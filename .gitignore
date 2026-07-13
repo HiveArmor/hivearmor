@@ -38,3 +38,23 @@ qodana.yaml
 # macOS
 .DS_Store
 **/.DS_Store
+
+# AI tool working directories — never commit
+.kiro/
+.plan/
+.claude/
+CLAUDE.md
+AGENTS.md
+
+# AI-generated audit/analysis files — never commit
+*_AUDIT_REPORT.md
+*_ANALYSIS.md
+*_PLAN.md
+*_REBRAND_*.md
+PHASE*.md
+UI_IMPROVEMENT_PLAN.md
+
+# Internal docs that don't belong in the public repo
+docs/baseline/
+docs/migration/
+docs/ui-audit/
