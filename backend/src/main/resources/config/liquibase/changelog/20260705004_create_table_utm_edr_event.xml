@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260705004-1" author="armorsight">
+        <createTable tableName="utm_edr_event">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="agent_id" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hostname" type="VARCHAR(200)"/>
+            <column name="event_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_time" type="TIMESTAMPTZ">
+                <constraints nullable="false"/>
+            </column>
+            <column name="process_name" type="VARCHAR(500)"/>
+            <column name="process_pid" type="INT"/>
+            <column name="process_path" type="TEXT"/>
+            <column name="process_cmdline" type="TEXT"/>
+            <column name="process_user" type="VARCHAR(200)"/>
+            <column name="process_hash" type="VARCHAR(128)"/>
+            <column name="file_path" type="TEXT"/>
+            <column name="file_hash" type="VARCHAR(128)"/>
+            <column name="network_src_ip" type="VARCHAR(45)"/>
+            <column name="network_dst_ip" type="VARCHAR(45)"/>
+            <column name="network_dst_port" type="INT"/>
+            <column name="network_proto" type="VARCHAR(10)"/>
+            <column name="matched_rule_id" type="BIGINT"/>
+            <column name="severity" type="VARCHAR(20)" defaultValue="INFO">
+                <constraints nullable="false"/>
+            </column>
+            <column name="raw_event" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="utm_edr_event" indexName="idx_edr_event_agent_id">
+            <column name="agent_id"/>
+        </createIndex>
+        <createIndex tableName="utm_edr_event" indexName="idx_edr_event_event_type">
+            <column name="event_type"/>
+        </createIndex>
+        <createIndex tableName="utm_edr_event" indexName="idx_edr_event_event_time">
+            <column name="event_time"/>
+        </createIndex>
+        <createIndex tableName="utm_edr_event" indexName="idx_edr_event_severity">
+            <column name="severity"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

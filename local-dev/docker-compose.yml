@@ -1,0 +1,368 @@
+# =============================================================================
+# HiveArmor Local Development - Docker Compose
+# =============================================================================
+# Usage:
+#   cd local-dev
+#   docker compose up -d
+#
+# Access:
+#   UI:      https://localhost
+#   API:     http://localhost:8080
+#   OpenSearch: https://localhost:9200 (admin / $OPENSEARCH_INITIAL_ADMIN_PASSWORD)
+#
+# Note: Locally built images target the host native architecture (arm64 on Apple Silicon).
+# Only web-pdf uses linux/amd64 (Selenium/Chrome requirement); runs via Rosetta on M-series.
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL - Relational database for backend, agent-manager, user-auditor
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: hivearmor/postgres:local
+    build:
+      context: ../docker/postgres
+      dockerfile: Dockerfile
+    pull_policy: never
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    ports:
+      - "5438:5432"
+    command: ["postgres", "-c", "shared_buffers=256MB", "-c", "max_connections=1000"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # OpenSearch - Log storage and full-text search engine
+  # ---------------------------------------------------------------------------
+  opensearch:
+    image: hivearmor/opensearch:local
+    build:
+      context: ..
+      dockerfile: etc/opensearch/2.x/Dockerfile
+    pull_policy: never
+    environment:
+      - cluster.name=hivearmor
+      - node.name=node1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=false
+      - bootstrap.system_call_filter=false
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=false
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - JAVA_HOME=/usr/share/opensearch/jdk
+      - action.auto_create_index=true
+      - path.repo=/usr/share/opensearch
+      - OPENSEARCH_JAVA_OPTS=-Xms1024m -Xmx1024m
+      - network.host=0.0.0.0
+      - plugins.security.ssl.http.pemcert_filepath=certificates/opensearch.crt
+      - plugins.security.ssl.http.pemkey_filepath=certificates/opensearch.key
+      - plugins.security.ssl.http.pemtrustedcas_filepath=certificates/ca.crt
+      - plugins.security.ssl.transport.pemcert_filepath=certificates/opensearch.crt
+      - plugins.security.ssl.transport.pemkey_filepath=certificates/opensearch.key
+      - plugins.security.ssl.transport.pemtrustedcas_filepath=certificates/ca.crt
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+      - opensearch_backups:/usr/share/opensearch/backups
+      - ./certs:/usr/share/opensearch/config/certificates:ro
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sk https://localhost:9200/_cluster/health -u admin:${OPENSEARCH_INITIAL_ADMIN_PASSWORD} | grep -qE 'green|yellow' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 3072M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Agent Manager - gRPC server for endpoint agent management
+  # ---------------------------------------------------------------------------
+  agentmanager:
+    image: hivearmor/agent-manager:local
+    build:
+      context: ..
+      dockerfile: agent-manager/Dockerfile
+    pull_policy: never
+    environment:
+      - DB_PATH=/data/hivearmor.db
+      - INTERNAL_KEY=${INTERNAL_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - HA_HOST=http://backend:8080
+      - DB_USER=postgres
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=agentmanager
+      - PANEL_SERV_NAME=http://backend:8080
+    volumes:
+      - ./certs:/cert:ro
+      - updates_data:/updates
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+      - "9090:9090"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Backend - Java Spring Boot REST API
+  # ---------------------------------------------------------------------------
+  backend:
+    image: hivearmor/backend:local
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    pull_policy: never
+    environment:
+      - SERVER_NAME=${SERVER_NAME}
+      - DB_USER=postgres
+      - DB_PASS=${POSTGRES_PASSWORD}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=hivearmor
+      - ELASTICSEARCH_HOST=opensearch
+      - ELASTICSEARCH_PORT=9200
+      - ELASTICSEARCH_USER=admin
+      - ELASTICSEARCH_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - INTERNAL_KEY=${INTERNAL_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - GRPC_AGENT_MANAGER_HOST=agentmanager
+      - GRPC_AGENT_MANAGER_PORT=9000
+      - EVENT_PROCESSOR_HOST=eventprocessor
+      - EVENT_PROCESSOR_PORT=9002
+      - SOC_AI_BASE_URL=http://eventprocessor:8090
+      - APP_TFA_ENABLED=false
+      - ELASTICSEARCH_CA_CERT=/cert/ca.crt
+      - JHIPSTER_CORS_ALLOWED__ORIGINS=${JHIPSTER_CORS_ALLOWED_ORIGINS}
+    volumes:
+      - datasources_data:/etc/hivearmor
+      - updates_data:/updates
+      - ./certs:/cert:ro
+    ports:
+      - "8088:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+      agentmanager:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/healthcheck || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Event Processor - Log correlation engine (manager mode)
+  # ---------------------------------------------------------------------------
+  eventprocessor:
+    image: hivearmor/event-processor:local
+    build:
+      context: ..
+      dockerfile: event-processor/Dockerfile
+    pull_policy: never
+    environment:
+      - WORK_DIR=/workdir
+      - LOG_LEVEL=200
+      - GIN_MODE=release
+      - MODE=manager
+      - NODE_NAME=manager
+    volumes:
+      - ep_pipeline:/workdir/pipeline
+      - ep_logs:/workdir/logs
+      - ep_rules:/workdir/rules/hivearmor
+      - ./certs:/cert:ro
+      - updates_data:/updates
+    ports:
+      - "50051:50051"
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # User Auditor - Tracks user sessions and activity
+  # ---------------------------------------------------------------------------
+  user-auditor:
+    image: hivearmor/user-auditor:local
+    build:
+      context: ../user-auditor
+      dockerfile: Dockerfile
+    pull_policy: never
+    environment:
+      - SERVER_NAME=${SERVER_NAME}
+      - INTERNAL_KEY=${INTERNAL_KEY}
+      - DB_USER=postgres
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=userauditor
+      - DB_PASS=${POSTGRES_PASSWORD}
+      - ELASTICSEARCH_HOST=opensearch
+      - ELASTICSEARCH_PORT=9200
+      - ELASTICSEARCH_USER=admin
+      - ELASTICSEARCH_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - ELASTICSEARCH_CA_CERT=/cert/ca.crt
+    volumes:
+      - ./certs:/cert:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/utm-auditor-users-by-src || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Web PDF - Report generation service (Selenium-based)
+  # ---------------------------------------------------------------------------
+  web-pdf:
+    image: hivearmor/web-pdf:local
+    build:
+      context: ../web-pdf
+      dockerfile: Dockerfile
+    pull_policy: never
+    platform: linux/amd64
+    volumes:
+      - shm_data:/dev/shm
+    depends_on:
+      backend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8080/ | grep -q 'error' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Frontend v2 - Next.js SIEM UI
+  # ---------------------------------------------------------------------------
+  frontend-v2:
+    image: hivearmor/frontend-v2:local
+    build:
+      context: ../frontend-v2
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://backend:8080
+    pull_policy: never
+    environment:
+      - BACKEND_URL=http://backend:8080
+      - HOSTNAME=0.0.0.0
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/login || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # OpenSearch Dashboards - Index management, dev tools, query UI
+  # ⚠️  DEV ONLY — REMOVE THIS SERVICE BEFORE DEPLOYING TO PRODUCTION.
+  #    Dashboards exposes full cluster admin access and is not hardened
+  #    for production use. Remove this entire block + the volume below.
+  # Access: http://localhost:5601  Login: admin / $OPENSEARCH_INITIAL_ADMIN_PASSWORD
+  # ---------------------------------------------------------------------------
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.18.0
+    environment:
+      - OPENSEARCH_HOSTS=["https://opensearch:9200"]
+      - OPENSEARCH_USERNAME=admin
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - OPENSEARCH_SSL_VERIFICATIONMODE=none
+      - SERVER_HOST=0.0.0.0
+    ports:
+      - "5601:5601"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  opensearch_data:
+  opensearch_backups:
+  updates_data:
+  datasources_data:
+  ep_pipeline:
+  ep_logs:
+  ep_rules:
+  shm_data:

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260705001-1" author="armorsight">
+        <createTable tableName="utm_agent_group">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="group_name" type="VARCHAR(200)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="platform" type="VARCHAR(50)"/>
+            <column name="created_by" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMPTZ"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260705001-2" author="armorsight">
+        <createTable tableName="utm_agent_group_member">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="group_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_group_member_group" references="utm_agent_group(id)" deleteCascade="true"/>
+            </column>
+            <column name="agent_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="added_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="utm_agent_group_member" indexName="idx_agent_group_member_group_id">
+            <column name="group_id"/>
+        </createIndex>
+        <createIndex tableName="utm_agent_group_member" indexName="idx_agent_group_member_agent_id">
+            <column name="agent_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

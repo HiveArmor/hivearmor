@@ -1,0 +1,38 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 468B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/eclipse-temurin:17
+#2 DONE 1.1s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/4] FROM docker.io/library/eclipse-temurin:17@sha256:89dc1a6e09920ea26b2ede6fddfcac1a7508b50159a6d04c918a46132953aab6
+#4 resolve docker.io/library/eclipse-temurin:17@sha256:89dc1a6e09920ea26b2ede6fddfcac1a7508b50159a6d04c918a46132953aab6 0.0s done
+#4 sha256:0a93da4399e3dac5a9688a74bfde085c91596fcc9a56ba84c8f67aaf51f2c05e 0B / 144.74MB 0.0s
+#4 sha256:b2b4144bf8691339f4f1011754b5ed314a4cb9c03e57af4c022301022f36b79a 5.24MB / 40.71MB 0.0s
+#4 sha256:17284abc9897e992390e833644cf736be424fe606e52da1f3c787dbd7bd86282 0B / 23.93MB 0.0s
+#4 ...
+
+#5 [internal] load build context
+#5 transferring context: 2.25MB 0.1s done
+#5 DONE 0.1s
+
+#6 [2/4] ADD target/utmstack.war ./
+#6 CANCELED
+Dockerfile:3
+--------------------
+   1 |     FROM eclipse-temurin:17
+   2 |     
+   3 | >>> ADD target/utmstack.war ./
+   4 |     COPY filters /nilachakra/filters
+   5 |     COPY rules /nilachakra/rules
+--------------------
+ERROR: failed to solve: failed to compute cache key: failed to calculate checksum of ref xvhao3mnf8gr5siazskszn8ud::hpigmdpacbv8wkv1oh8z58347: "/target/utmstack.war": not found
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/0gekjle33ylx8jlsnepuwcfk5
+DOCKER_BACKEND_FAIL

@@ -1,0 +1,103 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Detecting the operating system and CPU architecture
+[INFO] ------------------------------------------------------------------------
+[INFO] os.detected.name: osx
+[INFO] os.detected.arch: aarch_64
+[INFO] os.detected.version: 26.5
+[INFO] os.detected.version.major: 26
+[INFO] os.detected.version.minor: 5
+[INFO] os.detected.classifier: osx-aarch_64
+[INFO] 
+[INFO] ----------------------< com.atlasinside:utmstack >----------------------
+[INFO] Building UTMStack-API 11.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ war ]---------------------------------
+[WARNING] Parameter 'fork' is unknown for plugin 'spring-boot-maven-plugin:3.3.5:build-info (default)'
+[WARNING] Parameter 'fork' is unknown for plugin 'spring-boot-maven-plugin:3.3.5:repackage (default)'
+[INFO] 
+[INFO] --- clean:3.1.0:clean (default-clean) @ utmstack ---
+[INFO] Deleting /Users/encryptshell/GIT/UTMStack-11/backend/target
+[INFO] 
+[INFO] --- resources:3.2.0:copy-resources (default-resources) @ utmstack ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] Copying 6 resources
+[INFO] Copying 389 resources
+[INFO] 
+[INFO] --- resources:3.2.0:resources (default-resources) @ utmstack ---
+[WARNING]  Parameter 'resources' is read-only, must not be used in configuration
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] Copying 6 resources
+[INFO] Copying 389 resources
+[INFO] 
+[INFO] --- enforcer:3.0.0:enforce (enforce-versions) @ utmstack ---
+[INFO] 
+[INFO] --- enforcer:3.0.0:enforce (enforce-dependencyConvergence) @ utmstack ---
+[INFO] Downloading from utmstack: https://maven.pkg.github.com/utmstack/**/com/atlasinside/utmstack/11.0.0-SNAPSHOT/maven-metadata.xml
+[WARNING] Could not transfer metadata com.atlasinside:utmstack:11.0.0-SNAPSHOT/maven-metadata.xml from/to utmstack (https://maven.pkg.github.com/utmstack/**): status code: 401, reason phrase: Unauthorized (401)
+[INFO] 
+[INFO] --- protobuf:0.6.1:compile (default) @ utmstack ---
+[INFO] Compiling 3 proto file(s) to /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java
+[INFO] 
+[INFO] --- protobuf:0.6.1:compile-custom (default) @ utmstack ---
+[INFO] Compiling 3 proto file(s) to /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java
+[INFO] 
+[INFO] --- spring-boot:3.3.5:build-info (default) @ utmstack ---
+[INFO] 
+[INFO] --- compiler:3.12.0:compile (default-compile) @ utmstack ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 1002 source files with javac [debug target 17] to target/classes
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/domain/alert_response_rule/UtmAlertResponseActionTemplate.java:[45,40] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/domain/logstash_pipeline/UtmLogstashPipeline.java:[51,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/service/elasticsearch/ElasticsearchService.java:[57,1] Field 'log' already exists.
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/service/dto/visualization/mapper/UtmVisualizationMapper.java:[13,25] Unmapped target property: "queryLanguage".
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/service/mapper/compliance/UtmComplianceQueryConfigMapper.java:[12,30] Unmapped target property: "indexPattern".
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/service/mapper/compliance/UtmComplianceQueryConfigMapper.java:[19,10] Unmapped target property: "indexPattern".
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/service/mapper/compliance/UtmComplianceControlConfigMapper.java:[16,32] Unmapped target property: "systemOwner". Mapping from property "UtmComplianceStandardDto section.standard" to "UtmComplianceStandard section.standard".
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/service/mapper/compliance/UtmComplianceControlConfigMapper.java:[16,32] Unmapped target property: "standardId". Mapping from property "UtmComplianceStandardSectionDto section" to "UtmComplianceStandardSection section".
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/service/mapper/compliance/UtmComplianceControlConfigMapper.java:[22,10] Unmapped target property: "systemOwner". Mapping from property "UtmComplianceStandardDto section.standard" to "UtmComplianceStandard section.standard".
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/service/mapper/compliance/UtmComplianceControlConfigMapper.java:[22,10] Unmapped target property: "standardId". Mapping from property "UtmComplianceStandardSectionDto section" to "UtmComplianceStandardSection section".
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/service/dto/idp_provider/dto/IdentityProviderMapper.java:[27,10] Unmapped target properties: "spPrivateKeyPem, spCertificatePem".
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/service/dto/idp_provider/dto/IdentityProviderMapper.java:[35,37] Unmapped target properties: "id, createdAt, updatedAt".
+[INFO] Hibernate compile-time tooling 6.6.4.Final
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/domain/network_scan/UtmNetworkScan.java:[136,27] member 'scanId' of 'UtmPorts' is not annotated '@ManyToOne'
+[WARNING] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/domain/network_scan/UtmNetworkScan.java:[136,27] member 'scanId' of 'UtmPorts' is not of type 'UtmNetworkScan'
+[INFO] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/service/web_clients/rest_template/RestTemplateService.java: Some input files use or override a deprecated API.
+[INFO] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/service/web_clients/rest_template/RestTemplateService.java: Recompile with -Xlint:deprecation for details.
+[INFO] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/opensearch/OpenSearch.java: Some input files use unchecked or unsafe operations.
+[INFO] /Users/encryptshell/GIT/UTMStack-11/backend/src/main/java/com/nilachakra/opensearch/OpenSearch.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- resources:3.2.0:testResources (default-testResources) @ utmstack ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] Copying 1 resource
+[INFO] 
+[INFO] --- compiler:3.12.0:testCompile (default-testCompile) @ utmstack ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 2 source files with javac [debug target 17] to target/test-classes
+[INFO] Hibernate compile-time tooling 6.6.4.Final
+[INFO] 
+[INFO] --- surefire:3.5.4:test (default-test) @ utmstack ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- war:3.3.1:war (default-war) @ utmstack ---
+[INFO] Packaging webapp
+[INFO] Assembling webapp [utmstack] in [/Users/encryptshell/GIT/UTMStack-11/backend/target/utmstack]
+[INFO] Processing war project
+[INFO] Building war: /Users/encryptshell/GIT/UTMStack-11/backend/target/utmstack.war
+[INFO] 
+[INFO] --- spring-boot:3.3.5:repackage (default) @ utmstack ---
+[INFO] Replacing main artifact /Users/encryptshell/GIT/UTMStack-11/backend/target/utmstack.war with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to /Users/encryptshell/GIT/UTMStack-11/backend/target/utmstack.war.original
+[INFO] 
+[INFO] --- modernizer:2.3.0:modernizer (modernizer) @ utmstack ---
+[INFO] Skipping modernizer execution!
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  13.417 s
+[INFO] Finished at: 2026-07-02T14:58:24+05:30
+[INFO] ------------------------------------------------------------------------
+BACKEND_BUILD_OK

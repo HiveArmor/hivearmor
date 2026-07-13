@@ -1,0 +1,36 @@
+package com.hivearmor.userauditor.model;
+
+import com.hivearmor.userauditor.model.audit.Auditable;
+import lombok.*;
+
+import jakarta.persistence.*;
+import java.util.List;
+
+/**
+ * A UtmAuditorUsers.
+ */
+@Entity
+@Table(name = "hive_user")
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class User extends Base implements Auditable {
+
+    @Column(name = "name")
+    public String name;
+
+    @Column(name = "sid")
+    public String sid;
+
+    @Embedded
+    Audit audit;
+
+    @ManyToOne
+    @JoinColumn (name = "user_sources_id")
+    public UserSource source;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval=true)
+    List<UserAttribute> attributes;
+}

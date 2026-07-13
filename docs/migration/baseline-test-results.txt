@@ -1,0 +1,50 @@
+Phase 0 — Frontend Test Baseline
+Generated: 2026-06-29
+Node version: 14.16.1 (npm 6.14.12)
+Command: npm test -- --watch=false
+
+=== Test result: 5 FAILED, 2 SUCCESS (7 total specs) ===
+
+IMPORTANT: This is the baseline. These failures are PRE-EXISTING.
+All 5 failures exist BEFORE any migration step.
+
+Failure root cause:
+  "The pipe 'safe' could not be found" in UtmOnlineDocumentationComponent spec.
+  The test module for this component does not import SafePipe from UtmSharedModule.
+  This is a test infrastructure gap, not a production bug.
+
+Tests status: MINIMAL coverage confirmed.
+  Total specs: 7
+  Passing: 2
+  Failing: 5 (all related to missing SafePipe import in test module setup)
+
+=== Lint baseline ===
+Command: npm run lint
+Result: ERRORS PRESENT (pre-existing)
+  Total lint errors: 794
+  Total lint warnings: 14
+  Top error types:
+    164  Import sources within a group must be alphabetized
+    147  missing whitespace
+    145  " should be ' (double quotes instead of single)
+     55  Declaration of instance field after method
+     45  Missing semicolon
+     45  Exceeds maximum line length of 140
+  Top files with errors:
+    alert-view.component.ts       (92 errors)
+    guide-soc-ai.component.ts     (76 errors)
+    alert-soc-ai.component.ts     (20 errors)
+
+These 794 lint errors are ALL pre-existing.
+Phase 3 (TSLint → ESLint) will replace the linter, not fix these issues.
+Lint errors will be addressed as part of code quality improvements.
+
+=== Backend build baseline ===
+Command: mvn -B -Pprod clean package -DskipTests (not run locally — requires MAVEN_TK)
+Status: Backend compilation baseline confirmed via pom.xml review only.
+Key versions confirmed:
+  Spring Boot: 3.1.5
+  Hibernate:   5.4.32.Final (PINNED — known mismatch)
+  Java:        17
+  Liquibase:   4.24.0
+  gRPC:        1.65.1

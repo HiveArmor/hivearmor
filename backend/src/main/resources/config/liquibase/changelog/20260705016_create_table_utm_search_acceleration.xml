@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260705016" author="armorsight">
+        <createTable tableName="utm_search_acceleration">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="setting_key" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="setting_value" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="updated_at" type="TIMESTAMPTZ"/>
+            <column name="updated_by" type="VARCHAR(100)"/>
+        </createTable>
+
+        <!-- Default settings -->
+        <insert tableName="utm_search_acceleration">
+            <column name="setting_key" value="fielddata_cache_size"/>
+            <column name="setting_value" value="20%"/>
+            <column name="description" value="JVM heap percentage for field data cache (e.g. 20%)"/>
+        </insert>
+
+        <insert tableName="utm_search_acceleration">
+            <column name="setting_key" value="indices_query_cache_size"/>
+            <column name="setting_value" value="10%"/>
+            <column name="description" value="JVM heap percentage for query result cache"/>
+        </insert>
+
+        <insert tableName="utm_search_acceleration">
+            <column name="setting_key" value="indices_requests_cache_size"/>
+            <column name="setting_value" value="2%"/>
+            <column name="description" value="JVM heap percentage for request cache (aggregations)"/>
+        </insert>
+
+        <insert tableName="utm_search_acceleration">
+            <column name="setting_key" value="max_result_window"/>
+            <column name="setting_value" value="10000"/>
+            <column name="description" value="Maximum result window for index search (default 10000)"/>
+        </insert>
+
+        <insert tableName="utm_search_acceleration">
+            <column name="setting_key" value="refresh_interval"/>
+            <column name="setting_value" value="5s"/>
+            <column name="description" value="Index refresh interval — increase to reduce write amplification (e.g. 30s)"/>
+        </insert>
+
+        <insert tableName="utm_search_acceleration">
+            <column name="setting_key" value="translog_durability"/>
+            <column name="setting_value" value="request"/>
+            <column name="description" value="Translog durability: request (safe) or async (faster writes)"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260705013" author="armorsight">
+        <createTable tableName="utm_notification_route">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="channel_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_notif_route_channel" references="utm_notification_channel(id)"/>
+            </column>
+            <column name="match_severity" type="VARCHAR(200)"/>
+            <column name="match_source" type="VARCHAR(200)"/>
+            <column name="match_type" type="VARCHAR(200)"/>
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="throttle_minutes" type="INT" defaultValueNumeric="0"/>
+            <column name="last_fired_at" type="TIMESTAMPTZ"/>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="utm_notification_route" indexName="idx_notif_route_channel">
+            <column name="channel_id"/>
+        </createIndex>
+
+        <createIndex tableName="utm_notification_route" indexName="idx_notif_route_enabled">
+            <column name="enabled"/>
+        </createIndex>
+
+        <insert tableName="utm_notification_route">
+            <column name="name" value="Critical Alerts → Email"/>
+            <column name="channel_id" valueNumeric="1"/>
+            <column name="match_severity" value="critical,high"/>
+            <column name="match_source" value="ALERTS"/>
+            <column name="enabled" valueBoolean="false"/>
+            <column name="throttle_minutes" valueNumeric="15"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+
+        <insert tableName="utm_notification_route">
+            <column name="name" value="All Alerts → Slack"/>
+            <column name="channel_id" valueNumeric="2"/>
+            <column name="match_severity" value="critical,high,medium"/>
+            <column name="match_source" value="ALERTS"/>
+            <column name="enabled" valueBoolean="false"/>
+            <column name="throttle_minutes" valueNumeric="5"/>
+            <column name="created_at" valueComputed="NOW()"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

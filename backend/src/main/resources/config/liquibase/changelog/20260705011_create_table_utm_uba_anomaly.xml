@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+
+    <!-- Anomaly records: individual behavioral anomaly events -->
+    <changeSet id="20260705011-1" author="armorsight">
+        <createTable tableName="utm_uba_anomaly">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="entity_id" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entity_type" type="VARCHAR(20)" defaultValue="user">
+                <constraints nullable="false"/>
+            </column>
+            <column name="anomaly_type" type="VARCHAR(50)">
+                <!-- impossible_travel | off_hours_login | mass_download | privilege_escalation
+                     lateral_movement | new_country_login | bulk_data_access | c2_beacon
+                     after_hours_admin | failed_auth_spike -->
+                <constraints nullable="false"/>
+            </column>
+            <column name="severity" type="VARCHAR(20)" defaultValue="medium">
+                <!-- low | medium | high | critical -->
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="risk_contribution" type="INT" defaultValueNumeric="0"/>
+            <column name="detected_at" type="TIMESTAMPTZ">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_ip" type="VARCHAR(50)"/>
+            <column name="source_country" type="VARCHAR(100)"/>
+            <column name="details_json" type="TEXT"/>
+            <!-- contextual details as JSON -->
+            <column name="status" type="VARCHAR(20)" defaultValue="open">
+                <!-- open | investigating | resolved | false_positive -->
+            </column>
+            <column name="alert_id" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260705011-2" author="armorsight">
+        <createIndex tableName="utm_uba_anomaly" indexName="idx_uba_anomaly_entity">
+            <column name="entity_id"/>
+            <column name="entity_type"/>
+        </createIndex>
+        <createIndex tableName="utm_uba_anomaly" indexName="idx_uba_anomaly_detected_at">
+            <column name="detected_at"/>
+        </createIndex>
+        <createIndex tableName="utm_uba_anomaly" indexName="idx_uba_anomaly_severity">
+            <column name="severity"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260705011-3" author="armorsight">
+        <insert tableName="utm_uba_anomaly">
+            <column name="entity_id" value="jsmith"/>
+            <column name="entity_type" value="user"/>
+            <column name="anomaly_type" value="impossible_travel"/>
+            <column name="severity" value="critical"/>
+            <column name="description" value="Login from New York at 14:00 UTC, then London at 16:05 UTC — physically impossible in 2h 5min"/>
+            <column name="risk_contribution" valueNumeric="35"/>
+            <column name="detected_at" valueComputed="NOW() - INTERVAL '3 hours'"/>
+            <column name="source_ip" value="185.220.101.45"/>
+            <column name="source_country" value="United Kingdom"/>
+            <column name="details_json" value='{"from":{"city":"New York","country":"US","ip":"10.0.1.50","time":"2026-07-05T14:00:00Z"},"to":{"city":"London","country":"GB","ip":"185.220.101.45","time":"2026-07-05T16:05:00Z"},"distanceKm":5559,"travelTimeMin":125}'/>
+        </insert>
+        <insert tableName="utm_uba_anomaly">
+            <column name="entity_id" value="jsmith"/>
+            <column name="entity_type" value="user"/>
+            <column name="anomaly_type" value="mass_download"/>
+            <column name="severity" value="high"/>
+            <column name="description" value="Downloaded 14.2 GB from file server FS-01 in 28 minutes — 47x above personal baseline"/>
+            <column name="risk_contribution" valueNumeric="28"/>
+            <column name="detected_at" valueComputed="NOW() - INTERVAL '5 hours'"/>
+            <column name="source_ip" value="10.0.1.50"/>
+            <column name="source_country" value="United States"/>
+            <column name="details_json" value='{"bytesTransferred":15254000000,"durationSeconds":1680,"targetHost":"FS-01","fileCount":847,"baselineGB":0.3}'/>
+        </insert>
+        <insert tableName="utm_uba_anomaly">
+            <column name="entity_id" value="web-prod-01"/>
+            <column name="entity_type" value="host"/>
+            <column name="anomaly_type" value="c2_beacon"/>
+            <column name="severity" value="critical"/>
+            <column name="description" value="Periodic outbound connections to known C2 infrastructure every 300s — classic beacon pattern"/>
+            <column name="risk_contribution" valueNumeric="40"/>
+            <column name="detected_at" valueComputed="NOW() - INTERVAL '30 minutes'"/>
+            <column name="source_ip" value="185.220.101.45"/>
+            <column name="source_country" value="Russia"/>
+            <column name="details_json" value='{"remoteIp":"185.220.101.45","remotePort":443,"beaconIntervalSec":300,"connectionCount":18,"protocol":"HTTPS","jitter":0.12}'/>
+        </insert>
+        <insert tableName="utm_uba_anomaly">
+            <column name="entity_id" value="ajohnson"/>
+            <column name="entity_type" value="user"/>
+            <column name="anomaly_type" value="new_country_login"/>
+            <column name="severity" value="high"/>
+            <column name="description" value="First-ever login from Brazil — all 180 prior logins from United States"/>
+            <column name="risk_contribution" valueNumeric="25"/>
+            <column name="detected_at" valueComputed="NOW() - INTERVAL '8 hours'"/>
+            <column name="source_ip" value="177.54.200.1"/>
+            <column name="source_country" value="Brazil"/>
+            <column name="details_json" value='{"country":"BR","city":"São Paulo","previousCountries":["US"],"loginCount":180}'/>
+        </insert>
+        <insert tableName="utm_uba_anomaly">
+            <column name="entity_id" value="mwilliams"/>
+            <column name="entity_type" value="user"/>
+            <column name="anomaly_type" value="after_hours_admin"/>
+            <column name="severity" value="medium"/>
+            <column name="description" value="Modified 23 firewall rules at 02:47 AM — outside approved maintenance window"/>
+            <column name="risk_contribution" valueNumeric="18"/>
+            <column name="detected_at" valueComputed="NOW() - INTERVAL '14 hours'"/>
+            <column name="source_ip" value="10.0.5.22"/>
+            <column name="source_country" value="United States"/>
+            <column name="details_json" value='{"action":"firewall_rule_modify","count":23,"time":"02:47","maintenanceWindow":"Sat 00:00-04:00","dayOfWeek":"Wednesday"}'/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

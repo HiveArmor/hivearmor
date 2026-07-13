@@ -1,0 +1,45 @@
+package com.hivearmor.service.dto.idp_provider.dto;
+
+import com.hivearmor.domain.idp_provider.enums.ProviderType;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import java.time.LocalDateTime;
+
+/**
+ * DTO for Identity Provider configuration requests.
+ * Extended for SAML providers.
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class IdentityProviderConfigRequestDto {
+
+    private Long id;
+
+    @NotBlank
+    private String name;
+
+    @NotNull
+    private ProviderType providerType;
+
+    @NotBlank
+    private String metadataUrl;
+
+    @NotBlank
+    private String spEntityId;
+
+    @NotBlank
+    private String spAcsUrl;
+
+    @NotNull
+    private Boolean active;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+}

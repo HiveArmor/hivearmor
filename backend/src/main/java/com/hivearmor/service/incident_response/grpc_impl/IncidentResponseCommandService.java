@@ -1,0 +1,54 @@
+package com.hivearmor.service.incident_response.grpc_impl;
+
+import com.hivearmor.service.grpc.CommandResult;
+import com.hivearmor.service.grpc.PanelServiceGrpc;
+import com.hivearmor.service.grpc.UtmCommand;
+import io.grpc.ManagedChannel;
+import io.grpc.stub.StreamObserver;
+import org.springframework.stereotype.Service;
+
+@Service
+public class IncidentResponseCommandService {
+
+    private final PanelServiceGrpc.PanelServiceStub nonBlockingStub;
+
+    public IncidentResponseCommandService(ManagedChannel grpcManagedChannel) {
+        this.nonBlockingStub = PanelServiceGrpc.newStub(grpcManagedChannel);
+    }
+
+    public void sendCommand(String agentId,
+                            String command,
+                            String originType,
+                            String originId,
+                            String reason,
+                            String executedBy,
+                            String shell,
+                            StreamObserver<CommandResult> responseObserver) {
+
+        UtmCommand.Builder builder = UtmCommand.newBuilder()
+            .setAgentId(agentId)
+            .setCommand(command)
+            .setOriginId(originId)
+            .setOriginType(originType)
+            .setReason(reason)
+            .setExecutedBy(executedBy);
+
+        if (shell != null && !shell.isEmpty()) {
+            builder.setShell(shell);
+        }
+
+        UtmCommand utmCommand = builder.build();
+
+        // Send command using the bidirectional stream
+        StreamObserver<UtmCommand> requestObserver = nonBlockingStub.processCommand(responseObserver);
+        try {
+            requestObserver.onNext(utmCommand);
+            // Mark the end of requests
+            // requestObserver.onCompleted();
+        } catch (RuntimeException e) {
+            // Cancel RPC
+            requestObserver.onError(e);
+            throw e;
+        }
+    }
+}

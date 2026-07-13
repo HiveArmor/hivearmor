@@ -1,0 +1,149 @@
+management:
+  endpoints:
+    web:
+      base-path: /management
+      exposure:
+        include: ['health', 'info', 'jhimetrics', 'metrics', 'prometheus' ]
+  endpoint:
+    health:
+      show-details: when_authorized
+      roles: ["ROLE_ADMIN", "ROLE_USER"]
+      probes:
+        enabled: true
+    jhimetrics:
+      enabled: true
+  info:
+    git:
+      mode: full
+  health:
+    elasticsearch:
+      enabled: false
+    group:
+      liveness:
+        include: livenessState
+      readiness:
+        include: readinessState,db
+    mail:
+      enabled: false
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+        step: 60
+    enable:
+      http: true
+      jvm: true
+      logback: true
+      process: true
+      system: true
+    distribution:
+      percentiles-histogram:
+        all: true
+      percentiles:
+        all: 0, 0.5, 0.75, 0.95, 0.99, 1.0
+    tags:
+      application: ${spring.application.name}
+    web:
+      server:
+        request:
+          autotime:
+            enabled: true
+
+spring:
+  application:
+    name: HiveArmor-API
+  profiles:
+    active: #spring.profiles.active#
+    group:
+      dev:
+        - dev
+        - api-docs
+  jmx:
+    enabled: false
+  data:
+    jpa:
+      repositories:
+        bootstrap-mode: deferred
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
+      # hibernate.id.new_generator_mappings removed in Hibernate 6 (always true by default)
+      hibernate.connection.provider_disables_autocommit: true
+      hibernate.cache.use_second_level_cache: false
+      hibernate.cache.use_query_cache: false
+      hibernate.generate_statistics: false
+      hibernate.jdbc.batch_size: 25
+      hibernate.order_inserts: true
+      hibernate.order_updates: true
+      hibernate.query.fail_on_pagination_over_collection_fetch: true
+      hibernate.query.in_clause_parameter_padding: true
+    hibernate:
+      ddl-auto: none
+      naming:
+        # Phase 7: SpringPhysicalNamingStrategy removed in Spring Boot 3.x — use Hibernate 6 equivalents
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+  messages:
+    basename: i18n/messages
+  main:
+    allow-bean-definition-overriding: true
+  task:
+    execution:
+      thread-name-prefix: hivearmor-api-task-
+      pool:
+        core-size: 2
+        max-size: 1000
+        queue-capacity: 10000
+    scheduling:
+      thread-name-prefix: hivearmor-api-scheduling-
+      pool:
+        size: 2
+  thymeleaf:
+    mode: HTML
+  output:
+    ansi:
+      console-available: true
+
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+
+# Properties to be exposed on the /info management endpoint
+info:
+  # Comma separated list of profiles that will trigger the ribbon to show
+  display-ribbon-on-profiles: 'dev'
+
+jhipster:
+  api-docs:
+    default-include-pattern: ${server.servlet.context-path:}/api/.*
+    management-include-pattern: ${server.servlet.context-path:}/management/.*
+    title: HiveArmor Backend API
+    description: HiveArmor Backend API documentation
+    version: 10.1.0
+    terms-of-service-url:
+    contact-name:
+    contact-url:
+    contact-email:
+    license: unlicensed
+    license-url:
+  security:
+    content-security-policy: "default-src 'self' https://fonts.googleapis.com/css* https://fonts.gstatic.com/s/poppins/v20*; frame-src 'self' data:; script-src 'self' https://storage.googleapis.com*; style-src 'self' https://fonts.googleapis.com/css*; img-src 'self' data:; font-src 'self' data:"
+    authentication:
+      jwt:
+        base64-secret: ${ENCRYPTION_KEY:}  # Must be set; empty string causes startup failure
+        token-validity-in-seconds: 86400
+        token-validity-in-seconds-for-remember-me: 2592000
+
+app:
+  security:
+    trusted-proxy-cidrs: []  # Empty = never trust X-Forwarded-For (safe default)
+
+application:
+  branding:
+    name: "${APPLICATION_BRANDING_NAME:HiveArmor}"
+    name-short: "${APPLICATION_BRANDING_NAME_SHORT:NC}"
+    support-url: "https://hivearmor.io/contact"
+    docs-url: "https://docs.hivearmor.io"

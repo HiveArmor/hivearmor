@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260705002-1" author="armorsight">
+        <createTable tableName="utm_agent_policy">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="policy_name" type="VARCHAR(200)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="platform" type="VARCHAR(50)"/>
+            <column name="policy_config" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version_num" type="INT" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMPTZ"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260705002-2" author="armorsight">
+        <createTable tableName="utm_policy_group_assignment">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="policy_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_policy_assignment_policy" references="utm_agent_policy(id)" deleteCascade="true"/>
+            </column>
+            <column name="group_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_policy_assignment_group" references="utm_agent_group(id)" deleteCascade="true"/>
+            </column>
+            <column name="assigned_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_by" type="VARCHAR(100)"/>
+        </createTable>
+        <createIndex tableName="utm_policy_group_assignment" indexName="idx_policy_group_policy_id">
+            <column name="policy_id"/>
+        </createIndex>
+        <createIndex tableName="utm_policy_group_assignment" indexName="idx_policy_group_group_id">
+            <column name="group_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260705002-3" author="armorsight">
+        <createTable tableName="utm_policy_push_log">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="policy_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="policy_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="agent_id" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pushed_at" type="TIMESTAMPTZ">
+                <constraints nullable="false"/>
+            </column>
+            <column name="push_status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="error_msg" type="TEXT"/>
+            <column name="ack_at" type="TIMESTAMPTZ"/>
+        </createTable>
+        <createIndex tableName="utm_policy_push_log" indexName="idx_policy_push_log_policy_id">
+            <column name="policy_id"/>
+        </createIndex>
+        <createIndex tableName="utm_policy_push_log" indexName="idx_policy_push_log_agent_id">
+            <column name="agent_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260705002-4" author="armorsight">
+        <createTable tableName="utm_agent_policy_state">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="agent_id" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="policy_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="applied_version" type="INT"/>
+            <column name="desired_version" type="INT"/>
+            <column name="state" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_checked_at" type="TIMESTAMPTZ"/>
+            <column name="last_applied_at" type="TIMESTAMPTZ"/>
+            <column name="drift_details" type="TEXT"/>
+        </createTable>
+        <createIndex tableName="utm_agent_policy_state" indexName="idx_agent_policy_state_agent_id">
+            <column name="agent_id"/>
+        </createIndex>
+        <createIndex tableName="utm_agent_policy_state" indexName="idx_agent_policy_state_policy_id">
+            <column name="policy_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

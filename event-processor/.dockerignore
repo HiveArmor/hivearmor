@@ -1,0 +1,1 @@
+# geolocation-bundle/ is intentionally NOT listed here — Dockerfile COPYs it into the image

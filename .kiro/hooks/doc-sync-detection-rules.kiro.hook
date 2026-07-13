@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "Detection Rule Change → Docs Reminder",
+  "description": "When YAML correlation rules or Logstash-compatible filter definitions are edited, reminds the agent to keep the SIEM data flow baseline and siem-domain steering file in sync.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "rules/**/*.yaml",
+      "rules/**/*.yml",
+      "filters/**/*.yaml",
+      "filters/**/*.yml"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A correlation rule or log parsing filter was just edited. Before finishing this task, check whether the following documents need to be updated:\n\n**Baseline docs to review:**\n- `docs/baseline/07-siem-data-flow.md` — does a new filter introduce a new log source category (new data type)? Does a new rule introduce a new rule category beyond the existing 23?\n- `docs/baseline/08-integrations-and-connectors.md` — does this filter correspond to a new integration vendor? If so, the integration catalog needs a new row.\n\n**Steering files to review:**\n- `.kiro/steering/siem-domain.md` — new correlation rule categories (currently 23 listed), new data type string, or new deduplication/groupBy convention?\n\n**Correctness checks for rule files:**\n- `severity` must be one of: `low`, `medium`, `high` — no other values are valid\n- `category` must be one of the 23 existing categories unless a new one is explicitly being added\n- `deduplicateBy` and `groupBy` fields must reference fields that exist in the actual event document schema\n- Rules with low numeric IDs are system-owned — confirm `forcedSystemMode` is set if modifying one\n\n**Correctness checks for filter files:**\n- A new filter implies a new data type. Confirm `utm_data_types` table will also receive a new row via a Liquibase changeset if this is a new integration, not just a filter update.\n\nDo not update documentation if the rule change is still work-in-progress or under review."
+  }
+}

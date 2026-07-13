@@ -1,0 +1,55 @@
+# Override: replace upstream eventprocessor with our HiveArmor engine build.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
+
+services:
+  eventprocessor:
+    image: hivearmor/event-processor:local
+    build:
+      context: ..
+      dockerfile: event-processor/Dockerfile
+    environment:
+      - WORK_DIR=/workdir
+      - GIN_MODE=release
+      - MODE=manager
+      - NODE_NAME=manager
+      - OPENSEARCH_HOST=opensearch
+      - OPENSEARCH_PORT=9200
+      - OPENSEARCH_USER=admin
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - POSTGRESQL_HOST=postgres
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USER=postgres
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_DB=hivearmor
+      - INTERNAL_KEY=${INTERNAL_KEY}
+      - EVENTPROCESSOR_INJECT_KEY=${EVENTPROCESSOR_INJECT_KEY:-change-me-in-production}
+      - INPUTS_SOCKET_SECRET=${INPUTS_SOCKET_SECRET:-change-me-in-production}
+      # compliance-orchestrator config
+      - BACKEND_URL=http://backend:8080
+    volumes:
+      - ep_pipeline:/workdir/pipeline
+      - ep_logs:/workdir/logs
+      - ep_rules:/workdir/rules
+      - ./certs:/cert:ro
+      - ../filters:/workdir/pipeline/filters:ro
+    ports:
+      - "8000:8000"
+      - "8090:8090"
+      - "9003:9003"
+      - "8094:8094"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+    restart: unless-stopped

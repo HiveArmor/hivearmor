@@ -1,0 +1,72 @@
+- id: 2001
+  name: "Windows: Credential Dumping Detected"
+  dataTypes:
+    - wineventlog
+  category: "Credential Access"
+  technique: "T1003"
+  adversary: "origin"
+  description: "Credential dumping tools or techniques detected via Windows Security events."
+  where: |
+    safe("log.eventID", "") == "4688" && (contains("log.processName", "mimikatz") || contains("log.commandLine", "sekurlsa") || contains("log.commandLine", "lsadump"))
+  impact:
+    confidentiality: 3
+    integrity: 3
+    availability: 0
+
+- id: 2002
+  name: "Windows: Multiple Failed Login Attempts"
+  dataTypes:
+    - wineventlog
+  category: "Credential Access"
+  technique: "T1110"
+  adversary: "origin"
+  description: "Multiple Windows logon failures (Event ID 4625) from the same source."
+  where: |
+    safe("log.eventID", "") == "4625"
+  correlation:
+    - indexPattern: "v11-log-wineventlog-*"
+      with:
+        - field: "origin.ip"
+          operator: filter_match
+          value: "{{.origin.ip}}"
+        - field: "log.eventID"
+          operator: filter_match
+          value: "4625"
+      within: "10m"
+      count: 5
+  deduplicateBy:
+    - "adversary.ip"
+  impact:
+    confidentiality: 2
+    integrity: 1
+    availability: 0
+
+- id: 2003
+  name: "Windows: New Service Installed"
+  dataTypes:
+    - wineventlog
+  category: "Persistence"
+  technique: "T1543.003"
+  adversary: "origin"
+  description: "A new Windows service was installed (Event ID 4697), which may indicate persistence or malware."
+  where: |
+    safe("log.eventID", "") == "4697"
+  impact:
+    confidentiality: 1
+    integrity: 3
+    availability: 1
+
+- id: 2004
+  name: "Windows: Ransomware File Deletion Pattern"
+  dataTypes:
+    - wineventlog
+  category: "Impact"
+  technique: "T1490"
+  adversary: "origin"
+  description: "Shadow copy deletion or backup removal detected — common ransomware pre-execution step."
+  where: |
+    safe("log.eventID", "") == "4688" && (contains("log.commandLine", "vssadmin delete shadows") || contains("log.commandLine", "wbadmin delete") || contains("log.commandLine", "bcdedit /set"))
+  impact:
+    confidentiality: 0
+    integrity: 3
+    availability: 3

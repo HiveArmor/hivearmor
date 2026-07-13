@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20260705006-1" author="armorsight">
+        <createTable tableName="utm_edr_isolation">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="agent_id" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hostname" type="VARCHAR(200)"/>
+            <column name="isolation_type" type="VARCHAR(30)" defaultValue="FULL">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="ACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="VARCHAR(500)"/>
+            <column name="allowed_ips" type="TEXT"/>
+            <column name="isolated_at" type="TIMESTAMPTZ">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lifted_at" type="TIMESTAMPTZ"/>
+            <column name="actioned_by" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="edr_event_id" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="utm_edr_isolation" indexName="idx_edr_isolation_agent_id">
+            <column name="agent_id"/>
+        </createIndex>
+        <createIndex tableName="utm_edr_isolation" indexName="idx_edr_isolation_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

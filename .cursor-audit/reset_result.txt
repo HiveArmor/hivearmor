@@ -1,0 +1,5 @@
+LOGIN: {'success': True, 'tfaConfigured': False, 'forceTfa': False, 'method': None, 'token': 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOiJST0xFX0FETUlOLFJPTEVfVVNFUiIsImF1dGhlbnRpY2F0ZWQiOnRydWUsImV4cCI6MTc4MzA3MjI4Mn0.VXjrbVhGZsWJ-A89yiVscKcoV5doefG1KtKotM3dVHBTnPfSIDe6B7YCId0lCTiVEsiv09d8EVMuL_jBHkl1sA', 'tfaExpiresInSeconds': 0, 'firstLogin': True}
+TOKEN OK: eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiI...
+CHANGE PWD: {'status': 200, 'ok': True}
+VERIFY localdev123!: {'success': True, 'tfaConfigured': False, 'forceTfa': False, 'method': None, 'token': 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOiJST0xFX0FETUlOLFJPTEVfVVNFUiIsImF1dGhlbnRpY2F0ZWQiOnRydWUsImV4cCI6MTc4MzA3MjI4M30.OXwwn23n1ebHNh-icJIn88l5uLW2-3pG5xMO_uLfFk-amOFItqqH2mw8ETKlqvAMWLDo0M9TjFs1ZcR6zO7g2A', 'tfaExpiresInSeconds': 0, 'firstLogin': True}
+SUCCESS: login with localdev123! works

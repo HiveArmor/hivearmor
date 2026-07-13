@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+
+    <!-- Entity risk table: one row per user/device tracked -->
+    <changeSet id="20260705010-1" author="armorsight">
+        <createTable tableName="utm_uba_entity_risk">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="entity_id" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entity_type" type="VARCHAR(20)" defaultValue="user">
+                <!-- user | host | service -->
+                <constraints nullable="false"/>
+            </column>
+            <column name="display_name" type="VARCHAR(200)"/>
+            <column name="department" type="VARCHAR(100)"/>
+            <column name="role" type="VARCHAR(100)"/>
+            <column name="risk_score" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="prev_risk_score" type="INT" defaultValueNumeric="0"/>
+            <column name="risk_level" type="VARCHAR(20)" defaultValue="low">
+                <!-- low | medium | high | critical -->
+                <constraints nullable="false"/>
+            </column>
+            <column name="anomaly_count" type="INT" defaultValueNumeric="0"/>
+            <column name="alert_count" type="INT" defaultValueNumeric="0"/>
+            <column name="last_seen" type="TIMESTAMPTZ"/>
+            <column name="first_seen" type="TIMESTAMPTZ"/>
+            <column name="factors_json" type="TEXT"/>
+            <!-- JSON array of contributing risk factor strings -->
+            <column name="risk_trend_json" type="TEXT"/>
+            <!-- JSON array of {date, score} for sparkline -->
+            <column name="watchlisted" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="active"/>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()"/>
+            <column name="updated_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260705010-2" author="armorsight">
+        <createIndex tableName="utm_uba_entity_risk" indexName="idx_uba_entity_risk_score">
+            <column name="risk_score"/>
+        </createIndex>
+        <createIndex tableName="utm_uba_entity_risk" indexName="idx_uba_entity_risk_level">
+            <column name="risk_level"/>
+        </createIndex>
+        <createIndex tableName="utm_uba_entity_risk" indexName="idx_uba_entity_type">
+            <column name="entity_type"/>
+        </createIndex>
+        <addUniqueConstraint tableName="utm_uba_entity_risk" columnNames="entity_id,entity_type"
+            constraintName="uq_uba_entity_id_type"/>
+    </changeSet>
+
+    <changeSet id="20260705010-3" author="armorsight">
+        <insert tableName="utm_uba_entity_risk">
+            <column name="entity_id" value="jsmith"/>
+            <column name="entity_type" value="user"/>
+            <column name="display_name" value="John Smith"/>
+            <column name="department" value="Engineering"/>
+            <column name="role" value="Senior Developer"/>
+            <column name="risk_score" valueNumeric="94"/>
+            <column name="prev_risk_score" valueNumeric="72"/>
+            <column name="risk_level" value="critical"/>
+            <column name="anomaly_count" valueNumeric="7"/>
+            <column name="alert_count" valueNumeric="12"/>
+            <column name="last_seen" valueComputed="NOW()"/>
+            <column name="first_seen" valueComputed="NOW() - INTERVAL '90 days'"/>
+            <column name="factors_json" value='["Off-hours logins (3am-5am x4)","Impossible travel: NY→London 2h","Mass download: 14GB in 30min","Privilege escalation attempt"]'/>
+            <column name="risk_trend_json" value='[{"date":"2026-06-29","score":40},{"date":"2026-06-30","score":55},{"date":"2026-07-01","score":58},{"date":"2026-07-02","score":72},{"date":"2026-07-03","score":80},{"date":"2026-07-04","score":89},{"date":"2026-07-05","score":94}]'/>
+            <column name="watchlisted" valueBoolean="true"/>
+        </insert>
+        <insert tableName="utm_uba_entity_risk">
+            <column name="entity_id" value="ajohnson"/>
+            <column name="entity_type" value="user"/>
+            <column name="display_name" value="Alice Johnson"/>
+            <column name="department" value="Finance"/>
+            <column name="role" value="Financial Analyst"/>
+            <column name="risk_score" valueNumeric="78"/>
+            <column name="prev_risk_score" valueNumeric="65"/>
+            <column name="risk_level" value="high"/>
+            <column name="anomaly_count" valueNumeric="4"/>
+            <column name="alert_count" valueNumeric="6"/>
+            <column name="last_seen" valueComputed="NOW() - INTERVAL '2 hours'"/>
+            <column name="first_seen" valueComputed="NOW() - INTERVAL '180 days'"/>
+            <column name="factors_json" value='["Unusual access to financial records","Multiple failed auth attempts","Login from new country (Brazil)"]'/>
+            <column name="risk_trend_json" value='[{"date":"2026-06-29","score":30},{"date":"2026-06-30","score":45},{"date":"2026-07-01","score":55},{"date":"2026-07-02","score":60},{"date":"2026-07-03","score":65},{"date":"2026-07-04","score":70},{"date":"2026-07-05","score":78}]'/>
+            <column name="watchlisted" valueBoolean="false"/>
+        </insert>
+        <insert tableName="utm_uba_entity_risk">
+            <column name="entity_id" value="mwilliams"/>
+            <column name="entity_type" value="user"/>
+            <column name="display_name" value="Mark Williams"/>
+            <column name="department" value="IT Operations"/>
+            <column name="role" value="System Administrator"/>
+            <column name="risk_score" valueNumeric="61"/>
+            <column name="prev_risk_score" valueNumeric="68"/>
+            <column name="risk_level" value="medium"/>
+            <column name="anomaly_count" valueNumeric="3"/>
+            <column name="alert_count" valueNumeric="5"/>
+            <column name="last_seen" valueComputed="NOW() - INTERVAL '6 hours'"/>
+            <column name="first_seen" valueComputed="NOW() - INTERVAL '365 days'"/>
+            <column name="factors_json" value='["Bulk account modification","After-hours firewall rule changes","Accessed decommissioned server"]'/>
+            <column name="risk_trend_json" value='[{"date":"2026-06-29","score":75},{"date":"2026-06-30","score":70},{"date":"2026-07-01","score":68},{"date":"2026-07-02","score":65},{"date":"2026-07-03","score":64},{"date":"2026-07-04","score":63},{"date":"2026-07-05","score":61}]'/>
+            <column name="watchlisted" valueBoolean="false"/>
+        </insert>
+        <insert tableName="utm_uba_entity_risk">
+            <column name="entity_id" value="web-prod-01"/>
+            <column name="entity_type" value="host"/>
+            <column name="display_name" value="web-prod-01.corp.internal"/>
+            <column name="department" value="Infrastructure"/>
+            <column name="role" value="Web Server"/>
+            <column name="risk_score" valueNumeric="85"/>
+            <column name="prev_risk_score" valueNumeric="20"/>
+            <column name="risk_level" value="critical"/>
+            <column name="anomaly_count" valueNumeric="9"/>
+            <column name="alert_count" valueNumeric="22"/>
+            <column name="last_seen" valueComputed="NOW() - INTERVAL '15 minutes'"/>
+            <column name="first_seen" valueComputed="NOW() - INTERVAL '730 days'"/>
+            <column name="factors_json" value='["Unexpected outbound connection to C2","Unusual process spawning (cmd.exe)","High volume DNS queries","Lateral movement detected"]'/>
+            <column name="risk_trend_json" value='[{"date":"2026-06-29","score":18},{"date":"2026-06-30","score":20},{"date":"2026-07-01","score":22},{"date":"2026-07-02","score":35},{"date":"2026-07-03","score":60},{"date":"2026-07-04","score":78},{"date":"2026-07-05","score":85}]'/>
+            <column name="watchlisted" valueBoolean="true"/>
+        </insert>
+        <insert tableName="utm_uba_entity_risk">
+            <column name="entity_id" value="rbrown"/>
+            <column name="entity_type" value="user"/>
+            <column name="display_name" value="Robert Brown"/>
+            <column name="department" value="HR"/>
+            <column name="role" value="HR Manager"/>
+            <column name="risk_score" valueNumeric="42"/>
+            <column name="prev_risk_score" valueNumeric="38"/>
+            <column name="risk_level" value="medium"/>
+            <column name="anomaly_count" valueNumeric="2"/>
+            <column name="alert_count" valueNumeric="3"/>
+            <column name="last_seen" valueComputed="NOW() - INTERVAL '1 day'"/>
+            <column name="first_seen" valueComputed="NOW() - INTERVAL '200 days'"/>
+            <column name="factors_json" value='["Unusual access time (11pm)","Downloaded full employee directory"]'/>
+            <column name="risk_trend_json" value='[{"date":"2026-06-29","score":35},{"date":"2026-06-30","score":37},{"date":"2026-07-01","score":38},{"date":"2026-07-02","score":39},{"date":"2026-07-03","score":40},{"date":"2026-07-04","score":41},{"date":"2026-07-05","score":42}]'/>
+            <column name="watchlisted" valueBoolean="false"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

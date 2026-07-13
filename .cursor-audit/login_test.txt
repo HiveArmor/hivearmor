@@ -1,0 +1,1 @@
+{"success":true,"tfaConfigured":false,"forceTfa":false,"method":null,"token":"eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOiJST0xFX0FETUlOLFJPTEVfVVNFUiIsImF1dGhlbnRpY2F0ZWQiOnRydWUsImV4cCI6MTc4MzA2ODgzOX0.tCnTZseUSjI4fa8xql4M6mWNF4p7GFGE7XHakODZf8iJY8nmTEFHSr5ZZkG8eJl8aA8BfT8c0vvQY9PQsb_EWg","tfaExpiresInSeconds":0,"firstLogin":true}

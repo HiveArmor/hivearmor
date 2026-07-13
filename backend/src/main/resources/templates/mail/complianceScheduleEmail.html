@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${subject}">Compliance schedule</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="shortcut icon" th:href="@{|${baseUrl}/favicon.ico|}"/>
+</head>
+<body>
+    <div th:insert="mail/fragments/branding.html :: email-header"></div>
+
+    <p th:text="${content}"></p>
+
+    <div th:insert="mail/fragments/branding.html :: email-footer"></div>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="20260705007-1" author="armorSight">
+        <createTable tableName="utm_threat_feed">
+            <column name="id" type="VARCHAR(50)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(100)"/>
+            <column name="source" type="VARCHAR(500)"/>
+            <column name="last_updated" type="TIMESTAMPTZ"/>
+            <column name="ioc_count" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="active">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(1000)"/>
+            <column name="created_at" type="TIMESTAMPTZ"/>
+        </createTable>
+        <createIndex tableName="utm_threat_feed" indexName="idx_utm_threat_feed_enabled">
+            <column name="enabled"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260705007-2" author="armorSight">
+        <!-- Seed the default feeds matching frontend DEMO_FEEDS -->
+        <insert tableName="utm_threat_feed">
+            <column name="id" value="vt"/>
+            <column name="name" value="VirusTotal"/>
+            <column name="type" value="Multi-type"/>
+            <column name="source" value="https://virustotal.com"/>
+            <column name="last_updated" valueDate="2026-07-04 07:00:00"/>
+            <column name="ioc_count" valueNumeric="4820341"/>
+            <column name="status" value="active"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="description" value="Aggregated threat intelligence from 70+ antivirus engines and URL scanners."/>
+            <column name="created_at" valueDate="2026-07-04 00:00:00"/>
+        </insert>
+        <insert tableName="utm_threat_feed">
+            <column name="id" value="abuseipdb"/>
+            <column name="name" value="AbuseIPDB"/>
+            <column name="type" value="IP Reputation"/>
+            <column name="source" value="https://abuseipdb.com"/>
+            <column name="last_updated" valueDate="2026-07-04 06:45:00"/>
+            <column name="ioc_count" valueNumeric="1243890"/>
+            <column name="status" value="active"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="description" value="Community-driven IP abuse reporting database with categorized threats."/>
+            <column name="created_at" valueDate="2026-07-04 00:00:00"/>
+        </insert>
+        <insert tableName="utm_threat_feed">
+            <column name="id" value="otx"/>
+            <column name="name" value="AlienVault OTX"/>
+            <column name="type" value="Multi-type"/>
+            <column name="source" value="https://otx.alienvault.com"/>
+            <column name="last_updated" valueDate="2026-07-04 05:30:00"/>
+            <column name="ioc_count" valueNumeric="3107650"/>
+            <column name="status" value="active"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="description" value="Open threat exchange with pulses from 100k+ security researchers."/>
+            <column name="created_at" valueDate="2026-07-04 00:00:00"/>
+        </insert>
+        <insert tableName="utm_threat_feed">
+            <column name="id" value="et"/>
+            <column name="name" value="Emerging Threats"/>
+            <column name="type" value="Network Rules"/>
+            <column name="source" value="https://rules.emergingthreats.net"/>
+            <column name="last_updated" valueDate="2026-07-03 23:00:00"/>
+            <column name="ioc_count" valueNumeric="892430"/>
+            <column name="status" value="active"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="description" value="Proofpoint open-source network rule sets for IDS/IPS systems."/>
+            <column name="created_at" valueDate="2026-07-04 00:00:00"/>
+        </insert>
+        <insert tableName="utm_threat_feed">
+            <column name="id" value="shodan"/>
+            <column name="name" value="Shodan"/>
+            <column name="type" value="IP / Infrastructure"/>
+            <column name="source" value="https://shodan.io"/>
+            <column name="last_updated" valueDate="2026-07-04 02:15:00"/>
+            <column name="ioc_count" valueNumeric="621870"/>
+            <column name="status" value="active"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="description" value="Internet-wide scanning data identifying exposed services and vulnerabilities."/>
+            <column name="created_at" valueDate="2026-07-04 00:00:00"/>
+        </insert>
+        <insert tableName="utm_threat_feed">
+            <column name="id" value="cisa-kev"/>
+            <column name="name" value="CISA KEV"/>
+            <column name="type" value="Vulnerabilities"/>
+            <column name="source" value="https://cisa.gov/known-exploited-vulnerabilities-catalog"/>
+            <column name="last_updated" valueDate="2026-07-03 18:00:00"/>
+            <column name="ioc_count" valueNumeric="1147"/>
+            <column name="status" value="active"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="description" value="CISA catalog of known exploited vulnerabilities requiring remediation."/>
+            <column name="created_at" valueDate="2026-07-04 00:00:00"/>
+        </insert>
+        <insert tableName="utm_threat_feed">
+            <column name="id" value="malwarebazaar"/>
+            <column name="name" value="MalwareBazaar"/>
+            <column name="type" value="File Hashes"/>
+            <column name="source" value="https://bazaar.abuse.ch"/>
+            <column name="last_updated" valueDate="2026-07-04 04:00:00"/>
+            <column name="ioc_count" valueNumeric="2789340"/>
+            <column name="status" value="paused"/>
+            <column name="enabled" valueBoolean="false"/>
+            <column name="description" value="Malware sample sharing platform with rich metadata and YARA rules."/>
+            <column name="created_at" valueDate="2026-07-04 00:00:00"/>
+        </insert>
+        <insert tableName="utm_threat_feed">
+            <column name="id" value="phishtank"/>
+            <column name="name" value="PhishTank"/>
+            <column name="type" value="URLs / Domains"/>
+            <column name="source" value="https://phishtank.com"/>
+            <column name="last_updated" valueDate="2026-07-02 12:00:00"/>
+            <column name="ioc_count" valueNumeric="445220"/>
+            <column name="status" value="error"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="description" value="Community-verified phishing URL database with high-confidence verdicts."/>
+            <column name="created_at" valueDate="2026-07-04 00:00:00"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

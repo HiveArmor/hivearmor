@@ -1,0 +1,56 @@
+package com.hivearmor.web.rest.vm;
+
+import jakarta.validation.constraints.NotBlank;
+
+public class CommandVM {
+    @NotBlank
+    String command;
+    @NotBlank
+    String originType;
+    @NotBlank
+    String originId;
+    @NotBlank
+    String reason;
+
+    String shell;
+
+    public String getCommand() {
+        return command;
+    }
+
+    public void setCommand(String command) {
+        this.command = command;
+    }
+
+    public String getOriginType() {
+        return originType;
+    }
+
+    public void setOriginType(String originType) {
+        this.originType = originType;
+    }
+
+    public String getOriginId() {
+        return originId;
+    }
+
+    public void setOriginId(String originId) {
+        this.originId = originId;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public String getShell() {
+        return shell;
+    }
+
+    public void setShell(String shell) {
+        this.shell = shell;
+    }
+}

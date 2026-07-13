@@ -1,0 +1,77 @@
+package cmd
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/spf13/cobra"
+	pb "github.com/hivearmor/agent/agent"
+	"github.com/hivearmor/agent/collector"
+	"github.com/hivearmor/agent/config"
+	"github.com/hivearmor/agent/dependency"
+	"github.com/hivearmor/agent/serv"
+	"github.com/hivearmor/agent/utils"
+	"github.com/hivearmor/shared/exec"
+	"github.com/hivearmor/shared/fs"
+)
+
+var uninstallCmd = &cobra.Command{
+	Use:     "uninstall",
+	Short:   "Uninstall the HiveArmorAgent service",
+	Args:    cobra.NoArgs,
+	PreRunE: requireInstalled,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("Uninstalling HiveArmorAgent service ...")
+
+		fmt.Print("Stopping HiveArmorUpdater service... ")
+		updaterPath := filepath.Join(fs.GetExecutablePath(), dependency.UpdaterFile(""))
+		if fs.Exists(updaterPath) {
+			err := exec.Run(updaterPath, fs.GetExecutablePath(), "uninstall")
+			if err != nil {
+				fmt.Printf("Warning: %v\n", err)
+			} else {
+				fmt.Println("[OK]")
+			}
+			time.Sleep(2 * time.Second)
+		} else {
+			fmt.Println("[SKIPPED - not found]")
+		}
+
+		cnf, err := config.GetCurrentConfig()
+		if err != nil {
+			fmt.Println("Error getting config: ", err)
+			os.Exit(1)
+		}
+		if err = pb.DeleteAgent(cnf); err != nil {
+			utils.Logger.ErrorF("error deleting agent: %v", err)
+		}
+
+		// Uninstall dependencies (cleanup auditd rules, etc.)
+		fmt.Print("Cleaning up dependencies... ")
+		if err = dependency.UninstallAll(); err != nil {
+			fmt.Printf("Warning: %v\n", err)
+		} else {
+			fmt.Println("[OK]")
+		}
+
+		if err = collector.UninstallAll(); err != nil {
+			fmt.Printf("error uninstalling collectors: %v\n", err)
+			os.Exit(1)
+		}
+		os.Remove(config.ConfigurationFile)
+
+		serv.UninstallService()
+
+		fmt.Println("[OK]")
+		fmt.Println("HiveArmorAgent service uninstalled correctly")
+		os.Exit(0)
+
+		return nil
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(uninstallCmd)
+}

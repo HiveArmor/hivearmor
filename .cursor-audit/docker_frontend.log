@@ -1,0 +1,45 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 505B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/nginx:1.30.1
+#2 DONE 1.9s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/4] FROM docker.io/library/nginx:1.30.1@sha256:c35662d99b40137247cf7913871e97348a0524753a6925e09f7a5320b0b2f78b
+#4 resolve docker.io/library/nginx:1.30.1@sha256:c35662d99b40137247cf7913871e97348a0524753a6925e09f7a5320b0b2f78b 0.0s done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 88.08MB 0.5s done
+#5 DONE 0.5s
+
+#6 [2/4] WORKDIR /usr/share/nginx/html
+#6 CACHED
+
+#7 [3/4] COPY ./nginx/mime.types /etc/nginx/mime.types
+#7 CACHED
+
+#8 [4/4] COPY ./dist/utm-stack/ /usr/share/nginx/html/
+#8 DONE 0.4s
+
+#9 exporting to image
+#9 exporting layers
+#9 exporting layers 1.8s done
+#9 exporting manifest sha256:e496bbb71fcd97bfe3335d916c0670f7213b8dcaa349fe1023973c981a2421a6
+#9 exporting manifest sha256:e496bbb71fcd97bfe3335d916c0670f7213b8dcaa349fe1023973c981a2421a6 done
+#9 exporting config sha256:e551aa99af180d97da1ac238e5182a4cf12d243f5be4b5c07f2bc4cfb0f84d3c done
+#9 exporting attestation manifest sha256:76f193121d97283fde786fc025d15ad9774d72738fac024e4f2a927e6d2496b6 done
+#9 exporting manifest list sha256:6f94158ea875e63cfc5cb1a04b70152a2224eaf2569bf0b972aef8c663cf191a done
+#9 naming to docker.io/nilachakra/frontend:local done
+#9 unpacking to docker.io/nilachakra/frontend:local
+#9 unpacking to docker.io/nilachakra/frontend:local 0.4s done
+#9 DONE 2.2s
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/w4lot6btvfxx8g4otjk4k7i39
+DOCKER_FRONTEND_OK

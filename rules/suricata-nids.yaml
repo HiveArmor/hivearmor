@@ -1,0 +1,46 @@
+- id: 3001
+  name: "Suricata: Network Port Scan Detected"
+  dataTypes:
+    - suricata
+  category: "Discovery"
+  technique: "T1046"
+  adversary: "origin"
+  description: "Suricata IDS detected a port scanning signature from this source."
+  where: |
+    contains("log.signatureID", "ET:SCAN") || contains("log.category", "Attempted Information Leak")
+  deduplicateBy:
+    - "adversary.ip"
+  impact:
+    confidentiality: 1
+    integrity: 0
+    availability: 0
+
+- id: 3002
+  name: "Suricata: Log4j Exploitation Attempt"
+  dataTypes:
+    - suricata
+  category: "Initial Access"
+  technique: "T1190"
+  adversary: "origin"
+  description: "Suricata detected a Log4Shell (CVE-2021-44228) exploitation attempt."
+  where: |
+    contains("log.signatureID", "ET:EXPLOIT") && contains("log.signature", "Log4j")
+  impact:
+    confidentiality: 3
+    integrity: 3
+    availability: 2
+
+- id: 3003
+  name: "Suricata: CobaltStrike C2 Beacon Detected"
+  dataTypes:
+    - suricata
+  category: "Command and Control"
+  technique: "T1071"
+  adversary: "origin"
+  description: "CobaltStrike command-and-control traffic detected by Suricata IDS."
+  where: |
+    contains("log.signature", "CobaltStrike") || contains("log.signature", "Cobalt Strike")
+  impact:
+    confidentiality: 3
+    integrity: 3
+    availability: 1

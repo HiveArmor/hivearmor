@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title th:text="#{email.alert.title}">Alert notification</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="shortcut icon" th:href="@{|${baseUrl}/favicon.ico|}"/>
+</head>
+<body>
+
+<div th:insert="mail/fragments/branding.html :: email-header"></div>
+
+<p style="font-family: Roboto, sans-serif; background: #232f3e; padding: 5px 5px; color: #fff;">
+    Alert Detail Summary
+</p>
+
+<div style="padding: 0 1%;">
+    <div th:insert="mail/fragments/alert-detail-fragment.html :: alert-detail"></div>
+    <hr>
+</div>
+
+<div th:insert="mail/fragments/branding.html :: email-footer"></div>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        Phase C rebrand: Rename utm_configuration_parameter.conf_param_short keys
+        from "utmstack.*" prefix to "nilachakra.*" prefix.
+        These keys are the canonical identifiers used by Constants.java PROP_* constants.
+        Safe to run on fresh DB (no rows exist yet) or existing DB (UPDATE is idempotent).
+    -->
+    <changeSet id="20260703001" author="nilachakra-rebrand">
+
+        <update tableName="utm_configuration_parameter">
+            <column name="conf_param_short" valueComputed="replace(conf_param_short, 'utmstack.', 'nilachakra.')"/>
+            <where>conf_param_short LIKE 'utmstack.%'</where>
+        </update>
+
+    </changeSet>
+
+</databaseChangeLog>

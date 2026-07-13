@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260704004" author="detection-rules-lifecycle">
+
+        <createTable tableName="utm_rule_push_log">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="rule_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rule_name" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="agent_id" type="varchar(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pushed_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="push_status" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="error_msg" type="text"/>
+            <column name="ack_at" type="timestamp with time zone"/>
+        </createTable>
+
+        <createIndex tableName="utm_rule_push_log" indexName="idx_rule_push_log_rule_id">
+            <column name="rule_id"/>
+        </createIndex>
+
+        <createIndex tableName="utm_rule_push_log" indexName="idx_rule_push_log_agent_id">
+            <column name="agent_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

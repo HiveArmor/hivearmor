@@ -1,0 +1,125 @@
+=== ./agent-manager/go.mod ===
+go 1.25.5
+require (
+require go.mongodb.org/mongo-driver/v2 v2.6.0 // indirect
+
+=== ./agent/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./agent/updater/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./as400/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./as400/updater/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./installer/go.mod ===
+go 1.25.1
+require (
+require (
+
+=== ./plugins/alerts/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./plugins/aws/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./plugins/azure/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./plugins/bitdefender/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./plugins/compliance-orchestrator/go.mod ===
+go 1.25.5
+require github.com/threatwinds/go-sdk v1.1.8
+require (
+
+=== ./plugins/config/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./plugins/crowdstrike/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./plugins/events/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./plugins/feeds/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./plugins/gcp/go.mod ===
+go 1.25.8
+require (
+require (
+
+=== ./plugins/geolocation/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./plugins/inputs/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./plugins/modules-config/go.mod ===
+go 1.25.8
+require (
+require (
+
+=== ./plugins/o365/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./plugins/soc-ai/go.mod ===
+go 1.25.5
+require google.golang.org/grpc v1.81.1
+require (
+
+=== ./plugins/sophos/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./plugins/stats/go.mod ===
+go 1.25.5
+require (
+require (
+
+=== ./shared/go.mod ===
+go 1.25.1
+require (
+require (
+
+=== ./utmstack-collector/go.mod ===
+go 1.25.5
+require (
+require (
+

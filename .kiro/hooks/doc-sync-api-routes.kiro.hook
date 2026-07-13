@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "name": "API Route Change → Docs Reminder",
+  "description": "When a backend REST controller (*Resource.java or *Controller.java), SecurityConfiguration.java, or the Liquibase master changelog is edited, reminds the agent to keep the API inventory baseline and backend-api steering file in sync.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "backend/src/main/java/**/*Resource.java",
+      "backend/src/main/java/**/*Controller.java",
+      "backend/src/main/java/**/SecurityConfiguration.java",
+      "backend/src/main/resources/config/liquibase/master.xml",
+      "backend/src/main/resources/config/liquibase/changelog/**"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A backend API-related file was just edited. Before finishing this task, check whether the following documents need to be updated to reflect the change:\n\n**Baseline docs to review:**\n- `docs/baseline/03-backend-api-inventory.md` — endpoint added, removed, renamed, or changed auth requirement?\n- `docs/baseline/06-security-and-rbac-baseline.md` — SecurityConfiguration.java changed (new public endpoint, new role constraint, denyAll added/removed)?\n- `docs/baseline/04-data-model-and-storage.md` — new Liquibase changeset adds or removes a table/column?\n\n**Steering files to review:**\n- `.kiro/steering/backend-api.md` — new scheduled worker, new pagination convention, new public endpoint list entry?\n- `.kiro/steering/security-rbac.md` — new hardcoded restriction, new public path, changed immutable contract?\n\nFor each document: if the change is additive and backward-compatible, a note is sufficient. If an endpoint was removed or a Liquibase changeset is destructive, flag it explicitly. Do not make any documentation changes without confirming the code change is intentional and complete."
+  }
+}

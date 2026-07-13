@@ -1,0 +1,27 @@
+package com.hivearmor.domain.collector.validators;
+
+import com.hivearmor.domain.application_modules.UtmModuleGroupConfiguration;
+
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class UniqueServerNameValidator implements ConstraintValidator<UniqueServerName, List<UtmModuleGroupConfiguration>> {
+
+    @Override
+    public boolean isValid(List<UtmModuleGroupConfiguration> keys, ConstraintValidatorContext context) {
+
+        if (keys == null ) return false;
+
+        long duplicates = keys.stream()
+                .filter(k -> "Hostname".equals(k.getConfName()))
+                .collect(Collectors.groupingBy(UtmModuleGroupConfiguration::getConfValue, Collectors.counting()))
+                .values().stream()
+                .filter(count -> count > 1)
+                .count();
+
+        return duplicates == 0;
+
+    }
+}

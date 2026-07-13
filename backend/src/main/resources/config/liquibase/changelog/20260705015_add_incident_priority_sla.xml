@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260705015" author="armorsight">
+        <!-- Priority: P1 (critical, 1h SLA), P2 (high, 4h), P3 (medium, 24h), P4 (low, 72h) -->
+        <addColumn tableName="utm_incident">
+            <column name="incident_priority" type="VARCHAR(5)" defaultValue="P3">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="utm_incident">
+            <column name="sla_deadline" type="TIMESTAMPTZ"/>
+        </addColumn>
+
+        <addColumn tableName="utm_incident">
+            <column name="sla_breached" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <createIndex tableName="utm_incident" indexName="idx_utm_incident_priority">
+            <column name="incident_priority"/>
+        </createIndex>
+
+        <createIndex tableName="utm_incident" indexName="idx_utm_incident_sla_deadline">
+            <column name="sla_deadline"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

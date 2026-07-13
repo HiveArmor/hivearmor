@@ -1,0 +1,750 @@
+
+> utm-stack@17.0.0 build
+> ng build --configuration production --base-href /
+
+- Generating browser application bundles (phase: setup)...
+    TypeScript compiler options "target" and "useDefineForClassFields" are set to "ES2022" and "false" respectively by the Angular CLI. To control ECMA version and features use the Browserslist configuration. For more information, see https://angular.io/guide/build#configuring-browser-compatibility
+    NOTE: You can set the "target" to "ES2022" in the project's tsconfig to remove this warning.
+✔ Browser application bundle generation complete.
+✔ Browser application bundle generation complete.
+- Copying assets...
+✔ Copying assets complete.
+- Generating index html...
+✔ Index html generation complete.
+
+Initial chunk files           | Names                                                    |   Raw size | Estimated transfer size
+main.8a0539435bf5ba06.js      | main                                                     |    2.89 MB |               604.74 kB
+styles.6099a8fcf215709c.css   | styles                                                   |  564.95 kB |                65.43 kB
+scripts.1b35e3e9bd0c7be6.js   | scripts                                                  |  327.13 kB |                81.60 kB
+polyfills.5c8789d26fb649e5.js | polyfills                                                |   34.59 kB |                11.30 kB
+runtime.8af8ee547f48ea70.js   | runtime                                                  |    3.99 kB |                 1.91 kB
+
+                              | Initial total                                            |    3.79 MB |               764.99 kB
+
+Lazy chunk files              | Names                                                    |   Raw size | Estimated transfer size
+697.03ed2d5744ca7e04.js       | echarts                                                  | 1012.22 kB |               273.40 kB
+655.d0a6bba04be50cf0.js       | app-module-app-module-module                             | 1010.65 kB |               214.31 kB
+580.efd12aaeca8b814d.js       | app-management-app-management-module                     |  229.51 kB |                43.10 kB
+384.569b474e412e8df0.js       | compliance-compliance-module                             |  219.70 kB |                36.24 kB
+129.c2d165caf7e54895.js       | active-directory-active-directory-module                 |  213.65 kB |                30.87 kB
+799.ad200bfbffd5deaf.js       | canvg                                                    |  205.64 kB |                51.45 kB
+57.1967e57f5c5b552e.js        | chart-builder-chart-builder-module                       |  196.46 kB |                31.13 kB
+757.1d931ef47a49df3a.js       | rule-management-rule-management-module                   |  159.39 kB |                26.79 kB
+735.8e3d915c2fe21f0d.js       | data-management-alert-management-alert-management-module |  112.97 kB |                23.41 kB
+584.5e7cc526645ae4a5.js       | incident-response-incident-response-module               |  109.18 kB |                21.72 kB
+600.054b5d6b3203b7a8.js       | assets-discover-assets-discover-module                   |  108.15 kB |                19.17 kB
+34.5f0da45f0e826bae.js        | compliance-compliance-module                             |   78.79 kB |                16.12 kB
+2.05011c0d1bc2174b.js         | log-analyzer-log-analyzer-module                         |   70.28 kB |                15.63 kB
+146.03e37e6c1881d326.js       | file-management-file-management-module                   |   59.30 kB |                12.42 kB
+447.31228414ece29b54.js       | app-module-app-module-module                             |   44.22 kB |                13.64 kB
+669.9bb936050bf1cd00.js       | incident-incident-module                                 |   44.07 kB |                 9.46 kB
+943.a9b68b23d010dff9.js       | visualization-visualization-module                       |   41.54 kB |                 9.59 kB
+328.44f7590e341265d2.js       | log-analyzer-log-analyzer-module                         |   40.31 kB |                 9.81 kB
+751.96ee336b8ab1509c.js       | assets-discover-assets-discover-module                   |   39.55 kB |                 8.70 kB
+736.685848d094001ebd.js       | logstash-logstash-module                                 |   35.42 kB |                 8.31 kB
+common.763ae2ef78c1c6ab.js    | common                                                   |   32.50 kB |                 8.57 kB
+835.a378a89dd340ed70.js       | admin-admin-module                                       |   22.04 kB |                 5.36 kB
+784.9e6d22f5d7e5f74f.js       | graphic-builder-graphic-builder-module                   |   20.80 kB |                 5.93 kB
+973.2526c77eebb25f28.js       | dompurify                                                |   17.13 kB |                 6.28 kB
+280.59ea9a724e2ae538.js       | app-management-app-management-module                     |   15.60 kB |                 4.36 kB
+136.0afff1e08f03b758.js       | log-analyzer-log-analyzer-module                         |   14.90 kB |                 4.35 kB
+618.2c26be7513a62426.js       | data-management-alert-management-alert-management-module |   14.49 kB |                 4.10 kB
+206.c54f51fea2be617c.js       | adversary-management-adversary-management-module         |   13.07 kB |                 4.36 kB
+168.867d2d907fcb6953.js       | account-account-module                                   |   11.33 kB |                 2.56 kB
+933.472f31ec805c5863.js       | admin-admin-module                                       |    8.78 kB |                 2.90 kB
+310.0296fc3d4164867e.js       | automation-variables-automation-variables-module         |    7.09 kB |                 2.32 kB
+483.73c96c0a7a8c72a9.js       | data-management-data-management-module                   |    2.17 kB |               827 bytes
+370.c7c4e4d2a72790fd.js       | threatwind-threatwind-module                             |    1.31 kB |               662 bytes
+116.08bd8a2889a33c9c.js       | dashboard-builder-dashboard-builder-module               |    1.05 kB |               519 bytes
+
+Build at: 2026-07-02T09:06:09.904Z - Hash: 2551df3d99bbb9ff - Time: 16706ms
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/array/from.js depends on 'core-js-pure/features/array/from'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/array/is-array.js depends on 'core-js-pure/features/array/is-array'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/instance/slice.js depends on 'core-js-pure/features/instance/slice'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/is-iterable.js depends on 'core-js-pure/features/is-iterable'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/object/create.js depends on 'core-js-pure/features/object/create'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/object/define-property.js depends on 'core-js-pure/features/object/define-property'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/object/get-own-property-descriptor.js depends on 'core-js-pure/features/object/get-own-property-descriptor'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/object/get-prototype-of.js depends on 'core-js-pure/features/object/get-prototype-of'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/object/set-prototype-of.js depends on 'core-js-pure/features/object/set-prototype-of'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/promise.js depends on 'core-js-pure/features/promise'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/reflect/get.js depends on 'core-js-pure/features/reflect/get'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/symbol.js depends on 'core-js-pure/features/symbol'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/@babel/runtime-corejs3/core-js/symbol/iterator.js depends on 'core-js-pure/features/symbol/iterator'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/canvg/lib/index.es.js depends on 'raf'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/node_modules/canvg/lib/index.es.js depends on 'rgbcolor'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/active-directory/dashboard/active-directory-dashboard/shared/types/admins-inactive.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/active-directory/reports/schedule/shared/services/schedule.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/active-directory/shared/components/active-directory-tree/shared/from.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/active-directory/shared/const/active-directory-user-field.const.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/active-directory/shared/types/active-directory-field.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/active-directory/shared/types/active-directory-group.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/active-directory/shared/types/active-directory-user.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/app-management/rollover-config/shared/const/rollover-object-path.const.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/assets-discover/asset-groups/shared/enum/asset-group-field.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/assets-discover/asset-groups/shared/type/asset-group-field-filter.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/assets-discover/asset-groups/shared/type/asset-group-field.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/assets-discover/shared/behavior/asset-group-filters.behavior.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/assets-discover/shared/util/asset-field-navigation.util.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/assets-discover/source-data-type-config/input-source-data.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/assets-discover/source-data-type-config/input-source-mng.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/blocks/config/prod.config.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/blocks/config/uib-pagination.config.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/core/auth/enterprise-route-access.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/core/tracker/tracker.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/core/tracker/window.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/dashboard/shared/services/render-layout.service.ts depends on 'angular2-uuid'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/data-management/alert-management/shared/behavior/alert-tag-change.behavior.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/data-management/alert-management/shared/enums/alert-generated-by.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/graphic-builder/chart-builder/chart-property-builder/shared/behaviors/visualization.behavior.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/graphic-builder/visualization/shared/functions/chart-icon-resolver.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/license/license-routing.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/license/license.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/license/shared/components/utm-license-activate/utm-license-activate.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/license/utm-license/utm-license.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/log-analyzer/shared/const/log-explorer.const.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/log-analyzer/shared/enums/log-analyzer-query-params.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/log-analyzer/shared/services/log-analyzer-field-stored.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/report-custom-view/report-custom-view.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/report-routing.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/report-template-result/report-template-result.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/report-template/report-template.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/report.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/shared/component/report-custom-export-modal/report-custom-export-modal.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/shared/component/report-param-date-limit/report-param-date-limit.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/shared/component/report-param-date-range/report-param-date-range.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/shared/component/report-param-file-integrity/report-param-file-integrity.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/shared/component/report-param-risk-assetment/report-param-risk-assetment.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/shared/component/utm-report-create/utm-report-create.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/shared/component/utm-report-section-create/utm-report-section-create.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/shared/enums/report-params.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/shared/enums/report-short-name.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/shared/service/section-report.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/report/shared/type/report-section.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/rule-management/models/filter.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/rule-management/services/types.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/assets-dashboard/assets-dashboard.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/assets-dashboard/shared/services/asset-dashboard.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/assets-discovery-routing.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/assets-discovery.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/assets-host-detail/assets-host-detail.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/assets-host/assets-host.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/assets-host/shared/components/assets-host-filter/assets-host-filter.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/shared/chart/bar-host.def.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/shared/chart/host-topology.def.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/shared/chart/multiline-severity.def.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/shared/chart/pie-severity-class.def.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/shared/chart/word-cloud.def.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/shared/components/asset-host-card/asset-host-card.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/shared/components/asset-host-table/asset-host-table.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/shared/components/util/asset.util.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/shared/components/vulnerability-detail/vulnerability-detail.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/shared/services/asset-host-detail-dashboard.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/shared/services/asset-host-detail.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/shared/services/assets.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/assets-discovery/task-result/task-result.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/credential/credential-create/credential-create.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/credential/credential-delete/credential-delete.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/credential/credential-list/credential-list.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/credential/shared/services/credential.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/port/port-create/port-create.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/port/port-delete/port-delete.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/port/port-list/port-list.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/port/port-range/port-range-create/port-range-create.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/port/port-range/port-range-delete/port-range-delete.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/port/port-range/port-range-list/port-range-list.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/port/port-range/shared/services/port-range.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/port/shared/components/port-filter/port-filter.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/port/shared/form-validator/port-form.validator.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/port/shared/services/port.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/scanner-config-routing.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/scanner-config.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/scanner-config.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/schedule/schedule-create/schedule-create.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/schedule/schedule-delete/schedule-delete.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/schedule/schedule-list/schedule-list.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/schedule/shared/components/schedule-filter/schedule-filter.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/target/shared/components/target-filter/target-filter.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/target/target-create/target-create.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/target/target-delete/target-delete.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/target/target-detail/target-detail.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/target/target-list/target-list.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/task/shared/components/task-filter/task-filter.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/task/shared/components/task-status/task-status.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/task/shared/services/config-scanner.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/task/shared/services/scanner.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/task/shared/services/task-element-view-resolver.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/task/shared/services/task.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/task/task-create/task-create.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/task/task-delete/task-delete.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/task/task-detail/task-detail.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-config/task/task-list/task-list.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner-routing.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/scanner.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/components/asset-card-detail/asset-card-detail.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/components/asset-new-scan/asset-new-scan.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/components/asset-os/asset-os.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/components/asset-save-report/asset-report-active-filter/asset-report-active-filter.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/components/asset-save-report/asset-save-report.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/components/asset-save-report/shared/services/omp-report.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/components/asset-severity-chart/asset-severity-chart.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/components/asset-severity-help/asset-severity-help.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/components/scanner-export-vulnerabilities/scanner-export-vulnerabilities.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/const/task-status.const.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/enums/scanner-severity.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/assets/asset-identifier.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/assets/asset.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/assets/detail/asset-detail.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/assets/detail/ntv.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/assets/host-detail.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/assets/host.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/assets/openvas-chart/openvas-aggregate-column.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/assets/openvas-chart/openvas-column-info.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/assets/openvas-chart/openvas-group.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/assets/openvas-chart/openvas-option.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/assets/openvas-chart/openvas-subgroup.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/credential-data.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/credential.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/port-range.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/port.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/scanner-config.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/scanner.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/model/target-credential-data.model.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/providers/asset-so-resolver.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/scanner-shared.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/types/asset-active-filter.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/util/severity-resolve.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/scanner/shared/util/time-util.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/alert/alert-event.handler.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/alert/utm-alert-error.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/behaviors/ad-module-active.behavior.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/chart/types/chart-query.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/chart/types/charts/bar/utm-bar-data.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/chart/types/charts/bar/utm-bar-option.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/chart/types/charts/bar/utm-bar-properties.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/chart/types/charts/chart-properties/series/gauge/gauge-color.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/chart/types/charts/goal/utm-goal-properties.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/chart/types/charts/metric/utm-metric-properties.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/components/auth/password-reset/finish/password-reset-finish.route.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/components/auth/password-reset/init/password-reset-init.route.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/components/utm/config/shared/guard/can-deactivate-config.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/components/utm/config/shared/services/dialog-service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/constants/alert/alert-source.constant.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/constants/input.constants.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/enums/elastic-metric-health.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/enums/report-format.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/services/date-pipe-options.factory.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/services/scan/vs-severity-resolver.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/services/util/encrypt.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/alert/actions/alert-category.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/alert/actions/alert-description.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/alert/actions/alert-solution.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/alert/card-response-type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/compliance/AssetDiscoverType.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/compliance/ToolsType.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/elasticsearch/elasticsearch-field.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/incident/incident-detail.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/license/enum/utm-licence.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/license/utm-license-response.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/license/utm-license.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/menu/MenuNavType.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/types/updates/check-update-info.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/util/datepicker-adapter.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/util/echart-tooltip-formatter.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/util/field-by-data-nature.util.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/util/get-value-object-from-property-path.util.ts depends on 'flat'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/webflux/webflux.callback.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/shared/webflux/webflux.event.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/components/vs-task-result-export/vs-task-result-export.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/components/vs-task-status/vs-task-status.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/constants/task-field.const.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/enums/vs-severity.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/enums/vs-task-filter.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/enums/vs-task-status.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/enums/vs-task-trend.enum.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/services/vs-task-element-view-resolver.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/services/vs-task-result.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/services/vs-task.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/type/vs-quick-scan-param.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/type/vs-task-filter.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/type/vs-task-result.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/shared/type/vs-task.type.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vs-overview/shared/charts/vs-overview-severity-metric/vs-overview-severity-metric.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vs-overview/shared/charts/vs-tasks-chart/vs-tasks-chart.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vs-overview/shared/charts/vs-top-vulnerable-host/vs-top-vulnerable-host.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vs-overview/shared/charts/vs-vul-metrics/vs-vul-metrics.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vs-overview/shared/charts/vs-vulnerability-severity-pie/vs-vulnerability-severity-pie.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vs-overview/shared/services/vs-vulnerability-overview.service.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vs-overview/vs-overview.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vs-task-detail/vs-task-detail.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vs-task-result/component/vs-task-result-detail/vs-task-result-detail.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vs-task-result/vs-task-result.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vs-tasks/component/vs-task-generic-filter/vs-task-generic-filter.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vs-tasks/vs-tasks.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vulnerability-scanner-routing.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vulnerability-scanner.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vulnerability-shared/components/vs-quick-scan/vs-quick-scan.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vulnerability-shared/components/vs-severity-info/vs-severity-info.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vulnerability-shared/components/vs-severity/vs-severity.component.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+Warning: /Users/encryptshell/GIT/UTMStack-11/frontend/src/app/vulnerability-scanner/vulnerability-shared/vulnerability-shared.module.ts is part of the TypeScript compilation but it's unused.
+Add only entry points to the 'files' or 'include' properties in your tsconfig.
+
+
+BUILD_SUCCESS

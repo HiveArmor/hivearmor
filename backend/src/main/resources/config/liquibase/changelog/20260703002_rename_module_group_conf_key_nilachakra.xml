@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        Phase C rebrand: Rename utm_module_group_configuration.conf_key values
+        from "utmstack.socai.*" prefix to "nilachakra.socai.*" prefix.
+        Safe to run on fresh DB or existing DB (UPDATE is idempotent).
+    -->
+    <changeSet id="20260703002" author="nilachakra-rebrand">
+
+        <update tableName="utm_module_group_configuration">
+            <column name="conf_key" valueComputed="replace(conf_key, 'utmstack.', 'nilachakra.')"/>
+            <where>conf_key LIKE 'utmstack.%'</where>
+        </update>
+
+    </changeSet>
+
+</databaseChangeLog>

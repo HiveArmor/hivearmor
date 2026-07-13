@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260704002" author="soar-playbook">
+
+        <createTable tableName="utm_playbook_execution">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="playbook_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_playbook_execution_playbook_id"
+                             references="utm_playbook(id)"/>
+            </column>
+            <column name="playbook_name" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="triggered_by" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alert_id" type="varchar(100)"/>
+            <column name="started_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ended_at" type="timestamp with time zone"/>
+            <column name="total_steps" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_steps" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="error_message" type="text"/>
+            <column name="steps_log" type="text"/>
+        </createTable>
+
+        <createIndex tableName="utm_playbook_execution" indexName="idx_playbook_exec_playbook_id">
+            <column name="playbook_id"/>
+        </createIndex>
+
+        <createIndex tableName="utm_playbook_execution" indexName="idx_playbook_exec_started_at">
+            <column name="started_at" descending="true"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

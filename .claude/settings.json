@@ -1,0 +1,10 @@
+{
+  "sandbox": {
+    "filesystem": {
+      "allowWrite": [
+        "/Users/encryptshell/Library/Caches/go-build",
+        "/var/folders"
+      ]
+    }
+  }
+}

@@ -1,0 +1,77 @@
+package com.hivearmor.domain.logstash_filter;
+
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.io.Serializable;
+
+/**
+ * A UtmLogstashFilterGroup.
+ */
+@Entity
+@Table(name = "hive_logstash_filter_group")
+public class UtmLogstashFilterGroup implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotNull
+    @Size(max = 150)
+    @Column(name = "group_name", length = 150, nullable = false, unique = true)
+    private String groupName;
+
+    @Column(name = "group_description")
+    private String groupDescription;
+
+    @Column(name = "system_owner")
+    private Boolean systemOwner;
+
+    public UtmLogstashFilterGroup() {
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public UtmLogstashFilterGroup groupName(String groupName) {
+        this.groupName = groupName;
+        return this;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
+    }
+
+    public String getGroupDescription() {
+        return groupDescription;
+    }
+
+    public UtmLogstashFilterGroup groupDescription(String groupDescription) {
+        this.groupDescription = groupDescription;
+        return this;
+    }
+
+    public void setGroupDescription(String groupDescription) {
+        this.groupDescription = groupDescription;
+    }
+
+    public Boolean getSystemOwner() {
+        return systemOwner;
+    }
+
+    public void setSystemOwner(Boolean systemOwner) {
+        this.systemOwner = systemOwner;
+    }
+}

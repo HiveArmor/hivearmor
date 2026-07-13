@@ -1,0 +1,18 @@
+package com.hivearmor.validation.saml;
+
+import com.hivearmor.validation.saml.impl.ValidCertificateValidator;
+
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+import java.lang.annotation.*;
+
+@Target({ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = ValidCertificateValidator.class)
+@Documented
+public @interface ValidCertificate {
+    String message() default "The file does not contain a valid PEM certificate";
+    Class<?>[] groups() default {};
+    Class<? extends Payload>[] payload() default {};
+}
+

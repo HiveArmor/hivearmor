@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: HiveArmor-API-test
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5438}/${DB_NAME:hivearmor}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:localdev123!}
+    hikari:
+      poolName: Hikari
+      auto-commit: false
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database: POSTGRESQL
+  liquibase:
+    enabled: false
+
+jhipster:
+  security:
+    content-security-policy: "default-src 'self'"
+    authentication:
+      jwt:
+        token-validity-in-seconds: 86400
+        token-validity-in-seconds-for-remember-me: 2592000

@@ -1,0 +1,5 @@
+ login |                        password_hash                         
+-------+--------------------------------------------------------------
+ admin | $2a$10$gSAhZrxMllrbgj/kkK9UceBPpChGWJA7SYIb1Mqo.n5aNLq1/oRrC
+(1 row)
+

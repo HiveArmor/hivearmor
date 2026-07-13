@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="20260705008-1" author="armorSight">
+        <createTable tableName="utm_ioc_indicator">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ioc_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_seen" type="TIMESTAMPTZ"/>
+            <column name="last_seen" type="TIMESTAMPTZ"/>
+            <column name="threat_score" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="classification" type="VARCHAR(200)"/>
+            <column name="description" type="TEXT"/>
+            <column name="country" type="VARCHAR(100)"/>
+            <column name="asn" type="VARCHAR(200)"/>
+            <column name="tags" type="TEXT"/>
+            <!-- JSON arrays stored as TEXT -->
+            <column name="source_feeds_json" type="TEXT"/>
+            <column name="mitre_techniques_json" type="TEXT"/>
+            <column name="related_iocs_json" type="TEXT"/>
+            <column name="alert_count" type="INT" defaultValueNumeric="0"/>
+            <column name="feed_id" type="VARCHAR(50)"/>
+            <column name="created_at" type="TIMESTAMPTZ"/>
+            <column name="updated_at" type="TIMESTAMPTZ"/>
+        </createTable>
+        <createIndex tableName="utm_ioc_indicator" indexName="idx_ioc_value">
+            <column name="value"/>
+        </createIndex>
+        <createIndex tableName="utm_ioc_indicator" indexName="idx_ioc_type">
+            <column name="ioc_type"/>
+        </createIndex>
+        <createIndex tableName="utm_ioc_indicator" indexName="idx_ioc_threat_score">
+            <column name="threat_score"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Seed the well-known demo IOC so the frontend's "185.220.101.45" lookup hits DB -->
+    <changeSet id="20260705008-2" author="armorSight">
+        <insert tableName="utm_ioc_indicator">
+            <column name="value" value="185.220.101.45"/>
+            <column name="ioc_type" value="ip"/>
+            <column name="first_seen" valueDate="2023-08-12 14:22:00"/>
+            <column name="last_seen" valueDate="2026-07-03 21:05:00"/>
+            <column name="threat_score" valueNumeric="94"/>
+            <column name="classification" value="Malware C2 / Tor Exit Node"/>
+            <column name="description" value="Known Tor exit node associated with multiple malware command-and-control campaigns. Observed in APT28-attributed activity and Cobalt Strike beacon communications."/>
+            <column name="country" value="Germany"/>
+            <column name="asn" value="AS50624 (Contabo GmbH)"/>
+            <column name="tags" value="tor,c2,apt28,cobalt-strike,ransomware"/>
+            <column name="source_feeds_json" value='[{"name":"AbuseIPDB","confidence":98,"reportedAt":"2026-07-03T18:30:00Z"},{"name":"VirusTotal","confidence":95,"reportedAt":"2026-07-02T09:15:00Z"},{"name":"AlienVault OTX","confidence":91,"reportedAt":"2026-07-01T12:00:00Z"},{"name":"Emerging Threats","confidence":88,"reportedAt":"2026-06-30T06:45:00Z"},{"name":"Shodan","confidence":72,"reportedAt":"2026-06-28T20:10:00Z"}]'/>
+            <column name="mitre_techniques_json" value='[{"id":"T1071.001","name":"Web Protocols","tactic":"Command and Control"},{"id":"T1090.003","name":"Multi-hop Proxy","tactic":"Command and Control"},{"id":"T1059.003","name":"Windows Command Shell","tactic":"Execution"},{"id":"T1055","name":"Process Injection","tactic":"Defense Evasion"}]'/>
+            <column name="related_iocs_json" value='[{"value":"185.220.101.47","type":"ip","threatScore":91},{"value":"cobaltstrike-c2.ru","type":"domain","threatScore":88},{"value":"a1b2c3d4e5f6789012345678901234567890abcd","type":"hash","threatScore":82},{"value":"185.220.101.33","type":"ip","threatScore":79}]'/>
+            <column name="alert_count" valueNumeric="47"/>
+            <column name="feed_id" value="abuseipdb"/>
+            <column name="created_at" valueDate="2026-07-04 00:00:00"/>
+            <column name="updated_at" valueDate="2026-07-04 00:00:00"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

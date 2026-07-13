@@ -1,0 +1,23 @@
+# Multi-stage Dockerfile for local backend development
+# Stage 1: Build the WAR file
+FROM maven:3.9-eclipse-temurin-17 AS build
+
+WORKDIR /build
+COPY pom.xml settings.xml ./
+COPY .mvn .mvn
+COPY src ./src
+
+# Build the WAR - set revision to a placeholder version
+RUN mvn -B -Pprod clean package -s settings.xml -DskipTests -Drevision=local-dev
+
+# Stage 2: Runtime image
+FROM eclipse-temurin:17
+
+WORKDIR /app
+COPY --from=build /build/target/utmstack.war ./utmstack.war
+
+HEALTHCHECK --start-period=60s --interval=60s --timeout=60s --retries=3 \
+  CMD curl -f http://localhost:8080/api/healthcheck || exit 1
+
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "utmstack.war"]

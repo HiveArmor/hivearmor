@@ -1,0 +1,30 @@
+=== NilaChakra Large-Scale Seed Data ===
+
+── LOGS ──
+  wineventlog          →   800 docs  (0 failed)
+  linux                →   600 docs  (0 failed)
+  aws                  →   500 docs  (0 failed)
+  o365                 →   400 docs  (0 failed)
+  firewall             →   400 docs  (0 failed)
+  cisco-asa            →   300 docs  (0 failed)
+  suricata             →   300 docs  (0 failed)
+  azure                →   300 docs  (0 failed)
+  crowdstrike          →   250 docs  (0 failed)
+  netflow              →   250 docs  (0 failed)
+  github               →   150 docs  (0 failed)
+  syslog               →   400 docs  (0 failed)
+
+── ALERTS (1200) ──
+  v11-alert-*          →  1087 docs  (113 failed)
+
+── RESULT ──
+  Indexed : 5,737
+  Failed  : 113
+  Total   : 5,850
+
+── OpenSearch totals ──
+  Log indices  : 372 (10,003 docs)
+  Alert indices:  31 (2,250 docs)
+  GRAND TOTAL  : 12,253 docs across 403 indices
+
+✅ Done! Open http://localhost:8880 → Alerting or Discover to see data.

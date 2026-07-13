@@ -1,0 +1,2 @@
+-- Additional databases are created by the compose-mounted 01-init.sql script.
+-- This file is kept as a placeholder for the Dockerfile COPY step.

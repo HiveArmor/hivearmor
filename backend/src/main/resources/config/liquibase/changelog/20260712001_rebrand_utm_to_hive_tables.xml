@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Sprint 3 rebrand: rename all utm_ tables to hive_ -->
+    <!-- IMPORTANT: Do not edit this changeset after it is applied to any environment. -->
+
+    <changeSet id="20260712001-rename-utm-agent-group" author="hivearmor">
+        <renameTable oldTableName="utm_agent_group" newTableName="hive_agent_group"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-agent-group-member" author="hivearmor">
+        <renameTable oldTableName="utm_agent_group_member" newTableName="hive_agent_group_member"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-agent-manager" author="hivearmor">
+        <renameTable oldTableName="utm_agent_manager" newTableName="hive_agent_manager"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-agent-policy" author="hivearmor">
+        <renameTable oldTableName="utm_agent_policy" newTableName="hive_agent_policy"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-agent-policy-state" author="hivearmor">
+        <renameTable oldTableName="utm_agent_policy_state" newTableName="hive_agent_policy_state"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-ai-triage" author="hivearmor">
+        <renameTable oldTableName="utm_ai_triage" newTableName="hive_ai_triage"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-alert-last" author="hivearmor">
+        <renameTable oldTableName="utm_alert_last" newTableName="hive_alert_last"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-alert-log" author="hivearmor">
+        <renameTable oldTableName="utm_alert_log" newTableName="hive_alert_log"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-alert-response-rule" author="hivearmor">
+        <renameTable oldTableName="utm_alert_response_rule" newTableName="hive_alert_response_rule"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-alert-response-rule-execution" author="hivearmor">
+        <renameTable oldTableName="utm_alert_response_rule_execution" newTableName="hive_alert_response_rule_execution"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-alert-response-rule-history" author="hivearmor">
+        <renameTable oldTableName="utm_alert_response_rule_history" newTableName="hive_alert_response_rule_history"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-alert-socai-processing-request" author="hivearmor">
+        <renameTable oldTableName="utm_alert_socai_processing_request" newTableName="hive_alert_socai_processing_request"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-alert-tag" author="hivearmor">
+        <renameTable oldTableName="utm_alert_tag" newTableName="hive_alert_tag"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-alert-tag-rule" author="hivearmor">
+        <renameTable oldTableName="utm_alert_tag_rule" newTableName="hive_alert_tag_rule"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-asset-group" author="hivearmor">
+        <renameTable oldTableName="utm_asset_group" newTableName="hive_asset_group"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-asset-metrics" author="hivearmor">
+        <renameTable oldTableName="utm_asset_metrics" newTableName="hive_asset_metrics"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-asset-types" author="hivearmor">
+        <renameTable oldTableName="utm_asset_types" newTableName="hive_asset_types"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-client" author="hivearmor">
+        <renameTable oldTableName="utm_client" newTableName="hive_client"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-collectors" author="hivearmor">
+        <renameTable oldTableName="utm_collectors" newTableName="hive_collectors"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-compliance-control-config" author="hivearmor">
+        <renameTable oldTableName="utm_compliance_control_config" newTableName="hive_compliance_control_config"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-compliance-query-config" author="hivearmor">
+        <renameTable oldTableName="utm_compliance_query_config" newTableName="hive_compliance_query_config"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-compliance-report-config" author="hivearmor">
+        <renameTable oldTableName="utm_compliance_report_config" newTableName="hive_compliance_report_config"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-compliance-report-export" author="hivearmor">
+        <renameTable oldTableName="utm_compliance_report_export" newTableName="hive_compliance_report_export"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-compliance-report-schedule" author="hivearmor">
+        <renameTable oldTableName="utm_compliance_report_schedule" newTableName="hive_compliance_report_schedule"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-compliance-standard" author="hivearmor">
+        <renameTable oldTableName="utm_compliance_standard" newTableName="hive_compliance_standard"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-compliance-standard-section" author="hivearmor">
+        <renameTable oldTableName="utm_compliance_standard_section" newTableName="hive_compliance_standard_section"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-configuration-parameter" author="hivearmor">
+        <renameTable oldTableName="utm_configuration_parameter" newTableName="hive_configuration_parameter"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-configuration-section" author="hivearmor">
+        <renameTable oldTableName="utm_configuration_section" newTableName="hive_configuration_section"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-correlation-rule-version" author="hivearmor">
+        <renameTable oldTableName="utm_correlation_rule_version" newTableName="hive_correlation_rule_version"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-correlation-rules" author="hivearmor">
+        <renameTable oldTableName="utm_correlation_rules" newTableName="hive_correlation_rules"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-dashboard" author="hivearmor">
+        <renameTable oldTableName="utm_dashboard" newTableName="hive_dashboard"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-dashboard-authority" author="hivearmor">
+        <renameTable oldTableName="utm_dashboard_authority" newTableName="hive_dashboard_authority"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-dashboard-visualization" author="hivearmor">
+        <renameTable oldTableName="utm_dashboard_visualization" newTableName="hive_dashboard_visualization"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-data-input-status" author="hivearmor">
+        <renameTable oldTableName="utm_data_input_status" newTableName="hive_data_input_status"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-data-input-status-checkpoint" author="hivearmor">
+        <renameTable oldTableName="utm_data_input_status_checkpoint" newTableName="hive_data_input_status_checkpoint"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-data-source-config" author="hivearmor">
+        <renameTable oldTableName="utm_data_source_config" newTableName="hive_data_source_config"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-data-types" author="hivearmor">
+        <renameTable oldTableName="utm_data_types" newTableName="hive_data_types"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-edr-event" author="hivearmor">
+        <renameTable oldTableName="utm_edr_event" newTableName="hive_edr_event"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-edr-isolation" author="hivearmor">
+        <renameTable oldTableName="utm_edr_isolation" newTableName="hive_edr_isolation"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-edr-quarantine" author="hivearmor">
+        <renameTable oldTableName="utm_edr_quarantine" newTableName="hive_edr_quarantine"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-edr-rule" author="hivearmor">
+        <renameTable oldTableName="utm_edr_rule" newTableName="hive_edr_rule"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-federation-service-client" author="hivearmor">
+        <renameTable oldTableName="utm_federation_service_client" newTableName="hive_federation_service_client"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-getting-started" author="hivearmor">
+        <renameTable oldTableName="utm_getting_started" newTableName="hive_getting_started"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-group-logstash-pipeline-filters" author="hivearmor">
+        <renameTable oldTableName="utm_group_logstash_pipeline_filters" newTableName="hive_group_logstash_pipeline_filters"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-group-rules-data-type" author="hivearmor">
+        <renameTable oldTableName="utm_group_rules_data_type" newTableName="hive_group_rules_data_type"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-identity-provider-config" author="hivearmor">
+        <renameTable oldTableName="utm_identity_provider_config" newTableName="hive_identity_provider_config"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-images" author="hivearmor">
+        <renameTable oldTableName="utm_images" newTableName="hive_images"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-incident" author="hivearmor">
+        <renameTable oldTableName="utm_incident" newTableName="hive_incident"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-incident-action-command" author="hivearmor">
+        <renameTable oldTableName="utm_incident_action_command" newTableName="hive_incident_action_command"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-incident-actions" author="hivearmor">
+        <renameTable oldTableName="utm_incident_actions" newTableName="hive_incident_actions"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-incident-alert" author="hivearmor">
+        <renameTable oldTableName="utm_incident_alert" newTableName="hive_incident_alert"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-incident-history" author="hivearmor">
+        <renameTable oldTableName="utm_incident_history" newTableName="hive_incident_history"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-incident-jobs" author="hivearmor">
+        <renameTable oldTableName="utm_incident_jobs" newTableName="hive_incident_jobs"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-incident-note" author="hivearmor">
+        <renameTable oldTableName="utm_incident_note" newTableName="hive_incident_note"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-incident-variables" author="hivearmor">
+        <renameTable oldTableName="utm_incident_variables" newTableName="hive_incident_variables"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-index-pattern" author="hivearmor">
+        <renameTable oldTableName="utm_index_pattern" newTableName="hive_index_pattern"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-integration" author="hivearmor">
+        <renameTable oldTableName="utm_integration" newTableName="hive_integration"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-integration-conf" author="hivearmor">
+        <renameTable oldTableName="utm_integration_conf" newTableName="hive_integration_conf"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-ioc-indicator" author="hivearmor">
+        <renameTable oldTableName="utm_ioc_indicator" newTableName="hive_ioc_indicator"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-log-analyzer-query" author="hivearmor">
+        <renameTable oldTableName="utm_log_analyzer_query" newTableName="hive_log_analyzer_query"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-logstash-filter" author="hivearmor">
+        <renameTable oldTableName="utm_logstash_filter" newTableName="hive_logstash_filter"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-logstash-filter-group" author="hivearmor">
+        <renameTable oldTableName="utm_logstash_filter_group" newTableName="hive_logstash_filter_group"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-logstash-pipeline" author="hivearmor">
+        <renameTable oldTableName="utm_logstash_pipeline" newTableName="hive_logstash_pipeline"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-menu" author="hivearmor">
+        <renameTable oldTableName="utm_menu" newTableName="hive_menu"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-menu-authority" author="hivearmor">
+        <renameTable oldTableName="utm_menu_authority" newTableName="hive_menu_authority"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-module" author="hivearmor">
+        <renameTable oldTableName="utm_module" newTableName="hive_module"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-module-group" author="hivearmor">
+        <renameTable oldTableName="utm_module_group" newTableName="hive_module_group"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-module-group-configuration" author="hivearmor">
+        <renameTable oldTableName="utm_module_group_configuration" newTableName="hive_module_group_configuration"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-network-scan" author="hivearmor">
+        <renameTable oldTableName="utm_network_scan" newTableName="hive_network_scan"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-notification" author="hivearmor">
+        <renameTable oldTableName="utm_notification" newTableName="hive_notification"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-notification-channel" author="hivearmor">
+        <renameTable oldTableName="utm_notification_channel" newTableName="hive_notification_channel"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-notification-route" author="hivearmor">
+        <renameTable oldTableName="utm_notification_route" newTableName="hive_notification_route"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-playbook" author="hivearmor">
+        <renameTable oldTableName="utm_playbook" newTableName="hive_playbook"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-playbook-execution" author="hivearmor">
+        <renameTable oldTableName="utm_playbook_execution" newTableName="hive_playbook_execution"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-policy-group-assignment" author="hivearmor">
+        <renameTable oldTableName="utm_policy_group_assignment" newTableName="hive_policy_group_assignment"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-policy-push-log" author="hivearmor">
+        <renameTable oldTableName="utm_policy_push_log" newTableName="hive_policy_push_log"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-ports" author="hivearmor">
+        <renameTable oldTableName="utm_ports" newTableName="hive_ports"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-regex-pattern" author="hivearmor">
+        <renameTable oldTableName="utm_regex_pattern" newTableName="hive_regex_pattern"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-report" author="hivearmor">
+        <renameTable oldTableName="utm_report" newTableName="hive_report"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-report-section" author="hivearmor">
+        <renameTable oldTableName="utm_report_section" newTableName="hive_report_section"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-response-action-template" author="hivearmor">
+        <renameTable oldTableName="utm_response_action_template" newTableName="hive_response_action_template"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-rule-push-log" author="hivearmor">
+        <renameTable oldTableName="utm_rule_push_log" newTableName="hive_rule_push_log"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-schedule" author="hivearmor">
+        <renameTable oldTableName="utm_schedule" newTableName="hive_schedule"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-search-acceleration" author="hivearmor">
+        <renameTable oldTableName="utm_search_acceleration" newTableName="hive_search_acceleration"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-server" author="hivearmor">
+        <renameTable oldTableName="utm_server" newTableName="hive_server"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-server-module" author="hivearmor">
+        <renameTable oldTableName="utm_server_module" newTableName="hive_server_module"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-space-notification-control" author="hivearmor">
+        <renameTable oldTableName="utm_space_notification_control" newTableName="hive_space_notification_control"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-tenant-config" author="hivearmor">
+        <renameTable oldTableName="utm_tenant_config" newTableName="hive_tenant_config"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-threat-feed" author="hivearmor">
+        <renameTable oldTableName="utm_threat_feed" newTableName="hive_threat_feed"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-uba-anomaly" author="hivearmor">
+        <renameTable oldTableName="utm_uba_anomaly" newTableName="hive_uba_anomaly"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-uba-entity-risk" author="hivearmor">
+        <renameTable oldTableName="utm_uba_entity_risk" newTableName="hive_uba_entity_risk"/>
+    </changeSet>
+
+    <changeSet id="20260712001-rename-utm-visualization" author="hivearmor">
+        <renameTable oldTableName="utm_visualization" newTableName="hive_visualization"/>
+    </changeSet>
+
+
+</databaseChangeLog>

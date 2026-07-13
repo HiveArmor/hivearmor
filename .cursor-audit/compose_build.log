@@ -1,0 +1,259 @@
+ Service backend  Building
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [backend internal] load build definition from Dockerfile
+#1 transferring dockerfile: 488B done
+#1 DONE 0.0s
+
+#2 [backend internal] load metadata for docker.io/library/eclipse-temurin:17
+#2 DONE 3.4s
+
+#3 [backend internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [backend internal] load build context
+#4 transferring context: 113.10kB 0.1s done
+#4 DONE 0.1s
+
+#5 [backend 1/4] FROM docker.io/library/eclipse-temurin:17@sha256:89dc1a6e09920ea26b2ede6fddfcac1a7508b50159a6d04c918a46132953aab6
+#5 resolve docker.io/library/eclipse-temurin:17@sha256:89dc1a6e09920ea26b2ede6fddfcac1a7508b50159a6d04c918a46132953aab6 0.0s done
+#5 sha256:d60f06b6cbcfd6ae6c4348f9c722b4074e2f6d5b541c68f22d3d9a4e0e8c9a60 0B / 2.28kB 0.2s
+#5 sha256:abfa1c90bb09383563f68f0a8a5f322a616f44a3699b167b8246ba7209898fee 0B / 157B 0.2s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 0B / 145.91MB 0.2s
+#5 sha256:079bddacf53d151b0701a06a699eae3b80c0d41784662dca5a10927b87c7b2ac 0B / 24.04MB 0.2s
+#5 sha256:d60f06b6cbcfd6ae6c4348f9c722b4074e2f6d5b541c68f22d3d9a4e0e8c9a60 2.28kB / 2.28kB 0.3s done
+#5 sha256:2c1ce1d0a589804cc5314c1325593106b364e9d700502a06de710671c7697220 0B / 393B 0.2s
+#5 sha256:abfa1c90bb09383563f68f0a8a5f322a616f44a3699b167b8246ba7209898fee 157B / 157B 0.6s done
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 0B / 41.56MB 0.2s
+#5 sha256:079bddacf53d151b0701a06a699eae3b80c0d41784662dca5a10927b87c7b2ac 4.19MB / 24.04MB 1.4s
+#5 sha256:2c1ce1d0a589804cc5314c1325593106b364e9d700502a06de710671c7697220 393B / 393B 1.0s done
+#5 sha256:079bddacf53d151b0701a06a699eae3b80c0d41784662dca5a10927b87c7b2ac 6.29MB / 24.04MB 1.5s
+#5 sha256:079bddacf53d151b0701a06a699eae3b80c0d41784662dca5a10927b87c7b2ac 8.39MB / 24.04MB 1.7s
+#5 sha256:079bddacf53d151b0701a06a699eae3b80c0d41784662dca5a10927b87c7b2ac 10.49MB / 24.04MB 2.0s
+#5 sha256:079bddacf53d151b0701a06a699eae3b80c0d41784662dca5a10927b87c7b2ac 14.68MB / 24.04MB 2.3s
+#5 sha256:079bddacf53d151b0701a06a699eae3b80c0d41784662dca5a10927b87c7b2ac 16.78MB / 24.04MB 2.4s
+#5 sha256:079bddacf53d151b0701a06a699eae3b80c0d41784662dca5a10927b87c7b2ac 18.87MB / 24.04MB 2.6s
+#5 sha256:079bddacf53d151b0701a06a699eae3b80c0d41784662dca5a10927b87c7b2ac 24.04MB / 24.04MB 3.3s done
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 2.10MB / 41.56MB 2.6s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 5.24MB / 41.56MB 3.0s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 7.34MB / 41.56MB 3.3s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 7.34MB / 145.91MB 4.2s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 9.44MB / 41.56MB 3.6s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 11.53MB / 41.56MB 3.9s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 13.63MB / 41.56MB 4.2s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 15.73MB / 41.56MB 4.5s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 14.68MB / 145.91MB 5.6s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 17.83MB / 41.56MB 5.0s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 19.92MB / 41.56MB 5.3s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 22.02MB / 41.56MB 5.6s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 24.12MB / 41.56MB 5.9s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 22.02MB / 145.91MB 6.9s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 26.21MB / 41.56MB 6.5s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 28.31MB / 41.56MB 6.8s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 30.41MB / 41.56MB 7.1s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 29.36MB / 145.91MB 8.3s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 32.51MB / 41.56MB 7.5s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 34.60MB / 41.56MB 7.8s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 36.70MB / 41.56MB 8.1s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 38.80MB / 41.56MB 8.4s
+#5 sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 41.56MB / 41.56MB 8.7s done
+#5 extracting sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 36.70MB / 145.91MB 9.8s
+#5 extracting sha256:a9be9fd915e97ef977c92b5f9abe226548f0d6a4a013daef6d238708ccde9b61 0.6s done
+#5 extracting sha256:2c1ce1d0a589804cc5314c1325593106b364e9d700502a06de710671c7697220 done
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 44.04MB / 145.91MB 10.2s
+#5 extracting sha256:079bddacf53d151b0701a06a699eae3b80c0d41784662dca5a10927b87c7b2ac
+#5 extracting sha256:079bddacf53d151b0701a06a699eae3b80c0d41784662dca5a10927b87c7b2ac 0.3s done
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 51.38MB / 145.91MB 10.8s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 58.72MB / 145.91MB 11.7s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 66.06MB / 145.91MB 12.3s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 73.40MB / 145.91MB 12.8s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 80.74MB / 145.91MB 13.5s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 88.08MB / 145.91MB 14.1s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 95.42MB / 145.91MB 15.3s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 103.81MB / 145.91MB 16.4s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 114.29MB / 145.91MB 17.1s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 122.68MB / 145.91MB 17.6s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 130.02MB / 145.91MB 18.3s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 139.46MB / 145.91MB 18.9s
+#5 sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 145.91MB / 145.91MB 20.1s done
+#5 extracting sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3
+#5 extracting sha256:c2bc3fab2c08bf729c3b23b692050e0a9b458161c48a1bc290486007da9573a3 0.9s done
+#5 DONE 21.2s
+
+#5 [backend 1/4] FROM docker.io/library/eclipse-temurin:17@sha256:89dc1a6e09920ea26b2ede6fddfcac1a7508b50159a6d04c918a46132953aab6
+#5 extracting sha256:abfa1c90bb09383563f68f0a8a5f322a616f44a3699b167b8246ba7209898fee done
+#5 extracting sha256:d60f06b6cbcfd6ae6c4348f9c722b4074e2f6d5b541c68f22d3d9a4e0e8c9a60 done
+#5 DONE 21.2s
+
+#6 [backend 2/4] ADD backend/target/utmstack.war ./utmstack.war
+#6 DONE 0.6s
+
+#7 [backend 3/4] COPY filters /nilachakra/filters
+#7 DONE 0.0s
+
+#8 [backend 4/4] COPY rules /nilachakra/rules
+#8 DONE 0.1s
+
+#9 [backend] exporting to image
+#9 exporting layers
+#9 exporting layers 3.0s done
+#9 exporting manifest sha256:3456816f89095ccdc637e900cd7929ff2925e8af979c1c6adc3db113d0b2b38e
+ Service backend  Built
+ Service frontend  Building
+#9 exporting manifest sha256:3456816f89095ccdc637e900cd7929ff2925e8af979c1c6adc3db113d0b2b38e done
+#9 exporting config sha256:e77194a7e6cebf678a4b420747337cdc3895919611b7cd44c0735de803eda495 done
+#9 exporting attestation manifest sha256:552f100879977e878e39da16fe4af07c6699ac150d0a12ef32f59ab943e09896 done
+#9 exporting manifest list sha256:232239ba5064dc0cbb5d5fcf547da79e75f4a3cb5bcfb1b2ff02554631c67a61 done
+#9 naming to docker.io/nilachakra/backend:local done
+#9 DONE 3.0s
+
+#10 [backend] resolving provenance for metadata file
+#10 DONE 0.0s
+
+#11 [frontend internal] load build definition from Dockerfile
+#11 transferring dockerfile: 505B done
+#11 DONE 0.0s
+
+#12 [frontend internal] load metadata for docker.io/library/nginx:1.30.1
+#12 DONE 2.5s
+
+#13 [frontend internal] load .dockerignore
+#13 transferring context: 2B done
+#13 DONE 0.0s
+
+#14 [frontend internal] load build context
+#14 transferring context: 139.08kB 0.1s done
+#14 DONE 0.1s
+
+#15 [frontend 1/4] FROM docker.io/library/nginx:1.30.1@sha256:c35662d99b40137247cf7913871e97348a0524753a6925e09f7a5320b0b2f78b
+#15 resolve docker.io/library/nginx:1.30.1@sha256:c35662d99b40137247cf7913871e97348a0524753a6925e09f7a5320b0b2f78b 0.0s done
+#15 sha256:2841ce117426f758e73ac0649d39188341b3f78af135e3427f894b28394d16e0 0B / 1.21kB 0.2s
+#15 sha256:3183d2754c5e55437ca2ac21f7161b73ee48a55f05620fc39bde0395f20bb4aa 0B / 1.40kB 0.2s
+#15 sha256:6eb5f7b511a1139838de1038ccd9fcdc2b3f2b48c32845f7f894b031058fc1bf 0B / 404B 0.2s
+#15 sha256:2c8f04eb7209d2a3311336b94dee5e5a5aef6bad1ba4cc8db76cd2f853a1afa3 0B / 956B 0.2s
+#15 sha256:3183d2754c5e55437ca2ac21f7161b73ee48a55f05620fc39bde0395f20bb4aa 1.40kB / 1.40kB 0.3s done
+#15 sha256:575336f8d77ef7056e762c61f19b0e640457a7e430d28443302ce8ace42c23ca 0B / 627B 0.2s
+#15 sha256:2841ce117426f758e73ac0649d39188341b3f78af135e3427f894b28394d16e0 1.21kB / 1.21kB 0.6s done
+#15 sha256:6eb5f7b511a1139838de1038ccd9fcdc2b3f2b48c32845f7f894b031058fc1bf 404B / 404B 0.8s done
+#15 sha256:2c8f04eb7209d2a3311336b94dee5e5a5aef6bad1ba4cc8db76cd2f853a1afa3 956B / 956B 0.9s done
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 0B / 33.30MB 0.2s
+#15 sha256:575336f8d77ef7056e762c61f19b0e640457a7e430d28443302ce8ace42c23ca 627B / 627B 0.6s done
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 0B / 29.78MB 0.2s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 6.29MB / 33.30MB 0.6s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 9.44MB / 33.30MB 0.8s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 11.53MB / 33.30MB 0.9s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 13.63MB / 33.30MB 1.1s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 16.78MB / 33.30MB 1.4s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 2.10MB / 29.78MB 1.4s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 18.87MB / 33.30MB 1.7s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 4.19MB / 29.78MB 1.8s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 20.97MB / 33.30MB 2.1s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 6.29MB / 29.78MB 2.1s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 23.07MB / 33.30MB 2.6s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 8.39MB / 29.78MB 2.4s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 10.49MB / 29.78MB 2.9s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 25.17MB / 33.30MB 3.5s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 12.58MB / 29.78MB 3.6s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 14.68MB / 29.78MB 3.9s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 27.26MB / 33.30MB 4.2s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 16.78MB / 29.78MB 4.4s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 29.36MB / 33.30MB 4.7s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 18.87MB / 29.78MB 4.7s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 31.46MB / 33.30MB 5.1s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 20.97MB / 29.78MB 5.0s
+#15 sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 33.30MB / 33.30MB 5.3s done
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 23.07MB / 29.78MB 5.1s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 25.17MB / 29.78MB 5.3s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 27.26MB / 29.78MB 5.6s
+#15 sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 29.78MB / 29.78MB 5.7s done
+#15 extracting sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970
+#15 extracting sha256:5b4d6ff92fc4e14e911b7753c954fac965d48c40fe1075758d284148ccace970 0.4s done
+#15 DONE 7.0s
+
+#15 [frontend 1/4] FROM docker.io/library/nginx:1.30.1@sha256:c35662d99b40137247cf7913871e97348a0524753a6925e09f7a5320b0b2f78b
+#15 extracting sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a
+#15 extracting sha256:f56a672a79877dc73e89e8917b93a84ef9a24025a9226d8059f5b6a52e498c6a 0.3s done
+#15 DONE 7.4s
+
+#15 [frontend 1/4] FROM docker.io/library/nginx:1.30.1@sha256:c35662d99b40137247cf7913871e97348a0524753a6925e09f7a5320b0b2f78b
+#15 extracting sha256:575336f8d77ef7056e762c61f19b0e640457a7e430d28443302ce8ace42c23ca done
+#15 extracting sha256:2c8f04eb7209d2a3311336b94dee5e5a5aef6bad1ba4cc8db76cd2f853a1afa3 done
+#15 extracting sha256:6eb5f7b511a1139838de1038ccd9fcdc2b3f2b48c32845f7f894b031058fc1bf done
+#15 extracting sha256:2841ce117426f758e73ac0649d39188341b3f78af135e3427f894b28394d16e0 done
+#15 extracting sha256:3183d2754c5e55437ca2ac21f7161b73ee48a55f05620fc39bde0395f20bb4aa done
+#15 DONE 7.4s
+
+#16 [frontend 2/4] WORKDIR /usr/share/nginx/html
+#16 DONE 0.1s
+
+#17 [frontend 3/4] COPY ./nginx/mime.types /etc/nginx/mime.types
+#17 DONE 0.0s
+
+#18 [frontend 4/4] COPY ./dist/utm-stack/ /usr/share/nginx/html/
+#18 DONE 0.5s
+
+#19 [frontend] exporting to image
+#19 exporting layers
+#19 exporting layers 1.6s done
+#19 exporting manifest sha256:653cedfea114a2351c24a35cbb859bdc3e11bb1ac2e8d82439c8c12927ba2b40
+ Service frontend  Built
+#19 exporting manifest sha256:653cedfea114a2351c24a35cbb859bdc3e11bb1ac2e8d82439c8c12927ba2b40 done
+#19 exporting config sha256:af5c7e57f7c706d817928b7c82145fe561b08847fb7d103b44b9cb01931eb1b0 done
+#19 exporting attestation manifest sha256:e9c2b57e5b33ba8f80452024a7ceba37ee8fa9ac0622445c27d3bd9693b6ba27 done
+#19 exporting manifest list sha256:747ab31200fa0cc07582de7050793d1ff9d8ab24e2f57b747eadcf7032036b27 done
+#19 naming to docker.io/nilachakra/frontend:local done
+#19 DONE 1.7s
+
+#20 [frontend] resolving provenance for metadata file
+#20 DONE 0.0s
+ Network local-dev_default  Creating
+ Network local-dev_default  Created
+ Container local-dev-postgres-1  Creating
+ Container local-dev-opensearch-1  Creating
+ Container local-dev-opensearch-1  Created
+ Container local-dev-postgres-1  Created
+ Container local-dev-agentmanager-1  Creating
+ Container local-dev-user-auditor-1  Creating
+ Container local-dev-agentmanager-1  Created
+ Container local-dev-backend-1  Creating
+ Container local-dev-user-auditor-1  Created
+ Container local-dev-backend-1  Created
+ Container local-dev-frontend-1  Creating
+ Container local-dev-eventprocessor-1  Creating
+ Container local-dev-eventprocessor-1  Created
+ Container local-dev-frontend-1  Created
+ Container local-dev-web-pdf-1  Creating
+ Container local-dev-web-pdf-1  Created
+ Container local-dev-postgres-1  Starting
+ Container local-dev-opensearch-1  Starting
+ Container local-dev-postgres-1  Started
+ Container local-dev-postgres-1  Waiting
+ Container local-dev-opensearch-1  Started
+ Container local-dev-postgres-1  Waiting
+ Container local-dev-opensearch-1  Waiting
+ Container local-dev-postgres-1  Healthy
+ Container local-dev-postgres-1  Healthy
+ Container local-dev-agentmanager-1  Starting
+ Container local-dev-agentmanager-1  Started
+ Container local-dev-postgres-1  Waiting
+ Container local-dev-opensearch-1  Waiting
+ Container local-dev-postgres-1  Healthy
+ Container local-dev-opensearch-1  Healthy
+ Container local-dev-user-auditor-1  Starting
+ Container local-dev-opensearch-1  Healthy
+ Container local-dev-backend-1  Starting
+ Container local-dev-user-auditor-1  Started
+ Container local-dev-backend-1  Started
+ Container local-dev-frontend-1  Starting
+ Container local-dev-postgres-1  Waiting
+ Container local-dev-opensearch-1  Waiting
+ Container local-dev-frontend-1  Started
+ Container local-dev-web-pdf-1  Starting
+ Container local-dev-web-pdf-1  Started
+ Container local-dev-opensearch-1  Healthy
+ Container local-dev-postgres-1  Healthy
+ Container local-dev-eventprocessor-1  Starting
+ Container local-dev-eventprocessor-1  Started
+COMPOSE_UP_OK

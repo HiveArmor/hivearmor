@@ -1,0 +1,40 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                      http://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+    <activeProfiles>
+        <activeProfile>github</activeProfile>
+    </activeProfiles>
+
+    <profiles>
+        <profile>
+            <id>github</id>
+            <repositories>
+                <repository>
+                    <id>central</id>
+                    <url>https://repo1.maven.org/maven2</url>
+                </repository>
+                <repository>
+                    <id>hivearmor</id>
+                    <url>https://maven.pkg.github.com/hivearmor/**</url>
+                </repository>
+                <!-- OpenSAML v4+ is NOT on Maven Central — Shibboleth hosts it exclusively.
+                     Required for spring-security-saml2-service-provider transitive deps. -->
+                <repository>
+                    <id>shibboleth</id>
+                    <url>https://build.shibboleth.net/nexus/content/repositories/releases/</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                </repository>
+            </repositories>
+        </profile>
+    </profiles>
+
+    <servers>
+        <server>
+            <id>hivearmor</id>
+            <username>hivearmor</username>
+            <password>${env.MAVEN_TK}</password>
+        </server>
+    </servers>
+</settings>

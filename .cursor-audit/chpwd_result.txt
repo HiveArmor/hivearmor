@@ -1,0 +1,2 @@
+TOKEN_OK=
+{"timestamp":"2026-07-02T08:56:26.717+00:00","status":401,"error":"Unauthorized","path":"/api/account/change-password"}

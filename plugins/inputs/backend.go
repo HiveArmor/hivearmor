@@ -1,0 +1,59 @@
+package main
+
+import (
+	"fmt"
+	"io"
+	"net/http"
+
+	"github.com/threatwinds/go-sdk/catcher"
+	"github.com/threatwinds/go-sdk/plugins"
+)
+
+func createPanelRequest(method string, endpoint string) (*http.Request, error) {
+	pConfig := plugins.PluginCfg("com.hivearmor")
+	backend := pConfig.Get("backend").String()
+	internalKey := pConfig.Get("internalKey").String()
+
+	url := fmt.Sprintf(endpoint, backend)
+
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return nil, catcher.Error("cannot create request", err, map[string]any{"process": "plugin_com.hivearmor.inputs"})
+	}
+
+	req.Header.Add(panelAPIKeyHeader, internalKey)
+
+	return req, nil
+}
+
+func GetConnectionKey() ([]byte, error) {
+	client := &http.Client{}
+
+	req, err := createPanelRequest("GET", panelConnectionKeyEndpoint)
+	if err != nil {
+		return nil, catcher.Error("cannot create request", err, map[string]any{"process": "plugin_com.hivearmor.inputs"})
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, catcher.Error("cannot send request", err, map[string]any{"process": "plugin_com.hivearmor.inputs"})
+	}
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, catcher.Error("cannot get connection key", nil, map[string]any{
+			"process": "plugin_com.hivearmor.inputs",
+			"status":  resp.StatusCode,
+		})
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}

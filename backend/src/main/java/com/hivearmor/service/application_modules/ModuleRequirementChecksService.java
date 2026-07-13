@@ -1,0 +1,44 @@
+package com.hivearmor.service.application_modules;
+
+import com.hivearmor.config.Constants;
+import com.hivearmor.domain.application_modules.enums.ModuleRequirementStatus;
+import com.hivearmor.domain.application_modules.types.ModuleRequirement;
+import com.hivearmor.domain.index_pattern.enums.SystemIndexPattern;
+import com.hivearmor.service.elasticsearch.ElasticsearchService;
+import org.springframework.stereotype.Service;
+
+@Service
+public class ModuleRequirementChecksService {
+    private static final String CLASSNAME = "ModuleRequirementChecksService";
+
+    private final ElasticsearchService elasticsearchService;
+
+    public ModuleRequirementChecksService(ElasticsearchService elasticsearchService) {
+        this.elasticsearchService = elasticsearchService;
+    }
+
+    /**
+     * Check if exist windows event logs
+     *
+     * @return A ${@link ModuleRequirement} with requirement check result
+     * @throws Exception In case of any error
+     */
+    public ModuleRequirement checkWindowsEvents() throws Exception {
+        final String ctx = CLASSNAME + ".checkWindowsEvents";
+        try {
+            boolean indexExist = elasticsearchService.indexExist(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS_WINDOWS));
+
+            ModuleRequirement requirement = new ModuleRequirement();
+            requirement.setCheckName(Constants.MODULE_CHECK_WINEVENTLOG);
+            requirement.setCheckStatus(ModuleRequirementStatus.OK);
+
+            if (!indexExist) {
+                requirement.setCheckStatus(ModuleRequirementStatus.FAIL);
+                requirement.setFailMessage("Windows events are not being logged");
+            }
+            return requirement;
+        } catch (Exception e) {
+            throw new Exception(ctx + ": " + e.getMessage());
+        }
+    }
+}

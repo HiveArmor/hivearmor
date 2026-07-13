@@ -1,0 +1,31 @@
+package com.hivearmor.repository.alert_response_rule;
+
+import com.hivearmor.domain.alert_response_rule.UtmAlertResponseRule;
+import com.hivearmor.domain.correlation.rules.UtmCorrelationRules;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+
+/**
+ * Spring Data  repository for the UtmAlertSoarRule entity.
+ */
+@SuppressWarnings("unused")
+@Repository
+public interface UtmAlertResponseRuleRepository extends JpaRepository<UtmAlertResponseRule, Long>, JpaSpecificationExecutor<UtmAlertResponseRule> {
+
+    @Query("select distinct r.agentPlatform from UtmAlertResponseRule r")
+    List<String> findAgentPlatformValues();
+
+    @Query(nativeQuery = true, value = "SELECT r1.created_by AS users FROM hive_alert_response_rule r1 UNION SELECT r2.last_modified_by FROM hive_alert_response_rule r2 where r2.last_modified_by is not null")
+    List<String> findUserValues();
+
+    List<UtmAlertResponseRule> findAllByRuleActiveIsTrue();
+
+    Optional<UtmAlertResponseRule> findFirstBySystemOwnerIsTrueOrderByIdDesc();
+
+}

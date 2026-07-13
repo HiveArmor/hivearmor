@@ -1,0 +1,100 @@
+logging:
+    level:
+        ROOT: error
+        tech.jhipster: error
+        com.hivearmor: info
+
+spring:
+    devtools:
+        restart:
+            enabled: false
+        livereload:
+            enabled: false
+    datasource:
+        type: com.zaxxer.hikari.HikariDataSource
+        url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+        username: ${DB_USER}
+        password: ${DB_PASS}
+        hikari:
+            poolName: HiveArmor-HikariCP
+            auto-commit: false
+            maximumPoolSize: 20
+            minimumIdle: 5
+            connectionTimeout: 30000       # ms — fail fast if no connection available in 30s
+            idleTimeout: 600000            # ms — remove idle connections after 10min
+            maxLifetime: 1800000           # ms — recycle connections after 30min
+            keepaliveTime: 60000           # ms — keepalive to prevent firewall/proxy timeouts
+            connectionTestQuery: SELECT 1  # validate connection before use
+    jpa:
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+    elasticsearch: # This configuration is for the elasticsearch health indicator, please do not remove
+        rest:
+            uris: https://${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}
+            username: ${ELASTICSEARCH_USER}
+            password: ${ELASTICSEARCH_PASSWORD}
+    liquibase:
+        contexts: prod
+    mail:
+        host: localhost
+        port: 25
+        username:
+        password:
+    thymeleaf:
+        cache: true
+
+server:
+    port: 8080
+    shutdown: graceful # see https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-graceful-shutdown
+    compression:
+        enabled: true
+        mime-types: text/html,text/xml,text/plain,text/css,application/javascript,application/json,image/svg+xml
+        min-response-size: 1024
+
+jhipster:
+    http:
+        cache: # Used by the CachingHttpHeadersFilter
+            timeToLiveInDays: 1461
+    cors:
+        allowed-origins: ${APP_FRONTEND_URL:https://localhost:4200}
+        allowed-origin-patterns: ''
+        allowed-methods: 'GET,POST,PUT,DELETE,PATCH,OPTIONS'
+        allowed-headers: 'Authorization,Content-Type,X-Requested-With,Accept,Origin,Cache-Control'
+        exposed-headers: 'Authorization,Link,X-Total-Count,X-HiveArmor-alert,X-HiveArmor-error,X-HiveArmor-params'
+        allow-credentials: false
+        max-age: 1800
+    security:
+        authentication:
+            jwt:
+                base64-secret: ${ENCRYPTION_KEY}  # No default — must be set in production
+                token-validity-in-seconds: 86400
+                token-validity-in-seconds-for-remember-me: 2592000
+    mail:
+        from:
+        base-url:
+
+app:
+    frontend-url: ${APP_FRONTEND_URL:https://app.hivearmor.io}
+    security:
+        trusted-proxy-cidrs: ${TRUSTED_PROXY_CIDRS:}
+
+application:
+    incident-response:
+        asset-verification-interval: 300
+
+grpc:
+    server:
+        address: ${GRPC_AGENT_MANAGER_HOST}
+        port: ${GRPC_AGENT_MANAGER_PORT}
+
+management:
+    info:
+        build:
+            enabled: true
+
+# Disable springdoc swagger UI auto-config in prod WAR mode to avoid
+# SwaggerConfig condition evaluation failure on Tomcat embedded dispatcher
+springdoc:
+    swagger-ui:
+        enabled: false
+    api-docs:
+        enabled: false

@@ -1,0 +1,77 @@
+package com.hivearmor.security.saml;
+
+import com.hivearmor.config.AppProperties;
+import com.hivearmor.domain.User;
+import com.hivearmor.repository.UserRepository;
+import com.hivearmor.security.jwt.TokenProvider;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticatedPrincipal;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Collection;
+import java.util.Objects;
+
+/**
+ * Success handler for SAML2 login.
+ * Extracts NameID and attributes from the SAML assertion,
+ * generates a JWT, and redirects to the frontend with the token.
+ */
+
+@RequiredArgsConstructor
+@Slf4j
+public class Saml2LoginSuccessHandler implements AuthenticationSuccessHandler {
+
+    private final TokenProvider tokenProvider;
+    private final UserRepository userRepository;
+    private final AppProperties appProperties;
+
+    @Override
+    public void onAuthenticationSuccess(HttpServletRequest request,
+                                        HttpServletResponse response,
+                                        Authentication authentication) throws IOException {
+
+        String frontBaseUrl = appProperties.getFrontendUrl();
+
+        Saml2AuthenticatedPrincipal samlUser = (Saml2AuthenticatedPrincipal) authentication.getPrincipal();
+        String username = samlUser.getName();
+
+        User user = userRepository.findOneByLogin(username)
+                .orElseThrow(() -> {
+                    log.warn("SAML2 authentication successful for '{}' but user not found in local database", username);
+                    return new BadCredentialsException("User not provisioned in local system");
+                });
+
+        Collection<? extends GrantedAuthority> authorities = Objects.requireNonNull(user.getAuthorities())
+                .stream()
+                .map(a -> new SimpleGrantedAuthority(a.getName()))
+                .toList();
+
+        UsernamePasswordAuthenticationToken auth =
+                new UsernamePasswordAuthenticationToken(username, null, authorities);
+
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        String token = tokenProvider.createToken(auth, false, true);
+
+        URI redirectUri = UriComponentsBuilder.fromUriString(frontBaseUrl)
+                .path("/")
+                .queryParam("token", token)
+                .build()
+                .toUri();
+
+        log.info("SAML2 login successful for user: {}", username);
+        response.sendRedirect(redirectUri.toString());
+    }
+}

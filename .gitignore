@@ -1,0 +1,40 @@
+*~
+vendor/
+
+**/.idea
+**/.DS_Store
+**/.vscode
+
+# Go build outputs
+installer/installer
+**/*.plugin
+geolocation/
+.github/scripts/golang-updater/go-updater
+
+# Cert / key files — never commit real private keys
+local-dev/certs/*.key
+local-dev/certs/*.srl
+*.pem
+*.p12
+*.pfx
+
+# Environment secrets — use .env.example as template
+local-dev/.env
+**/.env.local
+**/.env.production
+**/.env.*.local
+
+# Installer ephemeral outputs
+installer/public_key.crt
+
+# IDE / tool noise
+qodana.yaml
+**/*.class
+**/target/
+**/node_modules/
+**/.next/
+**/.turbo/
+
+# macOS
+.DS_Store
+**/.DS_Store

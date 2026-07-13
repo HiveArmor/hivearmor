@@ -1,0 +1,188 @@
+package updater
+
+import (
+	"fmt"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+
+	"github.com/hivearmor/installer/config"
+	"github.com/hivearmor/installer/utils"
+)
+
+var (
+	version     = VersionFile{}
+	versionOnce sync.Once
+)
+
+func GetVersion() (VersionFile, error) {
+	var err error
+	versionOnce.Do(func() {
+		if !utils.CheckIfPathExist(config.VersionFilePath) {
+			version.Version = config.INSTALLER_VERSION
+			version.Changelog = ""
+			version.Edition = "community"
+
+			errB := utils.WriteJSON(config.VersionFilePath, &version)
+			if errB != nil {
+				err = fmt.Errorf("error writing version file: %v", err)
+				return
+			}
+		} else {
+			errB := utils.ReadJson(config.VersionFilePath, &version)
+			if errB != nil {
+				err = fmt.Errorf("error reading version file: %v", err)
+				return
+			}
+		}
+	})
+
+	return version, err
+}
+
+func SaveVersion(vers, edition, changelog string) error {
+	if _, err := GetVersion(); err != nil {
+		return fmt.Errorf("error loading current version before saving: %v", err)
+	}
+
+	if vers != "" {
+		version.Version = vers
+	}
+
+	if edition != "" {
+		version.Edition = edition
+	}
+
+	if changelog != "" {
+		version.Changelog = changelog
+	}
+
+	return utils.WriteJSON(config.VersionFilePath, &version)
+}
+
+func ExtractVersionFromFolder(folder string) (string, error) {
+	entries, err := os.ReadDir(folder)
+	if err != nil {
+		return "", fmt.Errorf("error reading directory: %v", err)
+	}
+
+	// Regex pattern to find versions like 11_0_0
+	versionRegex := regexp.MustCompile(`-(\d+_\d+_\d+)\.tar$`)
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		name := entry.Name()
+		if strings.HasPrefix(name, "hivearmor-") && strings.HasSuffix(name, ".tar") {
+			matches := versionRegex.FindStringSubmatch(name)
+			if len(matches) >= 2 {
+				version := strings.ReplaceAll(matches[1], "_", ".")
+				return version, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("valid version not found in folder")
+}
+
+// Version sorting functions
+type Version struct {
+	Major          int
+	Minor          int
+	Patch          int
+	PrereleaseName string // alpha, beta, rc, or empty
+	PrereleaseNum  int    // the number after alpha.X, beta.X, rc.X
+	Original       string
+}
+
+func ParseVersion(versionStr string) Version {
+	v := Version{Original: versionStr}
+
+	// Remove v prefix if present
+	versionStr = strings.TrimPrefix(versionStr, "v")
+	versionStr = strings.TrimPrefix(versionStr, "V")
+
+	// Parse version with regex: X.Y.Z or X.Y.Z-type.num
+	// Supports: dev, alpha, beta, rc
+	re := regexp.MustCompile(`^(\d+)\.(\d+)\.(\d+)(?:-(dev|alpha|beta|rc)\.(\d+))?$`)
+	matches := re.FindStringSubmatch(versionStr)
+
+	if len(matches) > 1 {
+		v.Major, _ = strconv.Atoi(matches[1])
+	}
+	if len(matches) > 2 {
+		v.Minor, _ = strconv.Atoi(matches[2])
+	}
+	if len(matches) > 3 {
+		v.Patch, _ = strconv.Atoi(matches[3])
+	}
+	if len(matches) > 4 && matches[4] != "" {
+		v.PrereleaseName = matches[4]
+	}
+	if len(matches) > 5 && matches[5] != "" {
+		v.PrereleaseNum, _ = strconv.Atoi(matches[5])
+	}
+
+	return v
+}
+
+func CompareVersions(v1, v2 Version) int {
+	// Compare major.minor.patch first
+	if v1.Major != v2.Major {
+		return v1.Major - v2.Major
+	}
+	if v1.Minor != v2.Minor {
+		return v1.Minor - v2.Minor
+	}
+	if v1.Patch != v2.Patch {
+		return v1.Patch - v2.Patch
+	}
+
+	// Handle stable vs prerelease versions
+	// According to semver: stable version (no prerelease) is GREATER than any prerelease
+	// Example: v11.0.0 > v11.0.0-rc.1 > v11.0.0-beta.1 > v11.0.0-alpha.1 > v11.0.0-dev.1
+	if v1.PrereleaseName == "" && v2.PrereleaseName != "" {
+		return 1 // v1 is stable, v2 is prerelease → v1 > v2
+	}
+	if v1.PrereleaseName != "" && v2.PrereleaseName == "" {
+		return -1 // v1 is prerelease, v2 is stable → v1 < v2
+	}
+
+	// Both are prereleases or both are stable
+	if v1.PrereleaseName != v2.PrereleaseName {
+		// Compare prerelease type names: dev < alpha < beta < rc
+		order := map[string]int{
+			"dev":   1,
+			"alpha": 2,
+			"beta":  3,
+			"rc":    4,
+		}
+		return order[v1.PrereleaseName] - order[v2.PrereleaseName]
+	}
+
+	// Same prerelease type, compare numbers
+	return v1.PrereleaseNum - v2.PrereleaseNum
+}
+
+func SortVersions(versions []map[string]string) []map[string]string {
+	if len(versions) <= 1 {
+		return versions
+	}
+
+	for i := range len(versions) - 1 {
+		for j := range len(versions) - i - 1 {
+			v1 := ParseVersion(versions[j]["version"])
+			v2 := ParseVersion(versions[j+1]["version"])
+
+			if CompareVersions(v1, v2) > 0 {
+				versions[j], versions[j+1] = versions[j+1], versions[j]
+			}
+		}
+	}
+
+	return versions
+}

@@ -1,0 +1,70 @@
+- id: 1001
+  name: "Linux: Possible SSH Brute Force Attack"
+  dataTypes:
+    - linux
+  category: "Credential Access"
+  technique: "T1110"
+  adversary: "origin"
+  description: "Multiple failed SSH login attempts from the same source IP."
+  where: |
+    contains("log.message", "Failed password") && safe("origin.ip", "") != ""
+  correlation:
+    - indexPattern: "v11-log-linux-*"
+      with:
+        - field: "origin.ip"
+          operator: filter_match
+          value: "{{.origin.ip}}"
+        - field: "log.action"
+          operator: filter_match
+          value: "failed"
+      within: "5m"
+      count: 5
+  deduplicateBy:
+    - "adversary.ip"
+  groupBy:
+    - "adversary.ip"
+  impact:
+    confidentiality: 2
+    integrity: 1
+    availability: 1
+
+- id: 1002
+  name: "Linux: Successful Login After Multiple Failures"
+  dataTypes:
+    - linux
+  category: "Credential Access"
+  technique: "T1110.001"
+  adversary: "origin"
+  description: "Successful authentication following a series of failures from the same source."
+  where: |
+    contains("log.message", "Accepted password") || contains("log.message", "Accepted publickey")
+  correlation:
+    - indexPattern: "v11-log-linux-*"
+      with:
+        - field: "origin.ip"
+          operator: filter_match
+          value: "{{.origin.ip}}"
+        - field: "log.message"
+          operator: filter_match
+          value: "Failed password"
+      within: "15m"
+      count: 3
+  impact:
+    confidentiality: 3
+    integrity: 2
+    availability: 1
+
+- id: 1003
+  name: "Linux: Privilege Escalation via sudo"
+  dataTypes:
+    - linux
+  category: "Privilege Escalation"
+  technique: "T1548.003"
+  adversary: "origin"
+  description: "A user executed a privileged command via sudo."
+  where: |
+    contains("log.message", "sudo:") && contains("log.message", "COMMAND=")
+  impact:
+    confidentiality: 2
+    integrity: 3
+    availability: 1

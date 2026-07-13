@@ -1,0 +1,107 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ArmorSight (Docker)",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "up", "--build", "backend", "frontend-v2"],
+      "port": 3000,
+      "autoPort": false,
+      "cwd": "local-dev"
+    },
+    {
+      "name": "frontend-v2 (Next.js dev)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "/Users/encryptshell/GIT/UTMStack-11/frontend-v2/node_modules/.ignored/next/dist/bin/next",
+        "dev",
+        "--port", "56946"
+      ],
+      "env": {
+        "NODE_PATH": "/Users/encryptshell/GIT/UTMStack-11/frontend-v2/node_modules/.ignored",
+        "BACKEND_URL": "http://localhost:8088"
+      },
+      "port": 56946,
+      "autoPort": true,
+      "cwd": "frontend-v2"
+    },
+    {
+      "name": "frontend-v2 (Next.js dev alt)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "/Users/encryptshell/GIT/UTMStack-11/frontend-v2/node_modules/.ignored/next/dist/bin/next",
+        "dev",
+        "--port", "56947"
+      ],
+      "env": {
+        "NODE_PATH": "/Users/encryptshell/GIT/UTMStack-11/frontend-v2/node_modules/.ignored",
+        "BACKEND_URL": "http://localhost:8088"
+      },
+      "port": 56947,
+      "autoPort": false,
+      "cwd": "frontend-v2"
+    },
+    {
+      "name": "frontend (Angular)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start"],
+      "port": 4200,
+      "cwd": "frontend"
+    },
+    {
+      "name": "backend (Spring Boot)",
+      "runtimeExecutable": "mvn",
+      "runtimeArgs": [
+        "-s", "settings.xml",
+        "-B",
+        "spring-boot:run",
+        "-Dspring-boot.run.profiles=dev",
+        "-Dspring-boot.run.arguments=--server.port=8089"
+      ],
+      "env": {
+        "JAVA_HOME": "/opt/homebrew/opt/openjdk@17",
+        "PATH": "/opt/homebrew/opt/openjdk@17/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+        "MAVEN_TK": "local",
+        "DB_HOST": "localhost",
+        "DB_PORT": "5438",
+        "DB_NAME": "hivearmor",
+        "DB_USER": "postgres",
+        "DB_PASS": "localdev123!",
+        "ELASTICSEARCH_HOST": "localhost",
+        "ELASTICSEARCH_PORT": "9200",
+        "ELASTICSEARCH_USER": "admin",
+        "ELASTICSEARCH_PASSWORD": "LocalDev@2024!",
+        "GRPC_AGENT_MANAGER_HOST": "localhost",
+        "GRPC_AGENT_MANAGER_PORT": "9000",
+        "INTERNAL_KEY": "local-dev-internal-key-do-not-use-in-prod-12345678",
+        "ENCRYPTION_KEY": "ZjY4MDYwNWU0ZTQ3MGFkMjJiY2IzYjMyNzAyMGE5NzMxMjdhY2JhMmQ5MDg5MzVjMmJhMTZlY2I5ZjE0NDZiNg==",
+        "SERVER_NAME": "localhost",
+        "EVENT_PROCESSOR_HOST": "localhost",
+        "EVENT_PROCESSOR_PORT": "9002",
+        "APP_TFA_ENABLED": "false",
+        "ELASTICSEARCH_CA_CERT": "/Users/encryptshell/GIT/UTMStack-11/local-dev/certs/ca.crt"
+      },
+      "port": 8089,
+      "autoPort": false,
+      "cwd": "backend"
+    }
+  ,
+    {
+      "name": "event-processor (ArmorSight engine)",
+      "runtimeExecutable": "/tmp/claude-501/armorsight-engine",
+      "runtimeArgs": [],
+      "env": {
+        "WORK_DIR": "/tmp/claude-501/ep-workdir",
+        "OPENSEARCH_HOST": "localhost",
+        "OPENSEARCH_PORT": "9200",
+        "OPENSEARCH_USER": "admin",
+        "OPENSEARCH_PASSWORD": "LocalDev@2024!",
+        "GIN_MODE": "release",
+        "PUBLIC_PORT": "8001",
+        "INGEST_PORT": "8090"
+      },
+      "port": 8090,
+      "autoPort": false
+    }
+  ]
+}

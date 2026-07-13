@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<!--
+  NilaChakra email branding fragment.
+  Variables injected by MailService.addBrandingVariables():
+    ${brandingName}       — product name (e.g. "NilaChakra")
+    ${brandingSupportUrl} — support URL (e.g. "https://nilachakra.com/contact")
+  Override via APPLICATION_BRANDING_NAME environment variable.
+-->
+
+<!-- ── Email header — product name banner ─────────────────────────── -->
+<div th:fragment="email-header">
+  <div style="padding: 16px 0 12px 0; border-bottom: 3px solid #4F8EF7; margin-bottom: 20px;">
+    <h2 style="font-family: Inter, Roboto, -apple-system, sans-serif;
+               margin: 0; padding: 0;
+               font-size: 22px;
+               font-weight: 700;
+               color: #151922;
+               letter-spacing: -0.01em;">
+      <span th:text="${brandingName}">NilaChakra</span>
+    </h2>
+    <p style="margin: 4px 0 0 0;
+              font-family: Inter, Roboto, -apple-system, sans-serif;
+              font-size: 12px;
+              color: #8899BB;
+              font-weight: 400;
+              letter-spacing: 0.04em;
+              text-transform: uppercase;">
+      Enterprise SIEM + XDR
+    </p>
+  </div>
+</div>
+
+<!-- ── Email footer — brand signature + support link ──────────────── -->
+<div th:fragment="email-footer">
+  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 28px 0 18px 0;">
+  <div style="font-family: Inter, Roboto, -apple-system, sans-serif;
+              font-size: 13px;
+              color: #6b7280;
+              line-height: 1.6;">
+    <p style="margin: 0 0 4px 0;">Best regards,</p>
+    <p style="margin: 0 0 4px 0;
+              font-weight: 600;
+              color: #111827;"
+       th:text="${brandingName}">NilaChakra</p>
+    <a th:href="${brandingSupportUrl}"
+       th:text="${brandingSupportUrl}"
+       style="color: #4F8EF7;
+              text-decoration: none;
+              font-size: 12px;">https://nilachakra.com/contact</a>
+  </div>
+</div>
+
+</body>
+</html>

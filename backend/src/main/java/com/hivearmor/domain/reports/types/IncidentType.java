@@ -1,0 +1,36 @@
+package com.hivearmor.domain.reports.types;
+
+import com.hivearmor.domain.incident_response.UtmIncidentJob;
+import com.hivearmor.domain.shared_types.alert.UtmAlert;
+
+import java.util.List;
+
+public class IncidentType {
+    private UtmAlert incident;
+    private List<UtmIncidentJob> srcResponses;
+    private List<UtmIncidentJob> destResponses;
+
+    public UtmAlert getIncident() {
+        return incident;
+    }
+
+    public void setIncident(UtmAlert incident) {
+        this.incident = incident;
+    }
+
+    public List<UtmIncidentJob> getSrcResponses() {
+        return srcResponses;
+    }
+
+    public void setSrcResponses(List<UtmIncidentJob> srcResponses) {
+        this.srcResponses = srcResponses;
+    }
+
+    public List<UtmIncidentJob> getDestResponses() {
+        return destResponses;
+    }
+
+    public void setDestResponses(List<UtmIncidentJob> destResponses) {
+        this.destResponses = destResponses;
+    }
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Missed in Sprint 3 rebrand: rename join table utm_alert_response_rule_template -->
+    <changeSet id="20260713002-rename-utm-alert-response-rule-template" author="hivearmor">
+        <renameTable oldTableName="utm_alert_response_rule_template" newTableName="hive_alert_response_rule_template"/>
+    </changeSet>
+
+</databaseChangeLog>

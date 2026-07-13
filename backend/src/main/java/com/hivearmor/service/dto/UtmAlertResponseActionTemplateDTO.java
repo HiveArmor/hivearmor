@@ -1,0 +1,42 @@
+package com.hivearmor.service.dto;
+
+import com.hivearmor.domain.alert_response_rule.UtmAlertResponseActionTemplate;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import java.io.Serializable;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UtmAlertResponseActionTemplateDTO implements Serializable {
+
+    private Long id;
+
+    @NotBlank
+    @Size(max = 150)
+    private String title;
+
+    @Size(max = 512)
+    private String description;
+
+    @NotBlank
+    private String command;
+
+    private Boolean systemOwner;
+
+    public static UtmAlertResponseActionTemplateDTO fromEntity(UtmAlertResponseActionTemplate entity) {
+        return UtmAlertResponseActionTemplateDTO.builder()
+                .id(entity.getId())
+                .title(entity.getTitle())
+                .description(entity.getDescription())
+                .systemOwner(entity.getSystemOwner())
+                .command(entity.getCommand())
+                .build();
+    }
+}

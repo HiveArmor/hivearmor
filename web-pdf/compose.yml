@@ -1,0 +1,13 @@
+services:
+    selenium-standalone-chrome:
+        image: selenium/standalone-chrome:latest
+        ports:
+            - "4444:4444"
+            - "5900:5900"
+    web-pdf:
+        image: ghcr.io/hivearmor/web-pdf:latest
+        environment:
+            - WEB_DRIVER_HOST=localhost
+            - WEB_DRIVER_PORT=4444
+        depends_on:
+            - selenium-standalone-chrome

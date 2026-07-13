@@ -1,0 +1,404 @@
+[
+  {
+    "label": "Dashboard",
+    "path": "/dashboard",
+    "url": "http://localhost:8880/",
+    "title": "UTMSTACK Technology",
+    "mainText": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 1,
+    "inputCount": 2,
+    "selectCount": 0,
+    "cardCount": 1,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 4979,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [
+      "401 http://localhost:8880/api/account"
+    ],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/dashboard.png"
+  },
+  {
+    "label": "Alerts",
+    "path": "/data/alerts",
+    "url": "http://localhost:8880/",
+    "title": "UTMSTACK Technology",
+    "mainText": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 1,
+    "inputCount": 2,
+    "selectCount": 0,
+    "cardCount": 1,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 4979,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [
+      "401 http://localhost:8880/api/account"
+    ],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/alerts.png"
+  },
+  {
+    "label": "Log Analyzer",
+    "path": "/discover",
+    "url": "http://localhost:8880/",
+    "title": "UTMSTACK Technology",
+    "mainText": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 1,
+    "inputCount": 2,
+    "selectCount": 0,
+    "cardCount": 1,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 4979,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [
+      "401 http://localhost:8880/api/account"
+    ],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/log_analyzer.png"
+  },
+  {
+    "label": "Incidents",
+    "path": "/incident",
+    "url": "http://localhost:8880/",
+    "title": "UTMSTACK Technology",
+    "mainText": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 1,
+    "inputCount": 2,
+    "selectCount": 0,
+    "cardCount": 1,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 4979,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [
+      "401 http://localhost:8880/api/account"
+    ],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/incidents.png"
+  },
+  {
+    "label": "SOAR",
+    "path": "/soar",
+    "url": "http://localhost:8880/",
+    "title": "UTMSTACK Technology",
+    "mainText": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 1,
+    "inputCount": 2,
+    "selectCount": 0,
+    "cardCount": 1,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 4979,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [
+      "401 http://localhost:8880/api/account"
+    ],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/soar.png"
+  },
+  {
+    "label": "Compliance",
+    "path": "/compliance",
+    "url": "http://localhost:8880/",
+    "title": "UTMSTACK Technology",
+    "mainText": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 1,
+    "inputCount": 2,
+    "selectCount": 0,
+    "cardCount": 1,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 4979,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [
+      "401 http://localhost:8880/api/account"
+    ],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/compliance.png"
+  },
+  {
+    "label": "Alerting Rules",
+    "path": "/alerting-rules",
+    "url": "http://localhost:8880/",
+    "title": "UTMSTACK Technology",
+    "mainText": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 1,
+    "inputCount": 2,
+    "selectCount": 0,
+    "cardCount": 1,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 4979,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [
+      "401 http://localhost:8880/api/account"
+    ],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/alerting_rules.png"
+  },
+  {
+    "label": "Data Sources",
+    "path": "/data-sources",
+    "url": "http://localhost:8880/",
+    "title": "UTMSTACK Technology",
+    "mainText": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 1,
+    "inputCount": 2,
+    "selectCount": 0,
+    "cardCount": 1,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 4979,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [
+      "401 http://localhost:8880/api/account"
+    ],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/data_sources.png"
+  },
+  {
+    "label": "Integrations",
+    "path": "/integrations",
+    "url": "http://localhost:8880/",
+    "title": "UTMSTACK Technology",
+    "mainText": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 1,
+    "inputCount": 2,
+    "selectCount": 0,
+    "cardCount": 1,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 4979,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [
+      "401 http://localhost:8880/api/account"
+    ],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/integrations.png"
+  },
+  {
+    "label": "App Management",
+    "path": "/app-management",
+    "url": "http://localhost:8880/",
+    "title": "UTMSTACK Technology",
+    "mainText": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 1,
+    "inputCount": 2,
+    "selectCount": 0,
+    "cardCount": 1,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 4979,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [
+      "401 http://localhost:8880/api/account"
+    ],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/app_management.png"
+  },
+  {
+    "label": "Data Parsing",
+    "path": "/data-parsing",
+    "url": "http://localhost:8880/",
+    "title": "UTMSTACK Technology",
+    "mainText": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 1,
+    "inputCount": 2,
+    "selectCount": 0,
+    "cardCount": 1,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 4979,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [
+      "401 http://localhost:8880/api/account"
+    ],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/data_parsing.png"
+  },
+  {
+    "label": "Admin",
+    "path": "/management",
+    "url": "http://localhost:8880/management",
+    "title": "Your request cannot be processed",
+    "mainText": "Your request cannot be processed\n\nSorry, an error has occurred.\n\nStatus: Unauthorized (Unauthorized)\n",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 0,
+    "inputCount": 0,
+    "selectCount": 0,
+    "cardCount": 0,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 0,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/admin.png"
+  },
+  {
+    "label": "Admin - Users",
+    "path": "/management/users",
+    "url": "http://localhost:8880/management/users",
+    "title": "Your request cannot be processed",
+    "mainText": "Your request cannot be processed\n\nSorry, an error has occurred.\n\nStatus: Unauthorized (Unauthorized)\n",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 0,
+    "inputCount": 0,
+    "selectCount": 0,
+    "cardCount": 0,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 0,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/admin___users.png"
+  },
+  {
+    "label": "Profile",
+    "path": "/profile",
+    "url": "http://localhost:8880/",
+    "title": "UTMSTACK Technology",
+    "mainText": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE",
+    "tables": [],
+    "tableCount": 0,
+    "visibleButtons": [],
+    "chartCount": 1,
+    "inputCount": 2,
+    "selectCount": 0,
+    "cardCount": 1,
+    "errorTexts": [],
+    "hasHorizontalScroll": false,
+    "overflowElements": [],
+    "hasEmptyState": false,
+    "hasLoadingSpinner": false,
+    "isLoginPage": false,
+    "appRootLen": 4979,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    ],
+    "networkErrors": [
+      "401 http://localhost:8880/api/account"
+    ],
+    "jsErrors": [],
+    "screenshotFile": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/profile.png"
+  }
+]

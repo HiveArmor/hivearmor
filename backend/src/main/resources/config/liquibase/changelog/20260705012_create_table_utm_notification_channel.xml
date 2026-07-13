@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260705012" author="armorsight">
+        <createTable tableName="utm_notification_channel">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="channel_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="config_json" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_tested_at" type="TIMESTAMPTZ"/>
+            <column name="last_test_ok" type="BOOLEAN"/>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMPTZ"/>
+            <column name="created_by" type="VARCHAR(100)"/>
+        </createTable>
+
+        <createIndex tableName="utm_notification_channel" indexName="idx_notif_channel_type">
+            <column name="channel_type"/>
+        </createIndex>
+
+        <insert tableName="utm_notification_channel">
+            <column name="name" value="Default Email"/>
+            <column name="channel_type" value="email"/>
+            <column name="enabled" valueBoolean="false"/>
+            <column name="config_json" value='{"host":"smtp.example.com","port":587,"username":"alerts@example.com","password":"","from":"ArmorSight Alerts &lt;alerts@example.com&gt;","authType":"STARTTLS","toAddresses":["soc@example.com"]}'/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="utm_notification_channel">
+            <column name="name" value="SOC Slack"/>
+            <column name="channel_type" value="slack"/>
+            <column name="enabled" valueBoolean="false"/>
+            <column name="config_json" value='{"webhookUrl":"https://hooks.slack.com/services/T000/B000/xxxx","channel":"#soc-alerts","username":"ArmorSight","iconEmoji":":shield:"}'/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="utm_notification_channel">
+            <column name="name" value="PagerDuty Webhook"/>
+            <column name="channel_type" value="webhook"/>
+            <column name="enabled" valueBoolean="false"/>
+            <column name="config_json" value='{"url":"https://events.pagerduty.com/v2/enqueue","method":"POST","headers":{"Authorization":"Token token=YOURKEY","Content-Type":"application/json"},"bodyTemplate":"{\"routing_key\":\"YOURKEY\",\"event_action\":\"trigger\",\"payload\":{\"summary\":\"{{message}}\",\"severity\":\"{{severity}}\",\"source\":\"ArmorSight\"}}"}'/>
+            <column name="created_at" valueComputed="NOW()"/>
+            <column name="created_by" value="system"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

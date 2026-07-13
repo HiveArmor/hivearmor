@@ -1,0 +1,96 @@
+logging:
+    level:
+        ROOT: debug
+        tech.jhipster: DEBUG
+        org.hibernate.SQL: DEBUG
+        com.hivearmor: debug
+        org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+spring:
+    devtools:
+        restart:
+            enabled: true
+            additional-exclude: static/**
+        livereload:
+            enabled: false # we use Webpack dev server + BrowserSync for livereload
+    jackson:
+        serialization:
+            indent-output: true
+    datasource:
+        type: com.zaxxer.hikari.HikariDataSource
+        url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+        username: ${DB_USER}
+        password: ${DB_PASS}
+        hikari:
+            poolName: HiveArmor-HikariCP-dev
+            auto-commit: false
+            maximumPoolSize: 10
+            minimumIdle: 2
+            connectionTimeout: 30000
+            idleTimeout: 600000
+            maxLifetime: 1800000
+            keepaliveTime: 60000
+    jpa:
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+        database: POSTGRESQL # For Postgresql database
+    elasticsearch: # This configuration is for the elasticsearch health indicator, please do not remove
+        rest:
+            uris: https://${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}
+            username: ${ELASTICSEARCH_USER}
+            password: ${ELASTICSEARCH_PASSWORD}
+    liquibase:
+        contexts: dev
+    mail:
+        host: localhost
+        port: 25
+        username: test@domain.local
+        password: Admin123.
+        protocol: smtp
+    messages:
+        cache-duration: PT1S # 1 second, see the ISO 8601 standard
+    thymeleaf:
+        cache: false
+    autoconfigure:
+        exclude:
+            - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+server:
+    port: 8080
+
+jhipster:
+    # CORS is only enabled by default with the "dev" profile
+    cors:
+        allowed-origins: 'http://localhost:3000,http://localhost:4200,http://127.0.0.1:3000,http://localhost:56946,http://localhost:56947,http://localhost:8080,http://localhost:51009,http://localhost:49767,http://localhost:65309,http://localhost:58635'
+        allowed-methods: 'GET,POST,PUT,DELETE,PATCH,OPTIONS'
+        allowed-headers: '*'
+        exposed-headers: 'Authorization,Link,X-Total-Count'
+        allow-credentials: false
+        max-age: 1800
+    security:
+        authentication:
+            jwt:
+                # Dev-only key — NEVER use in production
+                base64-secret: ${ENCRYPTION_KEY:ZjY4MDYwNWU0ZTQ3MGFkMjJiY2IzYjMyNzAyMGE5NzMxMjdhY2JhMmQ5MDg5MzVjMmJhMTZlY2I5ZjE0NDZiNg==}
+                token-validity-in-seconds: 86400
+                token-validity-in-seconds-for-remember-me: 2592000
+    mail:
+        from:
+        base-url:
+
+app:
+    frontend-url: http://localhost:4200
+    redis:
+        enabled: false  # No Redis in local dev stack; disables AlertRedisPublisher and listener
+
+application:
+    chart-builder: # Chart builder configuration
+        ip-info-index-name: .utm-geoip
+    incident-response:
+        asset-verification-interval: 300
+
+grpc:
+    server:
+        address: ${GRPC_AGENT_MANAGER_HOST}
+        port: ${GRPC_AGENT_MANAGER_PORT}

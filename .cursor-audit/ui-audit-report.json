@@ -1,0 +1,1054 @@
+{
+  "generated": "2026-06-30T11:01:13.289Z",
+  "loginResult": {
+    "success": true,
+    "redirectUrl": "http://localhost:8880/"
+  },
+  "pages": [
+    {
+      "path": "/dashboard",
+      "label": "Dashboard Overview",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/dashboard_overview.png"
+    },
+    {
+      "path": "/data/alerts",
+      "label": "Alerts",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/alerts.png"
+    },
+    {
+      "path": "/data/adversary-tracking",
+      "label": "Adversary Tracking",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/adversary_tracking.png"
+    },
+    {
+      "path": "/discover",
+      "label": "Log Analyzer / Discover",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/log_analyzer___discover.png"
+    },
+    {
+      "path": "/incident",
+      "label": "Incident Management",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/incident_management.png"
+    },
+    {
+      "path": "/soar",
+      "label": "SOAR",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/soar.png"
+    },
+    {
+      "path": "/compliance",
+      "label": "Compliance",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/compliance.png"
+    },
+    {
+      "path": "/alerting-rules",
+      "label": "Alerting Rules",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/alerting_rules.png"
+    },
+    {
+      "path": "/data-parsing",
+      "label": "Data Parsing",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/data_parsing.png"
+    },
+    {
+      "path": "/data-sources",
+      "label": "Data Sources",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/data_sources.png"
+    },
+    {
+      "path": "/integrations",
+      "label": "Integrations",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/integrations.png"
+    },
+    {
+      "path": "/app-management",
+      "label": "App Management",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/app_management.png"
+    },
+    {
+      "path": "/active-directory",
+      "label": "Active Directory",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/active_directory.png"
+    },
+    {
+      "path": "/threat-intelligence",
+      "label": "Threat Intelligence",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/threat_intelligence.png"
+    },
+    {
+      "path": "/creator",
+      "label": "Dashboard Builder",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/dashboard_builder.png"
+    },
+    {
+      "path": "/management",
+      "label": "Admin Management",
+      "loadedUrl": "http://localhost:8880/management",
+      "httpErrors": [
+        "401 http://localhost:8880/management"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": false,
+        "hasMainContent": false,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 0,
+        "buttonCount": 0,
+        "hasSpinner": false,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 0,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "Your request cannot be processed\n\nSorry, an error has occurred.\n\nStatus: Unauthorized (Unauthorized)\n",
+        "pageTitle": "Your request cannot be processed",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "MEDIUM",
+          "issue": "Main content area not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/admin_management.png"
+    },
+    {
+      "path": "/variables",
+      "label": "Automation Variables",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/automation_variables.png"
+    },
+    {
+      "path": "/profile",
+      "label": "Profile",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/profile.png"
+    },
+    {
+      "path": "/getting-started",
+      "label": "Getting Started",
+      "loadedUrl": "http://localhost:8880/",
+      "httpErrors": [
+        "401 http://localhost:8880/api/account"
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      ],
+      "jsErrors": [],
+      "elements": {
+        "hasSidebar": false,
+        "hasHeader": false,
+        "hasBreadcrumb": true,
+        "hasMainContent": true,
+        "tableCount": 0,
+        "hasEmptyState": false,
+        "inputCount": 2,
+        "buttonCount": 0,
+        "hasSpinner": true,
+        "hasErrorMsg": false,
+        "hasToast": false,
+        "chartCount": 1,
+        "hasOpenModal": false,
+        "hasHorizontalScroll": false,
+        "bodySnippet": "NilaChakra\n\nSECURITY INTELLIGENCE PLATFORM\n\nSign In\nForgot username / password?\nSYSTEM ONLINE\n\nLoading\n\nRestarting application, please wait\n\nUpdating application, please wait\n\nError while trying to connect with UTM services, check if restarting application is planning\n\nCreating print view, please wait\n\nTo change this config we nee check yor license, please wait\n\nGetting alert detail\n\nCreating pdf, please wait",
+        "pageTitle": "UTMSTACK Technology",
+        "selectCount": 0,
+        "datePickerCount": 0,
+        "clickableButtons": 0
+      },
+      "issues": [
+        {
+          "severity": "MEDIUM",
+          "issue": "Sidebar/nav not detected"
+        },
+        {
+          "severity": "HIGH",
+          "issue": "1 console error(s) on load"
+        }
+      ],
+      "screenshot": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/getting_started.png"
+    }
+  ],
+  "globalErrors": [],
+  "summary": {
+    "totalPages": 19,
+    "pagesWithIssues": 19,
+    "criticalIssues": 0,
+    "highIssues": 19,
+    "mediumIssues": 20,
+    "allIssues": [
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Dashboard Overview"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Dashboard Overview"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Alerts"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Alerts"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Adversary Tracking"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Adversary Tracking"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Log Analyzer / Discover"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Log Analyzer / Discover"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Incident Management"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Incident Management"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "SOAR"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "SOAR"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Compliance"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Compliance"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Alerting Rules"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Alerting Rules"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Data Parsing"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Data Parsing"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Data Sources"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Data Sources"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Integrations"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Integrations"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "App Management"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "App Management"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Active Directory"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Active Directory"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Threat Intelligence"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Threat Intelligence"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Dashboard Builder"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Dashboard Builder"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Admin Management"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Main content area not detected",
+        "page": "Admin Management"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Admin Management"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Automation Variables"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Automation Variables"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Profile"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Profile"
+      },
+      {
+        "severity": "MEDIUM",
+        "issue": "Sidebar/nav not detected",
+        "page": "Getting Started"
+      },
+      {
+        "severity": "HIGH",
+        "issue": "1 console error(s) on load",
+        "page": "Getting Started"
+      }
+    ]
+  }
+}

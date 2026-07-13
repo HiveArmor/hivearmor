@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        Sprint 3 rebrand: replace the old 'v11-' OpenSearch index prefix with '_v3_hive_' in all
+        DB rows that still carry the old value.
+
+        Why needed: earlier changesets (20250814001, 20251010001, 20260105001, 20260209/0302/…)
+        inserted rows with 'v11-' index patterns.  The code layer (event-processor, plugins, Java
+        constants) already uses '_v3_hive_'.  Without this migration the backend queries the wrong
+        index names and every dashboard widget is empty.
+
+        IMPORTANT: Do not edit this changeset after it is applied to any environment.
+    -->
+
+    <changeSet id="20260713003" author="hivearmor">
+        <sql dbms="postgresql" splitStatements="true" stripComments="true">
+        <![CDATA[
+            -- hive_index_pattern: 'v11-log-suricata-*' → '_v3_hive_log-suricata-*'
+            UPDATE hive_index_pattern
+            SET pattern = REPLACE(pattern, 'v11-', '_v3_hive_')
+            WHERE pattern LIKE 'v11-%';
+
+            -- hive_menu: '&indexPattern=v11-log-*' → '&indexPattern=_v3_hive_log-*'
+            UPDATE hive_menu
+            SET url = REPLACE(url, '&indexPattern=v11-', '&indexPattern=_v3_hive_')
+            WHERE url LIKE '%&indexPattern=v11-%';
+
+            -- hive_correlation_rules: rule_after_events_def JSON: {"indexPattern":"v11-*"}
+            UPDATE hive_correlation_rules
+            SET rule_after_events_def = REPLACE(rule_after_events_def, '"indexPattern":"v11-', '"indexPattern":"_v3_hive_')
+            WHERE rule_after_events_def LIKE '%"indexPattern":"v11-%';
+
+            -- hive_dashboard: filters JSON column may reference v11- from migration 20251218002
+            UPDATE hive_dashboard
+            SET filters = REPLACE(filters, '"indexPattern":"v11-', '"indexPattern":"_v3_hive_')
+            WHERE filters LIKE '%"indexPattern":"v11-%';
+        ]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

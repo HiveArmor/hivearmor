@@ -1,0 +1,1047 @@
+{
+  "timestamp": "2026-06-30T11:11:18.962Z",
+  "pages": [
+    {
+      "label": "00_Login",
+      "url": "/",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/00_login_page.png",
+      "findings": [
+        {
+          "severity": "error",
+          "type": "missing_element",
+          "detail": "No username input found on login page"
+        }
+      ],
+      "consoleErrors": [],
+      "networkErrors": []
+    },
+    {
+      "label": "01_Dashboard_Overview",
+      "url": "/dashboard",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/01_dashboard_overview.png",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "[Alert By Status] API Error: Et",
+        "ERROR ReferenceError: $localize is not defined\n    at consts (http://localhost:8880/main.8374e2428ef3585c.js:224:2384033)\n    at Wo (http://localhost:8880/main.8374e2428ef3585c.js:224:1989996)\n    at Sa (http://localhost:8880/main.8374e2428ef3585c.js:224:1989721)\n    at Ch (http://localhost:8880/main.8374e2428ef3585c.js:224:1989067)\n    at T1 (http://localhost:8880/main.8374e2428ef3585c.js:224:1989224)\n    at Nr (http://localhost:8880/main.8374e2428ef3585c.js:224:1989452)\n    at Xm (http://localhost:8880/main.8374e2428ef3585c.js:224:2054818)\n    at x (http://localhost:8880/main.8374e2428ef3585c.js:224:81311)\n    at Er (http://localhost:8880/main.8374e2428ef3585c.js:224:1988713)\n    at Lf (http://localhost:8880/main.8374e2428ef3585c.js:224:1996110)",
+        "TypeError: Cannot read properties of undefined (reading 'name')\n    at e.<anonymous> (http://localhost:8880/697.03ed2d5744ca7e04.js:1:935849)\n    at Array.map (<anonymous>)\n    at G (http://localhost:8880/697.03ed2d5744ca7e04.js:1:11095)\n    at e._updateData (http://localhost:8880/697.03ed2d5744ca7e04.js:1:935791)\n    at e.optionUpdated (http://localhost:8880/697.03ed2d5744ca7e04.js:1:935230)\n    at e.<anonymous> (http://localhost:8880/697.03ed2d5744ca7e04.js:1:187739)\n    at Array.forEach (<anonymous>)\n    at A (http://localhost:8880/697.03ed2d5744ca7e04.js:1:10861)\n    at e.f (http://localhost:8880/697.03ed2d5744ca7e04.js:1:187362)\n    at r.topologicalTravel (http://localhost:8880/697.03ed2d5744ca7e04.js:1:180466)"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [
+        "HTTP 500: /api/overview/count-alerts-by-status?from=now-7d/d&to=now",
+        "HTTP 500: /api/overview/count-alerts-by-status?from=now-7d&to=now"
+      ],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN&size=1&page=0",
+        "200 GET /api/utm-incidents?incidentStatus.in=IN_REVIEW&size=1&page=0",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/overview/events-in-time?from=now-24h&to=now&interval=Hour",
+        "200 GET /api/overview/count-alerts-today-and-last-week",
+        "200 GET /api/elasticsearch/cluster/status",
+        "500 GET /api/overview/count-alerts-by-status?from=now-7d/d&to=now",
+        "200 GET /api/overview/count-alerts-by-severity?from=now-7d/d&to=now&top=10",
+        "500 GET /api/overview/count-alerts-by-status?from=now-7d&to=now",
+        "200 GET /api/overview/count-alerts-by-severity?from=now-7d&to=now&top=10"
+      ],
+      "findings": [
+        {
+          "severity": "info",
+          "type": "kpi_cards_count",
+          "detail": "Found 65 KPI card elements"
+        },
+        {
+          "severity": "info",
+          "type": "chart_count",
+          "detail": "Found 7 chart elements"
+        }
+      ]
+    },
+    {
+      "label": "02_Dashboard_Custom",
+      "url": "/dashboard/view/1",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/02_dashboard_custom.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": [
+        {
+          "severity": "warn",
+          "type": "empty_dashboard",
+          "detail": "No dashboard widgets found (may be no configured dashboard)"
+        },
+        {
+          "severity": "info",
+          "type": "no_add_widget_btn",
+          "detail": "No add widget button visible"
+        }
+      ]
+    },
+    {
+      "label": "03_Alerts_List",
+      "url": "/data/alerts",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/03_alerts_list.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": [
+        {
+          "severity": "warn",
+          "type": "no_alert_table",
+          "detail": "No alert table found"
+        },
+        {
+          "severity": "info",
+          "type": "filter_count",
+          "detail": "0 filter elements found"
+        },
+        {
+          "severity": "info",
+          "type": "severity_badges",
+          "detail": "2 severity badge elements"
+        },
+        {
+          "severity": "info",
+          "type": "status_filters",
+          "detail": "10 status filter elements"
+        },
+        {
+          "severity": "warn",
+          "type": "no_pagination",
+          "detail": "No pagination found on alerts list"
+        }
+      ]
+    },
+    {
+      "label": "04_Alert_Management",
+      "url": "/data",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/04_alert_management.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200"
+      ],
+      "findings": []
+    },
+    {
+      "label": "05_Discover_Log_Analyzer",
+      "url": "/discover",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/05_discover_log_analyzer.png",
+      "consoleErrors": [
+        "ERROR TypeError: Cannot read properties of undefined (reading 'viewContainerRef')\n    at o.ngOnInit (http://localhost:8880/2.a089c677471763ea.js:1:56141)\n    at A0 (http://localhost:8880/main.8374e2428ef3585c.js:224:1962842)\n    at Ku (http://localhost:8880/main.8374e2428ef3585c.js:224:1962989)\n    at fd (http://localhost:8880/main.8374e2428ef3585c.js:224:1962744)\n    at Xu (http://localhost:8880/main.8374e2428ef3585c.js:224:1962462)\n    at Lg (http://localhost:8880/main.8374e2428ef3585c.js:224:1999238)\n    at t0 (http://localhost:8880/main.8374e2428ef3585c.js:224:2000865)\n    at Xh (http://localhost:8880/main.8374e2428ef3585c.js:224:2000694)\n    at Tm (http://localhost:8880/main.8374e2428ef3585c.js:224:2000626)\n    at Lg (http://localhost:8880/main.8374e2428ef3585c.js:224:1999416)"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": [
+        {
+          "severity": "warn",
+          "type": "no_time_filter",
+          "detail": "No time filter in log analyzer"
+        },
+        {
+          "severity": "warn",
+          "type": "no_results_area",
+          "detail": "No results area in log analyzer"
+        }
+      ]
+    },
+    {
+      "label": "06_Incidents",
+      "url": "/incident",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/06_incidents.png",
+      "consoleErrors": [
+        "ERROR ReferenceError: $localize is not defined\n    at consts (http://localhost:8880/main.8374e2428ef3585c.js:224:2384033)\n    at Wo (http://localhost:8880/main.8374e2428ef3585c.js:224:1989996)\n    at Sa (http://localhost:8880/main.8374e2428ef3585c.js:224:1989721)\n    at Ch (http://localhost:8880/main.8374e2428ef3585c.js:224:1989067)\n    at T1 (http://localhost:8880/main.8374e2428ef3585c.js:224:1989224)\n    at Nr (http://localhost:8880/main.8374e2428ef3585c.js:224:1989452)\n    at Xm (http://localhost:8880/main.8374e2428ef3585c.js:224:2054818)\n    at Lt (http://localhost:8880/669.9bb936050bf1cd00.js:1:25783)\n    at Er (http://localhost:8880/main.8374e2428ef3585c.js:224:1988713)\n    at Lf (http://localhost:8880/main.8374e2428ef3585c.js:224:1996110)"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/utm-incidents?page=0&size=25&sort=id,desc",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/utm-configuration-parameters?page=0&size=10000&sectionId.equals=4&confParamShort.equals=utmstack.alert.addressToNotifyIncidents&sort=id,asc",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": [
+        {
+          "severity": "info",
+          "type": "incident_elements",
+          "detail": "4 incident card elements"
+        },
+        {
+          "severity": "warn",
+          "type": "empty_button",
+          "detail": "<button _ngcontent-ng-c2587615405=\"\" type=\"button\" container=\"body\" placement=\"bottom\" tooltipclass=\"utm-tooltip-bottom\""
+        }
+      ]
+    },
+    {
+      "label": "07_SOAR_Home",
+      "url": "/soar",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/07_soar_home.png",
+      "consoleErrors": [
+        "ERROR ReferenceError: $localize is not defined\n    at consts (http://localhost:8880/main.8374e2428ef3585c.js:224:2384033)\n    at Wo (http://localhost:8880/main.8374e2428ef3585c.js:224:1989996)\n    at Sa (http://localhost:8880/main.8374e2428ef3585c.js:224:1989721)\n    at Ch (http://localhost:8880/main.8374e2428ef3585c.js:224:1989067)\n    at T1 (http://localhost:8880/main.8374e2428ef3585c.js:224:1989224)\n    at Nr (http://localhost:8880/main.8374e2428ef3585c.js:224:1989452)\n    at Object.Xm (http://localhost:8880/main.8374e2428ef3585c.js:224:2054818)\n    at Gn (http://localhost:8880/584.5e7cc526645ae4a5.js:1:80555)\n    at Er (http://localhost:8880/main.8374e2428ef3585c.js:224:1988713)\n    at Lf (http://localhost:8880/main.8374e2428ef3585c.js:224:1996110)"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/utm-alert-response-rules?page=0&size=25",
+        "200 GET /api/utm-alert-response-rules/resolve-filter-values",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": [
+        {
+          "severity": "info",
+          "type": "soar_elements",
+          "detail": "318 SOAR elements"
+        }
+      ]
+    },
+    {
+      "label": "08_SOAR_Automations",
+      "url": "/soar/automations",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/08_soar_automations.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/logstash-pipelines/stats"
+      ],
+      "findings": []
+    },
+    {
+      "label": "09_SOAR_Playbooks",
+      "url": "/soar/playbooks",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/09_soar_playbooks.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/account",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats"
+      ],
+      "findings": []
+    },
+    {
+      "label": "10_Compliance",
+      "url": "/compliance",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/10_compliance.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/compliance/standard?page=0&size=1000",
+        "200 GET /api/compliance/standard-section?page=0&size=1000&sort=id,asc&standardId.equals=500",
+        "200 GET /api/compliance/report-config/get-by-filters?page=0&size=1000&sort=id,asc&standardId=500&sectionId=501",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": [
+        {
+          "severity": "info",
+          "type": "compliance_charts",
+          "detail": "0 charts on compliance page"
+        },
+        {
+          "severity": "info",
+          "type": "compliance_standards",
+          "detail": "0 compliance standard elements"
+        }
+      ]
+    },
+    {
+      "label": "11_Alerting_Rules",
+      "url": "/alerting-rules",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/11_alerting_rules.png",
+      "consoleErrors": [
+        "ERROR ReferenceError: $localize is not defined\n    at consts (http://localhost:8880/main.8374e2428ef3585c.js:224:2384033)\n    at Wo (http://localhost:8880/main.8374e2428ef3585c.js:224:1989996)\n    at Sa (http://localhost:8880/main.8374e2428ef3585c.js:224:1989721)\n    at Ch (http://localhost:8880/main.8374e2428ef3585c.js:224:1989067)\n    at T1 (http://localhost:8880/main.8374e2428ef3585c.js:224:1989224)\n    at Nr (http://localhost:8880/main.8374e2428ef3585c.js:224:1989452)\n    at Xm (http://localhost:8880/main.8374e2428ef3585c.js:224:2054818)\n    at fs (http://localhost:8880/757.1d931ef47a49df3a.js:1:142643)\n    at Er (http://localhost:8880/main.8374e2428ef3585c.js:224:1988713)\n    at Lf (http://localhost:8880/main.8374e2428ef3585c.js:224:1996110)"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/correlation-rule/search-by-filters?size=100&page=0&sort=ruleLastUpdate,DESC",
+        "200 GET /api/correlation-rule/search-property-values?page=0&prop=RULE_STATUS&size=6&forGroups=false",
+        "200 GET /api/correlation-rule/search-property-values?page=0&prop=RULE_TECHNIQUE&size=6&forGroups=false",
+        "200 GET /api/correlation-rule/search-property-values?page=0&prop=RULE_CATEGORY&size=6&forGroups=false",
+        "200 GET /api/correlation-rule/search-property-values?page=0&prop=RULE_DATA_TYPES&size=6&forGroups=false",
+        "200 GET /api/correlation-rule/search-property-values?page=0&prop=RULE_ADVERSARY&size=6&forGroups=false"
+      ],
+      "findings": []
+    },
+    {
+      "label": "12_Data_Parsing",
+      "url": "/data-parsing",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/12_data_parsing.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats"
+      ],
+      "findings": []
+    },
+    {
+      "label": "13_Integrations",
+      "url": "/integrations",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/13_integrations.png",
+      "consoleErrors": [
+        "ERROR TypeError: Cannot read properties of null (reading 'writeValue')\n    at fs (http://localhost:8880/main.8374e2428ef3585c.js:224:2145624)\n    at Ve._setUpStandalone (http://localhost:8880/main.8374e2428ef3585c.js:224:2154216)\n    at Ve._setUpControl (http://localhost:8880/main.8374e2428ef3585c.js:224:2153931)\n    at Ve.ngOnChanges (http://localhost:8880/main.8374e2428ef3585c.js:224:2153473)\n    at Ve.Cu (http://localhost:8880/main.8374e2428ef3585c.js:224:1957678)\n    at A0 (http://localhost:8880/main.8374e2428ef3585c.js:224:1962842)\n    at Ku (http://localhost:8880/main.8374e2428ef3585c.js:224:1962998)\n    at fd (http://localhost:8880/main.8374e2428ef3585c.js:224:1962744)\n    at Xu (http://localhost:8880/main.8374e2428ef3585c.js:224:1962462)\n    at Yn (http://localhost:8880/main.8374e2428ef3585c.js:224:1986618)"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/utm-servers?page=0&size=100",
+        "200 GET /api/utm-modules?serverId.equals=1&sort=moduleCategory,asc&page=0&size=100",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": [
+        {
+          "severity": "info",
+          "type": "integration_cards",
+          "detail": "37 integration cards"
+        }
+      ]
+    },
+    {
+      "label": "14_App_Management",
+      "url": "/app-management",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/14_app_management.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/federation-service/token",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200"
+      ],
+      "findings": []
+    },
+    {
+      "label": "15_App_Config",
+      "url": "/app-management/config",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/15_app_config.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats"
+      ],
+      "findings": []
+    },
+    {
+      "label": "16_App_Api_Doc",
+      "url": "/app-management/api",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/16_app_api_doc.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/logstash-pipelines/stats"
+      ],
+      "findings": []
+    },
+    {
+      "label": "17_Data_Sources",
+      "url": "/data-sources",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/17_data_sources.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/utm-network-scans/searchPropertyValues?page=0&prop=GROUP&size=6&forGroups=false",
+        "200 GET /api/utm-network-scans/searchPropertyValues?page=0&prop=ALIVE&size=6&forGroups=false",
+        "200 GET /api/utm-network-scans/searchPropertyValues?page=0&prop=TYPE&size=6&forGroups=false",
+        "200 GET /api/utm-network-scans/searchPropertyValues?page=0&prop=DATA_TYPES&size=6&forGroups=false",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/utm-network-scans/search-by-filters?page=0&size=25&sort=id,desc",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": [
+        {
+          "severity": "warn",
+          "type": "empty_button",
+          "detail": "<button _ngcontent-ng-c1572893909=\"\" type=\"button\" container=\"body\" placement=\"bottom\" tooltipclass=\"utm-tooltip-bottom\""
+        },
+        {
+          "severity": "info",
+          "type": "empty_table",
+          "detail": "Table has empty tbody — may be loading issue or no data"
+        }
+      ]
+    },
+    {
+      "label": "18_Threat_Intelligence",
+      "url": "/threat-intelligence",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/18_threat_intelligence.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/account",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts",
+        "200 POST https://apis.threatwinds.com/api/search/v1/entities/advanced",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": []
+    },
+    {
+      "label": "19_Active_Directory",
+      "url": "/active-directory",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/19_active_directory.png",
+      "consoleErrors": [
+        "ERROR TypeError: Cannot read properties of undefined (reading 'id')\n    at n.deploy (http://localhost:8880/129.c2d165caf7e54895.js:1:161490)\n    at http://localhost:8880/129.c2d165caf7e54895.js:1:160147\n    at u.invoke (http://localhost:8880/polyfills.7451af7fa55ebb64.js:1:19171)\n    at Object.onInvoke (http://localhost:8880/main.8374e2428ef3585c.js:224:2005567)\n    at u.invoke (http://localhost:8880/polyfills.7451af7fa55ebb64.js:1:19111)\n    at N.run (http://localhost:8880/polyfills.7451af7fa55ebb64.js:1:14433)\n    at http://localhost:8880/polyfills.7451af7fa55ebb64.js:1:25549\n    at u.invokeTask (http://localhost:8880/polyfills.7451af7fa55ebb64.js:1:19789)\n    at Object.onInvokeTask (http://localhost:8880/main.8374e2428ef3585c.js:224:2005382)\n    at u.invokeTask (http://localhost:8880/polyfills.7451af7fa55ebb64.js:1:19710)"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/utm-auditor-users-by-src?sourceId=1&page=0&size=10000&sort=name,asc",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": []
+    },
+    {
+      "label": "20_Chart_Creator",
+      "url": "/creator",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/20_chart_creator.png",
+      "consoleErrors": [
+        "ERROR TypeError: Cannot read properties of null (reading 'writeValue')\n    at fs (http://localhost:8880/main.8374e2428ef3585c.js:224:2145624)\n    at Ve._setUpStandalone (http://localhost:8880/main.8374e2428ef3585c.js:224:2154216)\n    at Ve._setUpControl (http://localhost:8880/main.8374e2428ef3585c.js:224:2153931)\n    at Ve.ngOnChanges (http://localhost:8880/main.8374e2428ef3585c.js:224:2153473)\n    at Ve.Cu (http://localhost:8880/main.8374e2428ef3585c.js:224:1957678)\n    at A0 (http://localhost:8880/main.8374e2428ef3585c.js:224:1962842)\n    at Ku (http://localhost:8880/main.8374e2428ef3585c.js:224:1962998)\n    at fd (http://localhost:8880/main.8374e2428ef3585c.js:224:1962744)\n    at Xu (http://localhost:8880/main.8374e2428ef3585c.js:224:1962462)\n    at Yn (http://localhost:8880/main.8374e2428ef3585c.js:224:1986618)",
+        "ERROR TypeError: Cannot read properties of null (reading 'writeValue')\n    at fs (http://localhost:8880/main.8374e2428ef3585c.js:224:2145624)\n    at Ve._setUpStandalone (http://localhost:8880/main.8374e2428ef3585c.js:224:2154216)\n    at Ve._setUpControl (http://localhost:8880/main.8374e2428ef3585c.js:224:2153931)\n    at Ve.ngOnChanges (http://localhost:8880/main.8374e2428ef3585c.js:224:2153473)\n    at Ve.Cu (http://localhost:8880/main.8374e2428ef3585c.js:224:1957678)\n    at A0 (http://localhost:8880/main.8374e2428ef3585c.js:224:1962842)\n    at Ku (http://localhost:8880/main.8374e2428ef3585c.js:224:1962998)\n    at fd (http://localhost:8880/main.8374e2428ef3585c.js:224:1962744)\n    at Xu (http://localhost:8880/main.8374e2428ef3585c.js:224:1962462)\n    at Yn (http://localhost:8880/main.8374e2428ef3585c.js:224:1986618)",
+        "ERROR ReferenceError: $localize is not defined\n    at consts (http://localhost:8880/main.8374e2428ef3585c.js:224:2384033)\n    at Wo (http://localhost:8880/main.8374e2428ef3585c.js:224:1989996)\n    at Sa (http://localhost:8880/main.8374e2428ef3585c.js:224:1989721)\n    at Ch (http://localhost:8880/main.8374e2428ef3585c.js:224:1989067)\n    at T1 (http://localhost:8880/main.8374e2428ef3585c.js:224:1989224)\n    at Nr (http://localhost:8880/main.8374e2428ef3585c.js:224:1989452)\n    at Xm (http://localhost:8880/main.8374e2428ef3585c.js:224:2054818)\n    at Vt (http://localhost:8880/943.a9b68b23d010dff9.js:1:31369)\n    at Er (http://localhost:8880/main.8374e2428ef3585c.js:224:1988713)\n    at Lf (http://localhost:8880/main.8374e2428ef3585c.js:224:1996110)"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/utm-index-patterns?page=0&size=1000",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/utm-visualizations?page=0&size=25",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": [
+        {
+          "severity": "warn",
+          "type": "no_chart_builder",
+          "detail": "Chart builder UI not found"
+        },
+        {
+          "severity": "info",
+          "type": "chart_type_options",
+          "detail": "0 chart type options"
+        }
+      ]
+    },
+    {
+      "label": "21_Admin_Users",
+      "url": "/management/users",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/21_admin_users.png",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [],
+      "findings": [
+        {
+          "severity": "warn",
+          "type": "no_user_table",
+          "detail": "No user table found in admin"
+        },
+        {
+          "severity": "warn",
+          "type": "no_create_user_btn",
+          "detail": "No create user button found"
+        }
+      ]
+    },
+    {
+      "label": "22_Admin_Api_Keys",
+      "url": "/management/api-keys",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/22_admin_api_keys.png",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+        "Failed to load resource: the server responded with a status of 404 ()"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [],
+      "findings": []
+    },
+    {
+      "label": "23_Profile",
+      "url": "/profile",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/23_profile.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": [
+        {
+          "severity": "warn",
+          "type": "no_save_btn",
+          "detail": "No save button on profile page"
+        }
+      ]
+    },
+    {
+      "label": "24_Variables",
+      "url": "/variables",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/24_variables.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats"
+      ],
+      "findings": []
+    },
+    {
+      "label": "25_Getting_Started",
+      "url": "/getting-started",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/25_getting_started.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/account",
+        "200 GET /api/images/all?page=0&size=100"
+      ],
+      "findings": []
+    },
+    {
+      "label": "26_Alert_Status_Click",
+      "url": "/data/alerts",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/26_alert_status_click.png",
+      "consoleErrors": [],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts",
+        "200 GET /api/notifications/unread-count"
+      ],
+      "findings": [
+        {
+          "severity": "info",
+          "type": "no_alert_rows",
+          "detail": "No alert rows to click (empty data)"
+        }
+      ]
+    },
+    {
+      "label": "27_Dashboard_Date_Filter",
+      "url": "/dashboard",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/27_dashboard_date_filter.png",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "[Alert By Status] API Error: Et",
+        "ERROR ReferenceError: $localize is not defined\n    at consts (http://localhost:8880/main.8374e2428ef3585c.js:224:2384033)\n    at Wo (http://localhost:8880/main.8374e2428ef3585c.js:224:1989996)\n    at Sa (http://localhost:8880/main.8374e2428ef3585c.js:224:1989721)\n    at Ch (http://localhost:8880/main.8374e2428ef3585c.js:224:1989067)\n    at T1 (http://localhost:8880/main.8374e2428ef3585c.js:224:1989224)\n    at Nr (http://localhost:8880/main.8374e2428ef3585c.js:224:1989452)\n    at Xm (http://localhost:8880/main.8374e2428ef3585c.js:224:2054818)\n    at x (http://localhost:8880/main.8374e2428ef3585c.js:224:81311)\n    at Er (http://localhost:8880/main.8374e2428ef3585c.js:224:1988713)\n    at Lf (http://localhost:8880/main.8374e2428ef3585c.js:224:1996110)",
+        "TypeError: Cannot read properties of undefined (reading 'name')\n    at e.<anonymous> (http://localhost:8880/697.03ed2d5744ca7e04.js:1:935849)\n    at Array.map (<anonymous>)\n    at G (http://localhost:8880/697.03ed2d5744ca7e04.js:1:11095)\n    at e._updateData (http://localhost:8880/697.03ed2d5744ca7e04.js:1:935791)\n    at e.optionUpdated (http://localhost:8880/697.03ed2d5744ca7e04.js:1:935230)\n    at e.<anonymous> (http://localhost:8880/697.03ed2d5744ca7e04.js:1:187739)\n    at Array.forEach (<anonymous>)\n    at A (http://localhost:8880/697.03ed2d5744ca7e04.js:1:10861)\n    at e.f (http://localhost:8880/697.03ed2d5744ca7e04.js:1:187362)\n    at r.topologicalTravel (http://localhost:8880/697.03ed2d5744ca7e04.js:1:180466)"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [
+        "HTTP 500: /api/overview/count-alerts-by-status?from=now-7d/d&to=now",
+        "HTTP 500: /api/overview/count-alerts-by-status?from=now-7d&to=now"
+      ],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN&size=1&page=0",
+        "200 GET /api/utm-incidents?incidentStatus.in=IN_REVIEW&size=1&page=0",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/overview/events-in-time?from=now-24h&to=now&interval=Hour",
+        "200 GET /api/overview/count-alerts-today-and-last-week",
+        "200 GET /api/overview/count-alerts-by-severity?from=now-7d/d&to=now&top=10",
+        "200 GET /api/overview/count-alerts-by-severity?from=now-7d&to=now&top=10",
+        "500 GET /api/overview/count-alerts-by-status?from=now-7d/d&to=now",
+        "500 GET /api/overview/count-alerts-by-status?from=now-7d&to=now"
+      ],
+      "findings": [
+        {
+          "severity": "warn",
+          "type": "no_date_filter_btn",
+          "detail": "No date filter button found on dashboard"
+        }
+      ]
+    },
+    {
+      "label": "28_Log_Search_Input",
+      "url": "/discover",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/28_log_search_input.png",
+      "consoleErrors": [
+        "ERROR TypeError: Cannot read properties of undefined (reading 'viewContainerRef')\n    at o.ngOnInit (http://localhost:8880/2.a089c677471763ea.js:1:56141)\n    at A0 (http://localhost:8880/main.8374e2428ef3585c.js:224:1962842)\n    at Ku (http://localhost:8880/main.8374e2428ef3585c.js:224:1962989)\n    at fd (http://localhost:8880/main.8374e2428ef3585c.js:224:1962744)\n    at Xu (http://localhost:8880/main.8374e2428ef3585c.js:224:1962462)\n    at Lg (http://localhost:8880/main.8374e2428ef3585c.js:224:1999238)\n    at t0 (http://localhost:8880/main.8374e2428ef3585c.js:224:2000865)\n    at Xh (http://localhost:8880/main.8374e2428ef3585c.js:224:2000694)\n    at Tm (http://localhost:8880/main.8374e2428ef3585c.js:224:2000626)\n    at Lg (http://localhost:8880/main.8374e2428ef3585c.js:224:1999416)"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/account",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": [
+        {
+          "severity": "info",
+          "type": "search_input_works",
+          "detail": "Search input accepts text ✅"
+        }
+      ]
+    },
+    {
+      "label": "29_Incident_Create_Modal",
+      "url": "/incident",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/29_incident_create_modal.png",
+      "consoleErrors": [
+        "ERROR ReferenceError: $localize is not defined\n    at consts (http://localhost:8880/main.8374e2428ef3585c.js:224:2384033)\n    at Wo (http://localhost:8880/main.8374e2428ef3585c.js:224:1989996)\n    at Sa (http://localhost:8880/main.8374e2428ef3585c.js:224:1989721)\n    at Ch (http://localhost:8880/main.8374e2428ef3585c.js:224:1989067)\n    at T1 (http://localhost:8880/main.8374e2428ef3585c.js:224:1989224)\n    at Nr (http://localhost:8880/main.8374e2428ef3585c.js:224:1989452)\n    at Xm (http://localhost:8880/main.8374e2428ef3585c.js:224:2054818)\n    at Lt (http://localhost:8880/669.9bb936050bf1cd00.js:1:25783)\n    at Er (http://localhost:8880/main.8374e2428ef3585c.js:224:1988713)\n    at Lf (http://localhost:8880/main.8374e2428ef3585c.js:224:1996110)"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/account",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/utm-incidents?page=0&size=25&sort=id,desc",
+        "200 GET /api/utm-configuration-parameters?page=0&size=10000&sectionId.equals=4&confParamShort.equals=utmstack.alert.addressToNotifyIncidents&sort=id,asc",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-alerts/count-open-alerts"
+      ],
+      "findings": [
+        {
+          "severity": "warn",
+          "type": "no_create_modal",
+          "detail": "Create button click did not open modal"
+        },
+        {
+          "severity": "warn",
+          "type": "empty_button",
+          "detail": "<button _ngcontent-ng-c2587615405=\"\" type=\"button\" container=\"body\" placement=\"bottom\" tooltipclass=\"utm-tooltip-bottom\""
+        }
+      ]
+    },
+    {
+      "label": "30_Sidebar_Collapse",
+      "url": "/dashboard",
+      "screenshotPath": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots/30_sidebar_collapse.png",
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+        "[Alert By Status] API Error: Et",
+        "ERROR ReferenceError: $localize is not defined\n    at consts (http://localhost:8880/main.8374e2428ef3585c.js:224:2384033)\n    at Wo (http://localhost:8880/main.8374e2428ef3585c.js:224:1989996)\n    at Sa (http://localhost:8880/main.8374e2428ef3585c.js:224:1989721)\n    at Ch (http://localhost:8880/main.8374e2428ef3585c.js:224:1989067)\n    at T1 (http://localhost:8880/main.8374e2428ef3585c.js:224:1989224)\n    at Nr (http://localhost:8880/main.8374e2428ef3585c.js:224:1989452)\n    at Xm (http://localhost:8880/main.8374e2428ef3585c.js:224:2054818)\n    at x (http://localhost:8880/main.8374e2428ef3585c.js:224:81311)\n    at Er (http://localhost:8880/main.8374e2428ef3585c.js:224:1988713)\n    at Lf (http://localhost:8880/main.8374e2428ef3585c.js:224:1996110)",
+        "TypeError: Cannot read properties of undefined (reading 'name')\n    at e.<anonymous> (http://localhost:8880/697.03ed2d5744ca7e04.js:1:935849)\n    at Array.map (<anonymous>)\n    at G (http://localhost:8880/697.03ed2d5744ca7e04.js:1:11095)\n    at e._updateData (http://localhost:8880/697.03ed2d5744ca7e04.js:1:935791)\n    at e.optionUpdated (http://localhost:8880/697.03ed2d5744ca7e04.js:1:935230)\n    at e.<anonymous> (http://localhost:8880/697.03ed2d5744ca7e04.js:1:187739)\n    at Array.forEach (<anonymous>)\n    at A (http://localhost:8880/697.03ed2d5744ca7e04.js:1:10861)\n    at e.f (http://localhost:8880/697.03ed2d5744ca7e04.js:1:187362)\n    at r.topologicalTravel (http://localhost:8880/697.03ed2d5744ca7e04.js:1:180466)"
+      ],
+      "consoleWarnings": [],
+      "networkErrors": [
+        "HTTP 500: /api/overview/count-alerts-by-status?from=now-7d/d&to=now",
+        "HTTP 500: /api/overview/count-alerts-by-status?from=now-7d&to=now"
+      ],
+      "apiCalls": [
+        "200 GET /api/ping",
+        "200 GET /api/date-format",
+        "200 GET /api/info/version",
+        "200 GET /api/info/version",
+        "200 GET /api/account",
+        "200 GET /api/images/all?page=0&size=100",
+        "200 GET /api/utm-getting-started?page=0&size=15",
+        "200 GET /api/notifications/unread-count",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN,IN_REVIEW&size=1&page=0",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200",
+        "200 GET /api/utm-incidents?incidentStatus.in=OPEN&size=1&page=0",
+        "200 GET /api/utm-incidents?incidentStatus.in=IN_REVIEW&size=1&page=0",
+        "200 GET /api/overview/count-alerts-by-severity?from=now-7d/d&to=now&top=10",
+        "500 GET /api/overview/count-alerts-by-status?from=now-7d/d&to=now",
+        "200 GET /api/elasticsearch/cluster/status",
+        "200 GET /api/logstash-pipelines/stats",
+        "200 GET /api/overview/count-alerts-by-severity?from=now-7d&to=now&top=10",
+        "500 GET /api/overview/count-alerts-by-status?from=now-7d&to=now",
+        "200 GET /api/overview/top-alerts-by-category?from=now-7d&to=now&top=10",
+        "200 GET /api/menu?dashboardId.specified=true&menuActive.equals=true&size=200"
+      ],
+      "findings": [
+        {
+          "severity": "info",
+          "type": "sidebar_collapse_works",
+          "detail": "Sidebar collapses correctly ✅"
+        }
+      ]
+    }
+  ],
+  "globalIssues": [],
+  "summary": {
+    "totalPages": 31,
+    "totalConsoleErrors": 36,
+    "totalFindings": 31,
+    "errorFindings": 1,
+    "warnFindings": 14,
+    "screenshotDir": "/Users/encryptshell/GIT/UTMStack-11/.cursor-audit/screenshots"
+  }
+}

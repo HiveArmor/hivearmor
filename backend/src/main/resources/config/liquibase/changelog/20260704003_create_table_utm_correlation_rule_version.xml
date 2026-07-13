@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260704003" author="detection-rules-lifecycle">
+
+        <createTable tableName="utm_correlation_rule_version">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="rule_id" type="bigint">
+                <constraints nullable="false"
+                             foreignKeyName="fk_rule_version_rule_id"
+                             references="utm_correlation_rules(id)"/>
+            </column>
+            <column name="version_num" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rule_snapshot" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="change_note" type="varchar(500)"/>
+        </createTable>
+
+        <createIndex tableName="utm_correlation_rule_version" indexName="idx_rule_version_rule_id">
+            <column name="rule_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

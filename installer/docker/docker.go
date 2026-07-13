@@ -1,0 +1,101 @@
+package docker
+
+import (
+	"fmt"
+
+	"github.com/hivearmor/installer/config"
+	"github.com/hivearmor/installer/services"
+	"github.com/hivearmor/installer/utils"
+)
+
+func InstallDocker(distro string) error {
+	switch distro {
+	case config.RequiredDistroUbuntu:
+		env := []string{"DEBIAN_FRONTEND=noninteractive"}
+
+		if err := utils.RunEnvCmd(env, "apt-get", "update"); err != nil {
+			return err
+		}
+
+		if err := utils.RunEnvCmd(env, "apt-get", "install", "-y", "ca-certificates", "curl"); err != nil {
+			return err
+		}
+
+		if err := utils.RunEnvCmd(env, "install", "-m", "0755", "-d", "/etc/apt/keyrings"); err != nil {
+			return err
+		}
+
+		if err := utils.RunEnvCmd(env, "curl", "-fsSL", "https://download.docker.com/linux/ubuntu/gpg", "-o", "/etc/apt/keyrings/docker.asc"); err != nil {
+			return err
+		}
+
+		if err := utils.RunEnvCmd(env, "chmod", "a+r", "/etc/apt/keyrings/docker.asc"); err != nil {
+			return err
+		}
+
+		repoCmd := `echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null`
+		if err := utils.RunEnvCmd(env, "sh", "-c", repoCmd); err != nil {
+			return err
+		}
+
+		if err := utils.RunEnvCmd(env, "apt-get", "update"); err != nil {
+			return err
+		}
+
+		if err := utils.RunEnvCmd(env, "apt-get", "install", "-y", "docker-ce", "docker-ce-cli", "containerd.io", "docker-compose", "docker-buildx-plugin", "docker-compose-plugin"); err != nil {
+			return err
+		}
+
+	case config.RequiredDistroRHEL:
+		env := []string{"DNF_YUM_AUTO_YES=1"}
+
+		if err := utils.RunEnvCmd(env, "dnf", "install", "-y", "dnf-plugins-core", "ca-certificates", "curl"); err != nil {
+			return err
+		}
+
+		if err := utils.RunEnvCmd(env, "dnf", "config-manager", "--add-repo", "https://download.docker.com/linux/centos/docker-ce.repo"); err != nil {
+			return err
+		}
+
+		if err := utils.RunEnvCmd(env, "dnf", "makecache"); err != nil {
+			return err
+		}
+
+		if err := utils.RunEnvCmd(env, "dnf", "install", "-y", "docker-ce", "docker-ce-cli", "containerd.io", "docker-compose-plugin", "docker-buildx-plugin"); err != nil {
+			return err
+		}
+
+		if err := utils.RunEnvCmd(env, "systemctl", "enable", "--now", "docker"); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func InitSwarm(mainIP string) error {
+	if err := utils.RunCmd("docker", "swarm", "init", "--advertise-addr", mainIP); err != nil {
+		return err
+	}
+	return nil
+}
+
+func PostInstallation() error {
+	fmt.Print("  Waiting for backend")
+
+	if err := services.Backend(); err != nil {
+		return err
+	}
+
+	fmt.Println(" [OK]")
+
+	fmt.Print("  Cleaning up Docker system")
+
+	if err := utils.RunCmd("docker", "system", "prune", "-a", "-f"); err != nil {
+		return err
+	}
+
+	fmt.Println(" [OK]")
+
+	return nil
+}

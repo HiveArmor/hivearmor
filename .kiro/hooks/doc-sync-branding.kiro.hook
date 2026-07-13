@@ -1,0 +1,23 @@
+{
+  "enabled": true,
+  "name": "Branding Change → Docs Reminder",
+  "description": "When the frontend branding constant, SCSS token file, logo assets, email templates, or ApplicationProperties are edited, reminds the agent to keep the branding baseline and branding steering file in sync.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "frontend/src/environments/branding.ts",
+      "frontend/src/styles/_tokens.scss",
+      "frontend/src/assets/img/**",
+      "frontend/src/index.html",
+      "frontend/src/app/shared/constants/global.constant.ts",
+      "backend/src/main/resources/templates/mail/**",
+      "backend/src/main/java/**/ApplicationProperties.java",
+      "backend/src/main/resources/config/application.yml"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A branding-related file was just edited. Before finishing this task, check whether the following documents need to be updated:\n\n**Baseline docs to review:**\n- `docs/baseline/11-branding-impact-analysis.md` — was a new hardcoded branding reference introduced, or was an existing one resolved? Update the touch-point inventory accordingly. If a reference was added outside `branding.ts` or `ApplicationProperties`, flag it as a new Hardcoded_Occurrence that should be centralized.\n\n**Steering files to review:**\n- `.kiro/steering/branding.md` — did the primary color change? Did a logo file get renamed or added? Is the \"Single Source of Truth\" invariant still intact (all colors in `_tokens.scss`, all brand strings in `branding.ts`)?\n\n**Hard rules to check — these must never change without a coordinated deployment:**\n- `COOKIE_AUTH_TOKEN = 'utmauth'` in `frontend/src/app/app.constants.ts` — if this was touched, flag it immediately. Changing it invalidates all active browser sessions.\n- `ACCESS_KEY = 'Utm-Internal-Key'` in `app.constants.ts` — if this was touched, flag it. Changing it breaks frontend-to-backend and external API integrations.\n- `SESSION_AUTH_TOKEN` key pattern — same severity.\n- Agent install filesystem paths in `guide-linux-agent.component.ts` (e.g. `/opt/utmstack-linux-agent/`) — these are live paths on deployed endpoints. Do not change shell command strings; only display labels are safe to update.\n\n**If `_tokens.scss` was edited:**\n- Confirm `$sev-critical`, `$sev-high`, `$sev-medium`, `$sev-low` values are unchanged (SOC-standard colors, never rebrand).\n- Confirm the CSS custom properties `:root {}` block (if it exists) still mirrors the SCSS variable values.\n\n**If an email template was edited:**\n- Confirm the template still uses `th:insert` to include `mail/fragments/branding.html` rather than hardcoding the product name directly."
+  }
+}

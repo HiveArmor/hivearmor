@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260705014" author="armorsight">
+        <createTable tableName="utm_ai_triage">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="alert_id" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="classification" type="VARCHAR(100)"/>
+            <column name="confidence_score" type="DECIMAL(5,2)"/>
+            <column name="reasoning" type="TEXT"/>
+            <column name="next_steps" type="TEXT"/>
+            <column name="raw_response" type="TEXT"/>
+            <column name="model_version" type="VARCHAR(50)"/>
+            <column name="analyzed_at" type="TIMESTAMPTZ">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requested_by" type="VARCHAR(100)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="COMPLETED">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="utm_ai_triage" indexName="idx_ai_triage_alert_id">
+            <column name="alert_id"/>
+        </createIndex>
+
+        <createIndex tableName="utm_ai_triage" indexName="idx_ai_triage_analyzed_at">
+            <column name="analyzed_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
