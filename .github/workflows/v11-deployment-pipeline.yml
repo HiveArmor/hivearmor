@@ -26,7 +26,7 @@ jobs:
           # =====================================================================
           if ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/v11') }}; then
             ENVIRONMENT="dev"
-            CM_URL="https://cm.dev.hivearmor.io"
+            CM_URL="https://cmdev.onlyhacker.org"
             echo "Environment: $ENVIRONMENT"
             echo "CM URL: $CM_URL"
 
@@ -66,7 +66,7 @@ jobs:
           # Always runs a full build and deploys to our production instances.
           # =====================================================================
           elif ${{ github.event_name == 'release' }}; then
-            CM_URL="https://cm.hivearmor.io"
+            CM_URL="https://cm.onlyhacker.org"
             TAG="${{ github.event.release.tag_name }}"
             echo "Event: release, tag=$TAG"
 

@@ -50,7 +50,7 @@ var (
 func GetCMServer() string {
 	cnf := GetConfig()
 	if cnf.Branch == "alpha" {
-		return "https://cm.dev.hivearmor.io"
+		return "https://cmdev.onlyhacker.org"
 	}
-	return "https://cm.hivearmor.io"
+	return "https://cm.onlyhacker.org"
 }

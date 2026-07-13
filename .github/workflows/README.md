@@ -344,8 +344,8 @@ Jobs: `setup_deployment`, `validations`, `build_agent`,
 
 | Trigger | Environment | CM URL | Service Account | Schedule Var |
 |---------|-------------|--------|------------------|--------------|
-| Push to `release/v11**` | dev | `https://cm.dev.hivearmor.io` | `CM_SERVICE_ACCOUNT_DEV` | `SCHEDULE_INSTANCES_DEV` |
-| Prerelease | rc | `https://cm.hivearmor.io` | `CM_SERVICE_ACCOUNT_PROD` | `SCHEDULE_INSTANCES_PROD` |
+| Push to `release/v11**` | dev | `https://cmdev.onlyhacker.org` | `CM_SERVICE_ACCOUNT_DEV` | `SCHEDULE_INSTANCES_DEV` |
+| Prerelease | rc | `https://cm.onlyhacker.org` | `CM_SERVICE_ACCOUNT_PROD` | `SCHEDULE_INSTANCES_PROD` |
 
 ### Version auto-increment (dev)
 
