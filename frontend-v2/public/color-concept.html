@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>HiveArmor — Colour Concept v2</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+body{
+  font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+  background:#080610;
+  color:#EEF0F8;
+  overflow-x:hidden;
+}
+
+/* ─── Token system ──────────────────────────────────────── */
+:root{
+  --bg:        #080610;
+  --surf:      #0D0A1E;
+  --card:      #131028;
+  --elev:      #1A1535;
+  --bdr:       #1E1840;
+  --bdr-hi:    #2C2458;
+
+  /* Brand: SOCFortress orange-red */
+  --ora:       #E8552A;
+  --ora-lt:    #F06D42;
+  --ora-dk:    #C73D18;
+  --ora-sub:   rgba(232,85,42,0.09);
+  --ora-bdr:   rgba(232,85,42,0.22);
+
+  /* Purple: atmospheric only (not UI action) */
+  --pur:       #6D28D9;
+  --pur-lt:    #8B5CF6;
+  --pur-glow:  rgba(109,40,217,0.30);
+
+  /* Data palette */
+  --cyan:      #0EA5E9;
+  --crit:      #EF4444;
+  --med:       #EAB308;
+  --low:       #22C55E;
+
+  --tx:        #EEF0F8;
+  --tx2:       #6B6888;
+  --tx3:       #2A2455;
+}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bdr-hi);border-radius:2px}
+
+/* ─── Canvas ────────────────────────────────────────────── */
+#bg-canvas{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+}
+
+/* ─── CSS square grid overlay ───────────────────────────── */
+#grid-overlay{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(109,40,217,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(109,40,217,0.07) 1px, transparent 1px);
+  background-size:60px 60px;
+}
+
+/* ─── Purple atmosphere ─────────────────────────────────── */
+#atm{
+  position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:
+    radial-gradient(ellipse 65% 55% at 50% 80%,
+      rgba(109,40,217,0.22) 0%,
+      rgba(109,40,217,0.07) 45%,
+      transparent 70%),
+    radial-gradient(ellipse 40% 30% at 60% 20%,
+      rgba(232,85,42,0.04) 0%,
+      transparent 60%);
+}
+
+/* ─── Hero ──────────────────────────────────────────────── */
+.hero{
+  position:relative;z-index:10;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 24px;
+  text-align:center;
+}
+
+.location-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--tx2);background:var(--surf);border:1px solid var(--bdr);
+  padding:4px 12px;border-radius:20px;margin-bottom:28px;
+}
+.location-dot{width:6px;height:6px;border-radius:50%;background:var(--ora);animation:pip 2s ease-in-out infinite;}
+@keyframes pip{0%,100%{opacity:1;box-shadow:0 0 4px var(--ora)}50%{opacity:0.3;box-shadow:none}}
+
+.hero-logo{display:flex;align-items:center;gap:12px;margin-bottom:24px;justify-content:center;}
+.logo-svg{width:44px;height:44px}
+.logo-wordmark{font-size:22px;font-weight:800;letter-spacing:-0.03em;color:var(--tx)}
+
+h1.hero-title{
+  font-size:clamp(2.4rem,5.5vw,4.2rem);font-weight:800;
+  line-height:1.08;letter-spacing:-0.04em;
+  color:var(--tx);margin-bottom:16px;
+  max-width:680px;
+}
+h1.hero-title em{
+  font-style:normal;
+  background:linear-gradient(90deg,var(--ora),var(--ora-lt));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+.hero-sub{
+  font-size:15px;color:var(--tx2);line-height:1.65;margin-bottom:36px;max-width:460px;
+}
+
+.cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:52px;}
+.btn-ora{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:11px 24px;border-radius:8px;border:none;
+  background:var(--ora);color:#fff;font-size:13.5px;font-weight:600;
+  cursor:pointer;font-family:inherit;
+  box-shadow:0 0 22px rgba(232,85,42,0.28);
+  transition:transform 0.1s,box-shadow 0.15s;
+}
+.btn-ora:hover{transform:translateY(-1px);box-shadow:0 0 32px rgba(232,85,42,0.38);}
+.btn-dark{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:11px 24px;border-radius:8px;border:1px solid var(--bdr-hi);
+  background:rgba(255,255,255,0.04);color:var(--tx2);font-size:13.5px;font-weight:500;
+  cursor:pointer;font-family:inherit;transition:border-color 0.15s,color 0.15s;
+}
+.btn-dark:hover{border-color:var(--bdr-hi);color:var(--tx);}
+
+/* Three hex KPI tiles in hero bottom */
+.kpi-row{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;}
+.kpi-hex-wrap{
+  width:120px;height:120px;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  background:var(--card);
+  border:0;
+  transition:filter 0.2s;
+}
+.kpi-hex-wrap::before{
+  content:'';position:absolute;inset:0;
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  background:linear-gradient(135deg,var(--ora) 0%,transparent 70%);
+  opacity:0.12;
+}
+.kpi-hex-wrap:hover{filter:brightness(1.15);}
+.kpi-num{font-size:22px;font-weight:800;letter-spacing:-0.03em;position:relative;z-index:1;}
+.kpi-lbl{font-size:9px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--tx2);margin-top:2px;position:relative;z-index:1;}
+
+/* ─── Section wrapper ───────────────────────────────────── */
+.section{position:relative;z-index:10;padding:72px 40px;}
+.section-inner{max-width:1040px;margin:0 auto;}
+
+.sec-eyebrow{
+  font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--ora);margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.sec-eyebrow::before{
+  content:'';width:12px;height:12px;flex-shrink:0;
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  background:var(--ora);opacity:0.7;
+}
+.sec-title{font-size:1.9rem;font-weight:800;letter-spacing:-0.03em;color:var(--tx);margin-bottom:32px;}
+
+/* ─── Palette swatches ──────────────────────────────────── */
+.swatch-row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;}
+.sw-item{display:flex;flex-direction:column;align-items:center;gap:7px;}
+.sw-hex{
+  width:52px;height:52px;
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  transition:filter 0.15s,transform 0.15s;cursor:default;
+}
+.sw-hex:hover{filter:brightness(1.15);transform:scale(1.1);}
+.sw-name{font-size:9.5px;color:var(--tx2);text-align:center;line-height:1.3}
+.sw-code{font-size:8.5px;color:var(--tx3);font-family:'SF Mono','JetBrains Mono',monospace;}
+
+.swatch-divider{width:1px;height:56px;background:var(--bdr);align-self:center;margin:0 4px;}
+
+/* ─── Component grid ────────────────────────────────────── */
+.comp-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+@media(max-width:720px){.comp-grid{grid-template-columns:1fr;}}
+
+.comp-card{
+  background:var(--card);border:1px solid var(--bdr);border-radius:10px;
+  overflow:hidden;position:relative;
+}
+.comp-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--ora),transparent);}
+.comp-head{padding:12px 16px;border-bottom:1px solid var(--bdr);font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--tx2);display:flex;align-items:center;gap:6px;}
+.comp-head .ch{width:8px;height:8px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);}
+.comp-body{padding:16px;}
+
+/* KPI inside comp card */
+.kpi-mini{margin-bottom:12px;}
+.kpi-mini .num{font-size:2rem;font-weight:800;letter-spacing:-0.04em;line-height:1;}
+.kpi-mini .lbl{font-size:10px;color:var(--tx2);letter-spacing:0.05em;text-transform:uppercase;margin-top:3px;}
+.kpi-mini .delta{font-size:11px;margin-top:5px;}
+.kpi-mini .up{color:var(--crit);}
+.kpi-mini .dn{color:var(--low);}
+
+/* Severity badges */
+.badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px 3px 5px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;
+}
+.bh{width:10px;height:10px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);flex-shrink:0;}
+.b-crit{background:rgba(239,68,68,0.10);color:#FCA5A5;border:1px solid rgba(239,68,68,0.22);}
+.b-high{background:var(--ora-sub);color:#F8896A;border:1px solid var(--ora-bdr);}
+.b-med {background:rgba(234,179,8,0.09);color:#FDE68A;border:1px solid rgba(234,179,8,0.20);}
+.b-low {background:rgba(34,197,94,0.08);color:#86EFAC;border:1px solid rgba(34,197,94,0.18);}
+.b-info{background:rgba(100,116,139,0.08);color:#566880;border:1px solid rgba(100,116,139,0.15);}
+
+/* Button grid */
+.btn-grid{display:flex;flex-direction:column;gap:8px;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:filter 0.12s,transform 0.1s;border:none;width:100%;justify-content:center;}
+.btn:hover{filter:brightness(1.08);transform:translateY(-1px);}
+.btn-primary{background:var(--ora);color:#fff;box-shadow:0 2px 12px rgba(232,85,42,0.24);}
+.btn-secondary{background:var(--ora-sub);color:var(--ora-lt);border:1px solid var(--ora-bdr);}
+.btn-ghost{background:rgba(255,255,255,0.04);color:var(--tx2);border:1px solid var(--bdr);}
+.btn-pur{background:rgba(109,40,217,0.12);color:#A78BFA;border:1px solid rgba(109,40,217,0.22);}
+.btn-danger{background:rgba(239,68,68,0.09);color:#FCA5A5;border:1px solid rgba(239,68,68,0.20);}
+
+/* Alert row */
+.alert-row{
+  display:grid;grid-template-columns:3px 1fr auto;
+  border-bottom:1px solid var(--bdr);cursor:pointer;transition:background 0.1s;
+}
+.alert-row:last-child{border-bottom:none;}
+.alert-row:hover{background:rgba(255,255,255,0.015);}
+.ar-body{padding:9px 12px;min-width:0;}
+.ar-title{font-size:12.5px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
+.ar-meta{display:flex;gap:7px;font-size:10px;color:var(--tx2);align-items:center;}
+.ar-time{padding:10px 12px;font-size:9.5px;color:var(--tx3);font-family:monospace;white-space:nowrap;}
+
+/* ─── Comparison strip ──────────────────────────────────── */
+.compare-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.comp-half{background:var(--card);border:1px solid var(--bdr);border-radius:10px;padding:20px;text-align:center;}
+.comp-half .label{font-size:9.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:14px;}
+.old-label{color:rgba(101,166,55,0.7);}
+.new-label{color:var(--ora);}
+.color-dots{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.cd{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.08);}
+.cd-hex{
+  width:36px;height:36px;
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+}
+
+/* ─── Footer ────────────────────────────────────────────── */
+.pg-footer{
+  position:relative;z-index:10;
+  text-align:center;padding:32px;
+  border-top:1px solid var(--bdr);
+  font-size:10.5px;color:var(--tx3);
+  letter-spacing:0.06em;text-transform:uppercase;
+}
+
+/* ─── Horizontal rule divider ───────────────────────────── */
+.section-divider{
+  position:relative;z-index:10;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--bdr),transparent);
+  margin:0 40px;
+}
+</style>
+</head>
+<body>
+
+<!-- Animated canvas -->
+<canvas id="bg-canvas"></canvas>
+<!-- CSS grid -->
+<div id="grid-overlay"></div>
+<!-- Purple atmosphere -->
+<div id="atm"></div>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<section class="hero">
+
+  <div class="location-tag">
+    <span class="location-dot"></span>
+    Austin, TX
+  </div>
+
+  <div class="hero-logo">
+    <svg class="logo-svg" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="og" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#F06D42"/>
+          <stop offset="100%" stop-color="#C73D18"/>
+        </linearGradient>
+      </defs>
+      <polygon points="22,2 40,12 40,32 22,42 4,32 4,12" fill="none" stroke="url(#og)" stroke-width="0.8" opacity="0.3"/>
+      <polygon points="22,6 37,15 37,29 22,38 7,29 7,15" fill="none" stroke="url(#og)" stroke-width="1" opacity="0.6"/>
+      <polygon points="22,11 34,18 34,26 22,33 10,26 10,18" fill="url(#og)" opacity="0.10"/>
+      <polygon points="22,11 34,18 34,26 22,33 10,26 10,18" fill="none" stroke="url(#og)" stroke-width="1.4"/>
+      <polygon points="22,16.5 28,20 28,24 22,27.5 16,24 16,20" fill="url(#og)" opacity="0.88"/>
+      <circle cx="22" cy="22" r="2.4" fill="#080610"/>
+      <circle cx="22" cy="22" r="1.4" fill="url(#og)"/>
+    </svg>
+    <span class="logo-wordmark">HiveArmor</span>
+  </div>
+
+  <h1 class="hero-title">Do you want to explore<br>the world of <em>HiveArmor</em>?</h1>
+
+  <p class="hero-sub">Enterprise SIEM/XDR. Real-time correlation across 164+ log sources. Powered by the HexCore engine.</p>
+
+  <div class="cta-row">
+    <button class="btn-ora">Get CoPilot</button>
+    <button class="btn-dark">Watch our SIEM stack intro</button>
+  </div>
+
+  <!-- Hex KPI tiles -->
+  <div class="kpi-row">
+    <div class="kpi-hex-wrap">
+      <span class="kpi-num" style="color:var(--ora-lt)">2.47M</span>
+      <span class="kpi-lbl">Events/day</span>
+    </div>
+    <div class="kpi-hex-wrap">
+      <span class="kpi-num" style="color:#FCA5A5">847</span>
+      <span class="kpi-lbl">Active Alerts</span>
+    </div>
+    <div class="kpi-hex-wrap">
+      <span class="kpi-num" style="color:#86EFAC">99.7%</span>
+      <span class="kpi-lbl">Uptime</span>
+    </div>
+  </div>
+
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ═══════════════ PALETTE ═══════════════ -->
+<section class="section">
+  <div class="section-inner">
+    <div class="sec-eyebrow">Colour System v2</div>
+    <h2 class="sec-title">Adapted from SOCFortress</h2>
+
+    <div class="swatch-row">
+      <!-- Surfaces -->
+      <div class="sw-item">
+        <div class="sw-hex" style="background:#080610;outline:1px solid #1E1840;outline-offset:-1px"></div>
+        <div class="sw-name">Ground</div><div class="sw-code">#080610</div>
+      </div>
+      <div class="sw-item">
+        <div class="sw-hex" style="background:#0D0A1E"></div>
+        <div class="sw-name">Surface</div><div class="sw-code">#0D0A1E</div>
+      </div>
+      <div class="sw-item">
+        <div class="sw-hex" style="background:#131028"></div>
+        <div class="sw-name">Card</div><div class="sw-code">#131028</div>
+      </div>
+      <div class="sw-item">
+        <div class="sw-hex" style="background:#1E1840"></div>
+        <div class="sw-name">Border</div><div class="sw-code">#1E1840</div>
+      </div>
+
+      <div class="swatch-divider"></div>
+
+      <!-- Brand orange -->
+      <div class="sw-item">
+        <div class="sw-hex" style="background:linear-gradient(135deg,#F06D42,#E8552A);box-shadow:0 0 14px rgba(232,85,42,0.35)"></div>
+        <div class="sw-name">Brand</div><div class="sw-code">#E8552A</div>
+      </div>
+      <div class="sw-item">
+        <div class="sw-hex" style="background:#F06D42"></div>
+        <div class="sw-name">Brand Lt</div><div class="sw-code">#F06D42</div>
+      </div>
+      <div class="sw-item">
+        <div class="sw-hex" style="background:#C73D18"></div>
+        <div class="sw-name">Brand Dk</div><div class="sw-code">#C73D18</div>
+      </div>
+
+      <div class="swatch-divider"></div>
+
+      <!-- Purple atmospheric -->
+      <div class="sw-item">
+        <div class="sw-hex" style="background:linear-gradient(135deg,#8B5CF6,#6D28D9);box-shadow:0 0 14px rgba(109,40,217,0.35)"></div>
+        <div class="sw-name">Atm Purple</div><div class="sw-code">#6D28D9</div>
+      </div>
+      <div class="sw-item">
+        <div class="sw-hex" style="background:#8B5CF6"></div>
+        <div class="sw-name">Purple Lt</div><div class="sw-code">#8B5CF6</div>
+      </div>
+
+      <div class="swatch-divider"></div>
+
+      <!-- Severity -->
+      <div class="sw-item">
+        <div class="sw-hex" style="background:#EF4444;box-shadow:0 0 10px rgba(239,68,68,0.30)"></div>
+        <div class="sw-name">Critical</div><div class="sw-code">#EF4444</div>
+      </div>
+      <div class="sw-item">
+        <div class="sw-hex" style="background:#EAB308"></div>
+        <div class="sw-name">Medium</div><div class="sw-code">#EAB308</div>
+      </div>
+      <div class="sw-item">
+        <div class="sw-hex" style="background:#22C55E"></div>
+        <div class="sw-name">Low</div><div class="sw-code">#22C55E</div>
+      </div>
+      <div class="sw-item">
+        <div class="sw-hex" style="background:#0EA5E9"></div>
+        <div class="sw-name">Info / Cyan</div><div class="sw-code">#0EA5E9</div>
+      </div>
+    </div>
+
+    <!-- Before / After comparison -->
+    <div style="margin-top:36px">
+      <div class="sec-eyebrow">Palette Shift</div>
+      <div class="compare-row">
+        <div class="comp-half">
+          <div class="label old-label">v1 — Navy × Green (Splunk-inspired)</div>
+          <div class="color-dots">
+            <div class="cd" style="background:#060913"></div>
+            <div class="cd" style="background:#0A0F1C"></div>
+            <div class="cd" style="background:#0E1624"></div>
+            <div class="cd" style="background:#65A637"></div>
+            <div class="cd" style="background:#0EA5E9"></div>
+            <div class="cd" style="background:#EF4444"></div>
+          </div>
+        </div>
+        <div class="comp-half" style="border-color:var(--ora-bdr)">
+          <div class="label new-label">v2 — Indigo-Black × Orange (SOCFortress)</div>
+          <div class="color-dots">
+            <div class="cd-hex" style="background:#080610;outline:1px solid #2C2458;outline-offset:-1px"></div>
+            <div class="cd-hex" style="background:#131028"></div>
+            <div class="cd-hex" style="background:#1E1840"></div>
+            <div class="cd-hex" style="background:linear-gradient(135deg,#F06D42,#E8552A);box-shadow:0 0 8px rgba(232,85,42,0.28)"></div>
+            <div class="cd-hex" style="background:#6D28D9"></div>
+            <div class="cd-hex" style="background:#EF4444"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ═══════════════ COMPONENTS ═══════════════ -->
+<section class="section" style="padding-top:48px">
+  <div class="section-inner">
+    <div class="sec-eyebrow">Component Preview</div>
+    <h2 class="sec-title">UI Elements in v2 Palette</h2>
+
+    <div class="comp-grid">
+
+      <!-- KPI card -->
+      <div class="comp-card">
+        <div class="comp-head"><span class="ch" style="background:var(--ora)"></span>KPI Tiles</div>
+        <div class="comp-body">
+          <div class="kpi-mini">
+            <div class="num" style="color:var(--ora-lt)">2.47M</div>
+            <div class="lbl">Events Ingested</div>
+            <div class="delta"><span class="up">▲ 12.4%</span> <span style="color:var(--tx3)">vs yesterday</span></div>
+          </div>
+          <div style="height:1px;background:var(--bdr);margin:12px 0"></div>
+          <div class="kpi-mini">
+            <div class="num" style="color:#FCA5A5">847</div>
+            <div class="lbl">Active Alerts</div>
+            <div class="delta"><span class="up">▲ 34</span> <span style="color:var(--tx3)">new today</span></div>
+          </div>
+          <div style="height:1px;background:var(--bdr);margin:12px 0"></div>
+          <div class="kpi-mini">
+            <div class="num" style="color:#86EFAC">14m</div>
+            <div class="lbl">MTTR</div>
+            <div class="delta"><span class="dn">▼ 2m</span> <span style="color:var(--tx3)">improved</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Badges + Buttons -->
+      <div class="comp-card">
+        <div class="comp-head"><span class="ch" style="background:var(--pur-lt)"></span>Severity Badges &amp; Actions</div>
+        <div class="comp-body">
+          <div style="font-size:9px;color:var(--tx3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Severity Scale</div>
+          <div class="badge-row">
+            <div class="badge b-crit"><span class="bh" style="background:#EF4444"></span>CRITICAL</div>
+            <div class="badge b-high"><span class="bh" style="background:#E8552A"></span>HIGH</div>
+            <div class="badge b-med"><span class="bh" style="background:#EAB308"></span>MEDIUM</div>
+            <div class="badge b-low"><span class="bh" style="background:#22C55E"></span>LOW</div>
+            <div class="badge b-info"><span class="bh" style="background:#475569"></span>INFO</div>
+          </div>
+          <div style="height:1px;background:var(--bdr);margin:14px 0"></div>
+          <div style="font-size:9px;color:var(--tx3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">Actions</div>
+          <div class="btn-grid">
+            <button class="btn btn-primary">Investigate Alert</button>
+            <button class="btn btn-secondary">Export Report</button>
+            <button class="btn btn-pur">View in MITRE</button>
+            <button class="btn btn-ghost">Filter Events</button>
+            <button class="btn btn-danger">Escalate Case</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert feed -->
+      <div class="comp-card">
+        <div class="comp-head">
+          <span class="ch" style="background:#EF4444"></span>Live Critical Alerts
+          <span style="margin-left:auto;font-size:9px;background:rgba(239,68,68,0.10);color:#FCA5A5;border:1px solid rgba(239,68,68,0.20);padding:1px 7px;border-radius:3px;font-weight:700;letter-spacing:0.04em;">94 UNACK</span>
+        </div>
+        <div>
+          <div class="alert-row">
+            <div style="background:#EF4444"></div>
+            <div class="ar-body">
+              <div class="ar-title">Brute Force: RDP Multiple Failures</div>
+              <div class="ar-meta">
+                <span class="badge b-crit" style="padding:1px 5px;font-size:8.5px"><span class="bh" style="background:#EF4444;width:8px;height:8px"></span>CRITICAL</span>
+                <span>192.168.10.44</span>
+              </div>
+            </div>
+            <div class="ar-time">14:31</div>
+          </div>
+          <div class="alert-row">
+            <div style="background:#E8552A"></div>
+            <div class="ar-body">
+              <div class="ar-title">Suspicious PowerShell Execution</div>
+              <div class="ar-meta">
+                <span class="badge b-high" style="padding:1px 5px;font-size:8.5px"><span class="bh" style="background:#E8552A;width:8px;height:8px"></span>HIGH</span>
+                <span>WKSTN-0042</span>
+              </div>
+            </div>
+            <div class="ar-time">14:29</div>
+          </div>
+          <div class="alert-row">
+            <div style="background:#EF4444"></div>
+            <div class="ar-body">
+              <div class="ar-title">Ransomware: Mass File Encryption</div>
+              <div class="ar-meta">
+                <span class="badge b-crit" style="padding:1px 5px;font-size:8.5px"><span class="bh" style="background:#EF4444;width:8px;height:8px"></span>CRITICAL</span>
+                <span>10.0.2.88</span>
+              </div>
+            </div>
+            <div class="ar-time">14:27</div>
+          </div>
+          <div class="alert-row">
+            <div style="background:#E8552A"></div>
+            <div class="ar-body">
+              <div class="ar-title">Lateral Movement via Pass-the-Hash</div>
+              <div class="ar-meta">
+                <span class="badge b-high" style="padding:1px 5px;font-size:8.5px"><span class="bh" style="background:#E8552A;width:8px;height:8px"></span>HIGH</span>
+                <span>SRV-DC01</span>
+              </div>
+            </div>
+            <div class="ar-time">14:25</div>
+          </div>
+          <div class="alert-row">
+            <div style="background:#EAB308"></div>
+            <div class="ar-body">
+              <div class="ar-title">Unusual Outbound DNS Volume Spike</div>
+              <div class="ar-meta">
+                <span class="badge b-med" style="padding:1px 5px;font-size:8.5px"><span class="bh" style="background:#EAB308;width:8px;height:8px"></span>MEDIUM</span>
+                <span>10.0.1.33</span>
+              </div>
+            </div>
+            <div class="ar-time">14:22</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="pg-footer">
+  HiveArmor — Colour Concept v2 &nbsp;·&nbsp; Indigo-Black × Orange-Red &nbsp;·&nbsp; Inspired by SOCFortress
+</div>
+
+<script>
+/* ── Canvas: animated grid intersection glows ── */
+(function(){
+  const cvs = document.getElementById('bg-canvas');
+  const ctx  = cvs.getContext('2d');
+  let W, H;
+
+  const STEP = 60;
+
+  function resize(){
+    W = cvs.width  = window.innerWidth;
+    H = cvs.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function loop(t){
+    ctx.clearRect(0,0,W,H);
+
+    const cols = Math.ceil(W/STEP)+1;
+    const rows = Math.ceil(H/STEP)+1;
+
+    for(let c=0; c<cols; c++){
+      for(let r=0; r<rows; r++){
+        /* deterministic phase per intersection */
+        const phase  = (c*7.3 + r*13.7);
+        const wave   = Math.sin(t*0.00055 + phase*0.22);
+        const glow   = Math.pow(Math.max(0, wave), 5); /* sharp pulse */
+
+        if(glow < 0.015) continue;
+
+        const px = c*STEP;
+        const py = r*STEP;
+
+        /* sparse orange intersections (1 in 9), rest purple */
+        const isOrange = (c*3 + r*5) % 9 === 0;
+
+        if(isOrange){
+          ctx.fillStyle = `rgba(232,85,42,${glow*0.75})`;
+        } else {
+          ctx.fillStyle = `rgba(130,80,255,${glow*0.55})`;
+        }
+
+        /* dot */
+        ctx.beginPath();
+        ctx.arc(px, py, 1.5 + glow*2.5, 0, Math.PI*2);
+        ctx.fill();
+
+        /* halo for strong pulses */
+        if(glow > 0.35){
+          const r2 = 18*glow;
+          const grad = ctx.createRadialGradient(px,py,0,px,py,r2);
+          if(isOrange){
+            grad.addColorStop(0, `rgba(232,85,42,${glow*0.14})`);
+          } else {
+            grad.addColorStop(0, `rgba(120,70,240,${glow*0.10})`);
+          }
+          grad.addColorStop(1,'rgba(0,0,0,0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(px-r2,py-r2,r2*2,r2*2);
+        }
+      }
+    }
+
+    /* slow horizontal scan sweep (very faint) */
+    const scanY = (t * 0.022) % H;
+    const scanGrad = ctx.createLinearGradient(0, scanY-6, 0, scanY+6);
+    scanGrad.addColorStop(0,'rgba(130,80,255,0)');
+    scanGrad.addColorStop(0.5,`rgba(130,80,255,0.025)`);
+    scanGrad.addColorStop(1,'rgba(130,80,255,0)');
+    ctx.fillStyle = scanGrad;
+    ctx.fillRect(0, scanY-6, W, 12);
+
+    requestAnimationFrame(loop);
+  }
+
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

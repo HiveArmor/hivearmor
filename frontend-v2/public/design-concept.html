@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HiveArmor — Dashboard</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 13px; }
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #080610;
+  color: #EEF0F8;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root {
+  --bg:          #080610;
+  --surface:     #0D0A1E;
+  --card:        #131028;
+  --elevated:    #1A1535;
+  --border:      #1E1840;
+  --border-hi:   #2C2458;
+  --orange:      #E8552A;
+  --orange-lt:   #F06D42;
+  --orange-dk:   #C73D18;
+  --orange-sub:  rgba(232,85,42,0.09);
+  --orange-bdr:  rgba(232,85,42,0.22);
+  --pur:         #6D28D9;
+  --pur-lt:      #8B5CF6;
+  --pur-glow:    rgba(109,40,217,0.30);
+  --cyan:        #0EA5E9;
+  --cyan-lt:     #38BDF8;
+  --cyan-sub:    rgba(14,165,233,0.08);
+  --crit:        #EF4444;
+  --crit-sub:    rgba(239,68,68,0.10);
+  --crit-bdr:    rgba(239,68,68,0.20);
+  --high-sub:    rgba(232,85,42,0.10);
+  --med:         #EAB308;
+  --med-sub:     rgba(234,179,8,0.10);
+  --low:         #22C55E;
+  --low-sub:     rgba(34,197,94,0.08);
+  --tx:          #EEF0F8;
+  --tx2:         #6B6888;
+  --tx3:         #2A2455;
+  --radius:      7px;
+  --radius-sm:   4px;
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+/* CSS square grid */
+.sq-grid {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(109,40,217,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(109,40,217,0.06) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+/* Purple atmosphere */
+.atm {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 95%,
+      rgba(109,40,217,0.18) 0%,
+      rgba(109,40,217,0.06) 45%,
+      transparent 70%),
+    radial-gradient(ellipse 40% 25% at 80% 10%,
+      rgba(232,85,42,0.03) 0%,
+      transparent 60%);
+}
+
+.shell { display: flex; height: 100vh; position: relative; z-index: 1; overflow: hidden; }
+
+.sidebar {
+  width: 220px; flex-shrink: 0;
+  background: rgba(13,10,30,0.96);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+.logo-wrap {
+  padding: 16px 14px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-icon { width: 34px; height: 34px; flex-shrink: 0; }
+.logo-name  { font-size: 15px; font-weight: 700; color: #EEF2F8; letter-spacing: -0.02em; }
+.logo-sub   { font-size: 9px; color: rgba(249,115,22,0.5); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 1px; }
+
+.nav-group { padding: 14px 8px 4px; }
+.nav-group-label { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tx3); padding: 0 8px 7px; }
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 12.5px; color: var(--tx2);
+  transition: all 0.12s; margin-bottom: 1px; user-select: none;
+}
+.nav-item:hover { background: rgba(255,255,255,0.03); color: var(--tx); }
+.nav-item.active { background: var(--orange-sub); color: var(--orange-lt); border-left: 2px solid var(--orange); font-weight: 500; padding-left: calc(10px - 2px); }
+.nav-item svg { width: 13px; height: 13px; flex-shrink: 0; }
+.nav-pip { width: 5px; height: 5px; border-radius: 50%; background: var(--crit); margin-left: auto; animation: pip 1.4s ease-in-out infinite; }
+@keyframes pip { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+.sidebar-footer { margin-top: auto; padding: 10px 8px; border-top: 1px solid var(--border); }
+.user-block { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--radius-sm); cursor: pointer; }
+.user-block:hover { background: rgba(255,255,255,0.03); }
+.avatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, #C73D18, #E8552A); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
+.user-name { font-size: 12px; font-weight: 500; color: var(--tx); }
+.user-role { font-size: 10px; color: var(--tx2); }
+
+.main { flex: 1; overflow-y: auto; min-width: 0; display: flex; flex-direction: column; }
+
+.topbar {
+  height: 50px; flex-shrink: 0; background: rgba(8,6,16,0.94); border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px); display: flex; align-items: center; padding: 0 20px; gap: 10px;
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--orange-bdr) 35%, rgba(109,40,217,0.15) 70%, transparent);
+}
+.tb-title { font-size: 13.5px; font-weight: 600; color: var(--tx); flex: 1; letter-spacing: -0.01em; }
+.chip { display: flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 10.5px; font-weight: 500; }
+.chip-live  { background: var(--crit-sub); border: 1px solid var(--crit-bdr); color: #FCA5A5; letter-spacing: 0.05em; }
+.chip-eps   { background: var(--orange-sub); border: 1px solid var(--orange-bdr); color: var(--orange-lt); font-family: 'SF Mono','JetBrains Mono',monospace; }
+.chip-time  { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--tx2); font-family: 'SF Mono',monospace; font-size: 10px; }
+.live-dot   { width: 5px; height: 5px; border-radius: 50%; background: var(--crit); animation: pip 1.4s infinite; }
+
+.dash { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+
+.section-row { display: flex; align-items: center; gap: 10px; }
+.section-label {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--tx3); white-space: nowrap; display: flex; align-items: center; gap: 5px;
+}
+.section-label::before {
+  content: ''; display: inline-block; width: 8px; height: 8px;
+  clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  background: var(--orange); opacity: 0.6;
+}
+.section-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+
+.kpi-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.kpi-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 14px 12px; position: relative; overflow: hidden; transition: border-color 0.15s, transform 0.15s;
+}
+.kpi-card:hover { border-color: var(--border-hi); transform: translateY(-1px); }
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.kpi-card.k-orange::before { background: linear-gradient(90deg,var(--orange),var(--orange-dk) 60%,transparent); }
+.kpi-card.k-red::before    { background: linear-gradient(90deg,var(--crit),transparent); }
+.kpi-card.k-cyan::before   { background: linear-gradient(90deg,var(--cyan),transparent); }
+.kpi-card.k-violet::before { background: linear-gradient(90deg,#8B5CF6,transparent); }
+.kpi-card.k-green::before  { background: linear-gradient(90deg,var(--low),transparent); }
+.kpi-card::after {
+  content: ''; position: absolute; right: -12px; bottom: -12px; width: 64px; height: 64px; opacity: 0.04;
+  clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+}
+.kpi-card.k-orange::after  { background: var(--orange); }
+.kpi-card.k-red::after     { background: var(--crit); }
+.kpi-card.k-cyan::after    { background: var(--cyan); }
+.kpi-card.k-violet::after  { background: #8B5CF6; }
+.kpi-card.k-green::after   { background: var(--low); }
+
+.kpi-label { font-size: 10px; font-weight: 500; letter-spacing: 0.05em; color: var(--tx2); margin-bottom: 8px; text-transform: uppercase; }
+.kpi-value { font-size: 26px; font-weight: 700; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--tx); margin-bottom: 6px; }
+.kpi-card.k-orange .kpi-value { color: var(--orange-lt); }
+.kpi-card.k-red    .kpi-value { color: #FCA5A5; }
+.kpi-card.k-cyan   .kpi-value { color: var(--cyan-lt); }
+.kpi-card.k-violet .kpi-value { color: #C4B5FD; }
+.kpi-card.k-green  .kpi-value { color: #86EFAC; }
+.kpi-delta { display: flex; align-items: center; gap: 5px; font-size: 10.5px; }
+.delta-up  { color: var(--crit); }
+.delta-dn  { color: var(--low); }
+.kpi-sub   { color: var(--tx3); }
+.spark     { height: 24px; margin-top: 8px; }
+.spark svg { width: 100%; height: 100%; display: block; }
+
+.row-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.row-31 { display: grid; grid-template-columns: 280px 1fr; gap: 10px; }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; position: relative; }
+.card-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.card-title { font-size: 10.5px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--tx2); display: flex; align-items: center; gap: 6px; }
+.ct-hex { width: 7px; height: 7px; flex-shrink: 0; clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); }
+.badge { font-size: 10px; padding: 2px 8px; border-radius: 3px; font-weight: 600; letter-spacing: 0.04em; }
+.badge-red    { background: var(--crit-sub); color: #FCA5A5; border: 1px solid var(--crit-bdr); }
+.badge-orange { background: var(--orange-sub); color: var(--orange-lt); border: 1px solid var(--orange-bdr); }
+.badge-cyan   { background: var(--cyan-sub); color: var(--cyan-lt); border: 1px solid rgba(14,165,233,0.18); }
+.badge-violet { background: rgba(139,92,246,0.08); color: #C4B5FD; border: 1px solid rgba(139,92,246,0.18); }
+.badge-green  { background: var(--low-sub); color: #86EFAC; border: 1px solid rgba(34,197,94,0.18); }
+
+.donut-wrap { width: 136px; height: 136px; margin: 0 auto 12px; position: relative; }
+.donut-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.donut-num { font-size: 24px; font-weight: 700; color: var(--tx); line-height: 1; letter-spacing: -0.03em; }
+.donut-sub { font-size: 9.5px; color: var(--tx2); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+.donut-body { padding: 16px 14px 14px; }
+.leg-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+.leg-left { display: flex; align-items: center; gap: 7px; }
+.leg-swatch { width: 10px; height: 10px; flex-shrink: 0; clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); }
+.leg-name { font-size: 11.5px; color: var(--tx2); }
+.leg-val  { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.hm-body { padding: 12px 14px; }
+.hm-day-row { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--tx3); margin-bottom: 6px; }
+.hm-grid  { display: flex; flex-direction: column; gap: 2px; }
+.hm-row   { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; }
+.hc { height: 11px; border-radius: 2px; cursor: pointer; transition: filter 0.1s; }
+.hc:hover { filter: brightness(1.5); }
+.hm-hour-row { display: flex; justify-content: space-between; font-size: 9px; color: var(--tx3); margin-top: 7px; }
+.hm-legend { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 9.5px; color: var(--tx3); }
+
+.bars { padding: 8px 14px 12px; display: flex; flex-direction: column; gap: 7px; }
+.bar-row { display: grid; grid-template-columns: 120px 1fr 42px; align-items: center; gap: 8px; }
+.bar-label { font-size: 11.5px; color: var(--tx2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { height: 5px; background: var(--elevated); border-radius: 3px; overflow: hidden; }
+.bar-fill  { height: 100%; border-radius: 3px; }
+.bar-num   { text-align: right; font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+.alert-row { display: grid; grid-template-columns: 3px 1fr auto; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+.alert-row:hover { background: rgba(255,255,255,0.015); }
+.ar-body { padding: 8px 12px; min-width: 0; }
+.ar-title { font-size: 12px; color: var(--tx); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+.ar-meta  { display: flex; gap: 7px; font-size: 10px; color: var(--tx2); align-items: center; }
+.sev-pill { display: inline-flex; align-items: center; gap: 3px; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; }
+.ar-time  { padding: 10px 11px 8px; font-size: 9.5px; color: var(--tx3); font-family: monospace; white-space: nowrap; }
+
+.collector-grid { padding: 12px 14px 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+.chex { width: 52px; height: 52px; position: relative; cursor: pointer; transition: filter 0.15s, transform 0.15s; }
+.chex:hover { filter: brightness(1.1); transform: scale(1.06); z-index: 2; }
+.chex svg { width: 100%; height: 100%; display: block; }
+
+.vol-body { padding: 10px 14px 12px; }
+.vol-bars { display: flex; align-items: flex-end; gap: 3px; height: 72px; }
+.vol-bar  { flex: 1; border-radius: 2px 2px 0 0; min-width: 3px; cursor: pointer; transition: opacity 0.1s; }
+.vol-bar:hover { opacity: 0.7; }
+.vol-axis { display: flex; justify-content: space-between; font-size: 9px; color: var(--tx3); margin-top: 5px; }
+
+.stat-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; position: relative; overflow: hidden; }
+.sc-icon  { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 8px; }
+.sc-num   { font-size: 20px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.sc-label { font-size: 11px; color: var(--tx2); margin-top: 3px; }
+.sc-trend { font-size: 10px; margin-top: 5px; }
+
+.pal-grid { display: flex; gap: 10px; padding: 14px; flex-wrap: wrap; align-items: flex-end; }
+.pal-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.pal-swatch { clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); width: 40px; height: 40px; transition: filter 0.15s, transform 0.15s; }
+.pal-swatch:hover { filter: brightness(1.15); transform: scale(1.08); }
+.pal-name { font-size: 9px; color: var(--tx3); text-align: center; }
+.pal-code { font-size: 8px; color: var(--tx3); font-family: monospace; }
+
+.spec-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; padding: 14px; border-top: 1px solid var(--border); }
+.spec-title { font-size: 9px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tx3); margin-bottom: 9px; }
+
+.sev-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.sev-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px 3px 4px; border-radius: 3px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; }
+.sev-hex { width: 12px; height: 12px; clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); flex-shrink: 0; }
+
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 5px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; transition: filter 0.12s, transform 0.1s; font-family: inherit; }
+.btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn-primary   { background: var(--orange); color: #fff; box-shadow: 0 0 14px rgba(232,85,42,0.22); }
+.btn-secondary { background: transparent; color: var(--cyan-lt); border: 1px solid rgba(14,165,233,0.25); }
+.btn-ghost     { background: rgba(255,255,255,0.04); color: var(--tx2); border: 1px solid var(--border); }
+.btn-danger    { background: var(--crit-sub); color: #FCA5A5; border: 1px solid var(--crit-bdr); }
+</style>
+</head>
+<body>
+<div class="sq-grid"></div>
+<div class="atm"></div>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo-wrap">
+    <svg class="logo-icon" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#F06D42"/><stop offset="100%" stop-color="#C73D18"/></linearGradient></defs>
+      <polygon points="17,1.5 31,9.5 31,25.5 17,33.5 3,25.5 3,9.5" fill="none" stroke="url(#lg)" stroke-width="0.8" opacity="0.3"/>
+      <polygon points="17,5 28,11.5 28,23.5 17,30 6,23.5 6,11.5" fill="none" stroke="url(#lg)" stroke-width="1" opacity="0.6"/>
+      <polygon points="17,9 24,13 24,21 17,25 10,21 10,13" fill="url(#lg)" opacity="0.12"/>
+      <polygon points="17,9 24,13 24,21 17,25 10,21 10,13" fill="none" stroke="url(#lg)" stroke-width="1.3"/>
+      <polygon points="17,13.5 21,16 21,20 17,22.5 13,20 13,16" fill="url(#lg)" opacity="0.85"/>
+      <circle cx="17" cy="17.75" r="2.2" fill="#080610"/>
+      <circle cx="17" cy="17.75" r="1.3" fill="url(#lg)"/>
+    </svg>
+    <div>
+      <div class="logo-name">HiveArmor</div>
+      <div class="logo-sub">Security Intel</div>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Monitor</div>
+    <div class="nav-item active">
+      <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="currentColor"/><rect x="8.5" y="1" width="4.5" height="4.5" rx="1" fill="currentColor" opacity="0.45"/><rect x="1" y="8.5" width="4.5" height="4.5" rx="1" fill="currentColor" opacity="0.45"/><rect x="8.5" y="8.5" width="4.5" height="4.5" rx="1" fill="currentColor"/></svg>
+      Overview
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 14 14" fill="none"><path d="M1 10L4 7L7 8.5L10 4L13 5.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Event Stream <span class="nav-pip"></span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 4v3l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Alerts
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Investigate</div>
+    <div class="nav-item">
+      <svg viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M9.5 9.5L13 13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Threat Hunt
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="10" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h4M7 5v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Cases
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 14 14" fill="none"><path d="M7 1l6 3.5V8c0 2.5-2.5 4.5-6 5.5C1.5 12.5 1 10 1 8V4.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+      MITRE ATT&amp;CK
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Threats</div>
+    <div class="nav-item">
+      <svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2" fill="currentColor"/><path d="M7 1v2M7 11v2M1 7h2M11 7h2M3 3l1.5 1.5M9.5 9.5L11 11M11 3L9.5 4.5M4.5 9.5L3 11" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+      Intelligence
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 14 14" fill="none"><path d="M2 11L5 7l2 2 3-5 2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Analytics
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Assets</div>
+    <div class="nav-item">
+      <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="4" width="12" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M5 4V3a2 2 0 014 0v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Endpoints
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 14 14" fill="none"><polygon points="7,1 13,4.5 13,9.5 7,13 1,9.5 1,4.5" stroke="currentColor" stroke-width="1.2" fill="none"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg>
+      Collectors
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-block">
+      <div class="avatar">AD</div>
+      <div><div class="user-name">admin</div><div class="user-role">SOC Analyst L2</div></div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="tb-title">Security Overview</span>
+    <div class="chip chip-live"><span class="live-dot"></span>LIVE</div>
+    <div class="chip chip-eps">3,847 EPS</div>
+    <div class="chip chip-time">2026-07-12 &nbsp; 14:32:07 UTC</div>
+  </div>
+
+  <div class="dash">
+
+    <!-- KPI -->
+    <div class="section-row"><span class="section-label">Threat Posture — Last 24h</span><span class="section-line"></span></div>
+    <div class="kpi-strip">
+
+      <div class="kpi-card k-orange">
+        <div class="kpi-label">Events Ingested</div>
+        <div class="kpi-value">2.47M</div>
+        <div class="kpi-delta"><span class="delta-up">▲ 12.4%</span><span class="kpi-sub">vs yesterday</span></div>
+        <div class="spark"><svg viewBox="0 0 100 24" preserveAspectRatio="none">
+          <defs><linearGradient id="s1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E8552A" stop-opacity=".3"/><stop offset="100%" stop-color="#E8552A" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0,20 C12,18 20,12 30,14 C40,16 44,8 54,6 C64,4 70,10 80,8 C90,6 94,4 100,2 L100,24 L0,24Z" fill="url(#s1)"/>
+          <path d="M0,20 C12,18 20,12 30,14 C40,16 44,8 54,6 C64,4 70,10 80,8 C90,6 94,4 100,2" fill="none" stroke="#E8552A" stroke-width="1.3"/>
+        </svg></div>
+      </div>
+
+      <div class="kpi-card k-red">
+        <div class="kpi-label">Active Alerts</div>
+        <div class="kpi-value">847</div>
+        <div class="kpi-delta"><span class="delta-up">▲ 34</span><span class="kpi-sub">new today</span></div>
+        <div class="spark"><svg viewBox="0 0 100 24" preserveAspectRatio="none">
+          <defs><linearGradient id="s2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EF4444" stop-opacity=".3"/><stop offset="100%" stop-color="#EF4444" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0,22 C8,20 14,16 22,18 C30,20 34,10 44,8 C54,6 57,14 67,12 C77,10 82,16 92,12 C96,10 98,8 100,4 L100,24 L0,24Z" fill="url(#s2)"/>
+          <path d="M0,22 C8,20 14,16 22,18 C30,20 34,10 44,8 C54,6 57,14 67,12 C77,10 82,16 92,12 C96,10 98,8 100,4" fill="none" stroke="#EF4444" stroke-width="1.3"/>
+        </svg></div>
+      </div>
+
+      <div class="kpi-card k-cyan">
+        <div class="kpi-label">Open Incidents</div>
+        <div class="kpi-value">23</div>
+        <div class="kpi-delta"><span class="delta-dn">▼ 5</span><span class="kpi-sub">resolved</span></div>
+        <div class="spark"><svg viewBox="0 0 100 24" preserveAspectRatio="none">
+          <defs><linearGradient id="s3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0EA5E9" stop-opacity=".3"/><stop offset="100%" stop-color="#0EA5E9" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0,10 C10,12 16,18 26,20 C36,22 42,16 52,14 C62,12 67,18 77,16 C87,14 92,18 100,20 L100,24 L0,24Z" fill="url(#s3)"/>
+          <path d="M0,10 C10,12 16,18 26,20 C36,22 42,16 52,14 C62,12 67,18 77,16 C87,14 92,18 100,20" fill="none" stroke="#0EA5E9" stroke-width="1.3"/>
+        </svg></div>
+      </div>
+
+      <div class="kpi-card k-violet">
+        <div class="kpi-label">MTTR</div>
+        <div class="kpi-value">14m</div>
+        <div class="kpi-delta"><span class="delta-dn">▼ 2m</span><span class="kpi-sub">improved</span></div>
+        <div class="spark"><svg viewBox="0 0 100 24" preserveAspectRatio="none">
+          <defs><linearGradient id="s4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8B5CF6" stop-opacity=".3"/><stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0,24 C10,22 16,16 26,12 C36,8 42,14 52,12 C62,10 67,8 77,10 C87,12 92,10 100,8 L100,24 L0,24Z" fill="url(#s4)"/>
+          <path d="M0,24 C10,22 16,16 26,12 C36,8 42,14 52,12 C62,10 67,8 77,10 C87,12 92,10 100,8" fill="none" stroke="#8B5CF6" stroke-width="1.3"/>
+        </svg></div>
+      </div>
+
+      <div class="kpi-card k-green">
+        <div class="kpi-label">Sources Active</div>
+        <div class="kpi-value">164</div>
+        <div class="kpi-delta"><span class="delta-up">▲ 2</span><span class="kpi-sub">offline</span></div>
+        <div class="spark"><svg viewBox="0 0 100 24" preserveAspectRatio="none">
+          <defs><linearGradient id="s5" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22C55E" stop-opacity=".25"/><stop offset="100%" stop-color="#22C55E" stop-opacity="0"/></linearGradient></defs>
+          <path d="M0,14 C10,12 16,14 26,12 C36,10 42,12 52,12 C62,12 67,10 77,12 C87,14 92,12 100,14 L100,24 L0,24Z" fill="url(#s5)"/>
+          <path d="M0,14 C10,12 16,14 26,12 C36,10 42,12 52,12 C62,12 67,10 77,12 C87,14 92,12 100,14" fill="none" stroke="#22C55E" stroke-width="1.3"/>
+        </svg></div>
+      </div>
+
+    </div>
+
+    <!-- Donut + Heatmap/Volume -->
+    <div class="row-31">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title"><span class="ct-hex" style="background:var(--crit)"></span>Severity Distribution</span>
+          <span class="badge badge-red">94 CRITICAL</span>
+        </div>
+        <div class="donut-body">
+          <div class="donut-wrap">
+            <svg viewBox="0 0 136 136" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="68" cy="68" r="46" fill="none" stroke="#1A1535" stroke-width="14"/>
+              <circle cx="68" cy="68" r="46" fill="none" stroke="#EF4444" stroke-width="14" stroke-dasharray="32 257" style="filter:drop-shadow(0 0 4px rgba(239,68,68,0.4))"/>
+              <circle cx="68" cy="68" r="46" fill="none" stroke="#E8552A" stroke-width="14" stroke-dasharray="69 220" stroke-dashoffset="-32"/>
+              <circle cx="68" cy="68" r="46" fill="none" stroke="#EAB308" stroke-width="14" stroke-dasharray="90 199" stroke-dashoffset="-101"/>
+              <circle cx="68" cy="68" r="46" fill="none" stroke="#22C55E" stroke-width="14" stroke-dasharray="64 225" stroke-dashoffset="-191"/>
+              <circle cx="68" cy="68" r="46" fill="none" stroke="#2C2458" stroke-width="14" stroke-dasharray="34 255" stroke-dashoffset="-255"/>
+            </svg>
+            <div class="donut-center"><div class="donut-num">847</div><div class="donut-sub">Alerts</div></div>
+          </div>
+          <div>
+            <div class="leg-row"><div class="leg-left"><div class="leg-swatch" style="background:#EF4444"></div><span class="leg-name">Critical</span></div><span class="leg-val" style="color:#FCA5A5">94 (11%)</span></div>
+            <div class="leg-row"><div class="leg-left"><div class="leg-swatch" style="background:#E8552A"></div><span class="leg-name">High</span></div><span class="leg-val" style="color:#F06D42">203 (24%)</span></div>
+            <div class="leg-row"><div class="leg-left"><div class="leg-swatch" style="background:#EAB308"></div><span class="leg-name">Medium</span></div><span class="leg-val" style="color:#FDE68A">262 (31%)</span></div>
+            <div class="leg-row"><div class="leg-left"><div class="leg-swatch" style="background:#22C55E"></div><span class="leg-name">Low</span></div><span class="leg-val" style="color:#86EFAC">186 (22%)</span></div>
+            <div class="leg-row"><div class="leg-left"><div class="leg-swatch" style="background:#2C2458"></div><span class="leg-name">Info</span></div><span class="leg-val" style="color:#6B6888">102 (12%)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title"><span class="ct-hex" style="background:var(--orange)"></span>Alert Heatmap — 7 Days</span>
+          <span class="badge badge-orange">Peak 14:00–16:00</span>
+        </div>
+        <div class="hm-body">
+          <div class="hm-day-row" id="hm-days"></div>
+          <div class="hm-grid" id="hm-grid"></div>
+          <div class="hm-hour-row"><span>00</span><span>03</span><span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span></div>
+          <div class="hm-legend">
+            <span>Low</span>
+            <div style="flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#1A1535,#6D28D9,#C73D18,#E8552A,#EF4444)"></div>
+            <span>High</span>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border)">
+          <div class="card-head"><span class="card-title"><span class="ct-hex" style="background:var(--cyan)"></span>24h Alert Volume</span></div>
+          <div class="vol-body">
+            <div class="vol-bars" id="vol-bars"></div>
+            <div class="vol-axis"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:59</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MITRE + Alerts -->
+    <div class="row-2">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title"><span class="ct-hex" style="background:#8B5CF6"></span>Top MITRE ATT&amp;CK Tactics</span>
+          <span class="badge badge-violet">14 Active</span>
+        </div>
+        <div class="bars">
+          <div class="bar-row"><span class="bar-label">Initial Access</span><div class="bar-track"><div class="bar-fill" style="width:82%;background:linear-gradient(90deg,#EF4444,#E8552A)"></div></div><span class="bar-num" style="color:#FCA5A5">246</span></div>
+          <div class="bar-row"><span class="bar-label">Execution</span><div class="bar-track"><div class="bar-fill" style="width:74%;background:linear-gradient(90deg,#E8552A,#EAB308)"></div></div><span class="bar-num" style="color:#F06D42">222</span></div>
+          <div class="bar-row"><span class="bar-label">Persistence</span><div class="bar-track"><div class="bar-fill" style="width:63%;background:linear-gradient(90deg,#EAB308,#84CC16)"></div></div><span class="bar-num" style="color:#FDE68A">189</span></div>
+          <div class="bar-row"><span class="bar-label">Lateral Movement</span><div class="bar-track"><div class="bar-fill" style="width:51%;background:linear-gradient(90deg,#8B5CF6,#0EA5E9)"></div></div><span class="bar-num" style="color:#C4B5FD">153</span></div>
+          <div class="bar-row"><span class="bar-label">Credential Access</span><div class="bar-track"><div class="bar-fill" style="width:44%;background:linear-gradient(90deg,#0EA5E9,#22C55E)"></div></div><span class="bar-num" style="color:#7DD3FC">132</span></div>
+          <div class="bar-row"><span class="bar-label">Discovery</span><div class="bar-track"><div class="bar-fill" style="width:38%;background:linear-gradient(90deg,#22C55E,#0EA5E9)"></div></div><span class="bar-num" style="color:#86EFAC">114</span></div>
+          <div class="bar-row"><span class="bar-label">Command &amp; Control</span><div class="bar-track"><div class="bar-fill" style="width:29%;background:linear-gradient(90deg,#EC4899,#8B5CF6)"></div></div><span class="bar-num" style="color:#F9A8D4">87</span></div>
+          <div class="bar-row"><span class="bar-label">Exfiltration</span><div class="bar-track"><div class="bar-fill" style="width:18%;background:linear-gradient(90deg,#EF4444,#EC4899)"></div></div><span class="bar-num" style="color:#F0ABFC">54</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title"><span class="ct-hex" style="background:var(--crit)"></span>Live Critical Alerts</span>
+          <span class="badge badge-red">94 UNACK</span>
+        </div>
+        <div id="alert-feed"></div>
+      </div>
+    </div>
+
+    <!-- Collectors -->
+    <div class="section-row"><span class="section-label">Data Collector Health</span><span class="section-line"></span></div>
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title"><span class="ct-hex" style="background:var(--low)"></span>164 Active Collectors</span>
+        <span style="display:flex;gap:12px;font-size:10.5px;">
+          <span style="color:#86EFAC;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:#22C55E;display:inline-block"></span>158 Online</span>
+          <span style="color:#FDE68A;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:#EAB308;display:inline-block"></span>4 Degraded</span>
+          <span style="color:#FCA5A5;display:flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:#EF4444;display:inline-block"></span>2 Offline</span>
+        </span>
+      </div>
+      <div class="collector-grid" id="collector-grid"></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-strip">
+      <div class="stat-card">
+        <div class="sc-icon" style="background:var(--orange-sub)">🔍</div>
+        <div class="sc-num" style="color:var(--orange-lt)">12,847</div>
+        <div class="sc-label">Log Queries Today</div>
+        <div class="sc-trend" style="color:var(--low)">▲ 8% vs yesterday</div>
+        <div style="position:absolute;right:-10px;top:-10px;width:56px;height:56px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:var(--orange);opacity:0.05;"></div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-icon" style="background:var(--crit-sub)">🛡️</div>
+        <div class="sc-num" style="color:#FCA5A5">437</div>
+        <div class="sc-label">Threats Blocked</div>
+        <div class="sc-trend" style="color:var(--low)">▲ 23% vs yesterday</div>
+        <div style="position:absolute;right:-10px;top:-10px;width:56px;height:56px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:var(--crit);opacity:0.05;"></div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-icon" style="background:rgba(139,92,246,0.08)">📋</div>
+        <div class="sc-num" style="color:#C4B5FD">18</div>
+        <div class="sc-label">Open Cases</div>
+        <div class="sc-trend" style="color:var(--crit)">▲ 3 escalated</div>
+        <div style="position:absolute;right:-10px;top:-10px;width:56px;height:56px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:#8B5CF6;opacity:0.05;"></div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-icon" style="background:var(--cyan-sub)">⚡</div>
+        <div class="sc-num" style="color:var(--cyan-lt)">99.7%</div>
+        <div class="sc-label">Collector Uptime</div>
+        <div class="sc-trend" style="color:var(--low)">SLA 99.5% — met</div>
+        <div style="position:absolute;right:-10px;top:-10px;width:56px;height:56px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:var(--cyan);opacity:0.05;"></div>
+      </div>
+    </div>
+
+    <!-- Design System -->
+    <div class="section-row"><span class="section-label">HiveArmor HexCore — Design System v2</span><span class="section-line"></span></div>
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title"><span class="ct-hex" style="background:var(--orange)"></span>Colour Palette — Orange-Red × Indigo</span>
+      </div>
+      <div class="pal-grid">
+        <div class="pal-item"><div class="pal-swatch" style="background:linear-gradient(135deg,#F06D42,#E8552A);box-shadow:0 0 12px rgba(232,85,42,0.32)"></div><div class="pal-name">Brand</div><div class="pal-code">#E8552A</div></div>
+        <div class="pal-item"><div class="pal-swatch" style="background:linear-gradient(135deg,#38BDF8,#0EA5E9)"></div><div class="pal-name">Cyan</div><div class="pal-code">#0EA5E9</div></div>
+        <div class="pal-item"><div class="pal-swatch" style="background:linear-gradient(135deg,#A78BFA,#8B5CF6);box-shadow:0 0 10px rgba(109,40,217,0.30)"></div><div class="pal-name">Atmosphere</div><div class="pal-code">#6D28D9</div></div>
+        <div class="pal-item"><div class="pal-swatch" style="background:linear-gradient(135deg,#FCA5A5,#EF4444);box-shadow:0 0 10px rgba(239,68,68,0.28)"></div><div class="pal-name">Critical</div><div class="pal-code">#EF4444</div></div>
+        <div class="pal-item"><div class="pal-swatch" style="background:linear-gradient(135deg,#F06D42,#E8552A)"></div><div class="pal-name">High</div><div class="pal-code">#E8552A</div></div>
+        <div class="pal-item"><div class="pal-swatch" style="background:linear-gradient(135deg,#FDE68A,#EAB308)"></div><div class="pal-name">Medium</div><div class="pal-code">#EAB308</div></div>
+        <div class="pal-item"><div class="pal-swatch" style="background:linear-gradient(135deg,#86EFAC,#22C55E)"></div><div class="pal-name">Low</div><div class="pal-code">#22C55E</div></div>
+        <div class="pal-item"><div class="pal-swatch" style="background:var(--card);border:1px solid var(--border-hi)"></div><div class="pal-name">Surface</div><div class="pal-code">#131028</div></div>
+        <div class="pal-item"><div class="pal-swatch" style="background:var(--bg);border:1px solid var(--border)"></div><div class="pal-name">Ground</div><div class="pal-code">#080610</div></div>
+      </div>
+      <div class="spec-grid">
+        <div>
+          <div class="spec-title">Severity Badges</div>
+          <div class="sev-row">
+            <div class="sev-badge" style="background:var(--crit-sub);color:#FCA5A5;border:1px solid var(--crit-bdr)"><span class="sev-hex" style="background:#EF4444"></span>CRITICAL</div>
+            <div class="sev-badge" style="background:var(--high-sub);color:#F06D42;border:1px solid var(--orange-bdr)"><span class="sev-hex" style="background:#E8552A"></span>HIGH</div>
+            <div class="sev-badge" style="background:var(--med-sub);color:#FDE68A;border:1px solid rgba(234,179,8,0.2)"><span class="sev-hex" style="background:#EAB308"></span>MEDIUM</div>
+            <div class="sev-badge" style="background:var(--low-sub);color:#86EFAC;border:1px solid rgba(34,197,94,0.18)"><span class="sev-hex" style="background:#22C55E"></span>LOW</div>
+            <div class="sev-badge" style="background:rgba(100,116,139,0.08);color:#566880;border:1px solid rgba(100,116,139,0.15)"><span class="sev-hex" style="background:#475569"></span>INFO</div>
+          </div>
+        </div>
+        <div>
+          <div class="spec-title">Actions</div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary">Investigate</button>
+            <button class="btn btn-secondary">Export</button>
+            <button class="btn btn-ghost">Filter</button>
+            <button class="btn btn-danger">Escalate</button>
+          </div>
+        </div>
+        <div>
+          <div class="spec-title">Typography</div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div style="font-size:26px;font-weight:700;color:var(--orange-lt);letter-spacing:-0.03em;font-variant-numeric:tabular-nums;line-height:1">2.47M</div>
+            <div style="font-size:16px;font-weight:600;color:var(--cyan-lt);letter-spacing:-0.02em;font-variant-numeric:tabular-nums">3,847 EPS</div>
+            <div style="font-size:12.5px;color:#C4B5FD;font-variant-numeric:tabular-nums">MTTR: 14m 22s</div>
+            <div style="font-size:10px;color:var(--tx2);letter-spacing:0.05em;text-transform:uppercase;margin-top:3px">Panel Labels</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:16px"></div>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>{
+    const s=document.createElement('span');s.textContent=d;
+    document.getElementById('hm-days').appendChild(s);
+  });
+  const rows=[
+    [0,0,1,1,0,0,0,1,2,3,3,4,3,4,5,5,4,3,2,2,1,1,0,0],
+    [0,0,0,1,1,0,1,2,3,4,4,3,2,3,4,5,5,4,3,2,1,0,0,0],
+    [0,1,1,0,0,1,1,2,3,3,4,5,5,4,3,3,2,2,1,1,0,0,0,0],
+    [0,0,0,0,0,0,1,1,2,3,4,4,5,5,4,3,3,2,1,1,0,0,0,0],
+    [0,0,0,1,1,1,2,2,3,4,3,4,5,4,5,4,3,2,2,1,1,0,0,0],
+    [0,0,0,0,0,0,0,0,1,1,1,2,2,2,1,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,1,2,2,2,1,1,1,0,0,0,0,0,0,0,0],
+  ];
+  const pal=['rgba(26,21,53,0.95)','rgba(109,40,217,0.35)','rgba(199,61,24,0.55)','rgba(232,85,42,0.68)','rgba(240,109,66,0.80)','rgba(239,68,68,0.88)'];
+  const grid=document.getElementById('hm-grid');
+  rows.forEach(row=>{
+    const el=document.createElement('div');el.className='hm-row';
+    row.forEach(v=>{const c=document.createElement('div');c.className='hc';c.style.background=pal[v];el.appendChild(c);});
+    grid.appendChild(el);
+  });
+})();
+
+(function(){
+  const vals=[12,18,14,22,16,28,24,34,42,58,72,85,78,91,88,96,82,74,65,54,44,32,24,16];
+  const max=Math.max(...vals);
+  const cols=['#0EA5E9','#0EA5E9','#0EA5E9','#0EA5E9','#0EA5E9','#0EA5E9',
+              '#8B5CF6','#8B5CF6','#8B5CF6','#8B5CF6','#8B5CF6','#8B5CF6',
+              '#E8552A','#E8552A','#E8552A','#EF4444','#EF4444','#EF4444',
+              '#E8552A','#E8552A','#8B5CF6','#8B5CF6','#0EA5E9','#0EA5E9'];
+  const wrap=document.getElementById('vol-bars');
+  vals.forEach((v,i)=>{
+    const b=document.createElement('div');b.className='vol-bar';
+    b.style.height=(v/max*100)+'%';b.style.background=cols[i];b.style.opacity='0.80';
+    wrap.appendChild(b);
+  });
+})();
+
+(function(){
+  const feed=document.getElementById('alert-feed');
+  const items=[
+    {sev:'CRITICAL',sc:'#EF4444',bg:'rgba(239,68,68,0.10)',br:'rgba(239,68,68,0.20)',title:'Brute Force: RDP Multiple Failures',src:'192.168.10.44',type:'Windows Security',t:'14:31:52'},
+    {sev:'CRITICAL',sc:'#EF4444',bg:'rgba(239,68,68,0.10)',br:'rgba(239,68,68,0.20)',title:'Ransomware: Mass File Encryption Detected',src:'10.0.2.88',type:'Endpoint Detection',t:'14:30:17'},
+    {sev:'HIGH',sc:'#E8552A',bg:'rgba(232,85,42,0.10)',br:'rgba(232,85,42,0.22)',title:'Suspicious PowerShell Encoded Command',src:'WKSTN-0042',type:'Sysmon',t:'14:29:04'},
+    {sev:'CRITICAL',sc:'#EF4444',bg:'rgba(239,68,68,0.10)',br:'rgba(239,68,68,0.20)',title:'Lateral Movement via Pass-the-Hash',src:'SRV-DC01',type:'Active Directory',t:'14:27:38'},
+    {sev:'HIGH',sc:'#E8552A',bg:'rgba(232,85,42,0.10)',br:'rgba(232,85,42,0.22)',title:'Port Scan from External IP',src:'203.0.113.45',type:'Firewall / IDS',t:'14:26:11'},
+    {sev:'MEDIUM',sc:'#EAB308',bg:'rgba(234,179,8,0.10)',br:'rgba(234,179,8,0.20)',title:'Unusual Outbound DNS Volume Spike',src:'10.0.1.33',type:'DNS Logs',t:'14:24:50'},
+  ];
+  items.forEach(a=>{
+    feed.innerHTML+=`<div class="alert-row"><div style="background:${a.sc}"></div><div class="ar-body"><div class="ar-title">${a.title}</div><div class="ar-meta"><span class="sev-pill" style="background:${a.bg};color:${a.sc};border:1px solid ${a.br}">${a.sev}</span><span>${a.src}</span><span>${a.type}</span></div></div><div class="ar-time">${a.t}</div></div>`;
+  });
+})();
+
+(function(){
+  const wrap=document.getElementById('collector-grid');
+  const names=['FW-01','FW-02','WEB-01','WEB-02','DC-01','DC-02','AD-01','SQL-1','SQL-2','EXCH','PROXY','IDS-1','IDS-2','WAF','VPN-1','VPN-2','MAIL','CLOUD','DNS-1','DNS-2','API-GW','K8S-1','K8S-2','K8S-3','SIEM','EDR-1','EDR-2','NAC','SPLK','MON-1'];
+  const statuses=[
+    {c:'#22C55E',glow:'rgba(34,197,94,0.22)',lbl:'ING',n:158},
+    {c:'#EAB308',glow:'rgba(234,179,8,0.22)',lbl:'DEG',n:4},
+    {c:'#EF4444',glow:'rgba(239,68,68,0.25)',lbl:'OFF',n:2},
+  ];
+  const pool=[];
+  statuses.forEach(s=>{for(let i=0;i<s.n;i++)pool.push(s);});
+  pool.forEach((s,i)=>{
+    const name=i<names.length?names[i]:`S-${i}`;
+    const el=document.createElement('div');el.className='chex';
+    el.title=`${name} — ${s.lbl==='ING'?'Ingesting':s.lbl==='DEG'?'Degraded':'Offline'}`;
+    el.innerHTML=`<svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="cg${i}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${s.c}" stop-opacity="0.15"/>
+        <stop offset="100%" stop-color="${s.c}" stop-opacity="0.04"/>
+      </linearGradient></defs>
+      <polygon points="26,3 49,15.5 49,36.5 26,49 3,36.5 3,15.5" fill="url(#cg${i})" stroke="${s.c}" stroke-width="1" style="filter:drop-shadow(0 0 2px ${s.glow})"/>
+      <text x="26" y="24.5" text-anchor="middle" dominant-baseline="middle" font-size="6" font-weight="700" fill="${s.c}" font-family="Inter,system-ui,sans-serif" letter-spacing="0.04em">${name}</text>
+      <text x="26" y="33" text-anchor="middle" dominant-baseline="middle" font-size="5" fill="${s.c}" opacity="0.6" font-family="Inter,system-ui,sans-serif" letter-spacing="0.06em">${s.lbl}</text>
+      <circle cx="26" cy="43.5" r="2" fill="${s.c}" opacity="0.8"/>
+    </svg>`;
+    wrap.appendChild(el);
+  });
+})();
+</script>
+</body>
+</html>

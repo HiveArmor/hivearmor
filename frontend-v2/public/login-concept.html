@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>HiveArmor — Sign In</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body{background:#080610;display:flex;align-items:center;justify-content:center}
+
+/* ── Background layers ── */
+canvas#bg{position:fixed;inset:0;z-index:0}
+
+/* CSS square grid overlay */
+#grid-overlay{
+  position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(109,40,217,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(109,40,217,0.06) 1px, transparent 1px);
+  background-size:60px 60px;
+}
+
+/* Purple atmospheric glow */
+#atm{
+  position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 85%,
+      rgba(109,40,217,0.20) 0%,
+      rgba(109,40,217,0.07) 45%,
+      transparent 70%),
+    radial-gradient(ellipse 45% 35% at 50% 50%,
+      rgba(8,6,16,0) 0%,
+      rgba(8,6,16,0.55) 75%,
+      rgba(8,6,16,0.90) 100%);
+}
+
+/* ── Card ── */
+.wrap{position:relative;z-index:10;width:400px}
+
+.card{
+  background:#0D0A1E;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:10px;
+  padding:40px 36px 34px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.70),0 1px 0 rgba(255,255,255,0.03) inset;
+  animation:rise 0.45s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* single brand-red top line */
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:10px 10px 0 0;
+  background:linear-gradient(90deg,transparent 5%,#F06D42 40%,#E8552A 70%,transparent 95%);
+}
+
+/* ── Logo ── */
+.logo-area{display:flex;flex-direction:column;align-items:center;gap:7px;margin-bottom:28px}
+.logo-icon{width:48px;height:48px}
+.logo-name{font-size:20px;font-weight:700;letter-spacing:-0.02em;color:#EEF0F8}
+.logo-tag{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(232,85,42,0.55)}
+
+/* ── Title ── */
+.title{font-size:14.5px;font-weight:600;color:#9E9BC0;text-align:center;margin-bottom:3px}
+.subtitle{font-size:11.5px;color:#2A2455;text-align:center;margin-bottom:26px}
+
+/* ── Fields ── */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#2A2455;margin-bottom:6px}
+.field input{
+  width:100%;background:#080610;
+  border:1px solid #1E1840;
+  border-radius:6px;padding:10px 13px;
+  font-size:13px;color:#9E9BC0;outline:none;
+  transition:border-color 0.15s,box-shadow 0.15s;
+  font-family:inherit;
+}
+.field input::placeholder{color:#1E1840}
+.field input:focus{
+  border-color:rgba(232,85,42,0.45);
+  box-shadow:0 0 0 3px rgba(232,85,42,0.07);
+}
+
+/* ── Row ── */
+.row{display:flex;align-items:center;justify-content:space-between;margin:2px 0 20px}
+.remember{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.remember input{accent-color:#E8552A;width:12px;height:12px;cursor:pointer}
+.remember span{font-size:11.5px;color:#2A2455}
+.forgot{font-size:11.5px;color:#2A2455;text-decoration:none;transition:color 0.15s}
+.forgot:hover{color:rgba(232,85,42,0.7)}
+
+/* ── Submit ── */
+.btn-primary{
+  width:100%;padding:11px;border:none;border-radius:7px;
+  background:#E8552A;
+  color:#fff;font-size:13.5px;font-weight:600;letter-spacing:0.01em;
+  cursor:pointer;position:relative;overflow:hidden;
+  box-shadow:0 1px 10px rgba(232,85,42,0.22);
+  transition:background 0.15s,transform 0.1s,box-shadow 0.15s;
+  font-family:inherit;
+}
+.btn-primary:hover{background:#C73D18;transform:translateY(-1px);box-shadow:0 3px 22px rgba(232,85,42,0.34)}
+.btn-primary:active{transform:translateY(0);background:#A83010}
+/* button shimmer */
+.btn-primary::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,0.12) 50%,transparent 65%);
+  transform:translateX(-100%);
+  animation:shimmer 5s ease-in-out 2s infinite;
+}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(220%)}}
+
+/* ── Divider ── */
+.divider{display:flex;align-items:center;gap:10px;margin:18px 0 14px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#1E1840}
+.divider span{font-size:10px;color:#2A2455;letter-spacing:0.07em;text-transform:uppercase}
+
+/* ── SSO ── */
+.sso{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.btn-sso{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px;border-radius:6px;cursor:pointer;
+  background:#080610;border:1px solid #1E1840;
+  font-size:11.5px;font-weight:500;color:#2A2455;
+  transition:border-color 0.15s,color 0.15s;font-family:inherit;
+}
+.btn-sso:hover{border-color:#2C2458;color:#6B6888}
+.btn-sso svg{width:13px;height:13px;flex-shrink:0}
+
+/* ── Footer ── */
+.footer{margin-top:20px;text-align:center;font-size:10.5px;color:#2A2455}
+.footer a{color:#3D3870;text-decoration:none;transition:color 0.15s}
+.footer a:hover{color:rgba(232,85,42,0.65)}
+
+/* ── Status strip ── */
+.status{
+  margin-top:12px;padding:7px 14px;
+  background:#0D0A1E;border:1px solid #1E1840;border-radius:7px;
+  display:flex;align-items:center;gap:8px;
+  animation:rise 0.45s 0.15s cubic-bezier(0.22,1,0.36,1) both;
+}
+.sdot{width:5px;height:5px;border-radius:50%;background:#22C55E;flex-shrink:0;animation:blink 2.5s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.25}}
+.stext{font-size:10px;color:#2A2455;font-family:'SF Mono','Fira Code',monospace;white-space:nowrap;overflow:hidden;transition:opacity 0.3s}
+.stext b{color:rgba(232,85,42,0.65);font-weight:600}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<div id="grid-overlay"></div>
+<div id="atm"></div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="logo-area">
+      <svg class="logo-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="og" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#F06D42"/>
+            <stop offset="100%" stop-color="#C73D18"/>
+          </linearGradient>
+        </defs>
+        <polygon points="24,2 45,13.5 45,34.5 24,46 3,34.5 3,13.5"
+          fill="none" stroke="url(#og)" stroke-width="0.8" opacity="0.25"/>
+        <polygon points="24,6.5 41,17 41,31 24,41.5 7,31 7,17"
+          fill="none" stroke="url(#og)" stroke-width="1" opacity="0.5"/>
+        <polygon points="24,12 37,19.5 37,28.5 24,36 11,28.5 11,19.5"
+          fill="url(#og)" opacity="0.10"/>
+        <polygon points="24,12 37,19.5 37,28.5 24,36 11,28.5 11,19.5"
+          fill="none" stroke="url(#og)" stroke-width="1.4"/>
+        <polygon points="24,18 31,22 31,26 24,30 17,26 17,22"
+          fill="url(#og)" opacity="0.85"/>
+        <circle cx="24" cy="24" r="2.8" fill="#080610"/>
+        <circle cx="24" cy="24" r="1.5" fill="url(#og)"/>
+      </svg>
+      <div class="logo-name">HiveArmor</div>
+      <div class="logo-tag">Security Intelligence Platform</div>
+    </div>
+
+    <div class="title">Sign in to your workspace</div>
+    <div class="subtitle">SOC analyst access · Enterprise SIEM/XDR</div>
+
+    <div class="field">
+      <label>Username or Email</label>
+      <input type="text" placeholder="analyst@hivearmor.io" autocomplete="username"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" placeholder="••••••••••••" autocomplete="current-password"/>
+    </div>
+
+    <div class="row">
+      <label class="remember">
+        <input type="checkbox"/>
+        <span>Stay signed in</span>
+      </label>
+      <a href="#" class="forgot">Forgot password?</a>
+    </div>
+
+    <button class="btn-primary">Sign In</button>
+
+    <div class="divider"><span>or continue with</span></div>
+
+    <div class="sso">
+      <button class="btn-sso">
+        <svg viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="1" width="5.5" height="5.5" fill="#4285F4" rx="0.6"/>
+          <rect x="7.5" y="1" width="5.5" height="5.5" fill="#EA4335" rx="0.6"/>
+          <rect x="1" y="7.5" width="5.5" height="5.5" fill="#34A853" rx="0.6"/>
+          <rect x="7.5" y="7.5" width="5.5" height="5.5" fill="#FBBC05" rx="0.6"/>
+        </svg>
+        Google SSO
+      </button>
+      <button class="btn-sso">
+        <svg viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="3.5" width="12" height="7" rx="1" stroke="#0078D4" stroke-width="1.1"/>
+          <path d="M1 5.8L7 8.5l6-2.7" stroke="#0078D4" stroke-width="1.1"/>
+        </svg>
+        Microsoft / AD
+      </button>
+    </div>
+
+    <div class="footer">
+      No account? <a href="#">Request access</a> &nbsp;&middot;&nbsp; <a href="#">Help</a> &nbsp;&middot;&nbsp; <a href="#">Status</a>
+    </div>
+  </div>
+
+  <div class="status">
+    <div class="sdot"></div>
+    <div class="stext" id="st"></div>
+  </div>
+</div>
+
+<script>
+/* ── Canvas: animated square grid intersection glows ── */
+(function(){
+  const cvs = document.getElementById('bg');
+  const ctx  = cvs.getContext('2d');
+  let W, H;
+
+  const STEP = 60;
+
+  function resize(){
+    W = cvs.width  = window.innerWidth;
+    H = cvs.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function loop(t){
+    ctx.clearRect(0,0,W,H);
+    /* solid indigo-black base */
+    ctx.fillStyle = '#080610';
+    ctx.fillRect(0,0,W,H);
+
+    const cols = Math.ceil(W/STEP)+1;
+    const rows = Math.ceil(H/STEP)+1;
+
+    for(let c=0; c<cols; c++){
+      for(let r=0; r<rows; r++){
+        const phase = (c*7.3 + r*13.7);
+        const wave  = Math.sin(t*0.00055 + phase*0.22);
+        const glow  = Math.pow(Math.max(0, wave), 5);
+
+        if(glow < 0.015) continue;
+
+        const px = c*STEP;
+        const py = r*STEP;
+
+        /* 1 in 9 orange-red, rest purple */
+        const isOrange = (c*3 + r*5) % 9 === 0;
+
+        if(isOrange){
+          ctx.fillStyle = `rgba(232,85,42,${glow*0.75})`;
+        } else {
+          ctx.fillStyle = `rgba(130,80,255,${glow*0.55})`;
+        }
+
+        ctx.beginPath();
+        ctx.arc(px, py, 1.5 + glow*2.5, 0, Math.PI*2);
+        ctx.fill();
+
+        if(glow > 0.35){
+          const r2 = 18*glow;
+          const grad = ctx.createRadialGradient(px,py,0,px,py,r2);
+          if(isOrange){
+            grad.addColorStop(0, `rgba(232,85,42,${glow*0.14})`);
+          } else {
+            grad.addColorStop(0, `rgba(120,70,240,${glow*0.10})`);
+          }
+          grad.addColorStop(1,'rgba(0,0,0,0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(px-r2,py-r2,r2*2,r2*2);
+        }
+      }
+    }
+
+    /* faint horizontal scan sweep */
+    const scanY = (t * 0.018) % H;
+    const scanGrad = ctx.createLinearGradient(0, scanY-8, 0, scanY+8);
+    scanGrad.addColorStop(0,'rgba(130,80,255,0)');
+    scanGrad.addColorStop(0.5,'rgba(130,80,255,0.022)');
+    scanGrad.addColorStop(1,'rgba(130,80,255,0)');
+    ctx.fillStyle = scanGrad;
+    ctx.fillRect(0, scanY-8, W, 16);
+
+    requestAnimationFrame(loop);
+  }
+
+  requestAnimationFrame(loop);
+})();
+
+/* ── Status ticker ── */
+(function(){
+  const msgs=[
+    'Monitoring <b>164</b> endpoints &nbsp;·&nbsp; <b>3,847</b> EPS',
+    'All systems operational &nbsp;·&nbsp; <b>0</b> active incidents',
+    'Last login: <b>2026-07-11 09:14 UTC</b> — 10.0.1.45',
+    'Collector uptime <b>99.7%</b> &nbsp;·&nbsp; SLA met',
+    'MITRE coverage: <b>14</b> active tactics tracked',
+  ];
+  let i=0; const el=document.getElementById('st');
+  function next(){ el.style.opacity='0'; setTimeout(()=>{ el.innerHTML=msgs[i++%msgs.length]; el.style.opacity='1'; },300); }
+  next(); setInterval(next,4200);
+})();
+</script>
+</body>
+</html>
