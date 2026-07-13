@@ -48,6 +48,6 @@ jobs:
       - name: Build and Push the Image
         uses: docker/build-push-action@v6
         with:
-          context: /home/runner/work/HiveArmor/HiveArmor/${{inputs.image_name}}/
+          context: ${{ github.workspace }}/${{inputs.image_name}}
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}/${{inputs.image_name}}:${{inputs.tag}}
