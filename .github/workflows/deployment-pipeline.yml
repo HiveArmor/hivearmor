@@ -438,12 +438,10 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./event_processor.Dockerfile
+          file: ./event-processor/Dockerfile
           push: true
           provenance: false
           tags: ghcr.io/hivearmor/eventprocessor:${{ needs.setup_deployment.outputs.tag }}
-          build-args: |
-            BASE_IMAGE=ghcr.io/threatwinds/eventprocessor/base:${{ needs.setup_deployment.outputs.event_processor_tag }}
 
   build_backend:
     name: Build Backend Microservice
