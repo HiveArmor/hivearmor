@@ -85,52 +85,20 @@ class TlsClientFactoryTest {
         void run() throws Exception;
     }
 
-    /**
-     * Temporarily sets a system property that TlsClientFactory can read via
-     * System.getenv fallback. Because we cannot set real env vars in unit tests,
-     * we rely on the fact that TlsClientFactory reads System.getenv directly —
-     * so we use a mock environment technique via a custom ClassLoader override
-     * is out of scope; instead, this method verifies the observable behaviour
-     * by pointing ELASTICSEARCH_CA_CERT at a real file via a subprocessed env.
-     *
-     * For the purposes of this unit test we call the factory directly after
-     * writing the cert to a temp path; the no-env-var paths are the primary
-     * testable surface without an env-mutation library.
-     */
+    // TlsClientFactory.resolveCaCertPath() checks System.getProperty as a fallback,
+    // so tests set/clear a system property instead of mutating the process environment
+    // (which is impossible without fragile reflection on Java 17+).
     private void withEnv(String key, String value, ThrowingRunnable action) {
-        // System.getenv() cannot be mutated in standard JVM — test the factory
-        // logic by calling an internal overload that accepts a path directly.
-        // If such an overload doesn't exist, the test documents the contract.
+        String previous = System.getProperty(key);
+        System.setProperty(key, value);
         try {
-            // Use reflection to mutate env for testing (test-only, safe in isolation)
-            java.util.Map<String, String> env = new java.util.HashMap<>(System.getenv());
-            env.put(key, value);
-            setEnv(env);
             action.run();
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
-            // Restore original env
-            try {
-                setEnv(new java.util.HashMap<>(System.getenv()));
-            } catch (Exception ignored) {}
+            if (previous == null) System.clearProperty(key);
+            else System.setProperty(key, previous);
         }
-    }
-
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    private static void setEnv(java.util.Map<String, String> newEnv) throws Exception {
-        Class<?> processEnvClass = Class.forName("java.lang.ProcessEnvironment");
-        java.lang.reflect.Field theEnvironmentField = processEnvClass.getDeclaredField("theEnvironment");
-        theEnvironmentField.setAccessible(true);
-        java.util.Map<String, String> env = (java.util.Map<String, String>) theEnvironmentField.get(null);
-        env.putAll(newEnv);
-        // theCaseInsensitiveEnvironment only exists on Windows — skip silently on Linux/macOS
-        try {
-            java.lang.reflect.Field ciField =
-                    processEnvClass.getDeclaredField("theCaseInsensitiveEnvironment");
-            ciField.setAccessible(true);
-            ((java.util.Map<String, String>) ciField.get(null)).putAll(newEnv);
-        } catch (NoSuchFieldException ignored) {}
     }
 
     private Path copyTestCertToTempFile() throws Exception {

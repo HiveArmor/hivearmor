@@ -32,7 +32,7 @@ public final class TlsClientFactory {
      * Like {@link #buildOkHttpClient()} but with explicit timeouts (seconds, 0 = OkHttp default).
      */
     public static OkHttpClient buildOkHttpClient(long connectTimeoutSec, long writeTimeoutSec, long readTimeoutSec) {
-        String caCertPath = System.getenv(Constants.ENV_ELASTICSEARCH_CA_CERT);
+        String caCertPath = resolveCaCertPath();
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         if (connectTimeoutSec > 0) builder.connectTimeout(connectTimeoutSec, TimeUnit.SECONDS);
         if (writeTimeoutSec > 0)   builder.writeTimeout(writeTimeoutSec, TimeUnit.SECONDS);
@@ -64,7 +64,7 @@ public final class TlsClientFactory {
      * for use with Apache HttpClient (RestTemplate). Falls back to JVM defaults.
      */
     public static SSLContext buildSslContext() {
-        String caCertPath = System.getenv(Constants.ENV_ELASTICSEARCH_CA_CERT);
+        String caCertPath = resolveCaCertPath();
         if (caCertPath == null || caCertPath.isBlank()) {
             log.warn("ELASTICSEARCH_CA_CERT not set — using JVM default SSL context");
             try {
@@ -93,7 +93,7 @@ public final class TlsClientFactory {
      * Falls back to JVM defaults when the env var is unset.
      */
     public static X509TrustManager buildX509TrustManager() {
-        String caCertPath = System.getenv(Constants.ENV_ELASTICSEARCH_CA_CERT);
+        String caCertPath = resolveCaCertPath();
         if (caCertPath == null || caCertPath.isBlank()) {
             log.warn("ELASTICSEARCH_CA_CERT not set — gRPC channel will use JVM default trust store");
             try {
@@ -118,6 +118,13 @@ public final class TlsClientFactory {
         } catch (Exception e) {
             throw new IllegalStateException("Failed to build X509TrustManager from CA cert at " + caCertPath, e);
         }
+    }
+
+    // Resolves the CA cert path: env var wins, system property fallback (used in tests).
+    static String resolveCaCertPath() {
+        String fromEnv = System.getenv(Constants.ENV_ELASTICSEARCH_CA_CERT);
+        if (fromEnv != null && !fromEnv.isBlank()) return fromEnv;
+        return System.getProperty(Constants.ENV_ELASTICSEARCH_CA_CERT);
     }
 
     // Loads a PEM CA cert file into a KeyStore.

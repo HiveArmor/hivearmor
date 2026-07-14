@@ -114,7 +114,7 @@ class UtmAssetGroupServiceSqlInjectionTest {
      */
     @Test
     void validSortColumn_isPassedThrough() {
-        Sort validSort = Sort.by(Sort.Order.asc("utm_asset_group.group_name"));
+        Sort validSort = Sort.by(Sort.Order.asc("hive_asset_group.group_name"));
         Pageable pageable = PageRequest.of(0, 10, validSort);
 
         assertDoesNotThrow(() -> service.searchGroupsByFilter(new AssetGroupFilter(), pageable));
@@ -122,6 +122,6 @@ class UtmAssetGroupServiceSqlInjectionTest {
         ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
         verify(em, atLeastOnce()).createNativeQuery(sqlCaptor.capture(), any(Class.class));
         assertThat(sqlCaptor.getAllValues())
-            .anyMatch(sql -> sql.contains("utm_asset_group.group_name"));
+            .anyMatch(sql -> sql.contains("hive_asset_group.group_name"));
     }
 }
