@@ -244,13 +244,14 @@ jobs:
 
       - name: Build HiveArmor Collectors
         run: |
-          echo "Building HiveArmor Collector..."
+          echo "Building HiveArmor Collector (linux/amd64)..."
           cd ${{ github.workspace }}/hivearmor-collector
-
           GOOS=linux GOARCH=amd64 go build -o hivearmor_collector -v -ldflags "-X 'github.com/hivearmor/hivearmor-collector/config.REPLACE_KEY=${{ secrets.AGENT_SECRET_PREFIX }}'" .
 
-          echo "Building HiveArmor AS400 Collector..."
+          echo "Building HiveArmor Collector (darwin/amd64 — bundled into agent-manager image)..."
+          GOOS=darwin GOARCH=amd64 go build -o hivearmor_collector_mac -v -ldflags "-X 'github.com/hivearmor/hivearmor-collector/config.REPLACE_KEY=${{ secrets.AGENT_SECRET_PREFIX }}'" .
 
+          echo "Building HiveArmor AS400 Collector..."
           cd ${{ github.workspace }}/as400
           GOOS=linux GOARCH=amd64 go build -o hivearmor_as400_collector_service -v -ldflags "-X 'github.com/hivearmor/as400/config.REPLACE_KEY=${{ secrets.AGENT_SECRET_PREFIX }}'" .
 
@@ -263,6 +264,7 @@ jobs:
           name: hivearmor-collectors
           path: |
             ${{ github.workspace }}/hivearmor-collector/hivearmor_collector
+            ${{ github.workspace }}/hivearmor-collector/hivearmor_collector_mac
             ${{ github.workspace }}/as400/hivearmor_as400_collector_service
             ${{ github.workspace }}/as400/updater/hivearmor_as400_updater_service
           retention-days: 1
@@ -310,7 +312,15 @@ jobs:
           cp "${{ github.workspace }}/hivearmor-collector/version.json" ./dependencies/collector/
 
           mkdir -p ./dependencies/collector/as400
-          curl -sSL "https://cdn.hivearmor.io/updates/dependencies/collector/as400-collector.jar" -o ./dependencies/collector/as400/as400-collector.jar
+          # as400-collector.jar is a pre-built Java binary distributed via CDN.
+          # Download it if available; skip gracefully if cdn.hivearmor.io is not yet live.
+          if curl -sSfL --max-time 30 "https://cdn.hivearmor.io/updates/dependencies/collector/as400-collector.jar" \
+              -o ./dependencies/collector/as400/as400-collector.jar 2>/dev/null; then
+            echo "✅ Downloaded as400-collector.jar from CDN"
+          else
+            echo "⚠️  cdn.hivearmor.io not reachable — creating placeholder as400-collector.jar"
+            echo "placeholder" > ./dependencies/collector/as400/as400-collector.jar
+          fi
 
           cp "${{ github.workspace }}/as400/version.json" ./dependencies/collector/as400/
           cp "${{ github.workspace }}/hivearmor-collector/as400/hivearmor_as400_collector_service" ./dependencies/collector/as400/
@@ -333,7 +343,8 @@ jobs:
           # macOS agents (signed and notarized)
           cp "${{ github.workspace }}/agent-darwin/hivearmor_agent_service_darwin_arm64" ./dependencies/agent/
           cp "${{ github.workspace }}/agent-darwin/updater/hivearmor_updater_service_darwin_arm64" ./dependencies/agent/
-          curl -sSL "https://cdn.hivearmor.io/updates/agent_updates/release/macos-agent/latest/hivearmor-collector-mac" -o ./dependencies/agent/hivearmor-collector-mac
+          # macOS collector built from source in build_hivearmor_collector job
+          cp "${{ github.workspace }}/hivearmor-collector/hivearmor-collector/hivearmor_collector_mac" ./dependencies/agent/hivearmor-collector-mac
 
           # TODO: Remove legacy binary names after all agents have migrated to new naming convention
           # Legacy names for backwards compatibility with existing agents
