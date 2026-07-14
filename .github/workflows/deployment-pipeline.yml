@@ -193,16 +193,18 @@ jobs:
       os: windows
       artifact_name: agents-windows-unsigned
       signed_artifact_name: agents-windows-signed
-      gcp_project_id: ${{ vars.GCP_PROJECT_PROD }}
-      kms_location: ${{ vars.KMS_KEYRING_LOCATION }}
-      kms_keyring: ${{ vars.KMS_KEYRING_NAME }}
-      kms_key: ${{ vars.KMS_KEY_NAME }}
       binaries: |
         hivearmor_agent_service_windows_amd64.exe
         hivearmor_agent_service_windows_arm64.exe
         updater/hivearmor_updater_service_windows_amd64.exe
         updater/hivearmor_updater_service_windows_arm64.exe
-    secrets: inherit
+    secrets:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_PROD }}
+      KMS_KEYRING_LOCATION: ${{ secrets.KMS_KEYRING_LOCATION }}
+      KMS_KEYRING_NAME: ${{ secrets.KMS_KEYRING_NAME }}
+      KMS_KEY_NAME: ${{ secrets.KMS_KEY_NAME }}
+      GCP_WINDOWS_SIGNER_SA_KEY: ${{ secrets.GCP_WINDOWS_SIGNER_SA_KEY }}
+      WINDOWS_SIGNER_CERT_CHAIN_PEM: ${{ secrets.WINDOWS_SIGNER_CERT_CHAIN_PEM }}
 
   sign_agent_macos:
     name: Sign macOS Agent Binaries
@@ -216,7 +218,13 @@ jobs:
       binaries: |
         hivearmor_agent_service_darwin_arm64
         updater/hivearmor_updater_service_darwin_arm64
-    secrets: inherit
+    secrets:
+      APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
 
   build_hivearmor_collector:
     name: Build HiveArmor Collector

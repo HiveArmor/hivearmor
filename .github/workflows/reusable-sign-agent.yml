@@ -69,7 +69,15 @@ on:
         default: "http://timestamp.sectigo.com"
 
     secrets:
-      # Windows
+      # Windows — GCP KMS config (passed as secrets so vars.* context is not needed in with:)
+      GCP_PROJECT_ID:
+        required: false
+      KMS_KEYRING_LOCATION:
+        required: false
+      KMS_KEYRING_NAME:
+        required: false
+      KMS_KEY_NAME:
+        required: false
       GCP_WINDOWS_SIGNER_SA_KEY:
         required: false
       WINDOWS_SIGNER_CERT_CHAIN_PEM:
@@ -159,10 +167,10 @@ jobs:
       - name: Sign Windows binaries
         if: inputs.os == 'windows'
         env:
-          PROJECT_ID: ${{ inputs.gcp_project_id }}
-          KEYRING_LOCATION: ${{ inputs.kms_location }}
-          KEYRING_NAME: ${{ inputs.kms_keyring }}
-          KEY_NAME: ${{ inputs.kms_key }}
+          PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || inputs.gcp_project_id }}
+          KEYRING_LOCATION: ${{ secrets.KMS_KEYRING_LOCATION || inputs.kms_location }}
+          KEYRING_NAME: ${{ secrets.KMS_KEYRING_NAME || inputs.kms_keyring }}
+          KEY_NAME: ${{ secrets.KMS_KEY_NAME || inputs.kms_key }}
           SIGN_NAME: ${{ inputs.sign_name }}
           SIGN_URL: ${{ inputs.sign_url }}
           TSA_URL: ${{ inputs.tsa_url }}
