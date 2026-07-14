@@ -7,6 +7,11 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write      # upload release assets
+  packages: write      # push to ghcr.io
+  id-token: write      # OIDC — required by reusable-sign-agent (GCP KMS auth)
+
 jobs:
   setup_deployment:
     name: Setup Deployment
