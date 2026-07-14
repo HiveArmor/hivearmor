@@ -128,7 +128,7 @@ jobs:
           GOARCH: amd64
         run: |
           echo "Building V10 Installer for prerelease"
-          go build -o installer -v .
+          go build -o installer-linux-amd64 -v .
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
@@ -140,7 +140,7 @@ jobs:
           draft: false
           prerelease: ${{ inputs.prerelease }}
           files: |
-            ./installer/installer
+            ./installer/installer-linux-amd64
 
   # ============================================
   # V11 DEV - Deploy to runner with dev branch
@@ -175,12 +175,12 @@ jobs:
           GONOSUMDB: github.com/hivearmor
         run: |
           echo "Building V11 Installer for dev environment (branch=dev)"
-          go build -o installer -v -ldflags "\
-            -X 'github.com/encryptshellorg/hivearmor/installer/config.DEFAULT_BRANCH=dev' \
-            -X 'github.com/encryptshellorg/hivearmor/installer/config.INSTALLER_VERSION=${{ inputs.version }}' \
-            -X 'github.com/encryptshellorg/hivearmor/installer/config.REPLACE=${{ secrets.CM_ENCRYPT_SALT }}' \
-            -X 'github.com/encryptshellorg/hivearmor/installer/config.PUBLIC_KEY=${{ secrets.CM_SIGN_PUBLIC_KEY }}'" .
-          mv installer /usr/local/bin/hivearmor_installer
+          go build -o installer-linux-amd64 -v -ldflags "\
+            -X 'github.com/hivearmor/installer/config.DEFAULT_BRANCH=dev' \
+            -X 'github.com/hivearmor/installer/config.INSTALLER_VERSION=${{ inputs.version }}' \
+            -X 'github.com/hivearmor/installer/config.REPLACE=${{ secrets.CM_ENCRYPT_SALT }}' \
+            -X 'github.com/hivearmor/installer/config.PUBLIC_KEY=${{ secrets.CM_SIGN_PUBLIC_KEY }}'" .
+          mv installer-linux-amd64 /usr/local/bin/hivearmor_installer
           chmod +x /usr/local/bin/hivearmor_installer
 
       - name: Run Installer
@@ -227,11 +227,11 @@ jobs:
           GONOSUMDB: github.com/hivearmor
         run: |
           echo "Building V11 Installer for release (branch=prod)"
-          go build -o installer -v -ldflags "\
-            -X 'github.com/encryptshellorg/hivearmor/installer/config.DEFAULT_BRANCH=prod' \
-            -X 'github.com/encryptshellorg/hivearmor/installer/config.INSTALLER_VERSION=${{ inputs.version }}' \
-            -X 'github.com/encryptshellorg/hivearmor/installer/config.REPLACE=${{ secrets.CM_ENCRYPT_SALT }}' \
-            -X 'github.com/encryptshellorg/hivearmor/installer/config.PUBLIC_KEY=${{ secrets.CM_SIGN_PUBLIC_KEY }}'" .
+          go build -o installer-linux-amd64 -v -ldflags "\
+            -X 'github.com/hivearmor/installer/config.DEFAULT_BRANCH=prod' \
+            -X 'github.com/hivearmor/installer/config.INSTALLER_VERSION=${{ inputs.version }}' \
+            -X 'github.com/hivearmor/installer/config.REPLACE=${{ secrets.CM_ENCRYPT_SALT }}' \
+            -X 'github.com/hivearmor/installer/config.PUBLIC_KEY=${{ secrets.CM_SIGN_PUBLIC_KEY }}'" .
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
@@ -242,4 +242,4 @@ jobs:
           body_path: /tmp/CHANGELOG.md
           draft: false
           files: |
-            ./installer/installer
+            ./installer/installer-linux-amd64
