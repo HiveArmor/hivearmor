@@ -466,30 +466,6 @@ jobs:
           provenance: false
           tags: ghcr.io/hivearmor/frontend:${{ needs.setup_deployment.outputs.tag }}
 
-  build_cm_server:
-    name: Build CM Server
-    needs: [setup_deployment]
-    if: ${{ needs.setup_deployment.outputs.tag != '' }}
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and Push CM Server Image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./cm-server
-          push: true
-          provenance: false
-          tags: ghcr.io/hivearmor/cm-server:${{ needs.setup_deployment.outputs.tag }}
-
   all_builds_complete:
     name: All Builds Complete
     needs: [
@@ -498,10 +474,9 @@ jobs:
       build_backend,
       build_user_auditor,
       build_web_pdf,
-      build_frontend,
-      build_cm_server
+      build_frontend
     ]
-    if: ${{ always() && needs.build_agent_manager.result == 'success' && needs.build_event_processor.result == 'success' && needs.build_backend.result == 'success' && needs.build_user_auditor.result == 'success' && needs.build_web_pdf.result == 'success' && needs.build_frontend.result == 'success' && needs.build_cm_server.result == 'success' }}
+    if: ${{ always() && needs.build_agent_manager.result == 'success' && needs.build_event_processor.result == 'success' && needs.build_backend.result == 'success' && needs.build_user_auditor.result == 'success' && needs.build_web_pdf.result == 'success' && needs.build_frontend.result == 'success' }}
     runs-on: ubuntu-24.04
     steps:
       - run: echo "✅ All builds completed successfully."
