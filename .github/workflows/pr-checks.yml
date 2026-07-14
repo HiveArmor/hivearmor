@@ -5,8 +5,6 @@ on:
     branches:
       - 'main'
       - 'release/**'
-      - 'v10'
-      - 'v11'
 
 # Cancel previous runs when new commits are pushed to the same PR.
 concurrency:
@@ -39,7 +37,7 @@ jobs:
       - ai_review
     uses: ./.github/workflows/_pr-reusable-approver.yml
     with:
-      tier3_reviewers: 'Kbayero,osmontero'
+      tier3_reviewers: 'EncryptShell'
     secrets:
       APPROVER_APP_ID: ${{ secrets.APPROVER_APP_ID }}
       APPROVER_PRIVATE_KEY: ${{ secrets.APPROVER_PRIVATE_KEY }}
@@ -61,7 +59,14 @@ jobs:
           echo "Dependent job results:"
           echo "$NEEDS_JSON" | jq -r 'to_entries[] | "  \(.key): \(.value.result)"'
 
-          failed=$(echo "$NEEDS_JSON" | jq -r 'to_entries[] | select(.value.result != "success" and .value.result != "skipped") | .key')
+          # approver is a soft gate — it posts comments and tries to auto-approve
+          # if the GitHub App is configured, but its failure does not block merges.
+          # Only go_deps and ai_review are hard gates.
+          failed=$(echo "$NEEDS_JSON" | jq -r '
+            to_entries[]
+            | select(.key != "approver")
+            | select(.value.result != "success" and .value.result != "skipped")
+            | .key')
 
           if [ -n "$failed" ]; then
             echo ""

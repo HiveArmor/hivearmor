@@ -3,7 +3,7 @@ name: "HiveArmor - Build & Deploy Pipeline"
 on:
   push:
     branches:
-      - 'release/v11**'
+      - 'release/**'
   release:
     types: [published]
 
@@ -344,7 +344,7 @@ jobs:
           context: ./agent-manager
           push: true
           provenance: false
-          tags: ghcr.io/hivearmor/agent-manager:${{ needs.setup_deployment.outputs.tag }}
+          tags: ghcr.io/${{ github.repository_owner }}/agent-manager:${{ needs.setup_deployment.outputs.tag }}
 
   build_event_processor:
     name: Build Event Processor Microservice
@@ -417,6 +417,7 @@ jobs:
       maven_profile: 'prod'
       maven_goals: 'clean package'
       copy_filters_and_rules: true
+
   build_user_auditor:
     name: Build User-Auditor Microservice
     needs: [setup_deployment]
@@ -441,6 +442,30 @@ jobs:
       use_version_file: false
       maven_goals: 'clean install -U'
 
+  build_frontend:
+    name: Build Frontend (Next.js)
+    needs: [setup_deployment]
+    if: ${{ needs.setup_deployment.outputs.tag != '' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend-v2
+          push: true
+          provenance: false
+          tags: ghcr.io/hivearmor/frontend:${{ needs.setup_deployment.outputs.tag }}
+
   all_builds_complete:
     name: All Builds Complete
     needs: [
@@ -448,36 +473,25 @@ jobs:
       build_event_processor,
       build_backend,
       build_user_auditor,
-      build_web_pdf
+      build_web_pdf,
+      build_frontend
     ]
-    if: ${{ always() && needs.build_agent_manager.result == 'success' && needs.build_event_processor.result == 'success' && needs.build_backend.result == 'success' && needs.build_user_auditor.result == 'success' && needs.build_web_pdf.result == 'success' }}
+    if: ${{ always() && needs.build_agent_manager.result == 'success' && needs.build_event_processor.result == 'success' && needs.build_backend.result == 'success' && needs.build_user_auditor.result == 'success' && needs.build_web_pdf.result == 'success' && needs.build_frontend.result == 'success' }}
     runs-on: ubuntu-24.04
     steps:
       - run: echo "✅ All builds completed successfully."
-
-  generate_changelog:
-    name: Generate Changelog
-    needs: [all_builds_complete, setup_deployment]
-    if: ${{ needs.setup_deployment.outputs.tag != '' && github.event_name == 'release' }}
-    uses: ./.github/workflows/generate-changelog.yml
-    with:
-      current_tag: ${{ needs.setup_deployment.outputs.tag }}
-    secrets:
-      THREATWINDS_API_KEY: ${{ secrets.THREATWINDS_API_KEY }}
-      THREATWINDS_API_SECRET: ${{ secrets.THREATWINDS_API_SECRET }}
 
   # Installer build runs on any GitHub release event (prerelease or not).
   # The binary is uploaded to the release that triggered this pipeline.
   build_installer_release:
     name: Build & Upload Installer
-    needs: [generate_changelog, setup_deployment]
-    if: ${{ always() && needs.setup_deployment.result == 'success' && needs.setup_deployment.outputs.tag != '' && github.event_name == 'release' && needs.generate_changelog.result != 'cancelled' }}
+    needs: [all_builds_complete, setup_deployment]
+    if: ${{ always() && needs.all_builds_complete.result == 'success' && needs.setup_deployment.outputs.tag != '' && github.event_name == 'release' }}
     uses: ./.github/workflows/installer-release.yml
     with:
       version: ${{ needs.setup_deployment.outputs.tag }}
       version_major: v11
       environment: ${{ needs.setup_deployment.outputs.environment }}
-      changelog: ${{ needs.generate_changelog.outputs.changelog }}
     secrets:
       API_SECRET: ${{ secrets.API_SECRET }}
       CM_ENCRYPT_SALT: ${{ secrets.CM_ENCRYPT_SALT }}
@@ -499,7 +513,7 @@ jobs:
 
   publish_new_version:
     name: Publish New Version to Customer Manager
-    needs: [all_builds_complete, generate_changelog, setup_deployment]
+    needs: [all_builds_complete, setup_deployment]
     if: ${{ always() && needs.all_builds_complete.result == 'success' && needs.setup_deployment.outputs.tag != '' }}
     runs-on: ubuntu-24.04
     steps:
@@ -508,17 +522,11 @@ jobs:
 
       - name: Publish version
         env:
-          CHANGELOG_CONTENT: ${{ needs.generate_changelog.outputs.changelog }}
           ENVIRONMENT: ${{ needs.setup_deployment.outputs.environment }}
           TAG: ${{ needs.setup_deployment.outputs.tag }}
           CM_URL: ${{ needs.setup_deployment.outputs.cm_url }}
         run: |
-          # Use AI changelog for production releases, generic for dev.
-          if [ "$ENVIRONMENT" != "dev" ] && [ -n "$CHANGELOG_CONTENT" ]; then
-            changelog="$CHANGELOG_CONTENT"
-          else
-            changelog="Development build $TAG - Internal testing release"
-          fi
+          changelog="HiveArmor $TAG released"
 
           echo "Environment: $ENVIRONMENT"
           echo "CM URL: $CM_URL"

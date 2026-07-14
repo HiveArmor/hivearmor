@@ -51,4 +51,4 @@ jobs:
         with:
           context: ./${{inputs.image_name}}
           push: true
-          tags: ghcr.io/hivearmor/${{inputs.image_name}}:${{inputs.tag}}
+          tags: ghcr.io/${{ github.repository_owner }}/${{inputs.image_name}}:${{inputs.tag}}
