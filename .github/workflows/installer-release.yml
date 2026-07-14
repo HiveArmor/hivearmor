@@ -8,18 +8,13 @@ on:
         required: true
         type: string
       version_major:
-        description: 'Major version (v10 or v11)'
+        description: 'Major version (v11)'
         required: true
         type: string
       environment:
         description: 'Environment (dev or production)'
         required: true
         type: string
-      prerelease:
-        description: 'Whether this is a prerelease'
-        required: false
-        type: boolean
-        default: false
       changelog:
         description: 'Changelog content for the release body'
         required: false
@@ -35,118 +30,10 @@ on:
 
 jobs:
   # ============================================
-  # V10 DEV - Deploy to runner only
-  # ============================================
-  deploy_v10_dev:
-    name: Deploy V10 to Dev Runner
-    runs-on: hivearmor-v10-dev
-    if: inputs.version_major == 'v10' && inputs.environment == 'dev'
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ^1.20
-
-      - name: Build and Deploy
-        working-directory: ./installer
-        env:
-          GOOS: linux
-          GOARCH: amd64
-        run: |
-          echo "Building V10 Installer for dev environment"
-          go build -o installer -v .
-          mv installer /home/hivearmor/installer
-          chmod +x /home/hivearmor/installer
-
-      - name: Run Installer
-        working-directory: /home/hivearmor
-        run: |
-          sudo ./installer
-
-  # ============================================
-  # V10 RC - Deploy to runner
-  # ============================================
-  deploy_v10_rc_runner:
-    name: Deploy V10 to RC Runner
-    runs-on: hivearmor-v10-rc
-    if: inputs.version_major == 'v10' && inputs.environment == 'rc'
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ^1.20
-
-      - name: Build and Deploy
-        working-directory: ./installer
-        env:
-          GOOS: linux
-          GOARCH: amd64
-        run: |
-          echo "Building V10 Installer for rc environment"
-          go build -o installer -v .
-          mv installer /home/hivearmor/installer
-          chmod +x /home/hivearmor/installer
-
-      - name: Run Installer
-        working-directory: /home/hivearmor
-        run: |
-          sudo ./installer
-
-  # ============================================
-  # V10 RC - Upload to prerelease
-  # ============================================
-  deploy_v10_rc_prerelease:
-    name: Upload V10 Installer to Prerelease
-    runs-on: ubuntu-24.04
-    if: inputs.version_major == 'v10' && inputs.environment == 'rc'
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ^1.20
-
-      - name: Prepare changelog
-        id: changelog
-        env:
-          CHANGELOG_CONTENT: ${{ inputs.changelog }}
-        run: |
-          printf '%s' "$CHANGELOG_CONTENT" > /tmp/CHANGELOG.md
-
-      - name: Build
-        working-directory: ./installer
-        env:
-          GOOS: linux
-          GOARCH: amd64
-        run: |
-          echo "Building V10 Installer for prerelease"
-          go build -o installer-linux-amd64 -v .
-
-      - name: Upload Release Assets
-        uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ inputs.version }}
-          body_path: /tmp/CHANGELOG.md
-          draft: false
-          prerelease: ${{ inputs.prerelease }}
-          files: |
-            ./installer/installer-linux-amd64
-
-  # ============================================
-  # V11 DEV - Deploy to runner with dev branch
+  # V11 DEV - Build and deploy to dev runner
   # ============================================
   deploy_v11_dev:
-    name: Deploy V11 to Dev Runner
+    name: Deploy Installer (Dev)
     runs-on: hivearmor-v11-dev
     if: inputs.version_major == 'v11' && inputs.environment == 'dev'
     steps:
@@ -156,7 +43,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ^1.20
+          go-version: ^1.25
 
       - name: Configure git for private modules
         run: |
@@ -174,7 +61,7 @@ jobs:
           GONOPROXY: github.com/hivearmor
           GONOSUMDB: github.com/hivearmor
         run: |
-          echo "Building V11 Installer for dev environment (branch=dev)"
+          echo "Building HiveArmor Installer for dev (branch=dev)"
           go build -o installer-linux-amd64 -v -ldflags "\
             -X 'github.com/hivearmor/installer/config.DEFAULT_BRANCH=dev' \
             -X 'github.com/hivearmor/installer/config.INSTALLER_VERSION=${{ inputs.version }}' \
@@ -188,10 +75,10 @@ jobs:
           sudo /usr/local/bin/hivearmor_installer
 
   # ============================================
-  # V11 Production - Build installer and upload to GitHub release.
+  # V11 Production - Build and upload to GitHub release
   # ============================================
   build_v11_release:
-    name: Build V11 Installer for Release
+    name: Build Installer for Release
     runs-on: ubuntu-24.04
     if: inputs.version_major == 'v11' && inputs.environment == 'production'
     steps:
@@ -201,7 +88,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ^1.20
+          go-version: ^1.25
 
       - name: Configure git for private modules
         run: |
@@ -211,7 +98,6 @@ jobs:
           echo "GONOSUMDB=github.com/hivearmor" >> $GITHUB_ENV
 
       - name: Prepare changelog
-        id: changelog
         env:
           CHANGELOG_CONTENT: ${{ inputs.changelog }}
         run: |
@@ -226,7 +112,7 @@ jobs:
           GONOPROXY: github.com/hivearmor
           GONOSUMDB: github.com/hivearmor
         run: |
-          echo "Building V11 Installer for release (branch=prod)"
+          echo "Building HiveArmor Installer for release (branch=prod)"
           go build -o installer-linux-amd64 -v -ldflags "\
             -X 'github.com/hivearmor/installer/config.DEFAULT_BRANCH=prod' \
             -X 'github.com/hivearmor/installer/config.INSTALLER_VERSION=${{ inputs.version }}' \
