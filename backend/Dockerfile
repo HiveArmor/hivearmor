@@ -1,6 +1,6 @@
 FROM eclipse-temurin:17
 
-ADD backend/target/hivearmor.war ./hivearmor.war
+ADD target/hivearmor.war ./hivearmor.war
 COPY filters /hivearmor/filters
 COPY rules /hivearmor/rules
 
