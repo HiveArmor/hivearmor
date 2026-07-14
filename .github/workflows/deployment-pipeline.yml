@@ -367,7 +367,8 @@ jobs:
       - name: Build and Push the Agent Manager Image
         uses: docker/build-push-action@v6
         with:
-          context: ./agent-manager
+          context: .
+          file: ./agent-manager/Dockerfile
           push: true
           provenance: false
           tags: ghcr.io/hivearmor/agent-manager:${{ needs.setup_deployment.outputs.tag }}
