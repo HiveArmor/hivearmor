@@ -1,110 +1,73 @@
-# Platform Owner Runbook
+# HiveArmor Platform Owner Runbook
 
-> **Audience**: Development team and infrastructure team who own this fork of UTMStack.  
-> **Version**: Post-migration (Phases 0–10 complete). Angular 17, Spring Boot 3.3, Bootstrap 5.  
-> **Last updated**: June 2026
+> **Audience**: DevOps and infrastructure engineers operating the HiveArmor platform.
+> **Version**: v11.x (LTS — supported until November 2030).
+> **Last updated**: July 2026
 
 ---
 
 ## Table of Contents
 
-1. [Repository Ownership — What Changes When You Fork](#1-repository-ownership)
-2. [Repository & Branch Strategy](#2-repository--branch-strategy)
-3. [Local Development Setup](#3-local-development-setup)
-4. [Building Each Component](#4-building-each-component)
-5. [CI/CD Pipeline — What to Change for Your Repo](#5-cicd-pipeline)
-6. [GitHub Secrets & Variables Reference](#6-github-secrets--variables-reference)
-7. [Container Registry Setup](#7-container-registry-setup)
-8. [Hosting & Deployment](#8-hosting--deployment)
-9. [Merging Code Changes (PR Workflow)](#9-merging-code-changes)
-10. [Agent Distribution](#10-agent-distribution)
-11. [Secrets & Credentials Management](#11-secrets--credentials-management)
-12. [Known Deferred Items](#12-known-deferred-items)
+1. [Repository & Branch Strategy](#1-repository--branch-strategy)
+2. [Local Development Setup](#2-local-development-setup)
+3. [Building Each Component](#3-building-each-component)
+4. [CI/CD Pipeline](#4-cicd-pipeline)
+5. [GitHub Secrets & Variables Reference](#5-github-secrets--variables-reference)
+6. [Container Registry Setup](#6-container-registry-setup)
+7. [Hosting & Deployment](#7-hosting--deployment)
+8. [Merging Code Changes (PR Workflow)](#8-merging-code-changes)
+9. [Agent Distribution](#9-agent-distribution)
+10. [Secrets & Credentials Management](#10-secrets--credentials-management)
+11. [Known Technical Debt](#11-known-technical-debt)
 
 ---
 
-## 1. Repository Ownership
+## 1. Repository & Branch Strategy
 
-### What you inherited from the upstream fork
+### GitHub organisation and repository
 
-This project was originally `utmstack/UTMStack`. You now own it independently. Here is what still
-points to the **original organisation** and must be updated before you push to your own GitHub:
+- GitHub org: **HiveArmor**
+- Repository: `https://github.com/hivearmor/hivearmor`
+- Container registry: `ghcr.io/hivearmor/`
 
-| Item | Original value | What to change to |
-|---|---|---|
-| `pom.xml` `<groupId>` | `com.atlasinside` | your org's groupId, e.g. `com.yourcompany` |
-| `backend/settings.xml` `<url>` | `maven.pkg.github.com/utmstack/**` | `maven.pkg.github.com/YOUR_ORG/**` |
-| All `ghcr.io/utmstack/utmstack/...` image refs | `ghcr.io/utmstack/utmstack/` | `ghcr.io/YOUR_ORG/YOUR_REPO/` |
-| `reusable-*.yml` username | `utmstack` | your GitHub username or org |
-| `local-dev/docker-compose.yml` image tags | `ghcr.io/utmstack/utmstack/` | `ghcr.io/YOUR_ORG/YOUR_REPO/` |
-| `v11-deployment-pipeline.yml` CM URLs | `cm.utmstack.com`, `cm.dev.utmstack.com` | your own Customer Manager or remove |
-| `installer/` binary — removes CM dependency | n/a | Already resolved in Phase 8 (license-manager-sdk removed) |
-
-> **Priority order**: image registry first, then Maven settings, then CM URLs.
-
-### The Customer Manager (CM) dependency
-
-The original pipeline pushes built images to UTMStack's Customer Manager API to trigger rolling
-deployments on their servers. **You do not have access to their CM.** You have two options:
-
-- **Option A (recommended for teams)**: Remove the `publish_new_version` and `schedule` jobs from the
-  pipeline. Use your own deployment mechanism (Portainer, Ansible, Watchtower, or manual).
-- **Option B**: Build your own lightweight Customer Manager (a REST API that receives version
-  notifications and triggers `docker service update` on your server).
-
----
-
-## 2. Repository & Branch Strategy
-
-### Rename branches for your fork
-
-The original branch names are `v11`, `release/v11*`. Rename them to match your project:
-
-```bash
-git checkout v11
-git checkout -b main              # rename v11 → main
-git push origin main
-git push origin --delete v11      # delete old if desired
-```
-
-### Recommended branch model
+### Branch model
 
 | Branch | Purpose | CI trigger |
 |---|---|---|
 | `main` | Stable production code | PR merge only |
-| `release/v1.*` | Pre-release builds | Push → Docker build |
+| `release/v1.*` | Pre-release builds | Push → Docker build + image publish |
 | `feature/*` | Feature development | PR checks only |
 | `fix/*` | Hotfix branches | PR checks only |
 
 ### PR targets
 
-All PRs should target `main` or `release/*` — never push directly to `main`.
+All PRs must target `main` or `release/*`. Never push directly to `main`.
 
 ---
 
-## 3. Local Development Setup
+## 2. Local Development Setup
 
 ### Prerequisites
 
 | Tool | Version | Install |
 |---|---|---|
 | Docker Desktop | Latest | https://www.docker.com/products/docker-desktop/ |
-| Node.js | **20.20.2 LTS** | `nvm install 20 && nvm use 20` |
+| Node.js | **20 LTS** | `nvm install 20 && nvm use 20` |
 | Java | **17** (Temurin) | `brew install --cask temurin@17` |
 | Maven | **3.9.x** | `brew install maven` |
-| Go | **1.26.x** | `brew install go` |
+| Go | **1.25.5** | https://go.dev/dl/ |
 | nvm | Latest | https://github.com/nvm-sh/nvm |
 
 ### Clone and first-time setup
 
 ```bash
-git clone https://github.com/YOUR_ORG/YOUR_REPO.git
-cd YOUR_REPO
+git clone https://github.com/hivearmor/hivearmor.git
+cd hivearmor
 
-# Frontend
-cd frontend && nvm use 20 && npm install && cd ..
+# Next.js frontend (active UI)
+cd frontend-v2 && npm install && cd ..
 
-# Backend — requires GitHub PAT with read:packages for your org's Maven packages
+# Backend — requires a GitHub PAT with read:packages on the hivearmor org
 export MAVEN_TK=ghp_your_github_pat
 cd backend && mvn -s settings.xml dependency:resolve && cd ..
 ```
@@ -114,144 +77,166 @@ cd backend && mvn -s settings.xml dependency:resolve && cd ..
 ```bash
 cd local-dev
 cp .env.example .env
-# Edit .env — fill in all required values (see Section 6)
+# Edit .env — fill in all required values (see Section 5)
+# Set APP_TFA_ENABLED=false for local dev to skip the TFA challenge
 docker compose up -d
 ```
 
-Access points:
-- UI: `https://localhost` or `http://localhost:8880`
-- API: `http://localhost:8080`
-- OpenSearch: `https://localhost:9200`
-- Default admin: `admin` / `(printed to backend logs on first run)`
+Local access points:
 
-### Start frontend dev server (hot reload)
+| Service | URL | Credentials |
+|---|---|---|
+| HiveArmor UI (Next.js) | http://localhost:3000 | admin / localdev123! |
+| Backend API | http://localhost:8088 | admin / localdev123! |
+| OpenSearch Dashboards | http://localhost:5601 | admin / LocalDev@2024! |
+| PostgreSQL | localhost:5438 | postgres / localdev123! |
+| AgentManager gRPC | localhost:9000 | — |
+
+### Start the Next.js dev server (hot reload)
 
 ```bash
-cd frontend
+cd frontend-v2
 nvm use 20
-NODE_OPTIONS="--max_old_space_size=8192 --openssl-legacy-provider" npm start
-# Serves at http://localhost:4200
+npm run dev
+# Serves at http://localhost:3000
 ```
 
-### Start backend dev server
+### Start the backend dev server
 
 ```bash
 cd backend
 export MAVEN_TK=ghp_your_github_pat
 mvn -s settings.xml -B
-# Serves at http://localhost:8080
+# Serves at http://localhost:8080 (proxied to 8088 by docker-compose)
+```
+
+### Get an API token for curl testing
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8088/api/authenticate \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"localdev123!","rememberMe":false}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin).get('id_token',''))")
 ```
 
 ---
 
-## 4. Building Each Component
+## 3. Building Each Component
 
-### Frontend
+### Frontend v2 (Next.js)
 
 ```bash
-cd frontend
+cd frontend-v2
 nvm use 20
 npm install
-# Development build
-NODE_OPTIONS="--max_old_space_size=8192 --openssl-legacy-provider" npm run build
-# Output: frontend/dist/utm-stack/
+
+# Development server
+npm run dev
+
+# Production build (output: .next/standalone)
+npm run build
+
+# Lint
+npm run lint
+
+# Tests (Vitest)
+npm run test
 ```
 
-Why `--openssl-legacy-provider`: Angular CLI 17 with the classic webpack builder uses MD4 hashing
-which is blocked by OpenSSL 3 (Node 20). This flag is needed until the Angular 18 esbuild builder
-is adopted (Phase 5e, deferred).
-
-**Run tests:**
-```bash
-npm test -- --watch=false
-# Expected: TOTAL: 26 SUCCESS
-```
-
-### Backend
+### Backend (Java)
 
 ```bash
 cd backend
-export MAVEN_TK=ghp_your_github_pat  # GitHub PAT — read:packages on your org
+export MAVEN_TK=ghp_your_github_pat   # GitHub PAT — read:packages on hivearmor org
 
-# Development WAR (dev profile)
+# Development server
 mvn -s settings.xml -B
 
 # Production WAR
 mvn -B -Pprod clean package -s settings.xml -Drevision=11.0.0
+# Output: target/hivearmor.war
 
-# Validate Liquibase migrations before pushing
+# Validate Liquibase migrations (run before every schema change PR)
 mvn -s settings.xml liquibase:validate
+
+# Run tests
+mvn -s settings.xml test
 ```
 
-> **Note**: `MAVEN_TK` is used by `settings.xml` to authenticate to GitHub Packages.
-> The backend depends on `com.utmstack:opensearch-connector` which is hosted there.
-> If you move to your own registry, update `settings.xml` accordingly.
-> See `docs/migration/deferred-build-verification.md` for full details.
+The `settings.xml` authenticates to `https://maven.pkg.github.com/hivearmor/**` using `MAVEN_TK`. The `pom.xml` `groupId` is `com.hivearmor`.
 
-**Run tests:**
-```bash
-mvn -s settings.xml test -Dtest=TokenProviderTest,UserJWTControllerTest
-# Expected: Tests run: 14, Failures: 0
-```
+> **Schema change rule**: Liquibase changesets are immutable once merged. Never edit a shipped changeset — only add new ones. New columns must have a default value or be nullable. Follow the naming convention `backend/src/main/resources/config/liquibase/changelog/YYYYMMDDNNN_description.xml` and register in `master.xml` in strict date order.
 
 ### Agent (Go — requires ldflags)
 
+The agent binary must be compiled with `REPLACE_KEY` injected via ldflags. Every agent deployed in the field is compiled with this key. **Changing it requires reinstalling all deployed agents.** Store the value in GitHub Secrets as `AGENT_SECRET_PREFIX`.
+
 ```bash
 cd agent
+export AGENT_SECRET="your-32-char-hex-secret"   # same as AGENT_SECRET_PREFIX in GitHub Secrets
 
 # Linux amd64
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
-  go build -o utmstack_agent_service_linux_amd64 \
-  -ldflags "-X 'github.com/utmstack/UTMStack/agent/config.REPLACE_KEY=YOUR_SECRET_KEY'" .
+  go build -o hivearmor_agent_service_linux_amd64 \
+  -ldflags "-X 'github.com/hivearmor/agent/config.REPLACE_KEY=${AGENT_SECRET}'" .
+
+# Linux arm64
+GOOS=linux GOARCH=arm64 CGO_ENABLED=0 \
+  go build -o hivearmor_agent_service_linux_arm64 \
+  -ldflags "-X 'github.com/hivearmor/agent/config.REPLACE_KEY=${AGENT_SECRET}'" .
 
 # Windows amd64
 GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
-  go build -o utmstack_agent_service_windows_amd64.exe \
-  -ldflags "-X 'github.com/utmstack/UTMStack/agent/config.REPLACE_KEY=YOUR_SECRET_KEY'" .
+  go build -o hivearmor_agent_service_windows_amd64.exe \
+  -ldflags "-X 'github.com/hivearmor/agent/config.REPLACE_KEY=${AGENT_SECRET}'" .
+
+# Windows arm64
+GOOS=windows GOARCH=arm64 CGO_ENABLED=0 \
+  go build -o hivearmor_agent_service_windows_arm64.exe \
+  -ldflags "-X 'github.com/hivearmor/agent/config.REPLACE_KEY=${AGENT_SECRET}'" .
 
 # macOS arm64
 GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 \
-  go build -o utmstack_agent_service_darwin_arm64 \
-  -ldflags "-X 'github.com/utmstack/UTMStack/agent/config.REPLACE_KEY=YOUR_SECRET_KEY'" .
+  go build -o hivearmor_agent_service_darwin_arm64 \
+  -ldflags "-X 'github.com/hivearmor/agent/config.REPLACE_KEY=${AGENT_SECRET}'" .
 
-# Updater (no ldflags needed)
-cd updater && GOOS=linux GOARCH=amd64 go build -o utmstack_updater_service_linux_amd64 .
+# Updater (no ldflags required)
+cd updater && GOOS=linux GOARCH=amd64 go build -o hivearmor_updater_service_linux_amd64 .
 ```
 
-> **IMPORTANT**: `REPLACE_KEY` is your agent authentication secret. Every agent deployed in
-> the field is compiled with this key. **Changing it requires reinstalling all deployed agents.**
-> Choose it once and keep it secret. Store in GitHub Secrets as `AGENT_SECRET_PREFIX`.
+OS service names installed on endpoints:
+- Windows: `HiveArmorAgent` (main), `HiveArmorUpdater`
+- Linux/macOS: `hivearmor-agent.service` (systemd)
 
 ### Agent Manager
 
 ```bash
 cd agent-manager
 go build -o agent-manager -v .
-# Then build Docker image — see Dockerfile in agent-manager/
+# Then build Docker image via agent-manager/Dockerfile
 ```
 
-### Collector
+### Collector (hivearmor-collector — requires ldflags)
 
 ```bash
-cd utmstack-collector
-GOOS=linux GOARCH=amd64 \
-  go build -o utmstack_collector \
-  -ldflags "-X 'github.com/utmstack/UTMStack/utmstack-collector/config.REPLACE_KEY=YOUR_SECRET_KEY'" .
+cd hivearmor-collector
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
+  go build -o hivearmor_collector \
+  -ldflags "-X 'github.com/hivearmor/hivearmor-collector/config.REPLACE_KEY=${AGENT_SECRET}'" .
 ```
 
-### Plugins (all 16)
+### Plugins (17)
 
 ```bash
-for plugin in alerts aws azure bitdefender config crowdstrike events feeds gcp geolocation \
-              inputs modules-config o365 soc-ai sophos stats; do
+for plugin in alerts aws azure bitdefender compliance-orchestrator config crowdstrike events \
+              feeds gcp geolocation inputs modules-config o365 soc-ai sophos stats; do
   cd plugins/$plugin
-  GOOS=linux GOARCH=amd64 go build -o com.utmstack.$plugin.plugin -v .
+  GOOS=linux GOARCH=amd64 go build -o com.hivearmor.$plugin.plugin -v .
   cd ../..
 done
 ```
 
-> Plugin binaries **must** be named `com.utmstack.<name>.plugin` — the event processor
-> loads them by this convention at startup.
+> Plugin binaries **must** be named `com.hivearmor.<name>.plugin`. The event processor loads them by this exact convention at startup.
 
 ### Installer
 
@@ -259,273 +244,262 @@ done
 cd installer
 go build \
   -ldflags "
-    -X 'installer/config.DEFAULT_BRANCH=main'
-    -X 'installer/config.INSTALLER_VERSION=1.0.0'
-    -X 'installer/config.REPLACE=your-encryption-salt'
-    -X 'installer/config.PUBLIC_KEY=your-rsa-public-key-pem'
+    -X 'github.com/hivearmor/installer/config.DEFAULT_BRANCH=prod'
+    -X 'github.com/hivearmor/installer/config.INSTALLER_VERSION=11.0.0'
+    -X 'github.com/hivearmor/installer/config.REPLACE=${CM_ENCRYPT_SALT}'
+    -X 'github.com/hivearmor/installer/config.PUBLIC_KEY=${CM_SIGN_PUBLIC_KEY}'
   " \
-  -o utmstack-installer .
+  -o hivearmor-installer .
 ```
 
-> The installer binary provisions a fresh Ubuntu 22.04 host, installs Docker Swarm,
-> and deploys the entire stack. The `REPLACE` and `PUBLIC_KEY` fields are no longer
-> used for licensing (removed in Phase 8), but the build system still expects them.
-> Pass any non-empty values.
+The installer binary provisions a fresh server, installs Docker, generates TLS certificates, and deploys the full stack. `CM_ENCRYPT_SALT` and `CM_SIGN_PUBLIC_KEY` are used by the CM integration for instance registration and license verification.
 
 ---
 
-## 5. CI/CD Pipeline
+## 4. CI/CD Pipeline
 
-### What the current pipeline does
+### What the pipeline does
 
-The pipeline `v11-deployment-pipeline.yml` was designed for UTMStack's original infrastructure:
-1. Determines version (from branch name or release tag)
-2. Queries their Customer Manager for the latest version number
-3. Builds all 8 Docker images and pushes to `ghcr.io/utmstack/utmstack/`
-4. Publishes the new version to their Customer Manager
-5. Schedules a rolling deployment to their internal servers
+`v11-deployment-pipeline.yml`:
 
-### Minimum changes required for your fork
+1. Determines the version tag (from the branch name or release tag)
+2. Queries the Customer Manager (CM) at `cmdev.onlyhacker.org` (dev) or `cm.onlyhacker.org` (prod) for the latest version number
+3. Builds all Docker images and pushes to `ghcr.io/hivearmor/`
+4. Publishes the new version to CM
+5. Schedules a rolling deployment to registered instances via CM
 
-**Step 1 — Update image registry paths in workflow files**
+### Pipeline jobs summary
 
-Search and replace all occurrences of `ghcr.io/utmstack/utmstack/` with `ghcr.io/YOUR_ORG/YOUR_REPO/`:
+| Job | Purpose |
+|---|---|
+| `setup_deployment` | Resolves version tag and CM URL based on branch |
+| `build_backend` | Builds and pushes `ghcr.io/hivearmor/backend:<tag>` |
+| `build_frontend` | Builds and pushes `ghcr.io/hivearmor/frontend-v2:<tag>` |
+| `build_agent` | Cross-compiles agent binaries for Linux/Windows/macOS with ldflags |
+| `build_agent_manager` | Builds and pushes `ghcr.io/hivearmor/agent-manager:<tag>` |
+| `build_eventprocessor` | Builds and pushes `ghcr.io/hivearmor/eventprocessor:<tag>` |
+| `build_collector` | Compiles `hivearmor_collector` with ldflags |
+| `sign_agent_windows` | Signs Windows binaries (requires GCP KMS + JSign) |
+| `sign_agent_macos` | Signs macOS binaries (requires Apple Developer notarytool) |
+| `publish_new_version` | Registers the new version with CM |
+| `schedule` | Triggers rolling deployment on CM-registered instances |
 
-```bash
-find .github/workflows -name "*.yml" -exec \
-  sed -i '' 's|ghcr.io/utmstack/utmstack/|ghcr.io/YOUR_ORG/YOUR_REPO/|g' {} \;
+### Image registry paths
+
+All production images are published to:
+
+```
+ghcr.io/hivearmor/backend:<tag>
+ghcr.io/hivearmor/frontend-v2:<tag>
+ghcr.io/hivearmor/agent-manager:<tag>
+ghcr.io/hivearmor/eventprocessor:<tag>
 ```
 
-Also update `local-dev/docker-compose.yml` image tags.
+Local development images use the `hivearmor/<service>:local` tag built by `docker compose build`.
 
-**Step 2 — Remove or replace the Customer Manager integration**
-
-Remove these jobs from `v11-deployment-pipeline.yml` (they call `cm.utmstack.com`):
-- `publish_new_version`
-- `schedule`
-
-Or replace them with your own deployment trigger.
-
-**Step 3 — Remove the version-auto-increment logic**
-
-The `setup_deployment` job queries UTMStack's CM API to auto-increment dev version numbers.
-Replace with a simpler version strategy:
-
-```yaml
-# Simple replacement — use the branch name + commit SHA
-- name: Set version
-  id: set-env
-  run: |
-    SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-    TAG="${GITHUB_REF_NAME//\//-}-${SHORT_SHA}"
-    echo "tag=$TAG" >> $GITHUB_OUTPUT
-    echo "environment=dev" >> $GITHUB_OUTPUT
-```
-
-**Step 4 — Remove signing workflows (unless you have Apple/MS signing certs)**
+### Removing agent code signing (if you lack Apple/MS certs)
 
 The `sign_agent_windows` and `sign_agent_macos` jobs require:
-- Apple Developer account + notarytool credentials
-- Microsoft code-signing certificate via GCP KMS (JSign)
+- Apple Developer account + notarytool credentials for macOS notarisation
+- A Microsoft code-signing certificate via GCP KMS (JSign) for Windows
 
-If you don't have these, make `build_agent_manager` depend directly on `build_agent`
-and skip signing. Unsigned binaries work fine on Linux/macOS for internal deployments.
+If these are not available, make `build_agent_manager` depend directly on `build_agent` and remove the signing jobs. Unsigned binaries work on Linux for internal deployments.
 
-**Step 5 — Update PR checks (`pr-checks.yml`)**
+### PR checks (`pr-checks.yml`)
 
-The PR checks call UTMStack's AI review API (ThreatWinds). Remove `ai_review` job and
-the `approver` job's `tier3_reviewers` or update to your own reviewers.
-
-Simplest replacement:
-```yaml
-# Replace ai_review and approver with just a build check
-build_check:
-  runs-on: ubuntu-24.04
-  steps:
-    - uses: actions/checkout@v4
-    - run: echo "PR checks passed"
-```
-
-### Minimal working pipeline for your fork
-
-After the above changes, your pipeline does:
-1. On push to `release/*`: build all Docker images → push to your GHCR
-2. On PR: Go dependency scan + optional AI review
-
-That's sufficient to ship updates to your production server.
+Runs on every PR:
+- Go dependency vulnerability scan (`_pr-reusable-go-deps.yml`)
+- Automated approver bot (`_pr-reusable-approver.yml`)
+- Optional AI review (`_pr-reusable-ai-review.yml`)
 
 ---
 
-## 6. GitHub Secrets & Variables Reference
+## 5. GitHub Secrets & Variables Reference
 
-These must be set in **Settings → Secrets and variables → Actions** of your GitHub repository.
+Set in **Settings → Secrets and variables → Actions** of the `hivearmor/hivearmor` repository.
 
 ### Secrets (sensitive — never logged)
 
-| Secret name | What it is | How to generate |
+| Secret | What it is | How to generate |
 |---|---|---|
-| `AGENT_SECRET_PREFIX` | Agent authentication key injected via ldflags | `openssl rand -hex 32` — **choose once, never change** |
-| `MAVEN_TK` | GitHub PAT for `read:packages` on your org's Maven packages | GitHub → Settings → Developer settings → Personal access tokens → `read:packages` |
-| `CM_ENCRYPT_SALT` | Installer encryption salt (can be any string if you don't use UTMStack's CM) | `openssl rand -hex 16` |
-| `CM_SIGN_PUBLIC_KEY` | RSA public key for installer license verification (unused after Phase 8) | Any RSA public key PEM, or a placeholder |
-| `API_SECRET` | ThreatWinds AI review API secret — remove if not using AI review | N/A if removed |
-| `THREATWINDS_API_KEY` | ThreatWinds changelog generation | N/A if removed |
-| `THREATWINDS_API_SECRET` | ThreatWinds changelog generation | N/A if removed |
-| `CM_SERVICE_ACCOUNT_DEV` | JSON `{"id":"...","key":"..."}` for dev CM auth | N/A — remove publish_new_version job |
-| `CM_SERVICE_ACCOUNT_PROD` | JSON `{"id":"...","key":"..."}` for prod CM auth | N/A — remove publish_new_version job |
-| `APPROVER_APP_ID` | GitHub App ID for the approver bot | N/A if removed |
-| `APPROVER_PRIVATE_KEY` | GitHub App private key for the approver bot | N/A if removed |
+| `AGENT_SECRET_PREFIX` | Agent authentication key injected via ldflags into agent and collector binaries | `openssl rand -hex 32` — **choose once, never change** |
+| `MAVEN_TK` | GitHub PAT with `read:packages` on the hivearmor org | GitHub → Settings → Developer settings → Personal access tokens → `read:packages` |
+| `CM_ENCRYPT_SALT` | Encryption salt used by the installer for CM communication | `openssl rand -hex 16` |
+| `CM_SIGN_PUBLIC_KEY` | RSA public key PEM for CM license verification | RSA 2048 or 4096 public key |
+| `CM_SERVICE_ACCOUNT_DEV` | JSON `{"id":"...","key":"..."}` for dev CM auth | Issued by CM admin panel at cmdev.onlyhacker.org |
+| `CM_SERVICE_ACCOUNT_PROD` | JSON `{"id":"...","key":"..."}` for prod CM auth | Issued by CM admin panel at cm.onlyhacker.org |
+| `APPROVER_APP_ID` | GitHub App ID for the PR approver bot | GitHub App registration |
+| `APPROVER_PRIVATE_KEY` | GitHub App private key for the PR approver bot | GitHub App registration |
 
 ### Variables (non-sensitive — visible in logs)
 
-| Variable name | What it is | Example |
+| Variable | What it is | Example |
 |---|---|---|
-| `TW_EVENT_PROCESSOR_VERSION_DEV` | Base image tag for the event processor (dev) | `latest` |
-| `TW_EVENT_PROCESSOR_VERSION_PROD` | Base image tag for the event processor (prod) | `v1.2.3` |
-| `GCP_PROJECT_PROD` | GCP project ID for KMS signing | `your-gcp-project` |
+| `TW_EVENT_PROCESSOR_VERSION_DEV` | Base image tag for event processor (dev builds) | `latest` |
+| `TW_EVENT_PROCESSOR_VERSION_PROD` | Base image tag for event processor (prod builds) | `v1.2.3` |
+| `GCP_PROJECT_PROD` | GCP project for KMS Windows code signing | `your-gcp-project` |
 | `KMS_KEYRING_LOCATION` | GCP KMS keyring location | `global` |
 | `KMS_KEYRING_NAME` | GCP KMS keyring name | `code-signing` |
 | `KMS_KEY_NAME` | GCP KMS key name | `agent-signing-key` |
-| `SCHEDULE_INSTANCES_DEV` | Comma-separated CM instance IDs for dev | N/A — remove schedule job |
-| `SCHEDULE_INSTANCES_PROD` | Comma-separated CM instance IDs for prod | N/A — remove schedule job |
+| `SCHEDULE_INSTANCES_DEV` | Comma-separated CM instance IDs for dev deployments | `inst-abc123,inst-def456` |
+| `SCHEDULE_INSTANCES_PROD` | Comma-separated CM instance IDs for prod deployments | `inst-xyz789` |
 
-### Minimum required secrets (simplified pipeline)
+### Minimum required secrets
 
-If you remove the CM, AI review, and signing integrations, you only need:
+If you are not using agent code signing or the CM deployment automation, you only need:
 
 | Secret | Required for |
 |---|---|
-| `AGENT_SECRET_PREFIX` | Building agent/collector binaries |
+| `AGENT_SECRET_PREFIX` | Building agent and collector binaries |
 | `MAVEN_TK` | Building the Java backend |
 
 ---
 
-## 7. Container Registry Setup
+## 6. Container Registry Setup
 
-All Docker images are published to GitHub Container Registry (GHCR).
+All Docker images are published to GitHub Container Registry (GHCR) under the `hivearmor` org.
 
-### Enable GHCR for your repository
+### Enable GHCR for the organisation
 
-1. Go to your GitHub org/account → **Settings → Packages**
+1. GitHub org → **Settings → Packages**
 2. Ensure "Improve container support" is enabled
 
-### First push — make images public (optional)
+### First push — package visibility
 
-After your first pipeline run, images are private by default. To make them public:
+After the first pipeline run, images are private by default. To make them public:
 
-1. GitHub → your org → **Packages**
-2. Click each image → **Package Settings** → Change visibility → Public
+1. GitHub → HiveArmor org → **Packages**
+2. Click each package → **Package Settings** → Change visibility → Public
 
-Or keep them private and ensure your production server can authenticate:
+To keep them private and authenticate the production server:
+
 ```bash
 echo $GITHUB_PAT | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
 ```
 
 ### Image naming convention
 
-Your images will be at: `ghcr.io/YOUR_ORG/YOUR_REPO/<service>:<tag>`
+```
+ghcr.io/hivearmor/<service>:<tag>
+```
 
-Services: `backend`, `frontend`, `agent-manager`, `eventprocessor`, `user-auditor`, `web-pdf`
+Services: `backend`, `frontend-v2`, `agent-manager`, `eventprocessor`, `user-auditor`, `web-pdf`
 
-Infrastructure images (postgres, opensearch) are still pulled from `ghcr.io/utmstack/utmstack/` —
-these are stable and do not change with your customisations. You can optionally mirror them.
+Infrastructure images (PostgreSQL, OpenSearch) are separate stable images. Mirror them to your own registry if you need air-gapped deployments.
 
 ---
 
-## 8. Hosting & Deployment
+## 7. Hosting & Deployment
 
-### Production requirements
+### Supported operating systems
+
+| OS | Versions |
+|---|---|
+| Ubuntu | 22.04 LTS, 24.04 LTS |
+| Debian | 12 |
+| RHEL / Rocky Linux / AlmaLinux | 8, 9 |
+
+### Production server requirements
 
 | Resource | Minimum | Recommended |
 |---|---|---|
-| OS | Ubuntu 22.04 LTS | Ubuntu 22.04 LTS |
 | CPU | 4 cores | 8 cores |
 | RAM | 16 GB | 32 GB |
 | Disk | 100 GB SSD | 500 GB SSD |
-| Network | Port 443, 80, 9000 (gRPC) open | — |
+| Ports | 80, 443, 9000 (gRPC) | — |
 
-> For more than 500 data sources (deployed agents), add secondary nodes.
+For more than 500 deployed agents, provision additional nodes and distribute the event processor load.
 
-### Install Docker and Swarm on a fresh Ubuntu 22.04 server
+### Install Docker on a fresh server
 
 ```bash
-# Install Docker
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER
-
-# Initialize single-node Swarm
-docker swarm init
 
 # Authenticate to GHCR
 echo $GITHUB_PAT | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
 ```
 
-### Deploy the stack
+### Automated installation (recommended)
+
+Use the `hivearmor-installer` binary to provision a fresh server. The installer handles Docker installation, TLS certificate generation, stack deployment, and CM instance registration:
 
 ```bash
-# Create the env file on the server
-cat > /opt/utmstack/.env << 'EOF'
-UTMSTACK_TAG=v11.1.0
+# On the target server
+chmod +x hivearmor-installer
+./hivearmor-installer
+```
+
+### Manual deployment
+
+```bash
+# Create the environment file on the server
+mkdir -p /opt/hivearmor
+cat > /opt/hivearmor/.env << 'EOF'
+HIVEARMOR_TAG=v11.1.0
 SERVER_NAME=your-server-hostname-or-ip
 POSTGRES_PASSWORD=your-strong-password
 OPENSEARCH_INITIAL_ADMIN_PASSWORD=YourStr0ng!Password
 INTERNAL_KEY=$(openssl rand -hex 32)
-ENCRYPTION_KEY=$(openssl rand -hex 32)
+ENCRYPTION_KEY=$(openssl rand -base64 64)
+EVENTPROCESSOR_INJECT_KEY=$(openssl rand -hex 32)
+APP_TFA_ENABLED=true
 EOF
 
 # Copy docker-compose.yml to the server
-scp local-dev/docker-compose.yml user@server:/opt/utmstack/
+scp local-dev/docker-compose.yml user@server:/opt/hivearmor/
 
 # Deploy
-ssh user@server "cd /opt/utmstack && docker compose up -d"
+ssh user@server "cd /opt/hivearmor && docker compose up -d"
 ```
 
 ### Rolling update (after a new build)
 
 ```bash
-# Pull new images and update services with zero downtime
 ssh user@server << 'EOF'
-cd /opt/utmstack
-export UTMSTACK_TAG=v11.2.0   # the new tag
+cd /opt/hivearmor
+export HIVEARMOR_TAG=v11.2.0
 docker compose pull
-docker compose up -d --no-deps --build backend frontend agent-manager
+docker compose up -d --no-deps backend agent-manager eventprocessor frontend-v2
 EOF
 ```
 
-> **Session impact**: Backend restart invalidates all JWT sessions (ephemeral signing key).
-> Schedule backend updates during low-traffic windows and notify users beforehand.
+> **Session impact**: Backend restart regenerates the ephemeral JWT signing key, invalidating all active user sessions (tracked as DEBT-14). Schedule backend updates during low-traffic windows and notify users in advance.
 
-### Health check
+### Health checks
 
 ```bash
-# Check all services are running
-ssh user@server "docker compose ps"
+# All services running
+ssh user@server "cd /opt/hivearmor && docker compose ps"
 
-# Check backend
-curl -s http://localhost:8080/api/ping
+# Backend API
+curl -s http://localhost:8088/api/healthcheck
 
-# Check agent-manager gRPC port
+# AgentManager gRPC port
 nc -zv localhost 9000
 
-# Check OpenSearch
+# OpenSearch cluster health
 curl -sk https://localhost:9200/_cluster/health \
-  -u admin:$OPENSEARCH_INITIAL_ADMIN_PASSWORD | jq .status
+  -u admin:$OPENSEARCH_INITIAL_ADMIN_PASSWORD | python3 -m json.tool | grep status
+
+# Event processor health
+curl -sf http://localhost:8090/health
 ```
 
 ---
 
-## 9. Merging Code Changes
+## 8. Merging Code Changes
 
-### Branch protection rules (recommended)
+### Branch protection rules (required on `main`)
 
-Set these on your `main` branch in **Settings → Branches → Add rule**:
+Configure in **Settings → Branches → Add rule** for `main`:
 
-- ☑ Require pull request reviews (1 approver minimum)
-- ☑ Require status checks to pass before merging
+- Require pull request reviews (1 approver minimum)
+- Require status checks to pass before merging:
   - Go dependency scan
   - Build check
-- ☑ Require branches to be up to date before merging
-- ☑ Do not allow bypassing the above settings
+- Require branches to be up to date before merging
+- Do not allow bypassing the above settings
 
 ### PR workflow
 
@@ -534,151 +508,164 @@ Set these on your `main` branch in **Settings → Branches → Add rule**:
    git checkout main && git pull
    git checkout -b feature/my-change
 
-2. Make changes, commit
-   git add . && git commit -m "feat: describe change"
+2. Make changes and commit
+   git add <specific files> && git commit -m "feat: describe change"
 
 3. Push and open PR
    git push -u origin feature/my-change
    # Open PR on GitHub targeting main
 
-4. CI runs: Go deps scan, build check
+4. CI runs: Go dependency scan, build check
 5. At least 1 reviewer approves
-6. Merge (squash merge recommended)
+6. Squash merge into main
 ```
 
-### Deployment rule for security-sensitive changes
+### Security-sensitive changes — mandatory test coverage
 
-Per `testing.md`: **never merge to main without tests** for:
+Never merge to `main` without tests for:
 - Auth flows (`security/jwt/`, `SecurityConfiguration.java`)
 - SOAR rule evaluation (`UtmAlertResponseRuleService`)
 - Alert deduplication (`plugins/alerts/main.go`)
-- New REST endpoints (need happy-path + 401 test)
+- New REST endpoints (require a happy-path test and a 401 test)
 
-Current test coverage status:
-- Frontend: 26 specs ✅
-- Backend: 14 specs (T-001, T-002) ✅
-- Go: 0 test files (vacuous pass) — tracked in `testing.md`
+### New endpoint checklist
+
+Every new backend endpoint must have **either** a `@PreAuthorize` annotation or an explicit entry in `SecurityConfiguration.java`. Public endpoints must be explicitly added to the public path list. Audit trail is required for: alert status changes, incident status changes, user login/logout, agent remote commands, API key usage.
+
+### API change rules
+
+All endpoints live at `/api/ha-*`. No API versioning layer. Breaking changes (removed or renamed endpoints or fields) require keeping the old endpoint with a `Deprecation` response header for at least 2 releases. Additive changes are always safe.
 
 ---
 
-## 10. Agent Distribution
+## 9. Agent Distribution
 
 ### How agents reach deployed endpoints
 
-1. The **agent installer binary** is built with `REPLACE_KEY` baked in via ldflags
-2. It registers with `agent-manager` on port 9000 (TLS 1.3)
-3. After registration, it receives an `id` + `key` pair stored in SQLite locally
+1. The `hivearmor-installer` binary (or the agent binary distributed directly) is compiled with `REPLACE_KEY` baked in via ldflags
+2. The agent registers with `agent-manager` on port 9000 over TLS 1.3
+3. After registration, the endpoint stores an `id` + `key` pair locally in SQLite
 4. All subsequent communication uses `key/id/type` metadata headers
 
 ### Building agent binaries for distribution
 
-Agents for different platforms are built in CI. For manual builds:
-
-```bash
-cd agent
-
-# Set your secret (same one as AGENT_SECRET_PREFIX in GitHub Secrets)
-export AGENT_SECRET="your-32-char-hex-secret"
-
-# Linux
-GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
-  go build -o dist/utmstack_agent_service_linux_amd64 \
-  -ldflags "-X 'github.com/utmstack/UTMStack/agent/config.REPLACE_KEY=${AGENT_SECRET}'" .
-
-# Windows  
-GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
-  go build -o dist/utmstack_agent_service_windows_amd64.exe \
-  -ldflags "-X 'github.com/utmstack/UTMStack/agent/config.REPLACE_KEY=${AGENT_SECRET}'" .
-```
+See Section 3 for the full build commands. Binaries for all platforms are built automatically in CI on every push to `release/*`.
 
 ### Distributing agents to endpoints
 
-Option A — Serve binaries via HTTPS from your server:
+**Option A — Serve binaries from your server:**
+
 ```bash
-# Place binaries in a web-accessible directory on the server
-scp dist/* user@server:/var/www/html/agents/
-# Endpoints download and run: curl https://your-server/agents/utmstack_agent_service_linux_amd64 -o agent && chmod +x agent && ./agent install
+# Copy built binaries to a web-accessible directory
+scp dist/hivearmor_agent_service_* user@server:/var/www/html/agents/
+
+# On the endpoint (Linux)
+curl -sSL https://YOUR_SERVER/agents/hivearmor_agent_service_linux_amd64 \
+  -o /usr/bin/hivearmor_agent_service
+chmod +x /usr/bin/hivearmor_agent_service
+hivearmor_agent_service install \
+  --connection-key YOUR_CONNECTION_KEY \
+  --manager-ip YOUR_SERVER_IP
 ```
 
-Option B — The frontend's **Getting Started** screen generates install commands automatically
-once you set the `SERVER_NAME` env var correctly.
+**Option B — Generated install commands from the UI:**
+
+The HiveArmor UI's **Data Sources → Add Agent** screen generates platform-specific install commands automatically once `SERVER_NAME` is correctly set in `.env`.
 
 ### Install commands (endpoint side)
 
 **Linux:**
+
 ```bash
-curl -sSL https://YOUR_SERVER/agents/utmstack_agent_service_linux_amd64 -o /usr/bin/utmstack_agent_service
-chmod +x /usr/bin/utmstack_agent_service
-utmstack_agent_service install --connection-key YOUR_CONNECTION_KEY --manager-ip YOUR_SERVER_IP
+curl -sSL https://YOUR_SERVER/agents/hivearmor_agent_service_linux_amd64 \
+  -o /usr/bin/hivearmor_agent_service
+chmod +x /usr/bin/hivearmor_agent_service
+hivearmor_agent_service install \
+  --connection-key YOUR_CONNECTION_KEY \
+  --manager-ip YOUR_SERVER_IP
 ```
 
-**Windows (PowerShell as Admin):**
+**Windows (PowerShell as Administrator):**
+
 ```powershell
-Invoke-WebRequest -Uri "https://YOUR_SERVER/agents/utmstack_agent_service_windows_amd64.exe" -OutFile "C:\utmstack_agent_service.exe"
-C:\utmstack_agent_service.exe install --connection-key YOUR_CONNECTION_KEY --manager-ip YOUR_SERVER_IP
+Invoke-WebRequest -Uri "https://YOUR_SERVER/agents/hivearmor_agent_service_windows_amd64.exe" `
+  -OutFile "C:\hivearmor_agent_service.exe"
+C:\hivearmor_agent_service.exe install `
+  --connection-key YOUR_CONNECTION_KEY `
+  --manager-ip YOUR_SERVER_IP
 ```
 
-> The **connection key** is generated per-agent from the UI under Data Sources → Add Agent.
+The **connection key** is generated per-agent from the UI under Data Sources → Add Agent.
 
 ---
 
-## 11. Secrets & Credentials Management
+## 10. Secrets & Credentials Management
 
 ### Load-bearing secrets — change with extreme caution
 
 | Secret | Where stored | Impact of change |
 |---|---|---|
-| `INTERNAL_KEY` | `.env` on server + GitHub Secrets | Restart backend + agent-manager + eventprocessor simultaneously |
-| `AGENT_SECRET_PREFIX` (REPLACE_KEY) | GitHub Secrets + compiled into agent binary | Every deployed agent must be reinstalled |
-| `ENCRYPTION_KEY` | `.env` on server | Encrypted config values in DB become unreadable |
-| `POSTGRES_PASSWORD` | `.env` on server | All 3 services that use Postgres must restart with new password |
+| `INTERNAL_KEY` | `.env` on server + GitHub Secrets | Must restart backend, agent-manager, and eventprocessor simultaneously |
+| `AGENT_SECRET_PREFIX` (REPLACE_KEY) | GitHub Secrets + compiled into agent/collector binaries | Every deployed agent and collector must be reinstalled |
+| `ENCRYPTION_KEY` | `.env` on server | Encrypted config values stored in the database become unreadable |
+| `POSTGRES_PASSWORD` | `.env` on server | All services using PostgreSQL must restart with the new password |
 | `OPENSEARCH_INITIAL_ADMIN_PASSWORD` | `.env` on server | All services that query OpenSearch must restart |
 
 ### Rotation procedure for INTERNAL_KEY
 
-If you must rotate `INTERNAL_KEY`:
-
 ```bash
-# 1. Generate new key
+# 1. Generate a new key
 NEW_KEY=$(openssl rand -hex 32)
 
-# 2. Update .env on server
-sed -i "s/INTERNAL_KEY=.*/INTERNAL_KEY=$NEW_KEY/" /opt/utmstack/.env
+# 2. Update .env on the server
+sed -i "s/INTERNAL_KEY=.*/INTERNAL_KEY=$NEW_KEY/" /opt/hivearmor/.env
 
-# 3. Restart ALL three services simultaneously
+# 3. Restart all three services simultaneously
+cd /opt/hivearmor
 docker compose up -d --no-deps backend agent-manager eventprocessor
 
-# 4. All active user sessions are invalidated (JWT key rotation)
-# Notify users before doing this
+# All active user sessions are invalidated by the JWT key rotation.
+# Notify users before doing this.
 ```
 
 ### Secrets storage for the team
 
-Use a team password manager (Vault, 1Password Teams, Bitwarden) to store:
+Store all production secrets in a team password manager (HashiCorp Vault, 1Password Teams, Bitwarden, or equivalent):
+
 - `AGENT_SECRET_PREFIX` (production value)
 - `ENCRYPTION_KEY` (production value)
 - `INTERNAL_KEY` (production value)
+- `POSTGRES_PASSWORD` (production value)
 - All GitHub Secrets values
+- CM service account credentials
 
-**Never store secrets in the repository.** The `.env` file is in `.gitignore`.
+**Never commit secrets to the repository.** The `.env` file is in `.gitignore`.
 
----
+### Known open security issues
 
-## 12. Known Deferred Items
+The following issues are tracked in `.plan/features/SEC-FIXES.md` and `docs/baseline/12-risk-register.md`. Fix them before shipping to production:
 
-These items were tracked during migration and are **not blocking** but should be addressed:
-
-| Item | File | Priority |
+| ID | Location | Issue |
 |---|---|---|
-| Backend full compile verification | `docs/migration/deferred-build-verification.md` | High — do before first production deploy |
-| Go test coverage (T-003+) | `testing.md` — Go section | Medium — needed before modifying agent/SOAR code |
-| Angular esbuild builder (Phase 5e) | Removes `--openssl-legacy-provider` requirement | Low |
-| Bootstrap 5 — `badge-pill` → `rounded-pill` | Minor class rename | Low |
-| Branding abstraction (Phase 11) | `.kiro/specs/product-rebranding/` — spec written | When ready |
-| ng-bootstrap v16 — individual imports | 42 modules still use `NgbModule` blob | Low — works, not urgent |
-| Hibernate 6 JPQL full audit | `docs/migration/phase-7-hibernate6-jpql-audit.md` — clean | Ongoing due diligence |
+| SEC-01 | `AccountResource.java` | Password exposed in GET query parameter |
+| SEC-02 | `TokenProvider.java` | JWT signing key is ephemeral and rotates on every backend restart (DEBT-14) |
+| SEC-03 | Production Spring config | CORS `allowed-origins: '*'` in production config |
+| SEC-04 | gRPC client | `InsecureTrustManagerFactory` used for TLS |
 
 ---
 
-*End of runbook. For architecture details see `docs/baseline/01-architecture-overview.md`.  
-For migration history see `docs/migration/`.*
+## 11. Known Technical Debt
+
+| Item | Reference | Priority |
+|---|---|---|
+| SEC-01 through SEC-04 security fixes | `.plan/features/SEC-FIXES.md` | High — fix before production |
+| Ephemeral JWT key (DEBT-14) | `TokenProvider.java` | High — causes user session loss on every backend restart |
+| Go test coverage (agent, collector, plugins) | `docs/TEST-PLAN.md` Go section | Medium — add before modifying agent or SOAR code |
+| Hibernate 6 JPQL full audit | `docs/baseline/` | Ongoing due diligence |
+| Legacy Angular UI in `frontend/` | Scheduled for deletion per CLAUDE.md | Low — do not add new features to it |
+
+---
+
+*For architecture details see `docs/baseline/01-architecture-overview.md`.*
+*For the event processor internals see `docs/EVENT-PROCESSOR.md`.*
+*Support: support@hivearmor.io | Docs: https://docs.hivearmor.io | GitHub: https://github.com/hivearmor*

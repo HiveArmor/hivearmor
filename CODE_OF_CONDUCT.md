@@ -1,6 +1,6 @@
 # Code of Conduct
 
-This Code of Conduct outlines expectations for participation in the UTMStack's community. We aim to foster a productive and respectful environment for all contributors.
+This Code of Conduct outlines expectations for participation in the HiveArmor's community. We aim to foster a productive and respectful environment for all contributors.
 
 ## Expected Behavior
 
@@ -23,7 +23,7 @@ This Code of Conduct outlines expectations for participation in the UTMStack's c
 
 ## Enforcement
 
-Project maintainers are responsible for enforcing this Code of Conduct. If you witness or experience unacceptable behavior, please report it to the maintainers by contacting community@utmstack.com or through another designated channel.
+Project maintainers are responsible for enforcing this Code of Conduct. If you witness or experience unacceptable behavior, please report it to the maintainers by contacting community@hivearmor.io or through another designated channel.
 
 Maintainers will investigate all reported violations and take appropriate action, which may include:
 
@@ -42,4 +42,4 @@ To report a violation of this Code of Conduct, please provide the following info
 * The time and location of the behavior (e.g., a link to the relevant discussion or issue).
 * Any other relevant information.
 
-We appreciate your cooperation in making UTMStack a welcoming and productive community for everyone.
+We appreciate your cooperation in making HiveArmor a welcoming and productive community for everyone.

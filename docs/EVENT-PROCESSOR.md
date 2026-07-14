@@ -1,7 +1,7 @@
-# ArmorSight Event Processor — Technical Reference
+# HiveArmor Event Processor — Technical Reference
 
-> Audience: platform developers and tool administrators  
-> Binary: `event-processor/` · Module: `github.com/encryptshellorg/nilachakra/event-processor`
+> Audience: platform developers and tool administrators
+> Binary: `event-processor/` · Module: `github.com/hivearmor/event-processor`
 
 ---
 
@@ -43,7 +43,7 @@ External Log Source
         │
         ▼
   ┌─────────────────────────────────────────┐
-  │         ArmorSight Event Processor       │
+  │        HiveArmor Event Processor         │
   │                                          │
   │  Log → [Pipeline Filter] → Event         │
   │           │                              │
@@ -51,13 +51,13 @@ External Log Source
   │    [Enrichment: Geo + TI]                │
   │           │                              │
   │           ▼                              │
-  │  WriteEvent → v11-log-{type}-{date}      │
+  │  WriteEvent → _v3_hive_{type}-YYYY.MM.DD │
   │           │                              │
   │           ▼                              │
   │    [Rules Engine: CEL + Correlation]     │
   │           │                              │
   │           ▼                              │
-  │  WriteAlert → v11-alert-{date}           │
+  │  WriteAlert → _v3_hive_alert-YYYY.MM.DD  │
   │           │                              │
   │           ▼                              │
   │    [Enterprise: Risk / Offense]          │
@@ -99,7 +99,7 @@ main()
   ├─ pipeline.Init(filterDir)  ← load + hot-reload filter YAML every 30s
   ├─ rules.Init(rulesDir)      ← load + hot-reload rule YAML every 30s
   ├─ enrichment.SetGeoDir()    ← lazy-load MaxMind CSV on first lookup
-  ├─ enrichment.InitFeeds()    ← threat-intel lookup against v11-lookup-*
+  ├─ enrichment.InitFeeds()    ← threat-intel lookup against _v3_hive_lookup-*
   ├─ writer.InitEventWriter()  ← BulkQueue (5s flush, 500-doc threshold)
   ├─ writer.InitAlertWriter()  ← direct PUT per alert
   ├─ lookup.Init()             ← 5-min LRU cache for asset/identity tables
@@ -133,7 +133,7 @@ All configuration is via environment variables. No config file.
 | `POSTGRESQL_PORT` | `5432` | Postgres port |
 | `POSTGRESQL_USER` | `postgres` | Postgres user |
 | `POSTGRESQL_PASSWORD` | `localdev123!` | Postgres password |
-| `POSTGRESQL_DB` | `nilachakra` | Postgres database name |
+| `POSTGRESQL_DB` | `hivearmor` | Postgres database name |
 | `PUBLIC_PORT` | `8000` | HTTP port for backend-facing API |
 | `INGEST_PORT` | `8090` | HTTP port for test injection endpoint |
 | `MODE` | `manager` | Runtime mode (manager = standalone) |
@@ -232,9 +232,9 @@ Patterns are matched left-to-right against the remaining unmatched text. Each na
 | `{{.ipv6}}` | IPv6 address |
 | `{{.hostname}}` | Hostname / FQDN |
 | `{{.time}}` | `HH:MM:SS[.fraction]` |
-| `{{.monthName}}` | `Jan`, `Feb`, … `Dec` |
-| `{{.monthDay}}` | 1–31 with optional leading space |
-| `{{.day}}` | 1–31 |
+| `{{.monthName}}` | `Jan`, `Feb`, ... `Dec` |
+| `{{.monthDay}}` | 1-31 with optional leading space |
+| `{{.day}}` | 1-31 |
 | `{{.year}}` | 4-digit year |
 | `{{.space}}` | One or more whitespace characters |
 
@@ -311,13 +311,13 @@ Reads `data["raw"]`, splits on `fieldSplit`, then on `valueSplit`, and stores al
 
 ```yaml
 - dynamic:
-    plugin: com.utmstack.geolocation
+    plugin: com.hivearmor.geolocation
     params:
       source: origin.ip       # field holding the IP to look up
       destination: origin.geolocation   # where to store the result
 ```
 
-Currently supports `com.utmstack.geolocation`. Reads an IP from `source`, runs a MaxMind CSV lookup, and stores the result map at `destination`.
+Currently supports `com.hivearmor.geolocation`. Reads an IP from `source`, runs a MaxMind CSV lookup, and stores the result map at `destination`.
 
 ---
 
@@ -392,7 +392,7 @@ pipeline:
       - json:
           source: raw
 
-      # Map vendor fields to ArmorSight schema
+      # Map vendor fields to HiveArmor schema
       - rename:
           from: [log.event.UserIp]
           to: origin.ip
@@ -411,7 +411,7 @@ pipeline:
 
       # Add geolocation for origin IP
       - dynamic:
-          plugin: com.utmstack.geolocation
+          plugin: com.hivearmor.geolocation
           params:
             source: origin.ip
             destination: origin.geolocation
@@ -462,7 +462,7 @@ pipeline:
           to: log.message
 
       - dynamic:
-          plugin: com.utmstack.geolocation
+          plugin: com.hivearmor.geolocation
           params:
             source: origin.ip
             destination: origin.geolocation
@@ -501,7 +501,7 @@ pipeline:
               pattern: "to {{.ipv4}}"
 
       - dynamic:
-          plugin: com.utmstack.geolocation
+          plugin: com.hivearmor.geolocation
           params:
             source: origin.ip
             destination: origin.geolocation
@@ -529,7 +529,7 @@ Check the response:
 Verify the document in OpenSearch:
 ```bash
 curl -sk -u admin:LocalDev@2024! \
-  "https://localhost:9200/v11-log-crowdstrike-*/_search?pretty&size=1&sort=@timestamp:desc"
+  "https://localhost:9200/_v3_hive_crowdstrike-*/_search?pretty&size=1&sort=@timestamp:desc"
 ```
 
 #### Step 6 — (Optional) Add correlation rules
@@ -566,7 +566,7 @@ Rules are YAML files in `$WORK_DIR/rules/`. Each file can contain a single rule 
 
   # Correlation: count matching historical events in OpenSearch before firing
   correlation:
-    - indexPattern: "v11-log-linux-*"
+    - indexPattern: "_v3_hive_linux-*"
       with:
         - field: "origin.ip"
           operator: filter_match      # filter_match | filter_term
@@ -585,7 +585,7 @@ Rules are YAML files in `$WORK_DIR/rules/`. Each file can contain a single rule 
   groupBy:
     - "adversary.ip"
 
-  # Impact scores (0–3 each); sum determines severity
+  # Impact scores (0-3 each); sum determines severity
   impact:
     confidentiality: 2    # 0=none, 1=low, 2=medium, 3=high
     integrity: 1
@@ -599,9 +599,9 @@ Rules are YAML files in `$WORK_DIR/rules/`. Each file can contain a single rule 
 
 | Impact sum | Severity field | UI label |
 |---|---|---|
-| 0–4 | `"1"` | Low |
-| 5–7 | `"2"` | Medium / High (OPEN HIGH) |
-| 8–9 | `"3"` | High / Critical (OPEN CRITICAL) |
+| 0-4 | `"1"` | Low |
+| 5-7 | `"2"` | Medium / High (OPEN HIGH) |
+| 8-9 | `"3"` | High / Critical (OPEN CRITICAL) |
 
 **Correlation operators:**
 
@@ -630,7 +630,7 @@ sequence:                  # ordered multi-step detection
 
 ### 5.2 SOP: Writing a New Correlation Rule
 
-**Prerequisite:** The log source must already have a parser (Section 4.4) and events must be flowing into `v11-log-<dataType>-*`.
+**Prerequisite:** The log source must already have a parser (Section 4.4) and events must be flowing into `_v3_hive_<dataType>-*`.
 
 #### Step 1 — Identify the attack pattern
 
@@ -645,7 +645,7 @@ Query OpenSearch to see what fields are available:
 
 ```bash
 curl -sk -u admin:LocalDev@2024! \
-  "https://localhost:9200/v11-log-<dataType>-*/_search?pretty&size=1&sort=@timestamp:desc" \
+  "https://localhost:9200/_v3_hive_<dataType>-*/_search?pretty&size=1&sort=@timestamp:desc" \
   | jq '._source'
 ```
 
@@ -669,7 +669,7 @@ Create or append to a file in `$WORK_DIR/rules/`. Choose an unused integer ID. F
   where: |
     contains("log.message", "failed authentication") && safe("origin.ip", "") != ""
   correlation:
-    - indexPattern: "v11-log-paloalto-*"
+    - indexPattern: "_v3_hive_paloalto-*"
       with:
         - field: "origin.ip"
           operator: filter_match
@@ -771,13 +771,13 @@ Loaded lazily from `$WORK_DIR/geolocation/`. Expects MaxMind GeoLite2 CSV format
 
 Returns: `country`, `city`, `countryCode`, `asn`, `aso`, `latitude`, `longitude`.
 
-Used automatically in pipelines via the `dynamic: com.utmstack.geolocation` operator.
+Used automatically in pipelines via the `dynamic: com.hivearmor.geolocation` operator.
 
 ### Threat Intelligence Feeds
 
 File: `enrichment/feeds.go`
 
-Queries `v11-lookup-*` OpenSearch indices for IP reputation. Loaded on startup, cached with a 5-minute TTL. Enrich events by storing a `log.threatIntel` field if the origin IP matches a known-bad indicator.
+Queries `_v3_hive_lookup-*` OpenSearch indices for IP reputation. Loaded on startup, cached with a 5-minute TTL. Enriches events by storing a `log.threatIntel` field if the origin IP matches a known-bad indicator.
 
 ---
 
@@ -785,7 +785,7 @@ Queries `v11-lookup-*` OpenSearch indices for IP reputation. Loaded on startup, 
 
 ### Event Writer (`writer/events.go`)
 
-Uses `sdkos.BulkQueue` — batches documents and flushes every 5 seconds or at 500 documents. Index name: `v11-log-<dataType>-<YYYY-MM-DD>` (hyphen-date format).
+Uses `sdkos.BulkQueue` — batches documents and flushes every 5 seconds or at 500 documents. Index name: `_v3_hive_<dataType>-YYYY.MM.DD` (dot-date format).
 
 Each event document includes:
 - All standard fields: `@timestamp`, `id`, `dataType`, `dataSource`, `raw`, `action`, `actionResult`, `severity`, `protocol`
@@ -794,8 +794,8 @@ Each event document includes:
 
 ### Alert Writer (`writer/alerts.go`)
 
-Writes directly via HTTP PUT (not bulk queue) to `v11-alert-<YYYY-MM-DD>`. Before writing:
-1. **Dedup check**: queries `v11-alert-*` for the same `name` + same `deduplicateBy` field values within 7 days. Skips if found.
+Writes directly via HTTP PUT (not bulk queue) to `_v3_hive_alert-YYYY.MM.DD`. Before writing:
+1. **Dedup check**: queries `_v3_hive_alert-*` for the same `name` + same `deduplicateBy` field values within 7 days. Skips if found.
 2. **Group check**: queries for a parent alert with the same `groupBy` fields in the last 24 hours. Sets `parentId` if found.
 
 ---
@@ -805,8 +805,8 @@ Writes directly via HTTP PUT (not bulk queue) to `v11-alert-<YYYY-MM-DD>`. Befor
 | Feature | Package | What it does |
 |---|---|---|
 | Risk Scoring | `enterprise/risk/` | Accumulates per-IP risk points; flushes alert when threshold (100) reached; 10% hourly decay |
-| Offense Engine | `enterprise/offense/` | Groups ≥3 related alerts (same adversary IP/user within 2h) into an `v11-offense-*` document |
-| Lookup Tables | `enterprise/lookup/` | Enriches events from `v11-lookup-assets` and `v11-lookup-identities`; 5-min LRU cache |
+| Offense Engine | `enterprise/offense/` | Groups ≥3 related alerts (same adversary IP/user within 2h) into a `_v3_hive_offense-*` document |
+| Lookup Tables | `enterprise/lookup/` | Enriches events from `_v3_hive_lookup-assets` and `_v3_hive_lookup-identities`; 5-min LRU cache |
 | Anomaly Baseline | `enterprise/baseline/` | 15-min goroutine; computes 30-day mean+3σ per data source; triggers anomaly alerts |
 | Sequence Detection | `enterprise/sequence/` | Stateful multi-step detection using in-memory LRU(10000); fires when ordered steps match in time windows |
 
@@ -826,7 +826,7 @@ Writes directly via HTTP PUT (not bulk queue) to `v11-alert-<YYYY-MM-DD>`. Befor
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/health` | Returns `{"service":"armorsight-event-processor","status":"ok"}` |
+| `GET` | `/health` | Returns `{"service":"hivearmor-event-processor","status":"ok"}` |
 | `POST` | `/v1/inject` | Inject a synthetic log event for testing |
 
 **`POST /v1/inject` request body** — see [Section 5.4](#54-rule-testing-workflow).
@@ -836,7 +836,7 @@ Writes directly via HTTP PUT (not bulk queue) to `v11-alert-<YYYY-MM-DD>`. Befor
 {
   "status": "processed",        // or "dropped" if a drop step fired
   "id": "<event UUID>",
-  "index": "v11-log-linux",
+  "index": "_v3_hive_linux",
   "alerts": 1,                  // number of alerts that fired
   "alertIds": ["<alert UUID>"]
 }
@@ -881,7 +881,7 @@ func RegexOp(defs []RegexDef, data map[string]any) {
 Add a case to the `switch pluginName` in `operators/dynamic_op.go`:
 
 ```go
-case "com.mycompany.threatintel":
+case "com.hivearmor.threatintel":
     ip := getString(data, params["source"])
     result := myThreatIntelLookup(ip)
     setDeep(data, params["destination"], result)
@@ -921,7 +921,7 @@ Follow the pattern in `enterprise/risk/scorer.go`:
 docker compose restart eventprocessor
 
 # Systemd
-systemctl restart armorsight-eventprocessor
+systemctl restart hivearmor-eventprocessor
 
 # Local dev — stop and restart via the launch.json preview server
 ```
@@ -936,7 +936,7 @@ Restart is only needed when:
 ```bash
 cd event-processor
 GOCACHE=$TMPDIR/go-build GOPATH=$HOME/go GOMODCACHE=$HOME/go/pkg/mod \
-  go build -o /path/to/armorsight-engine .
+  go build -o /path/to/event-processor .
 ```
 
 ### Checking Rule Load Status
@@ -944,7 +944,7 @@ GOCACHE=$TMPDIR/go-build GOPATH=$HOME/go GOMODCACHE=$HOME/go/pkg/mod \
 There is no REST endpoint for loaded rules yet. Check engine startup logs:
 
 ```bash
-docker logs armorsight-eventprocessor 2>&1 | grep -E "started|warn|ERROR"
+docker logs hivearmor-eventprocessor 2>&1 | grep -E "started|warn|ERROR"
 ```
 
 Rules failing to parse are silently skipped — if a rule isn't firing, verify the YAML parses correctly:
@@ -957,13 +957,13 @@ python3 -c "import yaml; yaml.safe_load(open('myrule.yaml'))" && echo OK
 
 | Index pattern | Contents | Written by |
 |---|---|---|
-| `v11-log-<type>-<date>` | Normalized events | Event writer (BulkQueue) |
-| `v11-alert-<date>` | Fired alerts | Alert writer (direct PUT) |
-| `v11-offense-<date>` | Grouped offenses | Offense engine |
-| `v11-risk-scores-<date>` | Per-IP risk accumulator | Risk scorer |
-| `v11-baselines-<date>` | Anomaly baseline stats | Baseline collector |
-| `v11-lookup-assets` | Asset reference data | Manual / seed tool |
-| `v11-lookup-identities` | Identity reference data | Manual / seed tool |
+| `_v3_hive_<type>-YYYY.MM.DD` | Normalized events | Event writer (BulkQueue) |
+| `_v3_hive_alert-YYYY.MM.DD` | Fired alerts | Alert writer (direct PUT) |
+| `_v3_hive_offense-YYYY.MM.DD` | Grouped offenses | Offense engine |
+| `_v3_hive_risk-scores-YYYY.MM.DD` | Per-IP risk accumulator | Risk scorer |
+| `_v3_hive_baselines-YYYY.MM.DD` | Anomaly baseline stats | Baseline collector |
+| `_v3_hive_lookup-assets` | Asset reference data | Manual / seed tool |
+| `_v3_hive_lookup-identities` | Identity reference data | Manual / seed tool |
 
 ### Environment Variable Quick Reference
 

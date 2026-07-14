@@ -208,7 +208,7 @@ OpenSearch stores all logs in daily indices: `_v3_hive_<type>-YYYY.MM.DD`.
 
 ### Default retention policy
 
-The backend manages an ISM (Index State Management) policy `utmstack_ism_policy` in OpenSearch:
+The backend manages an ISM (Index State Management) policy `hivearmor_ism_policy` in OpenSearch:
 
 | Phase | Condition | Action |
 |---|---|---|
@@ -223,7 +223,7 @@ The backend manages an ISM (Index State Management) policy `utmstack_ism_policy`
 
 Alternatively, modify the ISM policy directly in OpenSearch Dashboards (dev/advanced users only):
 - Open `https://localhost:5601`
-- Navigate to **Index Management → Policies → utmstack_ism_policy**
+- Navigate to **Index Management → Policies → hivearmor_ism_policy**
 
 ---
 
@@ -420,9 +420,9 @@ All security-relevant actions are logged:
 | Event | Where stored |
 |---|---|
 | User login / logout | `user-auditor` service → `userauditor` DB → OpenSearch |
-| Alert status changes | `utm_alert_log` table (PostgreSQL) |
-| Incident changes | `utm_incident` table (PostgreSQL) |
-| Remote commands to agents | `utm_agent_command` table (PostgreSQL) |
+| Alert status changes | `ha_alert_log` table (PostgreSQL) |
+| Incident changes | `ha_incident` table (PostgreSQL) |
+| Remote commands to agents | `ha_agent_command` table (PostgreSQL) |
 | API key usage | Backend access logs |
 
 ### Viewing the audit log

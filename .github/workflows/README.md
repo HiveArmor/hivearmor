@@ -1,21 +1,20 @@
-# GitHub Actions Workflows — UTMStack
+# GitHub Actions Workflows — HiveArmor
 
-CI/CD for UTMStack v10 and v11. This folder contains two workflow families:
+CI/CD for HiveArmor v11. This folder contains two workflow families:
 
 - **PR checks** (`pr-checks.yml` + `_pr-reusable-*.yml`) — validate every
-  Pull Request before merge. The only gate into code on `release/**`,
-  `v10` and `v11`.
-- **Deployment pipelines** (`v10-deployment-pipeline.yml`,
-  `v11-deployment-pipeline.yml`, `installer-release.yml`) — build, publish
-  and deploy artifacts once code is merged.
+  Pull Request before merge. The gate into code on `main` and `release/**`.
+- **Deployment pipeline** (`v11-deployment-pipeline.yml`,
+  `installer-release.yml`) — build, publish, and deploy artifacts once code
+  is merged or a release is created.
 
 ## Table of contents
 
 - [Release policy](#release-policy)
 - [PR Checks](#pr-checks)
-- [V10 Deployment Pipeline](#v10-deployment-pipeline)
 - [V11 Deployment Pipeline](#v11-deployment-pipeline)
 - [Installer Release](#installer-release)
+- [Generate Changelog](#generate-changelog)
 - [Secrets and variables](#secrets-and-variables)
 - [Approver GitHub App setup](#approver-github-app-setup)
 - [Reusable workflows](#reusable-workflows)
@@ -28,9 +27,9 @@ CI/CD for UTMStack v10 and v11. This folder contains two workflow families:
 
 Hard rules:
 
-- **Direct push is forbidden** on `release/**`, `v10` and `v11`. PR only.
-- **Branch protection** is enabled on those branches: PR required, status
-  checks green (`All checks passed`), no force push.
+- **Direct push is forbidden** on `release/**`. PR only.
+- **Branch protection** is enabled: PR required, status checks green
+  (`All checks passed`), no force push.
 - **Roll-forward only.** No rollbacks. If a release breaks something, ship
   a hotfix that bumps the version (e.g. `v11.2.9` breaks → `v11.2.10`
   fixes it). Feature flags / kill switches are fine for turning features
@@ -38,18 +37,14 @@ Hard rules:
 
 ### Tiered approval model
 
-The team is small (3 devs + 2 part-time seniors), so the AI can approve
-and merge on its own in most cases. Seniors only get involved when the
-cost of being wrong is high.
-
 The **final tier** of a PR is decided by the approver, taking the maximum
 across all AI prompts (see [PR Checks](#pr-checks)).
 
 | Tier | Meaning | Approver action |
 |------|---------|-----------------|
-| **1** | Simple change, AI detects no issues, deps OK. | ✅ Sticky "Approved" comment + (when the approver App is configured) formal `APPROVE` review. Status check green. |
-| **2** | Minor issues the author should fix before merging (typos, small bugs, out-of-context code). | ⚠️ Sticky comment with the findings list + formal `REQUEST_CHANGES` review. Status check red. |
-| **3** | Touches critical paths (crypto, auth, migrations, installer, gRPC contracts, CI/CD) or the model can't judge with confidence. | 🛑 Sticky comment @mentioning the handles configured in `tier3_reviewers` + formal `REQUEST_CHANGES` review. Status check red. |
+| **1** | Simple change, AI detects no issues, deps OK. | Sticky "Approved" comment + (when the approver App is configured) formal `APPROVE` review. Status check green. |
+| **2** | Minor issues the author should fix before merging (typos, small bugs, out-of-context code). | Sticky comment with the findings list + formal `REQUEST_CHANGES` review. Status check red. |
+| **3** | Touches critical paths (crypto, auth, migrations, installer, gRPC contracts, CI/CD) or the model cannot judge with confidence. | Sticky comment @mentioning the handles configured in `tier3_reviewers` + formal `REQUEST_CHANGES` review. Status check red. |
 
 When the author pushes new commits, the sticky comments are **updated
 in-place** (same comment, no stacking) and the workflow re-runs
@@ -57,20 +52,21 @@ automatically. A blocked PR is **never auto-closed** — it stays open
 waiting for the fixes.
 
 Sensitive paths for Tier 3 are identified by each prompt's own rules (see
-`.github/ai-prompts/*.md`). In the future this could be reinforced with
-`CODEOWNERS` for additional per-path gates.
+`.github/ai-prompts/*.md`). This can be reinforced with `CODEOWNERS` for
+additional per-path gates.
 
 ### Auto-merge
 
 The approver enables GitHub's native auto-merge **only** when **all** of
 the following hold:
 
-- Target branch matches `release/**` (PRs to `v10` / `v11` stay manual
-  so production deploys are always intentional).
+- Target branch matches `release/**` (PRs to `main` stay manual so
+  production deploys are always intentional).
 - `deps_failed == false`.
 - `max_tier == 1` across every AI prompt.
-- PR author is in `@utmstack/administrators` or `@utmstack/core-developers`.
-- The approver GitHub App is configured (`APPROVER_APP_ID` + `APPROVER_PRIVATE_KEY` secrets present).
+- PR author is in `@hivearmor/administrators` or `@hivearmor/core-developers`.
+- The approver GitHub App is configured (`APPROVER_APP_ID` +
+  `APPROVER_PRIVATE_KEY` secrets present).
 
 Auto-merge does NOT merge immediately — it queues the merge until every
 branch-protection requirement is satisfied. If another check fails later
@@ -85,32 +81,32 @@ previous `updates:` list (see git history of that file).
 
 ### Hotfixes
 
-- `hotfix/x` branch from `v11` → PR to `v11` → same checks.
+- `hotfix/x` branch from `main` → PR to `main` → same checks.
 - `urgent` label allows fast-track: if checks pass and the AI approves,
   it merges without waiting for human review even when touching sensitive
   paths.
 - **Recommended (not strictly required):** after the hotfix merges to
-  `v11`, pull `v11` into the active `release/v11.x.x+1` branch (merge or
+  `main`, pull `main` into the active `release/v11.x.x+1` branch (merge or
   cherry-pick — either works). The fix is **not** lost if you skip this
-  step: git already has the hotfix in `v11`'s history, so when
+  step: git already has the hotfix in `main`'s history, so when
   `release/v11.x.x+1` later merges back, git combines both lines and
   the fix lands automatically. Syncing early is good hygiene because it
   surfaces conflicts in your release branch rather than at the final
   merge, and it lets dev builds include the patched code immediately.
 
-**Version derivation is automatic.** When a hotfix merges to `v11`, the
+**Version derivation is automatic.** When a hotfix merges, the
 deployment pipeline compares the candidate BASE (from CM DEV) against
 the latest version in CM PROD:
 
-- If BASE > PROD → use BASE as RC tag (normal flow).
+- If BASE > PROD → use BASE as the tag (normal flow).
 - If BASE ≤ PROD → the BASE was already shipped; bump the patch of PROD
   to get the next tag (hotfix flow).
 
 Concrete example: PROD is on `v11.2.9`, dev is still on
 `v11.2.9-dev.5` from the cycle that produced it. A hotfix lands on
-`v11`. The pipeline sees BASE=`v11.2.9` collides with PROD=`v11.2.9`,
+`main`. The pipeline sees BASE=`v11.2.9` collides with PROD=`v11.2.9`,
 auto-bumps to `v11.2.10`, and the rest of the run (build, installer,
-prerelease, CM register) proceeds with that tag. No manual rename, no
+changelog, CM register) proceeds with that tag. No manual rename, no
 config change.
 
 ---
@@ -119,9 +115,8 @@ config change.
 
 `pr-checks.yml` triggers on any Pull Request whose target is:
 
-- `release/**` (any release branch, v10 or v11)
-- `v10`
-- `v11`
+- `main`
+- `release/**` (any release branch)
 
 ### Architecture
 
@@ -191,7 +186,7 @@ Matrix with one job per `.md` under `.github/ai-prompts/` (except
 3. Validates the response against the `{tier, summary, findings}` schema.
 4. Uploads the JSON as the `ai-review-<name>` artifact.
 
-If the model's response isn't valid JSON or the tier isn't 1/2/3, the
+If the model's response is not valid JSON or the tier is not 1/2/3, the
 script writes a fallback with `tier: 2` and a "Manual review recommended"
 finding (fail-safe).
 
@@ -232,10 +227,10 @@ Single job that **depends on `go_deps` and `ai_review`**. Steps:
      unauthorized contributors get useful feedback.
 5. **Permission check (LAST gate).** Looks up `github.actor` against the
    GitHub teams `administrators` and `core-developers` of the
-   `utmstack` org via `API_SECRET`. Notably **does NOT** include
+   `hivearmor` org via `API_SECRET`. Does NOT include
    `integration-developers`. If the author is in neither team:
-   - Upsert "⛔ Permission denied" comment @mentioning
-     `@utmstack/administrators`.
+   - Upsert "Permission denied" comment @mentioning
+     `@hivearmor/administrators`.
    - Skip the formal `APPROVE` review (always `REQUEST_CHANGES`).
    - Skip auto-merge.
    - Exit 1.
@@ -247,11 +242,11 @@ Single job that **depends on `go_deps` and `ai_review`**. Steps:
    AND `BASE_REF` starts with `release/`. Calls
    `gh pr merge --auto --<method>` (default `squash`). This uses
    GitHub's native auto-merge, so the actual merge waits until **every**
-   branch-protection requirement is satisfied (other checks green, no
-   pending human reviews). PRs targeting `v10` / `v11` never auto-merge
-   — those branches stay manually merged so deploys are intentional.
+   branch-protection requirement is satisfied. PRs targeting `main` never
+   auto-merge — those branches stay manually merged so deploys are
+   intentional.
 8. **Exit code:** 0 only if everything is OK; 1 if deps failed,
-   tier ≥ 2, or author unauthorized.
+   tier >= 2, or author unauthorized.
 
 When the author pushes new commits the workflow re-runs and the comments
 are **updated in place** (no stacking). The PR is never auto-closed —
@@ -273,35 +268,16 @@ into `.github/ai-prompts/`.
 
 ---
 
-## V10 Deployment Pipeline
-
-Triggers:
-
-- Push to `v10` → deploy to **v10-rc**
-- Push to `release/v10**` → deploy to **v10-dev**
-- Tag `v10.*` → production build
-
-Main jobs:
-
-1. `setup_deployment` — determines environment from the trigger.
-2. `validations` — checks permissions (team membership).
-3. `build_agent` — Windows/Linux signed agents.
-4. `build_agent_manager` — Docker image.
-5. `build_*` — microservices (aws, backend, correlation, frontend, etc).
-6. `all_builds_complete` — checkpoint.
-7. `deploy_dev` / `deploy_rc` — deploy to the corresponding environment.
-
-Permissions: `integration-developers` or `core-developers`.
-
----
-
 ## V11 Deployment Pipeline
 
+`v11-deployment-pipeline.yml`
+
 Triggers:
 
-- Push to `release/v11**` → deploy to **dev** (auto-incremented version
-  `v11.x.x-dev.N`).
-- Prerelease created → deploy to **rc** (version `v11.x.x` from the tag).
+- Push to `release/v11**` → build and deploy to **dev** (auto-incremented
+  version `v11.x.x-dev.N`).
+- Release event published → build and deploy to **production** (version
+  taken from the release tag `v11.x.x`).
 
 ### Flow
 
@@ -309,71 +285,167 @@ Triggers:
 Push to release/v11.x.x
         │
         ▼
-Auto-increment version (v11.x.x-dev.N)
+setup_deployment: auto-increment version (v11.x.x-dev.N via CM)
         │
-        ▼
-Build & Deploy to DEV
+        ├── build_agent (Linux amd64/arm64, Windows amd64/arm64, macOS arm64)
+        │       │
+        │       ├── sign_agent_windows (jsign + GCP KMS)
+        │       └── sign_agent_macos (codesign + notarytool)
         │
-        ▼
-Publish to CM Dev → schedule to dev instances
+        ├── build_hivearmor_collector
+        │
+        ├── build_event_processor (plugins + geolocation data)
+        │
+        ├── build_backend (Java 17, Maven prod profile)
+        ├── build_user_auditor (Java 17)
+        └── build_web_pdf (Java 17)
+                │
+                ▼ (after sign_agent_* + build_hivearmor_collector)
+        build_agent_manager (embeds all agent + collector binaries)
+                │
+                ▼
+        all_builds_complete
+                │
+                ▼
+        deploy_installer_dev → publish_new_version → schedule
 
 
-Create Prerelease (tag v11.x.x)
+GitHub Release published (tag v11.x.x)
         │
         ▼
-Build & Deploy to RC
+setup_deployment: tag from release event
         │
-        ▼
-Generate Changelog (AI)
-        │
-        ▼
-Build & Upload Installer
-        │
-        ▼
-Publish to CM Prod → schedule to prod instances
+        [same build jobs as dev]
+                │
+                ▼
+        all_builds_complete
+                │
+                ▼
+        generate_changelog (AI, ThreatWinds API)
+                │
+                ▼
+        build_installer_release (upload to GitHub release)
+                │
+                ▼
+        publish_new_version → schedule (production CM + instances)
 ```
 
-Jobs: `setup_deployment`, `validations`, `build_agent`,
-`build_utmstack_collector`, `build_agent_manager`, `build_event_processor`,
-`build_backend` (Java 17), `build_frontend`, `build_user_auditor`,
-`build_web_pdf`, `all_builds_complete`, `generate_changelog` (RC),
-`build_installer_rc` (RC), `deploy_installer_dev` (Dev),
-`publish_new_version`, `schedule`.
+### Jobs
+
+| Job | Description |
+|-----|-------------|
+| `setup_deployment` | Determines environment (dev/production), CM URL, and version tag. For dev, auto-increments by querying CM DEV. For production, uses the release tag directly. |
+| `build_agent` | Compiles `hivearmor_agent_service` and `hivearmor_updater_service` for Linux (amd64/arm64), Windows (amd64/arm64), and macOS (arm64) with `AGENT_SECRET_PREFIX` injected via ldflags. |
+| `sign_agent_windows` | Signs Windows binaries via `reusable-sign-agent.yml` using jsign and GCP Cloud KMS. |
+| `sign_agent_macos` | Signs and notarizes macOS binaries via `reusable-sign-agent.yml` using Apple codesign and notarytool. |
+| `build_hivearmor_collector` | Compiles `hivearmor_collector` (Linux amd64) and the AS/400 collector with `AGENT_SECRET_PREFIX` via ldflags. |
+| `build_agent_manager` | Bundles all signed agent binaries, the collector, and legacy-named copies into the `agent-manager` Docker image. Image: `ghcr.io/hivearmor/agent-manager:<tag>`. |
+| `build_event_processor` | Builds all 16 plugins (`com.hivearmor.<name>.plugin`), downloads geolocation CSV data, and pushes the event processor image: `ghcr.io/hivearmor/eventprocessor:<tag>`. Uses a ThreatWinds base image. |
+| `build_backend` | Java 17, Maven `prod` profile, copies YAML filters and rules into the image. Image: `ghcr.io/hivearmor/hivearmor/backend:<tag>`. |
+| `build_user_auditor` | Java 17 microservice. Image: `ghcr.io/hivearmor/hivearmor/user-auditor:<tag>`. |
+| `build_web_pdf` | Java 17 microservice for PDF generation. Image: `ghcr.io/hivearmor/hivearmor/web-pdf:<tag>`. |
+| `all_builds_complete` | Checkpoint — requires all build jobs to succeed before proceeding. |
+| `generate_changelog` | Production only. AI-generated release notes via ThreatWinds API comparing the current tag against the previous. See [Generate Changelog](#generate-changelog). |
+| `build_installer_release` | Production only. Builds the Go installer binary with version, branch (`prod`), `CM_ENCRYPT_SALT`, and `CM_SIGN_PUBLIC_KEY` injected via ldflags; uploads to the GitHub release. |
+| `deploy_installer_dev` | Dev only. Builds and runs the installer on the `hivearmor-v11-dev` self-hosted runner. |
+| `publish_new_version` | Registers the new version with CM (dev or production) via `POST /api/v1/versions/register`. Uses the AI changelog for production builds. |
+| `schedule` | Calls CM `POST /api/v1/updates` for each instance UUID in `SCHEDULE_INSTANCES_DEV` or `SCHEDULE_INSTANCES_PROD` to queue the update rollout. |
 
 ### Environment detection
 
 | Trigger | Environment | CM URL | Service Account | Schedule Var |
-|---------|-------------|--------|------------------|--------------|
+|---------|-------------|--------|-----------------|--------------|
 | Push to `release/v11**` | dev | `https://cmdev.onlyhacker.org` | `CM_SERVICE_ACCOUNT_DEV` | `SCHEDULE_INSTANCES_DEV` |
-| Prerelease | rc | `https://cm.onlyhacker.org` | `CM_SERVICE_ACCOUNT_PROD` | `SCHEDULE_INSTANCES_PROD` |
+| Release published | production | `https://cm.onlyhacker.org` | `CM_SERVICE_ACCOUNT_PROD` | `SCHEDULE_INSTANCES_PROD` |
 
 ### Version auto-increment (dev)
 
-1. Extracts the base version from the branch (`release/v11.2.1` →
+1. Extracts the base version from the branch name (`release/v11.2.1` →
    `v11.2.1`).
-2. Queries CM for the latest version.
-3. If the base matches, bumps the dev suffix (`-dev.9` → `-dev.10`).
-4. If the base differs, starts at `-dev.1`.
+2. Queries CM DEV `GET /api/v1/versions/latest`.
+3. If the base matches the latest version's base, bumps the dev suffix
+   (`-dev.9` → `-dev.10`).
+4. If the base differs (new branch), starts at `-dev.1`.
 
-### Promotion to Community / Enterprise
+### Plugin binary names
 
-- **Community:** manual — promoting the prerelease to `latest` on GitHub
-  triggers the auto-deploy.
-- **Enterprise:** manual with a checklist (zero crashes for 48h, no open
-  P0 issues). The last safety net before touching large customers.
+Plugin binaries must be named exactly `com.hivearmor.<name>.plugin`. The
+event processor loads plugins by this exact name — do not change the
+convention.
+
+Current plugins: `alerts`, `aws`, `azure`, `bitdefender`, `config`,
+`crowdstrike`, `events`, `feeds`, `gcp`, `geolocation`, `inputs`, `o365`,
+`sophos`, `stats`, `soc-ai`, `modules-config`.
 
 ---
 
 ## Installer Release
 
-Trigger: GitHub Release published (type `released`).
+`installer-release.yml` — reusable workflow called by the deployment
+pipeline.
 
-```
-Tag v10.x.x → build v10 installer
-Tag v11.x.x → build v11 installer (with ldflags: version, branch, encryption keys)
-```
+Inputs: `version`, `version_major` (v11), `environment` (dev/production),
+`changelog` (optional, injected into the release body).
 
-The installer is uploaded as a release asset.
+| Condition | Job | Runner | What it does |
+|-----------|-----|--------|--------------|
+| v11 + dev | `deploy_v11_dev` | `hivearmor-v11-dev` | Builds installer with `DEFAULT_BRANCH=dev` ldflags and runs it on the dev runner. |
+| v11 + production | `build_v11_release` | `ubuntu-24.04` | Builds installer with `DEFAULT_BRANCH=prod` ldflags and uploads the binary to the GitHub release via `softprops/action-gh-release`. |
+
+The installer binary is a Go program (in `./installer/`) that handles
+Docker installation, TLS certificate generation, and first-run setup.
+
+ldflags injected at build time:
+
+| ldflag | Source |
+|--------|--------|
+| `config.DEFAULT_BRANCH` | `dev` or `prod` |
+| `config.INSTALLER_VERSION` | version tag (e.g. `v11.2.1`) |
+| `config.REPLACE` | `CM_ENCRYPT_SALT` secret |
+| `config.PUBLIC_KEY` | `CM_SIGN_PUBLIC_KEY` secret |
+
+Private Go modules under `github.com/hivearmor/` are accessed using
+`API_SECRET` as a GitHub PAT, configured via `git config url.insteadOf`.
+
+---
+
+## Generate Changelog
+
+`generate-changelog.yml` — reusable workflow called by the deployment
+pipeline for production releases.
+
+Wraps `.github/scripts/generate-changelog.sh`, which calls the ThreatWinds
+`/chat/completions` endpoint to turn the commit log between two tags into
+end-user release notes.
+
+Inputs:
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `current_tag` | (required) | The release tag being built (e.g. `v11.2.1`). |
+| `previous_tag` | auto-detected | If empty, the script walks `git tag --sort=-v:refname` to find the tag immediately before `current_tag`. |
+| `product_name` | `HiveArmor` | Included in the prompt sent to the AI model. |
+| `product_description` | `Unified Threat Management and SIEM Platform` | Included in the prompt. |
+| `model` | `gemini-3-flash-lite` | ThreatWinds model ID. Override per-call with `gemini-3-pro` or `claude-sonnet-4-6` for longer or more complex release notes. |
+
+Outputs: `changelog` (multiline markdown), `previous_tag`.
+
+The generated changelog is:
+
+1. Written to `/tmp/changelog.md` on the runner (previewed in the job log).
+2. Passed to `build_installer_release` where it becomes the GitHub release
+   body (`body_path`).
+3. Passed to `publish_new_version` where it is registered against the
+   version in CM.
+
+**To test locally:**
+
+```bash
+export THREATWINDS_API_KEY=...
+export THREATWINDS_API_SECRET=...
+bash .github/scripts/generate-changelog.sh v11.2.1
+# auto-detects previous tag; also loads from a local .env if present
+```
 
 ---
 
@@ -383,74 +455,85 @@ The installer is uploaded as a release asset.
 
 | Secret | Used in | Description |
 |--------|---------|-------------|
-| `API_SECRET` | All, pr-checks | GitHub PAT with `read:org` scope. Used by deployment workflows for team-membership validation and by the `approver` job to check that the PR author belongs to `administrators` or `core-developers`. |
-| `AGENT_SECRET_PREFIX` | v10, v11 | Agent encryption key |
-| `SIGN_CERT` | v10, v11 | Code signing certificate path (it's a `var`) |
-| `SIGN_KEY` | v10, v11 | Code signing key |
-| `SIGN_CONTAINER` | v10, v11 | Code signing container name |
-| `CM_SERVICE_ACCOUNT_PROD` | v11 | Customer Manager service account (prod/rc), JSON `{"id":"...","key":"..."}` |
-| `CM_SERVICE_ACCOUNT_DEV` | v11 | Customer Manager service account (dev), JSON `{"id":"...","key":"..."}` |
-| `CM_ENCRYPT_SALT` | installer | Installer encryption salt |
-| `CM_SIGN_PUBLIC_KEY` | installer | Public key for verification |
-| `THREATWINDS_API_KEY` | pr-checks, v11 changelog | ThreatWinds API key for `ai_review` and `generate-changelog` |
-| `THREATWINDS_API_SECRET` | pr-checks, v11 changelog | ThreatWinds API secret for `ai_review` and `generate-changelog` |
-| `APPROVER_APP_ID` | pr-checks | GitHub App ID for the approver bot. See [Approver GitHub App setup](#approver-github-app-setup). Without this, the approver runs in comments-only mode (no formal review, no auto-merge). |
+| `API_SECRET` | All, pr-checks, installer | GitHub PAT with `read:org` and `read:packages` scope. Used by deployment workflows for team-membership validation, private Go module access (`GOPRIVATE=github.com/hivearmor`), and by the `approver` job to check that the PR author belongs to `administrators` or `core-developers`. |
+| `AGENT_SECRET_PREFIX` | v11-deployment-pipeline | Encryption key injected into agent and collector binaries via `-X config.REPLACE_KEY=`. Required at build time — do not build agents for production without it. |
+| `CM_ENCRYPT_SALT` | installer-release | Injected into the installer binary as `config.REPLACE`. Used to encrypt installer payloads. |
+| `CM_SIGN_PUBLIC_KEY` | installer-release | Public key injected into the installer binary as `config.PUBLIC_KEY` for payload verification. |
+| `CM_SIGN_PRIVATE_KEY` | installer-release | Private key counterpart used to sign installer payloads. Keep out of logs. |
+| `CM_SERVICE_ACCOUNT_PROD` | v11-deployment-pipeline | Customer Manager service account for the production CM (`cm.onlyhacker.org`). JSON `{"id":"...","key":"..."}`. |
+| `CM_SERVICE_ACCOUNT_DEV` | v11-deployment-pipeline | Customer Manager service account for the dev CM (`cmdev.onlyhacker.org`). JSON `{"id":"...","key":"..."}`. |
+| `THREATWINDS_API_KEY` | pr-checks, generate-changelog | ThreatWinds API key for `ai_review` prompts and AI changelog generation. |
+| `THREATWINDS_API_SECRET` | pr-checks, generate-changelog | ThreatWinds API secret paired with `THREATWINDS_API_KEY`. |
+| `MAVEN_TK` | v11-deployment-pipeline (backend build) | GitHub PAT with `read:packages` scope for pulling dependencies from GitHub Packages (Maven). Required by `mvn -s settings.xml`. |
+| `APPROVER_APP_ID` | pr-checks | GitHub App ID for the approver bot. Without this, the approver runs in comments-only mode (no formal review, no auto-merge). See [Approver GitHub App setup](#approver-github-app-setup). |
 | `APPROVER_PRIVATE_KEY` | pr-checks | GitHub App private key (full `.pem` content, multi-line) paired with `APPROVER_APP_ID`. |
-| `GITHUB_TOKEN` | All | Provided automatically |
+| `GCP_WINDOWS_SIGNER_SA_KEY` | reusable-sign-agent (Windows) | GCP service account key JSON for Cloud KMS code signing of Windows binaries. |
+| `WINDOWS_SIGNER_CERT_CHAIN_PEM` | reusable-sign-agent (Windows) | PEM cert chain for jsign. When set, overrides the `cert_chain_path` repo file. |
+| `APPLE_CERTIFICATE_BASE64` | reusable-sign-agent (macOS) | Base64-encoded Apple Developer certificate (`.p12`). |
+| `APPLE_CERTIFICATE_PASSWORD` | reusable-sign-agent (macOS) | Password for the `.p12` certificate. |
+| `APPLE_SIGNING_IDENTITY` | reusable-sign-agent (macOS) | Apple signing identity string (e.g. `Developer ID Application: HiveArmor Inc`). |
+| `APPLE_ID` | reusable-sign-agent (macOS) | Apple ID email for notarytool authentication. |
+| `APPLE_APP_PASSWORD` | reusable-sign-agent (macOS) | App-specific password for notarytool. |
+| `APPLE_TEAM_ID` | reusable-sign-agent (macOS) | Apple Developer Team ID. |
+| `GITHUB_TOKEN` | All | Provided automatically by GitHub Actions. |
 
 ### Variables
 
 | Variable | Used in | Description | Format |
 |----------|---------|-------------|--------|
-| `SCHEDULE_INSTANCES_PROD` | v11 | Instance IDs for prod/rc scheduling | Comma-separated UUIDs |
-| `SCHEDULE_INSTANCES_DEV` | v11 | Instance IDs for dev scheduling | Comma-separated UUIDs |
-| `TW_EVENT_PROCESSOR_VERSION_PROD` | v11 | ThreatWinds Event Processor version (prod/rc) | Semver (`1.0.0`) |
-| `TW_EVENT_PROCESSOR_VERSION_DEV` | v11 | ThreatWinds Event Processor version (dev) | Semver (`1.0.0-beta`) |
+| `SCHEDULE_INSTANCES_PROD` | v11-deployment-pipeline | Instance UUIDs in CM PROD that receive the scheduled update. | Comma-separated UUIDs |
+| `SCHEDULE_INSTANCES_DEV` | v11-deployment-pipeline | Instance UUIDs in CM DEV that receive the scheduled update. | Comma-separated UUIDs |
+| `TW_EVENT_PROCESSOR_VERSION_PROD` | v11-deployment-pipeline | ThreatWinds Event Processor base image version for production builds. | Semver (`1.0.0`) |
+| `TW_EVENT_PROCESSOR_VERSION_DEV` | v11-deployment-pipeline | ThreatWinds Event Processor base image version for dev builds. | Semver (`1.0.0-beta`) |
+| `GCP_PROJECT_PROD` | reusable-sign-agent (Windows) | GCP project ID containing the KMS keyring. | String |
+| `KMS_KEYRING_LOCATION` | reusable-sign-agent (Windows) | KMS keyring location (e.g. `global`). | String |
+| `KMS_KEYRING_NAME` | reusable-sign-agent (Windows) | KMS keyring name. | String |
+| `KMS_KEY_NAME` | reusable-sign-agent (Windows) | KMS key name within the keyring. | String |
 
 ---
 
 ## Approver GitHub App setup
 
 The `approver` job uses a GitHub App (instead of a personal PAT) to leave
-formal PR reviews and enable auto-merge. Pros:
+formal PR reviews and enable auto-merge. Benefits:
 
 - Per-run installation token, valid for ~1 hour, auto-revoked when the
   job ends. No long-lived credential in the repo.
 - The App acts as its own identity, so it can `APPROVE` PRs opened by any
   human contributor — including the workflow's own author (GitHub blocks
   self-approval when using a PAT).
-- One place to audit who/what changed your branch protection state.
+- One place to audit who changed your branch protection state.
 
 ### One-time setup
 
 **1. Create the App.**
 
-Go to: `https://github.com/organizations/utmstack/settings/apps/new`
+Go to: `https://github.com/organizations/hivearmor/settings/apps/new`
 
-- **GitHub App name**: e.g. `UTMStack Approver`.
-- **Homepage URL**: any (the UTMStack repo URL is fine).
+- **GitHub App name**: e.g. `HiveArmor Approver`.
+- **Homepage URL**: `https://github.com/hivearmor` or `https://hivearmor.io`.
 - **Webhook**: untick **Active** — no callbacks needed.
 - **Repository permissions:**
-  - `Contents`: **Read-only**
-  - `Pull requests`: **Read and write**
-  - `Metadata`: Read-only (default, can't be removed).
+  - `Contents`: Read-only
+  - `Pull requests`: Read and write
+  - `Metadata`: Read-only (default, cannot be removed).
 - **Organization permissions:**
-  - `Members`: **Read-only** — needed for the team-membership check.
+  - `Members`: Read-only — needed for the team-membership check.
 - **Where can this GitHub App be installed?** Only on this account.
 
 Click **Create GitHub App**.
 
 **2. Get the App ID and a private key.**
 
-On the App's settings page you'll see the **App ID** (numeric). Save it.
+On the App's settings page you will see the **App ID** (numeric). Save it.
 
 Scroll to **Private keys** → **Generate a private key**. A `.pem` file
 downloads. Save the **full contents** (BEGIN/END lines included).
 
-**3. Install the App on the UTMStack repo.**
+**3. Install the App on the HiveArmor repo.**
 
-On the App page → **Install App** → pick the `utmstack` org → choose
-**Only select repositories** → select `UTMStack` → Install.
+On the App page → **Install App** → pick the `hivearmor` org → choose
+**Only select repositories** → select the HiveArmor repo → Install.
 
 **4. Add the secrets to the repo.**
 
@@ -461,18 +544,15 @@ Settings → Secrets and variables → Actions → New repository secret.
   including the `-----BEGIN/END PRIVATE KEY-----` lines. Paste as-is —
   GitHub preserves multi-line values.
 
-**5. Optional: drop `API_SECRET`.**
+**5. Optional: drop `API_SECRET` for org checks.**
 
 If the App has `Members: Read` at org level, you can stop maintaining a
 separate `API_SECRET` PAT for the permission check. The approver
-workflow falls back to the App token when `API_SECRET` is not set
-(`API_SECRET: ${{ secrets.API_SECRET || steps.app-token.outputs.token }}`
-in `_pr-reusable-approver.yml`).
+workflow falls back to the App token when `API_SECRET` is not set.
 
-`API_SECRET` is still used by the deployment workflows
-(`v10-deployment-pipeline.yml`, `v11-deployment-pipeline.yml`) for things
-like fetching private Go modules during installer builds — don't delete
-it from the repo until you confirm those workflows no longer need it.
+`API_SECRET` is still required by the deployment workflows for private Go
+module access (`GOPRIVATE=github.com/hivearmor`). Do not delete it from
+the repo until you confirm those workflows no longer need it.
 
 ### How it gets minted at runtime
 
@@ -490,28 +570,27 @@ In `_pr-reusable-approver.yml`:
     private-key: ${{ secrets.APPROVER_PRIVATE_KEY }}
 ```
 
-If the secrets aren't configured, the step is skipped, the approver
+If the secrets are not configured, the step is skipped, the approver
 runs in comments-only mode, and everything else still works (deps
 comment, AI review comment, status check) — just no formal review and
 no auto-merge.
 
 ### Verifying it works
 
-1. Open a small, low-risk PR against `release/v11.x.x` (or push the
-   workflow to a sandbox branch).
+1. Open a small, low-risk PR against `release/v11.x.x`.
 2. After the approver job runs, check the PR page:
    - The sticky `<!-- approver:ai -->` comment is signed by your bot
-     account (e.g. `utmstack-approver[bot]`).
+     account (e.g. `hivearmor-approver[bot]`).
    - The "Files changed" tab shows a review by the same bot, marked
      `Approved` (Tier 1 + deps OK + authorized) or `Changes requested`.
 3. If the target is `release/**` and Tier 1 → auto-merge is queued in
-   the PR header ("Auto-merge enabled by … via GitHub Actions").
+   the PR header.
 
 ---
 
 ## Reusable workflows
 
-**PR checks:**
+### PR checks
 
 - `_pr-reusable-go-deps.yml` — runs `go-deps.sh --check --discover` at
   repo level and uploads `go-deps-result` as an artifact.
@@ -520,67 +599,62 @@ no auto-merge.
 - `_pr-reusable-approver.yml` — downloads artifacts, decides verdict,
   posts sticky comments, optionally leaves a formal PR review.
 
-**Deployment pipelines:**
+### Deployment pipelines
 
-- `reusable-basic.yml` — generic Docker builds.
-- `reusable-golang.yml` — Go microservices.
-- `reusable-java.yml` — Java microservices.
-- `reusable-node.yml` — frontend / node.
-- `reusable-sign-agent.yml` — agent signing.
+- `reusable-basic.yml` — generic Docker image builds.
+- `reusable-golang.yml` — Go microservice builds.
+- `reusable-java.yml` — Java microservice builds (Maven, `settings.xml`,
+  `MAVEN_TK` for GitHub Packages).
+- `reusable-node.yml` — Node/Next.js builds. Installs Node 20, runs
+  `npm install` + `npm run build`, then builds and pushes a Docker image
+  to `ghcr.io/<owner>/<repo>/<image_name>:<tag>`.
+- `reusable-sign-agent.yml` — Binary signing for Windows (jsign + GCP
+  KMS, runs on `ubuntu-latest`) and macOS (codesign + notarytool, runs on
+  `macos-latest`). Accepts a newline-separated `binaries` input, downloads
+  the unsigned artifact, signs each binary, and re-uploads as a signed
+  artifact.
 
 ---
 
 ## How to deploy
 
-### V10
-
-**Dev:**
-
-```bash
-git checkout release/v10.x.x
-# Make changes via PR → merge → auto-deploy to v10-dev
-```
-
-**RC:**
-
-```bash
-# PR from release/v10.x.x → v10 → merge → auto-deploy to v10-rc
-```
-
-**Production:**
-
-```bash
-git tag v10.5.0
-git push origin v10.5.0
-```
-
-### V11
-
-**Dev:**
+### Dev build
 
 ```bash
 # Open a PR against release/v11.2.1 → checks → merge → auto-deploy
-# Version auto-incremented (v11.2.1-dev.1, v11.2.1-dev.2, ...)
+# Version is auto-incremented by querying CM DEV:
+#   v11.2.1-dev.1, v11.2.1-dev.2, ...
 ```
 
-**RC:**
+Merging to the release branch triggers `v11-deployment-pipeline.yml`,
+which builds all components, deploys the installer to the `hivearmor-v11-dev`
+runner, registers the version in CM DEV, and schedules the update to dev
+instances.
+
+### Production release
 
 1. GitHub Releases → "Draft a new release".
-2. New tag (e.g. `v11.2.1`).
-3. Mark as pre-release.
-4. Publish.
-5. The pipeline builds microservices, generates the AI changelog, uploads
-   the installer, publishes to CM, and schedules updates to RC instances.
-
-**Hotfix:**
+2. Create a new tag (e.g. `v11.2.1`).
+3. Publish the release (prerelease or final — the pipeline runs either way).
+4. The pipeline builds all components, generates the AI changelog,
+   uploads the installer binary to the release, registers the version in
+   CM PROD, and schedules updates to production instances.
 
 ```bash
-git checkout v11
+# Alternatively via CLI:
+gh release create v11.2.1 --title "HiveArmor v11.2.1" --notes ""
+# Then edit the release body once the changelog job completes.
+```
+
+### Hotfix
+
+```bash
+git checkout main
 git checkout -b hotfix/auth-bug
-# fix → PR to v11 (label `urgent` if applicable) → checks → merge
-# Recommended after merge: sync v11 into release/v11.x.x+1
+# fix → PR to main (label `urgent` if applicable) → checks → merge
+# Recommended after merge: sync main into release/v11.x.x+1
 #   git checkout release/v11.x.x+1
-#   git merge origin/v11      # or cherry-pick the specific commits
+#   git merge origin/main      # or cherry-pick the specific commits
 #   git push
 ```
 
@@ -589,22 +663,23 @@ git checkout -b hotfix/auth-bug
 ## Troubleshooting
 
 **Permission denied:**
-- Verify membership in `integration-developers` or `core-developers`.
+- Verify membership in `core-developers` or `administrators` of the
+  `hivearmor` GitHub org.
 
 **`ai_review` artifact with tier 2 fallback "Manual review recommended":**
-- The model didn't return valid JSON or returned an invalid tier. The
-  approver treats it as Tier 2 (changes requested) fail-safe. Refine the
-  prompt `.md` or re-run the workflow if it was transient.
+- The model did not return valid JSON or returned an invalid tier. The
+  approver treats it as Tier 2 (changes requested) as a fail-safe. Refine
+  the prompt `.md` or re-run the workflow if it was a transient API error.
 
 **`go_deps` fails with "Could not inspect ... run 'go mod tidy' there":**
 - `go.sum` is out of sync, typically due to local `replace` directives in
   `packages/`. Run `go mod tidy` in the affected module and commit.
 
 **The approver posts two separate comments (deps + AI):**
-- That's the expected behaviour when both dimensions fail. Each comment
-  is independent and gets updated in place on subsequent runs.
+- Expected behaviour when both dimensions fail. Each comment is
+  independent and gets updated in place on subsequent runs.
 
-**The approver doesn't leave a formal review (only comments):**
+**The approver does not leave a formal review (only comments):**
 - The approver GitHub App is not configured. Add both `APPROVER_APP_ID`
   and `APPROVER_PRIVATE_KEY` secrets — see
   [Approver GitHub App setup](#approver-github-app-setup).
@@ -614,33 +689,70 @@ git checkout -b hotfix/auth-bug
   input with comma-separated handles:
   ```yaml
   with:
-    tier3_reviewers: 'Kbayero,osmontero'
+    tier3_reviewers: 'handle1,handle2'
   ```
 
-**Build failures:**
-- Check that all required secrets are configured.
-- Verify availability of the `utmstack-signer` runner (required for
-  agent signing).
+**Agent build fails — "REPLACE_KEY not set":**
+- `AGENT_SECRET_PREFIX` secret must be configured. The agent and collector
+  binaries require this value injected via ldflags at build time;
+  authentication will fail without it.
+
+**Installer build fails — "missing private module":**
+- `API_SECRET` must be set and must be a GitHub PAT with `read:packages`
+  and `repo` scope. The installer references private modules under
+  `github.com/hivearmor/`.
 
 **Version not incrementing:**
-- Check that `CM_SERVICE_ACCOUNT_DEV` / `CM_SERVICE_ACCOUNT_PROD` are
-  configured and that the CM API is reachable.
-- The branch name must follow `release/v11.x.x`.
+- Check that `CM_SERVICE_ACCOUNT_DEV` is configured with valid `id` and
+  `key` fields, and that `cmdev.onlyhacker.org` is reachable from GitHub
+  Actions runners.
+- The branch name must follow the pattern `release/v11.x.x`.
 
 **Changelog not generated:**
-- Only applies to RC (prereleases).
-- Verify `THREATWINDS_API_KEY` and `THREATWINDS_API_SECRET` are configured.
-- To test locally: export the same secrets and run
-  `./scripts/test-generate-changelog.sh v11.2.8` from the repo root
-  (auto-detects the previous tag; the wrapper also loads them from a
-  local `.env` if present).
+- Only runs for production release events (not dev pushes).
+- Verify `THREATWINDS_API_KEY` and `THREATWINDS_API_SECRET` are
+  configured.
+- To test locally:
+  ```bash
+  export THREATWINDS_API_KEY=...
+  export THREATWINDS_API_SECRET=...
+  bash .github/scripts/generate-changelog.sh v11.2.1
+  # auto-detects previous tag; also loads from a local .env if present
+  ```
+
+**Windows signing fails:**
+- Verify `GCP_WINDOWS_SIGNER_SA_KEY` is set and the service account has
+  `cloudkms.cryptoKeyVersions.useToSign` on the configured keyring.
+- Verify `GCP_PROJECT_PROD`, `KMS_KEYRING_LOCATION`, `KMS_KEYRING_NAME`,
+  and `KMS_KEY_NAME` variables are set.
+- Check that `.github/certs/codesign-chain.pem` exists in the repo, or
+  set `WINDOWS_SIGNER_CERT_CHAIN_PEM` as a secret.
+
+**macOS signing fails:**
+- All five Apple secrets (`APPLE_CERTIFICATE_BASE64`,
+  `APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`,
+  `APPLE_APP_PASSWORD`, `APPLE_TEAM_ID`) must be configured.
+- The certificate must not be expired.
+
+**Build failures — general:**
+- Check that all required secrets are configured (see [Secrets and
+  variables](#secrets-and-variables)).
+- Confirm the `hivearmor-v11-dev` self-hosted runner is online and
+  connected to the repository.
 
 ---
 
 ## Notes
 
-- Docker images are published to `ghcr.io/utmstack/utmstack/*`.
-- Agent signing requires the `utmstack-signer` runner.
-- Artifacts (agents, collector) have a 1-day retention.
-- Dev versions: `v11.x.x-dev.N` (auto-incremented).
-- RC versions: the prerelease tag (e.g. `v11.2.1`).
+- Docker images are published to `ghcr.io/hivearmor/hivearmor/<component>:<tag>`.
+  Agent Manager and Event Processor are published directly as
+  `ghcr.io/hivearmor/agent-manager:<tag>` and
+  `ghcr.io/hivearmor/eventprocessor:<tag>`.
+- Agent binaries (Linux, Windows, macOS) have a **1-day artifact
+  retention** — they are consumed immediately by `build_agent_manager`.
+- Dev versions: `v11.x.x-dev.N` (auto-incremented via CM DEV).
+- Production versions: the release tag exactly as created (e.g. `v11.2.1`).
+- The OpenSearch index pattern `_v3_hive_<type>-YYYY.MM.DD` is version-locked
+  across all components. Do not change it.
+- HiveArmor v11.x is LTS-supported until November 2030.
+- Support: support@hivearmor.io | Docs: https://docs.hivearmor.io

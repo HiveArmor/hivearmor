@@ -1,4 +1,4 @@
-# ArmorSight Event Processor — Feature Test Plan
+# HiveArmor Event Processor — Feature Test Plan
 
 This document provides step-by-step test cases for every engine component. Each test is self-contained: prerequisite state, exact commands, and pass/fail criteria are fully specified so tests can be run independently and repeated.
 
@@ -69,7 +69,7 @@ inject_and_check() {
     -H "Content-Type: application/json" \
     -d "{\"dataType\":\"linux\",\"dataSource\":\"test\",\"tenantID\":\"default\",\"raw\":\"${raw}\"}"
   sleep 7
-  RESULT=$(curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-*/_search" \
+  RESULT=$(curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-*/_search" \
     -H "Content-Type: application/json" \
     -d "{\"query\":{\"match\":{\"${query_field}\":\"${expected_value}\"}},\"size\":1}" | jq -r '.hits.total.value')
   [ "$RESULT" -gt 0 ] && echo "PASS" || echo "FAIL (expected ${expected_value} in ${query_field})"
@@ -91,7 +91,7 @@ curl -s -X POST http://localhost:8090/v1/inject \
     "raw": "{\"eventID\": \"4688\", \"processName\": \"cmd.exe\", \"commandLine\": \"whoami\"}"
   }'
 sleep 7
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-*/_search?q=log.eventID:4688&size=1" | jq '.hits.hits[0]._source | {eventID: .log.eventID, processName: .log.processName}'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-*/_search?q=log.eventID:4688&size=1" | jq '.hits.hits[0]._source | {eventID: .log.eventID, processName: .log.processName}'
 ```
 
 **Pass**: `log.eventID = "4688"`, `log.processName = "cmd.exe"` visible in result.
@@ -113,7 +113,7 @@ sleep 7
 
 **Check:**
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-*/_search?q=origin.ip:192.168.100.50&size=1" | jq '.hits.hits[0]._source | {origin_ip: ."origin.ip", message: .log.message}'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-*/_search?q=origin.ip:192.168.100.50&size=1" | jq '.hits.hits[0]._source | {origin_ip: ."origin.ip", message: .log.message}'
 ```
 
 **Pass**: `origin.ip = "192.168.100.50"`, `log.message` contains "Failed password for root".
@@ -135,7 +135,7 @@ sleep 7
 
 **Check:**
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-*/_search?q=log.user:alice&size=1" | jq '.hits.hits[0]._source.log'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-*/_search?q=log.user:alice&size=1" | jq '.hits.hits[0]._source.log'
 ```
 
 **Pass**: `log.action = "login"`, `log.user = "alice"`, `log.src_ip = "10.10.10.10"`, `log.result = "success"`.
@@ -154,7 +154,7 @@ sleep 7
 
 **Check:**
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-*/_search?q=origin.ip:172.16.0.5&size=1" | jq '.hits.hits[0]._source."origin.ip"'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-*/_search?q=origin.ip:172.16.0.5&size=1" | jq '.hits.hits[0]._source."origin.ip"'
 ```
 
 **Pass**: `"172.16.0.5"` returned. `log.src_ip` should NOT appear.
@@ -189,7 +189,7 @@ sleep 7
 
 **Count before:**
 ```bash
-BEFORE=$(curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-*/_count" | jq .count)
+BEFORE=$(curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-*/_count" | jq .count)
 ```
 
 **Inject drop-matching event:**
@@ -202,13 +202,13 @@ sleep 7
 
 **Check:**
 ```bash
-AFTER=$(curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-*/_count" | jq .count)
+AFTER=$(curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-*/_count" | jq .count)
 [ "$BEFORE" -eq "$AFTER" ] && echo "PASS (event dropped)" || echo "FAIL (count increased to ${AFTER})"
 ```
 
 ### T-107 — Dynamic operator (geolocation)
 
-**Setup**: Parser YAML has `dynamic` step targeting `com.utmstack.geolocation` on `origin.ip`.
+**Setup**: Parser YAML has `dynamic` step targeting `com.hivearmor.geolocation` on `origin.ip`.
 
 **Inject event with public IP:**
 ```bash
@@ -220,7 +220,7 @@ sleep 7
 
 **Check:**
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-*/_search?q=origin.ip:8.8.8.8&size=1" | jq '.hits.hits[0]._source.origin'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-*/_search?q=origin.ip:8.8.8.8&size=1" | jq '.hits.hits[0]._source.origin'
 ```
 
 **Pass**: `origin.geo.country` or `origin.geo.city` is populated with non-empty string.
@@ -247,7 +247,7 @@ sleep 3
 
 **Check:**
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=name:*Credential*&size=1" | jq '.hits.hits[0]._source | {name, technique, severity}'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_alert-*/_search?q=name:*Credential*&size=1" | jq '.hits.hits[0]._source | {name, technique, severity}'
 ```
 
 **Pass**: Alert exists with name containing "Credential" or "Mimikatz", technique "T1003", severity 3.
@@ -296,12 +296,12 @@ sleep 3
 
 **Inject** a linux event, verify that a `wineventlog`-only rule (e.g., rule 2001) does NOT generate an alert:
 ```bash
-BEFORE=$(curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=name:*Windows*&size=0" | jq .hits.total.value)
+BEFORE=$(curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_alert-*/_search?q=name:*Windows*&size=0" | jq .hits.total.value)
 curl -s -X POST http://localhost:8090/v1/inject \
   -H "Content-Type: application/json" \
   -d '{"dataType":"linux","dataSource":"test","tenantID":"default","raw":"linux-only event"}'
 sleep 3
-AFTER=$(curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=name:*Windows*&size=0" | jq .hits.total.value)
+AFTER=$(curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_alert-*/_search?q=name:*Windows*&size=0" | jq .hits.total.value)
 [ "$BEFORE" -eq "$AFTER" ] && echo "PASS" || echo "FAIL (Windows alert fired on Linux event)"
 ```
 
@@ -337,7 +337,7 @@ sleep 7
 
 **Step 3**: Verify 4 events in OpenSearch:
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-*/_search?q=origin.ip:203.0.113.100&size=0" | jq .hits.total.value
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-*/_search?q=origin.ip:203.0.113.100&size=0" | jq .hits.total.value
 # Expected: 4
 ```
 
@@ -358,7 +358,7 @@ sleep 3
 
 **Step 5**: Check for alert:
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=name:*Brute*+AND+adversary.ip:203.0.113.100&size=1" \
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_alert-*/_search?q=name:*Brute*+AND+adversary.ip:203.0.113.100&size=1" \
   | jq '.hits.hits[0]._source | {name, technique, severity, adversary}'
 ```
 
@@ -368,7 +368,7 @@ curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=name:*Brute*+AND+adver
 - `technique = "T1110.003"`
 - `severity` = 2 or higher
 
-**Frontend check**: Open `http://localhost:PORT/alerts` — alert should appear at top of list.
+**Frontend check**: Open `http://localhost:3000/alerts` — alert should appear at top of list.
 
 ### T-302 — Correlation does NOT fire below threshold
 
@@ -385,7 +385,7 @@ sleep 7
 
 **Check:**
 ```bash
-COUNT=$(curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=adversary.ip:198.51.100.99&size=0" | jq .hits.total.value)
+COUNT=$(curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_alert-*/_search?q=adversary.ip:198.51.100.99&size=0" | jq .hits.total.value)
 [ "$COUNT" -eq 0 ] && echo "PASS (no alert)" || echo "FAIL (alert fired below threshold)"
 ```
 
@@ -420,7 +420,7 @@ for i in 1 2 3 4 5; do
   sleep 0.5
 done
 sleep 7
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=name:*Windows*Failed*&size=1" | jq '.hits.hits[0]._source.name'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_alert-*/_search?q=name:*Windows*Failed*&size=1" | jq '.hits.hits[0]._source.name'
 ```
 
 **Pass**: Alert with name containing "Windows" and "Failed" or "Login" exists.
@@ -450,7 +450,7 @@ sleep 3
 
 **Check:**
 ```bash
-COUNT=$(curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=adversary.ip:203.0.113.100+AND+name:*Brute*&size=0" | jq .hits.total.value)
+COUNT=$(curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_alert-*/_search?q=adversary.ip:203.0.113.100+AND+name:*Brute*&size=0" | jq .hits.total.value)
 echo "Alert count for 203.0.113.100: ${COUNT}"
 ```
 
@@ -471,7 +471,7 @@ sleep 3
 
 **Check:**
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=adversary.ip:203.0.113.100&size=5" | jq '[.hits.hits[]._source | {name, parentAlertId}]'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_alert-*/_search?q=adversary.ip:203.0.113.100&size=5" | jq '[.hits.hits[]._source | {name, parentAlertId}]'
 ```
 
 **Pass**: At least one alert has a non-null `parentAlertId` field pointing to the earlier alert's ID.
@@ -484,7 +484,7 @@ curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=adversary.ip:203.0.113
 
 ```bash
 TODAY=$(date +%Y.%m.%d)
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-${TODAY}/_count" | jq .count
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-${TODAY}/_count" | jq .count
 ```
 
 **Pass**: Count > 0 (events from earlier tests are in today's index).
@@ -492,7 +492,7 @@ curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-${TODAY}/_count" | jq .count
 ### T-502 — Flat and nested fields both stored
 
 ```bash
-DOC=$(curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-*/_search?q=origin.ip:203.0.113.100&size=1" | jq '.hits.hits[0]._source')
+DOC=$(curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-*/_search?q=origin.ip:203.0.113.100&size=1" | jq '.hits.hits[0]._source')
 FLAT=$(echo $DOC | jq -r '."origin.ip"')
 NESTED=$(echo $DOC | jq -r '.origin.ip')
 echo "Flat: ${FLAT}   Nested: ${NESTED}"
@@ -504,7 +504,7 @@ echo "Flat: ${FLAT}   Nested: ${NESTED}"
 
 ```bash
 TODAY=$(date +%Y.%m.%d)
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-${TODAY}/_count" | jq .count
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_alert-${TODAY}/_count" | jq .count
 ```
 
 **Pass**: Count matches the number of alerts generated in Section 4 tests.
@@ -534,7 +534,7 @@ curl -s -X POST http://localhost:8090/v1/inject \
   -H "Content-Type: application/json" \
   -d '{"dataType":"linux","dataSource":"test","tenantID":"default","raw":"hotreload test event"}'
 sleep 7
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-*/_search?q=test.hotreload:yes_this_works&size=1" | jq '.hits.total.value'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-*/_search?q=test.hotreload:yes_this_works&size=1" | jq '.hits.total.value'
 ```
 
 **Pass**: Count = 1. Revert the YAML change after the test.
@@ -564,7 +564,7 @@ sleep 3
 
 **Step 3**: Check engine logs for rule 9999 evaluation, or check alerts:
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=name:*Hot+Reload*&size=1" | jq '.hits.total.value'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_alert-*/_search?q=name:*Hot+Reload*&size=1" | jq '.hits.total.value'
 ```
 
 **Pass**: Alert count = 1 (or risk score incremented if riskScore-only rule). Delete the test rule file after the test.
@@ -588,7 +588,7 @@ sleep 7
 
 **Check risk scores index:**
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-risk-scores-*/_search?q=key:10.0.99.1&size=1" | jq '.hits.hits[0]._source'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_risk-scores-*/_search?q=key:10.0.99.1&size=1" | jq '.hits.hits[0]._source'
 ```
 
 **Pass**: Document exists with `key = "10.0.99.1"` and `score > 0`.
@@ -599,7 +599,7 @@ curl -sk -u "${OS_CRED}" "${OS_URL}/v11-risk-scores-*/_search?q=key:10.0.99.1&si
 
 **Check:**
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-offense-*/_search&size=5" | jq '[.hits.hits[]._source | {name, adversary, alertCount}]'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_offense-*/_search&size=5" | jq '[.hits.hits[]._source | {name, adversary, alertCount}]'
 ```
 
 **Pass**: At least one offense document exists with `alertCount >= 3`.
@@ -608,7 +608,7 @@ curl -sk -u "${OS_CRED}" "${OS_URL}/v11-offense-*/_search&size=5" | jq '[.hits.h
 
 **Step 1**: Seed an asset record:
 ```bash
-curl -sk -u "${OS_CRED}" -X PUT "${OS_URL}/v11-lookup-assets/_doc/1" \
+curl -sk -u "${OS_CRED}" -X PUT "${OS_URL}/_v3_hive_lookup-assets/_doc/1" \
   -H "Content-Type: application/json" \
   -d '{"ip":"10.0.1.100","hostname":"web-server-01","criticality":"high","business_unit":"ecommerce"}'
 ```
@@ -623,7 +623,7 @@ sleep 7
 
 **Step 3**: Verify enrichment:
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-log-linux-*/_search?q=origin.ip:10.0.1.100&size=1" | jq '.hits.hits[0]._source | {"asset.hostname": .["asset.hostname"], "asset.criticality": .["asset.criticality"]}'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_log-linux-*/_search?q=origin.ip:10.0.1.100&size=1" | jq '.hits.hits[0]._source | {"asset.hostname": .["asset.hostname"], "asset.criticality": .["asset.criticality"]}'
 ```
 
 **Pass**: `asset.hostname = "web-server-01"`, `asset.criticality = "high"`.
@@ -645,7 +645,7 @@ sleep 20
 
 **Check:**
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=category:Anomaly&size=1" | jq '.hits.hits[0]._source.name'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_alert-*/_search?q=category:Anomaly&size=1" | jq '.hits.hits[0]._source.name'
 ```
 
 **Pass**: An anomaly alert exists (name contains "Anomaly" or "Unusual Volume"). Note: requires `anomalyDetect: true` in at least one rule and baseline data for comparison.
@@ -679,7 +679,7 @@ sleep 3
 
 **Check:**
 ```bash
-curl -sk -u "${OS_CRED}" "${OS_URL}/v11-alert-*/_search?q=adversary.ip:10.0.0.99+AND+category:*Sequence*&size=1" | jq '.hits.hits[0]._source.name'
+curl -sk -u "${OS_CRED}" "${OS_URL}/_v3_hive_alert-*/_search?q=adversary.ip:10.0.0.99+AND+category:*Sequence*&size=1" | jq '.hits.hits[0]._source.name'
 ```
 
 **Pass**: Sequence alert fired.
@@ -749,8 +749,8 @@ docker compose -f local-dev/docker-compose.yml logs inputs --tail=20 | grep -i "
 **Pass**: Inputs plugin log shows connection to engine socket.
 
 **Send real event via agent** (requires an agent registered and connected):
-- Register a test agent via the frontend
-- Verify events from that agent appear in `v11-log-*`
+- Register a test agent via the HiveArmor frontend at `http://localhost:3000`
+- Verify events from that agent appear in `_v3_hive_log-*`
 
 ---
 
@@ -795,7 +795,7 @@ check() {
   fi
 }
 
-echo "=== ArmorSight Regression Suite ==="
+echo "=== HiveArmor Regression Suite ==="
 check "T-001 health" "curl -sf $BASE/../health" "ok"
 check "T-002 ingest" "curl -s -o/dev/null -w '%{http_code}' -X POST $BASE/v1/inject -H 'Content-Type: application/json' -d '{\"dataType\":\"linux\",\"dataSource\":\"test\",\"tenantID\":\"default\",\"raw\":\"test\"}'" "20"
 

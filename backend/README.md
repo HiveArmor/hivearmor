@@ -1,181 +1,247 @@
-![Sonarqube](https://github.com/UTMStack/backend/workflows/Sonarqube/badge.svg)
+# HiveArmor Backend
 
-# utmstack
+**HiveArmor** — Hyper-scale Incident Visibility Engine
 
-This application was generated using JHipster 5.8.2, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v5.8.2](https://www.jhipster.tech/documentation-archive/v5.8.2).
+This is the core REST API backend for the HiveArmor enterprise SIEM/XDR platform. It provides alert management, incident lifecycle, compliance reporting, user/RBAC administration, SOAR automation, and scheduled data-pipeline workers.
 
-## Development
+---
 
-Before you can build this project, you must install and configure the following dependencies on your machine:
+## Tech Stack
 
-1.  [Node.js][]: We use Node to run a development web server and build the project.
-    Depending on your system, you can install Node either from source or as a pre-packaged bundle.
+| Component | Version |
+|---|---|
+| Java | 17 |
+| Spring Boot | 3.3 |
+| Spring Security | 6 |
+| JHipster scaffolding | 8 |
+| JPA / Hibernate | 6 |
+| Liquibase | schema migrations |
+| PostgreSQL | app database |
+| OpenSearch client | log event queries |
 
-After installing Node, you should be able to run the following command to install development tools.
-You will only need to run this command when dependencies change in [package.json](package.json).
+---
 
-    npm install
+## Prerequisites
 
-We use npm scripts and [Webpack][] as our build system.
+- **Java 17** (JDK)
+- **Maven 3.9+**
+- **`MAVEN_TK` environment variable** — a GitHub Personal Access Token with `read:packages` scope, required to pull dependencies from GitHub Packages
 
-Run the following commands in two separate terminals to create a blissful development experience where your browser
-auto-refreshes when files change on your hard drive.
-
-    ./mvnw
-    npm start
-
-Npm is also used to manage CSS and JavaScript dependencies used in this application. You can upgrade dependencies by
-specifying a newer version in [package.json](package.json). You can also run `npm update` and `npm install` to manage dependencies.
-Add the `help` flag on any command to see how you can use it. For example, `npm help update`.
-
-The `npm run` command will list all of the scripts available to run for this project.
-
-### Service workers
-
-Service workers are commented by default, to enable them please uncomment the following code.
-
--   The service worker registering script in index.html
-
-```html
-<script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker
-        .register('./service-worker.js')
-        .then(function() { console.log('Service Worker Registered'); });
-    }
-</script>
+```bash
+export MAVEN_TK=ghp_your_token_here
 ```
 
-Note: workbox creates the respective service worker and dynamically generate the `service-worker.js`
+- A running PostgreSQL instance (`hivearmor` database) and OpenSearch cluster. For local development, start both with Docker Compose:
 
-### Managing dependencies
-
-For example, to add [Leaflet][] library as a runtime dependency of your application, you would run following command:
-
-    npm install --save --save-exact leaflet
-
-To benefit from TypeScript type definitions from [DefinitelyTyped][] repository in development, you would run following command:
-
-    npm install --save-dev --save-exact @types/leaflet
-
-Then you would import the JS and CSS files specified in library's installation instructions so that [Webpack][] knows about them:
-Edit [src/main/webapp/app/vendor.ts](src/main/webapp/app/vendor.ts) file:
-
-```
-import 'leaflet/dist/leaflet.js';
+```bash
+cd ../local-dev && docker compose up -d
 ```
 
-Edit [src/main/webapp/content/css/vendor.css](src/main/webapp/content/css/vendor.css) file:
+---
 
-```
-@import '~leaflet/dist/leaflet.css';
-```
+## Running in Development
 
-Note: there are still few other things remaining to do for Leaflet that we won't detail here.
-
-For further instructions on how to develop with JHipster, have a look at [Using JHipster in development][].
-
-### Using angular-cli
-
-You can also use [Angular CLI][] to generate some custom client code.
-
-For example, the following command:
-
-    ng generate component my-component
-
-will generate few files:
-
-    create src/main/webapp/app/my-component/my-component.component.html
-    create src/main/webapp/app/my-component/my-component.component.ts
-    update src/main/webapp/app/app.module.ts
-
-## Building for production
-
-To optimize the utmstack application for production, run:
-
-    ./mvnw -Pprod clean package
-
-This will concatenate and minify the client CSS and JavaScript files. It will also modify `index.html` so it references these new files.
-To ensure everything worked, run:
-
-    java -jar target/*.war
-
-Then navigate to [http://localhost:8080](http://localhost:8080) in your browser.
-
-Refer to [Using JHipster in production][] for more details.
-
-## Testing
-
-To launch your application's tests, run:
-
-    ./mvnw clean test
-
-### Client tests
-
-Unit tests are run by [Jest][] and written with [Jasmine][]. They're located in [src/test/javascript/](src/test/javascript/) and can be run with:
-
-    npm test
-
-For more information, refer to the [Running tests page][].
-
-### Code quality
-
-Sonar is used to analyse code quality. You can start a local Sonar server (accessible on http://localhost:9001) with:
-
-```
-docker-compose -f src/main/docker/sonar.yml up -d
+```bash
+cd backend
+mvn -s settings.xml -B
 ```
 
-Then, run a Sonar analysis:
+The API server starts on port **8080**. In the local Docker stack it is reverse-proxied to port **8088**.
+
+Local credentials: `admin` / `localdev123!`
+
+Get a JWT for curl testing:
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8088/api/authenticate \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"localdev123!","rememberMe":false}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin).get('id_token',''))")
+```
+
+---
+
+## Building for Production
+
+```bash
+mvn -B -Pprod clean package -s settings.xml
+```
+
+Output: `target/hivearmor.war`
+
+---
+
+## Running Tests
+
+```bash
+mvn -s settings.xml test
+```
+
+---
+
+## API Overview
+
+### Base path
+
+All HiveArmor endpoints are prefixed with `/api/ha-*`. The authentication endpoint is `/api/authenticate`.
+
+### Authentication
+
+Every protected request must include a JWT Bearer token:
 
 ```
-./mvnw -Pprod clean test sonar:sonar
+Authorization: Bearer <token>
 ```
 
-For more information, refer to the [Code quality page][].
+Tokens are issued by `POST /api/authenticate` and expire per the configured TTL. The JWT signing key is **ephemeral** — it regenerates on every server restart, which invalidates all active sessions (tracked as DEBT-14).
 
-## Using Docker to simplify development (optional)
+### Key endpoint groups
 
-You can use Docker to improve your JHipster development experience. A number of docker-compose configuration are available in the [src/main/docker](src/main/docker) folder to launch required third party services.
+| Prefix | Description |
+|---|---|
+| `POST /api/authenticate` | Obtain JWT token |
+| `/api/ha-alerts/` | Alert ingestion, status, tagging |
+| `/api/ha-incidents/` | Incident lifecycle management |
+| `/api/ha-compliance/` | Compliance report generation |
+| `/api/ha-users/` | User management |
+| `/api/ha-roles/` | RBAC role and permission management |
+| `/api/ha-soar/` | SOAR automation rules |
+| `/api/ha-agents/` | Agent registry queries |
+| `/api/ha-dashboard/` | Dashboard configuration |
+| `/api/ha-filters/` | Log filter management |
 
-For example, to start a mysql database in a docker container, run:
+### Authorization
 
-    docker-compose -f src/main/docker/mysql.yml up -d
+Every endpoint must have either a `@PreAuthorize` annotation on the controller method **or** an explicit entry in `SecurityConfiguration.java`. Public endpoints (e.g., `/api/authenticate`) must be explicitly allowlisted in the public path list. Do not create endpoints without authorization checks.
 
-To stop it and remove the container, run:
+---
 
-    docker-compose -f src/main/docker/mysql.yml down
+## Scheduled Workers
 
-You can also fully dockerize your application and all the services that it depends on.
-To achieve this, first build a docker image of your app by running:
+The backend runs several background workers:
 
-    ./mvnw package -Pprod verify jib:dockerBuild
+| Worker | Interval | Purpose |
+|---|---|---|
+| Alert tagger | 30 s | Applies rule-based tags to new alerts |
+| SOAR rule executor | 30 s | Evaluates SOAR response rules |
+| Pipeline sync | 20 s | Syncs EventProcessor pipeline state |
+| OpenSearch health check | 60 s | Monitors index health |
+| Compliance report builder | 5 s | Incremental compliance aggregation |
+| User cleanup | Daily 01:00 | Removes expired sessions and stale tokens |
 
-Then run:
+---
 
-    docker-compose -f src/main/docker/app.yml up -d
+## Database Migrations (Liquibase)
 
-For more information refer to [Using Docker and Docker-Compose][], this page also contains information on the docker-compose sub-generator (`jhipster docker-compose`), which is able to generate docker configurations for one or several JHipster applications.
+All schema changes are managed by Liquibase. Rules:
 
-## Continuous Integration (optional)
+1. Add a new changelog file:
+   `src/main/resources/config/liquibase/changelog/YYYYMMDDNNN_description.xml`
+2. Include it in `src/main/resources/config/liquibase/master.xml` in **strict date order**.
+3. New columns must have a default value or be `NULL`-able.
+4. Never edit or delete a changeset that has already been merged (changesets are immutable once shipped).
+5. `DROP COLUMN` and `RENAME COLUMN` require a 2-release deprecation cycle.
+6. Validate before merging:
 
-To configure CI for your project, run the ci-cd sub-generator (`jhipster ci-cd`), this will let you generate configuration files for a number of Continuous Integration systems. Consult the [Setting up Continuous Integration][] page for more information.
+```bash
+mvn -s settings.xml liquibase:validate
+```
 
-[jhipster homepage and latest documentation]: https://www.jhipster.tech
-[jhipster 5.8.2 archive]: https://www.jhipster.tech/documentation-archive/v5.8.2
-[using jhipster in development]: https://www.jhipster.tech/documentation-archive/v5.8.2/development/
-[using docker and docker-compose]: https://www.jhipster.tech/documentation-archive/v5.8.2/docker-compose
-[using jhipster in production]: https://www.jhipster.tech/documentation-archive/v5.8.2/production/
-[running tests page]: https://www.jhipster.tech/documentation-archive/v5.8.2/running-tests/
-[code quality page]: https://www.jhipster.tech/documentation-archive/v5.8.2/code-quality/
-[setting up continuous integration]: https://www.jhipster.tech/documentation-archive/v5.8.2/setting-up-ci/
-[node.js]: https://nodejs.org/
-[yarn]: https://yarnpkg.org/
-[webpack]: https://webpack.github.io/
-[angular cli]: https://cli.angular.io/
-[browsersync]: http://www.browsersync.io/
-[jest]: https://facebook.github.io/jest/
-[jasmine]: http://jasmine.github.io/2.0/introduction.html
-[protractor]: https://angular.github.io/protractor/
-[leaflet]: http://leafletjs.com/
-[definitelytyped]: http://definitelytyped.org/
+---
+
+## Security Rules
+
+Follow these rules for all new code:
+
+- Every endpoint requires `@PreAuthorize` or an explicit `SecurityConfiguration` entry.
+- Never put passwords or secrets in URL query parameters.
+- All OpenSearch queries must use `SearchUtil` DSL builders — never build query strings by concatenating user input.
+- Audit trail entries are required for: alert status changes, incident status changes, user login/logout, agent remote commands, API key usage.
+
+Known open security issues are tracked in `.plan/features/SEC-FIXES.md` and `docs/baseline/12-risk-register.md`. These must be resolved before shipping new features to production:
+
+| ID | Issue |
+|---|---|
+| SEC-01 | Password in GET query param (`AccountResource.java`) |
+| SEC-02 | JWT key regenerates on restart (`TokenProvider.java`) |
+| SEC-03 | CORS wildcard in prod config |
+| SEC-04 | `InsecureTrustManagerFactory` in gRPC/TLS |
+
+---
+
+## Service Communication
+
+| From | To | Protocol | Auth |
+|---|---|---|---|
+| Browser | Backend | HTTPS | JWT Bearer |
+| Backend | OpenSearch | HTTPS | env var basic auth |
+| Backend | AgentManager | gRPC | `INTERNAL_KEY` env var |
+| Backend | EventProcessor | HTTP | `X-Internal-Key` header |
+
+The `INTERNAL_KEY` is shared by the backend, AgentManager, and EventProcessor. Changing it requires a simultaneous redeploy of all three services.
+
+---
+
+## OpenSearch Index Pattern
+
+Log events and alerts are indexed as:
+
+```
+_v3_hive_<type>-YYYY.MM.DD
+```
+
+This pattern is **version-locked**. Do not change it — doing so requires migrating every existing index and every query across all services.
+
+---
+
+## API Change Policy
+
+- No versioning — all endpoints are at `/api/`.
+- Breaking changes (removed or renamed endpoints/fields) require keeping the old endpoint with a `Deprecation` response header for at least 2 releases.
+- Additive changes (new fields, new endpoints) are always safe to ship.
+
+---
+
+## Project Structure
+
+```
+backend/
+  src/main/java/com/hivearmor/
+    web/rest/          REST controllers
+    service/           Business logic and scheduled workers
+    repository/        Spring Data JPA repositories
+    domain/            JPA entity classes
+    security/          JWT, SecurityConfiguration
+    config/            Application configuration beans
+  src/main/resources/
+    config/
+      application.yml          Base config
+      application-dev.yml      Dev profile
+      application-prod.yml     Prod profile
+      liquibase/
+        master.xml             Liquibase changelog master
+        changelog/             Individual migration files
+```
+
+---
+
+## Related Services
+
+| Service | Role |
+|---|---|
+| `frontend-v2/` | Next.js 14 UI (active frontend) |
+| `agent/` | Go endpoint agent (Windows/Linux/macOS) |
+| `agent-manager/` | Go gRPC agent registry |
+| `hivearmor-collector/` | Go log collector (syslog/UDP/TCP) |
+| `event-processor/` | Go correlation engine |
+| `local-dev/` | Docker Compose full-stack environment |
+
+---
+
+## Support
+
+- Documentation: https://docs.hivearmor.io
+- Support: support@hivearmor.io
+- GitHub: https://github.com/hivearmor
+
+**Version policy:** v11.x LTS is supported until November 2030.

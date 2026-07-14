@@ -373,7 +373,7 @@ Before going live, verify each item:
 - [ ] TLS certificate is valid and trusted (CA-signed or Let's Encrypt)
 - [ ] Admin password changed from default
 - [ ] Backup job scheduled for PostgreSQL (daily minimum)
-- [ ] OpenSearch index lifecycle policy active (ISM policy `utmstack_ism_policy` auto-deletes old indices)
+- [ ] OpenSearch index lifecycle policy active (ISM policy `hivearmor_ism_policy` auto-deletes old indices)
 - [ ] Docker resource limits reviewed for your hardware (memory limits in docker-compose.yml)
 - [ ] Log rotation configured on the host for Docker daemon logs (`/etc/docker/daemon.json` → `log-opts`)
 - [ ] Known security issues from [SEC-FIXES.md](../../.plan/features/SEC-FIXES.md) reviewed and accepted or mitigated
