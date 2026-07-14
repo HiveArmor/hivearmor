@@ -76,7 +76,7 @@ class ElasticsearchServiceFieldValuesCacheTest {
         service.getFieldValues("user.keyword", "_v3_hive_log-*");
 
         verify(openSearch, times(1)).getFieldValues(
-                anyString(), anyString(), any(), any(), any(), any());
+                anyString(), anyString(), any(), anyInt(), any(), any());
     }
 
     @Test
@@ -104,6 +104,6 @@ class ElasticsearchServiceFieldValuesCacheTest {
 
         // Two distinct cache keys → two OpenSearch calls
         verify(openSearch, times(2)).getFieldValues(
-                anyString(), anyString(), any(), any(), any(), any());
+                anyString(), anyString(), any(), anyInt(), any(), any());
     }
 }

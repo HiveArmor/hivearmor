@@ -11,6 +11,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,8 +25,9 @@ class HikariPoolHealthIndicatorTest {
     @BeforeEach
     void setUp() {
         when(dataSource.getHikariPoolMXBean()).thenReturn(pool);
-        when(dataSource.getPoolName()).thenReturn("test-pool");
-        when(dataSource.getMaximumPoolSize()).thenReturn(20);
+        // lenient: not called in healthIsUnknownWhenMXBeanUnavailable (early-return path)
+        lenient().when(dataSource.getPoolName()).thenReturn("test-pool");
+        lenient().when(dataSource.getMaximumPoolSize()).thenReturn(20);
         indicator = new HikariPoolHealthIndicator(dataSource);
     }
 

@@ -119,18 +119,18 @@ class TlsClientFactoryTest {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static void setEnv(java.util.Map<String, String> newEnv) throws Exception {
-        // Works on OpenJDK 8–21 via ProcessEnvironment's internal map
         Class<?> processEnvClass = Class.forName("java.lang.ProcessEnvironment");
         java.lang.reflect.Field theEnvironmentField = processEnvClass.getDeclaredField("theEnvironment");
         theEnvironmentField.setAccessible(true);
         java.util.Map<String, String> env = (java.util.Map<String, String>) theEnvironmentField.get(null);
         env.putAll(newEnv);
-        java.lang.reflect.Field theCaseInsensitiveEnvField =
-                processEnvClass.getDeclaredField("theCaseInsensitiveEnvironment");
-        theCaseInsensitiveEnvField.setAccessible(true);
-        java.util.Map<String, String> ciEnv =
-                (java.util.Map<String, String>) theCaseInsensitiveEnvField.get(null);
-        ciEnv.putAll(newEnv);
+        // theCaseInsensitiveEnvironment only exists on Windows — skip silently on Linux/macOS
+        try {
+            java.lang.reflect.Field ciField =
+                    processEnvClass.getDeclaredField("theCaseInsensitiveEnvironment");
+            ciField.setAccessible(true);
+            ((java.util.Map<String, String>) ciField.get(null)).putAll(newEnv);
+        } catch (NoSuchFieldException ignored) {}
     }
 
     private Path copyTestCertToTempFile() throws Exception {
