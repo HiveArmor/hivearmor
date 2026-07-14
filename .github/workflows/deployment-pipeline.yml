@@ -382,49 +382,16 @@ jobs:
       - name: Check out code into the right branch
         uses: actions/checkout@v4
 
-      - name: Build Plugins
-        env:
-          GOOS: linux
-          GOARCH: amd64
-        run: |
-          cd ${{ github.workspace }}/plugins/alerts; go build -o com.hivearmor.alerts.plugin -v .
-          cd ${{ github.workspace }}/plugins/aws; go build -o com.hivearmor.aws.plugin -v .
-          cd ${{ github.workspace }}/plugins/azure; go build -o com.hivearmor.azure.plugin -v .
-          cd ${{ github.workspace }}/plugins/bitdefender; go build -o com.hivearmor.bitdefender.plugin -v .
-          cd ${{ github.workspace }}/plugins/config; go build -o com.hivearmor.config.plugin -v .
-          cd ${{ github.workspace }}/plugins/events; go build -o com.hivearmor.events.plugin -v .
-          cd ${{ github.workspace }}/plugins/gcp; go build -o com.hivearmor.gcp.plugin -v .
-          cd ${{ github.workspace }}/plugins/geolocation; go build -o com.hivearmor.geolocation.plugin -v .
-          cd ${{ github.workspace }}/plugins/inputs; go build -o com.hivearmor.inputs.plugin -v .
-          cd ${{ github.workspace }}/plugins/o365; go build -o com.hivearmor.o365.plugin -v .
-          cd ${{ github.workspace }}/plugins/sophos; go build -o com.hivearmor.sophos.plugin -v .
-          cd ${{ github.workspace }}/plugins/stats; go build -o com.hivearmor.stats.plugin -v .
-          cd ${{ github.workspace }}/plugins/soc-ai; go build -o com.hivearmor.soc-ai.plugin -v .
-          cd ${{ github.workspace }}/plugins/modules-config; go build -o com.hivearmor.modules-config.plugin -v .
-          cd ${{ github.workspace }}/plugins/crowdstrike; go build -o com.hivearmor.crowdstrike.plugin -v .
-          cd ${{ github.workspace }}/plugins/feeds; go build -o com.hivearmor.feeds.plugin -v .
-
-      - name: Prepare Dependencies for Event Processor Image
+      - name: Refresh GeoLite2 CSVs (optional)
         env:
           MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
         run: |
-          mkdir -p ./geolocation
           if [ -n "$MAXMIND_LICENSE_KEY" ]; then
-            echo "→ Downloading GeoLite2 CSVs from MaxMind..."
+            echo "→ Downloading fresh GeoLite2 CSVs from MaxMind..."
             MAXMIND_LICENSE_KEY="$MAXMIND_LICENSE_KEY" \
               bash event-processor/geolocation-bundle/download.sh
-            cp event-processor/geolocation-bundle/asn-blocks-v4.csv ./geolocation/
-            cp event-processor/geolocation-bundle/asn-blocks-v6.csv ./geolocation/
-            cp event-processor/geolocation-bundle/blocks-v4.csv     ./geolocation/
-            cp event-processor/geolocation-bundle/blocks-v6.csv     ./geolocation/
-            cp event-processor/geolocation-bundle/locations-en.csv  ./geolocation/
           else
-            echo "⚠️  MAXMIND_LICENSE_KEY not set — creating empty geolocation placeholder files"
-            touch ./geolocation/asn-blocks-v4.csv \
-                  ./geolocation/asn-blocks-v6.csv \
-                  ./geolocation/blocks-v4.csv \
-                  ./geolocation/blocks-v6.csv \
-                  ./geolocation/locations-en.csv
+            echo "ℹ️  MAXMIND_LICENSE_KEY not set — using bundled GeoLite2 CSVs"
           fi
 
       - name: Login to GitHub Container Registry
