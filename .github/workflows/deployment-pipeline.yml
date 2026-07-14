@@ -406,11 +406,11 @@ jobs:
       - name: Prepare Dependencies for Event Processor Image
         run: |
           mkdir -p ./geolocation
-          curl -sSL "https://cdn.hivearmor.io/updates/dependencies/geolocation/asn-blocks-v4.csv" -o ./geolocation/asn-blocks-v4.csv
-          curl -sSL "https://cdn.hivearmor.io/updates/dependencies/geolocation/asn-blocks-v6.csv" -o ./geolocation/asn-blocks-v6.csv
-          curl -sSL "https://cdn.hivearmor.io/updates/dependencies/geolocation/blocks-v4.csv" -o ./geolocation/blocks-v4.csv
-          curl -sSL "https://cdn.hivearmor.io/updates/dependencies/geolocation/blocks-v6.csv" -o ./geolocation/blocks-v6.csv
-          curl -sSL "https://cdn.hivearmor.io/updates/dependencies/geolocation/locations-en.csv" -o ./geolocation/locations-en.csv
+          cp event-processor/geolocation-bundle/asn-blocks-v4.csv ./geolocation/
+          cp event-processor/geolocation-bundle/asn-blocks-v6.csv ./geolocation/
+          cp event-processor/geolocation-bundle/blocks-v4.csv     ./geolocation/
+          cp event-processor/geolocation-bundle/blocks-v6.csv     ./geolocation/
+          cp event-processor/geolocation-bundle/locations-en.csv  ./geolocation/
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
