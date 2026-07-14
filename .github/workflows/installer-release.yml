@@ -30,12 +30,12 @@ on:
 
 jobs:
   # ============================================
-  # V11 DEV - Build and deploy to dev runner
+  # DEV - Build and deploy to dev runner
   # ============================================
   deploy_v11_dev:
     name: Deploy Installer (Dev)
     runs-on: hivearmor-v11-dev
-    if: inputs.version_major == 'v11' && inputs.environment == 'dev'
+    if: inputs.environment == 'dev'
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -80,7 +80,7 @@ jobs:
   build_v11_release:
     name: Build Installer for Release
     runs-on: ubuntu-24.04
-    if: inputs.version_major == 'v11' && inputs.environment == 'production'
+    if: inputs.environment == 'production'
     steps:
       - name: Check out code
         uses: actions/checkout@v4

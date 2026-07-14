@@ -20,16 +20,17 @@ jobs:
       tag: ${{ steps.set-env.outputs.tag }}
       environment: ${{ steps.set-env.outputs.environment }}
       cm_url: ${{ steps.set-env.outputs.cm_url }}
+      version_major: ${{ steps.set-env.outputs.version_major }}
       event_processor_tag: ${{ steps.set-env.outputs.event_processor_tag }}
     steps:
       - name: Determine Build Environment
         id: set-env
         run: |
           # =====================================================================
-          # DEV — push to release/v11**
+          # DEV — push to release/**
           # Version = <branch-base>-dev.N, auto-incremented via CM.
           # =====================================================================
-          if ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/v11') }}; then
+          if ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/heads/release/') }}; then
             ENVIRONMENT="dev"
             CM_URL="https://cmdev.onlyhacker.org"
             echo "Environment: $ENVIRONMENT"
@@ -59,9 +60,12 @@ jobs:
               echo "No previous version found, starting fresh: $TAG"
             fi
 
+            VERSION_MAJOR=$(echo "$BRANCH_VERSION" | grep -oP '^v\d+')
+
             echo "tag=$TAG" >> $GITHUB_OUTPUT
             echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
             echo "cm_url=$CM_URL" >> $GITHUB_OUTPUT
+            echo "version_major=$VERSION_MAJOR" >> $GITHUB_OUTPUT
             echo "event_processor_tag=${{ vars.TW_EVENT_PROCESSOR_VERSION_DEV }}" >> $GITHUB_OUTPUT
 
           # =====================================================================
@@ -74,18 +78,16 @@ jobs:
             CM_URL="https://cm.onlyhacker.org"
             TAG="${{ github.event.release.tag_name }}"
             echo "Event: release, tag=$TAG"
-
-            if [[ ! "$TAG" =~ ^v11\. ]]; then
-              echo "⏭️ Skipping: tag '$TAG' is not a v11 release."
-              exit 0
-            fi
-
             echo "Environment: production (our instances)"
             echo "CM URL: $CM_URL"
+
+            # Derive major version from tag (e.g. v7.0.1 → v7, v11.2.0 → v11)
+            VERSION_MAJOR=$(echo "$TAG" | grep -oP '^v\d+')
 
             echo "tag=$TAG" >> $GITHUB_OUTPUT
             echo "environment=production" >> $GITHUB_OUTPUT
             echo "cm_url=$CM_URL" >> $GITHUB_OUTPUT
+            echo "version_major=$VERSION_MAJOR" >> $GITHUB_OUTPUT
             echo "event_processor_tag=${{ vars.TW_EVENT_PROCESSOR_VERSION_PROD }}" >> $GITHUB_OUTPUT
           fi
 
@@ -503,7 +505,7 @@ jobs:
     uses: ./.github/workflows/installer-release.yml
     with:
       version: ${{ needs.setup_deployment.outputs.tag }}
-      version_major: v11
+      version_major: ${{ needs.setup_deployment.outputs.version_major }}
       environment: ${{ needs.setup_deployment.outputs.environment }}
     secrets:
       API_SECRET: ${{ secrets.API_SECRET }}
@@ -517,7 +519,7 @@ jobs:
     uses: ./.github/workflows/installer-release.yml
     with:
       version: ${{ needs.setup_deployment.outputs.tag }}
-      version_major: v11
+      version_major: ${{ needs.setup_deployment.outputs.version_major }}
       environment: dev
     secrets:
       API_SECRET: ${{ secrets.API_SECRET }}
