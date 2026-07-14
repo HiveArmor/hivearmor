@@ -404,13 +404,27 @@ jobs:
           cd ${{ github.workspace }}/plugins/feeds; go build -o com.hivearmor.feeds.plugin -v .
 
       - name: Prepare Dependencies for Event Processor Image
+        env:
+          MAXMIND_LICENSE_KEY: ${{ secrets.MAXMIND_LICENSE_KEY }}
         run: |
           mkdir -p ./geolocation
-          cp event-processor/geolocation-bundle/asn-blocks-v4.csv ./geolocation/
-          cp event-processor/geolocation-bundle/asn-blocks-v6.csv ./geolocation/
-          cp event-processor/geolocation-bundle/blocks-v4.csv     ./geolocation/
-          cp event-processor/geolocation-bundle/blocks-v6.csv     ./geolocation/
-          cp event-processor/geolocation-bundle/locations-en.csv  ./geolocation/
+          if [ -n "$MAXMIND_LICENSE_KEY" ]; then
+            echo "→ Downloading GeoLite2 CSVs from MaxMind..."
+            MAXMIND_LICENSE_KEY="$MAXMIND_LICENSE_KEY" \
+              bash event-processor/geolocation-bundle/download.sh
+            cp event-processor/geolocation-bundle/asn-blocks-v4.csv ./geolocation/
+            cp event-processor/geolocation-bundle/asn-blocks-v6.csv ./geolocation/
+            cp event-processor/geolocation-bundle/blocks-v4.csv     ./geolocation/
+            cp event-processor/geolocation-bundle/blocks-v6.csv     ./geolocation/
+            cp event-processor/geolocation-bundle/locations-en.csv  ./geolocation/
+          else
+            echo "⚠️  MAXMIND_LICENSE_KEY not set — creating empty geolocation placeholder files"
+            touch ./geolocation/asn-blocks-v4.csv \
+                  ./geolocation/asn-blocks-v6.csv \
+                  ./geolocation/blocks-v4.csv \
+                  ./geolocation/blocks-v6.csv \
+                  ./geolocation/locations-en.csv
+          fi
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
