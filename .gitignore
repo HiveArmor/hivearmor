@@ -8,7 +8,7 @@ vendor/
 # Go build outputs
 installer/installer
 **/*.plugin
-geolocation/
+event_processor/geolocation/
 .github/scripts/golang-updater/go-updater
 
 # Cert / key files — never commit real private keys
