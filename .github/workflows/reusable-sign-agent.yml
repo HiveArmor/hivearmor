@@ -116,28 +116,47 @@ jobs:
           name: ${{ inputs.artifact_name }}
           path: ./unsigned
 
+      # Check if signing credentials are available; if not, passthrough unsigned binaries.
+      # This keeps the job green so downstream jobs always receive an artifact.
+      - name: Check signing prerequisites
+        id: prereq
+        env:
+          WINDOWS_KEY: ${{ secrets.GCP_WINDOWS_SIGNER_SA_KEY }}
+          MACOS_CERT: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+        run: |
+          ENABLED=false
+          if [[ "${{ inputs.os }}" == "windows" && -n "$WINDOWS_KEY" ]]; then
+            ENABLED=true
+          elif [[ "${{ inputs.os }}" == "macos" && -n "$MACOS_CERT" ]]; then
+            ENABLED=true
+          fi
+          echo "SIGNING_ENABLED=$ENABLED" >> "$GITHUB_ENV"
+          if [ "$ENABLED" = "false" ]; then
+            echo "::warning::Signing credentials not configured for ${{ inputs.os }} — binaries will be uploaded unsigned."
+          fi
+
       # =========================================================
       # Windows path: jsign + GCP KMS
       # =========================================================
       - name: Authenticate to Google Cloud
-        if: inputs.os == 'windows'
+        if: inputs.os == 'windows' && env.SIGNING_ENABLED == 'true'
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_WINDOWS_SIGNER_SA_KEY }}
 
       - name: Set up gcloud
-        if: inputs.os == 'windows'
+        if: inputs.os == 'windows' && env.SIGNING_ENABLED == 'true'
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Set up Java (for jsign)
-        if: inputs.os == 'windows'
+        if: inputs.os == 'windows' && env.SIGNING_ENABLED == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Download jsign
-        if: inputs.os == 'windows'
+        if: inputs.os == 'windows' && env.SIGNING_ENABLED == 'true'
         env:
           JSIGN_VERSION: ${{ inputs.jsign_version }}
         run: |
@@ -145,7 +164,7 @@ jobs:
             "https://github.com/ebourg/jsign/releases/download/${JSIGN_VERSION}/jsign-${JSIGN_VERSION}.jar"
 
       - name: Prepare cert chain
-        if: inputs.os == 'windows'
+        if: inputs.os == 'windows' && env.SIGNING_ENABLED == 'true'
         env:
           CHAIN_SECRET: ${{ secrets.WINDOWS_SIGNER_CERT_CHAIN_PEM }}
           CHAIN_REPO_PATH: ${{ inputs.cert_chain_path }}
@@ -165,7 +184,7 @@ jobs:
           echo "CERT_CHAIN_FILE=${OUT}" >> "$GITHUB_ENV"
 
       - name: Sign Windows binaries
-        if: inputs.os == 'windows'
+        if: inputs.os == 'windows' && env.SIGNING_ENABLED == 'true'
         env:
           PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || inputs.gcp_project_id }}
           KEYRING_LOCATION: ${{ secrets.KMS_KEYRING_LOCATION || inputs.kms_location }}
@@ -207,7 +226,7 @@ jobs:
       # macOS path: codesign + notarytool
       # =========================================================
       - name: Install Apple certificate
-        if: inputs.os == 'macos'
+        if: inputs.os == 'macos' && env.SIGNING_ENABLED == 'true'
         env:
           CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
           CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -229,7 +248,7 @@ jobs:
             -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
       - name: Sign macOS binaries
-        if: inputs.os == 'macos'
+        if: inputs.os == 'macos' && env.SIGNING_ENABLED == 'true'
         env:
           SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           BINARIES: ${{ inputs.binaries }}
@@ -247,7 +266,7 @@ jobs:
           done <<< "$BINARIES"
 
       - name: Notarize macOS binaries
-        if: inputs.os == 'macos'
+        if: inputs.os == 'macos' && env.SIGNING_ENABLED == 'true'
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
@@ -274,7 +293,7 @@ jobs:
           done <<< "$BINARIES"
 
       # =========================================================
-      # Upload signed binaries
+      # Upload signed (or passthrough unsigned) binaries
       # =========================================================
       - name: Compute signed artifact name
         id: artifact

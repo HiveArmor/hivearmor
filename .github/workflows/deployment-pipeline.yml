@@ -195,7 +195,6 @@ jobs:
     name: Sign Windows Agent Binaries
     needs: [build_agent, setup_deployment]
     if: ${{ needs.setup_deployment.outputs.tag != '' }}
-    continue-on-error: true
     uses: ./.github/workflows/reusable-sign-agent.yml
     with:
       os: windows
@@ -218,7 +217,6 @@ jobs:
     name: Sign macOS Agent Binaries
     needs: [build_agent, setup_deployment]
     if: ${{ needs.setup_deployment.outputs.tag != '' }}
-    continue-on-error: true
     uses: ./.github/workflows/reusable-sign-agent.yml
     with:
       os: macos
@@ -272,7 +270,7 @@ jobs:
   build_agent_manager:
     name: Build Agent Manager Microservice
     needs: [sign_agent_windows, sign_agent_macos, build_hivearmor_collector, setup_deployment]
-    if: ${{ always() && (needs.sign_agent_windows.result == 'success' || needs.sign_agent_windows.result == 'failure') && (needs.sign_agent_macos.result == 'success' || needs.sign_agent_macos.result == 'failure') && needs.build_hivearmor_collector.result == 'success' && needs.setup_deployment.outputs.tag != '' }}
+    if: ${{ needs.sign_agent_windows.result == 'success' && needs.sign_agent_macos.result == 'success' && needs.build_hivearmor_collector.result == 'success' && needs.setup_deployment.outputs.tag != '' }}
     runs-on: ubuntu-24.04
     steps:
       - name: Check out code into the right branch
