@@ -220,6 +220,7 @@ services:
       - ep_sockets:/workdir/sockets
       - ./certs:/cert:ro
       - updates_data:/updates
+      - ./hivearmor_plugins.yaml:/workdir/pipeline/hivearmor_plugins.yaml:ro
     ports:
       - "8000:8000"
       - "8090:8090"
