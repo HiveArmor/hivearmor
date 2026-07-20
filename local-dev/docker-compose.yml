@@ -217,6 +217,7 @@ services:
       - ep_pipeline:/workdir/pipeline
       - ep_logs:/workdir/logs
       - ep_rules:/workdir/rules/hivearmor
+      - ep_sockets:/workdir/sockets
       - ./certs:/cert:ro
       - updates_data:/updates
     ports:
@@ -271,6 +272,7 @@ services:
       - ep_pipeline:/workdir/pipeline
       - ep_logs:/workdir/logs
       - ep_rules:/workdir/rules/hivearmor
+      - ep_sockets:/workdir/sockets
       - ./certs:/cert:ro
       - updates_data:/updates
       - ./hivearmor_plugins.yaml:/workdir/pipeline/hivearmor_plugins.yaml:ro
@@ -596,5 +598,6 @@ volumes:
   ep_pipeline:
   ep_logs:
   ep_rules:
+  ep_sockets:
   shm_data:
   neo4j_data:
