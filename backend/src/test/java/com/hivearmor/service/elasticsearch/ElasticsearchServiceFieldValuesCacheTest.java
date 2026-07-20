@@ -54,11 +54,11 @@ class ElasticsearchServiceFieldValuesCacheTest {
     @Test
     void getFieldValues_callsOpenSearchOnCacheMiss() throws Exception {
         when(openSearch.getFieldValues(
-                eq("user.keyword"), eq("_v3_hive_log-*"),
+                eq("user.keyword"), eq("v3-hive-log-*"),
                 isNull(), eq(500), any(TermOrder.class), any(SortOrder.class)
         )).thenReturn(Map.of("value1", 10L, "value2", 5L));
 
-        List<String> result = service.getFieldValues("user.keyword", "_v3_hive_log-*");
+        List<String> result = service.getFieldValues("user.keyword", "v3-hive-log-*");
 
         assertThat(result).containsExactlyInAnyOrder("value1", "value2");
         verify(openSearch, times(1)).getFieldValues(
@@ -68,12 +68,12 @@ class ElasticsearchServiceFieldValuesCacheTest {
     @Test
     void getFieldValues_returnsCachedValueOnSecondCall() throws Exception {
         when(openSearch.getFieldValues(
-                eq("user.keyword"), eq("_v3_hive_log-*"),
+                eq("user.keyword"), eq("v3-hive-log-*"),
                 isNull(), anyInt(), any(TermOrder.class), any(SortOrder.class)
         )).thenReturn(Map.of("value1", 10L));
 
-        service.getFieldValues("user.keyword", "_v3_hive_log-*");
-        service.getFieldValues("user.keyword", "_v3_hive_log-*");
+        service.getFieldValues("user.keyword", "v3-hive-log-*");
+        service.getFieldValues("user.keyword", "v3-hive-log-*");
 
         verify(openSearch, times(1)).getFieldValues(
                 anyString(), anyString(), any(), anyInt(), any(), any());
@@ -85,7 +85,7 @@ class ElasticsearchServiceFieldValuesCacheTest {
                 anyString(), anyString(), isNull(), anyInt(), any(TermOrder.class), any(SortOrder.class)
         )).thenReturn(Collections.emptyMap());
 
-        service.getFieldValues("host.keyword", "_v3_hive_log-*");
+        service.getFieldValues("host.keyword", "v3-hive-log-*");
 
         verify(openSearch).getFieldValues(
                 anyString(), anyString(), isNull(),

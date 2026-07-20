@@ -23,7 +23,7 @@ import java.util.*;
 
 /**
  * Scheduled service that reads real-time compliance evidence from OpenSearch
- * (_v3_hive_compliance_evidence-*) and produces per-framework scores, persisted
+ * (v3-hive-compliance_evidence-*) and produces per-framework scores, persisted
  * to hive_compliance_eval_history.
  *
  * Score formula per control:

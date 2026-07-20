@@ -301,7 +301,7 @@ fi
 echo ""
 echo "[10] Audit trail verification"
 
-# Application events are stored in OpenSearch index _v3_hive_backend-logs
+# Application events are stored in OpenSearch index v3-hive-backend-logs
 AUDIT_COUNT=$(curl -sk -u "$OS_CREDS" \
     "$OS_URL/v3-hive-backend-logs/_count" \
     -H "Content-Type: application/json" \

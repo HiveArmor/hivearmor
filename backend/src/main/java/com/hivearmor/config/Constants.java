@@ -141,9 +141,9 @@ public final class Constants {
     // ----------------------------------------------------------------------------------
     // Defines the index pattern for querying Elasticsearch statistics indexes.
     // ----------------------------------------------------------------------------------
-    public static final String STATISTICS_INDEX_PATTERN = "v3_hive_statistics-*";
-    public static final String V11_API_ACCESS_LOGS = "v3_hive_api-access-logs-*";
-    public static final String V11_ALERTS_INDEX_PATTERN = "v3_hive_alert-*";
+    public static final String STATISTICS_INDEX_PATTERN = "v3-hive-statistics-*";
+    public static final String V11_API_ACCESS_LOGS = "v3-hive-api-access-logs-*";
+    public static final String V11_ALERTS_INDEX_PATTERN = "v3-hive-alert-*";
 
     // Logging
     public static final String TRACE_ID_KEY = "traceId";

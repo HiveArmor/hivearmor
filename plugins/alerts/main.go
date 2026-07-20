@@ -113,7 +113,7 @@ func isDuplicate(alert *plugins.Alert) bool {
 	}
 
 	ctx := context.Background()
-	indices := []string{sdkos.BuildIndexPattern("_v3_hive_", "alert")}
+	indices := []string{sdkos.BuildIndexPattern("v3-hive", "alert")}
 
 	// Create BoolBuilder
 	bb := sdkos.NewBoolBuilder(ctx, indices, "plugin_com.hivearmor.alerts")
@@ -208,7 +208,7 @@ func getPreviousAlertId(alert *plugins.Alert) *string {
 	}
 
 	ctx := context.Background()
-	indices := []string{sdkos.BuildIndexPattern("_v3_hive_", "alert")}
+	indices := []string{sdkos.BuildIndexPattern("v3-hive", "alert")}
 
 	// Create BoolBuilder
 	bb := sdkos.NewBoolBuilder(ctx, indices, "plugin_com.hivearmor.alerts")
@@ -386,7 +386,7 @@ func newAlert(alert *plugins.Alert, parentId *string) error {
 	for retry := 0; retry < maxRetries; retry++ {
 		cancelableContext, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
-		err := sdkos.IndexDoc(cancelableContext, a, sdkos.BuildCurrentDayIndex("_v3_hive_", "alert"), alert.Id)
+		err := sdkos.IndexDoc(cancelableContext, a, sdkos.BuildCurrentDayIndex("v3-hive", "alert"), alert.Id)
 		if err == nil {
 			cancel()
 			return nil

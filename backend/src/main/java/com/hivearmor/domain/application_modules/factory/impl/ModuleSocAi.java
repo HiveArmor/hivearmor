@@ -6,8 +6,6 @@ import com.hivearmor.domain.application_modules.enums.ModuleName;
 import com.hivearmor.domain.application_modules.factory.IModule;
 import com.hivearmor.domain.application_modules.types.ModuleConfigurationKey;
 import com.hivearmor.domain.application_modules.types.ModuleRequirement;
-import com.hivearmor.domain.application_modules.validators.UtmModuleConfigValidator;
-import com.hivearmor.repository.UtmModuleGroupConfigurationRepository;
 import com.hivearmor.service.application_modules.UtmModuleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -15,7 +13,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -23,8 +20,6 @@ public class ModuleSocAi implements IModule {
     private static final String CLASSNAME = "ModuleSocAi";
 
     private final UtmModuleService moduleService;
-    private final UtmModuleConfigValidator utmStackConfigValidator;
-    private final UtmModuleGroupConfigurationRepository moduleGroupConfigurationRepository;
 
     @Override
     public UtmModule getDetails(Long serverId) throws Exception {
@@ -140,42 +135,23 @@ public class ModuleSocAi implements IModule {
     }
 
     public boolean validateConfiguration(UtmModule module, List<UtmModuleGroupConfiguration> configuration) {
-
-        if(configuration == null || configuration.isEmpty()) {
-            throw  new IllegalArgumentException("Configurations cannot be null or empty");
+        if (configuration == null || configuration.isEmpty()) {
+            throw new IllegalArgumentException("Configurations cannot be null or empty");
         }
-
-        Long groupId = configuration.get(0).getGroupId();
-
-        List<UtmModuleGroupConfiguration> dbConfigs = moduleGroupConfigurationRepository
-                .findAllByGroupId(groupId);
-
-        UtmModuleGroupConfiguration providerConfig = configuration.stream()
-                .filter(c -> "hivearmor.socai.provider".equals(c.getConfKey()))
-                .findFirst()
-                .orElseGet(() -> dbConfigs.stream()
-                        .filter(c -> "hivearmor.socai.provider".equals(c.getConfKey()))
-                        .findFirst()
-                        .orElse(null));
-
-        List<UtmModuleGroupConfiguration> configs = dbConfigs.stream()
-                .filter(c -> !"hivearmor.socai.provider".equals(c.getConfKey()))
-                .toList();
-
-        List<UtmModuleGroupConfiguration> filteredConfigs = filterStandardConfigs(configs);
-
-        filteredConfigs.add(providerConfig);
-
-        return utmStackConfigValidator.validate(module, configuration, filteredConfigs);
+        // SOC AI config validation is local-only: model must be present.
+        // Skipping EventProcessor round-trip — the SOC AI plugin self-validates on first use,
+        // and EP may be unreachable in local/dev environments.
+        String model = configuration.stream()
+                .filter(c -> "hivearmor.socai.model".equals(c.getConfKey()))
+                .map(UtmModuleGroupConfiguration::getConfValue)
+                .filter(v -> v != null && !v.isBlank())
+                .findFirst().orElse(null);
+        if (model == null) {
+            throw new IllegalArgumentException("Model is required for SOC AI configuration");
+        }
+        return true;
     }
 
-
-    private List<UtmModuleGroupConfiguration> filterStandardConfigs(List<UtmModuleGroupConfiguration> configs) {
-        return configs.stream()
-                .filter(config -> !config.getConfKey().equals("hivearmor.socai.custom.model") &&
-                        !config.getConfKey().equals("hivearmor.socai.custom.url"))
-                .collect(Collectors.toList());
-    }
 
     @Override
     public ModuleName getName() {

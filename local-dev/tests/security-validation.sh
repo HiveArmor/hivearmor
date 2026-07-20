@@ -74,10 +74,10 @@ echo "[B] SQL Injection Protection"
 
 # DML statements must be rejected (HTTP 400)
 for dml in \
-    "DELETE FROM _v3_hive_alert-2026.07.01" \
-    "DROP INDEX _v3_hive_alert-*" \
-    "INSERT INTO _v3_hive_alert-2026.07.01 VALUES (1)" \
-    "UPDATE _v3_hive_alert-2026.07.01 SET severity=5 WHERE 1=1"; do
+    "DELETE FROM v3-hive-alert-2026.07.01" \
+    "DROP INDEX v3-hive-alert-*" \
+    "INSERT INTO v3-hive-alert-2026.07.01 VALUES (1)" \
+    "UPDATE v3-hive-alert-2026.07.01 SET severity=5 WHERE 1=1"; do
     code=$(curl -so /dev/null -w "%{http_code}" -X POST \
         "$BASE_URL/api/elasticsearch/search/sql" \
         -H "Authorization: Bearer $TOKEN" \
@@ -86,7 +86,7 @@ for dml in \
     check_eq "DML blocked: $(echo "$dml" | cut -c1-25)..." "400" "$code"
 done
 
-# Cross-index access must be rejected (HTTP 400) — SqlQueryValidator.validateIndexAccess must block non-_v3_hive_* indices
+# Cross-index access must be rejected (HTTP 400) — SqlQueryValidator.validateIndexAccess must block non-v3-hive-* indices
 cross_resp=$(curl -si -X POST \
     "$BASE_URL/api/elasticsearch/search/sql" \
     -H "Authorization: Bearer $TOKEN" \
@@ -95,12 +95,12 @@ cross_resp=$(curl -si -X POST \
 cross_code=$(echo "$cross_resp" | grep "^HTTP" | head -1 | awk '{print $2}')
 cross_err=$(echo "$cross_resp" | grep -i "X-HiveArmor-error" || echo "")
 if [ "$cross_code" = "400" ]; then
-    pass "Cross-index (_v3_hive_* only) blocked by SqlQueryValidator"
+    pass "Cross-index (v3-hive-* only) blocked by SqlQueryValidator"
     PASS=$((PASS+1))
 elif [ "$cross_code" = "500" ] && echo "$cross_err" | grep -qi "SQL query failed"; then
-    fail "Cross-index (_v3_hive_* only) blocked" "query reached OpenSearch (validator index-check not deployed) — rebuild backend"
+    fail "Cross-index (v3-hive-* only) blocked" "query reached OpenSearch (validator index-check not deployed) — rebuild backend"
 else
-    fail "Cross-index (_v3_hive_* only) blocked" "expected 400 got $cross_code"
+    fail "Cross-index (v3-hive-* only) blocked" "expected 400 got $cross_code"
 fi
 
 # Comment injection must be rejected
@@ -108,21 +108,21 @@ code=$(curl -so /dev/null -w "%{http_code}" -X POST \
     "$BASE_URL/api/elasticsearch/search/sql" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
-    -d '{"query":"SELECT * FROM _v3_hive_log-2026.07.01 -- comment"}')
+    -d '{"query":"SELECT * FROM v3-hive-log-2026.07.01 -- comment"}')
 check_eq "SQL comment injection blocked" "400" "$code"
 
-# Valid SELECT against a _v3_hive_* index must not be blocked by the validator
+# Valid SELECT against a v3-hive-* index must not be blocked by the validator
 # (200 = data returned; 500 = validation passed but index absent in OS; 400 = blocked)
 code=$(curl -so /dev/null -w "%{http_code}" -X POST \
     "$BASE_URL/api/elasticsearch/search/sql" \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
-    -d '{"query":"SELECT dataType, COUNT(*) FROM _v3_hive_log-* GROUP BY dataType LIMIT 5"}')
+    -d '{"query":"SELECT dataType, COUNT(*) FROM v3-hive-log-* GROUP BY dataType LIMIT 5"}')
 if [ "$code" = "200" ] || [ "$code" = "500" ]; then
-    pass "Valid SELECT on _v3_hive_* not blocked by validator (HTTP $code)"
+    pass "Valid SELECT on v3-hive-* not blocked by validator (HTTP $code)"
     PASS=$((PASS+1))
 else
-    fail "Valid SELECT on _v3_hive_* should not be blocked by validation" "got HTTP $code"
+    fail "Valid SELECT on v3-hive-* should not be blocked by validation" "got HTTP $code"
 fi
 
 # ── C: API Key Security ───────────────────────────────────────────────────────

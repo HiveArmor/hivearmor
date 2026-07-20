@@ -52,7 +52,7 @@ func (c *OpenSearchClient) GetAlertByID(ctx context.Context, alertID string) (*m
 		},
 	}
 
-	return c.searchSingleAlert(ctx, "_v3_hive_alert-*", query)
+	return c.searchSingleAlert(ctx, "v3-hive-alert-*", query)
 }
 
 func (c *OpenSearchClient) searchSingleAlert(ctx context.Context, index string, query map[string]any) (*models.Alert, error) {

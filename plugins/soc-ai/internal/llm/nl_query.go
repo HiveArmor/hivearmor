@@ -22,7 +22,7 @@ Convert a natural language question into a valid OpenSearch DSL query (bool quer
 - dataType: source type (e.g. WINDOWS_AGENT, LINUX_AGENT, FIREWALL, IDS, PROXY, ANTIVIRUS, SYSLOG, CLOUDTRAIL)
 - severity: 1=low, 2=medium, 3=high, 4=critical
 
-### Log-specific fields (index: _v3_hive_log-*)
+### Log-specific fields (index: v3-hive-log-*)
 - logx.action: event action (LOGIN, LOGOUT, FAILED_LOGIN, FILE_ACCESS, PROCESS_CREATE, NETWORK_CONNECT, PRIVILEGE_ESCALATION, POLICY_VIOLATION)
 - logx.srcIp: source IP address
 - logx.dstIp: destination IP address
@@ -39,7 +39,7 @@ Convert a natural language question into a valid OpenSearch DSL query (bool quer
 - logx.eventId: Windows Event ID (integer)
 - logx.outcome: event outcome ("success", "failure")
 
-### Alert-specific fields (index: _v3_hive_alert-*)
+### Alert-specific fields (index: v3-hive-alert-*)
 - name: alert rule name
 - category: alert category
 - status: 1=open, 2=in progress, 3=resolved, 4=false positive, 5=completed

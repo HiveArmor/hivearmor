@@ -36,7 +36,7 @@ public class ApplicationEventService {
     @Async
     public void createEvent(String message, ApplicationEventType type) {
         final String ctx = CLASSNAME + ".createEvent";
-        final String V11_LOCAL_INDEX = "v3_hive_backend-logs";
+        final String V11_LOCAL_INDEX = "v3-hive-backend-logs";
         try {
             ApplicationEvent applicationEvent = ApplicationEvent.builder()
                 .message(message)

@@ -196,7 +196,7 @@ export function LogSavedQueries({ onLoad, currentQuery, currentIndexPattern, cla
 
   const handleSaveQuery = async (name: string) => {
     const query = currentQuery ?? "";
-    const indexPattern = currentIndexPattern ?? "_v3_hive_*";
+    const indexPattern = currentIndexPattern ?? "v3-hive-*";
     try {
       const existing = saved.find(
         (q) => q.description === query && q.dataOrigin === indexPattern,
@@ -227,7 +227,7 @@ export function LogSavedQueries({ onLoad, currentQuery, currentIndexPattern, cla
       await logAnalyzerService.updateQuery(id, {
         name,
         query: sq.description ?? "",
-        indexPattern: sq.dataOrigin ?? "_v3_hive_*",
+        indexPattern: sq.dataOrigin ?? "v3-hive-*",
         owner: sq.owner,
         creationDate: sq.creationDate,
       });
@@ -441,7 +441,7 @@ export function LogSavedQueries({ onLoad, currentQuery, currentIndexPattern, cla
                       </div>
                     ) : (
                       <button
-                        onClick={() => onLoad(sq.description ?? "", sq.dataOrigin ?? "_v3_hive_*")}
+                        onClick={() => onLoad(sq.description ?? "", sq.dataOrigin ?? "v3-hive-*")}
                         className="w-full text-left"
                       >
                         <div className="flex items-center gap-1">
@@ -463,7 +463,7 @@ export function LogSavedQueries({ onLoad, currentQuery, currentIndexPattern, cla
                         </p>
                         {sq.creationDate && (
                           <p className="text-tiny text-muted/60 mt-0.5">
-                            {formatRelativeTime(sq.creationDate)} · {sq.dataOrigin ?? "_v3_hive_*"}
+                            {formatRelativeTime(sq.creationDate)} · {sq.dataOrigin ?? "v3-hive-*"}
                           </p>
                         )}
                       </button>
@@ -471,7 +471,7 @@ export function LogSavedQueries({ onLoad, currentQuery, currentIndexPattern, cla
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     <button
-                      onClick={() => onLoad(sq.description ?? "", sq.dataOrigin ?? "_v3_hive_*")}
+                      onClick={() => onLoad(sq.description ?? "", sq.dataOrigin ?? "v3-hive-*")}
                       className="w-6 h-6 flex items-center justify-center rounded text-muted hover:text-brand hover:bg-brand-subtle transition-colors"
                       title="Load"
                     >

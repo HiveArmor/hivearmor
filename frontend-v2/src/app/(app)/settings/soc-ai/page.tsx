@@ -580,6 +580,30 @@ export default function SocAiSettingsPage() {
                   value={currentForm.url}
                   onChange={e => updateForm({ url: e.target.value })}
                 />
+                {provider === "ollama" &&
+                  (currentForm.url.includes("localhost") || currentForm.url.includes("127.0.0.1")) && (
+                  <div className="flex items-start gap-2 p-2.5 rounded-md bg-warning/10 border border-warning/30">
+                    <AlertCircle className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
+                    <p className="text-tiny text-warning">
+                      <span className="font-semibold">Docker networking:</span>{" "}
+                      HiveArmor runs inside Docker, so{" "}
+                      <code className="font-mono bg-warning/20 px-1 rounded">localhost</code> refers to the container, not your machine.{" "}
+                      Replace it with{" "}
+                      <button
+                        type="button"
+                        className="font-mono bg-warning/20 px-1 rounded underline decoration-dotted cursor-pointer hover:bg-warning/30"
+                        onClick={() => updateForm({
+                          url: currentForm.url
+                            .replace(/localhost/g, "host.docker.internal")
+                            .replace(/127\.0\.0\.1/g, "host.docker.internal")
+                        })}
+                      >
+                        host.docker.internal
+                      </button>
+                      {" "}to reach Ollama on your host machine.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

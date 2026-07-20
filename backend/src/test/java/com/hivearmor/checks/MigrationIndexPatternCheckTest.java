@@ -47,7 +47,7 @@ class MigrationIndexPatternCheckTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
             () -> MigrationIndexPatternCheck.check(con));
         assertThat(ex.getMessage()).contains("20241227001");
-        assertThat(ex.getMessage()).contains("_v3_hive_");
+        assertThat(ex.getMessage()).contains("v3-hive-");
         assertThat(ex.getMessage()).contains("3");
     }
 

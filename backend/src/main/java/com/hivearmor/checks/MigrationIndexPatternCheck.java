@@ -13,7 +13,7 @@ public class MigrationIndexPatternCheck {
 
     /**
      * Asserts that Liquibase migration 20241227001 was applied: all system index
-     * patterns must carry the "_v3_hive_" prefix. If any do not, the backend would query
+     * patterns must carry the "v3-hive-" prefix. If any do not, the backend would query
      * OpenSearch on the wrong index names and return empty results silently.
      *
      * @param con an open database connection (not closed by this method)
@@ -22,13 +22,12 @@ public class MigrationIndexPatternCheck {
     public static void check(Connection con) {
         final String ctx = CLASSNAME + ".check";
         ConsoleColors.cyanBold();
-        System.out.println(">> Checking migration 20241227001 (_v3_hive_ index pattern prefix):");
+        System.out.println(">> Checking migration 20241227001 (v3-hive- index pattern prefix):");
 
-        // Patterns may use either v3-hive- (hyphen) or _v3_hive_ (underscore) prefix
+        // All system patterns must use the v3-hive- (hyphen) prefix
         String sql = "SELECT COUNT(*) FROM hive_index_pattern " +
                      "WHERE pattern_system = true " +
-                     "AND pattern NOT LIKE 'v3-hive-%' " +
-                     "AND pattern NOT LIKE '_v3_hive_%'";
+                     "AND pattern NOT LIKE 'v3-hive-%'";
 
         try (PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -40,7 +39,7 @@ public class MigrationIndexPatternCheck {
                         "Liquibase migration 20241227001 " +
                         "(20241227001_updating-system-index-pattern.xml) may not have been applied. " +
                         "Run: SELECT pattern FROM hive_index_pattern WHERE pattern_system=true " +
-                        "AND pattern NOT LIKE 'v3-hive-%%' AND pattern NOT LIKE '_v3_hive_%%'; to see affected rows.",
+                        "AND pattern NOT LIKE 'v3-hive-%%'; to see affected rows.",
                         unprefixedCount
                     );
                     ConsoleColors.redBold();

@@ -71,7 +71,7 @@ public class UtmStackService {
         final String ctx = CLASSNAME + ".getMigrationStatus";
         Map<String, Object> result = new LinkedHashMap<>();
         String sql = "SELECT pattern FROM hive_index_pattern " +
-                     "WHERE pattern_system = true AND pattern NOT LIKE '_v3_hive_%'";
+                     "WHERE pattern_system = true AND pattern NOT LIKE 'v3-hive-%'";
         try (Connection con = dataSource.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {

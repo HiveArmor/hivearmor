@@ -363,7 +363,7 @@ public class OpenSearchManagementResource {
     /**
      * Generic POST proxy to OpenSearch. Passes the body as-is (ndjson or JSON).
      * Used for _bulk, _doc, and other write operations during dev/seed.
-     * Path example: /_bulk  or  /_v3_hive_alert-2026.07.07/_doc/some-id
+     * Path example: /_bulk  or  /v3-hive-alert-2026.07.07/_doc/some-id
      */
     @PostMapping("/raw/**")
     public ResponseEntity<String> rawPost(jakarta.servlet.http.HttpServletRequest request,

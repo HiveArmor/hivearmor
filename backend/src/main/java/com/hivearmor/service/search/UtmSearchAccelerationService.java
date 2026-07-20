@@ -107,7 +107,7 @@ public class UtmSearchAccelerationService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             addAuth(headers);
             ResponseEntity<String> resp = restTemplate.exchange(
-                baseUrl + "/_v3_hive_alert-*/_settings", HttpMethod.PUT,
+                baseUrl + "/v3-hive-alert-*/_settings", HttpMethod.PUT,
                 new HttpEntity<>(body, headers), String.class);
             results.put("index_settings", Map.of("status", resp.getStatusCodeValue(), "ok", resp.getStatusCode().is2xxSuccessful()));
         } catch (Exception e) {

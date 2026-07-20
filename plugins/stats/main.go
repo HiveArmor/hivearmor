@@ -172,7 +172,7 @@ func saveToOpenSearch[Data any](data Data) {
 	for retry := 0; retry < maxRetries; retry++ {
 		oCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 
-		err := sdkos.IndexDoc(oCtx, &data, fmt.Sprintf("_v3_hive_statistics-%s", time.Now().UTC().Format("2006.01")), uuid.NewString())
+		err := sdkos.IndexDoc(oCtx, &data, fmt.Sprintf("v3-hive-statistics-%s", time.Now().UTC().Format("2006.01")), uuid.NewString())
 		cancel()
 
 		if err == nil {

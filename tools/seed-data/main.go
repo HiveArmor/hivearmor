@@ -220,7 +220,7 @@ func seedLinux(today string, now time.Time, rng *rand.Rand) int {
 		})
 	}
 
-	return bulkIndex("_v3_hive_log-linux-"+today, docs)
+	return bulkIndex("v3-hive-log-linux-"+today, docs)
 }
 
 // ─── Windows ─────────────────────────────────────────────────────────────────
@@ -284,7 +284,7 @@ func seedWindows(today string, now time.Time, rng *rand.Rand) int {
 		})
 	}
 
-	return bulkIndex("_v3_hive_log-wineventlog-"+today, docs)
+	return bulkIndex("v3-hive-log-wineventlog-"+today, docs)
 }
 
 // ─── Suricata ─────────────────────────────────────────────────────────────────
@@ -345,7 +345,7 @@ func seedSuricata(today string, now time.Time, rng *rand.Rand) int {
 		})
 	}
 
-	return bulkIndex("_v3_hive_log-suricata-"+today, docs)
+	return bulkIndex("v3-hive-log-suricata-"+today, docs)
 }
 
 // ─── NetFlow ─────────────────────────────────────────────────────────────────
@@ -393,7 +393,7 @@ func seedNetflow(today string, now time.Time, rng *rand.Rand) int {
 		})
 	}
 
-	return bulkIndex("_v3_hive_log-netflow-"+today, docs)
+	return bulkIndex("v3-hive-log-netflow-"+today, docs)
 }
 
 // ─── Alerts ─────────────────────────────────────────────────────────────────
@@ -547,7 +547,7 @@ func seedAlerts(today string, now time.Time, rng *rand.Rand) int {
 		}))
 	}
 
-	return bulkIndex("_v3_hive_alert-"+today, docs)
+	return bulkIndex("v3-hive-alert-"+today, docs)
 }
 
 type alertSpec struct {
@@ -697,9 +697,9 @@ func seedLookupTables(now time.Time) int {
 		})
 	}
 
-	return bulkIndex("_v3_hive_lookup-assets", docs[:len(assets)]) +
-		bulkIndex("_v3_hive_lookup-identities", docs[len(assets):len(assets)+len(identities)]) +
-		bulkIndex("_v3_hive_lookup-threat-intel", docs[len(assets)+len(identities):])
+	return bulkIndex("v3-hive-lookup-assets", docs[:len(assets)]) +
+		bulkIndex("v3-hive-lookup-identities", docs[len(assets):len(assets)+len(identities)]) +
+		bulkIndex("v3-hive-lookup-threat-intel", docs[len(assets)+len(identities):])
 }
 
 // ─── OpenSearch bulk helpers ─────────────────────────────────────────────────

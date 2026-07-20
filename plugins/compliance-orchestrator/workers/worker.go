@@ -45,7 +45,7 @@ func StartWorkers(ctx context.Context, backend *client.BackendClient) {
 					QueryEvaluations: result.QueryEvaluations,
 				}
 
-				err = backend.IndexEvaluationResult(ctx, fmt.Sprintf("v3_hive_compliance_evidence-%s", time.Now().UTC().Format("2006.01.02")), doc)
+				err = backend.IndexEvaluationResult(ctx, fmt.Sprintf("v3-hive-compliance-evidence-%s", time.Now().UTC().Format("2006.01.02")), doc)
 				if err != nil {
 					catcher.Error("failed to index evaluation result", err, map[string]any{
 						"worker":  id,

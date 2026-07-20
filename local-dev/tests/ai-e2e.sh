@@ -55,7 +55,7 @@ echo "[3] Fetching an alert for analysis..."
 ALERT_JSON=$(curl -sf -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   "$BACKEND/api/elasticsearch/search" \
-  -d '{"indexPattern":"_v3_hive_alert-*","query":{"match_all":{}},"size":1}' 2>/dev/null || echo "{}")
+  -d '{"indexPattern":"v3-hive-alert-*","query":{"match_all":{}},"size":1}' 2>/dev/null || echo "{}")
 
 ALERT_ID=$(echo "$ALERT_JSON" | python3 -c "
 import sys,json
@@ -150,7 +150,7 @@ NL_RESULT=$(curl -sf -X POST \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   "$BACKEND/api/ha-search/nl-query" \
-  -d '{"question":"Show me failed logins in the last hour","indexPattern":"_v3_hive_log-*"}' \
+  -d '{"question":"Show me failed logins in the last hour","indexPattern":"v3-hive-log-*"}' \
   2>/dev/null || echo "{}")
 
 QUERY_EXISTS=$(echo "$NL_RESULT" | python3 -c "

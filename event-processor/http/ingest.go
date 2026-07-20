@@ -102,7 +102,7 @@ func handleInject(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":     "processed",
 		"id":         event.Id,
-		"index":      "_v3_hive_log-" + event.DataType,
+		"index":      "v3-hive-log-" + event.DataType,
 		"alerts":     len(alertIDs),
 		"alertIds":   alertIDs,
 		"compliance": len(complianceHits),

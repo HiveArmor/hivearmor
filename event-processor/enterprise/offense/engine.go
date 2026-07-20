@@ -93,7 +93,7 @@ func findRelatedAlerts(ip, user string) []string {
 		"size":    100,
 	}
 	body, _ := json.Marshal(query)
-	req, _ := http.NewRequest("POST", oOSURL+"/_v3_hive_alert-*/_search", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", oOSURL+"/v3-hive-alert-*/_search", bytes.NewReader(body))
 	req.SetBasicAuth(oOSUser, oOSPass)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := oclient.Do(req)
@@ -140,7 +140,7 @@ func findExistingOffense(ip, user string) string {
 		"size":    1,
 	}
 	body, _ := json.Marshal(query)
-	req, _ := http.NewRequest("POST", oOSURL+"/_v3_hive_offense-*/_search", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", oOSURL+"/v3-hive-offense-*/_search", bytes.NewReader(body))
 	req.SetBasicAuth(oOSUser, oOSPass)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := oclient.Do(req)
@@ -193,7 +193,7 @@ func writeOffense(offenseID string, trigger *plugins.Alert, relatedIDs []string,
 	}
 
 	body, _ := json.Marshal(doc)
-	idx := sdkos.BuildCurrentDayIndex("_v3_hive_", "offense")
+	idx := sdkos.BuildCurrentDayIndex("v3-hive", "offense")
 	url := fmt.Sprintf("%s/%s/_doc/%s", oOSURL, idx, offenseID)
 	req, _ := http.NewRequest("PUT", url, bytes.NewReader(body))
 	req.SetBasicAuth(oOSUser, oOSPass)
@@ -225,7 +225,7 @@ func setOffenseIdOnAlerts(osURL, osUser, osPass string, cl *http.Client, offense
 		},
 	}
 	body, _ := json.Marshal(query)
-	url := fmt.Sprintf("%s/_v3_hive_alert-*/_update_by_query", osURL)
+	url := fmt.Sprintf("%s/v3-hive-alert-*/_update_by_query", osURL)
 	req, _ := http.NewRequest("POST", url, bytes.NewReader(body))
 	req.SetBasicAuth(osUser, osPass)
 	req.Header.Set("Content-Type", "application/json")

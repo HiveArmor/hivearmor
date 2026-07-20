@@ -148,7 +148,6 @@ const NODE_R = 22;
 const ARROW_LEN = 9;
 
 export function InvestigationEntityGraph({ graph }: InvestigationEntityGraphProps) {
-  if (!graph) return null;
   const svgRef = useRef<SVGSVGElement>(null);
   const animRef = useRef<number>(0);
   const [dims, setDims] = useState({ w: 800, h: 520 });
@@ -193,13 +192,14 @@ export function InvestigationEntityGraph({ graph }: InvestigationEntityGraphProp
   }, []);
 
   useEffect(() => {
+    if (!graph) return;
     setNodes(initPositions(graph.nodes, dims.w, dims.h));
     tickRef.current = 0;
     setSimRunning(true);
   }, [graph, dims]);
 
   useEffect(() => {
-    if (!simRunning) return;
+    if (!simRunning || !graph) return;
     let running = true;
     const step = () => {
       if (!running) return;
@@ -213,6 +213,7 @@ export function InvestigationEntityGraph({ graph }: InvestigationEntityGraphProp
   }, [simRunning, graph.edges, dims]);
 
   const resetLayout = useCallback(() => {
+    if (!graph) return;
     setNodes(initPositions(graph.nodes, dims.w, dims.h));
     tickRef.current = 0;
     setSimRunning(true);
@@ -307,6 +308,8 @@ export function InvestigationEntityGraph({ graph }: InvestigationEntityGraphProp
     };
     smoothZoomRafRef.current = requestAnimationFrame(animate);
   }, []);
+
+  if (!graph) return null;
 
   const selectedNode = nodes.find((n) => n.id === selectedId);
   const nodeIdx = new Map(nodes.map((n) => [n.id, n]));

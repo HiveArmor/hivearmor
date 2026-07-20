@@ -1,4 +1,4 @@
-// Package enrichment — threat intel lookup from _v3_hive_lookup-threat-intel index.
+// Package enrichment — threat intel lookup from v3-hive-lookup-threat-intel index.
 package enrichment
 
 import (
@@ -58,7 +58,7 @@ func loadThreatIntel() {
 		"_source": []string{"ip", "malicious", "source", "tags"},
 	}
 	body, _ := json.Marshal(query)
-	req, _ := http.NewRequest("POST", osURL+"/_v3_hive_lookup-threat-intel/_search", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", osURL+"/v3-hive-lookup-threat-intel/_search", bytes.NewReader(body))
 	req.SetBasicAuth(osUser, osPass)
 	req.Header.Set("Content-Type", "application/json")
 

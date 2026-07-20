@@ -105,7 +105,7 @@ func putISMPolicy(client *http.Client, base, user, pass string) error {
 				},
 			},
 			"ism_template": []map[string]any{
-				{"index_patterns": []string{"_v3_hive_log-*", "_v3_hive_alert-*"}},
+				{"index_patterns": []string{"v3-hive-log-*", "v3-hive-alert-*"}},
 			},
 		},
 	}
@@ -186,7 +186,7 @@ func sideProperties() map[string]any {
 
 func logTemplate() map[string]any {
 	return map[string]any{
-		"index_patterns": []string{"_v3_hive_log-*"},
+		"index_patterns": []string{"v3-hive-log-*"},
 		"priority":       100,
 		"template": map[string]any{
 			"settings": map[string]any{
@@ -251,7 +251,7 @@ func logTemplate() map[string]any {
 
 func alertTemplate() map[string]any {
 	return map[string]any{
-		"index_patterns": []string{"_v3_hive_alert-*"},
+		"index_patterns": []string{"v3-hive-alert-*"},
 		"priority":       100,
 		"template": map[string]any{
 			"settings": map[string]any{
@@ -309,7 +309,7 @@ func alertTemplate() map[string]any {
 
 func riskTemplate() map[string]any {
 	return map[string]any{
-		"index_patterns": []string{"_v3_hive_risk-scores-*"},
+		"index_patterns": []string{"v3-hive-risk-scores-*"},
 		"priority":       100,
 		"template": map[string]any{
 			"settings": map[string]any{
@@ -337,7 +337,7 @@ func riskTemplate() map[string]any {
 
 func offenseTemplate() map[string]any {
 	return map[string]any{
-		"index_patterns": []string{"_v3_hive_offense-*"},
+		"index_patterns": []string{"v3-hive-offense-*"},
 		"priority":       100,
 		"template": map[string]any{
 			"settings": map[string]any{
@@ -367,7 +367,7 @@ func offenseTemplate() map[string]any {
 
 func lookupTemplate() map[string]any {
 	return map[string]any{
-		"index_patterns": []string{"_v3_hive_lookup-*"},
+		"index_patterns": []string{"v3-hive-lookup-*"},
 		"priority":       100,
 		"template": map[string]any{
 			"settings": map[string]any{
@@ -410,7 +410,7 @@ func lookupTemplate() map[string]any {
 
 func baselineTemplate() map[string]any {
 	return map[string]any{
-		"index_patterns": []string{"_v3_hive_baselines-*"},
+		"index_patterns": []string{"v3-hive-baselines-*"},
 		"priority":       100,
 		"template": map[string]any{
 			"settings": map[string]any{

@@ -39,7 +39,7 @@ sleep 8
 
 echo "Querying OpenSearch for dataType:OTLP..."
 RESULT=$(curl -sk -u "$OPENSEARCH_CREDS" \
-    "${OPENSEARCH_URL}/_v3_hive_log-*/_search" \
+    "${OPENSEARCH_URL}/v3-hive-log-*/_search" \
     -H "Content-Type: application/json" \
     -d "{
         \"query\": {
@@ -101,7 +101,7 @@ sleep 12
 
 echo "Querying OpenSearch for otelcol log..."
 RESULT2=$(curl -sk -u "$OPENSEARCH_CREDS" \
-    "${OPENSEARCH_URL}/_v3_hive_log-*/_search" \
+    "${OPENSEARCH_URL}/v3-hive-log-*/_search" \
     -H "Content-Type: application/json" \
     -d "{
         \"query\": {

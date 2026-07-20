@@ -58,7 +58,7 @@ func InitOpenSearch() error {
 	}
 
 	// Create index template
-	templateData := `{"index_patterns":["_v3_hive_alert-","_v3_hive_log-",".ha-",".hivearmor-"],"template":{"settings":{"index.number_of_shards":1,"index.number_of_replicas":0,"index.mapping.total_fields.limit":50000}}}`
+	templateData := `{"index_patterns":["v3-hive-alert-*","v3-hive-log-*",".ha-",".hivearmor-"],"template":{"settings":{"index.number_of_shards":1,"index.number_of_replicas":0,"index.mapping.total_fields.limit":50000}}}`
 	if err := execCurl(containerID, "PUT", "https://localhost:9200/_index_template/hivearmor_indexes", templateData); err != nil {
 		return err
 	}

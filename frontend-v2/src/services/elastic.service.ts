@@ -59,7 +59,7 @@ class ElasticService {
       const {
         page,
         size,
-        indexPattern = "_v3_hive_*",
+        indexPattern = "v3-hive-*",
         filters: extraFilters = [],
         sort = "@timestamp,desc",
         timeRange,

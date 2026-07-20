@@ -1,4 +1,4 @@
-// Package lookup enriches events from _v3_hive_lookup-* reference data (assets, identities).
+// Package lookup enriches events from v3-hive-lookup-* reference data (assets, identities).
 package lookup
 
 import (
@@ -72,7 +72,7 @@ func loadAssets() {
 	}
 	query := map[string]any{"query": map[string]any{"match_all": map[string]any{}}, "size": 10000}
 	body, _ := json.Marshal(query)
-	req, _ := http.NewRequest("POST", lOSURL+"/_v3_hive_lookup-assets/_search", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", lOSURL+"/v3-hive-lookup-assets/_search", bytes.NewReader(body))
 	req.SetBasicAuth(lOSUser, lOSPass)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := lHTTP.Do(req)
@@ -114,7 +114,7 @@ func loadIdentities() {
 	}
 	query := map[string]any{"query": map[string]any{"match_all": map[string]any{}}, "size": 10000}
 	body, _ := json.Marshal(query)
-	req, _ := http.NewRequest("POST", lOSURL+"/_v3_hive_lookup-identities/_search", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", lOSURL+"/v3-hive-lookup-identities/_search", bytes.NewReader(body))
 	req.SetBasicAuth(lOSUser, lOSPass)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := lHTTP.Do(req)

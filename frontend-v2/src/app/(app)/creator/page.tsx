@@ -83,7 +83,7 @@ const SIEM_FIELDS = [
   "process.name", "network.protocol", "rule.name", "event.category",
   "event.type", "http.response.status_code", "dns.question.name",
   "file.path", "registry.path", "threat.indicator.type",
-  // Alert-specific fields from the known _v3_hive_alert-* schema
+  // Alert-specific fields from the known v3-hive-alert-* schema
   "name", "status", "severity", "dataSource", "target", "adversary",
   "category", "impactScore",
 ];
@@ -950,7 +950,7 @@ export default function WidgetCreatorPage() {
       setRealData(null);
       return;
     }
-    const pattern = config.indexPatternRaw || "_v3_hive_*";
+    const pattern = config.indexPatternRaw || "v3-hive-*";
     setQueryLoading(true);
     setQueryError(null);
 
@@ -1211,7 +1211,7 @@ export default function WidgetCreatorPage() {
                       <input
                         value={config.indexPatternRaw}
                         onChange={e => update("indexPatternRaw", e.target.value)}
-                        placeholder="_v3_hive_*, auditbeat-*, filebeat-*"
+                        placeholder="v3-hive-*, auditbeat-*, filebeat-*"
                         className="input-base w-full font-mono text-small"
                       />
                     )}

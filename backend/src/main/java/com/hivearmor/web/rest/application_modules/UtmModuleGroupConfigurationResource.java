@@ -47,7 +47,15 @@ public class UtmModuleGroupConfigurationResource {
         try {
             UtmModule module = moduleGroupConfigurationService.updateConfigurationKeys(body.getModuleId(), body.getKeys());
             ModuleDTO moduleDTO = utmModuleMapper.toDto(module, false);
-            eventProcessorManagerService.updateModule(moduleDTO);
+
+            // Hot-reload is best-effort: config is already persisted in DB.
+            // If EventProcessor is unreachable (e.g. plugin offline, local dev),
+            // still return 200 — the plugin will pick up the new config on next restart.
+            try {
+                eventProcessorManagerService.updateModule(moduleDTO);
+            } catch (Exception reloadEx) {
+                log.warn("{}: EventProcessor hot-reload failed (config saved to DB): {}", ctx, reloadEx.getMessage());
+            }
 
             return ResponseEntity.ok().build();
         } catch (Exception e) {

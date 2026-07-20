@@ -34,7 +34,7 @@ interface LogTabsState {
 
 const MAX_TABS = 8;
 const STORAGE_KEY = "hivearmor_log_tabs";
-const DEFAULT_INDEX = "_v3_hive_*";
+const DEFAULT_INDEX = "v3-hive-*";
 const DEFAULT_FIELDS = ["message", "severity", "source.ip", "event.action", "host.name"];
 
 function newTab(index = 1): LogTab {

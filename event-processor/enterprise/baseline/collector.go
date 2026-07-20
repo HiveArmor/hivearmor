@@ -108,7 +108,7 @@ func computeBaselines() {
 	}
 
 	body, _ := json.Marshal(query)
-	req, _ := http.NewRequest("POST", bOSURL+"/_v3_hive_log-*/_search", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", bOSURL+"/v3-hive-log-*/_search", bytes.NewReader(body))
 	req.SetBasicAuth(bOSUser, bOSPass)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := bHTTP.Do(req)
@@ -159,7 +159,7 @@ func computeBaselines() {
 											SampleSize: len(counts),
 										}
 										docBody, _ := json.Marshal(doc)
-										idx := sdkos.BuildCurrentDayIndex("_v3_hive_", "baselines")
+										idx := sdkos.BuildCurrentDayIndex("v3-hive", "baselines")
 										putURL := fmt.Sprintf("%s/%s/_doc/%s", bOSURL, idx, source+"-"+action)
 										req, _ := http.NewRequest("PUT", putURL, bytes.NewReader(docBody))
 										req.SetBasicAuth(bOSUser, bOSPass)

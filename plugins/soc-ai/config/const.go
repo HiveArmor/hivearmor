@@ -14,9 +14,9 @@ const (
 	ELASTIC_UPDATE_BY_QUERY_ENDPOINT    = "/_update_by_query"
 
 	// Index patterns
-	ALERT_INDEX_PATTERN = "_v3_hive_alert-*"
-	LOGS_INDEX_PATTERN  = "_v3_hive_log-*"
-	SOC_AI_INDEX        = "_v3_hive_soc-ai"
+	ALERT_INDEX_PATTERN = "v3-hive-alert-*"
+	LOGS_INDEX_PATTERN  = "v3-hive-log-*"
+	SOC_AI_INDEX        = "v3-hive-soc-ai"
 
 	// Status codes
 	API_ALERT_COMPLETED_STATUS_CODE = 5

@@ -37,7 +37,7 @@ public class ApplicationStartProcessor implements EnvironmentPostProcessor {
             // Checking if liquibase is locked
             liquibaseLockedCheck(con);
 
-            // Checking that the _v3_hive_ index pattern migration was applied
+            // Checking that the v3-hive- index pattern migration was applied
             migrationIndexPatternCheck(con);
 
             // Checking elasticsearch connection
