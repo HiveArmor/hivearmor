@@ -1,0 +1,97 @@
+name: Validate Detection Rules
+
+on:
+  pull_request:
+    paths:
+      - 'rules/**'
+      - 'filters/**'
+      - 'rules/testing/**'
+
+# Cancel previous runs when new commits are pushed to the same PR.
+concurrency:
+  group: validate-rules-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate-rules:
+    name: Rule Syntax + Test Fixtures
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.4'
+          cache-dependency-path: event-processor/go.sum
+
+      - name: Validate YAML syntax (rules)
+        run: |
+          find rules/ -name "*.yml" -o -name "*.yaml" | xargs python3 -c "
+          import yaml, sys
+          failed = False
+          for f in sys.argv[1:]:
+              try:
+                  yaml.safe_load(open(f))
+                  print(f'  ✓ {f}')
+              except yaml.YAMLError as e:
+                  print(f'  ✗ {f}: {e}')
+                  failed = True
+          sys.exit(1 if failed else 0)
+          "
+
+      - name: Validate YAML syntax (filters)
+        run: |
+          find filters/ -name "*.yml" -o -name "*.yaml" | xargs python3 -c "
+          import yaml, sys
+          failed = False
+          for f in sys.argv[1:]:
+              try:
+                  yaml.safe_load(open(f))
+                  print(f'  ✓ {f}')
+              except yaml.YAMLError as e:
+                  print(f'  ✗ {f}: {e}')
+                  failed = True
+          sys.exit(1 if failed else 0)
+          "
+
+      - name: Validate rule schema
+        working-directory: event-processor
+        run: |
+          go run ./cmd/validate-schema/ --rules ../rules/
+
+      - name: Run rule test fixtures
+        working-directory: event-processor
+        run: |
+          go run ./cmd/rule-test/ --root ..
+
+      - name: Check new rules have test fixtures
+        run: |
+          NEW_RULES=$(git diff --diff-filter=A --name-only origin/main...HEAD \
+            | grep "^rules/.*\.yml$" \
+            | grep -v "rules/testing/\|\.test\.yml")
+          if [ -z "$NEW_RULES" ]; then
+            echo "No new rule files in this PR."
+            exit 0
+          fi
+          MISSING=()
+          for RULE in $NEW_RULES; do
+            # Strip leading rules/ and .yml, look for basename.test.yml in rules/testing/
+            BASE=$(basename "$RULE" .yml)
+            FIXTURE="rules/testing/${BASE}.test.yml"
+            if [ ! -f "$FIXTURE" ]; then
+              MISSING+=("$RULE  ->  missing $FIXTURE")
+            fi
+          done
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "The following new rules are missing test fixtures:"
+            printf '  %s\n' "${MISSING[@]}"
+            exit 1
+          fi
+          echo "All new rules have test fixtures ✓"

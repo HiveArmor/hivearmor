@@ -41,4 +41,10 @@ public class ApiKey implements Serializable {
 
     @Column
     private Instant expiresAt;
+
+    @Column(name = "api_key_hash")
+    private String apiKeyHash;
+
+    @Column(name = "key_prefix", length = 8)
+    private String keyPrefix;
 }

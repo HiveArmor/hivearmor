@@ -169,4 +169,12 @@ public class TokenProvider implements InitializingBean {
         return !tfaEnabled;
     }
 
+    public void rotateKey() {
+        byte[] newKeyBytes = new byte[64];
+        new java.security.SecureRandom().nextBytes(newKeyBytes);
+        this.key = Keys.hmacShaKeyFor(newKeyBytes);
+        this.jwtParser = Jwts.parserBuilder().setSigningKey(this.key).build();
+        log.info("JWT signing key rotated — all existing sessions are now invalid");
+    }
+
 }

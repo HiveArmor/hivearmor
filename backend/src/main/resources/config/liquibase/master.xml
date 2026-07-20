@@ -659,4 +659,34 @@
 
     <include file="config/liquibase/changelog/20260713004_rebrand_config_param_keys.xml" relativeToChangelogFile="false"/>
 
+    <include file="config/liquibase/changelog/20260715001_api_key_hashing.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260715002_compliance_trend_history.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260715003_soc2_framework_seed.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260715004_compliance_schedule_delivery.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260715007_compliance_control_mapping.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260715008_compliance_control_mapping_seed.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260715009_nis2_framework.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260715010_dora_framework.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260715011_jwt_signing_key.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260717001_fix_index_pattern_leading_underscore.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260718001_sigma_sync_config.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260718002_rule_staged_status.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260718003_soc_ai_confidence_fields.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260718004_rename_socai_conf_keys_to_hivearmor.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260719001_soc2_control_mappings.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>

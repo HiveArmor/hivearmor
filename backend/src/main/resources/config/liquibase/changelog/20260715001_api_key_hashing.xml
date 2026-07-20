@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="20260715001" author="hivearmor">
+        <addColumn tableName="api_keys">
+            <column name="api_key_hash" type="varchar(64)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="api_keys">
+            <column name="key_prefix" type="varchar(8)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <!-- Relax the not-null constraint so the migrator can clear plaintext values -->
+        <dropNotNullConstraint tableName="api_keys" columnName="api_key" columnDataType="varchar(255)"/>
+    </changeSet>
+
+</databaseChangeLog>

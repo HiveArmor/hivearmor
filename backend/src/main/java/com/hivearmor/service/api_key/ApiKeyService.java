@@ -192,4 +192,14 @@ public class ApiKeyService {
             });
         }
     }*/
+
+    public static String hashKey(String plainKey) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(plainKey.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 unavailable", e);
+        }
+    }
 }
