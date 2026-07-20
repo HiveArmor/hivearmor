@@ -174,4 +174,32 @@ public class OverviewResource {
                 HeaderUtil.createFailureAlert("", "", msg)).body(null);
         }
     }
+
+    @GetMapping("/alert-timeline")
+    public ResponseEntity<List<OverviewService.AlertTimelineBucketDTO>> getAlertTimeline(
+            @RequestParam(defaultValue = "7") int days) {
+        final String ctx = CLASS_NAME + ".getAlertTimeline";
+        try {
+            return ResponseEntity.ok(overviewService.getAlertTimeline(days));
+        } catch (Exception e) {
+            String msg = ctx + ": " + e.getMessage();
+            log.error(msg);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(
+                HeaderUtil.createFailureAlert("", "", msg)).body(null);
+        }
+    }
+
+    @GetMapping("/geo-threats")
+    public ResponseEntity<List<OverviewService.GeoThreatPointDTO>> getGeoThreats(
+            @RequestParam(defaultValue = "24") int hours) {
+        final String ctx = CLASS_NAME + ".getGeoThreats";
+        try {
+            return ResponseEntity.ok(overviewService.getGeoThreats(hours));
+        } catch (Exception e) {
+            String msg = ctx + ": " + e.getMessage();
+            log.error(msg);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(
+                HeaderUtil.createFailureAlert("", "", msg)).body(null);
+        }
+    }
 }

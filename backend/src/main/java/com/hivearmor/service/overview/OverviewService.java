@@ -291,6 +291,112 @@ public class OverviewService {
         }
     }
 
+    // ── Alert Timeline ────────────────────────────────────────────────────────
+
+    public record AlertTimelineBucketDTO(String hour, long low, long medium, long high) {}
+
+    public List<AlertTimelineBucketDTO> getAlertTimeline(int days) {
+        final String ctx = CLASS_NAME + ".getAlertTimeline";
+        try {
+            String from = java.time.Instant.now().minus(days, java.time.temporal.ChronoUnit.DAYS).toString();
+            String to   = java.time.Instant.now().toString();
+
+            List<FilterType> filters = new ArrayList<>();
+            filters.add(new FilterType(Constants.timestamp, OperatorType.IS_BETWEEN, List.of(from, to)));
+
+            SearchRequest rq = SearchRequest.of(s -> s.size(0).query(SearchUtil.toQuery(filters))
+                .index(Constants.V11_ALERTS_INDEX_PATTERN)
+                .aggregations("by_hour", a -> a.dateHistogram(h -> h
+                    .field(Constants.timestamp)
+                    .calendarInterval(CalendarInterval.Hour)
+                    .minDocCount(0))
+                    .aggregations("by_severity", sub -> sub.terms(t -> t
+                        .field("severity")
+                        .size(10)))));
+
+            SearchResponse<String> rs = elasticsearchService.search(rq, String.class);
+            List<BucketAggregation> hourBuckets = DateHistogramAggregateParser.parse(rs.aggregations().get("by_hour"));
+
+            List<AlertTimelineBucketDTO> result = new ArrayList<>();
+            if (!CollectionUtils.isEmpty(hourBuckets)) {
+                hourBuckets.forEach(hourBucket -> {
+                    long low = 0, medium = 0, high = 0;
+                    List<BucketAggregation> sevBuckets = TermAggregateParser.parse(hourBucket.getSubAggregations().get("by_severity"));
+                    if (!CollectionUtils.isEmpty(sevBuckets)) {
+                        for (BucketAggregation sev : sevBuckets) {
+                            long count = sev.getDocCount();
+                            String key = sev.getKey();
+                            if ("1".equals(key) || "low".equalsIgnoreCase(key)) low += count;
+                            else if ("2".equals(key) || "medium".equalsIgnoreCase(key)) medium += count;
+                            else if ("3".equals(key) || "high".equalsIgnoreCase(key)) high += count;
+                        }
+                    }
+                    result.add(new AlertTimelineBucketDTO(hourBucket.getKey(), low, medium, high));
+                });
+            }
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException(ctx + ": " + e.getMessage(), e);
+        }
+    }
+
+    // ── Geo Threats ───────────────────────────────────────────────────────────
+
+    public record GeoThreatPointDTO(String ip, double lat, double lon, String country, long alertCount, int maxSeverity) {}
+
+    public List<GeoThreatPointDTO> getGeoThreats(int hours) {
+        final String ctx = CLASS_NAME + ".getGeoThreats";
+        try {
+            String from = java.time.Instant.now().minus(hours, java.time.temporal.ChronoUnit.HOURS).toString();
+            String to   = java.time.Instant.now().toString();
+
+            List<FilterType> filters = new ArrayList<>();
+            filters.add(new FilterType(Constants.timestamp, OperatorType.IS_BETWEEN, List.of(from, to)));
+            filters.add(new FilterType("origin.geolocation.latitude", OperatorType.EXIST, null));
+
+            SearchRequest rq = SearchRequest.of(s -> s.size(0).query(SearchUtil.toQuery(filters))
+                .index(Constants.V11_ALERTS_INDEX_PATTERN)
+                .aggregations("by_ip", a -> a.terms(t -> t
+                    .field("origin.ip.keyword")
+                    .size(200))
+                    .aggregations("top_hit", sub -> sub.topHits(h -> h.size(1)))));
+
+            SearchResponse<String> rs = elasticsearchService.search(rq, String.class);
+            List<BucketAggregation> ipBuckets = TermAggregateParser.parse(rs.aggregations().get("by_ip"));
+
+            List<GeoThreatPointDTO> result = new ArrayList<>();
+            if (!CollectionUtils.isEmpty(ipBuckets)) {
+                for (BucketAggregation ipBucket : ipBuckets) {
+                    try {
+                        Aggregate topHitAgg = ipBucket.getSubAggregations().get("top_hit");
+                        if (topHitAgg == null || topHitAgg.topHits().hits().hits().isEmpty()) continue;
+                        String source = topHitAgg.topHits().hits().hits().get(0).source().to(String.class);
+                        if (source == null) continue;
+                        com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
+                        Map<?, ?> doc = om.readValue(source, Map.class);
+                        Map<?, ?> origin = doc.get("origin") instanceof Map ? (Map<?, ?>) doc.get("origin") : null;
+                        Map<?, ?> geo = (origin != null && origin.get("geolocation") instanceof Map) ? (Map<?, ?>) origin.get("geolocation") : null;
+                        if (geo == null) continue;
+                        Object latObj = geo.get("latitude");
+                        Object lonObj = geo.get("longitude");
+                        if (latObj == null || lonObj == null) continue;
+                        double lat = ((Number) latObj).doubleValue();
+                        double lon = ((Number) lonObj).doubleValue();
+                        String country = geo.get("country") instanceof String ? (String) geo.get("country") : "";
+                        Object sevObj = doc.get("severity");
+                        int sev = sevObj instanceof Number ? ((Number) sevObj).intValue() : 0;
+                        result.add(new GeoThreatPointDTO(ipBucket.getKey(), lat, lon, country, ipBucket.getDocCount(), sev));
+                    } catch (Exception parseEx) {
+                        // skip this IP if parsing fails
+                    }
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException(ctx + ": " + e.getMessage(), e);
+        }
+    }
+
     private List<FilterType> getDefaultFilters(List<String> dateRange){
         List<FilterType> filters = new ArrayList<>();
         filters.add(new FilterType(Constants.alertStatus, OperatorType.IS_NOT, AlertStatus.AUTOMATIC_REVIEW.getCode()));

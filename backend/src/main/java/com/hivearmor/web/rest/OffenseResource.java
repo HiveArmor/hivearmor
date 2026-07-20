@@ -31,8 +31,8 @@ import java.util.stream.Collectors;
 public class OffenseResource {
 
     private static final String CLASSNAME = "OffenseResource";
-    private static final String OFFENSE_INDEX = "_v3_hive_offense-*";
-    private static final String ALERT_INDEX = "_v3_hive_alert-*";
+    private static final String OFFENSE_INDEX = "v3_hive_offense-*";
+    private static final String ALERT_INDEX = "v3_hive_alert-*";
 
     private final Logger log = LoggerFactory.getLogger(OffenseResource.class);
     private final ElasticsearchService elasticsearchService;

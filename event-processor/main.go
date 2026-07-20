@@ -97,6 +97,11 @@ func main() {
 		}
 	}
 
+	// Always start the engine socket — companion plugins need it regardless of input source.
+	if err := enginegrpc.StartEngineSocket(workDir, config.SocketSecret); err != nil {
+		log.Printf("warn: engine socket: %v", err)
+	}
+
 	// Input: Kafka consumer (primary) or legacy gRPC unix socket (fallback)
 	if config.KafkaEnabled == "true" {
 		if config.KafkaBroker == "" {
@@ -116,9 +121,6 @@ func main() {
 		log.Printf("Kafka consumer started | brokers=%s group=%s workers=%d topic=hivearmor.raw.events",
 			config.KafkaBroker, config.KafkaConsumerGroup, config.KafkaWorkers)
 	} else {
-		if err := enginegrpc.StartEngineSocket(workDir, config.SocketSecret); err != nil {
-			log.Printf("warn: engine socket: %v", err)
-		}
 		log.Printf("Using legacy gRPC socket input (KAFKA_ENABLED not set)")
 	}
 

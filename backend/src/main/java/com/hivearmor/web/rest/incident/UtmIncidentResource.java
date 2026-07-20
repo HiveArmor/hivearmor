@@ -3,6 +3,10 @@ package com.hivearmor.web.rest.incident;
 import com.hivearmor.domain.application_events.enums.ApplicationEventType;
 import com.hivearmor.domain.incident.UtmIncident;
 import com.hivearmor.service.dto.incident.*;
+import com.hivearmor.service.dto.incident.AiSummaryDTO;
+import com.hivearmor.service.dto.incident.IncidentEntitiesDTO;
+import com.hivearmor.service.dto.incident.IncidentEvidenceDTO;
+import com.hivearmor.service.dto.incident.TimelineEventDTO;
 import com.hivearmor.domain.shared_types.alert.UtmAlert;
 import com.hivearmor.repository.incident.UtmIncidentAlertRepository;
 import com.hivearmor.service.UtmAlertService;
@@ -299,6 +303,30 @@ public class UtmIncidentResource {
         }
 
         return ResponseEntity.ok(new IncidentEntityGraphDTO(new ArrayList<>(nodeMap.values()), edges));
+    }
+
+    @GetMapping("/ha-incidents/{id}/evidence")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_USER')")
+    public ResponseEntity<List<IncidentEvidenceDTO>> getIncidentEvidence(@PathVariable Long id) {
+        return ResponseEntity.ok(incidentInvestigationService.getEvidence(id));
+    }
+
+    @GetMapping("/ha-incidents/{id}/timeline")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_USER')")
+    public ResponseEntity<List<TimelineEventDTO>> getIncidentTimeline(@PathVariable Long id) {
+        return ResponseEntity.ok(incidentInvestigationService.getTimeline(id));
+    }
+
+    @GetMapping("/ha-incidents/{id}/entities")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_USER')")
+    public ResponseEntity<IncidentEntitiesDTO> getIncidentEntities(@PathVariable Long id) {
+        return ResponseEntity.ok(incidentInvestigationService.getEntities(id));
+    }
+
+    @PostMapping("/ha-incidents/{id}/ai-summary")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_USER')")
+    public ResponseEntity<AiSummaryDTO> generateIncidentAiSummary(@PathVariable Long id) {
+        return ResponseEntity.ok(incidentInvestigationService.generateAiSummary(id));
     }
 
     private void addEdge(List<IncidentGraphEdgeDTO> edges, Set<String> seen, String src, String tgt, String relation) {
