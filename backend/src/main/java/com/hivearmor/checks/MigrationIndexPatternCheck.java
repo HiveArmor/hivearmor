@@ -24,8 +24,11 @@ public class MigrationIndexPatternCheck {
         ConsoleColors.cyanBold();
         System.out.println(">> Checking migration 20241227001 (_v3_hive_ index pattern prefix):");
 
+        // Patterns may use either v3-hive- (hyphen) or _v3_hive_ (underscore) prefix
         String sql = "SELECT COUNT(*) FROM hive_index_pattern " +
-                     "WHERE pattern_system = true AND pattern NOT LIKE '_v3_hive_%'";
+                     "WHERE pattern_system = true " +
+                     "AND pattern NOT LIKE 'v3-hive-%' " +
+                     "AND pattern NOT LIKE '_v3_hive_%'";
 
         try (PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -33,11 +36,11 @@ public class MigrationIndexPatternCheck {
                 int unprefixedCount = rs.getInt(1);
                 if (unprefixedCount > 0) {
                     String msg = String.format(
-                        "Migration check FAILED: %d system index pattern(s) are missing the '_v3_hive_' prefix. " +
+                        "Migration check FAILED: %d system index pattern(s) are missing the 'v3-hive-' prefix. " +
                         "Liquibase migration 20241227001 " +
                         "(20241227001_updating-system-index-pattern.xml) may not have been applied. " +
                         "Run: SELECT pattern FROM hive_index_pattern WHERE pattern_system=true " +
-                        "AND pattern NOT LIKE '_v3_hive_%%'; to see affected rows.",
+                        "AND pattern NOT LIKE 'v3-hive-%%' AND pattern NOT LIKE '_v3_hive_%%'; to see affected rows.",
                         unprefixedCount
                     );
                     ConsoleColors.redBold();

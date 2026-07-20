@@ -23,3 +23,16 @@ func injectKeyAuth(expectedKey string) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// internalKeyAuth returns a Gin middleware that validates the X-Internal-Key header.
+// When expectedKey is empty the middleware blocks all requests.
+func internalKeyAuth(expectedKey string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		key := c.GetHeader("X-Internal-Key")
+		if expectedKey == "" || key != expectedKey {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+		c.Next()
+	}
+}

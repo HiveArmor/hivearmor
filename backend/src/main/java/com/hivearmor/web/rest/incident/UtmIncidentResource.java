@@ -3,6 +3,10 @@ package com.hivearmor.web.rest.incident;
 import com.hivearmor.domain.application_events.enums.ApplicationEventType;
 import com.hivearmor.domain.incident.UtmIncident;
 import com.hivearmor.service.dto.incident.*;
+import com.hivearmor.domain.shared_types.alert.UtmAlert;
+import com.hivearmor.repository.incident.UtmIncidentAlertRepository;
+import com.hivearmor.service.UtmAlertService;
+import com.hivearmor.service.incident.IncidentInvestigationService;
 import com.hivearmor.service.incident.UtmIncidentQueryService;
 import com.hivearmor.service.incident.UtmIncidentService;
 import com.hivearmor.util.exceptions.NoAlertsProvidedException;
@@ -15,15 +19,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import com.hivearmor.aop.logging.AuditEvent;
 
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for managing UtmIncident.
@@ -39,6 +45,16 @@ public class UtmIncidentResource {
     private final UtmIncidentService utmIncidentService;
 
     private final UtmIncidentQueryService utmIncidentQueryService;
+
+    private final IncidentInvestigationService incidentInvestigationService;
+
+    private final UtmIncidentAlertRepository incidentAlertRepository;
+
+    private final UtmAlertService alertService;
+
+    public record IncidentGraphNodeDTO(String id, String type, String label, Map<String, Object> properties) {}
+    public record IncidentGraphEdgeDTO(String source, String target, String relation) {}
+    public record IncidentEntityGraphDTO(List<IncidentGraphNodeDTO> nodes, List<IncidentGraphEdgeDTO> edges) {}
 
 
     /**
@@ -167,5 +183,128 @@ public class UtmIncidentResource {
         Optional<UtmIncident> utmIncident = utmIncidentService.findOne(id);
         return tech.jhipster.web.util.ResponseUtil.wrapOrNotFound(utmIncident);
 
+    }
+
+    /**
+     * GET /ha-incidents/{id}/entity-graph
+     *
+     * Builds an entity graph for the given incident by collecting all entities
+     * (IPs, hosts, users, processes) from linked alert data. Nodes represent unique
+     * entities; edges connect adversary entities to target entities within each alert.
+     */
+    @GetMapping("/ha-incidents/{id}/entity-graph")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_USER')")
+    public ResponseEntity<IncidentEntityGraphDTO> getIncidentEntityGraph(@PathVariable Long id) {
+        log.debug("GET /api/ha-incidents/{}/entity-graph", id);
+
+        List<String> alertIds = incidentAlertRepository.findAllByIncidentId(id)
+                .stream().map(a -> a.getAlertId()).collect(Collectors.toList());
+        if (alertIds.isEmpty()) {
+            return ResponseEntity.ok(new IncidentEntityGraphDTO(List.of(), List.of()));
+        }
+
+        List<UtmAlert> alerts;
+        try {
+            alerts = alertService.getAlertsByIds(alertIds);
+        } catch (Exception e) {
+            log.warn("Failed to fetch alerts for incident entity graph {}: {}", id, e.getMessage());
+            return ResponseEntity.ok(new IncidentEntityGraphDTO(List.of(), List.of()));
+        }
+
+        // Build unique node sets — keyed by nodeId to deduplicate
+        Map<String, IncidentGraphNodeDTO> nodeMap = new LinkedHashMap<>();
+        List<IncidentGraphEdgeDTO> edges = new ArrayList<>();
+        Set<String> edgeKeys = new HashSet<>();
+
+        for (UtmAlert alert : alerts) {
+            List<String> alertNodeIds = new ArrayList<>();
+
+            // Adversary side
+            if (alert.getAdversary() != null) {
+                var adv = alert.getAdversary();
+                if (StringUtils.hasText(adv.getIp())) {
+                    String nid = "ip:" + adv.getIp();
+                    nodeMap.computeIfAbsent(nid, k -> {
+                        Map<String, Object> props = new LinkedHashMap<>();
+                        props.put("malicious", false);
+                        if (adv.getGeolocation() != null && StringUtils.hasText(adv.getGeolocation().getCountry()))
+                            props.put("country", adv.getGeolocation().getCountry());
+                        return new IncidentGraphNodeDTO(nid, "ip", adv.getIp(), props);
+                    });
+                    alertNodeIds.add(nid);
+                }
+                if (StringUtils.hasText(adv.getUser())) {
+                    String nid = "user:" + adv.getUser();
+                    nodeMap.computeIfAbsent(nid, k -> {
+                        Map<String, Object> props = new LinkedHashMap<>();
+                        if (StringUtils.hasText(adv.getDomain())) props.put("domain", adv.getDomain());
+                        return new IncidentGraphNodeDTO(nid, "user", adv.getUser(), props);
+                    });
+                    alertNodeIds.add(nid);
+                }
+                if (StringUtils.hasText(adv.getHost())) {
+                    String nid = "host:" + adv.getHost();
+                    nodeMap.computeIfAbsent(nid, k ->
+                        new IncidentGraphNodeDTO(nid, "host", adv.getHost(), new LinkedHashMap<>()));
+                    alertNodeIds.add(nid);
+                }
+                if (StringUtils.hasText(adv.getProcess())) {
+                    String nid = "process:" + adv.getProcess();
+                    nodeMap.computeIfAbsent(nid, k ->
+                        new IncidentGraphNodeDTO(nid, "process", adv.getProcess(), new LinkedHashMap<>()));
+                    alertNodeIds.add(nid);
+                }
+            }
+
+            // Target side
+            if (alert.getTarget() != null) {
+                var tgt = alert.getTarget();
+                if (StringUtils.hasText(tgt.getIp())) {
+                    String nid = "ip:" + tgt.getIp();
+                    nodeMap.computeIfAbsent(nid, k -> {
+                        Map<String, Object> props = new LinkedHashMap<>();
+                        props.put("malicious", false);
+                        if (tgt.getGeolocation() != null && StringUtils.hasText(tgt.getGeolocation().getCountry()))
+                            props.put("country", tgt.getGeolocation().getCountry());
+                        return new IncidentGraphNodeDTO(nid, "ip", tgt.getIp(), props);
+                    });
+                    alertNodeIds.add(nid);
+                }
+                if (StringUtils.hasText(tgt.getUser())) {
+                    String nid = "user:" + tgt.getUser();
+                    nodeMap.computeIfAbsent(nid, k ->
+                        new IncidentGraphNodeDTO(nid, "user", tgt.getUser(), new LinkedHashMap<>()));
+                    alertNodeIds.add(nid);
+                }
+                if (StringUtils.hasText(tgt.getHost())) {
+                    String nid = "host:" + tgt.getHost();
+                    nodeMap.computeIfAbsent(nid, k ->
+                        new IncidentGraphNodeDTO(nid, "host", tgt.getHost(), new LinkedHashMap<>()));
+                    alertNodeIds.add(nid);
+                }
+            }
+
+            // Connect first adversary entity to first target entity within the same alert
+            if (alert.getAdversary() != null && alert.getTarget() != null) {
+                String advIp   = StringUtils.hasText(alert.getAdversary().getIp())   ? "ip:"   + alert.getAdversary().getIp()   : null;
+                String tgtIp   = StringUtils.hasText(alert.getTarget().getIp())       ? "ip:"   + alert.getTarget().getIp()       : null;
+                String advUser = StringUtils.hasText(alert.getAdversary().getUser())  ? "user:" + alert.getAdversary().getUser()  : null;
+                String tgtHost = StringUtils.hasText(alert.getTarget().getHost())     ? "host:" + alert.getTarget().getHost()     : null;
+
+                addEdge(edges, edgeKeys, advIp, tgtIp, "targeted");
+                addEdge(edges, edgeKeys, advIp, advUser, "used_by");
+                addEdge(edges, edgeKeys, advIp, tgtHost, "attacked");
+                addEdge(edges, edgeKeys, advUser, tgtIp, "accessed");
+            }
+        }
+
+        return ResponseEntity.ok(new IncidentEntityGraphDTO(new ArrayList<>(nodeMap.values()), edges));
+    }
+
+    private void addEdge(List<IncidentGraphEdgeDTO> edges, Set<String> seen, String src, String tgt, String relation) {
+        if (src == null || tgt == null || src.equals(tgt)) return;
+        if (seen.add(src + "->" + tgt)) {
+            edges.add(new IncidentGraphEdgeDTO(src, tgt, relation));
+        }
     }
 }

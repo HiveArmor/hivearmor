@@ -538,16 +538,16 @@ public class ElasticsearchService {
         final String ctx = CLASSNAME + ".getControlEvaluations";
         try {
             Query query = Query.of(q -> q.term(t -> t
-                    .field("control_id")
+                    .field("controlId")
                     .value(FieldValue.of(controlId.toString())))
             );
 
             SearchRequest request = new SearchRequest.Builder()
-                    .index("_v3_hive_log-compliance-evaluation")
+                    .index("v3-hive-compliance-evidence-*")
                     .query(query)
                     .size(30)
                     .sort(s -> s.field(f -> f
-                            .field("timestamp")
+                            .field("@timestamp")
                             .order(SortOrder.Desc)
                     ))
                     .build();
@@ -569,12 +569,12 @@ public class ElasticsearchService {
     public UtmComplianceControlEvaluationHistoryDto getLatestControlEvaluation(Long controlId) {
         try {
             SearchRequest request = new SearchRequest.Builder()
-                    .index("_v3_hive_log-compliance-evaluation")
+                    .index("v3-hive-compliance-evidence-*")
                     .query(q -> q.term(t -> t
-                            .field("control_id")
+                            .field("controlId")
                             .value(v -> v.longValue(controlId))
                     ))
-                    .sort(s -> s.field(f -> f.field("timestamp").order(SortOrder.Desc)))
+                    .sort(s -> s.field(f -> f.field("@timestamp").order(SortOrder.Desc)))
                     .size(1)
                     .build();
 
@@ -608,21 +608,21 @@ public class ElasticsearchService {
                     .collect(Collectors.toList());
 
             SearchRequest request = SearchRequest.of(s -> s
-                    .index("_v3_hive_log-compliance-evaluation")
+                    .index("v3-hive-compliance-evidence-*")
                     .query(q -> q.terms(t -> t
-                            .field("control_id")
+                            .field("controlId")
                             .terms(tv -> tv.value(values))
                     ))
                     .aggregations("by_control_id", agg -> agg
                             .terms(t -> t
-                                    .field("control_id")
+                                    .field("controlId")
                                     .size(controlIds.size())
                             )
                             .aggregations("latest", sub -> sub
                                     .topHits(th -> th
                                             .size(1)
                                             .sort(sort -> sort.field(f -> f
-                                                    .field("timestamp")
+                                                    .field("@timestamp")
                                                     .order(SortOrder.Desc)))
                                     )
                             )

@@ -9,6 +9,7 @@ import (
 	"github.com/threatwinds/go-sdk/plugins"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/hivearmor/event-processor/compliance"
 	"github.com/hivearmor/event-processor/config"
 	"github.com/hivearmor/event-processor/enrichment"
 	"github.com/hivearmor/event-processor/enterprise/lookup"
@@ -93,12 +94,18 @@ func handleInject(c *gin.Context) {
 		alertIDs = append(alertIDs, alert.Id)
 	}
 
+	complianceHits := compliance.Evaluate(event)
+	if len(complianceHits) > 0 {
+		go compliance.WriteComplianceEvidence(complianceHits)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"status":   "processed",
-		"id":       event.Id,
-		"index":    "_v3_hive_log-" + event.DataType,
-		"alerts":   len(alertIDs),
-		"alertIds": alertIDs,
+		"status":     "processed",
+		"id":         event.Id,
+		"index":      "_v3_hive_log-" + event.DataType,
+		"alerts":     len(alertIDs),
+		"alertIds":   alertIDs,
+		"compliance": len(complianceHits),
 	})
 }
 

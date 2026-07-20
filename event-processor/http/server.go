@@ -41,6 +41,8 @@ func publicRouter() *gin.Engine {
 	r.Use(gin.Recovery())
 	registerHealthRoutes(r)
 	registerModulesRoutes(r)
+	registerReloadRoutes(r)
+	registerRulesRoutes(r)
 	return r
 }
 
