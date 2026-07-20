@@ -114,6 +114,24 @@ if [ "${MODE:-}" != "manager" ]; then
     add_companion "com.hivearmor.geolocation.plugin" /usr/local/bin/com.hivearmor.geolocation.plugin
 fi
 
+if [ -f /usr/local/bin/com.hivearmor.inputs.plugin ]; then
+    # inputs plugin writes to Kafka (when KAFKA_BROKER is set) or the engine socket.
+    # Start immediately without socket wait — if Kafka is configured it does not
+    # need the local engine socket at all. If socket mode, it will retry internally.
+    cat >> "$SUPERVISORD_CONF" <<'INPUTS'
+
+[program:com.hivearmor.inputs.plugin]
+command=/usr/local/bin/com.hivearmor.inputs.plugin
+autorestart=true
+startretries=10
+startsecs=5
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+INPUTS
+fi
+
 # compliance-orchestrator only needs backend + opensearch, no socket dependency
 cat >> "$SUPERVISORD_CONF" <<'ORCH'
 

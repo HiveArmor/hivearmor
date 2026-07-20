@@ -184,6 +184,15 @@ func computeBaselines() {
 	bMu.Unlock()
 }
 
+// GetBaseline returns the AnomalyState for the given dataSource+action pair.
+// If no baseline has been computed yet, a zero-value state is returned.
+func GetBaseline(dataSource, action string) (AnomalyState, bool) {
+	bMu.RLock()
+	state, ok := bCache[dataSource+"|"+action]
+	bMu.RUnlock()
+	return state, ok
+}
+
 // IsAnomaly returns true when count exceeds mean + (sigma * stdDev).
 func IsAnomaly(dataSource, action string, count float64) bool {
 	bMu.RLock()

@@ -1,0 +1,30 @@
+- name: "Privilege Escalation Chain — High-Risk User on Multiple Hosts"
+  type: graph_offense
+  severity: 4
+  category: "Privilege Escalation"
+  description: >
+    A user account with elevated risk score has logged into three or more hosts
+    within 2 hours — consistent with post-escalation lateral spread or
+    administrative credential abuse.
+  mitre:
+    tactics: ["TA0004"]
+    attacks: ["T1548", "T1078.003"]
+
+  cypherQuery: |
+    MATCH (u:User)-[r:LOGGED_INTO]->(h:Host)
+    WHERE r.lastSeen > datetime() - duration('PT2H')
+      AND u.riskScore >= 70
+    WITH u, count(DISTINCT h) AS hostCount, collect(DISTINCT h.hostname)[0..10] AS hosts
+    WHERE hostCount >= 3
+    RETURN u.username   AS escalatingUser,
+           hostCount,
+           hosts,
+           u.riskScore  AS riskScore
+
+  alertFields:
+    - escalatingUser
+    - hostCount
+    - hosts
+    - riskScore
+
+  checkIntervalSeconds: 60

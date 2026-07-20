@@ -11,12 +11,7 @@ import (
 	"github.com/threatwinds/go-sdk/plugins"
 	"google.golang.org/grpc"
 
-	"github.com/hivearmor/event-processor/enrichment"
-	"github.com/hivearmor/event-processor/enterprise/lookup"
-	"github.com/hivearmor/event-processor/enterprise/offense"
-	"github.com/hivearmor/event-processor/pipeline"
-	rulesengine "github.com/hivearmor/event-processor/rules"
-	"github.com/hivearmor/event-processor/writer"
+	"github.com/hivearmor/event-processor/processor"
 )
 
 // StartEngineSocket starts the unix-socket gRPC server that accepts logs from the inputs plugin.
@@ -138,30 +133,5 @@ func (e *engineServer) Notify(stream plugins.Engine_NotifyServer) error {
 }
 
 func processLog(log *plugins.Log) {
-	event := pipeline.Execute(log)
-	if event == nil {
-		return
-	}
-
-	lookup.Enrich(event)
-	enrichment.EnrichEvent(eventDataMap(event))
-
-	writer.WriteEvent(event)
-
-	alerts := rulesengine.Evaluate(event)
-	for _, alert := range alerts {
-		writer.WriteAlert(alert)
-		go offense.Process(alert)
-	}
-}
-
-func eventDataMap(e *plugins.Event) map[string]any {
-	m := map[string]any{}
-	if e.Origin != nil {
-		m["origin"] = map[string]any{"ip": e.Origin.Ip}
-	}
-	if e.Target != nil {
-		m["target"] = map[string]any{"ip": e.Target.Ip}
-	}
-	return m
+	processor.ProcessLog(log)
 }

@@ -25,17 +25,41 @@ type riskEntry struct {
 }
 
 var (
-	mu      sync.Mutex
-	scores  = map[string]*riskEntry{}
-	flushFn func(*plugins.Alert)
+	mu        sync.Mutex
+	scores    = map[string]*riskEntry{}
+	flushFn   func(*plugins.Alert)
+	threshold = defaultThreshold
 )
 
 // Init starts the risk engine background workers.
 // alertFn is called whenever a risk threshold is exceeded.
-func Init(alertFn func(*plugins.Alert)) {
+// An optional second argument overrides the default threshold.
+func Init(alertFn func(*plugins.Alert), th ...float64) {
 	flushFn = alertFn
+	if len(th) > 0 && th[0] > 0 {
+		threshold = th[0]
+	}
 	go decayLoop()
 	go flushLoop()
+}
+
+// ForceFlush synchronously checks all entries against the threshold and fires
+// alerts for any that exceed it. Used in tests to avoid waiting for the 60s ticker.
+func ForceFlush() {
+	mu.Lock()
+	for key, e := range scores {
+		if e.score >= threshold {
+			alert := buildRiskAlert(e, e.score)
+			e.score = 0
+			mu.Unlock()
+			if flushFn != nil {
+				flushFn(alert)
+			}
+			mu.Lock()
+			_ = key
+		}
+	}
+	mu.Unlock()
 }
 
 // AddScore adds riskScore points to the key derived from the event.
@@ -99,8 +123,9 @@ func flushLoop() {
 	for range tick.C {
 		mu.Lock()
 		for key, e := range scores {
-			if e.score >= defaultThreshold {
-				alert := buildRiskAlert(e)
+			if e.score >= threshold {
+				score := e.score
+				alert := buildRiskAlert(e, score)
 				e.score = 0
 				mu.Unlock()
 				if flushFn != nil {
@@ -114,8 +139,9 @@ func flushLoop() {
 	}
 }
 
-func buildRiskAlert(e *riskEntry) *plugins.Alert {
+func buildRiskAlert(e *riskEntry, accumulatedScore float64) *plugins.Alert {
 	now := time.Now().UTC().Format(time.RFC3339Nano)
+	severity := "3"
 	alert := &plugins.Alert{
 		Id:          uuid.New().String(),
 		Timestamp:   now,
@@ -123,9 +149,9 @@ func buildRiskAlert(e *riskEntry) *plugins.Alert {
 		Name:        "Risk Threshold Exceeded",
 		Category:    "risk",
 		Description: "Accumulated risk score exceeded threshold",
-		Severity:    "2",
+		Severity:    severity,
 		DataType:    e.dataType,
-		ImpactScore: 6,
+		ImpactScore: uint32(math.Round(accumulatedScore)),
 	}
 	if e.ip != "" || e.user != "" {
 		alert.Adversary = &plugins.Side{Ip: e.ip, User: e.user}

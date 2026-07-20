@@ -1,0 +1,12 @@
+- id: 9001
+  name: "[TEST] Repeated Failed Authentication"
+  dataTypes:
+    - windows
+    - linux
+  category: "Credential Access"
+  technique: "T1110"
+  adversary: "origin"
+  description: "Accumulates risk score for repeated failed authentication events from the same source."
+  riskScore: 30
+  where: |
+    safe("log.action", "") == "failed_auth" && safe("origin.ip", "") != ""

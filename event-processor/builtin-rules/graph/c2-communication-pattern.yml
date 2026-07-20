@@ -1,0 +1,31 @@
+- name: "Potential C2 Beacon — Multiple Hosts to Same External IP"
+  type: graph_offense
+  severity: 4
+  category: "Command and Control"
+  description: >
+    Three or more internal hosts have communicated with the same external IP address
+    within a 6-hour window — consistent with a C2 beacon pattern.
+  mitre:
+    tactics: ["TA0011"]
+    attacks: ["T1071", "T1105"]
+
+  cypherQuery: |
+    MATCH (h:Host)-[c:COMMUNICATED_WITH]->(extIP:IpAddress)
+    WHERE NOT extIP.address STARTS WITH '10.'
+      AND NOT extIP.address STARTS WITH '192.168.'
+      AND NOT extIP.address STARTS WITH '172.'
+      AND c.lastSeen > datetime() - duration('PT6H')
+    WITH extIP, count(DISTINCT h) AS hostCount, collect(DISTINCT h.hostname)[0..5] AS sampleHosts
+    WHERE hostCount >= 3
+    RETURN extIP.address  AS c2IP,
+           hostCount,
+           sampleHosts,
+           extIP.riskScore AS riskScore
+
+  alertFields:
+    - c2IP
+    - hostCount
+    - sampleHosts
+    - riskScore
+
+  checkIntervalSeconds: 120

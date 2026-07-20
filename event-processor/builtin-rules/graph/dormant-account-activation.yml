@@ -1,0 +1,31 @@
+- name: "Dormant Account Sudden Activation"
+  type: graph_offense
+  severity: 3
+  category: "Initial Access"
+  description: >
+    A user account that had no activity for more than 30 days has suddenly logged
+    into a host that then communicated with an external IP address.
+  mitre:
+    tactics: ["TA0001"]
+    attacks: ["T1078"]
+
+  cypherQuery: |
+    MATCH (u:User)-[login:LOGGED_INTO]->(h:Host)-[comm:COMMUNICATED_WITH]->(extIP:IpAddress)
+    WHERE login.lastSeen > datetime() - duration('PT24H')
+      AND u.firstSeen < datetime() - duration('P30D')
+      AND (u.lastSeen IS NULL OR u.lastSeen < datetime() - duration('P30D') OR u.firstSeen = u.lastSeen)
+      AND NOT extIP.address STARTS WITH '10.'
+      AND NOT extIP.address STARTS WITH '192.168.'
+      AND comm.lastSeen > datetime() - duration('PT24H')
+    RETURN u.username    AS user,
+           h.hostname    AS host,
+           extIP.address AS externalIP,
+           u.firstSeen   AS accountFirstSeen
+
+  alertFields:
+    - user
+    - host
+    - externalIP
+    - accountFirstSeen
+
+  checkIntervalSeconds: 300

@@ -25,7 +25,16 @@ var (
 	searchBase   string
 	searchUser   string
 	searchPass   string
+
+	// addScoreFn is called for rules with riskScore > 0. Injected by main.go via SetAddScoreFn
+	// to avoid a hard import cycle between the rules and enterprise/risk packages.
+	addScoreFn func(event *plugins.Event, score int)
 )
+
+// SetAddScoreFn registers the callback used to forward risk-score events.
+func SetAddScoreFn(fn func(event *plugins.Event, score int)) {
+	addScoreFn = fn
+}
 
 const celErrorLogInterval = 60 * time.Second
 
@@ -81,8 +90,21 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 
 	var alerts []*plugins.Alert
 	for _, rule := range GetRules(event.DataType) {
-		// Skip risk/sequence rules here — handled by enterprise packages
-		if rule.HasRiskScore() || rule.HasSequence() {
+		// Risk-score rules feed the accumulator instead of producing direct alerts.
+		if rule.HasRiskScore() {
+			ok, evalErr := getCEL().Evaluate(&eventStr, rule.Where)
+			if evalErr != nil {
+				if shouldLogCELError(rule.ID, rule.Where) {
+					log.Printf("[rules.Evaluate] CEL error rule.id=%d rule.name=%q expression=%q error=%v (suppressing duplicates for 60s)",
+						rule.ID, rule.Name, rule.Where, evalErr)
+				}
+			} else if ok && addScoreFn != nil {
+				addScoreFn(event, rule.RiskScore)
+			}
+			continue
+		}
+		// Sequence rules are handled by enterprise/sequence package.
+		if rule.HasSequence() {
 			continue
 		}
 		ok, evalErr := getCEL().Evaluate(&eventStr, rule.Where)

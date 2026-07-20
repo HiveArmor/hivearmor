@@ -5,7 +5,10 @@ type Rule struct {
 	ID            int64      `yaml:"id"`
 	DataTypes     []string   `yaml:"dataTypes"`
 	Name          string     `yaml:"name"`
+	Type          string     `yaml:"type,omitempty"`
 	Impact        *Impact    `yaml:"impact"`
+	Severity      int        `yaml:"severity,omitempty"`
+	MITRE         *MITRERef  `yaml:"mitre,omitempty"`
 	Category      string     `yaml:"category"`
 	Technique     string     `yaml:"technique"`
 	Adversary     string     `yaml:"adversary"`
@@ -20,6 +23,16 @@ type Rule struct {
 	RiskScore     int        `yaml:"riskScore,omitempty"`
 	Sequence      []SeqStep  `yaml:"sequence,omitempty"`
 	AnomalyDetect bool       `yaml:"anomalyDetect,omitempty"`
+	// graph_offense extension
+	CypherQuery          string   `yaml:"cypherQuery,omitempty"`
+	AlertFields          []string `yaml:"alertFields,omitempty"`
+	CheckIntervalSeconds int      `yaml:"checkIntervalSeconds,omitempty"`
+}
+
+// MITRERef holds ATT&CK tactic and technique IDs for a rule.
+type MITRERef struct {
+	Tactics []string `yaml:"tactics,omitempty"`
+	Attacks []string `yaml:"attacks,omitempty"`
 }
 
 type Impact struct {
@@ -56,6 +69,11 @@ func (r *Rule) HasRiskScore() bool {
 // HasSequence reports whether this rule uses sequence detection.
 func (r *Rule) HasSequence() bool {
 	return len(r.Sequence) > 0
+}
+
+// IsGraphOffense reports whether this is a graph_offense type rule.
+func (r *Rule) IsGraphOffense() bool {
+	return r.Type == "graph_offense"
 }
 
 // Normalize copies AfterEvents into Correlation if Correlation is empty (legacy alias).

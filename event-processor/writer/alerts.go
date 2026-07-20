@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hivearmor/event-processor/enrichment"
 	sdkos "github.com/threatwinds/go-sdk/os"
 	"github.com/threatwinds/go-sdk/plugins"
 )
@@ -55,7 +56,8 @@ func WriteAlert(alert *plugins.Alert) {
 	}
 
 	doc := alertToDoc(alert)
-	idx := sdkos.BuildCurrentDayIndex("_v3_hive_", "alert")
+	enrichment.EnrichAlertDoc(doc)
+	idx := sdkos.BuildCurrentDayIndex("v3-hive", "alert")
 	body, err := json.Marshal(doc)
 	if err != nil {
 		return
@@ -106,7 +108,7 @@ func isDuplicate(alert *plugins.Alert) bool {
 		"size":  1,
 	}
 	body, _ := json.Marshal(query)
-	req, _ := http.NewRequest("POST", alertOSURL+"/_v3_hive_alert-*/_search", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", alertOSURL+"/v3-hive-alert-*/_search", bytes.NewReader(body))
 	req.SetBasicAuth(alertOSUser, alertOSPass)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := alertHTTP.Do(req)
@@ -161,7 +163,7 @@ func findParentAlert(alert *plugins.Alert) string {
 		"size": 1,
 	}
 	body, _ := json.Marshal(query)
-	req, _ := http.NewRequest("POST", alertOSURL+"/_v3_hive_alert-*/_search", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", alertOSURL+"/v3-hive-alert-*/_search", bytes.NewReader(body))
 	req.SetBasicAuth(alertOSUser, alertOSPass)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := alertHTTP.Do(req)

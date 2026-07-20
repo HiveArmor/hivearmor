@@ -1,0 +1,16 @@
+id: test-sequence-001
+name: "[TEST] Recon followed by Exploitation"
+description: "Detects port scan followed by exploit attempt from same source IP"
+severity: HIGH
+dataTypes:
+  - LINUX
+  - WINDOWS
+sequence:
+  - step: 1
+    condition: "log['action'] == 'port_scan'"
+    within: 10m
+  - step: 2
+    condition: "log['action'] == 'exploit_attempt'"
+    within: 30m
+    after: 1
+technique: T1046

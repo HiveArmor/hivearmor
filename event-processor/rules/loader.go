@@ -10,10 +10,11 @@ import (
 )
 
 var (
-	mu       sync.RWMutex
-	byType   = map[string][]*Rule{}
-	lastLoad time.Time
-	rulesDir string
+	mu               sync.RWMutex
+	byType           = map[string][]*Rule{}
+	graphOffenseList []*Rule
+	lastLoad         time.Time
+	rulesDir         string
 )
 
 // Init sets the rules directory and performs an initial load.
@@ -30,7 +31,7 @@ func GetRules(dataType string) []*Rule {
 	return byType[dataType]
 }
 
-// AllRules returns all loaded rules.
+// AllRules returns all loaded rules (excludes graph_offense rules).
 func AllRules() []*Rule {
 	mu.RLock()
 	defer mu.RUnlock()
@@ -47,6 +48,15 @@ func AllRules() []*Rule {
 	return all
 }
 
+// GraphOffenseRules returns all loaded graph_offense rules.
+func GraphOffenseRules() []*Rule {
+	mu.RLock()
+	defer mu.RUnlock()
+	out := make([]*Rule, len(graphOffenseList))
+	copy(out, graphOffenseList)
+	return out
+}
+
 func watchLoop() {
 	tick := time.NewTicker(30 * time.Second)
 	defer tick.Stop()
@@ -55,8 +65,27 @@ func watchLoop() {
 	}
 }
 
+// Reload triggers an immediate out-of-band rules reload. Called by the webhook handler.
+func Reload() error {
+	reload()
+	return nil
+}
+
 func reload() {
 	newMap := map[string][]*Rule{}
+	var newGraphOffense []*Rule
+
+	addRule := func(r *Rule) {
+		r.Normalize()
+		if r.IsGraphOffense() {
+			newGraphOffense = append(newGraphOffense, r)
+			return
+		}
+		for _, dt := range r.DataTypes {
+			newMap[dt] = append(newMap[dt], r)
+		}
+	}
+
 	err := filepath.Walk(rulesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
@@ -72,20 +101,13 @@ func reload() {
 		// Rule files may be a single Rule or a list of Rules
 		var single Rule
 		if err := yaml.Unmarshal(data, &single); err == nil && single.Name != "" {
-			single.Normalize()
-			for _, dt := range single.DataTypes {
-				newMap[dt] = append(newMap[dt], &single)
-			}
+			addRule(&single)
 			return nil
 		}
 		var list []Rule
 		if err := yaml.Unmarshal(data, &list); err == nil {
 			for i := range list {
-				r := &list[i]
-				r.Normalize()
-				for _, dt := range r.DataTypes {
-					newMap[dt] = append(newMap[dt], r)
-				}
+				addRule(&list[i])
 			}
 		}
 		return nil
@@ -95,6 +117,7 @@ func reload() {
 	}
 	mu.Lock()
 	byType = newMap
+	graphOffenseList = newGraphOffense
 	lastLoad = time.Now()
 	mu.Unlock()
 }

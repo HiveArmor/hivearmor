@@ -1,8 +1,12 @@
 package writer
 
 import (
+	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
+	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -20,7 +24,7 @@ var (
 func InitEventWriter() {
 	eventQueueOnce.Do(func() {
 		eventQueue = sdkos.NewBulkQueue("hivearmor-events", sdkos.BulkQueueConfig{
-			FlushInterval:  5 * time.Second,
+			FlushInterval:  1 * time.Second,
 			FlushThreshold: 500,
 			MaxRetries:     3,
 			RetryDelay:     time.Second,
@@ -34,8 +38,42 @@ func WriteEvent(event *plugins.Event) {
 		return
 	}
 	doc := eventToDoc(event)
-	idx := sdkos.BuildCurrentDayIndex("_v3_hive_", "log", event.DataType)
+	idx := sdkos.BuildCurrentDayIndex("v3-hive", "log", event.DataType)
 	eventQueue.AddWithID(idx, event.Id, doc)
+}
+
+// WriteEventSync writes a single event directly to OpenSearch without going
+// through the BulkQueue. Use this from the Kafka consumer path so that the
+// Kafka offset is only committed after the write succeeds (at-least-once
+// durability: a restart causes re-delivery/duplicate, never silent loss).
+func WriteEventSync(event *plugins.Event, osURL, osUser, osPass string) error {
+	if event == nil {
+		return nil
+	}
+	doc := eventToDoc(event)
+	idx := sdkos.BuildCurrentDayIndex("v3-hive", "log", event.DataType)
+	body, err := json.Marshal(doc)
+	if err != nil {
+		return fmt.Errorf("marshal event: %w", err)
+	}
+	url := fmt.Sprintf("%s/%s/_doc/%s", osURL, idx, event.Id)
+	req, err := http.NewRequest("PUT", url, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.SetBasicAuth(osUser, osPass)
+	req.Header.Set("Content-Type", "application/json")
+
+	cl := &http.Client{Timeout: 10 * time.Second, Transport: sharedTransport()}
+	resp, err := cl.Do(req)
+	if err != nil {
+		return fmt.Errorf("write event %s: %w", event.Id, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("write event %s: HTTP %d", event.Id, resp.StatusCode)
+	}
+	return nil
 }
 
 // eventToDoc converts a plugins.Event to a flat map suitable for OpenSearch.
@@ -111,6 +149,18 @@ func sideDoc(s *plugins.Side) map[string]any {
 		}
 	}
 	return m
+}
+
+var syncTransportOnce sync.Once
+var syncTransportVal *http.Transport
+
+func sharedTransport() *http.Transport {
+	syncTransportOnce.Do(func() {
+		syncTransportVal = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+	})
+	return syncTransportVal
 }
 
 // dummy to keep context importable

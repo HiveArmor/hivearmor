@@ -46,6 +46,13 @@ RUN go mod download
 COPY plugins/compliance-orchestrator/ .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/com.hivearmor.compliance-orchestrator.plugin .
 
+WORKDIR /build
+COPY plugins/inputs/go.mod plugins/inputs/go.sum ./inputs/
+WORKDIR /build/inputs
+RUN go mod download
+COPY plugins/inputs/ .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/com.hivearmor.inputs.plugin .
+
 # --- Runtime image ---
 FROM debian:bookworm-slim
 
@@ -57,6 +64,7 @@ COPY --from=builder /out/com.hivearmor.events.plugin                   /usr/loca
 COPY --from=builder /out/com.hivearmor.alerts.plugin                   /usr/local/bin/com.hivearmor.alerts.plugin
 COPY --from=builder /out/com.hivearmor.geolocation.plugin              /usr/local/bin/com.hivearmor.geolocation.plugin
 COPY --from=builder /out/com.hivearmor.compliance-orchestrator.plugin  /usr/local/bin/com.hivearmor.compliance-orchestrator.plugin
+COPY --from=builder /out/com.hivearmor.inputs.plugin                   /usr/local/bin/com.hivearmor.inputs.plugin
 
 COPY event-processor/entrypoint.sh /entrypoint.sh
 COPY event-processor/wait-for-socket.sh /wait-for-socket.sh
@@ -65,6 +73,9 @@ RUN chmod +x /entrypoint.sh /wait-for-socket.sh
 # Bundle default GeoLite2 CSVs (can be overridden by volume mount at runtime)
 COPY event-processor/geolocation-bundle/ /workdir/geolocation/
 
-EXPOSE 8000 8090 9003 8094
+# Bundle built-in detection rules (including graph_offense rules)
+COPY event-processor/builtin-rules/ /workdir/rules/
+
+EXPOSE 8000 8090 9003 8094 4317 4318 50051
 
 ENTRYPOINT ["/entrypoint.sh"]
