@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260718003" author="hivearmor">
+        <addColumn tableName="hive_ai_triage">
+            <column name="is_true_positive" type="BOOLEAN"/>
+            <column name="mitre_tactics" type="VARCHAR(500)"/>
+            <column name="mitre_attacks" type="VARCHAR(500)"/>
+            <column name="recommendations" type="TEXT"/>
+            <column name="false_positive_reason" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

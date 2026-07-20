@@ -61,4 +61,18 @@ public interface UtmCorrelationRulesRepository extends JpaRepository<UtmCorrelat
     List<UtmCorrelationRules> findAllBySystemOwnerIsTrue();
 
     Optional<UtmCorrelationRules> findFirstBySystemOwnerIsTrueOrderByIdDesc();
+
+    boolean existsBySigmaRuleId(String sigmaRuleId);
+
+    List<UtmCorrelationRules> findAllByStagedTrue();
+
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE UtmCorrelationRules r SET r.ruleActive = true, r.staged = false WHERE r.id = :id")
+    void activateStagedRule(@Param("id") Long id);
+
+    @org.springframework.transaction.annotation.Transactional
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM UtmCorrelationRules r WHERE r.id = :id AND r.staged = true")
+    void dismissStagedRule(@Param("id") Long id);
 }

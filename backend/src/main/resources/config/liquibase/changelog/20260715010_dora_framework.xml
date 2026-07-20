@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        DORA (EU 2022/2554) — Digital Operational Resilience Act.
+        Targets financial sector entities. 10 controls from Articles 5, 9-11, 13, 17-19, 24, 28.
+        Key SLA: Art.19 — initial incident notification within 4 hours of classification.
+    -->
+    <changeSet id="20260715010-dora-standard" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM hive_compliance_standard WHERE standard_name = 'DORA'
+            </sqlCheck>
+        </preConditions>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+            INSERT INTO hive_compliance_standard (standard_name, standard_description, system_owner)
+            VALUES (
+                'DORA',
+                'EU Digital Operational Resilience Act (2022/2554). Mandatory ICT risk management, incident reporting, and resilience testing for financial sector entities.',
+                true
+            )
+            ]]>
+        </sql>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+            INSERT INTO hive_compliance_standard_section (standard_id, standard_section_name, standard_section_description)
+            SELECT s.id, v.name, v.descr FROM hive_compliance_standard s
+            CROSS JOIN (VALUES
+                ('ICT Risk Management',      'Articles 5-9: ICT risk management framework, governance, protection, prevention, and detection measures.'),
+                ('Incident Management',      'Articles 10-19: Response, recovery, classification, and mandatory reporting of major ICT-related incidents.'),
+                ('Resilience Testing',       'Articles 24-25: Digital operational resilience testing including scenario-based testing and threat-led penetration testing (TLPT).'),
+                ('Third-Party Risk',         'Articles 28-44: ICT third-party risk management, contractual requirements, and oversight of critical ICT providers.')
+            ) AS v(name, descr)
+            WHERE s.standard_name = 'DORA'
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="20260715010-dora-controls" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM hive_compliance_control_config c
+                JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+                JOIN hive_compliance_standard std ON sec.standard_id = std.id
+                WHERE std.standard_name = 'DORA'
+            </sqlCheck>
+        </preConditions>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+-- ICT Risk Management section controls
+INSERT INTO hive_compliance_control_config
+    (standard_section_id, control_name, control_solution, control_remediation, control_strategy)
+SELECT sec.id, v.name, v.solution, v.remediation, 'ALL'
+FROM hive_compliance_standard_section sec
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+CROSS JOIN (VALUES
+    (
+        'Art.5 - ICT Risk Management Framework',
+        'Implement and maintain a documented ICT risk management framework covering governance, risk appetite, asset classification, and risk treatment. Senior management approval required per DORA Art.5.',
+        'Document the ICT risk management framework and obtain board-level sign-off. Review and update annually. Include HiveArmor in the list of key ICT risk management tools.'
+    ),
+    (
+        'Art.9 - Protection and Prevention Measures',
+        'Deploy technical controls to protect ICT infrastructure: access management, patch management, network segmentation, and vulnerability scanning aligned with DORA Art.9.',
+        'Maintain an asset inventory. Apply critical patches within 72 hours. Run vulnerability scans weekly. Review firewall rules quarterly.'
+    ),
+    (
+        'Art.10 - Detection of Anomalous Activities',
+        'Implement continuous monitoring and detection capabilities for anomalous activities across all ICT assets using a combination of SIEM correlation rules and UBA behavioral analytics.',
+        'Enable UBA anomaly detection for all user accounts. Review unresolved anomalies daily. Tune SIEM correlation rules monthly to reduce false positives.'
+    )
+) AS v(name, solution, remediation)
+WHERE std.standard_name = 'DORA'
+  AND sec.standard_section_name = 'ICT Risk Management';
+
+-- Incident Management section controls
+INSERT INTO hive_compliance_control_config
+    (standard_section_id, control_name, control_solution, control_remediation, control_strategy)
+SELECT sec.id, v.name, v.solution, v.remediation, 'ALL'
+FROM hive_compliance_standard_section sec
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+CROSS JOIN (VALUES
+    (
+        'Art.11 - Response and Recovery',
+        'Execute documented response and recovery plans when ICT incidents occur. Track recovery actions via SOAR playbook execution. Document lessons learned within 72 hours of incident closure.',
+        'Ensure each incident type has a mapped SOAR playbook. Review playbook execution logs weekly. Conduct post-incident reviews for all HIGH/CRITICAL severity incidents.'
+    ),
+    (
+        'Art.13 - Post-Incident Learning',
+        'Conduct post-incident analysis for major ICT incidents. Document root cause, timeline, impact, and remediation actions. Share learnings to improve resilience per DORA Art.13.',
+        'Add investigation notes to all closed HIGH/CRITICAL incidents within 48 hours. Track remediation items as tasks. Review recurring incident patterns monthly.'
+    ),
+    (
+        'Art.17 - ICT Incident Management Process',
+        'Maintain a documented ICT-related incident management process covering classification criteria, escalation paths, communication templates, and regulatory notification workflows.',
+        'Document incident management procedures. Review and test escalation paths quarterly. Assign dedicated incident managers for major incidents.'
+    ),
+    (
+        'Art.18 - ICT Incident Classification',
+        'Classify ICT-related incidents according to DORA criteria: impact, duration, affected services, and data loss. Assign severity within 1 hour of detection.',
+        'Configure HiveArmor incident severity auto-assignment rules. Review classification accuracy monthly. Ensure all alerts auto-escalate to incidents within configured SLA.'
+    ),
+    (
+        'Art.19 - Major Incident Reporting (4-Hour SLA)',
+        'Report major ICT-related incidents to the competent authority. Initial notification required within 4 hours of classification as major. Final report within 1 month. SLA violations must be captured.',
+        'Ensure high/critical incidents have notes or notification records within 4 hours of creation. Configure alerting for incidents approaching the 4-hour SLA threshold. Document all regulatory notifications.'
+    )
+) AS v(name, solution, remediation)
+WHERE std.standard_name = 'DORA'
+  AND sec.standard_section_name = 'Incident Management';
+
+-- Resilience Testing section controls
+INSERT INTO hive_compliance_control_config
+    (standard_section_id, control_name, control_solution, control_remediation, control_strategy)
+SELECT sec.id, v.name, v.solution, v.remediation, 'ALL'
+FROM hive_compliance_standard_section sec
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+CROSS JOIN (VALUES
+    (
+        'Art.24 - Digital Operational Resilience Testing',
+        'Conduct regular resilience testing including vulnerability assessments, scenario-based tests, and threat-led penetration testing (TLPT) for significant entities per DORA Art.24.',
+        'Schedule annual penetration testing. Document all test results and remediation plans. Track open findings from penetration tests to closure. Report TLPT results to competent authority.'
+    )
+) AS v(name, solution, remediation)
+WHERE std.standard_name = 'DORA'
+  AND sec.standard_section_name = 'Resilience Testing';
+
+-- Third-Party Risk section controls
+INSERT INTO hive_compliance_control_config
+    (standard_section_id, control_name, control_solution, control_remediation, control_strategy)
+SELECT sec.id, v.name, v.solution, v.remediation, 'ALL'
+FROM hive_compliance_standard_section sec
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+CROSS JOIN (VALUES
+    (
+        'Art.28 - Third-Party ICT Risk Management',
+        'Manage ICT risks from third-party providers via contractual requirements, ongoing due diligence, and exit strategies. Include security incident notification obligations per DORA Art.28.',
+        'Maintain a register of critical ICT third-party providers. Conduct annual security assessments. Require contractual SLA for incident notification. Review exit strategies annually.'
+    )
+) AS v(name, solution, remediation)
+WHERE std.standard_name = 'DORA'
+  AND sec.standard_section_name = 'Third-Party Risk';
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="20260715010-dora-mappings" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM hive_compliance_control_mapping m
+                JOIN hive_compliance_control_config c ON m.control_id = c.id
+                JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+                JOIN hive_compliance_standard std ON sec.standard_id = std.id
+                WHERE std.standard_name = 'DORA'
+            </sqlCheck>
+        </preConditions>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+-- Art.10 — Detection: UBA anomalies firing = EVIDENCE that anomaly detection is active
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'UBA',
+       'logx.dataType == "UBA" && logx.anomaly_score > 0',
+       'UBA behavioral anomaly detected — confirms automated anomalous activity detection per DORA Art.10',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'DORA'
+  AND c.control_name LIKE '%Art.10%';
+
+-- Art.10 — SIEM correlation rules firing = additional EVIDENCE
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'ALERT',
+       'logx.dataType == "ALERT" && logx.alert_status != null',
+       'SIEM correlation alert generated — confirms that continuous monitoring and detection capability is active per DORA Art.10',
+       0.9, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'DORA'
+  AND c.control_name LIKE '%Art.10%';
+
+-- Art.11 — Response: SOAR playbook execution = EVIDENCE
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'PLAYBOOK',
+       'logx.dataType == "PLAYBOOK" && logx.execution_status in ["COMPLETED", "RUNNING"]',
+       'SOAR playbook executed for incident — confirms automated response and recovery capability per DORA Art.11',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'DORA'
+  AND c.control_name LIKE '%Art.11%';
+
+-- Art.13 — Post-incident learning: incident with investigation notes = EVIDENCE
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'INCIDENT',
+       'logx.dataType == "INCIDENT" && logx.incident_notes != null && logx.incident_notes != "" && logx.incident_status == "CLOSED"',
+       'Closed incident with investigation notes confirms post-incident learning process per DORA Art.13',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'DORA'
+  AND c.control_name LIKE '%Art.13%';
+
+-- Art.13 — Closed incident WITHOUT notes = VIOLATION (no post-incident documentation)
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'VIOLATION',
+       'INCIDENT',
+       'logx.dataType == "INCIDENT" && logx.incident_status == "CLOSED" && (logx.incident_notes == null || logx.incident_notes == "") && logx.incident_severity in ["HIGH", "CRITICAL"]',
+       'High/critical incident closed without investigation notes — violates DORA Art.13 post-incident learning requirement',
+       1.0, 180
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'DORA'
+  AND c.control_name LIKE '%Art.13%';
+
+-- Art.18 — Classification: incident with severity assigned = EVIDENCE
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'INCIDENT',
+       'logx.dataType == "INCIDENT" && logx.incident_severity in ["LOW", "MEDIUM", "HIGH", "CRITICAL"]',
+       'Incident with severity classification assigned — confirms ICT incident classification process is active per DORA Art.18',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'DORA'
+  AND c.control_name LIKE '%Art.18%';
+
+-- Art.18 — Incident without severity = VIOLATION (unclassified incident)
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'VIOLATION',
+       'INCIDENT',
+       'logx.dataType == "INCIDENT" && (logx.incident_severity == null || logx.incident_severity == "") && logx.incident_status == "OPEN"',
+       'Open incident without severity classification — violates DORA Art.18 requirement to classify ICT-related incidents',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'DORA'
+  AND c.control_name LIKE '%Art.18%';
+
+-- Art.19 — 4-hour SLA: high/critical incident with notification note within 4h = EVIDENCE
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'INCIDENT',
+       'logx.dataType == "INCIDENT" && logx.incident_severity in ["HIGH", "CRITICAL"] && logx.incident_notes != null && logx.incident_notes != ""',
+       'High/critical incident has notification notes — evidence of DORA Art.19 major incident reporting process',
+       1.0, 365
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'DORA'
+  AND c.control_name LIKE '%Art.19%';
+
+-- Art.19 — 4-hour SLA VIOLATION: high/critical incident open > 4h without notes
+-- The event-processor emits a synthetic INCIDENT_SLA_BREACH event when this threshold is crossed.
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'VIOLATION',
+       'INCIDENT_SLA_BREACH',
+       'logx.dataType == "INCIDENT_SLA_BREACH" && logx.sla_type == "DORA_ART19_4H" && logx.incident_severity in ["HIGH", "CRITICAL"]',
+       'DORA Art.19 4-hour notification SLA breached — high/critical incident has no notification record within 4 hours of creation',
+       1.0, 365
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'DORA'
+  AND c.control_name LIKE '%Art.19%';
+
+-- Art.9 — Protection: access control audit trail (Windows logon events) = EVIDENCE
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'WINDOWS_AGENT',
+       'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id in [4624, 4625, 4672, 4720, 4726]',
+       'Windows access control audit events confirm protection and prevention measures per DORA Art.9',
+       0.9, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'DORA'
+  AND c.control_name LIKE '%Art.9%';
+
+-- Art.9 — Audit log cleared = VIOLATION (disrupts protection monitoring)
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'VIOLATION',
+       'WINDOWS_AGENT',
+       'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 1102 || logx.winlog.event_id == 1100)',
+       'Audit log cleared or logging service stopped — violates DORA Art.9 protection and prevention controls',
+       1.0, 365
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'DORA'
+  AND c.control_name LIKE '%Art.9%';
+            ]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

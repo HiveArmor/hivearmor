@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        Rename utm_module_group_configuration conf_key from nilachakra.socai.* to hivearmor.socai.*
+        to align with the HiveArmor rebrand. Missed by 20260713004 which only touched hive_configuration_parameter.
+    -->
+    <changeSet id="20260718004-rename-socai-conf-keys" author="hivearmor">
+        <sql>
+            UPDATE hive_module_group_configuration
+            SET conf_key = REPLACE(conf_key, 'nilachakra.', 'hivearmor.')
+            WHERE conf_key LIKE 'nilachakra.%';
+        </sql>
+        <rollback>
+            <sql>
+                UPDATE hive_module_group_configuration
+                SET conf_key = REPLACE(conf_key, 'hivearmor.', 'nilachakra.')
+                WHERE conf_key LIKE 'hivearmor.socai.%';
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

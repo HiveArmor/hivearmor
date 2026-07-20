@@ -40,13 +40,23 @@ public class UtmComplianceControlLatestEvaluationMapper {
         }
 
         UtmComplianceControlEvaluationHistoryDto dto = new UtmComplianceControlEvaluationHistoryDto();
-        dto.setControlId(getLong(source.get("control_id")));
-        dto.setControlName(getString(source.get("control_name")));
-        dto.setStatus(getString(source.get("status")));
+        // Evidence docs use camelCase field names written by the Go compliance writer.
+        dto.setControlId(getLong(source.get("controlId") != null ? source.get("controlId") : source.get("control_id")));
+        dto.setControlName(getString(source.get("controlName") != null ? source.get("controlName") : source.get("control_name")));
 
-        Object ts = source.get("timestamp");
+        // Derive PASS/FAIL status from mappingType: EVIDENCE → PASS, VIOLATION → FAIL.
+        String rawStatus = getString(source.get("status"));
+        String mappingType = getString(source.get("mappingType"));
+        if (rawStatus == null && mappingType != null) {
+            rawStatus = mappingType.equalsIgnoreCase("EVIDENCE") ? "PASS"
+                      : mappingType.equalsIgnoreCase("VIOLATION") ? "FAIL"
+                      : "PARTIAL";
+        }
+        dto.setStatus(rawStatus);
+
+        Object ts = source.get("@timestamp") != null ? source.get("@timestamp") : source.get("timestamp");
         if (ts != null) {
-            dto.setTimestamp(Instant.parse(ts.toString()));
+            try { dto.setTimestamp(Instant.parse(ts.toString())); } catch (Exception ignored) {}
         }
 
         return dto;

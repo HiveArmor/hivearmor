@@ -24,4 +24,6 @@ public interface UtmUbaAnomalyRepository extends JpaRepository<UtmUbaAnomaly, Lo
     long countByDetectedAtAfter(Instant since);
 
     long countByStatus(String status);
+
+    boolean existsByDetailsJsonContaining(String fragment);
 }

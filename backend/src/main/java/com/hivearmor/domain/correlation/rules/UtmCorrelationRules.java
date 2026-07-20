@@ -168,6 +168,18 @@ public class UtmCorrelationRules implements Serializable {
             inverseJoinColumns = @JoinColumn(name = "data_type_id"))
     private Set<UtmDataTypes> dataTypes = new HashSet<>();
 
+    @Column(name = "sigma_rule_id")
+    private String sigmaRuleId;
+
+    @Column(name = "sigma_rule_url")
+    private String sigmaRuleUrl;
+
+    @Column(name = "sigma_accuracy")
+    private String sigmaAccuracy;
+
+    @Column(name = "staged")
+    private Boolean staged = false;
+
     public List<String> getRuleReferences() throws UtmSerializationException {
         if (StringUtils.hasText(ruleReferencesDef))
             ruleReferences = UtilSerializer.jsonDeserializeList(String.class, ruleReferencesDef);

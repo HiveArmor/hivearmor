@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="20260718001" author="hivearmor">
+        <createTable tableName="sigma_sync_config">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sync_url" type="varchar(500)" defaultValue="https://api.github.com/repos/SigmaHQ/sigma/contents/rules">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sync_frequency_hours" type="integer" defaultValueNumeric="24">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_synced_at" type="timestamp"/>
+            <column name="last_synced_commit" type="varchar(40)"/>
+            <column name="auto_activate" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category_filter" type="varchar(500)"/>
+        </createTable>
+
+        <!-- Seed one default row so the service always finds a config -->
+        <insert tableName="sigma_sync_config">
+            <column name="enabled" valueBoolean="false"/>
+            <column name="sync_url" value="https://api.github.com/repos/SigmaHQ/sigma/contents/rules"/>
+            <column name="sync_frequency_hours" valueNumeric="24"/>
+            <column name="auto_activate" valueBoolean="false"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

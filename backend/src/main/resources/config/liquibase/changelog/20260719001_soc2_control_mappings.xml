@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        SOC 2 Type II — full control and mapping seed for CC6, CC7, CC9.
+        The standard and sections were created in 20260715003_soc2_framework_seed.xml.
+        This changeset adds controls with CEL mappings so the scoring engine has real data.
+    -->
+    <changeSet id="20260719001-soc2-controls" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM hive_compliance_control_config c
+                JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+                JOIN hive_compliance_standard std ON sec.standard_id = std.id
+                WHERE std.standard_name = 'SOC 2 Type II'
+                  AND sec.standard_section_name LIKE '%CC6%'
+            </sqlCheck>
+        </preConditions>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+-- CC6 — Logical and Physical Access Controls
+INSERT INTO hive_compliance_control_config
+    (standard_section_id, control_name, control_solution, control_remediation, control_strategy)
+SELECT sec.id, v.name, v.solution, v.remediation, 'ALL'
+FROM hive_compliance_standard_section sec
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+CROSS JOIN (VALUES
+    (
+        'CC6.1 - Logical Access Controls',
+        'Implement logical access security infrastructure to protect against threats. Log all authentication events (success and failure) and review access control configurations quarterly.',
+        'Review access control lists for critical systems monthly. Ensure all logon events (4624, 4625, 4634) are captured in HiveArmor. Investigate accounts with excessive failed logins within 24 hours.'
+    ),
+    (
+        'CC6.2 - User Provisioning and Deprovisioning',
+        'Manage credentials and user accounts through a formal provisioning process. Disable accounts within 24 hours of personnel departure and document all user account lifecycle events.',
+        'Audit user provisioning records monthly. Verify deprovisioning of terminated employees within 1 business day. Alert on account creation outside business hours.'
+    ),
+    (
+        'CC6.3 - Role-Based Access and Least Privilege',
+        'Implement role-based access control (RBAC) and enforce least-privilege. Log all group membership changes and review privileged group membership quarterly.',
+        'Conduct quarterly access reviews for all privileged groups. Remove dormant privileged accounts. Document justification for all administrative group memberships.'
+    ),
+    (
+        'CC6.6 - External Threats',
+        'Implement controls to protect against external threats including firewalls, IDS/IPS, and threat intelligence feeds. Monitor for threat actor activity via SIEM correlation rules.',
+        'Review IDS/IPS alert volume weekly. Update threat intelligence feeds daily. Conduct external vulnerability scans monthly. Review firewall ruleset quarterly.'
+    ),
+    (
+        'CC6.7 - Data Protection in Transmission',
+        'Protect data during transmission using encryption (TLS 1.2+). Monitor for unencrypted transmission indicators including TLS errors and certificate failures.',
+        'Audit all service endpoints for TLS configuration quarterly. Enforce HTTPS-only policies. Alert on certificate expiry 30 days in advance. Review TLS error rates weekly.'
+    ),
+    (
+        'CC6.8 - Malware Detection',
+        'Deploy endpoint protection (antivirus/EDR) and maintain malware detection capability across all managed endpoints. Review malware detection alerts daily.',
+        'Ensure antivirus/EDR is deployed on all endpoints. Review malware alerts daily and escalate detections to incidents. Verify EDR agent health weekly.'
+    )
+) AS v(name, solution, remediation)
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND sec.standard_section_name LIKE '%CC6%';
+
+-- CC7 — System Operations
+INSERT INTO hive_compliance_control_config
+    (standard_section_id, control_name, control_solution, control_remediation, control_strategy)
+SELECT sec.id, v.name, v.solution, v.remediation, 'ALL'
+FROM hive_compliance_standard_section sec
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+CROSS JOIN (VALUES
+    (
+        'CC7.1 - Security Event Detection and Monitoring',
+        'Detect and monitor for security events using a combination of SIEM correlation rules, UBA behavioral analytics, and baseline anomaly detection.',
+        'Review UBA anomaly dashboard daily. Tune SIEM correlation rules monthly to reduce false positives. Ensure coverage for all critical asset types.'
+    ),
+    (
+        'CC7.2 - System Availability Monitoring',
+        'Monitor system availability by tracking agent heartbeat signals. Gaps in agent connectivity indicate unmonitored endpoints that represent availability and visibility risks.',
+        'Alert when agent heartbeat is not received for more than 15 minutes. Review offline endpoints daily. Investigate connectivity gaps before SLA reporting periods.'
+    ),
+    (
+        'CC7.3 - Processing Integrity',
+        'Verify that correlation rules are firing correctly and producing accurate detection outputs. Validate that the event processing pipeline maintains integrity end-to-end.',
+        'Review rule hit counts weekly to identify rules with zero activity. Test rule effectiveness quarterly with known-good test events. Monitor event pipeline latency.'
+    )
+) AS v(name, solution, remediation)
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND sec.standard_section_name LIKE '%CC7%';
+
+-- CC9 — Risk Mitigation
+INSERT INTO hive_compliance_control_config
+    (standard_section_id, control_name, control_solution, control_remediation, control_strategy)
+SELECT sec.id, v.name, v.solution, v.remediation, 'ALL'
+FROM hive_compliance_standard_section sec
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+CROSS JOIN (VALUES
+    (
+        'CC9.2 - Vendor and Third-Party Risk',
+        'Assess ICT vendor and third-party risks including monitoring for connector errors that indicate unreliable third-party integrations. Maintain a vendor risk register.',
+        'Review third-party integration error rates weekly. Escalate persistent connector failures to vendor management. Conduct annual vendor security assessments. Update vendor risk register quarterly.'
+    )
+) AS v(name, solution, remediation)
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND sec.standard_section_name LIKE '%CC9%';
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="20260719001-soc2-mappings" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM hive_compliance_control_mapping m
+                JOIN hive_compliance_control_config c ON m.control_id = c.id
+                JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+                JOIN hive_compliance_standard std ON sec.standard_id = std.id
+                WHERE std.standard_name = 'SOC 2 Type II'
+            </sqlCheck>
+        </preConditions>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+-- ── CC6.1 — Logical Access Controls ─────────────────────────────────────────
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'WINDOWS_AGENT',
+       'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id in [4624, 4625, 4634]',
+       'Windows logon success (4624), failure (4625), and logoff (4634) events confirm access control monitoring per SOC 2 CC6.1',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC6.1%';
+
+-- CC6.1 — Account lockout = VIOLATION (excessive failed attempts)
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'VIOLATION',
+       'WINDOWS_AGENT',
+       'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4740',
+       'Account lockout (4740) indicates repeated authentication failures — potential brute-force attack violating SOC 2 CC6.1',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC6.1%';
+
+-- ── CC6.2 — User Provisioning ────────────────────────────────────────────────
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'WINDOWS_AGENT',
+       'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id in [4720, 4726]',
+       'User account creation (4720) and deletion (4726) events satisfy SOC 2 CC6.2 user provisioning audit requirements',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC6.2%';
+
+-- ── CC6.3 — Role-Based Access ────────────────────────────────────────────────
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'WINDOWS_AGENT',
+       'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id in [4728, 4732, 4756, 4757]',
+       'Security group membership changes (4728/4732 global, 4756/4757 universal) confirm RBAC change audit per SOC 2 CC6.3',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC6.3%';
+
+-- CC6.3 — Privileged logon audit = supporting EVIDENCE
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'WINDOWS_AGENT',
+       'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4672',
+       'Privileged session token assignment (4672) confirms that administrative access events are being audited per SOC 2 CC6.3',
+       0.9, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC6.3%';
+
+-- ── CC6.6 — External Threats ─────────────────────────────────────────────────
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'ALERT',
+       'logx.dataType == "ALERT" && logx.alert_severity in ["HIGH", "CRITICAL"] && logx.alert_status != null',
+       'High/critical security alert present — confirms external threat detection and monitoring capability per SOC 2 CC6.6',
+       1.0, 30
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC6.6%';
+
+-- ── CC6.7 — Data Protection in Transmission ──────────────────────────────────
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'INDICATOR',
+       'GENERIC',
+       'logx.dataType == "GENERIC" && (logx.message matches ".*(SSL|TLS).*(error|failure|handshake|expired|invalid cert).*")',
+       'TLS/SSL error event suggests potential unencrypted or degraded-encryption transmission — risk indicator per SOC 2 CC6.7',
+       0.8, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC6.7%';
+
+-- ── CC6.8 — Malware Detection ─────────────────────────────────────────────────
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'ANTIVIRUS',
+       'logx.dataType == "ANTIVIRUS" && logx.action != null',
+       'Antivirus/EDR detection event confirms malware detection capability is active per SOC 2 CC6.8',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC6.8%';
+
+-- ── CC7.1 — Detection and Monitoring ─────────────────────────────────────────
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'UBA',
+       'logx.dataType == "UBA" && logx.anomaly_score > 0',
+       'UBA baseline anomaly detected — confirms behavioral analytics and anomaly monitoring is active per SOC 2 CC7.1',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC7.1%';
+
+-- CC7.1 — SIEM alert generated = additional evidence of active monitoring
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'ALERT',
+       'logx.dataType == "ALERT" && logx.alert_status != null',
+       'SIEM correlation alert generated — confirms automated security monitoring per SOC 2 CC7.1',
+       0.8, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC7.1%';
+
+-- ── CC7.2 — System Availability ───────────────────────────────────────────────
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'INDICATOR',
+       'AGENT_STATUS',
+       'logx.dataType == "AGENT_STATUS" && logx.agent_status == "OFFLINE"',
+       'Agent heartbeat gap detected — monitored endpoint is offline, creating unmonitored period that risks SOC 2 CC7.2 availability requirement',
+       0.8, 30
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC7.2%';
+
+-- ── CC7.3 — Processing Integrity ──────────────────────────────────────────────
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'ALERT',
+       'logx.dataType == "ALERT" && logx.rule_id != null && logx.rule_id != ""',
+       'Correlation rule fired and produced an alert with a rule_id — confirms event processing pipeline integrity per SOC 2 CC7.3',
+       0.9, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC7.3%';
+
+-- ── CC9.2 — Vendor Risk ────────────────────────────────────────────────────────
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'INDICATOR',
+       'GENERIC',
+       'logx.dataType == "GENERIC" && logx.message matches ".*(connector|integration|api|webhook).*(error|failed|timeout|unavailable).*"',
+       'Third-party connector/integration error — risk indicator for vendor reliability affecting SOC 2 CC9.2 vendor risk management',
+       0.7, 30
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'SOC 2 Type II'
+  AND c.control_name LIKE '%CC9.2%';
+            ]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

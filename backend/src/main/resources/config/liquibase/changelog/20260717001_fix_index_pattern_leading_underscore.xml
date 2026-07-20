@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        OpenSearch rejects index names starting with '_'. Migration 20260713003 renamed
+        patterns from 'v11-' to '_v3_hive_' but the leading underscore makes every direct
+        OpenSearch query fail with invalid_index_name_exception.
+
+        This changeset replaces '_v3_hive_' with 'v3-hive-' everywhere in the DB so the
+        patterns match the actual index names the event-processor writes
+        (e.g. v3-hive-alert-YYYY.MM.DD).
+
+        IMPORTANT: Do not edit this changeset after it is applied to any environment.
+    -->
+
+    <changeSet id="20260717001" author="hivearmor">
+        <sql dbms="postgresql" splitStatements="true" stripComments="true">
+        <![CDATA[
+            -- hive_index_pattern: '_v3_hive_alert-*' → 'v3-hive-alert-*'
+            UPDATE hive_index_pattern
+            SET pattern = REPLACE(pattern, '_v3_hive_', 'v3-hive-')
+            WHERE pattern LIKE '_v3\_hive\_%' ESCAPE '\';
+
+            -- hive_menu: '&indexPattern=_v3_hive_log-*' → '&indexPattern=v3-hive-log-*'
+            UPDATE hive_menu
+            SET url = REPLACE(url, '&indexPattern=_v3_hive_', '&indexPattern=v3-hive-')
+            WHERE url LIKE '%&indexPattern=_v3\_hive\_%' ESCAPE '\';
+
+            -- hive_correlation_rules: rule_after_events_def JSON
+            UPDATE hive_correlation_rules
+            SET rule_after_events_def = REPLACE(rule_after_events_def, '"indexPattern":"_v3_hive_', '"indexPattern":"v3-hive-')
+            WHERE rule_after_events_def LIKE '%"indexPattern":"_v3\_hive\_%' ESCAPE '\';
+
+            -- hive_dashboard: filters JSON
+            UPDATE hive_dashboard
+            SET filters = REPLACE(filters, '"indexPattern":"_v3_hive_', '"indexPattern":"v3-hive-')
+            WHERE filters LIKE '%"indexPattern":"_v3\_hive\_%' ESCAPE '\';
+        ]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

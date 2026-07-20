@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="20260718002" author="hivearmor">
+        <addColumn tableName="hive_correlation_rules">
+            <column name="staged" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sigma_rule_id" type="varchar(100)"/>
+            <column name="sigma_rule_url" type="varchar(500)"/>
+            <column name="sigma_accuracy" type="varchar(20)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

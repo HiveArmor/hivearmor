@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        NIS2 (EU 2022/2555) — Network and Information Security Directive 2.
+        10 controls from Article 21.2(a)-(j) covering essential-entity requirements.
+    -->
+    <changeSet id="20260715009-nis2-standard" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM hive_compliance_standard WHERE standard_name = 'NIS2'
+            </sqlCheck>
+        </preConditions>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+            INSERT INTO hive_compliance_standard (standard_name, standard_description, system_owner)
+            VALUES (
+                'NIS2',
+                'EU Network and Information Security Directive 2 (2022/2555). Cybersecurity requirements for operators of essential and important entities across the EU.',
+                true
+            )
+            ]]>
+        </sql>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+            INSERT INTO hive_compliance_standard_section (standard_id, standard_section_name, standard_section_description)
+            SELECT s.id, 'Article 21 - Security Measures', 'Cybersecurity risk-management measures required under Article 21(2) of NIS2 for essential and important entities.'
+            FROM hive_compliance_standard s
+            WHERE s.standard_name = 'NIS2'
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="20260715009-nis2-controls" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM hive_compliance_control_config c
+                JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+                JOIN hive_compliance_standard std ON sec.standard_id = std.id
+                WHERE std.standard_name = 'NIS2'
+            </sqlCheck>
+        </preConditions>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+            INSERT INTO hive_compliance_control_config
+                (standard_section_id, control_name, control_solution, control_remediation, control_strategy)
+            SELECT sec.id, v.name, v.solution, v.remediation, 'ALL'
+            FROM hive_compliance_standard_section sec
+            JOIN hive_compliance_standard std ON sec.standard_id = std.id
+            CROSS JOIN (VALUES
+                (
+                    'Art.21.2(a) - Risk Analysis and Security Policies',
+                    'Implement and maintain documented information security policies covering risk analysis methodology, asset inventory, and security objectives aligned with NIS2 Article 21.2(a).',
+                    'Conduct a formal risk assessment, document findings in a risk register, and review policies at least annually. Ensure management approval is recorded.'
+                ),
+                (
+                    'Art.21.2(b) - Incident Handling',
+                    'Establish and operate incident detection, analysis, containment, and recovery capabilities. Maintain audit trail of incidents via the HiveArmor incident management module.',
+                    'Ensure all security alerts are assigned incident IDs within 1 hour of detection. Review open incidents daily. Configure SOAR playbooks for common incident types.'
+                ),
+                (
+                    'Art.21.2(c) - Business Continuity and Disaster Recovery',
+                    'Implement backup management procedures and disaster recovery plans for information systems. Test recovery procedures at least annually.',
+                    'Verify offsite backups are operational. Document RTO/RPO targets and test recovery procedures. Review backup jobs weekly.'
+                ),
+                (
+                    'Art.21.2(d) - Supply Chain Security',
+                    'Assess and manage cybersecurity risks arising from relationships with direct suppliers and service providers. Include security requirements in supplier contracts.',
+                    'Maintain an inventory of critical suppliers. Conduct annual security assessments of key vendors. Require suppliers to notify of security incidents within 24 hours.'
+                ),
+                (
+                    'Art.21.2(e) - Security in Acquisition, Development, and Maintenance',
+                    'Apply security requirements to the acquisition, development, and maintenance of network and information systems, including vulnerability handling and disclosure.',
+                    'Integrate SAST/DAST into the CI/CD pipeline. Track and remediate CVEs with CVSS >= 7.0 within 30 days. Conduct annual penetration testing.'
+                ),
+                (
+                    'Art.21.2(f) - Cybersecurity Risk Measure Effectiveness',
+                    'Implement policies and procedures to assess the effectiveness of cybersecurity risk management measures, including regular audits and reviews.',
+                    'Run automated compliance scoring daily. Review compliance dashboard weekly. Address controls below 60% score within 14 days.'
+                ),
+                (
+                    'Art.21.2(g) - Cyber Hygiene and Training',
+                    'Enforce basic cyber hygiene practices and deliver cybersecurity awareness training to all staff. Include phishing simulation and privileged user training.',
+                    'Complete annual security awareness training for all employees. Deliver privileged-access training quarterly. Document completion rates.'
+                ),
+                (
+                    'Art.21.2(h) - Cryptography and Encryption Policies',
+                    'Implement policies on the use of cryptography and end-to-end encryption to protect data in transit and at rest.',
+                    'Audit TLS configuration across all services. Enforce TLS 1.2+ with strong cipher suites. Encrypt sensitive data at rest using AES-256 or equivalent.'
+                ),
+                (
+                    'Art.21.2(i) - Human Resources Security and Access Control',
+                    'Apply human resources security controls including background screening, role-based access provisioning, and timely deprovisioning upon departure.',
+                    'Review all privileged accounts monthly. Disable accounts within 24 hours of personnel departure. Enforce least-privilege for all user roles.'
+                ),
+                (
+                    'Art.21.2(j) - Multi-Factor Authentication',
+                    'Use multi-factor authentication or continuous authentication solutions across all network and information systems, particularly for remote access and privileged accounts.',
+                    'Enable MFA for all user accounts. Enforce MFA for remote access (VPN, RDP). Log and alert on MFA bypass attempts. Review MFA enrollment monthly.'
+                )
+            ) AS v(name, solution, remediation)
+            WHERE std.standard_name = 'NIS2'
+            ]]>
+        </sql>
+    </changeSet>
+
+    <changeSet id="20260715009-nis2-mappings" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM hive_compliance_control_mapping m
+                JOIN hive_compliance_control_config c ON m.control_id = c.id
+                JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+                JOIN hive_compliance_standard std ON sec.standard_id = std.id
+                WHERE std.standard_name = 'NIS2'
+            </sqlCheck>
+        </preConditions>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+-- Art.21.2(b) — Incident Handling: alerts linked to incidents are evidence
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'ALERT',
+       'logx.dataType == "ALERT" && logx.incident_id != null && logx.incident_id != ""',
+       'Security alert linked to an incident ID — confirms that incident handling process is active per NIS2 Art.21.2(b)',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'NIS2'
+  AND c.control_name LIKE '%Art.21.2(b)%';
+
+-- Art.21.2(b) — NIS2 72-hour notification window: high-severity incident with no notes after 72h = VIOLATION
+-- Handled as a time-bounded INDICATOR in the event processor; here we record the intent
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'INDICATOR',
+       'INCIDENT',
+       'logx.dataType == "INCIDENT" && logx.incident_status == "OPEN" && logx.incident_severity in ["HIGH","CRITICAL"]',
+       'Open high/critical incident — monitor for NIS2 Art.21.2(b) 72-hour notification SLA compliance',
+       0.8, 30
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'NIS2'
+  AND c.control_name LIKE '%Art.21.2(b)%';
+
+-- Art.21.2(i) — Access control: Windows login audit trail (4624/4625/4634) = EVIDENCE
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'WINDOWS_AGENT',
+       'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id in [4624, 4625, 4634]',
+       'Windows logon/logoff events (4624, 4625, 4634) confirm access control audit logging per NIS2 Art.21.2(i)',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'NIS2'
+  AND c.control_name LIKE '%Art.21.2(i)%';
+
+-- Art.21.2(i) — Deprovisioning: account deleted events = EVIDENCE
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'WINDOWS_AGENT',
+       'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id in [4720, 4726]',
+       'Account creation (4720) and deletion (4726) events satisfy NIS2 Art.21.2(i) identity lifecycle requirements',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'NIS2'
+  AND c.control_name LIKE '%Art.21.2(i)%';
+
+-- Art.21.2(j) — MFA: Windows events with MFA keywords in logon data = EVIDENCE
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'WINDOWS_AGENT',
+       'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4624 && (logx.winlog.event_data.AuthenticationPackageName matches ".*(MFA|OATH|Authenticator|DUO|FIDO|Smartcard).*")',
+       'Successful logon with MFA authentication package confirms multi-factor authentication is active per NIS2 Art.21.2(j)',
+       1.0, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'NIS2'
+  AND c.control_name LIKE '%Art.21.2(j)%';
+
+-- Art.21.2(j) — MFA bypass/failure = VIOLATION
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'VIOLATION',
+       'WINDOWS_AGENT',
+       'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4625 && logx.winlog.event_data.LogonType in ["10", "3"]',
+       'Remote or network logon failure (4625 type 3/10) may indicate MFA bypass attempt, violating NIS2 Art.21.2(j)',
+       1.0, 180
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'NIS2'
+  AND c.control_name LIKE '%Art.21.2(j)%';
+
+-- Art.21.2(f) — Effectiveness: UBA anomalies firing = EVIDENCE that monitoring is working
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'EVIDENCE',
+       'UBA',
+       'logx.dataType == "UBA" && logx.anomaly_score > 0',
+       'UBA anomaly fired — confirms automated risk-measure effectiveness monitoring per NIS2 Art.21.2(f)',
+       0.9, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'NIS2'
+  AND c.control_name LIKE '%Art.21.2(f)%';
+
+-- Art.21.2(h) — Crypto: TLS/SSL error events = INDICATOR of unencrypted traffic
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'INDICATOR',
+       'GENERIC',
+       'logx.dataType == "GENERIC" && (logx.message matches ".*(SSL|TLS).*(error|failure|handshake|cert).*" || logx.message matches ".*certificate.*expired.*")',
+       'TLS/SSL error or expired certificate detected — indicator of potential unencrypted traffic violating NIS2 Art.21.2(h) encryption policy',
+       0.8, 90
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'NIS2'
+  AND c.control_name LIKE '%Art.21.2(h)%';
+
+-- Art.21.2(b) — Audit log cleared = VIOLATION (hinders incident investigation)
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+SELECT c.id,
+       'VIOLATION',
+       'WINDOWS_AGENT',
+       'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 1102 || logx.winlog.event_id == 1100)',
+       'Audit log cleared (1102) or logging service stopped (1100) hampers incident handling — violates NIS2 Art.21.2(b)',
+       1.0, 365
+FROM hive_compliance_control_config c
+JOIN hive_compliance_standard_section sec ON c.standard_section_id = sec.id
+JOIN hive_compliance_standard std ON sec.standard_id = std.id
+WHERE std.standard_name = 'NIS2'
+  AND c.control_name LIKE '%Art.21.2(b)%';
+            ]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

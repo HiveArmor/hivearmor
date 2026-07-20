@@ -35,6 +35,15 @@ public interface UtmComplianceControlConfigRepository extends JpaRepository<UtmC
     List<UtmComplianceControlConfig> findWithQueriesByIdIn(
             @Param("ids") List<Long> ids);
 
+    @Query("""
+        SELECT c.id FROM UtmComplianceControlConfig c
+        WHERE c.standardSectionId IN (
+            SELECT s.id FROM UtmComplianceStandardSection s
+            WHERE s.standardId = :standardId
+        )
+    """)
+    List<Long> findControlIdsByStandardId(@Param("standardId") Long standardId);
+
     static Specification<UtmComplianceControlConfig> bySection(Long sectionId) {
         return (root, query, cb) ->
                 cb.equal(root.get("standardSectionId"), sectionId);

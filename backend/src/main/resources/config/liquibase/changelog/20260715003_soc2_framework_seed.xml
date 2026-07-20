@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260715003" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM hive_compliance_standard WHERE standard_name = 'SOC 2 Type II'
+            </sqlCheck>
+        </preConditions>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+            INSERT INTO hive_compliance_standard (standard_name, standard_description, system_owner)
+            VALUES (
+                'SOC 2 Type II',
+                'AICPA Trust Services Criteria for security, availability, processing integrity, confidentiality, and privacy. Type II evaluates operating effectiveness over a period.',
+                true
+            )
+            ]]>
+        </sql>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+            INSERT INTO hive_compliance_standard_section (standard_id, standard_section_name, standard_section_description)
+            SELECT s.id, v.name, v.descr FROM hive_compliance_standard s
+            CROSS JOIN (VALUES
+                ('CC1 - Control Environment', 'Demonstrates commitment to integrity, ethical values, and competence. Includes board oversight, organizational structure, and accountability.'),
+                ('CC2 - Communication and Information', 'Generates and uses relevant, quality information to support internal controls. Covers internal and external communication of information relevant to objectives.'),
+                ('CC3 - Risk Assessment', 'Specifies suitable objectives to enable identification and assessment of risks. Identifies and analyzes risks to achieve objectives, including fraud risks.'),
+                ('CC4 - Monitoring Activities', 'Selects, develops, and performs ongoing and separate evaluations to ascertain control components are present and functioning.'),
+                ('CC5 - Control Activities', 'Selects and develops control activities that contribute to mitigating risks. Deploys control activities through policies and procedures.'),
+                ('CC6 - Logical and Physical Access Controls', 'Implements logical access security software, infrastructure, and architecture. Manages access credentials, removes access, prevents unauthorized access, and restricts privileged access.'),
+                ('CC7 - System Operations', 'Detects and monitors for security events and anomalies. Responds to identified security incidents, evaluates security events, and communicates breaches.'),
+                ('CC8 - Change Management', 'Authorizes, designs, develops or acquires, configures, documents, tests, approves, and implements changes to infrastructure, data, software, and procedures.'),
+                ('CC9 - Risk Mitigation', 'Identifies, selects, and develops risk mitigation activities including contingency and business continuity planning. Manages vendor and business partner risk.')
+            ) AS v(name, descr)
+            WHERE s.standard_name = 'SOC 2 Type II'
+            ]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

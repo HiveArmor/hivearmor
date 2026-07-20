@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260715007" author="hivearmor">
+        <createTable tableName="hive_compliance_control_mapping">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="control_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <!-- EVIDENCE: log events that satisfy this control -->
+            <!-- VIOLATION: log events that violate this control -->
+            <!-- INDICATOR: log events that signal compliance risk -->
+            <column name="mapping_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data_types" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cel_condition" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="weight" type="DECIMAL(3,2)" defaultValueNumeric="1.0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="evidence_retention_days" type="INTEGER" defaultValueNumeric="90">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="hive_compliance_control_mapping"
+                baseColumnNames="control_id"
+                referencedTableName="hive_compliance_control_config"
+                referencedColumnNames="id"
+                constraintName="fk_control_mapping_control"
+                onDelete="CASCADE"/>
+
+        <createIndex indexName="idx_control_mapping_control" tableName="hive_compliance_control_mapping">
+            <column name="control_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_control_mapping_type" tableName="hive_compliance_control_mapping">
+            <column name="mapping_type"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

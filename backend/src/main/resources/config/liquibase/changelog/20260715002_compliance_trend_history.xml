@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260715002" author="hivearmor">
+        <createTable tableName="hive_compliance_eval_history">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="framework_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="evaluated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="overall_score" type="DECIMAL(5,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="controls_passed" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="controls_failed" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="controls_total" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="hive_compliance_eval_history"
+                baseColumnNames="framework_id"
+                referencedTableName="hive_compliance_standard"
+                referencedColumnNames="id"
+                constraintName="fk_eval_history_framework"
+                onDelete="CASCADE"/>
+
+        <createIndex indexName="idx_eval_history_framework_date" tableName="hive_compliance_eval_history">
+            <column name="framework_id"/>
+            <column name="evaluated_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

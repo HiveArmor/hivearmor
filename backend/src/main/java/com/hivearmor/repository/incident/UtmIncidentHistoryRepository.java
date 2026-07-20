@@ -13,4 +13,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UtmIncidentHistoryRepository extends JpaRepository<UtmIncidentHistory, Long>, JpaSpecificationExecutor<UtmIncidentHistory> {
 
+    java.util.List<UtmIncidentHistory> findByIncidentIdOrderByActionDateAsc(Long incidentId);
 }

@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        Seed 44 critical control mappings across PCI-DSS, HIPAA, and CMMC.
+        Uses direct control_id values (looked up from hive_compliance_control_config).
+        mapping_type values: EVIDENCE | VIOLATION | INDICATOR
+    -->
+    <changeSet id="20260715008" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM hive_compliance_control_mapping
+            </sqlCheck>
+        </preConditions>
+
+        <sql dbms="postgresql" splitStatements="false" stripComments="false">
+            <![CDATA[
+INSERT INTO hive_compliance_control_mapping
+    (control_id, mapping_type, data_types, cel_condition, description, weight, evidence_retention_days)
+VALUES
+
+-- ── PCI DSS ──────────────────────────────────────────────────────────────────
+-- id=52  Windows 10.2 Account Logon Failure
+(52, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4625',
+ 'Failed interactive logon (4625) captured as required by PCI DSS 10.2 audit trail requirements',
+ 1.0, 90),
+
+-- id=44  Windows 7.3 Account Logon Success
+(44, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4624',
+ 'Successful logon event (4624) provides evidence that user authentication activity is being captured',
+ 1.0, 90),
+
+-- id=50  Windows 10.2 Cleaned Event Log
+(50, 'VIOLATION', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 1102 || logx.winlog.event_id == 1100)',
+ 'Audit log cleared (1102) or logging service stopped (1100) violates PCI DSS requirement to protect audit trails',
+ 1.0, 365),
+
+-- id=53  Windows 10.2 Special privileges assigned to new logon
+(53, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4672',
+ 'Privileged logon (4672) confirms that administrative access is being audited per PCI DSS 10.2',
+ 1.0, 90),
+
+-- id=54  Windows 10.2 User Accounts Created
+(54, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4720',
+ 'User account creation (4720) documents identity provisioning events required by PCI DSS 10.2',
+ 1.0, 90),
+
+-- id=55  Windows 10.2 Additions to Security Groups
+(55, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 4728 || logx.winlog.event_id == 4732 || logx.winlog.event_id == 4756)',
+ 'Security group membership change confirms group access control changes are being audited',
+ 1.0, 90),
+
+-- id=56  Windows 10.2 Access to critical files or specific directories
+(56, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 4663 || logx.winlog.event_id == 4656)',
+ 'Object access audit event (4663/4656) provides evidence that access to cardholder data objects is logged',
+ 1.0, 90),
+
+-- id=57  Windows 10.2 Protected Object Permission Change
+(57, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4670',
+ 'Permission change on a protected object (4670) documents access control modifications for audit',
+ 1.0, 90),
+
+-- id=48  Windows 8.3 Account Locks
+(48, 'VIOLATION', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4740',
+ 'Account lockout event (4740) may indicate brute-force attack in violation of acceptable login attempt thresholds',
+ 1.0, 90),
+
+-- id=46  Windows 7.3 Account Authentication Using NTLM
+(46, 'INDICATOR', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4776 && logx.winlog.event_data.Status != "0x0"',
+ 'NTLM authentication failure (4776 with non-zero status) is an indicator of credential-stuffing or lateral movement',
+ 0.8, 90),
+
+-- id=58  Windows 10.2 Account Authentication Using NTLM
+(58, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4776 && logx.winlog.event_data.Status == "0x0"',
+ 'Successful NTLM authentication (4776) captured — evidence that authentication mechanism is being logged',
+ 1.0, 90),
+
+-- id=47  Windows 7.3 Kerberos ticket requests
+(47, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 4768 || logx.winlog.event_id == 4769)',
+ 'Kerberos TGT (4768) and service ticket (4769) requests confirm Kerberos authentication logging is active',
+ 1.0, 90),
+
+-- id=59  Windows 10.2 User Accounts Enabled
+(59, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4722',
+ 'Account enabled event (4722) documents user activation as part of access provisioning audit trail',
+ 1.0, 90),
+
+-- id=60  Windows A1 User Account Logoff
+(60, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 4634 || logx.winlog.event_id == 4647)',
+ 'Logoff events (4634/4647) confirm session termination is being captured for complete session audit trail',
+ 0.8, 90),
+
+-- id=66  Windows A1 Logins with explicit credentials
+(66, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4648',
+ 'Explicit credential logon (4648) documents use of RunAs or pass-through authentication for cardholder system access',
+ 1.0, 90),
+
+-- id=67  Windows A1 User Accounts Created
+(67, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4720',
+ 'User account creation (4720) in the A1 compliance section documents identity lifecycle management',
+ 1.0, 90),
+
+-- id=49  Windows 10.2 Event Logging Service Shut Down
+(49, 'VIOLATION', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 1100',
+ 'Event logging service shutdown (1100) violates PCI DSS requirement to maintain continuous audit logging',
+ 1.0, 365),
+
+-- id=51  Windows 10.2 Policy changes
+(51, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4719',
+ 'Audit policy change (4719) captures modifications to the audit configuration itself — required for tamper evidence',
+ 1.0, 90),
+
+-- id=6   Windows 7.2 Additions to Security Groups
+(6, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 4728 || logx.winlog.event_id == 4732)',
+ 'Security group membership addition (7.2 scope) confirms privileged group changes are being logged',
+ 1.0, 90),
+
+-- id=38  Windows 7.2 Member Addition to a Security Local Group
+(38, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4732',
+ 'Local group member addition (4732) confirms local administrator group changes are captured',
+ 1.0, 90),
+
+-- ── HIPAA ─────────────────────────────────────────────────────────────────────
+-- id=17  Windows Account Logon Failure
+(17, 'VIOLATION', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4625',
+ 'Failed logon on a system that may hold ePHI is a potential unauthorized access attempt under HIPAA 164.312(d)',
+ 1.0, 365),
+
+-- id=16  Windows Account Logon Success
+(16, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4624',
+ 'Successful logon to a system holding ePHI is captured — satisfies HIPAA 164.312(a)(2)(i) unique user identification',
+ 1.0, 365),
+
+-- id=15  Windows Access to critical files or specific directories
+(15, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 4663 || logx.winlog.event_id == 4656)',
+ 'Object access audit event on PHI-related file or directory satisfies HIPAA 164.312(b) audit controls',
+ 1.0, 365),
+
+-- id=3   Windows Password Reset Attempts
+(3, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 4723 || logx.winlog.event_id == 4724)',
+ 'Password change (4723) or reset (4724) confirms credential management events are captured under HIPAA security rule',
+ 1.0, 365),
+
+-- id=4   Windows Policy changes
+(4, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4719',
+ 'Audit policy change on a HIPAA-covered system must be logged as part of the security management process',
+ 1.0, 365),
+
+-- id=5   Windows Credential Access
+(5, 'INDICATOR', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4648',
+ 'Explicit credential use (4648) may indicate credential sharing or delegation on systems processing ePHI',
+ 0.9, 365),
+
+-- id=12  Windows Special privileges assigned to new logon
+(12, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4672',
+ 'Administrative session (4672) on a HIPAA-covered system — confirms privileged access is being audited',
+ 1.0, 365),
+
+-- id=13  Windows Event Log Service
+(13, 'VIOLATION', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 1100 || logx.winlog.event_id == 1102)',
+ 'Event logging service stopped or log cleared on a system holding ePHI constitutes a HIPAA audit control failure',
+ 1.0, 365),
+
+-- id=20  Windows User Accounts Created
+(20, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4720',
+ 'New user account on a HIPAA system must be documented as part of workforce clearance and access authorization',
+ 1.0, 365),
+
+-- id=2   Windows User Account Attributes Changes
+(2, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4738',
+ 'User account attribute change (4738) documents modifications to access rights on ePHI-holding systems',
+ 1.0, 365),
+
+-- id=7   Windows Access to shared resource
+(7, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 5140',
+ 'Network share access (5140) on a HIPAA system documents remote access to shared resources containing ePHI',
+ 1.0, 365),
+
+-- id=11  Windows Network Access to shared resource
+(11, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 5140',
+ 'Network share access to a resource on a HIPAA-covered system logged for access control review',
+ 0.8, 365),
+
+-- ── CMMC ─────────────────────────────────────────────────────────────────────
+-- id=103 Level 1 (AC.1.001) Account Logon Failure
+(103, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4625',
+ 'Failed logon captured per CMMC AC.1.001 — basic access control requires authentication attempt logging',
+ 1.0, 90),
+
+-- id=104 Level 2 (AU.2.043) Account Logon Success
+(104, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4624',
+ 'Successful logon captured per CMMC AU.2.043 audit control — user sessions on CUI systems must be logged',
+ 1.0, 90),
+
+-- id=105 Level 2 (AC.2.007) User Accounts Created
+(105, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4720',
+ 'Account creation (4720) logged per CMMC AC.2.007 — manage accounts associated with CUI access',
+ 1.0, 90),
+
+-- id=108 Level 3 (AC.3.014) Attempt to Access a Protected Object
+(108, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 4663 || logx.winlog.event_id == 4656)',
+ 'Object access event (4663/4656) satisfies CMMC AC.3.014 — employ the principle of least privilege',
+ 1.0, 90),
+
+-- id=109 Level 2 (AC.2.007) Protected Object Permission Change
+(109, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4670',
+ 'Permission change (4670) on a protected object captured per CMMC AC.2.007 account management controls',
+ 1.0, 90),
+
+-- id=110 Level 3 (AC.3.014) Access to shared resource
+(110, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 5140',
+ 'Network share access (5140) logged for CMMC AC.3.014 — control CUI flow enforcement on shared resources',
+ 1.0, 90),
+
+-- id=111 Level 5 (AC.5.025) Account Locks
+(111, 'VIOLATION', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4740',
+ 'Account lockout (4740) is a violation indicator per CMMC AC.5.025 — employ dual authorization for critical actions',
+ 1.0, 90),
+
+-- id=112 Level 3 (AC.3.014) Access to critical files or specific directories
+(112, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4663',
+ 'File system access audit event (4663) on CUI-containing directory satisfies CMMC AC.3.014',
+ 1.0, 90),
+
+-- id=113 Level 2 (AC.2.007) Special privileges assigned to new logon
+(113, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4672',
+ 'Privileged session token (4672) logged per CMMC AC.2.007 — manage accounts with elevated access to CUI systems',
+ 1.0, 90),
+
+-- id=115 Level 1 (AU.1.001) Policy changes
+(115, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4719',
+ 'Audit policy change (4719) captured per CMMC AU.1.001 — create and retain system audit logs',
+ 1.0, 90),
+
+-- id=116 Level 1 (AU.1.001) Logins with explicit credentials
+(116, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4648',
+ 'Explicit credential use (4648) logged per CMMC AU.1.001 — audit records for explicit authentication events',
+ 1.0, 90),
+
+-- id=127 Level 2 (SI.2.212) Cleaned Event Log
+(127, 'VIOLATION', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 1102',
+ 'Audit log cleared (1102) violates CMMC SI.2.212 — identify unauthorized changes to system audit logs',
+ 1.0, 90),
+
+-- id=163 Level 4 (AU.4.053) PowerShell Remote Session Creation
+(163, 'INDICATOR', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && logx.winlog.event_id == 4688 && logx.winlog.event_data.NewProcessName matches ".*powershell.*" && logx.winlog.event_data.CommandLine matches ".*(Enter-PSSession|Invoke-Command|New-PSSession|-ComputerName).*"',
+ 'PowerShell remoting command is a lateral movement indicator — review per CMMC AU.4.053 extensive audit logging',
+ 0.9, 180),
+
+-- id=183 Level 2 (AC.2.007) Additions to Security Groups
+(183, 'EVIDENCE', 'WINDOWS_AGENT',
+ 'logx.dataType == "WINDOWS_AGENT" && (logx.winlog.event_id == 4728 || logx.winlog.event_id == 4732 || logx.winlog.event_id == 4756)',
+ 'Security group addition (4728/4732/4756) logged per CMMC AC.2.007 — manage accounts associated with CUI access',
+ 1.0, 90);
+            ]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
