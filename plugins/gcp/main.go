@@ -35,9 +35,13 @@ func main() {
 
 	go config.StartConfigurationSystem()
 
-	for i := 0; i < 2*runtime.NumCPU(); i++ {
-		go plugins.SendLogsFromChannel("com.hivearmor.gcp")
-		go plugins.SendNotificationsFromChannel("com.hivearmor.gcp")
+	if broker := os.Getenv("KAFKA_BROKER"); broker != "" {
+		gcpKafkaWriter = newKafkaWriter()
+	} else {
+		for i := 0; i < 2*runtime.NumCPU(); i++ {
+			go plugins.SendLogsFromChannel("com.hivearmor.gcp")
+			go plugins.SendNotificationsFromChannel("com.hivearmor.gcp")
+		}
 	}
 
 	startGroupModuleManager()
@@ -90,14 +94,26 @@ func (g *GroupModule) PullLogs() {
 
 	for {
 		err := sub.Receive(g.CTX, func(ctx context.Context, msg *pubsub.Message) {
-			plugins.EnqueueLog(&plugins.Log{
+			log := &plugins.Log{
 				Id:         uuid.NewString(),
 				TenantId:   defaultTenant,
 				DataType:   "google",
 				DataSource: g.GroupName,
 				Timestamp:  time.Now().UTC().Format(time.RFC3339Nano),
 				Raw:        string(msg.Data),
-			}, "com.hivearmor.gcp")
+			}
+
+			if gcpKafkaWriter != nil {
+				if err := publishToKafka(gcpKafkaWriter, log); err != nil {
+					_ = catcher.Error("kafka publish failed, falling back to enqueue", err, map[string]any{
+						"process": "plugin_com.hivearmor.gcp",
+						"group":   g.GroupName,
+					})
+					plugins.EnqueueLog(log, "com.hivearmor.gcp")
+				}
+			} else {
+				plugins.EnqueueLog(log, "com.hivearmor.gcp")
+			}
 
 			msg.Ack()
 		})

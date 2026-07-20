@@ -131,3 +131,40 @@ func getSocketSecret() string {
 	}
 	return "change-me-in-production"
 }
+
+// sendViaSocket opens a fresh socket connection, sends one log, waits for the
+// ack, and closes. Used by kafkaSendLog() as a fallback when Kafka fails.
+func sendViaSocket(log *plugins.Log) error {
+	var socketsFolder utils.Folder
+	var err error
+
+	socketsFolder, err = utils.MkdirJoin(plugins.WorkDir, "sockets")
+	if err != nil {
+		return err
+	}
+
+	socketFile := socketsFolder.FileJoin("engine_server.sock")
+	secret := getSocketSecret()
+
+	conn, err := grpc.NewClient(
+		fmt.Sprintf("unix://%s", socketFile),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithContextDialer(secretDialer(secret)),
+	)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	inputClient, err := plugins.NewEngineClient(conn).Input(context.Background())
+	if err != nil {
+		return err
+	}
+
+	if err := inputClient.Send(log); err != nil {
+		return err
+	}
+
+	_, err = inputClient.Recv()
+	return err
+}

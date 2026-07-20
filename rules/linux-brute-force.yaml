@@ -9,7 +9,7 @@
   where: |
     contains("log.message", "Failed password") && safe("origin.ip", "") != ""
   correlation:
-    - indexPattern: "v11-log-linux-*"
+    - indexPattern: "v3-hive-log-linux-*"
       with:
         - field: "origin.ip"
           operator: filter_match
@@ -39,7 +39,7 @@
   where: |
     contains("log.message", "Accepted password") || contains("log.message", "Accepted publickey")
   correlation:
-    - indexPattern: "v11-log-linux-*"
+    - indexPattern: "v3-hive-log-linux-*"
       with:
         - field: "origin.ip"
           operator: filter_match

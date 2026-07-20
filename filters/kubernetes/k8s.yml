@@ -1,0 +1,52 @@
+# Kubernetes Pod Logs filter, version 1.0.0
+#
+# Processes OTLP log records from Kubernetes workloads.
+# The OTLP converter nests OTel k8s.* semconv resource attributes under
+# a "k8s" sub-object in raw JSON, so after json:source=raw they live at:
+#   log.k8s.podName, log.k8s.namespace, log.k8s.containerName,
+#   log.k8s.nodeName, log.k8s.clusterName, log.k8s.serviceName
+# Non-Kubernetes OTLP events carry no log.k8s key and are unaffected.
+
+pipeline:
+  - dataTypes:
+      - otlp
+    steps:
+      # ── Step 1: Parse raw JSON attribute bag into log.* ───────────────────
+      - json:
+          source: raw
+
+      # ── Step 2: Align node name to the canonical hostname field ───────────
+      - rename:
+          from:
+            - log.k8s.nodeName
+          to: log.hostname
+          where: 'exists("log.k8s.nodeName")'
+
+      # ── Step 3: Promote OTel severity text to a dedicated k8s field ───────
+      - rename:
+          from:
+            - log.severity
+          to: log.k8s.logLevel
+          where: 'exists("log.severity") && exists("log.k8s.podName")'
+
+      # ── Step 4: Map OTel severity to HiveArmor severity scalar ────────────
+      - add:
+          function: string
+          params:
+            key: severity
+            value: low
+          where: 'exists("log.k8s.podName") && oneOf("log.k8s.logLevel", ["INFO", "info", "DEBUG", "debug", "TRACE", "trace"])'
+
+      - add:
+          function: string
+          params:
+            key: severity
+            value: medium
+          where: 'exists("log.k8s.podName") && oneOf("log.k8s.logLevel", ["WARN", "warn", "WARNING", "warning"])'
+
+      - add:
+          function: string
+          params:
+            key: severity
+            value: high
+          where: 'exists("log.k8s.podName") && oneOf("log.k8s.logLevel", ["ERROR", "error", "FATAL", "fatal", "CRITICAL", "critical"])'

@@ -1,0 +1,49 @@
+- id: 5001
+  type: graph_offense
+  name: "Kill Chain: Multi-Host Lateral Movement"
+  category: "Lateral Movement"
+  technique: "T1021"
+  description: "Attacker pivoted from one compromised host to at least one additional internal host."
+  cypherQuery: |
+    MATCH path = (a:IpAddress)-[:LOGGED_INTO_FROM|BELONGS_TO*1..2]->(h1:Host)-[:COMMUNICATED_WITH]->(h2:Host)
+    WHERE a.riskScore > 20
+    AND h1.hostname <> h2.hostname
+    AND h2.lastSeen > datetime() - duration('PT30M')
+    RETURN a.address AS attackerIp, h1.hostname AS pivotHost, h2.hostname AS targetHost
+    LIMIT 20
+  alertFields:
+    - attackerIp
+    - pivotHost
+    - targetHost
+  checkIntervalSeconds: 60
+  impact:
+    confidentiality: 3
+    integrity: 3
+    availability: 2
+
+- id: 5002
+  type: graph_offense
+  name: "Kill Chain: High-Risk IP with Multi-Stage Activity"
+  category: "Impact"
+  technique: "T1590"
+  description: "An IP address with elevated risk score is linked to activity spanning multiple stages of the kill chain."
+  cypherQuery: |
+    MATCH (a:IpAddress)
+    WHERE a.riskScore >= 50
+    WITH a
+    MATCH (a)-[r1]->(n1)
+    MATCH (a)-[r2]->(n2)
+    WHERE type(r1) <> type(r2) OR n1 <> n2
+    RETURN a.address AS attackerIp, a.riskScore AS riskScore,
+           count(DISTINCT type(r1)) AS relationshipTypes
+    ORDER BY riskScore DESC
+    LIMIT 10
+  alertFields:
+    - attackerIp
+    - riskScore
+    - relationshipTypes
+  checkIntervalSeconds: 120
+  impact:
+    confidentiality: 3
+    integrity: 3
+    availability: 3

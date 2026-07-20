@@ -1,0 +1,44 @@
+# Positive: 10 failed logins (4625) from same IP, then a successful login (4624) triggers the rule.
+# Negative: fewer than 10 failures would not satisfy the afterEvents count threshold.
+rule: rules/windows/bruteforce_multiple_logon_failure_followed_by_success.yml
+description: "Brute-force followed by successful logon — afterEvents threshold ≥10 failures"
+
+# Trigger event: successful login (4624) — the rule's where clause
+events:
+  - timestamp: "2026-01-15T10:05:00Z"
+    dataType: wineventlog
+    origin:
+      ip: "192.168.1.100"
+      host: "ATTACKER-PC"
+      user: "attacker"
+    target:
+      ip: "192.168.1.10"
+      host: "DC01"
+      user: "jsmith"
+    log:
+      eventCode: 4624
+      channel: "Security"
+      message: "An account was successfully logged on"
+
+  # Correlation events: failed logins (4625) from the same IP — injected 11 times via repeat
+  - timestamp: "2026-01-15T10:00:00Z"
+    dataType: wineventlog
+    origin:
+      ip: "192.168.1.100"
+      host: "ATTACKER-PC"
+      user: "attacker"
+    target:
+      ip: "192.168.1.10"
+      host: "DC01"
+      user: "jsmith"
+    log:
+      eventCode: 4625
+      channel: "Security"
+      message: "An account failed to log on"
+
+repeat: 11
+
+expect:
+  alert: true
+  severity: "2"
+  name: "Windows: Multiple Logon Failure Followed by Logon Success"

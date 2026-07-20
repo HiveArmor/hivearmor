@@ -1,5 +1,7 @@
 FROM eclipse-temurin:17
 
+ARG CACHE_BUST=1
+RUN echo "Cache bust: $CACHE_BUST"
 ADD target/hivearmor.war ./hivearmor.war
 COPY filters /hivearmor/filters
 COPY rules /hivearmor/rules

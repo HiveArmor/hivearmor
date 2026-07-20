@@ -1,0 +1,32 @@
+receivers:
+  windowseventlog:
+    channel: System
+    operators:
+      - type: add
+        field: attributes.data_type
+        value: WINDOWS_AGENT
+  windowseventlog/security:
+    channel: Security
+    operators:
+      - type: add
+        field: attributes.data_type
+        value: WINDOWS_AGENT
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: ${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: ${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [windowseventlog, windowseventlog/security]
+      processors: [batch]
+      exporters: [otlp/hivearmor]

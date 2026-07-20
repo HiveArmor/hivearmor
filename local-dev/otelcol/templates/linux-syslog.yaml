@@ -1,0 +1,29 @@
+receivers:
+  filelog/syslog:
+    include: ["/var/log/syslog", "/var/log/messages", "/var/log/auth.log"]
+    start_at: end
+    multiline:
+      line_start_pattern: '^\w{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}'
+    operators:
+      - type: add
+        field: attributes.data_type
+        value: LINUX_AGENT
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: ${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: ${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [filelog/syslog]
+      processors: [batch]
+      exporters: [otlp/hivearmor]

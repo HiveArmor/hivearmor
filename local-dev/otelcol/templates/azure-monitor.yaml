@@ -1,0 +1,30 @@
+receivers:
+  azuremonitor:
+    subscription_id: ${AZURE_SUBSCRIPTION_ID}
+    resource_groups: []
+    services:
+      - "Microsoft.Compute/virtualMachines"
+      - "Microsoft.Network/networkSecurityGroups"
+    operators:
+      - type: add
+        field: attributes.data_type
+        value: AZURE
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: ${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: ${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [azuremonitor]
+      processors: [batch]
+      exporters: [otlp/hivearmor]

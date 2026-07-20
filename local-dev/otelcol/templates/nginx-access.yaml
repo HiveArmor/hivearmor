@@ -1,0 +1,30 @@
+receivers:
+  filelog/nginx:
+    include: ["/var/log/nginx/access.log", "/var/log/nginx/error.log"]
+    start_at: end
+    operators:
+      - type: regex_parser
+        regex: '^(?P<remote_addr>\S+) - (?P<remote_user>\S+) \[(?P<time_local>[^\]]+)\] "(?P<request>[^"]+)" (?P<status>\d+) (?P<body_bytes_sent>\d+)'
+        if: 'body matches "^\d"'
+      - type: add
+        field: attributes.data_type
+        value: NGINX
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: ${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: ${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [filelog/nginx]
+      processors: [batch]
+      exporters: [otlp/hivearmor]

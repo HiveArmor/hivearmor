@@ -24,6 +24,7 @@ services:
       - INTERNAL_KEY=${INTERNAL_KEY}
       - EVENTPROCESSOR_INJECT_KEY=${EVENTPROCESSOR_INJECT_KEY:-change-me-in-production}
       - INPUTS_SOCKET_SECRET=${INPUTS_SOCKET_SECRET:-change-me-in-production}
+      - OTLP_PORT=4317
       # compliance-orchestrator config
       - BACKEND_URL=http://backend:8080
     volumes:
@@ -32,6 +33,7 @@ services:
       - ep_rules:/workdir/rules
       - ./certs:/cert:ro
       - ../filters:/workdir/pipeline/filters:ro
+      - ./hivearmor_plugins.yaml:/workdir/pipeline/hivearmor_plugins.yaml:ro
     ports:
       - "8000:8000"
       - "8090:8090"

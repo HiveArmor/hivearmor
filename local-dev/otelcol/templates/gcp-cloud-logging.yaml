@@ -1,0 +1,30 @@
+receivers:
+  googlecloudpubsub:
+    project: ${GCP_PROJECT_ID}
+    subscription: projects/${GCP_PROJECT_ID}/subscriptions/${GCP_PUBSUB_SUBSCRIPTION}
+    encoding: raw_text
+    operators:
+      - type: json_parser
+        if: 'body matches "^{.*}$"'
+      - type: add
+        field: attributes.data_type
+        value: GCP
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: ${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: ${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [googlecloudpubsub]
+      processors: [batch]
+      exporters: [otlp/hivearmor]

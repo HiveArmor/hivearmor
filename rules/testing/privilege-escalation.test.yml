@@ -1,0 +1,18 @@
+# Positive: Linux privilege escalation via sudo — usermod -aG sudo adds user to admin group.
+# Negative: A plain "sudo apt install" command without usermod does NOT match the regexMatch.
+rule: rules/linux/user_added_to_admin_group.yml
+description: "User added to sudo group via usermod"
+
+events:
+  - timestamp: "2026-01-15T14:00:00Z"
+    dataType: linux
+    origin:
+      ip: "10.0.0.5"
+      user: "sysadmin"
+    log:
+      message: "sysadmin : TTY=pts/0 ; PWD=/home/sysadmin ; USER=root ; COMMAND=usermod -aG sudo newuser | new user added to group sudo by sysadmin"
+
+expect:
+  alert: true
+  severity: "3"
+  name: "System Linux: A user has been added to the administrators group"

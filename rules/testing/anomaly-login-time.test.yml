@@ -1,0 +1,24 @@
+# Positive: Risk-based rule — Linux rule 1003 (Privilege Escalation via sudo) accumulates
+#   riskScore=0; we use the risk test rule which scores 30 per event. Three events × 30 = 90 ≥ 75.
+# This test uses the bundled risk test rule which is safe to reference directly.
+#
+# Note: The production anomaly baseline requires OpenSearch (unsupported in unit tests).
+# This fixture exercises the risk accumulation path using the shipped test rule as a proxy.
+rule: event-processor/rules/tests/risk_test_rule.yml
+description: "Risk score accumulation — 3 failed-auth events × 30 pts = 90 ≥ threshold (75)"
+
+events:
+  - timestamp: "2026-01-15T02:00:00Z"
+    dataType: windows
+    origin:
+      ip: "10.0.0.77"
+      user: "jdoe"
+    log:
+      action: "failed_auth"
+
+repeat: 3
+
+expect:
+  alert: true
+  severity: "3"
+  name: "Risk Threshold Exceeded"

@@ -1,0 +1,31 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - otlp
+name: Privileged Kubernetes Container Launched
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 3
+category: Container Security
+technique: "T1611 - Escape to Host"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1611/
+  - https://kubernetes.io/docs/concepts/security/pod-security-standards/
+description: |
+  Detects when a privileged container is started in the Kubernetes cluster. Privileged containers have full access to the host kernel, which is the primary technique attackers use to escape container isolation and compromise the underlying node.
+
+  Next Steps:
+  1. Identify the pod and namespace where the privileged container was launched
+  2. Verify whether the workload was deployed by an authorized user or service account
+  3. Check the container image for known-malicious or unsigned images
+  4. Review RBAC bindings that allowed deployment of privileged pods
+  5. If unauthorized, cordon the affected node and delete the pod immediately
+  6. Enforce Pod Security Standards (restricted profile) via admission controllers
+where: |
+  exists("log.k8s.podName") &&
+  contains("log.message", "privileged: true")
+groupBy:
+  - log.k8s.namespace
+  - log.k8s.podName

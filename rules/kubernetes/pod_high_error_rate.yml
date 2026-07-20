@@ -1,0 +1,42 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - otlp
+name: Kubernetes Pod High Error Rate
+impact:
+  confidentiality: 1
+  integrity: 2
+  availability: 3
+category: Application Stability
+technique: "T1499 - Endpoint Denial of Service"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1499/
+  - https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/
+description: |
+  Detects a Kubernetes pod emitting more than 50 ERROR or FATAL log entries within 60 seconds. High error rates may indicate an application crash loop, a resource exhaustion attack, or an attacker injecting malformed input designed to destabilize a service.
+
+  Next Steps:
+  1. Review the pod logs for the error messages and identify the root cause
+  2. Check whether the error rate correlates with a spike in inbound traffic or unusual requests
+  3. Inspect pod resource utilisation (CPU, memory) and OOMKill events
+  4. Consider whether the pod is restarting (CrashLoopBackOff) and review the restart history
+  5. If the errors originate from malformed external input, review the ingress and apply input validation
+  6. Scale the deployment or apply a circuit breaker if the service is under legitimate load
+where: |
+  exists("log.k8s.podName") &&
+  oneOf("log.k8s.logLevel", ["ERROR", "error", "FATAL", "fatal", "CRITICAL", "critical"])
+afterEvents:
+  - indexPattern: v3-hive-log-otlp-*
+    with:
+      - field: log.k8s.podName
+        operator: filter_term
+        value: '{{.log.k8s.podName}}'
+      - field: log.k8s.logLevel
+        operator: filter_terms
+        value: '["ERROR","error","FATAL","fatal","CRITICAL","critical"]'
+    within: 60s
+    count: 50
+groupBy:
+  - log.k8s.namespace
+  - log.k8s.podName

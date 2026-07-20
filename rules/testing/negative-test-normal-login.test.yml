@@ -1,0 +1,23 @@
+# Negative: A single normal successful login (4624) WITHOUT preceding failures should NOT
+#   fire the brute-force rule because the afterEvents count (10 failures) is not satisfied.
+rule: rules/windows/bruteforce_multiple_logon_failure_followed_by_success.yml
+description: "Normal login — should NOT fire (no preceding failure events)"
+
+events:
+  - timestamp: "2026-01-15T08:30:00Z"
+    dataType: wineventlog
+    origin:
+      ip: "192.168.1.200"
+      host: "LAPTOP01"
+      user: "jsmith"
+    target:
+      ip: "192.168.1.10"
+      host: "DC01"
+      user: "jsmith"
+    log:
+      eventCode: 4624
+      channel: "Security"
+      message: "An account was successfully logged on"
+
+expect:
+  alert: false

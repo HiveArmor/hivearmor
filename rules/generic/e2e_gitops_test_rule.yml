@@ -1,0 +1,16 @@
+- id: 9999901
+  name: "E2E GitOps Test Rule — Unique Marker 8675309"
+  dataTypes:
+    - generic
+    - linux
+    - windows
+  category: "Testing"
+  technique: "T0000"
+  adversary: "origin"
+  description: "Synthetic rule used by the Sprint 05 GitOps E2E test. Do not activate in production."
+  where: |
+    safe("log.message", "") == "e2e-gitops-test"
+  impact:
+    confidentiality: 1
+    integrity: 1
+    availability: 1

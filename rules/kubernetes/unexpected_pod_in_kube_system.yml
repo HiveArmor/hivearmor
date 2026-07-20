@@ -1,0 +1,31 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - otlp
+name: Unexpected Pod Created in kube-system Namespace
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 3
+category: Container Security
+technique: "T1610 - Deploy Container"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1610/
+  - https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+description: |
+  Detects creation of a pod in the kube-system namespace outside of known system controllers. kube-system houses cluster-critical components; an attacker who can deploy workloads there gains persistent, privileged access to control-plane services.
+
+  Next Steps:
+  1. Determine who or what service account created the pod
+  2. Review the pod spec for suspicious images, commands, or volume mounts
+  3. Check whether the pod was created by a legitimate operator or Helm chart
+  4. If unauthorized, delete the pod and audit RBAC policies that permitted deployment
+  5. Review recent API server audit logs for the source IP and credentials used
+where: |
+  exists("log.k8s.podName") &&
+  equals("log.k8s.namespace", "kube-system") &&
+  contains("log.message", "Created pod")
+groupBy:
+  - log.k8s.podName
+  - log.hostname

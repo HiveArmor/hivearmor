@@ -1,0 +1,33 @@
+receivers:
+  awscloudwatch:
+    region: ${AWS_REGION}
+    logs:
+      poll_interval: 1m
+      groups:
+        named:
+          aws-cloudtrail-logs:
+            names:
+              - CloudTrail/management-events
+    operators:
+      - type: add
+        field: attributes.data_type
+        value: AWS
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: ${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: ${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [awscloudwatch]
+      processors: [batch]
+      exporters: [otlp/hivearmor]

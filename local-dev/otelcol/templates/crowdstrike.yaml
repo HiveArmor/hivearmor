@@ -1,0 +1,32 @@
+receivers:
+  # CrowdStrike Falcon Data Replicator streams events via S3 or Event Stream API.
+  # This template uses the S3-based replicator. Set bucket/region via env vars.
+  awss3:
+    s3downloader:
+      region: ${AWS_REGION}
+      s3_bucket: ${CROWDSTRIKE_FDR_BUCKET}
+      s3_prefix: "data/"
+    operators:
+      - type: json_parser
+      - type: add
+        field: attributes.data_type
+        value: CROWDSTRIKE_EDR
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: ${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: ${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [awss3]
+      processors: [batch]
+      exporters: [otlp/hivearmor]

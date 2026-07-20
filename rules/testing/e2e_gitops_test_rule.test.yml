@@ -1,0 +1,14 @@
+rule: rules/generic/e2e_gitops_test_rule.yml
+description: "GitOps E2E smoke rule — fires on log.message == e2e-gitops-test"
+
+events:
+  - timestamp: "2026-01-01T00:00:00Z"
+    dataType: generic
+    origin:
+      ip: "10.0.0.1"
+    log:
+      message: "e2e-gitops-test"
+
+expect:
+  alert: true
+  name: "E2E GitOps Test Rule — Unique Marker 8675309"

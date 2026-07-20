@@ -24,7 +24,7 @@
   where: |
     safe("log.eventID", "") == "4625"
   correlation:
-    - indexPattern: "v11-log-wineventlog-*"
+    - indexPattern: "v3-hive-log-wineventlog-*"
       with:
         - field: "origin.ip"
           operator: filter_match

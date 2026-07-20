@@ -203,6 +203,16 @@ services:
       - GIN_MODE=release
       - MODE=manager
       - NODE_NAME=manager
+      - OPENSEARCH_HOST=opensearch
+      - OPENSEARCH_PORT=9200
+      - OPENSEARCH_USER=admin
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - BACKEND_URL=http://backend:8080
+      - INTERNAL_KEY=${INTERNAL_KEY}
+      - EVENTPROCESSOR_INJECT_KEY=${EVENTPROCESSOR_INJECT_KEY}
+      - KAFKA_BROKER=redpanda:9092
+      - KAFKA_ENABLED=true
+      - OTLP_PORT=4317
     volumes:
       - ep_pipeline:/workdir/pipeline
       - ep_logs:/workdir/logs
@@ -210,8 +220,8 @@ services:
       - ./certs:/cert:ro
       - updates_data:/updates
     ports:
-      - "50051:50051"
       - "8000:8000"
+      - "8090:8090"
     depends_on:
       postgres:
         condition: service_healthy
@@ -219,6 +229,8 @@ services:
         condition: service_healthy
       backend:
         condition: service_started
+      redpanda:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 8000 || exit 1"]
       interval: 15s
@@ -229,6 +241,58 @@ services:
       resources:
         limits:
           memory: 2048M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Event Processor Worker - runs the inputs plugin (MODE=worker) so it
+  # accepts log ingestion from agents, hivearmor-collector, and OTLP sources.
+  # ---------------------------------------------------------------------------
+  eventprocessor-worker:
+    image: hivearmor/event-processor:local
+    pull_policy: never
+    environment:
+      - WORK_DIR=/workdir
+      - LOG_LEVEL=200
+      - GIN_MODE=release
+      - MODE=worker
+      - NODE_NAME=worker
+      - OPENSEARCH_HOST=opensearch
+      - OPENSEARCH_PORT=9200
+      - OPENSEARCH_USER=admin
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - BACKEND_URL=http://backend:8080
+      - INTERNAL_KEY=${INTERNAL_KEY}
+      - EVENTPROCESSOR_INJECT_KEY=${EVENTPROCESSOR_INJECT_KEY}
+      - KAFKA_BROKER=redpanda:9092
+      - KAFKA_ENABLED=true
+      - OTLP_PORT=4317
+      - INPUTS_SOCKET_SECRET=${INPUTS_SOCKET_SECRET:-change-me-in-production}
+    volumes:
+      - ep_pipeline:/workdir/pipeline
+      - ep_logs:/workdir/logs
+      - ep_rules:/workdir/rules/hivearmor
+      - ./certs:/cert:ro
+      - updates_data:/updates
+      - ./hivearmor_plugins.yaml:/workdir/pipeline/hivearmor_plugins.yaml:ro
+    ports:
+      - "50051:50051"      # HiveArmor gRPC (agents/collector)
+      - "4317:4317"        # OTLP gRPC
+      - "4318:4318"        # OTLP HTTP (future)
+    depends_on:
+      eventprocessor:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 50051 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
@@ -331,6 +395,117 @@ services:
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
+  # Neo4j - Security Knowledge Graph (entity relationship store)
+  # Browser: http://localhost:7474  Login: neo4j / $NEO4J_PASSWORD
+  # Bolt:    bolt://localhost:7687
+  # ⚠️  DEV ONLY — schema is mounted at /docker-entrypoint-initdb.d/schema.cypher;
+  #    apply once with: docker exec hivearmor-neo4j cypher-shell -u neo4j -p "$NEO4J_PASSWORD" -f /docker-entrypoint-initdb.d/schema.cypher
+  # ---------------------------------------------------------------------------
+  neo4j:
+    image: neo4j:5.20-community
+    container_name: hivearmor-neo4j
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
+      - 'NEO4J_PLUGINS=["apoc"]'
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_server_memory_heap_initial__size=512m
+      - NEO4J_server_memory_heap_max__size=1G
+    ports:
+      - "7474:7474"    # HTTP browser
+      - "7687:7687"    # Bolt protocol
+    volumes:
+      - neo4j_data:/data
+      - ./neo4j/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Redpanda - Kafka-compatible message bus (no ZooKeeper)
+  # External Kafka API: localhost:19092
+  # Admin API:          localhost:19644
+  # ⚠️  DEV ONLY — replace broker URL with managed Kafka for production.
+  # ---------------------------------------------------------------------------
+  redpanda:
+    image: redpandadata/redpanda:v23.3.21
+    container_name: hivearmor-redpanda
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+      - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:18082
+      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+      - --rpc-addr redpanda:33145
+      - --advertise-rpc-addr redpanda:33145
+      - --smp 1
+      - --memory 768M
+      - --mode dev-container
+      - --default-log-level=warn
+    ports:
+      - "19092:19092"   # External Kafka API
+      - "18081:18081"   # Schema Registry
+      - "18082:18082"   # HTTP Proxy
+      - "19644:9644"    # Admin API
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy.*true'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Redpanda Console - Topic browser and consumer group monitor
+  # Access: http://localhost:8081
+  # ⚠️  DEV ONLY
+  # ---------------------------------------------------------------------------
+  redpanda-console:
+    image: redpandadata/console:v2.4.6
+    container_name: hivearmor-redpanda-console
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    environment:
+      - KAFKA_BROKERS=redpanda:9092
+      - REDPANDA_ADMINAPI_ENABLED=true
+      - REDPANDA_ADMINAPI_URLS=http://redpanda:9644
+    ports:
+      - "8081:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Kafka Setup - Creates required topics once on first start
+  # ---------------------------------------------------------------------------
+  kafka-setup:
+    image: redpandadata/redpanda:v23.3.21
+    container_name: hivearmor-kafka-setup
+    entrypoint: /bin/bash
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    command: -c "sleep 5 && bash /scripts/create-topics.sh"
+    volumes:
+      - ./kafka-setup:/scripts
+    restart: "no"
+
+  # ---------------------------------------------------------------------------
   # OpenSearch Dashboards - Index management, dev tools, query UI
   # ⚠️  DEV ONLY — REMOVE THIS SERVICE BEFORE DEPLOYING TO PRODUCTION.
   #    Dashboards exposes full cluster admin access and is not hardened
@@ -356,6 +531,62 @@ services:
           memory: 512M
     restart: unless-stopped
 
+  # ---------------------------------------------------------------------------
+  # Entity Graph - Kafka → Neo4j entity/relationship builder
+  # Consumes hivearmor.processed.events and upserts entities into Neo4j.
+  # ---------------------------------------------------------------------------
+  entity-graph:
+    image: hivearmor/entity-graph:local
+    build:
+      context: ../entity-graph
+      dockerfile: Dockerfile
+    pull_policy: never
+    container_name: hivearmor-entity-graph
+    environment:
+      - KAFKA_BROKER=redpanda:9092
+      - KAFKA_CONSUMER_GROUP=hivearmor-entity-graph
+      - KAFKA_TOPIC=hivearmor.processed.events
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-localdev123!}
+    depends_on:
+      redpanda:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # OTel Collector sidecar - optional fan-in aggregator (start with --profile otelcol)
+  # External OTLP gRPC: localhost:4319  External OTLP HTTP: localhost:4320
+  # Usage: docker compose --profile otelcol up -d
+  # ---------------------------------------------------------------------------
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.99.0
+    container_name: hivearmor-otel-collector
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otelcol/config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4319:4317"   # External OTLP gRPC (separate port to avoid conflict with eventprocessor)
+      - "4320:4318"   # External OTLP HTTP
+    networks:
+      - default
+    profiles:
+      - otelcol
+    depends_on:
+      eventprocessor:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   opensearch_data:
@@ -366,3 +597,4 @@ volumes:
   ep_logs:
   ep_rules:
   shm_data:
+  neo4j_data:

@@ -1,0 +1,111 @@
+# CEF (Common Event Format) Syslog Parser, version 1.0.0
+# ArcSight CEF format: CEF:Version|Vendor|Product|ProdVer|SignatureID|Name|Severity|Extension
+# References: https://www.microfocus.com/documentation/arcsight/arcsight-smartconnectors/pdfdoc/common-event-format-v25/
+
+pipeline:
+  - dataTypes:
+      - SYSLOG_CEF
+    steps:
+
+      # ── Phase 1: Parse CEF header ──────────────────────────────────────────
+      - grok:
+          patterns:
+            - field_name: log.cefVersion
+              pattern: 'CEF:{{.integer}}\|'
+            - field_name: log.vendor
+              pattern: '{{.data}}\|'
+            - field_name: log.product
+              pattern: '{{.data}}\|'
+            - field_name: log.productVersion
+              pattern: '{{.data}}\|'
+            - field_name: log.signatureId
+              pattern: '{{.data}}\|'
+            - field_name: log.name
+              pattern: '{{.data}}\|'
+            - field_name: log.severity
+              pattern: '{{.integer}}\|'
+            - field_name: log.cefExtension
+              pattern: '{{.greedy}}'
+          source: raw
+          where: 'contains("raw", "CEF:")'
+
+      # ── Phase 2: Trim trailing pipe captured in header fields ─────────────
+      - trim:
+          function: suffix
+          substring: '|'
+          fields:
+            - log.cefVersion
+            - log.vendor
+            - log.product
+            - log.productVersion
+            - log.signatureId
+            - log.name
+
+      # ── Phase 3: Parse CEF extension key=value fields ─────────────────────
+      # CEF extension uses space as field delimiter and = as value delimiter
+      - kv:
+          fieldSplit: ' '
+          valueSplit: '='
+          source: log.cefExtension
+
+      # ── Phase 4: Promote to standard schema fields ────────────────────────
+      - rename:
+          from:
+            - log.src
+          to: origin.ip
+          where: exists("log.src")
+
+      - rename:
+          from:
+            - log.dst
+          to: target.ip
+          where: exists("log.dst")
+
+      - rename:
+          from:
+            - log.suser
+          to: origin.user
+          where: exists("log.suser")
+
+      - rename:
+          from:
+            - log.duser
+          to: target.user
+          where: exists("log.duser")
+
+      - rename:
+          from:
+            - log.act
+          to: action
+          where: exists("log.act")
+
+      - rename:
+          from:
+            - log.outcome
+          to: actionResult
+          where: exists("log.outcome")
+
+      - rename:
+          from:
+            - log.proto
+          to: protocol
+          where: exists("log.proto")
+
+      - rename:
+          from:
+            - log.msg
+          to: log.message
+          where: exists("log.msg")
+
+      # ── Phase 5: Set dataType and event category ─────────────────────────
+      - add:
+          function: set
+          params:
+            key: log.dataType
+            value: SYSLOG_CEF
+
+      - add:
+          function: set
+          params:
+            key: log.eventCategory
+            value: threat
