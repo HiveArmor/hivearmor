@@ -4,16 +4,18 @@ import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   X, Shield, Brain, Database, Map, History, Tag, Siren,
-  Maximize2, Minimize2, Copy, Check, Layers,
+  Maximize2, Minimize2, Copy, Check, Layers, Network,
+  AlertTriangle, Users, Monitor,
 } from "lucide-react";
-import { UtmAlert, severityToLevel, statusToLabel, AlertStatus } from "@/types/alert";
+import { UtmAlert, severityToLevel, statusToLabel, AlertStatus, EntityGraphDTO } from "@/types/alert";
 import { SeverityBadge } from "@/components/ui/severity-badge";
 import { AlertStatusBadge } from "./alert-status-badge";
 import { alertService } from "@/services/alert.service";
+import { entityGraphService } from "@/services/entity-graph.service";
 import { toast } from "@/components/ui/toast";
 import { format } from "date-fns";
 
-type TabId = "detail" | "socai" | "events" | "incident" | "map" | "history" | "tags" | "echoes";
+type TabId = "detail" | "socai" | "events" | "incident" | "map" | "history" | "tags" | "echoes" | "graph";
 
 interface AlertDetailPanelProps {
   alert: UtmAlert;
@@ -72,6 +74,9 @@ export function AlertDetailPanel({ alert, onClose, onRefresh }: AlertDetailPanel
   const [echoAlerts, setEchoAlerts] = useState<UtmAlert[]>([]);
   const [echoesLoading, setEchoesLoading] = useState(false);
   const [echoesLoaded, setEchoesLoaded] = useState(false);
+  const [graphData, setGraphData] = useState<EntityGraphDTO | null>(null);
+  const [graphLoading, setGraphLoading] = useState(false);
+  const [graphLoaded, setGraphLoaded] = useState(false);
 
   const tabs: { id: TabId; label: string; icon: React.ReactNode; show: boolean }[] = [
     { id: "detail",  label: "Detail",                            icon: <Shield className="w-3.5 h-3.5" />,   show: true },
@@ -82,6 +87,7 @@ export function AlertDetailPanel({ alert, onClose, onRefresh }: AlertDetailPanel
     { id: "map",     label: "Map",                               icon: <Map className="w-3.5 h-3.5" />,      show: !!alert.target?.geolocation?.latitude },
     { id: "history", label: "History",                           icon: <History className="w-3.5 h-3.5" />,  show: true },
     { id: "tags",    label: "Tags",                              icon: <Tag className="w-3.5 h-3.5" />,      show: !!alert.tagRulesApplied?.length },
+    { id: "graph",   label: "Graph",                             icon: <Network className="w-3.5 h-3.5" />,  show: !!(alert.adversary?.ip || alert.recentAlertCount) },
   ];
 
   useEffect(() => {
@@ -122,6 +128,22 @@ export function AlertDetailPanel({ alert, onClose, onRefresh }: AlertDetailPanel
       finally {
         setEchoesLoading(false);
         setEchoesLoaded(true);
+      }
+    }
+    if (id === "graph" && !graphLoaded) {
+      const ip = alert.adversary?.ip;
+      if (ip) {
+        setGraphLoading(true);
+        try {
+          const data = await entityGraphService.getGraph("ip", ip);
+          setGraphData(data);
+        } catch { /* ignore */ }
+        finally {
+          setGraphLoading(false);
+          setGraphLoaded(true);
+        }
+      } else {
+        setGraphLoaded(true);
       }
     }
   };
@@ -604,6 +626,116 @@ export function AlertDetailPanel({ alert, onClose, onRefresh }: AlertDetailPanel
                   Rule ID: {ruleId}
                 </div>
               ))}
+            </div>
+          )}
+
+          {activeTab === "graph" && (
+            <div className="space-y-4">
+              {/* Inline graph context from enriched alert fields */}
+              {(alert.sourceIpRiskScore !== undefined || alert.sourceIpMalicious || alert.recentAlertCount) && (
+                <div className="border border-surface-border rounded-lg p-4 space-y-3">
+                  <h4 className="text-h4 text-primary">Entity Risk Context</h4>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {alert.sourceIpRiskScore !== undefined && alert.sourceIpRiskScore > 0 && (
+                      <span className={cn(
+                        "px-2 py-1 rounded text-small font-semibold",
+                        alert.sourceIpRiskScore >= 8 ? "bg-severity-critical/15 text-severity-critical" :
+                        alert.sourceIpRiskScore >= 5 ? "bg-severity-high/15 text-severity-high" :
+                        "bg-severity-medium/15 text-severity-medium"
+                      )}>
+                        Risk Score: {alert.sourceIpRiskScore.toFixed(1)}
+                      </span>
+                    )}
+                    {alert.sourceIpMalicious && (
+                      <span className="flex items-center gap-1 px-2 py-1 rounded bg-severity-critical/15 text-severity-critical text-small font-semibold">
+                        <AlertTriangle className="w-3 h-3" /> Known Malicious IP
+                      </span>
+                    )}
+                    {alert.sourceIpCountry && (
+                      <span className="px-2 py-1 rounded bg-surface-tertiary text-secondary text-small">
+                        {alert.sourceIpCountry}
+                      </span>
+                    )}
+                  </div>
+                  {(alert.recentAlertCount ?? 0) > 1 && (
+                    <p className="text-small text-warning flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      This IP generated <strong>{alert.recentAlertCount}</strong> alerts in the last 30 days
+                    </p>
+                  )}
+                  {(alert.relatedUsers?.length ?? 0) > 0 && (
+                    <div className="flex items-start gap-2 text-small">
+                      <Users className="w-3.5 h-3.5 text-muted mt-0.5 shrink-0" />
+                      <div>
+                        <span className="text-muted">Related users: </span>
+                        <span className="text-secondary">{alert.relatedUsers!.join(", ")}</span>
+                      </div>
+                    </div>
+                  )}
+                  {(alert.relatedHosts?.length ?? 0) > 0 && (
+                    <div className="flex items-start gap-2 text-small">
+                      <Monitor className="w-3.5 h-3.5 text-muted mt-0.5 shrink-0" />
+                      <div>
+                        <span className="text-muted">Related hosts: </span>
+                        <span className="text-secondary">{alert.relatedHosts!.join(", ")}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Live graph neighborhood from entity graph API */}
+              {graphLoading && (
+                <div className="text-center py-8">
+                  <div className="w-6 h-6 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                  <p className="text-small text-muted">Loading entity graph...</p>
+                </div>
+              )}
+              {!graphLoading && graphLoaded && graphData && graphData.nodes.length > 1 && (
+                <div className="border border-surface-border rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-h4 text-primary">Entity Neighborhood</h4>
+                    <span className="text-tiny text-muted">{graphData.alertCount} alerts (30d)</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {graphData.edges.map((edge, i) => {
+                      const target = graphData.nodes.find(n => n.id === edge.target);
+                      if (!target) return null;
+                      const relationLabel = edge.relation.replace(/_/g, " ");
+                      return (
+                        <div key={i} className="flex items-center gap-2 text-small px-2 py-1.5 rounded bg-surface-secondary">
+                          <span className="text-muted w-28 shrink-0 truncate capitalize">{relationLabel}</span>
+                          <span className={cn(
+                            "px-1.5 py-0.5 rounded text-tiny font-medium",
+                            target.type === "ip"   ? "bg-info/15 text-info" :
+                            target.type === "user" ? "bg-brand/15 text-brand" :
+                            "bg-surface-tertiary text-secondary"
+                          )}>
+                            {target.type}
+                          </span>
+                          <span className="text-secondary font-mono text-tiny truncate">{target.label}</span>
+                          {typeof target.properties?.alertCount === "number" && (
+                            <span className="ml-auto text-tiny text-muted shrink-0">{target.properties.alertCount as number} alerts</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {!graphLoading && graphLoaded && (!graphData || graphData.nodes.length <= 1) && !alert.sourceIpRiskScore && !alert.recentAlertCount && (
+                <div className="text-center py-8">
+                  <Network className="w-8 h-8 text-muted mx-auto mb-2 opacity-50" />
+                  <p className="text-small text-muted">No graph context available for this alert yet.</p>
+                  <p className="text-tiny text-muted mt-1">Context builds up as more alerts are processed.</p>
+                </div>
+              )}
+              {!graphLoaded && !graphLoading && !alert.adversary?.ip && (
+                <div className="text-center py-8">
+                  <Network className="w-8 h-8 text-muted mx-auto mb-2 opacity-50" />
+                  <p className="text-small text-muted">No adversary IP available for graph lookup.</p>
+                </div>
+              )}
             </div>
           )}
         </div>

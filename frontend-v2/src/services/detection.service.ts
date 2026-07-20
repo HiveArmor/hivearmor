@@ -15,6 +15,8 @@ export interface CorrelationRule {
   ruleActive: boolean;
   systemOwner: boolean;
   dataTypes?: { id: number; dsName: string }[];
+  sigmaAccuracy?: string;
+  sigmaRuleUrl?: string;
 }
 
 export interface RuleVersion {
@@ -185,6 +187,20 @@ class DetectionService {
 
   getFilterValues(): Promise<{ agentPlatforms: string[]; users: string[] }> {
     return api.get("/api/ha-alert-response-rules/resolve-filter-values");
+  }
+
+  // Staged (community Sigma) rule review
+
+  getStagedRules(): Promise<CorrelationRule[]> {
+    return api.get<CorrelationRule[]>("/api/ha-correlation-rules/staged");
+  }
+
+  activateStagedRule(id: number): Promise<void> {
+    return api.post<void>(`/api/ha-correlation-rules/staged/${id}/activate`, {});
+  }
+
+  dismissStagedRule(id: number): Promise<void> {
+    return api.delete<void>(`/api/ha-correlation-rules/staged/${id}`);
   }
 }
 

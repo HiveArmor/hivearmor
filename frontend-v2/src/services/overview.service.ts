@@ -379,7 +379,7 @@ class OverviewService {
       const now  = new Date();
       const from = new Date(now.getTime() - 24 * 3600 * 1000).toISOString();
       const to   = now.toISOString();
-      const INDEX = "_v3_hive_alert-*";
+      const INDEX = "v3-hive-alert-*";
       const baseUrl = `/api/elasticsearch/search?top=10&indexPattern=${encodeURIComponent(INDEX)}&sort=%40timestamp%2Cdesc`;
       const filters = (sev: number) => [
         { field: "@timestamp", operator: "IS_BETWEEN", value: [from, to] },

@@ -19,7 +19,7 @@ import {
 } from "@/components/investigation/investigation-timeline";
 import {
   InvestigationEntityGraph,
-  DEMO_GRAPH,
+  type EntityGraph,
 } from "@/components/investigation/investigation-entity-graph";
 import { AlertSoarLauncher } from "@/components/alerts/alert-soar-launcher";
 import { Brain, X as XIcon } from "lucide-react";
@@ -81,6 +81,8 @@ export default function InvestigationPage({ params }: { params: { id: string } }
   const [showSoar, setShowSoar] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [entityGraph, setEntityGraph] = useState<EntityGraph | null>(null);
+  const [graphLoading, setGraphLoading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -124,6 +126,17 @@ export default function InvestigationPage({ params }: { params: { id: string } }
       </div>
     );
   }
+
+  const handleTabChange = (tab: TabId) => {
+    setActiveTab(tab);
+    if (tab === "graph" && entityGraph === null && !graphLoading) {
+      setGraphLoading(true);
+      incidentService.getEntityGraph(Number(id)).then((g) => {
+        setEntityGraph(g);
+        setGraphLoading(false);
+      });
+    }
+  };
 
   const handleStatusChange = (s: IStatus) => {
     setIncident((prev) => prev ? { ...prev, status: s } : prev);
@@ -183,7 +196,7 @@ export default function InvestigationPage({ params }: { params: { id: string } }
         {TABS.map((t) => (
           <button
             key={t.id}
-            onClick={() => setActiveTab(t.id)}
+            onClick={() => handleTabChange(t.id)}
             className={cn(
               "flex items-center gap-1.5 px-4 py-2.5 text-small font-medium transition-colors border-b-2 -mb-px",
               activeTab === t.id
@@ -209,7 +222,19 @@ export default function InvestigationPage({ params }: { params: { id: string } }
           <InvestigationTimeline events={DEMO_TIMELINE} />
         )}
         {activeTab === "graph" && (
-          <InvestigationEntityGraph graph={DEMO_GRAPH} />
+          graphLoading ? (
+            <div className="flex items-center justify-center h-full gap-3 text-muted">
+              <div className="w-5 h-5 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+              <span className="text-small">Loading entity graph…</span>
+            </div>
+          ) : entityGraph && entityGraph.nodes.length > 0 ? (
+            <InvestigationEntityGraph graph={entityGraph} />
+          ) : entityGraph && entityGraph.nodes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full gap-2 text-muted">
+              <span className="text-small">No entity data found for this incident.</span>
+              <span className="text-tiny">Link alerts to this incident to populate the graph.</span>
+            </div>
+          ) : null
         )}
       </div>
 

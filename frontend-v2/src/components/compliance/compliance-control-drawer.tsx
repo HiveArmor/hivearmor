@@ -6,6 +6,7 @@ import {
   ChevronRight, FileText, AlertTriangle,
   BookOpen, Zap, Loader2, RefreshCw,
 } from "lucide-react";
+import { ComplianceEvidencePanel } from "./evidence-panel";
 import { cn } from "@/lib/utils";
 import {
   complianceService,
@@ -294,6 +295,11 @@ function ControlDetail({
       {/* Evaluation history chart */}
       <div className="pt-1">
         <ComplianceEvalHistoryChart controlId={control.id} />
+      </div>
+
+      {/* Evidence drilldown */}
+      <div className="pt-2 border-t border-surface-border">
+        <ComplianceEvidencePanel controlId={control.id} />
       </div>
     </div>
   );

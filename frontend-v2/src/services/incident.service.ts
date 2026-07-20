@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import type { EntityGraph } from "@/components/investigation/investigation-entity-graph";
 
 export interface Incident {
   id: number;
@@ -59,6 +60,44 @@ class IncidentService {
       incidentAssignedTo: assigneeLogin,
     });
   }
+
+  async getEntityGraph(id: number): Promise<EntityGraph> {
+    interface ApiNode { id: string; type: string; label: string; properties?: Record<string, unknown> }
+    interface ApiEdge { source: string; target: string; relation: string }
+    interface ApiGraph { nodes: ApiNode[]; edges: ApiEdge[] }
+
+    try {
+      const raw = await api.get<ApiGraph>(`/api/ha-incidents/${id}/entity-graph`);
+      return {
+        nodes: (raw?.nodes ?? []).map((n) => ({
+          id: n.id,
+          kind: (["ip","host","user","process","file","domain"].includes(n.type) ? n.type : "ip") as EntityGraph["nodes"][number]["kind"],
+          label: n.label,
+          sublabel: buildSublabel(n.type, n.properties),
+          suspicious: n.properties?.malicious === true || (typeof n.properties?.riskScore === "number" && (n.properties.riskScore as number) > 30),
+          compromised: typeof n.properties?.riskScore === "number" && (n.properties.riskScore as number) > 70,
+        })),
+        edges: (raw?.edges ?? []).map((e, i) => ({
+          id: `e${i}-${e.source}-${e.target}`,
+          source: e.source,
+          target: e.target,
+          label: e.relation.replace(/_/g, " "),
+          suspicious: e.relation === "associated_with" || e.relation === "connected_to",
+        })),
+      };
+    } catch {
+      return { nodes: [], edges: [] };
+    }
+  }
+}
+
+function buildSublabel(type: string, props?: Record<string, unknown>): string | undefined {
+  if (!props) return undefined;
+  if (type === "ip") return props.country as string | undefined;
+  if (type === "user") return props.domain as string | undefined;
+  if (type === "host") return props.os as string | undefined;
+  if (type === "process") return props.path as string | undefined;
+  return undefined;
 }
 
 export const incidentService = new IncidentService();

@@ -3,17 +3,383 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   Search, Trash2, Eye, MonitorCheck, MonitorX, Server, Users,
-  FolderOpen, Radio, X,
+  FolderOpen, Radio, X, Workflow, ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TableSkeleton } from "@/components/ui/loading-skeleton";
 import { toast } from "@/components/ui/toast";
+import { CopyButton } from "@/components/ui/copy-button";
 import { agentService } from "@/services/agent.service";
 import type { Agent, AgentGroup, Collector } from "@/services/agent.service";
 import { formatDistanceToNow } from "date-fns";
 
-type Tab = "agents" | "groups" | "collectors" | "collector-groups";
+type Tab = "agents" | "groups" | "collectors" | "collector-groups" | "otelcol";
+
+const OTEL_TEMPLATES: { label: string; filename: string; envVars: string[]; content: string }[] = [
+  {
+    label: "Windows Event Logs",
+    filename: "windows.yaml",
+    envVars: [],
+    content: `receivers:
+  windowseventlog:
+    channel: System
+    operators:
+      - type: add
+        field: attributes.data_type
+        value: WINDOWS_AGENT
+  windowseventlog/security:
+    channel: Security
+    operators:
+      - type: add
+        field: attributes.data_type
+        value: WINDOWS_AGENT
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: \${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: \${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [windowseventlog, windowseventlog/security]
+      processors: [batch]
+      exporters: [otlp/hivearmor]`,
+  },
+  {
+    label: "Linux Syslog",
+    filename: "linux-syslog.yaml",
+    envVars: [],
+    content: `receivers:
+  filelog/syslog:
+    include: ["/var/log/syslog", "/var/log/messages", "/var/log/auth.log"]
+    start_at: end
+    multiline:
+      line_start_pattern: '^\\w{3}\\s+\\d{1,2}\\s+\\d{2}:\\d{2}:\\d{2}'
+    operators:
+      - type: add
+        field: attributes.data_type
+        value: LINUX_AGENT
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: \${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: \${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [filelog/syslog]
+      processors: [batch]
+      exporters: [otlp/hivearmor]`,
+  },
+  {
+    label: "Kubernetes Pod Logs",
+    filename: "kubernetes.yaml",
+    envVars: [],
+    content: `receivers:
+  k8s_events:
+    namespaces: []
+  filelog/k8s:
+    include: ["/var/log/pods/*/*/*.log"]
+    include_file_path: true
+    start_at: end
+    operators:
+      - type: json_parser
+        if: 'body matches "^{.*}$"'
+      - type: add
+        field: attributes.data_type
+        value: KUBERNETES
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["k8s.pod.log.path"]
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: \${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: \${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [k8s_events, filelog/k8s]
+      processors: [batch]
+      exporters: [otlp/hivearmor]`,
+  },
+  {
+    label: "AWS CloudTrail",
+    filename: "aws-cloudtrail.yaml",
+    envVars: ["AWS_REGION"],
+    content: `receivers:
+  awscloudwatch:
+    region: \${AWS_REGION}
+    logs:
+      poll_interval: 1m
+      groups:
+        named:
+          aws-cloudtrail-logs:
+            names:
+              - CloudTrail/management-events
+    operators:
+      - type: add
+        field: attributes.data_type
+        value: AWS
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: \${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: \${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [awscloudwatch]
+      processors: [batch]
+      exporters: [otlp/hivearmor]`,
+  },
+  {
+    label: "Azure Monitor",
+    filename: "azure-monitor.yaml",
+    envVars: ["AZURE_SUBSCRIPTION_ID"],
+    content: `receivers:
+  azuremonitor:
+    subscription_id: \${AZURE_SUBSCRIPTION_ID}
+    resource_groups: []
+    services:
+      - "Microsoft.Compute/virtualMachines"
+      - "Microsoft.Network/networkSecurityGroups"
+    operators:
+      - type: add
+        field: attributes.data_type
+        value: AZURE
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: \${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: \${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [azuremonitor]
+      processors: [batch]
+      exporters: [otlp/hivearmor]`,
+  },
+  {
+    label: "Nginx Access Logs",
+    filename: "nginx-access.yaml",
+    envVars: [],
+    content: `receivers:
+  filelog/nginx:
+    include: ["/var/log/nginx/access.log", "/var/log/nginx/error.log"]
+    start_at: end
+    operators:
+      - type: regex_parser
+        regex: '^(?P<remote_addr>\\S+) - (?P<remote_user>\\S+) \\[(?P<time_local>[^\\]]+)\\] "(?P<request>[^"]+)" (?P<status>\\d+) (?P<body_bytes_sent>\\d+)'
+        if: 'body matches "^\\d"'
+      - type: add
+        field: attributes.data_type
+        value: NGINX
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: \${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: \${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [filelog/nginx]
+      processors: [batch]
+      exporters: [otlp/hivearmor]`,
+  },
+  {
+    label: "Docker Containers",
+    filename: "docker-containers.yaml",
+    envVars: [],
+    content: `receivers:
+  filelog/docker:
+    include: ["/var/lib/docker/containers/*/*-json.log"]
+    include_file_path: true
+    start_at: end
+    operators:
+      - type: json_parser
+      - type: move
+        from: attributes.log
+        to: body
+      - type: move
+        from: attributes["log.file.path"]
+        to: resource["container.log.path"]
+      - type: add
+        field: attributes.data_type
+        value: GENERIC
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: \${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: \${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [filelog/docker]
+      processors: [batch]
+      exporters: [otlp/hivearmor]`,
+  },
+  {
+    label: "Palo Alto Networks",
+    filename: "palo-alto.yaml",
+    envVars: ["SYSLOG_UDP_PORT"],
+    content: `receivers:
+  udplog/pan:
+    listen_address: "0.0.0.0:\${SYSLOG_UDP_PORT:-514}"
+    operators:
+      - type: regex_parser
+        regex: '^<(?P<priority>\\d+)>(?P<timestamp>\\w{3}\\s+\\d{1,2}\\s+\\d{2}:\\d{2}:\\d{2})\\s+(?P<host>\\S+)\\s+(?P<message>.+)$'
+      - type: add
+        field: attributes.data_type
+        value: PALO_ALTO_NETWORKS
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: \${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: \${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [udplog/pan]
+      processors: [batch]
+      exporters: [otlp/hivearmor]`,
+  },
+  {
+    label: "CrowdStrike Falcon",
+    filename: "crowdstrike.yaml",
+    envVars: ["AWS_REGION", "CROWDSTRIKE_FDR_BUCKET"],
+    content: `receivers:
+  awss3:
+    s3downloader:
+      region: \${AWS_REGION}
+      s3_bucket: \${CROWDSTRIKE_FDR_BUCKET}
+      s3_prefix: "data/"
+    operators:
+      - type: json_parser
+      - type: add
+        field: attributes.data_type
+        value: CROWDSTRIKE_EDR
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: \${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: \${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [awss3]
+      processors: [batch]
+      exporters: [otlp/hivearmor]`,
+  },
+  {
+    label: "GCP Cloud Logging",
+    filename: "gcp-cloud-logging.yaml",
+    envVars: ["GCP_PROJECT_ID", "GCP_PUBSUB_SUBSCRIPTION"],
+    content: `receivers:
+  googlecloudpubsub:
+    project: \${GCP_PROJECT_ID}
+    subscription: projects/\${GCP_PROJECT_ID}/subscriptions/\${GCP_PUBSUB_SUBSCRIPTION}
+    encoding: raw_text
+    operators:
+      - type: json_parser
+        if: 'body matches "^{.*}$"'
+      - type: add
+        field: attributes.data_type
+        value: GCP
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  otlp/hivearmor:
+    endpoint: \${HIVEARMOR_OTLP_ENDPOINT}
+    tls:
+      insecure: \${HIVEARMOR_INSECURE:-false}
+    compression: none
+
+service:
+  pipelines:
+    logs:
+      receivers: [googlecloudpubsub]
+      processors: [batch]
+      exporters: [otlp/hivearmor]`,
+  },
+];
 
 function isOnline(lastSeen?: string): boolean {
   if (!lastSeen) return false;
@@ -29,6 +395,8 @@ export default function DataSourcesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [otelTemplateIdx, setOtelTemplateIdx] = useState(0);
+  const [otelDropdownOpen, setOtelDropdownOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -79,7 +447,10 @@ export default function DataSourcesPage() {
     { id: "groups", label: "Groups", icon: <FolderOpen className="w-3.5 h-3.5" /> },
     { id: "collectors", label: "Collectors", icon: <Radio className="w-3.5 h-3.5" /> },
     { id: "collector-groups", label: "Collector Groups", icon: <Users className="w-3.5 h-3.5" /> },
+    { id: "otelcol", label: "OpenTelemetry Collector", icon: <Workflow className="w-3.5 h-3.5" /> },
   ];
+
+  const selectedTemplate = OTEL_TEMPLATES[otelTemplateIdx];
 
   return (
     <div className="space-y-4">
@@ -290,6 +661,85 @@ export default function DataSourcesPage() {
               </table>
             </div>
           )}
+        </div>
+      ) : tab === "otelcol" ? (
+        <div className="space-y-4">
+          <div className="card p-5 space-y-4">
+            <div>
+              <h3 className="text-h3 text-primary">Deploy with OTel Collector</h3>
+              <p className="text-small text-secondary mt-1">
+                Choose your log source type and copy the configuration. No HiveArmor agent required.
+              </p>
+            </div>
+
+            {/* Source type selector */}
+            <div className="space-y-1.5">
+              <label className="text-tiny text-muted uppercase tracking-wider font-medium">Log source type</label>
+              <div className="relative w-72">
+                <button
+                  onClick={() => setOtelDropdownOpen((v) => !v)}
+                  className="input-base w-full flex items-center justify-between gap-2 text-left"
+                >
+                  <span className="text-small text-primary">{selectedTemplate.label}</span>
+                  <ChevronDown className={cn("w-3.5 h-3.5 text-muted transition-transform", otelDropdownOpen && "rotate-180")} />
+                </button>
+                {otelDropdownOpen && (
+                  <div className="absolute z-20 mt-1 w-full rounded-md border border-surface-border bg-surface-secondary shadow-lg py-1">
+                    {OTEL_TEMPLATES.map((t, i) => (
+                      <button
+                        key={t.filename}
+                        onClick={() => { setOtelTemplateIdx(i); setOtelDropdownOpen(false); }}
+                        className={cn(
+                          "w-full px-3 py-2 text-left text-small transition-colors",
+                          i === otelTemplateIdx
+                            ? "bg-brand/10 text-brand"
+                            : "text-secondary hover:bg-surface-tertiary hover:text-primary"
+                        )}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Extra env vars notice */}
+            {selectedTemplate.envVars.length > 0 && (
+              <div className="rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-small text-amber-400">
+                Also set:{" "}
+                {selectedTemplate.envVars.map((v) => (
+                  <code key={v} className="font-mono bg-amber-500/10 px-1 rounded mx-0.5">{v}</code>
+                ))}
+              </div>
+            )}
+
+            {/* YAML code block */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-tiny text-muted uppercase tracking-wider font-medium">
+                  {selectedTemplate.filename}
+                </span>
+                <CopyButton value={selectedTemplate.content} />
+              </div>
+              <pre className="code-block overflow-auto max-h-96 text-tiny leading-relaxed whitespace-pre">
+                {selectedTemplate.content}
+              </pre>
+            </div>
+
+            {/* Run instructions */}
+            <div className="space-y-2 border-t border-surface-border pt-4">
+              <p className="text-small text-secondary font-medium">Required environment variables</p>
+              <pre className="code-block text-tiny">
+{`HIVEARMOR_OTLP_ENDPOINT=<your-server>:4317
+HIVEARMOR_INSECURE=true  # set false in production`}
+              </pre>
+              <p className="text-small text-secondary font-medium mt-3">Run the collector</p>
+              <pre className="code-block text-tiny">
+{`otelcol --config ${selectedTemplate.filename}`}
+              </pre>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="card">

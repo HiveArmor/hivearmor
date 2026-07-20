@@ -18,6 +18,18 @@ export interface TriageHistory {
   items: TriageResult[];
 }
 
+export interface NlQuerySuggestedFilter {
+  field: string;
+  value: string;
+  label: string;
+}
+
+export interface NlQueryResult {
+  query: Record<string, unknown>;
+  explanation?: string;
+  suggestedFilters?: NlQuerySuggestedFilter[];
+}
+
 class SocAiService {
   /** POST /api/soc-ai/analyze — queue an alert for analysis */
   async analyze(alert: UtmAlert): Promise<AnalyzeResponse | null> {
@@ -43,6 +55,18 @@ class SocAiService {
       return (await api.get<TriageResult[]>(`/api/soc-ai/history/${encodeURIComponent(alertId)}`)) ?? [];
     } catch {
       return [];
+    }
+  }
+
+  /** POST /api/soc-ai/nl-query — translate natural language to OpenSearch DSL */
+  async nlQuery(params: {
+    question: string;
+    indexPattern?: string;
+  }): Promise<NlQueryResult | null> {
+    try {
+      return await api.post<NlQueryResult>("/api/soc-ai/nl-query", params);
+    } catch {
+      return null;
     }
   }
 

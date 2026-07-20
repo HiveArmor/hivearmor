@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Plus, Calendar, Download, Trash2, Eye, FileText, Shield,
-  Clock, CheckCircle, XCircle, Loader2, BarChart3, Play,
+  Clock, CheckCircle, XCircle, Loader2, BarChart3, Play, Layers,
+  Search, ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -24,12 +25,13 @@ import {
   type ComplianceStandard,
   type ComplianceSection,
   type ComplianceControlLatestEvaluation,
+  type ComplianceControlMapping,
 } from "@/services/compliance.service";
 import type { FrameworkTrendSeries } from "@/components/compliance/compliance-trend-chart";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type MainTab = "posture" | "reports" | "schedule";
+type MainTab = "posture" | "reports" | "schedule" | "mappings";
 
 interface ComplianceReport {
   id: number;
@@ -127,6 +129,111 @@ function abbreviate(name: string): string {
     .slice(0, 6);
 }
 
+// ── Mapping type badge ────────────────────────────────────────────────────────
+
+const MAPPING_TYPE_STYLES: Record<string, string> = {
+  EVIDENCE:  "bg-green-500/10 text-green-400",
+  VIOLATION: "bg-red-500/10 text-red-400",
+  INDICATOR: "bg-yellow-500/10 text-yellow-400",
+};
+
+function MappingTypeBadge({ type }: { type: string }) {
+  const cls = MAPPING_TYPE_STYLES[type] ?? "bg-surface-tertiary text-secondary";
+  return (
+    <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-tiny font-medium", cls)}>
+      {type.charAt(0) + type.slice(1).toLowerCase()}
+    </span>
+  );
+}
+
+// ── Mappings table ────────────────────────────────────────────────────────────
+
+function MappingsTable({
+  mappings,
+  search,
+  typeFilter,
+}: {
+  mappings: ComplianceControlMapping[];
+  search: string;
+  typeFilter: string;
+}) {
+  const filtered = mappings.filter((m) => {
+    if (typeFilter && m.mappingType !== typeFilter) return false;
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      m.controlName?.toLowerCase().includes(q) ||
+      m.standardName?.toLowerCase().includes(q) ||
+      m.sectionName?.toLowerCase().includes(q) ||
+      m.celCondition?.toLowerCase().includes(q) ||
+      m.description?.toLowerCase().includes(q)
+    );
+  });
+
+  if (filtered.length === 0) {
+    return (
+      <div className="card">
+        <EmptyState
+          icon={<Layers className="w-6 h-6" />}
+          title="No mappings found"
+          description={search || typeFilter ? "Try adjusting your search or filter" : "No control mappings have been seeded yet"}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="card overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-surface-border">
+              {["Framework", "Control", "Type", "Data Sources", "CEL Condition", "Description"].map((h) => (
+                <th key={h} className="px-4 py-3 text-left text-tiny text-muted uppercase tracking-wider font-medium whitespace-nowrap">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((m) => (
+              <tr key={m.id} className="border-b border-surface-border hover:bg-surface-tertiary/50 transition-colors">
+                <td className="px-4 py-3">
+                  <span className="text-tiny font-medium text-brand bg-brand/10 px-2 py-0.5 rounded whitespace-nowrap">
+                    {m.standardName ?? "—"}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-small text-primary max-w-[180px]">
+                  <span title={m.controlName} className="block truncate">{m.controlName ?? `#${m.controlId}`}</span>
+                  {m.sectionName && (
+                    <span className="block text-tiny text-muted truncate">{m.sectionName}</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <MappingTypeBadge type={m.mappingType} />
+                </td>
+                <td className="px-4 py-3 text-tiny text-muted max-w-[160px]">
+                  {m.dataTypes ? (
+                    <span className="block truncate" title={m.dataTypes}>{m.dataTypes}</span>
+                  ) : "—"}
+                </td>
+                <td className="px-4 py-3 max-w-[320px]">
+                  <code className="block text-tiny font-mono text-secondary bg-surface-tertiary px-2 py-1 rounded truncate" title={m.celCondition}>
+                    {m.celCondition}
+                  </code>
+                </td>
+                <td className="px-4 py-3 text-small text-secondary max-w-[240px]">
+                  <span className="block line-clamp-2" title={m.description}>{m.description ?? "—"}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ── Status badge ──────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
@@ -168,6 +275,15 @@ export default function CompliancePage() {
   // Per-framework evaluation trigger state
   const [triggeringId, setTriggeringId] = useState<number | null>(null);
 
+  // Per-framework evidence counts (standard id → count)
+  const [evidenceCounts, setEvidenceCounts] = useState<Record<number, number>>({});
+
+  // Control mappings state
+  const [mappings, setMappings] = useState<ComplianceControlMapping[]>([]);
+  const [mappingsLoading, setMappingsLoading] = useState(false);
+  const [mappingSearch, setMappingSearch] = useState("");
+  const [mappingTypeFilter, setMappingTypeFilter] = useState<string>("");
+
   // Cache of fully-loaded FrameworkData (avoids re-fetching on tab switch)
   const frameworkCache = useRef<Map<number, FrameworkData>>(new Map());
 
@@ -192,6 +308,13 @@ export default function CompliancePage() {
         if (placeholders.length > 0) {
           setActiveFrameworkId(placeholders[0].id);
         }
+        // Fetch evidence counts for all frameworks in the background (best-effort)
+        stds.forEach((std) => {
+          complianceService
+            .getFrameworkEvidenceCount(std.id)
+            .then((count) => setEvidenceCounts((prev) => ({ ...prev, [std.id]: count })))
+            .catch(() => {/* leave absent — renders "—" */});
+        });
       })
       .catch(() => {
         // Backend unavailable — frameworks will remain empty, showing empty state
@@ -249,6 +372,16 @@ export default function CompliancePage() {
   useEffect(() => {
     if (tab === "reports" || tab === "schedule") loadData();
   }, [tab, loadData]);
+
+  useEffect(() => {
+    if (tab !== "mappings") return;
+    setMappingsLoading(true);
+    complianceService
+      .getControlMappings(undefined, undefined, 0, 500)
+      .then((data) => setMappings(data ?? []))
+      .catch(() => setMappings([]))
+      .finally(() => setMappingsLoading(false));
+  }, [tab]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
@@ -364,6 +497,7 @@ export default function CompliancePage() {
     { id: "posture",  label: "Posture Dashboard", icon: <BarChart3 className="w-3.5 h-3.5" /> },
     { id: "reports",  label: "Reports",            icon: <FileText className="w-3.5 h-3.5" /> },
     { id: "schedule", label: "Schedule",            icon: <Calendar className="w-3.5 h-3.5" /> },
+    { id: "mappings", label: "Control Mappings",   icon: <Layers className="w-3.5 h-3.5" /> },
   ];
 
   return (
@@ -526,6 +660,11 @@ export default function CompliancePage() {
                         <p className="text-tiny text-muted mt-0.5">
                           {frameworks.find((f) => f.backendId === std.id)?.domains.reduce((acc, d) => acc + d.totalControls, 0) ?? "—"} controls
                         </p>
+                        {evidenceCounts[std.id] != null && (
+                          <p className="text-tiny text-muted mt-0.5">
+                            {evidenceCounts[std.id].toLocaleString()} evidence events in last 30 days
+                          </p>
+                        )}
                       </div>
                     </div>
                     <p className="text-small text-secondary flex-1 mb-4 line-clamp-3">{std.standardDescription || "—"}</p>
@@ -607,6 +746,52 @@ export default function CompliancePage() {
                 </div>
               )}
             </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Control Mappings tab ─────────────────────────── */}
+      {tab === "mappings" && (
+        <div className="flex-1 space-y-4">
+          {/* Toolbar */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search control, CEL condition, description…"
+                value={mappingSearch}
+                onChange={(e) => setMappingSearch(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-small bg-surface-secondary border border-surface-border rounded-lg focus:outline-none focus:ring-1 focus:ring-brand"
+              />
+            </div>
+            <div className="relative">
+              <select
+                value={mappingTypeFilter}
+                onChange={(e) => setMappingTypeFilter(e.target.value)}
+                className="appearance-none pl-3 pr-8 py-1.5 text-small bg-surface-secondary border border-surface-border rounded-lg focus:outline-none focus:ring-1 focus:ring-brand text-secondary"
+              >
+                <option value="">All types</option>
+                <option value="EVIDENCE">Evidence</option>
+                <option value="VIOLATION">Violation</option>
+                <option value="INDICATOR">Indicator</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
+            </div>
+            <span className="text-tiny text-muted ml-1">
+              {mappings.length} total
+            </span>
+          </div>
+
+          {/* Table */}
+          {mappingsLoading ? (
+            <div className="card"><TableSkeleton rows={8} cols={6} /></div>
+          ) : (
+            <MappingsTable
+              mappings={mappings}
+              search={mappingSearch}
+              typeFilter={mappingTypeFilter}
+            />
           )}
         </div>
       )}

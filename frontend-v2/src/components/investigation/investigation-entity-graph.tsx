@@ -49,38 +49,6 @@ const KIND_META: Record<EntityKind, { icon: ReactNode; color: string; fill: stri
 };
 
 // ── Demo graph ────────────────────────────────────────────────────────────────
-
-export const DEMO_GRAPH: EntityGraph = {
-  nodes: [
-    { id: "h1", kind: "host",    label: "srv-db-01",      sublabel: "10.0.0.12", compromised: true },
-    { id: "h2", kind: "host",    label: "srv-app-02",     sublabel: "10.0.0.14", compromised: true },
-    { id: "h3", kind: "host",    label: "workstation-07", sublabel: "10.0.0.47" },
-    { id: "u1", kind: "user",    label: "backup",         sublabel: "local",     compromised: true },
-    { id: "u2", kind: "user",    label: "root",           sublabel: "srv-db-01", compromised: true },
-    { id: "u3", kind: "user",    label: "svc_backup",     sublabel: "srv-app-02", suspicious: true },
-    { id: "i1", kind: "ip",      label: "192.168.4.21",   sublabel: "attacker",  suspicious: true },
-    { id: "i2", kind: "ip",      label: "185.220.101.45", sublabel: "C2",        suspicious: true },
-    { id: "i3", kind: "ip",      label: "45.33.32.156",   sublabel: "exfil dst", suspicious: true },
-    { id: "p1", kind: "process", label: "curl",           sublabel: "cmd exec" },
-    { id: "p2", kind: "process", label: "bash",           sublabel: "shell" },
-    { id: "f1", kind: "file",    label: "/etc/shadow",    sublabel: "credential dump" },
-    { id: "d1", kind: "domain",  label: "malware[.]cc",   sublabel: "payload host", suspicious: true },
-  ],
-  edges: [
-    { id: "e1",  source: "i1", target: "h1", label: "SSH brute force",  suspicious: true },
-    { id: "e2",  source: "i1", target: "u1", label: "authenticated as", suspicious: true },
-    { id: "e3",  source: "u1", target: "h1", label: "logged into" },
-    { id: "e4",  source: "u1", target: "u2", label: "escalated to",     suspicious: true },
-    { id: "e5",  source: "h1", target: "p1", label: "executed" },
-    { id: "e6",  source: "p1", target: "i2", label: "downloaded from",  suspicious: true },
-    { id: "e7",  source: "p1", target: "d1", label: "resolved",         suspicious: true },
-    { id: "e8",  source: "u2", target: "f1", label: "read",             suspicious: true },
-    { id: "e9",  source: "h1", target: "h2", label: "SMB lateral move", suspicious: true },
-    { id: "e10", source: "u2", target: "u3", label: "created user",     suspicious: true },
-    { id: "e11", source: "h2", target: "i3", label: "data exfil",       suspicious: true },
-  ],
-};
-
 // ── Force simulation ──────────────────────────────────────────────────────────
 
 interface SimNode extends EntityNode {
@@ -173,13 +141,14 @@ function NodeTooltip({ node, x, y }: { node: EntityNode; x: number; y: number })
 // ── Main component ────────────────────────────────────────────────────────────
 
 interface InvestigationEntityGraphProps {
-  graph?: EntityGraph;
+  graph: EntityGraph;
 }
 
 const NODE_R = 22;
 const ARROW_LEN = 9;
 
-export function InvestigationEntityGraph({ graph = DEMO_GRAPH }: InvestigationEntityGraphProps) {
+export function InvestigationEntityGraph({ graph }: InvestigationEntityGraphProps) {
+  if (!graph) return null;
   const svgRef = useRef<SVGSVGElement>(null);
   const animRef = useRef<number>(0);
   const [dims, setDims] = useState({ w: 800, h: 520 });

@@ -28,7 +28,7 @@ export interface AlertSearchResponse {
   newestTimestamp?: string;
 }
 
-const INDEX = "_v3_hive_alert-*";
+const INDEX = "v3-hive-alert-*";
 
 // Map a raw ES document (uses @timestamp, numeric severity 1-4) to UtmAlert shape
 function mapDoc(doc: Record<string, unknown>): UtmAlert {

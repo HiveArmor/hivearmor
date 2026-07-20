@@ -60,6 +60,25 @@ export interface AlertImpact {
   integrity?: number;
 }
 
+export interface GraphNode {
+  id: string;
+  type: string;
+  label: string;
+  properties?: Record<string, unknown>;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  relation: string;
+}
+
+export interface EntityGraphDTO {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  alertCount: number;
+}
+
 export interface UtmAlert {
   id: string;
   name: string;
@@ -95,6 +114,13 @@ export interface UtmAlert {
   echoes?: number;
   last_echo?: string;
   assetGroupName?: string;
+  // graph context — populated by event-processor enrichment
+  sourceIpRiskScore?: number;
+  sourceIpMalicious?: boolean;
+  sourceIpCountry?: string;
+  relatedUsers?: string[];
+  relatedHosts?: string[];
+  recentAlertCount?: number;
 }
 
 export interface AlertTag {
