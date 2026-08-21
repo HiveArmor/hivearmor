@@ -1,0 +1,43 @@
+id: f4a5b6c7-d8e9-0123-fabc-234567890124
+title: MSIExec Executing Remote or Suspicious MSI Package
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.execution
+  - attack.defense_evasion
+  - attack.T1218
+  - attack.T1218.007
+detection:
+  selection:
+    Image|endswith: '\msiexec.exe'
+    CommandLine|contains:
+      - 'http://'
+      - 'https://'
+      - 'ftp://'
+      - '\\\\' 
+  selection_quiet:
+    Image|endswith: '\msiexec.exe'
+    CommandLine|contains:
+      - '/quiet'
+      - '/qn'
+    CommandLine|contains:
+      - '/i '
+  condition: selection or selection_quiet
+falsepositives:
+  - Enterprise software deployment via SCCM or similar tools
+  - Legitimate MSI installations from network shares
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: execution
+  technique: T1218.007

@@ -3,9 +3,9 @@ package com.hivearmor.service.overview;
 import com.hivearmor.config.Constants;
 import com.hivearmor.domain.chart_builder.types.query.FilterType;
 import com.hivearmor.domain.chart_builder.types.query.OperatorType;
-import com.hivearmor.domain.index_pattern.enums.SystemIndexPattern;
 import com.hivearmor.domain.shared_types.EventsByObjectsInTimeType;
 import com.hivearmor.domain.shared_types.static_dashboard.*;
+import com.hivearmor.multitenancy.MsspIndexResolver;
 import com.hivearmor.service.elasticsearch.ElasticsearchService;
 import com.hivearmor.service.elasticsearch.SearchUtil;
 import com.hivearmor.util.enums.AlertStatus;
@@ -30,9 +30,12 @@ import java.util.stream.Collectors;
 public class OverviewService {
     private static final String CLASS_NAME = "OverviewService";
     private final ElasticsearchService elasticsearchService;
+    private final MsspIndexResolver indexResolver;
 
-    public OverviewService(ElasticsearchService elasticsearchService) {
+    public OverviewService(ElasticsearchService elasticsearchService,
+                           MsspIndexResolver indexResolver) {
         this.elasticsearchService = elasticsearchService;
+        this.indexResolver = indexResolver;
     }
 
     //-------------------------------------------------------------------------------------------------
@@ -50,14 +53,14 @@ public class OverviewService {
         final String TODAY_KEY = "today";
         final String LAST_WEEK_KEY = "last_week";
         try {
-            if (!elasticsearchService.indexExist(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS))) {
+            if (!elasticsearchService.indexExist(indexResolver.resolveIndexPattern("alert"))) {
                 List<CardType> result = new ArrayList<>();
                 result.add(new CardType("Today", 0));
                 result.add(new CardType("Last 7 days", 0));
                 return result;
             }
 
-            SearchRequest sr = SearchRequest.of(s -> s.index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS))
+            SearchRequest sr = SearchRequest.of(s -> s.index(indexResolver.resolveIndexPattern("alert"))
                 .query(SearchUtil.toQuery(this.getDefaultFilters(Collections.emptyList()))).aggregations(AGG_NAME, Aggregation.of(agg -> agg
                     .dateRange(dr -> dr.field(Constants.timestamp)
                         .keyed(true).timeZone("UTC")
@@ -81,11 +84,11 @@ public class OverviewService {
         final String ctx = CLASS_NAME + ".topAlerts";
         final String AGG_NAME = "top_alert";
         try {
-            if (!elasticsearchService.indexExist(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS)))
+            if (!elasticsearchService.indexExist(indexResolver.resolveIndexPattern("alert")))
                 return new TableType();
 
             SearchRequest rq = SearchRequest.of(s -> s.size(0).query(SearchUtil.toQuery(this.getDefaultFilters(List.of(from, to))))
-                .index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS))
+                .index(indexResolver.resolveIndexPattern("alert"))
                 .aggregations(AGG_NAME, agg -> agg.terms(t -> t.field(Constants.alertNameKeyword)
                     .size(top).order(List.of(Map.of("_count", SortOrder.Desc))))));
 
@@ -111,11 +114,11 @@ public class OverviewService {
         final String ctx = CLASS_NAME + ".countAlertsBySeverity";
         final String AGG_NAME = "alert_by_severity";
         try {
-            if (!elasticsearchService.indexExist(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS)))
+            if (!elasticsearchService.indexExist(indexResolver.resolveIndexPattern("alert")))
                 return new PieType();
 
             SearchRequest rq = SearchRequest.of(s -> s.size(0).query(SearchUtil.toQuery(this.getDefaultFilters(List.of(from, to))))
-                .index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS))
+                .index(indexResolver.resolveIndexPattern("alert"))
                 .aggregations(AGG_NAME, agg -> agg.terms(t -> t.field(Constants.alertSeverityLabel)
                     .size(top).order(List.of(Map.of("_count", SortOrder.Desc))))));
 
@@ -143,11 +146,11 @@ public class OverviewService {
         final String ctx = CLASS_NAME + ".topAlertsByCategory";
         final String AGG_NAME = "alert_by_category";
         try {
-            if (!elasticsearchService.indexExist(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS)))
+            if (!elasticsearchService.indexExist(indexResolver.resolveIndexPattern("alert")))
                 return new BarType();
 
             SearchRequest rq = SearchRequest.of(s -> s.size(0).query(SearchUtil.toQuery(this.getDefaultFilters(List.of(from, to))))
-                .index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS))
+                .index(indexResolver.resolveIndexPattern("alert"))
                 .aggregations(AGG_NAME, agg -> agg.terms(t -> t.field(Constants.alertCategoryKeyword)
                     .size(top).order(List.of(Map.of("_count", SortOrder.Desc))))));
 
@@ -177,14 +180,14 @@ public class OverviewService {
         final String ctx = CLASS_NAME + ".countEventsByType";
         final String AGG_NAME = "events_by_type";
         try {
-            if (!elasticsearchService.indexExist(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS)))
+            if (!elasticsearchService.indexExist(indexResolver.resolveIndexPattern("log")))
                 return new PieType();
 
             List<FilterType> filters = new ArrayList<>();
             filters.add(new FilterType(Constants.timestamp, OperatorType.IS_BETWEEN, List.of(from, to)));
 
             SearchRequest rq = SearchRequest.of(s -> s.size(0).query(SearchUtil.toQuery(filters))
-                .index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS))
+                .index(indexResolver.resolveIndexPattern("log"))
                 .aggregations(AGG_NAME, agg -> agg.terms(t -> t.field(Constants.dataTypeKeyword)
                     .size(top).order(List.of(Map.of("_count", SortOrder.Desc))))));
 
@@ -211,14 +214,14 @@ public class OverviewService {
         final String DATE_HISTOGRAM_AGG = "events_in_time";
         final String EVENT_TYPE_SUB_AGG = "event_by_type";
         try {
-            if (!elasticsearchService.indexExist(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS)))
+            if (!elasticsearchService.indexExist(indexResolver.resolveIndexPattern("log")))
                 return new EventsByObjectsInTimeType();
 
             List<FilterType> filters = new ArrayList<>();
             filters.add(new FilterType(Constants.timestamp, OperatorType.IS_BETWEEN, List.of(from, to)));
 
             SearchRequest rq = SearchRequest.of(s -> s.size(0).query(SearchUtil.toQuery(filters))
-                .index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS))
+                .index(indexResolver.resolveIndexPattern("log"))
                 .aggregations(DATE_HISTOGRAM_AGG, agg -> agg.dateHistogram(h -> h.calendarInterval(interval)
                         .format("yyyy-MM-dd HH:mm").field(Constants.timestamp).minDocCount(1))
                     .aggregations(EVENT_TYPE_SUB_AGG, e -> e.terms(t -> t.field(Constants.dataTypeKeyword)
@@ -234,7 +237,7 @@ public class OverviewService {
             EventsByObjectsInTimeType result = new EventsByObjectsInTimeType();
 
             List<String> eventTypes = elasticsearchService.getFieldValues(Constants.dataTypeKeyword,
-                Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS));
+                indexResolver.resolveIndexPattern("log"));
             if (CollectionUtils.isEmpty(eventTypes))
                 return new EventsByObjectsInTimeType();
 
@@ -262,7 +265,7 @@ public class OverviewService {
         final String ctx = CLASS_NAME + ".topEvents";
         final String AGG_NAME = "win_events_by_id";
         try {
-            if (!elasticsearchService.indexExist(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS_WINDOWS)))
+            if (!elasticsearchService.indexExist(indexResolver.resolveIndexPattern("log")))
                 return new TableType();
 
             List<FilterType> filters = new ArrayList<>();
@@ -270,7 +273,7 @@ public class OverviewService {
             filters.add(new FilterType(Constants.logxWineventlogLogNameKeyword, OperatorType.IS, "Security"));
 
             SearchRequest rq = SearchRequest.of(s -> s.size(0).query(SearchUtil.toQuery(filters))
-                .index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS_WINDOWS))
+                .index(indexResolver.resolveIndexPattern("log"))
                 .aggregations(AGG_NAME, agg -> agg.terms(t -> t.field(Constants.logxWineventlogEventNameKeyword)
                     .size(top).order(List.of(Map.of("_count", SortOrder.Desc))))));
 

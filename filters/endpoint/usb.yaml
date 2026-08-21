@@ -1,0 +1,50 @@
+# HiveArmor USB Device Event filter — version 1.0.0
+# DataType: usb
+#
+# Processes events from:
+#   - agent/collector/usb.Collector   (Linux /sys/bus/usb inotify)
+#   - agent/collector/etw.Collector   (Windows Kernel-PnP EventID 2003/2100)
+
+pipeline:
+  - dataTypes:
+      - usb
+    steps:
+      - json:
+          source: raw
+          where: 'startsWith("raw", "{")'
+
+      - rename:
+          from:
+            - log.deviceVid
+            - log.DeviceVID
+          to: log.device_vid
+          where: 'exists("log.deviceVid") || exists("log.DeviceVID")'
+
+      - rename:
+          from:
+            - log.devicePid
+            - log.DevicePID
+          to: log.device_pid
+          where: 'exists("log.devicePid") || exists("log.DevicePID")'
+
+      - rename:
+          from:
+            - log.deviceDesc
+            - log.DeviceDesc
+            - log.deviceManufacturer
+          to: log.device_desc
+          where: 'exists("log.deviceDesc") || exists("log.DeviceDesc") || exists("log.deviceManufacturer")'
+
+      - rename:
+          from:
+            - log.deviceInstance
+            - log.DeviceInstance
+          to: log.device_instance
+          where: 'exists("log.deviceInstance") || exists("log.DeviceInstance")'
+
+      - rename:
+          from:
+            - log.action
+            - log.Action
+          to: action
+          where: 'exists("log.action") || exists("log.Action")'

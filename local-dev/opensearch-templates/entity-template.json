@@ -1,0 +1,74 @@
+{
+  "index_patterns": ["v3-hive-entity-*"],
+  "priority": 200,
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "index.refresh_interval": "5s",
+      "analysis": {
+        "analyzer": {
+          "display_name_analyzer": {
+            "type": "standard"
+          }
+        }
+      }
+    },
+    "mappings": {
+      "properties": {
+        "id": {
+          "type": "keyword"
+        },
+        "type": {
+          "type": "keyword"
+        },
+        "value": {
+          "type": "keyword"
+        },
+        "displayName": {
+          "type": "text",
+          "analyzer": "standard",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        },
+        "riskScore": {
+          "type": "integer"
+        },
+        "riskLevel": {
+          "type": "keyword"
+        },
+        "riskTrend": {
+          "type": "keyword"
+        },
+        "criticality": {
+          "type": "keyword"
+        },
+        "alertCount": {
+          "type": "integer"
+        },
+        "lastSeen": {
+          "type": "date"
+        },
+        "firstSeen": {
+          "type": "date"
+        },
+        "baselineDeviation": {
+          "type": "float"
+        },
+        "tags": {
+          "type": "keyword"
+        },
+        "observationSources": {
+          "type": "keyword"
+        },
+        "tenantId": {
+          "type": "long"
+        }
+      }
+    }
+  }
+}

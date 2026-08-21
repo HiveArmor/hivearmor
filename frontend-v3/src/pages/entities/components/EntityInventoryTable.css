@@ -1,0 +1,44 @@
+/* EntityInventoryTable — full-width AG Grid wrapper */
+
+.ent-inventory-table {
+  height: 100%;
+  min-height: 0;
+  border: 1px solid var(--ha-border-default);
+  overflow: hidden;
+}
+
+.ent-table__type-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ha-foreground-secondary);
+}
+
+.ent-table__mono {
+  font-family: var(--ha-font-mono, 'JetBrains Mono', monospace);
+  font-size: 11px;
+}
+
+.ent-table__number {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ent-table__trend-cell {
+  font-family: var(--ha-font-mono, 'JetBrains Mono', monospace);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ent-table__trend-cell[data-trend='rising'] {
+  color: var(--ha-severity-critical);
+}
+
+.ent-table__trend-cell[data-trend='stable'] {
+  color: var(--ha-foreground-tertiary);
+}
+
+.ent-table__trend-cell[data-trend='declining'] {
+  color: var(--ha-severity-low);
+}

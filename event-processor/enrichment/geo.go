@@ -13,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	geommdb "github.com/hivearmor/event-processor/geo"
 )
 
 // GeoResult holds normalized geolocation data for an IP.
@@ -284,9 +286,29 @@ func enrichSide(data map[string]any, side string) {
 	if ip == "" {
 		return
 	}
+
+	// Priority: (1) CSV geo lookup, (2) MMDB fallback, (3) Unknown/XX stub only when both exhausted.
 	geo := Geolocate(ip)
 	if geo != nil {
 		sideMap["geolocation"] = geo
+		return
+	}
+
+	// CSV returned nil — fall back to MMDB. geommdb.Lookup is total (never panics).
+	fallback := geommdb.Lookup(ip)
+	sideMap["geolocation"] = map[string]any{
+		"country":     fallback.Country,
+		"city":        fallback.City,
+		"countryCode": fallback.CountryCode,
+		"asn":         "",
+		"aso":         "",
+		"latitude":    fallback.Latitude,
+		"longitude":   fallback.Longitude,
+		"accuracy":    0,
+		"coordinates": map[string]any{
+			"lat": fallback.Latitude,
+			"lon": fallback.Longitude,
+		},
 	}
 }
 

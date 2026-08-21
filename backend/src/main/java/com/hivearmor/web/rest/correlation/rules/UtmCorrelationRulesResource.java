@@ -47,8 +47,13 @@ import java.util.stream.Collectors;
 
 
 /**
- * REST controller for managing {@link UtmCorrelationRulesResource}.
+ * REST controller for the legacy correlation-rule contract.
+ *
+ * @deprecated since 2026-08-11. New detection-engineering consumers must use
+ * {@code /api/ha-detection-rules}. Compatibility is retained for existing
+ * integrations until the published sunset policy permits removal.
  */
+@Deprecated(since = "2026-08-11", forRemoval = false)
 @RestController
 @RequestMapping("/api")
 public class UtmCorrelationRulesResource {

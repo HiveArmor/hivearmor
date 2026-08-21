@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 // newTestEngine resets all package-level state and registers the given rules with a

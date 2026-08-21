@@ -132,6 +132,15 @@ public class UtmIncidentQueryService extends QueryService<UtmIncident> {
             if (criteria.getIncidentSeverity() != null) {
                 specification = specification.and(buildSpecification(criteria.getIncidentSeverity(), UtmIncident_.incidentSeverity));
             }
+            if (criteria.getIncidentPriority() != null) {
+                specification = specification.and(buildStringSpecification(criteria.getIncidentPriority(), UtmIncident_.incidentPriority));
+            }
+            if (criteria.getSlaDeadline() != null) {
+                specification = specification.and(buildRangeSpecification(criteria.getSlaDeadline(), UtmIncident_.slaDeadline));
+            }
+            if (criteria.getSlaBreached() != null) {
+                specification = specification.and(buildSpecification(criteria.getSlaBreached(), UtmIncident_.slaBreached));
+            }
         }
         return specification;
     }

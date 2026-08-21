@@ -29,4 +29,6 @@ message AuthResponse {
 
 message DeleteRequest {
   string deleted_by = 1;
+  uint32 agent_id = 2;
+  int64 tenant_id = 3;
 }

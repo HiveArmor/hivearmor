@@ -1,0 +1,38 @@
+id: ha-aws-007
+title: IAM Access Key Created for Existing User
+status: stable
+description: Detects creation of new IAM access keys for existing users. Adversaries create access keys to establish persistent programmatic access that may survive password resets and MFA changes.
+logsource:
+  product: aws
+  service: cloudtrail
+level: medium
+tags:
+  - attack.persistence
+  - attack.T1098.001
+detection:
+  selection:
+    eventName: CreateAccessKey
+  filter_self:
+    userIdentity.arn|contains: requestParameters.userName
+  condition: selection and not filter_self
+falsepositives:
+  - Authorised administrators provisioning programmatic credentials for service accounts
+  - Automated user onboarding workflows creating initial credentials
+fields:
+  - eventName
+  - requestParameters.userName
+  - userIdentity.arn
+  - sourceIPAddress
+  - responseElements.accessKey.accessKeyId
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - requestParameters.userName
+  - userIdentity.arn
+groupBy:
+  - userIdentity.arn
+mitre:
+  tactic: persistence
+  technique: T1098.001

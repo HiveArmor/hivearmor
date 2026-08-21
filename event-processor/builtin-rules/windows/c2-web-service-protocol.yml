@@ -1,0 +1,42 @@
+id: b8c9d0e1-f2a3-4567-bcde-678901234568
+title: Web Service Used as C2 Communication Channel
+status: stable
+logsource:
+  product: windows
+  category: network_connection
+level: high
+tags:
+  - attack.command_and_control
+  - attack.T1102
+  - attack.T1102.002
+detection:
+  selection:
+    DestinationHostname|contains:
+      - 'pastebin.com'
+      - 'githubusercontent.com'
+      - 'paste.ee'
+      - 'hastebin.com'
+      - 'controlc.com'
+      - 'p.ip.fi'
+    Image|endswith:
+      - '\powershell.exe'
+      - '\cmd.exe'
+      - '\wscript.exe'
+      - '\cscript.exe'
+      - '\mshta.exe'
+  condition: selection
+falsepositives:
+  - Developers fetching scripts from public repositories
+  - Update checks against public services
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - DestinationHostname
+groupBy:
+  - ComputerName
+mitre:
+  tactic: command-and-control
+  technique: T1102.002

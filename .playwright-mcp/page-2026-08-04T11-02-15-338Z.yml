@@ -1,0 +1,675 @@
+- generic [active] [ref=f33e1]:
+  - generic [ref=f33e5]:
+    - link "Skip to main content" [ref=f33e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f33e7]:
+      - generic [ref=f33e8]:
+        - generic [ref=f33e14]: HiveArmor
+        - generic [ref=f33e15]: Security operations
+      - generic [ref=f33e16]:
+        - button "CWM" [ref=f33e1034] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f33e26] [cursor=pointer]:
+          - generic [ref=f33e31]: ⌘ K
+        - generic [ref=f33e32]: Production
+      - generic [ref=f33e33]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=f33e34]'
+        - status "Live events per second" [ref=f33e37]:
+          - generic [ref=f33e39]: 0 EPS
+        - button "Notifications" [ref=f33e40] [cursor=pointer]
+        - button "Help" [ref=f33e45] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f33e49]:
+      - generic [ref=f33e50]:
+        - region "COMMAND" [ref=f33e51]:
+          - generic [ref=f33e52]:
+            - button "Mission Control" [ref=f33e53] [cursor=pointer]
+            - button "Analyst Queue" [ref=f33e60] [cursor=pointer]
+            - button "Alerts" [ref=f33e64] [cursor=pointer]
+            - button "Correlated Findings" [ref=f33e69] [cursor=pointer]
+            - button "Incidents" [ref=f33e75] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f33e81]:
+          - generic [ref=f33e82]:
+            - button "Search & Hunt" [ref=f33e83] [cursor=pointer]
+            - button "Investigations" [ref=f33e88] [cursor=pointer]
+            - button "Entities" [ref=f33e92] [cursor=pointer]
+            - button "Threat Constellation" [ref=f33e99] [cursor=pointer]
+        - region "DEFEND" [ref=f33e105]:
+          - generic [ref=f33e106]:
+            - button "Detection Rules" [ref=f33e107] [cursor=pointer]
+            - button "Playbooks" [ref=f33e111] [cursor=pointer]
+            - button "Response Library" [ref=f33e116] [cursor=pointer]
+        - region "POSTURE" [ref=f33e120]:
+          - generic [ref=f33e121]:
+            - button "Assets" [ref=f33e122] [cursor=pointer]
+            - button "Identities" [ref=f33e127] [cursor=pointer]
+            - button "Active Directory" [ref=f33e134] [cursor=pointer]
+            - button "Exposure" [ref=f33e141] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f33e147] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f33e158] [cursor=pointer]
+            - button "Sensors" [ref=f33e164] [cursor=pointer]
+            - button "Compliance" [ref=f33e168] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f33e173]:
+          - generic [ref=f33e174]:
+            - button "Endpoints" [ref=f33e175] [cursor=pointer]
+            - button "File Quarantine" [ref=f33e179] [cursor=pointer]
+            - button "File Integrity" [ref=f33e185] [cursor=pointer]
+            - button "Agent Policies" [ref=f33e192] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f33e197]:
+          - button "Studio" [ref=f33e199] [cursor=pointer]
+        - region "REPORT" [ref=f33e204]:
+          - button "Scheduled Reports" [ref=f33e206] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f33e211]:
+          - generic [ref=f33e212]:
+            - button "Users" [ref=f33e213] [cursor=pointer]
+            - button "Integrations" [ref=f33e227] [cursor=pointer]
+            - button "Notifications" [ref=f33e231] [cursor=pointer]
+            - button "Audit Log" [ref=f33e236] [cursor=pointer]
+            - button "Settings" [ref=f33e241] [cursor=pointer]
+      - generic [ref=f33e246]:
+        - button "User menu" [ref=f33e249] [cursor=pointer]:
+          - generic [ref=f33e250]: AA
+        - button "Pin sidebar open" [ref=f33e251] [cursor=pointer]
+    - main [ref=f33e254]:
+      - region [ref=f33e255]:
+        - generic [ref=f33e256]:
+          - generic [ref=f33e262]:
+            - generic [ref=f33e263]: INVESTIGATION
+            - heading "Search & Hunt" [level=1] [ref=f33e264]
+          - generic [ref=f33e265]: ⌘/Ctrl + Enter to run · J/K event navigation
+        - generic [ref=f33e269]:
+          - combobox [ref=f33e271]:
+            - generic "Hunt query editor" [ref=f33e272]:
+              - code [ref=f33e275]:
+                - generic [ref=f33e276]:
+                  - textbox "KQL search query. Press Enter to run, Shift Enter for a new line, or use arrow keys for suggestions." [ref=f33e277]
+                  - textbox [ref=f33e278]
+              - generic: Start typing for KQL suggestions · Enter loads the newest 100 events
+          - generic "Search controls" [ref=f33e287]:
+            - button "Toggle filters and field values" [pressed] [ref=f33e288] [cursor=pointer]
+            - button "KQL" [ref=f33e291] [cursor=pointer]
+            - button "Time range selector" [ref=f33e299] [cursor=pointer]:
+              - generic [ref=f33e302]: Last 4 hours
+            - generic [ref=f33e305]:
+              - generic [ref=f33e306]: Index
+              - combobox "Data source index" [ref=f33e307] [cursor=pointer]:
+                - option "All sources (logs + events)" [selected]
+                - option "Raw logs"
+                - option "Endpoint events"
+                - option "Alerts"
+            - button "History" [ref=f33e308] [cursor=pointer]
+            - button "Saved hunts" [ref=f33e313] [cursor=pointer]
+            - button "Save" [disabled] [ref=f33e318]
+            - button "Run search" [ref=f33e323] [cursor=pointer]
+          - status [ref=f33e326]:
+            - generic [ref=f33e327]: Query complete
+            - generic [ref=f33e329]: 228 events
+            - generic [ref=f33e334]: 10 ms
+            - generic [ref=f33e338]: Snapshot 16:32:09
+        - generic [ref=f33e344]:
+          - complementary "Filter and field browser" [ref=f33e345]:
+            - generic [ref=f33e346]:
+              - strong [ref=f33e351]: Fields & values
+              - generic [ref=f33e352]: 17 fields
+            - generic [ref=f33e353]:
+              - generic [ref=f33e357]: Filter available fields
+              - textbox "Filter available fields /" [ref=f33e358]:
+                - /placeholder: Filter fields
+              - generic [ref=f33e359]: /
+            - generic [ref=f33e360]:
+              - generic [ref=f33e361]: FIELD
+              - generic [ref=f33e362]: COVERAGE
+            - generic [ref=f33e363]:
+              - generic [ref=f33e1037]:
+                - button "Event 6" [expanded] [ref=f33e1038] [cursor=pointer]:
+                  - generic [ref=f33e1041]: Event
+                  - emphasis [ref=f33e1042]: "6"
+                - list [ref=f33e1043]:
+                  - listitem [ref=f33e1044]:
+                    - button "@timestamp date —" [ref=f33e1045] [cursor=pointer]:
+                      - generic [ref=f33e1046]:
+                        - strong [ref=f33e1047]: "@timestamp"
+                        - generic [ref=f33e1048]: date
+                      - emphasis [ref=f33e1049]: —
+                    - button "Add @timestamp as a result column" [disabled] [ref=f33e1050]
+                  - listitem [ref=f33e1052]:
+                    - button "event.severity number —" [ref=f33e1053] [cursor=pointer]:
+                      - generic [ref=f33e1054]:
+                        - strong [ref=f33e1055]: event.severity
+                        - generic [ref=f33e1056]: number
+                      - emphasis [ref=f33e1057]: —
+                    - button "Add event.severity as a result column" [disabled] [ref=f33e1058]
+                  - listitem [ref=f33e1060]:
+                    - button "event.category keyword —" [ref=f33e1061] [cursor=pointer]:
+                      - generic [ref=f33e1062]:
+                        - strong [ref=f33e1063]: event.category
+                        - generic [ref=f33e1064]: keyword
+                      - emphasis [ref=f33e1065]: —
+                    - button "Add event.category as a result column" [ref=f33e1066] [cursor=pointer]
+                  - listitem [ref=f33e1068]:
+                    - button "event.action keyword —" [ref=f33e1069] [cursor=pointer]:
+                      - generic [ref=f33e1070]:
+                        - strong [ref=f33e1071]: event.action
+                        - generic [ref=f33e1072]: keyword
+                      - emphasis [ref=f33e1073]: —
+                    - button "Add event.action as a result column" [disabled] [ref=f33e1074]
+                  - listitem [ref=f33e1076]:
+                    - button "event.outcome keyword —" [ref=f33e1077] [cursor=pointer]:
+                      - generic [ref=f33e1078]:
+                        - strong [ref=f33e1079]: event.outcome
+                        - generic [ref=f33e1080]: keyword
+                      - emphasis [ref=f33e1081]: —
+                    - button "Add event.outcome as a result column" [ref=f33e1082] [cursor=pointer]
+                  - listitem [ref=f33e1084]:
+                    - button "message text —" [ref=f33e1085] [cursor=pointer]:
+                      - generic [ref=f33e1086]:
+                        - strong [ref=f33e1087]: message
+                        - generic [ref=f33e1088]: text
+                      - emphasis [ref=f33e1089]: —
+                    - button "Add message as a result column" [ref=f33e1090] [cursor=pointer]
+              - generic [ref=f33e1092]:
+                - button "Host 2" [expanded] [ref=f33e1093] [cursor=pointer]:
+                  - generic [ref=f33e1096]: Host
+                  - emphasis [ref=f33e1097]: "2"
+                - list [ref=f33e1098]:
+                  - listitem [ref=f33e1099]:
+                    - button "host.name keyword —" [ref=f33e1100] [cursor=pointer]:
+                      - generic [ref=f33e1101]:
+                        - strong [ref=f33e1102]: host.name
+                        - generic [ref=f33e1103]: keyword
+                      - emphasis [ref=f33e1104]: —
+                    - button "Add host.name as a result column" [disabled] [ref=f33e1105]
+                  - listitem [ref=f33e1107]:
+                    - button "host.ip ip —" [ref=f33e1108] [cursor=pointer]:
+                      - generic [ref=f33e1109]:
+                        - strong [ref=f33e1110]: host.ip
+                        - generic [ref=f33e1111]: ip
+                      - emphasis [ref=f33e1112]: —
+                    - button "Add host.ip as a result column" [ref=f33e1113] [cursor=pointer]
+              - generic [ref=f33e1115]:
+                - button "Identity 2" [expanded] [ref=f33e1116] [cursor=pointer]:
+                  - generic [ref=f33e1119]: Identity
+                  - emphasis [ref=f33e1120]: "2"
+                - list [ref=f33e1121]:
+                  - listitem [ref=f33e1122]:
+                    - button "user.name keyword —" [ref=f33e1123] [cursor=pointer]:
+                      - generic [ref=f33e1124]:
+                        - strong [ref=f33e1125]: user.name
+                        - generic [ref=f33e1126]: keyword
+                      - emphasis [ref=f33e1127]: —
+                    - button "Add user.name as a result column" [disabled] [ref=f33e1128]
+                  - listitem [ref=f33e1130]:
+                    - button "user.domain keyword —" [ref=f33e1131] [cursor=pointer]:
+                      - generic [ref=f33e1132]:
+                        - strong [ref=f33e1133]: user.domain
+                        - generic [ref=f33e1134]: keyword
+                      - emphasis [ref=f33e1135]: —
+                    - button "Add user.domain as a result column" [ref=f33e1136] [cursor=pointer]
+              - generic [ref=f33e1138]:
+                - button "Network 5" [expanded] [ref=f33e1139] [cursor=pointer]:
+                  - generic [ref=f33e1142]: Network
+                  - emphasis [ref=f33e1143]: "5"
+                - list [ref=f33e1144]:
+                  - listitem [ref=f33e1145]:
+                    - button "source.ip ip —" [ref=f33e1146] [cursor=pointer]:
+                      - generic [ref=f33e1147]:
+                        - strong [ref=f33e1148]: source.ip
+                        - generic [ref=f33e1149]: ip
+                      - emphasis [ref=f33e1150]: —
+                    - button "Add source.ip as a result column" [disabled] [ref=f33e1151]
+                  - listitem [ref=f33e1153]:
+                    - button "source.port number —" [ref=f33e1154] [cursor=pointer]:
+                      - generic [ref=f33e1155]:
+                        - strong [ref=f33e1156]: source.port
+                        - generic [ref=f33e1157]: number
+                      - emphasis [ref=f33e1158]: —
+                    - button "Add source.port as a result column" [ref=f33e1159] [cursor=pointer]
+                  - listitem [ref=f33e1161]:
+                    - button "destination.ip ip —" [ref=f33e1162] [cursor=pointer]:
+                      - generic [ref=f33e1163]:
+                        - strong [ref=f33e1164]: destination.ip
+                        - generic [ref=f33e1165]: ip
+                      - emphasis [ref=f33e1166]: —
+                    - button "Add destination.ip as a result column" [ref=f33e1167] [cursor=pointer]
+                  - listitem [ref=f33e1169]:
+                    - button "destination.port number —" [ref=f33e1170] [cursor=pointer]:
+                      - generic [ref=f33e1171]:
+                        - strong [ref=f33e1172]: destination.port
+                        - generic [ref=f33e1173]: number
+                      - emphasis [ref=f33e1174]: —
+                    - button "Add destination.port as a result column" [ref=f33e1175] [cursor=pointer]
+                  - listitem [ref=f33e1177]:
+                    - button "source.geo.country_name keyword —" [ref=f33e1178] [cursor=pointer]:
+                      - generic [ref=f33e1179]:
+                        - strong [ref=f33e1180]: source.geo.country_name
+                        - generic [ref=f33e1181]: keyword
+                      - emphasis [ref=f33e1182]: —
+                    - button "Add source.geo.country_name as a result column" [ref=f33e1183] [cursor=pointer]
+              - button "Source 2" [ref=f33e1186] [cursor=pointer]:
+                - generic [ref=f33e1189]: Source
+                - emphasis [ref=f33e1190]: "2"
+          - main "Hunt results workspace" [ref=f33e518]:
+            - region "Event distribution over time" [ref=f33e537]:
+              - generic [ref=f33e538]:
+                - generic [ref=f33e539]:
+                  - strong [ref=f33e540]: Event distribution
+                  - generic [ref=f33e541]: Click a bucket to narrow the active time range
+                - generic [ref=f33e542]: 49 buckets
+              - img "Event histogram" [ref=f33e544]
+            - generic [ref=f33e548]:
+              - generic [ref=f33e549]:
+                - strong [ref=f33e550]: Events
+                - generic [ref=f33e551]: 1–100 loaded · more available
+              - generic [ref=f33e552]:
+                - generic [ref=f33e553]:
+                  - generic [ref=f33e554]: Rows
+                  - group "Result row density" [ref=f33e555]:
+                    - button "Compact rows" [pressed] [ref=f33e556] [cursor=pointer]
+                    - button "Standard rows" [ref=f33e562] [cursor=pointer]
+                    - button "Comfortable rows" [ref=f33e568] [cursor=pointer]
+                - button "Columns" [ref=f33e575] [cursor=pointer]
+            - generic "Hunt event results. Use arrow keys to navigate and Enter to open event context." [ref=f33e1193]:
+              - generic [ref=f33e1197]:
+                - grid [ref=f33e1199]:
+                  - rowgroup [ref=f33e1200]:
+                    - row [ref=f33e1201]:
+                      - columnheader [ref=f33e1202]:
+                        - checkbox "Column with Header Selection" [ref=f33e1203] [cursor=pointer]
+                        - text:  
+                        - generic: 
+                      - columnheader "Event time" [ref=f33e1204]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Severity" [ref=f33e1207]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Source" [ref=f33e1210]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Action" [ref=f33e1213]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Host" [ref=f33e1216]:
+                        - text: 
+                        - generic:      
+                      - columnheader "User" [ref=f33e1219]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Source IP" [ref=f33e1222]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Event summary" [ref=f33e1225]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Alerts" [ref=f33e1228]:
+                        - text: 
+                        - generic:      
+                    - row [ref=f33e1231] [cursor=pointer]:
+                      - gridcell [ref=f33e1232]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1233]
+                        - text: 
+                      - gridcell "2026-08-04 10:59:52.000 Z" [ref=f33e1234]
+                      - gridcell [ref=f33e1235]
+                      - gridcell "Linux Syslog" [ref=f33e1238]
+                      - gridcell "connection_accepted" [ref=f33e1239]
+                      - gridcell "SRV-workmates2-01" [ref=f33e1240]
+                      - gridcell "svc_backup" [ref=f33e1241]
+                      - gridcell "10.27.28.118" [ref=f33e1242]
+                      - gridcell "[Workmates2] connection_accepted by svc_backup@WORKMATES2.NET on SRV-workmates2-01" [ref=f33e1243]
+                      - gridcell "—" [ref=f33e1244]
+                    - row [ref=f33e1245] [cursor=pointer]:
+                      - gridcell [ref=f33e1246]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1247]
+                        - text: 
+                      - gridcell "2026-08-04 10:57:40.000 Z" [ref=f33e1248]
+                      - gridcell [ref=f33e1249]
+                      - gridcell "Palo Alto" [ref=f33e1252]
+                      - gridcell "file_created" [ref=f33e1253]
+                      - gridcell "WKS-cwm-10" [ref=f33e1254]
+                      - gridcell "svc_backup" [ref=f33e1255]
+                      - gridcell "10.186.202.30" [ref=f33e1256]
+                      - gridcell "[CWM] file_created by svc_backup@CWM.IO on WKS-cwm-10" [ref=f33e1257]
+                      - gridcell "—" [ref=f33e1258]
+                    - row [ref=f33e1259] [cursor=pointer]:
+                      - gridcell [ref=f33e1260]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1261]
+                        - text: 
+                      - gridcell "2026-08-04 10:57:38.000 Z" [ref=f33e1262]
+                      - gridcell [ref=f33e1263]
+                      - gridcell "Sysmon" [ref=f33e1266]
+                      - gridcell "process_started" [ref=f33e1267]
+                      - gridcell "WKS-cwm-10" [ref=f33e1268]
+                      - gridcell "admin" [ref=f33e1269]
+                      - gridcell "10.34.208.95" [ref=f33e1270]
+                      - gridcell "[CWM] Process svchost.exe started by admin on WKS-cwm-10" [ref=f33e1271]
+                      - gridcell "—" [ref=f33e1272]
+                    - row [ref=f33e1273] [cursor=pointer]:
+                      - gridcell [ref=f33e1274]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1275]
+                        - text: 
+                      - gridcell "2026-08-04 10:57:03.000 Z" [ref=f33e1276]
+                      - gridcell [ref=f33e1277]
+                      - gridcell "Sysmon" [ref=f33e1280]
+                      - gridcell "process_started" [ref=f33e1281]
+                      - gridcell "WKS-workmates1-10" [ref=f33e1282]
+                      - gridcell "j.doe" [ref=f33e1283]
+                      - gridcell "10.65.167.142" [ref=f33e1284]
+                      - gridcell "[Workmates1] Process powershell.exe started by j.doe on WKS-workmates1-10" [ref=f33e1285]
+                      - gridcell "—" [ref=f33e1286]
+                    - row [ref=f33e1287] [cursor=pointer]:
+                      - gridcell [ref=f33e1288]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1289]
+                        - text: 
+                      - gridcell "2026-08-04 10:54:55.000 Z" [ref=f33e1290]
+                      - gridcell [ref=f33e1291]
+                      - gridcell "Sysmon" [ref=f33e1294]
+                      - gridcell "process_started" [ref=f33e1295]
+                      - gridcell "WKS-cwm-10" [ref=f33e1296]
+                      - gridcell "admin" [ref=f33e1297]
+                      - gridcell "10.236.49.190" [ref=f33e1298]
+                      - gridcell "[CWM] Process svchost.exe started by admin on WKS-cwm-10" [ref=f33e1299]
+                      - gridcell "—" [ref=f33e1300]
+                    - row [ref=f33e1301] [cursor=pointer]:
+                      - gridcell [ref=f33e1302]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1303]
+                        - text: 
+                      - gridcell "2026-08-04 10:54:18.000 Z" [ref=f33e1304]
+                      - gridcell [ref=f33e1305]
+                      - gridcell "Sysmon" [ref=f33e1308]
+                      - gridcell "process_started" [ref=f33e1309]
+                      - gridcell "SRV-workmates2-01" [ref=f33e1310]
+                      - gridcell "LOCAL SERVICE" [ref=f33e1311]
+                      - gridcell "10.15.228.73" [ref=f33e1312]
+                      - gridcell "[Workmates2] Process whoami.exe started by LOCAL SERVICE on SRV-workmates2-01" [ref=f33e1313]
+                      - gridcell "—" [ref=f33e1314]
+                    - row [ref=f33e1315] [cursor=pointer]:
+                      - gridcell [ref=f33e1316]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1317]
+                        - text: 
+                      - gridcell "2026-08-04 10:54:17.000 Z" [ref=f33e1318]
+                      - gridcell [ref=f33e1319]
+                      - gridcell "Palo Alto" [ref=f33e1322]
+                      - gridcell "file_created" [ref=f33e1323]
+                      - gridcell "FW-workmates1-01" [ref=f33e1324]
+                      - gridcell "svc_backup" [ref=f33e1325]
+                      - gridcell "10.70.27.248" [ref=f33e1326]
+                      - gridcell "[Workmates1] file_created by svc_backup@WORKMATES1.COM on FW-workmates1-01" [ref=f33e1327]
+                      - gridcell "—" [ref=f33e1328]
+                    - row [ref=f33e1329] [cursor=pointer]:
+                      - gridcell [ref=f33e1330]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1331]
+                        - text: 
+                      - gridcell "2026-08-04 10:53:01.000 Z" [ref=f33e1332]
+                      - gridcell [ref=f33e1333]
+                      - gridcell "Palo Alto" [ref=f33e1336]
+                      - gridcell "connection_denied" [ref=f33e1337]
+                      - gridcell "DC-workmates1-01" [ref=f33e1338]
+                      - gridcell "k.admin" [ref=f33e1339]
+                      - gridcell "10.228.194.21" [ref=f33e1340]
+                      - gridcell "[Workmates1] connection_denied by k.admin@WORKMATES1.COM on DC-workmates1-01" [ref=f33e1341]
+                      - gridcell "—" [ref=f33e1342]
+                    - row [ref=f33e1343] [cursor=pointer]:
+                      - gridcell [ref=f33e1344]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1345]
+                        - text: 
+                      - gridcell "2026-08-04 10:52:52.000 Z" [ref=f33e1346]
+                      - gridcell [ref=f33e1347]
+                      - gridcell "FortiGate" [ref=f33e1350]
+                      - gridcell "file_created" [ref=f33e1351]
+                      - gridcell "FW-cwm-01" [ref=f33e1352]
+                      - gridcell "k.admin" [ref=f33e1353]
+                      - gridcell "10.4.81.31" [ref=f33e1354]
+                      - gridcell "[CWM] file_created by k.admin@CWM.IO on FW-cwm-01" [ref=f33e1355]
+                      - gridcell "—" [ref=f33e1356]
+                    - row [ref=f33e1357] [cursor=pointer]:
+                      - gridcell [ref=f33e1358]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1359]
+                        - text: 
+                      - gridcell "2026-08-04 10:52:30.000 Z" [ref=f33e1360]
+                      - gridcell [ref=f33e1361]
+                      - gridcell "Sysmon" [ref=f33e1364]
+                      - gridcell "process_started" [ref=f33e1365]
+                      - gridcell "SRV-workmates1-01" [ref=f33e1366]
+                      - gridcell "admin" [ref=f33e1367]
+                      - gridcell "10.241.52.103" [ref=f33e1368]
+                      - gridcell "[Workmates1] Process powershell.exe started by admin on SRV-workmates1-01" [ref=f33e1369]
+                      - gridcell "—" [ref=f33e1370]
+                    - row [ref=f33e1371] [cursor=pointer]:
+                      - gridcell [ref=f33e1372]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1373]
+                        - text: 
+                      - gridcell "2026-08-04 10:52:04.000 Z" [ref=f33e1374]
+                      - gridcell [ref=f33e1375]
+                      - gridcell "Sysmon" [ref=f33e1378]
+                      - gridcell "process_started" [ref=f33e1379]
+                      - gridcell "SRV-workmates2-01" [ref=f33e1380]
+                      - gridcell "j.doe" [ref=f33e1381]
+                      - gridcell "10.198.33.8" [ref=f33e1382]
+                      - gridcell "[Workmates2] Process svchost.exe started by j.doe on SRV-workmates2-01" [ref=f33e1383]
+                      - gridcell "—" [ref=f33e1384]
+                    - row [ref=f33e1385] [cursor=pointer]:
+                      - gridcell [ref=f33e1386]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1387]
+                        - text: 
+                      - gridcell "2026-08-04 10:51:41.000 Z" [ref=f33e1388]
+                      - gridcell [ref=f33e1389]
+                      - gridcell "AWS CloudTrail" [ref=f33e1392]
+                      - gridcell "logon_success" [ref=f33e1393]
+                      - gridcell "WKS-workmates2-10" [ref=f33e1394]
+                      - gridcell "analyst01" [ref=f33e1395]
+                      - gridcell "10.201.202.96" [ref=f33e1396]
+                      - gridcell "[Workmates2] logon_success by analyst01@WORKMATES2.NET on WKS-workmates2-10" [ref=f33e1397]
+                      - gridcell "—" [ref=f33e1398]
+                    - row [ref=f33e1399] [cursor=pointer]:
+                      - gridcell [ref=f33e1400]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1401]
+                        - text: 
+                      - gridcell "2026-08-04 10:50:27.000 Z" [ref=f33e1402]
+                      - gridcell [ref=f33e1403]
+                      - gridcell "FortiGate" [ref=f33e1406]
+                      - gridcell "logon_failed" [ref=f33e1407]
+                      - gridcell "SRV-workmates1-01" [ref=f33e1408]
+                      - gridcell "k.admin" [ref=f33e1409]
+                      - gridcell "10.19.0.214" [ref=f33e1410]
+                      - gridcell "[Workmates1] logon_failed by k.admin@WORKMATES1.COM on SRV-workmates1-01" [ref=f33e1411]
+                      - gridcell "—" [ref=f33e1412]
+                    - row [ref=f33e1413] [cursor=pointer]:
+                      - gridcell [ref=f33e1414]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1415]
+                        - text: 
+                      - gridcell "2026-08-04 10:50:05.000 Z" [ref=f33e1416]
+                      - gridcell [ref=f33e1417]
+                      - gridcell "AWS CloudTrail" [ref=f33e1420]
+                      - gridcell "dns_query" [ref=f33e1421]
+                      - gridcell "SRV-cwm-01" [ref=f33e1422]
+                      - gridcell "svc_backup" [ref=f33e1423]
+                      - gridcell "10.101.121.174" [ref=f33e1424]
+                      - gridcell "[CWM] dns_query by svc_backup@CWM.IO on SRV-cwm-01" [ref=f33e1425]
+                      - gridcell "—" [ref=f33e1426]
+                    - row [ref=f33e1427] [cursor=pointer]:
+                      - gridcell [ref=f33e1428]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1429]
+                        - text: 
+                      - gridcell "2026-08-04 10:49:23.000 Z" [ref=f33e1430]
+                      - gridcell [ref=f33e1431]
+                      - gridcell "Linux Syslog" [ref=f33e1434]
+                      - gridcell "file_created" [ref=f33e1435]
+                      - gridcell "FW-workmates2-01" [ref=f33e1436]
+                      - gridcell "k.admin" [ref=f33e1437]
+                      - gridcell "10.0.11.130" [ref=f33e1438]
+                      - gridcell "[Workmates2] file_created by k.admin@WORKMATES2.NET on FW-workmates2-01" [ref=f33e1439]
+                      - gridcell "—" [ref=f33e1440]
+                    - row [ref=f33e1441] [cursor=pointer]:
+                      - gridcell [ref=f33e1442]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1443]
+                        - text: 
+                      - gridcell "2026-08-04 10:48:35.000 Z" [ref=f33e1444]
+                      - gridcell [ref=f33e1445]
+                      - gridcell "Sysmon" [ref=f33e1448]
+                      - gridcell "process_started" [ref=f33e1449]
+                      - gridcell "WKS-workmates1-11" [ref=f33e1450]
+                      - gridcell "SYSTEM" [ref=f33e1451]
+                      - gridcell "10.178.41.186" [ref=f33e1452]
+                      - gridcell "[Workmates1] Process whoami.exe started by SYSTEM on WKS-workmates1-11" [ref=f33e1453]
+                      - gridcell "—" [ref=f33e1454]
+                    - row [ref=f33e1455] [cursor=pointer]:
+                      - gridcell [ref=f33e1456]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1457]
+                        - text: 
+                      - gridcell "2026-08-04 10:47:22.000 Z" [ref=f33e1458]
+                      - gridcell [ref=f33e1459]
+                      - gridcell "Sysmon" [ref=f33e1462]
+                      - gridcell "process_started" [ref=f33e1463]
+                      - gridcell "WKS-cwm-11" [ref=f33e1464]
+                      - gridcell "j.doe" [ref=f33e1465]
+                      - gridcell "10.3.14.211" [ref=f33e1466]
+                      - gridcell "[CWM] Process chrome.exe started by j.doe on WKS-cwm-11" [ref=f33e1467]
+                      - gridcell "—" [ref=f33e1468]
+                    - row [ref=f33e1469] [cursor=pointer]:
+                      - gridcell [ref=f33e1470]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1471]
+                        - text: 
+                      - gridcell "2026-08-04 10:47:11.000 Z" [ref=f33e1472]
+                      - gridcell [ref=f33e1473]
+                      - gridcell "Palo Alto" [ref=f33e1476]
+                      - gridcell "dns_query" [ref=f33e1477]
+                      - gridcell "SRV-workmates1-02" [ref=f33e1478]
+                      - gridcell "analyst01" [ref=f33e1479]
+                      - gridcell "10.40.243.231" [ref=f33e1480]
+                      - gridcell "[Workmates1] dns_query by analyst01@WORKMATES1.COM on SRV-workmates1-02" [ref=f33e1481]
+                      - gridcell "—" [ref=f33e1482]
+                    - row [ref=f33e1483] [cursor=pointer]:
+                      - gridcell [ref=f33e1484]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1485]
+                        - text: 
+                      - gridcell "2026-08-04 10:45:26.000 Z" [ref=f33e1486]
+                      - gridcell [ref=f33e1487]
+                      - gridcell "Sysmon" [ref=f33e1490]
+                      - gridcell "process_started" [ref=f33e1491]
+                      - gridcell "SRV-cwm-01" [ref=f33e1492]
+                      - gridcell "LOCAL SERVICE" [ref=f33e1493]
+                      - gridcell "10.184.217.38" [ref=f33e1494]
+                      - gridcell "[CWM] Process powershell.exe started by LOCAL SERVICE on SRV-cwm-01" [ref=f33e1495]
+                      - gridcell "—" [ref=f33e1496]
+                    - row [ref=f33e1497] [cursor=pointer]:
+                      - gridcell [ref=f33e1498]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1499]
+                        - text: 
+                      - gridcell "2026-08-04 10:45:00.000 Z" [ref=f33e1500]
+                      - gridcell [ref=f33e1501]
+                      - gridcell "Sysmon" [ref=f33e1504]
+                      - gridcell "process_started" [ref=f33e1505]
+                      - gridcell "SRV-cwm-01" [ref=f33e1506]
+                      - gridcell "SYSTEM" [ref=f33e1507]
+                      - gridcell "10.171.136.29" [ref=f33e1508]
+                      - gridcell "[CWM] Process chrome.exe started by SYSTEM on SRV-cwm-01" [ref=f33e1509]
+                      - gridcell "—" [ref=f33e1510]
+                    - row [ref=f33e1511] [cursor=pointer]:
+                      - gridcell [ref=f33e1512]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1513]
+                        - text: 
+                      - gridcell "2026-08-04 10:44:39.000 Z" [ref=f33e1514]
+                      - gridcell [ref=f33e1515]
+                      - gridcell "Sysmon" [ref=f33e1518]
+                      - gridcell "process_started" [ref=f33e1519]
+                      - gridcell "WKS-workmates2-10" [ref=f33e1520]
+                      - gridcell "SYSTEM" [ref=f33e1521]
+                      - gridcell "10.77.153.226" [ref=f33e1522]
+                      - gridcell "[Workmates2] Process powershell.exe started by SYSTEM on WKS-workmates2-10" [ref=f33e1523]
+                      - gridcell "—" [ref=f33e1524]
+                    - row [ref=f33e1525] [cursor=pointer]:
+                      - gridcell [ref=f33e1526]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1527]
+                        - text: 
+                      - gridcell "2026-08-04 10:43:48.000 Z" [ref=f33e1528]
+                      - gridcell [ref=f33e1529]
+                      - gridcell "FortiGate" [ref=f33e1532]
+                      - gridcell "connection_accepted" [ref=f33e1533]
+                      - gridcell "SRV-workmates1-01" [ref=f33e1534]
+                      - gridcell "svc_backup" [ref=f33e1535]
+                      - gridcell "10.52.230.128" [ref=f33e1536]
+                      - gridcell "[Workmates1] connection_accepted by svc_backup@WORKMATES1.COM on SRV-workmates1-01" [ref=f33e1537]
+                      - gridcell "—" [ref=f33e1538]
+                    - row [ref=f33e1539] [cursor=pointer]:
+                      - gridcell [ref=f33e1540]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1541]
+                        - text: 
+                      - gridcell "2026-08-04 10:43:42.000 Z" [ref=f33e1542]
+                      - gridcell [ref=f33e1543]
+                      - gridcell "Windows Security" [ref=f33e1546]
+                      - gridcell "logon_success" [ref=f33e1547]
+                      - gridcell "SRV-cwm-01" [ref=f33e1548]
+                      - gridcell "k.admin" [ref=f33e1549]
+                      - gridcell "10.58.103.60" [ref=f33e1550]
+                      - gridcell "[CWM] logon_success by k.admin@CWM.IO on SRV-cwm-01" [ref=f33e1551]
+                      - gridcell "—" [ref=f33e1552]
+                    - row [ref=f33e1553] [cursor=pointer]:
+                      - gridcell [ref=f33e1554]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1555]
+                        - text: 
+                      - gridcell "2026-08-04 10:41:45.000 Z" [ref=f33e1556]
+                      - gridcell [ref=f33e1557]
+                      - gridcell "AWS CloudTrail" [ref=f33e1560]
+                      - gridcell "file_created" [ref=f33e1561]
+                      - gridcell "SRV-workmates2-01" [ref=f33e1562]
+                      - gridcell "admin" [ref=f33e1563]
+                      - gridcell "10.24.8.50" [ref=f33e1564]
+                      - gridcell "[Workmates2] file_created by admin@WORKMATES2.NET on SRV-workmates2-01" [ref=f33e1565]
+                      - gridcell "—" [ref=f33e1566]
+                    - row [ref=f33e1567] [cursor=pointer]:
+                      - gridcell [ref=f33e1568]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1569]
+                        - text: 
+                      - gridcell "2026-08-04 10:41:39.000 Z" [ref=f33e1570]
+                      - gridcell [ref=f33e1571]
+                      - gridcell "Sysmon" [ref=f33e1574]
+                      - gridcell "process_started" [ref=f33e1575]
+                      - gridcell "WKS-workmates1-10" [ref=f33e1576]
+                      - gridcell "SYSTEM" [ref=f33e1577]
+                      - gridcell "10.143.113.15" [ref=f33e1578]
+                      - gridcell "[Workmates1] Process chrome.exe started by SYSTEM on WKS-workmates1-10" [ref=f33e1579]
+                      - gridcell "—" [ref=f33e1580]
+                    - row [ref=f33e1581] [cursor=pointer]:
+                      - gridcell [ref=f33e1582]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1583]
+                        - text: 
+                      - gridcell "2026-08-04 10:40:22.000 Z" [ref=f33e1584]
+                      - gridcell [ref=f33e1585]
+                      - gridcell "Linux Syslog" [ref=f33e1588]
+                      - gridcell "dns_query" [ref=f33e1589]
+                      - gridcell "DC-cwm-01" [ref=f33e1590]
+                      - gridcell "j.doe" [ref=f33e1591]
+                      - gridcell "10.237.251.160" [ref=f33e1592]
+                      - gridcell "[CWM] dns_query by j.doe@CWM.IO on DC-cwm-01" [ref=f33e1593]
+                      - gridcell "—" [ref=f33e1594]
+                    - row [ref=f33e1595] [cursor=pointer]:
+                      - gridcell [ref=f33e1596]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f33e1597]
+                        - text: 
+                      - gridcell "2026-08-04 10:39:27.000 Z" [ref=f33e1598]
+                      - gridcell [ref=f33e1599]
+                      - gridcell "Sysmon" [ref=f33e1602]
+                      - gridcell "process_started" [ref=f33e1603]
+                      - gridcell "WKS-cwm-10" [ref=f33e1604]
+                      - gridcell "LOCAL SERVICE" [ref=f33e1605]
+                      - gridcell "10.220.238.104" [ref=f33e1606]
+                      - gridcell "[CWM] Process whoami.exe started by LOCAL SERVICE on WKS-cwm-10" [ref=f33e1607]
+                      - gridcell "—" [ref=f33e1608]
+                - text:     
+            - navigation "Hunt result pages" [ref=f33e997]:
+              - generic [ref=f33e998]: 228 matching events
+              - strong [ref=f33e999]:
+                - text: Page 1
+                - generic [ref=f33e1000]: 1–100
+              - generic [ref=f33e1001]:
+                - button "Previous" [disabled] [ref=f33e1002]
+                - button "Next" [ref=f33e1005] [cursor=pointer]
+        - generic [ref=f33e525]:
+          - generic [ref=f33e526]:
+            - generic [ref=f33e528]: Connected
+            - generic [ref=f33e529]: •
+            - generic [ref=f33e531]: Live
+          - generic [ref=f33e532]: 0 eps
+  - generic:
+    - list "Notifications"
+  - generic [ref=f33e534]:
+    - alert
+    - alert

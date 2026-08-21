@@ -3,17 +3,17 @@ package com.hivearmor.service.index_policy;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.hivearmor.config.Constants;
-import com.hivearmor.domain.index_pattern.enums.SystemIndexPattern;
 import com.hivearmor.domain.index_policy.*;
 import com.hivearmor.service.elasticsearch.OpensearchClientBuilder;
-import com.hivearmor.util.events.IndexPatternsReadyEvent;
 import com.hivearmor.opensearch.enums.HttpMethod;
 import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -26,6 +26,11 @@ import java.util.Optional;
 public class IndexPolicyService {
     private static final String CLASSNAME = "IndexPolicyService";
     private final Logger log = LoggerFactory.getLogger(IndexPolicyService.class);
+
+    // ADMIN_GLOBAL: These are intentionally global patterns — IndexPolicyService manages
+    // physical ISM (Index State Management) policies across ALL indices regardless of tenant.
+    private static final String GLOBAL_LOG_PATTERN = "v3-hive-log-*";
+    private static final String GLOBAL_ALERT_PATTERN = "v3-hive-alert-*";
 
     private final ApplicationContext applicationContext;
     private final String CURRENT_POLICY_ID = "hivearmor_ism_policy";
@@ -92,7 +97,8 @@ public class IndexPolicyService {
             .orElse(null);
     }
 
-    @EventListener(IndexPatternsReadyEvent.class)
+    @Order(10)
+    @EventListener(ApplicationReadyEvent.class)
     public void init() throws Exception {
         final String ctx = CLASSNAME + ".init";
         try {
@@ -129,8 +135,8 @@ public class IndexPolicyService {
                     log.info(ctx + ": " + rs.body().string());
 
                 // Adds a policy to an index. This operation does not change the policy if the index already has one.
-                addPolicy(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS));
-                addPolicy(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS));
+                addPolicy(GLOBAL_LOG_PATTERN);
+                addPolicy(GLOBAL_ALERT_PATTERN);
             }
         } catch (Exception e) {
             throw new RuntimeException(ctx + ": " + e.getLocalizedMessage());
@@ -276,13 +282,13 @@ public class IndexPolicyService {
             UpdateManagedIndexPolicyResponse result = new UpdateManagedIndexPolicyResponse();
 
             if (snapshotActivated) {
-                UpdateManagedIndexPolicyResponse ingestToIngestForLogs = updateManagedIndex(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS),
+                UpdateManagedIndexPolicyResponse ingestToIngestForLogs = updateManagedIndex(GLOBAL_LOG_PATTERN,
                     Constants.STATE_INGEST, Constants.STATE_INGEST);
-                UpdateManagedIndexPolicyResponse openToBackupForLogs = updateManagedIndex(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS),
+                UpdateManagedIndexPolicyResponse openToBackupForLogs = updateManagedIndex(GLOBAL_LOG_PATTERN,
                     Constants.STATE_OPEN, Constants.STATE_BACKUP);
-                UpdateManagedIndexPolicyResponse ingestToIngestForAlerts = updateManagedIndex(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS),
+                UpdateManagedIndexPolicyResponse ingestToIngestForAlerts = updateManagedIndex(GLOBAL_ALERT_PATTERN,
                     Constants.STATE_INGEST, Constants.STATE_INGEST);
-                UpdateManagedIndexPolicyResponse openToBackupForAlerts = updateManagedIndex(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS),
+                UpdateManagedIndexPolicyResponse openToBackupForAlerts = updateManagedIndex(GLOBAL_ALERT_PATTERN,
                     Constants.STATE_OPEN, Constants.STATE_BACKUP);
 
                 int updatedIndices = ingestToIngestForLogs.getUpdatedIndices() + openToBackupForLogs.getUpdatedIndices() + ingestToIngestForAlerts.getUpdatedIndices()
@@ -294,17 +300,17 @@ public class IndexPolicyService {
                 result.getFailedIndices().addAll(ingestToIngestForAlerts.getFailedIndices());
                 result.getFailedIndices().addAll(openToBackupForAlerts.getFailedIndices());
             } else {
-                UpdateManagedIndexPolicyResponse ingestToIngestForLogs = updateManagedIndex(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS),
+                UpdateManagedIndexPolicyResponse ingestToIngestForLogs = updateManagedIndex(GLOBAL_LOG_PATTERN,
                     Constants.STATE_INGEST, Constants.STATE_INGEST);
-                UpdateManagedIndexPolicyResponse backupToOpenForLogs = updateManagedIndex(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS),
+                UpdateManagedIndexPolicyResponse backupToOpenForLogs = updateManagedIndex(GLOBAL_LOG_PATTERN,
                     Constants.STATE_BACKUP, Constants.STATE_OPEN);
-                UpdateManagedIndexPolicyResponse openToOpenForLogs = updateManagedIndex(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS),
+                UpdateManagedIndexPolicyResponse openToOpenForLogs = updateManagedIndex(GLOBAL_LOG_PATTERN,
                     Constants.STATE_OPEN, Constants.STATE_OPEN);
-                UpdateManagedIndexPolicyResponse ingestToIngestForAlerts = updateManagedIndex(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS),
+                UpdateManagedIndexPolicyResponse ingestToIngestForAlerts = updateManagedIndex(GLOBAL_ALERT_PATTERN,
                     Constants.STATE_INGEST, Constants.STATE_INGEST);
-                UpdateManagedIndexPolicyResponse backupToOpenForAlerts = updateManagedIndex(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS),
+                UpdateManagedIndexPolicyResponse backupToOpenForAlerts = updateManagedIndex(GLOBAL_ALERT_PATTERN,
                     Constants.STATE_BACKUP, Constants.STATE_OPEN);
-                UpdateManagedIndexPolicyResponse openToOpenForAlerts = updateManagedIndex(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS),
+                UpdateManagedIndexPolicyResponse openToOpenForAlerts = updateManagedIndex(GLOBAL_ALERT_PATTERN,
                     Constants.STATE_OPEN, Constants.STATE_OPEN);
 
                 int updatedIndices = ingestToIngestForLogs.getUpdatedIndices() + backupToOpenForLogs.getUpdatedIndices() + openToOpenForLogs.getUpdatedIndices()
@@ -419,8 +425,8 @@ public class IndexPolicyService {
                     .withDescription("HiveArmor main index lifecycle")
 
                     .withIsmTemplate(IsmTemplate.builder()
-                        .withIndexPattern(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS))
-                        .withIndexPattern(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS))
+                        .withIndexPattern(GLOBAL_LOG_PATTERN)
+                        .withIndexPattern(GLOBAL_ALERT_PATTERN)
                         .withPriority(1)
                         .build())
 

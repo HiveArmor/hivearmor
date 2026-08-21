@@ -1,0 +1,347 @@
+---
+description: HiveArmor global rules — always apply to all frontend-v3 work
+globs: ["frontend-v3/**"]
+alwaysApply: true
+---
+
+# HiveArmor — Global Rules for frontend-v3
+
+## Product Identity
+- Name: **HiveArmor** — one word, capital H, capital A. Never "Hive Armor" or "HIVEARMOR".
+- Active UI: `frontend-v3/` only. Never touch `frontend-v2/` or `frontend/`.
+- Component prefix: `Ha` for all PatternFly wrappers.
+- Repo root: `/Users/encryptshell/GIT/UTMStack-11/`
+
+## Hard Rules — Never Break
+- No `any` TypeScript types. Use `unknown` + type guard if shape is truly unknown.
+- No hardcoded hex colors in component files. Use CSS custom properties only.
+- No `dangerouslySetInnerHTML` with user content.
+- No raw customer data (IPs, hostnames, log payloads) in `console.log`.
+- JWT stored only at `localStorage["hivearmor_auth_token"]` — never in React state or URL params.
+- All API calls go through the Vite proxy `/api/*` — never absolute backend URLs.
+- Do not persist alert/incident content to `localStorage` — only UI preferences.
+- No library not already in `package.json` without explicit approval.
+
+## Test File Rule — CRITICAL
+Every `.test.tsx` / `.test.ts` you create MUST use Vitest. The project runs Vitest, NOT Node's built-in test runner.
+
+```typescript
+// ✅ ALWAYS use this
+import { describe, it, expect } from 'vitest';
+
+// ❌ NEVER use — Vitest will report "No test suite found"
+// import { describe, it } from 'node:test';
+// import assert from 'node:assert/strict';
+```
+
+Use `expect(value).toBe(true)` and `expect(value).toBeFalsy()` — never `assert.ok()`.
+
+## Design Tokens — Immutable
+All values live in `frontend-v3/src/styles/tokens.css`. Never add, remove, or hardcode them.
+
+```css
+--ha-background:      #070A0F    /* page canvas */
+--ha-surface-primary: #0D131C    /* cards, panels */
+--ha-surface-raised:  #131C28    /* toolbars, headers, dropdowns */
+--ha-border:          #253244    /* all borders — 1px solid only */
+--ha-primary:         #32D6C5    /* teal — actions, links, focus */
+--ha-intelligence:    #8B7CFF    /* purple — AI/intel */
+--ha-critical:        #FF5D6C    /* red */
+--ha-high:            #FFAA45    /* amber */
+--ha-medium:          #5AA7FF    /* blue */
+--ha-positive:        #40D69A    /* green */
+--ha-text-primary:    #E8EDF4
+--ha-text-secondary:  #97A6B8
+--ha-text-xs:         0.6875rem  /* 11px — timestamps, badges */
+--ha-text-sm:         0.75rem    /* 12px — table cells */
+--ha-text-base:       0.8125rem  /* 13px — body */
+--ha-text-md:         0.875rem   /* 14px — drawer titles */
+--ha-font-ui:         'Inter', sans-serif
+--ha-font-mono:       'JetBrains Mono', monospace
+--ha-radius-sm:       2px
+--ha-radius-base:     4px
+--ha-radius-md:       6px
+--ha-radius-lg:       8px
+--ha-z-drawer:        200
+--ha-z-modal:         300
+--ha-z-toast:         400
+--ha-z-tooltip:       500
+```
+
+## Technology Stack (frontend-v3 only)
+| Purpose | Required | Forbidden |
+|---|---|---|
+| Core UI components | PatternFly 6 via `Ha*` wrappers | Tailwind, Radix, MUI, Ant Design, shadcn |
+| Dense grids | AG Grid Community 36 via `SiemDataGrid` | PF Table for large datasets |
+| Charts | Apache ECharts via `HaChart` | Chart.js, Recharts, D3 directly |
+| Dashboard layout | GridStack.js 13 via `DashboardCanvas` | CSS grid for drag-drop |
+| Server state | TanStack Query v5 | SWR, RTK Query |
+| UI state | Zustand v5 | Redux, MobX, Context for global state |
+| Routing | React Router v6 | Next.js router, TanStack Router |
+| Query editors | Monaco Editor | CodeMirror, Ace |
+
+## Row Density Standards
+- Compact: 32px — high-volume alert grids (default)
+- Standard: 40px
+- Comfortable: 48px
+- Persisted to `localStorage` key `ha_row_density`
+
+## Shared Components (already built — import, do not re-implement)
+- `@/pages/alerts/alertColumns.tsx` — shared AG Grid column defs for alerts
+- `@/components/status-dock/StatusDock.tsx` — 28px fixed bottom bar (SSE state + EPS)
+- `@/components/filter-chips/FilterChipsRow.tsx` — dismissible filter chip row
+- `@/components/live-mode-toggle/LiveModeToggle.tsx` — Live/Historical pill toggle
+- `@/hooks/useAlertStream.ts` — SSE alert stream
+- `@/hooks/useEpsStream.ts` — SSE EPS counter
+- `@/store/alertStream.store.ts` — Zustand store: `newAlertCount`, `clearNewAlertCount`, `latestEvent`
+- `@/lib/severity.ts` — severity helpers (import from here, never duplicate)
+- `@/lib/status.ts` — status helpers (import from here, never duplicate)
+
+## Validation Gates — Run After Every Session
+```bash
+cd frontend-v3
+npm run lint        # zero ESLint errors
+npm run type-check  # zero TypeScript errors (tsc --noEmit)
+npm run test        # all Vitest tests pass
+npm run build       # production build succeeds
+```
+Do not mark a session complete if any gate fails.
+
+## Anti-Patterns (Forbidden UI)
+- Glassmorphism (`backdrop-filter: blur`)
+- Neon glow effects
+- Decorative gradients on data surfaces
+- Border-radius > 8px on primary data surfaces
+- Nested cards inside cards
+- Multiple permanent toolbars stacked vertically
+- Animated world maps
+
+## Security — Known Open Issues (do not replicate)
+| ID | Gap | What to avoid in new code |
+|---|---|---|
+| SEC-03 | CorrelatedFindings status endpoint vulnerable | Status control stays disabled until backend fix deployed |
+| SEC-05 | AgentManager no role check | Remote action buttons stay disabled until backend fix deployed |
+| SEC-06 | runVisualization no @PreAuthorize | Gate constant `GAP_SEC_06_RESOLVED = false` — do not remove |
+
+## Role Labels — Use Human Names, Not ROLE_ Constants
+Never expose internal role constants as UI copy. Map through a label function:
+| Internal constant | User-facing label |
+|---|---|
+| ROLE_ADMIN | Platform Administrator |
+| ROLE_SOC_MANAGER | SOC Manager |
+| ROLE_ANALYST | Analyst |
+| ROLE_THREAT_HUNTER | Threat Hunter |
+| ROLE_READ_ONLY | Read Only |
+| ROLE_USER | Standard User |
+
+Access-denied messages must say "Required permission: Platform Administrator" not "You need ROLE_ADMIN".
+
+## Confirmed API Endpoint Map (verified against backend source)
+Use ONLY these paths. Do not invent new paths without a backend ticket.
+
+```
+# Auth
+POST /api/authenticate
+GET  /api/account
+
+# Alerts
+GET  /api/ha-alerts                        (page, size, sort, filters → X-Total-Count header)
+GET  /api/ha-alerts/count-open-alerts
+POST /api/ha-alerts/status
+POST /api/ha-alerts/notes
+POST /api/ha-alerts/tags
+POST /api/ha-alerts/convert-to-incident
+GET  /api/alerts/stream                    (SSE)
+GET  /api/eps/stream                       (SSE — NOT /api/live-eps/stream)
+
+# Overview (Command Center widgets)
+GET  /api/overview/count-alerts-today-and-last-week
+GET  /api/overview/count-alerts-by-severity
+GET  /api/overview/count-alerts-by-status
+GET  /api/overview/top-alerts
+GET  /api/overview/alert-timeline
+GET  /api/overview/events-in-time
+GET  /api/overview/geo-threats
+
+# Incidents
+GET    /api/ha-incidents                   (page, size, sort)
+POST   /api/ha-incidents
+GET    /api/ha-incidents/{id}
+PUT    /api/ha-incidents/change-status
+PUT    /api/ha-incidents/{id}/priority
+POST   /api/ha-incidents/add-alerts
+GET    /api/ha-incidents/users-assigned
+GET    /api/ha-incidents/{id}/timeline
+GET    /api/ha-incidents/{id}/entities
+POST   /api/ha-incidents/{id}/ai-summary
+GET    /api/ha-incidents/sla-stats
+GET    /api/ha-incidents/{incidentId}/evidence-items
+POST   /api/ha-incidents/{incidentId}/evidence-items
+PUT    /api/ha-incidents/{incidentId}/evidence-items/{itemId}
+DELETE /api/ha-incidents/{incidentId}/evidence-items/{itemId}
+
+# Investigation Sessions (fully protected with @PreAuthorize)
+GET    /api/ha-investigation-sessions
+POST   /api/ha-investigation-sessions
+GET    /api/ha-investigation-sessions/{id}
+PUT    /api/ha-investigation-sessions/{id}
+DELETE /api/ha-investigation-sessions/{id}
+POST   /api/ha-investigation-sessions/{id}/items
+GET    /api/ha-investigation-sessions/{id}/items
+DELETE /api/ha-investigation-sessions/{id}/items/{itemId}
+POST   /api/ha-investigation-sessions/{id}/convert-to-incident
+
+# Offenses / Correlated Findings
+GET /api/offenses               (page, size → X-Total-Count)
+GET /api/offenses/{id}
+PUT /api/offenses/{id}/status   (SEC-03 — keep disabled in UI)
+GET /api/offenses/{id}/alerts
+
+# Detection / Correlation Rules (prefix is correlation-rule, singular, no ha-)
+GET    /api/correlation-rule/search-by-filters
+POST   /api/correlation-rule
+GET    /api/correlation-rule/{id}
+PUT    /api/correlation-rule
+DELETE /api/correlation-rule/{id}
+PUT    /api/correlation-rule/activate-deactivate   (body: {id, ruleActive})
+POST   /api/correlation-rule/test
+POST   /api/ha-sigma-sync/trigger                  (NOT /api/ha-sigma/sync)
+
+# SOAR / Response
+GET    /api/soar/playbooks
+POST   /api/soar/playbooks
+GET    /api/soar/playbooks/{id}
+PUT    /api/soar/playbooks/{id}
+DELETE /api/soar/playbooks/{id}
+POST   /api/soar/playbooks/{id}/execute
+GET    /api/soar/audit                             (replaces non-existent /api/ha-response-activity)
+# NOTE: GET /api/soar/actions does NOT exist — use static SOAR_ACTION_CATALOGUE in ActionPalette
+
+# Dashboards & Visualizations
+GET    /api/ha-dashboards
+POST   /api/ha-dashboards
+GET    /api/ha-dashboards/{id}
+PUT    /api/ha-dashboards
+DELETE /api/ha-dashboards/{id}
+GET    /api/ha-visualizations
+POST   /api/ha-visualizations/run   (GAP_SEC_06_RESOLVED=false gates this)
+
+# Search
+POST /api/ha-search/nl-query        (NOT /api/ha-search/execute)
+GET  /api/ha-saved-queries
+POST /api/ha-saved-queries
+PUT  /api/ha-saved-queries/{id}
+DELETE /api/ha-saved-queries/{id}
+
+# AI / SOC AI
+POST /api/ha-ai/chat                (SSE stream)
+POST /api/ha-soc-ai/query           (NOT /api/ha-ai/query)
+
+# Posture
+GET /api/ha-posture/score
+GET /api/ha-posture/frameworks
+GET /api/ha-entities
+GET /api/ha-entities/{id}
+GET /api/ha-entities/{id}/alerts
+GET /api/ha-entities/{id}/events
+GET /api/ha-entities/{id}/risk
+
+# Sensors / Agents
+GET /api/agent-manager/agents
+
+# Threat Intel
+GET  /api/ha-threat-intel/feeds
+PUT  /api/ha-threat-intel/feeds/{id}
+POST /api/ha-threat-intel/feeds/{id}/sync
+POST /api/ha-threat-intel/lookup
+GET  /api/ha-threat-intel/iocs
+GET  /api/v1/threat-intel/ioc?value={ioc}   (NOT /api/v1/threat-intel?ioc=)
+
+# Graph (Constellation)
+GET /api/ha-graph/nodes
+GET /api/ha-graph/edges
+
+# Reports
+GET    /api/ha-reports
+POST   /api/ha-reports
+GET    /api/ha-reports/{id}
+DELETE /api/ha-reports/{id}
+GET    /api/ha-reports/scheduled
+POST   /api/ha-reports/scheduled
+PUT    /api/ha-reports/scheduled/{id}
+DELETE /api/ha-reports/scheduled/{id}
+POST   /api/ha-reports/scheduled/{id}/run
+PATCH  /api/ha-reports/scheduled/{id}/pause
+PATCH  /api/ha-reports/scheduled/{id}/resume
+
+# Compliance
+GET /api/ha-posture/frameworks
+GET /api/compliance/control-config
+GET /api/compliance/control-config/{id}/evaluations
+GET /api/compliance/standard
+GET /api/compliance/standard-section
+
+# Administration
+GET    /api/users
+POST   /api/users
+PUT    /api/users
+DELETE /api/users/{login}
+PUT    /api/users/{login}/activate
+PUT    /api/users/{login}/deactivate
+GET    /api/users/authorities
+GET    /api/authority
+POST   /api/authority
+PUT    /api/authority
+DELETE /api/authority/{name}
+GET    /api/ha-tenants
+GET    /api/ha-integrations
+POST   /api/ha-integrations
+PUT    /api/ha-integrations/{id}
+DELETE /api/ha-integrations/{id}
+POST   /api/ha-integrations/{id}/test
+GET    /api/ha-notification-rules
+POST   /api/ha-notification-rules
+PUT    /api/ha-notification-rules/{id}
+DELETE /api/ha-notification-rules/{id}
+GET    /api/notification-channels
+GET    /api/ha-retention-policies
+GET    /api/ha-retention-policies/{dataType}
+PUT    /api/ha-retention-policies/{dataType}
+GET    /api/ha-parsers
+POST   /api/ha-parsers
+PUT    /api/ha-parsers/{id}
+DELETE /api/ha-parsers/{id}
+GET    /api/ha-connection-keys
+POST   /api/ha-connection-keys
+DELETE /api/ha-connection-keys/{id}
+GET    /api/ha-audit-log             (NOT /api/ha-audit-log/export — that export does NOT exist)
+GET    /api/ha-agent-enrollments/audit
+GET    /api/ha-agent-enrollments/audit/export
+GET    /api/ha-settings
+PUT    /api/ha-settings
+GET    /api/mitre/coverage
+GET    /api/mitre/rules
+```
+
+## rgba() / Color-Mix Rule
+When you need a semi-transparent version of a token color for badge backgrounds, use `color-mix()`:
+```css
+/* ✅ correct */
+background: color-mix(in srgb, var(--ha-critical) 15%, transparent);
+/* ❌ wrong */
+background: rgba(255, 93, 108, 0.15);
+```
+
+## Mock Data Rule (Dev Only)
+When a backend endpoint exists but returns no data in local dev, seed data through the API via
+`local-dev/seed-dev-data.sh` — do NOT hardcode mock data into UI components.
+Storybook fixtures (`.stories.tsx`) are the only place static mock data is permitted.
+
+## File Path Conventions
+- New pages: `frontend-v3/src/pages/<feature>/`
+- New shared components: `frontend-v3/src/components/<name>/`
+- New hooks: `frontend-v3/src/hooks/`
+- New services: `frontend-v3/src/services/`  (NEVER create service files inside pages/)
+- New types: add to `frontend-v3/src/types/api.types.ts`
+- New lib helpers: `frontend-v3/src/lib/`
+- Do NOT create service files inside `src/pages/` — always use `src/services/`

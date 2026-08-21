@@ -1,0 +1,105 @@
+/* RelationshipGraphPanel — Sprint 46 */
+
+.ha-relationship-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ha-relationship-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-relationship-panel__header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  margin: 0;
+}
+
+.ha-relationship-panel__total {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--ha-foreground-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ha-relationship-panel__loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.ha-relationship-panel__empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--ha-foreground-tertiary);
+  font-size: 13px;
+}
+
+.ha-relationship-panel__graph {
+  border: 1px solid var(--ha-border-default);
+  border-radius: 8px;
+  background: var(--ha-surface-panel);
+  overflow: hidden;
+}
+
+.ha-relationship-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.ha-relationship-panel__item {
+  display: grid;
+  grid-template-columns: 1fr 140px 90px 60px 80px;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: var(--ha-surface-panel);
+  border: 1px solid var(--ha-border-subtle);
+  font-size: 12px;
+  align-items: center;
+}
+
+.ha-relationship-panel__item:hover {
+  border-color: var(--ha-border-default);
+}
+
+.ha-relationship-panel__entity-value {
+  font-weight: 500;
+  color: var(--ha-foreground-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ha-relationship-panel__rel-type {
+  color: var(--ha-foreground-secondary);
+  text-transform: capitalize;
+}
+
+.ha-relationship-panel__direction {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-relationship-panel__strength {
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-action-primary);
+  font-weight: 600;
+}
+
+.ha-relationship-panel__events {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-foreground-tertiary);
+}

@@ -1,0 +1,61 @@
+- generic [ref=f38e3]:
+  - banner [ref=f38e4]:
+    - generic [ref=f38e5]: HiveArmor
+    - generic [ref=f38e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f38e13]'
+      - generic "Reconnecting..." [ref=f38e16]: 0 EPS
+      - button "Notifications" [ref=f38e18] [cursor=pointer]
+      - button "Help" [ref=f38e23] [cursor=pointer]
+      - button "User menu" [ref=f38e28] [cursor=pointer]:
+        - generic [ref=f38e29]: AA
+        - generic [ref=f38e30]: admin
+  - navigation [ref=f38e31]:
+    - generic [ref=f38e32]:
+      - generic [ref=f38e33]:
+        - generic [ref=f38e34]: COMMAND
+        - generic [ref=f38e35]:
+          - button "Analyst Queue" [ref=f38e36] [cursor=pointer]
+          - button "Alerts" [ref=f38e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f38e47] [cursor=pointer]
+          - button "Incidents" [ref=f38e54] [cursor=pointer]
+      - generic [ref=f38e61]:
+        - generic [ref=f38e62]: INVESTIGATE
+        - generic [ref=f38e63]:
+          - button "Search & Hunt" [ref=f38e64] [cursor=pointer]
+          - button "Investigations" [ref=f38e70] [cursor=pointer]
+          - button "Entities" [ref=f38e75] [cursor=pointer]
+      - generic [ref=f38e83]:
+        - generic [ref=f38e84]: DEFEND
+        - generic [ref=f38e85]:
+          - button "Detection Rules" [ref=f38e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f38e91] [cursor=pointer]
+      - generic [ref=f38e96]:
+        - generic [ref=f38e97]: POSTURE
+        - generic [ref=f38e98]:
+          - button "Assets" [ref=f38e99] [cursor=pointer]
+          - button "Identities" [ref=f38e105] [cursor=pointer]
+          - button "Active Directory" [ref=f38e113] [cursor=pointer]
+          - button "Exposure" [ref=f38e121] [cursor=pointer]
+          - button "Sensors" [ref=f38e128] [cursor=pointer]
+          - button "Compliance" [ref=f38e133] [cursor=pointer]
+      - generic [ref=f38e139]:
+        - generic [ref=f38e140]: DASHBOARDS
+        - button "Studio" [ref=f38e142] [cursor=pointer]
+      - generic [ref=f38e148]:
+        - generic [ref=f38e149]: REPORT
+        - button "Scheduled Reports" [ref=f38e151] [cursor=pointer]
+      - generic [ref=f38e157]:
+        - generic [ref=f38e158]: ADMINISTRATION
+        - generic [ref=f38e159]:
+          - button "Users" [ref=f38e160] [cursor=pointer]
+          - button "Integrations" [ref=f38e175] [cursor=pointer]
+          - button "Notifications" [ref=f38e180] [cursor=pointer]
+          - button "Audit Log" [ref=f38e186] [cursor=pointer]
+          - button "Settings" [ref=f38e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f38e199] [cursor=pointer]
+  - main [ref=f38e202]:
+    - generic [ref=f38e203]:
+      - generic [ref=f38e205]:
+        - heading "Security SITREP" [level=1] [ref=f38e207]
+        - button "Generate SITREP" [ref=f38e209] [cursor=pointer]
+      - generic [ref=f38e213]: Error loading SITREP reports. Please try again.

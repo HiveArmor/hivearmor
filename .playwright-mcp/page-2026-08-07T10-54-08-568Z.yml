@@ -1,0 +1,474 @@
+- generic [active] [ref=f5e1]:
+  - generic [ref=f5e5]:
+    - link "Skip to main content" [ref=f5e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f5e7]:
+      - generic [ref=f5e8]:
+        - generic [ref=f5e14]: HiveArmor
+        - generic [ref=f5e15]: Security operations
+      - generic [ref=f5e16]:
+        - button "All authorized tenants" [ref=f5e18] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f5e26] [cursor=pointer]:
+          - generic [ref=f5e31]: ⌘ K
+        - generic [ref=f5e32]: Production
+      - generic [ref=f5e33]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=f5e34]'
+        - status "Live events per second" [ref=f5e37]:
+          - generic [ref=f5e39]: 0 EPS
+        - button "Notifications" [ref=f5e40] [cursor=pointer]
+        - button "Help" [ref=f5e45] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f5e49]:
+      - generic [ref=f5e50]:
+        - region "COMMAND" [ref=f5e51]:
+          - generic [ref=f5e52]:
+            - button "Mission Control" [ref=f5e53] [cursor=pointer]
+            - button "Analyst Queue" [ref=f5e60] [cursor=pointer]
+            - button "Alerts" [ref=f5e64] [cursor=pointer]
+            - button "Correlated Findings" [ref=f5e69] [cursor=pointer]
+            - button "Incidents" [ref=f5e75] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f5e81]:
+          - generic [ref=f5e82]:
+            - button "Search & Hunt" [ref=f5e83] [cursor=pointer]
+            - button "Investigations" [ref=f5e88] [cursor=pointer]
+            - button "Entities" [ref=f5e92] [cursor=pointer]
+            - button "Threat Constellation" [ref=f5e99] [cursor=pointer]
+        - region "DEFEND" [ref=f5e105]:
+          - generic [ref=f5e106]:
+            - button "Detection Rules" [ref=f5e107] [cursor=pointer]
+            - button "Playbooks" [ref=f5e111] [cursor=pointer]
+            - button "Response Library" [ref=f5e116] [cursor=pointer]
+        - region "POSTURE" [ref=f5e120]:
+          - generic [ref=f5e121]:
+            - button "Assets" [ref=f5e122] [cursor=pointer]
+            - button "Identities" [ref=f5e127] [cursor=pointer]
+            - button "Active Directory" [ref=f5e134] [cursor=pointer]
+            - button "Exposure" [ref=f5e141] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f5e147] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f5e158] [cursor=pointer]
+            - button "Sensors" [ref=f5e164] [cursor=pointer]
+            - button "Compliance" [ref=f5e168] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f5e173]:
+          - generic [ref=f5e174]:
+            - button "Endpoints" [ref=f5e175] [cursor=pointer]
+            - button "File Quarantine" [ref=f5e179] [cursor=pointer]
+            - button "File Integrity" [ref=f5e185] [cursor=pointer]
+            - button "Agent Policies" [ref=f5e192] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f5e197]:
+          - button "Studio" [ref=f5e199] [cursor=pointer]
+        - region "REPORT" [ref=f5e204]:
+          - button "Scheduled Reports" [ref=f5e206] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f5e211]:
+          - generic [ref=f5e212]:
+            - button "Users" [ref=f5e213] [cursor=pointer]
+            - button "Integrations" [ref=f5e227] [cursor=pointer]
+            - button "Notifications" [ref=f5e231] [cursor=pointer]
+            - button "Audit Log" [ref=f5e236] [cursor=pointer]
+            - button "Settings" [ref=f5e241] [cursor=pointer]
+      - generic [ref=f5e246]:
+        - button "User menu" [ref=f5e249] [cursor=pointer]:
+          - generic [ref=f5e250]: AA
+        - button "Pin sidebar open" [ref=f5e251] [cursor=pointer]
+    - main [ref=f5e254]:
+      - generic [ref=f5e255]:
+        - generic [ref=f5e256]:
+          - generic [ref=f5e262]:
+            - heading "Correlated Findings" [level=1] [ref=f5e263]
+            - paragraph [ref=f5e264]: Multi-stage attack stories discovered by the correlation engine
+          - button "Refresh findings" [ref=f5e265] [cursor=pointer]
+        - region "Queue summary" [ref=f5e271]:
+          - button "Total 20" [ref=f5e272] [cursor=pointer]:
+            - generic [ref=f5e273]: Total
+            - strong [ref=f5e274]: "20"
+          - button "Critical 5" [ref=f5e275] [cursor=pointer]:
+            - generic [ref=f5e276]: Critical
+            - strong [ref=f5e277]: "5"
+          - button "High 7" [ref=f5e278] [cursor=pointer]:
+            - generic [ref=f5e279]: High
+            - strong [ref=f5e280]: "7"
+          - button "New 4" [ref=f5e281] [cursor=pointer]:
+            - generic [ref=f5e282]: New
+            - strong [ref=f5e283]: "4"
+          - button "Reviewing 8" [ref=f5e284] [cursor=pointer]:
+            - generic [ref=f5e285]: Reviewing
+            - strong [ref=f5e286]: "8"
+          - button "Confirmed 5" [ref=f5e287] [cursor=pointer]:
+            - generic [ref=f5e288]: Confirmed
+            - strong [ref=f5e289]: "5"
+        - generic [ref=f5e290]:
+          - button "Filter by severity" [ref=f5e292] [cursor=pointer]:
+            - generic [ref=f5e293]: Severity
+            - generic [ref=f5e294]: All severities
+          - button "Filter by status" [ref=f5e298] [cursor=pointer]:
+            - generic [ref=f5e299]: Status
+            - generic [ref=f5e300]: All statuses
+          - button "Filter by tactic" [ref=f5e304] [cursor=pointer]:
+            - generic [ref=f5e305]: Tactic
+            - generic [ref=f5e306]: All tactics
+          - button "Sort findings" [ref=f5e310] [cursor=pointer]:
+            - generic [ref=f5e311]: Sort
+            - generic [ref=f5e312]: Severity (highest)
+        - main [ref=f5e315]:
+          - table "Correlated findings queue" [ref=f5e316]:
+            - row [ref=f5e317]:
+              - columnheader "Severity" [ref=f5e318]
+              - columnheader "Title" [ref=f5e319]
+              - columnheader "Stages" [ref=f5e320]
+              - columnheader "Signals" [ref=f5e321]
+              - columnheader "Lead Entity" [ref=f5e322]
+              - columnheader "Tactics" [ref=f5e323]
+              - columnheader "Assignee" [ref=f5e324]
+              - columnheader "Created" [ref=f5e325]
+            - 'row "Open finding: DNS Tunneling Data Exfiltration from Database Server" [ref=f5e326] [cursor=pointer]':
+              - cell "Medium" [ref=f5e327]
+              - cell [ref=f5e330]:
+                - strong [ref=f5e331]: DNS Tunneling Data Exfiltration from Database Server
+                - code [ref=f5e332]: cor-2026-0801-007
+              - cell "3" [ref=f5e333]
+              - cell "4" [ref=f5e334]
+              - cell "DB-PROD-03 host" [ref=f5e335]:
+                - code [ref=f5e336]: DB-PROD-03
+                - generic [ref=f5e337]: host
+              - cell "TA0011 TA0009 TA0010" [ref=f5e338]:
+                - generic [ref=f5e339]: TA0011
+                - generic [ref=f5e340]: TA0009
+                - generic [ref=f5e341]: TA0010
+              - cell "Unassigned" [ref=f5e342]
+              - cell [ref=f5e346]:
+                - time [ref=f5e347]: 2d ago
+            - 'row "Open finding: Cryptominer Deployment via Compromised CI/CD Pipeline" [ref=f5e348] [cursor=pointer]':
+              - cell "Medium" [ref=f5e349]
+              - cell [ref=f5e352]:
+                - strong [ref=f5e353]: Cryptominer Deployment via Compromised CI/CD Pipeline
+                - code [ref=f5e354]: cor-2026-0801-005
+              - cell "4" [ref=f5e355]
+              - cell "6" [ref=f5e356]
+              - cell "ci-bot-03 user" [ref=f5e357]:
+                - code [ref=f5e358]: ci-bot-03
+                - generic [ref=f5e359]: user
+              - cell "TA0001 TA0002 TA0011 +1" [ref=f5e360]:
+                - generic [ref=f5e361]: TA0001
+                - generic [ref=f5e362]: TA0002
+                - generic [ref=f5e363]: TA0011
+                - generic [ref=f5e364]: "+1"
+              - cell "Unassigned" [ref=f5e365]
+              - cell [ref=f5e369]:
+                - time [ref=f5e370]: 2d ago
+            - 'row "Open finding: Rogue Wi-Fi Access Point Credential Harvesting" [ref=f5e371] [cursor=pointer]':
+              - cell "Medium" [ref=f5e372]
+              - cell [ref=f5e375]:
+                - strong [ref=f5e376]: Rogue Wi-Fi Access Point Credential Harvesting
+                - code [ref=f5e377]: cor-2026-0802-006
+              - cell "3" [ref=f5e378]
+              - cell "4" [ref=f5e379]
+              - cell "Rogue-AP-AA:BB:CC:DD:EE:FF host" [ref=f5e380]:
+                - code [ref=f5e381]: Rogue-AP-AA:BB:CC:DD:EE:FF
+                - generic [ref=f5e382]: host
+              - cell "TA0001 TA0006 TA0010" [ref=f5e383]:
+                - generic [ref=f5e384]: TA0001
+                - generic [ref=f5e385]: TA0006
+                - generic [ref=f5e386]: TA0010
+              - cell "Unassigned" [ref=f5e387]
+              - cell [ref=f5e391]:
+                - time [ref=f5e392]: 3d ago
+            - 'row "Open finding: Malicious Browser Extension Stealing Session Cookies" [ref=f5e393] [cursor=pointer]':
+              - cell "Medium" [ref=f5e394]
+              - cell [ref=f5e397]:
+                - strong [ref=f5e398]: Malicious Browser Extension Stealing Session Cookies
+                - code [ref=f5e399]: cor-2026-0803-002
+              - cell "3" [ref=f5e400]
+              - cell "5" [ref=f5e401]
+              - cell "chrome.exe (PDF Tools Pro) process" [ref=f5e402]:
+                - code [ref=f5e403]: chrome.exe (PDF Tools Pro)
+                - generic [ref=f5e404]: process
+              - cell "TA0001 TA0006 TA0010" [ref=f5e405]:
+                - generic [ref=f5e406]: TA0001
+                - generic [ref=f5e407]: TA0006
+                - generic [ref=f5e408]: TA0010
+              - cell "Unassigned" [ref=f5e409]
+              - cell [ref=f5e413]:
+                - time [ref=f5e414]: 4d ago
+            - 'row "Open finding: USB-Delivered Malware with Automated Spreading" [ref=f5e415] [cursor=pointer]':
+              - cell "Medium" [ref=f5e416]
+              - cell [ref=f5e419]:
+                - strong [ref=f5e420]: USB-Delivered Malware with Automated Spreading
+                - code [ref=f5e421]: cor-2026-0802-002
+              - cell "3" [ref=f5e422]
+              - cell "5" [ref=f5e423]
+              - cell "KIOSK-LBY-02 host" [ref=f5e424]:
+                - code [ref=f5e425]: KIOSK-LBY-02
+                - generic [ref=f5e426]: host
+              - cell "TA0001 TA0002 TA0008" [ref=f5e427]:
+                - generic [ref=f5e428]: TA0001
+                - generic [ref=f5e429]: TA0002
+                - generic [ref=f5e430]: TA0008
+              - cell "Unassigned" [ref=f5e431]
+              - cell [ref=f5e435]:
+                - time [ref=f5e436]: 8d ago
+            - 'row "Open finding: SSH Brute Force Followed by Internal Pivot Attempt" [ref=f5e437] [cursor=pointer]':
+              - cell "Medium" [ref=f5e438]
+              - cell [ref=f5e441]:
+                - strong [ref=f5e442]: SSH Brute Force Followed by Internal Pivot Attempt
+                - code [ref=f5e443]: cor-2026-0802-004
+              - cell "3" [ref=f5e444]
+              - cell "4" [ref=f5e445]
+              - cell "BASTION-01 host" [ref=f5e446]:
+                - code [ref=f5e447]: BASTION-01
+                - generic [ref=f5e448]: host
+              - cell "TA0006 TA0001 TA0008" [ref=f5e449]:
+                - generic [ref=f5e450]: TA0006
+                - generic [ref=f5e451]: TA0001
+                - generic [ref=f5e452]: TA0008
+              - cell "Unassigned" [ref=f5e453]
+              - cell [ref=f5e457]:
+                - time [ref=f5e458]: 12d ago
+            - 'row "Open finding: Webshell Persistence on Exchange Server" [ref=f5e459] [cursor=pointer]':
+              - cell "Low" [ref=f5e460]
+              - cell [ref=f5e463]:
+                - strong [ref=f5e464]: Webshell Persistence on Exchange Server
+                - code [ref=f5e465]: cor-2026-0801-009
+              - cell "3" [ref=f5e466]
+              - cell "3" [ref=f5e467]
+              - cell "EXCH-01 host" [ref=f5e468]:
+                - code [ref=f5e469]: EXCH-01
+                - generic [ref=f5e470]: host
+              - cell "TA0001 TA0002 TA0003" [ref=f5e471]:
+                - generic [ref=f5e472]: TA0001
+                - generic [ref=f5e473]: TA0002
+                - generic [ref=f5e474]: TA0003
+              - cell "Unassigned" [ref=f5e475]
+              - cell [ref=f5e479]:
+                - time [ref=f5e480]: 10d ago
+            - 'row "Open finding: Business Email Compromise - Invoice Redirect Attempt" [ref=f5e481] [cursor=pointer]':
+              - cell "Low" [ref=f5e482]
+              - cell [ref=f5e485]:
+                - strong [ref=f5e486]: Business Email Compromise - Invoice Redirect Attempt
+                - code [ref=f5e487]: cor-2026-0803-004
+              - cell "3" [ref=f5e488]
+              - cell "3" [ref=f5e489]
+              - cell "angela.martinez@workmates2.com user" [ref=f5e490]:
+                - code [ref=f5e491]: angela.martinez@workmates2.com
+                - generic [ref=f5e492]: user
+              - cell "TA0001 TA0003 TA0040" [ref=f5e493]:
+                - generic [ref=f5e494]: TA0001
+                - generic [ref=f5e495]: TA0003
+                - generic [ref=f5e496]: TA0040
+              - cell "Unassigned" [ref=f5e497]
+              - cell [ref=f5e501]:
+                - time [ref=f5e502]: 11d ago
+            - 'row "Open finding: Living Off the Land Binary Attack Chain - LOLBIN Abuse" [ref=f5e503] [cursor=pointer]':
+              - cell "High" [ref=f5e504]
+              - cell [ref=f5e507]:
+                - strong [ref=f5e508]: Living Off the Land Binary Attack Chain - LOLBIN Abuse
+                - code [ref=f5e509]: cor-2026-0801-010
+              - cell "4" [ref=f5e510]
+              - cell "7" [ref=f5e511]
+              - cell "HR-WKS-015 host" [ref=f5e512]:
+                - code [ref=f5e513]: HR-WKS-015
+                - generic [ref=f5e514]: host
+              - cell "TA0002 TA0003 TA0011 +1" [ref=f5e515]:
+                - generic [ref=f5e516]: TA0002
+                - generic [ref=f5e517]: TA0003
+                - generic [ref=f5e518]: TA0011
+                - generic [ref=f5e519]: "+1"
+              - cell "Unassigned" [ref=f5e520]
+              - cell [ref=f5e524]:
+                - time [ref=f5e525]: 1d ago
+            - 'row "Open finding: Exposed API Key Used for Cloud Resource Abuse" [ref=f5e526] [cursor=pointer]':
+              - cell "High" [ref=f5e527]
+              - cell [ref=f5e530]:
+                - strong [ref=f5e531]: Exposed API Key Used for Cloud Resource Abuse
+                - code [ref=f5e532]: cor-2026-0802-005
+              - cell "4" [ref=f5e533]
+              - cell "5" [ref=f5e534]
+              - cell "deploy-automation user" [ref=f5e535]:
+                - code [ref=f5e536]: deploy-automation
+                - generic [ref=f5e537]: user
+              - cell "TA0043 TA0001 TA0002 +1" [ref=f5e538]:
+                - generic [ref=f5e539]: TA0043
+                - generic [ref=f5e540]: TA0001
+                - generic [ref=f5e541]: TA0002
+                - generic [ref=f5e542]: "+1"
+              - cell "Unassigned" [ref=f5e543]
+              - cell [ref=f5e547]:
+                - time [ref=f5e548]: 1d ago
+            - 'row "Open finding: Azure AD Account Takeover via Token Theft" [ref=f5e549] [cursor=pointer]':
+              - cell "High" [ref=f5e550]
+              - cell [ref=f5e553]:
+                - strong [ref=f5e554]: Azure AD Account Takeover via Token Theft
+                - code [ref=f5e555]: cor-2026-0802-001
+              - cell "4" [ref=f5e556]
+              - cell "6" [ref=f5e557]
+              - cell "185.220.101.45 ip" [ref=f5e558]:
+                - code [ref=f5e559]: 185.220.101.45
+                - generic [ref=f5e560]: ip
+              - cell "TA0001 TA0005 TA0009 +1" [ref=f5e561]:
+                - generic [ref=f5e562]: TA0001
+                - generic [ref=f5e563]: TA0005
+                - generic [ref=f5e564]: TA0009
+                - generic [ref=f5e565]: "+1"
+              - cell "Unassigned" [ref=f5e566]
+              - cell [ref=f5e570]:
+                - time [ref=f5e571]: 2d ago
+            - 'row "Open finding: Credential Theft and Lateral Movement - Finance Domain" [ref=f5e572] [cursor=pointer]':
+              - cell "High" [ref=f5e573]
+              - cell [ref=f5e576]:
+                - strong [ref=f5e577]: Credential Theft and Lateral Movement - Finance Domain
+                - code [ref=f5e578]: cor-2026-0801-002
+              - cell "4" [ref=f5e579]
+              - cell "7" [ref=f5e580]
+              - cell "admin-svc-01 user" [ref=f5e581]:
+                - code [ref=f5e582]: admin-svc-01
+                - generic [ref=f5e583]: user
+              - cell "TA0006 TA0004 TA0007 +1" [ref=f5e584]:
+                - generic [ref=f5e585]: TA0006
+                - generic [ref=f5e586]: TA0004
+                - generic [ref=f5e587]: TA0007
+                - generic [ref=f5e588]: "+1"
+              - cell "maya.chen" [ref=f5e589]
+              - cell [ref=f5e593]:
+                - time [ref=f5e594]: 3d ago
+            - 'row "Open finding: Phishing to C2 Establishment and Targeted Data Theft" [ref=f5e595] [cursor=pointer]':
+              - cell "High" [ref=f5e596]
+              - cell [ref=f5e599]:
+                - strong [ref=f5e600]: Phishing to C2 Establishment and Targeted Data Theft
+                - code [ref=f5e601]: cor-2026-0801-006
+              - cell "5" [ref=f5e602]
+              - cell "9" [ref=f5e603]
+              - cell "diana.foster user" [ref=f5e604]:
+                - code [ref=f5e605]: diana.foster
+                - generic [ref=f5e606]: user
+              - cell "TA0001 TA0002 TA0011 +2" [ref=f5e607]:
+                - generic [ref=f5e608]: TA0001
+                - generic [ref=f5e609]: TA0002
+                - generic [ref=f5e610]: TA0011
+                - generic [ref=f5e611]: "+2"
+              - cell "james.wilson" [ref=f5e612]
+              - cell [ref=f5e616]:
+                - time [ref=f5e617]: 4d ago
+            - 'row "Open finding: Container Escape to Host and Cloud Metadata Theft" [ref=f5e618] [cursor=pointer]':
+              - cell "High" [ref=f5e619]
+              - cell [ref=f5e622]:
+                - strong [ref=f5e623]: Container Escape to Host and Cloud Metadata Theft
+                - code [ref=f5e624]: cor-2026-0803-003
+              - cell "4" [ref=f5e625]
+              - cell "6" [ref=f5e626]
+              - cell "k8s-worker-03 host" [ref=f5e627]:
+                - code [ref=f5e628]: k8s-worker-03
+                - generic [ref=f5e629]: host
+              - cell "TA0001 TA0004 TA0006 +1" [ref=f5e630]:
+                - generic [ref=f5e631]: TA0001
+                - generic [ref=f5e632]: TA0004
+                - generic [ref=f5e633]: TA0006
+                - generic [ref=f5e634]: "+1"
+              - cell "Unassigned" [ref=f5e635]
+              - cell [ref=f5e639]:
+                - time [ref=f5e640]: 6d ago
+            - 'row "Open finding: Insider Data Exfiltration via Personal Cloud Storage" [ref=f5e641] [cursor=pointer]':
+              - cell "High" [ref=f5e642]
+              - cell [ref=f5e645]:
+                - strong [ref=f5e646]: Insider Data Exfiltration via Personal Cloud Storage
+                - code [ref=f5e647]: cor-2026-0801-004
+              - cell "3" [ref=f5e648]
+              - cell "5" [ref=f5e649]
+              - cell "patricia.nguyen user" [ref=f5e650]:
+                - code [ref=f5e651]: patricia.nguyen
+                - generic [ref=f5e652]: user
+              - cell "TA0009 TA0010" [ref=f5e653]:
+                - generic [ref=f5e654]: TA0009
+                - generic [ref=f5e655]: TA0010
+              - cell "Unassigned" [ref=f5e656]
+              - cell [ref=f5e660]:
+                - time [ref=f5e661]: 7d ago
+            - 'row "Open finding: Multi-stage Ransomware Deployment via Compromised VPN" [ref=f5e662] [cursor=pointer]':
+              - cell "Critical" [ref=f5e663]
+              - cell [ref=f5e666]:
+                - strong [ref=f5e667]: Multi-stage Ransomware Deployment via Compromised VPN
+                - code [ref=f5e668]: cor-2026-0801-001
+              - cell "5" [ref=f5e669]
+              - cell "12" [ref=f5e670]
+              - cell "203.0.113.88 ip" [ref=f5e671]:
+                - code [ref=f5e672]: 203.0.113.88
+                - generic [ref=f5e673]: ip
+              - cell "TA0001 TA0002 TA0003 +2" [ref=f5e674]:
+                - generic [ref=f5e675]: TA0001
+                - generic [ref=f5e676]: TA0002
+                - generic [ref=f5e677]: TA0003
+                - generic [ref=f5e678]: "+2"
+              - cell "Unassigned" [ref=f5e679]
+              - cell [ref=f5e683]:
+                - time [ref=f5e684]: 1d ago
+            - 'row "Open finding: RDP Brute Force Leading to Network-Wide Ransomware" [ref=f5e685] [cursor=pointer]':
+              - cell "Critical" [ref=f5e686]
+              - cell [ref=f5e689]:
+                - strong [ref=f5e690]: RDP Brute Force Leading to Network-Wide Ransomware
+                - code [ref=f5e691]: cor-2026-0803-001
+              - cell "4" [ref=f5e692]
+              - cell "7" [ref=f5e693]
+              - cell "TERM-SRV-01 host" [ref=f5e694]:
+                - code [ref=f5e695]: TERM-SRV-01
+                - generic [ref=f5e696]: host
+              - cell "TA0001 TA0005 TA0008 +1" [ref=f5e697]:
+                - generic [ref=f5e698]: TA0001
+                - generic [ref=f5e699]: TA0005
+                - generic [ref=f5e700]: TA0008
+                - generic [ref=f5e701]: "+1"
+              - cell "maya.chen" [ref=f5e702]
+              - cell [ref=f5e706]:
+                - time [ref=f5e707]: 2d ago
+            - 'row "Open finding: SQL Injection Leading to Customer Database Exfiltration" [ref=f5e708] [cursor=pointer]':
+              - cell "Critical" [ref=f5e709]
+              - cell [ref=f5e712]:
+                - strong [ref=f5e713]: SQL Injection Leading to Customer Database Exfiltration
+                - code [ref=f5e714]: cor-2026-0802-003
+              - cell "5" [ref=f5e715]
+              - cell "9" [ref=f5e716]
+              - cell "WEB-PROD-01 host" [ref=f5e717]:
+                - code [ref=f5e718]: WEB-PROD-01
+                - generic [ref=f5e719]: host
+              - cell "TA0043 TA0001 TA0009 +2" [ref=f5e720]:
+                - generic [ref=f5e721]: TA0043
+                - generic [ref=f5e722]: TA0001
+                - generic [ref=f5e723]: TA0009
+                - generic [ref=f5e724]: "+2"
+              - cell "james.wilson" [ref=f5e725]
+              - cell [ref=f5e729]:
+                - time [ref=f5e730]: 3d ago
+            - 'row "Open finding: Supply Chain Compromise via Typosquatted NPM Package" [ref=f5e731] [cursor=pointer]':
+              - cell "Critical" [ref=f5e732]
+              - cell [ref=f5e735]:
+                - strong [ref=f5e736]: Supply Chain Compromise via Typosquatted NPM Package
+                - code [ref=f5e737]: cor-2026-0801-003
+              - cell "6" [ref=f5e738]
+              - cell "15" [ref=f5e739]
+              - cell "DEV-WKS-091 host" [ref=f5e740]:
+                - code [ref=f5e741]: DEV-WKS-091
+                - generic [ref=f5e742]: host
+              - cell "TA0001 TA0002 TA0003 +3" [ref=f5e743]:
+                - generic [ref=f5e744]: TA0001
+                - generic [ref=f5e745]: TA0002
+                - generic [ref=f5e746]: TA0003
+                - generic [ref=f5e747]: "+3"
+              - cell "Unassigned" [ref=f5e748]
+              - cell [ref=f5e752]:
+                - time [ref=f5e753]: 5d ago
+            - 'row "Open finding: Kerberoasting to Domain Admin Compromise" [ref=f5e754] [cursor=pointer]':
+              - cell "Critical" [ref=f5e755]
+              - cell [ref=f5e758]:
+                - strong [ref=f5e759]: Kerberoasting to Domain Admin Compromise
+                - code [ref=f5e760]: cor-2026-0801-008
+              - cell "4" [ref=f5e761]
+              - cell "8" [ref=f5e762]
+              - cell "IT-WKS-077 host" [ref=f5e763]:
+                - code [ref=f5e764]: IT-WKS-077
+                - generic [ref=f5e765]: host
+              - cell "TA0006 TA0004 TA0003 +1" [ref=f5e766]:
+                - generic [ref=f5e767]: TA0006
+                - generic [ref=f5e768]: TA0004
+                - generic [ref=f5e769]: TA0003
+                - generic [ref=f5e770]: "+1"
+              - cell "maya.chen" [ref=f5e771]
+              - cell [ref=f5e775]:
+                - time [ref=f5e776]: 6d ago
+          - generic [ref=f5e777]: Showing 20 of 20 findings
+  - generic:
+    - list "Notifications"

@@ -37,6 +37,9 @@ public class UtmPlaybook implements Serializable {
     @Column(name = "definition_json", nullable = false, columnDefinition = "TEXT")
     private String definitionJson;
 
+    @Column(name = "steps_json", columnDefinition = "TEXT")
+    private String stepsJson;
+
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 

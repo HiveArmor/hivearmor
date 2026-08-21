@@ -114,6 +114,7 @@ services:
     volumes:
       - ./certs:/cert:ro
       - updates_data:/updates
+      - updates_data:/dependencies
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -155,6 +156,7 @@ services:
       - ELASTICSEARCH_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
       - INTERNAL_KEY=${INTERNAL_KEY}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - HIVEARMOR_ENCRYPTION_KEY=${HIVEARMOR_ENCRYPTION_KEY}
       - GRPC_AGENT_MANAGER_HOST=agentmanager
       - GRPC_AGENT_MANAGER_PORT=9000
       - EVENT_PROCESSOR_HOST=eventprocessor
@@ -162,10 +164,17 @@ services:
       - SOC_AI_BASE_URL=http://eventprocessor:8090
       - APP_TFA_ENABLED=false
       - ELASTICSEARCH_CA_CERT=/cert/ca.crt
-      - JHIPSTER_CORS_ALLOWED__ORIGINS=${JHIPSTER_CORS_ALLOWED_ORIGINS}
+      - JHIPSTER_CORS_ALLOWED_ORIGINS=${JHIPSTER_CORS_ALLOWED_ORIGINS}
+      - LLM_PROVIDER=${LLM_PROVIDER:-disabled}
+      - LLM_OLLAMA_BASE_URL=${LLM_OLLAMA_BASE_URL:-http://ollama:11434}
+      - LLM_MODEL=${LLM_MODEL:-llama3.2:3b}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.2}
+      - LLM_MAX_TOKENS=${LLM_MAX_TOKENS:-2048}
     volumes:
       - datasources_data:/etc/hivearmor
       - updates_data:/updates
+      - updates_data:/dependencies
       - ./certs:/cert:ro
     ports:
       - "8088:8080"
@@ -210,17 +219,32 @@ services:
       - BACKEND_URL=http://backend:8080
       - INTERNAL_KEY=${INTERNAL_KEY}
       - EVENTPROCESSOR_INJECT_KEY=${EVENTPROCESSOR_INJECT_KEY}
+      - POSTGRESQL_HOST=postgres
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USER=postgres
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_DB=hivearmor
       - KAFKA_BROKER=redpanda:9092
       - KAFKA_ENABLED=true
+      - KAFKA_WORKERS=1
+      - OPENSEARCH_CA_CERT=/cert/ca.crt
       - OTLP_PORT=4317
+      - GEOIP_DB_PATH=/opt/hivearmor/geo/GeoLite2-City.mmdb
     volumes:
       - ep_pipeline:/workdir/pipeline
+      # Local acceptance tests must exercise the same raw telemetry filters as
+      # production. Mount repository definitions read-only; never pre-normalize
+      # test events or write alert documents directly.
+      - ../filters:/workdir/pipeline/filters:ro
       - ep_logs:/workdir/logs
       - ep_rules:/workdir/rules/hivearmor
+      - ./rules/test:/workdir/rules/test:ro
       - ep_sockets:/workdir/sockets
       - ./certs:/cert:ro
       - updates_data:/updates
       - ./hivearmor_plugins.yaml:/workdir/pipeline/hivearmor_plugins.yaml:ro
+      # Air-gap: mount a host-side MaxMind MMDB for offline geo enrichment
+      # - ./geo/GeoLite2-City.mmdb:/opt/hivearmor/geo/GeoLite2-City.mmdb:ro
     ports:
       - "8000:8000"
       - "8090:8090"
@@ -265,14 +289,22 @@ services:
       - BACKEND_URL=http://backend:8080
       - INTERNAL_KEY=${INTERNAL_KEY}
       - EVENTPROCESSOR_INJECT_KEY=${EVENTPROCESSOR_INJECT_KEY}
+      - POSTGRESQL_HOST=postgres
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USER=postgres
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_DB=hivearmor
       - KAFKA_BROKER=redpanda:9092
-      - KAFKA_ENABLED=true
+      - KAFKA_ENABLED=false
+      - OPENSEARCH_CA_CERT=/cert/ca.crt
       - OTLP_PORT=4317
       - INPUTS_SOCKET_SECRET=${INPUTS_SOCKET_SECRET:-change-me-in-production}
     volumes:
       - ep_pipeline:/workdir/pipeline
+      - ../filters:/workdir/pipeline/filters:ro
       - ep_logs:/workdir/logs
       - ep_rules:/workdir/rules/hivearmor
+      - ./rules/test:/workdir/rules/test:ro
       - ep_sockets:/workdir/sockets
       - ./certs:/cert:ro
       - updates_data:/updates
@@ -564,6 +596,44 @@ services:
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
+  # Ollama - Self-hosted LLM runtime (start with --profile ai)
+  # API: http://localhost:11434
+  # Usage: docker compose --profile ai up -d
+  # ---------------------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    profiles: [ai]
+    ports:
+      - "${OLLAMA_HOST_PORT:-11434}:11434"
+    environment:
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-24h}
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Ollama Init - One-shot model pull sidecar (start with --profile ai)
+  # Pulls OLLAMA_INIT_MODEL into the ollama service on first start, then exits.
+  # ---------------------------------------------------------------------------
+  ollama-init:
+    image: curlimages/curl:latest
+    profiles: [ai]
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_INIT_MODEL: ${OLLAMA_INIT_MODEL:-llama3.2:3b}
+    restart: "no"
+    command: >
+      sh -c "curl -fsS -X POST http://ollama:11434/api/pull
+             -d \"{\\\"name\\\":\\\"$${OLLAMA_INIT_MODEL}\\\",\\\"stream\\\":false}\""
+
+  # ---------------------------------------------------------------------------
   # OTel Collector sidecar - optional fan-in aggregator (start with --profile otelcol)
   # External OTLP gRPC: localhost:4319  External OTLP HTTP: localhost:4320
   # Usage: docker compose --profile otelcol up -d
@@ -602,3 +672,4 @@ volumes:
   ep_sockets:
   shm_data:
   neo4j_data:
+  ollama_data:

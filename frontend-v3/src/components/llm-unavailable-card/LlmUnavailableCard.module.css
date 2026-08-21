@@ -1,0 +1,60 @@
+/* LlmUnavailableCard CSS module — Sprint 27 (Task 6.11)
+ *
+ * Null-state card shown on every LLM-backed surface when the backend returns
+ * HTTP 503 (LLM not configured / disabled).
+ *
+ * Colors: --ha-* design tokens only. No raw hex (NoRawHexInvariant).
+ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ha-space-3);
+  padding: var(--ha-space-6) var(--ha-space-4);
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-md);
+  text-align: center;
+}
+
+.icon {
+  color: var(--ha-text-secondary);
+  opacity: 0.7;
+}
+
+.title {
+  font-size: var(--ha-text-base);
+  font-weight: var(--ha-weight-semibold);
+  color: var(--ha-text-primary);
+  margin: 0;
+}
+
+.description {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 320px;
+}
+
+/* ── Panel-level error message strip ──────────────────────────────────────── */
+
+.errorStrip {
+  display: flex;
+  align-items: center;
+  gap: var(--ha-space-2);
+  padding: var(--ha-space-2) var(--ha-space-3);
+  background: color-mix(in srgb, var(--ha-high) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ha-high) 40%, transparent);
+  border-radius: var(--ha-radius-base);
+  font-size: var(--ha-text-sm);
+  color: var(--ha-high);
+  margin-bottom: var(--ha-space-3);
+}
+
+.errorStripIcon {
+  flex-shrink: 0;
+  color: var(--ha-high);
+}

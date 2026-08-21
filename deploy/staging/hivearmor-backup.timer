@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily HiveArmor staging backup (dump + OpenSearch snapshot)
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=900
+
+[Install]
+WantedBy=timers.target

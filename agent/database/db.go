@@ -9,6 +9,7 @@ import (
 
 	"github.com/glebarez/sqlite"
 	"github.com/hivearmor/agent/config"
+	"github.com/hivearmor/agent/models"
 	"github.com/hivearmor/shared/fs"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -18,6 +19,7 @@ var (
 	dbInstance *Database
 	dbOnce     sync.Once
 	dbInitErr  error
+	testDB     *Database
 )
 
 type Database struct {
@@ -91,7 +93,8 @@ func (d *Database) DeleteOld(data interface{}, retentionMegabytes int) (int, err
 
 	var rowsAffected int
 	for currentSize > retentionMegabytes {
-		result := d.db.Where("1 = 1").Order("created_at ASC").Limit(500).Delete(data)
+		// Never reclaim space by deleting unprocessed rows; those are the durable spool.
+		result := d.db.Where("processed = ?", true).Order("created_at ASC").Limit(500).Delete(data)
 		if result.Error != nil {
 			break
 		}
@@ -112,7 +115,51 @@ func (d *Database) DeleteOld(data interface{}, retentionMegabytes int) (int, err
 	return rowsAffected, nil
 }
 
+func (d *Database) DeleteOldestProcessed(limit int) (int64, error) {
+	d.locker.Lock()
+	defer d.locker.Unlock()
+	result := d.db.Where("processed = ?", true).Order("created_at ASC").Limit(limit).Delete(&models.Log{})
+	return result.RowsAffected, result.Error
+}
+
+func (d *Database) FindUnprocessed(dest *[]models.Log, limit int) error {
+	d.locker.RLock()
+	defer d.locker.RUnlock()
+	if limit < 1 {
+		limit = 100
+	}
+	return d.db.Where("processed = ?", false).Order("created_at ASC").Limit(limit).Find(dest).Error
+}
+
+func OpenSQLite(path string) (*Database, error) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		file, err := os.Create(path)
+		if err != nil {
+			return nil, fmt.Errorf("creating database file: %w", err)
+		}
+		file.Close()
+	}
+	conn, err := gorm.Open(sqlite.Open(path), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("connecting with database: %w", err)
+	}
+	db := &Database{db: conn}
+	if err := db.Migrate(&models.Log{}); err != nil {
+		return nil, err
+	}
+	return db, nil
+}
+
+func SetTestDB(db *Database) {
+	testDB = db
+}
+
 func GetDB() (*Database, error) {
+	if testDB != nil {
+		return testDB, nil
+	}
 	dbOnce.Do(func() {
 		path := filepath.Join(fs.GetExecutablePath(), "logs_process")
 		if err := fs.CreateDirIfNotExist(path); err != nil {

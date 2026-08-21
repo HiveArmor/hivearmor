@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/hivearmor/plugins/inputs/otlp"
 	"github.com/threatwinds/go-sdk/catcher"
 	"github.com/threatwinds/go-sdk/plugins"
@@ -17,8 +16,6 @@ import (
 
 // kafkaBroker returns the configured broker list, or "" if Kafka is not set up.
 func kafkaBroker() string { return os.Getenv("KAFKA_BROKER") }
-
-const defaultTenant string = "ce66672c-e36d-4761-a8c8-90058fee1a24"
 
 var localLogsChannel chan *logEntry
 
@@ -31,6 +28,7 @@ func main() {
 	CheckAgentManagerHealth()
 
 	autService := NewLogAuthService()
+	logAuth = autService
 	go func() {
 		autService.SyncAuth()
 	}()
@@ -97,41 +95,14 @@ func main() {
 	_ = startGRPCServer(middlewares, cert, key)
 }
 
-// publishOtlpEvent converts a JSON-encoded otlp.LogEvent to plugins.Log and
-// enqueues it on localLogsChannel. Returns an error if the channel is full.
+// publishOtlpEvent fails closed: OTLP currently has no verified connector
+// identity, so records cannot be assigned a tenant.
 func publishOtlpEvent(payload []byte) error {
 	var ev otlp.LogEvent
 	if err := json.Unmarshal(payload, &ev); err != nil {
 		return fmt.Errorf("otlp: unmarshal event: %w", err)
 	}
-
-	l := &plugins.Log{
-		Id:         uuid.New().String(),
-		TenantId:   defaultTenant,
-		DataType:   ev.DataType,
-		DataSource: ev.DataSource,
-		Timestamp:  ev.Timestamp,
-		Raw:        ev.Raw,
-	}
-	if l.DataType == "" {
-		l.DataType = "OTLP"
-	}
-	if l.DataSource == "" {
-		l.DataSource = "otlp"
-	}
-	if l.Timestamp == "" {
-		l.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
-	}
-
-	entry := &logEntry{log: l, result: make(chan error, 1)}
-
-	select {
-	case localLogsChannel <- entry:
-	default:
-		return fmt.Errorf("otlp: input channel full, dropping event %s", l.Id)
-	}
-
-	return <-entry.result
+	return fmt.Errorf("otlp: %w", errMissingIdentity)
 }
 
 func loadCerts() (string, string, error) {

@@ -1,0 +1,148 @@
+/* AttackTechniquesPanel — Sprint 46 */
+
+.ha-techniques-panel {
+  border: 1px solid var(--ha-border-default);
+  border-radius: 8px;
+  background: var(--ha-surface-panel);
+  padding: 16px;
+}
+
+.ha-techniques-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-techniques-panel__header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  margin: 0;
+}
+
+.ha-techniques-panel__count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-techniques-panel__heatmap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ha-border-subtle);
+}
+
+.ha-techniques-panel__tactic-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  min-width: 60px;
+}
+
+.ha-techniques-panel__tactic-cell[data-heat='hot'] {
+  background: color-mix(in srgb, var(--ha-severity-critical) 20%, transparent);
+}
+
+.ha-techniques-panel__tactic-cell[data-heat='warm'] {
+  background: color-mix(in srgb, var(--ha-severity-high) 15%, transparent);
+}
+
+.ha-techniques-panel__tactic-cell[data-heat='mild'] {
+  background: color-mix(in srgb, var(--ha-severity-medium) 12%, transparent);
+}
+
+.ha-techniques-panel__tactic-cell[data-heat='cold'] {
+  background: var(--ha-surface-elevated);
+}
+
+.ha-techniques-panel__tactic-name {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--ha-foreground-secondary);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.ha-techniques-panel__tactic-count {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-foreground-primary);
+}
+
+.ha-techniques-panel__empty {
+  font-size: 12px;
+  color: var(--ha-foreground-tertiary);
+  text-align: center;
+  padding: 20px;
+}
+
+.ha-techniques-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ha-techniques-panel__technique {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--ha-surface-elevated);
+}
+
+.ha-techniques-panel__tech-id {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--ha-intelligence-primary);
+  flex-shrink: 0;
+}
+
+.ha-techniques-panel__tech-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ha-techniques-panel__tech-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ha-foreground-primary);
+}
+
+.ha-techniques-panel__tech-tactic {
+  font-size: 10px;
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-techniques-panel__tech-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.ha-techniques-panel__alert-count {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-techniques-panel__last-seen {
+  font-size: 10px;
+  color: var(--ha-foreground-tertiary);
+}

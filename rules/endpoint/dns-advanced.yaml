@@ -1,0 +1,110 @@
+# Advanced DNS Detection Rules
+# DataType: dns
+
+dataTypes:
+  - "dns"
+name: "DNS: Fast Flux Detection — High TTL Variance"
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+category: "Command and Control"
+technique: "T1568.001 - Dynamic Resolution: Fast Flux DNS"
+adversary: origin
+description: "A DNS query returned an extremely low TTL (< 30s). Fast flux networks rapidly rotate DNS answers to prevent blacklisting of C2 domains; very short TTLs are a reliable fast-flux indicator."
+references:
+  - "https://attack.mitre.org/techniques/T1568/001/"
+where: |
+  safe("log.ttl", 9999) < 30 &&
+  safe("log.response_code", "") == "NOERROR" &&
+  safe("log.query_type", "") == "A"
+groupBy:
+  - log.query
+  - origin.ip
+deduplicateBy:
+  - log.query
+---
+dataTypes:
+  - "dns"
+name: "DNS: Internal Hostname Resolved via External Server"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: "Reconnaissance"
+technique: "T1590 - Gather Victim Network Information"
+adversary: origin
+description: "A DNS query for an internal-sounding hostname (corp, internal, lan, intranet, local) was sent to an external DNS server. This can indicate DNS misconfiguration exposing internal network topology or DNS rebinding attacks."
+references:
+  - "https://attack.mitre.org/techniques/T1590/"
+where: |
+  regexMatch(toLower(safe("log.query", "")), "\\.(corp|internal|lan|intranet|local|ad|domain)$") &&
+  !startsWith(safe("origin.ip", ""), "127.") &&
+  (
+    startsWith(safe("target.ip", "8.8.8.8"), "8.8.") ||
+    startsWith(safe("target.ip", ""), "1.1.")
+  )
+groupBy:
+  - log.query
+  - origin.ip
+deduplicateBy:
+  - log.query
+---
+dataTypes:
+  - "dns"
+name: "DNS: Repeated Queries for Same Non-Existent Domain"
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+category: "Command and Control"
+technique: "T1071.004 - DNS"
+adversary: origin
+description: "The same NXDOMAIN response was received multiple times for the same domain from the same host. This is characteristic of malware with a hardcoded C2 domain that the attacker has not yet activated."
+references:
+  - "https://attack.mitre.org/techniques/T1071/004/"
+where: |
+  safe("log.response_code", "") == "NXDOMAIN"
+groupBy:
+  - log.query
+  - origin.ip
+deduplicateBy:
+  - log.query
+  - origin.ip
+correlation:
+  - indexPattern: "v3-hive-dns-*"
+    with:
+      - field: "log.query"
+        operator: filter_term
+        value: "{{.log.query}}"
+      - field: "origin.ip"
+        operator: filter_term
+        value: "{{.origin.ip}}"
+      - field: "log.response_code"
+        operator: filter_term
+        value: "NXDOMAIN"
+    within: 30m
+    count: 10
+---
+dataTypes:
+  - "dns"
+name: "DNS: Query for Known Malware Domain Pattern"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Command and Control"
+technique: "T1071.004 - Application Layer Protocol: DNS"
+adversary: origin
+description: "A DNS query matched a pattern associated with known malware families. Dynamic analysis has identified characteristic DNS naming patterns used by specific malware families for C2 communication."
+references:
+  - "https://attack.mitre.org/techniques/T1071/004/"
+where: |
+  regexMatch(toLower(safe("log.query", "")),
+    "(\\.(tk|ml|ga|cf|gq)$|\\.bit\\.|\\d{5,}\\.[a-z]{2,4}$|[a-z0-9]{20,}\\.[a-z]{2,4}$)")
+groupBy:
+  - log.query
+  - origin.ip
+deduplicateBy:
+  - log.query
+  - origin.ip

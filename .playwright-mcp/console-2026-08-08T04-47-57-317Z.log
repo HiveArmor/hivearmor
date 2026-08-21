@@ -1,0 +1,217 @@
+[     173ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     283ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     331ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   11354ms] [ERROR] Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s ent-ip-203-0-113-88 
+    at div
+    at aside
+    at main
+    at section
+    at ThreatConstellationPage (http://localhost:3000/src/pages/constellation/ThreatConstellationPage.tsx:113:19)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx?t=1786155592176:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:442
+[   11354ms] [ERROR] Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s ent-ip-203-0-113-99 
+    at div
+    at aside
+    at main
+    at section
+    at ThreatConstellationPage (http://localhost:3000/src/pages/constellation/ThreatConstellationPage.tsx:113:19)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx?t=1786155592176:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:442
+[   11354ms] [ERROR] Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s ent-ip-198-51-100-30 
+    at div
+    at aside
+    at main
+    at section
+    at ThreatConstellationPage (http://localhost:3000/src/pages/constellation/ThreatConstellationPage.tsx:113:19)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx?t=1786155592176:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:442
+[   11354ms] [ERROR] Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s ent-host-fin-wks-014 
+    at div
+    at aside
+    at main
+    at section
+    at ThreatConstellationPage (http://localhost:3000/src/pages/constellation/ThreatConstellationPage.tsx:113:19)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx?t=1786155592176:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:442
+[   11354ms] [ERROR] Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s ent-user-anna-kowalski 
+    at div
+    at aside
+    at main
+    at section
+    at ThreatConstellationPage (http://localhost:3000/src/pages/constellation/ThreatConstellationPage.tsx:113:19)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx?t=1786155592176:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:442
+[   11354ms] [ERROR] Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s ent-host-fin-wks-015 
+    at div
+    at aside
+    at main
+    at section
+    at ThreatConstellationPage (http://localhost:3000/src/pages/constellation/ThreatConstellationPage.tsx:113:19)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx?t=1786155592176:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:442
+[   11372ms] [ERROR] Graph nodes have duplicate name or id @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44075
+[   11373ms] [ERROR] Graph nodes have duplicate name or id @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44075
+[   11373ms] [ERROR] Graph nodes have duplicate name or id @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44075
+[   11373ms] [ERROR] Graph nodes have duplicate name or id @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44075
+[   11373ms] [ERROR] Graph nodes have duplicate name or id @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44075
+[   11373ms] [ERROR] Graph nodes have duplicate name or id @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44075
+[   11374ms] TypeError: Cannot set properties of undefined (setting 'dataIndex')
+    at Graph.update (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44186:92)
+    at createGraphFromNodeEdge (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44418:10)
+    at GraphSeriesModel.getInitialData (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44454:18)
+    at SeriesModel.init (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:18757:21)
+    at GraphSeriesModel.init (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44430:27)
+    at GlobalModel.<anonymous> (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:15328:24)
+    at Array.forEach (<anonymous>)
+    at each (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:291:58)
+    at GlobalModel.visitComponent (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:15288:6)
+    at entity.topologicalTravel (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:13494:16)
+[   11375ms] [ERROR] Error handled by React Router default ErrorBoundary: TypeError: Cannot set properties of undefined (setting 'dataIndex')
+    at Graph.update (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44186:92)
+    at createGraphFromNodeEdge (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44418:10)
+    at GraphSeriesModel.getInitialData (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44454:18)
+    at SeriesModel.init (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:18757:21)
+    at GraphSeriesModel.init (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44430:27)
+    at GlobalModel.<anonymous> (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:15328:24)
+    at Array.forEach (<anonymous>)
+    at each (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:291:58)
+    at GlobalModel.visitComponent (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:15288:6)
+    at entity.topologicalTravel (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:13494:16) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3780
+[   11375ms] [ERROR] Error handled by React Router default ErrorBoundary: TypeError: Cannot set properties of undefined (setting 'dataIndex')
+    at Graph.update (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44186:92)
+    at createGraphFromNodeEdge (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44418:10)
+    at GraphSeriesModel.getInitialData (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44454:18)
+    at SeriesModel.init (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:18757:21)
+    at GraphSeriesModel.init (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44430:27)
+    at GlobalModel.<anonymous> (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:15328:24)
+    at Array.forEach (<anonymous>)
+    at each (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:291:58)
+    at GlobalModel.visitComponent (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:15288:6)
+    at entity.topologicalTravel (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:13494:16) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3780
+[   11378ms] [ERROR] The above error occurred in the <EChartsReact> component:
+
+    at EChartsReact (http://localhost:3000/node_modules/.vite/deps/echarts-for-react.js?v=d60f55b8:475:23)
+    at div
+    at commitLayoutMountEffects_complete (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:14600:7)
+    at div
+    at commitLayoutMountEffects_complete (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:14600:7)
+    at Suspense
+    at section
+    at main
+    at section
+    at ThreatConstellationPage (http://localhost:3000/src/pages/constellation/ThreatConstellationPage.tsx:113:19)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx?t=1786155592176:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, RenderErrorBoundary. @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11718
+[   11378ms] [ERROR] React Router caught the following error during render TypeError: Cannot set properties of undefined (setting 'dataIndex')
+    at Graph.update (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44186:92)
+    at createGraphFromNodeEdge (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44418:10)
+    at GraphSeriesModel.getInitialData (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44454:18)
+    at SeriesModel.init (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:18757:21)
+    at GraphSeriesModel.init (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44430:27)
+    at GlobalModel.<anonymous> (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:15328:24)
+    at Array.forEach (<anonymous>)
+    at each (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:291:58)
+    at GlobalModel.visitComponent (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:15288:6)
+    at entity.topologicalTravel (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:13494:16) {componentStack: 
+    at EChartsReact (http://localhost:3000/node_m…ack_react-query.js?v=d60f55b8:2995:31)
+    at App} @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3810

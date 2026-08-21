@@ -1,0 +1,15 @@
+[     186ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:17230
+[     240ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     240ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[     244ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     259ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/api/offenses/1:0
+[     259ms] [ERROR] [CMD-09] Failed to load finding: ApiError: Not Found
+    at request (http://localhost:3000/src/lib/apiClient.ts:78:9)
+    at async getFindingDetail (http://localhost:3000/src/pages/correlated-findings/correlatedFindings.service.ts:64:14)
+    at async loadData (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingDetailPage.tsx:41:20) @ http://localhost:3000/@vite/client:524
+[     263ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/api/offenses/1:0
+[     263ms] [ERROR] [CMD-09] Failed to load finding: ApiError: Not Found
+    at request (http://localhost:3000/src/lib/apiClient.ts:78:9)
+    at async getFindingDetail (http://localhost:3000/src/pages/correlated-findings/correlatedFindings.service.ts:64:14)
+    at async loadData (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingDetailPage.tsx:41:20) @ http://localhost:3000/@vite/client:524
+[    5253ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0

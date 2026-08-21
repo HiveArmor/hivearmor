@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260721002-1" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_saved_query">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_login" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="query_name" type="VARCHAR(256)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="query_text" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="index_pattern" type="VARCHAR(512)"/>
+            <column name="time_range" type="JSONB"/>
+            <column name="filters" type="JSONB"/>
+            <column name="is_shared" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="hive_saved_query" indexName="idx_hive_saved_query_user_login">
+            <column name="user_login"/>
+        </createIndex>
+
+        <createIndex tableName="hive_saved_query" indexName="idx_hive_saved_query_is_shared">
+            <column name="is_shared"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

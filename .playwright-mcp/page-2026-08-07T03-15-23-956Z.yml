@@ -1,0 +1,262 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e65]:
+    - link "Skip to main content" [ref=e66] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e67]:
+      - generic [ref=e68]:
+        - generic [ref=e74]: HiveArmor
+        - generic [ref=e75]: Security operations
+      - generic [ref=e76]:
+        - button "All authorized tenants" [ref=e78] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=e86] [cursor=pointer]:
+          - generic [ref=e91]: ⌘ K
+        - generic [ref=e92]: Production
+      - generic [ref=e93]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=e94]'
+        - status "Live events per second" [ref=e97]:
+          - generic [ref=e99]: 0 EPS
+        - button "Notifications" [ref=e100] [cursor=pointer]
+        - button "Help" [ref=e105] [cursor=pointer]
+    - navigation "Primary navigation" [ref=e109]:
+      - generic [ref=e110]:
+        - region "COMMAND" [ref=e111]:
+          - generic [ref=e112]:
+            - button "Mission Control" [ref=e113] [cursor=pointer]
+            - button "Analyst Queue" [ref=e120] [cursor=pointer]
+            - button "Alerts" [ref=e124] [cursor=pointer]
+            - button "Correlated Findings" [ref=e129] [cursor=pointer]
+            - button "Incidents" [ref=e135] [cursor=pointer]
+        - region "INVESTIGATE" [ref=e141]:
+          - generic [ref=e142]:
+            - button "Search & Hunt" [ref=e143] [cursor=pointer]
+            - button "Investigations" [ref=e148] [cursor=pointer]
+            - button "Entities" [ref=e152] [cursor=pointer]
+            - button "Threat Constellation" [ref=e159] [cursor=pointer]
+        - region "DEFEND" [ref=e165]:
+          - generic [ref=e166]:
+            - button "Detection Rules" [ref=e167] [cursor=pointer]
+            - button "Playbooks" [ref=e171] [cursor=pointer]
+            - button "Response Library" [ref=e176] [cursor=pointer]
+        - region "POSTURE" [ref=e180]:
+          - generic [ref=e181]:
+            - button "Assets" [ref=e182] [cursor=pointer]
+            - button "Identities" [ref=e187] [cursor=pointer]
+            - button "Active Directory" [ref=e194] [cursor=pointer]
+            - button "Exposure" [ref=e201] [cursor=pointer]
+            - button "Vulnerabilities" [ref=e207] [cursor=pointer]
+            - button "CIS Benchmark" [ref=e218] [cursor=pointer]
+            - button "Sensors" [ref=e224] [cursor=pointer]
+            - button "Compliance" [ref=e228] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=e233]:
+          - generic [ref=e234]:
+            - button "Endpoints" [ref=e235] [cursor=pointer]
+            - button "File Quarantine" [ref=e239] [cursor=pointer]
+            - button "File Integrity" [ref=e245] [cursor=pointer]
+            - button "Agent Policies" [ref=e252] [cursor=pointer]
+        - region "DASHBOARDS" [ref=e257]:
+          - button "Studio" [ref=e259] [cursor=pointer]
+        - region "REPORT" [ref=e264]:
+          - button "Scheduled Reports" [ref=e266] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=e271]:
+          - generic [ref=e272]:
+            - button "Users" [ref=e273] [cursor=pointer]
+            - button "Integrations" [ref=e287] [cursor=pointer]
+            - button "Notifications" [ref=e291] [cursor=pointer]
+            - button "Audit Log" [ref=e296] [cursor=pointer]
+            - button "Settings" [ref=e301] [cursor=pointer]
+      - generic [ref=e306]:
+        - button "User menu" [ref=e309] [cursor=pointer]:
+          - generic [ref=e310]: AA
+        - button "Pin sidebar open" [ref=e311] [cursor=pointer]
+    - main [ref=e314]:
+      - region [ref=e315]:
+        - generic [ref=e316]:
+          - generic [ref=e322]:
+            - generic [ref=e323]: INVESTIGATION
+            - heading "Search & Hunt" [level=1] [ref=e324]
+          - generic [ref=e325]: ⌘/Ctrl + Enter to run · J/K event navigation
+        - generic [ref=e329]:
+          - combobox [ref=e331]:
+            - generic "Hunt query editor" [ref=e332]:
+              - code [ref=e335]:
+                - generic [ref=e336]:
+                  - textbox "KQL search query. Press Enter to run, Shift Enter for a new line, or use arrow keys for suggestions." [ref=e337]
+                  - textbox [ref=e338]
+              - generic: Start typing for KQL suggestions · Enter loads the newest 100 events
+          - generic "Search controls" [ref=e347]:
+            - button "Toggle filters and field values" [pressed] [ref=e348] [cursor=pointer]
+            - button "KQL" [ref=e351] [cursor=pointer]
+            - button "Time range selector" [ref=e359] [cursor=pointer]:
+              - generic [ref=e362]: Last 4 hours
+            - button "Data source index" [ref=e366] [cursor=pointer]:
+              - generic [ref=e367]: Index
+              - generic [ref=e368]: All sources (logs + events)
+            - button "History" [ref=e371] [cursor=pointer]
+            - button "Saved hunts" [ref=e376] [cursor=pointer]
+            - button "Manager" [ref=e381] [cursor=pointer]
+            - button "Save" [disabled] [ref=e386]
+            - button "Help" [ref=e391] [cursor=pointer]
+            - button "Run search" [ref=e395] [cursor=pointer]
+          - status [ref=e398]:
+            - generic [ref=e399]: Ready
+            - generic [ref=e401]: No result snapshot
+            - generic [ref=e406]: Duration —
+            - generic [ref=e410]: Freshness —
+        - generic [ref=e416]:
+          - complementary "Filter and field browser" [ref=e417]:
+            - generic [ref=e418]:
+              - strong [ref=e423]: Fields & values
+              - generic [ref=e424]: 17 fields
+            - generic [ref=e425]:
+              - generic [ref=e429]: Filter available fields
+              - textbox "Filter available fields /" [ref=e430]:
+                - /placeholder: Filter fields
+              - generic [ref=e431]: /
+            - generic [ref=e432]:
+              - generic [ref=e433]: FIELD
+              - generic [ref=e434]: COVERAGE
+            - generic [ref=e435]:
+              - generic [ref=e436]:
+                - button "Event 6" [expanded] [ref=e437] [cursor=pointer]:
+                  - generic [ref=e440]: Event
+                  - emphasis [ref=e441]: "6"
+                - list [ref=e442]:
+                  - listitem [ref=e443]:
+                    - button "@timestamp date —" [ref=e444] [cursor=pointer]:
+                      - generic [ref=e445]:
+                        - strong [ref=e446]: "@timestamp"
+                        - generic [ref=e447]: date
+                      - emphasis [ref=e448]: —
+                    - button "Add @timestamp as a result column" [disabled] [ref=e449]
+                  - listitem [ref=e451]:
+                    - button "event.severity number —" [ref=e452] [cursor=pointer]:
+                      - generic [ref=e453]:
+                        - strong [ref=e454]: event.severity
+                        - generic [ref=e455]: number
+                      - emphasis [ref=e456]: —
+                    - button "Add event.severity as a result column" [disabled] [ref=e457]
+                  - listitem [ref=e459]:
+                    - button "event.category keyword —" [ref=e460] [cursor=pointer]:
+                      - generic [ref=e461]:
+                        - strong [ref=e462]: event.category
+                        - generic [ref=e463]: keyword
+                      - emphasis [ref=e464]: —
+                    - button "Add event.category as a result column" [disabled] [ref=e465]
+                  - listitem [ref=e467]:
+                    - button "event.action keyword —" [ref=e468] [cursor=pointer]:
+                      - generic [ref=e469]:
+                        - strong [ref=e470]: event.action
+                        - generic [ref=e471]: keyword
+                      - emphasis [ref=e472]: —
+                    - button "Add event.action as a result column" [disabled] [ref=e473]
+                  - listitem [ref=e475]:
+                    - button "event.outcome keyword —" [ref=e476] [cursor=pointer]:
+                      - generic [ref=e477]:
+                        - strong [ref=e478]: event.outcome
+                        - generic [ref=e479]: keyword
+                      - emphasis [ref=e480]: —
+                    - button "Add event.outcome as a result column" [ref=e481] [cursor=pointer]
+                  - listitem [ref=e483]:
+                    - button "message text —" [ref=e484] [cursor=pointer]:
+                      - generic [ref=e485]:
+                        - strong [ref=e486]: message
+                        - generic [ref=e487]: text
+                      - emphasis [ref=e488]: —
+                    - button "Add message as a result column" [ref=e489] [cursor=pointer]
+              - generic [ref=e491]:
+                - button "Host 2" [expanded] [ref=e492] [cursor=pointer]:
+                  - generic [ref=e495]: Host
+                  - emphasis [ref=e496]: "2"
+                - list [ref=e497]:
+                  - listitem [ref=e498]:
+                    - button "host.name keyword —" [ref=e499] [cursor=pointer]:
+                      - generic [ref=e500]:
+                        - strong [ref=e501]: host.name
+                        - generic [ref=e502]: keyword
+                      - emphasis [ref=e503]: —
+                    - button "Add host.name as a result column" [disabled] [ref=e504]
+                  - listitem [ref=e506]:
+                    - button "host.ip ip —" [ref=e507] [cursor=pointer]:
+                      - generic [ref=e508]:
+                        - strong [ref=e509]: host.ip
+                        - generic [ref=e510]: ip
+                      - emphasis [ref=e511]: —
+                    - button "Add host.ip as a result column" [ref=e512] [cursor=pointer]
+              - generic [ref=e514]:
+                - button "Identity 2" [expanded] [ref=e515] [cursor=pointer]:
+                  - generic [ref=e518]: Identity
+                  - emphasis [ref=e519]: "2"
+                - list [ref=e520]:
+                  - listitem [ref=e521]:
+                    - button "user.name keyword —" [ref=e522] [cursor=pointer]:
+                      - generic [ref=e523]:
+                        - strong [ref=e524]: user.name
+                        - generic [ref=e525]: keyword
+                      - emphasis [ref=e526]: —
+                    - button "Add user.name as a result column" [disabled] [ref=e527]
+                  - listitem [ref=e529]:
+                    - button "user.domain keyword —" [ref=e530] [cursor=pointer]:
+                      - generic [ref=e531]:
+                        - strong [ref=e532]: user.domain
+                        - generic [ref=e533]: keyword
+                      - emphasis [ref=e534]: —
+                    - button "Add user.domain as a result column" [ref=e535] [cursor=pointer]
+              - generic [ref=e537]:
+                - button "Network 5" [expanded] [ref=e538] [cursor=pointer]:
+                  - generic [ref=e541]: Network
+                  - emphasis [ref=e542]: "5"
+                - list [ref=e543]:
+                  - listitem [ref=e544]:
+                    - button "source.ip ip —" [ref=e545] [cursor=pointer]:
+                      - generic [ref=e546]:
+                        - strong [ref=e547]: source.ip
+                        - generic [ref=e548]: ip
+                      - emphasis [ref=e549]: —
+                    - button "Add source.ip as a result column" [disabled] [ref=e550]
+                  - listitem [ref=e552]:
+                    - button "source.port number —" [ref=e553] [cursor=pointer]:
+                      - generic [ref=e554]:
+                        - strong [ref=e555]: source.port
+                        - generic [ref=e556]: number
+                      - emphasis [ref=e557]: —
+                    - button "Add source.port as a result column" [ref=e558] [cursor=pointer]
+                  - listitem [ref=e560]:
+                    - button "destination.ip ip —" [ref=e561] [cursor=pointer]:
+                      - generic [ref=e562]:
+                        - strong [ref=e563]: destination.ip
+                        - generic [ref=e564]: ip
+                      - emphasis [ref=e565]: —
+                    - button "Add destination.ip as a result column" [disabled] [ref=e566]
+                  - listitem [ref=e568]:
+                    - button "destination.port number —" [ref=e569] [cursor=pointer]:
+                      - generic [ref=e570]:
+                        - strong [ref=e571]: destination.port
+                        - generic [ref=e572]: number
+                      - emphasis [ref=e573]: —
+                    - button "Add destination.port as a result column" [ref=e574] [cursor=pointer]
+                  - listitem [ref=e576]:
+                    - button "source.geo.country_name keyword —" [ref=e577] [cursor=pointer]:
+                      - generic [ref=e578]:
+                        - strong [ref=e579]: source.geo.country_name
+                        - generic [ref=e580]: keyword
+                      - emphasis [ref=e581]: —
+                    - button "Add source.geo.country_name as a result column" [ref=e582] [cursor=pointer]
+              - button "Source 2" [ref=e585] [cursor=pointer]:
+                - generic [ref=e588]: Source
+                - emphasis [ref=e589]: "2"
+          - main "Hunt results workspace" [ref=e590]:
+            - generic [ref=e591]:
+              - heading "Start with a precise question" [level=2] [ref=e594]
+              - paragraph [ref=e595]: Choose normalized fields from the filter rail, combine conditions with AND/OR, or leave the editor blank to load the newest 100 authorized events in the selected time range.
+              - code [ref=e596]: event.category:authentication AND event.action:logon_failed
+        - generic [ref=e597]:
+          - generic [ref=e598]:
+            - generic [ref=e600]: Connected
+            - generic [ref=e601]: •
+            - generic [ref=e603]: Live
+          - generic [ref=e604]: 0 eps
+  - generic:
+    - list "Notifications"
+  - generic [ref=e606]:
+    - alert
+    - alert

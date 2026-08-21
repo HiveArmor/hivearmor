@@ -1,0 +1,669 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e61]:
+    - link "Skip to main content" [ref=e62] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e63]:
+      - generic [ref=e64]:
+        - generic [ref=e70]: HiveArmor
+        - generic [ref=e71]: Security operations
+      - generic [ref=e72]:
+        - button "All authorized tenants" [ref=e74] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=e82] [cursor=pointer]:
+          - generic [ref=e87]: ⌘ K
+        - generic [ref=e88]: Production
+      - generic [ref=e89]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=e90]'
+        - status "Live events per second" [ref=e93]:
+          - generic [ref=e95]: 0 EPS
+        - button "Notifications" [ref=e96] [cursor=pointer]
+        - button "Help" [ref=e101] [cursor=pointer]
+    - navigation "Primary navigation" [ref=e105]:
+      - generic [ref=e106]:
+        - region "COMMAND" [ref=e107]:
+          - generic [ref=e108]:
+            - button "Mission Control" [ref=e109] [cursor=pointer]
+            - button "Analyst Queue" [ref=e116] [cursor=pointer]
+            - button "Alerts" [ref=e120] [cursor=pointer]
+            - button "Correlated Findings" [ref=e125] [cursor=pointer]
+            - button "Incidents" [ref=e131] [cursor=pointer]
+        - region "INVESTIGATE" [ref=e137]:
+          - generic [ref=e138]:
+            - button "Search & Hunt" [ref=e139] [cursor=pointer]
+            - button "Investigations" [ref=e144] [cursor=pointer]
+            - button "Entities" [ref=e148] [cursor=pointer]
+            - button "Threat Constellation" [ref=e155] [cursor=pointer]
+        - region "DEFEND" [ref=e161]:
+          - generic [ref=e162]:
+            - button "Detection Rules" [ref=e163] [cursor=pointer]
+            - button "Playbooks" [ref=e167] [cursor=pointer]
+            - button "Response Library" [ref=e172] [cursor=pointer]
+        - region "POSTURE" [ref=e176]:
+          - generic [ref=e177]:
+            - button "Assets" [ref=e178] [cursor=pointer]
+            - button "Identities" [ref=e183] [cursor=pointer]
+            - button "Active Directory" [ref=e190] [cursor=pointer]
+            - button "Exposure" [ref=e197] [cursor=pointer]
+            - button "Vulnerabilities" [ref=e203] [cursor=pointer]
+            - button "CIS Benchmark" [ref=e214] [cursor=pointer]
+            - button "Sensors" [ref=e220] [cursor=pointer]
+            - button "Compliance" [ref=e224] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=e229]:
+          - generic [ref=e230]:
+            - button "Endpoints" [ref=e231] [cursor=pointer]
+            - button "File Quarantine" [ref=e235] [cursor=pointer]
+            - button "File Integrity" [ref=e241] [cursor=pointer]
+            - button "Agent Policies" [ref=e248] [cursor=pointer]
+        - region "DASHBOARDS" [ref=e253]:
+          - button "Studio" [ref=e255] [cursor=pointer]
+        - region "REPORT" [ref=e260]:
+          - button "Scheduled Reports" [ref=e262] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=e267]:
+          - generic [ref=e268]:
+            - button "Users" [ref=e269] [cursor=pointer]
+            - button "Integrations" [ref=e283] [cursor=pointer]
+            - button "Notifications" [ref=e287] [cursor=pointer]
+            - button "Audit Log" [ref=e292] [cursor=pointer]
+            - button "Settings" [ref=e297] [cursor=pointer]
+      - generic [ref=e302]:
+        - button "User menu" [ref=e305] [cursor=pointer]:
+          - generic [ref=e306]: AA
+        - button "Pin sidebar open" [ref=e307] [cursor=pointer]
+    - main [ref=e310]:
+      - generic [ref=e311]:
+        - generic [ref=e312]:
+          - generic [ref=e320]:
+            - generic [ref=e321]: Detection operations
+            - heading "Alerts" [level=1] [ref=e322]
+          - generic [ref=e323]:
+            - generic [ref=e326]:
+              - strong [ref=e327]: Live intake
+              - generic [ref=e328]: Automatic retry active
+            - link "Severity board" [ref=e329] [cursor=pointer]:
+              - /url: /alerts/board
+            - generic [ref=e334]:
+              - button "Live" [ref=e335] [cursor=pointer]
+              - button "Historical" [ref=e338] [cursor=pointer]
+        - generic "Alert queue controls and priority summary" [ref=e340]:
+          - region "Alert priority snapshot" [ref=e341]:
+            - 'button "Current scope: 84. matching alerts" [ref=e342] [cursor=pointer]':
+              - generic [ref=e345]:
+                - generic [ref=e346]: Current scope
+                - strong [ref=e347]: "84"
+                - emphasis [ref=e348]: matching alerts
+            - 'button "Critical open: 18. needs immediate review" [ref=e351] [cursor=pointer]':
+              - generic [ref=e355]:
+                - generic [ref=e356]: Critical open
+                - strong [ref=e357]: "18"
+                - emphasis [ref=e358]: needs immediate review
+            - 'button "SLA pressure: 0. at risk or breached" [ref=e361] [cursor=pointer]':
+              - generic [ref=e366]:
+                - generic [ref=e367]: SLA pressure
+                - strong [ref=e368]: "0"
+                - emphasis [ref=e369]: at risk or breached
+            - 'button "Unassigned: 82. without an owner" [ref=e372] [cursor=pointer]':
+              - generic [ref=e377]:
+                - generic [ref=e378]: Unassigned
+                - strong [ref=e379]: "82"
+                - emphasis [ref=e380]: without an owner
+            - 'button "Intel matches: 4. enriched indicators" [ref=e383] [cursor=pointer]':
+              - generic [ref=e387]:
+                - generic [ref=e388]: Intel matches
+                - strong [ref=e389]: "4"
+                - emphasis [ref=e390]: enriched indicators
+          - navigation "Alert queue views" [ref=e393]:
+            - strong [ref=e396]: Views
+            - generic [ref=e397]:
+              - button [ref=e398] [cursor=pointer]:
+                - strong [ref=e400]: Needs triage
+              - button [ref=e401] [cursor=pointer]:
+                - strong [ref=e403]: My priority
+              - button [ref=e404] [cursor=pointer]:
+                - strong [ref=e406]: Critical
+                - emphasis [ref=e407]: "18"
+              - button [ref=e408] [cursor=pointer]:
+                - strong [ref=e410]: SLA risk
+                - emphasis [ref=e411]: "0"
+              - button [ref=e412] [cursor=pointer]:
+                - strong [ref=e414]: Unassigned
+                - emphasis [ref=e415]: "82"
+              - button [ref=e416] [cursor=pointer]:
+                - strong [ref=e418]: Intel matches
+                - emphasis [ref=e419]: "4"
+              - button [ref=e420] [cursor=pointer]:
+                - strong [ref=e422]: All alerts
+            - 'generic "Keyboard triage shortcuts: J and K navigate, Space selects, A assigns, C classifies" [ref=e423]': J/K
+          - generic [ref=e427]:
+            - generic [ref=e428]:
+              - combobox "Alert query" [ref=e432]
+              - generic [ref=e433]: ⇧ F
+              - button "Run" [ref=e434] [cursor=pointer]
+            - generic [ref=e435]: Use field colon value conditions joined by AND or OR. Arrow keys select autocomplete suggestions. Press Enter to run.
+            - generic [ref=e436]:
+              - button "Add filter" [ref=e438] [cursor=pointer]
+              - button "Time range selector" [disabled] [ref=e441]:
+                - generic [ref=e444]: Last 24 hours
+              - button "Select columns" [ref=e448] [cursor=pointer]: Fields
+              - generic "Row density" [ref=e451]:
+                - button "compact row density" [ref=e452] [cursor=pointer]
+                - button "standard row density" [ref=e455] [cursor=pointer]
+                - button "comfortable row density" [ref=e458] [cursor=pointer]
+              - button "Refresh alert queue" [ref=e461] [cursor=pointer]
+          - generic "Active alert filters" [ref=e467]:
+            - generic [ref=e470]:
+              - strong [ref=e471]: Status
+              - text: active
+              - button "Remove Status filter" [ref=e472] [cursor=pointer]
+            - button "Clear filters" [ref=e476] [cursor=pointer]
+          - generic [ref=e477]:
+            - generic [ref=e478]:
+              - strong [ref=e479]: —
+              - generic [ref=e480]: matching alerts
+              - generic [ref=e482]:
+                - text: snapshot
+                - time [ref=e483]: 20:51
+            - generic [ref=e484]:
+              - generic [ref=e485]: Virtual queue · 100-row blocks
+              - generic [ref=e486]: ·Double-click opens investigation
+        - generic [ref=e489]:
+          - alert [ref=e490]:
+            - generic [ref=e493]:
+              - strong [ref=e494]: Alert queue unavailable
+              - generic [ref=e495]: Alert queue request failed with HTTP 400. The checked-in backend does not currently expose the list contract described by ALT-014.
+            - button "Retry" [ref=e496] [cursor=pointer]
+          - generic "Alert triage queue" [ref=e498]:
+            - generic [ref=e502]:
+              - grid [ref=e504]:
+                - rowgroup [ref=e505]:
+                  - row [ref=e506]:
+                    - columnheader [ref=e507]:
+                      - text: 
+                      - generic: 
+                    - columnheader "Severity" [ref=e508]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Detected" [ref=e511]:
+                      - text: 
+                      - generic [ref=e514] [cursor=pointer]:
+                        - text: 
+                        - generic [ref=e515]: 
+                        - text:    
+                    - columnheader "Risk" [ref=e516]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Alert reason" [ref=e519]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Primary entity" [ref=e522]:
+                      - text: 
+                      - generic: 
+                    - columnheader "Status" [ref=e525]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Owner" [ref=e528]:
+                      - text: 
+                      - generic:      
+                    - columnheader "SLA" [ref=e531]:
+                      - text: 
+                      - generic:      
+                    - columnheader "ATT&CK" [ref=e534]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Tenant" [ref=e537]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Confidence" [ref=e540]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Actions" [ref=e543]:
+                      - text: 
+                      - generic: 
+                  - row [ref=e545]:
+                    - gridcell [ref=e546]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e547] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e548]:
+                      - 'generic "Severity: Low" [ref=e549]':
+                        - strong [ref=e551]: Low
+                    - gridcell "— —" [ref=e552]:
+                      - generic [ref=e553]:
+                        - strong [ref=e554]: —
+                        - generic [ref=e555]: —
+                    - gridcell "—" [ref=e556]
+                    - gridcell [ref=e558]
+                    - gridcell "Unavailable" [ref=e559]
+                    - gridcell "Unknown" [ref=e561]
+                    - gridcell "Unassigned" [ref=e563]
+                    - gridcell "—" [ref=e565]
+                    - gridcell "—" [ref=e567]
+                    - gridcell [ref=e569]
+                    - gridcell "—" [ref=e570]
+                    - gridcell [ref=e571]
+                  - row [ref=e572]:
+                    - gridcell [ref=e573]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e574] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e575]:
+                      - 'generic "Severity: Low" [ref=e576]':
+                        - strong [ref=e578]: Low
+                    - gridcell "— —" [ref=e579]:
+                      - generic [ref=e580]:
+                        - strong [ref=e581]: —
+                        - generic [ref=e582]: —
+                    - gridcell "—" [ref=e583]
+                    - gridcell [ref=e585]
+                    - gridcell "Unavailable" [ref=e586]
+                    - gridcell "Unknown" [ref=e588]
+                    - gridcell "Unassigned" [ref=e590]
+                    - gridcell "—" [ref=e592]
+                    - gridcell "—" [ref=e594]
+                    - gridcell [ref=e596]
+                    - gridcell "—" [ref=e597]
+                    - gridcell [ref=e598]
+                  - row [ref=e599]:
+                    - gridcell [ref=e600]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e601] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e602]:
+                      - 'generic "Severity: Low" [ref=e603]':
+                        - strong [ref=e605]: Low
+                    - gridcell "— —" [ref=e606]:
+                      - generic [ref=e607]:
+                        - strong [ref=e608]: —
+                        - generic [ref=e609]: —
+                    - gridcell "—" [ref=e610]
+                    - gridcell [ref=e612]
+                    - gridcell "Unavailable" [ref=e613]
+                    - gridcell "Unknown" [ref=e615]
+                    - gridcell "Unassigned" [ref=e617]
+                    - gridcell "—" [ref=e619]
+                    - gridcell "—" [ref=e621]
+                    - gridcell [ref=e623]
+                    - gridcell "—" [ref=e624]
+                    - gridcell [ref=e625]
+                  - row [ref=e626]:
+                    - gridcell [ref=e627]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e628] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e629]:
+                      - 'generic "Severity: Low" [ref=e630]':
+                        - strong [ref=e632]: Low
+                    - gridcell "— —" [ref=e633]:
+                      - generic [ref=e634]:
+                        - strong [ref=e635]: —
+                        - generic [ref=e636]: —
+                    - gridcell "—" [ref=e637]
+                    - gridcell [ref=e639]
+                    - gridcell "Unavailable" [ref=e640]
+                    - gridcell "Unknown" [ref=e642]
+                    - gridcell "Unassigned" [ref=e644]
+                    - gridcell "—" [ref=e646]
+                    - gridcell "—" [ref=e648]
+                    - gridcell [ref=e650]
+                    - gridcell "—" [ref=e651]
+                    - gridcell [ref=e652]
+                  - row [ref=e653]:
+                    - gridcell [ref=e654]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e655] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e656]:
+                      - 'generic "Severity: Low" [ref=e657]':
+                        - strong [ref=e659]: Low
+                    - gridcell "— —" [ref=e660]:
+                      - generic [ref=e661]:
+                        - strong [ref=e662]: —
+                        - generic [ref=e663]: —
+                    - gridcell "—" [ref=e664]
+                    - gridcell [ref=e666]
+                    - gridcell "Unavailable" [ref=e667]
+                    - gridcell "Unknown" [ref=e669]
+                    - gridcell "Unassigned" [ref=e671]
+                    - gridcell "—" [ref=e673]
+                    - gridcell "—" [ref=e675]
+                    - gridcell [ref=e677]
+                    - gridcell "—" [ref=e678]
+                    - gridcell [ref=e679]
+                  - row [ref=e680]:
+                    - gridcell [ref=e681]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e682] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e683]:
+                      - 'generic "Severity: Low" [ref=e684]':
+                        - strong [ref=e686]: Low
+                    - gridcell "— —" [ref=e687]:
+                      - generic [ref=e688]:
+                        - strong [ref=e689]: —
+                        - generic [ref=e690]: —
+                    - gridcell "—" [ref=e691]
+                    - gridcell [ref=e693]
+                    - gridcell "Unavailable" [ref=e694]
+                    - gridcell "Unknown" [ref=e696]
+                    - gridcell "Unassigned" [ref=e698]
+                    - gridcell "—" [ref=e700]
+                    - gridcell "—" [ref=e702]
+                    - gridcell [ref=e704]
+                    - gridcell "—" [ref=e705]
+                    - gridcell [ref=e706]
+                  - row [ref=e707]:
+                    - gridcell [ref=e708]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e709] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e710]:
+                      - 'generic "Severity: Low" [ref=e711]':
+                        - strong [ref=e713]: Low
+                    - gridcell "— —" [ref=e714]:
+                      - generic [ref=e715]:
+                        - strong [ref=e716]: —
+                        - generic [ref=e717]: —
+                    - gridcell "—" [ref=e718]
+                    - gridcell [ref=e720]
+                    - gridcell "Unavailable" [ref=e721]
+                    - gridcell "Unknown" [ref=e723]
+                    - gridcell "Unassigned" [ref=e725]
+                    - gridcell "—" [ref=e727]
+                    - gridcell "—" [ref=e729]
+                    - gridcell [ref=e731]
+                    - gridcell "—" [ref=e732]
+                    - gridcell [ref=e733]
+                  - row [ref=e734]:
+                    - gridcell [ref=e735]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e736] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e737]:
+                      - 'generic "Severity: Low" [ref=e738]':
+                        - strong [ref=e740]: Low
+                    - gridcell "— —" [ref=e741]:
+                      - generic [ref=e742]:
+                        - strong [ref=e743]: —
+                        - generic [ref=e744]: —
+                    - gridcell "—" [ref=e745]
+                    - gridcell [ref=e747]
+                    - gridcell "Unavailable" [ref=e748]
+                    - gridcell "Unknown" [ref=e750]
+                    - gridcell "Unassigned" [ref=e752]
+                    - gridcell "—" [ref=e754]
+                    - gridcell "—" [ref=e756]
+                    - gridcell [ref=e758]
+                    - gridcell "—" [ref=e759]
+                    - gridcell [ref=e760]
+                  - row [ref=e761]:
+                    - gridcell [ref=e762]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e763] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e764]:
+                      - 'generic "Severity: Low" [ref=e765]':
+                        - strong [ref=e767]: Low
+                    - gridcell "— —" [ref=e768]:
+                      - generic [ref=e769]:
+                        - strong [ref=e770]: —
+                        - generic [ref=e771]: —
+                    - gridcell "—" [ref=e772]
+                    - gridcell [ref=e774]
+                    - gridcell "Unavailable" [ref=e775]
+                    - gridcell "Unknown" [ref=e777]
+                    - gridcell "Unassigned" [ref=e779]
+                    - gridcell "—" [ref=e781]
+                    - gridcell "—" [ref=e783]
+                    - gridcell [ref=e785]
+                    - gridcell "—" [ref=e786]
+                    - gridcell [ref=e787]
+                  - row [ref=e788]:
+                    - gridcell [ref=e789]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e790] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e791]:
+                      - 'generic "Severity: Low" [ref=e792]':
+                        - strong [ref=e794]: Low
+                    - gridcell "— —" [ref=e795]:
+                      - generic [ref=e796]:
+                        - strong [ref=e797]: —
+                        - generic [ref=e798]: —
+                    - gridcell "—" [ref=e799]
+                    - gridcell [ref=e801]
+                    - gridcell "Unavailable" [ref=e802]
+                    - gridcell "Unknown" [ref=e804]
+                    - gridcell "Unassigned" [ref=e806]
+                    - gridcell "—" [ref=e808]
+                    - gridcell "—" [ref=e810]
+                    - gridcell [ref=e812]
+                    - gridcell "—" [ref=e813]
+                    - gridcell [ref=e814]
+                  - row [ref=e815]:
+                    - gridcell [ref=e816]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e817] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e818]:
+                      - 'generic "Severity: Low" [ref=e819]':
+                        - strong [ref=e821]: Low
+                    - gridcell "— —" [ref=e822]:
+                      - generic [ref=e823]:
+                        - strong [ref=e824]: —
+                        - generic [ref=e825]: —
+                    - gridcell "—" [ref=e826]
+                    - gridcell [ref=e828]
+                    - gridcell "Unavailable" [ref=e829]
+                    - gridcell "Unknown" [ref=e831]
+                    - gridcell "Unassigned" [ref=e833]
+                    - gridcell "—" [ref=e835]
+                    - gridcell "—" [ref=e837]
+                    - gridcell [ref=e839]
+                    - gridcell "—" [ref=e840]
+                    - gridcell [ref=e841]
+                  - row [ref=e842]:
+                    - gridcell [ref=e843]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e844] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e845]:
+                      - 'generic "Severity: Low" [ref=e846]':
+                        - strong [ref=e848]: Low
+                    - gridcell "— —" [ref=e849]:
+                      - generic [ref=e850]:
+                        - strong [ref=e851]: —
+                        - generic [ref=e852]: —
+                    - gridcell "—" [ref=e853]
+                    - gridcell [ref=e855]
+                    - gridcell "Unavailable" [ref=e856]
+                    - gridcell "Unknown" [ref=e858]
+                    - gridcell "Unassigned" [ref=e860]
+                    - gridcell "—" [ref=e862]
+                    - gridcell "—" [ref=e864]
+                    - gridcell [ref=e866]
+                    - gridcell "—" [ref=e867]
+                    - gridcell [ref=e868]
+                  - row [ref=e869]:
+                    - gridcell [ref=e870]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e871] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e872]:
+                      - 'generic "Severity: Low" [ref=e873]':
+                        - strong [ref=e875]: Low
+                    - gridcell "— —" [ref=e876]:
+                      - generic [ref=e877]:
+                        - strong [ref=e878]: —
+                        - generic [ref=e879]: —
+                    - gridcell "—" [ref=e880]
+                    - gridcell [ref=e882]
+                    - gridcell "Unavailable" [ref=e883]
+                    - gridcell "Unknown" [ref=e885]
+                    - gridcell "Unassigned" [ref=e887]
+                    - gridcell "—" [ref=e889]
+                    - gridcell "—" [ref=e891]
+                    - gridcell [ref=e893]
+                    - gridcell "—" [ref=e894]
+                    - gridcell [ref=e895]
+                  - row [ref=e896]:
+                    - gridcell [ref=e897]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e898] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e899]:
+                      - 'generic "Severity: Low" [ref=e900]':
+                        - strong [ref=e902]: Low
+                    - gridcell "— —" [ref=e903]:
+                      - generic [ref=e904]:
+                        - strong [ref=e905]: —
+                        - generic [ref=e906]: —
+                    - gridcell "—" [ref=e907]
+                    - gridcell [ref=e909]
+                    - gridcell "Unavailable" [ref=e910]
+                    - gridcell "Unknown" [ref=e912]
+                    - gridcell "Unassigned" [ref=e914]
+                    - gridcell "—" [ref=e916]
+                    - gridcell "—" [ref=e918]
+                    - gridcell [ref=e920]
+                    - gridcell "—" [ref=e921]
+                    - gridcell [ref=e922]
+                  - row [ref=e923]:
+                    - gridcell [ref=e924]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e925] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e926]:
+                      - 'generic "Severity: Low" [ref=e927]':
+                        - strong [ref=e929]: Low
+                    - gridcell "— —" [ref=e930]:
+                      - generic [ref=e931]:
+                        - strong [ref=e932]: —
+                        - generic [ref=e933]: —
+                    - gridcell "—" [ref=e934]
+                    - gridcell [ref=e936]
+                    - gridcell "Unavailable" [ref=e937]
+                    - gridcell "Unknown" [ref=e939]
+                    - gridcell "Unassigned" [ref=e941]
+                    - gridcell "—" [ref=e943]
+                    - gridcell "—" [ref=e945]
+                    - gridcell [ref=e947]
+                    - gridcell "—" [ref=e948]
+                    - gridcell [ref=e949]
+                  - row [ref=e950]:
+                    - gridcell [ref=e951]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e952] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e953]:
+                      - 'generic "Severity: Low" [ref=e954]':
+                        - strong [ref=e956]: Low
+                    - gridcell "— —" [ref=e957]:
+                      - generic [ref=e958]:
+                        - strong [ref=e959]: —
+                        - generic [ref=e960]: —
+                    - gridcell "—" [ref=e961]
+                    - gridcell [ref=e963]
+                    - gridcell "Unavailable" [ref=e964]
+                    - gridcell "Unknown" [ref=e966]
+                    - gridcell "Unassigned" [ref=e968]
+                    - gridcell "—" [ref=e970]
+                    - gridcell "—" [ref=e972]
+                    - gridcell [ref=e974]
+                    - gridcell "—" [ref=e975]
+                    - gridcell [ref=e976]
+                  - row [ref=e977]:
+                    - gridcell [ref=e978]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e979] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e980]:
+                      - 'generic "Severity: Low" [ref=e981]':
+                        - strong [ref=e983]: Low
+                    - gridcell "— —" [ref=e984]:
+                      - generic [ref=e985]:
+                        - strong [ref=e986]: —
+                        - generic [ref=e987]: —
+                    - gridcell "—" [ref=e988]
+                    - gridcell [ref=e990]
+                    - gridcell "Unavailable" [ref=e991]
+                    - gridcell "Unknown" [ref=e993]
+                    - gridcell "Unassigned" [ref=e995]
+                    - gridcell "—" [ref=e997]
+                    - gridcell "—" [ref=e999]
+                    - gridcell [ref=e1001]
+                    - gridcell "—" [ref=e1002]
+                    - gridcell [ref=e1003]
+                  - row [ref=e1004]:
+                    - gridcell [ref=e1005]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e1006] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e1007]:
+                      - 'generic "Severity: Low" [ref=e1008]':
+                        - strong [ref=e1010]: Low
+                    - gridcell "— —" [ref=e1011]:
+                      - generic [ref=e1012]:
+                        - strong [ref=e1013]: —
+                        - generic [ref=e1014]: —
+                    - gridcell "—" [ref=e1015]
+                    - gridcell [ref=e1017]
+                    - gridcell "Unavailable" [ref=e1018]
+                    - gridcell "Unknown" [ref=e1020]
+                    - gridcell "Unassigned" [ref=e1022]
+                    - gridcell "—" [ref=e1024]
+                    - gridcell "—" [ref=e1026]
+                    - gridcell [ref=e1028]
+                    - gridcell "—" [ref=e1029]
+                    - gridcell [ref=e1030]
+                  - row [ref=e1031]:
+                    - gridcell [ref=e1032]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e1033] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e1034]:
+                      - 'generic "Severity: Low" [ref=e1035]':
+                        - strong [ref=e1037]: Low
+                    - gridcell "— —" [ref=e1038]:
+                      - generic [ref=e1039]:
+                        - strong [ref=e1040]: —
+                        - generic [ref=e1041]: —
+                    - gridcell "—" [ref=e1042]
+                    - gridcell [ref=e1044]
+                    - gridcell "Unavailable" [ref=e1045]
+                    - gridcell "Unknown" [ref=e1047]
+                    - gridcell "Unassigned" [ref=e1049]
+                    - gridcell "—" [ref=e1051]
+                    - gridcell "—" [ref=e1053]
+                    - gridcell [ref=e1055]
+                    - gridcell "—" [ref=e1056]
+                    - gridcell [ref=e1057]
+                  - row [ref=e1058]:
+                    - gridcell [ref=e1059]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e1060] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e1061]:
+                      - 'generic "Severity: Low" [ref=e1062]':
+                        - strong [ref=e1064]: Low
+                    - gridcell "— —" [ref=e1065]:
+                      - generic [ref=e1066]:
+                        - strong [ref=e1067]: —
+                        - generic [ref=e1068]: —
+                    - gridcell "—" [ref=e1069]
+                    - gridcell [ref=e1071]
+                    - gridcell "Unavailable" [ref=e1072]
+                    - gridcell "Unknown" [ref=e1074]
+                    - gridcell "Unassigned" [ref=e1076]
+                    - gridcell "—" [ref=e1078]
+                    - gridcell "—" [ref=e1080]
+                    - gridcell [ref=e1082]
+                    - gridcell "—" [ref=e1083]
+                    - gridcell [ref=e1084]
+                  - row [ref=e1085]:
+                    - gridcell [ref=e1086]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e1087] [cursor=pointer]
+                      - text: 
+                    - gridcell [ref=e1088]:
+                      - 'generic "Severity: Low" [ref=e1089]':
+                        - strong [ref=e1091]: Low
+                    - gridcell "— —" [ref=e1092]:
+                      - generic [ref=e1093]:
+                        - strong [ref=e1094]: —
+                        - generic [ref=e1095]: —
+                    - gridcell "—" [ref=e1096]
+                    - gridcell [ref=e1098]
+                    - gridcell "Unavailable" [ref=e1099]
+                    - gridcell "Unknown" [ref=e1101]
+                    - gridcell "Unassigned" [ref=e1103]
+                    - gridcell "—" [ref=e1105]
+                    - gridcell "—" [ref=e1107]
+                    - gridcell [ref=e1109]
+                    - gridcell "—" [ref=e1110]
+                    - gridcell [ref=e1111]
+              - text:     
+        - generic [ref=e1112]:
+          - generic [ref=e1113]:
+            - generic [ref=e1115]: Connected
+            - generic [ref=e1116]: •
+            - generic [ref=e1118]: Live
+          - generic [ref=e1119]: 0 eps
+  - generic:
+    - list "Notifications"

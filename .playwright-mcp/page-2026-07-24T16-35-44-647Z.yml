@@ -1,0 +1,63 @@
+- generic [ref=f10e3]:
+  - banner [ref=f10e4]:
+    - generic [ref=f10e5]: HiveArmor
+    - generic [ref=f10e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f10e13]'
+      - generic "Reconnecting..." [ref=f10e16]: 0 EPS
+      - button "Notifications" [ref=f10e18] [cursor=pointer]
+      - button "Help" [ref=f10e23] [cursor=pointer]
+      - button "User menu" [ref=f10e28] [cursor=pointer]:
+        - generic [ref=f10e29]: AA
+        - generic [ref=f10e30]: admin
+  - navigation [ref=f10e31]:
+    - generic [ref=f10e32]:
+      - generic [ref=f10e33]:
+        - generic [ref=f10e34]: COMMAND
+        - generic [ref=f10e35]:
+          - button "Analyst Queue" [ref=f10e36] [cursor=pointer]
+          - button "Alerts" [ref=f10e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f10e47] [cursor=pointer]
+          - button "Incidents" [ref=f10e54] [cursor=pointer]
+      - generic [ref=f10e61]:
+        - generic [ref=f10e62]: INVESTIGATE
+        - generic [ref=f10e63]:
+          - button "Search & Hunt" [ref=f10e64] [cursor=pointer]
+          - button "Investigations" [ref=f10e70] [cursor=pointer]
+          - button "Entities" [ref=f10e75] [cursor=pointer]
+      - generic [ref=f10e83]:
+        - generic [ref=f10e84]: DEFEND
+        - generic [ref=f10e85]:
+          - button "Detection Rules" [ref=f10e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f10e91] [cursor=pointer]
+      - generic [ref=f10e96]:
+        - generic [ref=f10e97]: POSTURE
+        - generic [ref=f10e98]:
+          - button "Assets" [ref=f10e99] [cursor=pointer]
+          - button "Identities" [ref=f10e105] [cursor=pointer]
+          - button "Active Directory" [ref=f10e113] [cursor=pointer]
+          - button "Exposure" [ref=f10e121] [cursor=pointer]
+          - button "Sensors" [ref=f10e128] [cursor=pointer]
+          - button "Compliance" [ref=f10e133] [cursor=pointer]
+      - generic [ref=f10e139]:
+        - generic [ref=f10e140]: DASHBOARDS
+        - button "Studio" [ref=f10e142] [cursor=pointer]
+      - generic [ref=f10e148]:
+        - generic [ref=f10e149]: REPORT
+        - button "Scheduled Reports" [ref=f10e151] [cursor=pointer]
+      - generic [ref=f10e157]:
+        - generic [ref=f10e158]: ADMINISTRATION
+        - generic [ref=f10e159]:
+          - button "Users" [ref=f10e160] [cursor=pointer]
+          - button "Integrations" [ref=f10e175] [cursor=pointer]
+          - button "Notifications" [ref=f10e180] [cursor=pointer]
+          - button "Audit Log" [ref=f10e186] [cursor=pointer]
+          - button "Settings" [ref=f10e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f10e199] [cursor=pointer]
+  - main [ref=f10e202]:
+    - generic [ref=f10e203]:
+      - heading "Correlated Findings" [level=1] [ref=f10e205]
+      - generic [ref=f10e206]: 0 findings
+      - generic [ref=f10e209]:
+        - paragraph [ref=f10e210]: Grid implementation placeholder — requires AG Grid Community integration
+        - paragraph [ref=f10e211]: "Datasource ready: configured. Click row to navigate to finding detail."
+        - button "Test Navigate to Finding Detail" [ref=f10e212] [cursor=pointer]

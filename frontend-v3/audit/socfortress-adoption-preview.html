@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HiveArmor — SOCFortress UX Adoption Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── HiveArmor Design Tokens ─────────────────────────────── */
+:root {
+  --ha-background: #070A0F;
+  --ha-surface-primary: #0D131C;
+  --ha-surface-raised: #131C28;
+  --ha-border: #253244;
+  --ha-primary: #32D6C5;
+  --ha-intelligence: #8B7CFF;
+  --ha-critical: #FF5D6C;
+  --ha-high: #FFAA45;
+  --ha-medium: #5AA7FF;
+  --ha-positive: #40D69A;
+  --ha-text-primary: #E8EDF4;
+  --ha-text-secondary: #97A6B8;
+  --ha-font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ha-font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --ha-radius-sm: 2px;
+  --ha-radius-base: 4px;
+  --ha-radius-md: 6px;
+  --ha-radius-lg: 8px;
+  --ha-shadow-overlay: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --ha-row-compact: 32px;
+  --ha-row-standard: 40px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--ha-font-ui);
+  background: var(--ha-background);
+  color: var(--ha-text-primary);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ── Layout Shell ─────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  height: 100vh;
+}
+.sidebar {
+  width: 56px;
+  background: var(--ha-surface-primary);
+  border-right: 1px solid var(--ha-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.sidebar-logo {
+  width: 32px;
+  height: 32px;
+  background: var(--ha-primary);
+  border-radius: 6px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 11px;
+  color: #070A0F;
+}
+.sidebar-item {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ha-radius-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ha-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-size: 11px;
+  font-weight: 500;
+}
+.sidebar-item:hover { background: var(--ha-surface-raised); color: var(--ha-text-primary); }
+.sidebar-item.active { background: rgba(50, 214, 197, 0.1); color: var(--ha-primary); }
+.sidebar-spacer { flex: 1; }
+
+/* Health indicator in sidebar */
+.sidebar-health {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ha-radius-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.health-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--ha-positive);
+}
+.health-dot.warning { background: var(--ha-high); }
+.health-dot.critical { background: var(--ha-critical); }
+
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Page Sections ────────────────────────────────────────── */
+.page-section {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--ha-border);
+}
+.page-section:last-child { border-bottom: none; }
+
+/* ── Section Navigation ───────────────────────────────────── */
+.section-nav {
+  display: flex;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--ha-surface-primary);
+  border-bottom: 1px solid var(--ha-border);
+  overflow-x: auto;
+}
+.section-nav-btn {
+  padding: 6px 16px;
+  border-radius: var(--ha-radius-base);
+  background: transparent;
+  border: 1px solid var(--ha-border);
+  color: var(--ha-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  font-family: var(--ha-font-ui);
+}
+.section-nav-btn:hover { border-color: var(--ha-primary); color: var(--ha-text-primary); }
+.section-nav-btn.active {
+  background: rgba(50, 214, 197, 0.08);
+  border-color: var(--ha-primary);
+  color: var(--ha-primary);
+}
+
+/* ── Queue Header ─────────────────────────────────────────── */
+.queue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px 12px;
+  background: var(--ha-surface-primary);
+  border-bottom: 1px solid var(--ha-border);
+}
+.queue-header-left { display: flex; align-items: center; gap: 12px; }
+.queue-header-right { display: flex; align-items: center; gap: 8px; }
+.page-title { font-size: 18px; font-weight: 600; }
+.open-badge {
+  background: rgba(255, 93, 108, 0.15);
+  color: var(--ha-critical);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-family: var(--ha-font-mono);
+}
+.time-range-selector {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--ha-text-secondary);
+  cursor: pointer;
+}
+.ha-btn-icon {
+  background: transparent;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  width: 32px; height: 32px;
+  color: var(--ha-text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ha-btn-icon:hover { border-color: var(--ha-primary); color: var(--ha-text-primary); }
+
+/* ── Status Facets (NEW — from SOCFortress principle) ─────── */
+.status-facets {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 24px;
+  background: var(--ha-surface-primary);
+  border-bottom: 1px solid var(--ha-border);
+  flex-wrap: wrap;
+}
+.facet-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--ha-radius-base);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ha-text-secondary);
+  font-size: 12px;
+  font-family: var(--ha-font-ui);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.facet-btn:hover { background: var(--ha-surface-raised); color: var(--ha-text-primary); }
+.facet-btn.active { border-color: var(--ha-primary); background: rgba(50,214,197,0.06); }
+.facet-dot { width: 6px; height: 6px; border-radius: 50%; }
+.facet-count { font-family: var(--ha-font-mono); font-weight: 600; font-size: 12px; }
+.facet-separator { width: 1px; height: 20px; background: var(--ha-border); margin: 0 8px; }
+.filter-chip {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--ha-text-secondary);
+}
+.filter-add-btn {
+  background: transparent;
+  border: 1px dashed var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  padding: 3px 8px;
+  font-size: 11px;
+  color: var(--ha-text-secondary);
+  cursor: pointer;
+  font-family: var(--ha-font-ui);
+}
+.filter-add-btn:hover { border-color: var(--ha-primary); color: var(--ha-primary); }
+.density-selector { display: flex; gap: 2px; border: 1px solid var(--ha-border); border-radius: var(--ha-radius-base); overflow: hidden; }
+.density-btn {
+  width: 28px; height: 24px;
+  border: none; background: transparent;
+  color: var(--ha-text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+}
+.density-btn.active { background: var(--ha-surface-raised); color: var(--ha-primary); }
+
+/* ── Grid ─────────────────────────────────────────────────── */
+.grid-container { flex: 1; overflow: auto; background: var(--ha-background); }
+.siem-grid { width: 100%; border-collapse: collapse; font-size: 12px; }
+.siem-grid thead { position: sticky; top: 0; z-index: 10; }
+.siem-grid th {
+  background: var(--ha-surface-raised);
+  border-bottom: 1px solid var(--ha-border);
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 500;
+  color: var(--ha-text-secondary);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.siem-grid td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ha-border);
+  color: var(--ha-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+}
+.grid-row { cursor: pointer; transition: background 0.1s; }
+.grid-row:hover { background: var(--ha-surface-raised); }
+.grid-row.selected-row { background: rgba(50, 214, 197, 0.05); border-left: 2px solid var(--ha-primary); }
+.col-checkbox { width: 36px; }
+.col-severity { width: 40px; }
+.col-ai { width: 36px; text-align: center; }
+.col-status { width: 100px; }
+.col-time { width: 70px; }
+.cell-title { font-weight: 500; }
+.mono-text { font-family: var(--ha-font-mono); font-size: 11px; color: var(--ha-text-secondary); }
+.severity-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: var(--ha-radius-sm);
+  font-size: 10px; font-weight: 700; color: #070A0F;
+}
+.severity-pill.critical { background: var(--ha-critical); }
+.severity-pill.high { background: var(--ha-high); }
+.severity-pill.medium { background: var(--ha-medium); }
+.severity-pill.low { background: var(--ha-positive); }
+.entity-badge {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  padding: 1px 6px;
+  font-family: var(--ha-font-mono);
+  font-size: 11px;
+}
+.status-label { font-size: 11px; font-weight: 500; padding: 2px 6px; border-radius: var(--ha-radius-sm); }
+.status-open { color: var(--ha-critical); background: rgba(255,93,108,0.1); }
+.status-progress { color: var(--ha-high); background: rgba(255,170,69,0.1); }
+.status-resolved { color: var(--ha-positive); background: rgba(64,214,154,0.1); }
+.ai-indicator { font-size: 14px; color: var(--ha-text-secondary); }
+.ai-indicator.pulsing { color: var(--ha-intelligence); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ── Bulk Action Bar ──────────────────────────────────────── */
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: var(--ha-surface-raised);
+  border-top: 1px solid var(--ha-border);
+}
+.bulk-count { font-size: 12px; color: var(--ha-text-secondary); margin-right: 8px; }
+.ha-btn-sm {
+  padding: 5px 12px;
+  border-radius: var(--ha-radius-base);
+  border: 1px solid var(--ha-border);
+  background: transparent;
+  color: var(--ha-text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--ha-font-ui);
+  transition: all 0.15s;
+}
+.ha-btn-sm:hover { border-color: var(--ha-primary); }
+.ha-btn-sm.ha-btn-primary {
+  background: var(--ha-primary);
+  color: #070A0F;
+  border-color: var(--ha-primary);
+  font-weight: 500;
+}
+.ha-btn-sm.ha-btn-primary:hover { opacity: 0.9; }
+
+/* ── Demo Sections ────────────────────────────────────────── */
+.demo-section {
+  padding: 32px 24px;
+  border-bottom: 1px solid var(--ha-border);
+}
+.demo-label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  padding: 8px 12px;
+  background: var(--ha-surface-raised);
+  border-left: 3px solid var(--ha-primary);
+  border-radius: 0 var(--ha-radius-base) var(--ha-radius-base) 0;
+}
+
+/* ── Drawer Demo ──────────────────────────────────────────── */
+.drawer-demo {
+  display: flex;
+  height: 560px;
+  border-radius: var(--ha-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--ha-border);
+}
+.drawer-backdrop {
+  flex: 1;
+  background: var(--ha-background);
+  opacity: 0.5;
+}
+.drawer-panel {
+  width: 520px;
+  background: var(--ha-surface-primary);
+  border-left: 1px solid var(--ha-border);
+  display: flex;
+  flex-direction: column;
+}
+.drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--ha-border);
+}
+.drawer-title-row { display: flex; align-items: center; }
+.drawer-title { font-size: 14px; font-weight: 600; }
+.drawer-close {
+  background: transparent; border: none;
+  color: var(--ha-text-secondary); cursor: pointer;
+  font-size: 16px; padding: 4px;
+}
+.drawer-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--ha-border);
+  padding: 0 20px;
+}
+.drawer-tab {
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--ha-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--ha-font-ui);
+}
+.drawer-tab:hover { color: var(--ha-text-primary); }
+.drawer-tab.active-tab {
+  color: var(--ha-primary);
+  border-bottom-color: var(--ha-primary);
+}
+.ai-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--ha-intelligence);
+  animation: pulse 2s infinite;
+}
+.drawer-content { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.drawer-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--ha-border);
+}
+
+/* ── AI Report Card ───────────────────────────────────────── */
+.ai-report-card {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-md);
+  overflow: hidden;
+}
+.ai-report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ha-border);
+}
+.ai-badge {
+  background: rgba(139, 124, 255, 0.12);
+  color: var(--ha-intelligence);
+  padding: 2px 8px;
+  border-radius: var(--ha-radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+}
+.ai-report-body { padding: 16px; }
+.ai-summary { font-size: 13px; line-height: 1.6; margin-bottom: 16px; }
+.ai-section { margin-bottom: 14px; }
+.ai-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--ha-text-secondary);
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+}
+.mitre-tags { display: flex; gap: 6px; }
+.mitre-tag {
+  background: rgba(90, 167, 255, 0.1);
+  color: var(--ha-medium);
+  padding: 2px 8px;
+  border-radius: var(--ha-radius-sm);
+  font-family: var(--ha-font-mono);
+  font-size: 11px;
+}
+.ai-actions {
+  list-style: none;
+  padding-left: 0;
+  font-size: 12px;
+}
+.ai-actions li {
+  padding: 4px 0;
+  padding-left: 16px;
+  position: relative;
+  color: var(--ha-text-primary);
+}
+.ai-actions li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--ha-primary);
+}
+.ai-confidence {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ha-text-secondary);
+  margin-top: 12px;
+}
+.confidence-bar {
+  width: 80px; height: 4px;
+  background: var(--ha-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.confidence-fill {
+  height: 100%;
+  background: var(--ha-intelligence);
+  border-radius: 2px;
+}
+
+/* ── Incident Workbench ───────────────────────────────────── */
+.incident-demo {
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-lg);
+  overflow: hidden;
+  background: var(--ha-surface-primary);
+}
+.incident-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-raised);
+}
+.incident-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.incident-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.incident-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ha-text-secondary);
+}
+.sla-indicator {
+  color: var(--ha-high);
+  font-weight: 500;
+}
+.incident-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--ha-border);
+}
+.incident-tab {
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: var(--ha-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  font-family: var(--ha-font-ui);
+}
+.incident-tab:hover { color: var(--ha-text-primary); }
+.incident-tab.active-tab { color: var(--ha-primary); border-bottom-color: var(--ha-primary); }
+.tab-badge {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-family: var(--ha-font-mono);
+  margin-left: 4px;
+}
+.incident-content {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  min-height: 350px;
+}
+
+/* Tasks panel */
+.tasks-panel {
+  padding: 20px 24px;
+  border-right: 1px solid var(--ha-border);
+}
+.panel-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.tasks-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.task-list { display: flex; flex-direction: column; gap: 8px; }
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--ha-radius-base);
+  font-size: 12px;
+}
+.task-item:hover { background: var(--ha-surface-raised); }
+.task-item.task-done { opacity: 0.6; }
+.task-item.task-done .task-text { text-decoration: line-through; }
+.task-item.task-active { background: rgba(50,214,197,0.05); border-left: 2px solid var(--ha-primary); }
+.task-check { color: var(--ha-text-secondary); font-size: 14px; width: 18px; text-align: center; }
+.task-check.task-current { color: var(--ha-primary); }
+.task-item.task-done .task-check { color: var(--ha-positive); }
+.task-text { flex: 1; }
+.task-assignee { color: var(--ha-text-secondary); font-size: 11px; }
+.tasks-progress { margin-top: 16px; }
+.progress-bar { height: 4px; background: var(--ha-border); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--ha-primary); border-radius: 2px; transition: width 0.3s; }
+
+/* Activity feed */
+.activity-panel { padding: 20px 16px; }
+.activity-feed { display: flex; flex-direction: column; gap: 16px; margin-top: 12px; }
+.activity-item { display: flex; gap: 10px; align-items: flex-start; }
+.activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.activity-body { font-size: 12px; color: var(--ha-text-primary); line-height: 1.5; }
+.activity-actor { font-weight: 600; }
+.activity-time { font-size: 11px; color: var(--ha-text-secondary); margin-top: 2px; font-family: var(--ha-font-mono); }
+
+/* ── Search Demo ──────────────────────────────────────────── */
+.search-demo {
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-lg);
+  overflow: hidden;
+  background: var(--ha-surface-primary);
+}
+.search-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--ha-surface-raised);
+  border-bottom: 1px solid var(--ha-border);
+}
+.search-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  overflow: hidden;
+}
+.search-prefix {
+  padding: 6px 10px;
+  background: var(--ha-background);
+  color: var(--ha-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  border-right: 1px solid var(--ha-border);
+}
+.search-input {
+  flex: 1;
+  background: var(--ha-surface-primary);
+  border: none;
+  padding: 6px 12px;
+  color: var(--ha-text-primary);
+  font-family: var(--ha-font-mono);
+  font-size: 12px;
+  outline: none;
+}
+.search-split {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  min-height: 280px;
+}
+.search-results {
+  border-right: 1px solid var(--ha-border);
+  padding: 0;
+}
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--ha-border);
+  font-size: 12px;
+  cursor: pointer;
+}
+.result-row:hover { background: var(--ha-surface-raised); }
+.result-row.result-selected { background: rgba(50,214,197,0.05); border-left: 2px solid var(--ha-primary); }
+
+/* Field detail with filter actions (NEW) */
+.field-detail-panel { padding: 16px 20px; }
+.field-detail-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--ha-text-secondary);
+  margin-bottom: 12px;
+  letter-spacing: 0.03em;
+}
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--ha-border);
+}
+.field-name {
+  font-family: var(--ha-font-mono);
+  font-size: 11px;
+  color: var(--ha-text-secondary);
+  width: 120px;
+  flex-shrink: 0;
+}
+.field-value {
+  font-family: var(--ha-font-mono);
+  font-size: 11px;
+  color: var(--ha-text-primary);
+  flex: 1;
+}
+.field-actions { display: flex; gap: 4px; opacity: 0.6; transition: opacity 0.15s; }
+.field-row:hover .field-actions { opacity: 1; }
+.field-action-btn {
+  width: 20px; height: 20px;
+  border-radius: var(--ha-radius-sm);
+  border: 1px solid var(--ha-border);
+  background: transparent;
+  color: var(--ha-text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
+.field-action-btn.filter-add:hover { border-color: var(--ha-primary); color: var(--ha-primary); background: rgba(50,214,197,0.08); }
+.field-action-btn.filter-exclude:hover { border-color: var(--ha-critical); color: var(--ha-critical); background: rgba(255,93,108,0.08); }
+
+/* ── Detection Demo ───────────────────────────────────────── */
+.detection-demo {
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-lg);
+  overflow: hidden;
+  background: var(--ha-surface-primary);
+}
+.detection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-raised);
+}
+.detection-stats {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--ha-border);
+}
+.stat-card {
+  flex: 1;
+  padding: 14px 20px;
+  text-align: center;
+  border-right: 1px solid var(--ha-border);
+}
+.stat-card:last-child { border-right: none; }
+.stat-value { font-size: 22px; font-weight: 700; font-family: var(--ha-font-mono); font-variant-numeric: tabular-nums; }
+.stat-label { font-size: 11px; color: var(--ha-text-secondary); margin-top: 2px; }
+.detection-tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--ha-border);
+}
+.gaps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 20px 24px;
+}
+.gap-card {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  padding: 14px 16px;
+}
+.gap-technique { font-family: var(--ha-font-mono); font-size: 12px; color: var(--ha-medium); font-weight: 600; }
+.gap-name { font-size: 13px; font-weight: 500; margin: 4px 0; }
+.gap-tactic { font-size: 11px; color: var(--ha-text-secondary); margin-bottom: 8px; }
+
+/* ── Health Panel Demo ────────────────────────────────────── */
+.health-demo {
+  max-width: 280px;
+}
+.health-sidebar {
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-lg);
+  padding: 16px;
+}
+.health-section { margin-bottom: 16px; }
+.health-section:last-child { margin-bottom: 0; }
+.health-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--ha-text-secondary);
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.health-issue-count {
+  color: var(--ha-high);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.health-row { display: flex; align-items: center; gap: 8px; }
+.health-version { font-family: var(--ha-font-mono); font-size: 12px; }
+.health-env {
+  background: rgba(50,214,197,0.1);
+  color: var(--ha-primary);
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: var(--ha-radius-sm);
+}
+.health-indicators { display: flex; flex-direction: column; gap: 6px; }
+.indicator-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.indicator-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.indicator-dot.ok { background: var(--ha-positive); }
+.indicator-dot.warning { background: var(--ha-high); }
+.indicator-dot.critical { background: var(--ha-critical); }
+.indicator-name { flex: 1; }
+.indicator-detail { color: var(--ha-text-secondary); font-family: var(--ha-font-mono); font-size: 10px; }
+
+/* ── Legend ────────────────────────────────────────────────── */
+.legend-grid { display: flex; flex-direction: column; gap: 8px; }
+.legend-item { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.legend-badge {
+  padding: 2px 8px;
+  border-radius: var(--ha-radius-sm);
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 60px;
+  text-align: center;
+}
+.legend-badge.new { background: rgba(50,214,197,0.15); color: var(--ha-primary); }
+.legend-badge.existing { background: rgba(151,166,184,0.15); color: var(--ha-text-secondary); }
+</style>
+</head>
+<body>
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 1: Enhanced Analyst Queue (Primary Pilot)
+     Shows: Status facets, AI indicator, density, drawer
+     ═══════════════════════════════════════════════════════════ -->
+
+<div class="section-nav">
+  <button class="section-nav-btn active">1. Analyst Queue (Enhanced)</button>
+  <button class="section-nav-btn" onclick="document.getElementById('s2').scrollIntoView({behavior:'smooth'})">2. Alert Drawer + AI Tab</button>
+  <button class="section-nav-btn" onclick="document.getElementById('s3').scrollIntoView({behavior:'smooth'})">3. Incident Detail Workbench</button>
+  <button class="section-nav-btn" onclick="document.getElementById('s4').scrollIntoView({behavior:'smooth'})">4. Search & Hunt (Filter-from-Detail)</button>
+  <button class="section-nav-btn" onclick="document.getElementById('s5').scrollIntoView({behavior:'smooth'})">5. Detection Catalog Shell</button>
+  <button class="section-nav-btn" onclick="document.getElementById('s6').scrollIntoView({behavior:'smooth'})">6. Sidebar Health Panel</button>
+</div>
+
+<div id="s1" class="app-shell" style="height: auto; min-height: 700px;">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">HA</div>
+    <div class="sidebar-item active" title="Queue">Q</div>
+    <div class="sidebar-item" title="Alerts">A</div>
+    <div class="sidebar-item" title="Incidents">I</div>
+    <div class="sidebar-item" title="Search">S</div>
+    <div class="sidebar-item" title="Detect">D</div>
+    <div class="sidebar-item" title="Response">R</div>
+    <div class="sidebar-item" title="Posture">P</div>
+    <div class="sidebar-item" title="Dashboards">📊</div>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-health" title="Platform Health: All OK">
+      <div class="health-dot"></div>
+    </div>
+    <div class="sidebar-item" title="Admin">⚙</div>
+  </div>
+
+  <!-- Main Content: Analyst Queue -->
+  <div class="main-area">
+    <!-- Page Header with Status Facets (NEW - inspired by SOCFortress) -->
+    <div class="queue-header">
+      <div class="queue-header-left">
+        <h1 class="page-title">Analyst Queue</h1>
+        <span class="open-badge">47</span>
+      </div>
+      <div class="queue-header-right">
+        <div class="time-range-selector">Last 24h ▾</div>
+        <button class="ha-btn-icon" title="Refresh">↻</button>
+        <button class="ha-btn-icon" title="Saved Views">☰</button>
+      </div>
+    </div>
+
+    <!-- NEW: Status Facet Bar (adopted from SOCFortress pattern) -->
+    <div class="status-facets">
+      <button class="facet-btn facet-all active">
+        <span class="facet-label">All</span>
+        <span class="facet-count">142</span>
+      </button>
+      <button class="facet-btn facet-open">
+        <span class="facet-dot" style="background: var(--ha-critical)"></span>
+        <span class="facet-label">Open</span>
+        <span class="facet-count" style="color: var(--ha-critical)">47</span>
+      </button>
+      <button class="facet-btn facet-progress">
+        <span class="facet-dot" style="background: var(--ha-high)"></span>
+        <span class="facet-label">In Progress</span>
+        <span class="facet-count" style="color: var(--ha-high)">23</span>
+      </button>
+      <button class="facet-btn facet-resolved">
+        <span class="facet-dot" style="background: var(--ha-positive)"></span>
+        <span class="facet-label">Resolved</span>
+        <span class="facet-count" style="color: var(--ha-positive)">72</span>
+      </button>
+      <div class="facet-separator"></div>
+      <!-- Filters -->
+      <div class="filter-chip">Severity: Critical, High</div>
+      <div class="filter-chip">Assignee: Me</div>
+      <button class="filter-add-btn">+ Filter</button>
+      <div style="flex:1"></div>
+      <!-- Density Selector -->
+      <div class="density-selector" title="Row density">
+        <button class="density-btn active">≡</button>
+        <button class="density-btn">☰</button>
+        <button class="density-btn">▤</button>
+      </div>
+    </div>
+
+    <!-- Data Grid -->
+    <div class="grid-container">
+      <table class="siem-grid">
+        <thead>
+          <tr>
+            <th class="col-checkbox"><input type="checkbox"></th>
+            <th class="col-severity">Sev</th>
+            <th class="col-title">Title</th>
+            <th class="col-source">Source</th>
+            <th class="col-entity">Entity</th>
+            <th class="col-status">Status</th>
+            <th class="col-assignee">Assignee</th>
+            <th class="col-time">Time</th>
+            <th class="col-ai">AI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="grid-row selected-row">
+            <td><input type="checkbox" checked></td>
+            <td><span class="severity-pill critical">C</span></td>
+            <td class="cell-title">Lateral movement detected: Pass-the-Hash via SMB</td>
+            <td><span class="mono-text">win-dc01</span></td>
+            <td><span class="entity-badge">192.168.1.40</span></td>
+            <td><span class="status-label status-open">Open</span></td>
+            <td>—</td>
+            <td class="mono-text">2m ago</td>
+            <td><span class="ai-indicator pulsing" title="AI analysis available">●</span></td>
+          </tr>
+          <tr class="grid-row">
+            <td><input type="checkbox"></td>
+            <td><span class="severity-pill high">H</span></td>
+            <td class="cell-title">Suspicious PowerShell encoded command execution</td>
+            <td><span class="mono-text">ws-fin-023</span></td>
+            <td><span class="entity-badge">jsmith</span></td>
+            <td><span class="status-label status-open">Open</span></td>
+            <td>Analyst-2</td>
+            <td class="mono-text">8m ago</td>
+            <td><span class="ai-indicator" title="No AI report">○</span></td>
+          </tr>
+          <tr class="grid-row">
+            <td><input type="checkbox"></td>
+            <td><span class="severity-pill high">H</span></td>
+            <td class="cell-title">Brute force authentication: 47 failures in 5m</td>
+            <td><span class="mono-text">fw-edge-01</span></td>
+            <td><span class="entity-badge">10.0.0.55</span></td>
+            <td><span class="status-label status-progress">In Progress</span></td>
+            <td>Analyst-1</td>
+            <td class="mono-text">14m ago</td>
+            <td><span class="ai-indicator pulsing" title="AI analysis available">●</span></td>
+          </tr>
+          <tr class="grid-row">
+            <td><input type="checkbox"></td>
+            <td><span class="severity-pill medium">M</span></td>
+            <td class="cell-title">Anomalous DNS query volume from single host</td>
+            <td><span class="mono-text">dns-int-02</span></td>
+            <td><span class="entity-badge">ws-dev-107</span></td>
+            <td><span class="status-label status-open">Open</span></td>
+            <td>—</td>
+            <td class="mono-text">22m ago</td>
+            <td><span class="ai-indicator">○</span></td>
+          </tr>
+          <tr class="grid-row">
+            <td><input type="checkbox"></td>
+            <td><span class="severity-pill medium">M</span></td>
+            <td class="cell-title">New scheduled task created on production server</td>
+            <td><span class="mono-text">srv-app-05</span></td>
+            <td><span class="entity-badge">SYSTEM</span></td>
+            <td><span class="status-label status-open">Open</span></td>
+            <td>—</td>
+            <td class="mono-text">31m ago</td>
+            <td><span class="ai-indicator">○</span></td>
+          </tr>
+          <tr class="grid-row">
+            <td><input type="checkbox"></td>
+            <td><span class="severity-pill low">L</span></td>
+            <td class="cell-title">User login from new geographic location</td>
+            <td><span class="mono-text">azure-ad</span></td>
+            <td><span class="entity-badge">mgarcia</span></td>
+            <td><span class="status-label status-resolved">Resolved</span></td>
+            <td>Analyst-3</td>
+            <td class="mono-text">45m ago</td>
+            <td><span class="ai-indicator">○</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Bulk Action Bar (appears on selection) -->
+    <div class="bulk-bar">
+      <span class="bulk-count">1 selected</span>
+      <button class="ha-btn-sm">Assign to me</button>
+      <button class="ha-btn-sm">Mark Reviewed</button>
+      <button class="ha-btn-sm">False Positive</button>
+      <button class="ha-btn-sm ha-btn-primary">Create Incident</button>
+      <button class="ha-btn-sm ha-btn-primary">Merge to Incident ▾</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 2: Enhanced Alert Detail Drawer with AI Tab
+     ═══════════════════════════════════════════════════════════ -->
+<div id="s2" class="demo-section">
+  <div class="demo-label">2. Alert Context Drawer — Enhanced with AI Tab (adopted from SOCFortress tabbed detail + AI indicator)</div>
+  <div class="drawer-demo">
+    <div class="drawer-backdrop"></div>
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <div class="drawer-title-row">
+          <span class="severity-pill critical" style="margin-right:8px">C</span>
+          <span class="drawer-title">Lateral movement detected: Pass-the-Hash via SMB</span>
+        </div>
+        <button class="drawer-close">✕</button>
+      </div>
+      <!-- Drawer tabs (NEW - adopted from SOCFortress AlertDetails pattern) -->
+      <div class="drawer-tabs">
+        <button class="drawer-tab">Overview</button>
+        <button class="drawer-tab active-tab">
+          <span class="ai-dot"></span>
+          AI Analysis
+        </button>
+        <button class="drawer-tab">Timeline</button>
+        <button class="drawer-tab">Entities</button>
+        <button class="drawer-tab">IoCs</button>
+        <button class="drawer-tab">Comments</button>
+      </div>
+      <!-- AI Analysis Tab Content -->
+      <div class="drawer-content">
+        <div class="ai-report-card">
+          <div class="ai-report-header">
+            <span class="ai-badge">Hive Intelligence</span>
+            <span class="mono-text">Generated 2m ago</span>
+          </div>
+          <div class="ai-report-body">
+            <p class="ai-summary"><strong>Assessment:</strong> This alert indicates a Pass-the-Hash attack using NTLM authentication via SMB. The source host 192.168.1.40 successfully authenticated to win-dc01 using harvested credentials.</p>
+            <div class="ai-section">
+              <div class="ai-section-title">MITRE ATT&CK</div>
+              <div class="mitre-tags">
+                <span class="mitre-tag">T1550.002</span>
+                <span class="mitre-tag">T1021.002</span>
+              </div>
+            </div>
+            <div class="ai-section">
+              <div class="ai-section-title">Recommended Actions</div>
+              <ul class="ai-actions">
+                <li>Isolate host 192.168.1.40 from network</li>
+                <li>Reset NTLM credentials for affected accounts</li>
+                <li>Review lateral movement from source in last 48h</li>
+              </ul>
+            </div>
+            <div class="ai-confidence">
+              <span>Confidence:</span>
+              <div class="confidence-bar"><div class="confidence-fill" style="width:87%"></div></div>
+              <span class="mono-text">87%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Drawer Actions -->
+      <div class="drawer-actions">
+        <button class="ha-btn-sm">Assign</button>
+        <button class="ha-btn-sm">False Positive</button>
+        <button class="ha-btn-sm ha-btn-primary">Create Incident</button>
+        <button class="ha-btn-sm ha-btn-primary">Merge to Incident ▾</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 3: Incident Detail Workbench (Restructured)
+     ═══════════════════════════════════════════════════════════ -->
+<div id="s3" class="demo-section">
+  <div class="demo-label">3. Incident Detail — Tabbed Workbench (adopted from SOCFortress CaseDetails progressive disclosure)</div>
+  <div class="incident-demo">
+    <!-- Incident Header -->
+    <div class="incident-header">
+      <div class="incident-header-top">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span class="severity-pill critical">C</span>
+          <div>
+            <h2 class="incident-title">INC-2026-0847: Active Lateral Movement Campaign</h2>
+            <div class="incident-meta">
+              <span class="status-label status-progress">In Progress</span>
+              <span class="mono-text">Created 34m ago</span>
+              <span class="mono-text">•</span>
+              <span>Assigned: Analyst-1, Analyst-2</span>
+              <span class="mono-text">•</span>
+              <span class="sla-indicator">SLA: 2h 26m remaining</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="ha-btn-sm">Escalate</button>
+          <button class="ha-btn-sm ha-btn-primary">Run Playbook ▾</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Incident Tabs (NEW structure - adopted from SOCFortress CaseDetails) -->
+    <div class="incident-tabs">
+      <button class="incident-tab active-tab">Summary</button>
+      <button class="incident-tab">Evidence <span class="tab-badge">5</span></button>
+      <button class="incident-tab">Timeline</button>
+      <button class="incident-tab">Tasks <span class="tab-badge">3/7</span></button>
+      <button class="incident-tab">Response</button>
+      <button class="incident-tab">Audit</button>
+    </div>
+
+    <!-- Tasks Tab Preview (NEW - adopted from SOCFortress CaseTasksList) -->
+    <div class="incident-content">
+      <div class="tasks-panel">
+        <div class="tasks-header">
+          <h3 class="panel-title">Investigation Tasks</h3>
+          <span class="mono-text">3 of 7 complete</span>
+        </div>
+        <div class="task-list">
+          <div class="task-item task-done">
+            <span class="task-check">✓</span>
+            <span class="task-text">Confirm initial compromise vector</span>
+            <span class="task-assignee">Analyst-1</span>
+          </div>
+          <div class="task-item task-done">
+            <span class="task-check">✓</span>
+            <span class="task-text">Identify all affected hosts</span>
+            <span class="task-assignee">Analyst-2</span>
+          </div>
+          <div class="task-item task-done">
+            <span class="task-check">✓</span>
+            <span class="task-text">Collect memory artifacts from source host</span>
+            <span class="task-assignee">Analyst-1</span>
+          </div>
+          <div class="task-item task-active">
+            <span class="task-check task-current">◉</span>
+            <span class="task-text">Determine scope of credential compromise</span>
+            <span class="task-assignee">Analyst-2</span>
+          </div>
+          <div class="task-item">
+            <span class="task-check">○</span>
+            <span class="task-text">Network containment of affected segment</span>
+            <span class="task-assignee">—</span>
+          </div>
+          <div class="task-item">
+            <span class="task-check">○</span>
+            <span class="task-text">Reset compromised credentials</span>
+            <span class="task-assignee">—</span>
+          </div>
+          <div class="task-item">
+            <span class="task-check">○</span>
+            <span class="task-text">Post-incident review and detection gap analysis</span>
+            <span class="task-assignee">—</span>
+          </div>
+        </div>
+        <div class="tasks-progress">
+          <div class="progress-bar"><div class="progress-fill" style="width:43%"></div></div>
+        </div>
+      </div>
+
+      <!-- Activity Feed (NEW - adopted from SOCFortress CaseTimelineFeed) -->
+      <div class="activity-panel">
+        <h3 class="panel-title">Activity Feed</h3>
+        <div class="activity-feed">
+          <div class="activity-item">
+            <div class="activity-dot" style="background: var(--ha-primary)"></div>
+            <div class="activity-body">
+              <span class="activity-actor">Analyst-1</span> completed task "Collect memory artifacts"
+              <div class="activity-time">4 min ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background: var(--ha-intelligence)"></div>
+            <div class="activity-body">
+              <span class="activity-actor">Hive Intelligence</span> updated threat assessment — confidence raised to 87%
+              <div class="activity-time">8 min ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background: var(--ha-high)"></div>
+            <div class="activity-body">
+              <span class="activity-actor">System</span> linked alert "Suspicious SMB session from 192.168.1.40"
+              <div class="activity-time">12 min ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-dot" style="background: var(--ha-primary)"></div>
+            <div class="activity-body">
+              <span class="activity-actor">Analyst-2</span> assigned to incident
+              <div class="activity-time">28 min ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 4: Search & Hunt — Filter-from-Detail
+     ═══════════════════════════════════════════════════════════ -->
+<div id="s4" class="demo-section">
+  <div class="demo-label">4. Search & Hunt — Filter-from-Detail Pattern (adopted from SOCFortress EventDetail addFilter/excludeFilter)</div>
+  <div class="search-demo">
+    <!-- Search toolbar -->
+    <div class="search-toolbar">
+      <div class="search-bar">
+        <span class="search-prefix">KQL</span>
+        <input type="text" class="search-input" value='source.ip:"192.168.1.40" AND event.action:"authentication_success"' readonly>
+        <button class="ha-btn-sm ha-btn-primary" style="border-radius: 0 4px 4px 0; margin: -1px;">Search</button>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div class="time-range-selector">Last 7d ▾</div>
+        <button class="ha-btn-icon" title="Configure columns">⊞</button>
+      </div>
+    </div>
+
+    <!-- Event detail with filter actions (NEW pattern) -->
+    <div class="search-split">
+      <div class="search-results">
+        <div class="result-row result-selected">
+          <span class="mono-text" style="color:var(--ha-text-secondary)">Jul 31 14:23:07</span>
+          <span>Authentication success via NTLM</span>
+          <span class="entity-badge">win-dc01</span>
+        </div>
+        <div class="result-row">
+          <span class="mono-text" style="color:var(--ha-text-secondary)">Jul 31 14:22:55</span>
+          <span>SMB session established</span>
+          <span class="entity-badge">srv-file-02</span>
+        </div>
+        <div class="result-row">
+          <span class="mono-text" style="color:var(--ha-text-secondary)">Jul 31 14:22:41</span>
+          <span>Network connection to 445/tcp</span>
+          <span class="entity-badge">192.168.1.40</span>
+        </div>
+      </div>
+
+      <!-- Field Detail with filter actions (NEW - from SOCFortress) -->
+      <div class="field-detail-panel">
+        <div class="field-detail-title">Event Fields</div>
+        <div class="field-row">
+          <span class="field-name">source.ip</span>
+          <span class="field-value">192.168.1.40</span>
+          <div class="field-actions">
+            <button class="field-action-btn filter-add" title="Add to filter">+</button>
+            <button class="field-action-btn filter-exclude" title="Exclude from results">−</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <span class="field-name">destination.ip</span>
+          <span class="field-value">10.0.1.5</span>
+          <div class="field-actions">
+            <button class="field-action-btn filter-add" title="Add to filter">+</button>
+            <button class="field-action-btn filter-exclude" title="Exclude from results">−</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <span class="field-name">user.name</span>
+          <span class="field-value">admin_svc</span>
+          <div class="field-actions">
+            <button class="field-action-btn filter-add" title="Add to filter">+</button>
+            <button class="field-action-btn filter-exclude" title="Exclude from results">−</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <span class="field-name">event.action</span>
+          <span class="field-value">authentication_success</span>
+          <div class="field-actions">
+            <button class="field-action-btn filter-add" title="Add to filter">+</button>
+            <button class="field-action-btn filter-exclude" title="Exclude from results">−</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <span class="field-name">winlog.logon_type</span>
+          <span class="field-value">3 (Network)</span>
+          <div class="field-actions">
+            <button class="field-action-btn filter-add" title="Add to filter">+</button>
+            <button class="field-action-btn filter-exclude" title="Exclude from results">−</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <span class="field-name">process.name</span>
+          <span class="field-value">lsass.exe</span>
+          <div class="field-actions">
+            <button class="field-action-btn filter-add" title="Add to filter">+</button>
+            <button class="field-action-btn filter-exclude" title="Exclude from results">−</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 5: Detection Catalog Shell
+     ═══════════════════════════════════════════════════════════ -->
+<div id="s5" class="demo-section">
+  <div class="demo-label">5. Detection Catalog — Multi-View Shell (adopted from SOCFortress DetectionCatalogShell with stats + gaps)</div>
+  <div class="detection-demo">
+    <div class="detection-header">
+      <h2 style="font-size:18px; font-weight:600;">Detection Rules</h2>
+      <div style="display:flex; gap:8px;">
+        <button class="ha-btn-sm">Import Rules</button>
+        <button class="ha-btn-sm ha-btn-primary">+ New Rule</button>
+      </div>
+    </div>
+
+    <!-- Stats bar (NEW - from SOCFortress DetectionCatalogStats) -->
+    <div class="detection-stats">
+      <div class="stat-card">
+        <div class="stat-value">247</div>
+        <div class="stat-label">Active Rules</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: var(--ha-positive)">89%</div>
+        <div class="stat-label">MITRE Coverage</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: var(--ha-high)">14</div>
+        <div class="stat-label">Coverage Gaps</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">12</div>
+        <div class="stat-label">Firing Today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: var(--ha-critical)">3</div>
+        <div class="stat-label">Errors</div>
+      </div>
+    </div>
+
+    <!-- Tab views (NEW - from SOCFortress multi-view catalog) -->
+    <div class="detection-tabs">
+      <button class="drawer-tab active-tab">Active Rules</button>
+      <button class="drawer-tab">Coverage Gaps</button>
+      <button class="drawer-tab">Compliance</button>
+      <button class="drawer-tab">Performance</button>
+    </div>
+
+    <!-- Coverage gaps preview -->
+    <div class="gaps-grid">
+      <div class="gap-card">
+        <div class="gap-technique">T1059.001</div>
+        <div class="gap-name">PowerShell</div>
+        <div class="gap-tactic">Execution</div>
+        <div class="gap-status">
+          <span class="status-label status-open">No Rule</span>
+        </div>
+      </div>
+      <div class="gap-card">
+        <div class="gap-technique">T1053.005</div>
+        <div class="gap-name">Scheduled Task</div>
+        <div class="gap-tactic">Persistence</div>
+        <div class="gap-status">
+          <span class="status-label status-progress">Draft</span>
+        </div>
+      </div>
+      <div class="gap-card">
+        <div class="gap-technique">T1078.002</div>
+        <div class="gap-name">Domain Accounts</div>
+        <div class="gap-tactic">Privilege Escalation</div>
+        <div class="gap-status">
+          <span class="status-label status-open">No Rule</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECTION 6: Sidebar Health Panel
+     ═══════════════════════════════════════════════════════════ -->
+<div id="s6" class="demo-section">
+  <div class="demo-label">6. Sidebar Health Context Panel (adopted from SOCFortress SidebarContextPanel — health indicators, version, issue count)</div>
+  <div class="health-demo">
+    <div class="health-sidebar">
+      <div class="health-section">
+        <div class="health-section-title">Platform</div>
+        <div class="health-row">
+          <span class="health-version">HiveArmor v3.2.1</span>
+          <span class="health-env">PRODUCTION</span>
+        </div>
+      </div>
+
+      <div class="health-section">
+        <div class="health-section-title">Health <span class="health-issue-count">1 issue</span></div>
+        <div class="health-indicators">
+          <div class="indicator-row">
+            <span class="indicator-dot ok"></span>
+            <span class="indicator-name">Event Processor</span>
+            <span class="indicator-detail">12.4k EPS</span>
+          </div>
+          <div class="indicator-row">
+            <span class="indicator-dot ok"></span>
+            <span class="indicator-name">OpenSearch</span>
+            <span class="indicator-detail">Cluster green</span>
+          </div>
+          <div class="indicator-row">
+            <span class="indicator-dot warning"></span>
+            <span class="indicator-name">Agent Manager</span>
+            <span class="indicator-detail">3 agents offline</span>
+          </div>
+          <div class="indicator-row">
+            <span class="indicator-dot ok"></span>
+            <span class="indicator-name">Correlation Engine</span>
+            <span class="indicator-detail">247 rules active</span>
+          </div>
+          <div class="indicator-row">
+            <span class="indicator-dot ok"></span>
+            <span class="indicator-name">PostgreSQL</span>
+            <span class="indicator-detail">Connections: 34/100</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="health-section">
+        <div class="health-section-title">Triage</div>
+        <div class="health-indicators">
+          <div class="indicator-row">
+            <span class="indicator-dot critical"></span>
+            <span class="indicator-name">Open Alerts</span>
+            <span class="indicator-detail" style="color:var(--ha-critical)">47</span>
+          </div>
+          <div class="indicator-row">
+            <span class="indicator-dot ok"></span>
+            <span class="indicator-name">Active Incidents</span>
+            <span class="indicator-detail">4</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="demo-section" style="padding-bottom: 60px;">
+  <div class="demo-label">Legend — What's New vs Existing</div>
+  <div class="legend-grid">
+    <div class="legend-item">
+      <span class="legend-badge new">NEW</span>
+      <span>Status Facet Bar — clickable status counts for quick filtering</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge new">NEW</span>
+      <span>AI Insight Indicator — pulsing dot when AI analysis is available</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge new">NEW</span>
+      <span>Merge to Incident — attach alert to existing incident (not just create new)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge new">NEW</span>
+      <span>Drawer Tabs — progressive disclosure (Overview/AI/Timeline/Entities/IoCs/Comments)</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge new">NEW</span>
+      <span>Investigation Tasks — checklist-driven task tracking within incidents</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge new">NEW</span>
+      <span>Activity Feed — chronological audit of all incident actions</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge new">NEW</span>
+      <span>Filter-from-Field — add/exclude filter directly from event field values</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge new">NEW</span>
+      <span>Detection Coverage Stats — overview bar with gap count and MITRE coverage</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge new">NEW</span>
+      <span>Coverage Gaps View — explicit visibility of detection blind spots</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge new">NEW</span>
+      <span>Health Context Panel — platform health at a glance in sidebar/dock</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge existing">EXISTING</span>
+      <span>SiemDataGrid, SeverityLabel, EntityBadge, StatusLabel, TimeRangeSelector, DensitySelector</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-badge existing">EXISTING</span>
+      <span>App Shell, Navigation, Queue page, Search page, Detection Rules page</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

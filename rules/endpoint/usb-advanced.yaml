@@ -1,0 +1,47 @@
+# USB Advanced Detection Rules
+
+dataTypes:
+  - "usb"
+name: "USB: Mass Storage Device Used Outside Maintenance Window"
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: "Exfiltration"
+technique: "T1052.001 - Exfiltration Over Physical Medium"
+adversary: origin
+description: "A USB mass storage device was inserted. Any USB mass storage usage should be tracked for data exfiltration investigations, particularly from endpoints with access to sensitive data."
+references:
+  - "https://attack.mitre.org/techniques/T1052/001/"
+where: |
+  safe("action", "") == "USB_ARRIVE" &&
+  contains(toLower(safe("log.device_desc", "")), "mass storage")
+groupBy:
+  - log.device_vid
+  - log.device_pid
+deduplicateBy:
+  - log.device_instance
+---
+dataTypes:
+  - "usb"
+name: "USB: Unknown Vendor ID — Potential Rogue Device"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: "Initial Access"
+technique: "T1200 - Hardware Additions"
+adversary: origin
+description: "A USB device with an unrecognised vendor ID was inserted. Rogue USB devices (LAN Turtle, Bash Bunny, O.MG cable) have custom or spoofed vendor IDs to impersonate legitimate devices while performing attacks."
+references:
+  - "https://attack.mitre.org/techniques/T1200/"
+where: |
+  safe("action", "") == "USB_ARRIVE" &&
+  safe("log.device_vid", "") != "" &&
+  !regexMatch(safe("log.device_vid", ""), "^(0781|0951|1058|0bda|04e8|05ac|045e|046d|03f0|04b3|17ef|413c|0430|0409|0b95|0a5c)")
+groupBy:
+  - log.device_vid
+  - log.device_pid
+deduplicateBy:
+  - log.device_vid
+  - log.device_pid

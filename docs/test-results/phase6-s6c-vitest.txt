@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /Users/encryptshell/GIT/UTMStack-11/frontend-v2
+
+
+ Test Files  47 passed (47)
+      Tests  574 passed (574)
+   Start at  02:07:24
+   Duration  656ms (transform 1.01s, setup 223ms, import 1.09s, tests 435ms, environment 3ms)
+

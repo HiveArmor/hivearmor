@@ -1,0 +1,73 @@
+- generic [active] [ref=f10e1]:
+  - generic [ref=f10e3]:
+    - link "Skip to main content" [ref=f10e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f10e5]:
+      - generic [ref=f10e6]:
+        - generic [ref=f10e12]: HiveArmor
+        - generic [ref=f10e13]: Security operations
+      - generic [ref=f10e14]:
+        - button "All authorized tenants" [ref=f10e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f10e24] [cursor=pointer]:
+          - generic [ref=f10e29]: ⌘ K
+        - generic [ref=f10e30]: Production
+      - generic [ref=f10e31]:
+        - 'status "Data pipeline: Critical - Bad Gateway" [ref=f10e32]'
+        - status "Live events per second" [ref=f10e35]:
+          - generic [ref=f10e37]: 12,840 EPS
+        - button "Notifications" [ref=f10e38] [cursor=pointer]
+        - button "Help" [ref=f10e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f10e47]:
+      - generic [ref=f10e48]:
+        - region "COMMAND" [ref=f10e49]:
+          - generic [ref=f10e50]:
+            - button "Mission Control" [ref=f10e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f10e58] [cursor=pointer]
+            - button "Alerts" [ref=f10e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f10e67] [cursor=pointer]
+            - button "Incidents" [ref=f10e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f10e79]:
+          - generic [ref=f10e80]:
+            - button "Search & Hunt" [ref=f10e81] [cursor=pointer]
+            - button "Investigations" [ref=f10e86] [cursor=pointer]
+            - button "Entities" [ref=f10e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f10e97] [cursor=pointer]
+        - region "DEFEND" [ref=f10e103]:
+          - generic [ref=f10e104]:
+            - button "Detection Rules" [ref=f10e105] [cursor=pointer]
+            - button "Playbooks" [ref=f10e109] [cursor=pointer]
+            - button "Response Library" [ref=f10e114] [cursor=pointer]
+        - region "POSTURE" [ref=f10e118]:
+          - generic [ref=f10e119]:
+            - button "Assets" [ref=f10e120] [cursor=pointer]
+            - button "Identities" [ref=f10e125] [cursor=pointer]
+            - button "Active Directory" [ref=f10e132] [cursor=pointer]
+            - button "Exposure" [ref=f10e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f10e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f10e156] [cursor=pointer]
+            - button "Compliance" [ref=f10e162] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f10e167]:
+          - generic [ref=f10e168]:
+            - button "Endpoints" [ref=f10e169] [cursor=pointer]
+            - button "File Quarantine" [ref=f10e173] [cursor=pointer]
+            - button "File Integrity" [ref=f10e179] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f10e186]:
+          - button "Studio" [ref=f10e188] [cursor=pointer]
+        - region "REPORT" [ref=f10e193]:
+          - button "Scheduled Reports" [ref=f10e195] [cursor=pointer]
+      - generic [ref=f10e200]:
+        - button "User menu" [ref=f10e203] [cursor=pointer]:
+          - generic [ref=f10e204]: MC
+        - button "Pin sidebar open" [ref=f10e205] [cursor=pointer]
+    - main [ref=f10e208]:
+      - generic [ref=f10e209]:
+        - generic [ref=f10e211]:
+          - heading "Playbooks" [level=1] [ref=f10e213]
+          - button "Create Playbook" [ref=f10e215] [cursor=pointer]
+        - generic [ref=f10e218]:
+          - 'heading "Danger alert: Failed to load playbooks" [level=4] [ref=f10e222]':
+            - generic [ref=f10e223]: "Danger alert:"
+            - text: Failed to load playbooks
+          - generic [ref=f10e224]: Bad Gateway
+  - generic:
+    - list "Notifications"

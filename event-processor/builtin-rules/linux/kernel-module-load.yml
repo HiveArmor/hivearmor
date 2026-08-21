@@ -1,0 +1,42 @@
+id: ha-linux-013
+title: Kernel Module Loaded via insmod or modprobe
+status: stable
+description: Detects loading of kernel modules using insmod or modprobe which can be used to install rootkits or malicious drivers that hide attacker activity.
+logsource:
+  product: linux
+  service: auditd
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.T1547.006
+  - attack.persistence
+detection:
+  selection:
+    type: EXECVE
+    a0:
+      - insmod
+      - modprobe
+  filter_known:
+    a1|contains:
+      - /lib/modules/
+  condition: selection and not filter_known
+falsepositives:
+  - Legitimate driver installation during system maintenance
+  - Kernel module loading by authorized system administrators
+fields:
+  - a0
+  - a1
+  - uid
+  - comm
+impact:
+  confidentiality: high
+  integrity: high
+  availability: high
+deduplicateBy:
+  - a1
+  - uid
+groupBy:
+  - uid
+mitre:
+  tactic: defense_evasion
+  technique: T1547.006

@@ -1,0 +1,10 @@
+[     570ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=b5022af4:17230
+[     775ms] [ERROR] AG Grid: error #200 Missing module ServerSideRowModelModule for rowModelType serverSide. 
+Visit https://www.ag-grid.com/react-data-grid/errors/200?_version_=36.0.1&reasonOrId=rowModelType+%3D+%27serverSide%27&moduleName=ServerSideRowModel&gridScoped=false&gridId=1&rowModelType=serverSide&isUmd=false @ http://localhost:3000/@vite/client:524
+[     835ms] [ERROR] Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: ["alerts","open-count"] @ http://localhost:3000/@vite/client:524
+[     839ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[     840ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     860ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[    5855ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   10874ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   15894ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0

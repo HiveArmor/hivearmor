@@ -1,0 +1,8 @@
+[     158ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:17230
+[     204ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     206ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[     206ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     215ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ http://localhost:8088/api/ha-dashboards/1:0
+[    1227ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ http://localhost:8088/api/ha-dashboards/1:0
+[    3243ms] [ERROR] Failed to load resource: the server responded with a status of 500 () @ http://localhost:8088/api/ha-dashboards/1:0
+[    5217ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0

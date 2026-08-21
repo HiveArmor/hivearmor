@@ -1,0 +1,64 @@
+# Correlation Rule: DNS Tunneling Detected
+# Detects excessive DNS queries to the same domain from the same source IP
+# within a short time window, indicating potential DNS tunneling.
+# DNS tunneling encodes data in DNS queries/responses to exfiltrate information
+# or establish covert command-and-control channels, bypassing traditional
+# network security controls that allow DNS traffic.
+# MITRE ATT&CK: T1071.004 — Application Layer Protocol: DNS (Command and Control)
+
+id: rule-dns-tunneling
+name: "DNS Tunneling Detected"
+description: "Detects more than 50 DNS queries to the same domain from the same source IP within 5 minutes, indicating DNS tunneling"
+severity: medium
+enabled: true
+
+mitre:
+  tactic: "Command and Control"
+  technique: "T1071.004"
+  subtechnique: ""
+  name: "Application Layer Protocol: DNS"
+
+# Match condition — which events feed this rule
+# Filters for network events targeting port 53 (DNS). The engine collects all
+# matching events and passes them to the correlation stage for threshold evaluation.
+match:
+  index: "v3-hive-log-*"
+  filter:
+    - field: "event.category"
+      operator: "equals"
+      value: "network"
+    - field: "destination.port"
+      operator: "equals"
+      value: 53
+
+# Correlation — CEL expression for threshold aggregation
+# Type "threshold" means the engine counts events sharing the same groupBy key
+# within the specified time window and fires when the count exceeds the threshold.
+#
+# Grouping by source.ip + dns.question.name isolates query volume per host per domain.
+# Normal DNS behaviour rarely exceeds 50 queries to the same domain in 5 minutes.
+# DNS tunneling tools (iodine, dnscat2, dns2tcp) generate high-frequency queries
+# to attacker-controlled domains to encode data in subdomain labels.
+#
+# The CEL expression `size(events) > 50` evaluates the collected event window
+# after groupBy and timeWindow constraints are applied by the engine.
+correlation:
+  type: "threshold"
+  groupBy: ["source.ip", "dns.question.name"]
+  timeWindow: "5m"
+  threshold: 50
+  cel: |
+    size(events) > 50
+
+# Alert template — generated when correlation condition is met
+alert:
+  title: "DNS Tunneling Detected: {{source.ip}} → {{dns.question.name}}"
+  description: "{{size(events)}} DNS queries to {{dns.question.name}} from {{source.ip}} in 5 minutes"
+  riskScore: 55
+  entities:
+    - field: "source.ip"
+      type: "ip"
+    - field: "host.name"
+      type: "host"
+    - field: "dns.question.name"
+      type: "domain"

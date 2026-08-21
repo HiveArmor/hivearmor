@@ -24,6 +24,8 @@ public interface UtmComplianceStandardSectionRepository extends JpaRepository<Ut
 
     Optional<UtmComplianceStandardSection> findByStandardSectionNameLike(String sectionName);
 
+    Optional<UtmComplianceStandardSection> findByStandardIdAndStandardSectionName(Long standardId, String sectionName);
+
     List<UtmComplianceStandardSection> findAllByStandardSectionNameNotIn(List<String> sectionNames);
 
     List<UtmComplianceStandardSection> findAllByStandardIdAndStandardSectionNameNotIn(Long standardId, List<String> sectionNames);

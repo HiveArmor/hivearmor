@@ -1,0 +1,231 @@
+- generic [active] [ref=f14e1]:
+  - generic [ref=f14e5]:
+    - link "Skip to main content" [ref=f14e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f14e7]:
+      - generic [ref=f14e8]:
+        - generic [ref=f14e14]: HiveArmor
+        - generic [ref=f14e15]: Security operations
+      - generic [ref=f14e16]:
+        - button "All authorized tenants" [ref=f14e18] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f14e26] [cursor=pointer]:
+          - generic [ref=f14e31]: ⌘ K
+        - generic [ref=f14e32]: Production
+      - generic [ref=f14e33]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=f14e34]'
+        - status "Live events per second" [ref=f14e37]:
+          - generic [ref=f14e39]: 0 EPS
+        - button "Notifications" [ref=f14e40] [cursor=pointer]
+        - button "Help" [ref=f14e45] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f14e49]:
+      - generic [ref=f14e50]:
+        - region "COMMAND" [ref=f14e51]:
+          - generic [ref=f14e52]:
+            - button "Mission Control" [ref=f14e53] [cursor=pointer]
+            - button "Analyst Queue" [ref=f14e60] [cursor=pointer]
+            - button "Alerts" [ref=f14e64] [cursor=pointer]
+            - button "Correlated Findings" [ref=f14e69] [cursor=pointer]
+            - button "Incidents" [ref=f14e75] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f14e81]:
+          - generic [ref=f14e82]:
+            - button "Search & Hunt" [ref=f14e83] [cursor=pointer]
+            - button "Investigations" [ref=f14e88] [cursor=pointer]
+            - button "Entities" [ref=f14e92] [cursor=pointer]
+            - button "Threat Constellation" [ref=f14e99] [cursor=pointer]
+        - region "DEFEND" [ref=f14e105]:
+          - generic [ref=f14e106]:
+            - button "Detection Rules" [ref=f14e107] [cursor=pointer]
+            - button "Playbooks" [ref=f14e111] [cursor=pointer]
+            - button "Response Library" [ref=f14e116] [cursor=pointer]
+        - region "POSTURE" [ref=f14e120]:
+          - generic [ref=f14e121]:
+            - button "Assets" [ref=f14e122] [cursor=pointer]
+            - button "Identities" [ref=f14e127] [cursor=pointer]
+            - button "Active Directory" [ref=f14e134] [cursor=pointer]
+            - button "Exposure" [ref=f14e141] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f14e147] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f14e158] [cursor=pointer]
+            - button "Sensors" [ref=f14e164] [cursor=pointer]
+            - button "Compliance" [ref=f14e168] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f14e173]:
+          - generic [ref=f14e174]:
+            - button "Endpoints" [ref=f14e175] [cursor=pointer]
+            - button "File Quarantine" [ref=f14e179] [cursor=pointer]
+            - button "File Integrity" [ref=f14e185] [cursor=pointer]
+            - button "Agent Policies" [ref=f14e192] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f14e197]:
+          - button "Studio" [ref=f14e199] [cursor=pointer]
+        - region "REPORT" [ref=f14e204]:
+          - button "Scheduled Reports" [ref=f14e206] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f14e211]:
+          - generic [ref=f14e212]:
+            - button "Users" [ref=f14e213] [cursor=pointer]
+            - button "Integrations" [ref=f14e227] [cursor=pointer]
+            - button "Notifications" [ref=f14e231] [cursor=pointer]
+            - button "Audit Log" [ref=f14e236] [cursor=pointer]
+            - button "Settings" [ref=f14e241] [cursor=pointer]
+      - generic [ref=f14e246]:
+        - button "User menu" [ref=f14e249] [cursor=pointer]:
+          - generic [ref=f14e250]: AA
+        - button "Pin sidebar open" [ref=f14e251] [cursor=pointer]
+    - main [ref=f14e254]:
+      - generic [ref=f14e255]:
+        - button "Back to entity inventory" [ref=f14e257] [cursor=pointer]
+        - generic [ref=f14e260]:
+          - generic [ref=f14e264]:
+            - generic [ref=f14e265]:
+              - heading "Engineering Server 001" [level=1] [ref=f14e266]
+              - generic [ref=f14e267]: HOST
+              - generic [ref=f14e268]: critical
+            - code [ref=f14e269]: ENG-SRV-001
+            - generic [ref=f14e270]:
+              - generic [ref=f14e271]: "First seen: 11 Oct 2025, 21:12"
+              - generic [ref=f14e275]: "Last seen: 7 Aug 2026, 21:12"
+            - generic [ref=f14e279]:
+              - generic [ref=f14e280]: engineering
+              - generic [ref=f14e281]: linux
+              - generic [ref=f14e282]: critical-infra
+          - button "Link to Incident" [ref=f14e284] [cursor=pointer]
+        - generic [ref=f14e288]:
+          - generic [ref=f14e289]:
+            - generic [ref=f14e290]:
+              - heading "Risk Profile" [level=2] [ref=f14e294]
+              - generic [ref=f14e295]:
+                - generic [ref=f14e296]:
+                  - generic [ref=f14e297]: "95"
+                  - generic [ref=f14e298]: critical
+                  - generic [ref=f14e299]: rising
+                - img "Risk score history" [ref=f14e304]
+              - generic [ref=f14e308]:
+                - heading "Risk Drivers" [level=3] [ref=f14e309]
+                - list [ref=f14e310]:
+                  - listitem [ref=f14e311]:
+                    - generic [ref=f14e312]:
+                      - generic [ref=f14e313]: c2 communication
+                      - generic [ref=f14e314]: "+25"
+                    - paragraph [ref=f14e315]: "C2 communication: periodic beaconing pattern to known malicious infrastructure detected"
+                  - listitem [ref=f14e318]:
+                    - generic [ref=f14e319]:
+                      - generic [ref=f14e320]: baseline deviation
+                      - generic [ref=f14e321]: "+27"
+                    - paragraph [ref=f14e322]: "Significant baseline deviation: login frequency 4.2x above normal for this entity"
+                  - listitem [ref=f14e325]:
+                    - generic [ref=f14e326]:
+                      - generic [ref=f14e327]: malware execution
+                      - generic [ref=f14e328]: "+17"
+                    - paragraph [ref=f14e329]: "Suspicious process execution: encoded PowerShell commands with download cradle"
+                  - listitem [ref=f14e332]:
+                    - generic [ref=f14e333]:
+                      - generic [ref=f14e334]: brute force target
+                      - generic [ref=f14e335]: "+13"
+                    - paragraph [ref=f14e336]: "Brute force target: 847 failed authentication attempts from 12 unique sources in 24h"
+                  - listitem [ref=f14e339]:
+                    - generic [ref=f14e340]:
+                      - generic [ref=f14e341]: baseline deviation
+                      - generic [ref=f14e342]: "+22"
+                    - paragraph [ref=f14e343]: "Significant baseline deviation: login frequency 4.2x above normal for this entity"
+                  - listitem [ref=f14e346]:
+                    - generic [ref=f14e347]:
+                      - generic [ref=f14e348]: privilege escalation
+                      - generic [ref=f14e349]: "+26"
+                    - paragraph [ref=f14e350]: "Privilege escalation: service account used outside normal scope with admin-level access"
+                  - listitem [ref=f14e353]:
+                    - generic [ref=f14e354]:
+                      - generic [ref=f14e355]: credential access
+                      - generic [ref=f14e356]: "+36"
+                    - paragraph [ref=f14e357]: "Credential harvesting: LSASS memory access and SAM database reads detected"
+            - generic [ref=f14e360]:
+              - generic [ref=f14e361]:
+                - heading "Baseline Metrics" [level=2] [ref=f14e365]
+                - generic [ref=f14e366]: "Learning: 2025-10-11 to 2026-07-24"
+              - generic [ref=f14e367]:
+                - generic [ref=f14e368]:
+                  - generic [ref=f14e369]:
+                    - generic [ref=f14e370]: Daily Login Count
+                    - generic [ref=f14e371]: normal
+                  - generic [ref=f14e372]:
+                    - generic [ref=f14e373]: "40"
+                    - generic [ref=f14e374]: vs
+                    - generic [ref=f14e375]: 21 baseline
+                    - generic [ref=f14e376]: 1.9×
+                - generic [ref=f14e379]:
+                  - generic [ref=f14e380]:
+                    - generic [ref=f14e381]: Process Unique Count
+                    - generic [ref=f14e382]: normal
+                  - generic [ref=f14e383]:
+                    - generic [ref=f14e384]: "40"
+                    - generic [ref=f14e385]: vs
+                    - generic [ref=f14e386]: 31 baseline
+                    - generic [ref=f14e387]: 1.3×
+                - generic [ref=f14e390]:
+                  - generic [ref=f14e391]:
+                    - generic [ref=f14e392]: Network Bytes Out
+                    - generic [ref=f14e393]: deviation
+                  - generic [ref=f14e394]:
+                    - generic [ref=f14e395]: 372.5K
+                    - generic [ref=f14e396]: vs
+                    - generic [ref=f14e397]: 128.5K baseline
+                    - generic [ref=f14e398]: 2.9×
+                - generic [ref=f14e401]:
+                  - generic [ref=f14e402]:
+                    - generic [ref=f14e403]: Failed Auth Count
+                    - generic [ref=f14e404]: critical deviation
+                  - generic [ref=f14e405]:
+                    - generic [ref=f14e406]: "14"
+                    - generic [ref=f14e407]: vs
+                    - generic [ref=f14e408]: 3 baseline
+                    - generic [ref=f14e409]: 4.7×
+              - generic [ref=f14e412]:
+                - heading "Active Deviations" [level=3] [ref=f14e413]
+                - generic [ref=f14e414]:
+                  - generic [ref=f14e415]: Network Bytes Out
+                  - generic [ref=f14e416]: 1.9× above
+                  - generic [ref=f14e417]: high
+                - generic [ref=f14e418]:
+                  - generic [ref=f14e419]: Failed Auth Count
+                  - generic [ref=f14e420]: 3.7× above
+                  - generic [ref=f14e421]: critical
+          - generic [ref=f14e422]:
+            - generic [ref=f14e423]:
+              - generic [ref=f14e424]:
+                - heading "Source Coverage" [level=2] [ref=f14e429]
+                - generic [ref=f14e430]: 3 sources · 0 gaps
+              - generic [ref=f14e431]:
+                - generic [ref=f14e432]:
+                  - generic [ref=f14e434]:
+                    - generic [ref=f14e435]: endpoint_agent
+                    - generic [ref=f14e436]: edr
+                  - generic [ref=f14e437]:
+                    - generic [ref=f14e438]: 388 events
+                    - generic [ref=f14e439]: 16m ago
+                - generic [ref=f14e440]:
+                  - generic [ref=f14e442]:
+                    - generic [ref=f14e443]: network_sensor
+                    - generic [ref=f14e444]: ids
+                  - generic [ref=f14e445]:
+                    - generic [ref=f14e446]: 569 events
+                    - generic [ref=f14e447]: 2h ago
+                - generic [ref=f14e448]:
+                  - generic [ref=f14e450]:
+                    - generic [ref=f14e451]: identity_provider
+                    - generic [ref=f14e452]: iam
+                  - generic [ref=f14e453]:
+                    - generic [ref=f14e454]: 139 events
+                    - generic [ref=f14e455]: 7h ago
+            - generic [ref=f14e456]:
+              - generic [ref=f14e457]:
+                - heading "ATT&CK Techniques" [level=2] [ref=f14e460]
+                - generic [ref=f14e461]: 0 techniques observed
+              - paragraph [ref=f14e462]: No ATT&CK techniques observed for this entity.
+        - tablist "Dossier detail panels" [ref=f14e463]:
+          - tab "Activity" [ref=f14e464] [cursor=pointer]
+          - tab "Related Alerts" [ref=f14e465] [cursor=pointer]
+          - tab "Relationships" [selected] [ref=f14e466] [cursor=pointer]
+        - tabpanel [ref=f14e467]:
+          - generic [ref=f14e642]:
+            - generic [ref=f14e643]:
+              - heading "Entity Relationships" [level=2] [ref=f14e648]
+              - generic [ref=f14e649]: 0 connections
+            - paragraph [ref=f14e651]: No relationships found for this entity.
+  - generic:
+    - list "Notifications"

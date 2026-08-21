@@ -1,0 +1,39 @@
+id: ha-net-012
+title: TCP SYN Scan to Internal Network
+status: stable
+description: Detects half-open TCP SYN connections characteristic of SYN-scan reconnaissance where the scanner never completes the three-way handshake, making it harder to detect in application logs.
+logsource:
+  product: network
+  service: flow
+level: medium
+tags:
+  - attack.reconnaissance
+  - attack.T1595.001
+detection:
+  selection:
+    network.transport: tcp
+    event.action: connection_attempt
+    network.direction: inbound
+  filter_established:
+    event.action: connection_established
+  condition: selection and not filter_established
+falsepositives:
+  - Authorized network security scanners performing scheduled SYN-based host discovery
+  - Firewall testing utilities verifying ACL configurations
+fields:
+  - source.ip
+  - destination.ip
+  - destination.port
+  - event.action
+impact:
+  confidentiality: medium
+  integrity: low
+  availability: low
+deduplicateBy:
+  - source.ip
+  - destination.ip
+groupBy:
+  - source.ip
+mitre:
+  tactic: reconnaissance
+  technique: T1595.001

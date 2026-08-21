@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Sprint 44 — Correlated findings idempotency table (COR-004) -->
+    <changeSet id="20260814002" author="hivearmor">
+        <createTable tableName="finding_idempotency">
+            <column name="idempotency_key" type="varchar(128)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="finding_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="response_body" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="finding_idempotency" indexName="idx_finding_idempotency_expires">
+            <column name="expires_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

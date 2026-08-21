@@ -1,0 +1,171 @@
+/* RiskProfilePanel — Sprint 46 */
+
+.ha-risk-panel {
+  border: 1px solid var(--ha-border-default);
+  border-radius: 8px;
+  background: var(--ha-surface-panel);
+  padding: 16px;
+}
+
+.ha-risk-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-risk-panel__header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  margin: 0;
+}
+
+.ha-risk-panel__top {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.ha-risk-panel__score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  background: var(--ha-surface-elevated);
+  min-width: 80px;
+}
+
+.ha-risk-panel__score-value {
+  font-size: 32px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ha-risk-panel__score[data-level='critical'] .ha-risk-panel__score-value {
+  color: var(--ha-severity-critical);
+}
+
+.ha-risk-panel__score[data-level='high'] .ha-risk-panel__score-value {
+  color: var(--ha-severity-high);
+}
+
+.ha-risk-panel__score[data-level='medium'] .ha-risk-panel__score-value {
+  color: var(--ha-severity-medium);
+}
+
+.ha-risk-panel__score[data-level='low'] .ha-risk-panel__score-value {
+  color: var(--ha-severity-low);
+}
+
+.ha-risk-panel__score-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-risk-panel__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.ha-risk-panel__trend[data-trend='rising'] {
+  color: var(--ha-severity-critical);
+}
+
+.ha-risk-panel__trend[data-trend='declining'] {
+  color: var(--ha-severity-low);
+}
+
+.ha-risk-panel__trend[data-trend='stable'] {
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-risk-panel__sparkline {
+  flex: 1;
+  min-width: 0;
+}
+
+.ha-risk-panel__chart-loading {
+  height: 120px;
+  background: var(--ha-surface-elevated);
+  border-radius: 4px;
+}
+
+.ha-risk-panel__drivers {
+  margin-top: 16px;
+  border-top: 1px solid var(--ha-border-subtle);
+  padding-top: 12px;
+}
+
+.ha-risk-panel__drivers h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ha-foreground-secondary);
+  margin: 0 0 10px;
+}
+
+.ha-risk-panel__drivers ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ha-risk-panel__driver {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--ha-surface-elevated);
+}
+
+.ha-risk-panel__driver-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ha-risk-panel__driver-category {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  text-transform: capitalize;
+}
+
+.ha-risk-panel__driver-contribution {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-severity-high);
+}
+
+.ha-risk-panel__driver-desc {
+  font-size: 11px;
+  color: var(--ha-foreground-secondary);
+  margin: 4px 0;
+}
+
+.ha-risk-panel__driver-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ha-surface-app);
+  overflow: hidden;
+}
+
+.ha-risk-panel__driver-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--ha-severity-high);
+  transition: width 0.3s;
+}

@@ -1,0 +1,52 @@
+id: a1b2c3d4-e5f6-7890-abcd-901234567861
+title: Suspicious Web Protocol C2 Communication
+status: stable
+logsource:
+  product: windows
+  category: network_connection
+level: high
+tags:
+  - attack.command_and_control
+  - attack.T1071
+  - attack.T1071.001
+detection:
+  selection:
+    Image|endswith:
+      - '\powershell.exe'
+      - '\cmd.exe'
+      - '\wscript.exe'
+      - '\cscript.exe'
+      - '\mshta.exe'
+    Initiated: 'true'
+    DestinationPort:
+      - 80
+      - 443
+      - 8080
+      - 8443
+  filter_legit:
+    DestinationIp|startswith:
+      - '10.'
+      - '192.168.'
+      - '172.16.'
+      - '172.17.'
+      - '172.18.'
+      - '172.19.'
+      - '172.20.'
+  condition: selection and not filter_legit
+falsepositives:
+  - System update utilities
+  - Legitimate scripted web requests
+  - Software download managers
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - Image
+  - DestinationIp
+groupBy:
+  - ComputerName
+mitre:
+  tactic: command-and-control
+  technique: T1071.001

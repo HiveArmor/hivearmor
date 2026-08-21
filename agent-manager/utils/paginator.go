@@ -18,6 +18,26 @@ type Page[T any] struct {
 	Rows  []T   `json:"rows"`
 }
 
+const maxInventoryPageSize = 100
+
+// BoundInventoryPage clamps list RPCs to a deterministic 1–100 row window.
+// Oversized requests are truncated rather than rejected so existing UI callers
+// continue to page instead of failing closed on a previously unbounded size.
+func BoundInventoryPage(pageNumber, pageSize int32) (page, size int) {
+	page = int(pageNumber)
+	size = int(pageSize)
+	if page < 1 {
+		page = 1
+	}
+	if size < 1 {
+		size = 20
+	}
+	if size > maxInventoryPageSize {
+		size = maxInventoryPageSize
+	}
+	return page, size
+}
+
 func NewPaginator(limit int, page int, sort string) Pagination {
 	p := Pagination{
 		Limit: limit,

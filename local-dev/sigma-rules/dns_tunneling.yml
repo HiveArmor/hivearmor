@@ -1,0 +1,28 @@
+title: DNS Tunneling via High Entropy Subdomain
+id: b3e5d8a2-7c4f-4b1e-a9d6-3e2f1c8b5a7d
+status: experimental
+level: high
+description: Identifies potential DNS tunneling by detecting queries with high-entropy subdomain names
+author: HiveArmor Threat Research
+date: 2024/04/10
+modified: 2025/01/20
+references:
+  - https://attack.mitre.org/techniques/T1071/004/
+tags:
+  - attack.command_and_control
+  - attack.t1071.004
+logsource:
+  category: dns_query
+  product: windows
+detection:
+  selection:
+    QueryName|re: '^[a-z0-9]{30,}\.'
+  filter_known:
+    QueryName|endswith:
+      - '.windowsupdate.com'
+      - '.microsoft.com'
+      - '.googleapis.com'
+  condition: selection and not filter_known
+falsepositives:
+  - CDN subdomains with long random strings
+  - Certificate validation queries

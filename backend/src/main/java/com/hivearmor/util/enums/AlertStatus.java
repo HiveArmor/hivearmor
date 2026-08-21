@@ -16,7 +16,13 @@ public enum AlertStatus {
     IN_REVIEW(3, "In review"),
     @SerializedName("Completed")
     @JsonProperty("Completed")
-    COMPLETED(5, "Completed");
+    COMPLETED(5, "Completed"),
+    @SerializedName("True positive")
+    @JsonProperty("True positive")
+    TRUE_POSITIVE(6, "True positive"),
+    @SerializedName("False positive")
+    @JsonProperty("False positive")
+    FALSE_POSITIVE(7, "False positive");
 
     private final int code;
     private final String name;
@@ -46,6 +52,10 @@ public enum AlertStatus {
                 return IN_REVIEW;
             case 5:
                 return COMPLETED;
+            case 6:
+                return TRUE_POSITIVE;
+            case 7:
+                return FALSE_POSITIVE;
         }
         return null;
     }

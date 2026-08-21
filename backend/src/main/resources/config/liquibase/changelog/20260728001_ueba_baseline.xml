@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260728001-1" author="hivearmor" context="dev,prod">
+        <createTable tableName="ha_ueba_peer_group">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="group_key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="group_source" type="VARCHAR(16)" defaultValue="AD_DEPT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(64)"/>
+            <column name="computed_on" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="ha_ueba_peer_group"
+                             columnNames="user_id, computed_on"
+                             constraintName="uk_ha_ueba_peer_group_user_day"/>
+        <createIndex tableName="ha_ueba_peer_group" indexName="ix_ha_ueba_peer_group_key">
+            <column name="group_key"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260728001-2" author="hivearmor" context="dev,prod">
+        <createTable tableName="ha_ueba_baseline">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="group_key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metric_name" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="computed_on" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="baseline_mean" type="DOUBLE PRECISION">
+                <constraints nullable="false"/>
+            </column>
+            <column name="baseline_stddev" type="DOUBLE PRECISION">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sample_size" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(64)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="ha_ueba_baseline"
+                             columnNames="group_key, metric_name, computed_on"
+                             constraintName="uk_ha_ueba_baseline_pk"/>
+        <createIndex tableName="ha_ueba_baseline" indexName="ix_ha_ueba_baseline_metric">
+            <column name="metric_name"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260728001-3" author="hivearmor" context="dev,prod">
+        <createTable tableName="ha_ueba_deviation">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metric_name" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="run_ts" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="z_score" type="DOUBLE PRECISION">
+                <constraints nullable="false"/>
+            </column>
+            <column name="points" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="observed_value" type="DOUBLE PRECISION"/>
+            <column name="tenant_id" type="VARCHAR(64)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="ha_ueba_deviation"
+                             columnNames="user_id, metric_name, run_ts"
+                             constraintName="uk_ha_ueba_deviation_pk"/>
+        <createIndex tableName="ha_ueba_deviation" indexName="ix_ha_ueba_deviation_user_run">
+            <column name="user_id"/>
+            <column name="run_ts"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

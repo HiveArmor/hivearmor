@@ -1,0 +1,827 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e3]:
+    - link "Skip to main content" [ref=f2e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f2e5]:
+      - generic [ref=f2e6]:
+        - generic [ref=f2e12]: HiveArmor
+        - generic [ref=f2e13]: Security operations
+      - generic [ref=f2e14]:
+        - button "All authorized tenants" [ref=f2e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f2e24] [cursor=pointer]:
+          - generic [ref=f2e29]: ⌘ K
+        - generic [ref=f2e30]: Production
+      - generic [ref=f2e31]:
+        - 'status "Data pipeline: Critical - Bad Gateway" [ref=f2e1206]'
+        - status "Live events per second" [ref=f2e35]:
+          - generic [ref=f2e37]: 12,840 EPS
+        - button "Notifications" [ref=f2e38] [cursor=pointer]
+        - button "Help" [ref=f2e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f2e47]:
+      - generic [ref=f2e48]:
+        - region "COMMAND" [ref=f2e49]:
+          - generic [ref=f2e50]:
+            - button "Mission Control" [ref=f2e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f2e58] [cursor=pointer]
+            - button "Alerts" [ref=f2e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f2e67] [cursor=pointer]
+            - button "Incidents" [ref=f2e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f2e79]:
+          - generic [ref=f2e80]:
+            - button "Search & Hunt" [ref=f2e81] [cursor=pointer]
+            - button "Investigations" [ref=f2e86] [cursor=pointer]
+            - button "Entities" [ref=f2e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f2e97] [cursor=pointer]
+        - region "DEFEND" [ref=f2e103]:
+          - generic [ref=f2e104]:
+            - button "Detection Rules" [ref=f2e105] [cursor=pointer]
+            - button "Playbooks" [ref=f2e109] [cursor=pointer]
+            - button "Response Library" [ref=f2e114] [cursor=pointer]
+        - region "POSTURE" [ref=f2e118]:
+          - generic [ref=f2e119]:
+            - button "Assets" [ref=f2e120] [cursor=pointer]
+            - button "Identities" [ref=f2e125] [cursor=pointer]
+            - button "Active Directory" [ref=f2e132] [cursor=pointer]
+            - button "Exposure" [ref=f2e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f2e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f2e156] [cursor=pointer]
+            - button "Compliance" [ref=f2e162] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f2e167]:
+          - generic [ref=f2e168]:
+            - button "Endpoints" [ref=f2e169] [cursor=pointer]
+            - button "File Quarantine" [ref=f2e173] [cursor=pointer]
+            - button "File Integrity" [ref=f2e179] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f2e186]:
+          - button "Studio" [ref=f2e188] [cursor=pointer]
+        - region "REPORT" [ref=f2e193]:
+          - button "Scheduled Reports" [ref=f2e195] [cursor=pointer]
+      - generic [ref=f2e200]:
+        - button "User menu" [ref=f2e203] [cursor=pointer]:
+          - generic [ref=f2e204]: MC
+        - button "Pin sidebar open" [ref=f2e205] [cursor=pointer]
+    - main [ref=f2e208]:
+      - generic [ref=f2e212]:
+        - generic [ref=f2e213]:
+          - generic [ref=f2e218]:
+            - generic [ref=f2e219]: DEFEND
+            - heading "Detection Engineering" [level=1] [ref=f2e220]
+          - generic [ref=f2e221]:
+            - generic [ref=f2e222]:
+              - text: Rule health and coverage
+              - generic [ref=f2e229]: J
+              - generic [ref=f2e230]: /
+              - generic [ref=f2e231]: K
+              - generic [ref=f2e232]: navigate
+            - button "Import" [ref=f2e233] [cursor=pointer]
+            - button "Sigma sync" [disabled] [ref=f2e237]
+            - button "Create rule" [ref=f2e242] [cursor=pointer]
+        - generic [ref=f2e244]:
+          - generic [ref=f2e245]:
+            - strong [ref=f2e246]: "Design fixture:"
+            - text: fictional detection content and execution telemetry are enabled.
+          - generic [ref=f2e247]: Production never receives these records.
+        - navigation "Detection engineering views" [ref=f2e248]:
+          - button "Rules 48" [ref=f2e249] [cursor=pointer]:
+            - text: Rules
+            - generic [ref=f2e252]: "48"
+          - button "Rule monitoring 42" [active] [ref=f2e253] [cursor=pointer]:
+            - text: Rule monitoring
+            - generic [ref=f2e256]: "42"
+          - button "ATT&CK coverage 12" [ref=f2e257] [cursor=pointer]:
+            - text: ATT&CK coverage
+            - generic [ref=f2e260]: "12"
+          - button "Test console" [ref=f2e261] [cursor=pointer]
+        - region "Rule execution monitoring" [ref=f2e1207]:
+          - generic [ref=f2e1208]:
+            - textbox "Search rule executions" [ref=f2e1213]:
+              - /placeholder: Find an execution by rule…
+            - combobox "Execution time range" [ref=f2e1215] [cursor=pointer]:
+              - option "Last 24 hours" [selected]
+              - option "Last 7 days"
+              - option "Last 30 days"
+            - combobox "Execution status" [ref=f2e1217] [cursor=pointer]:
+              - option "All responses" [selected]
+              - option "Succeeded"
+              - option "Warning"
+              - option "Failed"
+            - button "Only rules with gaps" [ref=f2e1218] [cursor=pointer]
+            - button "Refresh execution monitoring" [ref=f2e1222] [cursor=pointer]
+          - generic [ref=f2e1228]:
+            - article [ref=f2e1229]:
+              - generic [ref=f2e1230]: Successful responses
+              - strong [ref=f2e1234]: "29"
+              - generic [ref=f2e1235]: 69% of latest runs
+            - article [ref=f2e1236]:
+              - generic [ref=f2e1237]: Delayed or failed
+              - strong [ref=f2e1240]: "13"
+              - generic [ref=f2e1241]: requires analyst review
+            - article [ref=f2e1242]:
+              - generic [ref=f2e1243]: Coverage gaps
+              - strong [ref=f2e1247]: "3"
+              - generic [ref=f2e1248]: unfilled or partially filled
+            - article [ref=f2e1249]:
+              - generic [ref=f2e1250]: p95 duration
+              - strong [ref=f2e1254]: 1.81s
+              - generic [ref=f2e1255]: end-to-end execution
+          - generic "Execution response trend" [ref=f2e1256]:
+            - generic [ref=f2e1257]:
+              - generic [ref=f2e1258]:
+                - strong [ref=f2e1259]: Response trend
+                - generic [ref=f2e1260]: Latest bounded execution per enabled rule
+              - generic [ref=f2e1261]:
+                - generic [ref=f2e1262]: Succeeded
+                - generic [ref=f2e1263]: Warning
+                - generic [ref=f2e1264]: Failed
+            - generic [ref=f2e1265]:
+              - 'button "Rare privileged authentication followed by execution: Succeeded, 217ms" [ref=f2e1266] [cursor=pointer]'
+              - 'button "Suspicious LSASS memory access: Succeeded, 254ms" [ref=f2e1268] [cursor=pointer]'
+              - 'button "First-seen external destination from managed host: Warning, 291ms" [ref=f2e1270] [cursor=pointer]'
+              - 'button "Kerberoasting service ticket activity: Succeeded, 328ms" [ref=f2e1272] [cursor=pointer]'
+              - 'button "Remote service creation from administrative share: Failed, 365ms" [ref=f2e1274] [cursor=pointer]'
+              - 'button "Cloud role assignment outside change window: Succeeded, 402ms" [ref=f2e1276] [cursor=pointer]'
+              - 'button "DNS tunneling with high-entropy subdomains: Succeeded, 439ms" [ref=f2e1278] [cursor=pointer]'
+              - 'button "Executable written to user startup directory: Succeeded, 476ms" [ref=f2e1280] [cursor=pointer]'
+              - 'button "Unsigned binary launched from temporary path: Succeeded, 550ms" [ref=f2e1282] [cursor=pointer]'
+              - 'button "Mailbox forwarding rule created: Failed, 587ms" [ref=f2e1284] [cursor=pointer]'
+              - 'button "Encoded PowerShell with network retrieval · Variant 2: Succeeded, 624ms" [ref=f2e1286] [cursor=pointer]'
+              - 'button "Rare privileged authentication followed by execution · Variant 2: Succeeded, 661ms" [ref=f2e1288] [cursor=pointer]'
+              - 'button "Suspicious LSASS memory access · Variant 2: Succeeded, 698ms" [ref=f2e1290] [cursor=pointer]'
+              - 'button "First-seen external destination from managed host · Variant 2: Warning, 735ms" [ref=f2e1292] [cursor=pointer]'
+              - 'button "Kerberoasting service ticket activity · Variant 2: Succeeded, 772ms" [ref=f2e1294] [cursor=pointer]'
+              - 'button "Remote service creation from administrative share · Variant 2: Failed, 809ms" [ref=f2e1296] [cursor=pointer]'
+              - 'button "DNS tunneling with high-entropy subdomains · Variant 2: Succeeded, 883ms" [ref=f2e1298] [cursor=pointer]'
+              - 'button "Executable written to user startup directory · Variant 2: Succeeded, 920ms" [ref=f2e1300] [cursor=pointer]'
+              - 'button "Multiple failed logons followed by success · Variant 2: Warning, 957ms" [ref=f2e1302] [cursor=pointer]'
+              - 'button "Unsigned binary launched from temporary path · Variant 2: Succeeded, 994ms" [ref=f2e1304] [cursor=pointer]'
+              - 'button "Mailbox forwarding rule created · Variant 2: Failed, 1.03s" [ref=f2e1306] [cursor=pointer]'
+              - 'button "Encoded PowerShell with network retrieval · Variant 3: Succeeded, 1.07s" [ref=f2e1308] [cursor=pointer]'
+              - 'button "Rare privileged authentication followed by execution · Variant 3: Succeeded, 1.10s" [ref=f2e1310] [cursor=pointer]'
+              - 'button "Suspicious LSASS memory access · Variant 3: Succeeded, 1.14s" [ref=f2e1312] [cursor=pointer]'
+              - 'button "Kerberoasting service ticket activity · Variant 3: Succeeded, 1.22s" [ref=f2e1314] [cursor=pointer]'
+              - 'button "Remote service creation from administrative share · Variant 3: Failed, 1.25s" [ref=f2e1316] [cursor=pointer]'
+              - 'button "Cloud role assignment outside change window · Variant 3: Succeeded, 1.29s" [ref=f2e1318] [cursor=pointer]'
+              - 'button "DNS tunneling with high-entropy subdomains · Variant 3: Succeeded, 1.33s" [ref=f2e1320] [cursor=pointer]'
+              - 'button "Executable written to user startup directory · Variant 3: Succeeded, 1.36s" [ref=f2e1322] [cursor=pointer]'
+              - 'button "Multiple failed logons followed by success · Variant 3: Warning, 1.40s" [ref=f2e1324] [cursor=pointer]'
+              - 'button "Unsigned binary launched from temporary path · Variant 3: Succeeded, 1.44s" [ref=f2e1326] [cursor=pointer]'
+              - 'button "Mailbox forwarding rule created · Variant 3: Failed, 1.48s" [ref=f2e1328] [cursor=pointer]'
+          - generic [ref=f2e1331]:
+            - generic [ref=f2e1332]:
+              - generic [ref=f2e1333]:
+                - strong [ref=f2e1334]: Execution log
+                - generic [ref=f2e1335]: 42 latest responses
+              - generic [ref=f2e1336]: 24h · snapshot-bound
+            - table [ref=f2e1339]:
+              - rowgroup [ref=f2e1340]:
+                - row [ref=f2e1341]:
+                  - columnheader "Last run" [ref=f2e1342]
+                  - columnheader "Rule" [ref=f2e1343]
+                  - columnheader "Response" [ref=f2e1344]
+                  - columnheader "Run type" [ref=f2e1345]
+                  - columnheader "Duration" [ref=f2e1346]
+                  - columnheader "Events" [ref=f2e1347]
+                  - columnheader "Matches" [ref=f2e1348]
+                  - columnheader "Alerts" [ref=f2e1349]
+                  - columnheader "Gap" [ref=f2e1350]
+                  - columnheader "Open" [ref=f2e1351]
+              - rowgroup [ref=f2e1352]:
+                - row [ref=f2e1353] [cursor=pointer]:
+                  - cell [ref=f2e1354]:
+                    - time [ref=f2e1355]: 03 Aug, 18:24
+                  - cell "Rare privileged authentication followed by execution run-4101-20260803" [ref=f2e1356]:
+                    - strong [ref=f2e1357]: Rare privileged authentication followed by execution
+                    - generic [ref=f2e1358]: run-4101-20260803
+                  - cell "Succeeded" [ref=f2e1359]
+                  - cell "manual" [ref=f2e1361]
+                  - cell "217ms" [ref=f2e1362]
+                  - cell "148,000" [ref=f2e1363]
+                  - cell "17" [ref=f2e1364]
+                  - cell "17" [ref=f2e1365]
+                  - cell "—" [ref=f2e1366]
+                  - cell [ref=f2e1367]:
+                    - button "Open execution details for Rare privileged authentication followed by execution" [ref=f2e1368]
+                - row [ref=f2e1371] [cursor=pointer]:
+                  - cell [ref=f2e1372]:
+                    - time [ref=f2e1373]: 03 Aug, 17:20
+                  - cell "Suspicious LSASS memory access run-4102-20260803" [ref=f2e1374]:
+                    - strong [ref=f2e1375]: Suspicious LSASS memory access
+                    - generic [ref=f2e1376]: run-4102-20260803
+                  - cell "Succeeded" [ref=f2e1377]
+                  - cell "scheduled" [ref=f2e1379]
+                  - cell "254ms" [ref=f2e1380]
+                  - cell "185,421" [ref=f2e1381]
+                  - cell "34" [ref=f2e1382]
+                  - cell "18" [ref=f2e1383]
+                  - cell "—" [ref=f2e1384]
+                  - cell [ref=f2e1385]:
+                    - button "Open execution details for Suspicious LSASS memory access" [ref=f2e1386]
+                - row [ref=f2e1389] [cursor=pointer]:
+                  - cell [ref=f2e1390]:
+                    - time [ref=f2e1391]: 03 Aug, 16:16
+                  - cell "First-seen external destination from managed host run-4103-20260803" [ref=f2e1392]:
+                    - strong [ref=f2e1393]: First-seen external destination from managed host
+                    - generic [ref=f2e1394]: run-4103-20260803
+                  - cell "Warning" [ref=f2e1395]
+                  - cell "scheduled" [ref=f2e1397]
+                  - cell "291ms" [ref=f2e1398]
+                  - cell "222,842" [ref=f2e1399]
+                  - cell "8" [ref=f2e1400]
+                  - cell "8" [ref=f2e1401]
+                  - cell "—" [ref=f2e1402]
+                  - cell [ref=f2e1403]:
+                    - button "Open execution details for First-seen external destination from managed host" [ref=f2e1404]
+                - row [ref=f2e1407] [cursor=pointer]:
+                  - cell [ref=f2e1408]:
+                    - time [ref=f2e1409]: 03 Aug, 15:12
+                  - cell "Kerberoasting service ticket activity run-4104-20260803" [ref=f2e1410]:
+                    - strong [ref=f2e1411]: Kerberoasting service ticket activity
+                    - generic [ref=f2e1412]: run-4104-20260803
+                  - cell "Succeeded" [ref=f2e1413]
+                  - cell "scheduled" [ref=f2e1415]
+                  - cell "328ms" [ref=f2e1416]
+                  - cell "260,263" [ref=f2e1417]
+                  - cell "25" [ref=f2e1418]
+                  - cell "18" [ref=f2e1419]
+                  - cell "—" [ref=f2e1420]
+                  - cell [ref=f2e1421]:
+                    - button "Open execution details for Kerberoasting service ticket activity" [ref=f2e1422]
+                - row [ref=f2e1425] [cursor=pointer]:
+                  - cell [ref=f2e1426]:
+                    - time [ref=f2e1427]: 03 Aug, 14:08
+                  - cell "Remote service creation from administrative share run-4105-20260803" [ref=f2e1428]:
+                    - strong [ref=f2e1429]: Remote service creation from administrative share
+                    - generic [ref=f2e1430]: run-4105-20260803
+                  - cell "Failed" [ref=f2e1431]
+                  - cell "scheduled" [ref=f2e1433]
+                  - cell "365ms" [ref=f2e1434]
+                  - cell "297,684" [ref=f2e1435]
+                  - cell "42" [ref=f2e1436]
+                  - cell "18" [ref=f2e1437]
+                  - cell "—" [ref=f2e1438]
+                  - cell [ref=f2e1439]:
+                    - button "Open execution details for Remote service creation from administrative share" [ref=f2e1440]
+                - row [ref=f2e1443] [cursor=pointer]:
+                  - cell [ref=f2e1444]:
+                    - time [ref=f2e1445]: 03 Aug, 19:04
+                  - cell "Cloud role assignment outside change window run-4106-20260803" [ref=f2e1446]:
+                    - strong [ref=f2e1447]: Cloud role assignment outside change window
+                    - generic [ref=f2e1448]: run-4106-20260803
+                  - cell "Succeeded" [ref=f2e1449]
+                  - cell "scheduled" [ref=f2e1451]
+                  - cell "402ms" [ref=f2e1452]
+                  - cell "335,105" [ref=f2e1453]
+                  - cell "16" [ref=f2e1454]
+                  - cell "16" [ref=f2e1455]
+                  - cell "—" [ref=f2e1456]
+                  - cell [ref=f2e1457]:
+                    - button "Open execution details for Cloud role assignment outside change window" [ref=f2e1458]
+                - row [ref=f2e1461] [cursor=pointer]:
+                  - cell [ref=f2e1462]:
+                    - time [ref=f2e1463]: 03 Aug, 18:00
+                  - cell "DNS tunneling with high-entropy subdomains run-4107-20260803" [ref=f2e1464]:
+                    - strong [ref=f2e1465]: DNS tunneling with high-entropy subdomains
+                    - generic [ref=f2e1466]: run-4107-20260803
+                  - cell "Succeeded" [ref=f2e1467]
+                  - cell "scheduled" [ref=f2e1469]
+                  - cell "439ms" [ref=f2e1470]
+                  - cell "372,526" [ref=f2e1471]
+                  - cell "33" [ref=f2e1472]
+                  - cell "18" [ref=f2e1473]
+                  - cell "—" [ref=f2e1474]
+                  - cell [ref=f2e1475]:
+                    - button "Open execution details for DNS tunneling with high-entropy subdomains" [ref=f2e1476]
+                - row [ref=f2e1479] [cursor=pointer]:
+                  - cell [ref=f2e1480]:
+                    - time [ref=f2e1481]: 03 Aug, 16:56
+                  - cell "Executable written to user startup directory run-4108-20260803" [ref=f2e1482]:
+                    - strong [ref=f2e1483]: Executable written to user startup directory
+                    - generic [ref=f2e1484]: run-4108-20260803
+                  - cell "Succeeded" [ref=f2e1485]
+                  - cell "scheduled" [ref=f2e1487]
+                  - cell "476ms" [ref=f2e1488]
+                  - cell "409,947" [ref=f2e1489]
+                  - cell "7" [ref=f2e1490]
+                  - cell "7" [ref=f2e1491]
+                  - cell "—" [ref=f2e1492]
+                  - cell [ref=f2e1493]:
+                    - button "Open execution details for Executable written to user startup directory" [ref=f2e1494]
+                - row [ref=f2e1497] [cursor=pointer]:
+                  - cell [ref=f2e1498]:
+                    - time [ref=f2e1499]: 03 Aug, 14:48
+                  - cell "Unsigned binary launched from temporary path run-4110-20260803" [ref=f2e1500]:
+                    - strong [ref=f2e1501]: Unsigned binary launched from temporary path
+                    - generic [ref=f2e1502]: run-4110-20260803
+                  - cell "Succeeded" [ref=f2e1503]
+                  - cell "scheduled" [ref=f2e1505]
+                  - cell "550ms" [ref=f2e1506]
+                  - cell "447,368" [ref=f2e1507]
+                  - cell "41" [ref=f2e1508]
+                  - cell "18" [ref=f2e1509]
+                  - cell "—" [ref=f2e1510]
+                  - cell [ref=f2e1511]:
+                    - button "Open execution details for Unsigned binary launched from temporary path" [ref=f2e1512]
+                - row [ref=f2e1515] [cursor=pointer]:
+                  - cell [ref=f2e1516]:
+                    - time [ref=f2e1517]: 03 Aug, 13:44
+                  - cell "Mailbox forwarding rule created run-4111-20260803" [ref=f2e1518]:
+                    - strong [ref=f2e1519]: Mailbox forwarding rule created
+                    - generic [ref=f2e1520]: run-4111-20260803
+                  - cell "Failed" [ref=f2e1521]
+                  - cell "scheduled" [ref=f2e1523]
+                  - cell "587ms" [ref=f2e1524]
+                  - cell "484,789" [ref=f2e1525]
+                  - cell "15" [ref=f2e1526]
+                  - cell "15" [ref=f2e1527]
+                  - cell "—" [ref=f2e1528]
+                  - cell [ref=f2e1529]:
+                    - button "Open execution details for Mailbox forwarding rule created" [ref=f2e1530]
+                - row [ref=f2e1533] [cursor=pointer]:
+                  - cell [ref=f2e1534]:
+                    - time [ref=f2e1535]: 03 Aug, 19:28
+                  - cell "Encoded PowerShell with network retrieval · Variant 2 run-4112-20260803" [ref=f2e1536]:
+                    - strong [ref=f2e1537]: Encoded PowerShell with network retrieval · Variant 2
+                    - generic [ref=f2e1538]: run-4112-20260803
+                  - cell "Succeeded" [ref=f2e1539]
+                  - cell "scheduled" [ref=f2e1541]
+                  - cell "624ms" [ref=f2e1542]
+                  - cell "522,210" [ref=f2e1543]
+                  - cell "32" [ref=f2e1544]
+                  - cell "18" [ref=f2e1545]
+                  - cell "—" [ref=f2e1546]
+                  - cell [ref=f2e1547]:
+                    - button "Open execution details for Encoded PowerShell with network retrieval · Variant 2" [ref=f2e1548]
+                - row [ref=f2e1551] [cursor=pointer]:
+                  - cell [ref=f2e1552]:
+                    - time [ref=f2e1553]: 03 Aug, 18:24
+                  - cell "Rare privileged authentication followed by execution · Variant 2 run-4113-20260803" [ref=f2e1554]:
+                    - strong [ref=f2e1555]: Rare privileged authentication followed by execution · Variant 2
+                    - generic [ref=f2e1556]: run-4113-20260803
+                  - cell "Succeeded" [ref=f2e1557]
+                  - cell "gap-fill" [ref=f2e1559]
+                  - cell "661ms" [ref=f2e1560]
+                  - cell "559,631" [ref=f2e1561]
+                  - cell "6" [ref=f2e1562]
+                  - cell "6" [ref=f2e1563]
+                  - cell "68m" [ref=f2e1564]
+                  - cell [ref=f2e1565]:
+                    - button "Open execution details for Rare privileged authentication followed by execution · Variant 2" [ref=f2e1566]
+                - row [ref=f2e1569] [cursor=pointer]:
+                  - cell [ref=f2e1570]:
+                    - time [ref=f2e1571]: 03 Aug, 17:20
+                  - cell "Suspicious LSASS memory access · Variant 2 run-4114-20260803" [ref=f2e1572]:
+                    - strong [ref=f2e1573]: Suspicious LSASS memory access · Variant 2
+                    - generic [ref=f2e1574]: run-4114-20260803
+                  - cell "Succeeded" [ref=f2e1575]
+                  - cell "scheduled" [ref=f2e1577]
+                  - cell "698ms" [ref=f2e1578]
+                  - cell "597,052" [ref=f2e1579]
+                  - cell "23" [ref=f2e1580]
+                  - cell "18" [ref=f2e1581]
+                  - cell "—" [ref=f2e1582]
+                  - cell [ref=f2e1583]:
+                    - button "Open execution details for Suspicious LSASS memory access · Variant 2" [ref=f2e1584]
+                - row [ref=f2e1587] [cursor=pointer]:
+                  - cell [ref=f2e1588]:
+                    - time [ref=f2e1589]: 03 Aug, 16:16
+                  - cell "First-seen external destination from managed host · Variant 2 run-4115-20260803" [ref=f2e1590]:
+                    - strong [ref=f2e1591]: First-seen external destination from managed host · Variant 2
+                    - generic [ref=f2e1592]: run-4115-20260803
+                  - cell "Warning" [ref=f2e1593]
+                  - cell "scheduled" [ref=f2e1595]
+                  - cell "735ms" [ref=f2e1596]
+                  - cell "634,473" [ref=f2e1597]
+                  - cell "40" [ref=f2e1598]
+                  - cell "18" [ref=f2e1599]
+                  - cell "—" [ref=f2e1600]
+                  - cell [ref=f2e1601]:
+                    - button "Open execution details for First-seen external destination from managed host · Variant 2" [ref=f2e1602]
+                - row [ref=f2e1605] [cursor=pointer]:
+                  - cell [ref=f2e1606]:
+                    - time [ref=f2e1607]: 03 Aug, 15:12
+                  - cell "Kerberoasting service ticket activity · Variant 2 run-4116-20260803" [ref=f2e1608]:
+                    - strong [ref=f2e1609]: Kerberoasting service ticket activity · Variant 2
+                    - generic [ref=f2e1610]: run-4116-20260803
+                  - cell "Succeeded" [ref=f2e1611]
+                  - cell "scheduled" [ref=f2e1613]
+                  - cell "772ms" [ref=f2e1614]
+                  - cell "671,894" [ref=f2e1615]
+                  - cell "14" [ref=f2e1616]
+                  - cell "14" [ref=f2e1617]
+                  - cell "—" [ref=f2e1618]
+                  - cell [ref=f2e1619]:
+                    - button "Open execution details for Kerberoasting service ticket activity · Variant 2" [ref=f2e1620]
+                - row [ref=f2e1623] [cursor=pointer]:
+                  - cell [ref=f2e1624]:
+                    - time [ref=f2e1625]: 03 Aug, 14:08
+                  - cell "Remote service creation from administrative share · Variant 2 run-4117-20260803" [ref=f2e1626]:
+                    - strong [ref=f2e1627]: Remote service creation from administrative share · Variant 2
+                    - generic [ref=f2e1628]: run-4117-20260803
+                  - cell "Failed" [ref=f2e1629]
+                  - cell "scheduled" [ref=f2e1631]
+                  - cell "809ms" [ref=f2e1632]
+                  - cell "709,315" [ref=f2e1633]
+                  - cell "31" [ref=f2e1634]
+                  - cell "18" [ref=f2e1635]
+                  - cell "—" [ref=f2e1636]
+                  - cell [ref=f2e1637]:
+                    - button "Open execution details for Remote service creation from administrative share · Variant 2" [ref=f2e1638]
+                - row [ref=f2e1641] [cursor=pointer]:
+                  - cell [ref=f2e1642]:
+                    - time [ref=f2e1643]: 03 Aug, 18:00
+                  - cell "DNS tunneling with high-entropy subdomains · Variant 2 run-4119-20260803" [ref=f2e1644]:
+                    - strong [ref=f2e1645]: DNS tunneling with high-entropy subdomains · Variant 2
+                    - generic [ref=f2e1646]: run-4119-20260803
+                  - cell "Succeeded" [ref=f2e1647]
+                  - cell "scheduled" [ref=f2e1649]
+                  - cell "883ms" [ref=f2e1650]
+                  - cell "746,736" [ref=f2e1651]
+                  - cell "22" [ref=f2e1652]
+                  - cell "18" [ref=f2e1653]
+                  - cell "—" [ref=f2e1654]
+                  - cell [ref=f2e1655]:
+                    - button "Open execution details for DNS tunneling with high-entropy subdomains · Variant 2" [ref=f2e1656]
+                - row [ref=f2e1659] [cursor=pointer]:
+                  - cell [ref=f2e1660]:
+                    - time [ref=f2e1661]: 03 Aug, 16:56
+                  - cell "Executable written to user startup directory · Variant 2 run-4120-20260803" [ref=f2e1662]:
+                    - strong [ref=f2e1663]: Executable written to user startup directory · Variant 2
+                    - generic [ref=f2e1664]: run-4120-20260803
+                  - cell "Succeeded" [ref=f2e1665]
+                  - cell "scheduled" [ref=f2e1667]
+                  - cell "920ms" [ref=f2e1668]
+                  - cell "784,157" [ref=f2e1669]
+                  - cell "39" [ref=f2e1670]
+                  - cell "18" [ref=f2e1671]
+                  - cell "—" [ref=f2e1672]
+                  - cell [ref=f2e1673]:
+                    - button "Open execution details for Executable written to user startup directory · Variant 2" [ref=f2e1674]
+                - row [ref=f2e1677] [cursor=pointer]:
+                  - cell [ref=f2e1678]:
+                    - time [ref=f2e1679]: 03 Aug, 15:52
+                  - cell "Multiple failed logons followed by success · Variant 2 run-4121-20260803" [ref=f2e1680]:
+                    - strong [ref=f2e1681]: Multiple failed logons followed by success · Variant 2
+                    - generic [ref=f2e1682]: run-4121-20260803
+                  - cell "Warning" [ref=f2e1683]
+                  - cell "scheduled" [ref=f2e1685]
+                  - cell "957ms" [ref=f2e1686]
+                  - cell "821,578" [ref=f2e1687]
+                  - cell "13" [ref=f2e1688]
+                  - cell "13" [ref=f2e1689]
+                  - cell "—" [ref=f2e1690]
+                  - cell [ref=f2e1691]:
+                    - button "Open execution details for Multiple failed logons followed by success · Variant 2" [ref=f2e1692]
+                - row [ref=f2e1695] [cursor=pointer]:
+                  - cell [ref=f2e1696]:
+                    - time [ref=f2e1697]: 03 Aug, 14:48
+                  - cell "Unsigned binary launched from temporary path · Variant 2 run-4122-20260803" [ref=f2e1698]:
+                    - strong [ref=f2e1699]: Unsigned binary launched from temporary path · Variant 2
+                    - generic [ref=f2e1700]: run-4122-20260803
+                  - cell "Succeeded" [ref=f2e1701]
+                  - cell "scheduled" [ref=f2e1703]
+                  - cell "994ms" [ref=f2e1704]
+                  - cell "858,999" [ref=f2e1705]
+                  - cell "30" [ref=f2e1706]
+                  - cell "18" [ref=f2e1707]
+                  - cell "—" [ref=f2e1708]
+                  - cell [ref=f2e1709]:
+                    - button "Open execution details for Unsigned binary launched from temporary path · Variant 2" [ref=f2e1710]
+                - row [ref=f2e1713] [cursor=pointer]:
+                  - cell [ref=f2e1714]:
+                    - time [ref=f2e1715]: 03 Aug, 13:44
+                  - cell "Mailbox forwarding rule created · Variant 2 run-4123-20260803" [ref=f2e1716]:
+                    - strong [ref=f2e1717]: Mailbox forwarding rule created · Variant 2
+                    - generic [ref=f2e1718]: run-4123-20260803
+                  - cell "Failed" [ref=f2e1719]
+                  - cell "scheduled" [ref=f2e1721]
+                  - cell "1.03s" [ref=f2e1722]
+                  - cell "896,420" [ref=f2e1723]
+                  - cell "4" [ref=f2e1724]
+                  - cell "4" [ref=f2e1725]
+                  - cell "—" [ref=f2e1726]
+                  - cell [ref=f2e1727]:
+                    - button "Open execution details for Mailbox forwarding rule created · Variant 2" [ref=f2e1728]
+                - row [ref=f2e1731] [cursor=pointer]:
+                  - cell [ref=f2e1732]:
+                    - time [ref=f2e1733]: 03 Aug, 19:28
+                  - cell "Encoded PowerShell with network retrieval · Variant 3 run-4124-20260803" [ref=f2e1734]:
+                    - strong [ref=f2e1735]: Encoded PowerShell with network retrieval · Variant 3
+                    - generic [ref=f2e1736]: run-4124-20260803
+                  - cell "Succeeded" [ref=f2e1737]
+                  - cell "scheduled" [ref=f2e1739]
+                  - cell "1.07s" [ref=f2e1740]
+                  - cell "933,841" [ref=f2e1741]
+                  - cell "21" [ref=f2e1742]
+                  - cell "18" [ref=f2e1743]
+                  - cell "—" [ref=f2e1744]
+                  - cell [ref=f2e1745]:
+                    - button "Open execution details for Encoded PowerShell with network retrieval · Variant 3" [ref=f2e1746]
+                - row [ref=f2e1749] [cursor=pointer]:
+                  - cell [ref=f2e1750]:
+                    - time [ref=f2e1751]: 03 Aug, 18:24
+                  - cell "Rare privileged authentication followed by execution · Variant 3 run-4125-20260803" [ref=f2e1752]:
+                    - strong [ref=f2e1753]: Rare privileged authentication followed by execution · Variant 3
+                    - generic [ref=f2e1754]: run-4125-20260803
+                  - cell "Succeeded" [ref=f2e1755]
+                  - cell "manual" [ref=f2e1757]
+                  - cell "1.10s" [ref=f2e1758]
+                  - cell "971,262" [ref=f2e1759]
+                  - cell "38" [ref=f2e1760]
+                  - cell "18" [ref=f2e1761]
+                  - cell "—" [ref=f2e1762]
+                  - cell [ref=f2e1763]:
+                    - button "Open execution details for Rare privileged authentication followed by execution · Variant 3" [ref=f2e1764]
+                - row [ref=f2e1767] [cursor=pointer]:
+                  - cell [ref=f2e1768]:
+                    - time [ref=f2e1769]: 03 Aug, 17:20
+                  - cell "Suspicious LSASS memory access · Variant 3 run-4126-20260803" [ref=f2e1770]:
+                    - strong [ref=f2e1771]: Suspicious LSASS memory access · Variant 3
+                    - generic [ref=f2e1772]: run-4126-20260803
+                  - cell "Succeeded" [ref=f2e1773]
+                  - cell "gap-fill" [ref=f2e1775]
+                  - cell "1.14s" [ref=f2e1776]
+                  - cell "1,008,683" [ref=f2e1777]
+                  - cell "12" [ref=f2e1778]
+                  - cell "12" [ref=f2e1779]
+                  - cell "104m" [ref=f2e1780]
+                  - cell [ref=f2e1781]:
+                    - button "Open execution details for Suspicious LSASS memory access · Variant 3" [ref=f2e1782]
+                - row [ref=f2e1785] [cursor=pointer]:
+                  - cell [ref=f2e1786]:
+                    - time [ref=f2e1787]: 03 Aug, 15:12
+                  - cell "Kerberoasting service ticket activity · Variant 3 run-4128-20260803" [ref=f2e1788]:
+                    - strong [ref=f2e1789]: Kerberoasting service ticket activity · Variant 3
+                    - generic [ref=f2e1790]: run-4128-20260803
+                  - cell "Succeeded" [ref=f2e1791]
+                  - cell "scheduled" [ref=f2e1793]
+                  - cell "1.22s" [ref=f2e1794]
+                  - cell "1,046,104" [ref=f2e1795]
+                  - cell "3" [ref=f2e1796]
+                  - cell "3" [ref=f2e1797]
+                  - cell "—" [ref=f2e1798]
+                  - cell [ref=f2e1799]:
+                    - button "Open execution details for Kerberoasting service ticket activity · Variant 3" [ref=f2e1800]
+                - row [ref=f2e1803] [cursor=pointer]:
+                  - cell [ref=f2e1804]:
+                    - time [ref=f2e1805]: 03 Aug, 14:08
+                  - cell "Remote service creation from administrative share · Variant 3 run-4129-20260803" [ref=f2e1806]:
+                    - strong [ref=f2e1807]: Remote service creation from administrative share · Variant 3
+                    - generic [ref=f2e1808]: run-4129-20260803
+                  - cell "Failed" [ref=f2e1809]
+                  - cell "scheduled" [ref=f2e1811]
+                  - cell "1.25s" [ref=f2e1812]
+                  - cell "1,083,525" [ref=f2e1813]
+                  - cell "20" [ref=f2e1814]
+                  - cell "18" [ref=f2e1815]
+                  - cell "—" [ref=f2e1816]
+                  - cell [ref=f2e1817]:
+                    - button "Open execution details for Remote service creation from administrative share · Variant 3" [ref=f2e1818]
+                - row [ref=f2e1821] [cursor=pointer]:
+                  - cell [ref=f2e1822]:
+                    - time [ref=f2e1823]: 03 Aug, 19:04
+                  - cell "Cloud role assignment outside change window · Variant 3 run-4130-20260803" [ref=f2e1824]:
+                    - strong [ref=f2e1825]: Cloud role assignment outside change window · Variant 3
+                    - generic [ref=f2e1826]: run-4130-20260803
+                  - cell "Succeeded" [ref=f2e1827]
+                  - cell "scheduled" [ref=f2e1829]
+                  - cell "1.29s" [ref=f2e1830]
+                  - cell "1,120,946" [ref=f2e1831]
+                  - cell "37" [ref=f2e1832]
+                  - cell "18" [ref=f2e1833]
+                  - cell "—" [ref=f2e1834]
+                  - cell [ref=f2e1835]:
+                    - button "Open execution details for Cloud role assignment outside change window · Variant 3" [ref=f2e1836]
+                - row [ref=f2e1839] [cursor=pointer]:
+                  - cell [ref=f2e1840]:
+                    - time [ref=f2e1841]: 03 Aug, 18:00
+                  - cell "DNS tunneling with high-entropy subdomains · Variant 3 run-4131-20260803" [ref=f2e1842]:
+                    - strong [ref=f2e1843]: DNS tunneling with high-entropy subdomains · Variant 3
+                    - generic [ref=f2e1844]: run-4131-20260803
+                  - cell "Succeeded" [ref=f2e1845]
+                  - cell "scheduled" [ref=f2e1847]
+                  - cell "1.33s" [ref=f2e1848]
+                  - cell "1,158,367" [ref=f2e1849]
+                  - cell "11" [ref=f2e1850]
+                  - cell "11" [ref=f2e1851]
+                  - cell "—" [ref=f2e1852]
+                  - cell [ref=f2e1853]:
+                    - button "Open execution details for DNS tunneling with high-entropy subdomains · Variant 3" [ref=f2e1854]
+                - row [ref=f2e1857] [cursor=pointer]:
+                  - cell [ref=f2e1858]:
+                    - time [ref=f2e1859]: 03 Aug, 16:56
+                  - cell "Executable written to user startup directory · Variant 3 run-4132-20260803" [ref=f2e1860]:
+                    - strong [ref=f2e1861]: Executable written to user startup directory · Variant 3
+                    - generic [ref=f2e1862]: run-4132-20260803
+                  - cell "Succeeded" [ref=f2e1863]
+                  - cell "scheduled" [ref=f2e1865]
+                  - cell "1.36s" [ref=f2e1866]
+                  - cell "1,195,788" [ref=f2e1867]
+                  - cell "28" [ref=f2e1868]
+                  - cell "18" [ref=f2e1869]
+                  - cell "—" [ref=f2e1870]
+                  - cell [ref=f2e1871]:
+                    - button "Open execution details for Executable written to user startup directory · Variant 3" [ref=f2e1872]
+                - row [ref=f2e1875] [cursor=pointer]:
+                  - cell [ref=f2e1876]:
+                    - time [ref=f2e1877]: 03 Aug, 15:52
+                  - cell "Multiple failed logons followed by success · Variant 3 run-4133-20260803" [ref=f2e1878]:
+                    - strong [ref=f2e1879]: Multiple failed logons followed by success · Variant 3
+                    - generic [ref=f2e1880]: run-4133-20260803
+                  - cell "Warning" [ref=f2e1881]
+                  - cell "scheduled" [ref=f2e1883]
+                  - cell "1.40s" [ref=f2e1884]
+                  - cell "1,233,209" [ref=f2e1885]
+                  - cell "2" [ref=f2e1886]
+                  - cell "2" [ref=f2e1887]
+                  - cell "—" [ref=f2e1888]
+                  - cell [ref=f2e1889]:
+                    - button "Open execution details for Multiple failed logons followed by success · Variant 3" [ref=f2e1890]
+                - row [ref=f2e1893] [cursor=pointer]:
+                  - cell [ref=f2e1894]:
+                    - time [ref=f2e1895]: 03 Aug, 14:48
+                  - cell "Unsigned binary launched from temporary path · Variant 3 run-4134-20260803" [ref=f2e1896]:
+                    - strong [ref=f2e1897]: Unsigned binary launched from temporary path · Variant 3
+                    - generic [ref=f2e1898]: run-4134-20260803
+                  - cell "Succeeded" [ref=f2e1899]
+                  - cell "scheduled" [ref=f2e1901]
+                  - cell "1.44s" [ref=f2e1902]
+                  - cell "1,270,630" [ref=f2e1903]
+                  - cell "19" [ref=f2e1904]
+                  - cell "18" [ref=f2e1905]
+                  - cell "—" [ref=f2e1906]
+                  - cell [ref=f2e1907]:
+                    - button "Open execution details for Unsigned binary launched from temporary path · Variant 3" [ref=f2e1908]
+                - row [ref=f2e1911] [cursor=pointer]:
+                  - cell [ref=f2e1912]:
+                    - time [ref=f2e1913]: 03 Aug, 13:44
+                  - cell "Mailbox forwarding rule created · Variant 3 run-4135-20260803" [ref=f2e1914]:
+                    - strong [ref=f2e1915]: Mailbox forwarding rule created · Variant 3
+                    - generic [ref=f2e1916]: run-4135-20260803
+                  - cell "Failed" [ref=f2e1917]
+                  - cell "scheduled" [ref=f2e1919]
+                  - cell "1.48s" [ref=f2e1920]
+                  - cell "1,308,051" [ref=f2e1921]
+                  - cell "36" [ref=f2e1922]
+                  - cell "18" [ref=f2e1923]
+                  - cell "—" [ref=f2e1924]
+                  - cell [ref=f2e1925]:
+                    - button "Open execution details for Mailbox forwarding rule created · Variant 3" [ref=f2e1926]
+                - row [ref=f2e1929] [cursor=pointer]:
+                  - cell [ref=f2e1930]:
+                    - time [ref=f2e1931]: 03 Aug, 18:24
+                  - cell "Rare privileged authentication followed by execution · Variant 4 run-4137-20260803" [ref=f2e1932]:
+                    - strong [ref=f2e1933]: Rare privileged authentication followed by execution · Variant 4
+                    - generic [ref=f2e1934]: run-4137-20260803
+                  - cell "Succeeded" [ref=f2e1935]
+                  - cell "scheduled" [ref=f2e1937]
+                  - cell "1.55s" [ref=f2e1938]
+                  - cell "1,345,472" [ref=f2e1939]
+                  - cell "27" [ref=f2e1940]
+                  - cell "18" [ref=f2e1941]
+                  - cell "—" [ref=f2e1942]
+                  - cell [ref=f2e1943]:
+                    - button "Open execution details for Rare privileged authentication followed by execution · Variant 4" [ref=f2e1944]
+                - row [ref=f2e1947] [cursor=pointer]:
+                  - cell [ref=f2e1948]:
+                    - time [ref=f2e1949]: 03 Aug, 17:20
+                  - cell "Suspicious LSASS memory access · Variant 4 run-4138-20260803" [ref=f2e1950]:
+                    - strong [ref=f2e1951]: Suspicious LSASS memory access · Variant 4
+                    - generic [ref=f2e1952]: run-4138-20260803
+                  - cell "Succeeded" [ref=f2e1953]
+                  - cell "manual" [ref=f2e1955]
+                  - cell "1.59s" [ref=f2e1956]
+                  - cell "1,382,893" [ref=f2e1957]
+                  - cell "1" [ref=f2e1958]
+                  - cell "1" [ref=f2e1959]
+                  - cell "—" [ref=f2e1960]
+                  - cell [ref=f2e1961]:
+                    - button "Open execution details for Suspicious LSASS memory access · Variant 4" [ref=f2e1962]
+                - row [ref=f2e1965] [cursor=pointer]:
+                  - cell [ref=f2e1966]:
+                    - time [ref=f2e1967]: 03 Aug, 16:16
+                  - cell "First-seen external destination from managed host · Variant 4 run-4139-20260803" [ref=f2e1968]:
+                    - strong [ref=f2e1969]: First-seen external destination from managed host · Variant 4
+                    - generic [ref=f2e1970]: run-4139-20260803
+                  - cell "Warning" [ref=f2e1971]
+                  - cell "gap-fill" [ref=f2e1973]
+                  - cell "1.62s" [ref=f2e1974]
+                  - cell "1,420,314" [ref=f2e1975]
+                  - cell "18" [ref=f2e1976]
+                  - cell "18" [ref=f2e1977]
+                  - cell "137m" [ref=f2e1978]
+                  - cell [ref=f2e1979]:
+                    - button "Open execution details for First-seen external destination from managed host · Variant 4" [ref=f2e1980]
+                - row [ref=f2e1983] [cursor=pointer]:
+                  - cell [ref=f2e1984]:
+                    - time [ref=f2e1985]: 03 Aug, 15:12
+                  - cell "Kerberoasting service ticket activity · Variant 4 run-4140-20260803" [ref=f2e1986]:
+                    - strong [ref=f2e1987]: Kerberoasting service ticket activity · Variant 4
+                    - generic [ref=f2e1988]: run-4140-20260803
+                  - cell "Succeeded" [ref=f2e1989]
+                  - cell "scheduled" [ref=f2e1991]
+                  - cell "1.66s" [ref=f2e1992]
+                  - cell "1,457,735" [ref=f2e1993]
+                  - cell "35" [ref=f2e1994]
+                  - cell "18" [ref=f2e1995]
+                  - cell "—" [ref=f2e1996]
+                  - cell [ref=f2e1997]:
+                    - button "Open execution details for Kerberoasting service ticket activity · Variant 4" [ref=f2e1998]
+                - row [ref=f2e2001] [cursor=pointer]:
+                  - cell [ref=f2e2002]:
+                    - time [ref=f2e2003]: 03 Aug, 14:08
+                  - cell "Remote service creation from administrative share · Variant 4 run-4141-20260803" [ref=f2e2004]:
+                    - strong [ref=f2e2005]: Remote service creation from administrative share · Variant 4
+                    - generic [ref=f2e2006]: run-4141-20260803
+                  - cell "Failed" [ref=f2e2007]
+                  - cell "scheduled" [ref=f2e2009]
+                  - cell "1.70s" [ref=f2e2010]
+                  - cell "1,495,156" [ref=f2e2011]
+                  - cell "9" [ref=f2e2012]
+                  - cell "9" [ref=f2e2013]
+                  - cell "—" [ref=f2e2014]
+                  - cell [ref=f2e2015]:
+                    - button "Open execution details for Remote service creation from administrative share · Variant 4" [ref=f2e2016]
+                - row [ref=f2e2019] [cursor=pointer]:
+                  - cell [ref=f2e2020]:
+                    - time [ref=f2e2021]: 03 Aug, 19:04
+                  - cell "Cloud role assignment outside change window · Variant 4 run-4142-20260803" [ref=f2e2022]:
+                    - strong [ref=f2e2023]: Cloud role assignment outside change window · Variant 4
+                    - generic [ref=f2e2024]: run-4142-20260803
+                  - cell "Succeeded" [ref=f2e2025]
+                  - cell "scheduled" [ref=f2e2027]
+                  - cell "1.73s" [ref=f2e2028]
+                  - cell "1,532,577" [ref=f2e2029]
+                  - cell "26" [ref=f2e2030]
+                  - cell "18" [ref=f2e2031]
+                  - cell "—" [ref=f2e2032]
+                  - cell [ref=f2e2033]:
+                    - button "Open execution details for Cloud role assignment outside change window · Variant 4" [ref=f2e2034]
+                - row [ref=f2e2037] [cursor=pointer]:
+                  - cell [ref=f2e2038]:
+                    - time [ref=f2e2039]: 03 Aug, 18:00
+                  - cell "DNS tunneling with high-entropy subdomains · Variant 4 run-4143-20260803" [ref=f2e2040]:
+                    - strong [ref=f2e2041]: DNS tunneling with high-entropy subdomains · Variant 4
+                    - generic [ref=f2e2042]: run-4143-20260803
+                  - cell "Succeeded" [ref=f2e2043]
+                  - cell "scheduled" [ref=f2e2045]
+                  - cell "1.77s" [ref=f2e2046]
+                  - cell "1,569,998" [ref=f2e2047]
+                  - cell "0" [ref=f2e2048]
+                  - cell "0" [ref=f2e2049]
+                  - cell "—" [ref=f2e2050]
+                  - cell [ref=f2e2051]:
+                    - button "Open execution details for DNS tunneling with high-entropy subdomains · Variant 4" [ref=f2e2052]
+                - row [ref=f2e2055] [cursor=pointer]:
+                  - cell [ref=f2e2056]:
+                    - time [ref=f2e2057]: 03 Aug, 16:56
+                  - cell "Executable written to user startup directory · Variant 4 run-4144-20260803" [ref=f2e2058]:
+                    - strong [ref=f2e2059]: Executable written to user startup directory · Variant 4
+                    - generic [ref=f2e2060]: run-4144-20260803
+                  - cell "Succeeded" [ref=f2e2061]
+                  - cell "scheduled" [ref=f2e2063]
+                  - cell "1.81s" [ref=f2e2064]
+                  - cell "1,607,419" [ref=f2e2065]
+                  - cell "17" [ref=f2e2066]
+                  - cell "17" [ref=f2e2067]
+                  - cell "—" [ref=f2e2068]
+                  - cell [ref=f2e2069]:
+                    - button "Open execution details for Executable written to user startup directory · Variant 4" [ref=f2e2070]
+                - row [ref=f2e2073] [cursor=pointer]:
+                  - cell [ref=f2e2074]:
+                    - time [ref=f2e2075]: 03 Aug, 14:48
+                  - cell "Unsigned binary launched from temporary path · Variant 4 run-4146-20260803" [ref=f2e2076]:
+                    - strong [ref=f2e2077]: Unsigned binary launched from temporary path · Variant 4
+                    - generic [ref=f2e2078]: run-4146-20260803
+                  - cell "Succeeded" [ref=f2e2079]
+                  - cell "scheduled" [ref=f2e2081]
+                  - cell "1.88s" [ref=f2e2082]
+                  - cell "1,644,840" [ref=f2e2083]
+                  - cell "8" [ref=f2e2084]
+                  - cell "8" [ref=f2e2085]
+                  - cell "—" [ref=f2e2086]
+                  - cell [ref=f2e2087]:
+                    - button "Open execution details for Unsigned binary launched from temporary path · Variant 4" [ref=f2e2088]
+                - row [ref=f2e2091] [cursor=pointer]:
+                  - cell [ref=f2e2092]:
+                    - time [ref=f2e2093]: 03 Aug, 13:44
+                  - cell "Mailbox forwarding rule created · Variant 4 run-4147-20260803" [ref=f2e2094]:
+                    - strong [ref=f2e2095]: Mailbox forwarding rule created · Variant 4
+                    - generic [ref=f2e2096]: run-4147-20260803
+                  - cell "Failed" [ref=f2e2097]
+                  - cell "scheduled" [ref=f2e2099]
+                  - cell "1.92s" [ref=f2e2100]
+                  - cell "1,682,261" [ref=f2e2101]
+                  - cell "25" [ref=f2e2102]
+                  - cell "18" [ref=f2e2103]
+                  - cell "—" [ref=f2e2104]
+                  - cell [ref=f2e2105]:
+                    - button "Open execution details for Mailbox forwarding rule created · Variant 4" [ref=f2e2106]
+        - generic [ref=f2e1196]:
+          - generic [ref=f2e1197]:
+            - generic [ref=f2e1198]:
+              - generic [ref=f2e1200]: Connected
+              - generic [ref=f2e1201]: •
+              - generic [ref=f2e1203]: Live
+            - generic [ref=f2e1204]: 12840 eps
+          - generic: Rule snapshot 18:46
+  - generic:
+    - list "Notifications"

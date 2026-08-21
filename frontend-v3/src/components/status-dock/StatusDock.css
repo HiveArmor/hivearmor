@@ -1,0 +1,84 @@
+/**
+ * StatusDock styles
+ */
+
+.status-dock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+  padding: 0 16px;
+  background: var(--ha-surface-raised);
+  border-top: 1px solid var(--ha-border);
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+}
+
+.status-dock__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dock__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-dock__indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dock__connection-text {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+}
+
+.status-dock__separator {
+  color: var(--ha-border);
+  font-size: var(--ha-text-xs);
+}
+
+.status-dock__live-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ha-primary);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+.status-dock__mode-text {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+}
+
+.status-dock__mode-text--live {
+  color: var(--ha-primary);
+}
+
+.status-dock__eps {
+  font-family: var(--ha-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+}
+
+.status-dock__stale-warning {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-high);
+}

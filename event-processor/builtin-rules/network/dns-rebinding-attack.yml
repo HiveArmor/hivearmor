@@ -1,0 +1,37 @@
+id: ha-net-011
+title: DNS Rebinding Attack — Very Short TTL
+status: stable
+description: Detects DNS responses with extremely short TTL values (under 5 seconds) which are a hallmark of DNS rebinding attacks, where an attacker flips a domain's resolution between external and internal IP addresses to bypass same-origin policy.
+logsource:
+  product: network
+  service: dns
+level: high
+tags:
+  - attack.initial_access
+  - attack.T1557
+detection:
+  selection:
+    event.action: answer
+    dns.answers.ttl|lte: 5
+    dns.answers.ttl|gte: 0
+  condition: selection
+falsepositives:
+  - High-frequency DNS-based load balancers using sub-second TTLs for failover
+  - Internal service mesh health-check resolvers with low TTL by design
+fields:
+  - source.ip
+  - dns.question.name
+  - dns.answers.ttl
+  - dns.answers.data
+impact:
+  confidentiality: high
+  integrity: high
+  availability: low
+deduplicateBy:
+  - dns.question.name
+  - dns.answers.data
+groupBy:
+  - source.ip
+mitre:
+  tactic: initial-access
+  technique: T1557

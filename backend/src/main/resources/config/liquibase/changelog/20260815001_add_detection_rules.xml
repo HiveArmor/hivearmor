@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Sprint 47 — Detection rules table (DET-008 through DET-016) -->
+    <changeSet id="20260815001" author="hivearmor">
+        <createTable tableName="detection_rules">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="text"/>
+            <column name="expression" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filters" type="text"/>
+            <column name="schedule" type="varchar(64)"/>
+            <column name="scope" type="varchar(32)" defaultValue="custom">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(32)" defaultValue="draft">
+                <constraints nullable="false"/>
+            </column>
+            <column name="severity" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mitre_tactics" type="text"/>
+            <column name="mitre_techniques" type="text"/>
+            <column name="tags" type="text"/>
+            <column name="author" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sigma_source" type="text"/>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createIndex tableName="detection_rules" indexName="idx_detection_rules_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex tableName="detection_rules" indexName="idx_detection_rules_status">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="detection_rules" indexName="idx_detection_rules_scope">
+            <column name="scope"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,42 @@
+id: d4e5f6a7-b8c9-0123-defa-234567890164
+title: ICMP Data Exfiltration or C2 via Large Ping Payloads
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.command_and_control
+  - attack.exfiltration
+  - attack.T1095
+  - attack.T1048
+detection:
+  selection:
+    Image|endswith: '\ping.exe'
+    CommandLine|contains:
+      - '-l '
+      - '/l '
+    CommandLine|re: '.*[/-]l\s*[2-9]\d{2}.*'
+  selection_custom_icmp:
+    CommandLine|contains:
+      - 'icmp'
+      - '-p '
+    Image|endswith:
+      - '\ping.exe'
+      - '\nping.exe'
+  condition: selection or selection_custom_icmp
+falsepositives:
+  - Network performance testing with large ICMP payloads
+  - Authorized network diagnostic operations
+impact:
+  confidentiality: high
+  integrity: low
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: command-and-control
+  technique: T1095

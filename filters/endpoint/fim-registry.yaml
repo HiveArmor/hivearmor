@@ -1,0 +1,65 @@
+# HiveArmor Windows Registry FIM filter — version 1.0.0
+# DataType: fim-registry
+#
+# Processes events emitted by agent/collector/fim.RegistryWatcher (Windows only).
+# Raw payload is JSON with origin.registryKey and origin.hive fields.
+#
+# Fields emitted:
+#   action                 — MODIFY (current; CREATE/DELETE planned for Phase 2)
+#   origin.registryKey     — full registry key path (e.g. HKLM\SOFTWARE\...)
+#   origin.hive            — registry hive (HKLM / HKCU / HKCR / HKU / HKCC)
+#   hostname               — agent hostname
+#   @timestamp             — RFC3339Nano event time
+
+pipeline:
+  - dataTypes:
+      - fim-registry
+    steps:
+      # -----------------------------------------------------------------------
+      # PHASE 1: EXTRACTION
+      # -----------------------------------------------------------------------
+
+      - json:
+          source: raw
+          where: 'startsWith("raw", "{")'
+
+      # -----------------------------------------------------------------------
+      # PHASE 2: ENRICHMENT
+      # -----------------------------------------------------------------------
+
+      # Derive severity: all registry persistence keys are HIGH or CRITICAL.
+      - set:
+          field: log.severity
+          value: CRITICAL
+          where: >
+            contains("origin.registryKey", "\\CurrentVersion\\Run") or
+            contains("origin.registryKey", "\\CurrentVersion\\RunOnce") or
+            contains("origin.registryKey", "\\Winlogon") or
+            contains("origin.registryKey", "\\Image File Execution Options")
+
+      - set:
+          field: log.severity
+          value: HIGH
+          where: >
+            not exists("log.severity") or log.severity == ""
+
+      # -----------------------------------------------------------------------
+      # PHASE 3: NORMALIZATION
+      # -----------------------------------------------------------------------
+
+      - template:
+          dest: log.message
+          template: 'Registry FIM {{.action}}: {{.origin.registryKey}}'
+          where: 'exists("origin.registryKey") and exists("action")'
+
+      # -----------------------------------------------------------------------
+      # PHASE 4: ALERT FIELDS
+      # -----------------------------------------------------------------------
+
+      - set:
+          field: log.category
+          value: registry-integrity-monitoring
+
+      - set:
+          field: log.dataType
+          value: fim-registry

@@ -3,16 +3,17 @@ package writer
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
-	sdkos "github.com/threatwinds/go-sdk/os"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/event-processor/internal/httpclient"
+	sdkos "github.com/hivearmor/sdk/os"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 var (
@@ -38,7 +39,7 @@ func WriteEvent(event *plugins.Event) {
 		return
 	}
 	doc := eventToDoc(event)
-	idx := sdkos.BuildCurrentDayIndex("v3-hive", "log", event.DataType)
+	idx := EventIndex(event)
 	eventQueue.AddWithID(idx, event.Id, doc)
 }
 
@@ -51,7 +52,7 @@ func WriteEventSync(event *plugins.Event, osURL, osUser, osPass string) error {
 		return nil
 	}
 	doc := eventToDoc(event)
-	idx := sdkos.BuildCurrentDayIndex("v3-hive", "log", event.DataType)
+	idx := EventIndex(event)
 	body, err := json.Marshal(doc)
 	if err != nil {
 		return fmt.Errorf("marshal event: %w", err)
@@ -76,7 +77,7 @@ func WriteEventSync(event *plugins.Event, osURL, osUser, osPass string) error {
 	return nil
 }
 
-// eventToDoc converts a plugins.Event to a flat map suitable for OpenSearch.
+// eventToDoc converts a plugins.Event to the normalized OpenSearch shape.
 func eventToDoc(e *plugins.Event) map[string]any {
 	doc := map[string]any{
 		"@timestamp":   e.Timestamp,
@@ -85,6 +86,7 @@ func eventToDoc(e *plugins.Event) map[string]any {
 		"dataSource":   e.DataSource,
 		"tenantId":     e.TenantId,
 		"tenantName":   e.TenantName,
+		"tenantPrefix": e.TenantPrefix,
 		"raw":          e.Raw,
 		"action":       e.Action,
 		"actionResult": e.ActionResult,
@@ -92,8 +94,10 @@ func eventToDoc(e *plugins.Event) map[string]any {
 		"protocol":     e.Protocol,
 	}
 
-	// Fields starting with "log." go into a nested log object (matches seeded data schema).
-	// All other fields (e.g. asset.hostname, identity.*) stay at the top level.
+	// Pipeline parsers store source-specific fields as bare Event.Log keys. Keep
+	// those fields under the canonical `log` object used by detection rules and
+	// investigation views. Explicit dotted enrichment keys retain their existing
+	// top-level representation for backward compatibility.
 	logObj := map[string]any{}
 	for k, v := range e.Log {
 		if v == nil {
@@ -101,6 +105,8 @@ func eventToDoc(e *plugins.Event) map[string]any {
 		}
 		if strings.HasPrefix(k, "log.") {
 			logObj[k[4:]] = v.AsInterface()
+		} else if !strings.Contains(k, ".") {
+			logObj[k] = v.AsInterface()
 		} else {
 			doc[k] = v.AsInterface()
 		}
@@ -151,14 +157,42 @@ func sideDoc(s *plugins.Side) map[string]any {
 	return m
 }
 
-var syncTransportOnce sync.Once
-var syncTransportVal *http.Transport
+// EventIndex is the OpenSearch write index for a normalized log event.
+// Tenant-scoped events use v3-hive-log-<prefix>-YYYY.MM.DD to match
+// MsspIndexResolver("log"). DataType stays a document field, not an index segment.
+func EventIndex(event *plugins.Event) string {
+	prefix := ""
+	if event != nil {
+		prefix = event.GetTenantPrefix()
+	}
+	return sdkos.BuildTenantIndex("log", prefix)
+}
 
-func sharedTransport() *http.Transport {
+var syncTransportOnce sync.Once
+var syncTransportVal http.RoundTripper
+
+// OpenSearchStore persists required processing outputs with verified TLS.
+type OpenSearchStore struct {
+	URL  string
+	User string
+	Pass string
+}
+
+func (s OpenSearchStore) WriteEvent(event *plugins.Event) error {
+	return WriteEventSync(event, s.URL, s.User, s.Pass)
+}
+
+func (s OpenSearchStore) WriteAlert(alert *plugins.Alert) error {
+	return WriteAlertSync(alert, s.URL, s.User, s.Pass)
+}
+
+func sharedTransport() http.RoundTripper {
 	syncTransportOnce.Do(func() {
-		syncTransportVal = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		client, err := httpclient.NewSecureClient(10 * time.Second)
+		if err != nil {
+			log.Fatalf("opensearch tls client: %v", err)
 		}
+		syncTransportVal = client.Transport
 	})
 	return syncTransportVal
 }

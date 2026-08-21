@@ -1,0 +1,40 @@
+id: 2c7a4f1e-9b3d-4e6c-8f2a-5d0b7e3c9a1f
+title: Pass the Hash Attack via Network Logon
+status: stable
+logsource:
+  product: windows
+  service: security
+level: high
+tags:
+  - attack.lateral_movement
+  - attack.credential_access
+  - attack.T1550
+  - attack.T1550.002
+detection:
+  selection:
+    EventID: 4624
+    LogonType: 3
+    LogonProcessName: NtLmSsp
+    WorkstationName: ''
+    SubjectUserName|endswith: '$'
+  filter_computer_accounts:
+    TargetUserName|endswith: '$'
+  condition: selection and not filter_computer_accounts
+falsepositives:
+  - Legitimate administrative tools using NTLM authentication
+  - Network shares accessed from service accounts
+  - Some monitoring or backup solutions
+impact:
+  confidentiality: high
+  integrity: high
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - TargetUserName
+  - IpAddress
+groupBy:
+  - ComputerName
+  - IpAddress
+mitre:
+  tactic: lateral-movement
+  technique: T1550.002

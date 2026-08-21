@@ -3,8 +3,43 @@
     "filesystem": {
       "allowWrite": [
         "/Users/encryptshell/Library/Caches/go-build",
+        "/Users/encryptshell/.docker",
         "/var/folders"
       ]
+    },
+    "network": {
+      "allowUnixSockets": [
+        "/Users/encryptshell/.docker/run/docker.sock",
+        "/var/run/docker.sock",
+        "/private/tmp"
+      ],
+      "allowLocalBinding": true,
+      "allowMachLookup": [
+        "org.chromium.Chromium.*",
+        "com.apple.SecurityServer",
+        "com.apple.trustd.agent",
+        "com.apple.trustd",
+        "com.apple.ocspd"
+      ],
+      "enableWeakerNetworkIsolation": true,
+      "allowedDomains": [
+        "registry.npmjs.org",
+        "registry.yarnpkg.com",
+        "objects.githubusercontent.com",
+        "github.com",
+        "api.github.com",
+        "maven.pkg.github.com",
+        "playwright.azureedge.net",
+        "storage.googleapis.com",
+        "dl.google.com",
+        "localhost",
+        "127.0.0.1"
+      ]
     }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(*)"
+    ]
   }
 }

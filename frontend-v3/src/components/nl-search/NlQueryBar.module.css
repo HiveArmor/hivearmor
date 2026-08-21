@@ -1,0 +1,109 @@
+/* NlQueryBar CSS Module — Sprint 26
+ *
+ * Colors: --ha-* design tokens only. No raw hex values (NoRawHexInvariant).
+ */
+
+.queryBar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: 6px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nlInput {
+  flex: 1;
+  background: var(--ha-background);
+  border: 1px solid var(--ha-border);
+  border-radius: 4px;
+  color: var(--ha-text-primary);
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  font-family: inherit;
+  height: 36px;
+}
+
+.nlInput:focus {
+  outline: none;
+  border-color: var(--ha-primary);
+}
+
+.nlInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.translateButton {
+  background: var(--ha-primary);
+  border: none;
+  border-radius: 4px;
+  color: var(--ha-background);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0 1rem;
+  height: 36px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.translateButton:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.translateButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.modeToggle {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: 4px;
+  color: var(--ha-text-secondary);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.625rem;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.modeToggle:hover {
+  color: var(--ha-text-primary);
+  border-color: var(--ha-primary);
+}
+
+.monacoWrapper {
+  border: 1px solid var(--ha-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.monacoFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  background: var(--ha-background);
+  color: var(--ha-text-secondary);
+  font-size: 0.8125rem;
+  border: 1px solid var(--ha-border);
+  border-radius: 4px;
+}
+
+.errorAlert {
+  color: var(--ha-critical);
+  font-size: 0.8125rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--ha-critical);
+  border-radius: 4px;
+  background: var(--ha-surface-raised);
+}

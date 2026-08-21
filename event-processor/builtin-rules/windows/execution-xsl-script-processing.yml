@@ -1,0 +1,40 @@
+id: c7d8e9f0-a1b2-3456-cdef-567890123427
+title: XSL Script Processing via MSXSL or WMIC
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.execution
+  - attack.defense_evasion
+  - attack.T1220
+detection:
+  selection_msxsl:
+    Image|endswith: '\msxsl.exe'
+    CommandLine|contains:
+      - 'http://'
+      - 'https://'
+      - '.xsl'
+  selection_wmic:
+    Image|endswith: '\wmic.exe'
+    CommandLine|contains:
+      - '/format:'
+      - 'http://'
+      - 'https://'
+  condition: selection_msxsl or selection_wmic
+falsepositives:
+  - XSL transformation in build pipelines
+  - Enterprise reporting tools using XSLT
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: execution
+  technique: T1220

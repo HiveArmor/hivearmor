@@ -15,6 +15,8 @@ public interface UtmUbaEntityRiskRepository extends JpaRepository<UtmUbaEntityRi
 
     Optional<UtmUbaEntityRisk> findByEntityIdAndEntityType(String entityId, String entityType);
 
+    Optional<UtmUbaEntityRisk> findFirstByEntityId(String entityId);
+
     Page<UtmUbaEntityRisk> findAllByOrderByRiskScoreDesc(Pageable pageable);
 
     Page<UtmUbaEntityRisk> findByEntityTypeOrderByRiskScoreDesc(String entityType, Pageable pageable);

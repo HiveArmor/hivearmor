@@ -1,0 +1,76 @@
+- generic [ref=f5e3]:
+  - banner [ref=f5e4]:
+    - generic [ref=f5e5]: HiveArmor
+    - generic [ref=f5e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f5e13]'
+      - generic "Reconnecting..." [ref=f5e16]: 0 EPS
+      - button "Notifications" [ref=f5e18] [cursor=pointer]
+      - button "Help" [ref=f5e23] [cursor=pointer]
+      - button "User menu" [ref=f5e28] [cursor=pointer]:
+        - generic [ref=f5e29]: AA
+        - generic [ref=f5e30]: admin
+  - navigation [ref=f5e31]:
+    - generic [ref=f5e32]:
+      - generic [ref=f5e33]:
+        - generic [ref=f5e34]: COMMAND
+        - generic [ref=f5e35]:
+          - button "Analyst Queue" [ref=f5e36] [cursor=pointer]
+          - button "Alerts" [ref=f5e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f5e47] [cursor=pointer]
+          - button "Incidents" [ref=f5e54] [cursor=pointer]
+      - generic [ref=f5e61]:
+        - generic [ref=f5e62]: INVESTIGATE
+        - generic [ref=f5e63]:
+          - button "Search & Hunt" [ref=f5e64] [cursor=pointer]
+          - button "Investigations" [ref=f5e70] [cursor=pointer]
+          - button "Entities" [ref=f5e75] [cursor=pointer]
+      - generic [ref=f5e83]:
+        - generic [ref=f5e84]: DEFEND
+        - generic [ref=f5e85]:
+          - button "Detection Rules" [ref=f5e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f5e91] [cursor=pointer]
+      - generic [ref=f5e96]:
+        - generic [ref=f5e97]: POSTURE
+        - generic [ref=f5e98]:
+          - button "Assets" [ref=f5e99] [cursor=pointer]
+          - button "Identities" [ref=f5e105] [cursor=pointer]
+          - button "Active Directory" [ref=f5e113] [cursor=pointer]
+          - button "Exposure" [ref=f5e121] [cursor=pointer]
+          - button "Sensors" [ref=f5e128] [cursor=pointer]
+          - button "Compliance" [ref=f5e133] [cursor=pointer]
+      - generic [ref=f5e139]:
+        - generic [ref=f5e140]: DASHBOARDS
+        - button "Studio" [ref=f5e142] [cursor=pointer]
+      - generic [ref=f5e148]:
+        - generic [ref=f5e149]: REPORT
+        - button "Scheduled Reports" [ref=f5e151] [cursor=pointer]
+      - generic [ref=f5e157]:
+        - generic [ref=f5e158]: ADMINISTRATION
+        - generic [ref=f5e159]:
+          - button "Users" [ref=f5e160] [cursor=pointer]
+          - button "Integrations" [ref=f5e175] [cursor=pointer]
+          - button "Notifications" [ref=f5e180] [cursor=pointer]
+          - button "Audit Log" [ref=f5e186] [cursor=pointer]
+          - button "Settings" [ref=f5e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f5e199] [cursor=pointer]
+  - main [ref=f5e202]:
+    - generic [ref=f5e203]:
+      - generic [ref=f5e204]:
+        - heading "Analyst Queue" [level=1] [ref=f5e206]
+        - generic [ref=f5e207]:
+          - button "Refresh" [ref=f5e208] [cursor=pointer]
+          - button "Saved Views" [ref=f5e210] [cursor=pointer]
+      - generic [ref=f5e212]:
+        - combobox [ref=f5e213]:
+          - option "Severity" [selected]
+          - option "Critical"
+          - option "High"
+          - option "Medium"
+          - option "Low"
+        - combobox [ref=f5e214]:
+          - option "Status" [selected]
+          - option "Open"
+          - option "In Progress"
+          - option "Resolved"
+          - option "False Positive"
+        - textbox "Search alerts..." [ref=f5e215]

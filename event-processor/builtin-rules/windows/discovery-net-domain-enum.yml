@@ -1,0 +1,41 @@
+id: c1d2e3f4-a5b6-7890-cdef-901234567851
+title: Domain Enumeration via Net Commands
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: medium
+tags:
+  - attack.discovery
+  - attack.T1069
+  - attack.T1087
+  - attack.T1482
+detection:
+  selection:
+    Image|endswith:
+      - '\net.exe'
+      - '\net1.exe'
+    CommandLine|contains:
+      - ' group /domain'
+      - ' user /domain'
+      - ' localgroup'
+      - ' accounts /domain'
+      - ' domain'
+  condition: selection
+falsepositives:
+  - System administrators performing legitimate AD queries
+  - Asset management tools
+  - IT helpdesk tooling
+impact:
+  confidentiality: medium
+  integrity: low
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - User
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: discovery
+  technique: T1069

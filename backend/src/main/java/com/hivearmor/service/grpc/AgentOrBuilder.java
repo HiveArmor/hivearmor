@@ -169,4 +169,43 @@ public interface AgentOrBuilder extends
    */
   com.google.protobuf.ByteString
       getAddressesBytes();
+
+  /**
+   * <code>string agent_uuid = 15;</code>
+   * @return The agentUuid.
+   */
+  java.lang.String getAgentUuid();
+  /**
+   * <code>string agent_uuid = 15;</code>
+   * @return The bytes for agentUuid.
+   */
+  com.google.protobuf.ByteString
+      getAgentUuidBytes();
+
+  /**
+   * <code>int64 tenant_id = 16;</code>
+   * @return The tenantId.
+   */
+  long getTenantId();
+
+  /**
+   * <code>uint32 credential_version = 17;</code>
+   * @return The credentialVersion.
+   */
+  int getCredentialVersion();
+
+  /**
+   * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+   * @return Whether the credentialRevokedAt field is set.
+   */
+  boolean hasCredentialRevokedAt();
+  /**
+   * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+   * @return The credentialRevokedAt.
+   */
+  com.google.protobuf.Timestamp getCredentialRevokedAt();
+  /**
+   * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+   */
+  com.google.protobuf.TimestampOrBuilder getCredentialRevokedAtOrBuilder();
 }

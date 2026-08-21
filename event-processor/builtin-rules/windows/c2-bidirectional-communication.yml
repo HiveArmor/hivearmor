@@ -1,0 +1,38 @@
+id: f6a7b8c9-d0e1-2345-fabc-456789012366
+title: Bidirectional C2 Communication via Named Pipe or Socket
+status: stable
+logsource:
+  product: windows
+  category: pipe_created
+level: high
+tags:
+  - attack.command_and_control
+  - attack.T1573
+  - attack.T1095
+detection:
+  selection:
+    PipeName|contains:
+      - 'msagent_'
+      - 'postex_'
+      - 'mojo.'
+      - 'MSSE-'
+      - 'status_'
+      - 'spoolss'
+  selection_common_c2:
+    PipeName|re: '^\\\\[0-9a-f]{8}-[0-9a-f]{4}$'
+  condition: selection or selection_common_c2
+falsepositives:
+  - Legitimate applications using named pipes for IPC
+  - Security tools using custom pipe names
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - PipeName
+groupBy:
+  - ComputerName
+mitre:
+  tactic: command-and-control
+  technique: T1573

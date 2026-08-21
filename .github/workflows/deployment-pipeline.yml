@@ -200,6 +200,7 @@ jobs:
       os: windows
       artifact_name: agents-windows-unsigned
       signed_artifact_name: agents-windows-signed
+      require_signing: true
       binaries: |
         hivearmor_agent_service_windows_amd64.exe
         hivearmor_agent_service_windows_arm64.exe
@@ -222,6 +223,7 @@ jobs:
       os: macos
       artifact_name: agents-darwin-unsigned
       signed_artifact_name: agents-darwin-signed
+      require_signing: true
       binaries: |
         hivearmor_agent_service_darwin_arm64
         updater/hivearmor_updater_service_darwin_arm64
@@ -232,6 +234,68 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+  package_agent_releases:
+    name: Package and attest endpoint agents
+    needs: [build_agent, sign_agent_windows, setup_deployment]
+    if: ${{ needs.build_agent.result == 'success' && needs.sign_agent_windows.result == 'success' && needs.setup_deployment.outputs.tag != '' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Check out packaging policy
+        uses: actions/checkout@v4
+
+      - name: Download Linux agents
+        uses: actions/download-artifact@v4
+        with:
+          name: agents-linux
+          path: dist/linux
+
+      - name: Download signed Windows agents
+        uses: actions/download-artifact@v4
+        with:
+          name: agents-windows-signed
+          path: dist/windows
+
+      - name: Build deterministic release archives and checksums
+        env:
+          VERSION: ${{ needs.setup_deployment.outputs.tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          agent/scripts/package-release.sh linux amd64 "$VERSION" \
+            dist/linux/hivearmor_agent_service_linux_amd64 \
+            dist/linux/updater/hivearmor_updater_service_linux_amd64 \
+            agent/release/INSTALL.md release
+          agent/scripts/package-release.sh linux arm64 "$VERSION" \
+            dist/linux/hivearmor_agent_service_linux_arm64 \
+            dist/linux/updater/hivearmor_updater_service_linux_arm64 \
+            agent/release/INSTALL.md release
+          agent/scripts/package-release.sh windows amd64 "$VERSION" \
+            dist/windows/hivearmor_agent_service_windows_amd64.exe \
+            dist/windows/updater/hivearmor_updater_service_windows_amd64.exe \
+            agent/release/INSTALL.md release
+          agent/scripts/package-release.sh windows arm64 "$VERSION" \
+            dist/windows/hivearmor_agent_service_windows_arm64.exe \
+            dist/windows/updater/hivearmor_updater_service_windows_arm64.exe \
+            agent/release/INSTALL.md release
+          sha256sum release/hivearmor-agent-* > release/SHA256SUMS
+
+      - name: Attest Linux and Windows release archives
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: release/hivearmor-agent-*
+
+      - name: Upload verified release archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: hivearmor-agent-release-${{ needs.setup_deployment.outputs.tag }}
+          path: release/
+          if-no-files-found: error
+          retention-days: 30
 
   build_hivearmor_collector:
     name: Build HiveArmor Collector
@@ -640,6 +704,4 @@ jobs:
           done
 
           echo "✅ Scheduled release for all instances with version $TAG"
-
-
 

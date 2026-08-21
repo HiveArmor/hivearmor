@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260724010-1" author="hivearmor">
+
+        <!-- Table: ha_oidc_provider -->
+        <createTable tableName="ha_oidc_provider">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="provider_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_secret_encrypted" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="discovery_url" type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scopes" type="VARCHAR(500)" defaultValue="openid profile email">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <!-- Table: ha_oidc_state_cache -->
+        <createTable tableName="ha_oidc_state_cache">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="state_value" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="provider_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code_verifier" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="redirect_uri" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Table: ha_oidc_provider_user -->
+        <createTable tableName="ha_oidc_provider_user">
+            <column name="oidc_sub" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ha_user_login" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Composite PK on ha_oidc_provider_user -->
+        <addPrimaryKey
+            tableName="ha_oidc_provider_user"
+            columnNames="oidc_sub, provider_id"
+            constraintName="pk_oidc_provider_user"/>
+
+        <!-- FK: ha_oidc_provider_user.provider_id → ha_oidc_provider.id -->
+        <addForeignKeyConstraint
+            baseTableName="ha_oidc_provider_user"
+            baseColumnNames="provider_id"
+            constraintName="fk_oidc_provider_user_provider"
+            referencedTableName="ha_oidc_provider"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <!-- FK: ha_oidc_state_cache.provider_id → ha_oidc_provider.id -->
+        <addForeignKeyConstraint
+            baseTableName="ha_oidc_state_cache"
+            baseColumnNames="provider_id"
+            constraintName="fk_oidc_state_cache_provider"
+            referencedTableName="ha_oidc_provider"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <!-- Indexes on ha_oidc_state_cache -->
+        <createIndex tableName="ha_oidc_state_cache" indexName="idx_oidc_state_value">
+            <column name="state_value"/>
+        </createIndex>
+
+        <createIndex tableName="ha_oidc_state_cache" indexName="idx_oidc_state_created">
+            <column name="created_at"/>
+        </createIndex>
+
+    </changeSet>
+
+    <changeSet id="20260724010-2" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="ha_configuration_parameter"/>
+            </not>
+        </preConditions>
+
+        <!-- Table: ha_configuration_parameter — simple key/value store for SCIM tokens and other feature-level tunables -->
+        <createTable tableName="ha_configuration_parameter">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="param_key" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="param_value" type="TEXT"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>

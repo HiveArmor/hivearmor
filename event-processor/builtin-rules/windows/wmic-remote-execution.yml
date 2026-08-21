@@ -1,0 +1,35 @@
+id: 8c4a6e2f-1b5d-4c7a-d3e9-0f6a4b2c8d1e
+title: WMIC Remote Process Execution
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.execution
+  - attack.lateral_movement
+  - attack.T1047
+detection:
+  selection:
+    Image|endswith: '\wmic.exe'
+    CommandLine|contains|all:
+      - '/node:'
+      - 'process'
+  condition: selection
+falsepositives:
+  - Legitimate remote administration via WMIC by IT staff
+  - Software deployment tools using WMIC for remote execution
+  - Remote monitoring and management solutions
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+  - User
+mitre:
+  tactic: execution
+  technique: T1047

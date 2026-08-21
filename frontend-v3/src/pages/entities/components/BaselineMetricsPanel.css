@@ -1,0 +1,208 @@
+/* BaselineMetricsPanel — Sprint 46 */
+
+.ha-baseline-panel {
+  border: 1px solid var(--ha-border-default);
+  border-radius: 8px;
+  background: var(--ha-surface-panel);
+  padding: 16px;
+}
+
+.ha-baseline-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-baseline-panel__header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  margin: 0;
+}
+
+.ha-baseline-panel__period {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-baseline-panel__empty {
+  font-size: 12px;
+  color: var(--ha-foreground-tertiary);
+  text-align: center;
+  padding: 20px;
+}
+
+.ha-baseline-panel__metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ha-baseline-panel__metric {
+  padding: 10px;
+  border-radius: 6px;
+  background: var(--ha-surface-elevated);
+}
+
+.ha-baseline-panel__metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.ha-baseline-panel__metric-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+}
+
+.ha-baseline-panel__metric-status {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.ha-baseline-panel__metric[data-status='normal'] .ha-baseline-panel__metric-status {
+  background: color-mix(in srgb, var(--ha-severity-low) 15%, transparent);
+  color: var(--ha-severity-low);
+}
+
+.ha-baseline-panel__metric[data-status='deviation'] .ha-baseline-panel__metric-status {
+  background: color-mix(in srgb, var(--ha-severity-medium) 15%, transparent);
+  color: var(--ha-severity-medium);
+}
+
+.ha-baseline-panel__metric[data-status='critical_deviation'] .ha-baseline-panel__metric-status {
+  background: color-mix(in srgb, var(--ha-severity-critical) 15%, transparent);
+  color: var(--ha-severity-critical);
+}
+
+.ha-baseline-panel__metric-values {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.ha-baseline-panel__current {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-foreground-primary);
+}
+
+.ha-baseline-panel__separator {
+  font-size: 11px;
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-baseline-panel__baseline-val {
+  font-size: 12px;
+  color: var(--ha-foreground-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ha-baseline-panel__ratio {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-severity-high);
+}
+
+.ha-baseline-panel__metric[data-status='normal'] .ha-baseline-panel__ratio {
+  color: var(--ha-severity-low);
+}
+
+.ha-baseline-panel__bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ha-surface-app);
+  overflow: hidden;
+}
+
+.ha-baseline-panel__bar i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--ha-severity-medium);
+  transition: width 0.3s;
+}
+
+.ha-baseline-panel__metric[data-status='critical_deviation'] .ha-baseline-panel__bar i {
+  background: var(--ha-severity-critical);
+}
+
+.ha-baseline-panel__metric[data-status='normal'] .ha-baseline-panel__bar i {
+  background: var(--ha-severity-low);
+}
+
+.ha-baseline-panel__deviations {
+  margin-top: 14px;
+  border-top: 1px solid var(--ha-border-subtle);
+  padding-top: 10px;
+}
+
+.ha-baseline-panel__deviations h3 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ha-foreground-secondary);
+  margin: 0 0 8px;
+}
+
+.ha-baseline-panel__deviation {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--ha-surface-elevated);
+  margin-bottom: 4px;
+}
+
+.ha-baseline-panel__dev-metric {
+  font-size: 12px;
+  color: var(--ha-foreground-primary);
+  font-weight: 500;
+  flex: 1;
+}
+
+.ha-baseline-panel__dev-value {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-baseline-panel__dev-significance {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.ha-baseline-panel__deviation[data-significance='critical'] .ha-baseline-panel__dev-significance {
+  background: color-mix(in srgb, var(--ha-severity-critical) 15%, transparent);
+  color: var(--ha-severity-critical);
+}
+
+.ha-baseline-panel__deviation[data-significance='high'] .ha-baseline-panel__dev-significance {
+  background: color-mix(in srgb, var(--ha-severity-high) 15%, transparent);
+  color: var(--ha-severity-high);
+}
+
+.ha-baseline-panel__deviation[data-significance='medium'] .ha-baseline-panel__dev-significance {
+  background: color-mix(in srgb, var(--ha-severity-medium) 15%, transparent);
+  color: var(--ha-severity-medium);
+}
+
+.ha-baseline-panel__deviation[data-significance='low'] .ha-baseline-panel__dev-significance {
+  background: color-mix(in srgb, var(--ha-severity-low) 15%, transparent);
+  color: var(--ha-severity-low);
+}

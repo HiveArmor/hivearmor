@@ -1,0 +1,45 @@
+id: 4e0c2a8f-6b5d-4a1c-9e7f-3b8d1c5e2a0f
+title: Suspicious Scheduled Task Creation
+status: stable
+logsource:
+  product: windows
+  service: security
+level: medium
+tags:
+  - attack.persistence
+  - attack.execution
+  - attack.T1053
+  - attack.T1053.005
+detection:
+  selection_event:
+    EventID: 4698
+  selection_suspicious:
+    TaskContent|contains:
+      - 'cmd /c'
+      - 'cmd.exe /c'
+      - 'powershell'
+      - 'wscript'
+      - 'cscript'
+      - 'mshta'
+      - 'regsvr32'
+      - 'rundll32'
+      - 'certutil'
+      - 'bitsadmin'
+  condition: selection_event and selection_suspicious
+falsepositives:
+  - Legitimate software installation creating scheduled tasks
+  - IT administration scripts for patch management
+  - Monitoring and alerting software
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - TaskName
+groupBy:
+  - ComputerName
+  - SubjectUserName
+mitre:
+  tactic: persistence
+  technique: T1053.005

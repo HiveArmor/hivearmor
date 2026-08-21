@@ -1,0 +1,40 @@
+id: ha-net-005
+title: RDP Brute Force Authentication Attempt
+status: stable
+description: Detects multiple failed connection attempts to TCP port 3389 (RDP) from a single source IP, which is indicative of an automated brute force or credential spraying attack against Remote Desktop Protocol.
+logsource:
+  product: network
+  service: firewall
+level: high
+tags:
+  - attack.credential_access
+  - attack.T1110.001
+detection:
+  selection:
+    destination.port: 3389
+    network.transport: tcp
+    event.action:
+      - blocked
+      - denied
+      - drop
+  condition: selection
+falsepositives:
+  - Misconfigured RDP clients repeatedly attempting to connect with stale credentials
+  - Vulnerability scanners probing for open RDP services in authorized assessments
+fields:
+  - source.ip
+  - destination.ip
+  - destination.port
+  - event.action
+impact:
+  confidentiality: high
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - source.ip
+  - destination.ip
+groupBy:
+  - source.ip
+mitre:
+  tactic: credential-access
+  technique: T1110.001

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 // resetState wipes package-level scorer state for test isolation.

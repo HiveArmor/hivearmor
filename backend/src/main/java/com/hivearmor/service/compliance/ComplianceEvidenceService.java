@@ -1,5 +1,6 @@
 package com.hivearmor.service.compliance;
 
+import com.hivearmor.multitenancy.MsspIndexResolver;
 import com.hivearmor.service.dto.compliance.ComplianceEvidenceDTO;
 import com.hivearmor.service.elasticsearch.ElasticsearchService;
 import org.opensearch.client.opensearch._types.FieldValue;
@@ -21,13 +22,17 @@ import java.util.Map;
 @Service
 public class ComplianceEvidenceService {
 
-    private static final String EVIDENCE_INDEX = "v3-hive-compliance-evidence-*";
+    private static final String COMPLIANCE_EVIDENCE_DATA_TYPE = "compliance-evidence";
     private static final int MAX_SUMMARY_CHARS = 200;
 
     private final ElasticsearchService elasticsearchService;
+    private final MsspIndexResolver msspIndexResolver;
 
-    public ComplianceEvidenceService(ElasticsearchService elasticsearchService) {
+    public ComplianceEvidenceService(
+            ElasticsearchService elasticsearchService,
+            MsspIndexResolver msspIndexResolver) {
         this.elasticsearchService = elasticsearchService;
+        this.msspIndexResolver = msspIndexResolver;
     }
 
     public Page<ComplianceEvidenceDTO> getEvidenceForControl(
@@ -38,7 +43,7 @@ public class ComplianceEvidenceService {
         final String mt = mappingType;
         final String sinceStr = since.toString();
         SearchRequest request = SearchRequest.of(s -> s
-                .index(EVIDENCE_INDEX)
+                .index(msspIndexResolver.resolveIndexPattern(COMPLIANCE_EVIDENCE_DATA_TYPE))
                 .query(q -> q.bool(b -> {
                     b.must(m -> m.term(t -> t.field("controlId").value(FieldValue.of(controlId))));
                     b.filter(f -> f.range(r -> r.field("@timestamp").gte(JsonData.of(sinceStr))));
@@ -76,7 +81,7 @@ public class ComplianceEvidenceService {
 
         final String sinceStr2 = since.toString();
         SearchRequest request = SearchRequest.of(s -> s
-                .index(EVIDENCE_INDEX)
+                .index(msspIndexResolver.resolveIndexPattern(COMPLIANCE_EVIDENCE_DATA_TYPE))
                 .query(q -> q.bool(b -> {
                     b.must(m -> m.term(t -> t.field("controlId").value(FieldValue.of(controlId))));
                     b.filter(f -> f.range(r -> r.field("@timestamp").gte(JsonData.of(sinceStr2))));

@@ -1,0 +1,44 @@
+id: ha-net-007
+title: SMB Lateral Movement to Multiple Hosts
+status: stable
+description: Detects outbound SMB connections from a single internal host to multiple unique internal destinations within a short time window, indicative of automated lateral movement via SMB file shares or PsExec-style tooling.
+logsource:
+  product: network
+  service: flow
+level: high
+tags:
+  - attack.lateral_movement
+  - attack.T1021.002
+detection:
+  selection:
+    destination.port:
+      - 445
+      - 139
+    network.transport: tcp
+    network.direction: lateral
+  filter_dc:
+    destination.port: 445
+    source.port:
+      - 88
+      - 636
+  condition: selection and not filter_dc
+falsepositives:
+  - Authorized IT management tools such as SCCM distributing software via SMB
+  - Backup agents accessing multiple file shares simultaneously
+fields:
+  - source.ip
+  - destination.ip
+  - destination.port
+  - network.transport
+impact:
+  confidentiality: high
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - source.ip
+  - destination.ip
+groupBy:
+  - source.ip
+mitre:
+  tactic: lateral-movement
+  technique: T1021.002

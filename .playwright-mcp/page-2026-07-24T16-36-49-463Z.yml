@@ -1,0 +1,60 @@
+- generic [ref=f17e3]:
+  - banner [ref=f17e4]:
+    - generic [ref=f17e5]: HiveArmor
+    - generic [ref=f17e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f17e13]'
+      - generic "Reconnecting..." [ref=f17e16]: 0 EPS
+      - button "Notifications" [ref=f17e18] [cursor=pointer]
+      - button "Help" [ref=f17e23] [cursor=pointer]
+      - button "User menu" [ref=f17e28] [cursor=pointer]:
+        - generic [ref=f17e29]: AA
+        - generic [ref=f17e30]: admin
+  - navigation [ref=f17e31]:
+    - generic [ref=f17e32]:
+      - generic [ref=f17e33]:
+        - generic [ref=f17e34]: COMMAND
+        - generic [ref=f17e35]:
+          - button "Analyst Queue" [ref=f17e36] [cursor=pointer]
+          - button "Alerts" [ref=f17e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f17e47] [cursor=pointer]
+          - button "Incidents" [ref=f17e54] [cursor=pointer]
+      - generic [ref=f17e61]:
+        - generic [ref=f17e62]: INVESTIGATE
+        - generic [ref=f17e63]:
+          - button "Search & Hunt" [ref=f17e64] [cursor=pointer]
+          - button "Investigations" [ref=f17e70] [cursor=pointer]
+          - button "Entities" [ref=f17e75] [cursor=pointer]
+      - generic [ref=f17e83]:
+        - generic [ref=f17e84]: DEFEND
+        - generic [ref=f17e85]:
+          - button "Detection Rules" [ref=f17e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f17e91] [cursor=pointer]
+      - generic [ref=f17e96]:
+        - generic [ref=f17e97]: POSTURE
+        - generic [ref=f17e98]:
+          - button "Assets" [ref=f17e99] [cursor=pointer]
+          - button "Identities" [ref=f17e105] [cursor=pointer]
+          - button "Active Directory" [ref=f17e113] [cursor=pointer]
+          - button "Exposure" [ref=f17e121] [cursor=pointer]
+          - button "Sensors" [ref=f17e128] [cursor=pointer]
+          - button "Compliance" [ref=f17e133] [cursor=pointer]
+      - generic [ref=f17e139]:
+        - generic [ref=f17e140]: DASHBOARDS
+        - button "Studio" [ref=f17e142] [cursor=pointer]
+      - generic [ref=f17e148]:
+        - generic [ref=f17e149]: REPORT
+        - button "Scheduled Reports" [ref=f17e151] [cursor=pointer]
+      - generic [ref=f17e157]:
+        - generic [ref=f17e158]: ADMINISTRATION
+        - generic [ref=f17e159]:
+          - button "Users" [ref=f17e160] [cursor=pointer]
+          - button "Integrations" [ref=f17e175] [cursor=pointer]
+          - button "Notifications" [ref=f17e180] [cursor=pointer]
+          - button "Audit Log" [ref=f17e186] [cursor=pointer]
+          - button "Settings" [ref=f17e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f17e199] [cursor=pointer]
+  - main [ref=f17e202]:
+    - generic [ref=f17e203]:
+      - heading "Unable to load graph" [level=2] [ref=f17e206]
+      - paragraph [ref=f17e207]: An error occurred loading the threat constellation data.
+      - button "Retry" [ref=f17e208] [cursor=pointer]

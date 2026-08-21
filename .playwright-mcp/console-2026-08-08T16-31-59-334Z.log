@@ -1,0 +1,58 @@
+[     107ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     184ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     189ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/ha-incidents/105/entities:0
+[     190ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     202ms] [ERROR] Warning: Each child in a list should have a unique "key" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s 
+
+Check the render method of `IncidentDetailPage`.  
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx?t=1786206689535:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx?t=1786206689535:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d60f55b8:52
+[     204ms] [ERROR] Warning: Each child in a list should have a unique "key" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s 
+
+Check the render method of `IncidentTimelinePanel`.  
+    at li
+    at IncidentTimelinePanel (http://localhost:3000/src/pages/incidents/components/IncidentTimelinePanel.tsx?t=1786206689535:72:41)
+    at section
+    at div
+    at div
+    at section
+    at section
+    at div
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx?t=1786206689535:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx?t=1786206689535:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d60f55b8:52
+[     214ms] [ERROR] Failed to load resource: the server responded with a status of 403 (Forbidden) @ http://localhost:3000/api/ha-admin/settings/ai/status:0
+[    1202ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/ha-incidents/105/entities:0
+[   30182ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   60169ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0

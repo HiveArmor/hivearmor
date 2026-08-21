@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os/exec"
 
-	"github.com/threatwinds/go-sdk/entities"
+	"github.com/hivearmor/sdk/entities"
 )
 
 func ExecuteWithResult(c string, dir string, arg ...string) (string, bool) {

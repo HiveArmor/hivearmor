@@ -1,0 +1,41 @@
+id: c1d2e3f4-a5b6-7890-cdef-901234567821
+title: CertUtil Used to Download Files from Internet
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.execution
+  - attack.defense_evasion
+  - attack.T1218
+  - attack.T1105
+detection:
+  selection:
+    Image|endswith: '\certutil.exe'
+    CommandLine|contains:
+      - '-urlcache'
+      - '-split'
+      - '-f '
+      - '-decode'
+  filter_legit:
+    CommandLine|contains:
+      - '-store'
+      - '-addstore'
+      - '-viewstore'
+  condition: selection and not filter_legit
+falsepositives:
+  - Certificate management operations
+  - PKI administration tasks
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: execution
+  technique: T1218

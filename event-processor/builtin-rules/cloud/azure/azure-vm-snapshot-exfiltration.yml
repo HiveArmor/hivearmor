@@ -1,0 +1,36 @@
+id: ha-azure-008
+title: Azure VM Disk Snapshot Created and Shared
+status: stable
+description: Detects creation of a VM disk snapshot followed by granting access to another subscription or user, which is a technique attackers use to exfiltrate VM disk data without alerting on direct data access.
+logsource:
+  product: azure
+  service: activitylogs
+level: high
+tags:
+  - attack.exfiltration
+  - attack.T1537
+detection:
+  selection:
+    operationName: Microsoft.Compute/snapshots/write
+    resultType: Success
+  condition: selection
+falsepositives:
+  - Authorized disaster recovery workflows creating cross-region backup snapshots
+  - Migration projects copying workloads to new subscriptions
+fields:
+  - operationName
+  - caller
+  - resourceId
+  - subscriptionId
+impact:
+  confidentiality: high
+  integrity: low
+  availability: low
+deduplicateBy:
+  - caller
+  - resourceId
+groupBy:
+  - caller
+mitre:
+  tactic: exfiltration
+  technique: T1537

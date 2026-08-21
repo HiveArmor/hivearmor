@@ -1,0 +1,40 @@
+id: ha-aws-005
+title: Security Group Opened to All Traffic
+status: stable
+description: Detects when an EC2 security group ingress rule is added that permits unrestricted inbound traffic (0.0.0.0/0 or ::/0), significantly expanding the attack surface.
+logsource:
+  product: aws
+  service: cloudtrail
+level: high
+tags:
+  - attack.initial_access
+  - attack.T1190
+detection:
+  selection:
+    eventName: AuthorizeSecurityGroupIngress
+  selection_wildcard_cidr:
+    requestParameters.ipPermissions.items.ipRanges.items.cidrIp|contains:
+      - 0.0.0.0/0
+      - ::/0
+  condition: selection and selection_wildcard_cidr
+falsepositives:
+  - Intentional public-facing services (load balancers, CDN origins) with documented approval
+  - Development and testing environments with known exposure
+fields:
+  - eventName
+  - requestParameters.groupId
+  - requestParameters.ipPermissions.items.ipRanges.items.cidrIp
+  - userIdentity.arn
+  - sourceIPAddress
+impact:
+  confidentiality: medium
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - requestParameters.groupId
+  - userIdentity.arn
+groupBy:
+  - requestParameters.groupId
+mitre:
+  tactic: initial-access
+  technique: T1190

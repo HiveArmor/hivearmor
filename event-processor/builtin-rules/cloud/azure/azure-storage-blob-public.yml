@@ -1,0 +1,39 @@
+id: ha-azure-006
+title: Azure Storage Blob Container Made Public
+status: stable
+description: Detects when an Azure Blob storage container access level is changed to allow anonymous public read access, which can expose sensitive data to the internet.
+logsource:
+  product: azure
+  service: activitylogs
+level: high
+tags:
+  - attack.exfiltration
+  - attack.T1537
+detection:
+  selection:
+    operationName: Microsoft.Storage/storageAccounts/blobServices/containers/write
+    resultType: Success
+    properties.publicAccess:
+      - Blob
+      - Container
+  condition: selection
+falsepositives:
+  - Authorized administrators publishing static website content
+  - Public CDN origin containers managed by web team
+fields:
+  - operationName
+  - caller
+  - resourceId
+  - properties.publicAccess
+impact:
+  confidentiality: high
+  integrity: low
+  availability: low
+deduplicateBy:
+  - caller
+  - resourceId
+groupBy:
+  - resourceId
+mitre:
+  tactic: exfiltration
+  technique: T1537

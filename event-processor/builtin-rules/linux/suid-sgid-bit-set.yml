@@ -1,0 +1,42 @@
+id: ha-linux-005
+title: SUID or SGID Bit Set on File
+status: stable
+description: Detects when the SUID or SGID bit is set on a file, which can enable privilege escalation if the file executes a shell or vulnerable program.
+logsource:
+  product: linux
+  service: auditd
+level: high
+tags:
+  - attack.privilege_escalation
+  - attack.T1548.001
+detection:
+  selection:
+    type: SYSCALL
+    syscall: chmod
+    a1|contains:
+      - '4755'
+      - '6755'
+      - '4711'
+      - '4555'
+  condition: selection
+falsepositives:
+  - Legitimate software installation that requires SUID/SGID binaries (e.g. ping, su, passwd)
+  - System package managers setting permissions on known binaries
+fields:
+  - syscall
+  - a1
+  - a2
+  - uid
+  - comm
+impact:
+  confidentiality: high
+  integrity: high
+  availability: low
+deduplicateBy:
+  - a2
+  - uid
+groupBy:
+  - uid
+mitre:
+  tactic: privilege_escalation
+  technique: T1548.001

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- INV-009/010: tenant isolation and optimistic concurrency for analyst workspaces. -->
+    <changeSet id="20260813004-1" author="hivearmor" context="dev,prod">
+        <addColumn tableName="hive_investigation_session">
+            <column name="tenant_id" type="BIGINT"/>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <createIndex tableName="hive_investigation_session" indexName="idx_hive_inv_session_tenant_created">
+            <column name="tenant_id"/>
+            <column name="created_at" descending="true"/>
+        </createIndex>
+        <createIndex tableName="hive_investigation_session" indexName="idx_hive_inv_session_tenant_owner_created">
+            <column name="tenant_id"/>
+            <column name="created_by"/>
+            <column name="created_at" descending="true"/>
+        </createIndex>
+        <createIndex tableName="hive_session_item" indexName="idx_hive_session_item_session_added">
+            <column name="session_id"/>
+            <column name="added_at" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

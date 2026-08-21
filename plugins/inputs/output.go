@@ -133,7 +133,8 @@ func getSocketSecret() string {
 }
 
 // sendViaSocket opens a fresh socket connection, sends one log, waits for the
-// ack, and closes. Used by kafkaSendLog() as a fallback when Kafka fails.
+// ack, and closes. Used only when Kafka is not configured. The Kafka production
+// path must not call this function.
 func sendViaSocket(log *plugins.Log) error {
 	var socketsFolder utils.Folder
 	var err error

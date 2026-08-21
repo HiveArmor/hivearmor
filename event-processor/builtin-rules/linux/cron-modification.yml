@@ -1,0 +1,42 @@
+id: ha-linux-001
+title: Cron Job Modification
+status: stable
+description: Detects modifications to cron configuration files which may indicate persistence establishment by an attacker.
+logsource:
+  product: linux
+  service: auditd
+level: medium
+tags:
+  - attack.persistence
+  - attack.T1053.003
+detection:
+  selection:
+    type: PATH
+    name|contains:
+      - /etc/cron.d/
+      - /etc/cron.daily/
+      - /etc/cron.hourly/
+      - /etc/cron.monthly/
+      - /etc/cron.weekly/
+      - /etc/crontab
+      - /var/spool/cron/
+  condition: selection
+falsepositives:
+  - Legitimate system administration and software installation
+  - Configuration management tools (Ansible, Puppet, Chef)
+fields:
+  - name
+  - uid
+  - comm
+impact:
+  confidentiality: low
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - name
+  - uid
+groupBy:
+  - name
+mitre:
+  tactic: persistence
+  technique: T1053.003

@@ -1,0 +1,316 @@
+[     117ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:17230
+[     230ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     240ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   15260ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[   15268ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[   30190ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   31900ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[   60194ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   68534ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[   90185ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  120190ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  150192ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  180192ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  210193ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  240192ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  270192ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  300192ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  330192ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  360190ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  390193ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  420190ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  450194ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  480195ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  510195ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  540188ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  570190ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  600200ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  630182ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  660178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  690179ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  720176ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  750174ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  780177ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  810178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  840190ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  870176ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  900177ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  930177ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  960180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  990177ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1020178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1050178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1080178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1110179ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1140177ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1170174ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1200178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1230188ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1251684ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 1260049ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 1260121ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 1260170ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 1260182ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1263008ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 1264614ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 1266828ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 1286329ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 1290169ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1320178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1343734ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 1344826ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 1350179ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1380173ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1410188ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1440177ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1470178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1485206ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 1500183ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1530180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1560181ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1590180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1620179ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1650181ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1680183ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1710181ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1740180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1770171ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1800172ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1830178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1860180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1890171ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1920198ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1950181ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1980181ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2010182ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2040182ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2070180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2100180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2130181ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2160185ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2190182ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2220183ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2250186ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2280181ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2310182ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2339915ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2340184ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2357096ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2357124ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2359306ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2362556ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2362606ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2362651ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2364794ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2364837ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2364875ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2366976ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2366996ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2368524ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2368568ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2368606ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2370185ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2371601ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2372723ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2372760ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2372794ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2372900ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2372934ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2372964ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2373832ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2373873ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2373915ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2376285ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2377275ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2377317ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2377357ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2378432ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2378472ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2378513ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2384834ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2385044ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2386564ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2386769ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2400180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2430180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2460180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2490178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2520180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2550177ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2580180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2610178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2640180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2661101ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2661118ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2661209ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2661343ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2661363ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2661604ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2661651ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2661659ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2663104ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2663289ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2663310ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2663444ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2663518ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2663601ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2663922ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2663957ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2663965ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2664390ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2664477ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2664621ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2664632ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2664717ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2664839ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2664926ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2665018ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2665125ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2665218ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2665480ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2668690ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2669765ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2670178ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2671941ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2672241ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2672282ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2672328ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2673506ms] [WARNING] [ECharts] Can't get DOM width or height. Please check dom.clientWidth and dom.clientHeight. They should not be 0.For example, you may need to call this in the callback of window.onload. @ http://localhost:3000/node_modules/.vite/deps/echarts.js?v=488ae579:7101
+[ 2700180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2730181ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2760183ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2790174ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2820179ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2850189ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2880181ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2910180ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2940170ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2958981ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:17230
+[ 2959123ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2959133ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 2989126ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3008888ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:17230
+[ 3008963ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3008978ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3017793ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:17230
+[ 3017856ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3017869ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3034471ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:17230
+[ 3034534ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3034570ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3052823ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:17230
+[ 3052896ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3052906ms] ReferenceError: HaCompactSelect is not defined
+    at SearchHuntPage (http://localhost:3000/src/pages/search-hunt/SearchHuntPage.tsx?t=1785838486452:622:32)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12122:19)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12309:14)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:13092:13)
+    at HTMLUnknownElement.callCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:3142:11)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:3162:14)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:3201:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15990:5)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15568:12)
+[ 3052906ms] [ERROR] Error handled by React Router default ErrorBoundary: ReferenceError: HaCompactSelect is not defined
+    at SearchHuntPage (http://localhost:3000/src/pages/search-hunt/SearchHuntPage.tsx?t=1785838486452:622:32)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12122:19)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12309:14)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:13092:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15568:12)
+    at workLoopConcurrent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15560:54)
+    at renderRootConcurrent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15539:6)
+    at performConcurrentWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15140:110) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3780
+[ 3052906ms] [ERROR] Error handled by React Router default ErrorBoundary: ReferenceError: HaCompactSelect is not defined
+    at SearchHuntPage (http://localhost:3000/src/pages/search-hunt/SearchHuntPage.tsx?t=1785838486452:622:32)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12122:19)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12309:14)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:13092:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15568:12)
+    at workLoopConcurrent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15560:54)
+    at renderRootConcurrent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15539:6)
+    at performConcurrentWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15140:110) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3780
+[ 3052907ms] ReferenceError: HaCompactSelect is not defined
+    at SearchHuntPage (http://localhost:3000/src/pages/search-hunt/SearchHuntPage.tsx?t=1785838486452:622:32)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12122:19)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12309:14)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:13092:13)
+    at HTMLUnknownElement.callCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:3142:11)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:3162:14)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:3201:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15990:5)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15568:12)
+[ 3052907ms] [ERROR] Error handled by React Router default ErrorBoundary: ReferenceError: HaCompactSelect is not defined
+    at SearchHuntPage (http://localhost:3000/src/pages/search-hunt/SearchHuntPage.tsx?t=1785838486452:622:32)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12122:19)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12309:14)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:13092:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15500:6)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15193:21) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3780
+[ 3052907ms] [ERROR] Error handled by React Router default ErrorBoundary: ReferenceError: HaCompactSelect is not defined
+    at SearchHuntPage (http://localhost:3000/src/pages/search-hunt/SearchHuntPage.tsx?t=1785838486452:622:32)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12122:19)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12309:14)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:13092:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15500:6)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15193:21) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3780
+[ 3052908ms] [ERROR] The above error occurred in the <SearchHuntPage> component:
+
+    at SearchHuntPage (http://localhost:3000/src/pages/search-hunt/SearchHuntPage.tsx?t=1785838486452:134:22)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx?t=1785835252113:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx?t=1785838486452:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=ee613ef6:2995:31)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, RenderErrorBoundary. @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:11718
+[ 3052908ms] [ERROR] React Router caught the following error during render ReferenceError: HaCompactSelect is not defined
+    at SearchHuntPage (http://localhost:3000/src/pages/search-hunt/SearchHuntPage.tsx?t=1785838486452:622:32)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12122:19)
+    at mountLazyComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12309:14)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:13092:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15500:6)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15193:21) {componentStack: 
+    at SearchHuntPage (http://localhost:3000/src/…ack_react-query.js?v=ee613ef6:2995:31)
+    at App} @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3810
+[ 3052909ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3061671ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:17230
+[ 3061726ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3061744ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3080580ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:17230
+[ 3080647ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3080659ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3089526ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:17230
+[ 3089579ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3089588ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3119583ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3149588ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3179596ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 3209574ms] [ERROR] Failed to load resource: the server responded with a status of 502 (Bad Gateway) @ http://localhost:3000/api/overview/health:0

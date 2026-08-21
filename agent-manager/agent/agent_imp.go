@@ -9,13 +9,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/threatwinds/go-sdk/catcher"
 	"github.com/hivearmor/agent-manager/database"
 	"github.com/hivearmor/agent-manager/metrics"
 	"github.com/hivearmor/agent-manager/models"
 	"github.com/hivearmor/agent-manager/utils"
+	"github.com/threatwinds/go-sdk/catcher"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"gorm.io/gorm"
 )
 
 var (
@@ -40,8 +41,8 @@ type AgentService struct {
 func (s *AgentService) ValidateAgentKey(key string, id uint) bool {
 	s.CacheAgentKeyMutex.RLock()
 	defer s.CacheAgentKeyMutex.RUnlock()
-	_, valid := utils.IsKeyPairValid(key, id, s.CacheAgentKey)
-	return valid
+	stored, ok := s.CacheAgentKey[id]
+	return ok && credentialMatches(stored, key)
 }
 
 func InitAgentService() error {
@@ -61,47 +62,42 @@ func InitAgentService() error {
 			return
 		}
 		for _, agent := range agents {
-			AgentServ.CacheAgentKey[agent.ID] = agent.AgentKey
+			if agent.CredentialRevokedAt != nil {
+				continue
+			}
+			if agent.AgentKeyHash != "" {
+				AgentServ.CacheAgentKey[agent.ID] = agent.AgentKeyHash
+			} else if agent.AgentKey != "" {
+				// Dated compatibility path for pre-PILOT-01 rows. New writes never
+				// populate AgentKey; remove after the credential migration window.
+				AgentServ.CacheAgentKey[agent.ID] = agent.AgentKey
+			}
 		}
 	})
 	return err
 }
 
 func (s *AgentService) RegisterAgent(ctx context.Context, req *AgentRequest) (*AuthResponse, error) {
-	agent := &models.Agent{
-		Ip:             req.GetIp(),
-		Hostname:       req.GetHostname(),
-		Os:             req.GetOs(),
-		Platform:       req.GetPlatform(),
-		Version:        req.GetVersion(),
-		RegisterBy:     req.GetRegisterBy(),
-		Mac:            req.GetMac(),
-		OsMajorVersion: req.GetOsMajorVersion(),
-		OsMinorVersion: req.GetOsMinorVersion(),
-		Aliases:        req.GetAliases(),
-		Addresses:      req.GetAddresses(),
+	if req.GetHostname() == "" || req.GetMac() == "" || req.GetPlatform() == "" {
+		return nil, status.Error(codes.InvalidArgument, "hostname, MAC address, and platform are required")
 	}
-
-	oldAgent := &models.Agent{}
-	err := s.DBConnection.GetFirst(oldAgent, "hostname = ? AND mac = ?", agent.Hostname, agent.Mac)
-	if err == nil {
-		// Same machine re-registering, return existing agent
-		return &AuthResponse{
-			Id:  uint32(oldAgent.ID),
-			Key: oldAgent.AgentKey,
-		}, nil
-	}
-
-	key := uuid.New().String()
-	agent.AgentKey = key
-	err = s.DBConnection.Create(agent)
+	var agent *models.Agent
+	var key string
+	err := s.DBConnection.Transaction(func(tx *gorm.DB) error {
+		var err error
+		agent, key, err = consumeEnrollment(ctx, tx, req)
+		return err
+	})
 	if err != nil {
-		catcher.Error("failed to create agent", err, map[string]any{"process": "agent-manager"})
-		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to create agent: %v", err))
+		if _, ok := status.FromError(err); ok {
+			return nil, err
+		}
+		catcher.Error("failed to register agent", err, map[string]any{"process": "agent-manager"})
+		return nil, status.Error(codes.Internal, "failed to register agent")
 	}
 
 	s.CacheAgentKeyMutex.Lock()
-	s.CacheAgentKey[agent.ID] = key
+	s.CacheAgentKey[agent.ID] = agent.AgentKeyHash
 	s.CacheAgentKeyMutex.Unlock()
 
 	LastSeenChannel <- models.LastSeen{
@@ -118,7 +114,7 @@ func (s *AgentService) RegisterAgent(ctx context.Context, req *AgentRequest) (*A
 }
 
 func (s *AgentService) UpdateAgent(ctx context.Context, req *AgentRequest) (*AuthResponse, error) {
-	id, key, _, err := utils.GetItemsFromContext(ctx)
+	id, _, _, err := utils.GetItemsFromContext(ctx)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid context")
 	}
@@ -166,24 +162,33 @@ func (s *AgentService) UpdateAgent(ctx context.Context, req *AgentRequest) (*Aut
 	}
 
 	res := &AuthResponse{
-		Id:  uint32(agent.ID),
-		Key: key,
+		Id: uint32(agent.ID),
 	}
 
 	return res, nil
 }
 
 func (s *AgentService) DeleteAgent(ctx context.Context, req *DeleteRequest) (*AuthResponse, error) {
-	id, key, _, err := utils.GetItemsFromContext(ctx)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid context")
-	}
-	idInt, err := strconv.Atoi(id)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid id")
+	var idInt int
+	if req.GetAgentId() > 0 {
+		idInt = int(req.GetAgentId())
+		var scoped models.Agent
+		if req.GetTenantId() <= 0 || s.DBConnection.GetFirst(&scoped, "id = ? AND tenant_id = ?", idInt, req.GetTenantId()) != nil {
+			return nil, status.Error(codes.NotFound, "agent not found in tenant")
+		}
+	} else {
+		id, _, _, err := utils.GetItemsFromContext(ctx)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid context")
+		}
+		parsedID, err := strconv.Atoi(id)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid id")
+		}
+		idInt = parsedID
 	}
 
-	err = s.DBConnection.Upsert(&models.Agent{}, "id = ?", map[string]interface{}{"deleted_by": req.DeletedBy}, id)
+	err := s.DBConnection.Upsert(&models.Agent{}, "id = ?", map[string]interface{}{"deleted_by": req.DeletedBy}, idInt)
 	if err != nil {
 		catcher.Error("unable to update delete_by field in agent", err, map[string]any{"process": "agent-manager"})
 	}
@@ -194,7 +199,7 @@ func (s *AgentService) DeleteAgent(ctx context.Context, req *DeleteRequest) (*Au
 		return &AuthResponse{}, status.Error(codes.Internal, fmt.Sprintf("unable to delete agent commands: %v", err.Error()))
 	}
 
-	err = s.DBConnection.Delete(&models.Agent{}, "id = ?", false, id)
+	err = s.DBConnection.Delete(&models.Agent{}, "id = ?", false, idInt)
 	if err != nil {
 		catcher.Error("unable to delete agent", err, map[string]any{"process": "agent-manager"})
 		return &AuthResponse{}, status.Error(codes.Internal, fmt.Sprintf("unable to delete agent: %v", err.Error()))
@@ -208,16 +213,16 @@ func (s *AgentService) DeleteAgent(ctx context.Context, req *DeleteRequest) (*Au
 	delete(s.AgentStreamMap, uint(idInt))
 	s.AgentStreamMutex.Unlock()
 
-	catcher.Info("Agent deleted", map[string]any{"key": key, "deleted_by": req.DeletedBy, "process": "agent-manager"})
+	catcher.Info("Agent deleted", map[string]any{"agent_id": idInt, "deleted_by": req.DeletedBy, "process": "agent-manager"})
 
 	return &AuthResponse{
-		Id:  uint32(idInt),
-		Key: key,
+		Id: uint32(idInt),
 	}, nil
 }
 
 func (s *AgentService) ListAgents(ctx context.Context, req *ListRequest) (*ListAgentsResponse, error) {
-	page := utils.NewPaginator(int(req.PageSize), int(req.PageNumber), req.SortBy)
+	pageNumber, pageSize := utils.BoundInventoryPage(req.GetPageNumber(), req.GetPageSize())
+	page := utils.NewPaginator(pageSize, pageNumber, req.SortBy)
 	filter := utils.NewFilter(req.SearchQuery)
 
 	agents := []models.Agent{}
@@ -384,7 +389,8 @@ func (s *AgentService) ProcessCommand(stream PanelService_ProcessCommandServer) 
 }
 
 func (s *AgentService) ListAgentCommands(ctx context.Context, req *ListRequest) (*ListAgentsCommandsResponse, error) {
-	page := utils.NewPaginator(int(req.PageSize), int(req.PageNumber), req.SortBy)
+	pageNumber, pageSize := utils.BoundInventoryPage(req.GetPageNumber(), req.GetPageSize())
+	page := utils.NewPaginator(pageSize, pageNumber, req.SortBy)
 	filter := utils.NewFilter(req.SearchQuery)
 
 	commands := []models.AgentCommand{}

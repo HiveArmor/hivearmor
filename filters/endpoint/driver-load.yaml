@@ -1,0 +1,46 @@
+# HiveArmor Driver/Kernel Module Load filter — version 1.0.0
+# DataType: driver-load
+#
+# Processes events from:
+#   - agent/collector/ebpf.Collector init_module/finit_module tracepoints (Linux)
+#   - agent/collector/etw.Collector  (Windows — kernel extension load)
+#   - agent/collector/esf.Collector  ES_EVENT_TYPE_NOTIFY_KEXTLOAD (macOS)
+
+pipeline:
+  - dataTypes:
+      - driver-load
+    steps:
+      - json:
+          source: raw
+          where: 'startsWith("raw", "{")'
+
+      - rename:
+          from:
+            - log.moduleName
+            - log.ModuleName
+            - log.module_name
+          to: log.module_name
+          where: 'exists("log.moduleName") || exists("log.ModuleName") || exists("log.module_name")'
+
+      - rename:
+          from:
+            - log.pid
+            - log.PID
+          to: origin.pid
+          where: 'exists("log.pid") || exists("log.PID")'
+
+      - rename:
+          from:
+            - log.processName
+            - log.Comm
+            - log.comm
+          to: origin.process
+          where: 'exists("log.processName") || exists("log.Comm") || exists("log.comm")'
+
+      # Driver-load events are always HIGH severity — no legitimate software
+      # loads kernel modules without being explicitly installed.
+      - add:
+          function: string
+          params:
+            key: severity
+            value: "HIGH"

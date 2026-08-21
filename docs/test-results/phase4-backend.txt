@@ -1,0 +1,132 @@
+Phase 4 Backend — Combined S-4A + S-4B Results
+Date: 2026-07-21
+Status: All files written — backend integration tests require: cd backend && mvn -s settings.xml test
+
+═══════════════════════════════════════════════════════════════════════════════
+S-4A — Evidence Persistence Backend
+═══════════════════════════════════════════════════════════════════════════════
+
+Liquibase: 20260721001_evidence_board.xml
+  changeSet 20260721001-1: hive_evidence_item
+    id, incident_id, item_type (ALERT|NOTE|EXTERNAL_URL|ARTIFACT), title,
+    content (TEXT), source_ref, severity_hint, created_by, created_at, updated_at
+    + index on incident_id
+  changeSet 20260721001-2: hive_evidence_board
+    id, incident_id, name, created_at, updated_at
+    + index on incident_id
+  changeSet 20260721001-3: hive_evidence_placement
+    id, board_id (FK→hive_evidence_board CASCADE), evidence_item_id (FK→hive_evidence_item CASCADE),
+    pos_x, pos_y, width, height, schema_version (INT NOT NULL DEFAULT 0), updated_at
+    + index on board_id
+  changeSet 20260721001-4: hive_evidence_relationship
+    id, incident_id, source_item_id (FK→hive_evidence_item CASCADE),
+    target_item_id (FK→hive_evidence_item CASCADE), relationship_type, label, created_by, created_at
+    + index on incident_id
+  master.xml: entry added after 20260720002
+
+Domain entities: UtmEvidenceItem, UtmEvidenceBoard, UtmEvidencePlacement, UtmEvidenceRelationship
+Repositories:   UtmEvidenceItemRepository, UtmEvidenceBoardRepository,
+                UtmEvidencePlacementRepository, UtmEvidenceRelationshipRepository
+DTOs (records): EvidenceItemDTO, EvidenceBoardDTO, EvidencePlacementDTO (with schemaVersion),
+                EvidenceRelationshipDTO
+
+EvidenceService methods:
+  listItems, addItem, updateItem, deleteItem
+  getOrCreateMainBoard (lazy-creates "Main Board" on first access)
+  getBoard, savePlacements (→ 409 if storedVersion > submittedVersion)
+  listRelationships, addRelationship, deleteRelationship
+
+EvidenceResource — /api/ha-incidents/{incidentId}/:
+  POST   /evidence                              → 201  ADMIN|SOC_MANAGER|ANALYST
+  GET    /evidence                              → 200  all roles + READ_ONLY
+  PUT    /evidence/{itemId}                     → 200  write roles
+  DELETE /evidence/{itemId}                     → 204  write roles
+  GET    /evidence-boards/main                  → 200  read roles
+  GET    /evidence-boards/{boardId}/placements  → 200  read roles
+  PUT    /evidence-boards/{boardId}/placements  → 200|409  write roles
+  GET    /evidence-relationships                → 200  read roles
+  POST   /evidence-relationships                → 201  write roles
+  DELETE /evidence-relationships/{relId}        → 204  write roles
+
+Integration tests (EvidenceResourceIT.java):
+  addItem_returnsCreated
+  listItems_returnsOkWithList
+  getMainBoard_returnsOkAndLazilyCreates
+  savePlacements_withConflictVersion_returns409
+  listItems_readOnlyUser_canGet
+
+Run: cd backend && mvn -s settings.xml test -Dtest=EvidenceResourceIT
+
+═══════════════════════════════════════════════════════════════════════════════
+S-4B — Timeline + Notes Backend
+═══════════════════════════════════════════════════════════════════════════════
+
+No new Liquibase migration needed:
+  hive_incident_note already exists (renamed in 20260712001 from utm_incident_note)
+  Notes endpoint already exists at /api/ha-incident-notes (UtmIncidentNoteResource)
+
+New DTO: IncidentTimelineEventDTO (Java record)
+  id, eventType, actor, Instant eventAt, title, detail, Integer severityHint
+  @JsonInclude(NON_NULL)
+
+New Service: IncidentTimelineService
+  getTimeline(Long incidentId): aggregates from 5 sources, each try/catch isolated:
+  1. hive_incident_history → STATUS_CHANGE + NOTE (for INCIDENT_NOTE_* action types)
+  2. hive_incident_note    → NOTE events
+  3. hive_evidence_item    → EVIDENCE_ADDED events
+  4. SOAR_EXECUTED         → deferred to S-10 (comment in code)
+  5. hive_incident_alert   → ALERT_ADDED events (eventAt=Instant.EPOCH until addedAt column added in S-10)
+  → sorted ascending by eventAt (nullsFirst)
+
+Modified: UtmIncidentNoteRepository
+  + findByIncidentIdOrderByNoteSendDateAsc(Long incidentId)
+
+Modified: UtmIncidentResource
+  getIncidentTimeline() endpoint upgraded:
+    Path:    GET /api/ha-incidents/{id}/timeline (unchanged)
+    Returns: List<IncidentTimelineEventDTO> (was TimelineEventDTO)
+    Auth:    ROLE_ADMIN|SOC_MANAGER|ANALYST|USER|READ_ONLY (was ADMIN|USER only)
+    Impl:    incidentTimelineService.getTimeline() (was incidentInvestigationService.getTimeline())
+
+Integration tests (TimelineResourceIT.java):
+  getTimeline_returnsOk
+  getTimeline_emptyIncident_returnsEmptyList
+  getTimeline_readOnlyRole_canAccess
+  getTimeline_multipleSources_sortedAscending
+
+Run: cd backend && mvn -s settings.xml test -Dtest=TimelineResourceIT
+Run both: cd backend && mvn -s settings.xml test -Dtest="EvidenceResourceIT,TimelineResourceIT"
+
+═══════════════════════════════════════════════════════════════════════════════
+Phase 4 Backend — File Index
+═══════════════════════════════════════════════════════════════════════════════
+
+Created in S-4A:
+  backend/src/main/resources/config/liquibase/changelog/20260721001_evidence_board.xml
+  backend/src/main/java/com/hivearmor/domain/UtmEvidenceItem.java
+  backend/src/main/java/com/hivearmor/domain/UtmEvidenceBoard.java
+  backend/src/main/java/com/hivearmor/domain/UtmEvidencePlacement.java
+  backend/src/main/java/com/hivearmor/domain/UtmEvidenceRelationship.java
+  backend/src/main/java/com/hivearmor/repository/UtmEvidenceItemRepository.java
+  backend/src/main/java/com/hivearmor/repository/UtmEvidenceBoardRepository.java
+  backend/src/main/java/com/hivearmor/repository/UtmEvidencePlacementRepository.java
+  backend/src/main/java/com/hivearmor/repository/UtmEvidenceRelationshipRepository.java
+  backend/src/main/java/com/hivearmor/service/dto/EvidenceItemDTO.java
+  backend/src/main/java/com/hivearmor/service/dto/EvidenceBoardDTO.java
+  backend/src/main/java/com/hivearmor/service/dto/EvidencePlacementDTO.java
+  backend/src/main/java/com/hivearmor/service/dto/EvidenceRelationshipDTO.java
+  backend/src/main/java/com/hivearmor/service/evidence/EvidenceService.java
+  backend/src/main/java/com/hivearmor/web/rest/evidence/EvidenceResource.java
+  backend/src/test/java/com/hivearmor/web/rest/evidence/EvidenceResourceIT.java
+
+Modified in S-4A:
+  backend/src/main/resources/config/liquibase/master.xml
+
+Created in S-4B:
+  backend/src/main/java/com/hivearmor/service/dto/IncidentTimelineEventDTO.java
+  backend/src/main/java/com/hivearmor/service/incident/IncidentTimelineService.java
+  backend/src/test/java/com/hivearmor/web/rest/evidence/TimelineResourceIT.java
+
+Modified in S-4B:
+  backend/src/main/java/com/hivearmor/repository/incident/UtmIncidentNoteRepository.java
+  backend/src/main/java/com/hivearmor/web/rest/incident/UtmIncidentResource.java

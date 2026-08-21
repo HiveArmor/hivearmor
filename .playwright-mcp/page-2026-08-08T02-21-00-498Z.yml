@@ -1,0 +1,283 @@
+- generic [ref=f6e1]:
+  - generic [ref=f6e5]:
+    - link "Skip to main content" [ref=f6e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f6e7]:
+      - generic [ref=f6e8]:
+        - generic [ref=f6e14]: HiveArmor
+        - generic [ref=f6e15]: Security operations
+      - generic [ref=f6e16]:
+        - button "All authorized tenants" [ref=f6e18] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f6e26] [cursor=pointer]:
+          - generic [ref=f6e31]: ⌘ K
+        - generic [ref=f6e32]: Production
+      - generic [ref=f6e33]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=f6e34]'
+        - status "Live events per second" [ref=f6e37]:
+          - generic [ref=f6e39]: 0 EPS
+        - button "Notifications" [ref=f6e40] [cursor=pointer]
+        - button "Help" [ref=f6e45] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f6e49]:
+      - generic [ref=f6e50]:
+        - region "COMMAND" [ref=f6e51]:
+          - generic [ref=f6e52]:
+            - button "Mission Control" [ref=f6e53] [cursor=pointer]
+            - button "Analyst Queue" [ref=f6e60] [cursor=pointer]
+            - button "Alerts" [ref=f6e64] [cursor=pointer]
+            - button "Correlated Findings" [ref=f6e69] [cursor=pointer]
+            - button "Incidents" [ref=f6e75] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f6e81]:
+          - generic [ref=f6e82]:
+            - button "Search & Hunt" [ref=f6e83] [cursor=pointer]
+            - button "Investigations" [ref=f6e88] [cursor=pointer]
+            - button "Entities" [ref=f6e92] [cursor=pointer]
+            - button "Threat Constellation" [ref=f6e99] [cursor=pointer]
+        - region "DEFEND" [ref=f6e105]:
+          - generic [ref=f6e106]:
+            - button "Detection Rules" [ref=f6e107] [cursor=pointer]
+            - button "Playbooks" [ref=f6e111] [cursor=pointer]
+            - button "Response Library" [ref=f6e116] [cursor=pointer]
+        - region "POSTURE" [ref=f6e120]:
+          - generic [ref=f6e121]:
+            - button "Assets" [ref=f6e122] [cursor=pointer]
+            - button "Identities" [ref=f6e127] [cursor=pointer]
+            - button "Active Directory" [ref=f6e134] [cursor=pointer]
+            - button "Exposure" [ref=f6e141] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f6e147] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f6e158] [cursor=pointer]
+            - button "Sensors" [ref=f6e164] [cursor=pointer]
+            - button "Compliance" [ref=f6e168] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f6e173]:
+          - generic [ref=f6e174]:
+            - button "Endpoints" [ref=f6e175] [cursor=pointer]
+            - button "File Quarantine" [ref=f6e179] [cursor=pointer]
+            - button "File Integrity" [ref=f6e185] [cursor=pointer]
+            - button "Agent Policies" [ref=f6e192] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f6e197]:
+          - button "Studio" [ref=f6e199] [cursor=pointer]
+        - region "REPORT" [ref=f6e204]:
+          - button "Scheduled Reports" [ref=f6e206] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f6e211]:
+          - generic [ref=f6e212]:
+            - button "Users" [ref=f6e213] [cursor=pointer]
+            - button "Integrations" [ref=f6e227] [cursor=pointer]
+            - button "Notifications" [ref=f6e231] [cursor=pointer]
+            - button "Audit Log" [ref=f6e236] [cursor=pointer]
+            - button "Settings" [ref=f6e241] [cursor=pointer]
+      - generic [ref=f6e246]:
+        - button "User menu" [ref=f6e249] [cursor=pointer]:
+          - generic [ref=f6e250]: AA
+        - button "Pin sidebar open" [ref=f6e251] [cursor=pointer]
+    - main [ref=f6e254]:
+      - generic [ref=f6e255]:
+        - generic [ref=f6e256]:
+          - generic [ref=f6e261]:
+            - generic [ref=f6e262]: DEFEND
+            - heading "Detection Engineering" [level=1] [ref=f6e263]
+          - generic [ref=f6e264]:
+            - generic [ref=f6e265]:
+              - text: Rule health and coverage
+              - generic [ref=f6e272]: J
+              - generic [ref=f6e273]: /
+              - generic [ref=f6e274]: K
+              - generic [ref=f6e275]: navigate
+            - button "Import" [ref=f6e276] [cursor=pointer]
+            - button "Sigma sync" [ref=f6e280] [cursor=pointer]
+            - button "Create rule" [ref=f6e285] [cursor=pointer]
+        - navigation "Detection engineering views" [ref=f6e287]:
+          - button "Rules 3" [ref=f6e1252] [cursor=pointer]:
+            - text: Rules
+            - generic [ref=f6e291]: "3"
+          - button "Rule monitoring 3" [ref=f6e1253] [cursor=pointer]:
+            - text: Rule monitoring
+            - generic [ref=f6e295]: "3"
+          - button "ATT&CK coverage 0" [ref=f6e296] [cursor=pointer]:
+            - text: ATT&CK coverage
+            - generic [ref=f6e299]: "0"
+          - button "Test console" [ref=f6e300] [cursor=pointer]
+        - search "Detection rule filters" [ref=f6e304]:
+          - generic [ref=f6e305]:
+            - textbox "Search detection rules" [active] [ref=f6e309]:
+              - /placeholder: Search rule, Sigma ID, tactic, or technique…
+              - text: PowerShell
+            - button "Clear search" [ref=f6e1254] [cursor=pointer]
+          - button "Rule state" [ref=f6e311] [cursor=pointer]:
+            - generic [ref=f6e312]: All states
+          - button "Execution response" [ref=f6e316] [cursor=pointer]:
+            - generic [ref=f6e317]: All responses
+          - button "Rule source" [ref=f6e321] [cursor=pointer]:
+            - generic [ref=f6e322]: All sources
+          - button "Rule severity" [ref=f6e326] [cursor=pointer]:
+            - generic [ref=f6e327]: All severities
+          - button "Refresh detection rules" [ref=f6e330] [cursor=pointer]
+        - generic "Detection rule summary" [ref=f6e336]:
+          - article [ref=f6e337]:
+            - generic [ref=f6e338]: Installed rules
+            - strong [ref=f6e341]: "3"
+            - generic [ref=f6e342]: authorized scope
+          - article [ref=f6e343]:
+            - generic [ref=f6e344]: Enabled
+            - strong [ref=f6e347]: "3"
+            - generic [ref=f6e348]: 100% of inventory
+          - article [ref=f6e349]:
+            - generic [ref=f6e350]: Healthy
+            - strong [ref=f6e354]: "3"
+            - generic [ref=f6e355]: last execution succeeded
+          - article [ref=f6e356]:
+            - generic [ref=f6e357]: Needs attention
+            - strong [ref=f6e360]: —
+            - generic [ref=f6e361]: delayed or failed
+          - article [ref=f6e362]:
+            - generic [ref=f6e363]: Alerts · 24h
+            - strong [ref=f6e366]: —
+            - generic [ref=f6e367]: generated by enabled rules
+          - article [ref=f6e368]:
+            - generic [ref=f6e369]: ATT&CK coverage
+            - strong [ref=f6e372]: "0"
+            - generic [ref=f6e373]: mapped techniques
+        - main [ref=f6e374]:
+          - generic [ref=f6e375]:
+            - generic [ref=f6e376]:
+              - strong [ref=f6e377]: Installed rules
+              - generic [ref=f6e378]: 3 matching
+            - generic [ref=f6e379]:
+              - button "Clear filters" [ref=f6e1258] [cursor=pointer]
+              - group "Row density" [ref=f6e380]:
+                - generic [ref=f6e381]: Rows
+                - generic [ref=f6e382]:
+                  - button "compact rows" [pressed] [ref=f6e383] [cursor=pointer]
+                  - button "standard rows" [ref=f6e388] [cursor=pointer]
+                  - button "comfortable rows" [ref=f6e393] [cursor=pointer]
+              - button "Columns" [ref=f6e399] [cursor=pointer]
+          - generic "Detection rules inventory" [ref=f6e403]:
+            - generic [ref=f6e407]:
+              - grid [ref=f6e409]:
+                - rowgroup [ref=f6e410]:
+                  - row [ref=f6e411]:
+                    - columnheader "Column with Header Selection  Detection" [ref=f6e412]:
+                      - checkbox "Column with Header Selection" [ref=f6e414] [cursor=pointer]
+                      - text: 
+                      - generic [ref=f6e415] [cursor=pointer]: Detection
+                      - text: 
+                      - generic:      
+                    - columnheader "Status" [ref=f6e416]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Last response" [ref=f6e419]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Source" [ref=f6e422]:
+                      - text: 
+                      - generic:      
+                    - columnheader "MITRE ATT&CK" [ref=f6e425]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Alerts 24h" [ref=f6e428]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Schedule" [ref=f6e431]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Last run" [ref=f6e434]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Modified" [ref=f6e437]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Actions" [ref=f6e440]:
+                      - text: 
+                      - generic: 
+                  - row [ref=f6e1262] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Encoded PowerShell Execution HA-223 · v—" [ref=f6e1263]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=f6e1264]
+                      - text: 
+                      - generic [ref=f6e1265]:
+                        - strong [ref=f6e1266]: Encoded PowerShell Execution
+                        - generic [ref=f6e1267]: HA-223 · v—
+                    - gridcell [ref=f6e1268]:
+                      - switch "Disable Encoded PowerShell Execution" [checked] [ref=f6e1269]:
+                        - generic [ref=f6e1271]: Enabled
+                    - gridcell "Healthy" [ref=f6e1272]
+                    - gridcell "Managed" [ref=f6e1277]
+                    - gridcell "Not mapped" [ref=f6e1279]
+                    - gridcell "—" [ref=f6e1280]
+                    - gridcell "*/5 * * * *" [ref=f6e1281]
+                    - gridcell "Not available Duration unavailable" [ref=f6e1282]:
+                      - generic [ref=f6e1283]:
+                        - strong [ref=f6e1284]: Not available
+                        - generic [ref=f6e1285]: Duration unavailable
+                    - gridcell "1d ago" [ref=f6e1286]
+                    - gridcell [ref=f6e1287]:
+                      - generic [ref=f6e1288]:
+                        - button "Edit Encoded PowerShell Execution" [ref=f6e1289]
+                        - button "Test Encoded PowerShell Execution" [ref=f6e1293]
+                        - button "Delete Encoded PowerShell Execution" [ref=f6e1296]
+                  - row [ref=f6e1300] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Encoded PowerShell Execution HA-122 · v—" [ref=f6e1301]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=f6e1302]
+                      - text: 
+                      - generic [ref=f6e1303]:
+                        - strong [ref=f6e1304]: Encoded PowerShell Execution
+                        - generic [ref=f6e1305]: HA-122 · v—
+                    - gridcell [ref=f6e1306]:
+                      - switch "Disable Encoded PowerShell Execution" [checked] [ref=f6e1307]:
+                        - generic [ref=f6e1309]: Enabled
+                    - gridcell "Healthy" [ref=f6e1310]
+                    - gridcell "Managed" [ref=f6e1315]
+                    - gridcell "Not mapped" [ref=f6e1317]
+                    - gridcell "—" [ref=f6e1318]
+                    - gridcell "*/5 * * * *" [ref=f6e1319]
+                    - gridcell "Not available Duration unavailable" [ref=f6e1320]:
+                      - generic [ref=f6e1321]:
+                        - strong [ref=f6e1322]: Not available
+                        - generic [ref=f6e1323]: Duration unavailable
+                    - gridcell "1d ago" [ref=f6e1324]
+                    - gridcell [ref=f6e1325]:
+                      - generic [ref=f6e1326]:
+                        - button "Edit Encoded PowerShell Execution" [ref=f6e1327]
+                        - button "Test Encoded PowerShell Execution" [ref=f6e1331]
+                        - button "Delete Encoded PowerShell Execution" [ref=f6e1334]
+                  - row [ref=f6e1338] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Encoded PowerShell Execution HA-21 · v—" [ref=f6e1339]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=f6e1340]
+                      - text: 
+                      - generic [ref=f6e1341]:
+                        - strong [ref=f6e1342]: Encoded PowerShell Execution
+                        - generic [ref=f6e1343]: HA-21 · v—
+                    - gridcell [ref=f6e1344]:
+                      - switch "Disable Encoded PowerShell Execution" [checked] [ref=f6e1345]:
+                        - generic [ref=f6e1347]: Enabled
+                    - gridcell "Healthy" [ref=f6e1348]
+                    - gridcell "Managed" [ref=f6e1353]
+                    - gridcell "Not mapped" [ref=f6e1355]
+                    - gridcell "—" [ref=f6e1356]
+                    - gridcell "*/5 * * * *" [ref=f6e1357]
+                    - gridcell "Not available Duration unavailable" [ref=f6e1358]:
+                      - generic [ref=f6e1359]:
+                        - strong [ref=f6e1360]: Not available
+                        - generic [ref=f6e1361]: Duration unavailable
+                    - gridcell "1d ago" [ref=f6e1362]
+                    - gridcell [ref=f6e1363]:
+                      - generic [ref=f6e1364]:
+                        - button "Edit Encoded PowerShell Execution" [ref=f6e1365]
+                        - button "Test Encoded PowerShell Execution" [ref=f6e1369]
+                        - button "Delete Encoded PowerShell Execution" [ref=f6e1372]
+              - text:     
+          - generic [ref=f6e1231]:
+            - strong [ref=f6e1232]:
+              - text: 3 matching rules
+              - generic [ref=f6e1233]: · up to 100 rows loaded per page
+            - generic [ref=f6e1234]: Page 1 1–3
+            - generic [ref=f6e1235]:
+              - button "Previous" [disabled] [ref=f6e1236]
+              - button "Next" [disabled] [ref=f6e1239]
+        - generic [ref=f6e1242]:
+          - generic [ref=f6e1243]:
+            - generic [ref=f6e1244]:
+              - generic [ref=f6e1246]: Connected
+              - generic [ref=f6e1247]: •
+              - generic [ref=f6e1249]: Live
+            - generic [ref=f6e1250]: 0 eps
+          - generic: Rule snapshot 07:50
+  - generic:
+    - list "Notifications"

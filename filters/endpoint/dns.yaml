@@ -1,0 +1,77 @@
+# HiveArmor DNS Telemetry filter — version 1.0.0
+# DataType: dns
+#
+# Processes events from:
+#   - agent/collector/dns.Collector  (Linux passive DNS)
+#   - ETW DNS-Client EventID 3008    (Windows)
+#   - ESF NETWORKFLOW port 53        (macOS)
+
+pipeline:
+  - dataTypes:
+      - dns
+    steps:
+      - json:
+          source: raw
+          where: 'startsWith("raw", "{")'
+
+      - rename:
+          from:
+            - log.query
+            - log.QueryName
+          to: log.query
+          where: 'exists("log.query") || exists("log.QueryName")'
+
+      - rename:
+          from:
+            - log.query_type
+            - log.QueryType
+          to: log.query_type
+          where: 'exists("log.query_type") || exists("log.QueryType")'
+
+      - rename:
+          from:
+            - log.response_code
+            - log.ResponseCode
+          to: log.response_code
+          where: 'exists("log.response_code") || exists("log.ResponseCode")'
+
+      - rename:
+          from:
+            - log.answers
+            - log.Answers
+          to: log.answers
+          where: 'exists("log.answers") || exists("log.Answers")'
+
+      - rename:
+          from:
+            - log.query_length
+          to: log.query_length
+          where: 'exists("log.query_length")'
+
+      - rename:
+          from:
+            - log.subdomain_entropy
+          to: log.subdomain_entropy
+          where: 'exists("log.subdomain_entropy")'
+
+      - rename:
+          from:
+            - log.pid
+            - log.PID
+          to: origin.pid
+          where: 'exists("log.pid") || exists("log.PID")'
+
+      - rename:
+          from:
+            - log.processName
+            - log.Process
+            - log.process
+          to: origin.process
+          where: 'exists("log.processName") || exists("log.Process") || exists("log.process")'
+
+      - rename:
+          from:
+            - log.srcIp
+            - log.SrcIP
+          to: origin.ip
+          where: 'exists("log.srcIp") || exists("log.SrcIP")'

@@ -1,0 +1,45 @@
+id: ha-net-009
+title: SSH Brute Force Attack
+status: stable
+description: Detects multiple failed SSH connection attempts from a single external source IP targeting internal hosts on port 22, indicating an automated brute force or credential spraying campaign.
+logsource:
+  product: network
+  service: firewall
+level: high
+tags:
+  - attack.credential_access
+  - attack.T1110.003
+detection:
+  selection:
+    destination.port: 22
+    network.transport: tcp
+    event.action:
+      - blocked
+      - denied
+      - drop
+  filter_internal:
+    source.ip|cidr:
+      - 10.0.0.0/8
+      - 172.16.0.0/12
+      - 192.168.0.0/16
+  condition: selection and not filter_internal
+falsepositives:
+  - Misconfigured SSH clients repeatedly failing authentication with stale keys
+  - Authorized external access with expired certificates triggering rejections
+fields:
+  - source.ip
+  - destination.ip
+  - destination.port
+  - event.action
+impact:
+  confidentiality: high
+  integrity: high
+  availability: low
+deduplicateBy:
+  - source.ip
+  - destination.ip
+groupBy:
+  - source.ip
+mitre:
+  tactic: credential-access
+  technique: T1110.003

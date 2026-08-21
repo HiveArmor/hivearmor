@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+  <changeSet id="20260724050-1" author="hivearmor">
+    <addColumn tableName="ha_client">
+      <column name="client_prefix" type="VARCHAR(20)"/>
+      <column name="mssp_managed"  type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+      <column name="max_users"     type="INTEGER" defaultValue="50"/>
+      <column name="licence_type"  type="VARCHAR(20)" defaultValue="standard"/>
+    </addColumn>
+    <addUniqueConstraint tableName="ha_client"
+                         columnNames="client_prefix"
+                         constraintName="uc_ha_client_prefix"/>
+    <sql>
+      ALTER TABLE ha_client
+      ADD CONSTRAINT ha_client_prefix_fmt
+      CHECK (client_prefix IS NULL OR client_prefix ~ '^[a-z0-9][a-z0-9-]{1,19}$');
+    </sql>
+  </changeSet>
+
+  <changeSet id="20260724050-2" author="hivearmor">
+    <createTable tableName="ha_tenant_user">
+      <column name="id" type="BIGSERIAL">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="client_id"    type="BIGINT">     <constraints nullable="false"/></column>
+      <column name="jhi_user_id"  type="BIGINT">     <constraints nullable="false"/></column>
+      <column name="tenant_role"  type="VARCHAR(50)" defaultValue="ANALYST">
+        <constraints nullable="false"/>
+      </column>
+      <column name="assigned_at"  type="TIMESTAMP"  defaultValueDate="now()">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+    <addForeignKeyConstraint constraintName="fk_ha_tenant_user_client"
+                             baseTableName="ha_tenant_user"    baseColumnNames="client_id"
+                             referencedTableName="ha_client"   referencedColumnNames="id"
+                             onDelete="CASCADE"/>
+    <addForeignKeyConstraint constraintName="fk_ha_tenant_user_user"
+                             baseTableName="ha_tenant_user"    baseColumnNames="jhi_user_id"
+                             referencedTableName="jhi_user"    referencedColumnNames="id"
+                             onDelete="CASCADE"/>
+    <addUniqueConstraint constraintName="uc_ha_tenant_user_client_user"
+                         tableName="ha_tenant_user"
+                         columnNames="client_id, jhi_user_id"/>
+    <createIndex indexName="idx_ha_tenant_user_user_id" tableName="ha_tenant_user">
+      <column name="jhi_user_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="20260724050-3" author="hivearmor">
+    <createTable tableName="ha_tenant_sso">
+      <column name="id" type="BIGSERIAL">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="client_id"        type="BIGINT">
+        <constraints nullable="false" unique="true"/>
+      </column>
+      <column name="oidc_provider_id" type="BIGINT"/>
+      <column name="enforce_sso"      type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+    <addForeignKeyConstraint constraintName="fk_ha_tenant_sso_client"
+                             baseTableName="ha_tenant_sso"     baseColumnNames="client_id"
+                             referencedTableName="ha_client"   referencedColumnNames="id"
+                             onDelete="CASCADE"/>
+  </changeSet>
+
+  <changeSet id="20260724050-4" author="hivearmor">
+    <createTable tableName="ha_tenant_api_key">
+      <column name="id" type="BIGSERIAL">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="client_id"   type="BIGINT">      <constraints nullable="false"/></column>
+      <column name="key_hash"    type="VARCHAR(128)"><constraints nullable="false" unique="true"/></column>
+      <column name="key_prefix"  type="VARCHAR(12)"> <constraints nullable="false"/></column>
+      <column name="description" type="VARCHAR(200)"/>
+      <column name="created_at"  type="TIMESTAMP" defaultValueDate="now()">
+        <constraints nullable="false"/>
+      </column>
+      <column name="active"      type="BOOLEAN"   defaultValueBoolean="true">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+    <addForeignKeyConstraint constraintName="fk_ha_tenant_api_key_client"
+                             baseTableName="ha_tenant_api_key" baseColumnNames="client_id"
+                             referencedTableName="ha_client"   referencedColumnNames="id"
+                             onDelete="CASCADE"/>
+    <createIndex indexName="idx_ha_tenant_api_key_active" tableName="ha_tenant_api_key">
+      <column name="active"/>
+      <column name="client_id"/>
+    </createIndex>
+  </changeSet>
+
+</databaseChangeLog>

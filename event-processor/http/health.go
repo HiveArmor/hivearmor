@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hivearmor/event-processor/config"
+	rulesengine "github.com/hivearmor/event-processor/rules"
 )
 
 func registerHealthRoutes(r *gin.Engine) {
@@ -14,10 +16,17 @@ func registerHealthRoutes(r *gin.Engine) {
 }
 
 func handleHealth(c *gin.Context) {
+	report := rulesengine.LastLoadReport()
+	status := "ok"
+	if !report.PilotPackOK {
+		status = "degraded"
+	}
 	c.JSON(http.StatusOK, gin.H{
-		"status":  "ok",
+		"status":  status,
 		"service": "hivearmor-event-processor",
 		"plugins": getSupervisordStatus(),
+		"rules":   report,
+		"inject":  config.InjectEnabled(),
 	})
 }
 

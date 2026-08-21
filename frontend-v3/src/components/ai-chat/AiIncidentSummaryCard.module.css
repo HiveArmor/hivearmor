@@ -1,0 +1,104 @@
+/* AiIncidentSummaryCard CSS module — Sprint 25.
+ * Colors via --ha-* tokens only (NoRawHexInvariant).
+ */
+
+.card {
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ha-intelligence);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.riskBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Risk level colors via data-level attribute selectors — no inline hex */
+.riskBadge[data-level="critical"] {
+  background: color-mix(in srgb, var(--ha-critical) 20%, transparent);
+  color: var(--ha-critical);
+  border: 1px solid var(--ha-critical);
+}
+
+.riskBadge[data-level="high"] {
+  background: color-mix(in srgb, var(--ha-high) 20%, transparent);
+  color: var(--ha-high);
+  border: 1px solid var(--ha-high);
+}
+
+.riskBadge[data-level="medium"] {
+  background: color-mix(in srgb, var(--ha-medium) 20%, transparent);
+  color: var(--ha-medium);
+  border: 1px solid var(--ha-medium);
+}
+
+.riskBadge[data-level="low"] {
+  background: color-mix(in srgb, var(--ha-positive) 20%, transparent);
+  color: var(--ha-positive);
+  border: 1px solid var(--ha-positive);
+}
+
+.narrative {
+  font-size: 0.8125rem;
+  color: var(--ha-text-primary);
+  line-height: 1.6;
+  margin-bottom: 0.75rem;
+}
+
+.threatActor {
+  font-size: 0.75rem;
+  color: var(--ha-text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.stepsLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ha-text-secondary);
+  margin-bottom: 0.375rem;
+}
+
+.stepsList {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--ha-text-primary);
+  line-height: 1.6;
+}
+
+.regenerateBtn {
+  background: none;
+  border: none;
+  color: var(--ha-primary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+}
+
+.statusText {
+  font-size: 0.8125rem;
+  color: var(--ha-text-secondary);
+  padding: 0.5rem 0;
+}

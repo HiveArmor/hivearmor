@@ -3,14 +3,13 @@ package com.hivearmor.util;
 import com.hivearmor.config.Constants;
 import com.hivearmor.domain.chart_builder.types.query.FilterType;
 import com.hivearmor.domain.chart_builder.types.query.OperatorType;
-import com.hivearmor.domain.index_pattern.enums.SystemIndexPattern;
+import com.hivearmor.multitenancy.MsspIndexResolver;
 import com.hivearmor.service.elasticsearch.ElasticsearchService;
 import com.hivearmor.service.elasticsearch.SearchUtil;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,16 +18,23 @@ public class AlertUtil {
     private static final String CLASSNAME = "AlertUtil";
 
     private final ElasticsearchService elasticsearchService;
+    private final MsspIndexResolver indexResolver;
 
-    public AlertUtil(ElasticsearchService elasticsearchService) {
+    public AlertUtil(ElasticsearchService elasticsearchService, MsspIndexResolver indexResolver) {
         this.elasticsearchService = elasticsearchService;
+        this.indexResolver = indexResolver;
+    }
+
+    public String getAlertIndex() {
+        return indexResolver.resolveAlertIndexPattern();
     }
 
     public Long countAlertsByStatus(int status) {
         final String ctx = CLASSNAME + ".countAlertsByStatus";
         final String AGG_NAME = "count_open_alerts";
         try {
-            if (!elasticsearchService.indexExist(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS)))
+            String alertIndex = indexResolver.resolveAlertIndexPattern();
+            if (!elasticsearchService.indexExist(alertIndex))
                 return 0L;
 
             List<FilterType> filters = new ArrayList<>();
@@ -38,7 +44,7 @@ public class AlertUtil {
 
             SearchRequest.Builder srb = new SearchRequest.Builder();
             srb.query(SearchUtil.toQuery(filters))
-                .index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS))
+                .index(alertIndex)
                 .aggregations(AGG_NAME, a -> a.valueCount(c -> c.field(Constants.alertStatus)))
                 .size(0);
 
@@ -53,7 +59,8 @@ public class AlertUtil {
         final String ctx = CLASSNAME + ".countAlertsByStatus";
         final String AGG_NAME = "count_open_alerts";
         try {
-            if (!elasticsearchService.indexExist(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS)))
+            String alertIndex = indexResolver.resolveAlertIndexPattern();
+            if (!elasticsearchService.indexExist(alertIndex))
                 return 0L;
 
             List<FilterType> filters = new ArrayList<>();
@@ -62,7 +69,7 @@ public class AlertUtil {
 
             SearchRequest.Builder srb = new SearchRequest.Builder();
             srb.query(SearchUtil.toQuery(filters))
-                    .index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS))
+                    .index(alertIndex)
                     .aggregations(AGG_NAME, a -> a.valueCount(c -> c.field(Constants.alertStatus)))
                     .size(0);
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -13,7 +14,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 
 	"github.com/hivearmor/agent/config"
 	"github.com/hivearmor/agent/database"
@@ -35,9 +36,13 @@ var (
 	processorInitErr error
 	LogQueue         = make(chan *plugins.Log, 10000)
 	timeCLeanLogs    = 10 * time.Minute
+	// unprocessedRetryInterval re-queues durable spool rows after a send or
+	// broker failure. Retention reclaim stays on the slower ticker.
+	unprocessedRetryInterval = 15 * time.Second
 
-	// LogsDropped counts events discarded because LogQueue was full.
-	// Incremented by any collector that drops an event; reported by monitorQueueDepth.
+	// LogsDropped counts events that could not be durably spooled and also
+	// could not be placed on LogQueue. Unprocessed SQLite rows are not counted
+	// here; they are retried by CleanCountedLogs.
 	LogsDropped atomic.Int64
 
 	// ErrAgentUninstalled is returned when the agent uninstalls itself due to invalid key
@@ -142,6 +147,9 @@ func (l *LogProcessor) processLogs(plClient plugins.Integration_ProcessLogClient
 			utils.Logger.Info("context done, exiting processLogs")
 			return
 		case newLog := <-LogQueue:
+			// Collectors spool before enqueue. Only persist here when the
+			// durable path was unavailable and the memory queue still accepted
+			// the record.
 			if newLog.Id == "" {
 				id, err := uuid.NewRandom()
 				if err != nil {
@@ -152,7 +160,7 @@ func (l *LogProcessor) processLogs(plClient plugins.Integration_ProcessLogClient
 				newLog.Id = id.String()
 				err = l.db.Create(&models.Log{ID: newLog.Id, Log: newLog.Raw, Type: newLog.DataType, CreatedAt: time.Now(), DataSource: newLog.DataSource, Processed: false})
 				if err != nil {
-					utils.Logger.ErrorF("failed to save log: %v :log: %s", err, newLog.Raw)
+					utils.Logger.ErrorF("failed to save log: %v", err)
 				}
 			}
 
@@ -171,51 +179,60 @@ func (l *LogProcessor) processLogs(plClient plugins.Integration_ProcessLogClient
 }
 
 func (l *LogProcessor) CleanCountedLogs() {
-	ticker := time.NewTicker(timeCLeanLogs)
-	defer ticker.Stop()
-	for range ticker.C {
-		dataRetention, err := GetDataRetention()
-		if err != nil {
-			utils.Logger.ErrorF("error getting data retention: %s, creating default retention file", err)
-			if err := SetDataRetention(""); err != nil {
-				utils.Logger.ErrorF("error creating default data retention: %s", err)
-				continue
-			}
-			dataRetention, err = GetDataRetention()
-			if err != nil {
-				utils.Logger.ErrorF("error reading newly created data retention: %s", err)
-				continue
-			}
+	retryTicker := time.NewTicker(unprocessedRetryInterval)
+	retentionTicker := time.NewTicker(timeCLeanLogs)
+	defer retryTicker.Stop()
+	defer retentionTicker.Stop()
+	for {
+		select {
+		case <-retryTicker.C:
+			l.enqueueUnprocessed(500)
+		case <-retentionTicker.C:
+			l.reclaimProcessedRetention()
 		}
-		_, err = l.db.DeleteOld(&models.Log{}, dataRetention)
-		if err != nil {
-			utils.Logger.ErrorF("error deleting old logs: %s", err)
-		}
+	}
+}
 
-		unprocessed := make([]models.Log, 0, 10)
-		found, err := l.db.Find(&unprocessed, "processed", false)
-		if err != nil {
-			utils.Logger.ErrorF("error finding unprocessed logs: %s", err)
-			continue
+func (l *LogProcessor) reclaimProcessedRetention() {
+	dataRetention, err := GetDataRetention()
+	if err != nil {
+		utils.Logger.ErrorF("error getting data retention: %s, creating default retention file", err)
+		if err := SetDataRetention(""); err != nil {
+			utils.Logger.ErrorF("error creating default data retention: %s", err)
+			return
 		}
+		dataRetention, err = GetDataRetention()
+		if err != nil {
+			utils.Logger.ErrorF("error reading newly created data retention: %s", err)
+			return
+		}
+	}
+	_, err = l.db.DeleteOld(&models.Log{}, dataRetention)
+	if err != nil {
+		utils.Logger.ErrorF("error deleting old logs: %s", err)
+	}
+}
 
-		if found {
-			for _, log := range unprocessed {
-				entry := &plugins.Log{
-					Id:         log.ID,
-					Raw:        log.Log,
-					DataType:   log.Type,
-					DataSource: log.DataSource,
-					Timestamp:  log.CreatedAt.Format(time.RFC3339Nano),
-				}
-				select {
-				case LogQueue <- entry:
-				default:
-					// Queue still full — record remains processed=false and will be
-					// retried on the next tick.
-					utils.Logger.LogF(400, "logprocessor: LogQueue full during retry; deferring log id=%s", log.ID)
-				}
-			}
+func (l *LogProcessor) enqueueUnprocessed(limit int) {
+	unprocessed := make([]models.Log, 0, limit)
+	if err := l.db.FindUnprocessed(&unprocessed, limit); err != nil {
+		logSpool(400, "logprocessor: error finding unprocessed logs: %s", err)
+		return
+	}
+	for _, log := range unprocessed {
+		entry := &plugins.Log{
+			Id:         log.ID,
+			Raw:        log.Log,
+			DataType:   log.Type,
+			DataSource: log.DataSource,
+			Timestamp:  log.CreatedAt.Format(time.RFC3339Nano),
+		}
+		select {
+		case LogQueue <- entry:
+		default:
+			// Queue still full — record remains processed=false and will be
+			// retried on the next tick.
+			logSpool(400, "logprocessor: LogQueue full during retry; deferring log id=%s", log.ID)
 		}
 	}
 }
@@ -238,7 +255,7 @@ func (l *LogProcessor) monitorQueueDepth(ctx context.Context) {
 				utils.Logger.LogF(400, "logprocessor: total logs dropped since start: %d", dropped)
 			}
 			if pct > 90 {
-				utils.Logger.ErrorF("logprocessor: LogQueue near capacity: depth=%d/%d (%.0f%%); events may be dropped", depth, cap, pct)
+				utils.Logger.ErrorF("logprocessor: LogQueue near capacity: depth=%d/%d (%.0f%%); unprocessed rows remain in spool", depth, cap, pct)
 			} else if pct > 50 {
 				utils.Logger.LogF(400, "logprocessor: LogQueue depth=%d/%d (%.0f%%)", depth, cap, pct)
 			}
@@ -246,13 +263,32 @@ func (l *LogProcessor) monitorQueueDepth(ctx context.Context) {
 	}
 }
 
+// dlqMaxBytes is the per-file size limit for the dead-letter queue file.
+// When the file exceeds this limit rotation is attempted (renamed with a
+// timestamp suffix). If rotation fails (e.g. file locked on Windows), the
+// write is skipped to prevent unbounded disk usage.
+const dlqMaxBytes = 50 * 1024 * 1024 // 50 MiB
+
 // WriteToDLQ appends a dropped log entry to the dead-letter file on disk.
 // It is exported so collectors in other packages can call it.
+// The file is rotated when it exceeds dlqMaxBytes to prevent unbounded growth.
 func WriteToDLQ(source string, l *plugins.Log) {
 	dlqPath := filepath.Join(fs.GetExecutablePath(), "dlq", "dropped-logs.jsonl")
 	if err := os.MkdirAll(filepath.Dir(dlqPath), 0755); err != nil {
 		return
 	}
+
+	// Rotate if the current file has grown past the size cap.
+	if info, err := os.Stat(dlqPath); err == nil && info.Size() >= dlqMaxBytes {
+		rotated := fmt.Sprintf("%s.%d", dlqPath, time.Now().UnixNano())
+		if renameErr := os.Rename(dlqPath, rotated); renameErr != nil {
+			// Rotation failed (e.g., file locked on Windows by another process).
+			// Skip writing this event rather than letting the DLQ grow past the cap.
+			utils.Logger.LogF(400, "logprocessor: DLQ rotation failed (%v); dropping event", renameErr)
+			return
+		}
+	}
+
 	f, err := os.OpenFile(dlqPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return
@@ -313,7 +349,7 @@ func createClient(client plugins.IntegrationClient, ctx context.Context) (plugin
 
 func SetDataRetention(retention string) error {
 	if retention == "" {
-		retention = "20"
+		retention = "512"
 	}
 
 	retentionInt, err := strconv.Atoi(retention)

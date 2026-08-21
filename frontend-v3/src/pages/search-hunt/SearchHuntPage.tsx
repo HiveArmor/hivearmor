@@ -1,0 +1,467 @@
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
+
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { EChartsOption } from 'echarts';
+import {
+  BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleStop, Clock3, Code2, Columns3, Database, FileClock,
+  FolderClock, History, Keyboard, ListFilter, Play, Save, Search, ShieldAlert, X,
+} from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+
+import { EventContextDrawer } from './components/EventContextDrawer';
+import { EventDetailFlyout } from './components/EventDetailFlyout';
+import { FieldBrowser } from './components/FieldBrowser';
+import { HuntActionDrawer } from './components/HuntActionDrawer';
+import { PromotionActionBar, PromotionModal } from './components/PromotionModal';
+import { QueryCapabilitiesPanel } from './components/QueryCapabilitiesPanel';
+import { SaveSearchModal } from './components/SaveSearchModal';
+import { SearchManagerPanel } from './components/SearchManagerPanel';
+import { SearchProgressBar } from './components/SearchProgressBar';
+import { SearchResultsGrid } from './components/SearchResultsGrid';
+import { addToHuntHistory, getHuntHistory } from './history';
+import { useSearchStream } from './hooks/useSearchStream';
+import { DEFAULT_HUNT_QUERY, normalizeHuntQuery } from './huntQuerySuggestions';
+import { HUNT_FIELD_COLUMN_MAP, huntColumnsToProjection } from './searchHunt.projection';
+import {
+  cancelHunt, executeHunt, fetchHuntSchema, fetchQueryCapabilities, searchHuntFixtureMode,
+} from './searchHunt.service';
+import type {
+  HuntActionRequest, HuntEvent, HuntRowDensity, HuntSearchRequest, HuntSearchResponse,
+} from './searchHunt.types';
+
+import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
+import { StatusDock } from '@/components/status-dock/StatusDock';
+import { TimeRangeSelector } from '@/components/time-range-selector/TimeRangeSelector';
+import { resolveTimeRange } from '@/components/time-range-selector/timeRangeUtils';
+import type { TimeRange } from '@/components/time-range-selector/timeRangeUtils';
+import { useEpsStream } from '@/hooks/useEpsStream';
+import { useSavedHunts } from '@/hooks/useSavedHunts';
+import { ApiError } from '@/lib/apiClient';
+import { useAuthStore } from '@/store/auth.store';
+import type { HuntHistoryEntry } from '@/types/search';
+
+import './SearchHuntPage.css';
+
+const QueryEditor = lazy(() => import('./components/QueryBar').then((module) => ({ default: module.QueryBar })));
+const LazyHaChart = lazy(() => import('@/components/ha-chart/HaChart').then((module) => ({ default: module.HaChart })));
+
+const DEFAULT_COLUMNS = ['timestamp', 'severity', 'dataSource', 'action', 'host', 'user', 'sourceIp', 'message', 'alertCount'];
+const COLUMN_OPTIONS = [
+  ['timestamp', 'Event time'], ['severity', 'Severity'], ['dataSource', 'Source'], ['dataset', 'Dataset'],
+  ['category', 'Category'], ['action', 'Action'], ['host', 'Host'], ['user', 'User'],
+  ['sourceIp', 'Source IP'], ['destinationIp', 'Destination IP'], ['tenantName', 'Tenant'],
+  ['message', 'Event summary'], ['alertCount', 'Alerts'],
+] as const;
+const DENSITY_OPTIONS: Array<{ value: HuntRowDensity; label: string }> = [
+  { value: 'compact', label: 'Compact rows' },
+  { value: 'standard', label: 'Standard rows' },
+  { value: 'comfortable', label: 'Comfortable rows' },
+];
+const QUERY_LANGUAGES = [
+  { id: 'kql', label: 'KQL', detail: 'Keyword, field, range, wildcard, and Boolean filters', available: true },
+  { id: 'lucene', label: 'Lucene', detail: 'Backend parser capability required', available: false },
+  { id: 'esql', label: 'ES|QL', detail: 'Tabular aggregation contract required', available: false },
+  { id: 'opensearch_dsl', label: 'OpenSearch DSL', detail: 'Restricted server-side validation required', available: false },
+] as const;
+function makeRequest(query: string, timeRange: TimeRange, tenantScope: string, fields: string[], indexPattern?: string): HuntSearchRequest {
+  const resolved = resolveTimeRange(timeRange);
+  const projectionFields = huntColumnsToProjection(fields);
+  return {
+    query: query.trim(), language: 'kql', timeRange: { from: resolved.from, to: resolved.to },
+    tenantScope, indexPattern, fields: projectionFields, cursor: null, limit: 100,
+    sort: [{ field: '@timestamp', direction: 'desc' }, { field: '_id', direction: 'asc' }],
+    includeHistogram: true,
+  };
+}
+
+function chartToken(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+export function SearchHuntPage(): JSX.Element {
+  const queryClient = useQueryClient();
+  const [routeSearchParams] = useSearchParams();
+  const routedQuery = routeSearchParams.get('q')?.trim() ?? '';
+  const selectedTenantId = useAuthStore((state) => state.selectedTenantId);
+  const [query, setQuery] = useState(() => routedQuery || DEFAULT_HUNT_QUERY);
+  const [timeRange, setTimeRange] = useState<TimeRange>({ type: 'preset', preset: '24h' });
+  const [committed, setCommitted] = useState<HuntSearchRequest>(() =>
+    makeRequest(
+      normalizeHuntQuery(routedQuery),
+      { type: 'preset', preset: '24h' },
+      'authorized',
+      DEFAULT_COLUMNS,
+    ));
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [activeEvent, setActiveEvent] = useState<HuntEvent | null>(null);
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
+    try { const saved = localStorage.getItem('ha_hunt_columns'); return saved ? JSON.parse(saved) : DEFAULT_COLUMNS; } catch { return DEFAULT_COLUMNS; }
+  });
+  const [density, setDensity] = useState<HuntRowDensity>(() => {
+    return (localStorage.getItem('ha_hunt_density') as HuntRowDensity) || 'compact';
+  });
+  const [selectedIndex, setSelectedIndex] = useState<string>('all');
+  const [fieldRailOpen, setFieldRailOpen] = useState(true);
+  const [libraryOpen, setLibraryOpen] = useState<'saved' | 'history' | null>(null);
+  const [managerPanelOpen, setManagerPanelOpen] = useState(false);
+  const [flyoutEventId, setFlyoutEventId] = useState<string | null>(null);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [pageCursors, setPageCursors] = useState<Array<string | null>>([null]);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [firstPageSummary, setFirstPageSummary] = useState<HuntSearchResponse | null>(null);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [actionMode, setActionMode] = useState<HuntActionRequest['type'] | null>(null);
+  const [actionEventIds, setActionEventIds] = useState<string[]>([]);
+  const [history, setHistory] = useState<HuntHistoryEntry[]>(getHuntHistory);
+  const recordedSearchId = useRef<string | null>(null);
+  const queryWorkspaceRef = useRef<HTMLDivElement | null>(null);
+  const [queryWorkspaceHeight, setQueryWorkspaceHeight] = useState(116);
+  const epsStream = useEpsStream();
+  const [promotionOpen, setPromotionOpen] = useState(false);
+  const [promotionAction, setPromotionAction] = useState<'create_evidence' | 'create_investigation' | 'escalate_incident' | null>(null);
+  const [capabilitiesOpen, setCapabilitiesOpen] = useState(false);
+
+  // Query capabilities: fetch on mount, never refetch (staleTime: Infinity)
+  const capabilitiesQuery = useQuery({
+    queryKey: ['hunt-capabilities'],
+    queryFn: () => fetchQueryCapabilities(),
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: 1,
+  });
+
+  // Persist columns and density to localStorage
+  useEffect(() => { localStorage.setItem('ha_hunt_columns', JSON.stringify(visibleColumns)); }, [visibleColumns]);
+  useEffect(() => { localStorage.setItem('ha_hunt_density', density); }, [density]);
+
+  const columnsPickerRef = useRef<HTMLDivElement | null>(null);
+  // Close columns picker on outside click
+  useEffect(() => {
+    if (!columnsOpen) return undefined;
+    const handler = (e: MouseEvent) => {
+      if (columnsPickerRef.current && !columnsPickerRef.current.contains(e.target as Node)) setColumnsOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [columnsOpen]);
+
+  const schemaQuery = useQuery({
+    queryKey: ['hunt-schema', selectedTenantId],
+    queryFn: ({ signal }) => fetchHuntSchema(signal),
+    staleTime: 15 * 60_000,
+    retry: 1,
+  });
+
+  const pageCursor = pageCursors[pageIndex] ?? null;
+
+  const searchQuery = useQuery({
+    queryKey: ['hunt-search', committed, pageCursor],
+    queryFn: ({ signal }) => {
+      if (!committed) return Promise.reject(new Error('Search request is not ready'));
+      return executeHunt({ ...committed, cursor: pageCursor, includeHistogram: pageIndex === 0 }, signal);
+    },
+    enabled: committed.query.length > 0,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    placeholderData: (previous) => previous,
+    retry: false,
+  });
+
+  const { data: savedHunts = [], isError: savedHuntsError } = useSavedHunts();
+  const events = useMemo(() => searchQuery.data?.items ?? [], [searchQuery.data?.items]);
+  const summary = searchQuery.data ?? firstPageSummary;
+  const histogram = useMemo(() => pageIndex === 0
+    ? searchQuery.data?.histogram ?? firstPageSummary?.histogram ?? []
+    : firstPageSummary?.histogram ?? [], [firstPageSummary?.histogram, pageIndex, searchQuery.data?.histogram]);
+  const permissionDenied = searchQuery.error instanceof ApiError && searchQuery.error.status === 403;
+  const schemaPermissionDenied = schemaQuery.error instanceof ApiError && schemaQuery.error.status === 403;
+  const staleVisible = searchQuery.isFetching && events.length > 0;
+
+  // SSE search progress stream — connects when search is running
+  const searchStreamStatus: 'running' | 'completed' | 'cancelled' | 'idle' = searchQuery.isFetching ? 'running' : 'idle';
+  const searchStream = useSearchStream(summary?.searchId ?? null, searchStreamStatus);
+
+  useEffect(() => {
+    if (pageIndex === 0 && searchQuery.data) setFirstPageSummary(searchQuery.data);
+  }, [pageIndex, searchQuery.data]);
+
+  useEffect(() => {
+    if (!committed) return;
+    const retainedCursors = new Set<string | null>([
+      pageCursor,
+      pageIndex > 0 ? pageCursors[pageIndex - 1] : null,
+    ]);
+    queryClient.removeQueries({
+      queryKey: ['hunt-search', committed],
+      predicate: (candidate) => !retainedCursors.has((candidate.queryKey[2] as string | null | undefined) ?? null),
+    });
+  }, [committed, pageCursor, pageCursors, pageIndex, queryClient]);
+
+  useEffect(() => {
+    if (!summary || recordedSearchId.current === summary.searchId || !committed) return;
+    recordedSearchId.current = summary.searchId;
+    addToHuntHistory({ query: committed.query, timestamp: new Date().toISOString(), resultCount: summary.totalApproximate });
+    setHistory(getHuntHistory());
+  }, [committed, summary]);
+
+  useEffect(() => {
+    const workspace = queryWorkspaceRef.current;
+    if (!workspace || typeof ResizeObserver === 'undefined') return undefined;
+    const updateHeight = (): void => setQueryWorkspaceHeight(Math.ceil(workspace.getBoundingClientRect().height));
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(workspace);
+    return () => observer.disconnect();
+  }, []);
+
+  const runSearch = useCallback((override?: { query?: string; timeRange?: TimeRange }): void => {
+    const displayedQuery = override?.query ?? query;
+    const nextQuery = normalizeHuntQuery(displayedQuery);
+    const nextTime = override?.timeRange ?? timeRange;
+    setQuery(displayedQuery.trim());
+    if (override?.timeRange) setTimeRange(nextTime);
+    setSelectedIds([]);
+    setActiveEvent(null);
+    setPageCursors([null]);
+    setPageIndex(0);
+    setFirstPageSummary(null);
+    setCommitted(makeRequest(nextQuery, nextTime, selectedTenantId === null ? 'authorized' : String(selectedTenantId), visibleColumns, selectedIndex === 'all' ? undefined : selectedIndex));
+  }, [query, selectedIndex, selectedTenantId, timeRange, visibleColumns]);
+
+  const stopSearch = useCallback((): void => {
+    void queryClient.cancelQueries({ queryKey: ['hunt-search', committed] });
+    if (summary?.searchId) void cancelHunt(summary.searchId);
+  }, [committed, queryClient, summary?.searchId]);
+
+  const goToPreviousPage = useCallback((): void => {
+    if (pageIndex === 0 || searchQuery.isFetching) return;
+    setSelectedIds([]);
+    setActiveEvent(null);
+    setPageIndex((current) => Math.max(0, current - 1));
+  }, [pageIndex, searchQuery.isFetching]);
+
+  const goToNextPage = useCallback((): void => {
+    const nextCursor = searchQuery.data?.nextCursor;
+    if (!nextCursor || searchQuery.isFetching) return;
+    setSelectedIds([]);
+    setActiveEvent(null);
+    setPageCursors((current) => [...current.slice(0, pageIndex + 1), nextCursor]);
+    setPageIndex((current) => current + 1);
+  }, [pageIndex, searchQuery.data?.nextCursor, searchQuery.isFetching]);
+
+  const insertCondition = useCallback((field: string, operator = ':', value = '*'): void => {
+    const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    const formattedValue = /[\s:()]/.test(value) ? `"${escaped}"` : escaped;
+    setQuery((current) => `${current.trim()}${current.trim() ? ' AND ' : ''}${field}${operator}${formattedValue}`);
+  }, []);
+
+  const insertQueryFragment = useCallback((fragment: string): void => {
+    setQuery((current) => `${current.trim()}${current.trim() ? ' AND ' : ''}${fragment}`);
+  }, []);
+
+  const toggleColumn = (column: string): void => {
+    setVisibleColumns((current) => current.includes(column)
+      ? current.length === 1 ? current : current.filter((item) => item !== column)
+      : [...current, column]);
+  };
+
+  const addFieldColumn = (field: string): void => {
+    const column = HUNT_FIELD_COLUMN_MAP[field] ?? field;
+    setVisibleColumns((current) => current.includes(column) ? current : [...current, column]);
+  };
+
+  const selectedSchemaFields = useMemo(() => Object.entries(HUNT_FIELD_COLUMN_MAP)
+    .filter(([, column]) => visibleColumns.includes(column))
+    .map(([field]) => field), [visibleColumns]);
+
+  const openAction = useCallback((mode: HuntActionRequest['type'], ids: string[]): void => {
+    setActionEventIds(ids);
+    setActionMode(mode);
+  }, []);
+
+  const handlePivot = useCallback((pivotQuery: string): void => {
+    setActiveEvent(null);
+    setFlyoutEventId(null);
+    runSearch({ query: pivotQuery });
+  }, [runSearch]);
+
+  // Sync flyout with active event
+  useEffect(() => {
+    setFlyoutEventId(activeEvent?.id ?? null);
+  }, [activeEvent]);
+
+  const handleManagerLoadQuery = useCallback((q: string): void => {
+    setQuery(q);
+    setManagerPanelOpen(false);
+  }, []);
+
+  const handleManagerExecuteQuery = useCallback((q: string): void => {
+    setManagerPanelOpen(false);
+    runSearch({ query: q });
+  }, [runSearch]);
+
+  const handleFlyoutClose = useCallback((): void => {
+    setFlyoutEventId(null);
+    setActiveEvent(null);
+  }, []);
+
+  useEffect(() => {
+    const handleShortcuts = (event: KeyboardEvent): void => {
+      const target = event.target as HTMLElement;
+      if (target.closest('input, textarea, [contenteditable="true"], .monaco-editor')) return;
+      if ((event.key === 'j' || event.key === 'k') && events.length > 0) {
+        event.preventDefault();
+        const currentIndex = activeEvent ? events.findIndex((item) => item.id === activeEvent.id) : -1;
+        const nextIndex = event.key === 'j'
+          ? Math.min(events.length - 1, currentIndex + 1)
+          : Math.max(0, currentIndex < 0 ? 0 : currentIndex - 1);
+        setActiveEvent(events[nextIndex]);
+      }
+      if (event.key === 'Escape') {
+        setLibraryOpen(null); setColumnsOpen(false); setLanguageOpen(false); setActiveEvent(null); setFlyoutEventId(null); setManagerPanelOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleShortcuts);
+    return () => document.removeEventListener('keydown', handleShortcuts);
+  }, [activeEvent, events]);
+
+  const histogramOption = useMemo<EChartsOption>(() => {
+    const buckets = histogram;
+    return {
+      animation: false,
+      grid: { left: 42, right: 10, top: 10, bottom: 24 },
+      xAxis: { type: 'category', data: buckets.map((bucket) => new Date(bucket.from).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })), axisLabel: { color: chartToken('--ha-foreground-tertiary'), fontSize: 10 }, axisLine: { lineStyle: { color: chartToken('--ha-border-subtle') } }, axisTick: { show: false } },
+      yAxis: { type: 'value', minInterval: 1, axisLabel: { color: chartToken('--ha-foreground-tertiary'), fontSize: 10 }, splitLine: { lineStyle: { color: chartToken('--ha-border-subtle') } } },
+      series: [{ type: 'bar', data: buckets.map((bucket) => bucket.count), barMaxWidth: 20, itemStyle: { color: chartToken('--ha-action-primary') }, emphasis: { itemStyle: { color: chartToken('--ha-action-primary-hover') } } }],
+      tooltip: { trigger: 'axis', backgroundColor: chartToken('--ha-surface-elevated'), borderColor: chartToken('--ha-border-default'), textStyle: { color: chartToken('--ha-foreground-primary'), fontSize: 11 } },
+    };
+  }, [histogram]);
+
+  const handleHistogramClick = (params: unknown): void => {
+    const index = (params as { dataIndex?: number }).dataIndex;
+    const bucket = index === undefined ? undefined : histogram[index];
+    if (!bucket) return;
+    runSearch({ timeRange: { type: 'custom', from: bucket.from, to: bucket.to } });
+  };
+
+  const pageSize = committed?.limit ?? 100;
+  const firstVisibleRow = events.length > 0 ? pageIndex * pageSize + 1 : 0;
+  const lastVisibleRow = pageIndex * pageSize + events.length;
+
+  return (
+    <section className="hunt-page" aria-labelledby="hunt-page-title" style={{ '--hunt-sticky-query-height': `${queryWorkspaceHeight}px` } as CSSProperties}>
+      <header className="hunt-page__identity">
+        <div className="hunt-page__title"><span className="hunt-page__icon"><Search size={17} /></span><div><small>INVESTIGATION</small><h1 id="hunt-page-title">Search &amp; Hunt</h1></div></div>
+        <div className="hunt-page__identity-actions">
+          <span className="hunt-page__shortcut"><Keyboard size={13} />⌘/Ctrl + Enter to run · J/K event navigation</span>
+        </div>
+      </header>
+
+      {searchHuntFixtureMode && <div className="hunt-page__fixture" role="status"><span><strong>Design fixture:</strong> fictional normalized events are enabled for visual review.</span><span>Production never receives these records.</span></div>}
+
+      <div className="hunt-query-workspace" ref={queryWorkspaceRef}>
+        <div className="hunt-query-workspace__editor">
+          <Suspense fallback={<div className="hunt-query-editor__loading">Loading query workspace…</div>}>
+            <QueryEditor value={query} onChange={setQuery} onExecute={() => runSearch()} fields={schemaQuery.data ?? []} disabled={searchQuery.isFetching && events.length === 0} />
+          </Suspense>
+        </div>
+        <div className="hunt-query-workspace__controls" aria-label="Search controls">
+          <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setFieldRailOpen((open) => !open)} aria-pressed={fieldRailOpen} aria-label="Toggle filters and field values" title="Filters and field values"><ListFilter size={14} /></button>
+          <div className="hunt-language-picker">
+            <button type="button" className="hunt-control-button" onClick={() => setLanguageOpen((open) => !open)} aria-expanded={languageOpen} aria-haspopup="menu" title="Query language"><Code2 size={13} />KQL<ChevronDown size={11} /></button>
+            {languageOpen && <div className="hunt-language-picker__menu" role="menu" aria-label="Query language">
+              {QUERY_LANGUAGES.map((language) => <button key={language.id} type="button" role="menuitem" disabled={!language.available} onClick={() => setLanguageOpen(false)}>
+                <span><strong>{language.label}</strong><small>{language.detail}</small></span>{language.available ? <Check size={13} /> : <em>Unavailable</em>}
+              </button>)}
+              <p>Only server-advertised languages are enabled. This deployment currently supports KQL.</p>
+            </div>}
+          </div>
+          <TimeRangeSelector value={timeRange} onChange={setTimeRange} disabled={searchQuery.isFetching && events.length === 0} />
+          <HaCompactSelect ariaLabel="Data source index" label="Index" value={selectedIndex} onChange={setSelectedIndex} options={[{ value: 'all', label: 'All sources (logs + alerts)' }, { value: 'log', label: 'Raw logs' }, { value: 'event', label: 'Endpoint events' }, { value: 'alert', label: 'Alerts' }]} />
+          <button type="button" className="hunt-control-button" onClick={() => setLibraryOpen(libraryOpen === 'history' ? null : 'history')} aria-expanded={libraryOpen === 'history'}><History size={13} />History</button>
+          <button type="button" className="hunt-control-button" onClick={() => setLibraryOpen(libraryOpen === 'saved' ? null : 'saved')} aria-expanded={libraryOpen === 'saved'}><FolderClock size={13} />Saved hunts</button>
+          <button type="button" className="hunt-control-button" onClick={() => setManagerPanelOpen((open) => !open)} aria-expanded={managerPanelOpen} title="Search manager panel"><Database size={13} />Manager</button>
+          <button type="button" className="hunt-control-button" onClick={() => setSaveOpen(true)} disabled={!query.trim()} title={!query.trim() ? 'Enter a reusable query before saving' : 'Save hunt'}><Save size={13} />Save</button>
+          <button type="button" className="hunt-control-button" onClick={() => setCapabilitiesOpen((open) => !open)} aria-expanded={capabilitiesOpen} title="Query language reference"><BookOpen size={13} />Help</button>
+          <span className="hunt-query-workspace__spacer" />
+          {searchQuery.isFetching ? <button type="button" className="hunt-button hunt-button--stop" onClick={stopSearch}><CircleStop size={14} />Cancel</button> : <button type="button" className="hunt-button hunt-button--primary" onClick={() => runSearch()} title={!query.trim() ? 'Load the newest 100 events in the selected scope' : 'Run KQL hunt'}><Play size={14} />Run search</button>}
+        </div>
+        {libraryOpen && <aside className="hunt-library" aria-label={libraryOpen === 'saved' ? 'Saved hunts' : 'Query history'}>
+          <header><div>{libraryOpen === 'saved' ? <FolderClock size={15} /> : <History size={15} />}<strong>{libraryOpen === 'saved' ? 'Saved hunts' : 'Query history'}</strong></div><button type="button" onClick={() => setLibraryOpen(null)} aria-label="Close query library"><X size={14} /></button></header>
+          <div className="hunt-library__list">
+            {libraryOpen === 'saved' && savedHuntsError && <p role="alert">Saved hunts are unavailable. Your active query is unchanged.</p>}
+            {libraryOpen === 'saved' && !savedHuntsError && savedHunts.length === 0 && <p>No saved hunts are available.</p>}
+            {libraryOpen === 'saved' && savedHunts.map((hunt) => <button type="button" key={hunt.id} onClick={() => { setQuery(hunt.queryDsl ?? hunt.nlQuery ?? ''); setLibraryOpen(null); }}><span><strong>{hunt.huntName}</strong><small>{hunt.isShared ? 'Shared' : 'Private'} · {hunt.createdBy}</small></span><code>{hunt.queryDsl ?? hunt.nlQuery ?? 'No query text'}</code></button>)}
+            {libraryOpen === 'history' && history.length === 0 && <p>No searches have been run in this browser.</p>}
+            {libraryOpen === 'history' && history.map((item, index) => <button type="button" key={`${item.timestamp}-${index}`} onClick={() => { setQuery(item.query); setLibraryOpen(null); }}><span><strong>{new Date(item.timestamp).toLocaleString()}</strong><small>{item.resultCount.toLocaleString()} results</small></span><code>{item.query}</code></button>)}
+          </div>
+        </aside>}
+        <div className="hunt-execution-strip" role="status" aria-live="polite">
+          <span data-state={searchQuery.isFetching ? 'running' : summary ? 'complete' : 'idle'}><i aria-hidden="true" />{searchQuery.isFetching ? 'Query running' : summary ? 'Query complete' : 'Ready'}</span>
+          <span><Database size={12} />{summary ? `${summary.totalIsExact ? '' : 'About '}${summary.totalApproximate.toLocaleString()} events` : 'No result snapshot'}</span>
+          <span><Clock3 size={12} />{summary ? `${summary.tookMs.toLocaleString()} ms` : 'Duration —'}</span>
+          <span><FileClock size={12} />{summary ? `Snapshot ${new Date(summary.snapshotAt).toLocaleTimeString()}` : 'Freshness —'}</span>
+          {staleVisible && <strong>Updating · previous results preserved</strong>}
+          {summary?.partialFailures.length ? <strong data-tone="warning">Partial results · {summary.partialFailures.length} source unavailable</strong> : null}
+        </div>
+        {searchQuery.isFetching && summary?.searchId && (
+          <SearchProgressBar searchId={summary.searchId} stream={searchStream} onCancelled={stopSearch} />
+        )}
+        {capabilitiesOpen && capabilitiesQuery.data && (
+          <QueryCapabilitiesPanel capabilities={capabilitiesQuery.data} onClose={() => setCapabilitiesOpen(false)} onInsertExample={(exQuery) => { setQuery(exQuery); setCapabilitiesOpen(false); }} />
+        )}
+      </div>
+
+      <div className="hunt-results-workspace" data-field-rail={fieldRailOpen || undefined}>
+        {fieldRailOpen && <FieldBrowser fields={schemaQuery.data ?? []} selectedFields={selectedSchemaFields} searchId={summary?.searchId} onAddField={addFieldColumn} onInsertCondition={insertCondition} onInsertFragment={insertQueryFragment} loading={schemaQuery.isLoading} unavailable={schemaQuery.isError && !schemaPermissionDenied} />}
+        <main className="hunt-results" aria-label="Hunt results workspace">
+          {permissionDenied || schemaPermissionDenied ? <div className="hunt-full-state" role="alert"><ShieldAlert size={30} /><h2>Search access is restricted</h2><p>Your account does not have permission to search this tenant scope or view its schema. Choose an authorized tenant or ask an administrator for hunt access.</p></div> : searchQuery.isError && events.length === 0 ? <div className="hunt-full-state" role="alert"><ShieldAlert size={30} /><h2>Search could not be completed</h2><p>The query service did not return a usable snapshot. Widen the time range, choose Index: Alerts if you expected detections, then retry. Log events appear after an endpoint agent is enrolled from Posture → Sensors.</p><button type="button" className="hunt-button" onClick={() => void searchQuery.refetch()}>Retry search</button></div> : null}
+
+          {!permissionDenied && !(searchQuery.isError && events.length === 0) && <>
+            <section className="hunt-histogram" aria-label="Event distribution over time">
+              <header><div><strong>Event distribution</strong><span>Click a bucket to narrow the active time range</span></div><span>{histogram.length} buckets</span></header>
+              <div className="hunt-histogram__chart">{histogram.length ? <Suspense fallback={<div className="hunt-chart-skeleton" />}><LazyHaChart option={histogramOption} height="100%" onChartClick={handleHistogramClick} ariaLabel="Event histogram" ariaDescription="Event counts over the current query time range. Activate a bucket to narrow the search." /></Suspense> : <div className="hunt-chart-skeleton" />}</div>
+            </section>
+            <div className="hunt-results-toolbar">
+              <div><strong>Events</strong><span>{events.length > 0 ? `${firstVisibleRow.toLocaleString()}–${lastVisibleRow.toLocaleString()} loaded` : 'No rows loaded'}{searchQuery.data?.hasMore ? ' · more available' : ''}</span></div>
+              <div className="hunt-results-toolbar__actions">
+                <div className="hunt-density-control">
+                  <span>Rows</span>
+                  <div role="group" aria-label="Result row density">
+                    {DENSITY_OPTIONS.map((option) => <button key={option.value} type="button" onClick={() => setDensity(option.value)} aria-pressed={density === option.value} title={option.label}><span className="hunt-density-glyph" data-density={option.value} aria-hidden="true"><i /><i /><i /></span><span className="hunt-sr-only">{option.label}</span></button>)}
+                  </div>
+                </div>
+                <div className="hunt-column-picker" ref={columnsPickerRef}><button type="button" className="hunt-control-button" onClick={() => setColumnsOpen((open) => !open)} aria-expanded={columnsOpen}><Columns3 size={13} />Columns <ChevronDown size={12} /></button>{columnsOpen && <div className="hunt-column-picker__menu">{COLUMN_OPTIONS.map(([id, label]) => <label key={id}><input type="checkbox" checked={visibleColumns.includes(id)} onChange={() => toggleColumn(id)} /><span>{label}</span>{visibleColumns.includes(id) && <Check size={12} />}</label>)}<button type="button" className="hunt-column-picker__reset" onClick={() => { setVisibleColumns(DEFAULT_COLUMNS); setColumnsOpen(false); }}>Reset to default</button></div>}</div>
+              </div>
+            </div>
+            <div className="hunt-grid-shell">
+              {events.length > 0 ? <SearchResultsGrid key={`${summary?.searchId ?? 'pending'}-${pageIndex}`} events={events} loading={searchQuery.isFetching && events.length === 0} visibleColumns={visibleColumns} density={density} onSelectionChanged={setSelectedIds} onActivateEvent={setActiveEvent} /> : searchQuery.isFetching ? <div className="hunt-grid-loading" aria-label="Loading search results"><span /><span /><span /><span /><span /></div> : <div className="hunt-grid-empty"><ListFilter size={26} /><strong>No matching events</strong><span>The query completed. Choose Index: Alerts for detections, widen the 24h window, or enroll an agent from Posture → Sensors so endpoint logs are indexed.</span></div>}
+            </div>
+            <nav className="hunt-pagination" aria-label="Hunt result pages">
+              <span>{summary ? `${summary.totalIsExact ? '' : 'About '}${summary.totalApproximate.toLocaleString()} matching events` : 'Result count unavailable'}</span>
+              <strong>Page {pageIndex + 1}<small>{firstVisibleRow.toLocaleString()}–{lastVisibleRow.toLocaleString()}</small></strong>
+              <div>
+                <button type="button" className="hunt-button" onClick={goToPreviousPage} disabled={pageIndex === 0 || searchQuery.isFetching}><ChevronLeft size={14} />Previous</button>
+                <button type="button" className="hunt-button" onClick={goToNextPage} disabled={!searchQuery.data?.nextCursor || searchQuery.isFetching}>Next<ChevronRight size={14} /></button>
+              </div>
+            </nav>
+          </>}
+        </main>
+      </div>
+
+      <StatusDock sseConnected={searchHuntFixtureMode || epsStream.connected} eps={searchHuntFixtureMode ? 12840 : epsStream.eps} mode="live" />
+
+      {selectedIds.length > 0 && <PromotionActionBar selectedCount={selectedIds.length} onAction={(action) => { setPromotionOpen(true); setPromotionAction(action); }} />}
+
+      {promotionOpen && promotionAction && <PromotionModal selectedEventIds={selectedIds} searchId={summary?.searchId ?? ''} initialAction={promotionAction} onSuccess={() => { setSelectedIds([]); setPromotionOpen(false); setPromotionAction(null); }} onClose={() => { setPromotionOpen(false); setPromotionAction(null); }} />}
+
+      <EventContextDrawer event={activeEvent} searchId={summary?.searchId ?? ''} onClose={() => setActiveEvent(null)} onPivot={handlePivot} onAction={openAction} />
+      <HuntActionDrawer mode={actionMode} eventIds={actionEventIds} searchId={summary?.searchId ?? ''} onClose={() => setActionMode(null)} />
+      <SaveSearchModal isOpen={saveOpen} onClose={() => setSaveOpen(false)} currentQuery={query} onSave={() => setSaveOpen(false)} />
+      <SearchManagerPanel isOpen={managerPanelOpen} onClose={() => setManagerPanelOpen(false)} onLoadQuery={handleManagerLoadQuery} onExecuteQuery={handleManagerExecuteQuery} currentQuery={query} />
+      <EventDetailFlyout eventId={flyoutEventId} searchId={summary?.searchId ?? ''} onClose={handleFlyoutClose} onPivot={handlePivot} />
+    </section>
+  );
+}

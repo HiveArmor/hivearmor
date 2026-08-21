@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"github.com/hivearmor/agent/config"
 )
 

@@ -1,0 +1,39 @@
+id: b2c3d4e5-f6a7-8901-bcde-012345678962
+title: DNS Query for Known C2 Framework Default Domains
+status: stable
+logsource:
+  product: windows
+  category: dns_query
+level: high
+tags:
+  - attack.command_and_control
+  - attack.T1071
+  - attack.T1071.004
+detection:
+  selection:
+    QueryName|contains:
+      - '.c2.'
+      - 'cobaltstrike'
+      - 'metasploit'
+      - '.onion.'
+      - 'empire.'
+      - 'sliver.'
+      - 'havoc.'
+  selection_dga:
+    QueryName|re: '^[a-z0-9]{15,30}\.(com|net|org|info)$'
+  condition: selection or selection_dga
+falsepositives:
+  - Security research DNS lookups
+  - Threat intelligence platform queries
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - QueryName
+groupBy:
+  - ComputerName
+mitre:
+  tactic: command-and-control
+  technique: T1071.004

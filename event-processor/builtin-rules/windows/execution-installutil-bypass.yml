@@ -1,0 +1,39 @@
+id: a5b6c7d8-e9f0-1234-abcd-345678901225
+title: InstallUtil AppLocker Bypass Execution
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.execution
+  - attack.defense_evasion
+  - attack.T1218
+  - attack.T1218.004
+detection:
+  selection:
+    Image|endswith: '\InstallUtil.exe'
+    CommandLine|contains:
+      - '/logfile='
+      - '/LogToConsole='
+      - '/U '
+  filter_legit:
+    CommandLine|contains:
+      - 'C:\Windows\Microsoft.NET\'
+      - 'C:\Program Files\'
+  condition: selection and not filter_legit
+falsepositives:
+  - Legitimate .NET application installation using InstallUtil
+  - Software uninstallation procedures
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: execution
+  technique: T1218.004

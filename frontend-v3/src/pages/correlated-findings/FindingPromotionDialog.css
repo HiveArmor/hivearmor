@@ -1,0 +1,39 @@
+.finding-promotion__backdrop { position: fixed; z-index: 350; inset: 0; display: grid; place-items: center; padding: 24px; background: color-mix(in srgb, var(--ha-surface-app) 84%, transparent); backdrop-filter: blur(2px); }
+.finding-promotion { width: min(610px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; border: 1px solid var(--ha-border-strong); border-radius: 11px; background: var(--ha-surface-overlay); box-shadow: var(--ha-shadow-high); color: var(--ha-foreground-primary); }
+.finding-promotion > header { display: grid; grid-template-columns: 44px minmax(0, 1fr) 32px; gap: 10px; padding: 14px; border-bottom: 1px solid var(--ha-border-subtle); background: linear-gradient(115deg, color-mix(in srgb, var(--ha-action-primary) 10%, transparent), transparent 48%), var(--ha-surface-panel); }
+.finding-promotion > header > span { display: grid; width: 42px; height: 46px; place-items: center; clip-path: polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%); background: color-mix(in srgb, var(--ha-action-primary) 17%, var(--ha-surface-elevated)); color: var(--ha-action-secondary); }
+.finding-promotion > header small { color: var(--ha-action-secondary); font: 8px/1.2 var(--ha-font-ui); font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+.finding-promotion > header h2 { margin: 3px 0 0; font: 17px/1.2 var(--ha-font-ui); font-weight: 730; }
+.finding-promotion > header p { margin: 4px 0 0; color: var(--ha-foreground-secondary); font: 10px/1.4 var(--ha-font-ui); }
+.finding-promotion > header button { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid var(--ha-border-subtle); border-radius: 7px; background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); cursor: pointer; }
+.finding-promotion__body { display: grid; gap: 10px; padding: 14px; }
+.finding-promotion__body > section { padding: 11px; border: 1px solid var(--ha-border-subtle); border-radius: 8px; background: var(--ha-surface-input); }
+.finding-promotion__body > section > span { color: var(--ha-action-secondary); font: 8px/1.2 var(--ha-font-ui); font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+.finding-promotion__body h3 { margin: 4px 0; font: 13px/1.3 var(--ha-font-ui); font-weight: 700; }
+.finding-promotion__body section > p { margin: 0; color: var(--ha-foreground-secondary); font: 9px/1.45 var(--ha-font-ui); }
+.finding-promotion__body dl { display: grid; margin: 0; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--ha-border-subtle); border-radius: 8px; overflow: hidden; }
+.finding-promotion__body dl > div { padding: 8px; border-right: 1px solid var(--ha-border-subtle); background: var(--ha-surface-elevated); }
+.finding-promotion__body dl > div:last-child { border-right: 0; }
+.finding-promotion__body dt { color: var(--ha-foreground-tertiary); font: 8px/1.2 var(--ha-font-ui); }
+.finding-promotion__body dd { margin: 3px 0 0; overflow: hidden; color: var(--ha-foreground-primary); font: 10px/1.2 var(--ha-font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.finding-promotion__duplicates { border-color: color-mix(in srgb, var(--ha-state-warning) 35%, var(--ha-border-subtle)) !important; }
+.finding-promotion__duplicates header { display: flex; align-items: center; gap: 6px; color: var(--ha-state-warning); font: 10px/1.2 var(--ha-font-ui); }
+.finding-promotion__duplicates > div { display: grid; grid-template-columns: 100px minmax(0, 1fr) auto; gap: 8px; margin-top: 8px; padding: 7px; border: 1px solid var(--ha-border-subtle); border-radius: 6px; background: var(--ha-surface-elevated); font: 9px/1.25 var(--ha-font-ui); }
+.finding-promotion__duplicates code { color: var(--ha-action-secondary); font-family: var(--ha-font-mono); }
+.finding-promotion__duplicates em { color: var(--ha-state-warning); font-style: normal; }
+.finding-promotion__duplicates > p { margin-top: 7px !important; }
+.finding-promotion__warning { display: flex; align-items: center; gap: 5px; margin: 0; color: var(--ha-state-warning); font: 9px/1.35 var(--ha-font-ui); }
+.finding-promotion__mutation-error { margin: 0 14px 10px; padding: 8px; border: 1px solid color-mix(in srgb, var(--ha-severity-critical) 40%, var(--ha-border-subtle)); border-radius: 6px; color: var(--ha-severity-critical); font: 9px/1.3 var(--ha-font-ui); }
+.finding-promotion > footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px; border-top: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
+.finding-promotion > footer > span { display: flex; max-width: 290px; align-items: start; gap: 5px; color: var(--ha-foreground-tertiary); font: 8px/1.35 var(--ha-font-ui); }
+.finding-promotion > footer div { display: flex; gap: 7px; }
+.finding-promotion > footer button, .finding-promotion__error button { display: inline-flex; min-height: 32px; align-items: center; gap: 5px; padding: 0 10px; border: 1px solid var(--ha-border-default); border-radius: 7px; background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); cursor: pointer; font: var(--ha-type-compact); font-weight: 680; }
+.finding-promotion > footer button:last-child { border-color: var(--ha-action-primary); background: color-mix(in srgb, var(--ha-action-primary) 17%, var(--ha-surface-elevated)); color: var(--ha-action-secondary); }
+.finding-promotion__loading { display: grid; gap: 8px; padding: 18px; }
+.finding-promotion__loading span { height: 42px; border-radius: 7px; background: linear-gradient(90deg, var(--ha-surface-elevated), var(--ha-surface-hover), var(--ha-surface-elevated)); background-size: 200% 100%; animation: finding-promotion-shimmer 1.4s linear infinite; }
+.finding-promotion__error { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 18px; color: var(--ha-severity-critical); }
+.finding-promotion__error strong { font: 11px/1.3 var(--ha-font-ui); }
+.finding-promotion__error p { margin: 2px 0 0; color: var(--ha-foreground-secondary); font: 9px/1.35 var(--ha-font-ui); }
+@keyframes finding-promotion-shimmer { to { background-position: -200% 0; } }
+@media (max-width: 600px) { .finding-promotion__body dl { grid-template-columns: repeat(2, 1fr); } .finding-promotion__body dl > div:nth-child(2) { border-right: 0; } .finding-promotion > footer { align-items: stretch; flex-direction: column; } .finding-promotion > footer > span { max-width: none; } .finding-promotion > footer div { justify-content: flex-end; } }
+@media (prefers-reduced-motion: reduce) { .finding-promotion__loading span { animation: none; } }

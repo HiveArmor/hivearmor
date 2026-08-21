@@ -1,0 +1,61 @@
+- generic [ref=f40e3]:
+  - banner [ref=f40e4]:
+    - generic [ref=f40e5]: HiveArmor
+    - generic [ref=f40e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f40e13]'
+      - generic "Reconnecting..." [ref=f40e16]: 0 EPS
+      - button "Notifications" [ref=f40e18] [cursor=pointer]
+      - button "Help" [ref=f40e23] [cursor=pointer]
+      - button "User menu" [ref=f40e28] [cursor=pointer]:
+        - generic [ref=f40e29]: AA
+        - generic [ref=f40e30]: admin
+  - navigation [ref=f40e31]:
+    - generic [ref=f40e32]:
+      - generic [ref=f40e33]:
+        - generic [ref=f40e34]: COMMAND
+        - generic [ref=f40e35]:
+          - button "Analyst Queue" [ref=f40e36] [cursor=pointer]
+          - button "Alerts" [ref=f40e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f40e47] [cursor=pointer]
+          - button "Incidents" [ref=f40e54] [cursor=pointer]
+      - generic [ref=f40e61]:
+        - generic [ref=f40e62]: INVESTIGATE
+        - generic [ref=f40e63]:
+          - button "Search & Hunt" [ref=f40e64] [cursor=pointer]
+          - button "Investigations" [ref=f40e70] [cursor=pointer]
+          - button "Entities" [ref=f40e75] [cursor=pointer]
+      - generic [ref=f40e83]:
+        - generic [ref=f40e84]: DEFEND
+        - generic [ref=f40e85]:
+          - button "Detection Rules" [ref=f40e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f40e91] [cursor=pointer]
+      - generic [ref=f40e96]:
+        - generic [ref=f40e97]: POSTURE
+        - generic [ref=f40e98]:
+          - button "Assets" [ref=f40e99] [cursor=pointer]
+          - button "Identities" [ref=f40e105] [cursor=pointer]
+          - button "Active Directory" [ref=f40e113] [cursor=pointer]
+          - button "Exposure" [ref=f40e121] [cursor=pointer]
+          - button "Sensors" [ref=f40e128] [cursor=pointer]
+          - button "Compliance" [ref=f40e133] [cursor=pointer]
+      - generic [ref=f40e139]:
+        - generic [ref=f40e140]: DASHBOARDS
+        - button "Studio" [ref=f40e142] [cursor=pointer]
+      - generic [ref=f40e148]:
+        - generic [ref=f40e149]: REPORT
+        - button "Scheduled Reports" [ref=f40e151] [cursor=pointer]
+      - generic [ref=f40e157]:
+        - generic [ref=f40e158]: ADMINISTRATION
+        - generic [ref=f40e159]:
+          - button "Users" [ref=f40e160] [cursor=pointer]
+          - button "Integrations" [ref=f40e175] [cursor=pointer]
+          - button "Notifications" [ref=f40e180] [cursor=pointer]
+          - button "Audit Log" [ref=f40e186] [cursor=pointer]
+          - button "Settings" [ref=f40e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f40e199] [cursor=pointer]
+  - main [ref=f40e202]:
+    - generic [ref=f40e203]:
+      - generic [ref=f40e205]:
+        - heading "After-Action Review" [level=1] [ref=f40e207]
+        - button "New After-Action Report" [ref=f40e209] [cursor=pointer]
+      - generic [ref=f40e213]: Error loading after-action reports. Please try again.

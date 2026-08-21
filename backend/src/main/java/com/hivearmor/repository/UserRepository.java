@@ -53,4 +53,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findAllByLoginNotAndFsManagerIsNullOrFsManagerIsFalse(Pageable pageable, String login);
 
     List<User> findUserByIdIn(List<Long> ids);
+
+    boolean existsByLogin(String login);
 }

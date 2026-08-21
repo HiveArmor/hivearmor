@@ -1,0 +1,54 @@
+id: ha-linux-007
+title: Reverse Shell Execution via Common Tools
+status: stable
+description: Detects execution patterns commonly associated with reverse shell establishment using bash, nc, python, or perl with network redirection.
+logsource:
+  product: linux
+  service: auditd
+level: critical
+tags:
+  - attack.execution
+  - attack.T1059.004
+  - attack.command_and_control
+  - attack.T1071
+detection:
+  selection_bash:
+    type: EXECVE
+    a0: bash
+    a1|contains:
+      - '-i'
+      - '-c'
+  selection_netcat:
+    type: EXECVE
+    a0:
+      - nc
+      - ncat
+      - netcat
+    a1|contains:
+      - '-e'
+  selection_python:
+    type: EXECVE
+    a0|contains: python
+    a1|contains: socket
+  condition: selection_bash or selection_netcat or selection_python
+falsepositives:
+  - Legitimate network diagnostics using netcat
+  - Interactive bash sessions for system administration
+fields:
+  - a0
+  - a1
+  - a2
+  - uid
+  - comm
+impact:
+  confidentiality: high
+  integrity: high
+  availability: high
+deduplicateBy:
+  - a0
+  - uid
+groupBy:
+  - uid
+mitre:
+  tactic: execution
+  technique: T1059.004

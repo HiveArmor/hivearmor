@@ -1,0 +1,74 @@
+{
+  "index_patterns": ["v3-hive-relationship-*"],
+  "priority": 200,
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "index.refresh_interval": "5s"
+    },
+    "mappings": {
+      "properties": {
+        "id": {
+          "type": "keyword"
+        },
+        "sourceEntityId": {
+          "type": "keyword"
+        },
+        "targetEntityId": {
+          "type": "keyword"
+        },
+        "sourceEntityType": {
+          "type": "keyword"
+        },
+        "targetEntityType": {
+          "type": "keyword"
+        },
+        "sourceEntityValue": {
+          "type": "keyword"
+        },
+        "targetEntityValue": {
+          "type": "keyword"
+        },
+        "relationshipType": {
+          "type": "keyword"
+        },
+        "direction": {
+          "type": "keyword"
+        },
+        "strength": {
+          "type": "float"
+        },
+        "evidence": {
+          "type": "nested",
+          "properties": {
+            "type": {
+              "type": "keyword"
+            },
+            "description": {
+              "type": "text"
+            },
+            "timestamp": {
+              "type": "date"
+            },
+            "eventId": {
+              "type": "keyword"
+            }
+          }
+        },
+        "firstSeen": {
+          "type": "date"
+        },
+        "lastSeen": {
+          "type": "date"
+        },
+        "eventCount": {
+          "type": "integer"
+        },
+        "tenantId": {
+          "type": "long"
+        }
+      }
+    }
+  }
+}

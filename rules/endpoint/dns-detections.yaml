@@ -1,0 +1,123 @@
+# DNS Anomaly Detection Rules
+# DataType: dns
+
+dataTypes:
+  - "dns"
+name: "DNS: Possible DNS Tunneling — Long Query"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: "Exfiltration"
+technique: "T1048.003 - Exfiltration Over Alternative Protocol: DNS"
+adversary: origin
+description: "A DNS query with an unusually long subdomain was detected. DNS tunneling tools encode data in subdomains to exfiltrate information through the DNS protocol, which is rarely blocked by firewalls."
+references:
+  - "https://attack.mitre.org/techniques/T1048/003/"
+where: |
+  safe("log.query_length", 0) > 60 &&
+  safe("log.query_type", "") != "PTR"
+groupBy:
+  - origin.ip
+  - log.query
+deduplicateBy:
+  - log.query
+correlation:
+  - indexPattern: "v3-hive-dns-*"
+    with:
+      - field: "origin.ip"
+        operator: filter_term
+        value: "{{.origin.ip}}"
+      - field: "log.query_length"
+        operator: filter_range_gt
+        value: "60"
+    within: 5m
+    count: 5
+---
+dataTypes:
+  - "dns"
+name: "DNS: High Entropy Subdomain — DGA Indicator"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: "Command and Control"
+technique: "T1568.002 - Dynamic Resolution: Domain Generation Algorithms"
+adversary: origin
+description: "A DNS query was made for a domain with high Shannon entropy in the subdomain component. Domain Generation Algorithms (DGA) produce high-entropy random-looking domains as C2 fallback mechanisms."
+references:
+  - "https://attack.mitre.org/techniques/T1568/002/"
+where: |
+  safe("log.subdomain_entropy", 0.0) > 3.8 &&
+  safe("log.response_code", "") == "NXDOMAIN"
+groupBy:
+  - origin.ip
+  - origin.process
+deduplicateBy:
+  - origin.ip
+  - log.query
+correlation:
+  - indexPattern: "v3-hive-dns-*"
+    with:
+      - field: "origin.ip"
+        operator: filter_term
+        value: "{{.origin.ip}}"
+      - field: "log.response_code"
+        operator: filter_term
+        value: "NXDOMAIN"
+    within: 10m
+    count: 20
+---
+dataTypes:
+  - "dns"
+name: "DNS: NXDOMAIN Storm — Possible DGA or Malware C2 Probing"
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+category: "Command and Control"
+technique: "T1568 - Dynamic Resolution"
+adversary: origin
+description: "A high volume of NXDOMAIN responses was observed from a single host. This pattern is typical of DGA malware that cycles through a list of generated domains looking for an active C2 server."
+references:
+  - "https://attack.mitre.org/techniques/T1568/"
+where: |
+  safe("log.response_code", "") == "NXDOMAIN"
+groupBy:
+  - origin.ip
+deduplicateBy:
+  - origin.ip
+correlation:
+  - indexPattern: "v3-hive-dns-*"
+    with:
+      - field: "origin.ip"
+        operator: filter_term
+        value: "{{.origin.ip}}"
+      - field: "log.response_code"
+        operator: filter_term
+        value: "NXDOMAIN"
+    within: 2m
+    count: 30
+---
+dataTypes:
+  - "dns"
+name: "DNS: Suspicious TXT Record Query — Possible C2 Channel"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: "Command and Control"
+technique: "T1071.004 - Application Layer Protocol: DNS"
+adversary: origin
+description: "A DNS TXT record query was made. TXT records are used by DNS-based C2 frameworks (e.g., DNScat2, Cobalt Strike DNS C2) to receive command data encoded in DNS responses."
+references:
+  - "https://attack.mitre.org/techniques/T1071/004/"
+where: |
+  safe("log.query_type", "") == "TXT" &&
+  !regexMatch(safe("log.query", ""), "(google\\.com|microsoft\\.com|cloudflare\\.com|amazonaws\\.com|spf\\.)")
+groupBy:
+  - origin.ip
+  - log.query
+deduplicateBy:
+  - origin.ip
+  - log.query

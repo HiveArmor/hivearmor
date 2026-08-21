@@ -1,0 +1,73 @@
+Sprint S-4C — Evidence Board Frontend
+Date: 2026-07-21
+Test runner: Vitest 4.1.10
+
+─── Results ─────────────────────────────────────────────────────────────────
+Test Files: 38 passed (38)
+Tests:      439 passed (439)
+  Before S-4C: 413 tests
+  New S-4C:    26 tests
+Failures:   0
+TypeScript errors: 0
+
+─── New test file ────────────────────────────────────────────────────────────
+frontend-v2/src/components/investigation/__tests__/evidence-board.test.ts
+  describe: getCardLabel         — 6 tests
+  describe: extractDomain        — 6 tests
+  describe: detectVersionConflict — 6 tests
+  describe: applyDragDelta       — 6 tests
+  describe: debounce logic       — 2 tests
+
+─── Files created ────────────────────────────────────────────────────────────
+frontend-v2/src/types/evidence.ts
+  EvidenceItemType, EvidenceItem, EvidencePlacement, EvidenceBoard,
+  EvidenceRelationship, EvidenceBoardState
+
+frontend-v2/src/services/evidence.service.ts
+  EvidenceService class: listItems, addItem, updateItem, deleteItem,
+  getMainBoard, getPlacements, savePlacements, listRelationships,
+  addRelationship, deleteRelationship
+  TanStack Query hooks: useEvidenceItems, useBoardPlacements
+  409 handling: throws Error('VERSION_CONFLICT')
+
+frontend-v2/src/components/investigation/add-evidence-modal.tsx
+  AddEvidenceModal component with 4 tabs:
+  From Alerts (placeholder) / Note / URL / Artifact
+
+frontend-v2/src/components/investigation/evidence-card.tsx
+  EvidenceCard component — renders all 4 itemTypes with type-appropriate icons:
+  ALERT (SeverityLabel + title + chip)
+  NOTE (MessageSquare icon + content preview + author)
+  EXTERNAL_URL (ExternalLink icon + title + domain)
+  ARTIFACT (Paperclip icon + title + content)
+  Remove button (X icon, only when onRemove prop provided)
+
+frontend-v2/src/components/investigation/__fixtures__/evidence.fixture.ts
+  DEMO_EVIDENCE fixture (moved from production component)
+
+─── Files modified ───────────────────────────────────────────────────────────
+frontend-v2/src/components/investigation/investigation-evidence-board.tsx
+  Real-data mode: accepts incidentId prop, fetches from evidenceService
+  Loading state: 3 skeleton cards (animate-pulse)
+  Error state: "Could not load evidence" + Retry button
+  Empty state: "No evidence yet" + Add button
+  Board view: CSS mouse-event dragging (window event listeners)
+  Debounce save: 500ms via useDebouncedCallback hook
+  409 version conflict: toast warning + invalidateQueries refetch
+  List view: plain <table> with type/title/createdBy/createdAt/remove columns
+  Board/List toggle: LayoutGrid / List lucide icons
+  Legacy mode: backward-compat LegacyBoardMode for initialCards prop (no incidentId)
+  DEMO_EVIDENCE removed from exports — moved to __fixtures__/evidence.fixture.ts
+
+frontend-v2/src/app/(app)/incidents/[id]/page.tsx
+  Removed DEMO_EVIDENCE import
+  InvestigationEvidenceBoard now receives incidentId={Number(id)} instead of initialCards
+
+─── Notes ────────────────────────────────────────────────────────────────────
+- @use-gesture/react IS installed — confirmed with node -e require check.
+  CSS mouse-event dragging was used for the real-data board view (no dependency
+  on @use-gesture/react needed — the existing useDebouncedCallback covers all
+  debounce needs).
+- Manual screenshot required: docs/screenshots/phase4/evidence-board.png
+  (requires running frontend dev server and navigating to /incidents/{id})
+- Backend required for real data: run `cd local-dev && docker compose up -d`

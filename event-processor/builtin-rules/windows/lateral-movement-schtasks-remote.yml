@@ -1,0 +1,40 @@
+id: c5d6e7f8-a9b0-1234-cdef-345678901215
+title: Remote Scheduled Task Creation for Lateral Movement
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.lateral_movement
+  - attack.execution
+  - attack.T1053
+  - attack.T1053.005
+detection:
+  selection:
+    Image|endswith: '\schtasks.exe'
+    CommandLine|contains:
+      - '/create'
+      - '/s '
+    CommandLine|contains:
+      - '/tn '
+  filter_local:
+    CommandLine|contains:
+      - '/s localhost'
+      - '/s 127.0.0.1'
+  condition: selection and not filter_local
+falsepositives:
+  - Authorized software deployment creating remote tasks
+  - Enterprise configuration management tools
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: lateral-movement
+  technique: T1053.005

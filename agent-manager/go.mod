@@ -3,10 +3,11 @@ module github.com/hivearmor/agent-manager
 go 1.25.5
 
 require (
-	github.com/hivearmor/shared v0.0.0
 	github.com/gin-gonic/gin v1.12.0
 	github.com/google/uuid v1.6.0
+	github.com/hivearmor/shared v0.0.0
 	github.com/prometheus/client_golang v1.23.2
+	github.com/threatwinds/go-sdk v1.1.26
 	github.com/utmstack/config-client-go v1.2.7
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.11
@@ -15,7 +16,22 @@ require (
 )
 
 require (
-	github.com/hivearmor/shared v0.0.0
+	cel.dev/expr v0.25.2 // indirect
+	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
+	github.com/google/cel-go v0.28.1 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+	github.com/opensearch-project/opensearch-go/v4 v4.6.0 // indirect
+	github.com/tidwall/gjson v1.19.0 // indirect
+	github.com/tidwall/match v1.2.0 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	golang.org/x/exp v0.0.0-20260603202125-055de637280b // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
+	sigs.k8s.io/yaml v1.6.0 // indirect
+)
+
+require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
@@ -27,7 +43,6 @@ require (
 )
 
 require (
-	github.com/hivearmor/shared v0.0.0
 	github.com/bytedance/gopkg v0.1.4 // indirect
 	github.com/bytedance/sonic v1.15.2 // indirect
 	github.com/bytedance/sonic/loader v0.5.1 // indirect
@@ -54,15 +69,15 @@ require (
 	github.com/pelletier/go-toml/v2 v2.3.1 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.59.1 // indirect
-	github.com/threatwinds/go-sdk v1.1.26
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.1 // indirect
 	golang.org/x/arch v0.27.0 // indirect
-	golang.org/x/crypto v0.52.0 // indirect
+	golang.org/x/crypto v0.52.0
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 )
+
 replace github.com/hivearmor/shared => ../shared

@@ -1,0 +1,43 @@
+id: ha-azure-001
+title: Network Security Group Allows All Traffic
+status: stable
+description: Detects when an Azure Network Security Group (NSG) is configured with an inbound rule that allows all traffic from any source, which significantly expands the attack surface.
+logsource:
+  product: azure
+  service: activitylogs
+level: high
+tags:
+  - attack.initial_access
+  - attack.T1190
+detection:
+  selection:
+    operationName: Microsoft.Network/networkSecurityGroups/securityRules/write
+    properties.provisioningState: Succeeded
+    properties.access: Allow
+    properties.sourceAddressPrefix:
+      - '*'
+      - 'Any'
+      - 'Internet'
+    properties.destinationPortRange: '*'
+  condition: selection
+falsepositives:
+  - Authorized network administrators deliberately opening access during maintenance windows
+  - Emergency access configurations with subsequent tightening
+fields:
+  - operationName
+  - caller
+  - resourceId
+  - properties.access
+  - properties.sourceAddressPrefix
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - caller
+  - resourceId
+groupBy:
+  - resourceId
+mitre:
+  tactic: initial-access
+  technique: T1190

@@ -1,0 +1,101 @@
+# LEEF (Log Event Extended Format) Syslog Parser, version 1.0.0
+# IBM QRadar LEEF format: LEEF:Version|Vendor|Product|Version|EventID|key=value pairs (tab-separated)
+# LEEF 2.0 uses a configurable delimiter; defaults to tab when not specified.
+# References: https://www.ibm.com/docs/en/dsm?topic=leef-data-format
+
+pipeline:
+  - dataTypes:
+      - SYSLOG_LEEF
+    steps:
+
+      # ── Phase 1: Parse LEEF header ────────────────────────────────────────
+      - grok:
+          patterns:
+            - field_name: log.leefVersion
+              pattern: 'LEEF:{{.data}}\|'
+            - field_name: log.vendor
+              pattern: '{{.data}}\|'
+            - field_name: log.product
+              pattern: '{{.data}}\|'
+            - field_name: log.productVersion
+              pattern: '{{.data}}\|'
+            - field_name: log.eventId
+              pattern: '{{.data}}\|'
+            - field_name: log.leefExtension
+              pattern: '{{.greedy}}'
+          source: raw
+          where: 'contains("raw", "LEEF:")'
+
+      # ── Phase 2: Trim trailing pipe from header fields ────────────────────
+      - trim:
+          function: suffix
+          substring: '|'
+          fields:
+            - log.leefVersion
+            - log.vendor
+            - log.product
+            - log.productVersion
+            - log.eventId
+
+      # ── Phase 3: Parse LEEF extension key=value fields ────────────────────
+      # LEEF extension uses tab as field delimiter and = as value delimiter
+      - kv:
+          fieldSplit: "\t"
+          valueSplit: '='
+          source: log.leefExtension
+
+      # ── Phase 4: Promote to standard schema fields ────────────────────────
+      - rename:
+          from:
+            - log.src
+          to: origin.ip
+          where: exists("log.src")
+
+      - rename:
+          from:
+            - log.dst
+          to: target.ip
+          where: exists("log.dst")
+
+      - rename:
+          from:
+            - log.usrName
+          to: origin.user
+          where: exists("log.usrName")
+
+      - rename:
+          from:
+            - log.identSrc
+          to: origin.host
+          where: exists("log.identSrc")
+
+      - rename:
+          from:
+            - log.identHostName
+          to: target.host
+          where: exists("log.identHostName")
+
+      - rename:
+          from:
+            - log.proto
+          to: protocol
+          where: exists("log.proto")
+
+      - rename:
+          from:
+            - log.cat
+          to: log.category
+          where: exists("log.cat")
+
+      - rename:
+          from:
+            - log.severity
+          to: severity
+          where: exists("log.severity")
+
+      # ── Phase 5: Set dataType ─────────────────────────────────────────────
+      - add:
+          function: set
+          params:
+            key: log.dataType
+            value: SYSLOG_LEEF

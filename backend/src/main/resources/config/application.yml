@@ -141,6 +141,22 @@ app:
   security:
     trusted-proxy-cidrs: []  # Empty = never trust X-Forwarded-For (safe default)
 
+ha:
+  pivot:
+    signing:
+      secret: "${HA_PIVOT_SIGNING_SECRET:ha-pivot-local-dev-secret-change-in-production}"
+  pipeline-signals:
+    sample-file: "${HA_PIPELINE_SIGNALS_SAMPLE_FILE:/var/hivearmor-slo-soak/latest.json}"
+    sample-dir: "${HA_PIPELINE_SIGNALS_SAMPLE_DIR:/var/hivearmor-slo-soak}"
+
+hivearmor:
+  air-gap: ${HIVEARMOR_AIR_GAP:false}
+  encryption-key: ${HIVEARMOR_ENCRYPTION_KEY:}
+  agent-packages:
+    directories: ${HIVEARMOR_AGENT_PACKAGE_DIRS:/dependencies/agent,/updates/agent}
+  rule-gen:
+    output-dir: "${HIVEARMOR_RULE_GEN_OUTPUT_DIR:./rules/generated}"
+
 application:
   branding:
     name: "${APPLICATION_BRANDING_NAME:HiveArmor}"

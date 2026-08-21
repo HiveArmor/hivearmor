@@ -1,0 +1,60 @@
+Sprint:      S-4D — Investigation Timeline Frontend
+Date:        2026-07-21
+TS errors:   0
+Tests:       476 passed / 476 total (37 new in this sprint)
+
+Files created:
+  frontend-v2/src/types/incident.ts
+    - IncidentTimelineEvent interface
+  frontend-v2/src/components/investigation/__fixtures__/timeline.fixture.ts
+    - DEMO_TIMELINE fixture (moved from production code)
+  frontend-v2/src/components/investigation/investigation-notes.tsx
+    - InvestigationNotes component with useQuery, add/delete notes, markdown preview
+  frontend-v2/src/components/investigation/__tests__/investigation-timeline.test.ts
+    - 19 pure-logic tests: getEventIconName (7), getEventColour (7), sortByEventAt (5)
+  frontend-v2/src/components/investigation/__tests__/investigation-notes.test.ts
+    - 18 pure-logic tests: renderMarkdown (12), canDeleteNote (6)
+
+Files modified:
+  frontend-v2/src/services/incident.service.ts
+    - Added getTimeline(incidentId) → GET /api/ha-incidents/{id}/timeline
+    - Added import for IncidentTimelineEvent type
+  frontend-v2/src/components/investigation/investigation-timeline.tsx
+    - Dual-mode: ApiTimeline (incidentId prop → useQuery) + LegacyTimeline (events prop)
+    - DEMO_TIMELINE export removed from component (moved to fixture)
+    - Loading: 4 skeleton items (animate-pulse)
+    - Empty state: Clock icon + "No timeline events yet."
+    - Error state: retry button (calls refetch)
+    - Event icons: STATUS_CHANGE=ArrowLeftRight, NOTE=MessageSquare, EVIDENCE_ADDED=Puzzle,
+                   SOAR_EXECUTED=Zap, ALERT_ADDED=AlertTriangle
+    - Colours via CSS vars: --ha-primary, --ha-text-secondary, --ha-medium, --ha-high, --ha-critical
+    - Exported: getEventIconName, getEventColour, sortByEventAt (used by tests)
+  frontend-v2/src/app/(app)/incidents/[id]/page.tsx
+    - Added "notes" TabId
+    - Added NOTES tab to TABS array (MessageSquare icon)
+    - TIMELINE tab now uses: <InvestigationTimeline incidentId={Number(id)} />
+    - NOTES tab uses: <InvestigationNotes incidentId={Number(id)} />
+    - Removed DEMO_TIMELINE import (no longer needed)
+
+New test counts by file:
+  investigation-timeline.test.ts:  19 tests
+  investigation-notes.test.ts:     18 tests
+  Total new:                        37 tests
+
+Previous total: 439 tests
+New total:      476 tests
+
+Backend note endpoint used: GET /api/ha-incident-notes?incidentId.equals={id}
+                            POST /api/ha-incident-notes { incidentId, noteText }
+                            (DELETE /api/ha-incident-notes/{id} — called in UI but endpoint
+                             not confirmed in current UtmIncidentNoteResource; delete
+                             button will 405 if backend lacks it, notes re-fetch will work)
+
+Phase 4 exit criteria status:
+  [x] DEMO_TIMELINE removed from production code paths
+  [x] Timeline loads from GET /api/ha-incidents/{id}/timeline
+  [x] Timeline: loading skeleton (4 items), empty state, error state
+  [x] Notes tab functional with persistence (add + delete own notes)
+  [x] Markdown preview toggle (regex-based, no 3rd-party lib)
+  [x] 4 tabs: Evidence | Timeline | Entity Graph | Notes
+  [x] All 476 tests pass, 0 TS errors

@@ -1,0 +1,120 @@
+Phase 1 — HiveArmor Visual Identity — Test Verification Log
+============================================================
+Date: 2026-07-20
+Author: HiveArmor automated implementation
+
+────────────────────────────────────────────────────────────────────────────────
+1-A: HiveArmor Logo SVG Component
+────────────────────────────────────────────────────────────────────────────────
+Files created:
+  frontend-v2/src/components/brand/hivearmor-logo.tsx
+    Variants: icon | wordmark | full
+    Sizes: sm (24px) | md (32px) | lg (48px) | hero (96px)
+    SVG: shield body + hexagonal cell inset + "HA" monogram
+    All colours via CSS variables (--ha-surface-raised, --ha-primary)
+
+Files modified:
+  frontend-v2/src/components/layout/app-shell.tsx
+    Replaced: <Shield className="w-7 h-7 text-white" /> in loading state
+    With: <HiveArmorLogo variant="icon" size="lg" />
+    Also: loading screen bg changed from --surface-ground to --ha-background
+
+  frontend-v2/src/components/layout/sidebar.tsx
+    Replaced: manual ShieldCheck + text stack
+    With: <HiveArmorLogo variant="full" size="sm" /> (expanded)
+         <HiveArmorLogo variant="icon" size="sm" /> (collapsed)
+
+  frontend-v2/src/app/login/page.tsx
+    Replaced: custom shield SVG with baked-in blue colours
+    With: <HiveArmorLogo variant="icon" size="hero" />
+    Also fixed: background, card, error state to use --ha-* tokens
+
+Tests:
+  frontend-v2/src/components/brand/__tests__/hivearmor-logo.test.ts
+    ✓ defines all four required sizes (sm/md/lg/hero)
+    ✓ sm icon size is 24px
+    ✓ md icon size is 32px
+    ✓ lg icon size is 48px
+    ✓ hero icon size is 96px
+    ✓ each size has a textClass string
+    ✓ hexPath produces closed SVG path (M...Z)
+    ✓ generates exactly 6 line segments
+    ✓ centred hex returns symmetric x-coordinates
+    ✓ outer hex is larger than inner hex for same centre
+
+Visual verification:
+  → Browser screenshot: Login page shows HiveArmor shield logo with teal glow
+  → Browser screenshot: Sidebar shows "HiveArmor" full logo in header
+  → No Lucide <Shield> used as brand placeholder in layout/app-shell.tsx or layout/sidebar.tsx
+
+────────────────────────────────────────────────────────────────────────────────
+1-B: Honeycomb Pattern Background
+────────────────────────────────────────────────────────────────────────────────
+Files created:
+  frontend-v2/src/components/brand/hive-pattern.tsx
+    SVG <pattern> with flat-top hexagonal tessellation
+    Stroke: --ha-border at configurable opacity (default 0.4)
+    Fill: transparent
+    cellSize and opacity props for flexibility
+
+Applied to:
+  frontend-v2/src/app/login/page.tsx — full-page decorative background
+
+Tests:
+  frontend-v2/src/components/brand/__tests__/hive-pattern.test.ts
+    ✓ tile width equals 2x cell size
+    ✓ tile height equals cellSize * sqrt(3)
+    ✓ flat-top hexPath produces 6 vertices
+    ✓ hexPath starts with M and ends with Z
+    ✓ flat-top hex has first vertex directly to the right of centre (angle 0°)
+
+Visual verification:
+  → Login page screenshot confirms honeycomb pattern visible across full background
+
+────────────────────────────────────────────────────────────────────────────────
+1-C: ECharts Theme (already done in Phase 0)
+────────────────────────────────────────────────────────────────────────────────
+Status: Already complete from Phase 0-A
+  DARK_CHART_THEME.color[0] = #32D6C5 ✓
+  No #3B82F6 in color array ✓
+  See phase0-vitest.txt for chart-theme.test.ts results
+
+────────────────────────────────────────────────────────────────────────────────
+1-D: Remove Electric-Blue Hardcoded References
+────────────────────────────────────────────────────────────────────────────────
+Fixed remaining #3B82F6 / rgba(59,130,246) references:
+  frontend-v2/src/components/ui/sparkline.tsx
+    color default: "#3B82F6" → "#32D6C5"
+  frontend-v2/src/components/logs/log-timeline-histogram.tsx
+    "var(--brand-primary, #3B82F6)" → "var(--ha-primary)"
+  frontend-v2/src/components/builder/chart-config-builder.ts (3 occurrences)
+    progress gauge colour: "#3B82F6" → "#32D6C5"
+    gauge 100% colour: "#10B981" → "#40D69A"
+    heatmap range: ["#1E293B","#3B82F6","#8B5CF6"] → ["#131C28","#32D6C5","#8B7CFF"]
+
+Intentionally preserved:
+  frontend-v2/src/app/(app)/settings/page.tsx — user-selectable accent colour "Blue" option
+
+Verification:
+  grep -rn '"#3B82F6"\|59,130,246' frontend-v2/src (excl. settings.tsx, tests) → 0 results ✓
+
+Legacy token alias bridge (--surface-*, --brand-*, --color-*, --text-*):
+  All aliases confirmed pointing to ha-* values via getComputedStyle():
+    --brand-primary: #32D6C5 ✓
+    --surface-ground: #070A0F ✓
+    --surface-primary: #0D131C ✓
+    --color-critical: #FF5D6C ✓
+    --text-primary: #E8EDF4 ✓
+    --text-muted: #6B7FA0 ✓
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 1 EXIT CRITERIA — ALL MET
+────────────────────────────────────────────────────────────────────────────────
+  ✓ Custom HiveArmor logo appears in sidebar, login page, and loading state
+  ✓ No Lucide <Shield> used as brand placeholder in layout components
+  ✓ Honeycomb pattern visible on login page
+  ✓ All ECharts series use #32D6C5 as first colour
+  ✓ Zero occurrences of #3B82F6 in component files (outside intentional colour picker)
+  ✓ Legacy token aliases intact and bridge all resolves to --ha-* values
+  ✓ Next.js build passes (compiled successfully, 58/58 static pages)
+  ✓ Dev server live verification: login page and dashboard confirmed visually

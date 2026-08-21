@@ -1,0 +1,29 @@
+title: Lateral Movement via SMB to Multiple Hosts
+id: c4f6e9b3-8d5a-4c2f-b7e1-4a3d2b9c6e8f
+status: test
+level: high
+description: Detects a single host making SMB connections to multiple internal machines
+author: HiveArmor Threat Research
+date: 2024/05/01
+modified: 2025/03/15
+references:
+  - https://attack.mitre.org/techniques/T1021/002/
+tags:
+  - attack.lateral_movement
+  - attack.t1021.002
+logsource:
+  category: network_connection
+  product: windows
+detection:
+  selection:
+    DestinationPort: 445
+    Initiated: 'true'
+  filter_servers:
+    SourceImage|endswith:
+      - '\System'
+      - '\svchost.exe'
+  condition: selection and not filter_servers | count(DestinationIp) by SourceIp > 3
+falsepositives:
+  - Vulnerability scanners
+  - Network monitoring tools
+  - Admin workstations

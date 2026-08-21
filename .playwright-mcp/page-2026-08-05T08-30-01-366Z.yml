@@ -1,0 +1,985 @@
+- generic [ref=f61e1]:
+  - generic [ref=f61e5]:
+    - link "Skip to main content" [ref=f61e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f61e7]:
+      - generic [ref=f61e8]:
+        - generic [ref=f61e14]: HiveArmor
+        - generic [ref=f61e15]: Security operations
+      - generic [ref=f61e16]:
+        - generic [ref=f61e17]:
+          - button "All authorized tenants" [expanded] [ref=f61e18] [cursor=pointer]
+          - menu "Tenant scope" [ref=f61e1640]:
+            - textbox "Search tenants" [active] [ref=f61e1645]:
+              - /placeholder: Search tenants…
+            - generic [ref=f61e1646]: Select tenant scope
+            - generic [ref=f61e1647]:
+              - menuitemradio "All authorized tenants View events across all tenants you have access to" [checked] [ref=f61e1648] [cursor=pointer]:
+                - generic [ref=f61e1649]:
+                  - strong [ref=f61e1650]: All authorized tenants
+                  - generic [ref=f61e1651]: View events across all tenants you have access to
+              - menuitemradio "Workmates1 Primary workspace · EDR + Log collection" [ref=f61e1654] [cursor=pointer]:
+                - generic [ref=f61e1655]:
+                  - strong [ref=f61e1656]: Workmates1
+                  - generic [ref=f61e1657]: Primary workspace · EDR + Log collection
+              - menuitemradio "CWM Cloud Workload Management · Cloud + Network" [ref=f61e1658] [cursor=pointer]:
+                - generic [ref=f61e1659]:
+                  - strong [ref=f61e1660]: CWM
+                  - generic [ref=f61e1661]: Cloud Workload Management · Cloud + Network
+              - menuitemradio "Workmates2 Secondary workspace · Endpoint monitoring" [ref=f61e1662] [cursor=pointer]:
+                - generic [ref=f61e1663]:
+                  - strong [ref=f61e1664]: Workmates2
+                  - generic [ref=f61e1665]: Secondary workspace · Endpoint monitoring
+        - button "Search alerts, incidents, entities…" [ref=f61e26] [cursor=pointer]:
+          - generic [ref=f61e31]: ⌘ K
+        - generic [ref=f61e32]: Production
+      - generic [ref=f61e33]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=f61e34]'
+        - status "Live events per second" [ref=f61e37]:
+          - generic [ref=f61e39]: 0 EPS
+        - button "Notifications" [ref=f61e40] [cursor=pointer]
+        - button "Help" [ref=f61e45] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f61e49]:
+      - generic [ref=f61e50]:
+        - region "COMMAND" [ref=f61e51]:
+          - generic [ref=f61e52]:
+            - button "Mission Control" [ref=f61e53] [cursor=pointer]
+            - button "Analyst Queue" [ref=f61e60] [cursor=pointer]
+            - button "Alerts" [ref=f61e64] [cursor=pointer]
+            - button "Correlated Findings" [ref=f61e69] [cursor=pointer]
+            - button "Incidents" [ref=f61e75] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f61e81]:
+          - generic [ref=f61e82]:
+            - button "Search & Hunt" [ref=f61e83] [cursor=pointer]
+            - button "Investigations" [ref=f61e88] [cursor=pointer]
+            - button "Entities" [ref=f61e92] [cursor=pointer]
+            - button "Threat Constellation" [ref=f61e99] [cursor=pointer]
+        - region "DEFEND" [ref=f61e105]:
+          - generic [ref=f61e106]:
+            - button "Detection Rules" [ref=f61e107] [cursor=pointer]
+            - button "Playbooks" [ref=f61e111] [cursor=pointer]
+            - button "Response Library" [ref=f61e116] [cursor=pointer]
+        - region "POSTURE" [ref=f61e120]:
+          - generic [ref=f61e121]:
+            - button "Assets" [ref=f61e122] [cursor=pointer]
+            - button "Identities" [ref=f61e127] [cursor=pointer]
+            - button "Active Directory" [ref=f61e134] [cursor=pointer]
+            - button "Exposure" [ref=f61e141] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f61e147] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f61e158] [cursor=pointer]
+            - button "Sensors" [ref=f61e164] [cursor=pointer]
+            - button "Compliance" [ref=f61e168] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f61e173]:
+          - generic [ref=f61e174]:
+            - button "Endpoints" [ref=f61e175] [cursor=pointer]
+            - button "File Quarantine" [ref=f61e179] [cursor=pointer]
+            - button "File Integrity" [ref=f61e185] [cursor=pointer]
+            - button "Agent Policies" [ref=f61e192] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f61e197]:
+          - button "Studio" [ref=f61e199] [cursor=pointer]
+        - region "REPORT" [ref=f61e204]:
+          - button "Scheduled Reports" [ref=f61e206] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f61e211]:
+          - generic [ref=f61e212]:
+            - button "Users" [ref=f61e213] [cursor=pointer]
+            - button "Integrations" [ref=f61e227] [cursor=pointer]
+            - button "Notifications" [ref=f61e231] [cursor=pointer]
+            - button "Audit Log" [ref=f61e236] [cursor=pointer]
+            - button "Settings" [ref=f61e241] [cursor=pointer]
+      - generic [ref=f61e246]:
+        - button "User menu" [ref=f61e249] [cursor=pointer]:
+          - generic [ref=f61e250]: AA
+        - button "Pin sidebar open" [ref=f61e251] [cursor=pointer]
+    - main [ref=f61e254]:
+      - generic [ref=f61e255]:
+        - generic [ref=f61e256]:
+          - generic [ref=f61e264]:
+            - generic [ref=f61e265]: Detection operations
+            - heading "Alerts" [level=1] [ref=f61e266]
+          - generic [ref=f61e267]:
+            - generic [ref=f61e270]:
+              - strong [ref=f61e271]: Live intake
+              - generic [ref=f61e272]: Rows updated 13:59
+            - link "Severity board" [ref=f61e273] [cursor=pointer]:
+              - /url: /alerts/board
+            - generic [ref=f61e278]:
+              - button "Live" [ref=f61e279] [cursor=pointer]
+              - button "Historical" [ref=f61e282] [cursor=pointer]
+        - generic "Alert queue controls and priority summary" [ref=f61e284]:
+          - region "Alert priority snapshot" [ref=f61e285]:
+            - 'button "Current scope: 75. matching alerts" [ref=f61e286] [cursor=pointer]':
+              - generic [ref=f61e289]:
+                - generic [ref=f61e290]: Current scope
+                - strong [ref=f61e291]: "75"
+                - emphasis [ref=f61e292]: matching alerts
+            - 'button "Critical open: 15. needs immediate review" [ref=f61e295] [cursor=pointer]':
+              - generic [ref=f61e299]:
+                - generic [ref=f61e300]: Critical open
+                - strong [ref=f61e301]: "15"
+                - emphasis [ref=f61e302]: needs immediate review
+            - 'button "SLA pressure: 0. at risk or breached" [ref=f61e305] [cursor=pointer]':
+              - generic [ref=f61e310]:
+                - generic [ref=f61e311]: SLA pressure
+                - strong [ref=f61e312]: "0"
+                - emphasis [ref=f61e313]: at risk or breached
+            - 'button "Unassigned: 75. without an owner" [ref=f61e316] [cursor=pointer]':
+              - generic [ref=f61e321]:
+                - generic [ref=f61e322]: Unassigned
+                - strong [ref=f61e323]: "75"
+                - emphasis [ref=f61e324]: without an owner
+            - 'button "Intel matches: 0. enriched indicators" [ref=f61e327] [cursor=pointer]':
+              - generic [ref=f61e331]:
+                - generic [ref=f61e332]: Intel matches
+                - strong [ref=f61e333]: "0"
+                - emphasis [ref=f61e334]: enriched indicators
+          - navigation "Alert queue views" [ref=f61e337]:
+            - strong [ref=f61e340]: Views
+            - generic [ref=f61e341]:
+              - button [ref=f61e342] [cursor=pointer]:
+                - strong [ref=f61e344]: Needs triage
+              - button [ref=f61e345] [cursor=pointer]:
+                - strong [ref=f61e347]: My priority
+              - button [ref=f61e348] [cursor=pointer]:
+                - strong [ref=f61e350]: Critical
+                - emphasis [ref=f61e351]: "15"
+              - button [ref=f61e352] [cursor=pointer]:
+                - strong [ref=f61e354]: SLA risk
+                - emphasis [ref=f61e355]: "0"
+              - button [ref=f61e356] [cursor=pointer]:
+                - strong [ref=f61e358]: Unassigned
+                - emphasis [ref=f61e359]: "75"
+              - button [ref=f61e360] [cursor=pointer]:
+                - strong [ref=f61e362]: Intel matches
+                - emphasis [ref=f61e363]: "0"
+              - button [ref=f61e364] [cursor=pointer]:
+                - strong [ref=f61e366]: All alerts
+            - 'generic "Keyboard triage shortcuts: J and K navigate, Space selects, A assigns, C classifies" [ref=f61e367]': J/K
+          - generic [ref=f61e371]:
+            - generic [ref=f61e372]:
+              - combobox "Alert query" [ref=f61e376]
+              - generic [ref=f61e377]: ⇧ F
+              - button "Run" [ref=f61e378] [cursor=pointer]
+            - generic [ref=f61e379]: Use field colon value conditions joined by AND or OR. Arrow keys select autocomplete suggestions. Press Enter to run.
+            - generic [ref=f61e380]:
+              - button "Add filter" [ref=f61e382] [cursor=pointer]
+              - button "Time range selector" [disabled] [ref=f61e385]:
+                - generic [ref=f61e388]: Last 24 hours
+              - button "Select columns" [ref=f61e392] [cursor=pointer]: Fields
+              - generic "Row density" [ref=f61e395]:
+                - button "compact row density" [ref=f61e396] [cursor=pointer]
+                - button "standard row density" [ref=f61e399] [cursor=pointer]
+                - button "comfortable row density" [ref=f61e402] [cursor=pointer]
+              - button "Refresh alert queue" [ref=f61e405] [cursor=pointer]
+          - generic "Active alert filters" [ref=f61e411]:
+            - generic [ref=f61e414]:
+              - strong [ref=f61e415]: Status
+              - text: active
+              - button "Remove Status filter" [ref=f61e416] [cursor=pointer]
+            - button "Clear filters" [ref=f61e420] [cursor=pointer]
+          - generic [ref=f61e421]:
+            - generic [ref=f61e422]:
+              - strong [ref=f61e423]: "75"
+              - generic [ref=f61e424]: matching alerts
+              - generic [ref=f61e426]:
+                - text: snapshot
+                - time [ref=f61e427]: 13:59
+            - generic [ref=f61e428]:
+              - generic [ref=f61e429]: Virtual queue · 100-row blocks
+              - generic [ref=f61e430]: ·Double-click opens investigation
+        - generic "Alert triage queue" [ref=f61e435]:
+          - generic [ref=f61e439]:
+            - grid [ref=f61e441]:
+              - rowgroup [ref=f61e442]:
+                - row [ref=f61e443]:
+                  - columnheader [ref=f61e444]:
+                    - text: 
+                    - generic: 
+                  - columnheader "Severity" [ref=f61e445]:
+                    - text: 
+                    - generic:      
+                  - columnheader "Detected" [ref=f61e448]:
+                    - text: 
+                    - generic [ref=f61e451] [cursor=pointer]:
+                      - text: 
+                      - generic [ref=f61e452]: 
+                      - text:    
+                  - columnheader "Risk" [ref=f61e453]:
+                    - text: 
+                    - generic:      
+                  - columnheader "Alert reason" [ref=f61e456]:
+                    - text: 
+                    - generic:      
+                  - columnheader "Primary entity" [ref=f61e459]:
+                    - text: 
+                    - generic: 
+                  - columnheader "Status" [ref=f61e462]:
+                    - text: 
+                    - generic:      
+                  - columnheader "Owner" [ref=f61e465]:
+                    - text: 
+                    - generic:      
+                  - columnheader "SLA" [ref=f61e468]:
+                    - text: 
+                    - generic:      
+                  - columnheader "ATT&CK" [ref=f61e471]:
+                    - text: 
+                    - generic:      
+                  - columnheader "Tenant" [ref=f61e474]:
+                    - text: 
+                    - generic:      
+                  - columnheader "Actions" [ref=f61e477]:
+                    - text: 
+                    - generic: 
+                - row [ref=f61e479]:
+                  - gridcell [ref=f61e480]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e481] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e482]:
+                    - 'generic "Severity: High" [ref=f61e483]':
+                      - strong [ref=f61e485]: High
+                  - gridcell "6m ago 13:53" [ref=f61e486]:
+                    - generic "05/08/2026, 13:53:45" [ref=f61e487]:
+                      - strong [ref=f61e488]: 6m ago
+                      - generic [ref=f61e489]: 13:53
+                  - gridcell "—" [ref=f61e490]
+                  - gridcell "USB data transfer anomaly olQK0Z8BxaxMk94eu2lh Exfiltration" [ref=f61e492]:
+                    - generic "USB data transfer anomaly" [ref=f61e493]:
+                      - strong [ref=f61e494]: USB data transfer anomaly
+                      - generic [ref=f61e495]:
+                        - generic [ref=f61e496]: olQK0Z8BxaxMk94eu2lh
+                        - generic [ref=f61e497]: ·
+                        - generic [ref=f61e498]: Exfiltration
+                  - gridcell "Unavailable" [ref=f61e499]
+                  - gridcell "Open" [ref=f61e501]
+                  - gridcell "Unassigned" [ref=f61e503]
+                  - gridcell "—" [ref=f61e505]
+                  - gridcell "—" [ref=f61e507]
+                  - gridcell [ref=f61e509]
+                  - gridcell [ref=f61e510]:
+                    - group "Quick actions for USB data transfer anomaly" [ref=f61e511]:
+                      - button "Change status for USB data transfer anomaly" [ref=f61e512] [cursor=pointer]
+                      - button "Add analyst note for USB data transfer anomaly" [ref=f61e516] [cursor=pointer]
+                      - button "Apply tags for USB data transfer anomaly" [ref=f61e520] [cursor=pointer]
+                      - button "Add to or create incident for USB data transfer anomaly" [ref=f61e524] [cursor=pointer]
+                - row [ref=f61e527]:
+                  - gridcell [ref=f61e528]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e529] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e530]:
+                    - 'generic "Severity: Low" [ref=f61e531]':
+                      - strong [ref=f61e533]: Low
+                  - gridcell "12m ago 13:47" [ref=f61e534]:
+                    - generic "05/08/2026, 13:47:17" [ref=f61e535]:
+                      - strong [ref=f61e536]: 12m ago
+                      - generic [ref=f61e537]: 13:47
+                  - gridcell "—" [ref=f61e538]
+                  - gridcell "Ransomware encryption behavior xVQK0Z8BxaxMk94eu2nA Impact" [ref=f61e540]:
+                    - generic "Ransomware encryption behavior" [ref=f61e541]:
+                      - strong [ref=f61e542]: Ransomware encryption behavior
+                      - generic [ref=f61e543]:
+                        - generic [ref=f61e544]: xVQK0Z8BxaxMk94eu2nA
+                        - generic [ref=f61e545]: ·
+                        - generic [ref=f61e546]: Impact
+                  - gridcell "Unavailable" [ref=f61e547]
+                  - gridcell "In review" [ref=f61e549]
+                  - gridcell "Unassigned" [ref=f61e551]
+                  - gridcell "—" [ref=f61e553]
+                  - gridcell "—" [ref=f61e555]
+                  - gridcell [ref=f61e557]
+                  - gridcell [ref=f61e558]:
+                    - group "Quick actions for Ransomware encryption behavior" [ref=f61e559]:
+                      - button "Change status for Ransomware encryption behavior" [ref=f61e560] [cursor=pointer]
+                      - button "Add analyst note for Ransomware encryption behavior" [ref=f61e564] [cursor=pointer]
+                      - button "Apply tags for Ransomware encryption behavior" [ref=f61e568] [cursor=pointer]
+                      - button "Add to or create incident for Ransomware encryption behavior" [ref=f61e572] [cursor=pointer]
+                - row [ref=f61e575]:
+                  - gridcell [ref=f61e576]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e577] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e578]:
+                    - 'generic "Severity: High" [ref=f61e579]':
+                      - strong [ref=f61e581]: High
+                  - gridcell "13m ago 13:46" [ref=f61e582]:
+                    - generic "05/08/2026, 13:46:15" [ref=f61e583]:
+                      - strong [ref=f61e584]: 13m ago
+                      - generic [ref=f61e585]: 13:46
+                  - gridcell "—" [ref=f61e586]
+                  - gridcell "Privilege escalation detected slQK0Z8BxaxMk94eu2nA Privilege Escalation" [ref=f61e588]:
+                    - generic "Privilege escalation detected" [ref=f61e589]:
+                      - strong [ref=f61e590]: Privilege escalation detected
+                      - generic [ref=f61e591]:
+                        - generic [ref=f61e592]: slQK0Z8BxaxMk94eu2nA
+                        - generic [ref=f61e593]: ·
+                        - generic [ref=f61e594]: Privilege Escalation
+                  - gridcell "Unavailable" [ref=f61e595]
+                  - gridcell "Open" [ref=f61e597]
+                  - gridcell "Unassigned" [ref=f61e599]
+                  - gridcell "—" [ref=f61e601]
+                  - gridcell "—" [ref=f61e603]
+                  - gridcell [ref=f61e605]
+                  - gridcell [ref=f61e606]:
+                    - group "Quick actions for Privilege escalation detected" [ref=f61e607]:
+                      - button "Change status for Privilege escalation detected" [ref=f61e608] [cursor=pointer]
+                      - button "Add analyst note for Privilege escalation detected" [ref=f61e612] [cursor=pointer]
+                      - button "Apply tags for Privilege escalation detected" [ref=f61e616] [cursor=pointer]
+                      - button "Add to or create incident for Privilege escalation detected" [ref=f61e620] [cursor=pointer]
+                - row [ref=f61e623]:
+                  - gridcell [ref=f61e624]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e625] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e626]:
+                    - 'generic "Severity: Medium" [ref=f61e627]':
+                      - strong [ref=f61e629]: Medium
+                  - gridcell "17m ago 13:42" [ref=f61e630]:
+                    - generic "05/08/2026, 13:42:38" [ref=f61e631]:
+                      - strong [ref=f61e632]: 17m ago
+                      - generic [ref=f61e633]: 13:42
+                  - gridcell "—" [ref=f61e634]
+                  - gridcell "Supply chain tampering 1VQK0Z8BxaxMk94evGkQ Initial Access" [ref=f61e636]:
+                    - generic "Supply chain tampering" [ref=f61e637]:
+                      - strong [ref=f61e638]: Supply chain tampering
+                      - generic [ref=f61e639]:
+                        - generic [ref=f61e640]: 1VQK0Z8BxaxMk94evGkQ
+                        - generic [ref=f61e641]: ·
+                        - generic [ref=f61e642]: Initial Access
+                  - gridcell "Unavailable" [ref=f61e643]
+                  - gridcell "Open" [ref=f61e645]
+                  - gridcell "Unassigned" [ref=f61e647]
+                  - gridcell "—" [ref=f61e649]
+                  - gridcell "—" [ref=f61e651]
+                  - gridcell [ref=f61e653]
+                  - gridcell [ref=f61e654]:
+                    - group "Quick actions for Supply chain tampering" [ref=f61e655]:
+                      - button "Change status for Supply chain tampering" [ref=f61e656] [cursor=pointer]
+                      - button "Add analyst note for Supply chain tampering" [ref=f61e660] [cursor=pointer]
+                      - button "Apply tags for Supply chain tampering" [ref=f61e664] [cursor=pointer]
+                      - button "Add to or create incident for Supply chain tampering" [ref=f61e668] [cursor=pointer]
+                - row [ref=f61e671]:
+                  - gridcell [ref=f61e672]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e673] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e674]:
+                    - 'generic "Severity: Low" [ref=f61e675]':
+                      - strong [ref=f61e677]: Low
+                  - gridcell "21m ago 13:38" [ref=f61e678]:
+                    - generic "05/08/2026, 13:38:54" [ref=f61e679]:
+                      - strong [ref=f61e680]: 21m ago
+                      - generic [ref=f61e681]: 13:38
+                  - gridcell "—" [ref=f61e682]
+                  - gridcell "Ransomware encryption behavior nVQK0Z8BxaxMk94eu2lh Impact" [ref=f61e684]:
+                    - generic "Ransomware encryption behavior" [ref=f61e685]:
+                      - strong [ref=f61e686]: Ransomware encryption behavior
+                      - generic [ref=f61e687]:
+                        - generic [ref=f61e688]: nVQK0Z8BxaxMk94eu2lh
+                        - generic [ref=f61e689]: ·
+                        - generic [ref=f61e690]: Impact
+                  - gridcell "Unavailable" [ref=f61e691]
+                  - gridcell "In review" [ref=f61e693]
+                  - gridcell "Unassigned" [ref=f61e695]
+                  - gridcell "—" [ref=f61e697]
+                  - gridcell "—" [ref=f61e699]
+                  - gridcell [ref=f61e701]
+                  - gridcell [ref=f61e702]:
+                    - group "Quick actions for Ransomware encryption behavior" [ref=f61e703]:
+                      - button "Change status for Ransomware encryption behavior" [ref=f61e704] [cursor=pointer]
+                      - button "Add analyst note for Ransomware encryption behavior" [ref=f61e708] [cursor=pointer]
+                      - button "Apply tags for Ransomware encryption behavior" [ref=f61e712] [cursor=pointer]
+                      - button "Add to or create incident for Ransomware encryption behavior" [ref=f61e716] [cursor=pointer]
+                - row [ref=f61e719]:
+                  - gridcell [ref=f61e720]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e721] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e722]:
+                    - 'generic "Severity: Critical" [ref=f61e723]':
+                      - strong [ref=f61e725]: Critical
+                  - gridcell "22m ago 13:37" [ref=f61e726]:
+                    - generic "05/08/2026, 13:37:52" [ref=f61e727]:
+                      - strong [ref=f61e728]: 22m ago
+                      - generic [ref=f61e729]: 13:37
+                  - gridcell "—" [ref=f61e730]
+                  - gridcell "Rogue admin account created 0VQK0Z8BxaxMk94evGkQ Persistence" [ref=f61e732]:
+                    - generic "Rogue admin account created" [ref=f61e733]:
+                      - strong [ref=f61e734]: Rogue admin account created
+                      - generic [ref=f61e735]:
+                        - generic [ref=f61e736]: 0VQK0Z8BxaxMk94evGkQ
+                        - generic [ref=f61e737]: ·
+                        - generic [ref=f61e738]: Persistence
+                  - gridcell "Unavailable" [ref=f61e739]
+                  - gridcell "In review" [ref=f61e741]
+                  - gridcell "Unassigned" [ref=f61e743]
+                  - gridcell "—" [ref=f61e745]
+                  - gridcell "—" [ref=f61e747]
+                  - gridcell [ref=f61e749]
+                  - gridcell [ref=f61e750]:
+                    - group "Quick actions for Rogue admin account created" [ref=f61e751]:
+                      - button "Change status for Rogue admin account created" [ref=f61e752] [cursor=pointer]
+                      - button "Add analyst note for Rogue admin account created" [ref=f61e756] [cursor=pointer]
+                      - button "Apply tags for Rogue admin account created" [ref=f61e760] [cursor=pointer]
+                      - button "Add to or create incident for Rogue admin account created" [ref=f61e764] [cursor=pointer]
+                - row [ref=f61e767]:
+                  - gridcell [ref=f61e768]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e769] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e770]:
+                    - 'generic "Severity: Critical" [ref=f61e771]':
+                      - strong [ref=f61e773]: Critical
+                  - gridcell "26m ago 13:33" [ref=f61e774]:
+                    - generic "05/08/2026, 13:33:29" [ref=f61e775]:
+                      - strong [ref=f61e776]: 26m ago
+                      - generic [ref=f61e777]: 13:33
+                  - gridcell "—" [ref=f61e778]
+                  - gridcell "Brute force login attempt rlQK0Z8BxaxMk94eu2nA Credential Access" [ref=f61e780]:
+                    - generic "Brute force login attempt" [ref=f61e781]:
+                      - strong [ref=f61e782]: Brute force login attempt
+                      - generic [ref=f61e783]:
+                        - generic [ref=f61e784]: rlQK0Z8BxaxMk94eu2nA
+                        - generic [ref=f61e785]: ·
+                        - generic [ref=f61e786]: Credential Access
+                  - gridcell "Unavailable" [ref=f61e787]
+                  - gridcell "In review" [ref=f61e789]
+                  - gridcell "Unassigned" [ref=f61e791]
+                  - gridcell "—" [ref=f61e793]
+                  - gridcell "—" [ref=f61e795]
+                  - gridcell [ref=f61e797]
+                  - gridcell [ref=f61e798]:
+                    - group "Quick actions for Brute force login attempt" [ref=f61e799]:
+                      - button "Change status for Brute force login attempt" [ref=f61e800] [cursor=pointer]
+                      - button "Add analyst note for Brute force login attempt" [ref=f61e804] [cursor=pointer]
+                      - button "Apply tags for Brute force login attempt" [ref=f61e808] [cursor=pointer]
+                      - button "Add to or create incident for Brute force login attempt" [ref=f61e812] [cursor=pointer]
+                - row [ref=f61e815]:
+                  - gridcell [ref=f61e816]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e817] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e818]:
+                    - 'generic "Severity: Low" [ref=f61e819]':
+                      - strong [ref=f61e821]: Low
+                  - gridcell "27m ago 13:32" [ref=f61e822]:
+                    - generic "05/08/2026, 13:32:21" [ref=f61e823]:
+                      - strong [ref=f61e824]: 27m ago
+                      - generic [ref=f61e825]: 13:32
+                  - gridcell "—" [ref=f61e826]
+                  - gridcell "Malware signature matched nFQK0Z8BxaxMk94eu2lh Execution" [ref=f61e828]:
+                    - generic "Malware signature matched" [ref=f61e829]:
+                      - strong [ref=f61e830]: Malware signature matched
+                      - generic [ref=f61e831]:
+                        - generic [ref=f61e832]: nFQK0Z8BxaxMk94eu2lh
+                        - generic [ref=f61e833]: ·
+                        - generic [ref=f61e834]: Execution
+                  - gridcell "Unavailable" [ref=f61e835]
+                  - gridcell "Open" [ref=f61e837]
+                  - gridcell "Unassigned" [ref=f61e839]
+                  - gridcell "—" [ref=f61e841]
+                  - gridcell "—" [ref=f61e843]
+                  - gridcell [ref=f61e845]
+                  - gridcell [ref=f61e846]:
+                    - group "Quick actions for Malware signature matched" [ref=f61e847]:
+                      - button "Change status for Malware signature matched" [ref=f61e848] [cursor=pointer]
+                      - button "Add analyst note for Malware signature matched" [ref=f61e852] [cursor=pointer]
+                      - button "Apply tags for Malware signature matched" [ref=f61e856] [cursor=pointer]
+                      - button "Add to or create incident for Malware signature matched" [ref=f61e860] [cursor=pointer]
+                - row [ref=f61e863]:
+                  - gridcell [ref=f61e864]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e865] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e866]:
+                    - 'generic "Severity: Low" [ref=f61e867]':
+                      - strong [ref=f61e869]: Low
+                  - gridcell "28m ago 13:31" [ref=f61e870]:
+                    - generic "05/08/2026, 13:31:56" [ref=f61e871]:
+                      - strong [ref=f61e872]: 28m ago
+                      - generic [ref=f61e873]: 13:31
+                  - gridcell "—" [ref=f61e874]
+                  - gridcell "Credential dumping LSASS 31QK0Z8BxaxMk94evGkQ Credential Access" [ref=f61e876]:
+                    - generic "Credential dumping LSASS" [ref=f61e877]:
+                      - strong [ref=f61e878]: Credential dumping LSASS
+                      - generic [ref=f61e879]:
+                        - generic [ref=f61e880]: 31QK0Z8BxaxMk94evGkQ
+                        - generic [ref=f61e881]: ·
+                        - generic [ref=f61e882]: Credential Access
+                  - gridcell "Unavailable" [ref=f61e883]
+                  - gridcell "In review" [ref=f61e885]
+                  - gridcell "Unassigned" [ref=f61e887]
+                  - gridcell "—" [ref=f61e889]
+                  - gridcell "—" [ref=f61e891]
+                  - gridcell [ref=f61e893]
+                  - gridcell [ref=f61e894]:
+                    - group "Quick actions for Credential dumping LSASS" [ref=f61e895]:
+                      - button "Change status for Credential dumping LSASS" [ref=f61e896] [cursor=pointer]
+                      - button "Add analyst note for Credential dumping LSASS" [ref=f61e900] [cursor=pointer]
+                      - button "Apply tags for Credential dumping LSASS" [ref=f61e904] [cursor=pointer]
+                      - button "Add to or create incident for Credential dumping LSASS" [ref=f61e908] [cursor=pointer]
+                - row [ref=f61e911]:
+                  - gridcell [ref=f61e912]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e913] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e914]:
+                    - 'generic "Severity: Low" [ref=f61e915]':
+                      - strong [ref=f61e917]: Low
+                  - gridcell "31m ago 13:29" [ref=f61e918]:
+                    - generic "05/08/2026, 13:29:11" [ref=f61e919]:
+                      - strong [ref=f61e920]: 31m ago
+                      - generic [ref=f61e921]: 13:29
+                  - gridcell "—" [ref=f61e922]
+                  - gridcell "Ransomware encryption behavior rFQK0Z8BxaxMk94eu2lh Impact" [ref=f61e924]:
+                    - generic "Ransomware encryption behavior" [ref=f61e925]:
+                      - strong [ref=f61e926]: Ransomware encryption behavior
+                      - generic [ref=f61e927]:
+                        - generic [ref=f61e928]: rFQK0Z8BxaxMk94eu2lh
+                        - generic [ref=f61e929]: ·
+                        - generic [ref=f61e930]: Impact
+                  - gridcell "Unavailable" [ref=f61e931]
+                  - gridcell "In review" [ref=f61e933]
+                  - gridcell "Unassigned" [ref=f61e935]
+                  - gridcell "—" [ref=f61e937]
+                  - gridcell "—" [ref=f61e939]
+                  - gridcell [ref=f61e941]
+                  - gridcell [ref=f61e942]:
+                    - group "Quick actions for Ransomware encryption behavior" [ref=f61e943]:
+                      - button "Change status for Ransomware encryption behavior" [ref=f61e944] [cursor=pointer]
+                      - button "Add analyst note for Ransomware encryption behavior" [ref=f61e948] [cursor=pointer]
+                      - button "Apply tags for Ransomware encryption behavior" [ref=f61e952] [cursor=pointer]
+                      - button "Add to or create incident for Ransomware encryption behavior" [ref=f61e956] [cursor=pointer]
+                - row [ref=f61e959]:
+                  - gridcell [ref=f61e960]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e961] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e962]:
+                    - 'generic "Severity: Medium" [ref=f61e963]':
+                      - strong [ref=f61e965]: Medium
+                  - gridcell "37m ago 13:23" [ref=f61e966]:
+                    - generic "05/08/2026, 13:23:03" [ref=f61e967]:
+                      - strong [ref=f61e968]: 37m ago
+                      - generic [ref=f61e969]: 13:23
+                  - gridcell "—" [ref=f61e970]
+                  - gridcell "C2 beacon communication mlQK0Z8BxaxMk94eu2lh Command and Control" [ref=f61e972]:
+                    - generic "C2 beacon communication" [ref=f61e973]:
+                      - strong [ref=f61e974]: C2 beacon communication
+                      - generic [ref=f61e975]:
+                        - generic [ref=f61e976]: mlQK0Z8BxaxMk94eu2lh
+                        - generic [ref=f61e977]: ·
+                        - generic [ref=f61e978]: Command and Control
+                  - gridcell "Unavailable" [ref=f61e979]
+                  - gridcell "Open" [ref=f61e981]
+                  - gridcell "Unassigned" [ref=f61e983]
+                  - gridcell "—" [ref=f61e985]
+                  - gridcell "—" [ref=f61e987]
+                  - gridcell [ref=f61e989]
+                  - gridcell [ref=f61e990]:
+                    - group "Quick actions for C2 beacon communication" [ref=f61e991]:
+                      - button "Change status for C2 beacon communication" [ref=f61e992] [cursor=pointer]
+                      - button "Add analyst note for C2 beacon communication" [ref=f61e996] [cursor=pointer]
+                      - button "Apply tags for C2 beacon communication" [ref=f61e1000] [cursor=pointer]
+                      - button "Add to or create incident for C2 beacon communication" [ref=f61e1004] [cursor=pointer]
+                - row [ref=f61e1007]:
+                  - gridcell [ref=f61e1008]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1009] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1010]:
+                    - 'generic "Severity: High" [ref=f61e1011]':
+                      - strong [ref=f61e1013]: High
+                  - gridcell "41m ago 13:18" [ref=f61e1014]:
+                    - generic "05/08/2026, 13:18:32" [ref=f61e1015]:
+                      - strong [ref=f61e1016]: 41m ago
+                      - generic [ref=f61e1017]: 13:18
+                  - gridcell "—" [ref=f61e1018]
+                  - gridcell "Encoded PowerShell execution vlQK0Z8BxaxMk94eu2nA Execution" [ref=f61e1020]:
+                    - generic "Encoded PowerShell execution" [ref=f61e1021]:
+                      - strong [ref=f61e1022]: Encoded PowerShell execution
+                      - generic [ref=f61e1023]:
+                        - generic [ref=f61e1024]: vlQK0Z8BxaxMk94eu2nA
+                        - generic [ref=f61e1025]: ·
+                        - generic [ref=f61e1026]: Execution
+                  - gridcell "Unavailable" [ref=f61e1027]
+                  - gridcell "Open" [ref=f61e1029]
+                  - gridcell "Unassigned" [ref=f61e1031]
+                  - gridcell "—" [ref=f61e1033]
+                  - gridcell "—" [ref=f61e1035]
+                  - gridcell [ref=f61e1037]
+                  - gridcell [ref=f61e1038]:
+                    - group "Quick actions for Encoded PowerShell execution" [ref=f61e1039]:
+                      - button "Change status for Encoded PowerShell execution" [ref=f61e1040] [cursor=pointer]
+                      - button "Add analyst note for Encoded PowerShell execution" [ref=f61e1044] [cursor=pointer]
+                      - button "Apply tags for Encoded PowerShell execution" [ref=f61e1048] [cursor=pointer]
+                      - button "Add to or create incident for Encoded PowerShell execution" [ref=f61e1052] [cursor=pointer]
+                - row [ref=f61e1055]:
+                  - gridcell [ref=f61e1056]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1057] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1058]:
+                    - 'generic "Severity: Low" [ref=f61e1059]':
+                      - strong [ref=f61e1061]: Low
+                  - gridcell "41m ago 13:18" [ref=f61e1062]:
+                    - generic "05/08/2026, 13:18:18" [ref=f61e1063]:
+                      - strong [ref=f61e1064]: 41m ago
+                      - generic [ref=f61e1065]: 13:18
+                  - gridcell "—" [ref=f61e1066]
+                  - gridcell "Malware signature matched tVQK0Z8BxaxMk94eu2nA Execution" [ref=f61e1068]:
+                    - generic "Malware signature matched" [ref=f61e1069]:
+                      - strong [ref=f61e1070]: Malware signature matched
+                      - generic [ref=f61e1071]:
+                        - generic [ref=f61e1072]: tVQK0Z8BxaxMk94eu2nA
+                        - generic [ref=f61e1073]: ·
+                        - generic [ref=f61e1074]: Execution
+                  - gridcell "Unavailable" [ref=f61e1075]
+                  - gridcell "Open" [ref=f61e1077]
+                  - gridcell "Unassigned" [ref=f61e1079]
+                  - gridcell "—" [ref=f61e1081]
+                  - gridcell "—" [ref=f61e1083]
+                  - gridcell [ref=f61e1085]
+                  - gridcell [ref=f61e1086]:
+                    - group "Quick actions for Malware signature matched" [ref=f61e1087]:
+                      - button "Change status for Malware signature matched" [ref=f61e1088] [cursor=pointer]
+                      - button "Add analyst note for Malware signature matched" [ref=f61e1092] [cursor=pointer]
+                      - button "Apply tags for Malware signature matched" [ref=f61e1096] [cursor=pointer]
+                      - button "Add to or create incident for Malware signature matched" [ref=f61e1100] [cursor=pointer]
+                - row [ref=f61e1103]:
+                  - gridcell [ref=f61e1104]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1105] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1106]:
+                    - 'generic "Severity: Critical" [ref=f61e1107]':
+                      - strong [ref=f61e1109]: Critical
+                  - gridcell "41m ago 13:18" [ref=f61e1110]:
+                    - generic "05/08/2026, 13:18:14" [ref=f61e1111]:
+                      - strong [ref=f61e1112]: 41m ago
+                      - generic [ref=f61e1113]: 13:18
+                  - gridcell "—" [ref=f61e1114]
+                  - gridcell "Brute force login attempt 1lQK0Z8BxaxMk94evGkQ Credential Access" [ref=f61e1116]:
+                    - generic "Brute force login attempt" [ref=f61e1117]:
+                      - strong [ref=f61e1118]: Brute force login attempt
+                      - generic [ref=f61e1119]:
+                        - generic [ref=f61e1120]: 1lQK0Z8BxaxMk94evGkQ
+                        - generic [ref=f61e1121]: ·
+                        - generic [ref=f61e1122]: Credential Access
+                  - gridcell "Unavailable" [ref=f61e1123]
+                  - gridcell "Open" [ref=f61e1125]
+                  - gridcell "Unassigned" [ref=f61e1127]
+                  - gridcell "—" [ref=f61e1129]
+                  - gridcell "—" [ref=f61e1131]
+                  - gridcell [ref=f61e1133]
+                  - gridcell [ref=f61e1134]:
+                    - group "Quick actions for Brute force login attempt" [ref=f61e1135]:
+                      - button "Change status for Brute force login attempt" [ref=f61e1136] [cursor=pointer]
+                      - button "Add analyst note for Brute force login attempt" [ref=f61e1140] [cursor=pointer]
+                      - button "Apply tags for Brute force login attempt" [ref=f61e1144] [cursor=pointer]
+                      - button "Add to or create incident for Brute force login attempt" [ref=f61e1148] [cursor=pointer]
+                - row [ref=f61e1151]:
+                  - gridcell [ref=f61e1152]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1153] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1154]:
+                    - 'generic "Severity: High" [ref=f61e1155]':
+                      - strong [ref=f61e1157]: High
+                  - gridcell "42m ago 13:17" [ref=f61e1158]:
+                    - generic "05/08/2026, 13:17:29" [ref=f61e1159]:
+                      - strong [ref=f61e1160]: 42m ago
+                      - generic [ref=f61e1161]: 13:17
+                  - gridcell "—" [ref=f61e1162]
+                  - gridcell "Lateral movement via PsExec yVQK0Z8BxaxMk94evGkQ Lateral Movement" [ref=f61e1164]:
+                    - generic "Lateral movement via PsExec" [ref=f61e1165]:
+                      - strong [ref=f61e1166]: Lateral movement via PsExec
+                      - generic [ref=f61e1167]:
+                        - generic [ref=f61e1168]: yVQK0Z8BxaxMk94evGkQ
+                        - generic [ref=f61e1169]: ·
+                        - generic [ref=f61e1170]: Lateral Movement
+                  - gridcell "Unavailable" [ref=f61e1171]
+                  - gridcell "In review" [ref=f61e1173]
+                  - gridcell "Unassigned" [ref=f61e1175]
+                  - gridcell "—" [ref=f61e1177]
+                  - gridcell "—" [ref=f61e1179]
+                  - gridcell [ref=f61e1181]
+                  - gridcell [ref=f61e1182]:
+                    - group "Quick actions for Lateral movement via PsExec" [ref=f61e1183]:
+                      - button "Change status for Lateral movement via PsExec" [ref=f61e1184] [cursor=pointer]
+                      - button "Add analyst note for Lateral movement via PsExec" [ref=f61e1188] [cursor=pointer]
+                      - button "Apply tags for Lateral movement via PsExec" [ref=f61e1192] [cursor=pointer]
+                      - button "Add to or create incident for Lateral movement via PsExec" [ref=f61e1196] [cursor=pointer]
+                - row [ref=f61e1199]:
+                  - gridcell [ref=f61e1200]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1201] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1202]:
+                    - 'generic "Severity: Low" [ref=f61e1203]':
+                      - strong [ref=f61e1205]: Low
+                  - gridcell "45m ago 13:14" [ref=f61e1206]:
+                    - generic "05/08/2026, 13:14:26" [ref=f61e1207]:
+                      - strong [ref=f61e1208]: 45m ago
+                      - generic [ref=f61e1209]: 13:14
+                  - gridcell "—" [ref=f61e1210]
+                  - gridcell "Ransomware encryption behavior 3lQK0Z8BxaxMk94evGkQ Impact" [ref=f61e1212]:
+                    - generic "Ransomware encryption behavior" [ref=f61e1213]:
+                      - strong [ref=f61e1214]: Ransomware encryption behavior
+                      - generic [ref=f61e1215]:
+                        - generic [ref=f61e1216]: 3lQK0Z8BxaxMk94evGkQ
+                        - generic [ref=f61e1217]: ·
+                        - generic [ref=f61e1218]: Impact
+                  - gridcell "Unavailable" [ref=f61e1219]
+                  - gridcell "In review" [ref=f61e1221]
+                  - gridcell "Unassigned" [ref=f61e1223]
+                  - gridcell "—" [ref=f61e1225]
+                  - gridcell "—" [ref=f61e1227]
+                  - gridcell [ref=f61e1229]
+                  - gridcell [ref=f61e1230]:
+                    - group "Quick actions for Ransomware encryption behavior" [ref=f61e1231]:
+                      - button "Change status for Ransomware encryption behavior" [ref=f61e1232] [cursor=pointer]
+                      - button "Add analyst note for Ransomware encryption behavior" [ref=f61e1236] [cursor=pointer]
+                      - button "Apply tags for Ransomware encryption behavior" [ref=f61e1240] [cursor=pointer]
+                      - button "Add to or create incident for Ransomware encryption behavior" [ref=f61e1244] [cursor=pointer]
+                - row [ref=f61e1247]:
+                  - gridcell [ref=f61e1248]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1249] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1250]:
+                    - 'generic "Severity: Medium" [ref=f61e1251]':
+                      - strong [ref=f61e1253]: Medium
+                  - gridcell "46m ago 13:13" [ref=f61e1254]:
+                    - generic "05/08/2026, 13:13:30" [ref=f61e1255]:
+                      - strong [ref=f61e1256]: 46m ago
+                      - generic [ref=f61e1257]: 13:13
+                  - gridcell "—" [ref=f61e1258]
+                  - gridcell "Suspicious DNS tunneling m1QK0Z8BxaxMk94eu2lh Exfiltration" [ref=f61e1260]:
+                    - generic "Suspicious DNS tunneling" [ref=f61e1261]:
+                      - strong [ref=f61e1262]: Suspicious DNS tunneling
+                      - generic [ref=f61e1263]:
+                        - generic [ref=f61e1264]: m1QK0Z8BxaxMk94eu2lh
+                        - generic [ref=f61e1265]: ·
+                        - generic [ref=f61e1266]: Exfiltration
+                  - gridcell "Unavailable" [ref=f61e1267]
+                  - gridcell "Open" [ref=f61e1269]
+                  - gridcell "Unassigned" [ref=f61e1271]
+                  - gridcell "—" [ref=f61e1273]
+                  - gridcell "—" [ref=f61e1275]
+                  - gridcell [ref=f61e1277]
+                  - gridcell [ref=f61e1278]:
+                    - group "Quick actions for Suspicious DNS tunneling" [ref=f61e1279]:
+                      - button "Change status for Suspicious DNS tunneling" [ref=f61e1280] [cursor=pointer]
+                      - button "Add analyst note for Suspicious DNS tunneling" [ref=f61e1284] [cursor=pointer]
+                      - button "Apply tags for Suspicious DNS tunneling" [ref=f61e1288] [cursor=pointer]
+                      - button "Add to or create incident for Suspicious DNS tunneling" [ref=f61e1292] [cursor=pointer]
+                - row [ref=f61e1295]:
+                  - gridcell [ref=f61e1296]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1297] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1298]:
+                    - 'generic "Severity: Critical" [ref=f61e1299]':
+                      - strong [ref=f61e1301]: Critical
+                  - gridcell "47m ago 13:12" [ref=f61e1302]:
+                    - generic "05/08/2026, 13:12:42" [ref=f61e1303]:
+                      - strong [ref=f61e1304]: 47m ago
+                      - generic [ref=f61e1305]: 13:12
+                  - gridcell "—" [ref=f61e1306]
+                  - gridcell "Brute force login attempt vVQK0Z8BxaxMk94eu2nA Credential Access" [ref=f61e1308]:
+                    - generic "Brute force login attempt" [ref=f61e1309]:
+                      - strong [ref=f61e1310]: Brute force login attempt
+                      - generic [ref=f61e1311]:
+                        - generic [ref=f61e1312]: vVQK0Z8BxaxMk94eu2nA
+                        - generic [ref=f61e1313]: ·
+                        - generic [ref=f61e1314]: Credential Access
+                  - gridcell "Unavailable" [ref=f61e1315]
+                  - gridcell "Open" [ref=f61e1317]
+                  - gridcell "Unassigned" [ref=f61e1319]
+                  - gridcell "—" [ref=f61e1321]
+                  - gridcell "—" [ref=f61e1323]
+                  - gridcell [ref=f61e1325]
+                  - gridcell [ref=f61e1326]:
+                    - group "Quick actions for Brute force login attempt" [ref=f61e1327]:
+                      - button "Change status for Brute force login attempt" [ref=f61e1328] [cursor=pointer]
+                      - button "Add analyst note for Brute force login attempt" [ref=f61e1332] [cursor=pointer]
+                      - button "Apply tags for Brute force login attempt" [ref=f61e1336] [cursor=pointer]
+                      - button "Add to or create incident for Brute force login attempt" [ref=f61e1340] [cursor=pointer]
+                - row [ref=f61e1343]:
+                  - gridcell [ref=f61e1344]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1345] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1346]:
+                    - 'generic "Severity: Critical" [ref=f61e1347]':
+                      - strong [ref=f61e1349]: Critical
+                  - gridcell "47m ago 13:12" [ref=f61e1350]:
+                    - generic "05/08/2026, 13:12:40" [ref=f61e1351]:
+                      - strong [ref=f61e1352]: 47m ago
+                      - generic [ref=f61e1353]: 13:12
+                  - gridcell "—" [ref=f61e1354]
+                  - gridcell "Rogue admin account created uFQK0Z8BxaxMk94eu2nA Persistence" [ref=f61e1356]:
+                    - generic "Rogue admin account created" [ref=f61e1357]:
+                      - strong [ref=f61e1358]: Rogue admin account created
+                      - generic [ref=f61e1359]:
+                        - generic [ref=f61e1360]: uFQK0Z8BxaxMk94eu2nA
+                        - generic [ref=f61e1361]: ·
+                        - generic [ref=f61e1362]: Persistence
+                  - gridcell "Unavailable" [ref=f61e1363]
+                  - gridcell "Open" [ref=f61e1365]
+                  - gridcell "Unassigned" [ref=f61e1367]
+                  - gridcell "—" [ref=f61e1369]
+                  - gridcell "—" [ref=f61e1371]
+                  - gridcell [ref=f61e1373]
+                  - gridcell [ref=f61e1374]:
+                    - group "Quick actions for Rogue admin account created" [ref=f61e1375]:
+                      - button "Change status for Rogue admin account created" [ref=f61e1376] [cursor=pointer]
+                      - button "Add analyst note for Rogue admin account created" [ref=f61e1380] [cursor=pointer]
+                      - button "Apply tags for Rogue admin account created" [ref=f61e1384] [cursor=pointer]
+                      - button "Add to or create incident for Rogue admin account created" [ref=f61e1388] [cursor=pointer]
+                - row [ref=f61e1391]:
+                  - gridcell [ref=f61e1392]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1393] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1394]:
+                    - 'generic "Severity: High" [ref=f61e1395]':
+                      - strong [ref=f61e1397]: High
+                  - gridcell "48m ago 13:11" [ref=f61e1398]:
+                    - generic "05/08/2026, 13:11:37" [ref=f61e1399]:
+                      - strong [ref=f61e1400]: 48m ago
+                      - generic [ref=f61e1401]: 13:11
+                  - gridcell "—" [ref=f61e1402]
+                  - gridcell "Firewall rule bypass uVQK0Z8BxaxMk94eu2nA Defense Evasion" [ref=f61e1404]:
+                    - generic "Firewall rule bypass" [ref=f61e1405]:
+                      - strong [ref=f61e1406]: Firewall rule bypass
+                      - generic [ref=f61e1407]:
+                        - generic [ref=f61e1408]: uVQK0Z8BxaxMk94eu2nA
+                        - generic [ref=f61e1409]: ·
+                        - generic [ref=f61e1410]: Defense Evasion
+                  - gridcell "Unavailable" [ref=f61e1411]
+                  - gridcell "Open" [ref=f61e1413]
+                  - gridcell "Unassigned" [ref=f61e1415]
+                  - gridcell "—" [ref=f61e1417]
+                  - gridcell "—" [ref=f61e1419]
+                  - gridcell [ref=f61e1421]
+                  - gridcell [ref=f61e1422]:
+                    - group "Quick actions for Firewall rule bypass" [ref=f61e1423]:
+                      - button "Change status for Firewall rule bypass" [ref=f61e1424] [cursor=pointer]
+                      - button "Add analyst note for Firewall rule bypass" [ref=f61e1428] [cursor=pointer]
+                      - button "Apply tags for Firewall rule bypass" [ref=f61e1432] [cursor=pointer]
+                      - button "Add to or create incident for Firewall rule bypass" [ref=f61e1436] [cursor=pointer]
+                - row [ref=f61e1439]:
+                  - gridcell [ref=f61e1440]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1441] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1442]:
+                    - 'generic "Severity: Low" [ref=f61e1443]':
+                      - strong [ref=f61e1445]: Low
+                  - gridcell "51m ago 13:08" [ref=f61e1446]:
+                    - generic "05/08/2026, 13:08:37" [ref=f61e1447]:
+                      - strong [ref=f61e1448]: 51m ago
+                      - generic [ref=f61e1449]: 13:08
+                  - gridcell "—" [ref=f61e1450]
+                  - gridcell "Ransomware encryption behavior z1QK0Z8BxaxMk94evGkQ Impact" [ref=f61e1452]:
+                    - generic "Ransomware encryption behavior" [ref=f61e1453]:
+                      - strong [ref=f61e1454]: Ransomware encryption behavior
+                      - generic [ref=f61e1455]:
+                        - generic [ref=f61e1456]: z1QK0Z8BxaxMk94evGkQ
+                        - generic [ref=f61e1457]: ·
+                        - generic [ref=f61e1458]: Impact
+                  - gridcell "Unavailable" [ref=f61e1459]
+                  - gridcell "In review" [ref=f61e1461]
+                  - gridcell "Unassigned" [ref=f61e1463]
+                  - gridcell "—" [ref=f61e1465]
+                  - gridcell "—" [ref=f61e1467]
+                  - gridcell [ref=f61e1469]
+                  - gridcell [ref=f61e1470]:
+                    - group "Quick actions for Ransomware encryption behavior" [ref=f61e1471]:
+                      - button "Change status for Ransomware encryption behavior" [ref=f61e1472] [cursor=pointer]
+                      - button "Add analyst note for Ransomware encryption behavior" [ref=f61e1476] [cursor=pointer]
+                      - button "Apply tags for Ransomware encryption behavior" [ref=f61e1480] [cursor=pointer]
+                      - button "Add to or create incident for Ransomware encryption behavior" [ref=f61e1484] [cursor=pointer]
+                - row [ref=f61e1487]:
+                  - gridcell [ref=f61e1488]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1489] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1490]:
+                    - 'generic "Severity: High" [ref=f61e1491]':
+                      - strong [ref=f61e1493]: High
+                  - gridcell "1h ago 12:57" [ref=f61e1494]:
+                    - generic "05/08/2026, 12:57:54" [ref=f61e1495]:
+                      - strong [ref=f61e1496]: 1h ago
+                      - generic [ref=f61e1497]: 12:57
+                  - gridcell "—" [ref=f61e1498]
+                  - gridcell "Privilege escalation detected wVQK0Z8BxaxMk94eu2nA Privilege Escalation" [ref=f61e1500]:
+                    - generic "Privilege escalation detected" [ref=f61e1501]:
+                      - strong [ref=f61e1502]: Privilege escalation detected
+                      - generic [ref=f61e1503]:
+                        - generic [ref=f61e1504]: wVQK0Z8BxaxMk94eu2nA
+                        - generic [ref=f61e1505]: ·
+                        - generic [ref=f61e1506]: Privilege Escalation
+                  - gridcell "Unavailable" [ref=f61e1507]
+                  - gridcell "Open" [ref=f61e1509]
+                  - gridcell "Unassigned" [ref=f61e1511]
+                  - gridcell "—" [ref=f61e1513]
+                  - gridcell "—" [ref=f61e1515]
+                  - gridcell [ref=f61e1517]
+                  - gridcell [ref=f61e1518]:
+                    - group "Quick actions for Privilege escalation detected" [ref=f61e1519]:
+                      - button "Change status for Privilege escalation detected" [ref=f61e1520] [cursor=pointer]
+                      - button "Add analyst note for Privilege escalation detected" [ref=f61e1524] [cursor=pointer]
+                      - button "Apply tags for Privilege escalation detected" [ref=f61e1528] [cursor=pointer]
+                      - button "Add to or create incident for Privilege escalation detected" [ref=f61e1532] [cursor=pointer]
+                - row [ref=f61e1535]:
+                  - gridcell [ref=f61e1536]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1537] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1538]:
+                    - 'generic "Severity: High" [ref=f61e1539]':
+                      - strong [ref=f61e1541]: High
+                  - gridcell "1h ago 12:56" [ref=f61e1542]:
+                    - generic "05/08/2026, 12:56:54" [ref=f61e1543]:
+                      - strong [ref=f61e1544]: 1h ago
+                      - generic [ref=f61e1545]: 12:56
+                  - gridcell "—" [ref=f61e1546]
+                  - gridcell "Lateral movement via PsExec sFQK0Z8BxaxMk94eu2nA Lateral Movement" [ref=f61e1548]:
+                    - generic "Lateral movement via PsExec" [ref=f61e1549]:
+                      - strong [ref=f61e1550]: Lateral movement via PsExec
+                      - generic [ref=f61e1551]:
+                        - generic [ref=f61e1552]: sFQK0Z8BxaxMk94eu2nA
+                        - generic [ref=f61e1553]: ·
+                        - generic [ref=f61e1554]: Lateral Movement
+                  - gridcell "Unavailable" [ref=f61e1555]
+                  - gridcell "Open" [ref=f61e1557]
+                  - gridcell "Unassigned" [ref=f61e1559]
+                  - gridcell "—" [ref=f61e1561]
+                  - gridcell "—" [ref=f61e1563]
+                  - gridcell [ref=f61e1565]
+                  - gridcell [ref=f61e1566]:
+                    - group "Quick actions for Lateral movement via PsExec" [ref=f61e1567]:
+                      - button "Change status for Lateral movement via PsExec" [ref=f61e1568] [cursor=pointer]
+                      - button "Add analyst note for Lateral movement via PsExec" [ref=f61e1572] [cursor=pointer]
+                      - button "Apply tags for Lateral movement via PsExec" [ref=f61e1576] [cursor=pointer]
+                      - button "Add to or create incident for Lateral movement via PsExec" [ref=f61e1580] [cursor=pointer]
+                - row [ref=f61e1583]:
+                  - gridcell [ref=f61e1584]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f61e1585] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f61e1586]:
+                    - 'generic "Severity: Medium" [ref=f61e1587]':
+                      - strong [ref=f61e1589]: Medium
+                  - gridcell "1h ago 12:56" [ref=f61e1590]:
+                    - generic "05/08/2026, 12:56:28" [ref=f61e1591]:
+                      - strong [ref=f61e1592]: 1h ago
+                      - generic [ref=f61e1593]: 12:56
+                  - gridcell "—" [ref=f61e1594]
+                  - gridcell "C2 beacon communication zFQK0Z8BxaxMk94evGkQ Command and Control" [ref=f61e1596]:
+                    - generic "C2 beacon communication" [ref=f61e1597]:
+                      - strong [ref=f61e1598]: C2 beacon communication
+                      - generic [ref=f61e1599]:
+                        - generic [ref=f61e1600]: zFQK0Z8BxaxMk94evGkQ
+                        - generic [ref=f61e1601]: ·
+                        - generic [ref=f61e1602]: Command and Control
+                  - gridcell "Unavailable" [ref=f61e1603]
+                  - gridcell "Open" [ref=f61e1605]
+                  - gridcell "Unassigned" [ref=f61e1607]
+                  - gridcell "—" [ref=f61e1609]
+                  - gridcell "—" [ref=f61e1611]
+                  - gridcell [ref=f61e1613]
+                  - gridcell [ref=f61e1614]:
+                    - group "Quick actions for C2 beacon communication" [ref=f61e1615]:
+                      - button "Change status for C2 beacon communication" [ref=f61e1616] [cursor=pointer]
+                      - button "Add analyst note for C2 beacon communication" [ref=f61e1620] [cursor=pointer]
+                      - button "Apply tags for C2 beacon communication" [ref=f61e1624] [cursor=pointer]
+                      - button "Add to or create incident for C2 beacon communication" [ref=f61e1628] [cursor=pointer]
+            - text:     
+        - generic [ref=f61e1631]:
+          - generic [ref=f61e1632]:
+            - generic [ref=f61e1634]: Connected
+            - generic [ref=f61e1635]: •
+            - generic [ref=f61e1637]: Live
+          - generic [ref=f61e1638]: 0 eps
+  - generic:
+    - list "Notifications"

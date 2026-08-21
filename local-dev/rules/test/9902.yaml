@@ -1,0 +1,15 @@
+- id: 9902
+  dataTypes: [powershell]
+  name: "E2E: Encoded PowerShell Script Block"
+  category: "Execution"
+  technique: "T1059.001 - PowerShell"
+  adversary: origin
+  impact:
+    confidentiality: 3
+    integrity: 3
+    availability: 2
+  description: "Raw ETW Script Block telemetry contained an encoded PowerShell command. This local-only rule proves collector normalization and engine evaluation without seeding an alert document."
+  references:
+    - "https://attack.mitre.org/techniques/T1059/001/"
+  where: |
+    regexMatch(toLower(safe("log.scriptBlock", "")), "(-encodedcommand|-enc|-e)[[:space:]]+[a-zA-Z0-9+/=]{20,}")

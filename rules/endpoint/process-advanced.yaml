@@ -1,0 +1,233 @@
+# Advanced Process Execution Kill-Chain Rules
+# DataType: process
+
+dataTypes:
+  - "process"
+name: "Process: Living-Off-the-Land — Regsvr32 COM Scriptlet Execution"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: "Defense Evasion"
+technique: "T1218.010 - Regsvr32"
+adversary: origin
+description: "regsvr32.exe was used to execute a remote COM scriptlet (scrobj.dll) via the /s /n /u /i: pattern. This technique (Squiblydoo) bypasses AppLocker and application whitelisting."
+references:
+  - "https://attack.mitre.org/techniques/T1218/010/"
+  - "https://lolbas-project.github.io/lolbas/Binaries/Regsvr32/"
+where: |
+  regexMatch(toLower(safe("origin.process", "")), "regsvr32") &&
+  regexMatch(toLower(safe("origin.command", "")), "/i:http")
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Scheduled Task Created via schtasks"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: "Persistence"
+technique: "T1053.005 - Scheduled Task"
+adversary: origin
+description: "A scheduled task was created using schtasks.exe. Attackers use scheduled tasks to persist on Windows systems and re-execute malware at regular intervals or at specific events."
+references:
+  - "https://attack.mitre.org/techniques/T1053/005/"
+where: |
+  regexMatch(toLower(safe("origin.process", "")), "schtasks") &&
+  regexMatch(toLower(safe("origin.command", "")), "/create")
+groupBy:
+  - origin.command
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: WMI Remote Execution"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: "Lateral Movement"
+technique: "T1021.006 - Remote Services: Windows Remote Management"
+adversary: origin
+description: "wmic.exe was used with node: parameter for remote WMI execution. WMI is a common lateral movement tool used to execute commands on remote hosts without requiring administrative shares."
+references:
+  - "https://attack.mitre.org/techniques/T1021/006/"
+where: |
+  regexMatch(toLower(safe("origin.process", "")), "wmic") &&
+  regexMatch(toLower(safe("origin.command", "")), "/node:")
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Crontab Command Executed"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: "Persistence"
+technique: "T1053.003 - Cron"
+adversary: origin
+description: "The crontab command was executed with -e or -r flags, indicating a scheduled job was created, modified, or removed. Monitor for unauthorised cron job manipulation."
+references:
+  - "https://attack.mitre.org/techniques/T1053/003/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(safe("origin.process", ""), "^crontab$") &&
+  regexMatch(safe("origin.command", ""), "-[er]")
+groupBy:
+  - origin.user
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Base64 Decode Pipe to Shell"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: "Execution"
+technique: "T1140 - Deobfuscate/Decode Files or Information"
+adversary: origin
+description: "A base64 decode command was piped directly to a shell interpreter (bash, sh, python, perl). This is a common one-liner technique for downloading and executing payloads while evading content inspection."
+references:
+  - "https://attack.mitre.org/techniques/T1140/"
+where: |
+  safe("action", "") == "exec" &&
+  (
+    regexMatch(safe("origin.command", ""), "base64.*\\|.*(bash|sh|python|perl|ruby)") ||
+    regexMatch(safe("origin.command", ""), "base64 --decode.*\\|")
+  )
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Curl or Wget Pipe to Shell"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: "Execution"
+technique: "T1105 - Ingress Tool Transfer"
+adversary: origin
+description: "curl or wget output was piped directly to a shell interpreter. This is the standard pattern for 'curl | bash' supply chain attacks and malicious installer scripts."
+references:
+  - "https://attack.mitre.org/techniques/T1105/"
+where: |
+  safe("action", "") == "exec" &&
+  (
+    regexMatch(toLower(safe("origin.command", "")), "(curl|wget).*(http|ftp).*\\|.*(bash|sh)") ||
+    regexMatch(toLower(safe("origin.command", "")), "(bash|sh).*<.*(curl|wget)")
+  )
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: SSH Tunneling Detected"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: "Command and Control"
+technique: "T1572 - Protocol Tunneling"
+adversary: origin
+description: "An SSH command with port forwarding flags (-L, -R, -D) was executed. SSH tunneling is used to proxy C2 traffic through legitimate SSH connections, exfiltrate data, and bypass network controls."
+references:
+  - "https://attack.mitre.org/techniques/T1572/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(safe("origin.process", ""), "^ssh$") &&
+  regexMatch(safe("origin.command", ""), " -[LRD] ")
+groupBy:
+  - origin.user
+  - origin.command
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Named Pipe Created for IPC Abuse"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: "Defense Evasion"
+technique: "T1559.001 - Inter-Process Communication: Component Object Model"
+adversary: origin
+description: "A named pipe commonly associated with Cobalt Strike or Metasploit post-exploitation frameworks was created. Named pipes are used for C2 communication and lateral movement in stealthy attacks."
+references:
+  - "https://attack.mitre.org/techniques/T1559/001/"
+  - "https://labs.f-secure.com/blog/detecting-cobalt-strike-default-modules-via-named-pipe-analysis"
+where: |
+  regexMatch(safe("log.filePath", safe("origin.file", "")),
+    "(\\\\msagent_|\\\\MSSE-|\\\\status_|\\\\postex_|\\\\mojo\\.\\d{4,}\\.pipe|\\\\wkssvc|\\\\lsarpc)")
+groupBy:
+  - log.filePath
+deduplicateBy:
+  - log.filePath
+---
+dataTypes:
+  - "process"
+name: "Process: Shadow Copy Deletion — Ransomware Indicator"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 3
+category: "Impact"
+technique: "T1490 - Inhibit System Recovery"
+adversary: origin
+description: "Shadow copies were deleted via vssadmin or wmic. Deleting shadow copies is the most reliable ransomware pre-indicator — it removes Windows backup points before encryption begins."
+references:
+  - "https://attack.mitre.org/techniques/T1490/"
+where: |
+  (
+    regexMatch(toLower(safe("origin.process", "")), "vssadmin") &&
+    regexMatch(toLower(safe("origin.command", "")), "delete shadows")
+  ) ||
+  (
+    regexMatch(toLower(safe("origin.process", "")), "wmic") &&
+    regexMatch(toLower(safe("origin.command", "")), "shadowcopy.*delete")
+  ) ||
+  (
+    regexMatch(toLower(safe("origin.process", "")), "powershell") &&
+    regexMatch(toLower(safe("origin.command", "")), "get-wmiobject.*win32_shadowcopy.*delete")
+  )
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Defensive Tool Disabled (auditd/rsyslog/firewalld)"
+impact:
+  confidentiality: 1
+  integrity: 2
+  availability: 3
+category: "Defense Evasion"
+technique: "T1562.001 - Impair Defenses: Disable or Modify Tools"
+adversary: origin
+description: "A security-critical service (auditd, rsyslog, firewalld, ufw, fail2ban) was stopped or disabled. Attackers disable logging and firewall services before conducting attacks to avoid detection."
+references:
+  - "https://attack.mitre.org/techniques/T1562/001/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(toLower(safe("origin.command", "")), "(systemctl|service|chkconfig).*(stop|disable|kill|mask).*(auditd|rsyslog|syslog-ng|firewalld|ufw|iptables|fail2ban|ossec|wazuh)")
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid

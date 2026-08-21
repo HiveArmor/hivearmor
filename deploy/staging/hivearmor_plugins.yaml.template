@@ -1,0 +1,40 @@
+plugins:
+  com.hivearmor:
+    rulesFolder: /workdir/rules
+    geoIPFolder: /workdir/geolocation
+    opensearch:
+      host: opensearch
+      port: "9200"
+      user: admin
+      password: __OPENSEARCH_INITIAL_ADMIN_PASSWORD__
+    postgresql:
+      server: postgres
+      port: "5432"
+      user: postgres
+      password: __POSTGRES_PASSWORD__
+      database: hivearmor
+    serverName: localhost
+    internalKey: __INTERNAL_KEY__
+    env: staging
+    agentManager: agentmanager:9000
+    backend: http://backend:8080
+    certsFolder: /cert
+    modulesConfig: eventprocessor:9003
+  org.opensearch:
+    opensearch:
+      host: opensearch
+      port: "9200"
+      user: admin
+      password: __OPENSEARCH_INITIAL_ADMIN_PASSWORD__
+  analysis:
+    order:
+      - com.hivearmor.events
+      - cel
+      - feeds
+  correlation:
+    order:
+      - com.hivearmor.alerts
+      - com.hivearmor.soc-ai
+  notification:
+    order:
+      - com.hivearmor.stats

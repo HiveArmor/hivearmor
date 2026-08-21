@@ -1,0 +1,45 @@
+id: d8e9f0a1-b2c3-4567-defa-678901234558
+title: Permission Group Discovery via Net or PowerShell
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: medium
+tags:
+  - attack.discovery
+  - attack.T1069
+  - attack.T1069.002
+detection:
+  selection_net:
+    Image|endswith:
+      - '\net.exe'
+      - '\net1.exe'
+    CommandLine|contains:
+      - ' group '
+      - ' localgroup '
+  selection_powershell:
+    CommandLine|contains:
+      - 'Get-ADGroup'
+      - 'Get-ADGroupMember'
+      - 'net group'
+      - 'net localgroup'
+  selection_dsquery:
+    Image|endswith: '\dsquery.exe'
+    CommandLine|contains:
+      - 'group'
+  condition: selection_net or selection_powershell or selection_dsquery
+falsepositives:
+  - IT administrators auditing group memberships
+  - HR tools querying AD group membership
+impact:
+  confidentiality: medium
+  integrity: low
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: discovery
+  technique: T1069.002

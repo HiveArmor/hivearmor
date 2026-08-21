@@ -5,20 +5,20 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/hivearmor/agent/agent"
+	"github.com/hivearmor/agent/config"
+	"github.com/hivearmor/agent/utils"
+	"github.com/hivearmor/sdk/entities"
+	"github.com/hivearmor/sdk/plugins"
 	goflownetflow "github.com/netsampler/goflow2/decoders/netflow"
 	"github.com/netsampler/goflow2/decoders/netflowlegacy"
 	"github.com/tehmaze/netflow/netflow1"
 	"github.com/tehmaze/netflow/netflow6"
 	"github.com/tehmaze/netflow/netflow7"
-	"github.com/threatwinds/go-sdk/entities"
-	"github.com/threatwinds/go-sdk/plugins"
-	"github.com/hivearmor/agent/agent"
-	"github.com/hivearmor/agent/config"
-	"github.com/hivearmor/agent/utils"
 )
 
 // processMessage converts a decoded netflow message to log entries and sends them to the queue.
-func processMessage(remote string, message interface{}, queue chan *plugins.Log) error {
+func processMessage(remote string, message interface{}, queue chan<- *plugins.Log) error {
 	var metrics []Metric
 
 	switch m := message.(type) {
@@ -61,13 +61,7 @@ func processMessage(remote string, message interface{}, queue chan *plugins.Log)
 			DataSource: remote,
 			Raw:        msg,
 		}
-		select {
-		case queue <- log:
-		default:
-			agent.LogsDropped.Add(1)
-			agent.WriteToDLQ("netflow", log)
-			utils.Logger.LogF(400, "netflow: LogQueue full; dropping record from %s", remote)
-		}
+		agent.Offer(queue, "netflow", log)
 	}
 
 	return nil

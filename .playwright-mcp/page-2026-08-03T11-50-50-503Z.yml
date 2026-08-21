@@ -1,0 +1,647 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e12]: HiveArmor
+        - generic [ref=e13]: Security operations
+      - generic [ref=e14]:
+        - button "All authorized tenants" [ref=e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=e24] [cursor=pointer]:
+          - generic [ref=e29]: ⌘ K
+        - generic [ref=e30]: Production
+      - generic [ref=e31]:
+        - 'status "Data pipeline: Healthy" [ref=e32]'
+        - status "Live events per second" [ref=e35]:
+          - generic [ref=e37]: 12,840 EPS
+        - button "Notifications" [ref=e38] [cursor=pointer]
+        - button "Help" [ref=e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=e47]:
+      - generic [ref=e48]:
+        - region "COMMAND" [ref=e49]:
+          - generic [ref=e50]:
+            - button "Mission Control" [ref=e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=e58] [cursor=pointer]
+            - button "Alerts" [ref=e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=e67] [cursor=pointer]
+            - button "Incidents" [ref=e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=e79]:
+          - generic [ref=e80]:
+            - button "Search & Hunt" [ref=e81] [cursor=pointer]
+            - button "Investigations" [ref=e86] [cursor=pointer]
+            - button "Entities" [ref=e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=e97] [cursor=pointer]
+        - region "DEFEND" [ref=e103]:
+          - generic [ref=e104]:
+            - button "Detection Rules" [ref=e105] [cursor=pointer]
+            - button "Playbooks" [ref=e109] [cursor=pointer]
+            - button "Response Library" [ref=e114] [cursor=pointer]
+        - region "POSTURE" [ref=e118]:
+          - generic [ref=e119]:
+            - button "Assets" [ref=e120] [cursor=pointer]
+            - button "Identities" [ref=e125] [cursor=pointer]
+            - button "Active Directory" [ref=e132] [cursor=pointer]
+            - button "Exposure" [ref=e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=e156] [cursor=pointer]
+            - button "Compliance" [ref=e162] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=e167]:
+          - generic [ref=e168]:
+            - button "Endpoints" [ref=e169] [cursor=pointer]
+            - button "File Quarantine" [ref=e173] [cursor=pointer]
+            - button "File Integrity" [ref=e179] [cursor=pointer]
+        - region "DASHBOARDS" [ref=e186]:
+          - button "Studio" [ref=e188] [cursor=pointer]
+        - region "REPORT" [ref=e193]:
+          - button "Scheduled Reports" [ref=e195] [cursor=pointer]
+      - generic [ref=e200]:
+        - button "User menu" [ref=e203] [cursor=pointer]:
+          - generic [ref=e204]: MC
+        - button "Pin sidebar open" [ref=e205] [cursor=pointer]
+    - main [ref=e208]:
+      - generic [ref=e212]:
+        - generic [ref=e213]:
+          - generic [ref=e218]:
+            - generic [ref=e219]: DEFEND
+            - heading "Detection Engineering" [level=1] [ref=e220]
+          - generic [ref=e221]:
+            - generic [ref=e222]:
+              - text: Rule health and coverage
+              - generic [ref=e229]: J
+              - generic [ref=e230]: /
+              - generic [ref=e231]: K
+              - generic [ref=e232]: navigate
+            - button "Import" [ref=e233] [cursor=pointer]
+            - button "Sigma sync" [disabled] [ref=e237]
+            - button "Create rule" [ref=e242] [cursor=pointer]
+        - generic [ref=e244]:
+          - generic [ref=e245]:
+            - strong [ref=e246]: "Design fixture:"
+            - text: fictional detection content and execution telemetry are enabled.
+          - generic [ref=e247]: Production never receives these records.
+        - navigation "Detection engineering views" [ref=e248]:
+          - button "Rules 48" [ref=e249] [cursor=pointer]:
+            - text: Rules
+            - generic [ref=e252]: "48"
+          - button "Rule monitoring 42" [ref=e253] [cursor=pointer]:
+            - text: Rule monitoring
+            - generic [ref=e256]: "42"
+          - button "ATT&CK coverage" [ref=e257] [cursor=pointer]
+          - button "Test console" [ref=e260] [cursor=pointer]
+        - search "Detection rule filters" [ref=e264]:
+          - textbox "Search detection rules" [ref=e269]:
+            - /placeholder: Search rule, Sigma ID, tactic, or technique…
+          - combobox "Rule state" [ref=e271] [cursor=pointer]:
+            - option "All states" [selected]
+            - option "Enabled"
+            - option "Disabled"
+          - combobox "Execution response" [ref=e273] [cursor=pointer]:
+            - option "All responses" [selected]
+            - option "Healthy"
+            - option "Delayed"
+            - option "Failed"
+            - option "Unknown"
+          - combobox "Rule source" [ref=e275] [cursor=pointer]:
+            - option "All sources" [selected]
+            - option "Managed content"
+            - option "Custom rules"
+          - combobox "Rule severity" [ref=e277] [cursor=pointer]:
+            - option "All severities" [selected]
+            - option "Critical"
+            - option "High"
+            - option "Medium"
+            - option "Low"
+          - button "Refresh detection rules" [ref=e278] [cursor=pointer]
+        - generic "Detection rule summary" [ref=e284]:
+          - article [ref=e285]:
+            - generic [ref=e286]: Installed rules
+            - strong [ref=e289]: "48"
+            - generic [ref=e290]: authorized scope
+          - article [ref=e291]:
+            - generic [ref=e292]: Enabled
+            - strong [ref=e295]: "42"
+            - generic [ref=e296]: 88% of inventory
+          - article [ref=e297]:
+            - generic [ref=e298]: Healthy
+            - strong [ref=e302]: "29"
+            - generic [ref=e303]: last execution succeeded
+          - article [ref=e304]:
+            - generic [ref=e305]: Needs attention
+            - strong [ref=e308]: "13"
+            - generic [ref=e309]: delayed or failed
+          - article [ref=e310]:
+            - generic [ref=e311]: Alerts · 24h
+            - strong [ref=e314]: "885"
+            - generic [ref=e315]: generated by enabled rules
+          - article [ref=e316]:
+            - generic [ref=e317]: ATT&CK coverage
+            - strong [ref=e319]: 12/204
+            - generic [ref=e320]: mapped techniques
+        - main [ref=e321]:
+          - generic [ref=e322]:
+            - generic [ref=e323]:
+              - strong [ref=e324]: Installed rules
+              - generic [ref=e325]: 48 matching
+            - generic [ref=e326]:
+              - group "Row density" [ref=e327]:
+                - generic [ref=e328]: Rows
+                - generic [ref=e329]:
+                  - button "compact rows" [pressed] [ref=e330] [cursor=pointer]
+                  - button "standard rows" [ref=e335] [cursor=pointer]
+                  - button "comfortable rows" [ref=e340] [cursor=pointer]
+              - button "Columns" [ref=e346] [cursor=pointer]
+          - generic "Detection rules inventory" [ref=e350]:
+            - generic [ref=e354]:
+              - grid [ref=e356]:
+                - rowgroup [ref=e357]:
+                  - row [ref=e358]:
+                    - columnheader "Column with Header Selection  Detection" [ref=e359]:
+                      - checkbox "Column with Header Selection" [ref=e361] [cursor=pointer]
+                      - text: 
+                      - generic [ref=e362] [cursor=pointer]: Detection
+                      - text: 
+                      - generic:      
+                    - columnheader "Status" [ref=e363]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Last response" [ref=e366]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Source" [ref=e369]:
+                      - text: 
+                      - generic:      
+                    - columnheader "MITRE ATT&CK" [ref=e372]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Alerts 24h" [ref=e375]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Schedule" [ref=e378]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Last run" [ref=e381]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Modified" [ref=e384]:
+                      - text: 
+                      - generic:      
+                    - columnheader "Actions" [ref=e387]:
+                      - text: 
+                      - generic: 
+                  - row [ref=e390] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Encoded PowerShell with network retrieval HA-4100 · v2" [ref=e391]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e392]
+                      - text: 
+                      - generic [ref=e393]:
+                        - strong [ref=e394]: Encoded PowerShell with network retrieval
+                        - generic [ref=e395]: HA-4100 · v2
+                    - gridcell [ref=e396]:
+                      - switch "Enable Encoded PowerShell with network retrieval" [ref=e397]:
+                        - generic [ref=e399]: Disabled
+                    - gridcell [ref=e400]:
+                      - generic "Rule is disabled" [ref=e401]: Unknown
+                    - gridcell "Custom" [ref=e405]
+                    - gridcell "T1059.001 PowerShell" [ref=e407]:
+                      - generic [ref=e408]:
+                        - code [ref=e409]: T1059.001
+                        - generic [ref=e410]: PowerShell
+                    - gridcell "0" [ref=e411]
+                    - gridcell "Every 5m" [ref=e412]
+                    - gridcell "Not available Duration unavailable" [ref=e413]:
+                      - generic [ref=e414]:
+                        - strong [ref=e415]: Not available
+                        - generic [ref=e416]: Duration unavailable
+                    - gridcell "1d ago" [ref=e417]
+                    - gridcell [ref=e418]:
+                      - generic [ref=e419]:
+                        - button "Edit Encoded PowerShell with network retrieval" [ref=e420]
+                        - button "Test Encoded PowerShell with network retrieval" [ref=e424]
+                        - button "More actions for Encoded PowerShell with network retrieval" [ref=e427]
+                  - row [ref=e432] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Rare privileged authentication followed by execution ha-sigma-8001 · v3" [ref=e433]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e434]
+                      - text: 
+                      - generic [ref=e435]:
+                        - strong [ref=e436]: Rare privileged authentication followed by execution
+                        - generic [ref=e437]: ha-sigma-8001 · v3
+                    - gridcell [ref=e438]:
+                      - switch "Disable Rare privileged authentication followed by execution" [checked] [ref=e439]:
+                        - generic [ref=e441]: Enabled
+                    - gridcell [ref=e442]:
+                      - generic "Last execution completed" [ref=e443]: Healthy
+                    - gridcell "Managed" [ref=e447]
+                    - gridcell "T1078 Valid Accounts" [ref=e449]:
+                      - generic [ref=e450]:
+                        - code [ref=e451]: T1078
+                        - generic [ref=e452]: Valid Accounts
+                    - gridcell "17" [ref=e453]
+                    - gridcell "Every 10m" [ref=e454]
+                    - gridcell "Just now 217 ms" [ref=e455]:
+                      - generic [ref=e456]:
+                        - strong [ref=e457]: Just now
+                        - generic [ref=e458]: 217 ms
+                    - gridcell "23h ago" [ref=e459]
+                    - gridcell [ref=e460]:
+                      - generic [ref=e461]:
+                        - button "Edit Rare privileged authentication followed by execution" [ref=e462]
+                        - button "Test Rare privileged authentication followed by execution" [ref=e466]
+                        - button "More actions for Rare privileged authentication followed by execution" [ref=e469]
+                  - row [ref=e474] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Suspicious LSASS memory access ha-sigma-8002 · v4" [ref=e475]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e476]
+                      - text: 
+                      - generic [ref=e477]:
+                        - strong [ref=e478]: Suspicious LSASS memory access
+                        - generic [ref=e479]: ha-sigma-8002 · v4
+                    - gridcell [ref=e480]:
+                      - switch "Disable Suspicious LSASS memory access" [checked] [ref=e481]:
+                        - generic [ref=e483]: Enabled
+                    - gridcell [ref=e484]:
+                      - generic "Last execution completed" [ref=e485]: Healthy
+                    - gridcell "Managed" [ref=e489]
+                    - gridcell "T1003.001 LSASS Memory" [ref=e491]:
+                      - generic [ref=e492]:
+                        - code [ref=e493]: T1003.001
+                        - generic [ref=e494]: LSASS Memory
+                    - gridcell "34" [ref=e495]
+                    - gridcell "Every 15m" [ref=e496]
+                    - gridcell "Just now 254 ms" [ref=e497]:
+                      - generic [ref=e498]:
+                        - strong [ref=e499]: Just now
+                        - generic [ref=e500]: 254 ms
+                    - gridcell "36m ago" [ref=e501]
+                    - gridcell [ref=e502]:
+                      - generic [ref=e503]:
+                        - button "Edit Suspicious LSASS memory access" [ref=e504]
+                        - button "Test Suspicious LSASS memory access" [ref=e508]
+                        - button "More actions for Suspicious LSASS memory access" [ref=e511]
+                  - row [ref=e516] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  First-seen external destination from managed host ha-sigma-8003 · v5" [ref=e517]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e518]
+                      - text: 
+                      - generic [ref=e519]:
+                        - strong [ref=e520]: First-seen external destination from managed host
+                        - generic [ref=e521]: ha-sigma-8003 · v5
+                    - gridcell [ref=e522]:
+                      - switch "Disable First-seen external destination from managed host" [checked] [ref=e523]:
+                        - generic [ref=e525]: Enabled
+                    - gridcell [ref=e526]:
+                      - generic "Execution exceeded the normal duration" [ref=e527]: Delayed
+                    - gridcell "Managed" [ref=e530]
+                    - gridcell "T1071.001 Web Protocols" [ref=e532]:
+                      - generic [ref=e533]:
+                        - code [ref=e534]: T1071.001
+                        - generic [ref=e535]: Web Protocols
+                    - gridcell "8" [ref=e536]
+                    - gridcell "Every 5m" [ref=e537]
+                    - gridcell "1h ago 291 ms" [ref=e538]:
+                      - generic [ref=e539]:
+                        - strong [ref=e540]: 1h ago
+                        - generic [ref=e541]: 291 ms
+                    - gridcell "2d ago" [ref=e542]
+                    - gridcell [ref=e543]:
+                      - generic [ref=e544]:
+                        - button "Edit First-seen external destination from managed host" [ref=e545]
+                        - button "Test First-seen external destination from managed host" [ref=e549]
+                        - button "More actions for First-seen external destination from managed host" [ref=e552]
+                  - row [ref=e557] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Kerberoasting service ticket activity HA-4104 · v6" [ref=e558]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e559]
+                      - text: 
+                      - generic [ref=e560]:
+                        - strong [ref=e561]: Kerberoasting service ticket activity
+                        - generic [ref=e562]: HA-4104 · v6
+                    - gridcell [ref=e563]:
+                      - switch "Disable Kerberoasting service ticket activity" [checked] [ref=e564]:
+                        - generic [ref=e566]: Enabled
+                    - gridcell [ref=e567]:
+                      - generic "Last execution completed" [ref=e568]: Healthy
+                    - gridcell "Custom" [ref=e572]
+                    - gridcell "T1558.003 Kerberoasting" [ref=e574]:
+                      - generic [ref=e575]:
+                        - code [ref=e576]: T1558.003
+                        - generic [ref=e577]: Kerberoasting
+                    - gridcell "25" [ref=e578]
+                    - gridcell "Every 10m" [ref=e579]
+                    - gridcell "2h ago 328 ms" [ref=e580]:
+                      - generic [ref=e581]:
+                        - strong [ref=e582]: 2h ago
+                        - generic [ref=e583]: 328 ms
+                    - gridcell "1d ago" [ref=e584]
+                    - gridcell [ref=e585]:
+                      - generic [ref=e586]:
+                        - button "Edit Kerberoasting service ticket activity" [ref=e587]
+                        - button "Test Kerberoasting service ticket activity" [ref=e591]
+                        - button "More actions for Kerberoasting service ticket activity" [ref=e594]
+                  - row [ref=e599] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Remote service creation from administrative share ha-sigma-8005 · v7" [ref=e600]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e601]
+                      - text: 
+                      - generic [ref=e602]:
+                        - strong [ref=e603]: Remote service creation from administrative share
+                        - generic [ref=e604]: ha-sigma-8005 · v7
+                    - gridcell [ref=e605]:
+                      - switch "Disable Remote service creation from administrative share" [checked] [ref=e606]:
+                        - generic [ref=e608]: Enabled
+                    - gridcell [ref=e609]:
+                      - generic "Required data field was unavailable" [ref=e610]: Failed
+                    - gridcell "Managed" [ref=e613]
+                    - gridcell "T1021.002 SMB/Windows Admin Shares" [ref=e615]:
+                      - generic [ref=e616]:
+                        - code [ref=e617]: T1021.002
+                        - generic [ref=e618]: SMB/Windows Admin Shares
+                    - gridcell "42" [ref=e619]
+                    - gridcell "Every 15m" [ref=e620]
+                    - gridcell "3h ago 365 ms" [ref=e621]:
+                      - generic [ref=e622]:
+                        - strong [ref=e623]: 3h ago
+                        - generic [ref=e624]: 365 ms
+                    - gridcell "3h ago" [ref=e625]
+                    - gridcell [ref=e626]:
+                      - generic [ref=e627]:
+                        - button "Edit Remote service creation from administrative share" [ref=e628]
+                        - button "Test Remote service creation from administrative share" [ref=e632]
+                        - button "More actions for Remote service creation from administrative share" [ref=e635]
+                  - row [ref=e640] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Cloud role assignment outside change window ha-sigma-8006 · v8" [ref=e641]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e642]
+                      - text: 
+                      - generic [ref=e643]:
+                        - strong [ref=e644]: Cloud role assignment outside change window
+                        - generic [ref=e645]: ha-sigma-8006 · v8
+                    - gridcell [ref=e646]:
+                      - switch "Disable Cloud role assignment outside change window" [checked] [ref=e647]:
+                        - generic [ref=e649]: Enabled
+                    - gridcell [ref=e650]:
+                      - generic "Last execution completed" [ref=e651]: Healthy
+                    - gridcell "Managed" [ref=e655]
+                    - gridcell "T1098 Account Manipulation" [ref=e657]:
+                      - generic [ref=e658]:
+                        - code [ref=e659]: T1098
+                        - generic [ref=e660]: Account Manipulation
+                    - gridcell "16" [ref=e661]
+                    - gridcell "Every 5m" [ref=e662]
+                    - gridcell "Just now 402 ms" [ref=e663]:
+                      - generic [ref=e664]:
+                        - strong [ref=e665]: Just now
+                        - generic [ref=e666]: 402 ms
+                    - gridcell "2d ago" [ref=e667]
+                    - gridcell [ref=e668]:
+                      - generic [ref=e669]:
+                        - button "Edit Cloud role assignment outside change window" [ref=e670]
+                        - button "Test Cloud role assignment outside change window" [ref=e674]
+                        - button "More actions for Cloud role assignment outside change window" [ref=e677]
+                  - row [ref=e682] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  DNS tunneling with high-entropy subdomains HA-4107 · v9" [ref=e683]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e684]
+                      - text: 
+                      - generic [ref=e685]:
+                        - strong [ref=e686]: DNS tunneling with high-entropy subdomains
+                        - generic [ref=e687]: HA-4107 · v9
+                    - gridcell [ref=e688]:
+                      - switch "Disable DNS tunneling with high-entropy subdomains" [checked] [ref=e689]:
+                        - generic [ref=e691]: Enabled
+                    - gridcell [ref=e692]:
+                      - generic "Last execution completed" [ref=e693]: Healthy
+                    - gridcell "Custom" [ref=e697]
+                    - gridcell "T1071.004 DNS" [ref=e699]:
+                      - generic [ref=e700]:
+                        - code [ref=e701]: T1071.004
+                        - generic [ref=e702]: DNS
+                    - gridcell "33" [ref=e703]
+                    - gridcell "Every 10m" [ref=e704]
+                    - gridcell "Just now 439 ms" [ref=e705]:
+                      - generic [ref=e706]:
+                        - strong [ref=e707]: Just now
+                        - generic [ref=e708]: 439 ms
+                    - gridcell "1d ago" [ref=e709]
+                    - gridcell [ref=e710]:
+                      - generic [ref=e711]:
+                        - button "Edit DNS tunneling with high-entropy subdomains" [ref=e712]
+                        - button "Test DNS tunneling with high-entropy subdomains" [ref=e716]
+                        - button "More actions for DNS tunneling with high-entropy subdomains" [ref=e719]
+                  - row [ref=e724] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Executable written to user startup directory HA-4108 · v2" [ref=e725]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e726]
+                      - text: 
+                      - generic [ref=e727]:
+                        - strong [ref=e728]: Executable written to user startup directory
+                        - generic [ref=e729]: HA-4108 · v2
+                    - gridcell [ref=e730]:
+                      - switch "Disable Executable written to user startup directory" [checked] [ref=e731]:
+                        - generic [ref=e733]: Enabled
+                    - gridcell [ref=e734]:
+                      - generic "Last execution completed" [ref=e735]: Healthy
+                    - gridcell "Custom" [ref=e739]
+                    - gridcell "T1547.001 Registry Run Keys / Startup Folder" [ref=e741]:
+                      - generic [ref=e742]:
+                        - code [ref=e743]: T1547.001
+                        - generic [ref=e744]: Registry Run Keys / Startup Folder
+                    - gridcell "7" [ref=e745]
+                    - gridcell "Every 15m" [ref=e746]
+                    - gridcell "24m ago 476 ms" [ref=e747]:
+                      - generic [ref=e748]:
+                        - strong [ref=e749]: 24m ago
+                        - generic [ref=e750]: 476 ms
+                    - gridcell "5h ago" [ref=e751]
+                    - gridcell [ref=e752]:
+                      - generic [ref=e753]:
+                        - button "Edit Executable written to user startup directory" [ref=e754]
+                        - button "Test Executable written to user startup directory" [ref=e758]
+                        - button "More actions for Executable written to user startup directory" [ref=e761]
+                  - row [ref=e766] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Multiple failed logons followed by success ha-sigma-8009 · v3" [ref=e767]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e768]
+                      - text: 
+                      - generic [ref=e769]:
+                        - strong [ref=e770]: Multiple failed logons followed by success
+                        - generic [ref=e771]: ha-sigma-8009 · v3
+                    - gridcell [ref=e772]:
+                      - switch "Enable Multiple failed logons followed by success" [ref=e773]:
+                        - generic [ref=e775]: Disabled
+                    - gridcell [ref=e776]:
+                      - generic "Rule is disabled" [ref=e777]: Unknown
+                    - gridcell "Managed" [ref=e781]
+                    - gridcell "T1110 Brute Force" [ref=e783]:
+                      - generic [ref=e784]:
+                        - code [ref=e785]: T1110
+                        - generic [ref=e786]: Brute Force
+                    - gridcell "0" [ref=e787]
+                    - gridcell "Every 5m" [ref=e788]
+                    - gridcell "Not available Duration unavailable" [ref=e789]:
+                      - generic [ref=e790]:
+                        - strong [ref=e791]: Not available
+                        - generic [ref=e792]: Duration unavailable
+                    - gridcell "2d ago" [ref=e793]
+                    - gridcell [ref=e794]:
+                      - generic [ref=e795]:
+                        - button "Edit Multiple failed logons followed by success" [ref=e796]
+                        - button "Test Multiple failed logons followed by success" [ref=e800]
+                        - button "More actions for Multiple failed logons followed by success" [ref=e803]
+                  - row [ref=e808] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Unsigned binary launched from temporary path ha-sigma-8010 · v4" [ref=e809]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e810]
+                      - text: 
+                      - generic [ref=e811]:
+                        - strong [ref=e812]: Unsigned binary launched from temporary path
+                        - generic [ref=e813]: ha-sigma-8010 · v4
+                    - gridcell [ref=e814]:
+                      - switch "Disable Unsigned binary launched from temporary path" [checked] [ref=e815]:
+                        - generic [ref=e817]: Enabled
+                    - gridcell [ref=e818]:
+                      - generic "Last execution completed" [ref=e819]: Healthy
+                    - gridcell "Managed" [ref=e823]
+                    - gridcell "T1204.002 Malicious File" [ref=e825]:
+                      - generic [ref=e826]:
+                        - code [ref=e827]: T1204.002
+                        - generic [ref=e828]: Malicious File
+                    - gridcell "41" [ref=e829]
+                    - gridcell "Every 10m" [ref=e830]
+                    - gridcell "2h ago 550 ms" [ref=e831]:
+                      - generic [ref=e832]:
+                        - strong [ref=e833]: 2h ago
+                        - generic [ref=e834]: 550 ms
+                    - gridcell "1d ago" [ref=e835]
+                    - gridcell [ref=e836]:
+                      - generic [ref=e837]:
+                        - button "Edit Unsigned binary launched from temporary path" [ref=e838]
+                        - button "Test Unsigned binary launched from temporary path" [ref=e842]
+                        - button "More actions for Unsigned binary launched from temporary path" [ref=e845]
+                  - row [ref=e850] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Mailbox forwarding rule created ha-sigma-8011 · v5" [ref=e851]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e852]
+                      - text: 
+                      - generic [ref=e853]:
+                        - strong [ref=e854]: Mailbox forwarding rule created
+                        - generic [ref=e855]: ha-sigma-8011 · v5
+                    - gridcell [ref=e856]:
+                      - switch "Disable Mailbox forwarding rule created" [checked] [ref=e857]:
+                        - generic [ref=e859]: Enabled
+                    - gridcell [ref=e860]:
+                      - generic "Required data field was unavailable" [ref=e861]: Failed
+                    - gridcell "Managed" [ref=e864]
+                    - gridcell "T1114.003 Email Forwarding Rule" [ref=e866]:
+                      - generic [ref=e867]:
+                        - code [ref=e868]: T1114.003
+                        - generic [ref=e869]: Email Forwarding Rule
+                    - gridcell "15" [ref=e870]
+                    - gridcell "Every 15m" [ref=e871]
+                    - gridcell "3h ago 587 ms" [ref=e872]:
+                      - generic [ref=e873]:
+                        - strong [ref=e874]: 3h ago
+                        - generic [ref=e875]: 587 ms
+                    - gridcell "Just now" [ref=e876]
+                    - gridcell [ref=e877]:
+                      - generic [ref=e878]:
+                        - button "Edit Mailbox forwarding rule created" [ref=e879]
+                        - button "Test Mailbox forwarding rule created" [ref=e883]
+                        - button "More actions for Mailbox forwarding rule created" [ref=e886]
+                  - row [ref=e891] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Encoded PowerShell with network retrieval · Variant 2 HA-4112 · v6" [ref=e892]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e893]
+                      - text: 
+                      - generic [ref=e894]:
+                        - strong [ref=e895]: Encoded PowerShell with network retrieval · Variant 2
+                        - generic [ref=e896]: HA-4112 · v6
+                    - gridcell [ref=e897]:
+                      - switch "Disable Encoded PowerShell with network retrieval · Variant 2" [checked] [ref=e898]:
+                        - generic [ref=e900]: Enabled
+                    - gridcell [ref=e901]:
+                      - generic "Last execution completed" [ref=e902]: Healthy
+                    - gridcell "Custom" [ref=e906]
+                    - gridcell "T1059.001 PowerShell" [ref=e908]:
+                      - generic [ref=e909]:
+                        - code [ref=e910]: T1059.001
+                        - generic [ref=e911]: PowerShell
+                    - gridcell "32" [ref=e912]
+                    - gridcell "Every 5m" [ref=e913]
+                    - gridcell "Just now 624 ms" [ref=e914]:
+                      - generic [ref=e915]:
+                        - strong [ref=e916]: Just now
+                        - generic [ref=e917]: 624 ms
+                    - gridcell "1d ago" [ref=e918]
+                    - gridcell [ref=e919]:
+                      - generic [ref=e920]:
+                        - button "Edit Encoded PowerShell with network retrieval · Variant 2" [ref=e921]
+                        - button "Test Encoded PowerShell with network retrieval · Variant 2" [ref=e925]
+                        - button "More actions for Encoded PowerShell with network retrieval · Variant 2" [ref=e928]
+                  - row [ref=e933] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Rare privileged authentication followed by execution · Variant 2 ha-sigma-8013 · v7" [ref=e934]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e935]
+                      - text: 
+                      - generic [ref=e936]:
+                        - strong [ref=e937]: Rare privileged authentication followed by execution · Variant 2
+                        - generic [ref=e938]: ha-sigma-8013 · v7
+                    - gridcell [ref=e939]:
+                      - switch "Disable Rare privileged authentication followed by execution · Variant 2" [checked] [ref=e940]:
+                        - generic [ref=e942]: Enabled
+                    - gridcell [ref=e943]:
+                      - generic "Last execution completed" [ref=e944]:
+                        - text: Healthy
+                        - emphasis [ref=e948]: Gap
+                    - gridcell "Managed" [ref=e949]
+                    - gridcell "T1078 Valid Accounts" [ref=e951]:
+                      - generic [ref=e952]:
+                        - code [ref=e953]: T1078
+                        - generic [ref=e954]: Valid Accounts
+                    - gridcell "6" [ref=e955]
+                    - gridcell "Every 10m" [ref=e956]
+                    - gridcell "Just now 661 ms" [ref=e957]:
+                      - generic [ref=e958]:
+                        - strong [ref=e959]: Just now
+                        - generic [ref=e960]: 661 ms
+                    - gridcell "1d ago" [ref=e961]
+                    - gridcell [ref=e962]:
+                      - generic [ref=e963]:
+                        - button "Edit Rare privileged authentication followed by execution · Variant 2" [ref=e964]
+                        - button "Test Rare privileged authentication followed by execution · Variant 2" [ref=e968]
+                        - button "More actions for Rare privileged authentication followed by execution · Variant 2" [ref=e971]
+                  - row [ref=e976] [cursor=pointer]:
+                    - gridcell "Press Space to toggle row selection (unchecked)  Suspicious LSASS memory access · Variant 2 HA-4114 · v8" [ref=e977]:
+                      - checkbox "Press Space to toggle row selection (unchecked)" [ref=e978]
+                      - text: 
+                      - generic [ref=e979]:
+                        - strong [ref=e980]: Suspicious LSASS memory access · Variant 2
+                        - generic [ref=e981]: HA-4114 · v8
+                    - gridcell [ref=e982]:
+                      - switch "Disable Suspicious LSASS memory access · Variant 2" [checked] [ref=e983]:
+                        - generic [ref=e985]: Enabled
+                    - gridcell [ref=e986]:
+                      - generic "Last execution completed" [ref=e987]: Healthy
+                    - gridcell "Custom" [ref=e991]
+                    - gridcell "T1003.001 LSASS Memory" [ref=e993]:
+                      - generic [ref=e994]:
+                        - code [ref=e995]: T1003.001
+                        - generic [ref=e996]: LSASS Memory
+                    - gridcell "23" [ref=e997]
+                    - gridcell "Every 15m" [ref=e998]
+                    - gridcell "Just now 698 ms" [ref=e999]:
+                      - generic [ref=e1000]:
+                        - strong [ref=e1001]: Just now
+                        - generic [ref=e1002]: 698 ms
+                    - gridcell "1h ago" [ref=e1003]
+                    - gridcell [ref=e1004]:
+                      - generic [ref=e1005]:
+                        - button "Edit Suspicious LSASS memory access · Variant 2" [ref=e1006]
+                        - button "Test Suspicious LSASS memory access · Variant 2" [ref=e1010]
+                        - button "More actions for Suspicious LSASS memory access · Variant 2" [ref=e1013]
+              - text:     
+          - generic [ref=e1018]:
+            - strong [ref=e1019]:
+              - text: 48 matching rules
+              - generic [ref=e1020]: · up to 100 rows loaded per page
+            - generic [ref=e1021]: Page 1 1–48
+            - generic [ref=e1022]:
+              - button "Previous" [disabled] [ref=e1023]
+              - button "Next" [disabled] [ref=e1026]
+        - generic [ref=e1029]:
+          - generic [ref=e1030]:
+            - generic [ref=e1031]:
+              - generic [ref=e1033]: Connected
+              - generic [ref=e1034]: •
+              - generic [ref=e1036]: Live
+            - generic [ref=e1037]: 12840 eps
+          - generic: Rule snapshot 18:46
+  - generic:
+    - list "Notifications"

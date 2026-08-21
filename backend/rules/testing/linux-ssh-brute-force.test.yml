@@ -1,0 +1,33 @@
+# Positive: SSH brute force — "Failed password" message triggers rule, afterEvents count=5
+#   satisfied by 6 correlation events from the same source IP.
+# Negative: "Accepted password" (successful login) does NOT match the where clause of rule 1001.
+rule: rules/linux-brute-force.yaml
+description: "Linux SSH brute force — failed password threshold ≥5"
+
+# Trigger event — matches where: contains("log.message", "Failed password") && origin.ip != ""
+events:
+  - timestamp: "2026-01-15T12:00:00Z"
+    dataType: linux
+    origin:
+      ip: "10.0.0.99"
+      user: "root"
+    log:
+      message: "Failed password for root from 10.0.0.99 port 54321 ssh2"
+      action: "failed"
+
+  # Correlation events — same IP, action=failed, 6 events to satisfy count=5
+  - timestamp: "2026-01-15T11:58:00Z"
+    dataType: linux
+    origin:
+      ip: "10.0.0.99"
+      user: "root"
+    log:
+      message: "Failed password for root from 10.0.0.99 port 54320 ssh2"
+      action: "failed"
+
+repeat: 6
+
+expect:
+  alert: true
+  severity: "1"
+  name: "Linux: Possible SSH Brute Force Attack"

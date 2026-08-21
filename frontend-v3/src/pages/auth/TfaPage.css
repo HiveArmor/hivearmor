@@ -1,0 +1,122 @@
+.tfa-step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  padding: 0 16px;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--ha-text-sm);
+  font-weight: 600;
+  border: 2px solid var(--ha-border);
+  background: var(--ha-surface-raised);
+  color: var(--ha-text-secondary);
+  transition: all 0.2s ease;
+}
+
+.step-item.completed .step-marker {
+  background: var(--ha-primary);
+  border-color: var(--ha-primary);
+  color: var(--ha-background);
+}
+
+.step-item.active .step-marker {
+  border-color: var(--ha-primary);
+  color: var(--ha-primary);
+}
+
+.step-label {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.step-item.active .step-label {
+  color: var(--ha-text-primary);
+  font-weight: 600;
+}
+
+.step-divider {
+  width: 48px;
+  height: 2px;
+  background: var(--ha-border);
+  margin: 0 8px;
+  margin-bottom: 24px;
+}
+
+.tfa-heading {
+  font-size: var(--ha-text-xl);
+  color: var(--ha-text-primary);
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 8px 0;
+}
+
+.tfa-subtext {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  text-align: center;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.tfa-code-input {
+  text-align: center;
+  font-family: var(--ha-font-mono);
+  font-size: var(--ha-text-lg);
+  letter-spacing: 0.5em;
+  padding-left: calc(0.5em + 12px);
+}
+
+.tfa-footer {
+  margin-top: 16px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tfa-footer .divider {
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+}
+
+@media (max-width: 400px) {
+  .step-label {
+    font-size: 10px;
+  }
+
+  .step-divider {
+    width: 32px;
+    margin: 0 4px;
+    margin-bottom: 24px;
+  }
+
+  .step-marker {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+}
+
+.field-error {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-critical);
+  margin-top: 4px;
+}

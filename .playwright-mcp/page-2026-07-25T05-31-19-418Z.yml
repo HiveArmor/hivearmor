@@ -1,0 +1,76 @@
+- generic [ref=f2e5]:
+  - banner [ref=f2e6]:
+    - generic [ref=f2e7]: HiveArmor
+    - generic [ref=f2e14]:
+      - 'generic "Data pipeline: Critical - Internal Server Error" [ref=f2e15]'
+      - generic "Reconnecting..." [ref=f2e18]: 0 EPS
+      - button "Notifications" [ref=f2e20] [cursor=pointer]
+      - button "Help" [ref=f2e25] [cursor=pointer]
+      - button "User menu" [ref=f2e30] [cursor=pointer]:
+        - generic [ref=f2e31]: AA
+        - generic [ref=f2e32]: admin
+  - navigation [ref=f2e33]:
+    - generic [ref=f2e34]:
+      - generic [ref=f2e35]:
+        - generic [ref=f2e36]: COMMAND
+        - generic [ref=f2e37]:
+          - button "Analyst Queue" [ref=f2e38] [cursor=pointer]
+          - button "Alerts" [ref=f2e43] [cursor=pointer]
+          - button "Correlated Findings" [ref=f2e49] [cursor=pointer]
+          - button "Incidents" [ref=f2e56] [cursor=pointer]
+      - generic [ref=f2e63]:
+        - generic [ref=f2e64]: INVESTIGATE
+        - generic [ref=f2e65]:
+          - button "Search & Hunt" [ref=f2e66] [cursor=pointer]
+          - button "Investigations" [ref=f2e72] [cursor=pointer]
+          - button "Entities" [ref=f2e77] [cursor=pointer]
+      - generic [ref=f2e85]:
+        - generic [ref=f2e86]: DEFEND
+        - generic [ref=f2e87]:
+          - button "Detection Rules" [ref=f2e88] [cursor=pointer]
+          - button "Response Playbooks" [ref=f2e93] [cursor=pointer]
+      - generic [ref=f2e98]:
+        - generic [ref=f2e99]: POSTURE
+        - generic [ref=f2e100]:
+          - button "Assets" [ref=f2e101] [cursor=pointer]
+          - button "Identities" [ref=f2e107] [cursor=pointer]
+          - button "Active Directory" [ref=f2e115] [cursor=pointer]
+          - button "Exposure" [ref=f2e123] [cursor=pointer]
+          - button "Sensors" [ref=f2e130] [cursor=pointer]
+          - button "Compliance" [ref=f2e135] [cursor=pointer]
+      - generic [ref=f2e141]:
+        - generic [ref=f2e142]: DASHBOARDS
+        - button "Studio" [ref=f2e144] [cursor=pointer]
+      - generic [ref=f2e150]:
+        - generic [ref=f2e151]: REPORT
+        - button "Scheduled Reports" [ref=f2e153] [cursor=pointer]
+      - generic [ref=f2e159]:
+        - generic [ref=f2e160]: ADMINISTRATION
+        - generic [ref=f2e161]:
+          - button "Users" [ref=f2e162] [cursor=pointer]
+          - button "Integrations" [ref=f2e177] [cursor=pointer]
+          - button "Notifications" [ref=f2e182] [cursor=pointer]
+          - button "Audit Log" [ref=f2e188] [cursor=pointer]
+          - button "Settings" [ref=f2e194] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f2e201] [cursor=pointer]
+  - main [ref=f2e204]:
+    - generic [ref=f2e205]:
+      - generic [ref=f2e206]:
+        - generic [ref=f2e207]:
+          - heading "Alerts" [level=1] [ref=f2e211]
+          - generic [ref=f2e212]: —
+        - generic [ref=f2e213]:
+          - button "Live" [active] [ref=f2e214] [cursor=pointer]
+          - button "Historical" [ref=f2e217] [cursor=pointer]
+      - generic [ref=f2e219]:
+        - textbox "KQL filter input" [ref=f2e221]:
+          - /placeholder: severity:critical AND status:open  ·  title:"brute force"
+        - button "Add filter" [ref=f2e223] [cursor=pointer]: + Add filter
+        - button "Select columns" [ref=f2e225] [cursor=pointer]: Fields
+        - button "Last 15 min" [disabled] [ref=f2e229]
+      - generic [ref=f2e239]:
+        - generic [ref=f2e240]:
+          - generic [ref=f2e242]: Connected
+          - generic [ref=f2e247]: •
+          - generic [ref=f2e249]: Live
+        - generic [ref=f2e245]: 0 eps

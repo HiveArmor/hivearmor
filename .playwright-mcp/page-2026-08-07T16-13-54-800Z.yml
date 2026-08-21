@@ -1,0 +1,495 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e12]: HiveArmor
+        - generic [ref=e13]: Security operations
+      - generic [ref=e14]:
+        - button "All authorized tenants" [ref=e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=e24] [cursor=pointer]:
+          - generic [ref=e29]: ⌘ K
+        - generic [ref=e30]: Production
+      - generic [ref=e31]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=e256]'
+        - status "Live events per second" [ref=e257]:
+          - generic [ref=e37]: 0 EPS
+        - button "Notifications" [ref=e38] [cursor=pointer]
+        - button "Help" [ref=e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=e47]:
+      - generic [ref=e48]:
+        - region "COMMAND" [ref=e49]:
+          - generic [ref=e50]:
+            - button "Mission Control" [ref=e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=e58] [cursor=pointer]
+            - button "Alerts" [ref=e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=e67] [cursor=pointer]
+            - button "Incidents" [ref=e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=e79]:
+          - generic [ref=e80]:
+            - button "Search & Hunt" [ref=e81] [cursor=pointer]
+            - button "Investigations" [ref=e86] [cursor=pointer]
+            - button "Entities" [ref=e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=e97] [cursor=pointer]
+        - region "DEFEND" [ref=e103]:
+          - generic [ref=e104]:
+            - button "Detection Rules" [ref=e105] [cursor=pointer]
+            - button "Playbooks" [ref=e109] [cursor=pointer]
+            - button "Response Library" [ref=e114] [cursor=pointer]
+        - region "POSTURE" [ref=e118]:
+          - generic [ref=e119]:
+            - button "Assets" [ref=e120] [cursor=pointer]
+            - button "Identities" [ref=e125] [cursor=pointer]
+            - button "Active Directory" [ref=e132] [cursor=pointer]
+            - button "Exposure" [ref=e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=e156] [cursor=pointer]
+            - button "Sensors" [ref=e162] [cursor=pointer]
+            - button "Compliance" [ref=e166] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=e171]:
+          - generic [ref=e172]:
+            - button "Endpoints" [ref=e173] [cursor=pointer]
+            - button "File Quarantine" [ref=e177] [cursor=pointer]
+            - button "File Integrity" [ref=e183] [cursor=pointer]
+            - button "Agent Policies" [ref=e190] [cursor=pointer]
+        - region "DASHBOARDS" [ref=e195]:
+          - button "Studio" [ref=e197] [cursor=pointer]
+        - region "REPORT" [ref=e202]:
+          - button "Scheduled Reports" [ref=e204] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=e209]:
+          - generic [ref=e210]:
+            - button "Users" [ref=e211] [cursor=pointer]
+            - button "Integrations" [ref=e225] [cursor=pointer]
+            - button "Notifications" [ref=e229] [cursor=pointer]
+            - button "Audit Log" [ref=e234] [cursor=pointer]
+            - button "Settings" [ref=e239] [cursor=pointer]
+      - generic [ref=e244]:
+        - button "User menu" [ref=e247] [cursor=pointer]:
+          - generic [ref=e248]: AA
+        - button "Pin sidebar open" [ref=e249] [cursor=pointer]
+    - main [ref=e252]:
+      - generic [ref=e258]:
+        - generic [ref=e259]:
+          - generic [ref=e265]:
+            - generic [ref=e266]: ENTITY INTELLIGENCE
+            - heading "Entity Inventory" [level=1] [ref=e267]
+          - generic "Live updates active" [ref=e871]: ● Live
+        - region "Entity inventory summary" [ref=e268]:
+          - article [ref=e269]:
+            - generic [ref=e275]:
+              - generic [ref=e276]: Total entities
+              - strong [ref=e277]: —
+          - article [ref=e278]:
+            - generic [ref=e283]:
+              - generic [ref=e284]: High risk
+              - strong [ref=e285]: —
+          - article [ref=e286]:
+            - generic [ref=e291]:
+              - generic [ref=e292]: Rising
+              - strong [ref=e293]: —
+          - article [ref=e294]:
+            - generic [ref=e298]:
+              - generic [ref=e299]: Active alerts
+              - strong [ref=e300]: —
+          - article [ref=e301]:
+            - generic [ref=e305]:
+              - generic [ref=e306]: New 24h
+              - strong [ref=e307]: —
+        - generic [ref=e308]:
+          - complementary "Entity filters" [ref=e309]:
+            - textbox "Search entities by name or value" [ref=e314]:
+              - /placeholder: Search entities…
+            - group "Entity type" [ref=e315]:
+              - generic [ref=e317] [cursor=pointer]:
+                - checkbox "Host" [active] [ref=e318]
+                - generic [ref=e319]: Host
+              - generic [ref=e320] [cursor=pointer]:
+                - checkbox "User" [ref=e321]
+                - generic [ref=e322]: User
+              - generic [ref=e323] [cursor=pointer]:
+                - checkbox "IP" [ref=e324]
+                - generic [ref=e325]: IP
+              - generic [ref=e326] [cursor=pointer]:
+                - checkbox "Domain" [ref=e327]
+                - generic [ref=e328]: Domain
+            - group "Risk level" [ref=e329]:
+              - generic [ref=e331] [cursor=pointer]:
+                - checkbox "Critical" [ref=e332]
+                - generic [ref=e333]: Critical
+              - generic [ref=e334] [cursor=pointer]:
+                - checkbox "High" [ref=e335]
+                - generic [ref=e336]: High
+              - generic [ref=e337] [cursor=pointer]:
+                - checkbox "Medium" [ref=e338]
+                - generic [ref=e339]: Medium
+              - generic [ref=e340] [cursor=pointer]:
+                - checkbox "Low" [ref=e341]
+                - generic [ref=e342]: Low
+            - group "Criticality" [ref=e343]:
+              - generic [ref=e345] [cursor=pointer]:
+                - checkbox "Critical" [ref=e346]
+                - generic [ref=e347]: Critical
+              - generic [ref=e348] [cursor=pointer]:
+                - checkbox "High" [ref=e349]
+                - generic [ref=e350]: High
+              - generic [ref=e351] [cursor=pointer]:
+                - checkbox "Medium" [ref=e352]
+                - generic [ref=e353]: Medium
+              - generic [ref=e354] [cursor=pointer]:
+                - checkbox "Low" [ref=e355]
+                - generic [ref=e356]: Low
+              - generic [ref=e357] [cursor=pointer]:
+                - checkbox "Unclassified" [ref=e358]
+                - generic [ref=e359]: Unclassified
+            - group "Toggles" [ref=e360]:
+              - generic [ref=e362] [cursor=pointer]:
+                - checkbox "Active alerts only" [ref=e363]
+                - generic [ref=e364]: Active alerts only
+              - generic [ref=e365] [cursor=pointer]:
+                - checkbox "Rising trend only" [ref=e366]
+                - generic [ref=e367]: Rising trend only
+          - generic [ref=e368]:
+            - generic "Entity intelligence inventory" [ref=e370]:
+              - generic [ref=e374]:
+                - generic [ref=e375]: Loading...
+                - grid [ref=e376]:
+                  - rowgroup [ref=e377]:
+                    - row [ref=e378]:
+                      - columnheader "Type" [ref=e379]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Value" [ref=e382]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Display Name" [ref=e385]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Risk" [ref=e388]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Trend" [ref=e391]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Criticality" [ref=e394]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Alerts" [ref=e397]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Last Seen" [ref=e400]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Sources" [ref=e403]:
+                        - text: 
+                        - generic: 
+                    - row [ref=e1181]:
+                      - gridcell "host" [ref=e449]
+                      - gridcell "ENG-SRV-001" [ref=e454]
+                      - gridcell "Engineering Server 001" [ref=e455]
+                      - gridcell [ref=e456]:
+                        - generic "Risk score 95, level critical, trend rising" [ref=e457]:
+                          - strong [ref=e458]: "95"
+                          - generic [ref=e459]: ↑
+                      - gridcell "↑ rising" [ref=e460]
+                      - gridcell "critical" [ref=e462]
+                      - gridcell "18" [ref=e463]
+                      - gridcell "31m ago" [ref=e1182]
+                      - gridcell "endpoint, network" [ref=e465]
+                    - row [ref=e1183]:
+                      - gridcell "host" [ref=e549]
+                      - gridcell "DC-001" [ref=e554]
+                      - gridcell "Domain Controller 001" [ref=e555]
+                      - gridcell [ref=e556]:
+                        - generic "Risk score 91, level critical, trend rising" [ref=e557]:
+                          - strong [ref=e558]: "91"
+                          - generic [ref=e559]: ↑
+                      - gridcell "↑ rising" [ref=e560]
+                      - gridcell "critical" [ref=e562]
+                      - gridcell "20" [ref=e563]
+                      - gridcell "31m ago" [ref=e1184]
+                      - gridcell "endpoint, network" [ref=e565]
+                    - row [ref=e1185]:
+                      - gridcell "host" [ref=e668]
+                      - gridcell "DC-004" [ref=e673]
+                      - gridcell "Domain Controller 004" [ref=e674]
+                      - gridcell [ref=e675]:
+                        - generic "Risk score 88, level critical, trend stable" [ref=e676]:
+                          - strong [ref=e677]: "88"
+                          - generic [ref=e678]: →
+                      - gridcell "→ stable" [ref=e679]
+                      - gridcell "critical" [ref=e681]
+                      - gridcell "11" [ref=e682]
+                      - gridcell "31m ago" [ref=e1186]
+                      - gridcell "endpoint, network" [ref=e684]
+                    - row [ref=e1187]:
+                      - gridcell "host" [ref=e686]
+                      - gridcell "FIN-WKS-001" [ref=e691]
+                      - gridcell "Finance Workstation 001" [ref=e692]
+                      - gridcell [ref=e693]:
+                        - generic "Risk score 88, level critical, trend rising" [ref=e694]:
+                          - strong [ref=e695]: "88"
+                          - generic [ref=e696]: ↑
+                      - gridcell "↑ rising" [ref=e697]
+                      - gridcell "high" [ref=e699]
+                      - gridcell "15" [ref=e700]
+                      - gridcell "31m ago" [ref=e1188]
+                      - gridcell "endpoint, network" [ref=e702]
+                    - row [ref=e1189]:
+                      - gridcell "host" [ref=e765]
+                      - gridcell "DC-005" [ref=e770]
+                      - gridcell "Domain Controller 005" [ref=e771]
+                      - gridcell [ref=e772]:
+                        - generic "Risk score 86, level critical, trend stable" [ref=e773]:
+                          - strong [ref=e774]: "86"
+                          - generic [ref=e775]: →
+                      - gridcell "→ stable" [ref=e776]
+                      - gridcell "critical" [ref=e778]
+                      - gridcell "9" [ref=e779]
+                      - gridcell "31m ago" [ref=e1190]
+                      - gridcell "endpoint, network" [ref=e781]
+                    - row [ref=e1191]:
+                      - gridcell "host" [ref=e823]
+                      - gridcell "DC-002" [ref=e828]
+                      - gridcell "Domain Controller 002" [ref=e829]
+                      - gridcell [ref=e830]:
+                        - generic "Risk score 84, level critical, trend stable" [ref=e831]:
+                          - strong [ref=e832]: "84"
+                          - generic [ref=e833]: →
+                      - gridcell "→ stable" [ref=e834]
+                      - gridcell "critical" [ref=e836]
+                      - gridcell "10" [ref=e837]
+                      - gridcell "31m ago" [ref=e1192]
+                      - gridcell "endpoint, network" [ref=e839]
+                    - row [ref=e1193]:
+                      - gridcell "domain" [ref=e1194]
+                      - gridcell "cdn-update.xyz" [ref=e1202]
+                      - gridcell "cdn-update.xyz (Suspicious DGA)" [ref=e1203]
+                      - gridcell [ref=e1204]:
+                        - generic "Risk score 97, level critical, trend rising" [ref=e1205]:
+                          - strong [ref=e1206]: "97"
+                          - generic [ref=e1207]: ↑
+                      - gridcell "↑ rising" [ref=e1208]
+                      - gridcell "unclassified" [ref=e1210]
+                      - gridcell "23" [ref=e1211]
+                      - gridcell "31m ago" [ref=e1212]
+                      - gridcell "network, cloud" [ref=e1213]
+                    - row [ref=e1214]:
+                      - gridcell "ip" [ref=e1215]
+                      - gridcell "203.0.113.10" [ref=e1223]
+                      - gridcell "203.0.113.10 (Suspicious C2)" [ref=e1224]
+                      - gridcell [ref=e1225]:
+                        - generic "Risk score 96, level critical, trend rising" [ref=e1226]:
+                          - strong [ref=e1227]: "96"
+                          - generic [ref=e1228]: ↑
+                      - gridcell "↑ rising" [ref=e1229]
+                      - gridcell "unclassified" [ref=e1231]
+                      - gridcell "25" [ref=e1232]
+                      - gridcell "31m ago" [ref=e1233]
+                      - gridcell "network" [ref=e1234]
+                    - row [ref=e1235]:
+                      - gridcell "domain" [ref=e1236]
+                      - gridcell "secure-login-portal.net" [ref=e1244]
+                      - gridcell "secure-login-portal.net (Phishing)" [ref=e1245]
+                      - gridcell [ref=e1246]:
+                        - generic "Risk score 94, level critical, trend rising" [ref=e1247]:
+                          - strong [ref=e1248]: "94"
+                          - generic [ref=e1249]: ↑
+                      - gridcell "↑ rising" [ref=e1250]
+                      - gridcell "unclassified" [ref=e1252]
+                      - gridcell "20" [ref=e1253]
+                      - gridcell "31m ago" [ref=e1254]
+                      - gridcell "network, cloud" [ref=e1255]
+                    - row [ref=e1256]:
+                      - gridcell "ip" [ref=e1257]
+                      - gridcell "203.0.113.88" [ref=e1265]
+                      - gridcell "203.0.113.88 (DDoS Source)" [ref=e1266]
+                      - gridcell [ref=e1267]:
+                        - generic "Risk score 94, level critical, trend rising" [ref=e1268]:
+                          - strong [ref=e1269]: "94"
+                          - generic [ref=e1270]: ↑
+                      - gridcell "↑ rising" [ref=e1271]
+                      - gridcell "unclassified" [ref=e1273]
+                      - gridcell "22" [ref=e1274]
+                      - gridcell "31m ago" [ref=e1275]
+                      - gridcell "network" [ref=e1276]
+                    - row [ref=e1277]:
+                      - gridcell "user" [ref=e1278]
+                      - gridcell "admin-svc-01" [ref=e1284]
+                      - gridcell "Admin Service Account - Primary" [ref=e1285]
+                      - gridcell [ref=e1286]:
+                        - generic "Risk score 93, level critical, trend rising" [ref=e1287]:
+                          - strong [ref=e1288]: "93"
+                          - generic [ref=e1289]: ↑
+                      - gridcell "↑ rising" [ref=e1290]
+                      - gridcell "critical" [ref=e1292]
+                      - gridcell "22" [ref=e1293]
+                      - gridcell "31m ago" [ref=e1294]
+                      - gridcell "identity, endpoint" [ref=e1295]
+                    - row [ref=e1296]:
+                      - gridcell "ip" [ref=e1297]
+                      - gridcell "198.51.100.30" [ref=e1305]
+                      - gridcell "198.51.100.30 (Data Exfil)" [ref=e1306]
+                      - gridcell [ref=e1307]:
+                        - generic "Risk score 92, level critical, trend rising" [ref=e1308]:
+                          - strong [ref=e1309]: "92"
+                          - generic [ref=e1310]: ↑
+                      - gridcell "↑ rising" [ref=e1311]
+                      - gridcell "unclassified" [ref=e1313]
+                      - gridcell "21" [ref=e1314]
+                      - gridcell "31m ago" [ref=e1315]
+                      - gridcell "network" [ref=e1316]
+                    - row [ref=e1317]:
+                      - gridcell "user" [ref=e1318]
+                      - gridcell "wm1-admin-svc-01" [ref=e1324]
+                      - gridcell "Admin Service Account - WM1 Primary" [ref=e1325]
+                      - gridcell [ref=e1326]:
+                        - generic "Risk score 91, level critical, trend rising" [ref=e1327]:
+                          - strong [ref=e1328]: "91"
+                          - generic [ref=e1329]: ↑
+                      - gridcell "↑ rising" [ref=e1330]
+                      - gridcell "critical" [ref=e1332]
+                      - gridcell "17" [ref=e1333]
+                      - gridcell "31m ago" [ref=e1334]
+                      - gridcell "identity, endpoint" [ref=e1335]
+                    - row [ref=e1336]:
+                      - gridcell "domain" [ref=e1337]
+                      - gridcell "microsft-update.com" [ref=e1345]
+                      - gridcell "microsft-update.com (Typosquat)" [ref=e1346]
+                      - gridcell [ref=e1347]:
+                        - generic "Risk score 90, level critical, trend stable" [ref=e1348]:
+                          - strong [ref=e1349]: "90"
+                          - generic [ref=e1350]: →
+                      - gridcell "→ stable" [ref=e1351]
+                      - gridcell "unclassified" [ref=e1353]
+                      - gridcell "16" [ref=e1354]
+                      - gridcell "1d ago" [ref=e1355]
+                      - gridcell "network, cloud" [ref=e1356]
+                    - row [ref=e1357]:
+                      - gridcell "user" [ref=e1358]
+                      - gridcell "wm2-admin-svc-01" [ref=e1364]
+                      - gridcell "Admin Service Account - WM2 Primary" [ref=e1365]
+                      - gridcell [ref=e1366]:
+                        - generic "Risk score 90, level critical, trend stable" [ref=e1367]:
+                          - strong [ref=e1368]: "90"
+                          - generic [ref=e1369]: →
+                      - gridcell "→ stable" [ref=e1370]
+                      - gridcell "critical" [ref=e1372]
+                      - gridcell "10" [ref=e1373]
+                      - gridcell "31m ago" [ref=e1374]
+                      - gridcell "identity, endpoint" [ref=e1375]
+                    - row [ref=e1376]:
+                      - gridcell "domain" [ref=e1377]
+                      - gridcell "data-sync-pro.com" [ref=e1385]
+                      - gridcell "data-sync-pro.com (Suspicious Exfil)" [ref=e1386]
+                      - gridcell [ref=e1387]:
+                        - generic "Risk score 89, level critical, trend rising" [ref=e1388]:
+                          - strong [ref=e1389]: "89"
+                          - generic [ref=e1390]: ↑
+                      - gridcell "↑ rising" [ref=e1391]
+                      - gridcell "unclassified" [ref=e1393]
+                      - gridcell "16" [ref=e1394]
+                      - gridcell "31m ago" [ref=e1395]
+                      - gridcell "network, cloud" [ref=e1396]
+                    - row [ref=e1397]:
+                      - gridcell "ip" [ref=e1398]
+                      - gridcell "198.51.100.5" [ref=e1406]
+                      - gridcell "198.51.100.5 (Phishing Host)" [ref=e1407]
+                      - gridcell [ref=e1408]:
+                        - generic "Risk score 89, level critical, trend rising" [ref=e1409]:
+                          - strong [ref=e1410]: "89"
+                          - generic [ref=e1411]: ↑
+                      - gridcell "↑ rising" [ref=e1412]
+                      - gridcell "unclassified" [ref=e1414]
+                      - gridcell "19" [ref=e1415]
+                      - gridcell "31m ago" [ref=e1416]
+                      - gridcell "network" [ref=e1417]
+                    - row [ref=e1418]:
+                      - gridcell "domain" [ref=e1419]
+                      - gridcell "login-verify.net" [ref=e1427]
+                      - gridcell "login-verify.net (Credential Theft)" [ref=e1428]
+                      - gridcell [ref=e1429]:
+                        - generic "Risk score 87, level critical, trend stable" [ref=e1430]:
+                          - strong [ref=e1431]: "87"
+                          - generic [ref=e1432]: →
+                      - gridcell "→ stable" [ref=e1433]
+                      - gridcell "unclassified" [ref=e1435]
+                      - gridcell "14" [ref=e1436]
+                      - gridcell "1d ago" [ref=e1437]
+                      - gridcell "network, cloud" [ref=e1438]
+                    - row [ref=e1439]:
+                      - gridcell "user" [ref=e1440]
+                      - gridcell "admin-svc-02" [ref=e1446]
+                      - gridcell "Admin Service Account - Secondary" [ref=e1447]
+                      - gridcell [ref=e1448]:
+                        - generic "Risk score 87, level critical, trend stable" [ref=e1449]:
+                          - strong [ref=e1450]: "87"
+                          - generic [ref=e1451]: →
+                      - gridcell "→ stable" [ref=e1452]
+                      - gridcell "critical" [ref=e1454]
+                      - gridcell "11" [ref=e1455]
+                      - gridcell "31m ago" [ref=e1456]
+                      - gridcell "identity, endpoint" [ref=e1457]
+                    - row [ref=e1458]:
+                      - gridcell "domain" [ref=e1459]
+                      - gridcell "dl-patch.info" [ref=e1467]
+                      - gridcell "dl-patch.info (Malware Delivery)" [ref=e1468]
+                      - gridcell [ref=e1469]:
+                        - generic "Risk score 86, level critical, trend rising" [ref=e1470]:
+                          - strong [ref=e1471]: "86"
+                          - generic [ref=e1472]: ↑
+                      - gridcell "↑ rising" [ref=e1473]
+                      - gridcell "unclassified" [ref=e1475]
+                      - gridcell "13" [ref=e1476]
+                      - gridcell "31m ago" [ref=e1477]
+                      - gridcell "network, cloud" [ref=e1478]
+                    - row [ref=e1479]:
+                      - gridcell "ip" [ref=e1480]
+                      - gridcell "203.0.113.50" [ref=e1488]
+                      - gridcell "203.0.113.50 (Suspicious Proxy)" [ref=e1489]
+                      - gridcell [ref=e1490]:
+                        - generic "Risk score 85, level critical, trend rising" [ref=e1491]:
+                          - strong [ref=e1492]: "85"
+                          - generic [ref=e1493]: ↑
+                      - gridcell "↑ rising" [ref=e1494]
+                      - gridcell "unclassified" [ref=e1496]
+                      - gridcell "15" [ref=e1497]
+                      - gridcell "31m ago" [ref=e1498]
+                      - gridcell "network" [ref=e1499]
+                    - row [ref=e1500]:
+                      - gridcell "user" [ref=e1501]
+                      - gridcell "sarah.chen" [ref=e1507]
+                      - gridcell "Sarah Chen (SOC Analyst)" [ref=e1508]
+                      - gridcell [ref=e1509]:
+                        - generic "Risk score 85, level critical, trend rising" [ref=e1510]:
+                          - strong [ref=e1511]: "85"
+                          - generic [ref=e1512]: ↑
+                      - gridcell "↑ rising" [ref=e1513]
+                      - gridcell "high" [ref=e1515]
+                      - gridcell "14" [ref=e1516]
+                      - gridcell "31m ago" [ref=e1517]
+                      - gridcell "identity, endpoint" [ref=e1518]
+                    - row [ref=e1519]:
+                      - gridcell "user" [ref=e1520]
+                      - gridcell "oliver.schmidt" [ref=e1526]
+                      - gridcell "Oliver Schmidt (CISO)" [ref=e1527]
+                      - gridcell [ref=e1528]:
+                        - generic "Risk score 84, level critical, trend rising" [ref=e1529]:
+                          - strong [ref=e1530]: "84"
+                          - generic [ref=e1531]: ↑
+                      - gridcell "↑ rising" [ref=e1532]
+                      - gridcell "critical" [ref=e1534]
+                      - gridcell "12" [ref=e1535]
+                      - gridcell "31m ago" [ref=e1536]
+                      - gridcell "identity, endpoint" [ref=e1537]
+                - text:     
+            - generic [ref=e859]:
+              - generic [ref=e860]: 200 entities
+              - strong [ref=e861]:
+                - text: Page 1
+                - generic [ref=e862]: 1–100
+              - generic [ref=e863]:
+                - button "Previous" [disabled] [ref=e864]
+                - button "Next" [ref=e867] [cursor=pointer]
+  - generic:
+    - list "Notifications"

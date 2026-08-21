@@ -1,0 +1,166 @@
+- generic [active] [ref=f7e1]:
+  - generic [ref=f7e3]:
+    - link "Skip to main content" [ref=f7e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f7e5]:
+      - generic [ref=f7e6]:
+        - generic [ref=f7e12]: HiveArmor
+        - generic [ref=f7e13]: Security operations
+      - generic [ref=f7e14]:
+        - button "All authorized tenants" [ref=f7e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f7e24] [cursor=pointer]:
+          - generic [ref=f7e29]: ⌘ K
+        - generic [ref=f7e30]: Production
+      - generic [ref=f7e31]:
+        - 'status "Data pipeline: Healthy" [ref=f7e32]'
+        - status "Live events per second" [ref=f7e35]:
+          - generic [ref=f7e37]: 0 EPS
+        - button "Notifications" [ref=f7e38] [cursor=pointer]
+        - button "Help" [ref=f7e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f7e47]:
+      - generic [ref=f7e48]:
+        - region "COMMAND" [ref=f7e49]:
+          - generic [ref=f7e50]:
+            - button "Mission Control" [ref=f7e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f7e58] [cursor=pointer]
+            - button "Alerts" [ref=f7e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f7e67] [cursor=pointer]
+            - button "Incidents" [ref=f7e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f7e79]:
+          - generic [ref=f7e80]:
+            - button "Search & Hunt" [ref=f7e81] [cursor=pointer]
+            - button "Investigations" [ref=f7e86] [cursor=pointer]
+            - button "Entities" [ref=f7e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f7e97] [cursor=pointer]
+        - region "DEFEND" [ref=f7e103]:
+          - generic [ref=f7e104]:
+            - button "Detection Rules" [ref=f7e105] [cursor=pointer]
+            - button "Playbooks" [ref=f7e109] [cursor=pointer]
+            - button "Response Library" [ref=f7e114] [cursor=pointer]
+        - region "POSTURE" [ref=f7e118]:
+          - generic [ref=f7e119]:
+            - button "Assets" [ref=f7e120] [cursor=pointer]
+            - button "Identities" [ref=f7e125] [cursor=pointer]
+            - button "Active Directory" [ref=f7e132] [cursor=pointer]
+            - button "Exposure" [ref=f7e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f7e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f7e156] [cursor=pointer]
+            - button "Sensors" [ref=f7e162] [cursor=pointer]
+            - button "Compliance" [ref=f7e166] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f7e171]:
+          - generic [ref=f7e172]:
+            - button "Endpoints" [ref=f7e173] [cursor=pointer]
+            - button "File Quarantine" [ref=f7e177] [cursor=pointer]
+            - button "File Integrity" [ref=f7e183] [cursor=pointer]
+            - button "Agent Policies" [ref=f7e190] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f7e195]:
+          - button "Studio" [ref=f7e197] [cursor=pointer]
+        - region "REPORT" [ref=f7e202]:
+          - button "Scheduled Reports" [ref=f7e204] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f7e209]:
+          - generic [ref=f7e210]:
+            - button "Users" [ref=f7e211] [cursor=pointer]
+            - button "Integrations" [ref=f7e225] [cursor=pointer]
+            - button "Notifications" [ref=f7e229] [cursor=pointer]
+            - button "Audit Log" [ref=f7e234] [cursor=pointer]
+            - button "Settings" [ref=f7e239] [cursor=pointer]
+      - generic [ref=f7e244]:
+        - button "User menu" [ref=f7e247] [cursor=pointer]:
+          - generic [ref=f7e248]: AA
+        - button "Pin sidebar open" [ref=f7e249] [cursor=pointer]
+    - main [ref=f7e252]:
+      - generic [ref=f7e253]:
+        - generic [ref=f7e254]:
+          - generic [ref=f7e259]:
+            - generic [ref=f7e260]: DEFEND
+            - heading "Detection Engineering" [level=1] [ref=f7e261]
+          - generic [ref=f7e262]:
+            - generic [ref=f7e263]:
+              - text: Rule health and coverage
+              - generic [ref=f7e270]: J
+              - generic [ref=f7e271]: /
+              - generic [ref=f7e272]: K
+              - generic [ref=f7e273]: navigate
+            - button "Import" [ref=f7e274] [cursor=pointer]
+            - button "Sigma sync" [ref=f7e278] [cursor=pointer]
+            - button "Create rule" [ref=f7e283] [cursor=pointer]
+        - navigation "Detection engineering views" [ref=f7e285]:
+          - button "Rules 0" [ref=f7e286] [cursor=pointer]:
+            - text: Rules
+            - generic [ref=f7e289]: "0"
+          - button "Rule monitoring 0" [ref=f7e290] [cursor=pointer]:
+            - text: Rule monitoring
+            - generic [ref=f7e293]: "0"
+          - button "ATT&CK coverage 0" [ref=f7e294] [cursor=pointer]:
+            - text: ATT&CK coverage
+            - generic [ref=f7e297]: "0"
+          - button "Test console" [ref=f7e298] [cursor=pointer]
+        - search "Detection rule filters" [ref=f7e302]:
+          - textbox "Search detection rules" [ref=f7e307]:
+            - /placeholder: Search rule, Sigma ID, tactic, or technique…
+          - button "Rule state" [ref=f7e309] [cursor=pointer]:
+            - generic [ref=f7e310]: All states
+          - button "Execution response" [ref=f7e314] [cursor=pointer]:
+            - generic [ref=f7e315]: All responses
+          - button "Rule source" [ref=f7e319] [cursor=pointer]:
+            - generic [ref=f7e320]: All sources
+          - button "Rule severity" [ref=f7e324] [cursor=pointer]:
+            - generic [ref=f7e325]: All severities
+          - button "Refresh detection rules" [disabled] [ref=f7e328] [cursor=pointer]
+        - generic "Detection rule summary" [ref=f7e334]:
+          - article [ref=f7e335]:
+            - generic [ref=f7e336]: Installed rules
+            - strong [ref=f7e339]: "0"
+            - generic [ref=f7e340]: authorized scope
+          - article [ref=f7e341]:
+            - generic [ref=f7e342]: Enabled
+            - strong [ref=f7e345]: "0"
+            - generic [ref=f7e346]: No inventory
+          - article [ref=f7e347]:
+            - generic [ref=f7e348]: Healthy
+            - strong [ref=f7e352]: —
+            - generic [ref=f7e353]: last execution succeeded
+          - article [ref=f7e354]:
+            - generic [ref=f7e355]: Needs attention
+            - strong [ref=f7e358]: —
+            - generic [ref=f7e359]: delayed or failed
+          - article [ref=f7e360]:
+            - generic [ref=f7e361]: Alerts · 24h
+            - strong [ref=f7e364]: —
+            - generic [ref=f7e365]: generated by enabled rules
+          - article [ref=f7e366]:
+            - generic [ref=f7e367]: ATT&CK coverage
+            - strong [ref=f7e370]: "0"
+            - generic [ref=f7e371]: mapped techniques
+        - main [ref=f7e372]:
+          - generic [ref=f7e373]:
+            - generic [ref=f7e374]:
+              - strong [ref=f7e375]: Installed rules
+              - generic [ref=f7e376]: Loading inventory
+            - generic [ref=f7e377]:
+              - group "Row density" [ref=f7e378]:
+                - generic [ref=f7e379]: Rows
+                - generic [ref=f7e380]:
+                  - button "compact rows" [pressed] [ref=f7e381] [cursor=pointer]
+                  - button "standard rows" [ref=f7e386] [cursor=pointer]
+                  - button "comfortable rows" [ref=f7e391] [cursor=pointer]
+              - button "Columns" [ref=f7e397] [cursor=pointer]
+          - generic "Loading detection rules" [ref=f7e401]
+          - generic [ref=f7e412]:
+            - strong [ref=f7e413]:
+              - text: 0 matching rules
+              - generic [ref=f7e414]: · up to 100 rows loaded per page
+            - generic [ref=f7e415]: Page 1 0
+            - generic [ref=f7e416]:
+              - button "Previous" [disabled] [ref=f7e417]
+              - button "Next" [disabled] [ref=f7e420]
+        - generic [ref=f7e423]:
+          - generic [ref=f7e424]:
+            - generic [ref=f7e425]:
+              - generic [ref=f7e427]: Connected
+              - generic [ref=f7e428]: •
+              - generic [ref=f7e430]: Live
+            - generic [ref=f7e431]: 0 eps
+          - generic: Rule snapshot 07:52
+  - generic:
+    - list "Notifications"

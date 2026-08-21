@@ -1,0 +1,37 @@
+id: e5f6a7b8-c9d0-1234-efab-345678901235
+title: Winlogon Helper DLL or Userinit Modification
+status: stable
+logsource:
+  product: windows
+  category: registry_set
+level: high
+tags:
+  - attack.persistence
+  - attack.T1547
+  - attack.T1547.004
+detection:
+  selection_userinit:
+    TargetObject: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Userinit'
+    Details|contains: ','
+  selection_shell:
+    TargetObject: 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Shell'
+  filter_legit_userinit:
+    Details: 'C:\Windows\system32\userinit.exe,'
+  filter_legit_shell:
+    Details: 'explorer.exe'
+  condition: (selection_userinit and not filter_legit_userinit) or (selection_shell and not filter_legit_shell)
+falsepositives:
+  - Security software modifying Winlogon keys
+  - Accessibility tools that hook into Winlogon
+impact:
+  confidentiality: medium
+  integrity: critical
+  availability: high
+deduplicateBy:
+  - ComputerName
+  - TargetObject
+groupBy:
+  - ComputerName
+mitre:
+  tactic: persistence
+  technique: T1547.004

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 // BuildAnomalyAlert constructs a standard ANOMALY alert for the given event.

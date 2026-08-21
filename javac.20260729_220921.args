@@ -1,0 +1,5 @@
+-cp
+/dev/null
+/tmp/Hello.java
+-d
+/tmp

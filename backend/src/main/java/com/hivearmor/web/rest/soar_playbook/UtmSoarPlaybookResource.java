@@ -29,9 +29,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Legacy SOAR playbook compatibility resource.
+ *
+ * @deprecated since 2026-08-11. New consumers must use the secured canonical
+ *             {@code /api/ha-playbooks} API. This resource remains available only
+ *             for compatibility while existing integrations migrate.
+ */
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@Deprecated(since = "2026-08-11", forRemoval = false)
 public class UtmSoarPlaybookResource {
 
     private static final String CLASSNAME = "UtmSoarPlaybookResource";

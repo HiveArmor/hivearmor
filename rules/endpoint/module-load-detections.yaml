@@ -1,0 +1,82 @@
+# Module Load / DLL Injection Detection Rules
+# DataType: module-load
+
+dataTypes:
+  - "module-load"
+name: "Module Load: DLL Loaded from Temp/Writable Path"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: "Defense Evasion"
+technique: "T1574.001 - DLL Search Order Hijacking"
+adversary: origin
+description: "A DLL was loaded from a temporary or world-writable directory. Legitimate DLLs are installed to System32 or application directories; loading from temp paths is characteristic of DLL sideloading attacks."
+references:
+  - "https://attack.mitre.org/techniques/T1574/001/"
+where: |
+  safe("dataType", "") == "module-load" &&
+  (
+    contains(toLower(safe("log.module_path", "")), "\\temp\\") ||
+    contains(toLower(safe("log.module_path", "")), "\\appdata\\local\\temp") ||
+    startsWith(safe("log.module_path", ""), "/tmp/") ||
+    startsWith(safe("log.module_path", ""), "/var/tmp/")
+  )
+groupBy:
+  - log.module_path
+  - origin.process
+deduplicateBy:
+  - log.module_path
+  - origin.process
+---
+dataTypes:
+  - "module-load"
+name: "Module Load: LD_PRELOAD Library Loaded (Linux)"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Defense Evasion"
+technique: "T1574.006 - Dynamic Linker Hijacking"
+adversary: origin
+description: "A shared library was loaded via LD_PRELOAD environment variable injection. Attackers use LD_PRELOAD to hook libc functions, intercept credentials, and hide malicious activity from system utilities."
+references:
+  - "https://attack.mitre.org/techniques/T1574/006/"
+where: |
+  safe("dataType", "") == "module-load" &&
+  (
+    contains(safe("log.module_path", ""), ".so") &&
+    (
+      startsWith(safe("log.module_path", ""), "/tmp/") ||
+      startsWith(safe("log.module_path", ""), "/dev/shm/") ||
+      startsWith(safe("log.module_path", ""), "/var/tmp/")
+    )
+  )
+groupBy:
+  - log.module_path
+  - origin.process
+deduplicateBy:
+  - log.module_path
+---
+dataTypes:
+  - "module-load"
+name: "Module Load: Reflective DLL Injection Pattern"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Defense Evasion"
+technique: "T1055.001 - Dynamic-link Library Injection"
+adversary: origin
+description: "A DLL was loaded without a file path (anonymous mapping), which is the signature of reflective DLL injection. Reflective loaders map a DLL from memory without touching disk, evading file-based detection."
+references:
+  - "https://attack.mitre.org/techniques/T1055/001/"
+where: |
+  safe("action", "") == "mmap_exec" &&
+  safe("log.module_path", "") == "" &&
+  !regexMatch(safe("origin.process", ""), "(jvm|java|node|python|ruby|mono|dotnet)")
+groupBy:
+  - origin.process
+  - origin.pid
+deduplicateBy:
+  - origin.pid

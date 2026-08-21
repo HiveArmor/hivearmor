@@ -2,14 +2,20 @@ package com.hivearmor.config;
 
 import com.hivearmor.repository.UserRepository;
 import com.hivearmor.security.AuthoritiesConstants;
+import com.hivearmor.security.PlaybookSseTokenFilter;
 import com.hivearmor.security.api_key.ApiKeyConfigurer;
 import com.hivearmor.security.api_key.ApiKeyFilter;
 import com.hivearmor.security.internalApiKey.InternalApiKeyConfigurer;
 import com.hivearmor.security.internalApiKey.InternalApiKeyProvider;
 import com.hivearmor.security.jwt.JWTConfigurer;
+import com.hivearmor.security.jwt.JWTFilter;
 import com.hivearmor.security.jwt.TokenProvider;
 import com.hivearmor.security.saml.Saml2LoginFailureHandler;
 import com.hivearmor.security.saml.Saml2LoginSuccessHandler;
+import com.hivearmor.security.telemetry.TelemetryAgentIdentityFilter;
+import com.hivearmor.web.filter.HaCorrelationIdFilter;
+import com.hivearmor.web.filter.HaDeprecationFilter;
+import com.hivearmor.web.filter.HaSecurityHeadersFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,7 +69,11 @@ public class SecurityConfiguration {
     private final UserDetailsService userDetailsService;
     private final TokenProvider tokenProvider;
     private final CorsFilter corsFilter;
+    private final HaCorrelationIdFilter haCorrelationIdFilter;
+    private final HaSecurityHeadersFilter haSecurityHeadersFilter;
+    private final HaDeprecationFilter haDeprecationFilter;
     private final InternalApiKeyProvider internalApiKeyProvider;
+    private final TelemetryAgentIdentityFilter telemetryAgentIdentityFilter;
     private final ApiKeyFilter apiKeyFilter;
     private final UserRepository userRepository;
     private final AppProperties appProperties;
@@ -91,6 +101,9 @@ public class SecurityConfiguration {
         return web -> web.ignoring()
                 .requestMatchers(HttpMethod.OPTIONS, "/**")
                 .requestMatchers("/swagger-ui/**")
+                .requestMatchers("/v3/api-docs/**")
+                .requestMatchers("/api/ha-openapi/**")
+                .requestMatchers("/api/ha-docs/**")
                 .requestMatchers("/i18n/**");
     }
 
@@ -98,6 +111,8 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                .addFilterBefore(haCorrelationIdFilter, CorsFilter.class)
+                .addFilterAfter(haSecurityHeadersFilter, HaCorrelationIdFilter.class)
                 .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(
@@ -119,9 +134,17 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/releaseInfo").permitAll()
                         .requestMatchers("/api/account/reset-password/init").permitAll()
                         .requestMatchers("/api/account/reset-password/finish").permitAll()
+                        // Login-time OIDC discovery and the PKCE redirect/callback must
+                        // remain reachable before a HiveArmor JWT exists. The resource
+                        // exposes public-only DTOs and keeps admin CRUD under ROLE_ADMIN.
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/ha-oidc/providers/enabled",
+                                "/api/ha-oidc/authorize",
+                                "/api/ha-oidc/callback").permitAll()
                         .requestMatchers("/api/ha-providers").permitAll()
                         .requestMatchers("/api/images/all").permitAll()
                         .requestMatchers("/api/info/version").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/agent-packages/**").permitAll()
                         .requestMatchers("/api/enrollment/**")
                                 .hasAnyAuthority(AuthoritiesConstants.PRE_VERIFICATION_USER)
                         .requestMatchers("/api/tfa/verify-code")
@@ -143,6 +166,16 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/api/ha-incident-variables", "/api/ha-incident-variables")
                                 .hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER)
                         .requestMatchers("/api/custom-reports/**").denyAll()
+                        // Agent telemetry ingest — device identity (X-HiveArmor-Agent-Id + X-Agent-Key)
+                        // or, when ALLOW_LEGACY_TELEMETRY_INTERNAL_KEY=true, INTERNAL_KEY.
+                        .requestMatchers(HttpMethod.POST, "/api/ha-telemetry/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT,  "/api/ha-telemetry/**").authenticated()
+                        .requestMatchers(HttpMethod.GET,  "/api/ha-telemetry/**").authenticated()
+                        // Enrollment administration is intentionally narrower than the
+                        // legacy catch-all API rule and must remain reachable to the
+                        // dedicated SOC Manager authority as well as administrators.
+                        .requestMatchers("/api/ha-agent-enrollments/**")
+                                .hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.SOC_MANAGER)
                         .requestMatchers("/api/**")
                                 .hasAnyAuthority(AuthoritiesConstants.ADMIN, AuthoritiesConstants.USER)
                         .requestMatchers("/ws/topic").hasAuthority(AuthoritiesConstants.ADMIN)
@@ -156,8 +189,10 @@ public class SecurityConfiguration {
                         .failureHandler(new Saml2LoginFailureHandler())
                 )
                 .with(new JWTConfigurer(tokenProvider), c -> {})
-                .with(new InternalApiKeyConfigurer(internalApiKeyProvider), c -> {})
-                .with(new ApiKeyConfigurer(apiKeyFilter), c -> {});
+                .addFilterBefore(new PlaybookSseTokenFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .with(new InternalApiKeyConfigurer(internalApiKeyProvider, telemetryAgentIdentityFilter), c -> {})
+                .with(new ApiKeyConfigurer(apiKeyFilter), c -> {})
+                .addFilterAfter(haDeprecationFilter, org.springframework.security.web.access.intercept.AuthorizationFilter.class);
 
         return http.build();
     }

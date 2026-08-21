@@ -21,6 +21,10 @@ import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.cat.IndicesRequest;
 import org.opensearch.client.opensearch.cat.indices.IndicesRecord;
 import org.opensearch.client.opensearch.core.*;
+import org.opensearch.client.opensearch.core.pit.CreatePitRequest;
+import org.opensearch.client.opensearch.core.pit.CreatePitResponse;
+import org.opensearch.client.opensearch.core.pit.DeletePitRequest;
+import org.opensearch.client.opensearch.core.pit.DeletePitResponse;
 import org.opensearch.client.opensearch.indices.GetMappingRequest;
 import org.opensearch.client.opensearch.indices.GetMappingResponse;
 import org.opensearch.client.opensearch.indices.get_mapping.IndexMappingRecord;
@@ -173,6 +177,14 @@ public class OpenSearch implements AutoCloseable {
      */
     public boolean indexExist(String index) throws Exception {
         return client.indices().exists(r -> r.index(index)).value();
+    }
+
+    /**
+     * Lightweight connectivity probe used by the authenticated operational-health endpoint.
+     * No cluster metadata or document content is returned to the caller.
+     */
+    public boolean ping() throws Exception {
+        return client.ping().value();
     }
 
     /**
@@ -350,6 +362,21 @@ public class OpenSearch implements AutoCloseable {
      */
     public <T> SearchResponse<T> search(SearchRequest request, Class<T> type) throws Exception {
         return client.search(request, type);
+    }
+
+    /** Creates a short-lived point-in-time snapshot for consistent hunt pagination. */
+    public CreatePitResponse createPit(CreatePitRequest request) throws Exception {
+        return client.createPit(request);
+    }
+
+    /** Releases one or more point-in-time snapshots. */
+    public DeletePitResponse deletePit(DeletePitRequest request) throws Exception {
+        return client.deletePit(request);
+    }
+
+    /** Returns mapping capabilities for fields across a bounded set of indices. */
+    public FieldCapsResponse fieldCaps(FieldCapsRequest request) throws Exception {
+        return client.fieldCaps(request);
     }
 
     /**

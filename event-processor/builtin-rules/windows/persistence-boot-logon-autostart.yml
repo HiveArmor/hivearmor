@@ -1,0 +1,37 @@
+id: a7b8c9d0-e1f2-3456-abcd-567890123437
+title: Boot or Logon Autostart Extension via LSA Provider
+status: stable
+logsource:
+  product: windows
+  category: registry_set
+level: high
+tags:
+  - attack.persistence
+  - attack.T1547
+  - attack.T1547.005
+detection:
+  selection:
+    TargetObject|contains:
+      - '\SYSTEM\CurrentControlSet\Control\Lsa\Authentication Packages'
+      - '\SYSTEM\CurrentControlSet\Control\Lsa\Notification Packages'
+      - '\SYSTEM\CurrentControlSet\Control\Lsa\Security Packages'
+  filter_legit:
+    Details|contains:
+      - 'msv1_0'
+      - 'scecli'
+  condition: selection and not filter_legit
+falsepositives:
+  - Legitimate security products registering LSA notification packages
+  - Third-party authentication providers
+impact:
+  confidentiality: high
+  integrity: critical
+  availability: high
+deduplicateBy:
+  - ComputerName
+  - TargetObject
+groupBy:
+  - ComputerName
+mitre:
+  tactic: persistence
+  technique: T1547.005

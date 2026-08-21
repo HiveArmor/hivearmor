@@ -1,0 +1,59 @@
+/* EntitySummaryBadges — compact clickable badge strip */
+
+.entities-summary-badge {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: var(--ha-surface-panel);
+  border: 1px solid var(--ha-border-default);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.entities-summary-badge:hover {
+  border-color: var(--ha-border-strong);
+}
+
+.entities-summary-badge:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 2px;
+}
+
+.entities-summary-badge[data-tone='critical'] {
+  border-color: var(--ha-severity-critical);
+}
+
+.entities-summary-badge[data-tone='high'] {
+  border-color: var(--ha-severity-high);
+}
+
+.entities-summary-badge[data-tone='rising'] {
+  border-color: var(--ha-severity-high);
+}
+
+.entities-summary-badge[data-tone='alerts'] {
+  border-color: var(--ha-severity-medium);
+}
+
+.entities-summary-badge[data-active='true'] {
+  background: var(--ha-surface-selected);
+  border-color: var(--ha-action-primary);
+}
+
+.entities-summary-badge__label {
+  font-size: 0.7rem;
+  color: var(--ha-foreground-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.entities-summary-badge__count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  font-variant-numeric: tabular-nums;
+}

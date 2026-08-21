@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260724001-edr-1" author="hivearmor">
+        <createTable tableName="ha_edr_quarantine">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="agent_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="agent_name" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="filename" type="varchar(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_path" type="varchar(4000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sha256_hash" type="varchar(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="file_size" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="quarantine_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(20)" defaultValue="quarantined">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quarantined_by" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="notes" type="text">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ha_edr_quarantine" indexName="idx_quarantine_agent">
+            <column name="agent_id"/>
+        </createIndex>
+
+        <createIndex tableName="ha_edr_quarantine" indexName="idx_quarantine_status">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="ha_edr_quarantine" indexName="idx_quarantine_hash">
+            <column name="sha256_hash"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

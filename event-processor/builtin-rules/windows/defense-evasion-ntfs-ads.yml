@@ -1,0 +1,46 @@
+id: b4c5d6e7-f8a9-0123-bcde-234567890144
+title: NTFS Alternate Data Stream Used to Hide Payload
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.T1564
+  - attack.T1564.004
+detection:
+  selection:
+    CommandLine|contains:
+      - 'type '
+      - 'echo '
+    CommandLine|contains:
+      - '> '
+    CommandLine|re: '.*:[^\\:]+:[^\\:]+.*'
+  selection_powershell:
+    CommandLine|contains:
+      - 'Set-Content'
+      - 'Add-Content'
+    CommandLine|contains:
+      - ':[a-zA-Z]'
+  selection_execution:
+    CommandLine|contains:
+      - 'wscript'
+      - 'cscript'
+    CommandLine|re: '.*\.[a-zA-Z]{3}:[a-zA-Z].*'
+  condition: selection or selection_powershell or selection_execution
+falsepositives:
+  - Zone.Identifier ADS added by browser downloads
+  - Legitimate backup software using ADS for metadata
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: defense-evasion
+  technique: T1564.004

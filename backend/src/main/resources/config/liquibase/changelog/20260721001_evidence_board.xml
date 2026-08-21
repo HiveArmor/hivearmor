@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        S-4A: Evidence Board persistence schema.
+        Creates four tables that back the investigation evidence board:
+        hive_evidence_item, hive_evidence_board, hive_evidence_placement,
+        hive_evidence_relationship.
+    -->
+
+    <!-- 1. Evidence items (the actual cards) -->
+    <changeSet id="20260721001-1" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_evidence_item">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="incident_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- ALERT | NOTE | EXTERNAL_URL | ARTIFACT -->
+            <column name="item_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="title" type="varchar(512)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="content" type="text">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="source_ref" type="varchar(512)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="severity_hint" type="integer">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="created_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="hive_evidence_item"
+                     indexName="idx_evidence_item_incident_id">
+            <column name="incident_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- 2. Evidence boards (one per incident, can have multiples later) -->
+    <changeSet id="20260721001-2" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_evidence_board">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="incident_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="name" type="varchar(255)" defaultValue="Main Board">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="hive_evidence_board"
+                     indexName="idx_evidence_board_incident_id">
+            <column name="incident_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- 3. Placements (position + size of each item on a board) -->
+    <changeSet id="20260721001-3" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_evidence_placement">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="board_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="evidence_item_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="pos_x" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="pos_y" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="width" type="integer" defaultValueNumeric="200">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="height" type="integer" defaultValueNumeric="150">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="schema_version" type="integer" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="hive_evidence_placement"
+                baseColumnNames="board_id"
+                constraintName="fk_evidence_placement_board"
+                referencedTableName="hive_evidence_board"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                baseTableName="hive_evidence_placement"
+                baseColumnNames="evidence_item_id"
+                constraintName="fk_evidence_placement_item"
+                referencedTableName="hive_evidence_item"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <createIndex tableName="hive_evidence_placement"
+                     indexName="idx_evidence_placement_board_id">
+            <column name="board_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- 4. Relationships (edges between evidence items) -->
+    <changeSet id="20260721001-4" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_evidence_relationship">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="incident_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="source_item_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="target_item_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- RELATED | CAUSED_BY | LEADS_TO | CONTRADICTS -->
+            <column name="relationship_type" type="varchar(64)" defaultValue="RELATED">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="label" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="created_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="hive_evidence_relationship"
+                baseColumnNames="source_item_id"
+                constraintName="fk_evidence_rel_source"
+                referencedTableName="hive_evidence_item"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                baseTableName="hive_evidence_relationship"
+                baseColumnNames="target_item_id"
+                constraintName="fk_evidence_rel_target"
+                referencedTableName="hive_evidence_item"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <createIndex tableName="hive_evidence_relationship"
+                     indexName="idx_evidence_relationship_incident_id">
+            <column name="incident_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

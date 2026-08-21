@@ -15,6 +15,9 @@ import java.util.Optional;
 
 @Repository
 public interface UtmComplianceControlConfigRepository extends JpaRepository<UtmComplianceControlConfig, Long>, JpaSpecificationExecutor<UtmComplianceControlConfig> {
+
+    Optional<UtmComplianceControlConfig> findByStandardSectionIdAndControlName(Long standardSectionId, String controlName);
+
     @Query("""
         SELECT c FROM UtmComplianceControlConfig c
         LEFT JOIN FETCH c.section s

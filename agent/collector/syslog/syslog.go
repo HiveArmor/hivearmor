@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"github.com/hivearmor/agent/collector/configwatcher"
 	"github.com/hivearmor/agent/collector/schema"
 	"github.com/hivearmor/agent/config"
@@ -17,7 +17,7 @@ import (
 type SyslogCollector struct {
 	instances map[string]*syslogInstance
 	mu        sync.RWMutex
-	queue     chan *plugins.Log
+	queue     chan<- *plugins.Log
 }
 
 // New creates a new SyslogCollector.
@@ -42,7 +42,7 @@ func (sc *SyslogCollector) Stop() {
 
 // Start begins watching for configuration changes using fsnotify.
 // It performs an initial reconciliation and then reacts to config file changes.
-func (sc *SyslogCollector) Start(ctx context.Context, queue chan *plugins.Log) {
+func (sc *SyslogCollector) Start(ctx context.Context, queue chan<- *plugins.Log) {
 	sc.queue = queue
 	configwatcher.Watch(ctx, "syslog collector", sc.reconcile)
 }

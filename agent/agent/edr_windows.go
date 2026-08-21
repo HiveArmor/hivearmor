@@ -3,6 +3,7 @@
 package agent
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,6 +14,12 @@ import (
 )
 
 func startEdrCollectorOS(cnf *config.Config) {
+	StartWindowsEdrCollector(cnf)
+}
+
+func startEdrCollectorWithContextOS(cnf *config.Config, ctx context.Context) {
+	// Windows ETW collector started separately in serv/service.go.
+	// The legacy WMIC-based polling is being phased out.
 	StartWindowsEdrCollector(cnf)
 }
 

@@ -5,6 +5,7 @@ import com.hivearmor.service.grpc.DeleteRequest;
 import com.hivearmor.service.grpc.ListRequest;
 import com.hivearmor.config.Constants;
 import com.hivearmor.security.SecurityUtils;
+import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.service.grpc.*;
 import com.hivearmor.web.rest.errors.AgentNotfoundException;
 import com.hivearmor.web.rest.vm.AgentRequestVM;
@@ -15,9 +16,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.time.Instant;
 
 @Service
 public class AgentGrpcService {
@@ -34,6 +37,144 @@ public class AgentGrpcService {
 
     public ListAgentsResponseDTO listAgents(ListRequest request) throws Exception {
         return mapToListAgentsResponseDTO(blockingStub.listAgents(request));
+    }
+
+    public EnrollmentTokenCreatedDTO createEnrollmentToken(long tenantId, EnrollmentTokenCreateDTO request, String actor) {
+        CreateEnrollmentTokenRequest grpcRequest = CreateEnrollmentTokenRequest.newBuilder()
+            .setTenantId(tenantId)
+            .setPolicyId(request.policyId())
+            .setPlatform(request.platform().toLowerCase())
+            .setExpiresAt(toTimestamp(request.expiresAt()))
+            .setMaxUses(request.maxUses())
+            .setCreatedBy(actor)
+            .build();
+        CreateEnrollmentTokenResponse response = blockingStub.createEnrollmentToken(grpcRequest);
+        return new EnrollmentTokenCreatedDTO(toEnrollmentDTO(response.getEnrollment()), response.getToken());
+    }
+
+    public List<EnrollmentTokenDTO> listEnrollmentTokens(long tenantId, int page, int size) {
+        ListEnrollmentTokensResponse response = blockingStub.listEnrollmentTokens(
+            ListEnrollmentTokensRequest.newBuilder().setTenantId(tenantId).setPageNumber(page).setPageSize(size).build());
+        return response.getRowsList().stream().map(this::toEnrollmentDTO).toList();
+    }
+
+    public int countEnrollmentTokens(long tenantId) {
+        return blockingStub.listEnrollmentTokens(
+            ListEnrollmentTokensRequest.newBuilder().setTenantId(tenantId).setPageNumber(0).setPageSize(1).build()).getTotal();
+    }
+
+    public EnrollmentTokenDTO revokeEnrollmentToken(long tenantId, String id, EnrollmentTokenRevokeDTO request, String actor) {
+        EnrollmentToken response = blockingStub.revokeEnrollmentToken(RevokeEnrollmentTokenRequest.newBuilder()
+            .setTenantId(tenantId).setId(id).setReason(request.reason()).setExpectedVersion(request.expectedVersion())
+            .setRevokedBy(actor).build());
+        return toEnrollmentDTO(response);
+    }
+
+    public AgentCredentialDTO rotateAgentCredential(long tenantId, long agentId, String actor, String reason) {
+        return toAgentCredentialDTO(blockingStub.rotateAgentCredential(agentCredentialRequest(tenantId, agentId, actor, reason)));
+    }
+
+    public AgentCredentialDTO revokeAgentCredential(long tenantId, long agentId, String actor, String reason) {
+        return toAgentCredentialDTO(blockingStub.revokeAgentCredential(agentCredentialRequest(tenantId, agentId, actor, reason)));
+    }
+
+    private AgentCredentialRequest agentCredentialRequest(long tenantId, long agentId, String actor, String reason) {
+        if (agentId < 1 || agentId > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("agent id is outside the supported range");
+        }
+        return AgentCredentialRequest.newBuilder().setTenantId(tenantId).setAgentId((int) agentId)
+            .setActor(actor).setReason(reason).build();
+    }
+
+    public EnrollmentAuditPageDTO listEnrollmentAuditEvents(
+        long tenantId,
+        int page,
+        int size,
+        String tokenId,
+        String agentUuid,
+        String eventType
+    ) {
+        ListEnrollmentAuditEventsRequest.Builder request = ListEnrollmentAuditEventsRequest.newBuilder()
+            .setTenantId(tenantId).setPageNumber(page).setPageSize(size);
+        if (tokenId != null) {
+            request.setTokenId(tokenId);
+        }
+        if (agentUuid != null) {
+            request.setAgentUuid(agentUuid);
+        }
+        if (eventType != null) {
+            request.setEventType(eventType);
+        }
+        ListEnrollmentAuditEventsResponse response = blockingStub.listEnrollmentAuditEvents(request.build());
+        return new EnrollmentAuditPageDTO(
+            response.getRowsList().stream().map(this::toEnrollmentAuditDTO).toList(), response.getTotal());
+    }
+
+    public static final int MAX_ENROLLMENT_AUDIT_EXPORT_ROWS = 10_000;
+    public static final int ENROLLMENT_AUDIT_EXPORT_PAGE_SIZE = 100;
+
+    /**
+     * Pages the existing bounded audit RPC. Does not delete or mutate source rows.
+     */
+    public EnrollmentAuditExportDTO exportEnrollmentAuditEvents(
+        long tenantId,
+        String tokenId,
+        String agentUuid,
+        String eventType
+    ) {
+        List<EnrollmentAuditEventDTO> rows = new ArrayList<>();
+        EnrollmentAuditPageDTO page = listEnrollmentAuditEvents(
+            tenantId, 0, ENROLLMENT_AUDIT_EXPORT_PAGE_SIZE, tokenId, agentUuid, eventType);
+        long total = page.total();
+        rows.addAll(page.rows());
+        int pageNumber = 1;
+        while (rows.size() < MAX_ENROLLMENT_AUDIT_EXPORT_ROWS && rows.size() < total) {
+            EnrollmentAuditPageDTO next = listEnrollmentAuditEvents(
+                tenantId, pageNumber, ENROLLMENT_AUDIT_EXPORT_PAGE_SIZE, tokenId, agentUuid, eventType);
+            if (next.rows().isEmpty()) {
+                break;
+            }
+            for (EnrollmentAuditEventDTO row : next.rows()) {
+                if (rows.size() >= MAX_ENROLLMENT_AUDIT_EXPORT_ROWS) {
+                    break;
+                }
+                rows.add(row);
+            }
+            pageNumber++;
+        }
+        boolean truncated = rows.size() < total;
+        log.info("enrollment audit export tenant={} exported={} total={} truncated={}",
+            tenantId, rows.size(), total, truncated);
+        return new EnrollmentAuditExportDTO(List.copyOf(rows), total, truncated);
+    }
+
+    private EnrollmentTokenDTO toEnrollmentDTO(EnrollmentToken token) {
+        return new EnrollmentTokenDTO(token.getId(), token.getTenantId(), token.getPolicyId(), token.getPlatform(),
+            fromTimestamp(token.hasExpiresAt(), token.getExpiresAt()), token.getMaxUses(), token.getUseCount(),
+            fromTimestamp(token.hasCreatedAt(), token.getCreatedAt()), token.getCreatedBy(),
+            fromTimestamp(token.hasLastUsedAt(), token.getLastUsedAt()), fromTimestamp(token.hasRevokedAt(), token.getRevokedAt()),
+            token.getRevokedBy(), token.getRevocationReason(), token.getVersion(), token.getStatus());
+    }
+
+    private AgentCredentialDTO toAgentCredentialDTO(AgentCredentialResponse response) {
+        return new AgentCredentialDTO(response.getAgentId(), response.getAgentUuid(), response.getCredentialVersion(),
+            response.getKey(), fromTimestamp(response.hasRevokedAt(), response.getRevokedAt()));
+    }
+
+    private EnrollmentAuditEventDTO toEnrollmentAuditDTO(EnrollmentAuditEvent event) {
+        return new EnrollmentAuditEventDTO(
+            event.getId(), event.getTenantId(), event.getEventType(), event.getActor(), event.getReason(),
+            event.getTokenId(), Integer.toUnsignedLong(event.getAgentId()), event.getAgentUuid(), event.getPolicyId(),
+            event.getPlatform(), Integer.toUnsignedLong(event.getCredentialVersion()), event.getEnrollmentVersion(),
+            fromTimestamp(event.hasOccurredAt(), event.getOccurredAt()));
+    }
+
+    private com.google.protobuf.Timestamp toTimestamp(Instant value) {
+        return com.google.protobuf.Timestamp.newBuilder().setSeconds(value.getEpochSecond()).setNanos(value.getNano()).build();
+    }
+
+    private Instant fromTimestamp(boolean present, com.google.protobuf.Timestamp value) {
+        return present ? Instant.ofEpochSecond(value.getSeconds(), value.getNanos()) : null;
     }
 
     public ListAgentsCommandsResponseDTO listAgentCommands(ListRequest request) throws Exception {
@@ -202,16 +343,13 @@ public class AgentGrpcService {
                 throw e;
             }
 
-            DeleteRequest request = DeleteRequest.newBuilder().setDeletedBy(currentUser).build();
-
-            Metadata customHeaders = new Metadata();
-            customHeaders.put(Metadata.Key.of("key", Metadata.ASCII_STRING_MARSHALLER), agent.getAgentKey());
-            customHeaders.put(Metadata.Key.of("id", Metadata.ASCII_STRING_MARSHALLER), String.valueOf(agent.getId()));
-            customHeaders.put(Metadata.Key.of("type", Metadata.ASCII_STRING_MARSHALLER), Constants.AGENT_HEADER);
-
-            Channel intercept = ClientInterceptors.intercept(grpcManagedChannel, MetadataUtils.newAttachHeadersInterceptor(customHeaders));
-            AgentServiceGrpc.AgentServiceBlockingStub newStub = AgentServiceGrpc.newBlockingStub(intercept);
-            newStub.deleteAgent(request);
+            Long tenantId = TenantContext.getClientId();
+            if (tenantId == null || tenantId <= 0) {
+                throw new IllegalArgumentException("select an authorized tenant before deleting an agent");
+            }
+            DeleteRequest request = DeleteRequest.newBuilder().setDeletedBy(currentUser)
+                .setAgentId(agent.getId()).setTenantId(tenantId).build();
+            blockingStub.deleteAgent(request);
 
         } catch (AgentNotfoundException e) {
             throw e;
@@ -225,6 +363,22 @@ public class AgentGrpcService {
             log.error(msg);
             throw new RuntimeException(msg);
         }
+    }
+
+    /**
+     * Confirms a presented agent secret. The secret is never returned or logged.
+     */
+    public ConnectorIdentity verifyAgentIdentity(int connectorId, String presentedKey) {
+        VerifyConnectorIdentityResponse response = blockingStub.verifyConnectorIdentity(
+            VerifyConnectorIdentityRequest.newBuilder()
+                .setConnectorId(connectorId)
+                .setPresentedKey(presentedKey)
+                .setConnectorType(ConnectorType.AGENT)
+                .build());
+        return new ConnectorIdentity(response.getId(), response.getUuid(), response.getTenantId());
+    }
+
+    public record ConnectorIdentity(int id, String uuid, long tenantId) {
     }
 
     private Metadata getCustomHeaders (AgentDTO agent) {

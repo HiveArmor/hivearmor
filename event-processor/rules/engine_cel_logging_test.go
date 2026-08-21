@@ -8,8 +8,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hivearmor/sdk/plugins"
 	"github.com/stretchr/testify/assert"
-	"github.com/threatwinds/go-sdk/plugins"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // withTestRules temporarily replaces the rule store for the duration of fn.
@@ -150,6 +151,30 @@ func TestEvaluate_ValidRuleProducesAlertWithoutLogging(t *testing.T) {
 	})
 
 	assert.NotContains(t, buf.String(), "CEL error", "no error log for a valid rule")
+}
+
+func TestEvaluate_ComposedSafeLowercaseRegexProducesAlert(t *testing.T) {
+	rule := &Rule{
+		ID:        9902,
+		Name:      "encoded PowerShell",
+		DataTypes: []string{"powershell"},
+		Where:     `regexMatch(toLower(safe("log.scriptBlock", "")), "(-encodedcommand|-enc|-e)[[:space:]]+[a-zA-Z0-9+/=]{20,}")`,
+		Impact:    &Impact{Confidentiality: 3, Integrity: 3, Availability: 2},
+	}
+	event := makeTestEvent("powershell", "ev-powershell")
+	event.Log = map[string]*structpb.Value{
+		"scriptBlock": structpb.NewStringValue("powershell.exe -NoProfile -EncodedCommand SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAKQA="),
+	}
+
+	withTestRules([]*Rule{rule}, func() {
+		alerts := Evaluate(event)
+		if assert.Len(t, alerts, 1) {
+			assert.Equal(t, "encoded PowerShell", alerts[0].Name)
+			if assert.Len(t, alerts[0].Events, 1) {
+				assert.Equal(t, "ev-powershell", alerts[0].Events[0].Id)
+			}
+		}
+	})
 }
 
 func TestShouldLogCELError_ConcurrentSafety(t *testing.T) {

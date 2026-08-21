@@ -1,0 +1,34 @@
+.add-alert-filter { position: relative; }
+.add-alert-filter__trigger { display: flex; align-items: center; gap: 5px; padding-inline: 10px !important; cursor: pointer; white-space: nowrap; }
+
+.add-alert-filter__popover { position: absolute; z-index: 120; top: calc(100% + 7px); right: 0; width: min(370px, calc(100vw - 32px)); overflow: hidden; border: 1px solid var(--ha-border-default); border-radius: 10px; background: var(--ha-surface-overlay); box-shadow: var(--ha-shadow-medium); color: var(--ha-foreground-primary); }
+.add-alert-filter__popover > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 11px 12px; border-bottom: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
+.add-alert-filter__popover > header strong,
+.add-alert-filter__popover > header span { display: block; }
+.add-alert-filter__popover > header strong { font: var(--ha-type-compact); font-weight: 700; }
+.add-alert-filter__popover > header span { margin-top: 2px; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
+.add-alert-filter__popover > header button { display: grid; width: 27px; height: 27px; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--ha-foreground-secondary); cursor: pointer; }
+.add-alert-filter__popover > header button:hover { background: var(--ha-surface-hover); color: var(--ha-foreground-primary); }
+
+.add-alert-filter__body { display: grid; gap: 11px; padding: 12px; }
+.add-alert-filter__body label:not(.ha-compact-select) > span,
+.add-alert-filter__join legend { display: block; margin-bottom: 5px; color: var(--ha-foreground-secondary); font: var(--ha-type-metadata); font-weight: 650; }
+.add-alert-filter__body input { width: 100%; min-height: 34px; padding: 0 8px; border: 1px solid var(--ha-border-default); border-radius: 7px; outline: 0; background: var(--ha-surface-input); color: var(--ha-foreground-primary); font: var(--ha-type-compact); }
+.add-alert-filter__body input:focus { border-color: var(--ha-border-strong); }
+.add-alert-filter__condition { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 9px; }
+.add-alert-filter__condition > *, .add-alert-filter__value { min-width: 0; }
+.add-alert-filter__join { min-width: 0; margin: 0; padding: 0; border: 0; }
+.add-alert-filter__join > div { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.add-alert-filter__join button { display: flex; min-height: 38px; align-items: center; gap: 7px; padding: 5px 8px; border: 1px solid var(--ha-border-subtle); border-radius: 7px; background: var(--ha-surface-input); color: var(--ha-foreground-secondary); cursor: pointer; text-align: left; }
+.add-alert-filter__join button[data-active='true'] { border-color: color-mix(in srgb, var(--ha-action-primary) 45%, var(--ha-border-default)); background: var(--ha-surface-selected); }
+.add-alert-filter__join button strong { color: var(--ha-action-secondary); font: 11px/1 var(--ha-font-mono); }
+.add-alert-filter__join button span { color: var(--ha-foreground-tertiary); font: 10px/1.2 var(--ha-font-ui); }
+
+.add-alert-filter__popover > footer { display: flex; align-items: center; justify-content: flex-end; gap: 7px; padding: 9px 12px; border-top: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
+.add-alert-filter__popover > footer button { min-height: 32px; padding: 0 10px; border: 1px solid var(--ha-border-default); border-radius: 7px; background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); cursor: pointer; font: var(--ha-type-compact); font-weight: 650; }
+.add-alert-filter__popover > footer button:last-child { border-color: var(--ha-action-primary); background: var(--ha-action-primary); color: var(--ha-foreground-on-action); }
+.add-alert-filter__popover > footer button:disabled { border-color: var(--ha-border-subtle); background: var(--ha-action-disabled); color: var(--ha-foreground-disabled); cursor: not-allowed; }
+
+@media (max-width: 700px) {
+  .add-alert-filter__popover { position: fixed; top: auto; right: 8px; bottom: 42px; left: 80px; width: auto; }
+}

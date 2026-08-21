@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Sprint 44 — Correlated findings notes table (COR-004) -->
+    <changeSet id="20260814001" author="hivearmor">
+        <createTable tableName="finding_notes">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="finding_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="author" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mentions" type="text"/>
+            <column name="tenant_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="finding_notes" indexName="idx_finding_notes_finding">
+            <column name="finding_id"/>
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

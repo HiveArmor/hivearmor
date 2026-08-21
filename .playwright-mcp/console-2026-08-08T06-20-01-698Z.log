@@ -1,0 +1,24 @@
+[     159ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     225ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     244ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     317ms] [WARNING] AG Grid: warning #2 Visit https://www.ag-grid.com/react-data-grid/errors/2?_version_=36.0.0&nodeId=ent-ip-203-0-113-88 
+  Alternatively register the ValidationModule to see the full message in the console. @ http://localhost:3000/node_modules/.vite/deps/ag-grid-community.js?v=d60f55b8:6343
+[     317ms] [WARNING] AG Grid: warning #2 Visit https://www.ag-grid.com/react-data-grid/errors/2?_version_=36.0.0&nodeId=ent-ip-203-0-113-99 
+  Alternatively register the ValidationModule to see the full message in the console. @ http://localhost:3000/node_modules/.vite/deps/ag-grid-community.js?v=d60f55b8:6343
+[     317ms] [WARNING] AG Grid: warning #2 Visit https://www.ag-grid.com/react-data-grid/errors/2?_version_=36.0.0&nodeId=ent-ip-198-51-100-30 
+  Alternatively register the ValidationModule to see the full message in the console. @ http://localhost:3000/node_modules/.vite/deps/ag-grid-community.js?v=d60f55b8:6343
+[   30219ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   60219ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   90220ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  120222ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  122058ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[  122156ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  122166ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  122200ms] [WARNING] AG Grid: warning #2 Visit https://www.ag-grid.com/react-data-grid/errors/2?_version_=36.0.0&nodeId=ent-ip-203-0-113-88 
+  Alternatively register the ValidationModule to see the full message in the console. @ http://localhost:3000/node_modules/.vite/deps/ag-grid-community.js?v=d60f55b8:6343
+[  122200ms] [WARNING] AG Grid: warning #2 Visit https://www.ag-grid.com/react-data-grid/errors/2?_version_=36.0.0&nodeId=ent-ip-203-0-113-99 
+  Alternatively register the ValidationModule to see the full message in the console. @ http://localhost:3000/node_modules/.vite/deps/ag-grid-community.js?v=d60f55b8:6343
+[  122200ms] [WARNING] AG Grid: warning #2 Visit https://www.ag-grid.com/react-data-grid/errors/2?_version_=36.0.0&nodeId=ent-ip-198-51-100-30 
+  Alternatively register the ValidationModule to see the full message in the console. @ http://localhost:3000/node_modules/.vite/deps/ag-grid-community.js?v=d60f55b8:6343
+[  152116ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  182120ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0

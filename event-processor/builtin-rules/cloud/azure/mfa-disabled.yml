@@ -1,0 +1,36 @@
+id: ha-azure-002
+title: Multi-Factor Authentication Disabled for User
+status: stable
+description: Detects when MFA is disabled for an Azure Active Directory user account, which weakens authentication security and may indicate an attacker preparing for credential-based access.
+logsource:
+  product: azure
+  service: auditlogs
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.T1556.006
+detection:
+  selection:
+    operationName: Disable Strong Authentication
+    resultType: Success
+  condition: selection
+falsepositives:
+  - Authorized identity administrators managing MFA exemption policies
+  - Break-glass accounts with pre-approved MFA exclusions
+fields:
+  - operationName
+  - initiatedBy.user.userPrincipalName
+  - targetResources.userPrincipalName
+  - resultType
+impact:
+  confidentiality: high
+  integrity: high
+  availability: low
+deduplicateBy:
+  - initiatedBy.user.userPrincipalName
+  - targetResources.userPrincipalName
+groupBy:
+  - initiatedBy.user.userPrincipalName
+mitre:
+  tactic: defense-evasion
+  technique: T1556.006

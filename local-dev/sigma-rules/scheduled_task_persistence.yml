@@ -1,0 +1,36 @@
+title: Suspicious Scheduled Task Creation
+id: e6b8a1d5-0f7c-4e4b-d9a3-6c5f4d1e8a0b
+status: test
+level: medium
+description: Detects creation of scheduled tasks with suspicious command patterns
+author: HiveArmor Threat Research
+date: 2024/06/15
+modified: 2025/04/01
+references:
+  - https://attack.mitre.org/techniques/T1053/005/
+tags:
+  - attack.persistence
+  - attack.execution
+  - attack.t1053.005
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection_tool:
+    Image|endswith:
+      - '\schtasks.exe'
+      - '\at.exe'
+  selection_create:
+    CommandLine|contains: '/create'
+  selection_suspicious:
+    CommandLine|contains:
+      - 'powershell'
+      - 'cmd /c'
+      - 'wscript'
+      - 'cscript'
+      - 'mshta'
+      - 'rundll32'
+  condition: selection_tool and selection_create and selection_suspicious
+falsepositives:
+  - Administrative maintenance scripts
+  - Software deployment tools

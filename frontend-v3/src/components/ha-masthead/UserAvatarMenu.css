@@ -1,0 +1,70 @@
+.ha-user-menu { position: relative; min-width: 0; }
+
+.ha-user-menu__trigger {
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  gap: 9px;
+  overflow: hidden;
+  padding: 5px 7px;
+  border: 1px solid transparent;
+  border-radius: var(--ha-radius-control);
+  background: transparent;
+  color: var(--ha-foreground-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.ha-user-menu__trigger:hover,
+.ha-user-menu__trigger[aria-expanded='true'] {
+  border-color: var(--ha-border-subtle);
+  background: var(--ha-surface-hover);
+  color: var(--ha-foreground-primary);
+}
+
+.ha-user-menu__avatar {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  place-items: center;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  background: var(--ha-surface-selected);
+  color: var(--ha-action-secondary);
+  font: 10px/1 var(--ha-font-ui);
+  font-weight: 750;
+}
+
+.ha-user-menu__identity { min-width: 0; flex: 1; }
+.ha-user-menu__identity strong,
+.ha-user-menu__identity small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-user-menu__identity strong { color: var(--ha-foreground-primary); font: var(--ha-type-compact); font-weight: 650; }
+.ha-user-menu__identity small { margin-top: 1px; color: var(--ha-foreground-tertiary); font: 9px/1.2 var(--ha-font-ui); }
+.ha-user-menu[data-compact='true'] .ha-user-menu__trigger { justify-content: center; padding-inline: 0; }
+.ha-user-menu[data-compact='true'] .ha-user-menu__identity { display: none; }
+
+.ha-user-menu__scrim { position: fixed; z-index: 198; inset: 0; border: 0; background: transparent; cursor: default; }
+.ha-user-menu__popover {
+  position: fixed;
+  z-index: 200;
+  left: 8px;
+  bottom: 98px;
+  width: 224px;
+  overflow: hidden;
+  padding: 5px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 10px;
+  background: var(--ha-surface-elevated);
+  box-shadow: var(--ha-shadow-medium);
+}
+.ha-user-menu[data-placement='bottom'] .ha-user-menu__popover { top: calc(var(--ha-masthead-height) + 6px); bottom: auto; right: 8px; left: auto; }
+.ha-user-menu__summary { padding: 7px 9px 9px; border-bottom: 1px solid var(--ha-border-subtle); }
+.ha-user-menu__summary strong,
+.ha-user-menu__summary span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ha-user-menu__summary strong { color: var(--ha-foreground-primary); font: var(--ha-type-compact); font-weight: 700; }
+.ha-user-menu__summary span { margin-top: 2px; color: var(--ha-foreground-tertiary); font: 9px/1.2 var(--ha-font-ui); }
+.ha-user-menu__popover > button { display: flex; width: 100%; min-height: 36px; align-items: center; gap: 9px; padding: 0 9px; border: 0; border-radius: 6px; background: transparent; color: var(--ha-foreground-secondary); cursor: pointer; text-align: left; font: var(--ha-type-compact); }
+.ha-user-menu__popover > button:hover { background: var(--ha-surface-hover); color: var(--ha-foreground-primary); }
+.ha-user-menu__popover > button[data-tone='danger'] { color: var(--ha-severity-critical); }
+.ha-user-menu__separator { display: block; height: 1px; margin: 4px; background: var(--ha-border-subtle); }

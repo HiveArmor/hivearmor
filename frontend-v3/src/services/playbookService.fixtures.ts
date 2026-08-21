@@ -1,0 +1,218 @@
+import type { Playbook, PlaybookAuditEntry, PlaybookExecution } from '../types/playbook';
+
+import { foundationPlaybookListItems } from '@/pages/response/response.fixtures';
+
+const legacyFixturePlaybooks: Playbook[] = [
+  {
+    id: 1,
+    name: 'Isolate Compromised Host',
+    description: 'Immediately quarantines a host upon confirmed compromise — blocks network, notifies SOC.',
+    triggerType: 'alert-triggered',
+    active: true,
+    runCount: 47,
+    lastRunAt: '2026-08-03T14:22:00Z',
+    lastRunStatus: 'success',
+    steps: [
+      { stepIndex: 0, stepType: 'condition', label: 'Verify alert severity >= High', config: {} },
+      { stepIndex: 1, stepType: 'action', label: 'Block host at firewall', config: {} },
+      { stepIndex: 2, stepType: 'action', label: 'Disable AD account', config: {} },
+      { stepIndex: 3, stepType: 'action', label: 'Notify SOC channel', config: {} },
+    ],
+  },
+  {
+    id: 2,
+    name: 'Phishing Response',
+    description: 'Automated phishing triage — extract IOCs, check reputation, quarantine mailbox.',
+    triggerType: 'alert-triggered',
+    active: true,
+    runCount: 112,
+    lastRunAt: '2026-08-04T08:15:00Z',
+    lastRunStatus: 'success',
+    steps: [
+      { stepIndex: 0, stepType: 'action', label: 'Extract URLs and attachments', config: {} },
+      { stepIndex: 1, stepType: 'action', label: 'Check URL reputation', config: {} },
+      { stepIndex: 2, stepType: 'condition', label: 'If malicious', config: {} },
+      { stepIndex: 3, stepType: 'action', label: 'Quarantine mailbox', config: {} },
+      { stepIndex: 4, stepType: 'action', label: 'Block sender domain', config: {} },
+    ],
+  },
+  {
+    id: 3,
+    name: 'Threat Intel Enrichment',
+    description: 'Enriches alerts with threat intelligence feeds — VirusTotal, AbuseIPDB, MITRE mapping.',
+    triggerType: 'alert-triggered',
+    active: true,
+    runCount: 1024,
+    lastRunAt: '2026-08-04T09:30:00Z',
+    lastRunStatus: 'success',
+    steps: [
+      { stepIndex: 0, stepType: 'action', label: 'Query VirusTotal', config: {} },
+      { stepIndex: 1, stepType: 'action', label: 'Query AbuseIPDB', config: {} },
+      { stepIndex: 2, stepType: 'action', label: 'Map to MITRE ATT&CK', config: {} },
+      { stepIndex: 3, stepType: 'action', label: 'Update alert tags', config: {} },
+    ],
+  },
+  {
+    id: 4,
+    name: 'Vulnerability Scan — Weekly',
+    description: 'Scheduled weekly vulnerability scan of critical assets.',
+    triggerType: 'scheduled',
+    active: true,
+    runCount: 18,
+    lastRunAt: '2026-08-02T02:00:00Z',
+    lastRunStatus: 'success',
+    steps: [
+      { stepIndex: 0, stepType: 'action', label: 'Initiate Nessus scan', config: {} },
+      { stepIndex: 1, stepType: 'delay', label: 'Wait for completion (30m)', config: {} },
+      { stepIndex: 2, stepType: 'action', label: 'Import results', config: {} },
+      { stepIndex: 3, stepType: 'action', label: 'Create tickets for critical CVEs', config: {} },
+    ],
+  },
+  {
+    id: 5,
+    name: 'Password Spray Detection Response',
+    description: 'Responds to detected password spray attacks — locks accounts, alerts security team.',
+    triggerType: 'alert-triggered',
+    active: false,
+    runCount: 3,
+    lastRunAt: '2026-07-28T11:45:00Z',
+    lastRunStatus: 'failure',
+    steps: [
+      { stepIndex: 0, stepType: 'condition', label: 'Check failed login count > 50', config: {} },
+      { stepIndex: 1, stepType: 'action', label: 'Lock targeted accounts', config: {} },
+      { stepIndex: 2, stepType: 'action', label: 'Block source IPs', config: {} },
+      { stepIndex: 3, stepType: 'action', label: 'Page on-call analyst', config: {} },
+    ],
+  },
+  {
+    id: 6,
+    name: 'Manual Investigation',
+    description: 'Template for ad-hoc manual investigations — collects context and opens case.',
+    triggerType: 'manual',
+    active: true,
+    runCount: 7,
+    lastRunAt: '2026-08-01T16:00:00Z',
+    lastRunStatus: 'success',
+    steps: [
+      { stepIndex: 0, stepType: 'action', label: 'Collect host telemetry', config: {} },
+      { stepIndex: 1, stepType: 'action', label: 'Snapshot memory', config: {} },
+      { stepIndex: 2, stepType: 'action', label: 'Open investigation case', config: {} },
+    ],
+  },
+  {
+    id: 7,
+    name: 'Ransomware Containment',
+    description: 'Emergency containment for ransomware — isolate segment, snapshot affected systems.',
+    triggerType: 'alert-triggered',
+    active: true,
+    runCount: 2,
+    lastRunAt: '2026-07-15T03:12:00Z',
+    lastRunStatus: 'success',
+    steps: [
+      { stepIndex: 0, stepType: 'action', label: 'Isolate network segment', config: {} },
+      { stepIndex: 1, stepType: 'action', label: 'Snapshot affected VMs', config: {} },
+      { stepIndex: 2, stepType: 'action', label: 'Disable lateral movement paths', config: {} },
+      { stepIndex: 3, stepType: 'action', label: 'Escalate to incident commander', config: {} },
+      { stepIndex: 4, stepType: 'action', label: 'Notify CISO', config: {} },
+    ],
+  },
+];
+
+/** Canonical fixture detail projection aligned with the Phase 7 library IDs. */
+export const fixturePlaybooks: Playbook[] = foundationPlaybookListItems.map((item, index) => {
+  const template = legacyFixturePlaybooks[index % legacyFixturePlaybooks.length];
+  return {
+    id: Number(item.id),
+    name: item.name,
+    description: item.description,
+    triggerType: item.triggerType === 'MANUAL' ? 'manual' : item.triggerType === 'SCHEDULED' ? 'scheduled' : 'alert-triggered',
+    active: item.status === 'ACTIVE',
+    runCount: item.runCount,
+    lastRunAt: item.lastRunAt,
+    lastRunStatus: item.lastRunStatus === 'awaiting_approval' ? 'running' : item.lastRunStatus,
+    steps: template.steps.map((step, stepIndex) => ({ ...step, stepIndex, config: { ...step.config } })),
+  };
+});
+
+export const fixturePlaybookExecutions: PlaybookExecution[] = [
+  {
+    executionId: 'exec-001',
+    playbookId: 1,
+    playbookName: 'Isolate Compromised Host',
+    startedAt: '2026-08-03T14:22:00Z',
+    completedAt: '2026-08-03T14:22:08Z',
+    durationSeconds: 8,
+    status: 'success',
+    triggeredBy: 'Alert Rule: Critical Host Compromise',
+  },
+  {
+    executionId: 'exec-002',
+    playbookId: 2,
+    playbookName: 'Phishing Response',
+    startedAt: '2026-08-04T08:15:00Z',
+    completedAt: '2026-08-04T08:15:12Z',
+    durationSeconds: 12,
+    status: 'success',
+    triggeredBy: 'Alert Rule: Phishing Email Detected',
+  },
+  {
+    executionId: 'exec-003',
+    playbookId: 5,
+    playbookName: 'Password Spray Detection Response',
+    startedAt: '2026-07-28T11:45:00Z',
+    completedAt: '2026-07-28T11:45:45Z',
+    durationSeconds: 45,
+    status: 'failure',
+    triggeredBy: 'Alert Rule: Password Spray',
+  },
+];
+
+/** Fictional audit records used only by an explicitly enabled development fixture build. */
+export const fixturePlaybookAudit: PlaybookAuditEntry[] = [
+  {
+    id: 'audit-pb-1-005',
+    occurredAt: '2026-08-03T14:22:08Z',
+    action: 'EXECUTED',
+    actor: 'Critical Host Compromise',
+    actorRole: 'Detection rule',
+    summary: 'Execution completed successfully in 8 seconds; four governed actions recorded.',
+    version: 4,
+    correlationId: 'exec-001',
+  },
+  {
+    id: 'audit-pb-1-004',
+    occurredAt: '2026-08-02T11:18:00Z',
+    action: 'ACTIVATED',
+    actor: 'Maya Chen',
+    actorRole: 'SOC Manager',
+    summary: 'Activated version 4 after connector and rollback readiness checks passed.',
+    version: 4,
+  },
+  {
+    id: 'audit-pb-1-003',
+    occurredAt: '2026-08-02T11:12:00Z',
+    action: 'VALIDATED',
+    actor: 'HiveArmor policy engine',
+    actorRole: 'System',
+    summary: 'Definition, permissions, connector health, approval policy, and rollback path validated.',
+    version: 4,
+  },
+  {
+    id: 'audit-pb-1-002',
+    occurredAt: '2026-08-02T10:47:00Z',
+    action: 'PUBLISHED',
+    actor: 'Maya Chen',
+    actorRole: 'SOC Manager',
+    summary: 'Published immutable version 4 with two-person approval for disruptive actions.',
+    version: 4,
+  },
+  {
+    id: 'audit-pb-1-001',
+    occurredAt: '2026-07-18T09:30:00Z',
+    action: 'CREATED',
+    actor: 'Maya Chen',
+    actorRole: 'Detection Engineer',
+    summary: 'Created the initial endpoint-containment playbook draft.',
+    version: 1,
+  },
+];

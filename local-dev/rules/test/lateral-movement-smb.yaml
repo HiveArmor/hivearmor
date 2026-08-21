@@ -1,0 +1,85 @@
+# Correlation Rule: Lateral Movement via SMB
+# Detects lateral movement by correlating a successful authentication event
+# followed by a network connection to port 445 (SMB) on the same destination host
+# within a 5-minute window. This sequence indicates an attacker authenticating to a
+# remote host and then accessing shared resources via SMB — a hallmark of lateral
+# movement in enterprise environments.
+# MITRE ATT&CK: T1021.002 — Remote Services: SMB/Windows Admin Shares (Lateral Movement)
+
+id: rule-lateral-movement-smb
+name: "Lateral Movement via SMB"
+description: "Detects authentication followed by SMB connection to the same destination host within 5 minutes, indicating lateral movement"
+severity: high
+enabled: true
+
+mitre:
+  tactic: "Lateral Movement"
+  technique: "T1021.002"
+  subtechnique: ""
+  name: "Remote Services: SMB/Windows Admin Shares"
+
+# Match condition — which events feed this rule
+# This rule consumes events from two categories: authentication and network.
+# The sequence correlation engine collects events matching either category and
+# evaluates the ordering constraint defined in the CEL expression below.
+match:
+  index: "v3-hive-log-*"
+  filter:
+    - field: "event.category"
+      operator: "oneOf"
+      value: ["authentication", "network"]
+
+# Correlation — CEL expression for sequence detection
+# Type "sequence" means the engine looks for an ordered chain of events sharing the
+# same groupBy key within the specified time window.
+#
+# Sequence logic:
+#   Step 1: An authentication event with a successful outcome
+#           (event.category == "authentication" && event.outcome == "success")
+#   Step 2: A network connection to destination port 445 (SMB)
+#           (event.category == "network" && destination.port == 445)
+#
+# Both events must share the same source.ip AND destination.ip (enforced by groupBy).
+# The afterEvents pattern ensures Step 2 occurs AFTER Step 1 within the 5-minute window.
+#
+# The CEL expression uses the afterEvents() function which is the engine's built-in
+# correlation window operator. It evaluates to true when the second condition is observed
+# following the first condition within the configured timeWindow for the same group key.
+correlation:
+  type: "sequence"
+  groupBy: ["source.ip", "destination.ip"]
+  timeWindow: "5m"
+  sequence:
+    - name: "auth_success"
+      filter:
+        - field: "event.category"
+          operator: "equals"
+          value: "authentication"
+        - field: "event.outcome"
+          operator: "equals"
+          value: "success"
+    - name: "smb_connection"
+      filter:
+        - field: "event.category"
+          operator: "equals"
+          value: "network"
+        - field: "destination.port"
+          operator: "equals"
+          value: 445
+  cel: |
+    afterEvents(auth_success, smb_connection, "5m")
+
+# Alert template — generated when the sequence correlation condition is met
+alert:
+  title: "Lateral Movement via SMB: {{source.ip}} → {{destination.ip}}"
+  description: "Authentication followed by SMB connection from {{source.ip}} to {{destination.ip}} within 5 minutes"
+  riskScore: 80
+  entities:
+    - field: "source.ip"
+      type: "ip"
+    - field: "destination.ip"
+      type: "ip"
+    - field: "host.name"
+      type: "host"
+    - field: "user.name"
+      type: "user"

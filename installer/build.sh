@@ -5,12 +5,12 @@ set -e  # Exit on error
 # ============================================
 # CONFIGURATION - Edit these values
 # ============================================
-DEFAULT_BRANCH="prod"
-INSTALLER_VERSION="v11.0.0-dev.1"
-CM_ENCRYPT_SALT="your-encryption-salt-here"
-CM_SIGN_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
+DEFAULT_BRANCH="${DEFAULT_BRANCH:-prod}"
+INSTALLER_VERSION="${INSTALLER_VERSION:-v11.0.0-dev.1}"
+CM_ENCRYPT_SALT="${CM_ENCRYPT_SALT:-your-encryption-salt-here}"
+CM_SIGN_PUBLIC_KEY="${CM_SIGN_PUBLIC_KEY:------BEGIN PUBLIC KEY-----
 your-public-key-here
------END PUBLIC KEY-----"
+-----END PUBLIC KEY-----}"
 
 # ============================================
 # Build Process

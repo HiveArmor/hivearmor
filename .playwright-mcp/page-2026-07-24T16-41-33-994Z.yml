@@ -1,0 +1,77 @@
+- generic [ref=f51e3]:
+  - banner [ref=f51e4]:
+    - generic [ref=f51e5]: HiveArmor
+    - generic [ref=f51e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f51e13]'
+      - generic "Reconnecting..." [ref=f51e16]: 0 EPS
+      - button "Notifications" [ref=f51e18] [cursor=pointer]
+      - button "Help" [ref=f51e23] [cursor=pointer]
+      - button "User menu" [ref=f51e28] [cursor=pointer]:
+        - generic [ref=f51e29]: AA
+        - generic [ref=f51e30]: admin
+  - navigation [ref=f51e31]:
+    - generic [ref=f51e32]:
+      - generic [ref=f51e33]:
+        - generic [ref=f51e34]: COMMAND
+        - generic [ref=f51e35]:
+          - button "Analyst Queue" [ref=f51e36] [cursor=pointer]
+          - button "Alerts" [ref=f51e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f51e47] [cursor=pointer]
+          - button "Incidents" [ref=f51e54] [cursor=pointer]
+      - generic [ref=f51e61]:
+        - generic [ref=f51e62]: INVESTIGATE
+        - generic [ref=f51e63]:
+          - button "Search & Hunt" [ref=f51e64] [cursor=pointer]
+          - button "Investigations" [ref=f51e70] [cursor=pointer]
+          - button "Entities" [ref=f51e75] [cursor=pointer]
+      - generic [ref=f51e83]:
+        - generic [ref=f51e84]: DEFEND
+        - generic [ref=f51e85]:
+          - button "Detection Rules" [ref=f51e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f51e91] [cursor=pointer]
+      - generic [ref=f51e96]:
+        - generic [ref=f51e97]: POSTURE
+        - generic [ref=f51e98]:
+          - button "Assets" [ref=f51e99] [cursor=pointer]
+          - button "Identities" [ref=f51e105] [cursor=pointer]
+          - button "Active Directory" [ref=f51e113] [cursor=pointer]
+          - button "Exposure" [ref=f51e121] [cursor=pointer]
+          - button "Sensors" [ref=f51e128] [cursor=pointer]
+          - button "Compliance" [ref=f51e133] [cursor=pointer]
+      - generic [ref=f51e139]:
+        - generic [ref=f51e140]: DASHBOARDS
+        - button "Studio" [ref=f51e142] [cursor=pointer]
+      - generic [ref=f51e148]:
+        - generic [ref=f51e149]: REPORT
+        - button "Scheduled Reports" [ref=f51e151] [cursor=pointer]
+      - generic [ref=f51e157]:
+        - generic [ref=f51e158]: ADMINISTRATION
+        - generic [ref=f51e159]:
+          - button "Users" [ref=f51e160] [cursor=pointer]
+          - button "Integrations" [ref=f51e175] [cursor=pointer]
+          - button "Notifications" [ref=f51e180] [cursor=pointer]
+          - button "Audit Log" [ref=f51e186] [cursor=pointer]
+          - button "Settings" [ref=f51e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f51e199] [cursor=pointer]
+  - main [ref=f51e202]:
+    - generic [ref=f51e204]:
+      - generic [ref=f51e205]: 🚧
+      - 'heading "Multi-Tenancy: Full-Stack Development Required" [level=1] [ref=f51e206]'
+      - paragraph [ref=f51e207]: "This feature requires a complete backend implementation before the UI can be activated. The following backend work must be completed first:"
+      - generic [ref=f51e208]:
+        - heading "Backend Requirements Checklist:" [level=2] [ref=f51e209]
+        - list [ref=f51e210]:
+          - listitem [ref=f51e211]: hive_tenants PostgreSQL table
+          - listitem [ref=f51e212]: Tenant columns on all operational entities
+          - listitem [ref=f51e213]: User-to-tenant association model
+          - listitem [ref=f51e214]: Tenant enforcement middleware (X-Tenant-ID header)
+          - listitem [ref=f51e215]: OpenSearch query filter injection
+          - listitem [ref=f51e216]: Neo4j graph scoping
+          - listitem [ref=f51e217]: SSE stream partitioning
+          - listitem [ref=f51e218]: Cache partitioning
+          - listitem [ref=f51e219]: All 6 /api/ha-tenants endpoints
+        - paragraph [ref=f51e220]:
+          - text: "Gap IDs:"
+          - strong [ref=f51e221]: GAP-BE-04
+          - text: ","
+          - strong [ref=f51e222]: GAP-MT-11

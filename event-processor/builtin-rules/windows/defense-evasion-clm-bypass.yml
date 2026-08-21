@@ -1,0 +1,39 @@
+id: e7f8a9b0-c1d2-3456-efab-567890123447
+title: PowerShell Constrained Language Mode Bypass
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.T1059
+  - attack.T1059.001
+detection:
+  selection:
+    CommandLine|contains:
+      - '__PSLockdownPolicy'
+      - 'FullLanguage'
+      - 'PSLanguageMode'
+  selection_env:
+    CommandLine|contains:
+      - '$env:__PSLockdownPolicy'
+      - 'SetEnvironmentVariable'
+    CommandLine|contains:
+      - '__PSLockdownPolicy'
+  condition: selection or selection_env
+falsepositives:
+  - Authorized PowerShell testing environments
+  - Security assessment scripts
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: defense-evasion
+  technique: T1059.001

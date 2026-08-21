@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 // SequenceRule defines a multi-step detection rule.
@@ -180,12 +180,45 @@ func adversaryKey(event *plugins.Event) string {
 }
 
 func eventMap(e *plugins.Event) map[string]any {
-	return map[string]any{
-		"dataType":   e.DataType,
-		"dataSource": e.DataSource,
-		"raw":        e.Raw,
-		"action":     e.Action,
+	m := map[string]any{
+		"id":           e.Id,
+		"@timestamp":   e.Timestamp,
+		"dataType":     e.DataType,
+		"dataSource":   e.DataSource,
+		"raw":          e.Raw,
+		"action":       e.Action,
+		"actionResult": e.ActionResult,
+		"severity":     e.Severity,
+		"protocol":     e.Protocol,
 	}
+	// log fields — needed for CEL expressions like equals("log.action", ...)
+	logMap := map[string]any{}
+	for k, v := range e.Log {
+		if v != nil {
+			logMap[k] = v.AsInterface()
+		}
+	}
+	m["log"] = logMap
+
+	if e.Origin != nil {
+		m["origin"] = sideToMap(e.Origin)
+	}
+	if e.Target != nil {
+		m["target"] = sideToMap(e.Target)
+	}
+	return m
+}
+
+func sideToMap(s *plugins.Side) map[string]any {
+	m := map[string]any{
+		"ip":      s.Ip,
+		"host":    s.Host,
+		"user":    s.User,
+		"domain":  s.Domain,
+		"process": s.Process,
+		"command": s.Command,
+	}
+	return m
 }
 
 func buildSeqAlert(event *plugins.Event, rule *SequenceRule) *plugins.Alert {

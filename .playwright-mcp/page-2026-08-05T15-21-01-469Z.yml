@@ -1,0 +1,46 @@
+- generic [ref=e4]:
+  - complementary [ref=e5]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: HiveArmor
+      - generic [ref=e14]:
+        - text: Enterprise security operations
+        - heading "See the signal. Coordinate the response." [level=2] [ref=e15]
+        - paragraph [ref=e16]: Hybrid Intelligence & Visibility Engine for Advanced Response, Monitoring, Orchestration and Resilience.
+      - generic "Platform capabilities" [ref=e17]:
+        - generic [ref=e18]:
+          - strong [ref=e19]: Unified visibility
+          - text: Across tenants and telemetry
+        - generic [ref=e20]:
+          - strong [ref=e21]: Analyst-led response
+          - text: Evidence before action
+        - generic [ref=e22]:
+          - strong [ref=e23]: Operational resilience
+          - text: Health and risk in context
+  - main [ref=e24]:
+    - generic [ref=e25]:
+      - text: Secure access
+      - heading "Sign in to HiveArmor" [level=1] [ref=e26]
+      - paragraph [ref=e27]: Use your organization credentials to access the security operations workspace.
+      - form "Sign in" [ref=e28]:
+        - generic [ref=e29]:
+          - generic [ref=e31]:
+            - text: Work email or username
+            - generic [ref=e32]: "*"
+          - textbox "Work email or username" [active] [ref=e34]
+        - generic [ref=e35]:
+          - generic [ref=e37]:
+            - text: Password
+            - generic [ref=e38]: "*"
+          - generic [ref=e40]:
+            - textbox "Password" [ref=e41]
+            - button "Show password" [ref=e42] [cursor=pointer]
+        - generic [ref=e46]:
+          - generic [ref=e47] [cursor=pointer]:
+            - checkbox "Remember this device" [ref=e48]
+            - generic [ref=e49]: Remember this device
+          - button "Forgot password?" [ref=e50] [cursor=pointer]
+        - button "Sign in" [ref=e51] [cursor=pointer]
+        - button "Continue with organization SSO" [ref=e54] [cursor=pointer]
+      - generic [ref=e55]:
+        - generic [ref=e56]: Authentication service available
+        - generic [ref=e57]: Protected enterprise access

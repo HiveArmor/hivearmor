@@ -82,6 +82,28 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int AGENT_ID_FIELD_NUMBER = 2;
+  private int agentId_ = 0;
+  /**
+   * <code>uint32 agent_id = 2;</code>
+   * @return The agentId.
+   */
+  @java.lang.Override
+  public int getAgentId() {
+    return agentId_;
+  }
+
+  public static final int TENANT_ID_FIELD_NUMBER = 3;
+  private long tenantId_ = 0L;
+  /**
+   * <code>int64 tenant_id = 3;</code>
+   * @return The tenantId.
+   */
+  @java.lang.Override
+  public long getTenantId() {
+    return tenantId_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -99,6 +121,12 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessage.isStringEmpty(deletedBy_)) {
       com.google.protobuf.GeneratedMessage.writeString(output, 1, deletedBy_);
     }
+    if (agentId_ != 0) {
+      output.writeUInt32(2, agentId_);
+    }
+    if (tenantId_ != 0L) {
+      output.writeInt64(3, tenantId_);
+    }
     getUnknownFields().writeTo(output);
   }
 
@@ -110,6 +138,14 @@ private static final long serialVersionUID = 0L;
     size = 0;
     if (!com.google.protobuf.GeneratedMessage.isStringEmpty(deletedBy_)) {
       size += com.google.protobuf.GeneratedMessage.computeStringSize(1, deletedBy_);
+    }
+    if (agentId_ != 0) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeUInt32Size(2, agentId_);
+    }
+    if (tenantId_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(3, tenantId_);
     }
     size += getUnknownFields().getSerializedSize();
     memoizedSize = size;
@@ -128,6 +164,10 @@ private static final long serialVersionUID = 0L;
 
     if (!getDeletedBy()
         .equals(other.getDeletedBy())) return false;
+    if (getAgentId()
+        != other.getAgentId()) return false;
+    if (getTenantId()
+        != other.getTenantId()) return false;
     if (!getUnknownFields().equals(other.getUnknownFields())) return false;
     return true;
   }
@@ -141,6 +181,11 @@ private static final long serialVersionUID = 0L;
     hash = (19 * hash) + getDescriptor().hashCode();
     hash = (37 * hash) + DELETED_BY_FIELD_NUMBER;
     hash = (53 * hash) + getDeletedBy().hashCode();
+    hash = (37 * hash) + AGENT_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getAgentId();
+    hash = (37 * hash) + TENANT_ID_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getTenantId());
     hash = (29 * hash) + getUnknownFields().hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -273,6 +318,8 @@ private static final long serialVersionUID = 0L;
       super.clear();
       bitField0_ = 0;
       deletedBy_ = "";
+      agentId_ = 0;
+      tenantId_ = 0L;
       return this;
     }
 
@@ -309,6 +356,12 @@ private static final long serialVersionUID = 0L;
       if (((from_bitField0_ & 0x00000001) != 0)) {
         result.deletedBy_ = deletedBy_;
       }
+      if (((from_bitField0_ & 0x00000002) != 0)) {
+        result.agentId_ = agentId_;
+      }
+      if (((from_bitField0_ & 0x00000004) != 0)) {
+        result.tenantId_ = tenantId_;
+      }
     }
 
     @java.lang.Override
@@ -327,6 +380,12 @@ private static final long serialVersionUID = 0L;
         deletedBy_ = other.deletedBy_;
         bitField0_ |= 0x00000001;
         onChanged();
+      }
+      if (other.getAgentId() != 0) {
+        setAgentId(other.getAgentId());
+      }
+      if (other.getTenantId() != 0L) {
+        setTenantId(other.getTenantId());
       }
       this.mergeUnknownFields(other.getUnknownFields());
       onChanged();
@@ -359,6 +418,16 @@ private static final long serialVersionUID = 0L;
               bitField0_ |= 0x00000001;
               break;
             } // case 10
+            case 16: {
+              agentId_ = input.readUInt32();
+              bitField0_ |= 0x00000002;
+              break;
+            } // case 16
+            case 24: {
+              tenantId_ = input.readInt64();
+              bitField0_ |= 0x00000004;
+              break;
+            } // case 24
             default: {
               if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                 done = true; // was an endgroup tag
@@ -444,6 +513,70 @@ private static final long serialVersionUID = 0L;
       checkByteStringIsUtf8(value);
       deletedBy_ = value;
       bitField0_ |= 0x00000001;
+      onChanged();
+      return this;
+    }
+
+    private int agentId_ ;
+    /**
+     * <code>uint32 agent_id = 2;</code>
+     * @return The agentId.
+     */
+    @java.lang.Override
+    public int getAgentId() {
+      return agentId_;
+    }
+    /**
+     * <code>uint32 agent_id = 2;</code>
+     * @param value The agentId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setAgentId(int value) {
+
+      agentId_ = value;
+      bitField0_ |= 0x00000002;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>uint32 agent_id = 2;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearAgentId() {
+      bitField0_ = (bitField0_ & ~0x00000002);
+      agentId_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private long tenantId_ ;
+    /**
+     * <code>int64 tenant_id = 3;</code>
+     * @return The tenantId.
+     */
+    @java.lang.Override
+    public long getTenantId() {
+      return tenantId_;
+    }
+    /**
+     * <code>int64 tenant_id = 3;</code>
+     * @param value The tenantId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setTenantId(long value) {
+
+      tenantId_ = value;
+      bitField0_ |= 0x00000004;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>int64 tenant_id = 3;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearTenantId() {
+      bitField0_ = (bitField0_ & ~0x00000004);
+      tenantId_ = 0L;
       onChanged();
       return this;
     }

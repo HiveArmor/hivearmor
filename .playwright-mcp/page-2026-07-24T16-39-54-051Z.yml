@@ -1,0 +1,61 @@
+- generic [ref=f39e3]:
+  - banner [ref=f39e4]:
+    - generic [ref=f39e5]: HiveArmor
+    - generic [ref=f39e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f39e13]'
+      - generic "Reconnecting..." [ref=f39e16]: 0 EPS
+      - button "Notifications" [ref=f39e18] [cursor=pointer]
+      - button "Help" [ref=f39e23] [cursor=pointer]
+      - button "User menu" [ref=f39e28] [cursor=pointer]:
+        - generic [ref=f39e29]: AA
+        - generic [ref=f39e30]: admin
+  - navigation [ref=f39e31]:
+    - generic [ref=f39e32]:
+      - generic [ref=f39e33]:
+        - generic [ref=f39e34]: COMMAND
+        - generic [ref=f39e35]:
+          - button "Analyst Queue" [ref=f39e36] [cursor=pointer]
+          - button "Alerts" [ref=f39e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f39e47] [cursor=pointer]
+          - button "Incidents" [ref=f39e54] [cursor=pointer]
+      - generic [ref=f39e61]:
+        - generic [ref=f39e62]: INVESTIGATE
+        - generic [ref=f39e63]:
+          - button "Search & Hunt" [ref=f39e64] [cursor=pointer]
+          - button "Investigations" [ref=f39e70] [cursor=pointer]
+          - button "Entities" [ref=f39e75] [cursor=pointer]
+      - generic [ref=f39e83]:
+        - generic [ref=f39e84]: DEFEND
+        - generic [ref=f39e85]:
+          - button "Detection Rules" [ref=f39e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f39e91] [cursor=pointer]
+      - generic [ref=f39e96]:
+        - generic [ref=f39e97]: POSTURE
+        - generic [ref=f39e98]:
+          - button "Assets" [ref=f39e99] [cursor=pointer]
+          - button "Identities" [ref=f39e105] [cursor=pointer]
+          - button "Active Directory" [ref=f39e113] [cursor=pointer]
+          - button "Exposure" [ref=f39e121] [cursor=pointer]
+          - button "Sensors" [ref=f39e128] [cursor=pointer]
+          - button "Compliance" [ref=f39e133] [cursor=pointer]
+      - generic [ref=f39e139]:
+        - generic [ref=f39e140]: DASHBOARDS
+        - button "Studio" [ref=f39e142] [cursor=pointer]
+      - generic [ref=f39e148]:
+        - generic [ref=f39e149]: REPORT
+        - button "Scheduled Reports" [ref=f39e151] [cursor=pointer]
+      - generic [ref=f39e157]:
+        - generic [ref=f39e158]: ADMINISTRATION
+        - generic [ref=f39e159]:
+          - button "Users" [ref=f39e160] [cursor=pointer]
+          - button "Integrations" [ref=f39e175] [cursor=pointer]
+          - button "Notifications" [ref=f39e180] [cursor=pointer]
+          - button "Audit Log" [ref=f39e186] [cursor=pointer]
+          - button "Settings" [ref=f39e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f39e199] [cursor=pointer]
+  - main [ref=f39e202]:
+    - generic [ref=f39e203]:
+      - generic [ref=f39e205]:
+        - heading "Incident Reports" [level=1] [ref=f39e207]
+        - button "Generate Report" [ref=f39e209] [cursor=pointer]
+      - generic [ref=f39e213]: Error loading incident reports. Please try again.

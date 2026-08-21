@@ -1,6 +1,7 @@
 package com.hivearmor.service.compliance;
 
 import com.hivearmor.domain.compliance.UtmComplianceEvalHistory;
+import com.hivearmor.multitenancy.MsspIndexResolver;
 import com.hivearmor.repository.compliance.UtmComplianceControlConfigRepository;
 import com.hivearmor.repository.compliance.UtmComplianceEvalHistoryRepository;
 import com.hivearmor.repository.compliance.UtmComplianceStandardRepository;
@@ -23,8 +24,7 @@ import java.util.*;
 
 /**
  * Scheduled service that reads real-time compliance evidence from OpenSearch
- * (v3-hive-compliance_evidence-*) and produces per-framework scores, persisted
- * to hive_compliance_eval_history.
+ * and produces per-framework scores, persisted to hive_compliance_eval_history.
  *
  * Score formula per control:
  *   score = (sum of EVIDENCE weights) / (sum of EVIDENCE + VIOLATION weights + MIN_DENOMINATOR) * 100
@@ -34,23 +34,26 @@ import java.util.*;
 public class ComplianceEvidenceScoringService {
 
     private static final Logger log = LoggerFactory.getLogger(ComplianceEvidenceScoringService.class);
-    private static final String EVIDENCE_INDEX = "v3-hive-compliance-evidence-*";
+    private static final String COMPLIANCE_EVIDENCE_DATA_TYPE = "compliance-evidence";
     private static final double MIN_DENOMINATOR = 1.0;
 
     private final ElasticsearchService elasticsearchService;
     private final UtmComplianceControlConfigRepository controlConfigRepository;
     private final UtmComplianceStandardRepository standardRepository;
     private final UtmComplianceEvalHistoryRepository evalHistoryRepository;
+    private final MsspIndexResolver msspIndexResolver;
 
     public ComplianceEvidenceScoringService(
             ElasticsearchService elasticsearchService,
             UtmComplianceControlConfigRepository controlConfigRepository,
             UtmComplianceStandardRepository standardRepository,
-            UtmComplianceEvalHistoryRepository evalHistoryRepository) {
+            UtmComplianceEvalHistoryRepository evalHistoryRepository,
+            MsspIndexResolver msspIndexResolver) {
         this.elasticsearchService = elasticsearchService;
         this.controlConfigRepository = controlConfigRepository;
         this.standardRepository = standardRepository;
         this.evalHistoryRepository = evalHistoryRepository;
+        this.msspIndexResolver = msspIndexResolver;
     }
 
     /**
@@ -112,7 +115,7 @@ public class ComplianceEvidenceScoringService {
         try {
             String now = Instant.now().toString();
             SearchRequest request = SearchRequest.of(s -> s
-                    .index(EVIDENCE_INDEX)
+                    .index(msspIndexResolver.resolveIndexPattern(COMPLIANCE_EVIDENCE_DATA_TYPE))
                     .query(q -> q.bool(b -> b
                             .must(m -> m.term(t -> t
                                     .field("controlId")

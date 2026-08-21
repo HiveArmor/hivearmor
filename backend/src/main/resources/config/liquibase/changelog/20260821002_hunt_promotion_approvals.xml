@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- HNT-007 — SOC Manager approval records for gated hunt promotions -->
+    <changeSet id="20260821002" author="hivearmor">
+        <createTable tableName="ha_hunt_promotion_approval">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="search_id" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_ids_hash" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requester" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_key" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="request_rationale" type="text"/>
+            <column name="decision_rationale" type="text"/>
+            <column name="decided_by" type="varchar(255)"/>
+            <column name="decided_at" type="timestamp"/>
+            <column name="consumed_at" type="timestamp"/>
+            <column name="expires_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ha_hunt_promotion_approval" indexName="idx_hunt_promo_appr_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="ha_hunt_promotion_approval" indexName="idx_hunt_promo_appr_search">
+            <column name="search_id"/>
+        </createIndex>
+        <createIndex tableName="ha_hunt_promotion_approval" indexName="idx_hunt_promo_appr_requester">
+            <column name="requester"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

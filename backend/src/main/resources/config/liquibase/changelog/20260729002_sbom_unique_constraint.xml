@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        Add missing UNIQUE constraint on ha_sbom_component(agent_id, purl).
+
+        The constraint is required for the ON CONFLICT (agent_id, purl) DO UPDATE
+        upsert in HaTelemetryService.processSbom() to work on PostgreSQL.
+        Without this constraint, every INSERT throws:
+          ERROR: there is no unique or exclusion constraint matching the ON CONFLICT specification
+
+        Note on nullable purl: PostgreSQL treats two NULLs as distinct in unique
+        constraints (NULL != NULL), so components without a purl will never conflict
+        and each scan will insert a new row. This is acceptable because components
+        without a purl cannot be CVE-matched anyway.
+    -->
+    <changeSet id="20260729002-sbom-unique-1" author="hivearmor">
+        <addUniqueConstraint
+            tableName="ha_sbom_component"
+            columnNames="agent_id, purl"
+            constraintName="uq_ha_sbom_agent_purl"/>
+    </changeSet>
+
+</databaseChangeLog>

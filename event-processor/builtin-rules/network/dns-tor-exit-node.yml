@@ -1,0 +1,39 @@
+id: ha-net-002
+title: DNS Resolution of Known Tor Exit Node
+status: stable
+description: Detects DNS queries or network connections to known Tor exit nodes or Tor-related domain patterns, which may indicate an attacker or insider threat attempting to anonymize their network activity.
+logsource:
+  product: network
+  service: dns
+level: high
+tags:
+  - attack.command_and_control
+  - attack.T1090.003
+detection:
+  selection:
+    dns.question.name|contains:
+      - '.onion'
+      - 'torproject.org'
+      - 'check.torproject.org'
+    event.action: query
+  condition: selection
+falsepositives:
+  - Security researchers testing Tor connectivity from authorized lab systems
+  - Privacy-focused employees accessing the Tor Project website for information
+fields:
+  - dns.question.name
+  - source.ip
+  - destination.ip
+  - event.action
+impact:
+  confidentiality: high
+  integrity: low
+  availability: low
+deduplicateBy:
+  - source.ip
+  - dns.question.name
+groupBy:
+  - source.ip
+mitre:
+  tactic: command-and-control
+  technique: T1090.003

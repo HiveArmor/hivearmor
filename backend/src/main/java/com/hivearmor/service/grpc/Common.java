@@ -52,12 +52,13 @@ public final class Common {
       "\n\014common.proto\022\005agent\"\\\n\013ListRequest\022\023\n\013" +
       "page_number\030\001 \001(\005\022\021\n\tpage_size\030\002 \001(\005\022\024\n\014" +
       "search_query\030\003 \001(\t\022\017\n\007sort_by\030\004 \001(\t\"\'\n\014A" +
-      "uthResponse\022\n\n\002id\030\001 \001(\r\022\013\n\003key\030\002 \001(\t\"#\n\r" +
-      "DeleteRequest\022\022\n\ndeleted_by\030\001 \001(\t*.\n\006Sta" +
-      "tus\022\n\n\006ONLINE\020\000\022\013\n\007OFFLINE\020\001\022\013\n\007UNKNOWN\020" +
-      "\002*)\n\rConnectorType\022\t\n\005AGENT\020\000\022\r\n\tCOLLECT" +
-      "OR\020\001B)\n\032com.hivearmor.service.grpcB\006Comm" +
-      "onP\001\210\001\001b\006proto3"
+      "uthResponse\022\n\n\002id\030\001 \001(\r\022\013\n\003key\030\002 \001(\t\"H\n\r" +
+      "DeleteRequest\022\022\n\ndeleted_by\030\001 \001(\t\022\020\n\010age" +
+      "nt_id\030\002 \001(\r\022\021\n\ttenant_id\030\003 \001(\003*.\n\006Status" +
+      "\022\n\n\006ONLINE\020\000\022\013\n\007OFFLINE\020\001\022\013\n\007UNKNOWN\020\002*)" +
+      "\n\rConnectorType\022\t\n\005AGENT\020\000\022\r\n\tCOLLECTOR\020" +
+      "\001B)\n\032com.hivearmor.service.grpcB\006CommonP" +
+      "\001\210\001\001b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -80,7 +81,7 @@ public final class Common {
     internal_static_agent_DeleteRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_agent_DeleteRequest_descriptor,
-        new java.lang.String[] { "DeletedBy", });
+        new java.lang.String[] { "DeletedBy", "AgentId", "TenantId", });
     descriptor.resolveAllFeaturesImmutable();
   }
 

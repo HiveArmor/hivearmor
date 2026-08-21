@@ -1,0 +1,42 @@
+id: d8e9f0a1-b2c3-4567-defa-678901234528
+title: CMSTP UAC Bypass and Code Execution
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.execution
+  - attack.defense_evasion
+  - attack.privilege_escalation
+  - attack.T1218
+  - attack.T1218.003
+detection:
+  selection:
+    Image|endswith: '\cmstp.exe'
+    CommandLine|contains:
+      - '/ni '
+      - '/s '
+      - '/ns '
+  selection_parent:
+    ParentImage|endswith: '\cmstp.exe'
+    Image|endswith:
+      - '\cmd.exe'
+      - '\powershell.exe'
+      - '\wscript.exe'
+  condition: selection or selection_parent
+falsepositives:
+  - Legitimate Connection Manager Profile Installer usage
+  - Network configuration management tools
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: execution
+  technique: T1218.003

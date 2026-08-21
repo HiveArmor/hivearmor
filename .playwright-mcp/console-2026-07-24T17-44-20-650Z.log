@@ -1,0 +1,9 @@
+[     187ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3002/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:17230
+[     233ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/api/overview/health:0
+[     234ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/api/live-eps/stream:0
+[     234ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/api/ha-retention-policies:0
+[     236ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/api/overview/health:0
+[    1253ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/api/ha-retention-policies:0
+[    3264ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/api/ha-retention-policies:0
+[    5249ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/api/live-eps/stream:0
+[   10263ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/api/live-eps/stream:0

@@ -50,11 +50,15 @@ func authHeaders(md metadata.MD, fullMethod string) error {
 	authId := md.Get("id")
 	connectorType := md.Get("type")
 	authConnectionKey := md.Get("connection-key")
+	authEnrollmentToken := md.Get("enrollment-token")
 	authInternalKey := md.Get("internal-key")
 
 	if len(authKey) > 0 && len(authId) > 0 && len(connectorType) > 0 {
 		authType = "key"
 		routes = config.KeyAuthRoutes()
+	} else if len(authEnrollmentToken) > 0 {
+		authType = "enrollment-token"
+		routes = config.EnrollmentTokenRoutes()
 	} else if len(authConnectionKey) > 0 {
 		authType = "connection-key"
 		routes = config.ConnectionKeyRoutes()
@@ -90,8 +94,18 @@ func authHeaders(md metadata.MD, fullMethod string) error {
 			return status.Error(codes.PermissionDenied, "invalid type")
 		}
 	case "connection-key":
+		if !config.AllowLegacyEnrollment {
+			return status.Error(codes.PermissionDenied, "legacy federation-key enrollment was retired on 2026-08-14; use a one-time enrollment token")
+		}
 		if !utils.IsConnectionKeyValid(fmt.Sprintf(config.PanelConnectionKeyUrl, config.UTMHost), authConnectionKey[0]) {
 			return status.Error(codes.PermissionDenied, "invalid connection key")
+		}
+	case "enrollment-token":
+		// The handler performs bcrypt verification and an atomic row-locked
+		// consume. The interceptor only ensures the secret is used on the
+		// enrollment route and never as a general service credential.
+		if len(authEnrollmentToken) != 1 || authEnrollmentToken[0] == "" {
+			return status.Error(codes.Unauthenticated, "enrollment token is required")
 		}
 	case "internal-key":
 		if !isInternalKeyValid(authInternalKey[0]) {

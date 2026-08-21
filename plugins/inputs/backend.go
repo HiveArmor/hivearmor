@@ -12,7 +12,7 @@ import (
 func createPanelRequest(method string, endpoint string) (*http.Request, error) {
 	pConfig := plugins.PluginCfg("com.hivearmor")
 	backend := pConfig.Get("backend").String()
-	internalKey := pConfig.Get("internalKey").String()
+	internalKey := hiveArmorInternalKey()
 
 	url := fmt.Sprintf(endpoint, backend)
 

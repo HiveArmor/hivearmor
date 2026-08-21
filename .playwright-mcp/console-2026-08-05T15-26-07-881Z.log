@@ -1,0 +1,92 @@
+[     224ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:17230
+[     449ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     461ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   30356ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   60358ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   90372ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  120363ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  150363ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  180364ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  210364ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  240363ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  270365ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  300358ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  330364ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  360362ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  390367ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  420362ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  450368ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  480367ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  510368ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  540363ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  570364ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  600364ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  630375ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  660366ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  690363ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  720364ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  750364ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  780368ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  810363ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  840365ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  870368ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  900365ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  930365ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  960368ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  990369ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1020369ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1050365ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1080365ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1110381ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1113265ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:17230
+[ 1113387ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1113459ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1143395ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1173399ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[ 1179339ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:3000/@vite/client:992
+[ 1179341ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:3000/api/eps/stream:0
+[ 1179341ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:3000/api/alerts/stream:0
+[ 1179346ms] [ERROR] Failed to load resource: net::ERR_INCOMPLETE_CHUNKED_ENCODING @ http://localhost:3000/api/eps/stream:0
+[ 1183984ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/src/pages/alerts/AlertInvestigationPage.tsx:0
+[ 1184021ms] Failed to fetch dynamically imported module: http://localhost:3000/src/pages/alerts/AlertInvestigationPage.tsx
+[ 1183990ms] [ERROR] Error handled by React Router default ErrorBoundary: TypeError: Failed to fetch dynamically imported module: http://localhost:3000/src/pages/alerts/AlertInvestigationPage.tsx @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3780
+[ 1183990ms] [ERROR] Error handled by React Router default ErrorBoundary: TypeError: Failed to fetch dynamically imported module: http://localhost:3000/src/pages/alerts/AlertInvestigationPage.tsx @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3780
+[ 1184022ms] Failed to fetch dynamically imported module: http://localhost:3000/src/pages/alerts/AlertInvestigationPage.tsx
+[ 1183991ms] [ERROR] Error handled by React Router default ErrorBoundary: TypeError: Failed to fetch dynamically imported module: http://localhost:3000/src/pages/alerts/AlertInvestigationPage.tsx @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3780
+[ 1183991ms] [ERROR] Error handled by React Router default ErrorBoundary: TypeError: Failed to fetch dynamically imported module: http://localhost:3000/src/pages/alerts/AlertInvestigationPage.tsx @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3780
+[ 1183992ms] [ERROR] The above error occurred in the <AuthGuard> component:
+
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx?t=1785846203117:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx?t=1785925375543:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=ee613ef6:2995:31)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, RenderErrorBoundary. @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:11718
+[ 1183992ms] [ERROR] React Router caught the following error during render TypeError: Failed to fetch dynamically imported module: http://localhost:3000/src/pages/alerts/AlertInvestigationPage.tsx {componentStack: 
+    at AuthGuard (http://localhost:3000/src/route…ack_react-query.js?v=ee613ef6:2995:31)
+    at App} @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=0309025e:3810
+[ 1185111ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/overview/health:0
+[ 1185111ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/ha-admin/system-info:0
+[ 1185111ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/overview/health:0
+[ 1185111ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/eps/stream:0
+[ 1185111ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/alerts/stream:0
+[ 1185114ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/ha-alerts/summary?status=active:0
+[ 1185115ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/eps/stream:0
+[ 1185115ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/ha-admin/system-info:0
+[ 1185122ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/ha-alerts?page=0&size=100&sort=-%40timestamp%2Cid&order=desc&status=active:0
+[ 1186116ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/ha-alerts/summary?status=active:0
+[ 1190113ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/eps/stream:0
+[ 1190113ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/alerts/stream:0
+[ 1190121ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3000/api/eps/stream:0

@@ -1,0 +1,357 @@
+# User Account, Privilege & Authentication Rules
+# DataTypes: process, fim
+
+dataTypes:
+  - "process"
+name: "Auth: New Local User Account Created"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: "Persistence"
+technique: "T1136.001 - Create Account: Local Account"
+adversary: origin
+description: "A new local user account was created via useradd, adduser, net user, or New-LocalUser. Attackers create backdoor accounts to maintain persistent access to compromised systems."
+references:
+  - "https://attack.mitre.org/techniques/T1136/001/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(toLower(safe("origin.command", "")), "(useradd|adduser|net user.*\\/add|new-localuser)")
+groupBy:
+  - origin.user
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Auth: User Added to sudo/Administrators Group"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: "Privilege Escalation"
+technique: "T1098 - Account Manipulation"
+adversary: origin
+description: "A user was added to the sudo, wheel, or Administrators group. This grants the account administrative privileges — a common persistence and privilege escalation step after initial access."
+references:
+  - "https://attack.mitre.org/techniques/T1098/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(toLower(safe("origin.command", "")), "(usermod.*-a.*-G.*(sudo|wheel)|net localgroup administrators.*/add|add-localgroupmember.*administrators)")
+groupBy:
+  - origin.user
+  - origin.command
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Auth: Password Changed for High-Value Account"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: "Credential Access"
+technique: "T1098 - Account Manipulation"
+adversary: origin
+description: "The password was changed for root, Administrator, or another high-privilege account. Attackers change passwords to lock out legitimate users and maintain exclusive access."
+references:
+  - "https://attack.mitre.org/techniques/T1098/"
+where: |
+  safe("action", "") == "exec" &&
+  (
+    regexMatch(toLower(safe("origin.command", "")), "passwd root") ||
+    regexMatch(toLower(safe("origin.command", "")), "net user (administrator|admin).* \\/") ||
+    regexMatch(toLower(safe("origin.command", "")), "set-localuser.*(administrator|admin)")
+  )
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Auth: Login Attempt with Blank Password"
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 1
+category: "Credential Access"
+technique: "T1110.001 - Brute Force: Password Guessing"
+adversary: origin
+description: "An authentication attempt was made with a blank password. Blank passwords indicate a misconfigured account or an attacker testing for default/empty credentials."
+references:
+  - "https://attack.mitre.org/techniques/T1110/001/"
+where: |
+  safe("action", "") == "exec" &&
+  (
+    regexMatch(toLower(safe("origin.command", "")), "ssh.*-o.*passwordauthentication.*no") ||
+    regexMatch(toLower(safe("origin.command", "")), "sshpass -p \"\"") ||
+    regexMatch(toLower(safe("origin.command", "")), "net use.*\"\".*\"\"")
+  )
+groupBy:
+  - origin.user
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Auth: Suspicious su Execution to Root"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: "Privilege Escalation"
+technique: "T1548.003 - Sudo and Sudo Caching"
+adversary: origin
+description: "The su command was executed targeting root from a non-standard user or context. Su to root from unusual processes or during off-hours is a strong privilege escalation indicator."
+references:
+  - "https://attack.mitre.org/techniques/T1548.003/"
+where: |
+  safe("action", "") == "exec" &&
+  safe("origin.process", "") == "su" &&
+  (
+    contains(safe("origin.command", ""), " root") ||
+    safe("origin.command", "") == "su"
+  ) &&
+  safe("origin.uid", 0) != 0
+groupBy:
+  - origin.user
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Kernel Module Compiled and Loaded"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 3
+category: "Defense Evasion"
+technique: "T1014 - Rootkit"
+adversary: origin
+description: "A kernel module was compiled (make/cc -DMODULE) and immediately loaded. Compiling a custom kernel module at runtime is a strong indicator of rootkit installation or kernel exploit payload delivery."
+references:
+  - "https://attack.mitre.org/techniques/T1014/"
+where: |
+  safe("action", "") == "exec" &&
+  (
+    regexMatch(toLower(safe("origin.command", "")), "(insmod|modprobe)") ||
+    (
+      regexMatch(toLower(safe("origin.command", "")), "make.*module") &&
+      regexMatch(toLower(safe("origin.command", "")), "(insmod|modprobe)")
+    )
+  )
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Reverse Shell via Netcat"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Execution"
+technique: "T1059 - Command and Scripting Interpreter"
+adversary: origin
+description: "A netcat (nc, ncat, nmap ncat) command with -e or -c flag was executed. These flags create a reverse shell by redirecting stdin/stdout to a network connection."
+references:
+  - "https://attack.mitre.org/techniques/T1059/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(safe("origin.process", ""), "^(nc|ncat|nmap|netcat)$") &&
+  regexMatch(safe("origin.command", ""), " -(e|c) ")
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: /dev/tcp Reverse Shell (Bash Built-in)"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Execution"
+technique: "T1059.004 - Unix Shell"
+adversary: origin
+description: "A bash reverse shell using /dev/tcp was executed. This technique abuses bash's built-in TCP socket support to create a reverse shell without requiring netcat or other tools, bypassing tool-based detection."
+references:
+  - "https://attack.mitre.org/techniques/T1059/004/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(safe("origin.command", ""), "/dev/tcp/")
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Sudo -l Executed — Privilege Discovery"
+impact:
+  confidentiality: 1
+  integrity: 1
+  availability: 1
+category: "Discovery"
+technique: "T1069 - Permission Groups Discovery"
+adversary: origin
+description: "sudo -l was executed to list available sudo permissions. Attackers enumerate sudo privileges after gaining initial access to identify privilege escalation paths."
+references:
+  - "https://attack.mitre.org/techniques/T1069/"
+where: |
+  safe("action", "") == "exec" &&
+  safe("origin.process", "") == "sudo" &&
+  regexMatch(safe("origin.command", ""), "sudo -l")
+groupBy:
+  - origin.user
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: History File Cleared — Anti-Forensics"
+impact:
+  confidentiality: 1
+  integrity: 2
+  availability: 1
+category: "Defense Evasion"
+technique: "T1070.003 - Indicator Removal: Clear Command History"
+adversary: origin
+description: "The shell history file was cleared or unset. Attackers clear history files to remove evidence of commands executed during an intrusion."
+references:
+  - "https://attack.mitre.org/techniques/T1070/003/"
+where: |
+  safe("action", "") == "exec" &&
+  (
+    regexMatch(safe("origin.command", ""), "(history -c|unset HISTFILE|HISTFILE=/dev/null|> ~/.bash_history|cat /dev/null > ~/.bash_history)")
+  )
+groupBy:
+  - origin.user
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Timestomping Detected"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 1
+category: "Defense Evasion"
+technique: "T1070.006 - Indicator Removal: Timestomp"
+adversary: origin
+description: "The touch command was used with -t (timestamp) flag to modify file timestamps, or SetFileTime was called on a system binary. Timestomping is used to evade forensic timeline analysis."
+references:
+  - "https://attack.mitre.org/techniques/T1070/006/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(safe("origin.process", ""), "^touch$") &&
+  regexMatch(safe("origin.command", ""), " -t [0-9]{8,}")
+groupBy:
+  - origin.process
+  - origin.command
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Python/Perl/Ruby HTTP Server Started"
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 1
+category: "Exfiltration"
+technique: "T1105 - Ingress Tool Transfer"
+adversary: origin
+description: "A one-liner HTTP server was started using Python, Perl, or Ruby. Attackers commonly use these ad-hoc servers to exfiltrate files or host second-stage payloads within a compromised network."
+references:
+  - "https://attack.mitre.org/techniques/T1105/"
+where: |
+  safe("action", "") == "exec" &&
+  (
+    regexMatch(toLower(safe("origin.command", "")), "python.*-m.*http\\.server") ||
+    regexMatch(toLower(safe("origin.command", "")), "python.*simplehttpserver") ||
+    regexMatch(toLower(safe("origin.command", "")), "ruby.*-run.*-e.*httpd") ||
+    regexMatch(toLower(safe("origin.command", "")), "perl.*http::server")
+  )
+groupBy:
+  - origin.user
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Exfiltration via DNS with dig/nslookup"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: "Exfiltration"
+technique: "T1048.003 - Exfiltration Over Alternative Protocol: DNS"
+adversary: origin
+description: "dig or nslookup was used with a long query that may encode exfiltrated data. DNS tools can be used to manually exfiltrate data by encoding it in DNS queries."
+references:
+  - "https://attack.mitre.org/techniques/T1048/003/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(safe("origin.process", ""), "^(dig|nslookup|host)$") &&
+  len(safe("origin.command", "")) > 80
+groupBy:
+  - origin.user
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Container Escape via nsenter or unshare"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 3
+category: "Privilege Escalation"
+technique: "T1611 - Escape to Host"
+adversary: origin
+description: "nsenter or unshare was executed with --pid or --mount flags, which can be used to escape container namespaces and access the host system. This is a common container escape technique when running as root inside a container."
+references:
+  - "https://attack.mitre.org/techniques/T1611/"
+where: |
+  safe("action", "") == "exec" &&
+  (
+    regexMatch(safe("origin.process", ""), "^(nsenter|unshare)$") &&
+    regexMatch(safe("origin.command", ""), "--(pid|mount|uts|net|all)")
+  )
+groupBy:
+  - origin.user
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Disk or File System Wiping"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 3
+category: "Impact"
+technique: "T1561 - Disk Wipe"
+adversary: origin
+description: "A disk or file system wiping command was executed (dd, shred, wipe, secure-delete, diskpart clean). These commands can destroy forensic evidence or cause destructive denial of service."
+references:
+  - "https://attack.mitre.org/techniques/T1561/"
+where: |
+  safe("action", "") == "exec" &&
+  (
+    (regexMatch(safe("origin.process", ""), "^dd$") && regexMatch(safe("origin.command", ""), "if=/dev/zero|if=/dev/urandom")) ||
+    regexMatch(safe("origin.process", ""), "^(shred|wipe|srm|secure-delete)$") ||
+    (regexMatch(toLower(safe("origin.process", "")), "diskpart") && regexMatch(toLower(safe("origin.command", "")), "clean"))
+  )
+groupBy:
+  - origin.user
+deduplicateBy:
+  - origin.pid

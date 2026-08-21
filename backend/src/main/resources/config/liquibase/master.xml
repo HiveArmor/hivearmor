@@ -325,6 +325,9 @@
 
     <include file="/config/liquibase/changelog/20260126001_update_regex_for_configuration_parameter_base_url.xml" relativeToChangelogFile="false"/>
 
+    <!-- Sprint 27 — Seed LLM provider configuration rows (idempotent) -->
+    <include file="config/liquibase/changelog/20260127001_seed_llm_config.xml" relativeToChangelogFile="false"/>
+
     <include file="/config/liquibase/changelog/20260128001_update_azure_correlation_rules.xml" relativeToChangelogFile="false"/>
 
     <include file="/config/liquibase/changelog/20260128002_update_o365_correlation_rules.xml" relativeToChangelogFile="false"/>
@@ -688,5 +691,69 @@
     <include file="config/liquibase/changelog/20260718004_rename_socai_conf_keys_to_hivearmor.xml" relativeToChangelogFile="false"/>
 
     <include file="config/liquibase/changelog/20260719001_soc2_control_mappings.xml" relativeToChangelogFile="false"/>
+
+    <!-- Investigation sessions — analyst workspaces and pinned evidence -->
+    <include file="config/liquibase/changelog/20260721003_add_investigation_sessions.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260729001_agent_telemetry_schema.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260729002_sbom_unique_constraint.xml" relativeToChangelogFile="false"/>
+    <!-- Sprint 21 — MSSP foundation schema -->
+    <include file="config/liquibase/changelog/20260724050_mssp_schema.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 24 — compliance result table (S24-T01) -->
+    <include file="config/liquibase/changelog/20260724051a_ha_compliance_result_create.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260724051_compliance_mssp_scoping.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 25 — AI Chat history table (S25-T01) -->
+    <include file="config/liquibase/changelog/20260724060_ai_chat.xml" relativeToChangelogFile="false"/>
+
+    <!-- Agent provisioning UX — alias + unique constraint on api_keys -->
+    <include file="config/liquibase/changelog/20260730001_agent_key_alias.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 28 — UEBA signals and rule generation tables -->
+    <include file="config/liquibase/changelog/20260724070_rule_gen.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 29 — UEBA baseline peer groups, baselines, and deviations -->
+    <include file="config/liquibase/changelog/20260728001_ueba_baseline.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 30 — POA&M table for government compliance frameworks -->
+    <include file="config/liquibase/changelog/20260731001_govt_compliance.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 36 — Saved alert views table and built-in view seeds (S36-T03) -->
+    <include file="config/liquibase/changelog/20260801001_add_ha_alert_view_table.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 36 — Idempotency infrastructure table (S36-T04) -->
+    <include file="config/liquibase/changelog/20260801002_add_ha_idempotency_table.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 41 — Response action job tracking table (ALT-010) -->
+    <include file="config/liquibase/changelog/20260811001_add_response_jobs.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 42 — Saved hunts and hunt history tables (HNT-005) -->
+    <include file="config/liquibase/changelog/20260812001_add_hunt_tables.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260812002_add_hunt_history.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 43 — Incident workbench tables (INC-002, INC-006, INC-007) -->
+    <include file="config/liquibase/changelog/20260813001_add_incident_tasks.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260813002_add_incident_activity.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260813003_add_evidence_custody.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260813004_secure_investigation_sessions.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 44 — Correlated findings tables (COR-004) -->
+    <include file="config/liquibase/changelog/20260814001_add_finding_notes.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260814002_add_finding_idempotency.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 47 — Detection rules tables (DET-008 through DET-016) -->
+    <include file="config/liquibase/changelog/20260815001_add_detection_rules.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260815002_add_rule_versions.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260815003_add_rule_executions.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260815004_add_rule_approvals.xml" relativeToChangelogFile="false"/>
+
+    <!-- Sprint 49 — Idempotency keys table (HAR-003) -->
+    <include file="config/liquibase/changelog/20260820001_idempotency_keys.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20260819001_telemetry_tenant_scope.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260819002_enrollment_audit_retention.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260821001_cis_catalog_identity.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20260821002_hunt_promotion_approvals.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

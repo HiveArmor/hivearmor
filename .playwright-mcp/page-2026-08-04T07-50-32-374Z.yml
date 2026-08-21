@@ -1,0 +1,11 @@
+- generic [ref=e2]:
+  - heading "Unexpected Application Error!" [level=2] [ref=e61]
+  - heading "Cannot read properties of null (reading 'toLocaleString')" [level=3] [ref=e62]
+  - generic [ref=e63]: "TypeError: Cannot read properties of null (reading 'toLocaleString') at http://localhost:3000/src/pages/search-hunt/components/FieldBrowser.tsx:238:139 at Array.map (<anonymous>) at http://localhost:3000/src/pages/search-hunt/components/FieldBrowser.tsx:221:87 at Array.map (<anonymous>) at FieldBrowser (http://localhost:3000/src/pages/search-hunt/components/FieldBrowser.tsx:187:42) at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:9632:19) at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:12122:19) at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:13096:13) at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15982:12) at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d7848635:15568:12)"
+  - paragraph [ref=e64]: 💿 Hey developer 👋
+  - paragraph [ref=e65]:
+    - text: You can provide a way better UX than this when your app throws errors by providing your own
+    - code [ref=e66]: ErrorBoundary
+    - text: or
+    - code [ref=e67]: errorElement
+    - text: prop on your route.

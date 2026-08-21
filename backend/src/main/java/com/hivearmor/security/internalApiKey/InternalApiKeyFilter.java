@@ -33,19 +33,49 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
         apiKeyHeaderInUse = false;
         final String ctx = CLASSNAME + ".doFilterInternal";
-        String apiKeyHeader = request.getHeader(API_KEY_HEADER);
+        if (SecurityContextHolder.getContext().getAuthentication() != null
+                && SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         String envApiKey = System.getenv("INTERNAL_KEY");
 
         if (!StringUtils.hasText(envApiKey)) {
             log.error(ctx + ": The environment variable that stores the internal communication key does not exist or has no value");
-        } else if (StringUtils.hasText(apiKeyHeader) && apiKeyHeader.equals(envApiKey)) {
-            UsernamePasswordAuthenticationToken authentication = internalApiKeyProvider.getAuthentication(apiKeyHeader);
+        } else if (isTelemetryIngestWithoutLegacy(request)) {
+            log.debug("{}: refusing INTERNAL_KEY for telemetry ingest unless ALLOW_LEGACY_TELEMETRY_INTERNAL_KEY=true", ctx);
+        } else if (matchesInternalKey(request, envApiKey)) {
+            UsernamePasswordAuthenticationToken authentication = internalApiKeyProvider.getAuthentication(envApiKey);
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
             apiKeyHeaderInUse = true;
         }
         filterChain.doFilter(request, response);
     }
+
+    static boolean matchesInternalKey(HttpServletRequest request, String envApiKey) {
+        String utm = request.getHeader(API_KEY_HEADER);
+        String xInternal = request.getHeader("X-Internal-Key");
+        return (StringUtils.hasText(utm) && utm.equals(envApiKey))
+                || (StringUtils.hasText(xInternal) && xInternal.equals(envApiKey));
+    }
+
+    static boolean isTelemetryIngestWithoutLegacy(HttpServletRequest request) {
+        if (!"true".equalsIgnoreCase(System.getenv("ALLOW_LEGACY_TELEMETRY_INTERNAL_KEY"))) {
+            String path = request.getServletPath();
+            if (path == null || path.isBlank()) {
+                path = request.getRequestURI();
+            }
+            String method = request.getMethod();
+            boolean ingest = path != null && (
+                    (("POST".equalsIgnoreCase(method))
+                            && ("/api/ha-telemetry/sca".equals(path) || "/api/ha-telemetry/sbom".equals(path)))
+                    || ("PUT".equalsIgnoreCase(method) && path.startsWith("/api/ha-telemetry/vitals")));
+            return ingest;
+        }
+        return false;
+    }
+
     public static Boolean isApiKeyHeaderInUse(){
         return apiKeyHeaderInUse;
     }

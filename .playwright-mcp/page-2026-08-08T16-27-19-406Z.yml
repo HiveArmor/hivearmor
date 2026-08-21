@@ -1,0 +1,120 @@
+- generic [active] [ref=f969e1]:
+  - generic [ref=f969e3]:
+    - link "Skip to main content" [ref=f969e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f969e5]:
+      - generic [ref=f969e6]:
+        - generic [ref=f969e12]: HiveArmor
+        - generic [ref=f969e13]: Security operations
+      - generic [ref=f969e14]:
+        - button "All authorized tenants" [ref=f969e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f969e24] [cursor=pointer]:
+          - generic [ref=f969e29]: ⌘ K
+        - generic [ref=f969e30]: Production
+      - generic [ref=f969e31]:
+        - 'status "Data pipeline: Healthy" [ref=f969e32]'
+        - status "Live events per second" [ref=f969e35]:
+          - generic [ref=f969e37]: 0 EPS
+        - button "Notifications" [ref=f969e38] [cursor=pointer]
+        - button "Help" [ref=f969e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f969e47]:
+      - generic [ref=f969e48]:
+        - region "COMMAND" [ref=f969e49]:
+          - generic [ref=f969e50]:
+            - button "Mission Control" [ref=f969e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f969e58] [cursor=pointer]
+            - button "Alerts" [ref=f969e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f969e67] [cursor=pointer]
+            - button "Incidents" [ref=f969e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f969e79]:
+          - generic [ref=f969e80]:
+            - button "Search & Hunt" [ref=f969e81] [cursor=pointer]
+            - button "Investigations" [ref=f969e86] [cursor=pointer]
+            - button "Entities" [ref=f969e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f969e97] [cursor=pointer]
+        - region "DEFEND" [ref=f969e103]:
+          - generic [ref=f969e104]:
+            - button "Detection Rules" [ref=f969e105] [cursor=pointer]
+            - button "Playbooks" [ref=f969e109] [cursor=pointer]
+            - button "Response Library" [ref=f969e114] [cursor=pointer]
+        - region "POSTURE" [ref=f969e118]:
+          - generic [ref=f969e119]:
+            - button "Assets" [ref=f969e120] [cursor=pointer]
+            - button "Identities" [ref=f969e125] [cursor=pointer]
+            - button "Active Directory" [ref=f969e132] [cursor=pointer]
+            - button "Exposure" [ref=f969e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f969e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f969e156] [cursor=pointer]
+            - button "Sensors" [ref=f969e162] [cursor=pointer]
+            - button "Compliance" [ref=f969e166] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f969e171]:
+          - generic [ref=f969e172]:
+            - button "Endpoints" [ref=f969e173] [cursor=pointer]
+            - button "File Quarantine" [ref=f969e177] [cursor=pointer]
+            - button "File Integrity" [ref=f969e183] [cursor=pointer]
+            - button "Agent Policies" [ref=f969e190] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f969e195]:
+          - button "Studio" [ref=f969e197] [cursor=pointer]
+        - region "REPORT" [ref=f969e202]:
+          - button "Scheduled Reports" [ref=f969e204] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f969e209]:
+          - generic [ref=f969e210]:
+            - button "Users" [ref=f969e211] [cursor=pointer]
+            - button "Integrations" [ref=f969e225] [cursor=pointer]
+            - button "Notifications" [ref=f969e229] [cursor=pointer]
+            - button "Audit Log" [ref=f969e234] [cursor=pointer]
+            - button "Settings" [ref=f969e239] [cursor=pointer]
+      - generic [ref=f969e244]:
+        - button "User menu" [ref=f969e247] [cursor=pointer]:
+          - generic [ref=f969e248]: AA
+        - button "Pin sidebar open" [ref=f969e249] [cursor=pointer]
+    - main [ref=f969e252]:
+      - generic [ref=f969e253]:
+        - generic [ref=f969e254]:
+          - generic [ref=f969e255]:
+            - heading "Incidents" [level=1] [ref=f969e259]
+            - generic [ref=f969e260]: —
+          - generic [ref=f969e261]:
+            - button "Refresh incidents" [ref=f969e262] [cursor=pointer]
+            - button "Create Incident" [ref=f969e268] [cursor=pointer]
+        - generic [ref=f969e269]: Filters — Implementation pending
+        - generic [ref=f969e276]:
+          - grid [ref=f969e278]:
+            - rowgroup [ref=f969e279]:
+              - row [ref=f969e280]:
+                - columnheader "Priority" [ref=f969e281]:
+                  - text: 
+                  - generic:      
+                - columnheader "Severity" [ref=f969e283]:
+                  - text: 
+                  - generic:      
+                - columnheader "Incident Name" [ref=f969e285]:
+                  - text: 
+                  - generic:      
+                - columnheader "Status" [ref=f969e288]:
+                  - text: 
+                  - generic:      
+                - columnheader "Assigned To" [ref=f969e290]:
+                  - text: 
+                  - generic:      
+                - columnheader "Created Date" [ref=f969e293]:
+                  - text: 
+                  - generic:      
+                - columnheader "SLA Deadline" [ref=f969e296]:
+                  - text: 
+                  - generic:      
+                - columnheader "SLA Breached" [ref=f969e299]:
+                  - text: 
+                  - generic:      
+              - row [ref=f969e301]:
+                - gridcell "—" [ref=f969e302]
+                - gridcell "—" [ref=f969e303]
+                - gridcell [ref=f969e304]
+                - gridcell "—" [ref=f969e305]
+                - gridcell "Unassigned" [ref=f969e306]
+                - gridcell "—" [ref=f969e307]
+                - gridcell "—" [ref=f969e308]
+                - gridcell [ref=f969e309]
+          - text:     
+  - generic:
+    - list "Notifications"

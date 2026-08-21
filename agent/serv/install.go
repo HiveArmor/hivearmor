@@ -21,6 +21,10 @@ func InstallService() {
 		os.Exit(1)
 	}
 
+	if err := EnsureLinuxTelemetryEnvironment(); err != nil {
+		fmt.Println("\nWarning: Linux telemetry EnvironmentFile drop-in was not applied: ", err)
+	}
+
 	err = newService.Start()
 	if err != nil {
 		fmt.Println("\nError starting new service: ", err)

@@ -1,0 +1,268 @@
+/* IncidentLinkModal — Sprint 46 */
+
+.ha-link-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--ha-surface-app) 80%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.ha-link-modal {
+  width: 520px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 12px;
+  background: var(--ha-surface-panel);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--ha-surface-app) 50%, transparent);
+  overflow: hidden;
+}
+
+.ha-link-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--ha-border-subtle);
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-link-modal__header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.ha-link-modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ha-foreground-tertiary);
+  cursor: pointer;
+}
+
+.ha-link-modal__close:hover {
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-primary);
+}
+
+.ha-link-modal__body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ha-link-modal__options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ha-link-modal__option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 8px;
+  background: var(--ha-surface-elevated);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s;
+}
+
+.ha-link-modal__option:hover {
+  border-color: var(--ha-border-strong);
+}
+
+.ha-link-modal__option[data-selected='true'] {
+  border-color: var(--ha-action-primary);
+  background: color-mix(in srgb, var(--ha-action-primary) 5%, var(--ha-surface-elevated));
+}
+
+.ha-link-modal__option span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+}
+
+.ha-link-modal__option small {
+  font-size: 11px;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-link-modal__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ha-link-modal__fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ha-link-modal__fields label span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-link-modal__fields input,
+.ha-link-modal__fields select {
+  padding: 8px 12px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 6px;
+  background: var(--ha-surface-input);
+  color: var(--ha-foreground-primary);
+  font-size: 13px;
+}
+
+.ha-link-modal__fields input:focus,
+.ha-link-modal__fields select:focus {
+  outline: none;
+  border-color: var(--ha-border-focus);
+}
+
+.ha-link-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.ha-link-modal__cancel {
+  padding: 8px 16px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ha-foreground-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ha-link-modal__cancel:hover {
+  border-color: var(--ha-border-strong);
+  color: var(--ha-foreground-primary);
+}
+
+.ha-link-modal__primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--ha-action-primary);
+  color: var(--ha-foreground-on-action, var(--ha-surface-app));
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ha-link-modal__primary:hover:not(:disabled) {
+  background: var(--ha-action-primary-hover);
+}
+
+.ha-link-modal__primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ha-link-modal__error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ha-severity-critical) 10%, transparent);
+  color: var(--ha-severity-critical);
+  font-size: 12px;
+}
+
+.ha-link-modal__preview h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  margin: 0 0 8px;
+}
+
+.ha-link-modal__preview-text {
+  font-size: 12px;
+  color: var(--ha-foreground-secondary);
+  margin: 0 0 12px;
+}
+
+.ha-link-modal__preview-data {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--ha-surface-elevated);
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+  max-height: 200px;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-link-modal__success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 20px 0;
+  color: var(--ha-severity-low);
+}
+
+.ha-link-modal__success h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  margin: 0;
+}
+
+.ha-link-modal__success dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+}
+
+.ha-link-modal__success dl div {
+  padding: 8px;
+  border-radius: 4px;
+  background: var(--ha-surface-elevated);
+}
+
+.ha-link-modal__success dt {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-link-modal__success dd {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}

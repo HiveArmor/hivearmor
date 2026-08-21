@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Sprint 27 — Seed LLM configuration section -->
+    <changeSet id="20260127001-seed-llm-section" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM hive_configuration_section WHERE id = 11
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <insert tableName="hive_configuration_section">
+            <column name="id" valueNumeric="11"/>
+            <column name="section" value="LLM Configuration"/>
+            <column name="description" value="Settings for the pluggable LLM provider (Ollama, OpenAI, Azure OpenAI). Controls which provider is active and its connection parameters."/>
+            <column name="short_name" value="LLM_CONFIG"/>
+            <column name="section_active" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+
+    <!-- LLM_PROVIDER -->
+    <changeSet id="20260127001-seed-llm-provider" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM hive_configuration_parameter WHERE conf_param_short = 'LLM_PROVIDER'
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <insert tableName="hive_configuration_parameter">
+            <column name="id" valueNumeric="42"/>
+            <column name="section_id" valueNumeric="11"/>
+            <column name="conf_param_short" value="LLM_PROVIDER"/>
+            <column name="conf_param_large" value="LLM Provider"/>
+            <column name="conf_param_description" value="Active LLM provider. One of: disabled, openai, azure, ollama."/>
+            <column name="conf_param_value" value="disabled"/>
+            <column name="conf_param_required" valueBoolean="true"/>
+            <column name="conf_param_datatype" value="text"/>
+            <column name="modification_time" value="NULL"/>
+            <column name="modification_user" value="NULL"/>
+            <column name="conf_param_option" value="disabled,openai,azure,ollama"/>
+            <column name="conf_param_regexp" value="NULL"/>
+        </insert>
+    </changeSet>
+
+    <!-- LLM_BASE_URL -->
+    <changeSet id="20260127001-seed-llm-base-url" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM hive_configuration_parameter WHERE conf_param_short = 'LLM_BASE_URL'
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <insert tableName="hive_configuration_parameter">
+            <column name="id" valueNumeric="43"/>
+            <column name="section_id" valueNumeric="11"/>
+            <column name="conf_param_short" value="LLM_BASE_URL"/>
+            <column name="conf_param_large" value="LLM Base URL"/>
+            <column name="conf_param_description" value="Base URL for the active LLM provider (e.g. http://ollama:11434 for Ollama, or the Azure endpoint URL)."/>
+            <column name="conf_param_value" value=""/>
+            <column name="conf_param_required" valueBoolean="false"/>
+            <column name="conf_param_datatype" value="text"/>
+            <column name="modification_time" value="NULL"/>
+            <column name="modification_user" value="NULL"/>
+            <column name="conf_param_option" value="NULL"/>
+            <column name="conf_param_regexp" value="NULL"/>
+        </insert>
+    </changeSet>
+
+    <!-- LLM_MODEL -->
+    <changeSet id="20260127001-seed-llm-model" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM hive_configuration_parameter WHERE conf_param_short = 'LLM_MODEL'
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <insert tableName="hive_configuration_parameter">
+            <column name="id" valueNumeric="44"/>
+            <column name="section_id" valueNumeric="11"/>
+            <column name="conf_param_short" value="LLM_MODEL"/>
+            <column name="conf_param_large" value="LLM Model"/>
+            <column name="conf_param_description" value="Model name to use for completions (e.g. llama3.2:3b for Ollama, gpt-4o for OpenAI)."/>
+            <column name="conf_param_value" value=""/>
+            <column name="conf_param_required" valueBoolean="false"/>
+            <column name="conf_param_datatype" value="text"/>
+            <column name="modification_time" value="NULL"/>
+            <column name="modification_user" value="NULL"/>
+            <column name="conf_param_option" value="NULL"/>
+            <column name="conf_param_regexp" value="NULL"/>
+        </insert>
+    </changeSet>
+
+    <!-- LLM_API_KEY -->
+    <changeSet id="20260127001-seed-llm-api-key" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM hive_configuration_parameter WHERE conf_param_short = 'LLM_API_KEY'
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <insert tableName="hive_configuration_parameter">
+            <column name="id" valueNumeric="45"/>
+            <column name="section_id" valueNumeric="11"/>
+            <column name="conf_param_short" value="LLM_API_KEY"/>
+            <column name="conf_param_large" value="LLM API Key"/>
+            <column name="conf_param_description" value="API key for the active LLM provider. Leave empty when using Ollama (no auth required)."/>
+            <column name="conf_param_value" value=""/>
+            <column name="conf_param_required" valueBoolean="false"/>
+            <column name="conf_param_datatype" value="password"/>
+            <column name="modification_time" value="NULL"/>
+            <column name="modification_user" value="NULL"/>
+            <column name="conf_param_option" value="NULL"/>
+            <column name="conf_param_regexp" value="NULL"/>
+        </insert>
+    </changeSet>
+
+    <!-- LLM_TEMPERATURE -->
+    <changeSet id="20260127001-seed-llm-temperature" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM hive_configuration_parameter WHERE conf_param_short = 'LLM_TEMPERATURE'
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <insert tableName="hive_configuration_parameter">
+            <column name="id" valueNumeric="46"/>
+            <column name="section_id" valueNumeric="11"/>
+            <column name="conf_param_short" value="LLM_TEMPERATURE"/>
+            <column name="conf_param_large" value="LLM Temperature"/>
+            <column name="conf_param_description" value="Sampling temperature for LLM completions. Valid range: 0.0–2.0. Lower values produce more deterministic output."/>
+            <column name="conf_param_value" value="0.2"/>
+            <column name="conf_param_required" valueBoolean="false"/>
+            <column name="conf_param_datatype" value="decimal"/>
+            <column name="modification_time" value="NULL"/>
+            <column name="modification_user" value="NULL"/>
+            <column name="conf_param_option" value="NULL"/>
+            <column name="conf_param_regexp" value="NULL"/>
+        </insert>
+    </changeSet>
+
+    <!-- LLM_MAX_TOKENS -->
+    <changeSet id="20260127001-seed-llm-max-tokens" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM hive_configuration_parameter WHERE conf_param_short = 'LLM_MAX_TOKENS'
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <insert tableName="hive_configuration_parameter">
+            <column name="id" valueNumeric="47"/>
+            <column name="section_id" valueNumeric="11"/>
+            <column name="conf_param_short" value="LLM_MAX_TOKENS"/>
+            <column name="conf_param_large" value="LLM Max Tokens"/>
+            <column name="conf_param_description" value="Maximum number of tokens in the LLM response. Valid range: 1–32768."/>
+            <column name="conf_param_value" value="2048"/>
+            <column name="conf_param_required" valueBoolean="false"/>
+            <column name="conf_param_datatype" value="integer"/>
+            <column name="modification_time" value="NULL"/>
+            <column name="modification_user" value="NULL"/>
+            <column name="conf_param_option" value="NULL"/>
+            <column name="conf_param_regexp" value="NULL"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

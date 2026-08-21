@@ -1,0 +1,36 @@
+id: c3d4e5f6-a7b8-9012-cdef-123456789033
+title: COM Object Hijacking via HKCU InprocServer32
+status: stable
+logsource:
+  product: windows
+  category: registry_set
+level: high
+tags:
+  - attack.persistence
+  - attack.defense_evasion
+  - attack.T1546
+  - attack.T1546.015
+detection:
+  selection:
+    TargetObject|contains: '\HKCU\SOFTWARE\Classes\CLSID\'
+    TargetObject|contains: '\InprocServer32'
+  filter_legit:
+    Details|contains:
+      - 'C:\Windows\'
+      - 'C:\Program Files\'
+  condition: selection and not filter_legit
+falsepositives:
+  - Legitimate per-user COM component installation
+  - Developer environments registering COM objects
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - TargetObject
+groupBy:
+  - ComputerName
+mitre:
+  tactic: persistence
+  technique: T1546.015

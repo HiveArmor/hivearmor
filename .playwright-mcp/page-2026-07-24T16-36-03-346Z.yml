@@ -1,0 +1,70 @@
+- generic [ref=f12e3]:
+  - banner [ref=f12e4]:
+    - generic [ref=f12e5]: HiveArmor
+    - generic [ref=f12e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f12e13]'
+      - generic "Reconnecting..." [ref=f12e16]: 0 EPS
+      - button "Notifications" [ref=f12e18] [cursor=pointer]
+      - button "Help" [ref=f12e23] [cursor=pointer]
+      - button "User menu" [ref=f12e28] [cursor=pointer]:
+        - generic [ref=f12e29]: AA
+        - generic [ref=f12e30]: admin
+  - navigation [ref=f12e31]:
+    - generic [ref=f12e32]:
+      - generic [ref=f12e33]:
+        - generic [ref=f12e34]: COMMAND
+        - generic [ref=f12e35]:
+          - button "Analyst Queue" [ref=f12e36] [cursor=pointer]
+          - button "Alerts" [ref=f12e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f12e47] [cursor=pointer]
+          - button "Incidents" [ref=f12e54] [cursor=pointer]
+      - generic [ref=f12e61]:
+        - generic [ref=f12e62]: INVESTIGATE
+        - generic [ref=f12e63]:
+          - button "Search & Hunt" [ref=f12e64] [cursor=pointer]
+          - button "Investigations" [ref=f12e70] [cursor=pointer]
+          - button "Entities" [ref=f12e75] [cursor=pointer]
+      - generic [ref=f12e83]:
+        - generic [ref=f12e84]: DEFEND
+        - generic [ref=f12e85]:
+          - button "Detection Rules" [ref=f12e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f12e91] [cursor=pointer]
+      - generic [ref=f12e96]:
+        - generic [ref=f12e97]: POSTURE
+        - generic [ref=f12e98]:
+          - button "Assets" [ref=f12e99] [cursor=pointer]
+          - button "Identities" [ref=f12e105] [cursor=pointer]
+          - button "Active Directory" [ref=f12e113] [cursor=pointer]
+          - button "Exposure" [ref=f12e121] [cursor=pointer]
+          - button "Sensors" [ref=f12e128] [cursor=pointer]
+          - button "Compliance" [ref=f12e133] [cursor=pointer]
+      - generic [ref=f12e139]:
+        - generic [ref=f12e140]: DASHBOARDS
+        - button "Studio" [ref=f12e142] [cursor=pointer]
+      - generic [ref=f12e148]:
+        - generic [ref=f12e149]: REPORT
+        - button "Scheduled Reports" [ref=f12e151] [cursor=pointer]
+      - generic [ref=f12e157]:
+        - generic [ref=f12e158]: ADMINISTRATION
+        - generic [ref=f12e159]:
+          - button "Users" [ref=f12e160] [cursor=pointer]
+          - button "Integrations" [ref=f12e175] [cursor=pointer]
+          - button "Notifications" [ref=f12e180] [cursor=pointer]
+          - button "Audit Log" [ref=f12e186] [cursor=pointer]
+          - button "Settings" [ref=f12e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f12e199] [cursor=pointer]
+  - main [ref=f12e202]:
+    - generic [ref=f12e203]:
+      - generic [ref=f12e204]:
+        - button "Fields" [ref=f12e205] [cursor=pointer]
+        - generic "Search query editor" [ref=f12e207]: Enter KQL or Lucene query...
+        - button "Last 1 hour" [ref=f12e212] [cursor=pointer]
+        - button "Search" [disabled] [ref=f12e218]
+      - generic [ref=f12e222]: Execute a search to view event distribution
+      - generic [ref=f12e230]:
+        - generic [ref=f12e231]:
+          - heading "Field Browser" [level=3] [ref=f12e232]
+          - button "Close field browser" [ref=f12e233] [cursor=pointer]
+        - textbox "Filter fields..." [ref=f12e242]
+        - listbox [ref=f12e243]:
+          - generic [ref=f12e244]: No fields found

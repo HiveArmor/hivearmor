@@ -1,0 +1,37 @@
+id: ha-linux-006
+title: SSH Authorized Keys File Modification
+status: stable
+description: Detects modifications to SSH authorized_keys files which may indicate an attacker establishing persistent remote access via an added SSH public key.
+logsource:
+  product: linux
+  service: auditd
+level: high
+tags:
+  - attack.persistence
+  - attack.T1098.004
+detection:
+  selection:
+    type: PATH
+    name|contains:
+      - /.ssh/authorized_keys
+      - /.ssh/authorized_keys2
+  condition: selection
+falsepositives:
+  - Legitimate SSH key deployment by configuration management systems
+  - Authorized user adding their own SSH public keys
+fields:
+  - name
+  - uid
+  - comm
+impact:
+  confidentiality: high
+  integrity: high
+  availability: low
+deduplicateBy:
+  - name
+  - uid
+groupBy:
+  - uid
+mitre:
+  tactic: persistence
+  technique: T1098.004

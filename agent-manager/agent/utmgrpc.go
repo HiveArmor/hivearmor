@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/threatwinds/go-sdk/catcher"
 	"github.com/hivearmor/agent-manager/config"
+	"github.com/threatwinds/go-sdk/catcher"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
@@ -50,6 +50,8 @@ func StartGrpcServer() {
 
 	grpcServer := grpc.NewServer(
 		grpc.Creds(transportCredentials),
+		grpc.MaxRecvMsgSize(4*1024*1024),
+		grpc.MaxSendMsgSize(4*1024*1024),
 		grpc.ChainUnaryInterceptor(UnaryInterceptor),
 		grpc.StreamInterceptor(StreamInterceptor))
 

@@ -1,0 +1,113 @@
+- generic [ref=f3e3]:
+  - banner [ref=f3e4]:
+    - generic [ref=f3e5]: HiveArmor
+    - generic [ref=f3e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f3e13]'
+      - generic "Reconnecting..." [ref=f3e16]: 0 EPS
+      - button "Notifications" [ref=f3e18] [cursor=pointer]
+      - button "Help" [ref=f3e23] [cursor=pointer]
+      - button "User menu" [ref=f3e28] [cursor=pointer]:
+        - generic [ref=f3e29]: AA
+        - generic [ref=f3e30]: admin
+  - navigation [ref=f3e31]:
+    - generic [ref=f3e32]:
+      - generic [ref=f3e33]:
+        - generic [ref=f3e34]: COMMAND
+        - generic [ref=f3e35]:
+          - button "Analyst Queue" [ref=f3e36] [cursor=pointer]
+          - button "Alerts" [ref=f3e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f3e47] [cursor=pointer]
+          - button "Incidents" [ref=f3e54] [cursor=pointer]
+      - generic [ref=f3e61]:
+        - generic [ref=f3e62]: INVESTIGATE
+        - generic [ref=f3e63]:
+          - button "Search & Hunt" [ref=f3e64] [cursor=pointer]
+          - button "Investigations" [ref=f3e70] [cursor=pointer]
+          - button "Entities" [ref=f3e75] [cursor=pointer]
+      - generic [ref=f3e83]:
+        - generic [ref=f3e84]: DEFEND
+        - generic [ref=f3e85]:
+          - button "Detection Rules" [ref=f3e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f3e91] [cursor=pointer]
+      - generic [ref=f3e96]:
+        - generic [ref=f3e97]: POSTURE
+        - generic [ref=f3e98]:
+          - button "Assets" [ref=f3e99] [cursor=pointer]
+          - button "Identities" [ref=f3e105] [cursor=pointer]
+          - button "Active Directory" [ref=f3e113] [cursor=pointer]
+          - button "Exposure" [ref=f3e121] [cursor=pointer]
+          - button "Sensors" [ref=f3e128] [cursor=pointer]
+          - button "Compliance" [ref=f3e133] [cursor=pointer]
+      - generic [ref=f3e139]:
+        - generic [ref=f3e140]: DASHBOARDS
+        - button "Studio" [ref=f3e142] [cursor=pointer]
+      - generic [ref=f3e148]:
+        - generic [ref=f3e149]: REPORT
+        - button "Scheduled Reports" [ref=f3e151] [cursor=pointer]
+      - generic [ref=f3e157]:
+        - generic [ref=f3e158]: ADMINISTRATION
+        - generic [ref=f3e159]:
+          - button "Users" [ref=f3e160] [cursor=pointer]
+          - button "Integrations" [ref=f3e175] [cursor=pointer]
+          - button "Notifications" [ref=f3e180] [cursor=pointer]
+          - button "Audit Log" [ref=f3e186] [cursor=pointer]
+          - button "Settings" [ref=f3e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f3e199] [cursor=pointer]
+  - main [ref=f3e202]:
+    - generic [ref=f3e203]:
+      - generic [ref=f3e204]:
+        - generic [ref=f3e205]:
+          - generic [ref=f3e206]:
+            - link "Detection Rules" [ref=f3e207] [cursor=pointer]:
+              - /url: /rules
+            - text: /
+          - generic [ref=f3e208]: New Rule
+        - generic [ref=f3e209]:
+          - heading "New Rule" [level=1] [ref=f3e211]
+          - generic [ref=f3e213]:
+            - generic [ref=f3e214]:
+              - generic "Unsaved changes indicator" [ref=f3e215]
+              - text: Unsaved changes
+            - button "Save rule" [ref=f3e216] [cursor=pointer]:
+              - generic [ref=f3e217]: Save
+            - button "Test rule" [disabled]:
+              - generic: Test
+            - button "Discard changes" [ref=f3e218] [cursor=pointer]:
+              - generic [ref=f3e219]: Discard
+            - button "Import from Sigma" [ref=f3e220] [cursor=pointer]:
+              - generic [ref=f3e221]: Sigma Import
+      - generic [ref=f3e222]:
+        - generic [ref=f3e224]:
+          - generic [ref=f3e225]:
+            - generic [ref=f3e227]:
+              - text: Rule Name
+              - generic [ref=f3e228]: "*"
+            - textbox "Rule Name" [ref=f3e231]:
+              - /placeholder: e.g. Brute Force Login Detected
+          - generic [ref=f3e233]:
+            - generic [ref=f3e235]:
+              - text: Data Types
+              - generic [ref=f3e236]: "*"
+            - listbox "Select data types…" [ref=f3e238]:
+              - option "Log" [ref=f3e239]
+              - option "Windows" [ref=f3e240]
+              - option "Network" [ref=f3e241]
+              - option "Endpoint" [ref=f3e242]
+              - option "Cloud" [ref=f3e243]
+              - option "Email" [ref=f3e244]
+              - option "DNS" [ref=f3e245]
+              - option "Other" [ref=f3e246]
+          - generic [ref=f3e248]:
+            - generic [ref=f3e249]: Active
+            - generic [ref=f3e251]:
+              - generic [ref=f3e252] [cursor=pointer]:
+                - switch "Inactive" [ref=f3e253]
+                - generic [ref=f3e255]: Inactive
+              - generic [ref=f3e256]: This rule will not generate alerts until activated.
+          - generic [ref=f3e258]:
+            - generic [ref=f3e259]: Sigma Rule ID
+            - generic [ref=f3e261]:
+              - textbox "Sigma Rule ID" [ref=f3e263]:
+                - /placeholder: e.g. a1b2c3d4-e5f6-...
+              - generic [ref=f3e264]: Optional. UUID of the upstream Sigma rule if this rule originates from Sigma.
+        - generic [ref=f3e265]: Loading...

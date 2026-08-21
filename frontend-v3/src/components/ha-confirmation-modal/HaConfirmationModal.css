@@ -1,0 +1,65 @@
+.ha-confirmation-modal.pf-v6-c-modal-box {
+  overflow: hidden;
+  max-width: calc(100vw - 32px);
+  border: 1px solid var(--ha-border-strong);
+  border-radius: var(--ha-radius-panel);
+  background: var(--ha-surface-elevated);
+  box-shadow: var(--ha-shadow-high);
+}
+
+.ha-confirmation-modal__backdrop.pf-v6-c-backdrop {
+  background: color-mix(in srgb, var(--ha-surface-app) 86%, transparent);
+}
+
+.ha-confirmation-modal .pf-v6-c-modal-box__header {
+  padding: 16px 18px 13px;
+  border-bottom: 1px solid var(--ha-border-subtle);
+  background: color-mix(in srgb, var(--ha-surface-panel) 94%, transparent);
+}
+
+.ha-confirmation-modal .pf-v6-c-modal-box__title {
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-section-title);
+  font-weight: 680;
+}
+
+.ha-confirmation-modal .pf-v6-c-modal-box__close {
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-confirmation-modal__body.pf-v6-c-modal-box__body {
+  padding: 16px 18px;
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-body);
+  line-height: 1.5;
+}
+
+.ha-confirmation-modal__body p {
+  margin: 0;
+}
+
+.ha-confirmation-modal__guardrail {
+  margin-top: 14px;
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb, var(--ha-state-warning) 36%, var(--ha-border-subtle));
+  border-radius: var(--ha-radius-control);
+  background: color-mix(in srgb, var(--ha-state-warning) 8%, var(--ha-surface-panel));
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+}
+
+.ha-confirmation-modal__footer.pf-v6-c-modal-box__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--ha-border-subtle);
+  background: var(--ha-surface-panel);
+}
+
+@media (max-width: 520px) {
+  .ha-confirmation-modal__footer.pf-v6-c-modal-box__footer {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+}

@@ -1,0 +1,80 @@
+.ha-auth-container {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: var(--ha-surface-app);
+}
+
+.ha-auth-workspace {
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-workspace);
+  background: var(--ha-surface-panel);
+  box-shadow: var(--ha-shadow-medium);
+}
+
+.ha-auth-panel {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  min-width: 0;
+  padding: 40px;
+  background: var(--ha-surface-panel);
+}
+
+.ha-auth-card {
+  width: 100%;
+  max-width: 400px;
+  text-align: left;
+}
+.ha-auth-aside { display: none; }
+
+.ha-auth-container[data-variant='split'] {
+  background:
+    radial-gradient(circle at 17% 18%, color-mix(in srgb, var(--ha-action-primary) 10%, transparent), transparent 29%),
+    var(--ha-surface-app);
+}
+
+.ha-auth-container[data-variant='split'] .ha-auth-workspace {
+  max-width: 1180px;
+  min-height: min(760px, calc(100vh - 40px));
+  display: grid;
+  grid-template-columns: minmax(420px, 1.12fr) minmax(440px, .88fr);
+}
+
+.ha-auth-container[data-variant='split'] .ha-auth-aside {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  overflow: hidden;
+  padding: clamp(44px, 6vw, 84px);
+  border-right: 1px solid var(--ha-border-default);
+  background: var(--ha-surface-sidebar);
+}
+
+.ha-auth-container[data-variant='split'] .ha-auth-panel {
+  place-items: center;
+  align-content: center;
+  padding: clamp(36px, 5vw, 72px);
+}
+
+.ha-auth-container[data-variant='split'] .ha-auth-card {
+  max-width: 400px;
+}
+
+@media (max-width: 940px) {
+  .ha-auth-container[data-variant='split'] .ha-auth-workspace { max-width: 720px; grid-template-columns: 1fr; }
+  .ha-auth-container[data-variant='split'] .ha-auth-aside { display: none; }
+}
+
+@media (max-width: 560px) {
+  .ha-auth-container { padding: 0; place-items: stretch; }
+  .ha-auth-workspace,
+  .ha-auth-container[data-variant='split'] .ha-auth-workspace { min-height: 100vh; border: 0; border-radius: 0; }
+  .ha-auth-panel,
+  .ha-auth-container[data-variant='split'] .ha-auth-panel { align-items: start; padding: 32px 22px; }
+}

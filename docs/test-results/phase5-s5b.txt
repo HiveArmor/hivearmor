@@ -1,0 +1,56 @@
+Sprint S-5B — Saved Queries Backend + Frontend
+==============================================
+Date: 2026-07-21
+
+## TypeScript
+npx tsc --noEmit → 0 errors
+
+## Vitest
+Tests before: 492/492 pass
+Tests after:  505/505 pass (13 new tests added)
+New test file: frontend-v2/src/services/__tests__/saved-query.service.test.ts
+
+## Files Created
+Backend:
+  backend/src/main/resources/config/liquibase/changelog/20260721002_add_saved_queries.xml
+  backend/src/main/java/com/hivearmor/domain/UtmSavedQuery.java
+  backend/src/main/java/com/hivearmor/repository/UtmSavedQueryRepository.java
+  backend/src/main/java/com/hivearmor/web/rest/SavedQueryResource.java
+  backend/src/test/java/com/hivearmor/web/rest/SavedQueryResourceIT.java
+
+Frontend:
+  frontend-v2/src/services/saved-query.service.ts
+  frontend-v2/src/services/__tests__/saved-query.service.test.ts
+
+## Files Modified
+  backend/src/main/resources/config/liquibase/master.xml (added 20260721002)
+  frontend-v2/src/components/logs/log-saved-queries.tsx (migrated from logAnalyzerService to savedQueryService + migration banner)
+
+## Feature Summary
+- Liquibase table: hive_saved_query (id, user_login, query_name, query_text, index_pattern, time_range JSONB, filters JSONB, is_shared, created_at, updated_at)
+- Indexes: idx_hive_saved_query_user_login, idx_hive_saved_query_is_shared
+- Entity: UtmSavedQuery with @EntityListeners(AuditingEntityListener.class)
+- Repository: findByUserLoginOrIsSharedTrueOrderByCreatedAtDesc() for GET list
+- REST endpoints:
+    GET    /api/ha-saved-queries  — own + shared; ANALYST/USER/SOC_MANAGER/ADMIN/READ_ONLY
+    POST   /api/ha-saved-queries  — create; ANALYST/USER/SOC_MANAGER/ADMIN (READ_ONLY → 403)
+    PUT    /api/ha-saved-queries/{id} — owner or ADMIN only; otherwise → 403
+    DELETE /api/ha-saved-queries/{id} — owner or ADMIN only; otherwise → 403
+- Frontend service: savedQueryService (list/create/update/delete) using @/lib/api
+- Component migration: log-saved-queries.tsx now calls savedQueryService.list/create/update/delete
+- localStorage migration banner: appears when backend is empty AND localStorage has 'savedQueries' key
+  - "Import N saved queries from this browser?" banner with Import button
+  - Import → POST each item → remove localStorage key → refetch from backend
+  - Dismiss → hides banner but DOES NOT delete localStorage data
+
+## Backend Tests (require mvn to run)
+Run: cd backend && mvn -s settings.xml test -Dtest=SavedQueryResourceIT
+Tests written:
+  - POST → 201 (createQuery_returnsCreated)
+  - READ_ONLY POST → 403 (createQuery_readOnly_returns403)
+  - GET list → 200 + X-Total-Count (listQueries_returnsOkWithList)
+  - READ_ONLY GET → 200 (listQueries_readOnly_canGet)
+  - PUT own query → 200 (updateQuery_ownQuery_returnsOk)
+  - PUT other's query → 403 (updateQuery_otherUsersQuery_returns403)
+  - DELETE own query → 204 (deleteQuery_ownQuery_returnsNoContent)
+  - DELETE other's query → 403 (deleteQuery_otherUsersQuery_returns403)

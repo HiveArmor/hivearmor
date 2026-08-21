@@ -1,0 +1,11 @@
+- generic [ref=f2e2]:
+  - heading "Unexpected Application Error!" [level=2] [ref=f2e5]
+  - heading "Cannot set properties of undefined (setting 'dataIndex')" [level=3] [ref=f2e6]
+  - generic [ref=f2e7]: "TypeError: Cannot set properties of undefined (setting 'dataIndex') at Graph.update (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44186:92) at createGraphFromNodeEdge (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44418:10) at GraphSeriesModel.getInitialData (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44454:18) at SeriesModel.init (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:18757:21) at GraphSeriesModel.init (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:44430:27) at GlobalModel.<anonymous> (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:15328:24) at Array.forEach (<anonymous>) at each (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:291:58) at GlobalModel.visitComponent (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:15288:6) at entity.topologicalTravel (http://localhost:3000/node_modules/.vite/deps/echarts.js?v=d60f55b8:13494:16)"
+  - paragraph [ref=f2e8]: 💿 Hey developer 👋
+  - paragraph [ref=f2e9]:
+    - text: You can provide a way better UX than this when your app throws errors by providing your own
+    - code [ref=f2e10]: ErrorBoundary
+    - text: or
+    - code [ref=f2e11]: errorElement
+    - text: prop on your route.

@@ -1,0 +1,103 @@
+import { useCallback, useMemo, useRef } from 'react';
+
+import type { ColDef, RowClickedEvent } from 'ag-grid-community';
+import type { AgGridReact } from 'ag-grid-react';
+
+import type { HuntEvent, HuntRowDensity } from '../searchHunt.types';
+
+import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+
+export interface SearchResultsGridProps {
+  events: HuntEvent[];
+  loading?: boolean;
+  visibleColumns: string[];
+  density: HuntRowDensity;
+  onSelectionChanged: (selectedIds: string[]) => void;
+  onActivateEvent: (event: HuntEvent) => void;
+}
+
+const severityOrder: Record<HuntEvent['severity'], number> = {
+  critical: 5,
+  high: 4,
+  medium: 3,
+  low: 2,
+  info: 1,
+};
+
+export function SearchResultsGrid({
+  events,
+  loading = false,
+  visibleColumns,
+  density,
+  onSelectionChanged,
+  onActivateEvent,
+}: SearchResultsGridProps): JSX.Element {
+  const gridRef = useRef<AgGridReact>(null);
+
+  const allColumns = useMemo<Record<string, ColDef<HuntEvent>>>(() => ({
+    timestamp: {
+      headerName: 'Event time', field: 'timestamp', width: 188, pinned: 'left', lockPinned: true,
+      cellClass: 'hunt-grid__mono',
+      valueFormatter: ({ value }) => value ? new Date(String(value)).toISOString().replace('T', ' ').replace('Z', ' Z') : '—',
+    },
+    severity: {
+      headerName: 'Severity', field: 'severity', width: 104,
+      comparator: (a, b) => severityOrder[a as HuntEvent['severity']] - severityOrder[b as HuntEvent['severity']],
+      cellRenderer: ({ value }: { value?: HuntEvent['severity'] }) => value ? <span className="hunt-severity" data-severity={value}><i aria-hidden="true" />{value}</span> : '—',
+    },
+    dataSource: { headerName: 'Source', field: 'dataSource', width: 108 },
+    dataset: { headerName: 'Dataset', field: 'dataset', width: 158, cellClass: 'hunt-grid__mono' },
+    category: { headerName: 'Category', field: 'category', width: 112 },
+    action: { headerName: 'Action', field: 'action', width: 138, cellClass: 'hunt-grid__mono' },
+    host: { headerName: 'Host', field: 'host', width: 132, cellClass: 'hunt-grid__entity' },
+    user: { headerName: 'User', field: 'user', width: 126, cellClass: 'hunt-grid__entity' },
+    sourceIp: { headerName: 'Source IP', field: 'sourceIp', width: 132, cellClass: 'hunt-grid__mono' },
+    destinationIp: { headerName: 'Destination IP', field: 'destinationIp', width: 142, cellClass: 'hunt-grid__mono' },
+    tenantName: { headerName: 'Tenant', field: 'tenantName', width: 146 },
+    message: { headerName: 'Event summary', field: 'message', minWidth: 320, flex: 1, tooltipField: 'message' },
+    alertCount: {
+      headerName: 'Alerts', field: 'alertCount', width: 76, cellClass: 'hunt-grid__number',
+      valueFormatter: ({ value }) => Number(value) > 0 ? String(value) : '—',
+    },
+  }), []);
+
+  const columnDefs = useMemo<ColDef<HuntEvent>[]>(() => [
+    {
+      headerName: '', colId: 'selection', width: 38, pinned: 'left', lockPinned: true,
+      checkboxSelection: true, headerCheckboxSelection: true, sortable: false, resizable: false, suppressMovable: true,
+    },
+    ...visibleColumns.map((id) => allColumns[id] ?? {
+      headerName: id,
+      colId: id,
+      width: 150,
+      valueGetter: ({ data }: { data?: HuntEvent }) => data?.normalized[id],
+      cellClass: 'hunt-grid__mono',
+    }),
+  ], [allColumns, visibleColumns]);
+
+  const handleSelection = useCallback((rows: unknown[]) => {
+    onSelectionChanged((rows as HuntEvent[]).map((row) => row.id));
+  }, [onSelectionChanged]);
+
+  const handleRowClicked = useCallback((event: RowClickedEvent<HuntEvent>) => {
+    if (event.data) onActivateEvent(event.data);
+  }, [onActivateEvent]);
+
+  return (
+    <SiemDataGrid
+      ref={gridRef}
+      className="hunt-results-grid"
+      ariaLabel="Hunt event results. Use arrow keys to navigate and Enter to open event context."
+      columnDefs={columnDefs}
+      rowData={events}
+      loading={loading}
+      rowHeight={density === 'compact' ? 30 : density === 'comfortable' ? 42 : 36}
+      rowSelection="multiple"
+      suppressRowClickSelection
+      onSelectionChanged={handleSelection}
+      onRowClicked={handleRowClicked}
+      getRowId={({ data }) => (data as HuntEvent).id}
+      defaultColDef={{ sortable: true, filter: false, resizable: true }}
+    />
+  );
+}

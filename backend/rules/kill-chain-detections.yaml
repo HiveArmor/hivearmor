@@ -1,0 +1,75 @@
+- id: 5003
+  name: "Network: Port Scan or Blocked Connection Sweep"
+  dataTypes:
+    - generic
+  category: "Discovery"
+  technique: "T1046"
+  adversary: "origin"
+  description: "Multiple blocked connection attempts from a single source — indicative of port scanning."
+  where: |
+    contains("raw", "BLOCK src=") && safe("origin.ip", "") != ""
+  deduplicateBy:
+    - "adversary.ip"
+  groupBy:
+    - "adversary.ip"
+  impact:
+    confidentiality: 1
+    integrity: 1
+    availability: 1
+
+- id: 5004
+  name: "Lateral Movement: SSH Login from Internal Host"
+  dataTypes:
+    - linux
+  category: "Lateral Movement"
+  technique: "T1021.004"
+  adversary: "origin"
+  description: "Successful SSH authentication from an internal RFC1918 address — lateral movement indicator."
+  where: |
+    (contains("log.message", "Accepted password") || contains("log.message", "Accepted publickey")) && contains("origin.ip", "10.")
+  deduplicateBy:
+    - "adversary.ip"
+  groupBy:
+    - "adversary.ip"
+  impact:
+    confidentiality: 3
+    integrity: 2
+    availability: 1
+
+- id: 5005
+  name: "Collection: Sensitive File Access Detected"
+  dataTypes:
+    - linux
+  category: "Collection"
+  technique: "T1005"
+  adversary: "origin"
+  description: "Access to a sensitive system file such as /etc/shadow, /etc/passwd, or database config files."
+  where: |
+    contains("raw", "audit: type=PATH") && (contains("raw", "/etc/shadow") || contains("raw", "/etc/passwd") || contains("raw", "pg_hba.conf") || contains("raw", "postgresql.conf"))
+  deduplicateBy:
+    - "adversary.ip"
+  groupBy:
+    - "adversary.ip"
+  impact:
+    confidentiality: 3
+    integrity: 1
+    availability: 0
+
+- id: 5006
+  name: "Exfiltration: Large Outbound Data Transfer"
+  dataTypes:
+    - generic
+  category: "Exfiltration"
+  technique: "T1048"
+  adversary: "origin"
+  description: "Unusually large outbound data transfer allowed through the firewall."
+  where: |
+    contains("raw", "ALLOW src=") && contains("raw", "bytes=") && contains("raw", "dst=185.")
+  deduplicateBy:
+    - "adversary.ip"
+  groupBy:
+    - "adversary.ip"
+  impact:
+    confidentiality: 3
+    integrity: 2
+    availability: 1

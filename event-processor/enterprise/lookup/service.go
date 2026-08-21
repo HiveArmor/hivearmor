@@ -3,13 +3,13 @@ package lookup
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/event-processor/internal/httpclient"
+	"github.com/hivearmor/sdk/plugins"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -20,14 +20,14 @@ type assetEntry struct {
 }
 
 type identityEntry struct {
-	fullName    string
-	department  string
-	role        string
+	fullName   string
+	department string
+	role       string
 }
 
 var (
 	lMu        sync.RWMutex
-	assets     = map[string]assetEntry{}   // keyed by IP
+	assets     = map[string]assetEntry{}    // keyed by IP
 	identities = map[string]identityEntry{} // keyed by username
 	lHTTP      *http.Client
 	lOSURL     string
@@ -42,12 +42,7 @@ func Init(osURL, user, pass string) {
 		lOSURL = osURL
 		lOSUser = user
 		lOSPass = pass
-		lHTTP = &http.Client{
-			Timeout: 5 * time.Second,
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
-		}
+		lHTTP = httpclient.MustClient(5 * time.Second)
 		go refreshLoop()
 	})
 }

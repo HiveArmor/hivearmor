@@ -1,0 +1,54 @@
+# Correlation Rule: Encoded PowerShell Execution
+# Detects PowerShell processes launched with encoded commands (-EncodedCommand or -enc),
+# a common technique used by attackers to obfuscate malicious scripts and evade
+# signature-based detection.
+# MITRE ATT&CK: T1059.001 — Command and Scripting Interpreter: PowerShell (Execution)
+
+id: rule-encoded-powershell
+name: "Encoded PowerShell Execution"
+description: "Detects PowerShell execution with encoded command arguments, commonly used to obfuscate malicious payloads"
+severity: critical
+enabled: true
+
+mitre:
+  tactic: "Execution"
+  technique: "T1059.001"
+  subtechnique: ""
+  name: "Command and Scripting Interpreter: PowerShell"
+
+# Match condition — which events feed this rule
+# Targets process creation events where powershell.exe is the process name
+match:
+  index: "v3-hive-log-*"
+  filter:
+    - field: "process.name"
+      operator: "equals"
+      value: "powershell.exe"
+
+# Correlation — CEL expression for simple match (single event fires the rule)
+# No aggregation, no groupBy, no time window — triggers immediately on match.
+#
+# The CEL regex matches the command line for the -EncodedCommand or -enc flags.
+# The pattern uses case-insensitive matching with (?i) and word boundary checks:
+#   - "(?i)" enables case-insensitive mode (handles -ENCODEDCOMMAND, -Enc, etc.)
+#   - "-EncodedCommand" matches the full flag name
+#   - "-enc" matches the common short alias (with word boundary via \b to avoid
+#     matching unrelated flags like -Encrypt or -Encoding)
+#   - The alternation (|) allows either form to trigger the rule
+correlation:
+  type: "simple"
+  cel: |
+    process.command_line.matches("(?i)-(EncodedCommand|enc)\\b")
+
+# Alert template — generated when correlation condition is met
+alert:
+  title: "Encoded PowerShell Execution: {{host.name}}"
+  description: "PowerShell with encoded command detected on {{host.name}} by {{user.name}}"
+  riskScore: 90
+  entities:
+    - field: "host.name"
+      type: "host"
+    - field: "user.name"
+      type: "user"
+    - field: "source.ip"
+      type: "ip"

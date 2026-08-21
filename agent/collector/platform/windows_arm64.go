@@ -17,11 +17,11 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/threatwinds/go-sdk/entities"
-	"github.com/threatwinds/go-sdk/plugins"
 	"github.com/hivearmor/agent/agent"
 	"github.com/hivearmor/agent/config"
 	"github.com/hivearmor/agent/utils"
+	"github.com/hivearmor/sdk/entities"
+	"github.com/hivearmor/sdk/plugins"
 	"golang.org/x/sys/windows"
 )
 
@@ -253,7 +253,7 @@ func (w *Windows) Name() string {
 	return "windows-arm64"
 }
 
-func (w *Windows) Start(ctx context.Context, queue chan *plugins.Log) {
+func (w *Windows) Start(ctx context.Context, queue chan<- *plugins.Log) {
 	defer func() {
 		if r := recover(); r != nil {
 			utils.Logger.ErrorF("panic in Windows ARM64 collector: %v", r)
@@ -315,7 +315,7 @@ func (w *Windows) Start(ctx context.Context, queue chan *plugins.Log) {
 	utils.Logger.Info("Windows ARM64 collector stopped.")
 }
 
-func eventWorker(queue chan *plugins.Log) {
+func eventWorker(queue chan<- *plugins.Log) {
 	host, err := os.Hostname()
 	if err != nil {
 		utils.Logger.ErrorF("error getting hostname: %v", err)
@@ -346,13 +346,7 @@ func eventWorker(queue chan *plugins.Log) {
 			DataType:   string(config.DataTypeWindowsAgent),
 			Raw:        validatedLog,
 		}
-		select {
-		case queue <- log:
-		default:
-			agent.LogsDropped.Add(1)
-			agent.WriteToDLQ("windows", log)
-			utils.Logger.LogF(400, "windows: LogQueue full; dropping event")
-		}
+		agent.Offer(queue, "windows", log)
 	}
 }
 

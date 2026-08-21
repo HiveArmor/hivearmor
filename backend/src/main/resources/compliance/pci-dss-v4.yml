@@ -1,0 +1,301 @@
+framework:
+  id: PCI-DSS-V4
+  name: PCI DSS v4.0
+  shortName: PCI-DSSv4
+  version: "4.0.1"
+  description: >
+    Payment Card Industry Data Security Standard version 4.0 — requirements for entities
+    that store, process, or transmit cardholder data.
+
+families:
+  - id: R1
+    name: Install and Maintain Network Security Controls
+    controls:
+      - id: R1.1
+        name: Processes and mechanisms for network security controls are defined and understood
+        description: Ensure network security control processes are documented and maintained.
+        severity: high
+      - id: R1.2
+        name: Network security controls are configured and maintained
+        description: Configure and maintain network security controls to protect cardholder data.
+        severity: high
+      - id: R1.3
+        name: Network access to and from the cardholder data environment is restricted
+        description: Restrict inbound and outbound traffic to the cardholder data environment.
+        severity: critical
+      - id: R1.4
+        name: Network connections between trusted and untrusted networks are controlled
+        description: Control connections between trusted and untrusted network segments.
+        severity: high
+      - id: R1.5
+        name: Risks to the CDE from computing devices connecting to untrusted networks are mitigated
+        description: Mitigate risks from devices that connect to both untrusted networks and the CDE.
+        severity: high
+
+  - id: R2
+    name: Apply Secure Configurations to All System Components
+    controls:
+      - id: R2.1
+        name: Processes and mechanisms for secure configurations are defined and understood
+        description: Document and maintain processes for applying secure configurations.
+        severity: medium
+      - id: R2.2
+        name: System components are configured and managed securely
+        description: Manage system components with secure configuration baselines.
+        severity: high
+      - id: R2.3
+        name: Wireless environments are configured and managed securely
+        description: Secure wireless environments connected to the cardholder data environment.
+        severity: high
+
+  - id: R3
+    name: Protect Stored Account Data
+    controls:
+      - id: R3.1
+        name: Processes and mechanisms for protecting stored account data are defined
+        description: Document and maintain processes for protecting stored account data.
+        severity: high
+      - id: R3.2
+        name: Storage of account data is kept to a minimum
+        description: Minimize storage of account data through data retention and disposal policies.
+        severity: high
+      - id: R3.3
+        name: Sensitive authentication data is not stored after authorization
+        description: Do not store sensitive authentication data after the authorization process.
+        severity: critical
+      - id: R3.4
+        name: Access to displays of full PAN and ability to copy PAN is restricted
+        description: Restrict access to full primary account number displays.
+        severity: high
+      - id: R3.5
+        name: Primary account number is secured wherever it is stored
+        description: Render PAN unreadable using strong cryptography wherever it is stored.
+        severity: critical
+
+  - id: R4
+    name: Protect Cardholder Data with Strong Cryptography During Transmission
+    controls:
+      - id: R4.1
+        name: Processes and mechanisms for strong cryptography during transmission are defined
+        description: Document and maintain processes for protecting data during transmission.
+        severity: high
+      - id: R4.2
+        name: PAN is protected with strong cryptography during transmission over open networks
+        description: Encrypt PAN with strong cryptography when transmitted over open public networks.
+        severity: critical
+
+  - id: R5
+    name: Protect All Systems and Networks from Malicious Software
+    controls:
+      - id: R5.1
+        name: Processes and mechanisms for protecting against malicious software are defined
+        description: Document processes for detecting and protecting against malicious software.
+        severity: high
+      - id: R5.2
+        name: Malicious software is prevented or detected and addressed
+        description: Deploy anti-malware solutions on all systems commonly affected by malware.
+        severity: high
+      - id: R5.3
+        name: Anti-malware mechanisms and processes are active, maintained, and monitored
+        description: Ensure anti-malware mechanisms are current, actively running, and generating logs.
+        severity: high
+      - id: R5.4
+        name: Anti-phishing mechanisms protect users against phishing attacks
+        description: Implement technical controls and awareness to protect against phishing.
+        severity: medium
+
+  - id: R6
+    name: Develop and Maintain Secure Systems and Software
+    controls:
+      - id: R6.1
+        name: Processes and mechanisms for secure systems and software are defined and understood
+        description: Document and maintain processes for developing and maintaining secure systems.
+        severity: medium
+      - id: R6.2
+        name: Bespoke and custom software is developed securely
+        description: Apply secure development practices to all bespoke and custom software.
+        severity: high
+      - id: R6.3
+        name: Security vulnerabilities are identified and addressed
+        description: Identify and address security vulnerabilities through vulnerability management.
+        severity: high
+      - id: R6.4
+        name: Public-facing web applications are protected against attacks
+        description: Protect public-facing web applications against known attack vectors.
+        severity: critical
+      - id: R6.5
+        name: Changes to all system components are managed securely
+        description: Manage change control processes for all changes to system components.
+        severity: high
+
+  - id: R7
+    name: Restrict Access to System Components and Cardholder Data by Business Need to Know
+    controls:
+      - id: R7.1
+        name: Processes and mechanisms for restricting access are defined and understood
+        description: Document access control policies restricting access to cardholder data.
+        severity: high
+      - id: R7.2
+        name: Access to system components and data is appropriately defined and assigned
+        description: Limit access to system components based on job classification and function.
+        severity: high
+      - id: R7.3
+        name: Access to system components and data is managed via an access control system
+        description: Enforce access restrictions using access control systems or mechanisms.
+        severity: high
+
+  - id: R8
+    name: Identify Users and Authenticate Access to System Components
+    controls:
+      - id: R8.1
+        name: Processes and mechanisms for identification and authentication are defined
+        description: Document processes for user identification and authentication management.
+        severity: high
+      - id: R8.2
+        name: User identification and related accounts are strictly managed
+        description: Manage user accounts throughout their lifecycle with strict controls.
+        severity: high
+      - id: R8.3
+        name: Strong authentication for users and administrators is established and managed
+        description: Enforce strong authentication mechanisms including multi-factor authentication.
+        severity: critical
+      - id: R8.4
+        name: Multi-factor authentication is implemented to secure access to the CDE
+        description: Implement MFA for all access into the cardholder data environment.
+        severity: critical
+      - id: R8.5
+        name: Multi-factor authentication systems are configured to prevent misuse
+        description: Configure MFA systems to prevent bypass and replay attacks.
+        severity: high
+      - id: R8.6
+        name: Use of application and system accounts is strictly managed
+        description: Manage application and system accounts with strict access controls.
+        severity: high
+
+  - id: R9
+    name: Restrict Physical Access to Cardholder Data
+    controls:
+      - id: R9.1
+        name: Processes and mechanisms for restricting physical access are defined
+        description: Document processes for restricting physical access to cardholder data.
+        severity: medium
+      - id: R9.2
+        name: Physical access controls manage entry into facilities and sensitive areas
+        description: Control physical access to facilities with cardholder data systems.
+        severity: high
+      - id: R9.3
+        name: Physical access for personnel and visitors is authorized and managed
+        description: Authorize and manage physical access for personnel and visitors.
+        severity: high
+      - id: R9.4
+        name: Media with cardholder data is securely stored, accessed, distributed, and destroyed
+        description: Protect media containing cardholder data through secure handling procedures.
+        severity: high
+      - id: R9.5
+        name: Point-of-interaction devices are protected from tampering and unauthorized substitution
+        description: Protect POI devices from physical tampering and unauthorized replacement.
+        severity: high
+
+  - id: R10
+    name: Log and Monitor All Access to System Components and Cardholder Data
+    controls:
+      - id: R10.1
+        name: Processes and mechanisms for logging and monitoring are defined and documented
+        description: Document and maintain processes for logging and monitoring all access.
+        severity: high
+      - id: R10.2
+        name: Audit logs are implemented to support the detection of anomalies and suspicious activity
+        description: Implement audit logs to record all user access to cardholder data.
+        severity: critical
+      - id: R10.3
+        name: Audit logs are protected from destruction and unauthorized modifications
+        description: Protect audit trail files from unauthorized viewing and modification.
+        severity: high
+      - id: R10.4
+        name: Audit logs are reviewed to identify anomalies or suspicious activity
+        description: Review audit logs daily and follow up on exceptions and anomalies.
+        severity: high
+      - id: R10.5
+        name: Audit log history is retained and available for analysis
+        description: Retain audit trail history for at least twelve months with minimum three months online.
+        severity: high
+      - id: R10.6
+        name: Time-synchronization mechanisms support consistent time settings across systems
+        description: Synchronize critical system clocks and times using industry-accepted sources.
+        severity: medium
+      - id: R10.7
+        name: Failures of critical security control systems are detected, reported, and responded to
+        description: Detect and alert on failures of critical security control systems promptly.
+        severity: critical
+
+  - id: R11
+    name: Test Security of Systems and Networks Regularly
+    controls:
+      - id: R11.1
+        name: Processes and mechanisms for testing security are defined and understood
+        description: Document and maintain processes for regularly testing security.
+        severity: medium
+      - id: R11.2
+        name: Wireless access points are identified and monitored with unauthorized APs addressed
+        description: Detect and identify all authorized and unauthorized wireless access points.
+        severity: high
+      - id: R11.3
+        name: External and internal vulnerabilities are regularly identified and addressed
+        description: Perform internal and external vulnerability scans at least quarterly.
+        severity: high
+      - id: R11.4
+        name: External and internal penetration testing is regularly performed
+        description: Conduct penetration testing at least annually and after significant changes.
+        severity: high
+      - id: R11.5
+        name: Network intrusions and unexpected file changes are detected and responded to
+        description: Deploy change-detection and intrusion-detection mechanisms for critical systems.
+        severity: high
+      - id: R11.6
+        name: Unauthorized changes on payment pages are detected and responded to
+        description: Deploy mechanisms to detect unauthorized changes to HTTP headers and payment pages.
+        severity: critical
+
+  - id: R12
+    name: Support Information Security with Organizational Policies and Programs
+    controls:
+      - id: R12.1
+        name: A comprehensive information security policy is known and governs all activities
+        description: Establish, maintain, and disseminate an information security policy.
+        severity: medium
+      - id: R12.2
+        name: Acceptable use policies for end-user technologies are defined and implemented
+        description: Define acceptable use policies for critical technologies and access to cardholder data.
+        severity: medium
+      - id: R12.3
+        name: Risks to the cardholder data environment are formally identified and managed
+        description: Perform a formal risk assessment at least annually identifying critical assets and threats.
+        severity: high
+      - id: R12.4
+        name: PCI DSS compliance is managed throughout the year
+        description: Assign responsibility for PCI DSS compliance and maintain ongoing program management.
+        severity: medium
+      - id: R12.5
+        name: PCI DSS scope is documented and validated regularly
+        description: Document and confirm PCI DSS scope at least annually and upon environment changes.
+        severity: high
+      - id: R12.6
+        name: Security awareness education is an ongoing activity
+        description: Implement a formal security awareness program for all personnel.
+        severity: medium
+      - id: R12.7
+        name: Personnel are screened to reduce risks from insider threats
+        description: Screen potential personnel prior to hire to minimize insider threat risk.
+        severity: medium
+      - id: R12.8
+        name: Risk to information assets from third-party service provider relationships is managed
+        description: Maintain policies and manage information security of service provider relationships.
+        severity: high
+      - id: R12.9
+        name: Third-party service providers support PCI DSS compliance of their customers
+        description: Ensure service providers acknowledge responsibility for cardholder data security.
+        severity: medium
+      - id: R12.10
+        name: Suspected and confirmed security incidents are responded to immediately
+        description: Implement an incident response plan to be activated immediately upon breach.
+        severity: critical

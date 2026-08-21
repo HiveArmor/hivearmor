@@ -1,0 +1,8 @@
+# HiveArmor pilot detection pack v1.0.0
+# Native CEL rules (name + where). Sigma files elsewhere are not loaded.
+version: 1.0.0
+pack: hivearmor-pilot-detection
+requiredRules:
+  - PILOT-WIN-PS-ENCODED
+  - PILOT-WIN-FAILED-LOGON
+  - PILOT-LIN-AUTH-FAIL

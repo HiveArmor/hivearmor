@@ -1,0 +1,46 @@
+id: f8a9b0c1-d2e3-4567-fabc-678901234518
+title: SSH Port Forwarding for Lateral Movement
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: medium
+tags:
+  - attack.lateral_movement
+  - attack.T1021
+  - attack.T1021.004
+  - attack.command_and_control
+  - attack.T1572
+detection:
+  selection:
+    Image|endswith: '\ssh.exe'
+    CommandLine|contains:
+      - ' -L '
+      - ' -R '
+      - ' -D '
+      - '-NTR'
+      - '-NTL'
+  selection_tools:
+    Image|endswith:
+      - '\plink.exe'
+      - '\putty.exe'
+    CommandLine|contains:
+      - '-L '
+      - '-R '
+      - '-D '
+  condition: selection or selection_tools
+falsepositives:
+  - Authorized developers using SSH tunnels for development
+  - VPN replacement via SSH by administrators
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: lateral-movement
+  technique: T1021.004

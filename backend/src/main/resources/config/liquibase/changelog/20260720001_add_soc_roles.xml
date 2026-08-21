@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        S-2C: Seed three new SOC-specific roles into jhi_authority.
+
+        ROLE_SOC_MANAGER  — rule authoring, SOAR playbooks, analyst workload management
+        ROLE_ANALYST      — full read/write on alerts, incidents, queue, and sessions
+        ROLE_READ_ONLY    — read-only access to dashboards and log explorer
+
+        These mirror AuthoritiesConstants.java constants added in the same sprint.
+        Guarded with preConditions so re-running is safe.
+    -->
+    <changeSet id="20260720001-soc-roles" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM jhi_authority WHERE name IN ('ROLE_SOC_MANAGER', 'ROLE_ANALYST', 'ROLE_READ_ONLY')
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="jhi_authority">
+            <column name="name" value="ROLE_SOC_MANAGER"/>
+            <column name="name_show" value="SOC Manager"/>
+        </insert>
+
+        <insert tableName="jhi_authority">
+            <column name="name" value="ROLE_ANALYST"/>
+            <column name="name_show" value="Analyst"/>
+        </insert>
+
+        <insert tableName="jhi_authority">
+            <column name="name" value="ROLE_READ_ONLY"/>
+            <column name="name_show" value="Read Only"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

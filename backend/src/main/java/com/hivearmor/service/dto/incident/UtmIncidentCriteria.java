@@ -37,6 +37,12 @@ public class UtmIncidentCriteria implements Serializable {
 
     private IntegerFilter incidentSeverity;
 
+    private StringFilter incidentPriority;
+
+    private InstantFilter slaDeadline;
+
+    private BooleanFilter slaBreached;
+
     public LongFilter getId() {
         return id;
     }
@@ -93,6 +99,30 @@ public class UtmIncidentCriteria implements Serializable {
         this.incidentSeverity = incidentSeverity;
     }
 
+    public StringFilter getIncidentPriority() {
+        return incidentPriority;
+    }
+
+    public void setIncidentPriority(StringFilter incidentPriority) {
+        this.incidentPriority = incidentPriority;
+    }
+
+    public InstantFilter getSlaDeadline() {
+        return slaDeadline;
+    }
+
+    public void setSlaDeadline(InstantFilter slaDeadline) {
+        this.slaDeadline = slaDeadline;
+    }
+
+    public BooleanFilter getSlaBreached() {
+        return slaBreached;
+    }
+
+    public void setSlaBreached(BooleanFilter slaBreached) {
+        this.slaBreached = slaBreached;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -109,7 +139,10 @@ public class UtmIncidentCriteria implements Serializable {
                 Objects.equals(incidentStatus, that.incidentStatus) &&
                 Objects.equals(incidentAssignedTo, that.incidentAssignedTo) &&
                 Objects.equals(incidentSeverity, that.incidentSeverity) &&
-                Objects.equals(incidentCreatedDate, that.incidentCreatedDate);
+                Objects.equals(incidentCreatedDate, that.incidentCreatedDate) &&
+                Objects.equals(incidentPriority, that.incidentPriority) &&
+                Objects.equals(slaDeadline, that.slaDeadline) &&
+                Objects.equals(slaBreached, that.slaBreached);
     }
 
     @Override
@@ -121,7 +154,10 @@ public class UtmIncidentCriteria implements Serializable {
             incidentStatus,
             incidentAssignedTo,
             incidentCreatedDate,
-            incidentSeverity
+            incidentSeverity,
+            incidentPriority,
+            slaDeadline,
+            slaBreached
         );
     }
 
@@ -134,6 +170,10 @@ public class UtmIncidentCriteria implements Serializable {
             (incidentStatus != null ? "incidentStatus=" + incidentStatus + ", " : "") +
             (incidentAssignedTo != null ? "incidentAssignedTo=" + incidentAssignedTo + ", " : "") +
             (incidentCreatedDate != null ? "incidentCreatedDate=" + incidentCreatedDate + ", " : "") +
+            (incidentSeverity != null ? "incidentSeverity=" + incidentSeverity + ", " : "") +
+            (incidentPriority != null ? "incidentPriority=" + incidentPriority + ", " : "") +
+            (slaDeadline != null ? "slaDeadline=" + slaDeadline + ", " : "") +
+            (slaBreached != null ? "slaBreached=" + slaBreached + ", " : "") +
             "}";
     }
 

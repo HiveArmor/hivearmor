@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hivearmor/event-processor/config"
 )
 
 func publicPort() string {
@@ -28,8 +29,11 @@ func StartPublicServer() {
 	go srv.ListenAndServe()
 }
 
-// StartIngestServer starts the test injection endpoint (default :8090, override INGEST_PORT).
+// StartIngestServer starts the test injection endpoint when inject is enabled.
 func StartIngestServer() {
+	if !config.InjectEnabled() {
+		return
+	}
 	r := ingestRouter()
 	srv := &http.Server{Addr: ingestPort(), Handler: r}
 	go srv.ListenAndServe()

@@ -1,0 +1,37 @@
+id: f4a5b6c7-d8e9-0123-fabc-234567890154
+title: WMI System Information Discovery
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: low
+tags:
+  - attack.discovery
+  - attack.T1082
+  - attack.T1057
+detection:
+  selection:
+    Image|endswith: '\wmic.exe'
+    CommandLine|contains:
+      - 'computersystem'
+      - 'os '
+      - 'process '
+      - 'useraccount'
+      - 'bios'
+  condition: selection
+falsepositives:
+  - IT inventory management tools
+  - System configuration scripts
+  - Automated deployment verification
+impact:
+  confidentiality: low
+  integrity: low
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: discovery
+  technique: T1082

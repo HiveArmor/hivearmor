@@ -11,12 +11,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/threatwinds/go-sdk/entities"
-	"github.com/threatwinds/go-sdk/plugins"
 	"github.com/hivearmor/agent/agent"
 	"github.com/hivearmor/agent/collector/auditd"
 	"github.com/hivearmor/agent/config"
 	"github.com/hivearmor/agent/utils"
+	"github.com/hivearmor/sdk/entities"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 const (
@@ -34,7 +34,7 @@ func (l *LinuxSystemArm64) Name() string {
 	return "linux-system"
 }
 
-func (l *LinuxSystemArm64) Start(ctx context.Context, queue chan *plugins.Log) {
+func (l *LinuxSystemArm64) Start(ctx context.Context, queue chan<- *plugins.Log) {
 	host, err := os.Hostname()
 	if err != nil {
 		utils.Logger.ErrorF("error getting hostname: %v", err)
@@ -73,7 +73,7 @@ func (l *LinuxSystemArm64) Start(ctx context.Context, queue chan *plugins.Log) {
 	}
 }
 
-func (l *LinuxSystemArm64) runJournalctl(ctx context.Context, host string, queue chan *plugins.Log) int {
+func (l *LinuxSystemArm64) runJournalctl(ctx context.Context, host string, queue chan<- *plugins.Log) int {
 	l.mu.Lock()
 	cmdCtx, cancel := context.WithCancel(ctx)
 	l.cancel = cancel
@@ -128,13 +128,7 @@ func (l *LinuxSystemArm64) runJournalctl(ctx context.Context, host string, queue
 			DataSource: host,
 			Raw:        validatedLog,
 		}
-		select {
-		case queue <- log:
-		default:
-			agent.LogsDropped.Add(1)
-			agent.WriteToDLQ("linux-system", log)
-			utils.Logger.LogF(400, "linux-system: LogQueue full; dropping journald event")
-		}
+		agent.Offer(queue, "linux-system", log)
 	}
 
 	if err := scanner.Err(); err != nil {

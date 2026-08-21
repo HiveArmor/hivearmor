@@ -1,0 +1,31 @@
+title: Registry Run Key Modification for Persistence
+id: f7c9b2e6-1a8d-4f5c-e0b4-7d6a5e2f9b1c
+status: test
+level: medium
+description: Identifies modifications to Windows registry Run keys commonly abused for persistence
+author: HiveArmor Threat Research
+date: 2024/04/20
+modified: 2025/03/10
+references:
+  - https://attack.mitre.org/techniques/T1547/001/
+tags:
+  - attack.persistence
+  - attack.t1547.001
+logsource:
+  category: registry_set
+  product: windows
+detection:
+  selection:
+    TargetObject|contains:
+      - '\CurrentVersion\Run'
+      - '\CurrentVersion\RunOnce'
+  filter_legit:
+    Details|contains:
+      - 'SecurityHealth'
+      - 'Windows Defender'
+      - 'OneDrive'
+      - 'Microsoft Teams'
+  condition: selection and not filter_legit
+falsepositives:
+  - Legitimate software installations
+  - System updates

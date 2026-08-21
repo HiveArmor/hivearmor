@@ -1,0 +1,36 @@
+# Positive: Internal host makes ≥10 SMB (port 445) connections to different internal targets
+#   within 10 minutes — Internal SMB/RDP Lateral Movement Detection.
+# Negative: Traffic from a public IP (not RFC-1918) does NOT satisfy the inCIDR check.
+rule: rules/netflow/netflow_lateral_movement_smb_rdp.yml
+description: "Internal SMB lateral movement — ≥10 connections from RFC-1918 source to port 445"
+
+# Trigger event
+events:
+  - timestamp: "2026-01-15T15:00:00Z"
+    dataType: netflow
+    origin:
+      ip: "192.168.10.5"
+    target:
+      ip: "192.168.10.20"
+      port: 445
+    log:
+      dataType: "netflow"
+
+  # Correlation events — same origin IP, target.port=445, 11 total to satisfy count=10
+  - timestamp: "2026-01-15T15:01:00Z"
+    dataType: netflow
+    origin:
+      ip: "192.168.10.5"
+    target:
+      ip: "192.168.10.21"
+      port: 445
+    log:
+      dataType: "netflow"
+      target.port: "445"
+
+repeat: 11
+
+expect:
+  alert: true
+  severity: "3"
+  name: "Internal SMB/RDP Lateral Movement Detection"

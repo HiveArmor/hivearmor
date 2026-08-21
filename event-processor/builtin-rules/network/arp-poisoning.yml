@@ -1,0 +1,37 @@
+id: ha-net-014
+title: ARP Cache Poisoning Detected
+status: stable
+description: Detects gratuitous ARP replies where a host claims an IP address already assigned to a different MAC address, which is the primary indicator of ARP cache poisoning used in man-in-the-middle attacks.
+logsource:
+  product: network
+  service: arp
+level: high
+tags:
+  - attack.credential_access
+  - attack.T1557.002
+detection:
+  selection:
+    event.action: arp_reply
+    network.type: arp
+    arp.gratuitous: 'true'
+  condition: selection
+falsepositives:
+  - Network equipment performing IP takeover in high-availability failover scenarios
+  - VMware or Hyper-V live migration temporarily announcing IP address changes
+fields:
+  - source.ip
+  - source.mac
+  - destination.ip
+  - event.action
+impact:
+  confidentiality: high
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - source.ip
+  - source.mac
+groupBy:
+  - source.ip
+mitre:
+  tactic: credential-access
+  technique: T1557.002

@@ -1,0 +1,285 @@
+- generic [active] [ref=f24e1]:
+  - generic [ref=f24e3]:
+    - link "Skip to main content" [ref=f24e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f24e5]:
+      - generic [ref=f24e6]:
+        - generic [ref=f24e12]: HiveArmor
+        - generic [ref=f24e13]: Security operations
+      - generic [ref=f24e14]:
+        - button "All authorized tenants" [ref=f24e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f24e24] [cursor=pointer]:
+          - generic [ref=f24e29]: ⌘ K
+        - generic [ref=f24e30]: Production
+      - generic [ref=f24e31]:
+        - 'status "Data pipeline: Healthy" [ref=f24e32]'
+        - status "Live events per second" [ref=f24e35]:
+          - generic [ref=f24e37]: 12,840 EPS
+        - button "Notifications" [ref=f24e38] [cursor=pointer]
+        - button "Help" [ref=f24e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f24e47]:
+      - generic [ref=f24e48]:
+        - region "COMMAND" [ref=f24e49]:
+          - generic [ref=f24e50]:
+            - button "Mission Control" [ref=f24e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f24e58] [cursor=pointer]
+            - button "Alerts" [ref=f24e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f24e67] [cursor=pointer]
+            - button "Incidents" [ref=f24e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f24e79]:
+          - generic [ref=f24e80]:
+            - button "Search & Hunt" [ref=f24e81] [cursor=pointer]
+            - button "Investigations" [ref=f24e86] [cursor=pointer]
+            - button "Entities" [ref=f24e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f24e97] [cursor=pointer]
+        - region "DEFEND" [ref=f24e103]:
+          - generic [ref=f24e104]:
+            - button "Detection Rules" [ref=f24e105] [cursor=pointer]
+            - button "Playbooks" [ref=f24e109] [cursor=pointer]
+            - button "Response Library" [ref=f24e114] [cursor=pointer]
+        - region "POSTURE" [ref=f24e118]:
+          - generic [ref=f24e119]:
+            - button "Assets" [ref=f24e120] [cursor=pointer]
+            - button "Identities" [ref=f24e125] [cursor=pointer]
+            - button "Active Directory" [ref=f24e132] [cursor=pointer]
+            - button "Exposure" [ref=f24e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f24e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f24e156] [cursor=pointer]
+            - button "Compliance" [ref=f24e162] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f24e167]:
+          - generic [ref=f24e168]:
+            - button "Endpoints" [ref=f24e169] [cursor=pointer]
+            - button "File Quarantine" [ref=f24e173] [cursor=pointer]
+            - button "File Integrity" [ref=f24e179] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f24e186]:
+          - button "Studio" [ref=f24e188] [cursor=pointer]
+        - region "REPORT" [ref=f24e193]:
+          - button "Scheduled Reports" [ref=f24e195] [cursor=pointer]
+      - generic [ref=f24e200]:
+        - button "User menu" [ref=f24e203] [cursor=pointer]:
+          - generic [ref=f24e204]: MC
+        - button "Pin sidebar open" [ref=f24e205] [cursor=pointer]
+    - main [ref=f24e208]:
+      - region [ref=f24e209]:
+        - generic [ref=f24e210]:
+          - generic [ref=f24e211]:
+            - generic [ref=f24e212]: Command / Mission Control
+            - heading "Mission Control" [level=1] [ref=f24e213]
+            - paragraph [ref=f24e214]: Prioritized risk, intervention work, telemetry health, and team capacity for the current shift.
+          - generic "Dashboard context and actions" [ref=f24e215]:
+            - generic [ref=f24e216]: All authorized tenants
+            - generic [ref=f24e217]: Last 24 hours
+            - generic [ref=f24e221]: Live · 07:43
+            - button "Refresh" [ref=f24e222] [cursor=pointer]
+        - generic [ref=f24e228]:
+          - generic [ref=f24e229]:
+            - strong [ref=f24e230]: Demonstration data
+            - text: · Stable fictional records for visual validation only.
+          - generic [ref=f24e231]: Northwind Financial · Meridian Health · Aegis Public Sector
+        - generic "Operational summary" [ref=f24e232]:
+          - article [ref=f24e233]:
+            - generic [ref=f24e234]: Critical open incidents
+            - strong [ref=f24e235]: "12"
+            - generic [ref=f24e236]: 3 escalated this shift
+            - generic [ref=f24e237]: +2 vs prior shift
+            - link "Open Critical open incidents" [ref=f24e238] [cursor=pointer]:
+              - /url: /incidents
+          - article [ref=f24e239]:
+            - generic [ref=f24e240]: Critical unassigned alerts
+            - strong [ref=f24e241]: "7"
+            - generic [ref=f24e242]: Oldest waiting 18 min
+            - generic [ref=f24e243]: 2 require triage
+            - link "Open Critical unassigned alerts" [ref=f24e244] [cursor=pointer]:
+              - /url: /queue
+          - article [ref=f24e245]:
+            - generic [ref=f24e246]: SLA at risk
+            - strong [ref=f24e247]: "9"
+            - generic [ref=f24e248]: Within the next 30 min
+            - generic [ref=f24e249]: +3 since 06:00
+            - link "Open SLA at risk" [ref=f24e250] [cursor=pointer]:
+              - /url: /queue
+          - article [ref=f24e251]:
+            - generic [ref=f24e252]: Active investigations
+            - strong [ref=f24e253]: "24"
+            - generic [ref=f24e254]: Across 3 tenant scopes
+            - generic [ref=f24e255]: 6 updated recently
+            - link "Open Active investigations" [ref=f24e256] [cursor=pointer]:
+              - /url: /investigations
+          - article [ref=f24e257]:
+            - generic [ref=f24e258]: Detection health
+            - strong [ref=f24e259]: 99.6%
+            - generic [ref=f24e260]: 2 pipelines delayed
+            - generic [ref=f24e261]: Within objective
+            - link "Open Detection health" [ref=f24e262] [cursor=pointer]:
+              - /url: /detection-rules
+          - article [ref=f24e263]:
+            - generic [ref=f24e264]: Data ingestion health
+            - strong [ref=f24e265]: 98.9%
+            - generic [ref=f24e266]: 1 source disconnected
+            - generic [ref=f24e267]: 1.84M EPS processed
+            - link "Open Data ingestion health" [ref=f24e268] [cursor=pointer]:
+              - /url: /posture/sensors
+        - generic [ref=f24e269]:
+          - article [ref=f24e270]:
+            - generic [ref=f24e271]:
+              - generic [ref=f24e272]:
+                - heading "Alert and incident trend" [level=2] [ref=f24e273]
+                - paragraph [ref=f24e274]: Use the relationship between alert volume and promoted incidents to identify investigation pressure.
+              - generic [ref=f24e275]: 24-hour view
+            - generic [ref=f24e276]:
+              - img "Alert and incident trend for the last 24 hours" [ref=f24e277]
+              - paragraph [ref=f24e281]: "Peak pressure occurred at 16:00: 329 alerts produced 26 incidents. Escalation remains above the overnight baseline."
+          - article [ref=f24e282]:
+            - generic [ref=f24e283]:
+              - generic [ref=f24e284]:
+                - heading "Operational health" [level=2] [ref=f24e285]
+                - paragraph [ref=f24e286]: Processing, coverage, readiness, and integration state.
+              - link "View sensors" [ref=f24e287] [cursor=pointer]:
+                - /url: /posture/sensors
+            - generic [ref=f24e288]:
+              - generic [ref=f24e289]:
+                - generic [ref=f24e291]:
+                  - generic [ref=f24e292]: Data ingestion
+                  - strong [ref=f24e293]: 98.9%
+                - generic [ref=f24e296]: 1 source disconnected
+              - generic [ref=f24e297]:
+                - generic [ref=f24e299]:
+                  - generic [ref=f24e300]: Sensor coverage
+                  - strong [ref=f24e301]: 97.4%
+                - generic [ref=f24e304]: 2,942 of 3,020 reporting
+              - generic [ref=f24e305]:
+                - generic [ref=f24e307]:
+                  - generic [ref=f24e308]: Detection processing
+                  - strong [ref=f24e309]: 99.6%
+                - generic [ref=f24e312]: Median latency 4.2 sec
+              - generic [ref=f24e313]:
+                - generic [ref=f24e315]:
+                  - generic [ref=f24e316]: Response readiness
+                  - strong [ref=f24e317]: 96.1%
+                - generic [ref=f24e320]: 2 connectors degraded
+              - generic [ref=f24e321]:
+                - generic [ref=f24e323]:
+                  - generic [ref=f24e324]: Integration health
+                  - strong [ref=f24e325]: 94.8%
+                - generic [ref=f24e328]: 1 credential expires soon
+          - article [ref=f24e329]:
+            - generic [ref=f24e330]:
+              - generic [ref=f24e331]:
+                - heading "Priority work stream" [level=2] [ref=f24e332]
+                - paragraph [ref=f24e333]: Ranked by severity, SLA exposure, and current ownership.
+              - link "Open analyst queue" [ref=f24e334] [cursor=pointer]:
+                - /url: /queue
+            - list [ref=f24e335]:
+              - listitem [ref=f24e336]:
+                - generic [ref=f24e337]: critical
+                - generic [ref=f24e338]:
+                  - strong [ref=f24e339]: Suspicious privileged-account login
+                  - generic [ref=f24e340]: INC-2841 · Incident
+                - generic [ref=f24e341]:
+                  - strong [ref=f24e342]: Northwind Financial
+                  - text: Maya Chen
+                - generic [ref=f24e343]: SLA 18 min
+                - link "Open" [ref=f24e344] [cursor=pointer]:
+                  - /url: /incidents
+              - listitem [ref=f24e345]:
+                - generic [ref=f24e346]: critical
+                - generic [ref=f24e347]:
+                  - strong [ref=f24e348]: Lateral movement using remote service
+                  - generic [ref=f24e349]: INC-2837 · Incident
+                - generic [ref=f24e350]:
+                  - strong [ref=f24e351]: Aegis Public Sector
+                  - text: Unassigned
+                - generic [ref=f24e352]: SLA 9 min
+                - link "Open" [ref=f24e353] [cursor=pointer]:
+                  - /url: /incidents
+              - listitem [ref=f24e354]:
+                - generic [ref=f24e355]: high
+                - generic [ref=f24e356]:
+                  - strong [ref=f24e357]: Repeated MFA fatigue attempts
+                  - generic [ref=f24e358]: ALT-99120 · Alert
+                - generic [ref=f24e359]:
+                  - strong [ref=f24e360]: Meridian Health
+                  - text: Luis Romero
+                - generic [ref=f24e361]: SLA 26 min
+                - link "Open" [ref=f24e362] [cursor=pointer]:
+                  - /url: /incidents
+              - listitem [ref=f24e363]:
+                - generic [ref=f24e364]: high
+                - generic [ref=f24e365]:
+                  - strong [ref=f24e366]: Detection pipeline delay
+                  - generic [ref=f24e367]: DET-104 · Health
+                - generic [ref=f24e368]:
+                  - strong [ref=f24e369]: Northwind Financial
+                  - text: Platform Ops
+                - generic [ref=f24e370]: SLA 22 min
+                - link "Open" [ref=f24e371] [cursor=pointer]:
+                  - /url: /incidents
+              - listitem [ref=f24e372]:
+                - generic [ref=f24e373]: medium
+                - generic [ref=f24e374]:
+                  - strong [ref=f24e375]: Encoded PowerShell execution
+                  - generic [ref=f24e376]: ALT-99088 · Alert
+                - generic [ref=f24e377]:
+                  - strong [ref=f24e378]: Aegis Public Sector
+                  - text: Ari Patel
+                - generic [ref=f24e379]: SLA 48 min
+                - link "Open" [ref=f24e380] [cursor=pointer]:
+                  - /url: /incidents
+          - article [ref=f24e381]:
+            - generic [ref=f24e382]:
+              - generic [ref=f24e383]:
+                - heading "Analyst workload" [level=2] [ref=f24e384]
+                - paragraph [ref=f24e385]: Assigned work, capacity, and SLA exposure.
+              - link "Manage queue" [ref=f24e386] [cursor=pointer]:
+                - /url: /queue
+            - generic [ref=f24e387]:
+              - generic [ref=f24e388]:
+                - generic [ref=f24e389]:
+                  - strong [ref=f24e390]: Maya Chen
+                  - generic [ref=f24e391]: 8 assigned
+                - generic [ref=f24e394]: 2 SLA risk
+              - generic [ref=f24e395]:
+                - generic [ref=f24e396]:
+                  - strong [ref=f24e397]: Ari Patel
+                  - generic [ref=f24e398]: 6 assigned
+                - generic [ref=f24e401]: 1 SLA risk
+              - generic [ref=f24e402]:
+                - generic [ref=f24e403]:
+                  - strong [ref=f24e404]: Luis Romero
+                  - generic [ref=f24e405]: 5 assigned
+                - generic [ref=f24e408]: 2 SLA risk
+              - generic [ref=f24e409]:
+                - generic [ref=f24e410]:
+                  - strong [ref=f24e411]: Unassigned queue
+                  - generic [ref=f24e412]: 7 assigned
+                - generic [ref=f24e415]: 4 SLA risk
+          - article [ref=f24e416]:
+            - generic [ref=f24e417]:
+              - generic [ref=f24e418]:
+                - heading "Recent activity" [level=2] [ref=f24e419]
+                - paragraph [ref=f24e420]: Operational changes requiring shared shift awareness.
+              - link "View activity" [ref=f24e421] [cursor=pointer]:
+                - /url: /incidents
+            - generic [ref=f24e422]:
+              - generic [ref=f24e423]:
+                - strong [ref=f24e424]: Incident escalated
+                - paragraph [ref=f24e425]: INC-2841 · Privileged-account login
+                - generic [ref=f24e426]: Maya Chen · 3 min ago
+              - generic [ref=f24e427]:
+                - strong [ref=f24e428]: Playbook completed
+                - paragraph [ref=f24e429]: Contain suspicious endpoint
+                - generic [ref=f24e430]: HiveArmor Automation · 9 min ago
+              - generic [ref=f24e431]:
+                - strong [ref=f24e432]: Alert assigned
+                - paragraph [ref=f24e433]: ALT-99120 · MFA fatigue attempts
+                - generic [ref=f24e434]: Shift Lead · 14 min ago
+              - generic [ref=f24e435]:
+                - strong [ref=f24e436]: Sensor disconnected
+                - paragraph [ref=f24e437]: mrd-clinic-edge-04
+                - generic [ref=f24e438]: Meridian Health · 18 min ago
+              - generic [ref=f24e439]:
+                - strong [ref=f24e440]: Detection rule changed
+                - paragraph [ref=f24e441]: Encoded PowerShell sequence
+                - generic [ref=f24e442]: Ari Patel · 31 min ago
+  - generic:
+    - list "Notifications"

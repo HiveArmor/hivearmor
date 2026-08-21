@@ -1,0 +1,864 @@
+- generic [active] [ref=f15e1]:
+  - generic [ref=f15e5]:
+    - link "Skip to main content" [ref=f15e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f15e7]:
+      - generic [ref=f15e8]:
+        - generic [ref=f15e14]: HiveArmor
+        - generic [ref=f15e15]: Security operations
+      - generic [ref=f15e16]:
+        - button "All authorized tenants" [ref=f15e18] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f15e26] [cursor=pointer]:
+          - generic [ref=f15e31]: ⌘ K
+        - generic [ref=f15e32]: Production
+      - generic [ref=f15e33]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=f15e34]'
+        - status "Live events per second" [ref=f15e37]:
+          - generic [ref=f15e39]: 0 EPS
+        - button "Notifications" [ref=f15e40] [cursor=pointer]
+        - button "Help" [ref=f15e45] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f15e49]:
+      - generic [ref=f15e50]:
+        - region "COMMAND" [ref=f15e51]:
+          - generic [ref=f15e52]:
+            - button "Mission Control" [ref=f15e53] [cursor=pointer]
+            - button "Analyst Queue" [ref=f15e60] [cursor=pointer]
+            - button "Alerts" [ref=f15e64] [cursor=pointer]
+            - button "Correlated Findings" [ref=f15e69] [cursor=pointer]
+            - button "Incidents" [ref=f15e75] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f15e81]:
+          - generic [ref=f15e82]:
+            - button "Search & Hunt" [ref=f15e83] [cursor=pointer]
+            - button "Investigations" [ref=f15e88] [cursor=pointer]
+            - button "Entities" [ref=f15e92] [cursor=pointer]
+            - button "Threat Constellation" [ref=f15e99] [cursor=pointer]
+        - region "DEFEND" [ref=f15e105]:
+          - generic [ref=f15e106]:
+            - button "Detection Rules" [ref=f15e107] [cursor=pointer]
+            - button "Playbooks" [ref=f15e111] [cursor=pointer]
+            - button "Response Library" [ref=f15e116] [cursor=pointer]
+        - region "POSTURE" [ref=f15e120]:
+          - generic [ref=f15e121]:
+            - button "Assets" [ref=f15e122] [cursor=pointer]
+            - button "Identities" [ref=f15e127] [cursor=pointer]
+            - button "Active Directory" [ref=f15e134] [cursor=pointer]
+            - button "Exposure" [ref=f15e141] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f15e147] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f15e158] [cursor=pointer]
+            - button "Sensors" [ref=f15e164] [cursor=pointer]
+            - button "Compliance" [ref=f15e168] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f15e173]:
+          - generic [ref=f15e174]:
+            - button "Endpoints" [ref=f15e175] [cursor=pointer]
+            - button "File Quarantine" [ref=f15e179] [cursor=pointer]
+            - button "File Integrity" [ref=f15e185] [cursor=pointer]
+            - button "Agent Policies" [ref=f15e192] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f15e197]:
+          - button "Studio" [ref=f15e199] [cursor=pointer]
+        - region "REPORT" [ref=f15e204]:
+          - button "Scheduled Reports" [ref=f15e206] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f15e211]:
+          - generic [ref=f15e212]:
+            - button "Users" [ref=f15e213] [cursor=pointer]
+            - button "Integrations" [ref=f15e227] [cursor=pointer]
+            - button "Notifications" [ref=f15e231] [cursor=pointer]
+            - button "Audit Log" [ref=f15e236] [cursor=pointer]
+            - button "Settings" [ref=f15e241] [cursor=pointer]
+      - generic [ref=f15e246]:
+        - button "User menu" [ref=f15e249] [cursor=pointer]:
+          - generic [ref=f15e250]: AA
+        - button "Pin sidebar open" [ref=f15e251] [cursor=pointer]
+    - main [ref=f15e254]:
+      - generic [ref=f15e255]:
+        - generic [ref=f15e256]:
+          - generic [ref=f15e263]:
+            - generic [ref=f15e264]: INVESTIGATION
+            - heading "Threat Constellation" [level=1] [ref=f15e265]
+            - paragraph [ref=f15e266]: Evidence-backed entity and activity relationships
+          - generic [ref=f15e267]:
+            - generic [ref=f15e268]: fresh
+            - button "Refresh" [ref=f15e275] [cursor=pointer]
+        - region "Relationship graph summary" [ref=f15e281]:
+          - article [ref=f15e282]:
+            - generic [ref=f15e283]: Visible entities
+            - strong [ref=f15e288]: "139"
+            - generic [ref=f15e289]: 0 external
+          - article [ref=f15e290]:
+            - generic [ref=f15e291]: Relationships
+            - strong [ref=f15e296]: "335"
+            - generic [ref=f15e297]: 335 authorized
+          - article [ref=f15e298]:
+            - generic [ref=f15e299]: Highest risk
+            - strong [ref=f15e302]: "99"
+            - generic [ref=f15e303]: normalized /100
+          - article [ref=f15e304]:
+            - generic [ref=f15e305]: Alert references
+            - strong [ref=f15e308]: "681"
+            - generic [ref=f15e309]: across visible entities
+          - article [ref=f15e310]:
+            - generic [ref=f15e311]: Activity window
+            - strong [ref=f15e315]: 24h
+            - generic [ref=f15e316]: 2 relationship hops
+          - article [ref=f15e317]:
+            - generic [ref=f15e318]: Snapshot
+            - strong [ref=f15e324]: 10:52:29
+            - generic [ref=f15e325]: 32 ms query
+        - region "Threat relationship controls" [ref=f15e326]:
+          - generic [ref=f15e327]:
+            - button "Relationship filters" [ref=f15e328] [cursor=pointer]:
+              - generic [ref=f15e331]: "17"
+            - textbox "Find entity in constellation" [ref=f15e336]:
+              - /placeholder: Find an entity, IP, process, or domain
+            - generic [ref=f15e337]:
+              - generic [ref=f15e338]: Window
+              - combobox "Window" [ref=f15e339] [cursor=pointer]:
+                - option "Last 1 hour"
+                - option "Last 4 hours"
+                - option "Last 24 hours" [selected]
+                - option "Last 7 days"
+                - option "Last 30 days"
+            - generic [ref=f15e340]:
+              - generic [ref=f15e341]: Hops
+              - combobox "Hops" [ref=f15e342] [cursor=pointer]:
+                - option "1 hop"
+                - option "2 hops" [selected]
+                - option "3 hops"
+            - generic [ref=f15e343]:
+              - generic [ref=f15e344]: Risk
+              - combobox "Risk" [ref=f15e345] [cursor=pointer]:
+                - option "All risk" [selected]
+                - option "40+"
+                - option "60+"
+                - option "80+"
+            - generic "Graph view controls" [ref=f15e346]:
+              - button "Pause relationship flow" [ref=f15e347] [cursor=pointer]
+              - button "Zoom out" [ref=f15e351] [cursor=pointer]
+              - button "Zoom in" [ref=f15e353] [cursor=pointer]
+              - button "Fit graph to view" [ref=f15e355] [cursor=pointer]
+              - button "Enter full graph view" [ref=f15e359] [cursor=pointer]
+              - button "Reset relationship workspace" [ref=f15e365] [cursor=pointer]
+        - main [ref=f15e369]:
+          - complementary "Accessible graph inventory" [ref=f15e370]:
+            - tablist "Graph inventory" [ref=f15e372]:
+              - tab "Entities 139" [selected] [ref=f15e373] [cursor=pointer]:
+                - text: Entities
+                - generic [ref=f15e375]: "139"
+              - tab "Links 335" [ref=f15e376] [cursor=pointer]:
+                - text: Links
+                - generic [ref=f15e381]: "335"
+            - listbox "Visible entities" [ref=f15e382]:
+              - option "203.0.113.88 IP address · 8 alerts 99" [ref=f15e383] [cursor=pointer]:
+                - generic [ref=f15e390]:
+                  - strong [ref=f15e391]: 203.0.113.88
+                  - generic [ref=f15e392]: IP address · 8 alerts
+                - emphasis [ref=f15e393]: "99"
+              - option "mimikatz.exe Process · 5 alerts 99" [ref=f15e394] [cursor=pointer]:
+                - generic [ref=f15e401]:
+                  - strong [ref=f15e402]: mimikatz.exe
+                  - generic [ref=f15e403]: Process · 5 alerts
+                - emphasis [ref=f15e404]: "99"
+              - option "c2.malicious.io Domain · 11 alerts 99" [ref=f15e405] [cursor=pointer]:
+                - generic [ref=f15e412]:
+                  - strong [ref=f15e413]: c2.malicious.io
+                  - generic [ref=f15e414]: Domain · 11 alerts
+                - emphasis [ref=f15e415]: "99"
+              - option "ENG-SRV-012 Host · 8 alerts 98" [ref=f15e416] [cursor=pointer]:
+                - generic [ref=f15e420]:
+                  - strong [ref=f15e421]: ENG-SRV-012
+                  - generic [ref=f15e422]: Host · 8 alerts
+                - emphasis [ref=f15e423]: "98"
+              - option "cobalt_strike.exe Process · 1 alerts 98" [ref=f15e424] [cursor=pointer]:
+                - generic [ref=f15e431]:
+                  - strong [ref=f15e432]: cobalt_strike.exe
+                  - generic [ref=f15e433]: Process · 1 alerts
+                - emphasis [ref=f15e434]: "98"
+              - option "FIN-WKS-044 Host · 15 alerts 97" [ref=f15e435] [cursor=pointer]:
+                - generic [ref=f15e439]:
+                  - strong [ref=f15e440]: FIN-WKS-044
+                  - generic [ref=f15e441]: Host · 15 alerts
+                - emphasis [ref=f15e442]: "97"
+              - option "implant.exe File · 9 alerts 97" [ref=f15e443] [cursor=pointer]:
+                - generic [ref=f15e450]:
+                  - strong [ref=f15e451]: implant.exe
+                  - generic [ref=f15e452]: File · 9 alerts
+                - emphasis [ref=f15e453]: "97"
+              - option "cdn-update.xyz Domain · 7 alerts 97" [ref=f15e454] [cursor=pointer]:
+                - generic [ref=f15e461]:
+                  - strong [ref=f15e462]: cdn-update.xyz
+                  - generic [ref=f15e463]: Domain · 7 alerts
+                - emphasis [ref=f15e464]: "97"
+              - option "203.0.113.10 IP address · 7 alerts 96" [ref=f15e465] [cursor=pointer]:
+                - generic [ref=f15e472]:
+                  - strong [ref=f15e473]: 203.0.113.10
+                  - generic [ref=f15e474]: IP address · 7 alerts
+                - emphasis [ref=f15e475]: "96"
+              - option "beacon.dll File · 3 alerts 95" [ref=f15e476] [cursor=pointer]:
+                - generic [ref=f15e483]:
+                  - strong [ref=f15e484]: beacon.dll
+                  - generic [ref=f15e485]: File · 3 alerts
+                - emphasis [ref=f15e486]: "95"
+              - option "secure-login-portal.net Domain · 10 alerts 94" [ref=f15e487] [cursor=pointer]:
+                - generic [ref=f15e494]:
+                  - strong [ref=f15e495]: secure-login-portal.net
+                  - generic [ref=f15e496]: Domain · 10 alerts
+                - emphasis [ref=f15e497]: "94"
+              - option "203.0.113.88 IP address · 22 alerts 94" [ref=f15e498] [cursor=pointer]:
+                - generic [ref=f15e505]:
+                  - strong [ref=f15e506]: 203.0.113.88
+                  - generic [ref=f15e507]: IP address · 22 alerts
+                - emphasis [ref=f15e508]: "94"
+              - option "198.51.100.22 IP address · 0 alerts 92" [ref=f15e509] [cursor=pointer]:
+                - generic [ref=f15e516]:
+                  - strong [ref=f15e517]: 198.51.100.22
+                  - generic [ref=f15e518]: IP address · 0 alerts
+                - emphasis [ref=f15e519]: "92"
+              - option "payload.ps1 File · 6 alerts 92" [ref=f15e520] [cursor=pointer]:
+                - generic [ref=f15e527]:
+                  - strong [ref=f15e528]: payload.ps1
+                  - generic [ref=f15e529]: File · 6 alerts
+                - emphasis [ref=f15e530]: "92"
+              - option "198.51.100.30 IP address · 21 alerts 92" [ref=f15e531] [cursor=pointer]:
+                - generic [ref=f15e538]:
+                  - strong [ref=f15e539]: 198.51.100.30
+                  - generic [ref=f15e540]: IP address · 21 alerts
+                - emphasis [ref=f15e541]: "92"
+              - option "HR-LPT-001 Host · 9 alerts 91" [ref=f15e542] [cursor=pointer]:
+                - generic [ref=f15e546]:
+                  - strong [ref=f15e547]: HR-LPT-001
+                  - generic [ref=f15e548]: Host · 9 alerts
+                - emphasis [ref=f15e549]: "91"
+              - option "wm1-admin-svc-01 User · 17 alerts 91" [ref=f15e550] [cursor=pointer]:
+                - generic [ref=f15e555]:
+                  - strong [ref=f15e556]: wm1-admin-svc-01
+                  - generic [ref=f15e557]: User · 17 alerts
+                - emphasis [ref=f15e558]: "91"
+              - option "microsft-update.com Domain · 8 alerts 90" [ref=f15e559] [cursor=pointer]:
+                - generic [ref=f15e566]:
+                  - strong [ref=f15e567]: microsft-update.com
+                  - generic [ref=f15e568]: Domain · 8 alerts
+                - emphasis [ref=f15e569]: "90"
+              - option "wm2-admin-svc-01 User · 10 alerts 90" [ref=f15e570] [cursor=pointer]:
+                - generic [ref=f15e575]:
+                  - strong [ref=f15e576]: wm2-admin-svc-01
+                  - generic [ref=f15e577]: User · 10 alerts
+                - emphasis [ref=f15e578]: "90"
+              - option "198.51.100.5 IP address · 0 alerts 89" [ref=f15e579] [cursor=pointer]:
+                - generic [ref=f15e586]:
+                  - strong [ref=f15e587]: 198.51.100.5
+                  - generic [ref=f15e588]: IP address · 0 alerts
+                - emphasis [ref=f15e589]: "89"
+              - option "data-sync-pro.com Domain · 16 alerts 89" [ref=f15e590] [cursor=pointer]:
+                - generic [ref=f15e597]:
+                  - strong [ref=f15e598]: data-sync-pro.com
+                  - generic [ref=f15e599]: Domain · 16 alerts
+                - emphasis [ref=f15e600]: "89"
+              - option "203.0.113.99 IP address · 2 alerts 88" [ref=f15e601] [cursor=pointer]:
+                - generic [ref=f15e608]:
+                  - strong [ref=f15e609]: 203.0.113.99
+                  - generic [ref=f15e610]: IP address · 2 alerts
+                - emphasis [ref=f15e611]: "88"
+              - option "exfil.zip File · 8 alerts 88" [ref=f15e612] [cursor=pointer]:
+                - generic [ref=f15e619]:
+                  - strong [ref=f15e620]: exfil.zip
+                  - generic [ref=f15e621]: File · 8 alerts
+                - emphasis [ref=f15e622]: "88"
+              - option "DC-004 Host · 11 alerts 88" [ref=f15e623] [cursor=pointer]:
+                - generic [ref=f15e627]:
+                  - strong [ref=f15e628]: DC-004
+                  - generic [ref=f15e629]: Host · 11 alerts
+                - emphasis [ref=f15e630]: "88"
+              - option "dl-patch.info Domain · 13 alerts 86" [ref=f15e631] [cursor=pointer]:
+                - generic [ref=f15e638]:
+                  - strong [ref=f15e639]: dl-patch.info
+                  - generic [ref=f15e640]: Domain · 13 alerts
+                - emphasis [ref=f15e641]: "86"
+              - option "DC-005 Host · 9 alerts 86" [ref=f15e642] [cursor=pointer]:
+                - generic [ref=f15e646]:
+                  - strong [ref=f15e647]: DC-005
+                  - generic [ref=f15e648]: Host · 9 alerts
+                - emphasis [ref=f15e649]: "86"
+              - option "carlos.rodriguez User · 0 alerts 85" [ref=f15e650] [cursor=pointer]:
+                - generic [ref=f15e655]:
+                  - strong [ref=f15e656]: carlos.rodriguez
+                  - generic [ref=f15e657]: User · 0 alerts
+                - emphasis [ref=f15e658]: "85"
+              - option "203.0.113.50 IP address · 15 alerts 85" [ref=f15e659] [cursor=pointer]:
+                - generic [ref=f15e666]:
+                  - strong [ref=f15e667]: 203.0.113.50
+                  - generic [ref=f15e668]: IP address · 15 alerts
+                - emphasis [ref=f15e669]: "85"
+              - option "oliver.schmidt User · 12 alerts 84" [ref=f15e670] [cursor=pointer]:
+                - generic [ref=f15e675]:
+                  - strong [ref=f15e676]: oliver.schmidt
+                  - generic [ref=f15e677]: User · 12 alerts
+                - emphasis [ref=f15e678]: "84"
+              - option "ENG-SRV-015 Host · 13 alerts 83" [ref=f15e679] [cursor=pointer]:
+                - generic [ref=f15e683]:
+                  - strong [ref=f15e684]: ENG-SRV-015
+                  - generic [ref=f15e685]: Host · 13 alerts
+                - emphasis [ref=f15e686]: "83"
+              - option "david.nakamura User · 1 alerts 82" [ref=f15e687] [cursor=pointer]:
+                - generic [ref=f15e692]:
+                  - strong [ref=f15e693]: david.nakamura
+                  - generic [ref=f15e694]: User · 1 alerts
+                - emphasis [ref=f15e695]: "82"
+              - option "marcus.bailey User · 2 alerts 82" [ref=f15e696] [cursor=pointer]:
+                - generic [ref=f15e701]:
+                  - strong [ref=f15e702]: marcus.bailey
+                  - generic [ref=f15e703]: User · 2 alerts
+                - emphasis [ref=f15e704]: "82"
+              - option "203.0.113.22 IP address · 0 alerts 82" [ref=f15e705] [cursor=pointer]:
+                - generic [ref=f15e712]:
+                  - strong [ref=f15e713]: 203.0.113.22
+                  - generic [ref=f15e714]: IP address · 0 alerts
+                - emphasis [ref=f15e715]: "82"
+              - option "lisa.park User · 1 alerts 81" [ref=f15e716] [cursor=pointer]:
+                - generic [ref=f15e721]:
+                  - strong [ref=f15e722]: lisa.park
+                  - generic [ref=f15e723]: User · 1 alerts
+                - emphasis [ref=f15e724]: "81"
+              - option "fast-download.xyz Domain · 11 alerts 81" [ref=f15e725] [cursor=pointer]:
+                - generic [ref=f15e732]:
+                  - strong [ref=f15e733]: fast-download.xyz
+                  - generic [ref=f15e734]: Domain · 11 alerts
+                - emphasis [ref=f15e735]: "81"
+              - option "FIN-WKS-022 Host · 10 alerts 80" [ref=f15e736] [cursor=pointer]:
+                - generic [ref=f15e740]:
+                  - strong [ref=f15e741]: FIN-WKS-022
+                  - generic [ref=f15e742]: Host · 10 alerts
+                - emphasis [ref=f15e743]: "80"
+              - option "api-tracker.xyz Domain · 9 alerts 79" [ref=f15e744] [cursor=pointer]:
+                - generic [ref=f15e751]:
+                  - strong [ref=f15e752]: api-tracker.xyz
+                  - generic [ref=f15e753]: Domain · 9 alerts
+                - emphasis [ref=f15e754]: "79"
+              - option "anna.kowalski User · 9 alerts 79" [ref=f15e755] [cursor=pointer]:
+                - generic [ref=f15e760]:
+                  - strong [ref=f15e761]: anna.kowalski
+                  - generic [ref=f15e762]: User · 9 alerts
+                - emphasis [ref=f15e763]: "79"
+              - option "svc-deploy User · 0 alerts 78" [ref=f15e764] [cursor=pointer]:
+                - generic [ref=f15e769]:
+                  - strong [ref=f15e770]: svc-deploy
+                  - generic [ref=f15e771]: User · 0 alerts
+                - emphasis [ref=f15e772]: "78"
+              - option "203.0.113.77 IP address · 10 alerts 78" [ref=f15e773] [cursor=pointer]:
+                - generic [ref=f15e780]:
+                  - strong [ref=f15e781]: 203.0.113.77
+                  - generic [ref=f15e782]: IP address · 10 alerts
+                - emphasis [ref=f15e783]: "78"
+              - option "203.0.113.45 IP address · 3 alerts 77" [ref=f15e784] [cursor=pointer]:
+                - generic [ref=f15e791]:
+                  - strong [ref=f15e792]: 203.0.113.45
+                  - generic [ref=f15e793]: IP address · 3 alerts
+                - emphasis [ref=f15e794]: "77"
+              - option "HR-LPT-003 Host · 8 alerts 76" [ref=f15e795] [cursor=pointer]:
+                - generic [ref=f15e799]:
+                  - strong [ref=f15e800]: HR-LPT-003
+                  - generic [ref=f15e801]: Host · 8 alerts
+                - emphasis [ref=f15e802]: "76"
+              - option "HR-LPT-007 Host · 6 alerts 76" [ref=f15e803] [cursor=pointer]:
+                - generic [ref=f15e807]:
+                  - strong [ref=f15e808]: HR-LPT-007
+                  - generic [ref=f15e809]: Host · 6 alerts
+                - emphasis [ref=f15e810]: "76"
+              - option "aisha.thompson User · 4 alerts 76" [ref=f15e811] [cursor=pointer]:
+                - generic [ref=f15e816]:
+                  - strong [ref=f15e817]: aisha.thompson
+                  - generic [ref=f15e818]: User · 4 alerts
+                - emphasis [ref=f15e819]: "76"
+              - option "FIN-WKS-013 Host · 8 alerts 76" [ref=f15e820] [cursor=pointer]:
+                - generic [ref=f15e824]:
+                  - strong [ref=f15e825]: FIN-WKS-013
+                  - generic [ref=f15e826]: Host · 8 alerts
+                - emphasis [ref=f15e827]: "76"
+              - option "FIN-WKS-012 Host · 0 alerts 75" [ref=f15e828] [cursor=pointer]:
+                - generic [ref=f15e832]:
+                  - strong [ref=f15e833]: FIN-WKS-012
+                  - generic [ref=f15e834]: Host · 0 alerts
+                - emphasis [ref=f15e835]: "75"
+              - option "ENG-SRV-004 Host · 1 alerts 75" [ref=f15e836] [cursor=pointer]:
+                - generic [ref=f15e840]:
+                  - strong [ref=f15e841]: ENG-SRV-004
+                  - generic [ref=f15e842]: Host · 1 alerts
+                - emphasis [ref=f15e843]: "75"
+              - option "svc-monitoring User · 3 alerts 75" [ref=f15e844] [cursor=pointer]:
+                - generic [ref=f15e849]:
+                  - strong [ref=f15e850]: svc-monitoring
+                  - generic [ref=f15e851]: User · 3 alerts
+                - emphasis [ref=f15e852]: "75"
+              - option "198.51.100.15 IP address · 5 alerts 75" [ref=f15e853] [cursor=pointer]:
+                - generic [ref=f15e860]:
+                  - strong [ref=f15e861]: 198.51.100.15
+                  - generic [ref=f15e862]: IP address · 5 alerts
+                - emphasis [ref=f15e863]: "75"
+              - option "certutil.exe Process · 11 alerts 75" [ref=f15e864] [cursor=pointer]:
+                - generic [ref=f15e871]:
+                  - strong [ref=f15e872]: certutil.exe
+                  - generic [ref=f15e873]: Process · 11 alerts
+                - emphasis [ref=f15e874]: "75"
+              - option "dump.dmp File · 5 alerts 75" [ref=f15e875] [cursor=pointer]:
+                - generic [ref=f15e882]:
+                  - strong [ref=f15e883]: dump.dmp
+                  - generic [ref=f15e884]: File · 5 alerts
+                - emphasis [ref=f15e885]: "75"
+              - option "quinn.taylor User · 8 alerts 75" [ref=f15e886] [cursor=pointer]:
+                - generic [ref=f15e891]:
+                  - strong [ref=f15e892]: quinn.taylor
+                  - generic [ref=f15e893]: User · 8 alerts
+                - emphasis [ref=f15e894]: "75"
+              - option "ENG-SRV-008 Host · 1 alerts 73" [ref=f15e895] [cursor=pointer]:
+                - generic [ref=f15e899]:
+                  - strong [ref=f15e900]: ENG-SRV-008
+                  - generic [ref=f15e901]: Host · 1 alerts
+                - emphasis [ref=f15e902]: "73"
+              - option "FIN-WKS-003 Host · 2 alerts 72" [ref=f15e903] [cursor=pointer]:
+                - generic [ref=f15e907]:
+                  - strong [ref=f15e908]: FIN-WKS-003
+                  - generic [ref=f15e909]: Host · 2 alerts
+                - emphasis [ref=f15e910]: "72"
+              - option "ENG-SRV-003 Host · 6 alerts 72" [ref=f15e911] [cursor=pointer]:
+                - generic [ref=f15e915]:
+                  - strong [ref=f15e916]: ENG-SRV-003
+                  - generic [ref=f15e917]: Host · 6 alerts
+                - emphasis [ref=f15e918]: "72"
+              - option "powershell.exe Process · 8 alerts 72" [ref=f15e919] [cursor=pointer]:
+                - generic [ref=f15e926]:
+                  - strong [ref=f15e927]: powershell.exe
+                  - generic [ref=f15e928]: Process · 8 alerts
+                - emphasis [ref=f15e929]: "72"
+              - option "admin-svc-02 User · 2 alerts 71" [ref=f15e930] [cursor=pointer]:
+                - generic [ref=f15e935]:
+                  - strong [ref=f15e936]: admin-svc-02
+                  - generic [ref=f15e937]: User · 2 alerts
+                - emphasis [ref=f15e938]: "71"
+              - option "FIN-WKS-006 Host · 5 alerts 70" [ref=f15e939] [cursor=pointer]:
+                - generic [ref=f15e943]:
+                  - strong [ref=f15e944]: FIN-WKS-006
+                  - generic [ref=f15e945]: Host · 5 alerts
+                - emphasis [ref=f15e946]: "70"
+              - option "ryan.mitchell User · 0 alerts 70" [ref=f15e947] [cursor=pointer]:
+                - generic [ref=f15e952]:
+                  - strong [ref=f15e953]: ryan.mitchell
+                  - generic [ref=f15e954]: User · 0 alerts
+                - emphasis [ref=f15e955]: "70"
+              - option "198.51.100.30 IP address · 1 alerts 70" [ref=f15e956] [cursor=pointer]:
+                - generic [ref=f15e963]:
+                  - strong [ref=f15e964]: 198.51.100.30
+                  - generic [ref=f15e965]: IP address · 1 alerts
+                - emphasis [ref=f15e966]: "70"
+              - option "mshta.exe Process · 0 alerts 70" [ref=f15e967] [cursor=pointer]:
+                - generic [ref=f15e974]:
+                  - strong [ref=f15e975]: mshta.exe
+                  - generic [ref=f15e976]: Process · 0 alerts
+                - emphasis [ref=f15e977]: "70"
+              - option "10.1.10.15 IP address · 6 alerts 68" [ref=f15e978] [cursor=pointer]:
+                - generic [ref=f15e985]:
+                  - strong [ref=f15e986]: 10.1.10.15
+                  - generic [ref=f15e987]: IP address · 6 alerts
+                - emphasis [ref=f15e988]: "68"
+              - option "elena.volkov User · 0 alerts 68" [ref=f15e989] [cursor=pointer]:
+                - generic [ref=f15e994]:
+                  - strong [ref=f15e995]: elena.volkov
+                  - generic [ref=f15e996]: User · 0 alerts
+                - emphasis [ref=f15e997]: "68"
+              - option "198.51.100.44 IP address · 5 alerts 68" [ref=f15e998] [cursor=pointer]:
+                - generic [ref=f15e1005]:
+                  - strong [ref=f15e1006]: 198.51.100.44
+                  - generic [ref=f15e1007]: IP address · 5 alerts
+                - emphasis [ref=f15e1008]: "68"
+              - option "rundll32.exe Process · 5 alerts 68" [ref=f15e1009] [cursor=pointer]:
+                - generic [ref=f15e1016]:
+                  - strong [ref=f15e1017]: rundll32.exe
+                  - generic [ref=f15e1018]: Process · 5 alerts
+                - emphasis [ref=f15e1019]: "68"
+              - option "PRINT-002 Host · 3 alerts 66" [ref=f15e1020] [cursor=pointer]:
+                - generic [ref=f15e1024]:
+                  - strong [ref=f15e1025]: PRINT-002
+                  - generic [ref=f15e1026]: Host · 3 alerts
+                - emphasis [ref=f15e1027]: "66"
+              - option "ENG-SRV-007 Host · 1 alerts 65" [ref=f15e1028] [cursor=pointer]:
+                - generic [ref=f15e1032]:
+                  - strong [ref=f15e1033]: ENG-SRV-007
+                  - generic [ref=f15e1034]: Host · 1 alerts
+                - emphasis [ref=f15e1035]: "65"
+              - option "PRINT-001 Host · 2 alerts 65" [ref=f15e1036] [cursor=pointer]:
+                - generic [ref=f15e1040]:
+                  - strong [ref=f15e1041]: PRINT-001
+                  - generic [ref=f15e1042]: Host · 2 alerts
+                - emphasis [ref=f15e1043]: "65"
+              - option "sarah.johnson User · 1 alerts 65" [ref=f15e1044] [cursor=pointer]:
+                - generic [ref=f15e1049]:
+                  - strong [ref=f15e1050]: sarah.johnson
+                  - generic [ref=f15e1051]: User · 1 alerts
+                - emphasis [ref=f15e1052]: "65"
+              - option "wscript.exe Process · 11 alerts 65" [ref=f15e1053] [cursor=pointer]:
+                - generic [ref=f15e1060]:
+                  - strong [ref=f15e1061]: wscript.exe
+                  - generic [ref=f15e1062]: Process · 11 alerts
+                - emphasis [ref=f15e1063]: "65"
+              - option "sarah.chen User · 0 alerts 64" [ref=f15e1064] [cursor=pointer]:
+                - generic [ref=f15e1069]:
+                  - strong [ref=f15e1070]: sarah.chen
+                  - generic [ref=f15e1071]: User · 0 alerts
+                - emphasis [ref=f15e1072]: "64"
+              - option "ENG-SRV-002 Host · 0 alerts 63" [ref=f15e1073] [cursor=pointer]:
+                - generic [ref=f15e1077]:
+                  - strong [ref=f15e1078]: ENG-SRV-002
+                  - generic [ref=f15e1079]: Host · 0 alerts
+                - emphasis [ref=f15e1080]: "63"
+              - option "FIN-WKS-028 Host · 6 alerts 63" [ref=f15e1081] [cursor=pointer]:
+                - generic [ref=f15e1085]:
+                  - strong [ref=f15e1086]: FIN-WKS-028
+                  - generic [ref=f15e1087]: Host · 6 alerts
+                - emphasis [ref=f15e1088]: "63"
+              - option "10.1.10.120 IP address · 5 alerts 63" [ref=f15e1089] [cursor=pointer]:
+                - generic [ref=f15e1096]:
+                  - strong [ref=f15e1097]: 10.1.10.120
+                  - generic [ref=f15e1098]: IP address · 5 alerts
+                - emphasis [ref=f15e1099]: "63"
+              - option "FIN-WKS-001 Host · 4 alerts 62" [ref=f15e1100] [cursor=pointer]:
+                - generic [ref=f15e1104]:
+                  - strong [ref=f15e1105]: FIN-WKS-001
+                  - generic [ref=f15e1106]: Host · 4 alerts
+                - emphasis [ref=f15e1107]: "62"
+              - option "FIN-WKS-008 Host · 6 alerts 62" [ref=f15e1108] [cursor=pointer]:
+                - generic [ref=f15e1112]:
+                  - strong [ref=f15e1113]: FIN-WKS-008
+                  - generic [ref=f15e1114]: Host · 6 alerts
+                - emphasis [ref=f15e1115]: "62"
+              - option "FIN-WKS-020 Host · 5 alerts 62" [ref=f15e1116] [cursor=pointer]:
+                - generic [ref=f15e1120]:
+                  - strong [ref=f15e1121]: FIN-WKS-020
+                  - generic [ref=f15e1122]: Host · 5 alerts
+                - emphasis [ref=f15e1123]: "62"
+              - option "ENG-SRV-005 Host · 2 alerts 61" [ref=f15e1124] [cursor=pointer]:
+                - generic [ref=f15e1128]:
+                  - strong [ref=f15e1129]: ENG-SRV-005
+                  - generic [ref=f15e1130]: Host · 2 alerts
+                - emphasis [ref=f15e1131]: "61"
+              - option "admin-svc-03 User · 0 alerts 61" [ref=f15e1132] [cursor=pointer]:
+                - generic [ref=f15e1137]:
+                  - strong [ref=f15e1138]: admin-svc-03
+                  - generic [ref=f15e1139]: User · 0 alerts
+                - emphasis [ref=f15e1140]: "61"
+              - option "svc-backup User · 5 alerts 60" [ref=f15e1141] [cursor=pointer]:
+                - generic [ref=f15e1146]:
+                  - strong [ref=f15e1147]: svc-backup
+                  - generic [ref=f15e1148]: User · 5 alerts
+                - emphasis [ref=f15e1149]: "60"
+              - option "FIN-WKS-015 Host · 7 alerts 56" [ref=f15e1150] [cursor=pointer]:
+                - generic [ref=f15e1154]:
+                  - strong [ref=f15e1155]: FIN-WKS-015
+                  - generic [ref=f15e1156]: Host · 7 alerts
+                - emphasis [ref=f15e1157]: "56"
+              - option "FIN-WKS-014 Host · 4 alerts 55" [ref=f15e1158] [cursor=pointer]:
+                - generic [ref=f15e1162]:
+                  - strong [ref=f15e1163]: FIN-WKS-014
+                  - generic [ref=f15e1164]: Host · 4 alerts
+                - emphasis [ref=f15e1165]: "55"
+              - option "python3 Process · 7 alerts 55" [ref=f15e1166] [cursor=pointer]:
+                - generic [ref=f15e1173]:
+                  - strong [ref=f15e1174]: python3
+                  - generic [ref=f15e1175]: Process · 7 alerts
+                - emphasis [ref=f15e1176]: "55"
+              - option "anna.kowalski User · 1 alerts 52" [ref=f15e1177] [cursor=pointer]:
+                - generic [ref=f15e1182]:
+                  - strong [ref=f15e1183]: anna.kowalski
+                  - generic [ref=f15e1184]: User · 1 alerts
+                - emphasis [ref=f15e1185]: "52"
+              - option "HR-LPT-010 Host · 4 alerts 52" [ref=f15e1186] [cursor=pointer]:
+                - generic [ref=f15e1190]:
+                  - strong [ref=f15e1191]: HR-LPT-010
+                  - generic [ref=f15e1192]: Host · 4 alerts
+                - emphasis [ref=f15e1193]: "52"
+              - option "FIN-WKS-004 Host · 4 alerts 50" [ref=f15e1194] [cursor=pointer]:
+                - generic [ref=f15e1198]:
+                  - strong [ref=f15e1199]: FIN-WKS-004
+                  - generic [ref=f15e1200]: Host · 4 alerts
+                - emphasis [ref=f15e1201]: "50"
+              - option "admin-svc-01 User · 4 alerts 49" [ref=f15e1202] [cursor=pointer]:
+                - generic [ref=f15e1207]:
+                  - strong [ref=f15e1208]: admin-svc-01
+                  - generic [ref=f15e1209]: User · 4 alerts
+                - emphasis [ref=f15e1210]: "49"
+              - option "FIN-WKS-009 Host · 3 alerts 48" [ref=f15e1211] [cursor=pointer]:
+                - generic [ref=f15e1215]:
+                  - strong [ref=f15e1216]: FIN-WKS-009
+                  - generic [ref=f15e1217]: Host · 3 alerts
+                - emphasis [ref=f15e1218]: "48"
+              - option "10.2.1.1 IP address · 2 alerts 47" [ref=f15e1219] [cursor=pointer]:
+                - generic [ref=f15e1226]:
+                  - strong [ref=f15e1227]: 10.2.1.1
+                  - generic [ref=f15e1228]: IP address · 2 alerts
+                - emphasis [ref=f15e1229]: "47"
+              - option "alex.turner User · 3 alerts 47" [ref=f15e1230] [cursor=pointer]:
+                - generic [ref=f15e1235]:
+                  - strong [ref=f15e1236]: alex.turner
+                  - generic [ref=f15e1237]: User · 3 alerts
+                - emphasis [ref=f15e1238]: "47"
+              - option "victor.ross User · 3 alerts 46" [ref=f15e1239] [cursor=pointer]:
+                - generic [ref=f15e1244]:
+                  - strong [ref=f15e1245]: victor.ross
+                  - generic [ref=f15e1246]: User · 3 alerts
+                - emphasis [ref=f15e1247]: "46"
+              - option "10.1.5.1 IP address · 2 alerts 45" [ref=f15e1248] [cursor=pointer]:
+                - generic [ref=f15e1255]:
+                  - strong [ref=f15e1256]: 10.1.5.1
+                  - generic [ref=f15e1257]: IP address · 2 alerts
+                - emphasis [ref=f15e1258]: "45"
+              - option "10.1.10.50 IP address · 3 alerts 45" [ref=f15e1259] [cursor=pointer]:
+                - generic [ref=f15e1266]:
+                  - strong [ref=f15e1267]: 10.1.10.50
+                  - generic [ref=f15e1268]: IP address · 3 alerts
+                - emphasis [ref=f15e1269]: "45"
+              - option "cmd.exe Process · 1 alerts 45" [ref=f15e1270] [cursor=pointer]:
+                - generic [ref=f15e1277]:
+                  - strong [ref=f15e1278]: cmd.exe
+                  - generic [ref=f15e1279]: Process · 1 alerts
+                - emphasis [ref=f15e1280]: "45"
+              - option "FIN-WKS-007 Host · 2 alerts 44" [ref=f15e1281] [cursor=pointer]:
+                - generic [ref=f15e1285]:
+                  - strong [ref=f15e1286]: FIN-WKS-007
+                  - generic [ref=f15e1287]: Host · 2 alerts
+                - emphasis [ref=f15e1288]: "44"
+              - option "ENG-SRV-006 Host · 3 alerts 44" [ref=f15e1289] [cursor=pointer]:
+                - generic [ref=f15e1293]:
+                  - strong [ref=f15e1294]: ENG-SRV-006
+                  - generic [ref=f15e1295]: Host · 3 alerts
+                - emphasis [ref=f15e1296]: "44"
+              - option "DC-003 Host · 1 alerts 44" [ref=f15e1297] [cursor=pointer]:
+                - generic [ref=f15e1301]:
+                  - strong [ref=f15e1302]: DC-003
+                  - generic [ref=f15e1303]: Host · 1 alerts
+                - emphasis [ref=f15e1304]: "44"
+              - option "10.1.5.200 IP address · 2 alerts 43" [ref=f15e1305] [cursor=pointer]:
+                - generic [ref=f15e1312]:
+                  - strong [ref=f15e1313]: 10.1.5.200
+                  - generic [ref=f15e1314]: IP address · 2 alerts
+                - emphasis [ref=f15e1315]: "43"
+              - option "admin-svc-05 User · 5 alerts 42" [ref=f15e1316] [cursor=pointer]:
+                - generic [ref=f15e1321]:
+                  - strong [ref=f15e1322]: admin-svc-05
+                  - generic [ref=f15e1323]: User · 5 alerts
+                - emphasis [ref=f15e1324]: "42"
+              - option "10.1.10.30 IP address · 4 alerts 42" [ref=f15e1325] [cursor=pointer]:
+                - generic [ref=f15e1332]:
+                  - strong [ref=f15e1333]: 10.1.10.30
+                  - generic [ref=f15e1334]: IP address · 4 alerts
+                - emphasis [ref=f15e1335]: "42"
+              - option "10.1.5.100 IP address · 2 alerts 42" [ref=f15e1336] [cursor=pointer]:
+                - generic [ref=f15e1343]:
+                  - strong [ref=f15e1344]: 10.1.5.100
+                  - generic [ref=f15e1345]: IP address · 2 alerts
+                - emphasis [ref=f15e1346]: "42"
+              - option "DC-001 Host · 3 alerts 41" [ref=f15e1347] [cursor=pointer]:
+                - generic [ref=f15e1351]:
+                  - strong [ref=f15e1352]: DC-001
+                  - generic [ref=f15e1353]: Host · 3 alerts
+                - emphasis [ref=f15e1354]: "41"
+              - option "omar.hassan User · 1 alerts 41" [ref=f15e1355] [cursor=pointer]:
+                - generic [ref=f15e1360]:
+                  - strong [ref=f15e1361]: omar.hassan
+                  - generic [ref=f15e1362]: User · 1 alerts
+                - emphasis [ref=f15e1363]: "41"
+              - option "mail.internal Domain · 2 alerts 40" [ref=f15e1364] [cursor=pointer]:
+                - generic [ref=f15e1371]:
+                  - strong [ref=f15e1372]: mail.internal
+                  - generic [ref=f15e1373]: Domain · 2 alerts
+                - emphasis [ref=f15e1374]: "40"
+              - option "svc-scanner User · 3 alerts 40" [ref=f15e1375] [cursor=pointer]:
+                - generic [ref=f15e1380]:
+                  - strong [ref=f15e1381]: svc-scanner
+                  - generic [ref=f15e1382]: User · 3 alerts
+                - emphasis [ref=f15e1383]: "40"
+              - option "10.1.10.10 IP address · 5 alerts 40" [ref=f15e1384] [cursor=pointer]:
+                - generic [ref=f15e1391]:
+                  - strong [ref=f15e1392]: 10.1.10.10
+                  - generic [ref=f15e1393]: IP address · 5 alerts
+                - emphasis [ref=f15e1394]: "40"
+              - option "10.2.1.100 IP address · 1 alerts 39" [ref=f15e1395] [cursor=pointer]:
+                - generic [ref=f15e1402]:
+                  - strong [ref=f15e1403]: 10.2.1.100
+                  - generic [ref=f15e1404]: IP address · 1 alerts
+                - emphasis [ref=f15e1405]: "39"
+              - option "10.1.10.20 IP address · 1 alerts 38" [ref=f15e1406] [cursor=pointer]:
+                - generic [ref=f15e1413]:
+                  - strong [ref=f15e1414]: 10.1.10.20
+                  - generic [ref=f15e1415]: IP address · 1 alerts
+                - emphasis [ref=f15e1416]: "38"
+              - option "FIN-WKS-010 Host · 3 alerts 37" [ref=f15e1417] [cursor=pointer]:
+                - generic [ref=f15e1421]:
+                  - strong [ref=f15e1422]: FIN-WKS-010
+                  - generic [ref=f15e1423]: Host · 3 alerts
+                - emphasis [ref=f15e1424]: "37"
+              - option "FIN-WKS-013 Host · 2 alerts 37" [ref=f15e1425] [cursor=pointer]:
+                - generic [ref=f15e1429]:
+                  - strong [ref=f15e1430]: FIN-WKS-013
+                  - generic [ref=f15e1431]: Host · 2 alerts
+                - emphasis [ref=f15e1432]: "37"
+              - option "priya.sharma User · 1 alerts 37" [ref=f15e1433] [cursor=pointer]:
+                - generic [ref=f15e1438]:
+                  - strong [ref=f15e1439]: priya.sharma
+                  - generic [ref=f15e1440]: User · 1 alerts
+                - emphasis [ref=f15e1441]: "37"
+              - option "192.168.1.1 IP address · 1 alerts 36" [ref=f15e1442] [cursor=pointer]:
+                - generic [ref=f15e1449]:
+                  - strong [ref=f15e1450]: 192.168.1.1
+                  - generic [ref=f15e1451]: IP address · 1 alerts
+                - emphasis [ref=f15e1452]: "36"
+              - option "10.1.5.50 IP address · 7 alerts 35" [ref=f15e1453] [cursor=pointer]:
+                - generic [ref=f15e1460]:
+                  - strong [ref=f15e1461]: 10.1.5.50
+                  - generic [ref=f15e1462]: IP address · 7 alerts
+                - emphasis [ref=f15e1463]: "35"
+              - option "10.1.10.40 IP address · 5 alerts 35" [ref=f15e1464] [cursor=pointer]:
+                - generic [ref=f15e1471]:
+                  - strong [ref=f15e1472]: 10.1.10.40
+                  - generic [ref=f15e1473]: IP address · 5 alerts
+                - emphasis [ref=f15e1474]: "35"
+              - option "vpn.internal Domain · 1 alerts 33" [ref=f15e1475] [cursor=pointer]:
+                - generic [ref=f15e1482]:
+                  - strong [ref=f15e1483]: vpn.internal
+                  - generic [ref=f15e1484]: Domain · 1 alerts
+                - emphasis [ref=f15e1485]: "33"
+              - option "ENG-SRV-010 Host · 4 alerts 32" [ref=f15e1486] [cursor=pointer]:
+                - generic [ref=f15e1490]:
+                  - strong [ref=f15e1491]: ENG-SRV-010
+                  - generic [ref=f15e1492]: Host · 4 alerts
+                - emphasis [ref=f15e1493]: "32"
+              - option "10.1.5.70 IP address · 9 alerts 32" [ref=f15e1494] [cursor=pointer]:
+                - generic [ref=f15e1501]:
+                  - strong [ref=f15e1502]: 10.1.5.70
+                  - generic [ref=f15e1503]: IP address · 9 alerts
+                - emphasis [ref=f15e1504]: "32"
+              - option "wm1.corp.local Domain · 1 alerts 32" [ref=f15e1505] [cursor=pointer]:
+                - generic [ref=f15e1512]:
+                  - strong [ref=f15e1513]: wm1.corp.local
+                  - generic [ref=f15e1514]: Domain · 1 alerts
+                - emphasis [ref=f15e1515]: "32"
+              - option "ENG-SRV-009 Host · 4 alerts 31" [ref=f15e1516] [cursor=pointer]:
+                - generic [ref=f15e1520]:
+                  - strong [ref=f15e1521]: ENG-SRV-009
+                  - generic [ref=f15e1522]: Host · 4 alerts
+                - emphasis [ref=f15e1523]: "31"
+              - option "admin-svc-04 User · 1 alerts 31" [ref=f15e1524] [cursor=pointer]:
+                - generic [ref=f15e1529]:
+                  - strong [ref=f15e1530]: admin-svc-04
+                  - generic [ref=f15e1531]: User · 1 alerts
+                - emphasis [ref=f15e1532]: "31"
+              - option "wm2.corp.local Domain · 1 alerts 31" [ref=f15e1533] [cursor=pointer]:
+                - generic [ref=f15e1540]:
+                  - strong [ref=f15e1541]: wm2.corp.local
+                  - generic [ref=f15e1542]: Domain · 1 alerts
+                - emphasis [ref=f15e1543]: "31"
+              - option "corp.hivearmor.local Domain · 1 alerts 30" [ref=f15e1544] [cursor=pointer]:
+                - generic [ref=f15e1551]:
+                  - strong [ref=f15e1552]: corp.hivearmor.local
+                  - generic [ref=f15e1553]: Domain · 1 alerts
+                - emphasis [ref=f15e1554]: "30"
+              - option "DC-002 Host · 7 alerts 30" [ref=f15e1555] [cursor=pointer]:
+                - generic [ref=f15e1559]:
+                  - strong [ref=f15e1560]: DC-002
+                  - generic [ref=f15e1561]: Host · 7 alerts
+                - emphasis [ref=f15e1562]: "30"
+              - option "10.1.5.10 IP address · 5 alerts 30" [ref=f15e1563] [cursor=pointer]:
+                - generic [ref=f15e1570]:
+                  - strong [ref=f15e1571]: 10.1.5.10
+                  - generic [ref=f15e1572]: IP address · 5 alerts
+                - emphasis [ref=f15e1573]: "30"
+              - option "svchost.exe Process · 11 alerts 30" [ref=f15e1574] [cursor=pointer]:
+                - generic [ref=f15e1581]:
+                  - strong [ref=f15e1582]: svchost.exe
+                  - generic [ref=f15e1583]: Process · 11 alerts
+                - emphasis [ref=f15e1584]: "30"
+              - option "FIN-WKS-002 Host · 3 alerts 29" [ref=f15e1585] [cursor=pointer]:
+                - generic [ref=f15e1589]:
+                  - strong [ref=f15e1590]: FIN-WKS-002
+                  - generic [ref=f15e1591]: Host · 3 alerts
+                - emphasis [ref=f15e1592]: "29"
+              - option "10.1.5.30 IP address · 5 alerts 28" [ref=f15e1593] [cursor=pointer]:
+                - generic [ref=f15e1600]:
+                  - strong [ref=f15e1601]: 10.1.5.30
+                  - generic [ref=f15e1602]: IP address · 5 alerts
+                - emphasis [ref=f15e1603]: "28"
+              - option "10.1.5.80 IP address · 4 alerts 27" [ref=f15e1604] [cursor=pointer]:
+                - generic [ref=f15e1611]:
+                  - strong [ref=f15e1612]: 10.1.5.80
+                  - generic [ref=f15e1613]: IP address · 4 alerts
+                - emphasis [ref=f15e1614]: "27"
+              - option "FIN-WKS-005 Host · 0 alerts 26" [ref=f15e1615] [cursor=pointer]:
+                - generic [ref=f15e1619]:
+                  - strong [ref=f15e1620]: FIN-WKS-005
+                  - generic [ref=f15e1621]: Host · 0 alerts
+                - emphasis [ref=f15e1622]: "26"
+              - option "10.1.5.20 IP address · 0 alerts 25" [ref=f15e1623] [cursor=pointer]:
+                - generic [ref=f15e1630]:
+                  - strong [ref=f15e1631]: 10.1.5.20
+                  - generic [ref=f15e1632]: IP address · 0 alerts
+                - emphasis [ref=f15e1633]: "25"
+              - option "ENG-SRV-001 Host · 0 alerts 23" [ref=f15e1634] [cursor=pointer]:
+                - generic [ref=f15e1638]:
+                  - strong [ref=f15e1639]: ENG-SRV-001
+                  - generic [ref=f15e1640]: Host · 0 alerts
+                - emphasis [ref=f15e1641]: "23"
+              - option "james.wilson User · 1 alerts 23" [ref=f15e1642] [cursor=pointer]:
+                - generic [ref=f15e1647]:
+                  - strong [ref=f15e1648]: james.wilson
+                  - generic [ref=f15e1649]: User · 1 alerts
+                - emphasis [ref=f15e1650]: "23"
+              - option "FIN-WKS-011 Host · 7 alerts 22" [ref=f15e1651] [cursor=pointer]:
+                - generic [ref=f15e1655]:
+                  - strong [ref=f15e1656]: FIN-WKS-011
+                  - generic [ref=f15e1657]: Host · 7 alerts
+                - emphasis [ref=f15e1658]: "22"
+              - option "10.1.5.40 IP address · 7 alerts 22" [ref=f15e1659] [cursor=pointer]:
+                - generic [ref=f15e1666]:
+                  - strong [ref=f15e1667]: 10.1.5.40
+                  - generic [ref=f15e1668]: IP address · 7 alerts
+                - emphasis [ref=f15e1669]: "22"
+              - option "10.1.5.60 IP address · 6 alerts 20" [ref=f15e1670] [cursor=pointer]:
+                - generic [ref=f15e1677]:
+                  - strong [ref=f15e1678]: 10.1.5.60
+                  - generic [ref=f15e1679]: IP address · 6 alerts
+                - emphasis [ref=f15e1680]: "20"
+              - option "tom.huang User · 3 alerts 17" [ref=f15e1681] [cursor=pointer]:
+                - generic [ref=f15e1686]:
+                  - strong [ref=f15e1687]: tom.huang
+                  - generic [ref=f15e1688]: User · 3 alerts
+                - emphasis [ref=f15e1689]: "17"
+              - option "kevin.wright User · 5 alerts 16" [ref=f15e1690] [cursor=pointer]:
+                - generic [ref=f15e1695]:
+                  - strong [ref=f15e1696]: kevin.wright
+                  - generic [ref=f15e1697]: User · 5 alerts
+                - emphasis [ref=f15e1698]: "16"
+              - option "8.8.8.8 IP address · 9 alerts 5" [ref=f15e1699] [cursor=pointer]:
+                - generic [ref=f15e1706]:
+                  - strong [ref=f15e1707]: 8.8.8.8
+                  - generic [ref=f15e1708]: IP address · 9 alerts
+                - emphasis [ref=f15e1709]: "5"
+              - option "1.1.1.1 IP address · 1 alerts 5" [ref=f15e1710] [cursor=pointer]:
+                - generic [ref=f15e1717]:
+                  - strong [ref=f15e1718]: 1.1.1.1
+                  - generic [ref=f15e1719]: IP address · 1 alerts
+                - emphasis [ref=f15e1720]: "5"
+          - region "Threat relationship visualization" [ref=f15e1721]:
+            - generic:
+              - generic: Internal
+              - generic: External
+              - generic: Critical risk
+              - generic: High risk
+              - generic: Node size = alert volume
+              - generic: Moving arrows = observed direction
+            - generic "Threat relationship graph workspace" [ref=f15e1722]:
+              - img "Threat constellation relationship graph" [ref=f15e1723]
+        - generic [ref=f15e1728]:
+          - generic [ref=f15e1729]:
+            - generic [ref=f15e1730]:
+              - generic [ref=f15e1732]: Connected
+              - generic [ref=f15e1733]: •
+              - generic [ref=f15e1735]: Live
+            - generic [ref=f15e1736]: 0 eps
+          - generic: Snapshot 10:52:29 · Projection stable
+  - generic:
+    - list "Notifications"

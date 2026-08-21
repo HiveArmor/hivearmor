@@ -1,0 +1,35 @@
+/* ConstellationPage — Sprint 48 layout */
+
+.ha-constellation-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ha-surface-app);
+}
+
+.ha-constellation-page__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ha-constellation-page__sidebar {
+  width: 20%;
+  min-width: 280px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--ha-surface-sidebar);
+  border-right: 1px solid var(--ha-border-subtle);
+  overflow-y: auto;
+}
+
+.ha-constellation-page__canvas {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+  background: var(--ha-surface-panel);
+}

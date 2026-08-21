@@ -2,12 +2,15 @@ package agent
 
 import (
 	context "context"
+	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/hivearmor/agent/config"
 	"github.com/hivearmor/agent/models"
 	"github.com/hivearmor/agent/utils"
 	"github.com/hivearmor/shared/fs"
+	"google.golang.org/grpc/metadata"
 )
 
 const updateInterval = 5 * time.Minute
@@ -64,4 +67,28 @@ func updateAgentOnce(cnf *config.Config, ctx context.Context) error {
 
 	_, err = client.UpdateAgent(ctx, request)
 	return err
+}
+
+// ValidateCredential proves that a newly issued credential is authoritative
+// for this agent before the local protected configuration is replaced. The
+// server's UpdateAgent response intentionally never echoes the credential.
+func ValidateCredential(cnf *config.Config, credential string) error {
+	if cnf == nil || cnf.AgentID == 0 || credential == "" {
+		return fmt.Errorf("agent identity and credential are required")
+	}
+	connection, err := GetAgentManagerConnection(cnf)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	ctx = metadata.AppendToOutgoingContext(ctx,
+		"key", credential,
+		"id", strconv.FormatUint(uint64(cnf.AgentID), 10),
+		"type", "agent",
+	)
+	if _, err := NewAgentServiceClient(connection).UpdateAgent(ctx, &AgentRequest{}); err != nil {
+		return fmt.Errorf("credential validation failed: %w", err)
+	}
+	return nil
 }

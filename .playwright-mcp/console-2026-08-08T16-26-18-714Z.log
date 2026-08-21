@@ -1,0 +1,260 @@
+[     118ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     162ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/overview/health:0
+[     163ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/overview/health:0
+[     166ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[     374ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     415ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[     479ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     518ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[     584ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     619ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[     684ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     723ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[     789ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     824ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[     891ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     931ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[     998ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    1035ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    1106ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    1145ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    1211ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    1245ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    1312ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    1353ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    1420ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    1458ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    1526ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    1565ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    1630ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    1667ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    1733ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    1772ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    1839ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    1875ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    1942ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    1981ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    2047ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    2091ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    2154ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    2192ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    2256ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    2292ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    2355ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    2393ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    2455ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    2492ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    2554ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    2594ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    2657ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    2693ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    2759ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    2795ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    2863ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    2901ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    3000ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    3047ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    3162ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    3211ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    3283ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    3328ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    3397ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    3442ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    3510ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    3546ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    3611ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    3667ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    3740ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    3779ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    3843ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    3885ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    3961ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    4006ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    4079ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    4125ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    4191ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    4236ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    4299ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    4335ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    4398ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    4437ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    4498ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    4538ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    4599ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    4639ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    4701ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    4736ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    4798ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    4837ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    4898ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    4934ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    5002ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    5045ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    5127ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    5161ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    5225ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    5269ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    5332ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    5372ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    5438ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    5477ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    5543ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    5578ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    5640ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    5681ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    5748ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    5785ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    5848ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    5885ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    5947ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    5982ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    6048ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    6086ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    6155ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    6191ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    6258ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    6300ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    6369ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    6403ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    6469ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    6506ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    6572ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    6606ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    6672ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    6710ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    6775ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    6809ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    6872ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    6911ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    6972ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    7008ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    7070ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    7112ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    7176ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    7212ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    7274ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    7322ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    7396ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    7440ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    7506ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    7554ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    7621ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    7660ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    7722ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    7759ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    7821ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    7864ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    7925ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    7963ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    8025ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    8068ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    8130ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    8166ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    8229ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    8271ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    8334ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    8379ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    8444ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    8482ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    8544ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    8582ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    8644ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    8682ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    8745ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    8780ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    8841ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    8881ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    8942ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    8979ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    9040ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    9082ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    9143ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    9178ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    9242ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    9281ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    9346ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    9385ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    9455ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    9492ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    9561ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    9596ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    9662ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    9701ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    9766ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    9803ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    9877ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[    9919ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[    9984ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   10020ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   10090ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   10132ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   10198ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   10235ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   10305ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   10342ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   10427ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   10467ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   10534ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   10574ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   10643ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   10679ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   10744ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   10782ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   10852ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   10888ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   10956ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   10997ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   11079ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   11124ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   11192ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   11240ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   11321ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   11358ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   11424ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   11470ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   11543ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   11582ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   11647ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   11684ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   11749ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   11789ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   11854ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   11890ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   11952ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   11990ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   12051ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   12091ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   12157ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   12197ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   12259ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   12298ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   12367ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   12406ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   12471ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[   12514ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   12585ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:3001/@vite/client:992
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/features/mssp/pages/DownloadAggregateButton.tsx:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/features/mssp/api/msspOverviewApi.ts:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/error-state/ErrorState.tsx:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/ha-chart/HaChart.tsx:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/loading-state/LoadingState.tsx:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/siem-data-grid/SiemDataGrid.tsx:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/features/mssp/api/msspTenantApi.ts:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/features/mssp/api/msspMembershipApi.ts:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/features/mssp/api/msspTypes.ts:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/ha-confirmation-modal/HaConfirmationModal.tsx:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/ha-button/HaButton.tsx:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/ha-form-group/HaFormGroup.tsx:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/ha-inline-banner/HaInlineBanner.tsx:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/ha-select/HaSelect.tsx:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/ha-text-input/HaTextInput.tsx:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/hooks/useDebounce.ts:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/hooks/useEpsStream.ts:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/ha-navigation/NavItem.tsx:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/ha-masthead/UserAvatarMenu.css:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/features/mssp/store/msspNavStore.ts:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/ha-button/index.ts:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/pages/auth/AccessDeniedPage.css:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/components/ha-navigation/HaNavigation.css:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/store/theme.store.ts:0
+[   12587ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:3001/src/lib/auth/hasAuthority.ts:0

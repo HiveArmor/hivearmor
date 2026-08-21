@@ -1,11 +1,10 @@
 package com.hivearmor.service.elasticsearch;
 
-import com.hivearmor.config.Constants;
 import com.hivearmor.domain.User;
 import com.hivearmor.domain.UtmSpaceNotificationControl;
 import com.hivearmor.domain.application_events.enums.ApplicationEventType;
 import com.hivearmor.domain.chart_builder.types.query.FilterType;
-import com.hivearmor.domain.index_pattern.enums.SystemIndexPattern;
+
 import com.hivearmor.repository.UserRepository;
 import com.hivearmor.service.MailService;
 import com.hivearmor.service.UtmSpaceNotificationControlService;
@@ -296,7 +295,8 @@ public class ElasticsearchService {
     private void deleteOldestIndices() {
         final String ctx = CLASSNAME + ".deleteOldestIndices";
         try {
-            List<IndicesRecord> indices = client.getClient().getIndices(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS), IndexSort.builder()
+            // ADMIN_GLOBAL: intentionally uses global log pattern for infrastructure disk management
+            List<IndicesRecord> indices = client.getClient().getIndices("v3-hive-log-*", IndexSort.builder()
                     .with(IndexSortableProperty.CreationDate, SortOrder.Asc).build());
 
             // If no index that match with log-* was found then te function is terminated

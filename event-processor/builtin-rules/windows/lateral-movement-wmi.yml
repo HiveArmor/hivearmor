@@ -1,0 +1,38 @@
+id: a3b4c5d6-e7f8-9012-abcd-123456789013
+title: WMI Lateral Movement via Remote Process Creation
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.lateral_movement
+  - attack.T1021
+  - attack.T1047
+  - attack.execution
+detection:
+  selection:
+    ParentImage|endswith: '\WmiPrvSE.exe'
+    Image|endswith:
+      - '\cmd.exe'
+      - '\powershell.exe'
+      - '\cscript.exe'
+      - '\wscript.exe'
+  filter_legitimate:
+    ParentCommandLine|contains: 'WMI_NAMESPACE'
+  condition: selection and not filter_legitimate
+falsepositives:
+  - Legitimate WMI-based monitoring agents
+  - System management tools using WMI
+impact:
+  confidentiality: high
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - Image
+groupBy:
+  - ComputerName
+mitre:
+  tactic: lateral-movement
+  technique: T1021

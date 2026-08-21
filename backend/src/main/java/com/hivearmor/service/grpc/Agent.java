@@ -40,6 +40,7 @@ private static final long serialVersionUID = 0L;
     osMinorVersion_ = "";
     aliases_ = "";
     addresses_ = "";
+    agentUuid_ = "";
   }
 
   public static final com.google.protobuf.Descriptors.Descriptor
@@ -55,6 +56,7 @@ private static final long serialVersionUID = 0L;
             com.hivearmor.service.grpc.Agent.class, com.hivearmor.service.grpc.Agent.Builder.class);
   }
 
+  private int bitField0_;
   public static final int IP_FIELD_NUMBER = 1;
   @SuppressWarnings("serial")
   private volatile java.lang.Object ip_ = "";
@@ -552,6 +554,93 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int AGENT_UUID_FIELD_NUMBER = 15;
+  @SuppressWarnings("serial")
+  private volatile java.lang.Object agentUuid_ = "";
+  /**
+   * <code>string agent_uuid = 15;</code>
+   * @return The agentUuid.
+   */
+  @java.lang.Override
+  public java.lang.String getAgentUuid() {
+    java.lang.Object ref = agentUuid_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      agentUuid_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string agent_uuid = 15;</code>
+   * @return The bytes for agentUuid.
+   */
+  @java.lang.Override
+  public com.google.protobuf.ByteString
+      getAgentUuidBytes() {
+    java.lang.Object ref = agentUuid_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      agentUuid_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int TENANT_ID_FIELD_NUMBER = 16;
+  private long tenantId_ = 0L;
+  /**
+   * <code>int64 tenant_id = 16;</code>
+   * @return The tenantId.
+   */
+  @java.lang.Override
+  public long getTenantId() {
+    return tenantId_;
+  }
+
+  public static final int CREDENTIAL_VERSION_FIELD_NUMBER = 17;
+  private int credentialVersion_ = 0;
+  /**
+   * <code>uint32 credential_version = 17;</code>
+   * @return The credentialVersion.
+   */
+  @java.lang.Override
+  public int getCredentialVersion() {
+    return credentialVersion_;
+  }
+
+  public static final int CREDENTIAL_REVOKED_AT_FIELD_NUMBER = 18;
+  private com.google.protobuf.Timestamp credentialRevokedAt_;
+  /**
+   * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+   * @return Whether the credentialRevokedAt field is set.
+   */
+  @java.lang.Override
+  public boolean hasCredentialRevokedAt() {
+    return ((bitField0_ & 0x00000001) != 0);
+  }
+  /**
+   * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+   * @return The credentialRevokedAt.
+   */
+  @java.lang.Override
+  public com.google.protobuf.Timestamp getCredentialRevokedAt() {
+    return credentialRevokedAt_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : credentialRevokedAt_;
+  }
+  /**
+   * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+   */
+  @java.lang.Override
+  public com.google.protobuf.TimestampOrBuilder getCredentialRevokedAtOrBuilder() {
+    return credentialRevokedAt_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : credentialRevokedAt_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -608,6 +697,18 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessage.isStringEmpty(addresses_)) {
       com.google.protobuf.GeneratedMessage.writeString(output, 14, addresses_);
     }
+    if (!com.google.protobuf.GeneratedMessage.isStringEmpty(agentUuid_)) {
+      com.google.protobuf.GeneratedMessage.writeString(output, 15, agentUuid_);
+    }
+    if (tenantId_ != 0L) {
+      output.writeInt64(16, tenantId_);
+    }
+    if (credentialVersion_ != 0) {
+      output.writeUInt32(17, credentialVersion_);
+    }
+    if (((bitField0_ & 0x00000001) != 0)) {
+      output.writeMessage(18, getCredentialRevokedAt());
+    }
     getUnknownFields().writeTo(output);
   }
 
@@ -661,6 +762,21 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessage.isStringEmpty(addresses_)) {
       size += com.google.protobuf.GeneratedMessage.computeStringSize(14, addresses_);
     }
+    if (!com.google.protobuf.GeneratedMessage.isStringEmpty(agentUuid_)) {
+      size += com.google.protobuf.GeneratedMessage.computeStringSize(15, agentUuid_);
+    }
+    if (tenantId_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(16, tenantId_);
+    }
+    if (credentialVersion_ != 0) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeUInt32Size(17, credentialVersion_);
+    }
+    if (((bitField0_ & 0x00000001) != 0)) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(18, getCredentialRevokedAt());
+    }
     size += getUnknownFields().getSerializedSize();
     memoizedSize = size;
     return size;
@@ -703,6 +819,17 @@ private static final long serialVersionUID = 0L;
         .equals(other.getAliases())) return false;
     if (!getAddresses()
         .equals(other.getAddresses())) return false;
+    if (!getAgentUuid()
+        .equals(other.getAgentUuid())) return false;
+    if (getTenantId()
+        != other.getTenantId()) return false;
+    if (getCredentialVersion()
+        != other.getCredentialVersion()) return false;
+    if (hasCredentialRevokedAt() != other.hasCredentialRevokedAt()) return false;
+    if (hasCredentialRevokedAt()) {
+      if (!getCredentialRevokedAt()
+          .equals(other.getCredentialRevokedAt())) return false;
+    }
     if (!getUnknownFields().equals(other.getUnknownFields())) return false;
     return true;
   }
@@ -742,6 +869,17 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getAliases().hashCode();
     hash = (37 * hash) + ADDRESSES_FIELD_NUMBER;
     hash = (53 * hash) + getAddresses().hashCode();
+    hash = (37 * hash) + AGENT_UUID_FIELD_NUMBER;
+    hash = (53 * hash) + getAgentUuid().hashCode();
+    hash = (37 * hash) + TENANT_ID_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getTenantId());
+    hash = (37 * hash) + CREDENTIAL_VERSION_FIELD_NUMBER;
+    hash = (53 * hash) + getCredentialVersion();
+    if (hasCredentialRevokedAt()) {
+      hash = (37 * hash) + CREDENTIAL_REVOKED_AT_FIELD_NUMBER;
+      hash = (53 * hash) + getCredentialRevokedAt().hashCode();
+    }
     hash = (29 * hash) + getUnknownFields().hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -861,13 +999,19 @@ private static final long serialVersionUID = 0L;
 
     // Construct using com.hivearmor.service.grpc.Agent.newBuilder()
     private Builder() {
-
+      maybeForceBuilderInitialization();
     }
 
     private Builder(
         com.google.protobuf.GeneratedMessage.BuilderParent parent) {
       super(parent);
-
+      maybeForceBuilderInitialization();
+    }
+    private void maybeForceBuilderInitialization() {
+      if (com.google.protobuf.GeneratedMessage
+              .alwaysUseFieldBuilders) {
+        getCredentialRevokedAtFieldBuilder();
+      }
     }
     @java.lang.Override
     public Builder clear() {
@@ -887,6 +1031,14 @@ private static final long serialVersionUID = 0L;
       osMinorVersion_ = "";
       aliases_ = "";
       addresses_ = "";
+      agentUuid_ = "";
+      tenantId_ = 0L;
+      credentialVersion_ = 0;
+      credentialRevokedAt_ = null;
+      if (credentialRevokedAtBuilder_ != null) {
+        credentialRevokedAtBuilder_.dispose();
+        credentialRevokedAtBuilder_ = null;
+      }
       return this;
     }
 
@@ -962,6 +1114,23 @@ private static final long serialVersionUID = 0L;
       if (((from_bitField0_ & 0x00002000) != 0)) {
         result.addresses_ = addresses_;
       }
+      if (((from_bitField0_ & 0x00004000) != 0)) {
+        result.agentUuid_ = agentUuid_;
+      }
+      if (((from_bitField0_ & 0x00008000) != 0)) {
+        result.tenantId_ = tenantId_;
+      }
+      if (((from_bitField0_ & 0x00010000) != 0)) {
+        result.credentialVersion_ = credentialVersion_;
+      }
+      int to_bitField0_ = 0;
+      if (((from_bitField0_ & 0x00020000) != 0)) {
+        result.credentialRevokedAt_ = credentialRevokedAtBuilder_ == null
+            ? credentialRevokedAt_
+            : credentialRevokedAtBuilder_.build();
+        to_bitField0_ |= 0x00000001;
+      }
+      result.bitField0_ |= to_bitField0_;
     }
 
     @java.lang.Override
@@ -1041,6 +1210,20 @@ private static final long serialVersionUID = 0L;
         addresses_ = other.addresses_;
         bitField0_ |= 0x00002000;
         onChanged();
+      }
+      if (!other.getAgentUuid().isEmpty()) {
+        agentUuid_ = other.agentUuid_;
+        bitField0_ |= 0x00004000;
+        onChanged();
+      }
+      if (other.getTenantId() != 0L) {
+        setTenantId(other.getTenantId());
+      }
+      if (other.getCredentialVersion() != 0) {
+        setCredentialVersion(other.getCredentialVersion());
+      }
+      if (other.hasCredentialRevokedAt()) {
+        mergeCredentialRevokedAt(other.getCredentialRevokedAt());
       }
       this.mergeUnknownFields(other.getUnknownFields());
       onChanged();
@@ -1138,6 +1321,28 @@ private static final long serialVersionUID = 0L;
               bitField0_ |= 0x00002000;
               break;
             } // case 114
+            case 122: {
+              agentUuid_ = input.readStringRequireUtf8();
+              bitField0_ |= 0x00004000;
+              break;
+            } // case 122
+            case 128: {
+              tenantId_ = input.readInt64();
+              bitField0_ |= 0x00008000;
+              break;
+            } // case 128
+            case 136: {
+              credentialVersion_ = input.readUInt32();
+              bitField0_ |= 0x00010000;
+              break;
+            } // case 136
+            case 146: {
+              input.readMessage(
+                  getCredentialRevokedAtFieldBuilder().getBuilder(),
+                  extensionRegistry);
+              bitField0_ |= 0x00020000;
+              break;
+            } // case 146
             default: {
               if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                 done = true; // was an endgroup tag
@@ -2102,6 +2307,263 @@ private static final long serialVersionUID = 0L;
       bitField0_ |= 0x00002000;
       onChanged();
       return this;
+    }
+
+    private java.lang.Object agentUuid_ = "";
+    /**
+     * <code>string agent_uuid = 15;</code>
+     * @return The agentUuid.
+     */
+    public java.lang.String getAgentUuid() {
+      java.lang.Object ref = agentUuid_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        agentUuid_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string agent_uuid = 15;</code>
+     * @return The bytes for agentUuid.
+     */
+    public com.google.protobuf.ByteString
+        getAgentUuidBytes() {
+      java.lang.Object ref = agentUuid_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        agentUuid_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string agent_uuid = 15;</code>
+     * @param value The agentUuid to set.
+     * @return This builder for chaining.
+     */
+    public Builder setAgentUuid(
+        java.lang.String value) {
+      if (value == null) { throw new NullPointerException(); }
+      agentUuid_ = value;
+      bitField0_ |= 0x00004000;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string agent_uuid = 15;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearAgentUuid() {
+      agentUuid_ = getDefaultInstance().getAgentUuid();
+      bitField0_ = (bitField0_ & ~0x00004000);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string agent_uuid = 15;</code>
+     * @param value The bytes for agentUuid to set.
+     * @return This builder for chaining.
+     */
+    public Builder setAgentUuidBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) { throw new NullPointerException(); }
+      checkByteStringIsUtf8(value);
+      agentUuid_ = value;
+      bitField0_ |= 0x00004000;
+      onChanged();
+      return this;
+    }
+
+    private long tenantId_ ;
+    /**
+     * <code>int64 tenant_id = 16;</code>
+     * @return The tenantId.
+     */
+    @java.lang.Override
+    public long getTenantId() {
+      return tenantId_;
+    }
+    /**
+     * <code>int64 tenant_id = 16;</code>
+     * @param value The tenantId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setTenantId(long value) {
+
+      tenantId_ = value;
+      bitField0_ |= 0x00008000;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>int64 tenant_id = 16;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearTenantId() {
+      bitField0_ = (bitField0_ & ~0x00008000);
+      tenantId_ = 0L;
+      onChanged();
+      return this;
+    }
+
+    private int credentialVersion_ ;
+    /**
+     * <code>uint32 credential_version = 17;</code>
+     * @return The credentialVersion.
+     */
+    @java.lang.Override
+    public int getCredentialVersion() {
+      return credentialVersion_;
+    }
+    /**
+     * <code>uint32 credential_version = 17;</code>
+     * @param value The credentialVersion to set.
+     * @return This builder for chaining.
+     */
+    public Builder setCredentialVersion(int value) {
+
+      credentialVersion_ = value;
+      bitField0_ |= 0x00010000;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>uint32 credential_version = 17;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearCredentialVersion() {
+      bitField0_ = (bitField0_ & ~0x00010000);
+      credentialVersion_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private com.google.protobuf.Timestamp credentialRevokedAt_;
+    private com.google.protobuf.SingleFieldBuilder<
+        com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> credentialRevokedAtBuilder_;
+    /**
+     * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+     * @return Whether the credentialRevokedAt field is set.
+     */
+    public boolean hasCredentialRevokedAt() {
+      return ((bitField0_ & 0x00020000) != 0);
+    }
+    /**
+     * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+     * @return The credentialRevokedAt.
+     */
+    public com.google.protobuf.Timestamp getCredentialRevokedAt() {
+      if (credentialRevokedAtBuilder_ == null) {
+        return credentialRevokedAt_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : credentialRevokedAt_;
+      } else {
+        return credentialRevokedAtBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+     */
+    public Builder setCredentialRevokedAt(com.google.protobuf.Timestamp value) {
+      if (credentialRevokedAtBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        credentialRevokedAt_ = value;
+      } else {
+        credentialRevokedAtBuilder_.setMessage(value);
+      }
+      bitField0_ |= 0x00020000;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+     */
+    public Builder setCredentialRevokedAt(
+        com.google.protobuf.Timestamp.Builder builderForValue) {
+      if (credentialRevokedAtBuilder_ == null) {
+        credentialRevokedAt_ = builderForValue.build();
+      } else {
+        credentialRevokedAtBuilder_.setMessage(builderForValue.build());
+      }
+      bitField0_ |= 0x00020000;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+     */
+    public Builder mergeCredentialRevokedAt(com.google.protobuf.Timestamp value) {
+      if (credentialRevokedAtBuilder_ == null) {
+        if (((bitField0_ & 0x00020000) != 0) &&
+          credentialRevokedAt_ != null &&
+          credentialRevokedAt_ != com.google.protobuf.Timestamp.getDefaultInstance()) {
+          getCredentialRevokedAtBuilder().mergeFrom(value);
+        } else {
+          credentialRevokedAt_ = value;
+        }
+      } else {
+        credentialRevokedAtBuilder_.mergeFrom(value);
+      }
+      if (credentialRevokedAt_ != null) {
+        bitField0_ |= 0x00020000;
+        onChanged();
+      }
+      return this;
+    }
+    /**
+     * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+     */
+    public Builder clearCredentialRevokedAt() {
+      bitField0_ = (bitField0_ & ~0x00020000);
+      credentialRevokedAt_ = null;
+      if (credentialRevokedAtBuilder_ != null) {
+        credentialRevokedAtBuilder_.dispose();
+        credentialRevokedAtBuilder_ = null;
+      }
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+     */
+    public com.google.protobuf.Timestamp.Builder getCredentialRevokedAtBuilder() {
+      bitField0_ |= 0x00020000;
+      onChanged();
+      return getCredentialRevokedAtFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+     */
+    public com.google.protobuf.TimestampOrBuilder getCredentialRevokedAtOrBuilder() {
+      if (credentialRevokedAtBuilder_ != null) {
+        return credentialRevokedAtBuilder_.getMessageOrBuilder();
+      } else {
+        return credentialRevokedAt_ == null ?
+            com.google.protobuf.Timestamp.getDefaultInstance() : credentialRevokedAt_;
+      }
+    }
+    /**
+     * <code>.google.protobuf.Timestamp credential_revoked_at = 18;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilder<
+        com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> 
+        getCredentialRevokedAtFieldBuilder() {
+      if (credentialRevokedAtBuilder_ == null) {
+        credentialRevokedAtBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+            com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>(
+                getCredentialRevokedAt(),
+                getParentForChildren(),
+                isClean());
+        credentialRevokedAt_ = null;
+      }
+      return credentialRevokedAtBuilder_;
     }
 
     // @@protoc_insertion_point(builder_scope:agent.Agent)

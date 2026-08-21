@@ -3,8 +3,8 @@ package com.hivearmor.service.reports;
 import com.hivearmor.config.Constants;
 import com.hivearmor.domain.chart_builder.types.query.FilterType;
 import com.hivearmor.domain.chart_builder.types.query.OperatorType;
-import com.hivearmor.domain.index_pattern.enums.SystemIndexPattern;
 import com.hivearmor.domain.network_scan.NetworkScanFilter;
+import com.hivearmor.multitenancy.MsspIndexResolver;
 import com.hivearmor.domain.reports.types.IncidentType;
 import com.hivearmor.domain.shared_types.alert.UtmAlert;
 import com.hivearmor.domain.shared_types.enums.ImageShortName;
@@ -38,17 +38,20 @@ public class CustomReportService {
     private final UtmIncidentJobService incidentJobService;
     private final UtmNetworkScanService utmNetworkScanService;
     private final UtmImagesService imagesService;
+    private final MsspIndexResolver indexResolver;
 
     public CustomReportService(ElasticsearchService elasticsearchService,
                                PdfUtil pdfUtil,
                                UtmIncidentJobService incidentJobService,
                                UtmNetworkScanService utmNetworkScanService,
-                               UtmImagesService imagesService) {
+                               UtmImagesService imagesService,
+                               MsspIndexResolver indexResolver) {
         this.elasticsearchService = elasticsearchService;
         this.pdfUtil = pdfUtil;
         this.incidentJobService = incidentJobService;
         this.utmNetworkScanService = utmNetworkScanService;
         this.imagesService = imagesService;
+        this.indexResolver = indexResolver;
     }
 
     /**
@@ -71,7 +74,7 @@ public class CustomReportService {
             Pageable page = PageRequest.of(0, top, Sort.by(Sort.Direction.ASC, Constants.alertStatus));
 
             SearchRequest.Builder srb = new SearchRequest.Builder();
-            srb.index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS))
+            srb.index(indexResolver.resolveAlertIndexPattern())
                 .query(SearchUtil.toQuery(filters));
             SearchUtil.applyPaginationAndSort(srb, page, top);
 
@@ -102,7 +105,7 @@ public class CustomReportService {
             Pageable page = PageRequest.of(0, top, Sort.by(Sort.Direction.ASC, Constants.alertStatus));
 
             SearchRequest.Builder srb = new SearchRequest.Builder();
-            srb.index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS))
+            srb.index(indexResolver.resolveAlertIndexPattern())
                 .query(SearchUtil.toQuery(filters));
             SearchUtil.applyPaginationAndSort(srb, page, top);
 

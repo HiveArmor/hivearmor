@@ -3,7 +3,6 @@ package baseline
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,7 +11,8 @@ import (
 	"sync"
 	"time"
 
-	sdkos "github.com/threatwinds/go-sdk/os"
+	"github.com/hivearmor/event-processor/internal/httpclient"
+	sdkos "github.com/hivearmor/sdk/os"
 )
 
 const (
@@ -33,8 +33,9 @@ type BaselineDoc struct {
 }
 
 type AnomalyState struct {
-	Mean   float64
-	StdDev float64
+	Mean       float64
+	StdDev     float64
+	SampleSize int
 }
 
 var (
@@ -54,12 +55,11 @@ func Init(osURL, user, pass string) {
 		bOSURL = osURL
 		bOSUser = user
 		bOSPass = pass
-		bHTTP = &http.Client{
-			Timeout: 30 * time.Second,
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
+		client, err := httpclient.NewSecureClient(30 * time.Second)
+		if err != nil {
+			panic(err)
 		}
+		bHTTP = client
 		go collectLoop()
 	})
 }
@@ -147,7 +147,7 @@ func computeBaselines() {
 										}
 										mean, std := stats(counts)
 										key := source + "|" + action
-										newCache[key] = AnomalyState{Mean: mean, StdDev: std}
+										newCache[key] = AnomalyState{Mean: mean, StdDev: std, SampleSize: len(counts)}
 
 										// Write baseline doc
 										doc := BaselineDoc{
@@ -159,7 +159,7 @@ func computeBaselines() {
 											SampleSize: len(counts),
 										}
 										docBody, _ := json.Marshal(doc)
-										idx := sdkos.BuildCurrentDayIndex("v3-hive", "baselines")
+										idx := sdkos.BuildCurrentDayIndex("baselines")
 										putURL := fmt.Sprintf("%s/%s/_doc/%s", bOSURL, idx, source+"-"+action)
 										req, _ := http.NewRequest("PUT", putURL, bytes.NewReader(docBody))
 										req.SetBasicAuth(bOSUser, bOSPass)

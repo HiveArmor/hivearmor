@@ -1,0 +1,11 @@
+- generic [ref=f6e2]:
+  - heading "Unexpected Application Error!" [level=2] [ref=f6e1376]
+  - 'heading "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: object. Check the render method of `RuleEditorPage`." [level=3] [ref=f6e1377]'
+  - generic [ref=f6e1378]: "Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: object. Check the render method of `RuleEditorPage`. at createFiberFromTypeAndProps (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16466:12) at createFiberFromElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16481:16) at reconcileSingleElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8849:22) at reconcileChildFibers (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8879:56) at reconcileChildren (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11924:49) at updateHostComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12287:4) at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13102:32) at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15982:12) at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12) at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36)"
+  - paragraph [ref=f6e1379]: 💿 Hey developer 👋
+  - paragraph [ref=f6e1380]:
+    - text: You can provide a way better UX than this when your app throws errors by providing your own
+    - code [ref=f6e1381]: ErrorBoundary
+    - text: or
+    - code [ref=f6e1382]: errorElement
+    - text: prop on your route.

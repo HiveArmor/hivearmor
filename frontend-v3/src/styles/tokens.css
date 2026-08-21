@@ -1,0 +1,82 @@
+/**
+ * HiveArmor Design Tokens — IMMUTABLE
+ * Do not add, remove, or modify any custom property in this file.
+ * All values are locked and reviewed. Any change requires product-owner sign-off.
+ * Last verified: 2026-07-23
+ */
+
+:root {
+  /* ─── Surfaces ──────────────────────────────────────────────────── */
+  --ha-background:      #070A0F;   /* Page background — deepest layer */
+  --ha-surface-primary: #0D131C;   /* Primary card / panel surface */
+  --ha-surface-raised:  #131C28;   /* Toolbar, header, raised element */
+
+  /* ─── Structure ─────────────────────────────────────────────────── */
+  --ha-border:          #253244;   /* All borders — 1px solid only */
+
+  /* ─── Brand / Semantic ───────────────────────────────────────────── */
+  --ha-primary:         #32D6C5;   /* Teal — actions, links, focus rings */
+  --ha-intelligence:    #8B7CFF;   /* Purple — AI, intel, enrichment */
+  --ha-critical:        #FF5D6C;   /* Red — critical severity */
+  --ha-high:            #FFAA45;   /* Amber — high severity */
+  --ha-medium:          #5AA7FF;   /* Blue — medium severity */
+  --ha-positive:        #40D69A;   /* Green — low sev, resolved, on-track */
+
+  /* ─── Text ───────────────────────────────────────────────────────── */
+  --ha-text-primary:    #E8EDF4;   /* Body text, labels */
+  --ha-text-secondary:  #97A6B8;   /* Muted text, captions, placeholders */
+
+  /* ─── Typography ─────────────────────────────────────────────────── */
+  --ha-font-ui:   'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --ha-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+  --ha-text-xs:   0.6875rem;   /* 11px — timestamps, badges, captions */
+  --ha-text-sm:   0.75rem;     /* 12px — table cell text, secondary labels */
+  --ha-text-base: 0.8125rem;   /* 13px — primary body, form inputs */
+  --ha-text-md:   0.875rem;    /* 14px — drawer titles, emphasis */
+  --ha-text-lg:   1rem;        /* 16px — page section headings */
+  --ha-text-xl:   1.125rem;    /* 18px — page titles */
+  --ha-text-2xl:  1.375rem;    /* 22px — KPI values, hero numbers */
+
+  --ha-weight-normal:   400;
+  --ha-weight-medium:   500;
+  --ha-weight-semibold: 600;
+  --ha-weight-bold:     700;
+
+  /* ─── Spacing (4px grid) ─────────────────────────────────────────── */
+  --ha-space-1:  0.25rem;   /*  4px */
+  --ha-space-2:  0.5rem;    /*  8px */
+  --ha-space-3:  0.75rem;   /* 12px */
+  --ha-space-4:  1rem;      /* 16px */
+  --ha-space-5:  1.25rem;   /* 20px */
+  --ha-space-6:  1.5rem;    /* 24px */
+  --ha-space-8:  2rem;      /* 32px */
+  --ha-space-10: 2.5rem;    /* 40px */
+  --ha-space-12: 3rem;      /* 48px */
+
+  /* ─── Border Radius ──────────────────────────────────────────────── */
+  --ha-radius-sm:   2px;   /* Badges, pills, tight chips */
+  --ha-radius-base: 4px;   /* Buttons, inputs, cards */
+  --ha-radius-md:   6px;   /* Drawers, modals */
+  --ha-radius-lg:   8px;   /* Large panels (rare) — max value */
+
+  /* ─── Z-Index ────────────────────────────────────────────────────── */
+  --ha-z-drawer:  200;
+  --ha-z-modal:   300;
+  --ha-z-toast:   400;
+  --ha-z-tooltip: 500;
+
+  /* ─── Elevation (overlays only) ──────────────────────────────────── */
+  --ha-shadow-overlay: 0 4px 16px rgba(0, 0, 0, 0.45);
+
+  /* ─── Row heights ────────────────────────────────────────────────── */
+  --ha-row-compact:     32px;   /* High-volume alert grids (1000+ rows) */
+  --ha-row-standard:    40px;   /* Default for most operational views */
+  --ha-row-comfortable: 48px;   /* Admin tables, forms, settings */
+}
+
+@keyframes ha-pulse {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.6; }
+  100% { opacity: 1; }
+}

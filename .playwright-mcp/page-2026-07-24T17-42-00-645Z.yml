@@ -1,0 +1,21 @@
+- generic [ref=f2e4]:
+  - generic [ref=f2e5]: HiveArmor
+  - heading "Sign in to HiveArmor" [level=1] [ref=f2e6]
+  - form "Sign in" [ref=f2e7]:
+    - generic [ref=f2e8]:
+      - generic [ref=f2e10]:
+        - text: Username
+        - generic [ref=f2e11]: "*"
+      - textbox "Username" [active] [ref=f2e13]
+    - generic [ref=f2e14]:
+      - generic [ref=f2e16]:
+        - text: Password
+        - generic [ref=f2e17]: "*"
+      - generic [ref=f2e19]:
+        - textbox "Password" [ref=f2e20]
+        - button "Show password" [ref=f2e21] [cursor=pointer]
+    - generic [ref=f2e26] [cursor=pointer]:
+      - checkbox "Remember me" [ref=f2e27]
+      - generic [ref=f2e28]: Remember me
+    - button "Sign in" [ref=f2e29] [cursor=pointer]
+    - button "Sign in with SSO" [ref=f2e32] [cursor=pointer]

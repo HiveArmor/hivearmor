@@ -1,0 +1,241 @@
+framework:
+  id: SOC2-TSC
+  name: SOC 2 Trust Services Criteria
+  shortName: SOC2
+  version: "2017"
+  description: >
+    AICPA Trust Services Criteria for Security, Availability, Processing Integrity,
+    Confidentiality, and Privacy — used in SOC 2 Type I and Type II engagements.
+
+families:
+  - id: CC
+    name: Security (Common Criteria)
+    controls:
+      - id: CC1.1
+        name: The entity demonstrates a commitment to integrity and ethical values
+        description: COSO principle demonstrating commitment to integrity and ethical values across the organization.
+        severity: medium
+      - id: CC1.2
+        name: The board of directors demonstrates independence from management
+        description: The board exercises oversight of the development and performance of internal control.
+        severity: medium
+      - id: CC1.3
+        name: Management establishes structures, reporting lines, and authorities
+        description: Management establishes organizational structures and assigns responsibilities.
+        severity: medium
+      - id: CC1.4
+        name: The entity demonstrates a commitment to attract and retain competent individuals
+        description: The entity demonstrates commitment to competence through hiring and development policies.
+        severity: medium
+      - id: CC1.5
+        name: The entity holds individuals accountable for their internal control responsibilities
+        description: Accountability mechanisms enforce internal control responsibilities for personnel.
+        severity: medium
+      - id: CC2.1
+        name: The entity obtains or generates relevant quality information to support internal control
+        description: Information systems produce relevant and quality data supporting internal controls.
+        severity: medium
+      - id: CC2.2
+        name: The entity internally communicates information necessary to support internal control
+        description: Internal communication policies ensure information reaches appropriate personnel.
+        severity: medium
+      - id: CC2.3
+        name: The entity communicates with external parties regarding internal control matters
+        description: External communication processes address matters that affect internal controls.
+        severity: medium
+      - id: CC3.1
+        name: The entity specifies objectives with sufficient clarity for risk identification
+        description: Objectives are defined clearly enough to enable identification of risks to their achievement.
+        severity: medium
+      - id: CC3.2
+        name: The entity identifies risks to the achievement of its objectives and analyzes risks
+        description: Risk identification and analysis processes cover entity-wide and activity-level risks.
+        severity: high
+      - id: CC3.3
+        name: The entity considers the potential for fraud in assessing risks
+        description: Fraud risk assessment includes incentives, pressures, opportunities, and rationalizations.
+        severity: high
+      - id: CC3.4
+        name: The entity identifies and assesses changes that could significantly impact internal control
+        description: Change assessment processes detect internal and external changes affecting controls.
+        severity: medium
+      - id: CC4.1
+        name: The entity selects and develops control activities that mitigate risks
+        description: Control activities are selected and developed to reduce risks to acceptable levels.
+        severity: high
+      - id: CC4.2
+        name: The entity selects and develops general control activities over technology
+        description: General IT controls over technology infrastructure are developed and implemented.
+        severity: high
+      - id: CC5.1
+        name: The entity selects and develops control activities that contribute to risk mitigation
+        description: Control activities include policies and procedures deployed through the organization.
+        severity: high
+      - id: CC5.2
+        name: The entity deploys control activities through policies and procedures
+        description: Operational procedures implement control activities across the organization.
+        severity: high
+      - id: CC5.3
+        name: The entity deploys control activities using relevant technology infrastructure
+        description: Technology infrastructure is configured to support control activity objectives.
+        severity: high
+      - id: CC6.1
+        name: The entity implements logical access security over protected information assets
+        description: Logical access controls restrict access to information assets to authorized users only.
+        severity: critical
+      - id: CC6.2
+        name: The entity controls access credentials to protected assets through registration
+        description: Access credential lifecycle is managed through registration and authorization processes.
+        severity: high
+      - id: CC6.3
+        name: The entity authorizes, modifies, or removes access to protected assets based on roles
+        description: Role-based access provisioning and deprovisioning controls are enforced.
+        severity: high
+      - id: CC6.4
+        name: The entity restricts physical access to facilities and protected information assets
+        description: Physical access controls protect facilities housing sensitive information assets.
+        severity: high
+      - id: CC6.5
+        name: The entity discontinues logical and physical protections over assets no longer needed
+        description: Asset disposal and decommissioning processes remove protections when no longer required.
+        severity: medium
+      - id: CC6.6
+        name: The entity implements logical access security measures against threats from external sources
+        description: Boundary protection and threat prevention mechanisms defend against external threats.
+        severity: critical
+      - id: CC6.7
+        name: The entity restricts the transmission of data to authorized parties
+        description: Data transmission controls ensure only authorized recipients receive sensitive data.
+        severity: high
+      - id: CC6.8
+        name: The entity implements controls to prevent or detect unauthorized or malicious software
+        description: Anti-malware and software restriction controls prevent unauthorized code execution.
+        severity: high
+      - id: CC7.1
+        name: The entity uses detection and monitoring procedures to identify security events
+        description: Monitoring and detection mechanisms identify configuration changes and security events.
+        severity: critical
+      - id: CC7.2
+        name: The entity monitors system components for anomalies indicative of malicious acts
+        description: Anomaly detection and analysis identify indicators of compromise and malicious activity.
+        severity: critical
+      - id: CC7.3
+        name: The entity evaluates security events to determine whether they constitute incidents
+        description: Event evaluation processes classify security events and determine incident response actions.
+        severity: high
+      - id: CC7.4
+        name: The entity responds to identified security incidents through defined response procedures
+        description: Incident response procedures contain and remediate confirmed security incidents.
+        severity: critical
+      - id: CC7.5
+        name: The entity identifies the need for and implements recovery procedures after incidents
+        description: Recovery activities restore systems and operations to normal after security incidents.
+        severity: high
+      - id: CC8.1
+        name: The entity authorizes, designs, develops, and implements changes to infrastructure
+        description: Change management controls authorize and track changes to infrastructure and software.
+        severity: high
+      - id: CC9.1
+        name: The entity identifies, selects, and develops risk mitigation activities for third parties
+        description: Vendor and third-party risk management controls mitigate risks from external relationships.
+        severity: high
+      - id: CC9.2
+        name: The entity assesses and manages risks associated with vendors and business partners
+        description: Third-party risk assessment processes evaluate and manage vendor-associated risks.
+        severity: high
+
+  - id: A
+    name: Availability
+    controls:
+      - id: A1.1
+        name: The entity maintains and monitors processing capacity to meet availability commitments
+        description: Capacity planning and monitoring ensure system resources meet service-level demands.
+        severity: high
+      - id: A1.2
+        name: The entity authorizes, designs, and manages environmental protections and recovery
+        description: Environmental controls and recovery infrastructure support system availability objectives.
+        severity: high
+      - id: A1.3
+        name: The entity tests recovery plan procedures supporting system availability objectives
+        description: Disaster recovery and backup procedures are tested to validate availability commitments.
+        severity: high
+
+  - id: PI
+    name: Processing Integrity
+    controls:
+      - id: PI1.1
+        name: The entity obtains or generates and uses relevant quality information for processing
+        description: Data quality controls ensure input data is complete, accurate, and valid for processing.
+        severity: high
+      - id: PI1.2
+        name: The entity implements policies for the accurate and timely processing of information
+        description: Processing controls ensure system outputs are complete, accurate, and timely.
+        severity: high
+      - id: PI1.3
+        name: The entity implements policies for storing processing output completely and accurately
+        description: Data storage controls maintain the integrity and completeness of processed outputs.
+        severity: high
+      - id: PI1.4
+        name: The entity implements policies for distributing output completely and accurately
+        description: Data distribution controls ensure outputs are delivered to authorized recipients accurately.
+        severity: medium
+      - id: PI1.5
+        name: The entity implements policies for inputs and outputs that are stored to be retrievable
+        description: Data retention and retrieval controls ensure stored inputs and outputs remain accessible.
+        severity: medium
+
+  - id: C
+    name: Confidentiality
+    controls:
+      - id: C1.1
+        name: The entity identifies and maintains confidential information to meet objectives
+        description: Confidential information identification and classification processes are maintained.
+        severity: high
+      - id: C1.2
+        name: The entity disposes of confidential information to meet confidentiality objectives
+        description: Secure disposal processes ensure confidential information is destroyed when no longer needed.
+        severity: high
+
+  - id: P
+    name: Privacy
+    controls:
+      - id: P1.1
+        name: The entity provides notice to data subjects about its privacy practices
+        description: Privacy notice procedures inform data subjects of collection, use, and disclosure practices.
+        severity: medium
+      - id: P2.1
+        name: The entity communicates choices available to data subjects regarding personal information
+        description: Consent and choice mechanisms allow data subjects to control use of their personal information.
+        severity: medium
+      - id: P3.1
+        name: The entity collects personal information consistent with its privacy objectives
+        description: Data collection is limited to information relevant and necessary for stated privacy objectives.
+        severity: high
+      - id: P4.1
+        name: The entity limits the use of personal information to purposes identified in the notice
+        description: Use limitation controls ensure personal information is used only for stated purposes.
+        severity: high
+      - id: P5.1
+        name: The entity retains personal information consistent with its privacy objectives
+        description: Data retention policies ensure personal information is retained only as long as needed.
+        severity: medium
+      - id: P5.2
+        name: The entity securely disposes of personal information to meet privacy objectives
+        description: Secure disposal processes destroy personal information when retention no longer justified.
+        severity: high
+      - id: P6.1
+        name: The entity provides data subjects with access to their personal information for review
+        description: Data subject access request procedures enable individuals to review their personal data.
+        severity: medium
+      - id: P6.2
+        name: The entity corrects inaccurate personal information as requested by data subjects
+        description: Correction procedures enable data subjects to update inaccurate personal information.
+        severity: medium
+      - id: P7.1
+        name: The entity collects and maintains accurate and complete personal information
+        description: Data quality controls ensure personal information is accurate, complete, and up to date.
+        severity: medium
+      - id: P8.1
+        name: The entity implements procedures for reporting privacy incidents and breaches
+        description: Incident management procedures handle privacy breaches, notifications, and remediation activities.
+        severity: critical

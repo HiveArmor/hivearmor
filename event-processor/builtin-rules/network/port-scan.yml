@@ -1,0 +1,43 @@
+id: ha-net-001
+title: Network Port Scan Detected
+status: stable
+description: Detects rapid sequential connection attempts to multiple ports on a single destination host, which is characteristic of automated port scanning activity used during reconnaissance.
+logsource:
+  product: network
+  service: firewall
+level: medium
+tags:
+  - attack.reconnaissance
+  - attack.T1046
+detection:
+  selection:
+    event.action:
+      - connection_attempt
+      - blocked
+    network.transport: tcp
+    destination.ip|startswith:
+      - '10.'
+      - '172.'
+      - '192.168.'
+  condition: selection
+falsepositives:
+  - Authorized vulnerability scanners running scheduled network assessments
+  - IT asset inventory tools performing network discovery
+fields:
+  - source.ip
+  - destination.ip
+  - destination.port
+  - network.transport
+  - event.action
+impact:
+  confidentiality: medium
+  integrity: low
+  availability: low
+deduplicateBy:
+  - source.ip
+  - destination.ip
+groupBy:
+  - source.ip
+mitre:
+  tactic: reconnaissance
+  technique: T1046

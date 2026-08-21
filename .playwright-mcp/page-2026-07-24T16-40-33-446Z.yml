@@ -1,0 +1,64 @@
+- generic [ref=f44e3]:
+  - banner [ref=f44e4]:
+    - generic [ref=f44e5]: HiveArmor
+    - generic [ref=f44e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f44e13]'
+      - generic "Reconnecting..." [ref=f44e16]: 0 EPS
+      - button "Notifications" [ref=f44e18] [cursor=pointer]
+      - button "Help" [ref=f44e23] [cursor=pointer]
+      - button "User menu" [ref=f44e28] [cursor=pointer]:
+        - generic [ref=f44e29]: AA
+        - generic [ref=f44e30]: admin
+  - navigation [ref=f44e31]:
+    - generic [ref=f44e32]:
+      - generic [ref=f44e33]:
+        - generic [ref=f44e34]: COMMAND
+        - generic [ref=f44e35]:
+          - button "Analyst Queue" [ref=f44e36] [cursor=pointer]
+          - button "Alerts" [ref=f44e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f44e47] [cursor=pointer]
+          - button "Incidents" [ref=f44e54] [cursor=pointer]
+      - generic [ref=f44e61]:
+        - generic [ref=f44e62]: INVESTIGATE
+        - generic [ref=f44e63]:
+          - button "Search & Hunt" [ref=f44e64] [cursor=pointer]
+          - button "Investigations" [ref=f44e70] [cursor=pointer]
+          - button "Entities" [ref=f44e75] [cursor=pointer]
+      - generic [ref=f44e83]:
+        - generic [ref=f44e84]: DEFEND
+        - generic [ref=f44e85]:
+          - button "Detection Rules" [ref=f44e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f44e91] [cursor=pointer]
+      - generic [ref=f44e96]:
+        - generic [ref=f44e97]: POSTURE
+        - generic [ref=f44e98]:
+          - button "Assets" [ref=f44e99] [cursor=pointer]
+          - button "Identities" [ref=f44e105] [cursor=pointer]
+          - button "Active Directory" [ref=f44e113] [cursor=pointer]
+          - button "Exposure" [ref=f44e121] [cursor=pointer]
+          - button "Sensors" [ref=f44e128] [cursor=pointer]
+          - button "Compliance" [ref=f44e133] [cursor=pointer]
+      - generic [ref=f44e139]:
+        - generic [ref=f44e140]: DASHBOARDS
+        - button "Studio" [ref=f44e142] [cursor=pointer]
+      - generic [ref=f44e148]:
+        - generic [ref=f44e149]: REPORT
+        - button "Scheduled Reports" [ref=f44e151] [cursor=pointer]
+      - generic [ref=f44e157]:
+        - generic [ref=f44e158]: ADMINISTRATION
+        - generic [ref=f44e159]:
+          - button "Users" [ref=f44e160] [cursor=pointer]
+          - button "Integrations" [ref=f44e175] [cursor=pointer]
+          - button "Notifications" [ref=f44e180] [cursor=pointer]
+          - button "Audit Log" [ref=f44e186] [cursor=pointer]
+          - button "Settings" [ref=f44e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f44e199] [cursor=pointer]
+  - main [ref=f44e202]:
+    - generic [ref=f44e203]:
+      - generic [ref=f44e205]:
+        - heading "Integrations & Data Sources" [level=1] [ref=f44e207]
+        - button "Add Integration" [ref=f44e209] [cursor=pointer]
+      - generic [ref=f44e214]:
+        - heading "No integrations configured" [level=3] [ref=f44e218]
+        - paragraph [ref=f44e219]: Add a data source to start collecting events.
+        - button "Add Integration" [ref=f44e221] [cursor=pointer]

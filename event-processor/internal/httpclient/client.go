@@ -14,7 +14,21 @@ import (
 // Otherwise uses the system certificate pool.
 // Fails loudly — never falls back to InsecureSkipVerify.
 func NewSecureClient(timeout time.Duration) (*http.Client, error) {
-	tlsCfg := &tls.Config{}
+	tlsCfg, err := NewTLSConfig()
+	if err != nil {
+		return nil, err
+	}
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: &http.Transport{TLSClientConfig: tlsCfg},
+	}, nil
+}
+
+// NewTLSConfig returns a TLS config that verifies certificates. If
+// OPENSEARCH_CA_CERT is set, that PEM is the trusted root. Hostname
+// verification uses the connection URL host. Never sets InsecureSkipVerify.
+func NewTLSConfig() (*tls.Config, error) {
+	tlsCfg := &tls.Config{MinVersion: tls.VersionTLS12}
 
 	if caCertPath := os.Getenv("OPENSEARCH_CA_CERT"); caCertPath != "" {
 		caCert, err := os.ReadFile(caCertPath)
@@ -28,8 +42,14 @@ func NewSecureClient(timeout time.Duration) (*http.Client, error) {
 		tlsCfg.RootCAs = pool
 	}
 
-	return &http.Client{
-		Timeout:   timeout,
-		Transport: &http.Transport{TLSClientConfig: tlsCfg},
-	}, nil
+	return tlsCfg, nil
+}
+
+// MustClient returns a verified TLS HTTP client or exits. Use at process start.
+func MustClient(timeout time.Duration) *http.Client {
+	client, err := NewSecureClient(timeout)
+	if err != nil {
+		panic(fmt.Sprintf("secure http client: %v", err))
+	}
+	return client
 }

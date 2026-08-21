@@ -1,0 +1,39 @@
+id: ha-linux-010
+title: New Systemd Service Unit Created
+status: stable
+description: Detects creation of new systemd service unit files which may indicate an attacker establishing persistence through a malicious system service.
+logsource:
+  product: linux
+  service: auditd
+level: medium
+tags:
+  - attack.persistence
+  - attack.T1543.002
+detection:
+  selection:
+    type: PATH
+    name|contains:
+      - /etc/systemd/system/
+      - /usr/lib/systemd/system/
+      - /lib/systemd/system/
+    name|endswith: .service
+  condition: selection
+falsepositives:
+  - Legitimate software installation creating system services
+  - System administrators creating new services for authorized applications
+fields:
+  - name
+  - uid
+  - comm
+impact:
+  confidentiality: low
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - name
+  - uid
+groupBy:
+  - name
+mitre:
+  tactic: persistence
+  technique: T1543.002

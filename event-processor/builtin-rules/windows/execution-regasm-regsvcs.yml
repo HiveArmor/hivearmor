@@ -1,0 +1,44 @@
+id: b6c7d8e9-f0a1-2345-bcde-456789012326
+title: RegAsm or RegSvcs Used to Execute Malicious Assembly
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.execution
+  - attack.defense_evasion
+  - attack.T1218
+  - attack.T1218.009
+detection:
+  selection:
+    Image|endswith:
+      - '\regasm.exe'
+      - '\regsvcs.exe'
+    CommandLine|contains:
+      - '/u '
+      - '/unregister'
+  selection_suspicious_path:
+    Image|endswith:
+      - '\regasm.exe'
+      - '\regsvcs.exe'
+    CommandLine|contains:
+      - '\AppData\'
+      - '\Temp\'
+      - '\Users\Public\'
+  condition: selection or selection_suspicious_path
+falsepositives:
+  - Legitimate .NET COM component registration
+  - Software installation procedures
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: execution
+  technique: T1218.009

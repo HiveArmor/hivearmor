@@ -1,0 +1,143 @@
+[
+  {
+    "tacticId": "TA0001",
+    "tacticName": "Initial Access",
+    "techniques": [
+      {"techniqueId": "T1078", "techniqueName": "Valid Accounts", "priority": "high"},
+      {"techniqueId": "T1566.001", "techniqueName": "Spearphishing Attachment", "priority": "high"},
+      {"techniqueId": "T1190", "techniqueName": "Exploit Public-Facing Application", "priority": "critical"},
+      {"techniqueId": "T1133", "techniqueName": "External Remote Services", "priority": "medium"},
+      {"techniqueId": "T1195", "techniqueName": "Supply Chain Compromise", "priority": "high"}
+    ]
+  },
+  {
+    "tacticId": "TA0002",
+    "tacticName": "Execution",
+    "techniques": [
+      {"techniqueId": "T1059.001", "techniqueName": "PowerShell", "priority": "high"},
+      {"techniqueId": "T1059.003", "techniqueName": "Windows Command Shell", "priority": "medium"},
+      {"techniqueId": "T1059.005", "techniqueName": "Visual Basic", "priority": "medium"},
+      {"techniqueId": "T1053.005", "techniqueName": "Scheduled Task/Job", "priority": "medium"},
+      {"techniqueId": "T1204.002", "techniqueName": "User Execution: Malicious File", "priority": "high"}
+    ]
+  },
+  {
+    "tacticId": "TA0003",
+    "tacticName": "Persistence",
+    "techniques": [
+      {"techniqueId": "T1547.001", "techniqueName": "Registry Run Keys", "priority": "high"},
+      {"techniqueId": "T1053.005", "techniqueName": "Scheduled Task", "priority": "medium"},
+      {"techniqueId": "T1136", "techniqueName": "Create Account", "priority": "medium"},
+      {"techniqueId": "T1543.003", "techniqueName": "Windows Service", "priority": "high"},
+      {"techniqueId": "T1546.001", "techniqueName": "Change Default File Association", "priority": "low"}
+    ]
+  },
+  {
+    "tacticId": "TA0004",
+    "tacticName": "Privilege Escalation",
+    "techniques": [
+      {"techniqueId": "T1548.002", "techniqueName": "Bypass UAC", "priority": "high"},
+      {"techniqueId": "T1134", "techniqueName": "Access Token Manipulation", "priority": "high"},
+      {"techniqueId": "T1068", "techniqueName": "Exploitation for Privilege Escalation", "priority": "critical"},
+      {"techniqueId": "T1055", "techniqueName": "Process Injection", "priority": "critical"}
+    ]
+  },
+  {
+    "tacticId": "TA0005",
+    "tacticName": "Defense Evasion",
+    "techniques": [
+      {"techniqueId": "T1055", "techniqueName": "Process Injection", "priority": "critical"},
+      {"techniqueId": "T1070.004", "techniqueName": "File Deletion", "priority": "medium"},
+      {"techniqueId": "T1112", "techniqueName": "Modify Registry", "priority": "medium"},
+      {"techniqueId": "T1497", "techniqueName": "Virtualization/Sandbox Evasion", "priority": "high"},
+      {"techniqueId": "T1036", "techniqueName": "Masquerading", "priority": "high"}
+    ]
+  },
+  {
+    "tacticId": "TA0006",
+    "tacticName": "Credential Access",
+    "techniques": [
+      {"techniqueId": "T1003.001", "techniqueName": "LSASS Memory", "priority": "critical"},
+      {"techniqueId": "T1003", "techniqueName": "OS Credential Dumping", "priority": "critical"},
+      {"techniqueId": "T1558.003", "techniqueName": "Kerberoasting", "priority": "high"},
+      {"techniqueId": "T1110", "techniqueName": "Brute Force", "priority": "high"},
+      {"techniqueId": "T1552", "techniqueName": "Unsecured Credentials", "priority": "medium"}
+    ]
+  },
+  {
+    "tacticId": "TA0007",
+    "tacticName": "Discovery",
+    "techniques": [
+      {"techniqueId": "T1087", "techniqueName": "Account Discovery", "priority": "low"},
+      {"techniqueId": "T1083", "techniqueName": "File and Directory Discovery", "priority": "low"},
+      {"techniqueId": "T1057", "techniqueName": "Process Discovery", "priority": "low"},
+      {"techniqueId": "T1018", "techniqueName": "Remote System Discovery", "priority": "medium"}
+    ]
+  },
+  {
+    "tacticId": "TA0008",
+    "tacticName": "Lateral Movement",
+    "techniques": [
+      {"techniqueId": "T1021.002", "techniqueName": "SMB/Windows Admin Shares", "priority": "high"},
+      {"techniqueId": "T1021.001", "techniqueName": "Remote Desktop Protocol", "priority": "medium"},
+      {"techniqueId": "T1570", "techniqueName": "Lateral Tool Transfer", "priority": "high"},
+      {"techniqueId": "T1021.006", "techniqueName": "Windows Remote Management", "priority": "medium"}
+    ]
+  },
+  {
+    "tacticId": "TA0009",
+    "tacticName": "Collection",
+    "techniques": [
+      {"techniqueId": "T1560", "techniqueName": "Archive Collected Data", "priority": "medium"},
+      {"techniqueId": "T1005", "techniqueName": "Data from Local System", "priority": "low"},
+      {"techniqueId": "T1114", "techniqueName": "Email Collection", "priority": "medium"}
+    ]
+  },
+  {
+    "tacticId": "TA0010",
+    "tacticName": "Exfiltration",
+    "techniques": [
+      {"techniqueId": "T1048.003", "techniqueName": "Exfiltration Over Unencrypted Non-C2 Protocol", "priority": "high"},
+      {"techniqueId": "T1041", "techniqueName": "Exfiltration Over C2 Channel", "priority": "high"},
+      {"techniqueId": "T1567", "techniqueName": "Exfiltration Over Web Service", "priority": "medium"}
+    ]
+  },
+  {
+    "tacticId": "TA0011",
+    "tacticName": "Command and Control",
+    "techniques": [
+      {"techniqueId": "T1071.004", "techniqueName": "DNS", "priority": "high"},
+      {"techniqueId": "T1071.001", "techniqueName": "Web Protocols", "priority": "medium"},
+      {"techniqueId": "T1573", "techniqueName": "Encrypted Channel", "priority": "medium"},
+      {"techniqueId": "T1105", "techniqueName": "Ingress Tool Transfer", "priority": "high"}
+    ]
+  },
+  {
+    "tacticId": "TA0040",
+    "tacticName": "Impact",
+    "techniques": [
+      {"techniqueId": "T1486", "techniqueName": "Data Encrypted for Impact", "priority": "critical"},
+      {"techniqueId": "T1489", "techniqueName": "Service Stop", "priority": "high"},
+      {"techniqueId": "T1529", "techniqueName": "System Shutdown/Reboot", "priority": "medium"},
+      {"techniqueId": "T1490", "techniqueName": "Inhibit System Recovery", "priority": "critical"}
+    ]
+  },
+  {
+    "tacticId": "TA0042",
+    "tacticName": "Resource Development",
+    "techniques": [
+      {"techniqueId": "T1583", "techniqueName": "Acquire Infrastructure", "priority": "low"},
+      {"techniqueId": "T1588", "techniqueName": "Obtain Capabilities", "priority": "low"},
+      {"techniqueId": "T1585", "techniqueName": "Establish Accounts", "priority": "low"}
+    ]
+  },
+  {
+    "tacticId": "TA0043",
+    "tacticName": "Reconnaissance",
+    "techniques": [
+      {"techniqueId": "T1595", "techniqueName": "Active Scanning", "priority": "medium"},
+      {"techniqueId": "T1589", "techniqueName": "Gather Victim Identity Information", "priority": "low"},
+      {"techniqueId": "T1590", "techniqueName": "Gather Victim Network Information", "priority": "medium"}
+    ]
+  }
+]

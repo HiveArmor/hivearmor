@@ -1,0 +1,249 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e5]:
+      - generic [ref=e6]: HiveArmor
+      - generic [ref=e14]:
+        - button "All authorized tenants" [ref=e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=e24] [cursor=pointer]:
+          - generic [ref=e29]: ⌘ K
+      - generic [ref=e31]:
+        - 'status "Data pipeline: Critical - Bad Gateway" [ref=e212]'
+        - button "Notifications" [ref=e38] [cursor=pointer]
+        - button "Help" [ref=e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=e47]:
+      - generic [ref=e48]:
+        - region "COMMAND" [ref=e49]:
+          - generic [ref=e50]:
+            - button "Mission Control" [ref=e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=e58] [cursor=pointer]
+            - button "Alerts" [ref=e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=e67] [cursor=pointer]
+            - button "Incidents" [ref=e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=e79]:
+          - generic [ref=e80]:
+            - button "Search & Hunt" [ref=e81] [cursor=pointer]
+            - button "Investigations" [ref=e86] [cursor=pointer]
+            - button "Entities" [ref=e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=e97] [cursor=pointer]
+        - region "DEFEND" [ref=e103]:
+          - generic [ref=e104]:
+            - button "Detection Rules" [ref=e105] [cursor=pointer]
+            - button "Playbooks" [ref=e109] [cursor=pointer]
+            - button "Response Library" [ref=e114] [cursor=pointer]
+        - region "POSTURE" [ref=e118]:
+          - generic [ref=e119]:
+            - button "Assets" [ref=e120] [cursor=pointer]
+            - button "Identities" [ref=e125] [cursor=pointer]
+            - button "Active Directory" [ref=e132] [cursor=pointer]
+            - button "Exposure" [ref=e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=e156] [cursor=pointer]
+            - button "Compliance" [ref=e162] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=e167]:
+          - generic [ref=e168]:
+            - button "Endpoints" [ref=e169] [cursor=pointer]
+            - button "File Quarantine" [ref=e173] [cursor=pointer]
+            - button "File Integrity" [ref=e179] [cursor=pointer]
+        - region "DASHBOARDS" [ref=e186]:
+          - button "Studio" [ref=e188] [cursor=pointer]
+        - region "REPORT" [ref=e193]:
+          - button "Scheduled Reports" [ref=e195] [cursor=pointer]
+      - generic [ref=e200]:
+        - button "User menu" [ref=e203] [cursor=pointer]:
+          - generic [ref=e204]: MC
+        - button "Pin sidebar open" [ref=e205] [cursor=pointer]
+    - main [ref=e208]:
+      - generic [ref=e213]:
+        - generic [ref=e214]:
+          - generic [ref=e221]:
+            - generic [ref=e222]: INVESTIGATION
+            - heading "Threat Constellation" [level=1] [ref=e223]
+            - paragraph [ref=e224]: Evidence-backed entity and activity relationships
+          - generic [ref=e225]:
+            - generic [ref=e226]: fresh
+            - button "Refresh" [ref=e233] [cursor=pointer]
+        - generic [ref=e239]:
+          - generic [ref=e240]:
+            - strong [ref=e241]: "Design fixture:"
+            - text: fictional entity relationships are enabled for visual review.
+          - generic [ref=e242]: Production never receives these records.
+        - region "Relationship graph summary" [ref=e243]:
+          - article [ref=e244]:
+            - generic [ref=e245]: Visible entities
+            - strong [ref=e250]: "18"
+            - generic [ref=e251]: 3 external
+          - article [ref=e252]:
+            - generic [ref=e253]: Relationships
+            - strong [ref=e258]: "19"
+            - generic [ref=e259]: 19 authorized
+          - article [ref=e260]:
+            - generic [ref=e261]: Highest risk
+            - strong [ref=e264]: "97"
+            - generic [ref=e265]: normalized /100
+          - article [ref=e266]:
+            - generic [ref=e267]: Alert references
+            - strong [ref=e270]: "47"
+            - generic [ref=e271]: across visible entities
+          - article [ref=e272]:
+            - generic [ref=e273]: Activity window
+            - strong [ref=e277]: 24h
+            - generic [ref=e278]: 2 relationship hops
+          - article [ref=e279]:
+            - generic [ref=e280]: Snapshot
+            - strong [ref=e286]: 16:22:42
+            - generic [ref=e287]: 184 ms query
+        - region "Threat relationship controls" [ref=e288]:
+          - generic [ref=e289]:
+            - button "Relationship filters" [ref=e290] [cursor=pointer]:
+              - generic [ref=e293]: "17"
+            - textbox "Find entity in constellation" [ref=e298]:
+              - /placeholder: Find an entity, IP, process, or domain
+            - generic [ref=e299]:
+              - generic [ref=e300]: Window
+              - combobox "Window" [ref=e301] [cursor=pointer]:
+                - option "Last 1 hour"
+                - option "Last 4 hours"
+                - option "Last 24 hours" [selected]
+                - option "Last 7 days"
+                - option "Last 30 days"
+            - generic [ref=e302]:
+              - generic [ref=e303]: Hops
+              - combobox "Hops" [ref=e304] [cursor=pointer]:
+                - option "1 hop"
+                - option "2 hops" [selected]
+                - option "3 hops"
+            - generic [ref=e305]:
+              - generic [ref=e306]: Risk
+              - combobox "Risk" [ref=e307] [cursor=pointer]:
+                - option "All risk" [selected]
+                - option "40+"
+                - option "60+"
+                - option "80+"
+            - generic "Graph view controls" [ref=e308]:
+              - button "Pause graph layout" [ref=e309] [cursor=pointer]
+              - button "Zoom out" [ref=e313] [cursor=pointer]
+              - button "Zoom in" [ref=e315] [cursor=pointer]
+              - button "Fit graph to view" [ref=e317] [cursor=pointer]
+              - button "Enter full graph view" [ref=e321] [cursor=pointer]
+              - button "Reset relationship workspace" [ref=e327] [cursor=pointer]
+        - main [ref=e331]:
+          - complementary "Accessible graph inventory" [ref=e332]:
+            - tablist "Graph inventory" [ref=e334]:
+              - tab "Entities 18" [selected] [ref=e335] [cursor=pointer]:
+                - text: Entities
+                - generic [ref=e337]: "18"
+              - tab "Links 19" [ref=e338] [cursor=pointer]:
+                - text: Links
+                - generic [ref=e343]: "19"
+            - listbox "Visible entities" [ref=e344]:
+              - option "FIN-WKS-044 Host · 7 alerts 97" [ref=e345] [cursor=pointer]:
+                - generic [ref=e349]:
+                  - strong [ref=e350]: FIN-WKS-044
+                  - generic [ref=e351]: Host · 7 alerts
+                - emphasis [ref=e352]: "97"
+              - option "sarah.chen User · 5 alerts 91" [ref=e353] [cursor=pointer]:
+                - generic [ref=e358]:
+                  - strong [ref=e359]: sarah.chen
+                  - generic [ref=e360]: User · 5 alerts
+                - emphasis [ref=e361]: "91"
+              - option "198.51.100.42 IP address · 4 alerts 88" [ref=e362] [cursor=pointer]:
+                - generic [ref=e369]:
+                  - strong [ref=e370]: 198.51.100.42
+                  - generic [ref=e371]: IP address · 4 alerts
+                - emphasis [ref=e372]: "88"
+              - option "powershell.exe Process · 6 alerts 84" [ref=e373] [cursor=pointer]:
+                - generic [ref=e380]:
+                  - strong [ref=e381]: powershell.exe
+                  - generic [ref=e382]: Process · 6 alerts
+                - emphasis [ref=e383]: "84"
+              - option "cdn-sync.example Domain · 3 alerts 82" [ref=e384] [cursor=pointer]:
+                - generic [ref=e391]:
+                  - strong [ref=e392]: cdn-sync.example
+                  - generic [ref=e393]: Domain · 3 alerts
+                - emphasis [ref=e394]: "82"
+              - option "update-loader.ps1 File · 4 alerts 79" [ref=e395] [cursor=pointer]:
+                - generic [ref=e402]:
+                  - strong [ref=e403]: update-loader.ps1
+                  - generic [ref=e404]: File · 4 alerts
+                - emphasis [ref=e405]: "79"
+              - option "IDM-DC-02 Host · 4 alerts 76" [ref=e406] [cursor=pointer]:
+                - generic [ref=e410]:
+                  - strong [ref=e411]: IDM-DC-02
+                  - generic [ref=e412]: Host · 4 alerts
+                - emphasis [ref=e413]: "76"
+              - option "svc-backup User · 3 alerts 72" [ref=e414] [cursor=pointer]:
+                - generic [ref=e419]:
+                  - strong [ref=e420]: svc-backup
+                  - generic [ref=e421]: User · 3 alerts
+                - emphasis [ref=e422]: "72"
+              - option "10.44.18.118 IP address · 2 alerts 68" [ref=e423] [cursor=pointer]:
+                - generic [ref=e430]:
+                  - strong [ref=e431]: 10.44.18.118
+                  - generic [ref=e432]: IP address · 2 alerts
+                - emphasis [ref=e433]: "68"
+              - option "Remote Desktop Service · 2 alerts 64" [ref=e434] [cursor=pointer]:
+                - generic [ref=e448]:
+                  - strong [ref=e449]: Remote Desktop
+                  - generic [ref=e450]: Service · 2 alerts
+                - emphasis [ref=e451]: "64"
+              - option "PAY-APP-07 Host · 2 alerts 61" [ref=e452] [cursor=pointer]:
+                - generic [ref=e456]:
+                  - strong [ref=e457]: PAY-APP-07
+                  - generic [ref=e458]: Host · 2 alerts
+                - emphasis [ref=e459]: "61"
+              - option "app-payments User · 1 alerts 58" [ref=e460] [cursor=pointer]:
+                - generic [ref=e465]:
+                  - strong [ref=e466]: app-payments
+                  - generic [ref=e467]: User · 1 alerts
+                - emphasis [ref=e468]: "58"
+              - option "login.northstar.example Domain · 1 alerts 45" [ref=e469] [cursor=pointer]:
+                - generic [ref=e476]:
+                  - strong [ref=e477]: login.northstar.example
+                  - generic [ref=e478]: Domain · 1 alerts
+                - emphasis [ref=e479]: "45"
+              - option "cloud-audit-reader Cloud · 1 alerts 42" [ref=e480] [cursor=pointer]:
+                - generic [ref=e484]:
+                  - strong [ref=e485]: cloud-audit-reader
+                  - generic [ref=e486]: Cloud · 1 alerts
+                - emphasis [ref=e487]: "42"
+              - option "cmd.exe Process · 1 alerts 39" [ref=e488] [cursor=pointer]:
+                - generic [ref=e495]:
+                  - strong [ref=e496]: cmd.exe
+                  - generic [ref=e497]: Process · 1 alerts
+                - emphasis [ref=e498]: "39"
+              - option "finance-archive.zip File · 1 alerts 35" [ref=e499] [cursor=pointer]:
+                - generic [ref=e506]:
+                  - strong [ref=e507]: finance-archive.zip
+                  - generic [ref=e508]: File · 1 alerts
+                - emphasis [ref=e509]: "35"
+              - option "10.44.0.12 IP address · 0 alerts 24" [ref=e510] [cursor=pointer]:
+                - generic [ref=e517]:
+                  - strong [ref=e518]: 10.44.0.12
+                  - generic [ref=e519]: IP address · 0 alerts
+                - emphasis [ref=e520]: "24"
+              - option "updates.vendor.example Domain · 0 alerts 12" [ref=e521] [cursor=pointer]:
+                - generic [ref=e528]:
+                  - strong [ref=e529]: updates.vendor.example
+                  - generic [ref=e530]: Domain · 0 alerts
+                - emphasis [ref=e531]: "12"
+          - region "Threat relationship visualization" [ref=e532]:
+            - generic:
+              - generic: Internal
+              - generic: External
+              - generic: Critical risk
+              - generic: High risk
+              - generic: Node size = alert volume
+            - generic "Threat relationship graph workspace" [ref=e533]:
+              - img "Threat constellation relationship graph" [ref=e534]
+        - generic [ref=e538]:
+          - generic [ref=e539]:
+            - generic [ref=e540]:
+              - generic [ref=e542]: Connected
+              - generic [ref=e543]: •
+              - generic [ref=e545]: Live
+            - generic [ref=e546]: 12840 eps
+          - generic: Snapshot 16:22:42 · Projection stable
+  - generic:
+    - list "Notifications"

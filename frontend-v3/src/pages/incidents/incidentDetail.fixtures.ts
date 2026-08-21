@@ -1,0 +1,216 @@
+/**
+ * Stable fictional records used only when VITE_USE_FOUNDATION_FIXTURES=true.
+ * Production builds continue to use the incident APIs exclusively.
+ */
+
+import type { EvidenceItem, IncidentDetail, TimelineEvent } from './incidentDetail.types';
+
+import type { IncidentEntity, UtmAlert } from '@/types/api.types';
+
+export const foundationIncident: IncidentDetail = {
+  id: 4821,
+  incidentName: 'Suspicious privileged-account access from a new geography',
+  incidentDescription:
+    'Five failed authentication attempts were followed by a successful VPN session from a geography not previously associated with this privileged identity. The device fingerprint is unknown and the source address appears in a threat-intelligence feed.',
+  incidentPriority: 'P1',
+  incidentSeverity: 9,
+  incidentStatus: 'in_progress',
+  incidentAssignedTo: 'Maya Chen',
+  incidentAssignedToId: 41,
+  incidentSolution:
+    'Validate the session with the account owner, revoke active sessions if unrecognized, and preserve authentication telemetry before containment.',
+  incidentCreatedDate: '2026-08-02T03:42:00Z',
+  incidentLastUpdated: '2026-08-02T03:51:00Z',
+  slaDeadline: '2026-08-02T05:12:00Z',
+};
+
+export const foundationTimeline: TimelineEvent[] = [
+  {
+    id: 1,
+    timestamp: '2026-08-02T03:42:00Z',
+    eventType: 'alert_added',
+    actor: 'Correlation engine',
+    description: 'Five authentication failures correlated with a successful privileged VPN login.',
+  },
+  {
+    id: 2,
+    timestamp: '2026-08-02T03:43:00Z',
+    eventType: 'evidence_added',
+    actor: 'Threat intelligence',
+    description: 'Source IP matched a high-confidence credential-access indicator.',
+  },
+  {
+    id: 3,
+    timestamp: '2026-08-02T03:45:00Z',
+    eventType: 'evidence_added',
+    actor: 'Identity analytics',
+    description: 'Device fingerprint and sign-in geography were confirmed as new for this account.',
+  },
+  {
+    id: 4,
+    timestamp: '2026-08-02T03:47:00Z',
+    eventType: 'assignee_changed',
+    actor: 'Alex Kumar',
+    description: 'Incident assigned to Maya Chen for Tier 2 investigation.',
+  },
+  {
+    id: 5,
+    timestamp: '2026-08-02T03:49:00Z',
+    eventType: 'status_changed',
+    actor: 'Maya Chen',
+    description: 'Status changed from Open to In progress.',
+  },
+  {
+    id: 6,
+    timestamp: '2026-08-02T03:51:00Z',
+    eventType: 'note_added',
+    actor: 'Maya Chen',
+    description: 'Identity owner verification initiated; active VPN session remains under observation.',
+  },
+];
+
+export const foundationEvidence: EvidenceItem[] = [
+  {
+    id: 11,
+    incidentId: 4821,
+    itemType: 'ALERT',
+    title: 'Privileged VPN authentication correlation',
+    content: 'Five failed attempts preceded a successful login within a nine-minute window.',
+    sourceRef: 'ALT-91274',
+    severityHint: 'critical',
+    createdBy: 'Correlation engine',
+    createdAt: '2026-08-02T03:42:00Z',
+  },
+  {
+    id: 12,
+    incidentId: 4821,
+    itemType: 'ARTIFACT',
+    title: 'Unknown device fingerprint',
+    content: 'Fingerprint 8d:4c:19:af has not been observed for this identity in the previous 30 days.',
+    sourceRef: 'device.fingerprint:8d:4c:19:af',
+    severityHint: 'high',
+    createdBy: 'Identity analytics',
+    createdAt: '2026-08-02T03:45:00Z',
+  },
+  {
+    id: 13,
+    incidentId: 4821,
+    itemType: 'EXTERNAL_URL',
+    title: 'Threat-intelligence match',
+    content: 'The source address is associated with recent credential-access infrastructure.',
+    sourceRef: 'https://example.test/intelligence/indicator/203.0.113.77',
+    severityHint: 'high',
+    createdBy: 'Threat intelligence',
+    createdAt: '2026-08-02T03:43:00Z',
+  },
+  {
+    id: 14,
+    incidentId: 4821,
+    itemType: 'NOTE',
+    title: 'Identity verification pending',
+    content: 'Account owner contacted through the approved out-of-band channel. Awaiting confirmation.',
+    sourceRef: null,
+    severityHint: 'medium',
+    createdBy: 'Maya Chen',
+    createdAt: '2026-08-02T03:51:00Z',
+  },
+];
+
+export const foundationEntities: IncidentEntity[] = [
+  {
+    id: 'usr-sarah-chen',
+    type: 'user',
+    label: 'Sarah Chen',
+    riskScore: 91,
+    alertCount: 4,
+    firstSeen: '2026-07-02T03:42:00Z',
+    lastSeen: '2026-08-02T03:47:00Z',
+  },
+  {
+    id: 'host-fin-wks-044',
+    type: 'host',
+    label: 'FIN-WKS-044',
+    riskScore: 74,
+    alertCount: 2,
+    firstSeen: '2026-07-11T11:20:00Z',
+    lastSeen: '2026-08-02T03:47:00Z',
+  },
+  {
+    id: 'ip-203-0-113-77',
+    type: 'ip',
+    label: '203.0.113.77',
+    riskScore: 96,
+    alertCount: 3,
+    firstSeen: '2026-08-02T03:42:00Z',
+    lastSeen: '2026-08-02T03:47:00Z',
+  },
+  {
+    id: 'proc-vpn-client',
+    type: 'process',
+    label: 'corporate-vpn.exe',
+    riskScore: 38,
+    alertCount: 1,
+    firstSeen: '2026-08-02T03:47:00Z',
+    lastSeen: '2026-08-02T03:47:00Z',
+  },
+];
+
+export const foundationAlerts: UtmAlert[] = [
+  {
+    id: 'ALT-91274',
+    name: 'Privileged account login after repeated failures',
+    '@timestamp': '2026-08-02T03:47:00Z',
+    timestamp: '2026-08-02T03:47:00Z',
+    severity: 9,
+    severityLabel: 'Critical',
+    status: 2,
+    statusLabel: 'In progress',
+    category: 'Identity',
+    description: 'A successful privileged login followed five failed attempts.',
+    mitreTacticId: 'TA0006',
+    mitreTacticName: 'Credential Access',
+    mitreTechniqueId: 'T1110',
+    mitreTechniqueName: 'Brute Force',
+    riskScore: 94,
+    confidence: 91,
+    threatIntelMatched: true,
+    threatIntelIndicatorType: 'ip',
+    threatIntelSource: 'HiveArmor curated feed',
+  },
+  {
+    id: 'ALT-91270',
+    name: 'Authentication from unseen geography',
+    '@timestamp': '2026-08-02T03:46:00Z',
+    timestamp: '2026-08-02T03:46:00Z',
+    severity: 8,
+    severityLabel: 'High',
+    status: 1,
+    statusLabel: 'Open',
+    category: 'Identity',
+    description: 'The account authenticated from a country not observed in its 30-day baseline.',
+    mitreTacticId: 'TA0001',
+    mitreTacticName: 'Initial Access',
+    mitreTechniqueId: 'T1078',
+    mitreTechniqueName: 'Valid Accounts',
+    riskScore: 87,
+    confidence: 88,
+  },
+  {
+    id: 'ALT-91268',
+    name: 'Unknown device fingerprint for privileged identity',
+    '@timestamp': '2026-08-02T03:45:00Z',
+    timestamp: '2026-08-02T03:45:00Z',
+    severity: 7,
+    severityLabel: 'High',
+    status: 1,
+    statusLabel: 'Open',
+    category: 'Endpoint',
+    description: 'No matching device was found in the identity baseline.',
+    mitreTacticId: 'TA0005',
+    mitreTacticName: 'Defense Evasion',
+    mitreTechniqueId: 'T1036',
+    mitreTechniqueName: 'Masquerading',
+    riskScore: 78,
+    confidence: 82,
+  },
+];

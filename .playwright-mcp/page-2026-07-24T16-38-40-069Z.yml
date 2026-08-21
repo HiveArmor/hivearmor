@@ -1,0 +1,89 @@
+- generic [ref=f30e3]:
+  - banner [ref=f30e4]:
+    - generic [ref=f30e5]: HiveArmor
+    - generic [ref=f30e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f30e13]'
+      - generic "Reconnecting..." [ref=f30e16]: 0 EPS
+      - button "Notifications" [ref=f30e18] [cursor=pointer]
+      - button "Help" [ref=f30e23] [cursor=pointer]
+      - button "User menu" [ref=f30e28] [cursor=pointer]:
+        - generic [ref=f30e29]: AA
+        - generic [ref=f30e30]: admin
+  - navigation [ref=f30e31]:
+    - generic [ref=f30e32]:
+      - generic [ref=f30e33]:
+        - generic [ref=f30e34]: COMMAND
+        - generic [ref=f30e35]:
+          - button "Analyst Queue" [ref=f30e36] [cursor=pointer]
+          - button "Alerts" [ref=f30e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f30e47] [cursor=pointer]
+          - button "Incidents" [ref=f30e54] [cursor=pointer]
+      - generic [ref=f30e61]:
+        - generic [ref=f30e62]: INVESTIGATE
+        - generic [ref=f30e63]:
+          - button "Search & Hunt" [ref=f30e64] [cursor=pointer]
+          - button "Investigations" [ref=f30e70] [cursor=pointer]
+          - button "Entities" [ref=f30e75] [cursor=pointer]
+      - generic [ref=f30e83]:
+        - generic [ref=f30e84]: DEFEND
+        - generic [ref=f30e85]:
+          - button "Detection Rules" [ref=f30e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f30e91] [cursor=pointer]
+      - generic [ref=f30e96]:
+        - generic [ref=f30e97]: POSTURE
+        - generic [ref=f30e98]:
+          - button "Assets" [ref=f30e99] [cursor=pointer]
+          - button "Identities" [ref=f30e105] [cursor=pointer]
+          - button "Active Directory" [ref=f30e113] [cursor=pointer]
+          - button "Exposure" [ref=f30e121] [cursor=pointer]
+          - button "Sensors" [ref=f30e128] [cursor=pointer]
+          - button "Compliance" [ref=f30e133] [cursor=pointer]
+      - generic [ref=f30e139]:
+        - generic [ref=f30e140]: DASHBOARDS
+        - button "Studio" [ref=f30e142] [cursor=pointer]
+      - generic [ref=f30e148]:
+        - generic [ref=f30e149]: REPORT
+        - button "Scheduled Reports" [ref=f30e151] [cursor=pointer]
+      - generic [ref=f30e157]:
+        - generic [ref=f30e158]: ADMINISTRATION
+        - generic [ref=f30e159]:
+          - button "Users" [ref=f30e160] [cursor=pointer]
+          - button "Integrations" [ref=f30e175] [cursor=pointer]
+          - button "Notifications" [ref=f30e180] [cursor=pointer]
+          - button "Audit Log" [ref=f30e186] [cursor=pointer]
+          - button "Settings" [ref=f30e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f30e199] [cursor=pointer]
+  - main [ref=f30e202]:
+    - generic [ref=f30e203]:
+      - alert [ref=f30e204]:
+        - generic [ref=f30e207]:
+          - generic [ref=f30e208]: EDR actions blocked (GAP-SEC-05)
+          - generic [ref=f30e209]: Remote EDR actions (Kill Process, Isolate Host, Run Scan) are blocked pending security remediation. The /api/edr/actions/* endpoints have no authorization gate. Contact your platform administrator.
+      - generic [ref=f30e211]:
+        - heading "Sensors" [level=1] [ref=f30e212]
+        - generic [ref=f30e213]: 0 / 0 active
+      - generic [ref=f30e219]:
+        - grid:
+          - rowgroup [ref=f30e221]:
+            - row [ref=f30e222]:
+              - columnheader "Hostname" [ref=f30e223]:
+                - generic:      
+              - columnheader "Platform" [ref=f30e226]:
+                - generic:      
+              - columnheader "OS Version" [ref=f30e229]:
+                - generic:      
+              - columnheader "Agent Version" [ref=f30e232]:
+                - generic:      
+              - columnheader "Connection Status" [ref=f30e235]:
+                - generic:      
+              - columnheader "CPU %" [ref=f30e238]:
+                - generic:      
+              - columnheader "Memory %" [ref=f30e241]:
+                - generic:      
+              - columnheader "Last Seen" [ref=f30e244]:
+                - generic:      
+        - generic:
+          - generic:
+            - heading "No sensors registered" [level=3]
+            - paragraph: Deploy HiveArmor agents to start monitoring your estate.
+      - generic [ref=f30e247]: 0/0 sensors active

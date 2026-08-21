@@ -1,0 +1,41 @@
+id: ha-linux-009
+title: LD_PRELOAD Library Hijacking
+status: stable
+description: Detects attempts to use LD_PRELOAD environment variable to hijack shared library loading, a common technique for privilege escalation and defense evasion on Linux.
+logsource:
+  product: linux
+  service: auditd
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.T1574.006
+  - attack.privilege_escalation
+detection:
+  selection:
+    type: EXECVE
+    a1|contains: LD_PRELOAD
+  selection_env:
+    type: EXECVE
+    a0: env
+    a1|startswith: LD_PRELOAD=
+  condition: selection or selection_env
+falsepositives:
+  - Legitimate performance profiling tools (e.g. valgrind, LD_PRELOAD for malloc replacement)
+  - Some legitimate security agent installations
+fields:
+  - a0
+  - a1
+  - uid
+  - comm
+impact:
+  confidentiality: high
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - a1
+  - uid
+groupBy:
+  - uid
+mitre:
+  tactic: defense_evasion
+  technique: T1574.006

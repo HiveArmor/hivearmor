@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Sprint 49 — HAR-003: Idempotency-Key storage for bulk operations -->
+    <changeSet id="20260820001-1" author="hivearmor">
+        <createTable tableName="ha_idempotency_keys">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="idempotency_key" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="endpoint" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="request_hash" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="response_status" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="response_body" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="ha_idempotency_keys"
+                             columnNames="idempotency_key,tenant_id"
+                             constraintName="uq_idempotency_key_tenant"/>
+
+        <createIndex tableName="ha_idempotency_keys" indexName="idx_idempotency_expires">
+            <column name="expires_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

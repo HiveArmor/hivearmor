@@ -1,0 +1,25 @@
+S-7B: Live WidgetCards + Cross-filter store — Vitest results
+Run: 2026-07-21
+Suite: src/store/__tests__/dashboard-filter-store.test.ts
+
+Test Files  1 passed (1)
+Tests       7 passed (7)
+Duration    ~149ms
+
+Tests:
+  dashboardFilterStore > setDashboard
+    ✓ sets dashboardId and clears existing filters
+
+  dashboardFilterStore > addFilter
+    ✓ adds a new filter
+    ✓ does not add duplicate filter (same field + value)
+    ✓ allows different values for the same field
+
+  dashboardFilterStore > removeFilter
+    ✓ removes filter matching field and value
+    ✓ is a no-op when filter does not exist
+
+  dashboardFilterStore > clearFilters
+    ✓ removes all filters, preserving dashboardId
+
+TypeScript: tsc --noEmit → 0 errors

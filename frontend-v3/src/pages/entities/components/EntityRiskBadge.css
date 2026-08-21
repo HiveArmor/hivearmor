@@ -1,0 +1,54 @@
+/* EntityRiskBadge — colored pill with score + trend arrow */
+
+.ent-risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.ent-risk-badge[data-level='critical'] {
+  background: color-mix(in srgb, var(--ha-severity-critical) 18%, transparent);
+  color: var(--ha-severity-critical);
+}
+
+.ent-risk-badge[data-level='high'] {
+  background: color-mix(in srgb, var(--ha-severity-high) 18%, transparent);
+  color: var(--ha-severity-high);
+}
+
+.ent-risk-badge[data-level='medium'] {
+  background: color-mix(in srgb, var(--ha-severity-medium) 18%, transparent);
+  color: var(--ha-severity-medium);
+}
+
+.ent-risk-badge[data-level='low'] {
+  background: color-mix(in srgb, var(--ha-severity-low) 18%, transparent);
+  color: var(--ha-severity-low);
+}
+
+.ent-risk-badge__score {
+  font-weight: 700;
+}
+
+.ent-risk-badge__trend {
+  font-size: 10px;
+}
+
+.ent-risk-badge[data-trend='rising'] .ent-risk-badge__trend {
+  color: var(--ha-severity-critical);
+}
+
+.ent-risk-badge[data-trend='stable'] .ent-risk-badge__trend {
+  color: var(--ha-foreground-tertiary);
+}
+
+.ent-risk-badge[data-trend='declining'] .ent-risk-badge__trend {
+  color: var(--ha-severity-low);
+}

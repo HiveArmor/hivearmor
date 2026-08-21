@@ -11,16 +11,16 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/threatwinds/go-sdk/entities"
-	"github.com/threatwinds/go-sdk/plugins"
 	"github.com/hivearmor/agent/agent"
 	"github.com/hivearmor/agent/config"
 	"github.com/hivearmor/agent/utils"
+	"github.com/hivearmor/sdk/entities"
+	"github.com/hivearmor/sdk/plugins"
 	"github.com/hivearmor/shared/fs"
 )
 
 const (
-	maxRestartDelay = 5 * time.Minute
+	maxRestartDelay  = 5 * time.Minute
 	baseRestartDelay = 5 * time.Second
 )
 
@@ -34,7 +34,7 @@ func (d Darwin) Name() string {
 	return "darwin"
 }
 
-func (d Darwin) Start(ctx context.Context, queue chan *plugins.Log) {
+func (d Darwin) Start(ctx context.Context, queue chan<- *plugins.Log) {
 	path := fs.GetExecutablePath()
 	collectorPath := filepath.Join(path, "hivearmor-collector-mac")
 
@@ -79,7 +79,7 @@ func (d Darwin) Start(ctx context.Context, queue chan *plugins.Log) {
 	}
 }
 
-func (d Darwin) runCollector(collectorPath, host string, queue chan *plugins.Log) int {
+func (d Darwin) runCollector(collectorPath, host string, queue chan<- *plugins.Log) int {
 	defer func() {
 		if r := recover(); r != nil {
 			utils.Logger.ErrorF("panic in macOS collector: %v", r)
@@ -130,13 +130,7 @@ func (d Darwin) runCollector(collectorPath, host string, queue chan *plugins.Log
 				DataSource: host,
 				Raw:        validatedLog,
 			}
-			select {
-			case queue <- log:
-			default:
-				agent.LogsDropped.Add(1)
-				agent.WriteToDLQ("darwin", log)
-				utils.Logger.LogF(400, "darwin: LogQueue full; dropping event")
-			}
+			agent.Offer(queue, "darwin", log)
 		}
 
 		if err := scanner.Err(); err != nil {

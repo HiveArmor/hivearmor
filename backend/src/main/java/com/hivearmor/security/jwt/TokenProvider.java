@@ -8,6 +8,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,10 +21,14 @@ import org.springframework.util.StringUtils;
 import tech.jhipster.config.JHipsterProperties;
 
 import jakarta.servlet.http.HttpServletRequest;
+import javax.crypto.SecretKey;
 import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Base64;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -39,12 +44,18 @@ public class TokenProvider implements InitializingBean {
     private static final String AUTHORITIES_KEY = "auth";
     private static final String AUTHENTICATED = "authenticated";
     public static final long TEMP_TOKEN_VALIDITY_IN_MILLIS = 300000;
+    /** HS512 requires a signing key of at least 512 bits (64 bytes). */
+    static final int HS512_MIN_KEY_BYTES = 64;
 
     private Key key;
     private JwtParser jwtParser;
     private final long tokenValidityInMilliseconds;
     private final long tokenValidityInMillisecondsForRememberMe;
     private final String base64JwtSecret;
+
+    /** Optional during narrow unit tests; wired by Spring in production. */
+    @Autowired(required = false)
+    JwtKeyService jwtKeyService;
 
     public TokenProvider(JHipsterProperties jHipsterProperties) {
         this.base64JwtSecret = jHipsterProperties.getSecurity().getAuthentication().getJwt().getBase64Secret();
@@ -55,8 +66,37 @@ public class TokenProvider implements InitializingBean {
                 .getTokenValidityInSecondsForRememberMe();
     }
 
+    /**
+     * Returns the ENCRYPTION_KEY environment variable value.
+     * Package-private so {@code TokenProviderDbKeyTest} can override it in a test subclass.
+     */
+    String getEncryptionKeyEnv() {
+        return System.getenv("JWT_ENCRYPTION_KEY");
+    }
+
     @Override
     public void afterPropertiesSet() {
+        String encryptionKey = getEncryptionKeyEnv();
+        if (StringUtils.hasText(encryptionKey)) {
+            byte[] wrappingKey;
+            try {
+                wrappingKey = Base64.getDecoder().decode(encryptionKey);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException("JWT_ENCRYPTION_KEY must be valid Base64", e);
+            }
+            if (wrappingKey.length != 32) {
+                throw new IllegalStateException("JWT_ENCRYPTION_KEY must decode to exactly 32 bytes");
+            }
+            if (jwtKeyService == null) {
+                throw new IllegalStateException("JWT database key service is unavailable");
+            }
+            this.key = jwtKeyService.resolveSigningKey(wrappingKey);
+            this.jwtParser = Jwts.parserBuilder().setSigningKey(key).build();
+            log.info("JWT signing key resolved from encrypted database storage");
+            warnWhenTfaDisabled();
+            return;
+        }
+
         if (!StringUtils.hasText(base64JwtSecret)) {
             throw new IllegalStateException(
                 "JWT signing key is not configured. " +
@@ -72,13 +112,47 @@ public class TokenProvider implements InitializingBean {
             throw new IllegalStateException(
                 "ENCRYPTION_KEY is not valid Base64. " +
                 "The key must be a Base64-encoded string (not hex). " +
-                "Generate a new key with: openssl rand -base64 64", e
+                "Generate a new key with: openssl rand -base64 64 | tr -d '\\n'", e
+            );
+        }
+        int configuredLength = keyBytes.length;
+        keyBytes = hmacSha512KeyMaterial(keyBytes);
+        if (configuredLength < HS512_MIN_KEY_BYTES) {
+            log.warn(
+                "JWT signing key decoded to {} bytes; expanded to {} bytes with SHA-512 for HS512. " +
+                    "Generate a 64-byte key with: openssl rand -base64 64 | tr -d '\\n'",
+                configuredLength,
+                keyBytes.length
             );
         }
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.jwtParser = Jwts.parserBuilder().setSigningKey(key).build();
         log.info("JWT signing key loaded from configuration (length: {} bytes)", keyBytes.length);
 
+        warnWhenTfaDisabled();
+    }
+
+    /**
+     * JJWT {@code signWith(..., HS512)} rejects keys shorter than 64 bytes.
+     * Existing deployments sometimes set ENCRYPTION_KEY to 32 or 48 decoded bytes.
+     * Those values are stretched with SHA-512 (exactly 64 bytes) so login does not 500.
+     * Keys that are already ≥64 bytes are used as-is.
+     */
+    static byte[] hmacSha512KeyMaterial(byte[] keyBytes) {
+        if (keyBytes == null || keyBytes.length == 0) {
+            throw new IllegalStateException("JWT signing key must not be empty");
+        }
+        if (keyBytes.length >= HS512_MIN_KEY_BYTES) {
+            return keyBytes;
+        }
+        try {
+            return MessageDigest.getInstance("SHA-512").digest(keyBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-512 is required to expand a short JWT signing key", e);
+        }
+    }
+
+    private void warnWhenTfaDisabled() {
         boolean tfaEnabled = Boolean.parseBoolean(
             Optional.ofNullable(System.getenv(Constants.ENV_TFA_ENABLE)).orElse("true")
         );
@@ -149,6 +223,26 @@ public class TokenProvider implements InitializingBean {
         return claims.getSubject();
     }
 
+    /**
+     * Returns the optional tenant identifier from a cryptographically verified JWT.
+     * Older tokens do not carry this claim and therefore return an empty value.
+     */
+    public Optional<Long> getClientIdFromToken(String token) {
+        Claims claims = jwtParser.parseClaimsJws(token).getBody();
+        Object value = claims.get("clientId");
+        if (value instanceof Number number) {
+            return Optional.of(number.longValue());
+        }
+        if (value instanceof String text) {
+            try {
+                return Optional.of(Long.parseLong(text));
+            } catch (NumberFormatException ignored) {
+                return Optional.empty();
+            }
+        }
+        return Optional.empty();
+    }
+
     public boolean validateToken(String authToken) {
         try {
             jwtParser.parseClaimsJws(authToken);
@@ -170,9 +264,24 @@ public class TokenProvider implements InitializingBean {
     }
 
     public void rotateKey() {
-        byte[] newKeyBytes = new byte[64];
-        new java.security.SecureRandom().nextBytes(newKeyBytes);
-        this.key = Keys.hmacShaKeyFor(newKeyBytes);
+        String encryptionKey = getEncryptionKeyEnv();
+        if (StringUtils.hasText(encryptionKey) && jwtKeyService != null) {
+            byte[] wrappingKey;
+            try {
+                wrappingKey = Base64.getDecoder().decode(encryptionKey);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException("JWT_ENCRYPTION_KEY must be valid Base64", e);
+            }
+            if (wrappingKey.length != 32) {
+                throw new IllegalStateException("JWT_ENCRYPTION_KEY must decode to exactly 32 bytes");
+            }
+            SecretKey rotatedKey = jwtKeyService.rotateSigningKey(wrappingKey);
+            this.key = rotatedKey;
+        } else {
+            byte[] newKeyBytes = new byte[64];
+            new java.security.SecureRandom().nextBytes(newKeyBytes);
+            this.key = Keys.hmacShaKeyFor(newKeyBytes);
+        }
         this.jwtParser = Jwts.parserBuilder().setSigningKey(this.key).build();
         log.info("JWT signing key rotated — all existing sessions are now invalid");
     }

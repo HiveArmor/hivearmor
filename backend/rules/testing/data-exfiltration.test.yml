@@ -1,0 +1,24 @@
+# Positive: Data exfiltration indicator — Windows audit log cleared (event 1102).
+#   This is a Defense Evasion technique: adversaries clear logs before or after exfiltration.
+#   Uses a simple where-only rule to verify the CEL evaluation path without requiring OpenSearch.
+# Negative: Event ID 1100 (event logging shutdown) is NOT the same as 1102 and would not fire.
+rule: rules/windows/audit_log_was_cleared.yml
+description: "Audit log cleared (event 1102) — indicator of data exfiltration cover-up"
+
+events:
+  - timestamp: "2026-01-15T16:30:00Z"
+    dataType: wineventlog
+    origin:
+      ip: "192.168.1.55"
+      user: "attacker"
+    target:
+      user: "SYSTEM"
+    log:
+      eventCode: 1102
+      channel: "Security"
+      message: "The audit log was cleared"
+
+expect:
+  alert: true
+  severity: "2"
+  name: "Windows audit log was cleared"

@@ -1,0 +1,44 @@
+id: e9f0a1b2-c3d4-5678-efab-789012345659
+title: Domain Trust Relationship Discovery
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: medium
+tags:
+  - attack.discovery
+  - attack.T1482
+detection:
+  selection_nltest:
+    Image|endswith: '\nltest.exe'
+    CommandLine|contains:
+      - '/domain_trusts'
+      - '/trusted_domains'
+  selection_powershell:
+    CommandLine|contains:
+      - 'Get-ADTrust'
+      - 'Get-ADForest'
+      - 'Get-ADDomain'
+      - 'nltest /domain_trusts'
+  selection_net:
+    Image|endswith:
+      - '\net.exe'
+      - '\net1.exe'
+    CommandLine|contains:
+      - ' trusts'
+  condition: selection_nltest or selection_powershell or selection_net
+falsepositives:
+  - Active Directory administrators performing trust audits
+  - Identity management software
+impact:
+  confidentiality: medium
+  integrity: low
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: discovery
+  technique: T1482

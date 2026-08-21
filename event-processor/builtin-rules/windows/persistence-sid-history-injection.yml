@@ -1,0 +1,33 @@
+id: b8c9d0e1-f2a3-4567-bcde-678901234538
+title: SID History Injection for Privilege Persistence
+status: stable
+logsource:
+  product: windows
+  service: security
+level: critical
+tags:
+  - attack.persistence
+  - attack.privilege_escalation
+  - attack.T1134
+  - attack.T1134.005
+detection:
+  selection:
+    EventID:
+      - 4765
+      - 4766
+  condition: selection
+falsepositives:
+  - Authorized domain migration operations
+  - Active Directory domain consolidation
+impact:
+  confidentiality: critical
+  integrity: critical
+  availability: high
+deduplicateBy:
+  - ComputerName
+  - SubjectUserName
+groupBy:
+  - ComputerName
+mitre:
+  tactic: persistence
+  technique: T1134.005

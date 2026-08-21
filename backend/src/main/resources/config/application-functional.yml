@@ -1,0 +1,59 @@
+# Spring profile: functional
+#
+# Used exclusively by Sprint*FunctionalIT tests. Targets the running local-dev
+# Docker Compose stack:
+#   - Backend REST API: http://localhost:8088
+#   - PostgreSQL:        localhost:5438
+#
+# This profile is activated by @ActiveProfiles("functional") in test classes
+# and is gated by Maven profile "functional" in pom.xml so it NEVER runs in
+# the default `mvn test` build.
+
+spring:
+    datasource:
+        type: com.zaxxer.hikari.HikariDataSource
+        url: jdbc:postgresql://localhost:5438/hivearmor
+        username: postgres
+        password: localdev123!
+        hikari:
+            poolName: HiveArmor-HikariCP-functional
+            auto-commit: false
+            maximumPoolSize: 5
+            minimumIdle: 1
+            connectionTimeout: 30000
+            idleTimeout: 600000
+            maxLifetime: 1800000
+    jpa:
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+        database: POSTGRESQL
+    liquibase:
+        enabled: false
+    autoconfigure:
+        exclude:
+            - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+            - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+server:
+    port: 8088
+
+logging:
+    level:
+        ROOT: WARN
+        com.hivearmor: INFO
+        com.hivearmor.functional: DEBUG
+
+jhipster:
+    security:
+        authentication:
+            jwt:
+                base64-secret: ${ENCRYPTION_KEY:ZjY4MDYwNWU0ZTQ3MGFkMjJiY2IzYjMyNzAyMGE5NzMxMjdhY2JhMmQ5MDg5MzVjMmJhMTZlY2I5ZjE0NDZiNg==}
+                token-validity-in-seconds: 86400
+                token-validity-in-seconds-for-remember-me: 2592000
+
+app:
+    redis:
+        enabled: false
+
+hivearmor:
+    encryption-key: ${ENCRYPTION_KEY:dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleXRlc3Q=}

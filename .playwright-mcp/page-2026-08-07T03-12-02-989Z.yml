@@ -1,0 +1,50 @@
+- generic [ref=e6]:
+  - complementary [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9]: HiveArmor
+      - generic [ref=e16]:
+        - text: Enterprise security operations
+        - heading "See the signal. Coordinate the response." [level=2] [ref=e17]
+        - paragraph [ref=e18]: Hybrid Intelligence & Visibility Engine for Advanced Response, Monitoring, Orchestration and Resilience.
+      - generic "Platform capabilities" [ref=e19]:
+        - generic [ref=e20]:
+          - strong [ref=e21]: Unified visibility
+          - text: Across tenants and telemetry
+        - generic [ref=e22]:
+          - strong [ref=e23]: Analyst-led response
+          - text: Evidence before action
+        - generic [ref=e24]:
+          - strong [ref=e25]: Operational resilience
+          - text: Health and risk in context
+  - main [ref=e26]:
+    - generic [ref=e27]:
+      - text: Secure access
+      - heading "Sign in to HiveArmor" [level=1] [ref=e28]
+      - paragraph [ref=e29]: Use your organization credentials to access the security operations workspace.
+      - form "Sign in" [ref=e30]:
+        - generic [ref=e31]:
+          - generic [ref=e33]:
+            - text: Work email or username
+            - generic [ref=e34]: "*"
+          - generic [ref=e35]:
+            - textbox "Work email or username" [invalid] [ref=e36]
+            - generic [ref=e63]: Enter your work email or username.
+        - generic [ref=e37]:
+          - generic [ref=e39]:
+            - text: Password
+            - generic [ref=e40]: "*"
+          - generic [ref=e41]:
+            - generic [ref=e42]:
+              - textbox "Password" [active] [invalid] [ref=e43]
+              - button "Show password" [ref=e44] [cursor=pointer]
+            - generic [ref=e64]: Enter your password.
+        - generic [ref=e48]:
+          - generic [ref=e49] [cursor=pointer]:
+            - checkbox "Remember this device" [ref=e50]
+            - generic [ref=e51]: Remember this device
+          - button "Forgot password?" [ref=e52] [cursor=pointer]
+        - button "Sign in" [ref=e53] [cursor=pointer]
+        - button "Continue with organization SSO" [ref=e56] [cursor=pointer]
+      - generic [ref=e57]:
+        - generic [ref=e58]: Authentication service available
+        - generic [ref=e59]: Protected enterprise access

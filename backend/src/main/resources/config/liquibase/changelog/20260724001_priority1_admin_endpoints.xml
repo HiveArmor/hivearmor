@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        PRIORITY 1 Admin Endpoint Tables
+        Implements: ha-notification-rules, ha-retention-policies, ha-parsers,
+                    ha-settings (config params), ha-tenants (alias of hive_client).
+
+        ha-integrations  → already backed by hive_integration (UtmIntegration)
+        ha-connection-keys → already backed by api_keys (ApiKey)
+        ha-audit-log     → backed by OpenSearch v11-backend-logs (no new table)
+        ha-settings      → backed by hive_configuration_parameter (UtmConfigurationParameter)
+        ha-tenants       → backed by hive_client (UtmClient)
+    -->
+
+    <!-- 1. Notification rules -->
+    <changeSet id="20260724001-1" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_notification_rule">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="severity_threshold" type="integer" defaultValueNumeric="3">
+                <constraints nullable="false"/>
+            </column>
+            <!-- email | webhook | slack | teams | pagerduty -->
+            <column name="destination_type" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- JSONB config bag: url, email addresses, tokens, etc. -->
+            <column name="destination_config" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="hive_notification_rule" indexName="idx_notif_rule_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- 2. Data retention policies (one row per DataType enum value) -->
+    <changeSet id="20260724001-2" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_retention_policy">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- ALERT | INCIDENT | AUDIT | AUTH_LOG | NETWORK_FLOW | ENDPOINT_EVENT | VULNERABILITY | COMPLIANCE | CUSTOM -->
+            <column name="data_type" type="varchar(64)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <!-- 1-3650 days -->
+            <column name="retention_days" type="integer" defaultValueNumeric="90">
+                <constraints nullable="false"/>
+            </column>
+            <column name="compression_enabled" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <!-- NONE | S3 | LOCAL -->
+            <column name="archive_target" type="varchar(16)" defaultValue="NONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="archive_path" type="varchar(1024)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- 2a. Seed default retention policies for all built-in DataType values -->
+    <changeSet id="20260724001-3" author="hivearmor" context="dev,prod">
+        <insert tableName="hive_retention_policy">
+            <column name="name" value="Alert Retention"/>
+            <column name="data_type" value="ALERT"/>
+            <column name="retention_days" valueNumeric="90"/>
+            <column name="compression_enabled" valueBoolean="false"/>
+            <column name="archive_target" value="NONE"/>
+        </insert>
+        <insert tableName="hive_retention_policy">
+            <column name="name" value="Incident Retention"/>
+            <column name="data_type" value="INCIDENT"/>
+            <column name="retention_days" valueNumeric="365"/>
+            <column name="compression_enabled" valueBoolean="false"/>
+            <column name="archive_target" value="NONE"/>
+        </insert>
+        <insert tableName="hive_retention_policy">
+            <column name="name" value="Audit Log Retention"/>
+            <column name="data_type" value="AUDIT"/>
+            <column name="retention_days" valueNumeric="365"/>
+            <column name="compression_enabled" valueBoolean="false"/>
+            <column name="archive_target" value="NONE"/>
+        </insert>
+        <insert tableName="hive_retention_policy">
+            <column name="name" value="Auth Log Retention"/>
+            <column name="data_type" value="AUTH_LOG"/>
+            <column name="retention_days" valueNumeric="90"/>
+            <column name="compression_enabled" valueBoolean="false"/>
+            <column name="archive_target" value="NONE"/>
+        </insert>
+        <insert tableName="hive_retention_policy">
+            <column name="name" value="Network Flow Retention"/>
+            <column name="data_type" value="NETWORK_FLOW"/>
+            <column name="retention_days" valueNumeric="30"/>
+            <column name="compression_enabled" valueBoolean="true"/>
+            <column name="archive_target" value="NONE"/>
+        </insert>
+        <insert tableName="hive_retention_policy">
+            <column name="name" value="Endpoint Event Retention"/>
+            <column name="data_type" value="ENDPOINT_EVENT"/>
+            <column name="retention_days" valueNumeric="60"/>
+            <column name="compression_enabled" valueBoolean="false"/>
+            <column name="archive_target" value="NONE"/>
+        </insert>
+        <insert tableName="hive_retention_policy">
+            <column name="name" value="Vulnerability Retention"/>
+            <column name="data_type" value="VULNERABILITY"/>
+            <column name="retention_days" valueNumeric="180"/>
+            <column name="compression_enabled" valueBoolean="false"/>
+            <column name="archive_target" value="NONE"/>
+        </insert>
+        <insert tableName="hive_retention_policy">
+            <column name="name" value="Compliance Retention"/>
+            <column name="data_type" value="COMPLIANCE"/>
+            <column name="retention_days" valueNumeric="730"/>
+            <column name="compression_enabled" valueBoolean="false"/>
+            <column name="archive_target" value="NONE"/>
+        </insert>
+    </changeSet>
+
+    <!-- 3. Data parsers (YAML-based log parsing rules) -->
+    <changeSet id="20260724001-4" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_parser_rule">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data_type" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- active | inactive | error -->
+            <column name="status" type="varchar(16)" defaultValue="inactive">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_matched_count" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="yaml_body" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="hive_parser_rule" indexName="idx_parser_rule_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

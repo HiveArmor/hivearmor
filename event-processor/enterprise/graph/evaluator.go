@@ -3,7 +3,6 @@ package graph
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,8 +12,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hivearmor/event-processor/internal/httpclient"
 	"github.com/hivearmor/event-processor/rules"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -32,7 +32,7 @@ type Evaluator struct {
 	alertFn   AlertFn
 	rules     []*rules.Rule
 
-	dedupMu sync.Mutex
+	dedupMu  sync.Mutex
 	dedupTTL map[string]time.Time
 }
 
@@ -42,15 +42,10 @@ func New(neo4jURI, user, pass string, alertFn AlertFn, rs []*rules.Rule) *Evalua
 		neo4jURI:  neo4jURI,
 		neo4jUser: user,
 		neo4jPass: pass,
-		http: &http.Client{
-			Timeout: 30 * time.Second,
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
-		},
-		alertFn:  alertFn,
-		rules:    rs,
-		dedupTTL: make(map[string]time.Time),
+		http:      httpclient.MustClient(30 * time.Second),
+		alertFn:   alertFn,
+		rules:     rs,
+		dedupTTL:  make(map[string]time.Time),
 	}
 }
 
@@ -92,13 +87,13 @@ type cypherRequest struct {
 }
 
 type cypherStatement struct {
-	Statement  string `json:"statement"`
+	Statement          string   `json:"statement"`
 	ResultDataContents []string `json:"resultDataContents"`
 }
 
 type cypherResponse struct {
 	Results []struct {
-		Columns []string        `json:"columns"`
+		Columns []string `json:"columns"`
 		Data    []struct {
 			Row []any `json:"row"`
 		} `json:"data"`

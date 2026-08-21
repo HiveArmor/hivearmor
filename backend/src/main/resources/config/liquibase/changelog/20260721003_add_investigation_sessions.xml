@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- hive_investigation_session: top-level investigation workspace -->
+    <changeSet id="20260721003-1" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_investigation_session">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="session_name" type="VARCHAR(512)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="status" type="VARCHAR(32)" defaultValue="ACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_to" type="VARCHAR(255)"/>
+            <!-- set when converted to incident; no FK constraint per spec -->
+            <column name="incident_id" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="hive_investigation_session" indexName="idx_hive_inv_session_created_by">
+            <column name="created_by"/>
+        </createIndex>
+
+        <createIndex tableName="hive_investigation_session" indexName="idx_hive_inv_session_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- hive_session_item: items pinned to a session -->
+    <changeSet id="20260721003-2" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_session_item">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="session_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_session_item_session"
+                             references="hive_investigation_session(id)"
+                             deleteCascade="true"/>
+            </column>
+            <!-- LOG_EVENT, ALERT, SAVED_QUERY, NOTE -->
+            <column name="item_type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- OpenSearch doc ID, alert ID, saved query ID, etc. -->
+            <column name="item_ref" type="VARCHAR(512)"/>
+            <!-- copy of key fields at pinning time -->
+            <column name="item_snapshot" type="JSONB"/>
+            <column name="note" type="TEXT"/>
+            <column name="added_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="added_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="hive_session_item" indexName="idx_hive_session_item_session_id">
+            <column name="session_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

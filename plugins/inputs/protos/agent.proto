@@ -13,6 +13,8 @@ service AgentService {
   rpc ListAgents (ListRequest) returns (ListAgentsResponse) {}
   rpc AgentStream(stream BidirectionalStream) returns (stream BidirectionalStream) {}
   rpc ListAgentCommands (ListRequest) returns (ListAgentsCommandsResponse) {}
+  rpc VerifyConnectorIdentity(VerifyConnectorIdentityRequest) returns (VerifyConnectorIdentityResponse) {}
+  rpc ListConnectorAuthorization(ListConnectorAuthorizationRequest) returns (ListConnectorAuthorizationResponse) {}
 }
 
 service PanelService {
@@ -105,4 +107,39 @@ message AgentCommand {
   string reason = 9;
   string origin_type = 10;
   string origin_id = 11;
+}
+
+message VerifyConnectorIdentityRequest {
+  uint32 connector_id = 1;
+  string presented_key = 2;
+  ConnectorType connector_type = 3;
+}
+
+message VerifyConnectorIdentityResponse {
+  uint32 id = 1;
+  string uuid = 2;
+  int64 tenant_id = 3;
+  uint32 credential_version = 4;
+  bool revoked = 5;
+  ConnectorType connector_type = 6;
+}
+
+message ListConnectorAuthorizationRequest {
+  ConnectorType connector_type = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+}
+
+message ConnectorAuthorization {
+  uint32 id = 1;
+  string uuid = 2;
+  int64 tenant_id = 3;
+  bool revoked = 4;
+  uint32 credential_version = 5;
+  ConnectorType connector_type = 6;
+}
+
+message ListConnectorAuthorizationResponse {
+  repeated ConnectorAuthorization rows = 1;
+  int32 total = 2;
 }

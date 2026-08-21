@@ -1,0 +1,48 @@
+id: ha-net-004
+title: Periodic C2 Beaconing Pattern Detected
+status: stable
+description: Detects regular, highly periodic outbound connections to the same external host that are characteristic of command-and-control (C2) malware beaconing behaviour with fixed intervals.
+logsource:
+  product: network
+  service: flow
+level: high
+tags:
+  - attack.command_and_control
+  - attack.T1071.001
+detection:
+  selection:
+    network.direction: outbound
+    network.transport: tcp
+    destination.port:
+      - 80
+      - 443
+      - 8080
+      - 8443
+    network.bytes|lte: 10240
+  filter_internal:
+    destination.ip|cidr:
+      - 10.0.0.0/8
+      - 172.16.0.0/12
+      - 192.168.0.0/16
+  condition: selection and not filter_internal
+falsepositives:
+  - Telemetry agents sending heartbeat signals to management servers
+  - Browser and OS update check processes contacting vendor endpoints
+fields:
+  - source.ip
+  - destination.ip
+  - destination.port
+  - network.bytes
+  - network.transport
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - source.ip
+  - destination.ip
+groupBy:
+  - source.ip
+mitre:
+  tactic: command-and-control
+  technique: T1071.001

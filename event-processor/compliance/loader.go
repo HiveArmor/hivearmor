@@ -1,7 +1,6 @@
 package compliance
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,7 +11,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/event-processor/internal/httpclient"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 // MappingType constants mirror the values in UtmComplianceControlMapping.mappingType.
@@ -63,12 +63,7 @@ func getCEL() *plugins.CELCache {
 func Init(bURL, iKey string) {
 	backendURL = bURL
 	internalKey = iKey
-	httpClient = &http.Client{
-		Timeout: 15 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+	httpClient = httpclient.MustClient(15 * time.Second)
 	// seed with empty set so callers never see a nil pointer
 	current.Store(&mappingSet{})
 	if err := reload(); err != nil {

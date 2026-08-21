@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/threatwinds/go-sdk/catcher"
 	"github.com/hivearmor/agent-manager/config"
 	"github.com/hivearmor/agent-manager/database"
 	"github.com/hivearmor/agent-manager/metrics"
 	"github.com/hivearmor/agent-manager/models"
 	"github.com/hivearmor/agent-manager/utils"
+	"github.com/threatwinds/go-sdk/catcher"
 	utmconf "github.com/utmstack/config-client-go"
 	"github.com/utmstack/config-client-go/enum"
 	"github.com/utmstack/config-client-go/types"
@@ -171,7 +171,7 @@ func (s *CollectorService) RegisterCollector(ctx context.Context, req *RegisterR
 }
 
 func (s *CollectorService) DeleteCollector(ctx context.Context, req *DeleteRequest) (*AuthResponse, error) {
-	id, key, _, err := utils.GetItemsFromContext(ctx)
+	id, _, _, err := utils.GetItemsFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -199,15 +199,15 @@ func (s *CollectorService) DeleteCollector(ctx context.Context, req *DeleteReque
 	delete(s.CollectorStreamMap, uint(idInt))
 	s.CollectorStreamMutex.Unlock()
 
-	catcher.Info("Collector deleted", map[string]any{"key": key, "deleted_by": req.DeletedBy, "process": "agent-manager"})
+	catcher.Info("Collector deleted", map[string]any{"collector_id": idInt, "deleted_by": req.DeletedBy, "process": "agent-manager"})
 	return &AuthResponse{
-		Id:  uint32(idInt),
-		Key: key,
+		Id: uint32(idInt),
 	}, nil
 }
 
 func (s *CollectorService) ListCollector(ctx context.Context, req *ListRequest) (*ListCollectorResponse, error) {
-	page := utils.NewPaginator(int(req.PageSize), int(req.PageNumber), req.SortBy)
+	pageNumber, pageSize := utils.BoundInventoryPage(req.GetPageNumber(), req.GetPageSize())
+	page := utils.NewPaginator(pageSize, pageNumber, req.SortBy)
 	filter := utils.NewFilter(req.SearchQuery)
 
 	collectors := []models.Collector{}

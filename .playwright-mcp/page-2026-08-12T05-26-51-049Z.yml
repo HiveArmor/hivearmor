@@ -1,0 +1,67 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e12]: HiveArmor
+        - generic [ref=e13]: Security operations
+      - generic [ref=e14]:
+        - button "All authorized tenants" [ref=e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=e24] [cursor=pointer]:
+          - generic [ref=e29]: ⌘ K
+        - generic [ref=e30]: Production
+      - generic [ref=e31]:
+        - 'status "Data pipeline: Healthy" [ref=e32]'
+        - status "Live events per second" [ref=e35]:
+          - generic [ref=e37]: 12,840 EPS
+        - button "Notifications" [ref=e38] [cursor=pointer]
+        - button "Help" [ref=e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=e47]:
+      - generic [ref=e48]:
+        - region "COMMAND" [ref=e49]:
+          - generic [ref=e50]:
+            - button "Mission Control" [ref=e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=e58] [cursor=pointer]
+            - button "Alerts" [ref=e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=e67] [cursor=pointer]
+            - button "Incidents" [ref=e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=e79]:
+          - generic [ref=e80]:
+            - button "Search & Hunt" [ref=e81] [cursor=pointer]
+            - button "Investigations" [ref=e86] [cursor=pointer]
+            - button "Entities" [ref=e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=e97] [cursor=pointer]
+        - region "DEFEND" [ref=e103]:
+          - generic [ref=e104]:
+            - button "Detection Rules" [ref=e105] [cursor=pointer]
+            - button "Playbooks" [ref=e109] [cursor=pointer]
+            - button "Response Approvals" [ref=e114] [cursor=pointer]
+            - button "Quarantine & Containment" [ref=e122] [cursor=pointer]
+            - button "Response Library" [ref=e128] [cursor=pointer]
+        - region "POSTURE" [ref=e132]:
+          - generic [ref=e133]:
+            - button "Assets" [ref=e134] [cursor=pointer]
+            - button "Identities" [ref=e139] [cursor=pointer]
+            - button "Active Directory" [ref=e146] [cursor=pointer]
+            - button "Exposure" [ref=e153] [cursor=pointer]
+            - button "Vulnerabilities" [ref=e159] [cursor=pointer]
+            - button "CIS Benchmark" [ref=e170] [cursor=pointer]
+            - button "Compliance" [ref=e176] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=e181]:
+          - generic [ref=e182]:
+            - button "Endpoints" [ref=e183] [cursor=pointer]
+            - button "File Integrity" [ref=e187] [cursor=pointer]
+        - region "DASHBOARDS" [ref=e194]:
+          - button "Studio" [ref=e196] [cursor=pointer]
+        - region "REPORT" [ref=e201]:
+          - button "Scheduled Reports" [ref=e203] [cursor=pointer]
+      - generic [ref=e208]:
+        - button "User menu" [ref=e211] [cursor=pointer]:
+          - generic [ref=e212]: MC
+        - button "Pin sidebar open" [ref=e213] [cursor=pointer]
+    - main [ref=e216]:
+      - status "Loading page" [ref=e217]:
+        - progressbar "Loading" [ref=e218]
+  - generic:
+    - list "Notifications"

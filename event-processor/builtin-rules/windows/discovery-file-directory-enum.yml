@@ -1,0 +1,41 @@
+id: b6c7d8e9-f0a1-2345-bcde-456789012356
+title: Suspicious File and Directory Enumeration
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: low
+tags:
+  - attack.discovery
+  - attack.T1083
+detection:
+  selection:
+    CommandLine|contains:
+      - 'dir /s '
+      - 'dir /b /s '
+      - 'tree /f '
+      - 'Get-ChildItem -Recurse'
+      - 'gci -recurse'
+      - 'ls -recurse'
+    CommandLine|contains:
+      - '\Users\'
+      - '\Documents\'
+      - '\Desktop\'
+      - '\Downloads\'
+  condition: selection
+falsepositives:
+  - Automated backup tools scanning user directories
+  - Security auditing software
+  - Software deployment scripts
+impact:
+  confidentiality: medium
+  integrity: low
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: discovery
+  technique: T1083

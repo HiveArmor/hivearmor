@@ -1,0 +1,30 @@
+Phase 7A — Vitest Results
+Date: 2026-07-21
+
+=== dataset.service.test.ts ===
+Test Files  1 passed (1)
+Tests  4 passed (4)
+Duration  143ms
+
+Tests:
+  ✓ datasetService > list() > calls GET /api/ha-datasets
+  ✓ datasetService > list() > returns array of LogicalDataset with all required fields
+  ✓ datasetService > list() > first dataset has label "Alerts"
+  ✓ datasetService > list() > returns empty array on network error (propagates)
+
+All dataset service tests PASS.
+
+=== Deliverables S-7A ===
+Backend:
+  + backend/src/main/java/com/hivearmor/config/HiveArmorProperties.java
+  + backend/src/main/java/com/hivearmor/web/rest/DatasetResource.java
+  + backend/src/test/java/com/hivearmor/web/rest/DatasetResourceIT.java
+  ~ backend/src/main/resources/config/application.yml (hivearmor.datasets block added)
+
+Frontend:
+  + frontend-v2/src/types/dataset.ts
+  + frontend-v2/src/services/dataset.service.ts
+  + frontend-v2/src/services/__tests__/dataset.service.test.ts
+  ~ frontend-v2/src/app/(app)/creator/page.tsx (dataset dropdown + advanced mode toggle)
+
+S-7B (WidgetCards + Cross-filter) is next — no user input required.

@@ -8,11 +8,11 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/threatwinds/go-sdk/entities"
-	"github.com/threatwinds/go-sdk/plugins"
 	"github.com/hivearmor/agent/agent"
 	"github.com/hivearmor/agent/config"
 	"github.com/hivearmor/agent/utils"
+	"github.com/hivearmor/sdk/entities"
+	"github.com/hivearmor/sdk/plugins"
 	"github.com/hivearmor/shared/exec"
 	"github.com/hivearmor/shared/fs"
 )
@@ -145,7 +145,7 @@ func (f Filebeat) Install() error {
 	return nil
 }
 
-func (f Filebeat) Start(ctx context.Context, queue chan *plugins.Log) {
+func (f Filebeat) Start(ctx context.Context, queue chan<- *plugins.Log) {
 	logLinesChan := make(chan string)
 	path := fs.GetExecutablePath()
 	filebLogPath := filepath.Join(path, "beats", "filebeat", "logs")
@@ -178,13 +178,7 @@ func (f Filebeat) Start(ctx context.Context, queue chan *plugins.Log) {
 				DataSource: host,
 				Raw:        logLine,
 			}
-			select {
-			case queue <- log:
-			default:
-				agent.LogsDropped.Add(1)
-				agent.WriteToDLQ("filebeat", log)
-				utils.Logger.LogF(400, "filebeat: LogQueue full; dropping event")
-			}
+			agent.Offer(queue, "filebeat", log)
 		}
 	}
 }

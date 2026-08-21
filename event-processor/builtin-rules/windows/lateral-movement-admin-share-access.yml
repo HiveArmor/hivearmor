@@ -1,0 +1,38 @@
+id: b4c5d6e7-f8a9-0123-bcde-234567890114
+title: Suspicious Admin Share Access for Lateral Movement
+status: stable
+logsource:
+  product: windows
+  service: security
+level: medium
+tags:
+  - attack.lateral_movement
+  - attack.T1021
+  - attack.T1021.002
+detection:
+  selection:
+    EventID: 5140
+    ShareName:
+      - '\\*\ADMIN$'
+      - '\\*\C$'
+      - '\\*\IPC$'
+  filter_known_admin:
+    SubjectUserName|endswith: '$'
+  condition: selection and not filter_known_admin
+falsepositives:
+  - Authorized system administrators accessing admin shares
+  - Domain join operations
+  - Software deployment tools
+impact:
+  confidentiality: medium
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - SubjectUserName
+  - ShareName
+groupBy:
+  - ComputerName
+mitre:
+  tactic: lateral-movement
+  technique: T1021.002

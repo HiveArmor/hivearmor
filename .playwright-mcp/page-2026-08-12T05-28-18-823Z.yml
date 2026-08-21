@@ -1,0 +1,325 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e5]:
+      - generic [ref=e6]: HiveArmor
+      - generic [ref=e14]:
+        - button "All authorized tenants" [ref=e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=e24] [cursor=pointer]:
+          - generic [ref=e29]: ⌘ K
+      - generic [ref=e31]:
+        - 'status "Data pipeline: Unavailable - Full authentication is required to access this resource" [ref=e220]'
+        - button "Notifications" [ref=e38] [cursor=pointer]
+        - button "Help" [ref=e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=e47]:
+      - generic [ref=e48]:
+        - region "COMMAND" [ref=e49]:
+          - generic [ref=e50]:
+            - button "Mission Control" [ref=e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=e58] [cursor=pointer]
+            - button "Alerts" [ref=e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=e67] [cursor=pointer]
+            - button "Incidents" [ref=e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=e79]:
+          - generic [ref=e80]:
+            - button "Search & Hunt" [ref=e81] [cursor=pointer]
+            - button "Investigations" [ref=e86] [cursor=pointer]
+            - button "Entities" [ref=e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=e97] [cursor=pointer]
+        - region "DEFEND" [ref=e103]:
+          - generic [ref=e104]:
+            - button "Detection Rules" [ref=e105] [cursor=pointer]
+            - button "Playbooks" [ref=e109] [cursor=pointer]
+            - button "Response Approvals" [ref=e114] [cursor=pointer]
+            - button "Quarantine & Containment" [ref=e122] [cursor=pointer]
+            - button "Response Library" [ref=e128] [cursor=pointer]
+        - region "POSTURE" [ref=e132]:
+          - generic [ref=e133]:
+            - button "Assets" [ref=e134] [cursor=pointer]
+            - button "Identities" [ref=e139] [cursor=pointer]
+            - button "Active Directory" [ref=e146] [cursor=pointer]
+            - button "Exposure" [ref=e153] [cursor=pointer]
+            - button "Vulnerabilities" [ref=e159] [cursor=pointer]
+            - button "CIS Benchmark" [ref=e170] [cursor=pointer]
+            - button "Compliance" [ref=e176] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=e181]:
+          - generic [ref=e182]:
+            - button "Endpoints" [ref=e183] [cursor=pointer]
+            - button "File Integrity" [ref=e187] [cursor=pointer]
+        - region "DASHBOARDS" [ref=e194]:
+          - button "Studio" [ref=e196] [cursor=pointer]
+        - region "REPORT" [ref=e201]:
+          - button "Scheduled Reports" [ref=e203] [cursor=pointer]
+      - generic [ref=e208]:
+        - button "User menu" [ref=e211] [cursor=pointer]:
+          - generic [ref=e212]: MC
+        - button "Pin sidebar open" [ref=e213] [cursor=pointer]
+    - main [ref=e216]:
+      - region "Response action and connector library" [ref=e221]:
+        - generic [ref=e222]:
+          - generic [ref=e231]:
+            - generic [ref=e232]: Response automation
+            - heading "Action & Connector Library" [level=1] [ref=e233]
+          - generic [ref=e234]:
+            - generic [ref=e235]: / search Enter inspect
+            - link "Playbooks" [ref=e236] [cursor=pointer]:
+              - /url: /response/playbooks
+            - link "Activity" [ref=e241] [cursor=pointer]:
+              - /url: /response/activity
+            - button "Refresh action catalog" [ref=e246] [cursor=pointer]
+        - generic [ref=e252]:
+          - strong [ref=e253]: "Design fixture:"
+          - text: fictional connector readiness and action schemas are enabled for visual review.
+          - generic [ref=e254]: Production never receives these records.
+        - generic "Catalog summary" [ref=e255]:
+          - generic [ref=e256]:
+            - generic [ref=e257]: Actions
+            - strong [ref=e261]: "8"
+            - generic [ref=e262]: authorized catalog
+          - generic [ref=e263]:
+            - generic [ref=e264]: Healthy
+            - strong [ref=e268]: "6"
+            - generic [ref=e269]: catalog reported
+          - generic [ref=e270]:
+            - generic [ref=e271]: Attention
+            - strong [ref=e274]: "2"
+            - generic [ref=e275]: degraded or unavailable
+          - generic [ref=e276]:
+            - generic [ref=e277]: High impact
+            - strong [ref=e280]: "3"
+            - generic [ref=e281]: high or critical
+          - generic [ref=e282]:
+            - generic [ref=e283]: Approval gated
+            - strong [ref=e290]: "2"
+            - generic [ref=e291]: catalog declared
+          - generic [ref=e292]:
+            - generic [ref=e293]: Rollback
+            - strong [ref=e297]: "7"
+            - generic [ref=e298]: catalog declared
+        - generic "Action catalog filters" [ref=e299]:
+          - generic [ref=e300]:
+            - searchbox "Search actions" [ref=e304]
+            - generic [ref=e305]: /
+          - generic [ref=e306] [cursor=pointer]:
+            - generic [ref=e307]: Risk
+            - combobox "Filter by risk" [ref=e308]:
+              - option "All risk levels" [selected]
+              - option "Critical"
+              - option "High"
+              - option "Medium"
+              - option "Low"
+              - option "Not reported"
+          - generic [ref=e309] [cursor=pointer]:
+            - generic [ref=e310]: Readiness
+            - combobox "Filter by readiness" [ref=e311]:
+              - option "All readiness states" [selected]
+              - option "Healthy"
+              - option "Degraded"
+              - option "Unavailable"
+              - option "Not reported"
+          - button "Reset" [disabled] [ref=e312]
+          - generic [ref=e316]: Snapshot 10:57
+        - main [ref=e317]:
+          - complementary "Action categories" [ref=e318]:
+            - generic [ref=e319]:
+              - generic [ref=e320]: Categories
+              - strong [ref=e322]: "3"
+            - button "All actions 8" [pressed] [ref=e323] [cursor=pointer]:
+              - generic [ref=e327]: All actions
+              - strong [ref=e328]: "8"
+            - button "Containment 3" [ref=e329] [cursor=pointer]:
+              - generic [ref=e333]: Containment
+              - strong [ref=e334]: "3"
+            - button "Eradication 3" [ref=e335] [cursor=pointer]:
+              - generic [ref=e338]: Eradication
+              - strong [ref=e339]: "3"
+            - button "Investigation 2" [ref=e340] [cursor=pointer]:
+              - generic [ref=e344]: Investigation
+              - strong [ref=e345]: "2"
+            - generic [ref=e350]:
+              - strong [ref=e351]: Governed primitives
+              - generic [ref=e352]: Actions are added to versioned playbooks. Execution always requires an exact target preview.
+          - region "Available response actions" [ref=e353]:
+            - generic [ref=e354]:
+              - generic [ref=e355]:
+                - strong [ref=e356]: Available actions
+                - generic [ref=e357]: 8 matching · bounded authorized projection
+              - generic [ref=e358]: Select a row to inspect its schema
+            - grid "Response action catalog" [ref=e361]:
+              - row [ref=e362]:
+                - columnheader "Action" [ref=e363]
+                - columnheader "Connector" [ref=e364]
+                - columnheader "Target" [ref=e365]
+                - columnheader "Readiness" [ref=e366]
+                - columnheader "Risk" [ref=e367]
+                - columnheader "Required role" [ref=e368]
+                - columnheader "Open details"
+              - generic [ref=e369]:
+                - row [active] [ref=e370] [cursor=pointer]:
+                  - gridcell "Isolate Host isolate_host · Containment" [ref=e371]:
+                    - generic [ref=e376]:
+                      - strong [ref=e377]: Isolate Host
+                      - generic [ref=e378]: isolate_host · Containment
+                  - gridcell "Endpoint control 2 inputs" [ref=e379]:
+                    - strong [ref=e380]: Endpoint control
+                    - generic [ref=e381]: 2 inputs
+                  - gridcell "Host" [ref=e382]
+                  - gridcell "Healthy" [ref=e383]
+                  - gridcell "Critical" [ref=e388]
+                  - gridcell "SOC MANAGER" [ref=e392]
+                  - gridcell [ref=e393]
+                - row [ref=e396] [cursor=pointer]:
+                  - gridcell "Kill Process kill_process · Containment" [ref=e397]:
+                    - generic [ref=e402]:
+                      - strong [ref=e403]: Kill Process
+                      - generic [ref=e404]: kill_process · Containment
+                  - gridcell "Endpoint control 2 inputs" [ref=e405]:
+                    - strong [ref=e406]: Endpoint control
+                    - generic [ref=e407]: 2 inputs
+                  - gridcell "Process" [ref=e408]
+                  - gridcell "Healthy" [ref=e409]
+                  - gridcell "High" [ref=e414]
+                  - gridcell "SOC ANALYST" [ref=e418]
+                  - gridcell [ref=e419]
+                - row [ref=e422] [cursor=pointer]:
+                  - gridcell "Block IP Address block_ip · Containment" [ref=e423]:
+                    - generic [ref=e428]:
+                      - strong [ref=e429]: Block IP Address
+                      - generic [ref=e430]: block_ip · Containment
+                  - gridcell "Network enforcement 2 inputs" [ref=e431]:
+                    - strong [ref=e432]: Network enforcement
+                    - generic [ref=e433]: 2 inputs
+                  - gridcell "Ip" [ref=e434]
+                  - gridcell "Healthy" [ref=e435]
+                  - gridcell "Medium" [ref=e440]
+                  - gridcell "SOC ANALYST" [ref=e444]
+                  - gridcell [ref=e445]
+                - row [ref=e448] [cursor=pointer]:
+                  - gridcell "Disable User Account disable_account · Eradication" [ref=e449]:
+                    - generic [ref=e453]:
+                      - strong [ref=e454]: Disable User Account
+                      - generic [ref=e455]: disable_account · Eradication
+                  - gridcell "Identity control 1 input" [ref=e456]:
+                    - strong [ref=e457]: Identity control
+                    - generic [ref=e458]: 1 input
+                  - gridcell "User" [ref=e459]
+                  - gridcell "Healthy" [ref=e460]
+                  - gridcell "High" [ref=e465]
+                  - gridcell "SOC MANAGER" [ref=e469]
+                  - gridcell [ref=e470]
+                - row [ref=e473] [cursor=pointer]:
+                  - gridcell "Quarantine File quarantine_file · Eradication" [ref=e474]:
+                    - generic [ref=e478]:
+                      - strong [ref=e479]: Quarantine File
+                      - generic [ref=e480]: quarantine_file · Eradication
+                  - gridcell "Endpoint control 2 inputs" [ref=e481]:
+                    - strong [ref=e482]: Endpoint control
+                    - generic [ref=e483]: 2 inputs
+                  - gridcell "File" [ref=e484]
+                  - gridcell "Degraded" [ref=e485]
+                  - gridcell "Medium" [ref=e489]
+                  - gridcell "SOC ANALYST" [ref=e493]
+                  - gridcell [ref=e494]
+                - row [ref=e497] [cursor=pointer]:
+                  - gridcell "Revoke All Sessions revoke_sessions · Eradication" [ref=e498]:
+                    - generic [ref=e502]:
+                      - strong [ref=e503]: Revoke All Sessions
+                      - generic [ref=e504]: revoke_sessions · Eradication
+                  - gridcell "Identity control 0 inputs" [ref=e505]:
+                    - strong [ref=e506]: Identity control
+                    - generic [ref=e507]: 0 inputs
+                  - gridcell "User" [ref=e508]
+                  - gridcell "Healthy" [ref=e509]
+                  - gridcell "Medium" [ref=e514]
+                  - gridcell "SOC ANALYST" [ref=e518]
+                  - gridcell [ref=e519]
+                - row [ref=e522] [cursor=pointer]:
+                  - gridcell "Collect Forensic Artifacts collect_forensics · Investigation" [ref=e523]:
+                    - generic [ref=e528]:
+                      - strong [ref=e529]: Collect Forensic Artifacts
+                      - generic [ref=e530]: collect_forensics · Investigation
+                  - gridcell "Endpoint telemetry 1 input" [ref=e531]:
+                    - strong [ref=e532]: Endpoint telemetry
+                    - generic [ref=e533]: 1 input
+                  - gridcell "Host" [ref=e534]
+                  - gridcell "Healthy" [ref=e535]
+                  - gridcell "Low" [ref=e540]
+                  - gridcell "SOC ANALYST" [ref=e544]
+                  - gridcell [ref=e545]
+                - row [ref=e548] [cursor=pointer]:
+                  - gridcell "Run Antivirus Scan run_scan · Investigation" [ref=e549]:
+                    - generic [ref=e554]:
+                      - strong [ref=e555]: Run Antivirus Scan
+                      - generic [ref=e556]: run_scan · Investigation
+                  - gridcell "Endpoint protection 1 input" [ref=e557]:
+                    - strong [ref=e558]: Endpoint protection
+                    - generic [ref=e559]: 1 input
+                  - gridcell "Host" [ref=e560]
+                  - gridcell "Unavailable" [ref=e561]
+                  - gridcell "Low" [ref=e566]
+                  - gridcell "SOC ANALYST" [ref=e570]
+                  - gridcell [ref=e571]
+            - generic [ref=e574]:
+              - generic [ref=e575]: 1–8 of 8
+              - generic [ref=e576]: Page 1 of 1
+              - generic [ref=e577]:
+                - button "Previous" [disabled] [ref=e578]
+                - button "Next" [disabled] [ref=e581]
+        - generic [ref=e584]:
+          - generic [ref=e585]:
+            - generic [ref=e586]:
+              - generic [ref=e588]: Connected
+              - generic [ref=e589]: •
+              - generic [ref=e591]: Live
+            - generic [ref=e592]: 12840 eps
+          - generic: Catalog browsing is side-effect free
+        - generic "Close drawer" [ref=e594]
+        - generic [ref=e595]:
+          - generic [ref=e596]:
+            - generic [ref=e597]:
+              - generic [ref=e598]: Isolate Host
+              - generic [ref=e599]: isolate_host · Containment
+            - button "Close drawer" [ref=e600] [cursor=pointer]
+          - generic [ref=e604]:
+            - tablist "Action details" [ref=e605]:
+              - tab "Overview" [selected] [ref=e606] [cursor=pointer]
+              - tab "Inputs 2" [ref=e607] [cursor=pointer]
+              - tab "Outputs 1" [ref=e608] [cursor=pointer]
+              - tab "Governance" [ref=e609] [cursor=pointer]
+            - tabpanel [ref=e610]:
+              - generic [ref=e616]:
+                - generic [ref=e617]: Endpoint control
+                - strong [ref=e618]: Isolate Host
+                - generic [ref=e619]: Isolate a host from the network while preserving its management channel.
+              - generic [ref=e620]:
+                - generic [ref=e621]:
+                  - generic [ref=e622]: Target
+                  - strong [ref=e623]: Host
+                - generic [ref=e624]:
+                  - generic [ref=e625]: Category
+                  - strong [ref=e626]: Containment
+                - generic [ref=e627]:
+                  - generic [ref=e628]: Readiness
+                  - strong [ref=e629]:
+                    - generic [ref=e630]: Healthy
+                - generic [ref=e634]:
+                  - generic [ref=e635]: Risk
+                  - strong [ref=e636]:
+                    - generic [ref=e637]: Critical
+                - generic [ref=e640]:
+                  - generic [ref=e641]: Used by
+                  - strong [ref=e642]: 9 playbooks
+                - generic [ref=e643]:
+                  - generic [ref=e644]: Action ID
+                  - strong [ref=e645]:
+                    - code [ref=e646]: isolate_host
+              - generic [ref=e651]:
+                - strong [ref=e652]: Preview before execution
+                - generic [ref=e653]: Catalog health is advisory. Target state, connector health, permissions, blast radius, and approval eligibility are revalidated during an authoritative preview.
+          - generic [ref=e654]:
+            - link "Add to playbook" [ref=e655] [cursor=pointer]:
+              - /url: /response/playbooks/new?action=isolate_host
+            - button "Close" [ref=e660] [cursor=pointer]
+  - generic:
+    - list "Notifications"

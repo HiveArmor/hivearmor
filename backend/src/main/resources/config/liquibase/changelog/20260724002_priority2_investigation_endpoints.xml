@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        PRIORITY 2 Investigation Endpoint Schema
+
+        ha-entities        → backed by hive_uba_entity_risk (existing) + OpenSearch
+        ha-entities/{id}/alerts  → OpenSearch query, no new table
+        ha-entities/{id}/events  → OpenSearch query, no new table
+        ha-constellation   → OpenSearch aggregation, no new table
+        ha-incidents/{id}/entities → new join table hive_incident_entity
+    -->
+
+    <!-- Incident ↔ Entity join table -->
+    <changeSet id="20260724002-1" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_incident_entity">
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="incident_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- entity_id is the string key used in hive_uba_entity_risk (e.g. "192.168.1.1", "WIN-HOST01") -->
+            <column name="entity_id" type="varchar(150)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="entity_type" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="added_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="added_at" type="timestamptz" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Unique: each entity can only be linked to an incident once -->
+        <addUniqueConstraint
+                tableName="hive_incident_entity"
+                columnNames="incident_id, entity_id"
+                constraintName="uq_incident_entity"/>
+
+        <createIndex tableName="hive_incident_entity" indexName="idx_incident_entity_incident_id">
+            <column name="incident_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

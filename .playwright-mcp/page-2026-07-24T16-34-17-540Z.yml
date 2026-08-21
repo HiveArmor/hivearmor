@@ -1,0 +1,10 @@
+- generic [ref=f3e4]:
+  - heading "Access Denied" [level=1] [ref=f3e10]
+  - paragraph [ref=f3e11]:
+    - text: You do not have permission to view this resource. Your account (
+    - strong [ref=f3e12]: admin
+    - text: ) does not have the required role or privileges.
+  - paragraph [ref=f3e13]: If you believe you should have access, please contact your administrator.
+  - generic [ref=f3e14]:
+    - button "Go Back" [ref=f3e15] [cursor=pointer]
+    - button "Go to Command Center" [ref=f3e17] [cursor=pointer]

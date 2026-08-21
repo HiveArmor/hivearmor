@@ -3,12 +3,13 @@ package grpc
 import (
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"google.golang.org/grpc"
 
 	"github.com/hivearmor/event-processor/processor"
@@ -113,12 +114,19 @@ type engineServer struct {
 
 func (e *engineServer) Input(stream plugins.Engine_InputServer) error {
 	for {
-		log, err := stream.Recv()
+		logMsg, err := stream.Recv()
 		if err != nil {
 			return err
 		}
-		go processLog(log)
-		stream.Send(&plugins.Ack{LastId: log.Id})
+		outcome := processor.Analyze(logMsg)
+		if err := processor.PersistRequired(outcome, processor.DefaultStore()); err != nil {
+			log.Printf("engine socket: persist failed id=%s: %v", logMsg.Id, err)
+			continue
+		}
+		processor.RunOptionalSideEffects(outcome)
+		if err := stream.Send(&plugins.Ack{LastId: logMsg.Id}); err != nil {
+			return err
+		}
 	}
 }
 
@@ -130,8 +138,4 @@ func (e *engineServer) Notify(stream plugins.Engine_NotifyServer) error {
 		}
 		stream.Send(&plugins.Ack{})
 	}
-}
-
-func processLog(log *plugins.Log) {
-	processor.ProcessLog(log)
 }

@@ -1,0 +1,46 @@
+Phase 5 — Search & Hunt Enhancements — Combined Frontend Test Results
+=====================================================================
+Date: 2026-07-21
+
+Sprint breakdown
+----------------
+S-5A — Dynamic Field Browser
+  Tests added: 16  (476 → 492)
+  TS errors: 0
+  Result: PASS
+
+S-5B — Saved Queries Backend + Frontend
+  Tests added: 13  (492 → 505)
+  TS errors: 0
+  Result: PASS
+
+S-5C — Investigation Sessions Backend
+  No frontend tests (backend-only sprint)
+  Result: PASS (backend tests in phase5-s5c-backend.txt)
+
+S-5D — Investigation Sessions Frontend
+  Tests added: 30  (505 → 535)
+  TS errors: 0
+  Result: PASS
+
+Phase 5 totals
+--------------
+Tests before phase: 476
+Tests after phase:  535
+New tests in phase: 59
+Pass: 535
+Fail: 0
+TS errors: 0
+
+All test files (Phase 5 additions)
+-----------------------------------
+frontend-v2/src/app/(app)/logs/__tests__/field-browser.test.ts               (16 tests)
+frontend-v2/src/services/__tests__/saved-query.service.test.ts               (13 tests)
+frontend-v2/src/services/__tests__/session.service.test.ts                   (20 tests)
+frontend-v2/src/components/sessions/__tests__/sessions-list.test.ts          (10 tests)
+
+Vitest output (final state after S-5D)
+---------------------------------------
+  Test Files  44 passed (44)
+  Tests       535 passed (535)
+  Duration    ~662ms

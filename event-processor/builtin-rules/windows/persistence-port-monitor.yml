@@ -1,0 +1,38 @@
+id: d0e1f2a3-b4c5-6789-defa-890123456740
+title: Port Monitor DLL Persistence via Registry
+status: stable
+logsource:
+  product: windows
+  category: registry_set
+level: high
+tags:
+  - attack.persistence
+  - attack.T1547
+  - attack.T1547.010
+detection:
+  selection:
+    TargetObject|contains:
+      - '\SYSTEM\CurrentControlSet\Control\Print\Monitors'
+    TargetObject|endswith: '\Driver'
+  filter_legit:
+    Details|contains:
+      - 'localspl.dll'
+      - 'tcpmon.dll'
+      - 'usbmon.dll'
+      - 'win32spl.dll'
+  condition: selection and not filter_legit
+falsepositives:
+  - Legitimate printer driver installation
+  - Third-party print management software
+impact:
+  confidentiality: low
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - TargetObject
+groupBy:
+  - ComputerName
+mitre:
+  tactic: persistence
+  technique: T1547.010

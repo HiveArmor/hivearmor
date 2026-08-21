@@ -1,0 +1,43 @@
+id: ha-linux-008
+title: Ptrace System Call for Process Injection
+status: stable
+description: Detects use of the ptrace system call which can be used to inject code into running processes or debug processes in ways that enable privilege escalation or credential theft.
+logsource:
+  product: linux
+  service: auditd
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.T1055.008
+  - attack.privilege_escalation
+detection:
+  selection:
+    type: SYSCALL
+    syscall: ptrace
+  filter_debugger:
+    comm:
+      - gdb
+      - strace
+      - ltrace
+  condition: selection and not filter_debugger
+falsepositives:
+  - Legitimate debugging sessions by developers
+  - Security tools performing memory analysis
+fields:
+  - syscall
+  - pid
+  - ppid
+  - uid
+  - comm
+impact:
+  confidentiality: high
+  integrity: high
+  availability: low
+deduplicateBy:
+  - pid
+  - uid
+groupBy:
+  - uid
+mitre:
+  tactic: defense_evasion
+  technique: T1055.008

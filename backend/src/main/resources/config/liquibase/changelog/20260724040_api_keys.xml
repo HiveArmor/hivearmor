@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="20260724040-01-create-ha-api-key" author="hivearmor">
+        <createTable tableName="ha_api_key">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="key_hash" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="key_prefix" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scopes" type="varchar(512)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+            <column name="revoked_at" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_by" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_used_at" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260724040-02-unique-key-hash" author="hivearmor">
+        <createIndex tableName="ha_api_key" indexName="uq_ha_api_key_key_hash" unique="true">
+            <column name="key_hash"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

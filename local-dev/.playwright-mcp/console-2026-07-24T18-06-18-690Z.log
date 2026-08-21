@@ -1,0 +1,246 @@
+[     237ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:17230
+[     282ms] [ERROR] AG Grid: error #200 Missing module ServerSideRowModelModule for rowModelType serverSide. 
+Visit https://www.ag-grid.com/react-data-grid/errors/200?_version_=36.0.1&reasonOrId=rowModelType+%3D+%27serverSide%27&moduleName=ServerSideRowModel&gridScoped=false&gridId=1&rowModelType=serverSide&isUmd=false @ http://localhost:3000/@vite/client:524
+[     287ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[     288ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     291ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[    5299ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   10315ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   15324ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   20339ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   25354ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   30297ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   30364ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   35380ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   40394ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   45404ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   50415ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   55431ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   60301ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   60451ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   65472ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   70486ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   75511ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   80529ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   85539ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   90302ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   90550ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[   95563ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  100607ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  105619ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  110634ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  115641ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  120295ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  120657ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  125667ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  130677ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  132499ms] [ERROR] AG Grid: error #200 Missing module ServerSideRowModelModule for rowModelType serverSide. 
+Visit https://www.ag-grid.com/react-data-grid/errors/200?_version_=36.0.1&reasonOrId=rowModelType+%3D+%27serverSide%27&moduleName=ServerSideRowModel&gridScoped=false&gridId=2&rowModelType=serverSide&isUmd=false @ http://localhost:3000/@vite/client:524
+[  135692ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  140708ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  145716ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  150302ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  150727ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  155886ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  160907ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  161844ms] ReferenceError: useMemo is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916540499:37:21)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13096:13)
+    at HTMLUnknownElement.callCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:3142:11)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:3162:14)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:3201:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15990:5)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+[  161846ms] [ERROR] Error handled by React Router default ErrorBoundary: ReferenceError: useMemo is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916540499:37:21)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13096:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15500:6)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15299:21)
+    at flushSyncCallbacks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:7802:19) @ http://localhost:3000/@vite/client:524
+[  161846ms] [ERROR] Error handled by React Router default ErrorBoundary: ReferenceError: useMemo is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916540499:37:21)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13096:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15500:6)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15299:21)
+    at flushSyncCallbacks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:7802:19) @ http://localhost:3000/@vite/client:524
+[  161846ms] ReferenceError: useMemo is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916540499:37:21)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13096:13)
+    at HTMLUnknownElement.callCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:3142:11)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:3162:14)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:3201:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15990:5)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+[  161846ms] [ERROR] Error handled by React Router default ErrorBoundary: ReferenceError: useMemo is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916540499:37:21)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13096:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15500:6)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15193:21)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15304:19) @ http://localhost:3000/@vite/client:524
+[  161847ms] [ERROR] Error handled by React Router default ErrorBoundary: ReferenceError: useMemo is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916540499:37:21)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13096:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15500:6)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15193:21)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15304:19) @ http://localhost:3000/@vite/client:524
+[  161847ms] [ERROR] The above error occurred in the <CorrelatedFindingsPage> component:
+
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916540499:31:19)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx?t=1784910164738:22:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:3235:8)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:3585:25)
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:25:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:3235:8)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:3202:3)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:4278:8)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:3605:18)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:4111:8)
+    at AppInner (http://localhost:3000/src/App.tsx?t=1784915918809:26:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=fbd45312:2553:30)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, RenderErrorBoundary. @ http://localhost:3000/@vite/client:524
+[  161848ms] [ERROR] React Router caught the following error during render ReferenceError: useMemo is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916540499:37:21)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13096:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15500:6)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15193:21)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15304:19) {componentStack: 
+    at CorrelatedFindingsPage (http://localhost:3…ack_react-query.js?v=fbd45312:2553:30)
+    at App} @ http://localhost:3000/@vite/client:524
+[  171617ms] ReferenceError: datasource is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916550274:125:7)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at mountIndeterminateComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12362:12)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13089:41)
+    at HTMLUnknownElement.callCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:3142:11)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:3162:14)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:3201:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15990:5)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+[  171618ms] [ERROR] Error handled by React Router default ErrorBoundary: ReferenceError: datasource is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916550274:125:7)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at mountIndeterminateComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12362:12)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13089:41)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15500:6)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15299:21)
+    at flushSyncCallbacks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:7802:19) @ http://localhost:3000/@vite/client:524
+[  171618ms] [ERROR] Error handled by React Router default ErrorBoundary: ReferenceError: datasource is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916550274:125:7)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at mountIndeterminateComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12362:12)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13089:41)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15500:6)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15299:21)
+    at flushSyncCallbacks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:7802:19) @ http://localhost:3000/@vite/client:524
+[  171621ms] ReferenceError: datasource is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916550274:125:7)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at mountIndeterminateComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12362:12)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13089:41)
+    at HTMLUnknownElement.callCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:3142:11)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:3162:14)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:3201:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15990:5)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+[  171621ms] [ERROR] Error handled by React Router default ErrorBoundary: ReferenceError: datasource is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916550274:125:7)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at mountIndeterminateComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12362:12)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13089:41)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15500:6)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15193:21)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15304:19) @ http://localhost:3000/@vite/client:524
+[  171621ms] [ERROR] Error handled by React Router default ErrorBoundary: ReferenceError: datasource is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916550274:125:7)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at mountIndeterminateComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12362:12)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13089:41)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15500:6)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15193:21)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15304:19) @ http://localhost:3000/@vite/client:524
+[  171621ms] [ERROR] The above error occurred in the <CorrelatedFindingsPage> component:
+
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916550274:31:19)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx?t=1784910164738:22:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:3235:8)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:3585:25)
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:25:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:3235:8)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:3202:3)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:4278:8)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:3605:18)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=fbd45312:4111:8)
+    at AppInner (http://localhost:3000/src/App.tsx?t=1784915918809:26:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=fbd45312:2553:30)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, RenderErrorBoundary. @ http://localhost:3000/@vite/client:524
+[  171621ms] [ERROR] React Router caught the following error during render ReferenceError: datasource is not defined
+    at CorrelatedFindingsPage (http://localhost:3000/src/pages/correlated-findings/CorrelatedFindingsPage.tsx?t=1784916550274:125:7)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19)
+    at mountIndeterminateComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12362:12)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13089:41)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15500:6)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15193:21)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15304:19) {componentStack: 
+    at CorrelatedFindingsPage (http://localhost:3…ack_react-query.js?v=fbd45312:2553:30)
+    at App} @ http://localhost:3000/@vite/client:524
+[  180386ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  180388ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  180395ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  185401ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[  190415ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0

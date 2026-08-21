@@ -1,0 +1,40 @@
+id: ha-azure-004
+title: Privileged Azure Role Assignment
+status: stable
+description: Detects assignment of highly privileged Azure RBAC roles such as Owner or Contributor, which can grant an attacker full control over the subscription or resource group.
+logsource:
+  product: azure
+  service: activitylogs
+level: high
+tags:
+  - attack.privilege_escalation
+  - attack.T1078.004
+detection:
+  selection:
+    operationName: Microsoft.Authorization/roleAssignments/write
+    resultType: Success
+    properties.roleDefinitionId|contains:
+      - '8e3af657-a8ff-443c-a75c-2fe8c4bcb635'
+      - 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+  condition: selection
+falsepositives:
+  - Authorized cloud administrators provisioning new team members
+  - Infrastructure-as-code pipelines assigning service principal roles
+fields:
+  - operationName
+  - caller
+  - properties.principalId
+  - properties.roleDefinitionId
+  - subscriptionId
+impact:
+  confidentiality: high
+  integrity: high
+  availability: high
+deduplicateBy:
+  - caller
+  - properties.principalId
+groupBy:
+  - caller
+mitre:
+  tactic: privilege-escalation
+  technique: T1078.004

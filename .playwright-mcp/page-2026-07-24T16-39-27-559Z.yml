@@ -1,0 +1,62 @@
+- generic [ref=f36e3]:
+  - banner [ref=f36e4]:
+    - generic [ref=f36e5]: HiveArmor
+    - generic [ref=f36e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f36e13]'
+      - generic "Reconnecting..." [ref=f36e16]: 0 EPS
+      - button "Notifications" [ref=f36e18] [cursor=pointer]
+      - button "Help" [ref=f36e23] [cursor=pointer]
+      - button "User menu" [ref=f36e28] [cursor=pointer]:
+        - generic [ref=f36e29]: AA
+        - generic [ref=f36e30]: admin
+  - navigation [ref=f36e31]:
+    - generic [ref=f36e32]:
+      - generic [ref=f36e33]:
+        - generic [ref=f36e34]: COMMAND
+        - generic [ref=f36e35]:
+          - button "Analyst Queue" [ref=f36e36] [cursor=pointer]
+          - button "Alerts" [ref=f36e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f36e47] [cursor=pointer]
+          - button "Incidents" [ref=f36e54] [cursor=pointer]
+      - generic [ref=f36e61]:
+        - generic [ref=f36e62]: INVESTIGATE
+        - generic [ref=f36e63]:
+          - button "Search & Hunt" [ref=f36e64] [cursor=pointer]
+          - button "Investigations" [ref=f36e70] [cursor=pointer]
+          - button "Entities" [ref=f36e75] [cursor=pointer]
+      - generic [ref=f36e83]:
+        - generic [ref=f36e84]: DEFEND
+        - generic [ref=f36e85]:
+          - button "Detection Rules" [ref=f36e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f36e91] [cursor=pointer]
+      - generic [ref=f36e96]:
+        - generic [ref=f36e97]: POSTURE
+        - generic [ref=f36e98]:
+          - button "Assets" [ref=f36e99] [cursor=pointer]
+          - button "Identities" [ref=f36e105] [cursor=pointer]
+          - button "Active Directory" [ref=f36e113] [cursor=pointer]
+          - button "Exposure" [ref=f36e121] [cursor=pointer]
+          - button "Sensors" [ref=f36e128] [cursor=pointer]
+          - button "Compliance" [ref=f36e133] [cursor=pointer]
+      - generic [ref=f36e139]:
+        - generic [ref=f36e140]: DASHBOARDS
+        - button "Studio" [ref=f36e142] [cursor=pointer]
+      - generic [ref=f36e148]:
+        - generic [ref=f36e149]: REPORT
+        - button "Scheduled Reports" [ref=f36e151] [cursor=pointer]
+      - generic [ref=f36e157]:
+        - generic [ref=f36e158]: ADMINISTRATION
+        - generic [ref=f36e159]:
+          - button "Users" [ref=f36e160] [cursor=pointer]
+          - button "Integrations" [ref=f36e175] [cursor=pointer]
+          - button "Notifications" [ref=f36e180] [cursor=pointer]
+          - button "Audit Log" [ref=f36e186] [cursor=pointer]
+          - button "Settings" [ref=f36e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f36e199] [cursor=pointer]
+  - main [ref=f36e202]:
+    - generic [ref=f36e203]:
+      - alert [ref=f36e204]:
+        - generic [ref=f36e207]:
+          - generic [ref=f36e208]: Could not load dashboard configuration
+          - generic [ref=f36e209]: The dashboard could not be loaded.
+      - button "Retry" [ref=f36e210] [cursor=pointer]

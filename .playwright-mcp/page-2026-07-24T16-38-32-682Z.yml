@@ -1,0 +1,81 @@
+- generic [ref=f29e3]:
+  - banner [ref=f29e4]:
+    - generic [ref=f29e5]: HiveArmor
+    - generic [ref=f29e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f29e13]'
+      - generic "Reconnecting..." [ref=f29e16]: 0 EPS
+      - button "Notifications" [ref=f29e18] [cursor=pointer]
+      - button "Help" [ref=f29e23] [cursor=pointer]
+      - button "User menu" [ref=f29e28] [cursor=pointer]:
+        - generic [ref=f29e29]: AA
+        - generic [ref=f29e30]: admin
+  - navigation [ref=f29e31]:
+    - generic [ref=f29e32]:
+      - generic [ref=f29e33]:
+        - generic [ref=f29e34]: COMMAND
+        - generic [ref=f29e35]:
+          - button "Analyst Queue" [ref=f29e36] [cursor=pointer]
+          - button "Alerts" [ref=f29e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f29e47] [cursor=pointer]
+          - button "Incidents" [ref=f29e54] [cursor=pointer]
+      - generic [ref=f29e61]:
+        - generic [ref=f29e62]: INVESTIGATE
+        - generic [ref=f29e63]:
+          - button "Search & Hunt" [ref=f29e64] [cursor=pointer]
+          - button "Investigations" [ref=f29e70] [cursor=pointer]
+          - button "Entities" [ref=f29e75] [cursor=pointer]
+      - generic [ref=f29e83]:
+        - generic [ref=f29e84]: DEFEND
+        - generic [ref=f29e85]:
+          - button "Detection Rules" [ref=f29e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f29e91] [cursor=pointer]
+      - generic [ref=f29e96]:
+        - generic [ref=f29e97]: POSTURE
+        - generic [ref=f29e98]:
+          - button "Assets" [ref=f29e99] [cursor=pointer]
+          - button "Identities" [ref=f29e105] [cursor=pointer]
+          - button "Active Directory" [ref=f29e113] [cursor=pointer]
+          - button "Exposure" [ref=f29e121] [cursor=pointer]
+          - button "Sensors" [ref=f29e128] [cursor=pointer]
+          - button "Compliance" [ref=f29e133] [cursor=pointer]
+      - generic [ref=f29e139]:
+        - generic [ref=f29e140]: DASHBOARDS
+        - button "Studio" [ref=f29e142] [cursor=pointer]
+      - generic [ref=f29e148]:
+        - generic [ref=f29e149]: REPORT
+        - button "Scheduled Reports" [ref=f29e151] [cursor=pointer]
+      - generic [ref=f29e157]:
+        - generic [ref=f29e158]: ADMINISTRATION
+        - generic [ref=f29e159]:
+          - button "Users" [ref=f29e160] [cursor=pointer]
+          - button "Integrations" [ref=f29e175] [cursor=pointer]
+          - button "Notifications" [ref=f29e180] [cursor=pointer]
+          - button "Audit Log" [ref=f29e186] [cursor=pointer]
+          - button "Settings" [ref=f29e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f29e199] [cursor=pointer]
+  - main [ref=f29e202]:
+    - generic [ref=f29e203]:
+      - heading "Exposure" [level=1] [ref=f29e205]
+      - generic [ref=f29e206]:
+        - heading "Exposure Analysis — Coming Soon" [level=2] [ref=f29e212]
+        - paragraph [ref=f29e213]: This feature requires full-stack development and a product decision.
+        - generic [ref=f29e214]:
+          - generic [ref=f29e215]:
+            - strong [ref=f29e216]: "GAP-BE-02:"
+            - text: No exposure aggregation endpoint exists.
+          - generic [ref=f29e217]:
+            - strong [ref=f29e218]: "PRODUCT_DECISION_REQUIRED (PD-POS-04-A):"
+            - text: "The exposure data model must be decided before backend design can begin. Options:"
+          - list [ref=f29e219]:
+            - listitem [ref=f29e220]:
+              - strong [ref=f29e221]: (A) Attack Surface Score
+              - text: — Exposure score derived from open ports, exposed services, and internet reachability per asset
+            - listitem [ref=f29e222]:
+              - strong [ref=f29e223]: (B) Graph-Based Exposure
+              - text: — Exposure modelled as a graph of entity relationships — lateral movement paths, blast radius from a compromised node
+            - listitem [ref=f29e224]:
+              - strong [ref=f29e225]: (C) CVE-Based Exposure Score
+              - text: — Composite score from unpatched CVEs weighted by CVSS and internet exposure
+          - generic [ref=f29e226]: Frontend implementation will begin after the backend API is deployed and PD-POS-04-A is resolved.
+        - alert [ref=f29e228]:
+          - generic [ref=f29e231]: This screen is not connected to any backend. It is a planning placeholder only.

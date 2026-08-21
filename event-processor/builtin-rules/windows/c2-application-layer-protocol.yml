@@ -1,0 +1,42 @@
+id: e5f6a7b8-c9d0-1234-efab-345678901265
+title: Application Layer Protocol Abuse for C2 Communication
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.command_and_control
+  - attack.T1071
+detection:
+  selection_smb:
+    CommandLine|contains:
+      - 'net use \\\\'
+      - 'smbclient'
+    CommandLine|contains:
+      - '/user:'
+  selection_ftp:
+    Image|endswith: '\ftp.exe'
+    CommandLine|contains:
+      - '-n '
+      - '-s:'
+  selection_telnet:
+    Image|endswith: '\telnet.exe'
+    Initiated: 'true'
+  condition: selection_smb or selection_ftp or selection_telnet
+falsepositives:
+  - Legitimate SMB file sharing
+  - FTP file transfer operations
+  - Legacy telnet usage in maintenance
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - Image
+groupBy:
+  - ComputerName
+mitre:
+  tactic: command-and-control
+  technique: T1071

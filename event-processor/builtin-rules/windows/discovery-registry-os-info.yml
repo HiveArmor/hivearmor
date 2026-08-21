@@ -1,0 +1,40 @@
+id: e3f4a5b6-c7d8-9012-efab-123456789053
+title: Registry Query for OS Version and System Information
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: low
+tags:
+  - attack.discovery
+  - attack.T1082
+detection:
+  selection:
+    Image|endswith: '\reg.exe'
+    CommandLine|contains:
+      - 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion'
+      - 'ProductName'
+      - 'CurrentVersion'
+      - 'BuildLab'
+  selection_multiple_queries:
+    CommandLine|contains:
+      - 'reg query'
+    CommandLine|contains:
+      - 'HKLM\SYSTEM'
+  condition: selection or selection_multiple_queries
+falsepositives:
+  - System inventory scripts
+  - Help desk diagnostic tools
+  - Software compatibility checks
+impact:
+  confidentiality: low
+  integrity: low
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: discovery
+  technique: T1082

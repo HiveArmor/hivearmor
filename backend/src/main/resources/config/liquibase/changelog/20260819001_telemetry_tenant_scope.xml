@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260819001-telemetry-tenant-epss" author="hivearmor">
+        <addColumn tableName="ha_vuln_finding">
+            <column name="tenant_id" type="bigint"/>
+            <column name="epss_score" type="double"/>
+            <column name="epss_percentile" type="double"/>
+            <column name="epss_as_of" type="datetime"/>
+        </addColumn>
+        <createIndex tableName="ha_vuln_finding" indexName="idx_ha_vuln_tenant">
+            <column name="tenant_id"/>
+            <column name="id"/>
+        </createIndex>
+
+        <addColumn tableName="ha_sca_result">
+            <column name="tenant_id" type="bigint"/>
+        </addColumn>
+        <createIndex tableName="ha_sca_result" indexName="idx_ha_sca_tenant">
+            <column name="tenant_id"/>
+            <column name="id"/>
+        </createIndex>
+
+        <addColumn tableName="ha_sca_summary">
+            <column name="tenant_id" type="bigint"/>
+        </addColumn>
+        <createIndex tableName="ha_sca_summary" indexName="idx_ha_sca_summary_tenant">
+            <column name="tenant_id"/>
+            <column name="id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

@@ -2,7 +2,6 @@ package sequence
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,7 +10,8 @@ import (
 	"strings"
 	"time"
 
-	sdkos "github.com/threatwinds/go-sdk/os"
+	"github.com/hivearmor/event-processor/internal/httpclient"
+	sdkos "github.com/hivearmor/sdk/os"
 )
 
 // stateIndexWildcard matches all daily sequence-state indices for cross-day queries.
@@ -30,12 +30,7 @@ func InitPersistence(url, user, pass string) {
 	osURL = url
 	osUser = user
 	osPass = pass
-	osClient = &http.Client{
-		Timeout: 10 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // internal only, mirrors writer/alerts.go
-		},
-	}
+	osClient = httpclient.MustClient(10 * time.Second)
 }
 
 // persistState upserts one in-progress sequence into OpenSearch.
@@ -67,7 +62,7 @@ func persistState(key string, ips inProgressSeq, expiresAt time.Time) {
 		return
 	}
 
-	idx := sdkos.BuildCurrentDayIndex("v3-hive", "sequence-state")
+	idx := sdkos.BuildCurrentDayIndex("sequence-state")
 	docID := docID(key, ips.ruleID)
 	url := fmt.Sprintf("%s/%s/_doc/%s", osURL, idx, docID)
 
@@ -149,9 +144,9 @@ func loadPersistedStates() {
 		Hits struct {
 			Hits []struct {
 				Source struct {
-					AdversaryKey   string    `json:"adversaryKey"`
-					RuleID         string    `json:"ruleId"`
-					CurrentStep    int       `json:"currentStep"`
+					AdversaryKey   string `json:"adversaryKey"`
+					RuleID         string `json:"ruleId"`
+					CurrentStep    int    `json:"currentStep"`
 					StepsCompleted []struct {
 						MatchedAt time.Time `json:"matchedAt"`
 					} `json:"stepsCompleted"`

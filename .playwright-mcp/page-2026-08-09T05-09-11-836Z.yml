@@ -1,0 +1,46 @@
+- generic [ref=f159e4]:
+  - complementary [ref=f159e5]:
+    - generic [ref=f159e6]:
+      - generic [ref=f159e7]: HiveArmor
+      - generic [ref=f159e14]:
+        - text: Enterprise security operations
+        - heading "See the signal. Coordinate the response." [level=2] [ref=f159e15]
+        - paragraph [ref=f159e16]: Hybrid Intelligence & Visibility Engine for Advanced Response, Monitoring, Orchestration and Resilience.
+      - generic "Platform capabilities" [ref=f159e17]:
+        - generic [ref=f159e18]:
+          - strong [ref=f159e19]: Unified visibility
+          - text: Across tenants and telemetry
+        - generic [ref=f159e20]:
+          - strong [ref=f159e21]: Analyst-led response
+          - text: Evidence before action
+        - generic [ref=f159e22]:
+          - strong [ref=f159e23]: Operational resilience
+          - text: Health and risk in context
+  - main [ref=f159e24]:
+    - generic [ref=f159e25]:
+      - text: Secure access
+      - heading "Sign in to HiveArmor" [level=1] [ref=f159e26]
+      - paragraph [ref=f159e27]: Use your organization credentials to access the security operations workspace.
+      - form "Sign in" [ref=f159e28]:
+        - generic [ref=f159e29]:
+          - generic [ref=f159e31]:
+            - text: Work email or username
+            - generic [ref=f159e32]: "*"
+          - textbox "Work email or username" [ref=f159e34]: admin
+        - generic [ref=f159e35]:
+          - generic [ref=f159e37]:
+            - text: Password
+            - generic [ref=f159e38]: "*"
+          - generic [ref=f159e40]:
+            - textbox "Password" [active] [ref=f159e41]: localdev12
+            - button "Show password" [ref=f159e42] [cursor=pointer]
+        - generic [ref=f159e46]:
+          - generic [ref=f159e47] [cursor=pointer]:
+            - checkbox "Remember this device" [ref=f159e48]
+            - generic [ref=f159e49]: Remember this device
+          - button "Forgot password?" [ref=f159e50] [cursor=pointer]
+        - button "Sign in" [ref=f159e51] [cursor=pointer]
+        - button "Continue with organization SSO" [ref=f159e54] [cursor=pointer]
+      - generic [ref=f159e55]:
+        - generic [ref=f159e56]: Authentication service available
+        - generic [ref=f159e57]: Protected enterprise access

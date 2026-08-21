@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Sprint 36 — Idempotency infrastructure table (S36-T04) -->
+    <changeSet id="20260801002-1" author="hivearmor">
+        <createTable tableName="ha_idempotency">
+            <column name="id" type="bigserial" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="idempotency_key" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_prefix" type="varchar(20)"/>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="request_hash" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="response_json" type="jsonb"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="ha_idempotency"
+                             columnNames="idempotency_key, tenant_prefix, user_id"
+                             constraintName="uq_ha_idempotency_key_tenant_user"/>
+
+        <createIndex tableName="ha_idempotency" indexName="idx_ha_idempotency_expires_at">
+            <column name="expires_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

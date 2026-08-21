@@ -1,0 +1,23 @@
+.ha-app-layout {
+  min-height: 100%;
+  background: var(--ha-surface-app);
+}
+
+.ha-app-main {
+  min-height: 100vh;
+  padding-top: var(--ha-masthead-height);
+  margin-left: var(--ha-sidebar-expanded);
+  background: var(--ha-surface-app);
+  transition: margin-left var(--ha-transition-base);
+}
+
+.ha-app-layout[data-sidebar-collapsed='true'] .ha-app-main {
+  margin-left: var(--ha-sidebar-collapsed);
+}
+
+@media (max-width: 1024px) {
+  .ha-app-main,
+  .ha-app-layout[data-sidebar-collapsed='false'] .ha-app-main {
+    margin-left: var(--ha-sidebar-collapsed);
+  }
+}

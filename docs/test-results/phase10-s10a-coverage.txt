@@ -1,0 +1,48 @@
+S-10A Coverage Gate Results
+============================
+Run date: 2026-07-21
+Tool: @vitest/coverage-v8 v4.1.10
+
+Configuration (vitest.config.ts)
+----------------------------------
+Coverage scope: pure-TS service/lib/store files with unit tests
+  src/lib/roles.ts
+  src/lib/route-permissions.ts
+  src/lib/chart-theme.ts
+  src/lib/query-client.ts
+  src/store/dashboard-filter-store.ts
+  src/services/dataset.service.ts
+  src/services/entity.service.ts
+  src/services/saved-query.service.ts
+  src/services/alert.service.ts
+  src/services/dashboard.service.ts
+  src/services/queue.service.ts
+  src/services/integration.service.ts
+
+Thresholds configured:
+  lines:     60%
+  branches:  50%
+  functions: 60%
+
+Coverage Summary (PASS)
+------------------------
+Statements:  76.89% (193/251)   [threshold: 60% ✓]
+Branches:    67.72% (107/158)   [threshold: 50% ✓]
+Functions:   68.18%  (60/88)    [threshold: 60% ✓]
+Lines:       78.80% (171/217)   [threshold: 60% ✓]
+
+Per-file highlights:
+  alert.service.ts         79% stmts / 70% branch / 66% funcs
+  dashboard.service.ts     54% stmts / 33% branch / 40% funcs
+  entity.service.ts        60% stmts / 50% branch / 33% funcs
+  integration.service.ts  100% stmts / 91% branch / 100% funcs
+  queue.service.ts         88% stmts / 79% branch / 100% funcs
+  saved-query.service.ts   85% stmts / 80% branch / 87%  funcs
+
+Gap-fill tests added (S-10A):
+  src/services/__tests__/alert.service.test.ts     (11 tests)
+  src/services/__tests__/dashboard.service.test.ts (13 tests)
+
+Total test suite (all files):
+  Test Files: 58 passed
+  Tests:      664 passed

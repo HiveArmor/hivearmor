@@ -1,0 +1,109 @@
+/* EntityPreviewCard — compact hover card */
+
+.ent-preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  min-width: 280px;
+  max-width: 340px;
+  background: var(--ha-surface-elevated);
+  border: 1px solid var(--ha-border-default);
+  border-radius: 6px;
+}
+
+.ent-preview-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ent-preview-card__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ent-preview-card__type {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ha-foreground-tertiary);
+}
+
+.ent-preview-card__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ent-preview-card__value {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--ha-foreground-secondary);
+}
+
+.ent-preview-card__metrics {
+  display: flex;
+  gap: 12px;
+}
+
+.ent-preview-card__metric {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ha-foreground-secondary);
+}
+
+.ent-preview-card__metric strong {
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-foreground-primary);
+}
+
+.ent-preview-card__metric small {
+  color: var(--ha-foreground-tertiary);
+}
+
+.ent-preview-card__metric[data-tone='alert'] strong {
+  color: var(--ha-severity-high);
+}
+
+.ent-preview-card__details dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.ent-preview-card__details dl > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ent-preview-card__details dt {
+  font-size: 10px;
+  color: var(--ha-foreground-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ent-preview-card__details dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ha-foreground-primary);
+}
+
+.ent-preview-card__footer {
+  border-top: 1px solid var(--ha-border-subtle);
+  padding-top: 10px;
+}

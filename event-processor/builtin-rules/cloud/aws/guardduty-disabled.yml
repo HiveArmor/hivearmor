@@ -1,0 +1,43 @@
+id: ha-aws-006
+title: AWS GuardDuty Detector Disabled or Deleted
+status: stable
+description: Detects when GuardDuty threat detection is disabled or its detector is deleted in an AWS account. Disabling GuardDuty is a common attacker technique to prevent detection of subsequent malicious activity.
+logsource:
+  product: aws
+  service: cloudtrail
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.T1562.001
+detection:
+  selection:
+    eventName:
+      - DisassociateFromMasterAccount
+      - DeleteDetector
+      - DisableOrganizationAdminAccount
+      - UpdateDetector
+  filter_update_enabled:
+    eventName: UpdateDetector
+    requestParameters.enable: 'true'
+  condition: selection and not filter_update_enabled
+falsepositives:
+  - GuardDuty migration or consolidation to a centralised master account
+  - Authorised security team decommissioning in non-production accounts
+fields:
+  - eventName
+  - requestParameters.detectorId
+  - userIdentity.arn
+  - sourceIPAddress
+  - awsRegion
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: low
+deduplicateBy:
+  - requestParameters.detectorId
+  - awsRegion
+groupBy:
+  - userIdentity.arn
+mitre:
+  tactic: defense-evasion
+  technique: T1562.001

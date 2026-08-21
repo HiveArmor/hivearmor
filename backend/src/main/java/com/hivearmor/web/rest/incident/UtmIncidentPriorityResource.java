@@ -6,6 +6,7 @@ import com.hivearmor.service.incident.UtmIncidentSlaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,11 +19,16 @@ import java.util.NoSuchElementException;
 @Slf4j
 public class UtmIncidentPriorityResource {
 
+    private static final String INCIDENT_AUTH =
+        "hasAuthority('ROLE_SOC_ANALYST') or hasAuthority('ROLE_SOC_MANAGER') " +
+        "or hasAuthority('ROLE_ANALYST') or hasAuthority('ROLE_ADMIN')";
+
     private final UtmIncidentRepository incidentRepository;
     private final UtmIncidentSlaService slaService;
 
     /** PUT /api/ha-incidents/{id}/priority  body: { "priority": "P1" } */
     @PutMapping("/{id}/priority")
+    @PreAuthorize(INCIDENT_AUTH)
     public ResponseEntity<UtmIncident> setPriority(
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
@@ -35,6 +41,7 @@ public class UtmIncidentPriorityResource {
 
     /** GET /api/ha-incidents/sla-breached — list breached open incidents */
     @GetMapping("/sla-breached")
+    @PreAuthorize(INCIDENT_AUTH)
     public ResponseEntity<List<UtmIncident>> slaBreached() {
         List<UtmIncident> breached = incidentRepository
             .findBySlaBreachedFalseAndSlaDeadlineBefore(java.time.Instant.now());
@@ -43,6 +50,7 @@ public class UtmIncidentPriorityResource {
 
     /** GET /api/ha-incidents/sla-stats — summary counts */
     @GetMapping("/sla-stats")
+    @PreAuthorize(INCIDENT_AUTH)
     public ResponseEntity<Map<String, Object>> slaStats() {
         long breachedCount = incidentRepository.countBySlaBreachedTrue();
         long total = incidentRepository.count();

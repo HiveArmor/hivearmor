@@ -1,7 +1,5 @@
 package com.hivearmor.config;
 
-import com.hivearmor.domain.index_pattern.enums.SystemIndexPattern;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +48,6 @@ public final class Constants {
     // ----------------------------------------------------------------------------------
     // - Application constant
     // ----------------------------------------------------------------------------------
-    public static final Map<SystemIndexPattern, String> SYS_INDEX_PATTERN = new HashMap<>();
     public static final Map<String, String> CFG = new HashMap<>();
 
     // ----------------------------------------------------------------------------------

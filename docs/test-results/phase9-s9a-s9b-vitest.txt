@@ -1,0 +1,76 @@
+S-9A / S-9B Test Results
+========================
+Run date: 2026-07-21
+
+a11y-patterns.test.ts (19/19)
+------------------------------
+Toast: role=status and aria-live
+  ✓ has role="status" on container
+  ✓ has aria-live="polite"
+  ✓ close button has aria-label
+
+Sidebar: aria-label on collapse button
+  ✓ collapse button has aria-label
+  ✓ collapse button has aria-expanded
+  ✓ sub-expand button has aria-expanded
+
+WidgetCard: ARIA attributes
+  ✓ card has role="figure"
+  ✓ loading state has role=status
+  ✓ error state has role=alert
+  ✓ remove button has aria-label
+
+EntityBadge: aria-label
+  ✓ badge span has aria-label
+  ✓ icon is aria-hidden
+
+EntitySearchPanel: ARIA roles
+  ✓ search input has aria-label
+  ✓ type filter group has aria-label
+
+AiChatPanel: aria-live on thread
+  ✓ message thread has aria-live=polite
+  ✓ send button has aria-label
+  ✓ clear button has aria-label
+
+ActiveFiltersBar: role=status
+  ✓ has role="status"
+  ✓ remove filter button has aria-label
+
+query-stale-times.test.ts (7/7)
+---------------------------------
+dataset.service staleTime
+  ✓ useDatasets has staleTime Infinity
+
+alert.service staleTime
+  ✓ useAlertById has staleTime 0
+  ✓ useAlertTags has staleTime 120_000
+
+dashboard.service staleTime
+  ✓ useDashboards has staleTime 60_000
+  ✓ useDashboardVisualizations has staleTime 30_000
+
+saved-query.service staleTime
+  ✓ useSavedQueries has staleTime 120_000
+
+entity.service staleTime
+  ✓ entity hooks have staleTime 30_000
+
+S-9B Dynamic imports applied
+-----------------------------
+- frontend-v2/src/app/(app)/logs/page.tsx: LogTimelineHistogram → next/dynamic (ssr:false)
+- frontend-v2/src/app/(app)/hive-intelligence/page.tsx: AiChatPanel → next/dynamic (ssr:false)
+- frontend-v2/src/components/entities/entity-detail-tabs.tsx: InvestigationEntityGraph → next/dynamic (ssr:false)
+
+S-9B Per-query staleTime overrides
+------------------------------------
+- datasets:               Infinity  (static schema enum)
+- alert detail (byId):    0         (always fresh — status changes immediately)
+- alert tags:             120_000   (2 min — rarely change mid-session)
+- dashboards:             60_000    (1 min)
+- dashboard-widgets:      30_000    (30 s)
+- saved queries:          120_000   (2 min)
+- entity search/timeline: 30_000    (30 s)
+
+Total new tests this phase: 19 (a11y) + 7 (staleTime) + 3 (query-config) = 29
+All passing.

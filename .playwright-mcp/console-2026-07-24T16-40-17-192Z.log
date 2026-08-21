@@ -1,0 +1,10 @@
+[     148ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:17230
+[     192ms] [ERROR] AG Grid: error #239 Visit https://www.ag-grid.com/react-data-grid/errors/239?_version_=36.0.1 
+  Alternatively register the ValidationModule to see the full message in the console. @ http://localhost:3000/@vite/client:524
+[     193ms] [ERROR] AG Grid: error #200 Visit https://www.ag-grid.com/react-data-grid/errors/200?_version_=36.0.1&gridId=1&gridScoped=false&rowModelType=clientSide&isUmd=false&usesAgGridProvider=false&moduleName=Pagination&reasonOrId=pagination 
+  Alternatively register the ValidationModule to see the full message in the console. @ http://localhost:3000/@vite/client:524
+[     205ms] [ERROR] Failed to load resource: the server responded with a status of 400 (Bad Request) @ http://localhost:3000/api/ha-reports?repType=TEMPLATE:0
+[     205ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     205ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     206ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0
+[    5226ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/live-eps/stream:0

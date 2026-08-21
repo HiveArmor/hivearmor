@@ -1,0 +1,37 @@
+id: ha-net-015
+title: DNS Fast Flux Domain Detected
+status: stable
+description: Detects DNS responses where a domain resolves to a large number of distinct IP addresses in a short period, which is characteristic of fast-flux networks used by C2 infrastructure to rapidly rotate hosting and evade blocklists.
+logsource:
+  product: network
+  service: dns
+level: high
+tags:
+  - attack.command_and_control
+  - attack.T1568.001
+detection:
+  selection:
+    event.action: answer
+    dns.answers.type: A
+    dns.answers.ttl|lte: 300
+  condition: selection
+falsepositives:
+  - Global CDN providers with anycast DNS returning different nearest-edge IPs
+  - Large-scale load-balanced services with many A records and short TTLs
+fields:
+  - source.ip
+  - dns.question.name
+  - dns.answers.data
+  - dns.answers.ttl
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - dns.question.name
+  - dns.answers.data
+groupBy:
+  - dns.question.name
+mitre:
+  tactic: command-and-control
+  technique: T1568.001

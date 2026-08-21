@@ -1,0 +1,40 @@
+id: d2e3f4a5-b6c7-8901-defa-012345678922
+title: MSHTA Executing Suspicious Script Content
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.execution
+  - attack.defense_evasion
+  - attack.T1218
+  - attack.T1218.005
+detection:
+  selection:
+    Image|endswith: '\mshta.exe'
+    CommandLine|contains:
+      - 'vbscript:'
+      - 'javascript:'
+      - 'http://'
+      - 'https://'
+      - '.hta'
+  filter_sccm:
+    CommandLine|contains:
+      - 'sms_helper.hta'
+  condition: selection and not filter_sccm
+falsepositives:
+  - Legitimate HTA-based administrative applications
+  - SCCM software deployment wizards
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: execution
+  technique: T1218.005

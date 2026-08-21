@@ -1,0 +1,59 @@
+- generic [ref=f32e3]:
+  - banner [ref=f32e4]:
+    - generic [ref=f32e5]: HiveArmor
+    - generic [ref=f32e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f32e13]'
+      - generic "Reconnecting..." [ref=f32e16]: 0 EPS
+      - button "Notifications" [ref=f32e18] [cursor=pointer]
+      - button "Help" [ref=f32e23] [cursor=pointer]
+      - button "User menu" [ref=f32e28] [cursor=pointer]:
+        - generic [ref=f32e29]: AA
+        - generic [ref=f32e30]: admin
+  - navigation [ref=f32e31]:
+    - generic [ref=f32e32]:
+      - generic [ref=f32e33]:
+        - generic [ref=f32e34]: COMMAND
+        - generic [ref=f32e35]:
+          - button "Analyst Queue" [ref=f32e36] [cursor=pointer]
+          - button "Alerts" [ref=f32e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f32e47] [cursor=pointer]
+          - button "Incidents" [ref=f32e54] [cursor=pointer]
+      - generic [ref=f32e61]:
+        - generic [ref=f32e62]: INVESTIGATE
+        - generic [ref=f32e63]:
+          - button "Search & Hunt" [ref=f32e64] [cursor=pointer]
+          - button "Investigations" [ref=f32e70] [cursor=pointer]
+          - button "Entities" [ref=f32e75] [cursor=pointer]
+      - generic [ref=f32e83]:
+        - generic [ref=f32e84]: DEFEND
+        - generic [ref=f32e85]:
+          - button "Detection Rules" [ref=f32e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f32e91] [cursor=pointer]
+      - generic [ref=f32e96]:
+        - generic [ref=f32e97]: POSTURE
+        - generic [ref=f32e98]:
+          - button "Assets" [ref=f32e99] [cursor=pointer]
+          - button "Identities" [ref=f32e105] [cursor=pointer]
+          - button "Active Directory" [ref=f32e113] [cursor=pointer]
+          - button "Exposure" [ref=f32e121] [cursor=pointer]
+          - button "Sensors" [ref=f32e128] [cursor=pointer]
+          - button "Compliance" [ref=f32e133] [cursor=pointer]
+      - generic [ref=f32e139]:
+        - generic [ref=f32e140]: DASHBOARDS
+        - button "Studio" [ref=f32e142] [cursor=pointer]
+      - generic [ref=f32e148]:
+        - generic [ref=f32e149]: REPORT
+        - button "Scheduled Reports" [ref=f32e151] [cursor=pointer]
+      - generic [ref=f32e157]:
+        - generic [ref=f32e158]: ADMINISTRATION
+        - generic [ref=f32e159]:
+          - button "Users" [ref=f32e160] [cursor=pointer]
+          - button "Integrations" [ref=f32e175] [cursor=pointer]
+          - button "Notifications" [ref=f32e180] [cursor=pointer]
+          - button "Audit Log" [ref=f32e186] [cursor=pointer]
+          - button "Settings" [ref=f32e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f32e199] [cursor=pointer]
+  - main [ref=f32e202]:
+    - generic [ref=f32e203]:
+      - heading "Page Not Found" [level=1] [ref=f32e204]
+      - paragraph [ref=f32e205]: Placeholder page — implementation in later session.

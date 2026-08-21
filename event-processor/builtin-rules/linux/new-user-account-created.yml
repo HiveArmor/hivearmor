@@ -1,0 +1,38 @@
+id: ha-linux-012
+title: New User Account Created via useradd or adduser
+status: stable
+description: Detects execution of useradd or adduser commands which may indicate an attacker creating backdoor accounts for persistent access.
+logsource:
+  product: linux
+  service: auditd
+level: medium
+tags:
+  - attack.persistence
+  - attack.T1136.001
+detection:
+  selection:
+    type: EXECVE
+    a0:
+      - useradd
+      - adduser
+  condition: selection
+falsepositives:
+  - Authorized system administrators adding new users
+  - Software installation processes creating service accounts
+fields:
+  - a0
+  - a1
+  - uid
+  - comm
+impact:
+  confidentiality: low
+  integrity: high
+  availability: low
+deduplicateBy:
+  - a1
+  - uid
+groupBy:
+  - uid
+mitre:
+  tactic: persistence
+  technique: T1136.001

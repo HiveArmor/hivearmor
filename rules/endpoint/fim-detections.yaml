@@ -1,0 +1,184 @@
+# FIM Detection Rules — system binary and configuration modification
+# DataType: fim
+
+dataTypes:
+  - "fim"
+name: "FIM: System Binary Modified or Replaced"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: "Defense Evasion"
+technique: "T1574 - Hijack Execution Flow"
+adversary: origin
+description: "A system binary in /bin, /sbin, /usr/bin, /usr/sbin, or Windows System32 was modified or replaced. This is a strong indicator of rootkit installation, trojanized binaries, or a supply chain attack."
+references:
+  - "https://attack.mitre.org/techniques/T1574/"
+where: |
+  (safe("action", "") == "MODIFY" || safe("action", "") == "CREATE") &&
+  (
+    startsWith(safe("origin.path", ""), "/bin/") ||
+    startsWith(safe("origin.path", ""), "/sbin/") ||
+    startsWith(safe("origin.path", ""), "/usr/bin/") ||
+    startsWith(safe("origin.path", ""), "/usr/sbin/") ||
+    contains(toLower(safe("origin.path", "")), "\\system32\\") ||
+    contains(toLower(safe("origin.path", "")), "\\syswow64\\")
+  )
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+  - origin.sha256
+---
+# Rule: SSH authorized_keys modification
+dataTypes:
+  - "fim"
+name: "FIM: SSH authorized_keys File Modified"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: "Persistence"
+technique: "T1098.004 - Account Manipulation: SSH Authorized Keys"
+adversary: origin
+description: "An SSH authorized_keys file was created or modified. Attackers add SSH keys to maintain persistent access to compromised systems."
+references:
+  - "https://attack.mitre.org/techniques/T1098/004/"
+where: |
+  (safe("action", "") == "MODIFY" || safe("action", "") == "CREATE") &&
+  regexMatch(safe("origin.file", ""), "/\\.ssh/authorized_keys$")
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+# Rule: /etc/passwd or /etc/shadow modification
+dataTypes:
+  - "fim"
+name: "FIM: Password Database Modified (passwd/shadow)"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: "Persistence"
+technique: "T1136 - Create Account"
+adversary: origin
+description: "The /etc/passwd or /etc/shadow file was modified. This may indicate account creation, password change, or privilege escalation."
+references:
+  - "https://attack.mitre.org/techniques/T1136/"
+where: |
+  (safe("action", "") == "MODIFY" || safe("action", "") == "CREATE") &&
+  (
+    safe("origin.file", "") == "/etc/passwd" ||
+    safe("origin.file", "") == "/etc/shadow" ||
+    safe("origin.file", "") == "/etc/group"
+  )
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+# Rule: sudoers modification
+dataTypes:
+  - "fim"
+name: "FIM: Sudoers File Modified"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: "Privilege Escalation"
+technique: "T1548.003 - Sudo and Sudo Caching"
+adversary: origin
+description: "The /etc/sudoers file or a file in /etc/sudoers.d/ was modified. This could allow unprivileged users to execute commands as root."
+references:
+  - "https://attack.mitre.org/techniques/T1548/003/"
+where: |
+  (safe("action", "") == "MODIFY" || safe("action", "") == "CREATE") &&
+  (
+    safe("origin.file", "") == "/etc/sudoers" ||
+    startsWith(safe("origin.path", ""), "/etc/sudoers.d/")
+  )
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+# Rule: Cron job created or modified
+dataTypes:
+  - "fim"
+name: "FIM: Cron Job File Created or Modified"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 1
+category: "Persistence"
+technique: "T1053.003 - Scheduled Task/Job: Cron"
+adversary: origin
+description: "A cron job file was created or modified. Attackers use cron jobs for persistence to re-establish access after remediation."
+references:
+  - "https://attack.mitre.org/techniques/T1053/003/"
+where: |
+  (safe("action", "") == "CREATE" || safe("action", "") == "MODIFY") &&
+  (
+    startsWith(safe("origin.path", ""), "/etc/cron") ||
+    startsWith(safe("origin.path", ""), "/var/spool/cron") ||
+    safe("origin.file", "") == "/etc/crontab"
+  )
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+# Rule: systemd service unit file created
+dataTypes:
+  - "fim"
+name: "FIM: systemd Service Unit File Created"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: "Persistence"
+technique: "T1543.002 - Create or Modify System Process: Systemd Service"
+adversary: origin
+description: "A new systemd service unit file was created. Attackers install malicious services as a persistence mechanism."
+references:
+  - "https://attack.mitre.org/techniques/T1543/002/"
+where: |
+  safe("action", "") == "CREATE" &&
+  (
+    startsWith(safe("origin.path", ""), "/etc/systemd/") ||
+    startsWith(safe("origin.path", ""), "/lib/systemd/") ||
+    startsWith(safe("origin.path", ""), "/usr/lib/systemd/")
+  ) &&
+  endsWith(safe("origin.file", ""), ".service")
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+# Rule: LaunchDaemon / LaunchAgent plist created (macOS persistence)
+dataTypes:
+  - "fim"
+name: "FIM: macOS LaunchDaemon or LaunchAgent Created"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: "Persistence"
+technique: "T1543.004 - Launch Daemon"
+adversary: origin
+description: "A new plist file was created in a LaunchDaemons or LaunchAgents directory. This is a standard persistence technique on macOS."
+references:
+  - "https://attack.mitre.org/techniques/T1543/004/"
+where: |
+  safe("action", "") == "CREATE" &&
+  (
+    startsWith(safe("origin.path", ""), "/Library/LaunchDaemons/") ||
+    startsWith(safe("origin.path", ""), "/Library/LaunchAgents/") ||
+    startsWith(safe("origin.path", ""), "/System/Library/LaunchDaemons/")
+  ) &&
+  endsWith(safe("origin.file", ""), ".plist")
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file

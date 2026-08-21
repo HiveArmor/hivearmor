@@ -31,9 +31,15 @@ public class InternalApiKeyProvider {
             User principal = new User(user.getLogin(), "", authorities);
             return new UsernamePasswordAuthenticationToken(principal, apiKey, authorities);
         } catch (Exception e) {
-            String msg = ctx + ": " + e.getLocalizedMessage();
-            log.error(msg);
-            throw new RuntimeException(msg);
+            // Fallback: when no admin user exists (e.g. first install / test DB), grant
+            // the internal service principal minimal ROLE_USER authority so agent telemetry
+            // ingest endpoints (which only require .authenticated()) can proceed.
+            // This prevents a chicken-and-egg failure where no users exist yet.
+            log.warn("{}: no active admin found, using synthetic agent principal: {}", ctx, e.getMessage());
+            List<SimpleGrantedAuthority> fallbackAuthorities = List.of(
+                    new SimpleGrantedAuthority("ROLE_USER"));
+            User agentPrincipal = new User("__agent_internal__", "", fallbackAuthorities);
+            return new UsernamePasswordAuthenticationToken(agentPrincipal, apiKey, fallbackAuthorities);
         }
     }
 

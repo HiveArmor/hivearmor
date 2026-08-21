@@ -1,0 +1,47 @@
+Sprint: S-5D — Investigation Sessions Frontend
+Date: 2026-07-21
+TS errors (before): 0
+TS errors (after):  0
+
+Test results
+------------
+Tests before: 505
+Tests added:  30
+Tests after:  535
+Pass:         535
+Fail:         0
+
+New test files
+--------------
+- frontend-v2/src/services/__tests__/session.service.test.ts        (20 tests)
+  - list(): correct URL params, X-Total-Count header, 500 returns empty, Authorization header
+  - create(): POST to correct URL
+  - get(): GET /api/ha-investigation-sessions/{id}
+  - convertToIncident(): POST to convert-to-incident, returns {incidentId}
+  - pinItem(): POST to /items with correct body
+  - unpinItem(): DELETE to /items/{itemId}
+
+- frontend-v2/src/components/sessions/__tests__/sessions-list.test.ts  (10 tests)
+  - getStatusChipColour: ACTIVE→ha-primary, CONVERTED→ha-intelligence, CLOSED→grey, unknown→grey
+  - canConvert: true only for ACTIVE
+  - canDelete: owner allowed, admin allowed, non-owner/non-admin denied
+  - itemCountLabel: singular/plural
+  - sessionItemPreview: NOTE type, LOG_EVENT type, truncation, fallback
+
+Files created
+-------------
+- frontend-v2/src/services/session.service.ts
+- frontend-v2/src/store/session-store.ts
+- frontend-v2/src/app/(app)/sessions/page.tsx           (replaces placeholder)
+- frontend-v2/src/app/(app)/sessions/[id]/page.tsx
+- frontend-v2/src/components/sessions/session-item-list.tsx
+- frontend-v2/src/components/sessions/session-header.tsx
+- frontend-v2/src/services/__tests__/session.service.test.ts
+- frontend-v2/src/components/sessions/__tests__/sessions-list.test.ts
+
+Files modified
+--------------
+- frontend-v2/src/app/(app)/logs/page.tsx
+    Added: session pinning state, toolbar chip, pin dialog, onPinToSession wire-up
+- frontend-v2/src/components/logs/log-results-table.tsx
+    Added: onPinToSession optional prop, PlusCircle button per row

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/hivearmor/event-processor/agentprefix"
 	"github.com/hivearmor/event-processor/compliance"
 	"github.com/hivearmor/event-processor/config"
 	"github.com/hivearmor/event-processor/enrichment"
@@ -18,19 +19,25 @@ import (
 	"github.com/hivearmor/event-processor/enterprise/lookup"
 	"github.com/hivearmor/event-processor/enterprise/offense"
 	"github.com/hivearmor/event-processor/enterprise/risk"
+	"github.com/hivearmor/event-processor/enterprise/sequence"
+	"github.com/hivearmor/event-processor/geo"
 	enginegrpc "github.com/hivearmor/event-processor/grpc"
 	enginehttp "github.com/hivearmor/event-processor/http"
 	enginekafka "github.com/hivearmor/event-processor/kafka"
 	"github.com/hivearmor/event-processor/pipeline"
 	"github.com/hivearmor/event-processor/rules"
 	"github.com/hivearmor/event-processor/writer"
-	"github.com/threatwinds/go-sdk/plugins"
-	sdkos "github.com/threatwinds/go-sdk/os"
+	sdkos "github.com/hivearmor/sdk/os"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	if err := config.RejectInsecureDefaults(); err != nil {
+		log.Fatal(err)
+	}
 
 	workDir := config.WorkDir
 	osURL := config.OpenSearchURL()
@@ -40,6 +47,13 @@ func main() {
 	// OpenSearch singleton connection
 	if err := sdkos.Connect([]string{osURL}, osUser, osPass); err != nil {
 		log.Printf("warn: OpenSearch connect failed: %v — continuing without SDK bulk writer", err)
+	}
+
+	prefixDB, err := agentprefix.Register(config.PostgresDSN())
+	if err != nil {
+		log.Printf("warn: agent prefix lookup unavailable — tenant-scoped events will use the global daily index")
+	} else {
+		defer prefixDB.Close()
 	}
 
 	// Pipeline filter loader
@@ -56,6 +70,13 @@ func main() {
 	// Enrichment
 	enrichment.SetGeoDir(filepath.Join(workDir, "geolocation"))
 	enrichment.InitGeo()
+
+	// MMDB geo fallback — non-aborting; logs a warning if the file is missing or invalid.
+	if err := geo.Init(os.Getenv("GEOIP_DB_PATH")); err != nil {
+		log.Printf("warn: geo.Init: %v", err)
+	}
+	defer geo.Close()
+
 	enrichment.InitFeeds(osURL, osUser, osPass)
 	enrichment.InitGraph(osURL, osUser, osPass)
 
@@ -70,12 +91,26 @@ func main() {
 	// Enterprise features
 	lookup.Init(osURL, osUser, osPass)
 	baseline.Init(osURL, osUser, osPass)
+	baseline.InitEvaluator(func(alert *plugins.Alert) {
+		writer.WriteAlert(alert)
+		offense.Process(alert)
+	})
 	offense.Init(osURL, osUser, osPass)
 	risk.Init(func(alert *plugins.Alert) {
 		writer.WriteAlert(alert)
 		offense.Process(alert)
 	})
 	rules.SetAddScoreFn(risk.AddScore)
+
+	// Sequence detection engine
+	seqRules := rules.SequenceRules()
+	if len(seqRules) > 0 {
+		sequence.Init(seqRules, func(alert *plugins.Alert) {
+			writer.WriteAlert(alert)
+			offense.Process(alert)
+		})
+		log.Printf("Sequence detection initialized with %d rules", len(seqRules))
+	}
 
 	// Graph offense evaluator — runs Cypher kill-chain queries against Neo4j
 	if config.Neo4jEnabled == "true" {
@@ -130,8 +165,12 @@ func main() {
 	}
 
 	// HTTP servers
-	enginehttp.StartPublicServer()  // :8000 — backend API
-	enginehttp.StartIngestServer()  // :8090 — test inject endpoint
+	enginehttp.StartPublicServer() // :8000 — backend API
+	if config.InjectEnabled() {
+		enginehttp.StartIngestServer() // :8090 — test inject, lab only
+	} else {
+		log.Printf("inject listener disabled")
+	}
 
 	fmt.Printf("HiveArmor event-processor started | workDir=%s | OS=%s\n", workDir, osURL)
 

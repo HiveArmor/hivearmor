@@ -1,0 +1,47 @@
+Phase 5 — Search & Hunt Enhancements — Combined Backend Test Results
+====================================================================
+Date: 2026-07-21
+
+Sprint breakdown
+----------------
+
+S-5B — Saved Queries Backend
+  Backend integration test: SavedQueryResourceIT.java (8 tests)
+  Run: cd backend && mvn -s settings.xml test -Dtest=SavedQueryResourceIT
+  Tests:
+    - POST → 201
+    - READ_ONLY POST → 403
+    - GET list → 200 + X-Total-Count
+    - READ_ONLY GET → 200
+    - PUT own query → 200
+    - PUT other user's query → 403
+    - DELETE own query → 204
+    - DELETE other user's query → 403
+
+S-5C — Investigation Sessions Backend
+  Backend integration test: InvestigationSessionResourceIT.java (11 tests)
+  Run: cd backend && mvn -s settings.xml test -Dtest=InvestigationSessionResourceIT
+  Tests:
+    - createSession → 201
+    - READ_ONLY POST → 403
+    - listSessions → 200 + X-Total-Count
+    - adminSeesAll → ADMIN sees all users' sessions
+    - readOnly GET → 200
+    - pinItem → 201
+    - listItems → 200
+    - listItems with ?type= filter
+    - unpinItem → 204
+    - unpinItem other user's item → 403
+    - convertToIncident → 200 with {incidentId}
+
+Phase 5 backend summary
+-----------------------
+Backend test classes: 2
+Total backend tests:  19
+Note: These require `cd backend && mvn -s settings.xml test` to verify.
+      Cannot be run in the Claude Code sandbox (no JVM/Maven access).
+
+Liquibase migrations added in Phase 5
+--------------------------------------
+  20260721002_add_saved_queries.xml      — hive_saved_query table
+  20260721003_add_investigation_sessions.xml — hive_investigation_session + hive_session_item tables

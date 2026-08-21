@@ -1,0 +1,40 @@
+id: f2a3b4c5-d6e7-8901-fabc-012345678912
+title: RDP Session Hijacking via tscon
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.lateral_movement
+  - attack.T1563
+  - attack.T1563.002
+detection:
+  selection:
+    Image|endswith: '\tscon.exe'
+    CommandLine|contains:
+      - '/dest:console'
+      - '/dest:rdp'
+  selection_service:
+    CommandLine|contains:
+      - 'tscon'
+    ParentImage|endswith:
+      - '\services.exe'
+      - '\cmd.exe'
+      - '\powershell.exe'
+  condition: selection or selection_service
+falsepositives:
+  - Legitimate remote desktop management by administrators
+  - Remote IT support operations
+impact:
+  confidentiality: high
+  integrity: high
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - User
+groupBy:
+  - ComputerName
+mitre:
+  tactic: lateral-movement
+  technique: T1563.002

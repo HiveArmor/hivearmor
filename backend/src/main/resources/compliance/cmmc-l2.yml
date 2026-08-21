@@ -1,0 +1,615 @@
+framework:
+  id: CMMC-L2
+  name: Cybersecurity Maturity Model Certification Level 2
+  shortName: CMMC L2
+  version: "2.0"
+  description: >
+    CMMC Level 2 aligns with NIST SP 800-171 Rev 3 requirements for protecting
+    Controlled Unclassified Information in nonfederal systems and organizations.
+
+families:
+  - id: AC
+    name: Access Control
+    controls:
+      - id: CMMC-AC.L2-3.1.1
+        name: Limit system access to authorized users and transactions
+        description: Limit information system access to authorized users, processes acting on behalf of authorized users, or devices (including other information systems).
+        severity: high
+        nistRef: AC-L2-3.1.1
+      - id: CMMC-AC.L2-3.1.2
+        name: Limit system access to authorized functions
+        description: Limit information system access to the types of transactions and functions that authorized users are permitted to execute.
+        severity: high
+        nistRef: AC-L2-3.1.2
+      - id: CMMC-AC.L2-3.1.3
+        name: Control the flow of CUI in accordance with approved authorizations
+        description: Control the flow of CUI in accordance with approved authorizations.
+        severity: high
+        nistRef: AC-L2-3.1.3
+      - id: CMMC-AC.L2-3.1.4
+        name: Separate the duties of individuals to reduce risk
+        description: Separate the duties of individuals to reduce the risk of malevolent activity without collusion.
+        severity: medium
+        nistRef: AC-L2-3.1.4
+      - id: CMMC-AC.L2-3.1.5
+        name: Employ the principle of least privilege
+        description: Employ the principle of least privilege, including for specific security functions and privileged accounts.
+        severity: high
+        nistRef: AC-L2-3.1.5
+      - id: CMMC-AC.L2-3.1.6
+        name: Use non-privileged accounts when accessing nonsecurity functions
+        description: Use non-privileged accounts or roles when accessing nonsecurity functions.
+        severity: medium
+        nistRef: AC-L2-3.1.6
+      - id: CMMC-AC.L2-3.1.7
+        name: Prevent non-privileged users from executing privileged functions
+        description: Prevent non-privileged users from executing privileged functions and capture the execution in audit logs.
+        severity: high
+        nistRef: AC-L2-3.1.7
+      - id: CMMC-AC.L2-3.1.8
+        name: Limit unsuccessful logon attempts
+        description: Limit unsuccessful logon attempts.
+        severity: high
+        nistRef: AC-L2-3.1.8
+      - id: CMMC-AC.L2-3.1.9
+        name: Provide privacy and security notices consistent with CUI rules
+        description: Provide privacy and security notices consistent with applicable CUI rules.
+        severity: low
+        nistRef: AC-L2-3.1.9
+      - id: CMMC-AC.L2-3.1.10
+        name: Use session lock with pattern-hiding displays
+        description: Use session lock with pattern-hiding displays to prevent access and viewing of data after a period of inactivity.
+        severity: medium
+        nistRef: AC-L2-3.1.10
+      - id: CMMC-AC.L2-3.1.11
+        name: Terminate user sessions after a defined condition
+        description: Terminate (automatically) a user session after a defined condition.
+        severity: medium
+        nistRef: AC-L2-3.1.11
+      - id: CMMC-AC.L2-3.1.12
+        name: Monitor and control remote access sessions
+        description: Monitor and control remote access sessions.
+        severity: high
+        nistRef: AC-L2-3.1.12
+      - id: CMMC-AC.L2-3.1.13
+        name: Employ cryptographic mechanisms to protect remote access
+        description: Employ cryptographic mechanisms to protect the confidentiality of remote access sessions.
+        severity: high
+        nistRef: AC-L2-3.1.13
+      - id: CMMC-AC.L2-3.1.14
+        name: Route remote access via managed access control points
+        description: Route remote access via managed access control points.
+        severity: high
+        nistRef: AC-L2-3.1.14
+      - id: CMMC-AC.L2-3.1.15
+        name: Authorize remote execution of privileged commands
+        description: Authorize remote execution of privileged commands and remote access to security-relevant information.
+        severity: high
+        nistRef: AC-L2-3.1.15
+      - id: CMMC-AC.L2-3.1.16
+        name: Authorize wireless access prior to connection
+        description: Authorize wireless access prior to allowing such connections.
+        severity: medium
+        nistRef: AC-L2-3.1.16
+      - id: CMMC-AC.L2-3.1.17
+        name: Protect wireless access using authentication and encryption
+        description: Protect wireless access using authentication and encryption.
+        severity: high
+        nistRef: AC-L2-3.1.17
+      - id: CMMC-AC.L2-3.1.18
+        name: Control connection of mobile devices
+        description: Control connection of mobile devices.
+        severity: medium
+        nistRef: AC-L2-3.1.18
+      - id: CMMC-AC.L2-3.1.19
+        name: Encrypt CUI on mobile devices and mobile computing platforms
+        description: Encrypt CUI on mobile devices and mobile computing platforms.
+        severity: high
+        nistRef: AC-L2-3.1.19
+      - id: CMMC-AC.L2-3.1.20
+        name: Verify and control connections to external systems
+        description: Verify and control/limit connections to and use of external systems.
+        severity: high
+        nistRef: AC-L2-3.1.20
+      - id: CMMC-AC.L2-3.1.21
+        name: Limit use of portable storage devices on external systems
+        description: Limit use of organizational portable storage devices on external systems.
+        severity: medium
+        nistRef: AC-L2-3.1.21
+      - id: CMMC-AC.L2-3.1.22
+        name: Control CUI posted or processed on publicly accessible systems
+        description: Control CUI posted or processed on publicly accessible systems.
+        severity: high
+        nistRef: AC-L2-3.1.22
+
+  - id: AT
+    name: Awareness and Training
+    controls:
+      - id: CMMC-AT.L2-3.2.1
+        name: Ensure personnel are aware of security risks associated with their activities
+        description: Ensure that managers, systems administrators, and users of organizational systems are made aware of the security risks associated with their activities and of the applicable policies, standards, and procedures related to the security of those systems.
+        severity: medium
+        nistRef: AT-L2-3.2.1
+      - id: CMMC-AT.L2-3.2.2
+        name: Ensure personnel are trained to carry out assigned security responsibilities
+        description: Ensure that personnel are trained to carry out their assigned information security-related duties and responsibilities.
+        severity: medium
+        nistRef: AT-L2-3.2.2
+      - id: CMMC-AT.L2-3.2.3
+        name: Provide security awareness training on recognizing social engineering
+        description: Provide security awareness training on recognizing and reporting potential indicators of insider threat.
+        severity: medium
+        nistRef: AT-L2-3.2.3
+
+  - id: AU
+    name: Audit and Accountability
+    controls:
+      - id: CMMC-AU.L2-3.3.1
+        name: Create and retain system audit logs and records
+        description: Create and retain system audit logs and records to the extent needed to enable the monitoring, analysis, investigation, and reporting of unlawful or unauthorized system activity.
+        severity: high
+        nistRef: AU-L2-3.3.1
+      - id: CMMC-AU.L2-3.3.2
+        name: Ensure actions of individual users can be uniquely traced
+        description: Ensure that the actions of individual system users can be uniquely traced to those users so they can be held accountable for their actions.
+        severity: high
+        nistRef: AU-L2-3.3.2
+      - id: CMMC-AU.L2-3.3.3
+        name: Review and update logged events
+        description: Review and update logged events.
+        severity: medium
+        nistRef: AU-L2-3.3.3
+      - id: CMMC-AU.L2-3.3.4
+        name: Alert in the event of an audit logging process failure
+        description: Alert in the event of an audit logging process failure.
+        severity: high
+        nistRef: AU-L2-3.3.4
+      - id: CMMC-AU.L2-3.3.5
+        name: Correlate audit record review and reporting processes
+        description: Correlate audit record review, analysis, and reporting processes for investigation and response to indications of unlawful, unauthorized, suspicious, or unusual activity.
+        severity: high
+        nistRef: AU-L2-3.3.5
+      - id: CMMC-AU.L2-3.3.6
+        name: Provide audit record reduction and report generation
+        description: Provide audit record reduction and report generation to support on-demand analysis and reporting.
+        severity: medium
+        nistRef: AU-L2-3.3.6
+      - id: CMMC-AU.L2-3.3.7
+        name: Provide a system capability to compare and synchronize clocks
+        description: Provide a system capability that compares and synchronizes internal system clocks with an authoritative source to generate time stamps for audit records.
+        severity: medium
+        nistRef: AU-L2-3.3.7
+      - id: CMMC-AU.L2-3.3.8
+        name: Protect audit information from unauthorized access and modification
+        description: Protect audit information and audit logging tools from unauthorized access, modification, and deletion.
+        severity: high
+        nistRef: AU-L2-3.3.8
+      - id: CMMC-AU.L2-3.3.9
+        name: Limit management of audit logging to a subset of privileged users
+        description: Limit management of audit logging functionality to a subset of privileged users.
+        severity: high
+        nistRef: AU-L2-3.3.9
+
+  - id: CA
+    name: Security Assessment
+    controls:
+      - id: CMMC-CA.L2-3.12.1
+        name: Periodically assess security controls in organizational systems
+        description: Periodically assess the security controls in organizational systems to determine if the controls are effective in their application.
+        severity: high
+        nistRef: CA-L2-3.12.1
+      - id: CMMC-CA.L2-3.12.2
+        name: Develop and implement plans of action to correct deficiencies
+        description: Develop and implement plans of action designed to correct deficiencies and reduce or eliminate vulnerabilities in organizational systems.
+        severity: high
+        nistRef: CA-L2-3.12.2
+      - id: CMMC-CA.L2-3.12.3
+        name: Monitor security controls on an ongoing basis
+        description: Monitor security controls on an ongoing basis to ensure the continued effectiveness of the controls.
+        severity: high
+        nistRef: CA-L2-3.12.3
+      - id: CMMC-CA.L2-3.12.4
+        name: Develop and update system security plans
+        description: Develop, document, and periodically update system security plans that describe system boundaries, system environments of operation, how security requirements are implemented, and the relationships with or connections to other systems.
+        severity: medium
+        nistRef: CA-L2-3.12.4
+
+  - id: CM
+    name: Configuration Management
+    controls:
+      - id: CMMC-CM.L2-3.4.1
+        name: Establish and maintain baseline configurations and system inventories
+        description: Establish and maintain baseline configurations and inventories of organizational systems throughout their life cycles.
+        severity: high
+        nistRef: CM-L2-3.4.1
+      - id: CMMC-CM.L2-3.4.2
+        name: Establish and enforce security configuration settings
+        description: Establish and enforce security configuration settings for information technology products employed in organizational systems.
+        severity: high
+        nistRef: CM-L2-3.4.2
+      - id: CMMC-CM.L2-3.4.3
+        name: Track, review, approve, and log changes to organizational systems
+        description: Track, review, approve or disapprove, and log changes to organizational systems.
+        severity: high
+        nistRef: CM-L2-3.4.3
+      - id: CMMC-CM.L2-3.4.4
+        name: Analyze the security impact of changes prior to implementation
+        description: Analyze the security impact of changes prior to implementation.
+        severity: medium
+        nistRef: CM-L2-3.4.4
+      - id: CMMC-CM.L2-3.4.5
+        name: Define and enforce physical and logical access restrictions
+        description: Define, document, approve, and enforce physical and logical access restrictions associated with changes to organizational systems.
+        severity: high
+        nistRef: CM-L2-3.4.5
+      - id: CMMC-CM.L2-3.4.6
+        name: Employ the principle of least functionality
+        description: Employ the principle of least functionality by configuring organizational systems to provide only essential capabilities.
+        severity: high
+        nistRef: CM-L2-3.4.6
+      - id: CMMC-CM.L2-3.4.7
+        name: Restrict, disable, or prevent nonessential programs and functions
+        description: Restrict, disable, or prevent the use of nonessential programs, functions, ports, protocols, and services.
+        severity: high
+        nistRef: CM-L2-3.4.7
+      - id: CMMC-CM.L2-3.4.8
+        name: Apply deny-by-exception policy to prevent unauthorized software
+        description: Apply deny-by-exception (blacklisting) policy to prevent the use of unauthorized software or deny-all, permit-by-exception (whitelisting) policy to allow the execution of authorized software.
+        severity: high
+        nistRef: CM-L2-3.4.8
+      - id: CMMC-CM.L2-3.4.9
+        name: Control and monitor user-installed software
+        description: Control and monitor user-installed software.
+        severity: medium
+        nistRef: CM-L2-3.4.9
+
+  - id: IA
+    name: Identification and Authentication
+    controls:
+      - id: CMMC-IA.L2-3.5.1
+        name: Identify system users, processes, and devices
+        description: Identify system users, processes acting on behalf of users, and devices.
+        severity: high
+        nistRef: IA-L2-3.5.1
+      - id: CMMC-IA.L2-3.5.2
+        name: Authenticate the identities of users, processes, and devices
+        description: Authenticate (or verify) the identities of users, processes, or devices, as a prerequisite to allowing access to organizational systems.
+        severity: critical
+        nistRef: IA-L2-3.5.2
+      - id: CMMC-IA.L2-3.5.3
+        name: Use multifactor authentication for local and network access
+        description: Use multifactor authentication for local and network access to privileged accounts and for network access to non-privileged accounts.
+        severity: critical
+        nistRef: IA-L2-3.5.3
+      - id: CMMC-IA.L2-3.5.4
+        name: Employ replay-resistant authentication mechanisms
+        description: Employ replay-resistant authentication mechanisms for network access to privileged and non-privileged accounts.
+        severity: high
+        nistRef: IA-L2-3.5.4
+      - id: CMMC-IA.L2-3.5.5
+        name: Prevent reuse of identifiers for a defined period
+        description: Prevent reuse of identifiers for a defined period.
+        severity: medium
+        nistRef: IA-L2-3.5.5
+      - id: CMMC-IA.L2-3.5.6
+        name: Disable identifiers after a defined period of inactivity
+        description: Disable identifiers after a defined period of inactivity.
+        severity: medium
+        nistRef: IA-L2-3.5.6
+      - id: CMMC-IA.L2-3.5.7
+        name: Enforce a minimum password complexity
+        description: Enforce a minimum password complexity and change of characters when new passwords are created.
+        severity: high
+        nistRef: IA-L2-3.5.7
+      - id: CMMC-IA.L2-3.5.8
+        name: Prohibit password reuse for a specified number of generations
+        description: Prohibit password reuse for a specified number of generations.
+        severity: medium
+        nistRef: IA-L2-3.5.8
+      - id: CMMC-IA.L2-3.5.9
+        name: Allow temporary password use for system logons with immediate change
+        description: Allow temporary password use for system logons with an immediate change to a permanent password.
+        severity: medium
+        nistRef: IA-L2-3.5.9
+      - id: CMMC-IA.L2-3.5.10
+        name: Store and transmit only cryptographically protected passwords
+        description: Store and transmit only cryptographically-protected passwords.
+        severity: high
+        nistRef: IA-L2-3.5.10
+      - id: CMMC-IA.L2-3.5.11
+        name: Obscure feedback of authentication information
+        description: Obscure feedback of authentication information.
+        severity: medium
+        nistRef: IA-L2-3.5.11
+
+  - id: IR
+    name: Incident Response
+    controls:
+      - id: CMMC-IR.L2-3.6.1
+        name: Establish an operational incident handling capability
+        description: Establish an operational incident-handling capability for organizational systems that includes preparation, detection, analysis, containment, recovery, and user response activities.
+        severity: high
+        nistRef: IR-L2-3.6.1
+      - id: CMMC-IR.L2-3.6.2
+        name: Track, document, and report incidents
+        description: Track, document, and report incidents to designated officials and/or authorities both internal and external to the organization.
+        severity: high
+        nistRef: IR-L2-3.6.2
+      - id: CMMC-IR.L2-3.6.3
+        name: Test the organizational incident response capability
+        description: Test the organizational incident response capability.
+        severity: medium
+        nistRef: IR-L2-3.6.3
+
+  - id: MA
+    name: Maintenance
+    controls:
+      - id: CMMC-MA.L2-3.7.1
+        name: Perform maintenance on organizational systems
+        description: Perform maintenance on organizational systems.
+        severity: medium
+        nistRef: MA-L2-3.7.1
+      - id: CMMC-MA.L2-3.7.2
+        name: Provide controls on maintenance tools and activities
+        description: Provide controls on the tools, techniques, mechanisms, and personnel used to conduct system maintenance.
+        severity: medium
+        nistRef: MA-L2-3.7.2
+      - id: CMMC-MA.L2-3.7.3
+        name: Ensure sanitization of equipment removed for off-site maintenance
+        description: Ensure equipment removed for off-site maintenance is sanitized of any CUI.
+        severity: high
+        nistRef: MA-L2-3.7.3
+      - id: CMMC-MA.L2-3.7.4
+        name: Check media containing diagnostic programs for malicious code
+        description: Check media containing diagnostic and test programs for malicious code before the media are used in the system.
+        severity: medium
+        nistRef: MA-L2-3.7.4
+      - id: CMMC-MA.L2-3.7.5
+        name: Require multifactor authentication for nonlocal maintenance
+        description: Require multifactor authentication to establish nonlocal maintenance sessions via external network connections and terminate such connections when nonlocal maintenance is complete.
+        severity: high
+        nistRef: MA-L2-3.7.5
+      - id: CMMC-MA.L2-3.7.6
+        name: Supervise maintenance activities of personnel without required access
+        description: Supervise the maintenance activities of maintenance personnel without required access authorization.
+        severity: medium
+        nistRef: MA-L2-3.7.6
+
+  - id: MP
+    name: Media Protection
+    controls:
+      - id: CMMC-MP.L2-3.8.1
+        name: Protect system media containing CUI both paper and digital
+        description: Protect (i.e., physically control and securely store) system media containing CUI, both paper and digital.
+        severity: medium
+        nistRef: MP-L2-3.8.1
+      - id: CMMC-MP.L2-3.8.2
+        name: Limit access to CUI on system media to authorized users
+        description: Limit access to CUI on system media to authorized users.
+        severity: medium
+        nistRef: MP-L2-3.8.2
+      - id: CMMC-MP.L2-3.8.3
+        name: Sanitize or destroy system media before disposal or reuse
+        description: Sanitize or destroy system media containing CUI before disposal or release for reuse.
+        severity: high
+        nistRef: MP-L2-3.8.3
+      - id: CMMC-MP.L2-3.8.4
+        name: Mark media with necessary CUI markings and distribution limitations
+        description: Mark media with necessary CUI markings and distribution limitations.
+        severity: low
+        nistRef: MP-L2-3.8.4
+      - id: CMMC-MP.L2-3.8.5
+        name: Control access to media containing CUI during transport
+        description: Control access to media containing CUI and maintain accountability for media during transport outside of controlled areas.
+        severity: medium
+        nistRef: MP-L2-3.8.5
+      - id: CMMC-MP.L2-3.8.6
+        name: Implement cryptographic mechanisms to protect CUI during transport
+        description: Implement cryptographic mechanisms to protect the confidentiality of CUI stored on digital media during transport unless otherwise protected by alternative physical safeguards.
+        severity: high
+        nistRef: MP-L2-3.8.6
+      - id: CMMC-MP.L2-3.8.7
+        name: Control the use of removable media on system components
+        description: Control the use of removable media on system components.
+        severity: medium
+        nistRef: MP-L2-3.8.7
+      - id: CMMC-MP.L2-3.8.8
+        name: Prohibit use of portable storage when owner cannot be identified
+        description: Prohibit the use of portable storage devices when such devices have no identifiable owner.
+        severity: medium
+        nistRef: MP-L2-3.8.8
+      - id: CMMC-MP.L2-3.8.9
+        name: Protect the confidentiality of backup CUI at storage locations
+        description: Protect the confidentiality of backup CUI at storage locations.
+        severity: medium
+        nistRef: MP-L2-3.8.9
+
+  - id: PE
+    name: Physical Protection
+    controls:
+      - id: CMMC-PE.L2-3.10.1
+        name: Limit physical access to organizational systems and equipment
+        description: Limit physical access to organizational information systems, equipment, and the respective operating environments to authorized individuals.
+        severity: high
+        nistRef: PE-L2-3.10.1
+      - id: CMMC-PE.L2-3.10.2
+        name: Protect and monitor the physical facility and support infrastructure
+        description: Protect and monitor the physical facility and support infrastructure for organizational systems.
+        severity: high
+        nistRef: PE-L2-3.10.2
+      - id: CMMC-PE.L2-3.10.3
+        name: Escort visitors and monitor visitor activity
+        description: Escort visitors and monitor visitor activity.
+        severity: medium
+        nistRef: PE-L2-3.10.3
+      - id: CMMC-PE.L2-3.10.4
+        name: Maintain audit logs of physical access
+        description: Maintain audit logs of physical access.
+        severity: medium
+        nistRef: PE-L2-3.10.4
+      - id: CMMC-PE.L2-3.10.5
+        name: Control and manage physical access devices
+        description: Control and manage physical access devices.
+        severity: medium
+        nistRef: PE-L2-3.10.5
+      - id: CMMC-PE.L2-3.10.6
+        name: Enforce safeguarding measures for CUI at alternate work sites
+        description: Enforce safeguarding measures for CUI at alternate work sites.
+        severity: medium
+        nistRef: PE-L2-3.10.6
+
+  - id: PS
+    name: Personnel Security
+    controls:
+      - id: CMMC-PS.L2-3.9.1
+        name: Screen individuals prior to authorizing access to systems with CUI
+        description: Screen individuals prior to authorizing access to organizational systems containing CUI.
+        severity: high
+        nistRef: PS-L2-3.9.1
+      - id: CMMC-PS.L2-3.9.2
+        name: Ensure CUI is protected during and after personnel actions
+        description: Ensure that organizational systems containing CUI are protected during and after personnel actions such as terminations and transfers.
+        severity: high
+        nistRef: PS-L2-3.9.2
+
+  - id: RA
+    name: Risk Assessment
+    controls:
+      - id: CMMC-RA.L2-3.11.1
+        name: Periodically assess the risk to organizational operations and assets
+        description: Periodically assess the risk to organizational operations (including mission, functions, image, or reputation), organizational assets, and individuals, resulting from the operation of organizational systems and the associated processing, storage, or transmission of CUI.
+        severity: high
+        nistRef: RA-L2-3.11.1
+      - id: CMMC-RA.L2-3.11.2
+        name: Scan for vulnerabilities periodically and when new vulnerabilities are identified
+        description: Scan for vulnerabilities in organizational systems and applications periodically and when new vulnerabilities affecting those systems and applications are identified.
+        severity: high
+        nistRef: RA-L2-3.11.2
+      - id: CMMC-RA.L2-3.11.3
+        name: Remediate vulnerabilities in accordance with risk assessments
+        description: Remediate vulnerabilities in accordance with risk assessments.
+        severity: high
+        nistRef: RA-L2-3.11.3
+
+  - id: SC
+    name: System and Communications Protection
+    controls:
+      - id: CMMC-SC.L2-3.13.1
+        name: Monitor, control, and protect communications at external boundaries
+        description: Monitor, control, and protect communications (i.e., information transmitted or received by organizational systems) at the external boundaries and key internal boundaries of organizational systems.
+        severity: critical
+        nistRef: SC-L2-3.13.1
+      - id: CMMC-SC.L2-3.13.2
+        name: Employ architectural designs and techniques for defense in depth
+        description: Employ architectural designs, software development techniques, and systems engineering principles that promote effective information security within organizational systems.
+        severity: high
+        nistRef: SC-L2-3.13.2
+      - id: CMMC-SC.L2-3.13.3
+        name: Separate user functionality from system management functionality
+        description: Separate user functionality from system management functionality.
+        severity: high
+        nistRef: SC-L2-3.13.3
+      - id: CMMC-SC.L2-3.13.4
+        name: Prevent unauthorized and unintended information transfer
+        description: Prevent unauthorized and unintended information transfer via shared system resources.
+        severity: high
+        nistRef: SC-L2-3.13.4
+      - id: CMMC-SC.L2-3.13.5
+        name: Implement subnetworks for publicly accessible system components
+        description: Implement subnetworks for publicly accessible system components that are physically or logically separated from internal networks.
+        severity: high
+        nistRef: SC-L2-3.13.5
+      - id: CMMC-SC.L2-3.13.6
+        name: Deny network communications traffic by default
+        description: Deny network communications traffic by default and allow network communications traffic by exception (i.e., deny all, permit by exception).
+        severity: high
+        nistRef: SC-L2-3.13.6
+      - id: CMMC-SC.L2-3.13.7
+        name: Prevent remote devices from establishing split tunneling
+        description: Prevent remote devices from simultaneously establishing non-remote connections with organizational systems and communicating via some other connection to resources in external networks (i.e., split tunneling).
+        severity: medium
+        nistRef: SC-L2-3.13.7
+      - id: CMMC-SC.L2-3.13.8
+        name: Implement cryptographic mechanisms to prevent unauthorized disclosure
+        description: Implement cryptographic mechanisms to prevent unauthorized disclosure of CUI during transmission unless otherwise protected by alternative physical safeguards.
+        severity: high
+        nistRef: SC-L2-3.13.8
+      - id: CMMC-SC.L2-3.13.9
+        name: Terminate network connections at the end of sessions
+        description: Terminate network connections associated with communications sessions at the end of the sessions or after a defined period of inactivity.
+        severity: medium
+        nistRef: SC-L2-3.13.9
+      - id: CMMC-SC.L2-3.13.10
+        name: Establish and manage cryptographic keys for required cryptography
+        description: Establish and manage cryptographic keys for cryptography employed in organizational systems.
+        severity: high
+        nistRef: SC-L2-3.13.10
+      - id: CMMC-SC.L2-3.13.11
+        name: Employ FIPS-validated cryptography when used to protect CUI
+        description: Employ FIPS-validated cryptography when used to protect the confidentiality of CUI.
+        severity: high
+        nistRef: SC-L2-3.13.11
+      - id: CMMC-SC.L2-3.13.12
+        name: Prohibit remote activation of collaborative computing devices
+        description: Prohibit remote activation of collaborative computing devices and provide indication of devices in use to users present at the device.
+        severity: medium
+        nistRef: SC-L2-3.13.12
+      - id: CMMC-SC.L2-3.13.13
+        name: Control and monitor the use of mobile code
+        description: Control and monitor the use of mobile code.
+        severity: medium
+        nistRef: SC-L2-3.13.13
+      - id: CMMC-SC.L2-3.13.14
+        name: Control and monitor the use of Voice over Internet Protocol
+        description: Control and monitor the use of Voice over Internet Protocol (VoIP) technologies.
+        severity: medium
+        nistRef: SC-L2-3.13.14
+      - id: CMMC-SC.L2-3.13.15
+        name: Protect the authenticity of communications sessions
+        description: Protect the authenticity of communications sessions.
+        severity: high
+        nistRef: SC-L2-3.13.15
+      - id: CMMC-SC.L2-3.13.16
+        name: Protect the confidentiality of CUI at rest
+        description: Protect the confidentiality of CUI at rest.
+        severity: high
+        nistRef: SC-L2-3.13.16
+
+  - id: SI
+    name: System and Information Integrity
+    controls:
+      - id: CMMC-SI.L2-3.14.1
+        name: Identify, report, and correct system flaws in a timely manner
+        description: Identify, report, and correct system flaws in a timely manner.
+        severity: high
+        nistRef: SI-L2-3.14.1
+      - id: CMMC-SI.L2-3.14.2
+        name: Provide protection from malicious code at designated locations
+        description: Provide protection from malicious code at appropriate locations within organizational systems.
+        severity: high
+        nistRef: SI-L2-3.14.2
+      - id: CMMC-SI.L2-3.14.3
+        name: Monitor system security alerts and advisories
+        description: Monitor system security alerts and advisories and take action in response.
+        severity: high
+        nistRef: SI-L2-3.14.3
+      - id: CMMC-SI.L2-3.14.4
+        name: Update malicious code protection mechanisms when new releases are available
+        description: Update malicious code protection mechanisms when new releases are available.
+        severity: high
+        nistRef: SI-L2-3.14.4
+      - id: CMMC-SI.L2-3.14.5
+        name: Perform periodic scans and real-time scans of files from external sources
+        description: Perform periodic scans of organizational systems and real-time scans of files from external sources as files are downloaded, opened, or executed.
+        severity: high
+        nistRef: SI-L2-3.14.5
+      - id: CMMC-SI.L2-3.14.6
+        name: Monitor organizational systems to detect attacks and indicators of attack
+        description: Monitor organizational systems, including inbound and outbound communications traffic, to detect attacks and indicators of potential attacks.
+        severity: high
+        nistRef: SI-L2-3.14.6
+      - id: CMMC-SI.L2-3.14.7
+        name: Identify unauthorized use of organizational systems
+        description: Identify unauthorized use of organizational systems.
+        severity: high
+        nistRef: SI-L2-3.14.7

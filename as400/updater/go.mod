@@ -3,8 +3,8 @@ module github.com/hivearmor/as400/updater
 go 1.25.5
 
 require (
+	github.com/hivearmor/sdk v0.0.0
 	github.com/kardianos/service v1.2.4
-	github.com/threatwinds/go-sdk v1.1.26
 	github.com/threatwinds/logger v1.2.3
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -48,3 +48,5 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
+
+replace github.com/hivearmor/sdk => ../../sdk

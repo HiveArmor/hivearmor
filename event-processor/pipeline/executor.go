@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/hivearmor/event-processor/pipeline/operators"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

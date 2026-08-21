@@ -12,7 +12,7 @@ import (
 
 	libaudit "github.com/elastic/go-libaudit/v2"
 	"github.com/elastic/go-libaudit/v2/auparse"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"github.com/hivearmor/agent/utils"
 )
 
@@ -35,7 +35,7 @@ func (a *AuditdCollector) Name() string {
 }
 
 // Start begins collecting audit events and sending them to the queue
-func (a *AuditdCollector) Start(ctx context.Context, queue chan *plugins.Log) {
+func (a *AuditdCollector) Start(ctx context.Context, queue chan<- *plugins.Log) {
 	if err := checkAuditCapability(); err != nil {
 		if !errors.Is(err, ErrAuditUnavailable) {
 			utils.Logger.ErrorF("auditd: preflight check failed: %v", err)
@@ -92,7 +92,7 @@ func (a *AuditdCollector) Start(ctx context.Context, queue chan *plugins.Log) {
 const auditdExitPermanent = -2
 
 // runAuditClient creates the audit client and runs the receive loop
-func (a *AuditdCollector) runAuditClient(ctx context.Context, host string, queue chan *plugins.Log) int {
+func (a *AuditdCollector) runAuditClient(ctx context.Context, host string, queue chan<- *plugins.Log) int {
 	a.mu.Lock()
 	clientCtx, cancel := context.WithCancel(ctx)
 	a.cancel = cancel

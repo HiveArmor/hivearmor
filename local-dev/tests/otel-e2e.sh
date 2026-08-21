@@ -12,7 +12,7 @@ set -euo pipefail
 # Prerequisites: docker compose up -d (all services healthy)
 # Environment overrides:
 #   OPENSEARCH_INITIAL_ADMIN_PASSWORD  (default: LocalDev@2024!)
-#   EVENTPROCESSOR_INJECT_KEY          (default: change-me-generate-with-openssl-rand-hex-32)
+#   EVENTPROCESSOR_INJECT_KEY          (default: localdev-inject-key-2024)
 # ---------------------------------------------------------------------------
 
 PASS=0; FAIL=0; WARN=0
@@ -29,7 +29,7 @@ OS_BASE="https://localhost:9200"
 OS_CREDS="admin:${OS_PASS}"
 
 BACKEND="http://localhost:8088"
-INJECT_KEY="${EVENTPROCESSOR_INJECT_KEY:-change-me-generate-with-openssl-rand-hex-32}"
+INJECT_KEY="${EVENTPROCESSOR_INJECT_KEY:-localdev-inject-key-2024}"
 
 # Unique run tag prevents collisions with previous test runs in the same day.
 RUN_TAG="e2e-$(date +%s)"

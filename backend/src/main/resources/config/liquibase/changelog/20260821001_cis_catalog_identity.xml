@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260821001-sca-identity-and-catalog" author="hivearmor">
+        <addColumn tableName="ha_sca_result">
+            <column name="pack_version" type="varchar(64)" defaultValue="1"/>
+        </addColumn>
+        <addColumn tableName="ha_sca_summary">
+            <column name="pack_version" type="varchar(64)" defaultValue="1"/>
+        </addColumn>
+        <sql>
+            UPDATE ha_sca_result SET pack_version = '1' WHERE pack_version IS NULL;
+            UPDATE ha_sca_summary SET pack_version = '1' WHERE pack_version IS NULL;
+            UPDATE ha_sca_result SET pack_id = 'unknown' WHERE pack_id IS NULL OR pack_id = '';
+            UPDATE ha_sca_summary SET pack_id = 'unknown' WHERE pack_id IS NULL OR pack_id = '';
+            UPDATE ha_sca_result SET tenant_id = 0 WHERE tenant_id IS NULL;
+            UPDATE ha_sca_summary SET tenant_id = 0 WHERE tenant_id IS NULL;
+        </sql>
+        <dropUniqueConstraint tableName="ha_sca_result" constraintName="uq_ha_sca_agent_check"/>
+        <dropUniqueConstraint tableName="ha_sca_summary" constraintName="uq_ha_sca_summary_agent_pack"/>
+        <addNotNullConstraint tableName="ha_sca_result" columnName="pack_id" columnDataType="varchar(100)"/>
+        <addNotNullConstraint tableName="ha_sca_result" columnName="pack_version" columnDataType="varchar(64)"/>
+        <addNotNullConstraint tableName="ha_sca_result" columnName="tenant_id" columnDataType="bigint"/>
+        <addNotNullConstraint tableName="ha_sca_summary" columnName="pack_id" columnDataType="varchar(100)"/>
+        <addNotNullConstraint tableName="ha_sca_summary" columnName="pack_version" columnDataType="varchar(64)"/>
+        <addNotNullConstraint tableName="ha_sca_summary" columnName="tenant_id" columnDataType="bigint"/>
+        <addUniqueConstraint tableName="ha_sca_result"
+                             columnNames="tenant_id, agent_id, pack_id, pack_version, check_id"
+                             constraintName="uq_ha_sca_tenant_pack_check"/>
+        <addUniqueConstraint tableName="ha_sca_summary"
+                             columnNames="tenant_id, agent_id, pack_id, pack_version"
+                             constraintName="uq_ha_sca_summary_tenant_pack"/>
+
+        <createTable tableName="ha_cis_pack_catalog">
+            <column name="pack_id" type="varchar(100)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="pack_version" type="varchar(64)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="authority" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="license_state" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="official_benchmark" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="platform" type="varchar(64)"/>
+            <column name="title" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="note" type="varchar(512)"/>
+        </createTable>
+        <insert tableName="ha_cis_pack_catalog">
+            <column name="pack_id" value="ha-linux-observed-ssh"/>
+            <column name="pack_version" value="1"/>
+            <column name="authority" value="HIVEARMOR"/>
+            <column name="license_state" value="SHIPPED_OBSERVED"/>
+            <column name="official_benchmark" valueBoolean="false"/>
+            <column name="platform" value="linux"/>
+            <column name="title" value="HiveArmor observed Linux SSH/login files"/>
+            <column name="note" value="Observed host files only. Not an official CIS Benchmark pack and not a compliance attestation."/>
+        </insert>
+        <insert tableName="ha_cis_pack_catalog">
+            <column name="pack_id" value="cis-linux"/>
+            <column name="pack_version" value="unpublished"/>
+            <column name="authority" value="CIS"/>
+            <column name="license_state" value="LICENSE_REQUIRED_NOT_SHIPPED"/>
+            <column name="official_benchmark" valueBoolean="true"/>
+            <column name="platform" value="linux"/>
+            <column name="title" value="CIS Linux Benchmark (not shipped)"/>
+            <column name="note" value="Official CIS Benchmark content is not licensed in this deployment. HiveArmor will not copy benchmark text into the product."/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

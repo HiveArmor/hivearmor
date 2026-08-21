@@ -1,0 +1,84 @@
+- generic [ref=f43e3]:
+  - banner [ref=f43e4]:
+    - generic [ref=f43e5]: HiveArmor
+    - generic [ref=f43e12]:
+      - generic "Checking data pipeline health..." [ref=f43e13]
+      - generic "Reconnecting..." [ref=f43e16]: 0 EPS
+      - button "Notifications" [ref=f43e18] [cursor=pointer]
+      - button "Help" [ref=f43e23] [cursor=pointer]
+      - button "User menu" [ref=f43e28] [cursor=pointer]:
+        - generic [ref=f43e29]: AA
+        - generic [ref=f43e30]: admin
+  - navigation [ref=f43e31]:
+    - generic [ref=f43e32]:
+      - generic [ref=f43e33]:
+        - generic [ref=f43e34]: COMMAND
+        - generic [ref=f43e35]:
+          - button "Analyst Queue" [ref=f43e36] [cursor=pointer]
+          - button "Alerts" [ref=f43e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f43e47] [cursor=pointer]
+          - button "Incidents" [ref=f43e54] [cursor=pointer]
+      - generic [ref=f43e61]:
+        - generic [ref=f43e62]: INVESTIGATE
+        - generic [ref=f43e63]:
+          - button "Search & Hunt" [ref=f43e64] [cursor=pointer]
+          - button "Investigations" [ref=f43e70] [cursor=pointer]
+          - button "Entities" [ref=f43e75] [cursor=pointer]
+      - generic [ref=f43e83]:
+        - generic [ref=f43e84]: DEFEND
+        - generic [ref=f43e85]:
+          - button "Detection Rules" [ref=f43e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f43e91] [cursor=pointer]
+      - generic [ref=f43e96]:
+        - generic [ref=f43e97]: POSTURE
+        - generic [ref=f43e98]:
+          - button "Assets" [ref=f43e99] [cursor=pointer]
+          - button "Identities" [ref=f43e105] [cursor=pointer]
+          - button "Active Directory" [ref=f43e113] [cursor=pointer]
+          - button "Exposure" [ref=f43e121] [cursor=pointer]
+          - button "Sensors" [ref=f43e128] [cursor=pointer]
+          - button "Compliance" [ref=f43e133] [cursor=pointer]
+      - generic [ref=f43e139]:
+        - generic [ref=f43e140]: DASHBOARDS
+        - button "Studio" [ref=f43e142] [cursor=pointer]
+      - generic [ref=f43e148]:
+        - generic [ref=f43e149]: REPORT
+        - button "Scheduled Reports" [ref=f43e151] [cursor=pointer]
+      - generic [ref=f43e157]:
+        - generic [ref=f43e158]: ADMINISTRATION
+        - generic [ref=f43e159]:
+          - button "Users" [ref=f43e160] [cursor=pointer]
+          - button "Integrations" [ref=f43e175] [cursor=pointer]
+          - button "Notifications" [ref=f43e180] [cursor=pointer]
+          - button "Audit Log" [ref=f43e186] [cursor=pointer]
+          - button "Settings" [ref=f43e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f43e199] [cursor=pointer]
+  - main [ref=f43e202]:
+    - generic [ref=f43e203]:
+      - alert [ref=f43e205]:
+        - generic [ref=f43e208]:
+          - generic [ref=f43e209]: Backend Security Gap — GAP-SEC-01
+          - generic [ref=f43e210]: The role management API (/api/authority) has no access controls at the backend level. Any authenticated user can enumerate all application roles. A backend fix is required before production deployment. Role assignment through this screen is properly secured via the UserResource (ROLE_ADMIN required).
+      - generic [ref=f43e212]:
+        - generic [ref=f43e213]:
+          - heading "Users & Roles" [level=1] [ref=f43e214]
+          - paragraph [ref=f43e215]: Manage platform user accounts and role assignments.
+        - generic [ref=f43e216]:
+          - generic [ref=f43e217]: 0 users
+          - button "Refresh" [disabled]
+          - button "Add User" [ref=f43e218] [cursor=pointer]
+      - generic [ref=f43e223]:
+        - textbox "Search by login or email..." [ref=f43e225]
+        - combobox [ref=f43e226] [cursor=pointer]:
+          - option "Select an option" [disabled]
+          - option "All Status" [selected]
+          - option "Active"
+          - option "Inactive"
+        - combobox [ref=f43e227] [cursor=pointer]:
+          - option "Select an option" [disabled] [selected]
+          - option "All Roles"
+          - option "ROLE_ADMIN"
+          - option "ROLE_USER"
+          - option "ROLE_SOC_MANAGER"
+          - option "ROLE_ANALYST"
+          - option "ROLE_READ_ONLY"

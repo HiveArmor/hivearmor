@@ -1,0 +1,37 @@
+id: ha-aws-001
+title: CloudTrail Logging Disabled
+status: stable
+description: Detects when AWS CloudTrail logging is stopped or disabled, which may indicate an attacker attempting to evade detection by removing audit trail coverage.
+logsource:
+  product: aws
+  service: cloudtrail
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.T1562.008
+detection:
+  selection:
+    eventName:
+      - StopLogging
+      - DeleteTrail
+  condition: selection
+falsepositives:
+  - Authorized cloud administrators decommissioning unused trails
+  - Automated infrastructure teardown pipelines
+fields:
+  - eventName
+  - userIdentity.arn
+  - sourceIPAddress
+  - awsRegion
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: low
+deduplicateBy:
+  - userIdentity.arn
+  - awsRegion
+groupBy:
+  - userIdentity.arn
+mitre:
+  tactic: defense-evasion
+  technique: T1562.008

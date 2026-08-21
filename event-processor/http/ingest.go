@@ -2,19 +2,23 @@ package http
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/hivearmor/event-processor/compliance"
 	"github.com/hivearmor/event-processor/config"
 	"github.com/hivearmor/event-processor/enrichment"
+	"github.com/hivearmor/event-processor/enterprise/baseline"
 	"github.com/hivearmor/event-processor/enterprise/lookup"
 	"github.com/hivearmor/event-processor/enterprise/offense"
+	"github.com/hivearmor/event-processor/enterprise/sequence"
 	"github.com/hivearmor/event-processor/pipeline"
+	"github.com/hivearmor/event-processor/processor"
 	rulesengine "github.com/hivearmor/event-processor/rules"
 	"github.com/hivearmor/event-processor/writer"
 )
@@ -80,19 +84,31 @@ func handleInject(c *gin.Context) {
 		event.Log[k] = structpb.NewStringValue(v)
 	}
 
+	if err := processor.BindTenant(event); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "tenant resolve failed"})
+		return
+	}
+
 	// Enrichment
 	lookup.Enrich(event)
-	enrichment.EnrichEvent(ingestEventMap(event))
-
-	writer.WriteEvent(event)
+	enrichGeoOnEvent(event)
 
 	alerts := rulesengine.Evaluate(event)
+	outcome := processor.ProcessingOutcome{Event: event, Alerts: alerts}
+	if err := processor.PersistRequired(outcome, processor.DefaultStore()); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "required persist failed"})
+		return
+	}
 	var alertIDs []string
 	for _, alert := range alerts {
-		writer.WriteAlert(alert)
 		go offense.Process(alert)
 		alertIDs = append(alertIDs, alert.Id)
 	}
+
+	sequence.Process(event)
+
+	// Evaluate anomaly detection against hourly baselines.
+	baseline.EvaluateEvent(event)
 
 	complianceHits := compliance.Evaluate(event)
 	if len(complianceHits) > 0 {
@@ -102,20 +118,61 @@ func handleInject(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":     "processed",
 		"id":         event.Id,
-		"index":      "v3-hive-log-" + event.DataType,
+		"index":      writer.EventIndex(event),
 		"alerts":     len(alertIDs),
 		"alertIds":   alertIDs,
 		"compliance": len(complianceHits),
 	})
 }
 
-func ingestEventMap(e *plugins.Event) map[string]any {
-	m := map[string]any{}
-	if e.Origin != nil {
-		m["origin"] = map[string]any{"ip": e.Origin.Ip}
+// enrichGeoOnEvent writes geolocation data directly to the Event proto fields
+// for both origin and target sides. This replaces the throwaway-map pattern.
+func enrichGeoOnEvent(e *plugins.Event) {
+	enrichSideGeo(e.Origin)
+	enrichSideGeo(e.Target)
+}
+
+// enrichSideGeo performs geo enrichment on a single Side, writing results
+// directly to the Geolocation proto field.
+func enrichSideGeo(side *plugins.Side) {
+	if side == nil || side.Ip == "" {
+		return
 	}
-	if e.Target != nil {
-		m["target"] = map[string]any{"ip": e.Target.Ip}
+	geo := enrichment.Geolocate(side.Ip)
+	if geo == nil {
+		return
 	}
-	return m
+	side.Geolocation = geoMapToProto(geo)
+}
+
+// geoMapToProto converts the enrichment map[string]any result into a proto Geolocation struct.
+func geoMapToProto(m map[string]any) *plugins.Geolocation {
+	g := &plugins.Geolocation{}
+	if v, ok := m["country"].(string); ok {
+		g.Country = v
+	}
+	if v, ok := m["city"].(string); ok {
+		g.City = v
+	}
+	if v, ok := m["countryCode"].(string); ok {
+		g.CountryCode = v
+	}
+	if v, ok := m["latitude"].(float64); ok {
+		g.Latitude = v
+	}
+	if v, ok := m["longitude"].(float64); ok {
+		g.Longitude = v
+	}
+	if v, ok := m["accuracy"].(int); ok {
+		g.Accuracy = uint32(v)
+	}
+	if v, ok := m["asn"].(string); ok && len(v) > 2 {
+		if n, err := strconv.ParseUint(v[2:], 10, 64); err == nil {
+			g.Asn = n
+		}
+	}
+	if v, ok := m["aso"].(string); ok {
+		g.Aso = v
+	}
+	return g
 }

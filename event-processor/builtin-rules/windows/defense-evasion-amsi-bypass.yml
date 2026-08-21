@@ -1,0 +1,45 @@
+id: d6e7f8a9-b0c1-2345-defa-456789012346
+title: AMSI Bypass via Memory Patching or Reflection
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.T1562
+  - attack.T1562.001
+detection:
+  selection_amsi:
+    CommandLine|contains:
+      - 'AmsiScanBuffer'
+      - 'amsiContext'
+      - 'amsiSession'
+      - '[Ref].Assembly.GetType'
+      - 'amsi.dll'
+  selection_reflection:
+    CommandLine|contains:
+      - 'GetMethod'
+      - 'Invoke'
+    CommandLine|contains:
+      - 'amsi'
+  selection_base64:
+    CommandLine|contains:
+      - 'QW1zaVNjYW5CdWZmZXI'
+      - 'YW1zaS5kbGw'
+  condition: selection_amsi or selection_reflection or selection_base64
+falsepositives:
+  - Security researchers in isolated test environments
+  - AMSI provider testing tools
+impact:
+  confidentiality: low
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: defense-evasion
+  technique: T1562.001

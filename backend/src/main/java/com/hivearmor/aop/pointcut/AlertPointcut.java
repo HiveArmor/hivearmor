@@ -16,7 +16,7 @@ public class AlertPointcut {
         // Method is empty as this is just a Pointcut, the implementations are in the advices.
     }
 
-    public void convertToIncidentPointcut(Query query, String incidentName, Integer incidentId, Instant incidentCreationDate, String incidentCreatedBy, String incidentSource, String indexPattern) {
+    public void convertToIncidentPointcut(Query query, String incidentName, long incidentId, Instant incidentCreationDate, String incidentCreatedBy, String incidentSource, String indexPattern) {
         // Method is empty as this is just a Pointcut, the implementations are in the advices.
     }
 }

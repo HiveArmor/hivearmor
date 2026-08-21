@@ -1,0 +1,31 @@
+# Positive: NTLM authentication downgrade attack — registry key modification
+#   event 4657, key LMCompatibilityLevel, non-SYSTEM/TrustedInstaller user.
+#   This is a Sigma-compatible rule testing registry-based defense evasion.
+# Negative: Event 4657 for an unrelated registry key would not match the regexMatch condition.
+# Note: The Windows Admin Shares rule (suspicious_event_*.yml) has a broken regex (unbalanced
+#   parentheses) that silently fails in RE2 / CEL; this NTLM downgrade rule is used instead
+#   to cover the Sigma/registry-modification detection category.
+rule: rules/windows/ntlm_downgrade_attack.yml
+description: "NTLM downgrade via LMCompatibilityLevel registry modification (event 4657)"
+
+events:
+  - timestamp: "2026-01-15T13:00:00Z"
+    dataType: wineventlog
+    origin:
+      ip: "192.168.1.55"
+      host: "WORKSTATION05"
+      user: "attacker"
+    target:
+      host: "DC01"
+      user: "attacker"
+    log:
+      eventCode: 4657
+      channel: "Security"
+      eventDataObjectName: "\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Lsa\\LMCompatibilityLevel"
+      eventDataSubjectUserName: "attacker"
+      message: "A registry value was modified"
+
+expect:
+  alert: true
+  severity: "2"
+  name: "NTLM Authentication Downgrade Attack"

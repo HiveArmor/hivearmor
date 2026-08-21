@@ -1,0 +1,42 @@
+id: c3d4e5f6-a7b8-9012-cdef-123456789063
+title: Non-Standard Port Usage by Common Applications for C2
+status: stable
+logsource:
+  product: windows
+  category: network_connection
+level: medium
+tags:
+  - attack.command_and_control
+  - attack.T1571
+detection:
+  selection:
+    Image|endswith:
+      - '\iexplore.exe'
+      - '\chrome.exe'
+      - '\firefox.exe'
+      - '\msedge.exe'
+      - '\outlook.exe'
+    DestinationPort|gt: 49151
+    Initiated: 'true'
+  filter_local:
+    DestinationIp|startswith:
+      - '127.'
+      - '::1'
+  condition: selection and not filter_local
+falsepositives:
+  - Browser extensions using non-standard ports
+  - Legitimate proxy configurations
+  - Developer tools with custom port settings
+impact:
+  confidentiality: medium
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - Image
+  - DestinationPort
+groupBy:
+  - ComputerName
+mitre:
+  tactic: command-and-control
+  technique: T1571

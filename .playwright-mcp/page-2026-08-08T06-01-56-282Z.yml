@@ -1,0 +1,294 @@
+- generic [active] [ref=f23e1]:
+  - generic [ref=f23e3]:
+    - link "Skip to main content" [ref=f23e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f23e5]:
+      - generic [ref=f23e6]:
+        - generic [ref=f23e12]: HiveArmor
+        - generic [ref=f23e13]: Security operations
+      - generic [ref=f23e14]:
+        - button "All authorized tenants" [ref=f23e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f23e24] [cursor=pointer]:
+          - generic [ref=f23e29]: ⌘ K
+        - generic [ref=f23e30]: Production
+      - generic [ref=f23e31]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=f23e256]'
+        - status "Live events per second" [ref=f23e257]:
+          - generic [ref=f23e37]: 0 EPS
+        - button "Notifications" [ref=f23e38] [cursor=pointer]
+        - button "Help" [ref=f23e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f23e47]:
+      - generic [ref=f23e48]:
+        - region "COMMAND" [ref=f23e49]:
+          - generic [ref=f23e50]:
+            - button "Mission Control" [ref=f23e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f23e58] [cursor=pointer]
+            - button "Alerts" [ref=f23e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f23e67] [cursor=pointer]
+            - button "Incidents" [ref=f23e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f23e79]:
+          - generic [ref=f23e80]:
+            - button "Search & Hunt" [ref=f23e81] [cursor=pointer]
+            - button "Investigations" [ref=f23e86] [cursor=pointer]
+            - button "Entities" [ref=f23e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f23e97] [cursor=pointer]
+        - region "DEFEND" [ref=f23e103]:
+          - generic [ref=f23e104]:
+            - button "Detection Rules" [ref=f23e105] [cursor=pointer]
+            - button "Playbooks" [ref=f23e109] [cursor=pointer]
+            - button "Response Library" [ref=f23e114] [cursor=pointer]
+        - region "POSTURE" [ref=f23e118]:
+          - generic [ref=f23e119]:
+            - button "Assets" [ref=f23e120] [cursor=pointer]
+            - button "Identities" [ref=f23e125] [cursor=pointer]
+            - button "Active Directory" [ref=f23e132] [cursor=pointer]
+            - button "Exposure" [ref=f23e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f23e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f23e156] [cursor=pointer]
+            - button "Sensors" [ref=f23e162] [cursor=pointer]
+            - button "Compliance" [ref=f23e166] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f23e171]:
+          - generic [ref=f23e172]:
+            - button "Endpoints" [ref=f23e173] [cursor=pointer]
+            - button "File Quarantine" [ref=f23e177] [cursor=pointer]
+            - button "File Integrity" [ref=f23e183] [cursor=pointer]
+            - button "Agent Policies" [ref=f23e190] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f23e195]:
+          - button "Studio" [ref=f23e197] [cursor=pointer]
+        - region "REPORT" [ref=f23e202]:
+          - button "Scheduled Reports" [ref=f23e204] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f23e209]:
+          - generic [ref=f23e210]:
+            - button "Users" [ref=f23e211] [cursor=pointer]
+            - button "Integrations" [ref=f23e225] [cursor=pointer]
+            - button "Notifications" [ref=f23e229] [cursor=pointer]
+            - button "Audit Log" [ref=f23e234] [cursor=pointer]
+            - button "Settings" [ref=f23e239] [cursor=pointer]
+      - generic [ref=f23e244]:
+        - button "User menu" [ref=f23e247] [cursor=pointer]:
+          - generic [ref=f23e248]: AA
+        - button "Pin sidebar open" [ref=f23e249] [cursor=pointer]
+    - main [ref=f23e252]:
+      - generic [ref=f23e258]:
+        - generic [ref=f23e259]:
+          - generic [ref=f23e265]:
+            - heading "Entity Intelligence" [level=1] [ref=f23e266]
+            - paragraph [ref=f23e267]: Monitored entities with risk scoring and behavioral analysis
+          - button "Refresh entity inventory" [ref=f23e269] [cursor=pointer]
+        - region "Entity summary" [ref=f23e275]:
+          - button "Total 251" [ref=f23e276] [cursor=pointer]:
+            - generic [ref=f23e277]: Total
+            - strong [ref=f23e278]: "251"
+          - button "High Risk 89" [ref=f23e279] [cursor=pointer]:
+            - generic [ref=f23e280]: High Risk
+            - strong [ref=f23e281]: "89"
+          - button "Rising 20" [ref=f23e282] [cursor=pointer]:
+            - generic [ref=f23e283]: Rising
+            - strong [ref=f23e284]: "20"
+          - button "Active Alerts 191" [ref=f23e285] [cursor=pointer]:
+            - generic [ref=f23e286]: Active Alerts
+            - strong [ref=f23e287]: "191"
+          - button "New 24h 0" [ref=f23e288] [cursor=pointer]:
+            - generic [ref=f23e289]: New 24h
+            - strong [ref=f23e290]: "0"
+        - generic [ref=f23e291]:
+          - button "Filter by entity type" [ref=f23e293] [cursor=pointer]:
+            - generic [ref=f23e294]: Type
+            - generic [ref=f23e295]: All types
+          - button "Filter by risk level" [ref=f23e299] [cursor=pointer]:
+            - generic [ref=f23e300]: Risk
+            - generic [ref=f23e301]: All risk levels
+          - button "Filter by criticality" [ref=f23e305] [cursor=pointer]:
+            - generic [ref=f23e306]: Criticality
+            - generic [ref=f23e307]: All criticality
+          - button "Rising" [ref=f23e310] [cursor=pointer]
+          - button "Alerts" [ref=f23e314] [cursor=pointer]
+          - textbox "Search entities by name or value" [ref=f23e321]:
+            - /placeholder: Search entities…
+          - button "Sort entities" [ref=f23e323] [cursor=pointer]:
+            - generic [ref=f23e324]: Sort
+            - generic [ref=f23e325]: Risk (highest)
+        - main [ref=f23e328]:
+          - generic "Entity intelligence inventory" [ref=f23e330]:
+            - generic [ref=f23e334]:
+              - grid:
+                - rowgroup [ref=f23e336]:
+                  - row [ref=f23e337]:
+                    - columnheader "Type" [ref=f23e338]:
+                      - text: 
+                      - generic: 
+                    - columnheader "Value" [ref=f23e341]:
+                      - text: 
+                      - generic: 
+                    - columnheader "Display Name" [ref=f23e344]:
+                      - text: 
+                      - generic: 
+                    - columnheader "Risk" [ref=f23e347]:
+                      - text: 
+                      - generic: 
+                    - columnheader "Trend" [ref=f23e350]:
+                      - text: 
+                      - generic: 
+                    - columnheader "Criticality" [ref=f23e353]:
+                      - text: 
+                      - generic: 
+                    - columnheader "Alerts" [ref=f23e356]:
+                      - text: 
+                      - generic: 
+                    - columnheader "Last Seen" [ref=f23e359]:
+                      - text: 
+                      - generic: 
+                    - columnheader "Sources" [ref=f23e362]:
+                      - text: 
+                      - generic: 
+                  - row [ref=f23e365]:
+                    - gridcell "domain" [ref=f23e366]
+                    - gridcell "c2.malicious.io" [ref=f23e374]
+                    - gridcell "C2 Server Domain" [ref=f23e375]
+                    - gridcell [ref=f23e376]:
+                      - generic "Risk score 99, level critical, trend null" [ref=f23e377]:
+                        - strong [ref=f23e378]: "99"
+                        - generic [ref=f23e379]: →
+                    - gridcell "→" [ref=f23e380]
+                    - gridcell [ref=f23e382]
+                    - gridcell "11" [ref=f23e383]
+                    - gridcell "51m ago" [ref=f23e384]
+                    - gridcell [ref=f23e385]
+                  - row [ref=f23e386]:
+                    - gridcell "ip" [ref=f23e387]
+                    - gridcell "203.0.113.88" [ref=f23e395]
+                    - gridcell "External C2 Server" [ref=f23e396]
+                    - gridcell [ref=f23e397]:
+                      - generic "Risk score 99, level critical, trend null" [ref=f23e398]:
+                        - strong [ref=f23e399]: "99"
+                        - generic [ref=f23e400]: →
+                    - gridcell "→" [ref=f23e401]
+                    - gridcell [ref=f23e403]
+                    - gridcell "8" [ref=f23e404]
+                    - gridcell "51m ago" [ref=f23e405]
+                    - gridcell [ref=f23e406]
+                  - row [ref=f23e407]:
+                    - gridcell "process" [ref=f23e408]
+                    - gridcell "mimikatz.exe" [ref=f23e416]
+                    - gridcell "Mimikatz" [ref=f23e417]
+                    - gridcell [ref=f23e418]:
+                      - generic "Risk score 99, level critical, trend null" [ref=f23e419]:
+                        - strong [ref=f23e420]: "99"
+                        - generic [ref=f23e421]: →
+                    - gridcell "→" [ref=f23e422]
+                    - gridcell [ref=f23e424]
+                    - gridcell "5" [ref=f23e425]
+                    - gridcell "51m ago" [ref=f23e426]
+                    - gridcell [ref=f23e427]
+                  - row [ref=f23e428]:
+                    - gridcell "host" [ref=f23e429]
+                    - gridcell "ENG-SRV-012" [ref=f23e434]
+                    - gridcell "Finance Workstation 012" [ref=f23e435]
+                    - gridcell [ref=f23e436]:
+                      - generic "Risk score 98, level critical, trend null" [ref=f23e437]:
+                        - strong [ref=f23e438]: "98"
+                        - generic [ref=f23e439]: →
+                    - gridcell "→" [ref=f23e440]
+                    - gridcell [ref=f23e442]
+                    - gridcell "8" [ref=f23e443]
+                    - gridcell "51m ago" [ref=f23e444]
+                    - gridcell [ref=f23e445]
+                  - row [ref=f23e446]:
+                    - gridcell "process" [ref=f23e447]
+                    - gridcell "cobalt_strike.exe" [ref=f23e455]
+                    - gridcell "Cobalt Strike Beacon" [ref=f23e456]
+                    - gridcell [ref=f23e457]:
+                      - generic "Risk score 98, level critical, trend null" [ref=f23e458]:
+                        - strong [ref=f23e459]: "98"
+                        - generic [ref=f23e460]: →
+                    - gridcell "→" [ref=f23e461]
+                    - gridcell [ref=f23e463]
+                    - gridcell "1" [ref=f23e464]
+                    - gridcell "51m ago" [ref=f23e465]
+                    - gridcell [ref=f23e466]
+                  - row [ref=f23e467]:
+                    - gridcell "domain" [ref=f23e468]
+                    - gridcell "cdn-update.xyz" [ref=f23e476]
+                    - gridcell "Fake CDN Update" [ref=f23e477]
+                    - gridcell [ref=f23e478]:
+                      - generic "Risk score 97, level critical, trend null" [ref=f23e479]:
+                        - strong [ref=f23e480]: "97"
+                        - generic [ref=f23e481]: →
+                    - gridcell "→" [ref=f23e482]
+                    - gridcell [ref=f23e484]
+                    - gridcell "7" [ref=f23e485]
+                    - gridcell "51m ago" [ref=f23e486]
+                    - gridcell [ref=f23e487]
+                  - row [ref=f23e488]:
+                    - gridcell "file" [ref=f23e489]
+                    - gridcell "implant.exe" [ref=f23e497]
+                    - gridcell "Implant Binary" [ref=f23e498]
+                    - gridcell [ref=f23e499]:
+                      - generic "Risk score 97, level critical, trend null" [ref=f23e500]:
+                        - strong [ref=f23e501]: "97"
+                        - generic [ref=f23e502]: →
+                    - gridcell "→" [ref=f23e503]
+                    - gridcell [ref=f23e505]
+                    - gridcell "9" [ref=f23e506]
+                    - gridcell "51m ago" [ref=f23e507]
+                    - gridcell [ref=f23e508]
+                  - row [ref=f23e509]:
+                    - gridcell "host" [ref=f23e510]
+                    - gridcell "FIN-WKS-044" [ref=f23e515]
+                    - gridcell "Finance Workstation 044" [ref=f23e516]
+                    - gridcell [ref=f23e517]:
+                      - generic "Risk score 97, level critical, trend null" [ref=f23e518]:
+                        - strong [ref=f23e519]: "97"
+                        - generic [ref=f23e520]: →
+                    - gridcell "→" [ref=f23e521]
+                    - gridcell [ref=f23e523]
+                    - gridcell "15" [ref=f23e524]
+                    - gridcell "51m ago" [ref=f23e525]
+                    - gridcell [ref=f23e526]
+                  - row [ref=f23e527]:
+                    - gridcell "ip" [ref=f23e528]
+                    - gridcell "203.0.113.10" [ref=f23e536]
+                    - gridcell "External Attacker 113.10" [ref=f23e537]
+                    - gridcell [ref=f23e538]:
+                      - generic "Risk score 96, level critical, trend null" [ref=f23e539]:
+                        - strong [ref=f23e540]: "96"
+                        - generic [ref=f23e541]: →
+                    - gridcell "→" [ref=f23e542]
+                    - gridcell [ref=f23e544]
+                    - gridcell "7" [ref=f23e545]
+                    - gridcell "51m ago" [ref=f23e546]
+                    - gridcell [ref=f23e547]
+                  - row [ref=f23e548]:
+                    - gridcell "file" [ref=f23e549]
+                    - gridcell "beacon.dll" [ref=f23e557]
+                    - gridcell "Beacon DLL" [ref=f23e558]
+                    - gridcell [ref=f23e559]:
+                      - generic "Risk score 95, level critical, trend null" [ref=f23e560]:
+                        - strong [ref=f23e561]: "95"
+                        - generic [ref=f23e562]: →
+                    - gridcell "→" [ref=f23e563]
+                    - gridcell [ref=f23e565]
+                    - gridcell "3" [ref=f23e566]
+                    - gridcell "51m ago" [ref=f23e567]
+                    - gridcell [ref=f23e568]
+                  - row [ref=f23e569]:
+                    - gridcell "domain" [ref=f23e570]
+                    - gridcell "secure-login-portal.net" [ref=f23e578]
+                    - gridcell "Phishing Portal" [ref=f23e579]
+                    - gridcell [ref=f23e580]:
+                      - generic "Risk score 94, level critical, trend null" [ref=f23e581]:
+                        - strong [ref=f23e582]: "94"
+                        - generic [ref=f23e583]: →
+                    - gridcell "→" [ref=f23e584]
+                    - gridcell [ref=f23e586]
+                    - gridcell "10" [ref=f23e587]
+                    - gridcell "51m ago" [ref=f23e588]
+                    - gridcell [ref=f23e589]
+              - text:     
+          - generic [ref=f23e590]:
+            - generic [ref=f23e591]:
+              - generic [ref=f23e592]: 251 entities
+              - generic [ref=f23e593]: Page 1 (1–100)
+            - button "Next" [ref=f23e595] [cursor=pointer]
+  - generic:
+    - list "Notifications"

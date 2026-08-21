@@ -1,0 +1,23 @@
+- generic [ref=f2e4]:
+  - generic [ref=f2e5]: HiveArmor
+  - 'generic "Step 2 of 2: Verify identity" [ref=f2e6]':
+    - generic [ref=f2e7]:
+      - generic [ref=f2e8]: "1"
+      - generic [ref=f2e9]: Authentication
+    - generic [ref=f2e11]:
+      - generic [ref=f2e12]: "2"
+      - generic [ref=f2e13]: Verification
+  - heading "Two-factor authentication" [level=1] [ref=f2e14]
+  - paragraph [ref=f2e15]: Enter the 6-digit code from your authenticator app.
+  - form "Two-factor authentication" [ref=f2e16]:
+    - generic [ref=f2e17]:
+      - generic [ref=f2e19]:
+        - text: Verification code
+        - generic [ref=f2e20]: "*"
+      - textbox "Verification code" [active] [ref=f2e22]:
+        - /placeholder: "000000"
+    - button "Verify" [disabled]
+    - generic [ref=f2e23]:
+      - button "Use a backup code" [ref=f2e24] [cursor=pointer]
+      - generic [ref=f2e25]: "|"
+      - button "Cancel" [ref=f2e26] [cursor=pointer]

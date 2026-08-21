@@ -201,6 +201,254 @@ public final class AgentServiceGrpc {
     return getListAgentCommandsMethod;
   }
 
+  private static volatile io.grpc.MethodDescriptor<com.hivearmor.service.grpc.CreateEnrollmentTokenRequest,
+      com.hivearmor.service.grpc.CreateEnrollmentTokenResponse> getCreateEnrollmentTokenMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "CreateEnrollmentToken",
+      requestType = com.hivearmor.service.grpc.CreateEnrollmentTokenRequest.class,
+      responseType = com.hivearmor.service.grpc.CreateEnrollmentTokenResponse.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+  public static io.grpc.MethodDescriptor<com.hivearmor.service.grpc.CreateEnrollmentTokenRequest,
+      com.hivearmor.service.grpc.CreateEnrollmentTokenResponse> getCreateEnrollmentTokenMethod() {
+    io.grpc.MethodDescriptor<com.hivearmor.service.grpc.CreateEnrollmentTokenRequest, com.hivearmor.service.grpc.CreateEnrollmentTokenResponse> getCreateEnrollmentTokenMethod;
+    if ((getCreateEnrollmentTokenMethod = AgentServiceGrpc.getCreateEnrollmentTokenMethod) == null) {
+      synchronized (AgentServiceGrpc.class) {
+        if ((getCreateEnrollmentTokenMethod = AgentServiceGrpc.getCreateEnrollmentTokenMethod) == null) {
+          AgentServiceGrpc.getCreateEnrollmentTokenMethod = getCreateEnrollmentTokenMethod =
+              io.grpc.MethodDescriptor.<com.hivearmor.service.grpc.CreateEnrollmentTokenRequest, com.hivearmor.service.grpc.CreateEnrollmentTokenResponse>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "CreateEnrollmentToken"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.CreateEnrollmentTokenRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.CreateEnrollmentTokenResponse.getDefaultInstance()))
+              .setSchemaDescriptor(new AgentServiceMethodDescriptorSupplier("CreateEnrollmentToken"))
+              .build();
+        }
+      }
+    }
+    return getCreateEnrollmentTokenMethod;
+  }
+
+  private static volatile io.grpc.MethodDescriptor<com.hivearmor.service.grpc.ListEnrollmentTokensRequest,
+      com.hivearmor.service.grpc.ListEnrollmentTokensResponse> getListEnrollmentTokensMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "ListEnrollmentTokens",
+      requestType = com.hivearmor.service.grpc.ListEnrollmentTokensRequest.class,
+      responseType = com.hivearmor.service.grpc.ListEnrollmentTokensResponse.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+  public static io.grpc.MethodDescriptor<com.hivearmor.service.grpc.ListEnrollmentTokensRequest,
+      com.hivearmor.service.grpc.ListEnrollmentTokensResponse> getListEnrollmentTokensMethod() {
+    io.grpc.MethodDescriptor<com.hivearmor.service.grpc.ListEnrollmentTokensRequest, com.hivearmor.service.grpc.ListEnrollmentTokensResponse> getListEnrollmentTokensMethod;
+    if ((getListEnrollmentTokensMethod = AgentServiceGrpc.getListEnrollmentTokensMethod) == null) {
+      synchronized (AgentServiceGrpc.class) {
+        if ((getListEnrollmentTokensMethod = AgentServiceGrpc.getListEnrollmentTokensMethod) == null) {
+          AgentServiceGrpc.getListEnrollmentTokensMethod = getListEnrollmentTokensMethod =
+              io.grpc.MethodDescriptor.<com.hivearmor.service.grpc.ListEnrollmentTokensRequest, com.hivearmor.service.grpc.ListEnrollmentTokensResponse>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "ListEnrollmentTokens"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.ListEnrollmentTokensRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.ListEnrollmentTokensResponse.getDefaultInstance()))
+              .setSchemaDescriptor(new AgentServiceMethodDescriptorSupplier("ListEnrollmentTokens"))
+              .build();
+        }
+      }
+    }
+    return getListEnrollmentTokensMethod;
+  }
+
+  private static volatile io.grpc.MethodDescriptor<com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest,
+      com.hivearmor.service.grpc.EnrollmentToken> getRevokeEnrollmentTokenMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "RevokeEnrollmentToken",
+      requestType = com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest.class,
+      responseType = com.hivearmor.service.grpc.EnrollmentToken.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+  public static io.grpc.MethodDescriptor<com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest,
+      com.hivearmor.service.grpc.EnrollmentToken> getRevokeEnrollmentTokenMethod() {
+    io.grpc.MethodDescriptor<com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest, com.hivearmor.service.grpc.EnrollmentToken> getRevokeEnrollmentTokenMethod;
+    if ((getRevokeEnrollmentTokenMethod = AgentServiceGrpc.getRevokeEnrollmentTokenMethod) == null) {
+      synchronized (AgentServiceGrpc.class) {
+        if ((getRevokeEnrollmentTokenMethod = AgentServiceGrpc.getRevokeEnrollmentTokenMethod) == null) {
+          AgentServiceGrpc.getRevokeEnrollmentTokenMethod = getRevokeEnrollmentTokenMethod =
+              io.grpc.MethodDescriptor.<com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest, com.hivearmor.service.grpc.EnrollmentToken>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "RevokeEnrollmentToken"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.EnrollmentToken.getDefaultInstance()))
+              .setSchemaDescriptor(new AgentServiceMethodDescriptorSupplier("RevokeEnrollmentToken"))
+              .build();
+        }
+      }
+    }
+    return getRevokeEnrollmentTokenMethod;
+  }
+
+  private static volatile io.grpc.MethodDescriptor<com.hivearmor.service.grpc.AgentCredentialRequest,
+      com.hivearmor.service.grpc.AgentCredentialResponse> getRotateAgentCredentialMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "RotateAgentCredential",
+      requestType = com.hivearmor.service.grpc.AgentCredentialRequest.class,
+      responseType = com.hivearmor.service.grpc.AgentCredentialResponse.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+  public static io.grpc.MethodDescriptor<com.hivearmor.service.grpc.AgentCredentialRequest,
+      com.hivearmor.service.grpc.AgentCredentialResponse> getRotateAgentCredentialMethod() {
+    io.grpc.MethodDescriptor<com.hivearmor.service.grpc.AgentCredentialRequest, com.hivearmor.service.grpc.AgentCredentialResponse> getRotateAgentCredentialMethod;
+    if ((getRotateAgentCredentialMethod = AgentServiceGrpc.getRotateAgentCredentialMethod) == null) {
+      synchronized (AgentServiceGrpc.class) {
+        if ((getRotateAgentCredentialMethod = AgentServiceGrpc.getRotateAgentCredentialMethod) == null) {
+          AgentServiceGrpc.getRotateAgentCredentialMethod = getRotateAgentCredentialMethod =
+              io.grpc.MethodDescriptor.<com.hivearmor.service.grpc.AgentCredentialRequest, com.hivearmor.service.grpc.AgentCredentialResponse>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "RotateAgentCredential"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.AgentCredentialRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.AgentCredentialResponse.getDefaultInstance()))
+              .setSchemaDescriptor(new AgentServiceMethodDescriptorSupplier("RotateAgentCredential"))
+              .build();
+        }
+      }
+    }
+    return getRotateAgentCredentialMethod;
+  }
+
+  private static volatile io.grpc.MethodDescriptor<com.hivearmor.service.grpc.AgentCredentialRequest,
+      com.hivearmor.service.grpc.AgentCredentialResponse> getRevokeAgentCredentialMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "RevokeAgentCredential",
+      requestType = com.hivearmor.service.grpc.AgentCredentialRequest.class,
+      responseType = com.hivearmor.service.grpc.AgentCredentialResponse.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+  public static io.grpc.MethodDescriptor<com.hivearmor.service.grpc.AgentCredentialRequest,
+      com.hivearmor.service.grpc.AgentCredentialResponse> getRevokeAgentCredentialMethod() {
+    io.grpc.MethodDescriptor<com.hivearmor.service.grpc.AgentCredentialRequest, com.hivearmor.service.grpc.AgentCredentialResponse> getRevokeAgentCredentialMethod;
+    if ((getRevokeAgentCredentialMethod = AgentServiceGrpc.getRevokeAgentCredentialMethod) == null) {
+      synchronized (AgentServiceGrpc.class) {
+        if ((getRevokeAgentCredentialMethod = AgentServiceGrpc.getRevokeAgentCredentialMethod) == null) {
+          AgentServiceGrpc.getRevokeAgentCredentialMethod = getRevokeAgentCredentialMethod =
+              io.grpc.MethodDescriptor.<com.hivearmor.service.grpc.AgentCredentialRequest, com.hivearmor.service.grpc.AgentCredentialResponse>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "RevokeAgentCredential"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.AgentCredentialRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.AgentCredentialResponse.getDefaultInstance()))
+              .setSchemaDescriptor(new AgentServiceMethodDescriptorSupplier("RevokeAgentCredential"))
+              .build();
+        }
+      }
+    }
+    return getRevokeAgentCredentialMethod;
+  }
+
+  private static volatile io.grpc.MethodDescriptor<com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest,
+      com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse> getListEnrollmentAuditEventsMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "ListEnrollmentAuditEvents",
+      requestType = com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest.class,
+      responseType = com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+  public static io.grpc.MethodDescriptor<com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest,
+      com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse> getListEnrollmentAuditEventsMethod() {
+    io.grpc.MethodDescriptor<com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest, com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse> getListEnrollmentAuditEventsMethod;
+    if ((getListEnrollmentAuditEventsMethod = AgentServiceGrpc.getListEnrollmentAuditEventsMethod) == null) {
+      synchronized (AgentServiceGrpc.class) {
+        if ((getListEnrollmentAuditEventsMethod = AgentServiceGrpc.getListEnrollmentAuditEventsMethod) == null) {
+          AgentServiceGrpc.getListEnrollmentAuditEventsMethod = getListEnrollmentAuditEventsMethod =
+              io.grpc.MethodDescriptor.<com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest, com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "ListEnrollmentAuditEvents"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse.getDefaultInstance()))
+              .setSchemaDescriptor(new AgentServiceMethodDescriptorSupplier("ListEnrollmentAuditEvents"))
+              .build();
+        }
+      }
+    }
+    return getListEnrollmentAuditEventsMethod;
+  }
+
+  private static volatile io.grpc.MethodDescriptor<com.hivearmor.service.grpc.VerifyConnectorIdentityRequest,
+      com.hivearmor.service.grpc.VerifyConnectorIdentityResponse> getVerifyConnectorIdentityMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "VerifyConnectorIdentity",
+      requestType = com.hivearmor.service.grpc.VerifyConnectorIdentityRequest.class,
+      responseType = com.hivearmor.service.grpc.VerifyConnectorIdentityResponse.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+  public static io.grpc.MethodDescriptor<com.hivearmor.service.grpc.VerifyConnectorIdentityRequest,
+      com.hivearmor.service.grpc.VerifyConnectorIdentityResponse> getVerifyConnectorIdentityMethod() {
+    io.grpc.MethodDescriptor<com.hivearmor.service.grpc.VerifyConnectorIdentityRequest, com.hivearmor.service.grpc.VerifyConnectorIdentityResponse> getVerifyConnectorIdentityMethod;
+    if ((getVerifyConnectorIdentityMethod = AgentServiceGrpc.getVerifyConnectorIdentityMethod) == null) {
+      synchronized (AgentServiceGrpc.class) {
+        if ((getVerifyConnectorIdentityMethod = AgentServiceGrpc.getVerifyConnectorIdentityMethod) == null) {
+          AgentServiceGrpc.getVerifyConnectorIdentityMethod = getVerifyConnectorIdentityMethod =
+              io.grpc.MethodDescriptor.<com.hivearmor.service.grpc.VerifyConnectorIdentityRequest, com.hivearmor.service.grpc.VerifyConnectorIdentityResponse>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "VerifyConnectorIdentity"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.VerifyConnectorIdentityRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.VerifyConnectorIdentityResponse.getDefaultInstance()))
+              .setSchemaDescriptor(new AgentServiceMethodDescriptorSupplier("VerifyConnectorIdentity"))
+              .build();
+        }
+      }
+    }
+    return getVerifyConnectorIdentityMethod;
+  }
+
+  private static volatile io.grpc.MethodDescriptor<com.hivearmor.service.grpc.ListConnectorAuthorizationRequest,
+      com.hivearmor.service.grpc.ListConnectorAuthorizationResponse> getListConnectorAuthorizationMethod;
+
+  @io.grpc.stub.annotations.RpcMethod(
+      fullMethodName = SERVICE_NAME + '/' + "ListConnectorAuthorization",
+      requestType = com.hivearmor.service.grpc.ListConnectorAuthorizationRequest.class,
+      responseType = com.hivearmor.service.grpc.ListConnectorAuthorizationResponse.class,
+      methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
+  public static io.grpc.MethodDescriptor<com.hivearmor.service.grpc.ListConnectorAuthorizationRequest,
+      com.hivearmor.service.grpc.ListConnectorAuthorizationResponse> getListConnectorAuthorizationMethod() {
+    io.grpc.MethodDescriptor<com.hivearmor.service.grpc.ListConnectorAuthorizationRequest, com.hivearmor.service.grpc.ListConnectorAuthorizationResponse> getListConnectorAuthorizationMethod;
+    if ((getListConnectorAuthorizationMethod = AgentServiceGrpc.getListConnectorAuthorizationMethod) == null) {
+      synchronized (AgentServiceGrpc.class) {
+        if ((getListConnectorAuthorizationMethod = AgentServiceGrpc.getListConnectorAuthorizationMethod) == null) {
+          AgentServiceGrpc.getListConnectorAuthorizationMethod = getListConnectorAuthorizationMethod =
+              io.grpc.MethodDescriptor.<com.hivearmor.service.grpc.ListConnectorAuthorizationRequest, com.hivearmor.service.grpc.ListConnectorAuthorizationResponse>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(SERVICE_NAME, "ListConnectorAuthorization"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.ListConnectorAuthorizationRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.hivearmor.service.grpc.ListConnectorAuthorizationResponse.getDefaultInstance()))
+              .setSchemaDescriptor(new AgentServiceMethodDescriptorSupplier("ListConnectorAuthorization"))
+              .build();
+        }
+      }
+    }
+    return getListConnectorAuthorizationMethod;
+  }
+
   /**
    * Creates a new async stub that supports all call types for the service
    */
@@ -290,6 +538,62 @@ public final class AgentServiceGrpc {
         io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.ListAgentsCommandsResponse> responseObserver) {
       io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getListAgentCommandsMethod(), responseObserver);
     }
+
+    /**
+     */
+    default void createEnrollmentToken(com.hivearmor.service.grpc.CreateEnrollmentTokenRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.CreateEnrollmentTokenResponse> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getCreateEnrollmentTokenMethod(), responseObserver);
+    }
+
+    /**
+     */
+    default void listEnrollmentTokens(com.hivearmor.service.grpc.ListEnrollmentTokensRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.ListEnrollmentTokensResponse> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getListEnrollmentTokensMethod(), responseObserver);
+    }
+
+    /**
+     */
+    default void revokeEnrollmentToken(com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.EnrollmentToken> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getRevokeEnrollmentTokenMethod(), responseObserver);
+    }
+
+    /**
+     */
+    default void rotateAgentCredential(com.hivearmor.service.grpc.AgentCredentialRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.AgentCredentialResponse> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getRotateAgentCredentialMethod(), responseObserver);
+    }
+
+    /**
+     */
+    default void revokeAgentCredential(com.hivearmor.service.grpc.AgentCredentialRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.AgentCredentialResponse> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getRevokeAgentCredentialMethod(), responseObserver);
+    }
+
+    /**
+     */
+    default void listEnrollmentAuditEvents(com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getListEnrollmentAuditEventsMethod(), responseObserver);
+    }
+
+    /**
+     */
+    default void verifyConnectorIdentity(com.hivearmor.service.grpc.VerifyConnectorIdentityRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.VerifyConnectorIdentityResponse> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getVerifyConnectorIdentityMethod(), responseObserver);
+    }
+
+    /**
+     */
+    default void listConnectorAuthorization(com.hivearmor.service.grpc.ListConnectorAuthorizationRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.ListConnectorAuthorizationResponse> responseObserver) {
+      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getListConnectorAuthorizationMethod(), responseObserver);
+    }
   }
 
   /**
@@ -366,6 +670,70 @@ public final class AgentServiceGrpc {
       io.grpc.stub.ClientCalls.asyncUnaryCall(
           getChannel().newCall(getListAgentCommandsMethod(), getCallOptions()), request, responseObserver);
     }
+
+    /**
+     */
+    public void createEnrollmentToken(com.hivearmor.service.grpc.CreateEnrollmentTokenRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.CreateEnrollmentTokenResponse> responseObserver) {
+      io.grpc.stub.ClientCalls.asyncUnaryCall(
+          getChannel().newCall(getCreateEnrollmentTokenMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
+    public void listEnrollmentTokens(com.hivearmor.service.grpc.ListEnrollmentTokensRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.ListEnrollmentTokensResponse> responseObserver) {
+      io.grpc.stub.ClientCalls.asyncUnaryCall(
+          getChannel().newCall(getListEnrollmentTokensMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
+    public void revokeEnrollmentToken(com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.EnrollmentToken> responseObserver) {
+      io.grpc.stub.ClientCalls.asyncUnaryCall(
+          getChannel().newCall(getRevokeEnrollmentTokenMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
+    public void rotateAgentCredential(com.hivearmor.service.grpc.AgentCredentialRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.AgentCredentialResponse> responseObserver) {
+      io.grpc.stub.ClientCalls.asyncUnaryCall(
+          getChannel().newCall(getRotateAgentCredentialMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
+    public void revokeAgentCredential(com.hivearmor.service.grpc.AgentCredentialRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.AgentCredentialResponse> responseObserver) {
+      io.grpc.stub.ClientCalls.asyncUnaryCall(
+          getChannel().newCall(getRevokeAgentCredentialMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
+    public void listEnrollmentAuditEvents(com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse> responseObserver) {
+      io.grpc.stub.ClientCalls.asyncUnaryCall(
+          getChannel().newCall(getListEnrollmentAuditEventsMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
+    public void verifyConnectorIdentity(com.hivearmor.service.grpc.VerifyConnectorIdentityRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.VerifyConnectorIdentityResponse> responseObserver) {
+      io.grpc.stub.ClientCalls.asyncUnaryCall(
+          getChannel().newCall(getVerifyConnectorIdentityMethod(), getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
+    public void listConnectorAuthorization(com.hivearmor.service.grpc.ListConnectorAuthorizationRequest request,
+        io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.ListConnectorAuthorizationResponse> responseObserver) {
+      io.grpc.stub.ClientCalls.asyncUnaryCall(
+          getChannel().newCall(getListConnectorAuthorizationMethod(), getCallOptions()), request, responseObserver);
+    }
   }
 
   /**
@@ -417,6 +785,62 @@ public final class AgentServiceGrpc {
     public com.hivearmor.service.grpc.ListAgentsCommandsResponse listAgentCommands(com.hivearmor.service.grpc.ListRequest request) {
       return io.grpc.stub.ClientCalls.blockingUnaryCall(
           getChannel(), getListAgentCommandsMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public com.hivearmor.service.grpc.CreateEnrollmentTokenResponse createEnrollmentToken(com.hivearmor.service.grpc.CreateEnrollmentTokenRequest request) {
+      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+          getChannel(), getCreateEnrollmentTokenMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public com.hivearmor.service.grpc.ListEnrollmentTokensResponse listEnrollmentTokens(com.hivearmor.service.grpc.ListEnrollmentTokensRequest request) {
+      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+          getChannel(), getListEnrollmentTokensMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public com.hivearmor.service.grpc.EnrollmentToken revokeEnrollmentToken(com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest request) {
+      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+          getChannel(), getRevokeEnrollmentTokenMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public com.hivearmor.service.grpc.AgentCredentialResponse rotateAgentCredential(com.hivearmor.service.grpc.AgentCredentialRequest request) {
+      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+          getChannel(), getRotateAgentCredentialMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public com.hivearmor.service.grpc.AgentCredentialResponse revokeAgentCredential(com.hivearmor.service.grpc.AgentCredentialRequest request) {
+      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+          getChannel(), getRevokeAgentCredentialMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse listEnrollmentAuditEvents(com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest request) {
+      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+          getChannel(), getListEnrollmentAuditEventsMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public com.hivearmor.service.grpc.VerifyConnectorIdentityResponse verifyConnectorIdentity(com.hivearmor.service.grpc.VerifyConnectorIdentityRequest request) {
+      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+          getChannel(), getVerifyConnectorIdentityMethod(), getCallOptions(), request);
+    }
+
+    /**
+     */
+    public com.hivearmor.service.grpc.ListConnectorAuthorizationResponse listConnectorAuthorization(com.hivearmor.service.grpc.ListConnectorAuthorizationRequest request) {
+      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+          getChannel(), getListConnectorAuthorizationMethod(), getCallOptions(), request);
     }
   }
 
@@ -475,6 +899,70 @@ public final class AgentServiceGrpc {
       return io.grpc.stub.ClientCalls.futureUnaryCall(
           getChannel().newCall(getListAgentCommandsMethod(), getCallOptions()), request);
     }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<com.hivearmor.service.grpc.CreateEnrollmentTokenResponse> createEnrollmentToken(
+        com.hivearmor.service.grpc.CreateEnrollmentTokenRequest request) {
+      return io.grpc.stub.ClientCalls.futureUnaryCall(
+          getChannel().newCall(getCreateEnrollmentTokenMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<com.hivearmor.service.grpc.ListEnrollmentTokensResponse> listEnrollmentTokens(
+        com.hivearmor.service.grpc.ListEnrollmentTokensRequest request) {
+      return io.grpc.stub.ClientCalls.futureUnaryCall(
+          getChannel().newCall(getListEnrollmentTokensMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<com.hivearmor.service.grpc.EnrollmentToken> revokeEnrollmentToken(
+        com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest request) {
+      return io.grpc.stub.ClientCalls.futureUnaryCall(
+          getChannel().newCall(getRevokeEnrollmentTokenMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<com.hivearmor.service.grpc.AgentCredentialResponse> rotateAgentCredential(
+        com.hivearmor.service.grpc.AgentCredentialRequest request) {
+      return io.grpc.stub.ClientCalls.futureUnaryCall(
+          getChannel().newCall(getRotateAgentCredentialMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<com.hivearmor.service.grpc.AgentCredentialResponse> revokeAgentCredential(
+        com.hivearmor.service.grpc.AgentCredentialRequest request) {
+      return io.grpc.stub.ClientCalls.futureUnaryCall(
+          getChannel().newCall(getRevokeAgentCredentialMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse> listEnrollmentAuditEvents(
+        com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest request) {
+      return io.grpc.stub.ClientCalls.futureUnaryCall(
+          getChannel().newCall(getListEnrollmentAuditEventsMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<com.hivearmor.service.grpc.VerifyConnectorIdentityResponse> verifyConnectorIdentity(
+        com.hivearmor.service.grpc.VerifyConnectorIdentityRequest request) {
+      return io.grpc.stub.ClientCalls.futureUnaryCall(
+          getChannel().newCall(getVerifyConnectorIdentityMethod(), getCallOptions()), request);
+    }
+
+    /**
+     */
+    public com.google.common.util.concurrent.ListenableFuture<com.hivearmor.service.grpc.ListConnectorAuthorizationResponse> listConnectorAuthorization(
+        com.hivearmor.service.grpc.ListConnectorAuthorizationRequest request) {
+      return io.grpc.stub.ClientCalls.futureUnaryCall(
+          getChannel().newCall(getListConnectorAuthorizationMethod(), getCallOptions()), request);
+    }
   }
 
   private static final int METHODID_REGISTER_AGENT = 0;
@@ -482,7 +970,15 @@ public final class AgentServiceGrpc {
   private static final int METHODID_DELETE_AGENT = 2;
   private static final int METHODID_LIST_AGENTS = 3;
   private static final int METHODID_LIST_AGENT_COMMANDS = 4;
-  private static final int METHODID_AGENT_STREAM = 5;
+  private static final int METHODID_CREATE_ENROLLMENT_TOKEN = 5;
+  private static final int METHODID_LIST_ENROLLMENT_TOKENS = 6;
+  private static final int METHODID_REVOKE_ENROLLMENT_TOKEN = 7;
+  private static final int METHODID_ROTATE_AGENT_CREDENTIAL = 8;
+  private static final int METHODID_REVOKE_AGENT_CREDENTIAL = 9;
+  private static final int METHODID_LIST_ENROLLMENT_AUDIT_EVENTS = 10;
+  private static final int METHODID_VERIFY_CONNECTOR_IDENTITY = 11;
+  private static final int METHODID_LIST_CONNECTOR_AUTHORIZATION = 12;
+  private static final int METHODID_AGENT_STREAM = 13;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -520,6 +1016,38 @@ public final class AgentServiceGrpc {
         case METHODID_LIST_AGENT_COMMANDS:
           serviceImpl.listAgentCommands((com.hivearmor.service.grpc.ListRequest) request,
               (io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.ListAgentsCommandsResponse>) responseObserver);
+          break;
+        case METHODID_CREATE_ENROLLMENT_TOKEN:
+          serviceImpl.createEnrollmentToken((com.hivearmor.service.grpc.CreateEnrollmentTokenRequest) request,
+              (io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.CreateEnrollmentTokenResponse>) responseObserver);
+          break;
+        case METHODID_LIST_ENROLLMENT_TOKENS:
+          serviceImpl.listEnrollmentTokens((com.hivearmor.service.grpc.ListEnrollmentTokensRequest) request,
+              (io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.ListEnrollmentTokensResponse>) responseObserver);
+          break;
+        case METHODID_REVOKE_ENROLLMENT_TOKEN:
+          serviceImpl.revokeEnrollmentToken((com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest) request,
+              (io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.EnrollmentToken>) responseObserver);
+          break;
+        case METHODID_ROTATE_AGENT_CREDENTIAL:
+          serviceImpl.rotateAgentCredential((com.hivearmor.service.grpc.AgentCredentialRequest) request,
+              (io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.AgentCredentialResponse>) responseObserver);
+          break;
+        case METHODID_REVOKE_AGENT_CREDENTIAL:
+          serviceImpl.revokeAgentCredential((com.hivearmor.service.grpc.AgentCredentialRequest) request,
+              (io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.AgentCredentialResponse>) responseObserver);
+          break;
+        case METHODID_LIST_ENROLLMENT_AUDIT_EVENTS:
+          serviceImpl.listEnrollmentAuditEvents((com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest) request,
+              (io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse>) responseObserver);
+          break;
+        case METHODID_VERIFY_CONNECTOR_IDENTITY:
+          serviceImpl.verifyConnectorIdentity((com.hivearmor.service.grpc.VerifyConnectorIdentityRequest) request,
+              (io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.VerifyConnectorIdentityResponse>) responseObserver);
+          break;
+        case METHODID_LIST_CONNECTOR_AUTHORIZATION:
+          serviceImpl.listConnectorAuthorization((com.hivearmor.service.grpc.ListConnectorAuthorizationRequest) request,
+              (io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.ListConnectorAuthorizationResponse>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -584,6 +1112,62 @@ public final class AgentServiceGrpc {
               com.hivearmor.service.grpc.ListRequest,
               com.hivearmor.service.grpc.ListAgentsCommandsResponse>(
                 service, METHODID_LIST_AGENT_COMMANDS)))
+        .addMethod(
+          getCreateEnrollmentTokenMethod(),
+          io.grpc.stub.ServerCalls.asyncUnaryCall(
+            new MethodHandlers<
+              com.hivearmor.service.grpc.CreateEnrollmentTokenRequest,
+              com.hivearmor.service.grpc.CreateEnrollmentTokenResponse>(
+                service, METHODID_CREATE_ENROLLMENT_TOKEN)))
+        .addMethod(
+          getListEnrollmentTokensMethod(),
+          io.grpc.stub.ServerCalls.asyncUnaryCall(
+            new MethodHandlers<
+              com.hivearmor.service.grpc.ListEnrollmentTokensRequest,
+              com.hivearmor.service.grpc.ListEnrollmentTokensResponse>(
+                service, METHODID_LIST_ENROLLMENT_TOKENS)))
+        .addMethod(
+          getRevokeEnrollmentTokenMethod(),
+          io.grpc.stub.ServerCalls.asyncUnaryCall(
+            new MethodHandlers<
+              com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest,
+              com.hivearmor.service.grpc.EnrollmentToken>(
+                service, METHODID_REVOKE_ENROLLMENT_TOKEN)))
+        .addMethod(
+          getRotateAgentCredentialMethod(),
+          io.grpc.stub.ServerCalls.asyncUnaryCall(
+            new MethodHandlers<
+              com.hivearmor.service.grpc.AgentCredentialRequest,
+              com.hivearmor.service.grpc.AgentCredentialResponse>(
+                service, METHODID_ROTATE_AGENT_CREDENTIAL)))
+        .addMethod(
+          getRevokeAgentCredentialMethod(),
+          io.grpc.stub.ServerCalls.asyncUnaryCall(
+            new MethodHandlers<
+              com.hivearmor.service.grpc.AgentCredentialRequest,
+              com.hivearmor.service.grpc.AgentCredentialResponse>(
+                service, METHODID_REVOKE_AGENT_CREDENTIAL)))
+        .addMethod(
+          getListEnrollmentAuditEventsMethod(),
+          io.grpc.stub.ServerCalls.asyncUnaryCall(
+            new MethodHandlers<
+              com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest,
+              com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse>(
+                service, METHODID_LIST_ENROLLMENT_AUDIT_EVENTS)))
+        .addMethod(
+          getVerifyConnectorIdentityMethod(),
+          io.grpc.stub.ServerCalls.asyncUnaryCall(
+            new MethodHandlers<
+              com.hivearmor.service.grpc.VerifyConnectorIdentityRequest,
+              com.hivearmor.service.grpc.VerifyConnectorIdentityResponse>(
+                service, METHODID_VERIFY_CONNECTOR_IDENTITY)))
+        .addMethod(
+          getListConnectorAuthorizationMethod(),
+          io.grpc.stub.ServerCalls.asyncUnaryCall(
+            new MethodHandlers<
+              com.hivearmor.service.grpc.ListConnectorAuthorizationRequest,
+              com.hivearmor.service.grpc.ListConnectorAuthorizationResponse>(
+                service, METHODID_LIST_CONNECTOR_AUTHORIZATION)))
         .build();
   }
 
@@ -638,6 +1222,14 @@ public final class AgentServiceGrpc {
               .addMethod(getListAgentsMethod())
               .addMethod(getAgentStreamMethod())
               .addMethod(getListAgentCommandsMethod())
+              .addMethod(getCreateEnrollmentTokenMethod())
+              .addMethod(getListEnrollmentTokensMethod())
+              .addMethod(getRevokeEnrollmentTokenMethod())
+              .addMethod(getRotateAgentCredentialMethod())
+              .addMethod(getRevokeAgentCredentialMethod())
+              .addMethod(getListEnrollmentAuditEventsMethod())
+              .addMethod(getVerifyConnectorIdentityMethod())
+              .addMethod(getListConnectorAuthorizationMethod())
               .build();
         }
       }

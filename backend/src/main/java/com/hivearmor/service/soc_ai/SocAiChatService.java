@@ -47,8 +47,7 @@ public class SocAiChatService {
      * through the provided SseEmitter. The emitter is completed/failed on the
      * executor thread; callers should return the emitter immediately.
      */
-    public void streamChat(ChatRequest chatRequest, SseEmitter emitter) {
-        executor.submit(() -> {
+    public void streamChat(ChatRequest chatRequest, SseEmitter emitter) {        executor.submit(() -> {
             try {
                 doStreamChat(chatRequest, emitter);
             } catch (Exception e) {
@@ -125,5 +124,41 @@ public class SocAiChatService {
         }
 
         emitter.complete();
+    }
+
+    /**
+     * Issues a synchronous (non-streaming) chat request to the soc-ai plugin and
+     * returns the full aggregated response text.
+     *
+     * @param chatRequest the chat request to forward
+     * @return the full response text from the AI plugin
+     * @throws RuntimeException when the plugin returns a non-2xx status or is unavailable
+     */
+    public String querySynchronous(ChatRequest chatRequest) {
+        String baseUrl = socAiBaseUrl;
+        if (!StringUtils.hasText(baseUrl)) {
+            throw new RuntimeException("SOC_AI_BASE_URL is not configured");
+        }
+        String internalKey = System.getenv(Constants.ENV_INTERNAL_KEY);
+        if (!StringUtils.hasText(internalKey)) {
+            throw new RuntimeException("INTERNAL_KEY is not configured");
+        }
+        Map<String, Object> body = new HashMap<>();
+        body.put("messages", chatRequest.getMessages());
+        body.put("stream", false);
+        String bodyJson = gson.toJson(body);
+        Request request = new Request.Builder()
+            .url(baseUrl + CHAT_PATH)
+            .post(RequestBody.create(bodyJson, MediaType.get("application/json")))
+            .header("X-Internal-Key", internalKey)
+            .build();
+        try (Response response = httpClient.newCall(request).execute()) {
+            if (!response.isSuccessful() || response.body() == null) {
+                throw new RuntimeException("SOC-AI plugin returned HTTP " + response.code());
+            }
+            return response.body().string();
+        } catch (IOException e) {
+            throw new RuntimeException("SOC-AI synchronous call failed: " + e.getMessage(), e);
+        }
     }
 }

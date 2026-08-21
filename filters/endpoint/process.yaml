@@ -1,0 +1,96 @@
+# HiveArmor Process Telemetry filter — version 1.0.0
+# DataType: process
+#
+# Processes events emitted by:
+#   - agent/collector/ebpf.Collector (Linux eBPF tracepoints)
+#   - agent/collector/etw.Collector  (Windows ETW Kernel-Process)
+#   - agent/collector/esf.Collector  (macOS EndpointSecurity)
+#
+# Raw payload is the JSON KernelEvent / ETWEvent / ESFEvent struct.
+
+pipeline:
+  - dataTypes:
+      - process
+    steps:
+      # Parse JSON payload from agent EDR collectors.
+      - json:
+          source: raw
+          where: 'startsWith("raw", "{")'
+
+      # Normalise PID to origin.pid field.
+      - rename:
+          from:
+            - log.pid
+            - log.PID
+          to: origin.pid
+          where: 'exists("log.pid") || exists("log.PID")'
+
+      # Normalise PPID.
+      - rename:
+          from:
+            - log.ppid
+            - log.PPID
+          to: log.ppid
+          where: 'exists("log.ppid") || exists("log.PPID")'
+
+      # Normalise process name (agent uses different field names per platform).
+      - rename:
+          from:
+            - log.processName
+            - log.Comm
+            - log.comm
+          to: origin.process
+          where: 'exists("log.processName") || exists("log.Comm") || exists("log.comm")'
+
+      # Normalise executable path.
+      - rename:
+          from:
+            - log.imagePath
+            - log.ExePath
+            - log.exePath
+          to: origin.path
+          where: 'exists("log.imagePath") || exists("log.ExePath") || exists("log.exePath")'
+
+      # Normalise command line.
+      - rename:
+          from:
+            - log.commandLine
+            - log.CommandLine
+            - log.Args
+            - log.args
+            - log.Argv
+          to: origin.command
+          where: 'exists("log.commandLine") || exists("log.CommandLine") || exists("log.Args") || exists("log.Argv")'
+
+      # Normalise user.
+      - rename:
+          from:
+            - log.user
+            - log.processUser
+          to: origin.user
+          where: 'exists("log.user") || exists("log.processUser")'
+
+      # Map event type to action.
+      - rename:
+          from:
+            - log.eventType
+            - log.EventType
+            - log.Type
+          to: action
+          where: 'exists("log.eventType") || exists("log.EventType") || exists("log.Type")'
+
+      # Map severity field.
+      - rename:
+          from:
+            - log.severity
+            - log.Severity
+          to: severity
+          where: 'exists("log.severity") || exists("log.Severity")'
+
+      # Derive data source from hostname.
+      - rename:
+          from:
+            - log.dataSource
+            - log.DataSource
+          to: dataSource
+          where: 'exists("log.dataSource") || exists("log.DataSource")'

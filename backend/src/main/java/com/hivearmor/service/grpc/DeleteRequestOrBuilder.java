@@ -20,4 +20,16 @@ public interface DeleteRequestOrBuilder extends
    */
   com.google.protobuf.ByteString
       getDeletedByBytes();
+
+  /**
+   * <code>uint32 agent_id = 2;</code>
+   * @return The agentId.
+   */
+  int getAgentId();
+
+  /**
+   * <code>int64 tenant_id = 3;</code>
+   * @return The tenantId.
+   */
+  long getTenantId();
 }

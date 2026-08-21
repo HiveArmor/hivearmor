@@ -1,0 +1,11 @@
+[Unit]
+Description=HiveArmor SIEM-009 pipeline signals soak (hourly samples for ~24h observation)
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1h
+Persistent=true
+Unit=hivearmor-slo-soak.service
+
+[Install]
+WantedBy=timers.target

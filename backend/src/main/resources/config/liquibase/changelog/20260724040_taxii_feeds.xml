@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260724040-1" author="hivearmor">
+        <createTable tableName="hive_taxii_feed">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="taxii_url" type="VARCHAR(512)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="collection_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="api_key_encrypted" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_sync_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="last_sync_status" type="VARCHAR(20)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="last_sync_count" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260724040-2" author="hivearmor">
+        <createTable tableName="hive_threat_ioc">
+            <column name="id" type="BIGSERIAL" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ioc_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ioc_value" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="confidence" type="INTEGER" defaultValueNumeric="50">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tlp" type="VARCHAR(10)" defaultValue="WHITE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="feed_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="feed_name" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="source_ref" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="first_seen" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="last_seen" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="expires_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="tags" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="hive_threat_ioc"
+            baseColumnNames="feed_id"
+            constraintName="fk_hive_threat_ioc_feed_id"
+            referencedTableName="hive_taxii_feed"
+            referencedColumnNames="id"
+            onDelete="SET NULL"/>
+
+        <addUniqueConstraint
+            tableName="hive_threat_ioc"
+            columnNames="ioc_type, ioc_value, feed_id"
+            constraintName="uq_ioc_type_value_feed"/>
+
+        <createIndex tableName="hive_threat_ioc" indexName="idx_ioc_value">
+            <column name="ioc_value"/>
+        </createIndex>
+
+        <createIndex tableName="hive_threat_ioc" indexName="idx_ioc_type_value">
+            <column name="ioc_type"/>
+            <column name="ioc_value"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

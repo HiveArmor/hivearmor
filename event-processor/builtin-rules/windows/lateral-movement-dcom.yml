@@ -1,0 +1,42 @@
+id: e7f8a9b0-c1d2-3456-efab-567890123417
+title: DCOM Lateral Movement via MMC or ShellWindows
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.lateral_movement
+  - attack.T1021
+  - attack.T1021.003
+detection:
+  selection_mmc:
+    ParentImage|endswith: '\mmc.exe'
+    Image|endswith:
+      - '\cmd.exe'
+      - '\powershell.exe'
+      - '\wscript.exe'
+  selection_shellwindows:
+    ParentImage|endswith:
+      - '\explorer.exe'
+      - '\svchost.exe'
+    CommandLine|contains:
+      - 'ShellWindows'
+      - 'ShellBrowserWindow'
+      - '9BA05972-F6A8-11CF-A442-00A0C90A8F39'
+  condition: selection_mmc or selection_shellwindows
+falsepositives:
+  - Microsoft Management Console legitimate operations
+  - Administrative scripts using DCOM
+impact:
+  confidentiality: high
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - Image
+groupBy:
+  - ComputerName
+mitre:
+  tactic: lateral-movement
+  technique: T1021.003

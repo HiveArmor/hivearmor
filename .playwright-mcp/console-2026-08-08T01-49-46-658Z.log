@@ -1,0 +1,5 @@
+[     661ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3001/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     861ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3001/api/overview/health:0
+[     866ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3001/api/overview/health:0
+[     873ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3001/api/ha-oidc/providers/enabled:0
+[   26347ms] [ERROR] Failed to load resource: the server responded with a status of 403 (Forbidden) @ http://localhost:3001/api/authenticate:0

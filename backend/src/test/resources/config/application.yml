@@ -17,6 +17,12 @@ spring:
   liquibase:
     enabled: false
 
+hivearmor:
+  air-gap: ${HIVEARMOR_AIR_GAP:false}
+  encryption-key: XDv9ooNP0JE2FhMyGDJDPHcostNIRsYNdqEVkXMlyDc=
+  rule-gen:
+    output-dir: "${java.io.tmpdir}/hivearmor-test-rules"
+
 jhipster:
   security:
     content-security-policy: "default-src 'self'"

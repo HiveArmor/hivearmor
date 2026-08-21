@@ -1,0 +1,11 @@
+[Unit]
+Description=HiveArmor SIEM-009 pipeline signals soak sample
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/ubuntu/HiveArmor-v1/deploy/staging
+ExecStart=/home/ubuntu/HiveArmor-v1/deploy/staging/run-siem009-slo-soak-sample.sh
+User=ubuntu
+Group=ubuntu

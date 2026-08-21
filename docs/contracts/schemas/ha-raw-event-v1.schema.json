@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.hivearmor.local/events/ha-raw-event-v1.schema.json",
+  "title": "HiveArmor raw event envelope v1",
+  "description": "Versioned transport envelope for records accepted into hivearmor.raw.events.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "eventId",
+    "tenantId",
+    "observedAt",
+    "receivedAt",
+    "source",
+    "producer",
+    "payload"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "ha.raw-event.v1"
+    },
+    "eventId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "tenantId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "receivedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["connectorType", "connectorId", "dataType", "dataSource"],
+      "properties": {
+        "connectorType": {
+          "type": "string",
+          "enum": ["agent", "collector", "http", "otlp", "internal"]
+        },
+        "connectorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "dataType": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "dataSource": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    },
+    "traceId": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "payload": {
+      "type": "object",
+      "description": "Serialized HiveArmor plugins.Log. Envelope and payload identity/source fields must match."
+    }
+  }
+}

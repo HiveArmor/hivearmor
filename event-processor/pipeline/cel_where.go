@@ -5,7 +5,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 var (

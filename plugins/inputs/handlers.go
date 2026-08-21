@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
+	"errors"
 	"net"
 	"net/http"
 	"time"
@@ -14,9 +16,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/health"
 	grpcHealth "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 func startHTTPServer(middlewares *Middlewares, cert string, key string) {
@@ -26,6 +31,7 @@ func startHTTPServer(middlewares *Middlewares, cert string, key string) {
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.Default()
+	router.Use(middlewares.LimitBody())
 	router.POST("/v1/logs", middlewares.HttpAuth(), Log)
 	router.POST("/v1/github-webhook", middlewares.GitHubAuth(), GitHub)
 	router.GET("/v1/ping", Ping)
@@ -78,8 +84,7 @@ func Log(c *gin.Context) {
 
 	_, err := buf.ReadFrom(c.Request.Body)
 	if err != nil {
-		e := catcher.Error("failed to read request body", err, map[string]any{"process": "plugin_com.hivearmor.inputs"})
-		e.GinError(c)
+		writeMaxBytesOrError(c, err, "failed to read request body")
 		return
 	}
 
@@ -94,47 +99,18 @@ func Log(c *gin.Context) {
 		return
 	}
 
-	if l.Id == "" {
-		l.Id = uuid.New().String()
-	}
-
-	if l.TenantId == "" {
-		l.TenantId = defaultTenant
-	}
-
-	if l.DataType == "" {
-		l.DataType = "generic"
-	}
-
-	if l.DataSource == "" {
-		l.DataSource = "unknown"
-	}
-
-	if l.Timestamp == "" {
-		l.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
-	}
-
-	entry := &logEntry{log: l, result: make(chan error, 1)}
-
-	select {
-	case localLogsChannel <- entry:
-	default:
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "input channel full, retry later"})
+	identity := identityFromContext(c.Request.Context())
+	if err := prepareIngressLog(l, identity); err != nil {
+		writeIdentityBindError(c, err)
 		return
 	}
 
-	select {
-	case deliveryErr := <-entry.result:
-		if deliveryErr != nil {
-			e := catcher.Error("failed to deliver log to engine", deliveryErr, map[string]any{
-				"process": "plugin_com.hivearmor.inputs",
-				"lastId":  l.Id,
-			})
-			e.GinError(c)
-			return
+	if err := enqueueLog(c.Request.Context(), l, identity, func(status int, payload gin.H) {
+		if status == http.StatusTooManyRequests || status == http.StatusServiceUnavailable {
+			c.Header("Retry-After", "1")
 		}
-	case <-c.Request.Context().Done():
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "request cancelled before delivery"})
+		c.JSON(status, payload)
+	}); err != nil {
 		return
 	}
 
@@ -146,49 +122,66 @@ func Ping(c *gin.Context) {
 }
 
 func GitHub(c *gin.Context) {
-	buf := new(bytes.Buffer)
-	_, err := buf.ReadFrom(c.Request.Body)
-	if err != nil {
-		e := catcher.Error("failed to read request body", err, map[string]any{"process": "plugin_com.hivearmor.inputs"})
-		e.GinError(c)
-		return
-	}
+	c.JSON(http.StatusForbidden, gin.H{"error": errMissingIdentity.Error()})
+}
 
-	var l = new(plugins.Log)
-
-	l.Raw = buf.String()
-	l.Id = uuid.New().String()
-	l.DataType = "github"
-	l.DataSource = "github"
-	l.TenantId = defaultTenant
-	l.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
-
-	entry := &logEntry{log: l, result: make(chan error, 1)}
+func enqueueLog(ctx context.Context, l *plugins.Log, identity *ConnectorIdentity, writeHTTP func(int, gin.H)) error {
+	entry := &logEntry{log: l, identity: identity, result: make(chan error, 1)}
 
 	select {
 	case localLogsChannel <- entry:
 	default:
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "input channel full, retry later"})
-		return
+		if writeHTTP != nil {
+			writeHTTP(http.StatusServiceUnavailable, gin.H{"error": "input channel full, retry later"})
+			return errChannelFull
+		}
+		return status.Error(codes.ResourceExhausted, "input channel full, rejecting log for retry; retry-after=1")
 	}
 
 	select {
 	case deliveryErr := <-entry.result:
 		if deliveryErr != nil {
-			e := catcher.Error("failed to deliver log to engine", deliveryErr, map[string]any{
+			return catcher.Error("failed to deliver log to engine", deliveryErr, map[string]any{
 				"process": "plugin_com.hivearmor.inputs",
 				"lastId":  l.Id,
 			})
-			e.GinError(c)
-			return
 		}
-	case <-c.Request.Context().Done():
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "request cancelled before delivery"})
-		return
+	case <-ctx.Done():
+		if writeHTTP != nil {
+			writeHTTP(http.StatusServiceUnavailable, gin.H{"error": "request cancelled before delivery"})
+			return ctx.Err()
+		}
+		return ctx.Err()
 	}
-
-	c.JSON(http.StatusOK, plugins.Ack{LastId: l.Id})
+	return nil
 }
+
+func writeIdentityBindError(c *gin.Context, err error) {
+	httpStatus := http.StatusForbidden
+	if errors.Is(err, errTenantConflict) {
+		httpStatus = http.StatusConflict
+	}
+	e := catcher.Error("cannot bind connector identity", err, map[string]any{"process": "plugin_com.hivearmor.inputs", "status": httpStatus})
+	e.GinError(c)
+}
+
+func prepareIngressLog(l *plugins.Log, identity *ConnectorIdentity) error {
+	if err := bindLogIdentity(l, identity); err != nil {
+		return err
+	}
+	if l.Id == "" {
+		l.Id = uuid.New().String()
+	}
+	if l.DataType == "" {
+		l.DataType = "generic"
+	}
+	if l.Timestamp == "" {
+		l.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
+	}
+	return nil
+}
+
+var errChannelFull = errors.New("input channel full")
 
 type integration struct {
 	plugins.UnimplementedIntegrationServer
@@ -228,6 +221,8 @@ func startGRPCServer(middlewares *Middlewares, cert string, key string) error {
 
 	server := grpc.NewServer(
 		grpc.Creds(transportCredentials),
+		grpc.MaxRecvMsgSize(maxMessageBytes),
+		grpc.MaxSendMsgSize(maxMessageBytes),
 		grpc.ChainUnaryInterceptor(middlewares.GrpcAuth),
 		grpc.ChainStreamInterceptor(middlewares.GrpcStreamAuth),
 	)
@@ -270,56 +265,28 @@ func startGRPCServer(middlewares *Middlewares, cert string, key string) error {
 }
 
 func (i *integration) ProcessLog(srv plugins.Integration_ProcessLogServer) error {
+	identity := identityFromContext(srv.Context())
 	for {
 		l, err := srv.Recv()
 		if err != nil {
 			return err
 		}
 
-		if l.Id == "" {
-			l.Id = uuid.New().String()
+		if err := prepareIngressLog(l, identity); err != nil {
+			return identityBindStatus(err)
 		}
-
-		if l.TenantId == "" {
-			l.TenantId = defaultTenant
-		}
-
-		if l.DataType == "" {
-			l.DataType = "generic"
-		}
-
-		if l.DataSource == "" {
-			l.DataSource = "unknown"
-		}
-
-		if l.Timestamp == "" {
-			l.Timestamp = time.Now().UTC().Format(time.RFC3339Nano)
-		}
-
-		entry := &logEntry{log: l, result: make(chan error, 1)}
-
-		// Non-blocking enqueue: if the channel is full, signal the collector to
-		// retry rather than blocking indefinitely with a full buffer.
-		select {
-		case localLogsChannel <- entry:
-		default:
-			return catcher.Error("input channel full, rejecting log for retry", nil, map[string]any{
-				"process": "plugin_com.hivearmor.inputs",
-				"lastId":  l.Id,
-			})
-		}
-
-		// Wait for sendLog() to confirm delivery to the engine before Acking.
-		select {
-		case deliveryErr := <-entry.result:
-			if deliveryErr != nil {
-				return catcher.Error("failed to deliver log to engine", deliveryErr, map[string]any{
-					"process": "plugin_com.hivearmor.inputs",
-					"lastId":  l.Id,
-				})
+		if logAuth != nil {
+			if wait, ok := logAuth.limiter.Allow(identity, nowUTC()); !ok {
+				_ = grpc.SetHeader(srv.Context(), metadata.Pairs("retry-after", retryAfterSeconds(wait)))
+				return status.Error(codes.ResourceExhausted, "rate limit exceeded; retry-after=1")
 			}
-		case <-srv.Context().Done():
-			return srv.Context().Err()
+		}
+
+		if err := enqueueLog(srv.Context(), l, identity, nil); err != nil {
+			if status.Code(err) == codes.ResourceExhausted {
+				_ = grpc.SetHeader(srv.Context(), metadata.Pairs("retry-after", "1"))
+			}
+			return err
 		}
 
 		if err := srv.Send(&plugins.Ack{LastId: l.Id}); err != nil {
@@ -328,5 +295,16 @@ func (i *integration) ProcessLog(srv plugins.Integration_ProcessLogServer) error
 				"lastId":  l.Id,
 			})
 		}
+	}
+}
+
+func identityBindStatus(err error) error {
+	switch {
+	case errors.Is(err, errTenantConflict):
+		return status.Error(codes.PermissionDenied, err.Error())
+	case errors.Is(err, errMissingIdentity), errors.Is(err, errTenantUnbound), errors.Is(err, errIdentityRevoked):
+		return status.Error(codes.PermissionDenied, err.Error())
+	default:
+		return status.Error(codes.InvalidArgument, err.Error())
 	}
 }

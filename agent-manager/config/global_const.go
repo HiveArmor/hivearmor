@@ -26,15 +26,27 @@ func KeyAuthRoutes() []string {
 
 func ConnectionKeyRoutes() []string {
 	return []string{
-		"/agent.AgentService/RegisterAgent",
 		"/agent.CollectorService/RegisterCollector",
 	}
+}
+
+func EnrollmentTokenRoutes() []string {
+	return []string{"/agent.AgentService/RegisterAgent"}
 }
 
 func InternalKeyRoutes() []string {
 	return []string{
 		"/agent.AgentService/ListAgents",
 		"/agent.AgentService/ListAgentCommands",
+		"/agent.AgentService/CreateEnrollmentToken",
+		"/agent.AgentService/ListEnrollmentTokens",
+		"/agent.AgentService/RevokeEnrollmentToken",
+		"/agent.AgentService/RotateAgentCredential",
+		"/agent.AgentService/RevokeAgentCredential",
+		"/agent.AgentService/ListEnrollmentAuditEvents",
+		"/agent.AgentService/VerifyConnectorIdentity",
+		"/agent.AgentService/ListConnectorAuthorization",
+		"/agent.AgentService/DeleteAgent",
 
 		"/agent.CollectorService/ListCollector",
 
@@ -63,4 +75,5 @@ var (
 	DBUser                    = os.Getenv("DB_USER")
 	DBPassword                = os.Getenv("DB_PASSWORD")
 	DBName                    = os.Getenv("DB_NAME")
+	AllowLegacyEnrollment     = os.Getenv("ALLOW_LEGACY_AGENT_ENROLLMENT") == "true"
 )

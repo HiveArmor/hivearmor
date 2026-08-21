@@ -7,7 +7,7 @@ import com.hivearmor.domain.UtmAlertTagRule;
 import com.hivearmor.domain.application_events.enums.ApplicationEventType;
 import com.hivearmor.domain.chart_builder.types.query.FilterType;
 import com.hivearmor.domain.chart_builder.types.query.OperatorType;
-import com.hivearmor.domain.index_pattern.enums.SystemIndexPattern;
+import com.hivearmor.multitenancy.MsspIndexResolver;
 import com.hivearmor.repository.UtmAlertTagRuleRepository;
 import com.hivearmor.service.application_events.ApplicationEventService;
 import com.hivearmor.service.elasticsearch.ElasticsearchService;
@@ -61,6 +61,7 @@ public class UtmAlertTagRuleService {
     private final UtmAlertTagService alertTagService;
     private final ElasticsearchService elasticsearchService;
     private final AlertAssetGroupService alertAssetGroupService;
+    private final MsspIndexResolver indexResolver;
 
 
     /**
@@ -183,7 +184,7 @@ public class UtmAlertTagRuleService {
             filters.add(new FilterType(Constants.alertTags, OperatorType.DOES_NOT_CONTAIN, Constants.FALSE_POSITIVE_TAG));
 
             Query query = SearchUtil.toQuery(filters);
-            String indexPattern = Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS);
+            String indexPattern = indexResolver.resolveAlertIndexPattern();
 
             elasticsearchService.updateByQuery(query, indexPattern, script);
 
@@ -223,7 +224,7 @@ public class UtmAlertTagRuleService {
                         "\n}";
 
                 List<UtmAlertTag> tags = alertTagService.findAllByIdIn(rule.getAppliedTagsAsListOfLong());
-                String indexPattern = Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS);
+                String indexPattern = indexResolver.resolveAlertIndexPattern();
 
                 String tagsForInsert = tags.stream().map(tag -> "'" + tag.getTagName() + "'").collect(Collectors.joining(","));
 
@@ -284,7 +285,7 @@ public class UtmAlertTagRuleService {
             filters.add(new FilterType("dataSource", OperatorType.EXIST, null));
 
             Query query = SearchUtil.toQuery(filters);
-            String indexPattern = Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS);
+            String indexPattern = indexResolver.resolveAlertIndexPattern();
 
             elasticsearchService.updateByQuery(query, indexPattern, script);
 

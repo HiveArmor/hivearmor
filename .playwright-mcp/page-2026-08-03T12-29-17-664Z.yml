@@ -1,0 +1,287 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e3]:
+    - link "Skip to main content" [ref=f2e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f2e5]:
+      - generic [ref=f2e6]:
+        - generic [ref=f2e12]: HiveArmor
+        - generic [ref=f2e13]: Security operations
+      - generic [ref=f2e14]:
+        - button "All authorized tenants" [ref=f2e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f2e24] [cursor=pointer]:
+          - generic [ref=f2e29]: ⌘ K
+        - generic [ref=f2e30]: Production
+      - generic [ref=f2e31]:
+        - 'status "Data pipeline: Critical - Bad Gateway" [ref=f2e1206]'
+        - status "Live events per second" [ref=f2e35]:
+          - generic [ref=f2e37]: 12,840 EPS
+        - button "Notifications" [ref=f2e38] [cursor=pointer]
+        - button "Help" [ref=f2e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f2e47]:
+      - generic [ref=f2e48]:
+        - region "COMMAND" [ref=f2e49]:
+          - generic [ref=f2e50]:
+            - button "Mission Control" [ref=f2e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f2e58] [cursor=pointer]
+            - button "Alerts" [ref=f2e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f2e67] [cursor=pointer]
+            - button "Incidents" [ref=f2e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f2e79]:
+          - generic [ref=f2e80]:
+            - button "Search & Hunt" [ref=f2e81] [cursor=pointer]
+            - button "Investigations" [ref=f2e86] [cursor=pointer]
+            - button "Entities" [ref=f2e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f2e97] [cursor=pointer]
+        - region "DEFEND" [ref=f2e103]:
+          - generic [ref=f2e104]:
+            - button "Detection Rules" [ref=f2e105] [cursor=pointer]
+            - button "Playbooks" [ref=f2e109] [cursor=pointer]
+            - button "Response Library" [ref=f2e114] [cursor=pointer]
+        - region "POSTURE" [ref=f2e118]:
+          - generic [ref=f2e119]:
+            - button "Assets" [ref=f2e120] [cursor=pointer]
+            - button "Identities" [ref=f2e125] [cursor=pointer]
+            - button "Active Directory" [ref=f2e132] [cursor=pointer]
+            - button "Exposure" [ref=f2e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f2e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f2e156] [cursor=pointer]
+            - button "Compliance" [ref=f2e162] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f2e167]:
+          - generic [ref=f2e168]:
+            - button "Endpoints" [ref=f2e169] [cursor=pointer]
+            - button "File Quarantine" [ref=f2e173] [cursor=pointer]
+            - button "File Integrity" [ref=f2e179] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f2e186]:
+          - button "Studio" [ref=f2e188] [cursor=pointer]
+        - region "REPORT" [ref=f2e193]:
+          - button "Scheduled Reports" [ref=f2e195] [cursor=pointer]
+      - generic [ref=f2e200]:
+        - button "User menu" [ref=f2e203] [cursor=pointer]:
+          - generic [ref=f2e204]: MC
+        - button "Pin sidebar open" [ref=f2e205] [cursor=pointer]
+    - main [ref=f2e208]:
+      - generic [ref=f2e212]:
+        - generic [ref=f2e213]:
+          - generic [ref=f2e218]:
+            - generic [ref=f2e219]: DEFEND
+            - heading "Detection Engineering" [level=1] [ref=f2e220]
+          - generic [ref=f2e221]:
+            - generic [ref=f2e222]:
+              - text: Rule health and coverage
+              - generic [ref=f2e229]: J
+              - generic [ref=f2e230]: /
+              - generic [ref=f2e231]: K
+              - generic [ref=f2e232]: navigate
+            - button "Import" [ref=f2e233] [cursor=pointer]
+            - button "Sigma sync" [disabled] [ref=f2e237]
+            - button "Create rule" [ref=f2e242] [cursor=pointer]
+        - generic [ref=f2e244]:
+          - generic [ref=f2e245]:
+            - strong [ref=f2e246]: "Design fixture:"
+            - text: fictional detection content and execution telemetry are enabled.
+          - generic [ref=f2e247]: Production never receives these records.
+        - navigation "Detection engineering views" [ref=f2e248]:
+          - button "Rules 48" [ref=f2e249] [cursor=pointer]:
+            - text: Rules
+            - generic [ref=f2e252]: "48"
+          - button "Rule monitoring 42" [ref=f2e253] [cursor=pointer]:
+            - text: Rule monitoring
+            - generic [ref=f2e256]: "42"
+          - button "ATT&CK coverage 12" [active] [ref=f2e257] [cursor=pointer]:
+            - text: ATT&CK coverage
+            - generic [ref=f2e260]: "12"
+          - button "Test console" [ref=f2e261] [cursor=pointer]
+        - region "MITRE ATT&CK detection coverage" [ref=f2e2109]:
+          - generic [ref=f2e2110]:
+            - textbox "Search ATT&CK coverage" [ref=f2e2115]:
+              - /placeholder: Find tactic, technique, or rule…
+            - combobox "Coverage mode" [ref=f2e2117] [cursor=pointer]:
+              - option "Enabled coverage" [selected]
+              - option "All installed rules"
+            - combobox "Telemetry platform" [ref=f2e2119] [cursor=pointer]:
+              - option "All telemetry" [selected]
+              - option "Endpoint"
+              - option "Identity"
+              - option "Network"
+              - option "Cloud"
+            - generic [ref=f2e2120]:
+              - generic [ref=f2e2125]: Enterprise ATT&CK
+              - strong [ref=f2e2126]: v16
+          - generic [ref=f2e2127]:
+            - article [ref=f2e2128]:
+              - generic [ref=f2e2129]: Covered tactics
+              - strong [ref=f2e2134]: 7/14
+              - generic [ref=f2e2135]: at least one enabled rule
+            - article [ref=f2e2136]:
+              - generic [ref=f2e2137]: Ready techniques
+              - strong [ref=f2e2141]: "8"
+              - generic [ref=f2e2142]: enabled and healthy telemetry
+            - article [ref=f2e2143]:
+              - generic [ref=f2e2144]: Degraded techniques
+              - strong [ref=f2e2147]: "4"
+              - generic [ref=f2e2148]: delayed or failed execution
+            - article [ref=f2e2149]:
+              - generic [ref=f2e2150]: Installed but inactive
+              - strong [ref=f2e2153]: —
+              - generic [ref=f2e2154]: visible in installed mode
+          - generic [ref=f2e2155]:
+            - generic [ref=f2e2156]:
+              - generic [ref=f2e2157]:
+                - generic [ref=f2e2158]:
+                  - strong [ref=f2e2159]: ATT&CK coverage matrix
+                  - generic [ref=f2e2160]: Rule mapping and current data readiness are separate signals
+                - generic [ref=f2e2161]:
+                  - generic [ref=f2e2162]: Ready
+                  - generic [ref=f2e2163]: Degraded
+                  - generic [ref=f2e2164]: Inactive
+              - region "Scrollable ATT&CK tactic matrix" [ref=f2e2165]:
+                - generic [ref=f2e2166]:
+                  - generic [ref=f2e2167]:
+                    - generic [ref=f2e2168]: Reconnaissance
+                    - strong [ref=f2e2169]: "0"
+                  - paragraph [ref=f2e2171]: No mapped rules
+                - generic [ref=f2e2172]:
+                  - generic [ref=f2e2173]:
+                    - generic [ref=f2e2174]: Resource Development
+                    - strong [ref=f2e2175]: "0"
+                  - paragraph [ref=f2e2177]: No mapped rules
+                - generic [ref=f2e2178]:
+                  - generic [ref=f2e2179]:
+                    - generic [ref=f2e2180]: Initial Access
+                    - strong [ref=f2e2181]: "0"
+                  - paragraph [ref=f2e2183]: No mapped rules
+                - generic [ref=f2e2184]:
+                  - generic [ref=f2e2185]:
+                    - generic [ref=f2e2186]: Execution
+                    - strong [ref=f2e2187]: "2"
+                  - generic [ref=f2e2188]:
+                    - button "T1059.001 PowerShell, ready" [ref=f2e2189] [cursor=pointer]:
+                      - code [ref=f2e2190]: T1059.001
+                      - strong [ref=f2e2191]: PowerShell
+                      - generic [ref=f2e2192]: 2/4 active
+                    - button "T1204.002 Malicious File, ready" [ref=f2e2193] [cursor=pointer]:
+                      - code [ref=f2e2194]: T1204.002
+                      - strong [ref=f2e2195]: Malicious File
+                      - generic [ref=f2e2196]: 4/4 active
+                - generic [ref=f2e2197]:
+                  - generic [ref=f2e2198]:
+                    - generic [ref=f2e2199]: Persistence
+                    - strong [ref=f2e2200]: "2"
+                  - generic [ref=f2e2201]:
+                    - button "T1098 Account Manipulation, ready" [ref=f2e2202] [cursor=pointer]:
+                      - code [ref=f2e2203]: T1098
+                      - strong [ref=f2e2204]: Account Manipulation
+                      - generic [ref=f2e2205]: 3/4 active
+                    - button "T1547.001 Registry Run Keys / Startup Folder, ready" [ref=f2e2206] [cursor=pointer]:
+                      - code [ref=f2e2207]: T1547.001
+                      - strong [ref=f2e2208]: Registry Run Keys / Startup Folder
+                      - generic [ref=f2e2209]: 4/4 active
+                - generic [ref=f2e2210]:
+                  - generic [ref=f2e2211]:
+                    - generic [ref=f2e2212]: Privilege Escalation
+                    - strong [ref=f2e2213]: "0"
+                  - paragraph [ref=f2e2215]: No mapped rules
+                - generic [ref=f2e2216]:
+                  - generic [ref=f2e2217]:
+                    - generic [ref=f2e2218]: Defense Evasion
+                    - strong [ref=f2e2219]: "1"
+                  - button "T1078 Valid Accounts, ready" [ref=f2e2221] [cursor=pointer]:
+                    - code [ref=f2e2222]: T1078
+                    - strong [ref=f2e2223]: Valid Accounts
+                    - generic [ref=f2e2224]: 4/4 active
+                - generic [ref=f2e2225]:
+                  - generic [ref=f2e2226]:
+                    - generic [ref=f2e2227]: Credential Access
+                    - strong [ref=f2e2228]: "3"
+                  - generic [ref=f2e2229]:
+                    - button "T1003.001 LSASS Memory, ready" [ref=f2e2230] [cursor=pointer]:
+                      - code [ref=f2e2231]: T1003.001
+                      - strong [ref=f2e2232]: LSASS Memory
+                      - generic [ref=f2e2233]: 4/4 active
+                    - button "T1558.003 Kerberoasting, ready" [ref=f2e2234] [cursor=pointer]:
+                      - code [ref=f2e2235]: T1558.003
+                      - strong [ref=f2e2236]: Kerberoasting
+                      - generic [ref=f2e2237]: 4/4 active
+                    - button "T1110 Brute Force, degraded" [ref=f2e2238] [cursor=pointer]:
+                      - code [ref=f2e2239]: T1110
+                      - strong [ref=f2e2240]: Brute Force
+                      - generic [ref=f2e2241]: 2/4 active
+                - generic [ref=f2e2242]:
+                  - generic [ref=f2e2243]:
+                    - generic [ref=f2e2244]: Discovery
+                    - strong [ref=f2e2245]: "0"
+                  - paragraph [ref=f2e2247]: No mapped rules
+                - generic [ref=f2e2248]:
+                  - generic [ref=f2e2249]:
+                    - generic [ref=f2e2250]: Lateral Movement
+                    - strong [ref=f2e2251]: "1"
+                  - button "T1021.002 SMB/Windows Admin Shares, degraded" [ref=f2e2253] [cursor=pointer]:
+                    - code [ref=f2e2254]: T1021.002
+                    - strong [ref=f2e2255]: SMB/Windows Admin Shares
+                    - generic [ref=f2e2256]: 4/4 active
+                - generic [ref=f2e2257]:
+                  - generic [ref=f2e2258]:
+                    - generic [ref=f2e2259]: Collection
+                    - strong [ref=f2e2260]: "1"
+                  - button "T1114.003 Email Forwarding Rule, degraded" [ref=f2e2262] [cursor=pointer]:
+                    - code [ref=f2e2263]: T1114.003
+                    - strong [ref=f2e2264]: Email Forwarding Rule
+                    - generic [ref=f2e2265]: 4/4 active
+                - generic [ref=f2e2266]:
+                  - generic [ref=f2e2267]:
+                    - generic [ref=f2e2268]: Command and Control
+                    - strong [ref=f2e2269]: "2"
+                  - generic [ref=f2e2270]:
+                    - button "T1071.001 Web Protocols, degraded" [ref=f2e2271] [cursor=pointer]:
+                      - code [ref=f2e2272]: T1071.001
+                      - strong [ref=f2e2273]: Web Protocols
+                      - generic [ref=f2e2274]: 3/4 active
+                    - button "T1071.004 DNS, ready" [ref=f2e2275] [cursor=pointer]:
+                      - code [ref=f2e2276]: T1071.004
+                      - strong [ref=f2e2277]: DNS
+                      - generic [ref=f2e2278]: 4/4 active
+                - generic [ref=f2e2279]:
+                  - generic [ref=f2e2280]:
+                    - generic [ref=f2e2281]: Exfiltration
+                    - strong [ref=f2e2282]: "0"
+                  - paragraph [ref=f2e2284]: No mapped rules
+                - generic [ref=f2e2285]:
+                  - generic [ref=f2e2286]:
+                    - generic [ref=f2e2287]: Impact
+                    - strong [ref=f2e2288]: "0"
+                  - paragraph [ref=f2e2290]: No mapped rules
+            - complementary "Coverage priorities" [ref=f2e2291]:
+              - generic [ref=f2e2293]:
+                - strong [ref=f2e2294]: Coverage priorities
+                - generic [ref=f2e2295]: Mapped content needing attention
+              - generic [ref=f2e2298]:
+                - button "T1071.001 Web Protocols Execution or telemetry degraded" [ref=f2e2299] [cursor=pointer]:
+                  - generic [ref=f2e2305]:
+                    - code [ref=f2e2306]: T1071.001
+                    - strong [ref=f2e2307]: Web Protocols
+                    - generic [ref=f2e2308]: Execution or telemetry degraded
+                - button "T1021.002 SMB/Windows Admin Shares Execution or telemetry degraded" [ref=f2e2311] [cursor=pointer]:
+                  - generic [ref=f2e2317]:
+                    - code [ref=f2e2318]: T1021.002
+                    - strong [ref=f2e2319]: SMB/Windows Admin Shares
+                    - generic [ref=f2e2320]: Execution or telemetry degraded
+                - button "T1110 Brute Force Execution or telemetry degraded" [ref=f2e2323] [cursor=pointer]:
+                  - generic [ref=f2e2329]:
+                    - code [ref=f2e2330]: T1110
+                    - strong [ref=f2e2331]: Brute Force
+                    - generic [ref=f2e2332]: Execution or telemetry degraded
+                - button "T1114.003 Email Forwarding Rule Execution or telemetry degraded" [ref=f2e2335] [cursor=pointer]:
+                  - generic [ref=f2e2341]:
+                    - code [ref=f2e2342]: T1114.003
+                    - strong [ref=f2e2343]: Email Forwarding Rule
+                    - generic [ref=f2e2344]: Execution or telemetry degraded
+        - generic [ref=f2e1196]:
+          - generic [ref=f2e1197]:
+            - generic [ref=f2e1198]:
+              - generic [ref=f2e1200]: Connected
+              - generic [ref=f2e1201]: •
+              - generic [ref=f2e1203]: Live
+            - generic [ref=f2e1204]: 12840 eps
+          - generic: Rule snapshot 18:46
+  - generic:
+    - list "Notifications"

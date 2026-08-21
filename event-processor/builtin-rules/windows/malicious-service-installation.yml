@@ -1,0 +1,43 @@
+id: 5f1d3b7e-8c2a-4d5f-a0b9-6e4c2f8a1d3b
+title: Malicious Service Installation via Service Control Manager
+status: stable
+logsource:
+  product: windows
+  service: security
+level: high
+tags:
+  - attack.persistence
+  - attack.privilege_escalation
+  - attack.T1543
+  - attack.T1543.003
+detection:
+  selection:
+    EventID: 7045
+    ServiceType: 'kernel driver'
+  selection_suspicious_image:
+    EventID: 7045
+    ImagePath|contains:
+      - '\Temp\'
+      - '\AppData\'
+      - '\Users\Public\'
+      - '%TEMP%'
+      - 'cmd /c'
+      - 'powershell'
+      - 'mshta'
+  condition: selection or selection_suspicious_image
+falsepositives:
+  - Legitimate kernel driver installation by security or hardware vendors
+  - Device driver updates during hardware setup
+  - Virtualization software kernel modules
+impact:
+  confidentiality: medium
+  integrity: critical
+  availability: high
+deduplicateBy:
+  - ComputerName
+  - ServiceName
+groupBy:
+  - ComputerName
+mitre:
+  tactic: persistence
+  technique: T1543.003

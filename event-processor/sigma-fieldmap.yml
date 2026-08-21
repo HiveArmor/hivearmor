@@ -1,0 +1,188 @@
+# sigma-fieldmap.yml
+# Sigma field name → ECS field path mapping for the HiveArmor event-processor.
+# Consumed exclusively by Go services under event-processor/.
+# The Java backend does NOT read this file.
+#
+# Categories covered:
+#   - Sysmon process fields
+#   - Windows Security event fields
+#   - Network fields
+#   - File fields
+#   - Registry fields
+#   - DNS fields
+#   - HTTP / web log fields
+#   - PowerShell fields
+#   - Linux auditd fields
+#   - AWS CloudTrail fields
+
+fieldmap:
+
+  # -------------------------------------------------------------------------
+  # Sysmon process fields
+  # -------------------------------------------------------------------------
+  CommandLine: process.command_line
+  Image: process.executable
+  ParentImage: process.parent.executable
+  ParentCommandLine: process.parent.command_line
+  ParentProcessId: process.parent.pid
+  ProcessId: process.pid
+  ProcessGuid: process.entity_id
+  IntegrityLevel: process.integrity_level
+  CurrentDirectory: process.working_directory
+  User: user.name
+  LogonId: user.id
+  LogonGuid: user.entity_id
+  OriginalFileName: process.pe.original_file_name
+  Hashes: process.hash.sha256
+  Description: process.pe.description
+  Product: process.pe.product
+  Company: process.pe.company
+  FileVersion: process.pe.file_version
+
+  # -------------------------------------------------------------------------
+  # Windows Security event fields
+  # -------------------------------------------------------------------------
+  EventID: event.code
+  SubjectUserName: user.name
+  SubjectUserSid: user.id
+  SubjectDomainName: user.domain
+  SubjectLogonId: user.id
+  TargetUserName: user.target.name
+  TargetUserSid: user.target.id
+  TargetDomainName: user.target.domain
+  TargetLogonId: user.target.id
+  LogonType: winlog.logon.type
+  WorkstationName: host.hostname
+  IpAddress: source.ip
+  IpPort: source.port
+  ServiceName: service.name
+  ServiceFileName: service.executable
+  TaskName: scheduled_task.name
+  ObjectName: file.path
+  ObjectType: object.type
+  AccessMask: file.access_mask
+  ShareName: network.share.name
+  ShareLocalPath: network.share.path
+
+  # -------------------------------------------------------------------------
+  # Network fields
+  # -------------------------------------------------------------------------
+  DestinationIp: destination.ip
+  DestinationPort: destination.port
+  DestinationHostname: destination.domain
+  SourceIp: source.ip
+  SourcePort: source.port
+  SourceHostname: source.domain
+  Protocol: network.transport
+  Initiated: network.direction
+  NetworkDirection: network.direction
+
+  # -------------------------------------------------------------------------
+  # File fields
+  # -------------------------------------------------------------------------
+  TargetFilename: file.path
+  FileName: file.name
+  FilePath: file.path
+  Extension: file.extension
+  Imphash: process.pe.imphash
+  CreationUtcTime: file.created
+  PreviousCreationUtcTime: file.mtime
+  FileSize: file.size
+
+  # -------------------------------------------------------------------------
+  # Registry fields
+  # -------------------------------------------------------------------------
+  TargetObject: registry.path
+  Details: registry.data.strings
+  EventType: event.type
+  RegistryKeyPath: registry.path
+  RegistryValueName: registry.value
+  RegistryValueData: registry.data.strings
+
+  # -------------------------------------------------------------------------
+  # DNS fields
+  # -------------------------------------------------------------------------
+  QueryName: dns.question.name
+  QueryType: dns.question.type
+  QueryStatus: dns.response_code
+  record_type: dns.question.type
+  answers: dns.answers.data
+  QueryResults: dns.answers.data
+
+  # -------------------------------------------------------------------------
+  # HTTP / web log fields
+  # -------------------------------------------------------------------------
+  cs-uri-stem: url.path
+  cs-uri-query: url.query
+  cs-method: http.request.method
+  cs-host: destination.domain
+  cs-bytes: http.request.bytes
+  sc-bytes: http.response.bytes
+  sc-status: http.response.status_code
+  cs-user-agent: user_agent.original
+  cs-referer: http.request.referrer
+  c-ip: source.ip
+  cs-username: user.name
+  r-ip: destination.ip
+
+  # -------------------------------------------------------------------------
+  # PowerShell fields
+  # -------------------------------------------------------------------------
+  ScriptBlockText: powershell.script_block_text
+  ScriptBlockId: powershell.script_block_id
+  Path: file.path
+  MessageNumber: powershell.message_number
+  MessageTotal: powershell.message_total
+  ContextInfo: powershell.context_info
+  HostName: powershell.host.name
+  HostVersion: powershell.host.version
+  EngineVersion: powershell.engine.version
+  RunspaceId: powershell.runspace_id
+  PipelineId: powershell.pipeline_id
+  CommandName: process.name
+  CommandType: powershell.command.type
+
+  # -------------------------------------------------------------------------
+  # Linux auditd fields
+  # -------------------------------------------------------------------------
+  comm: process.name
+  exe: process.executable
+  syscall: auditd.data.syscall
+  key: auditd.message_type
+  uid: user.id
+  gid: user.group.id
+  auid: auditd.summary.actor.primary
+  euid: user.effective.id
+  egid: user.effective.group.id
+  ppid: process.parent.pid
+  pid: process.pid
+  a0: auditd.data.a0
+  a1: auditd.data.a1
+  a2: auditd.data.a2
+  dev: file.device
+  name: file.path
+  nametype: auditd.paths.nametype
+  inode: file.inode
+  tty: process.tty.char_device.major
+  ses: auditd.session
+  subj: auditd.result.subject
+
+  # -------------------------------------------------------------------------
+  # AWS CloudTrail fields
+  # -------------------------------------------------------------------------
+  eventName: event.action
+  eventSource: event.provider
+  awsRegion: cloud.region
+  sourceIPAddress: source.ip
+  userAgent: user_agent.original
+  requestParameters: aws.cloudtrail.request_parameters
+  responseElements: aws.cloudtrail.response_elements
+  userIdentity.arn: aws.cloudtrail.user_identity.arn
+  userIdentity.type: aws.cloudtrail.user_identity.type
+  userIdentity.principalId: aws.cloudtrail.user_identity.principal_id
+  userIdentity.accountId: cloud.account.id
+  userIdentity.sessionContext.sessionIssuer.arn: aws.cloudtrail.user_identity.session_context.session_issuer.arn
+  errorCode: aws.cloudtrail.error_code
+  errorMessage: aws.cloudtrail.error_message
+  recipientAccountId: cloud.account.id
+  requestID: event.id

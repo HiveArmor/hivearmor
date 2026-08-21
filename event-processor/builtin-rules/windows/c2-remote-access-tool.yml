@@ -1,0 +1,45 @@
+id: a7b8c9d0-e1f2-3456-abcd-567890123467
+title: Remote Access Tool Execution or Installation
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.command_and_control
+  - attack.T1219
+detection:
+  selection:
+    Image|endswith:
+      - '\TeamViewer.exe'
+      - '\AnyDesk.exe'
+      - '\ScreenConnect.exe'
+      - '\LogMeIn.exe'
+      - '\RemotePC.exe'
+      - '\Ammyy Admin.exe'
+      - '\Supremo.exe'
+    CommandLine|contains:
+      - '--install'
+      - '/install'
+      - '--service'
+      - '/service'
+  filter_known_good:
+    ParentImage|contains:
+      - 'C:\Program Files\'
+      - 'C:\Program Files (x86)\'
+  condition: selection and not filter_known_good
+falsepositives:
+  - Authorized IT support tools being installed
+  - Managed remote access solutions
+impact:
+  confidentiality: high
+  integrity: high
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - Image
+groupBy:
+  - ComputerName
+mitre:
+  tactic: command-and-control
+  technique: T1219

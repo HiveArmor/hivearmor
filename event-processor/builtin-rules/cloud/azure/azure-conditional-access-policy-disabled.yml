@@ -1,0 +1,36 @@
+id: ha-azure-007
+title: Azure Conditional Access Policy Disabled
+status: stable
+description: Detects when an Azure AD Conditional Access policy is disabled, which may weaken tenant-wide authentication controls and allow attackers to bypass location or device compliance requirements.
+logsource:
+  product: azure
+  service: auditlogs
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.T1556
+detection:
+  selection:
+    operationName: Update conditional access policy
+    targetResources.modifiedProperties.newValue|contains: '"state":"disabled"'
+    resultType: Success
+  condition: selection
+falsepositives:
+  - Authorized identity administrators performing planned policy changes
+  - Break-glass scenarios with policy temporarily disabled
+fields:
+  - operationName
+  - initiatedBy.user.userPrincipalName
+  - targetResources.displayName
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - initiatedBy.user.userPrincipalName
+  - targetResources.displayName
+groupBy:
+  - initiatedBy.user.userPrincipalName
+mitre:
+  tactic: defense-evasion
+  technique: T1556

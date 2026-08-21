@@ -1,0 +1,108 @@
+- generic [active] [ref=f18e1]:
+  - generic [ref=f18e3]:
+    - link "Skip to main content" [ref=f18e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f18e5]:
+      - generic [ref=f18e6]:
+        - generic [ref=f18e12]: HiveArmor
+        - generic [ref=f18e13]: Security operations
+      - generic [ref=f18e14]:
+        - button "All authorized tenants" [ref=f18e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f18e24] [cursor=pointer]:
+          - generic [ref=f18e29]: ⌘ K
+        - generic [ref=f18e30]: Production
+      - generic [ref=f18e31]:
+        - 'status "Data pipeline: Healthy" [ref=f18e32]'
+        - status "Live events per second" [ref=f18e35]:
+          - generic [ref=f18e37]: 12,840 EPS
+        - button "Notifications" [ref=f18e38] [cursor=pointer]
+        - button "Help" [ref=f18e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f18e47]:
+      - generic [ref=f18e48]:
+        - region "COMMAND" [ref=f18e49]:
+          - generic [ref=f18e50]:
+            - button "Mission Control" [ref=f18e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f18e58] [cursor=pointer]
+            - button "Alerts" [ref=f18e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f18e67] [cursor=pointer]
+            - button "Incidents" [ref=f18e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f18e79]:
+          - generic [ref=f18e80]:
+            - button "Search & Hunt" [ref=f18e81] [cursor=pointer]
+            - button "Investigations" [ref=f18e86] [cursor=pointer]
+            - button "Entities" [ref=f18e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f18e97] [cursor=pointer]
+        - region "DEFEND" [ref=f18e103]:
+          - generic [ref=f18e104]:
+            - button "Detection Rules" [ref=f18e105] [cursor=pointer]
+            - button "Playbooks" [ref=f18e109] [cursor=pointer]
+            - button "Response Library" [ref=f18e114] [cursor=pointer]
+        - region "POSTURE" [ref=f18e118]:
+          - generic [ref=f18e119]:
+            - button "Assets" [ref=f18e120] [cursor=pointer]
+            - button "Identities" [ref=f18e125] [cursor=pointer]
+            - button "Active Directory" [ref=f18e132] [cursor=pointer]
+            - button "Exposure" [ref=f18e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f18e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f18e156] [cursor=pointer]
+            - button "Compliance" [ref=f18e162] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f18e167]:
+          - generic [ref=f18e168]:
+            - button "Endpoints" [ref=f18e169] [cursor=pointer]
+            - button "File Quarantine" [ref=f18e173] [cursor=pointer]
+            - button "File Integrity" [ref=f18e179] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f18e186]:
+          - button "Studio" [ref=f18e188] [cursor=pointer]
+        - region "REPORT" [ref=f18e193]:
+          - button "Scheduled Reports" [ref=f18e195] [cursor=pointer]
+      - generic [ref=f18e200]:
+        - button "User menu" [ref=f18e203] [cursor=pointer]:
+          - generic [ref=f18e204]: MC
+        - button "Pin sidebar open" [ref=f18e205] [cursor=pointer]
+    - main [ref=f18e208]:
+      - generic [ref=f18e209]:
+        - generic [ref=f18e210]:
+          - generic [ref=f18e211]:
+            - link [ref=f18e212] [cursor=pointer]:
+              - /url: /response/playbooks
+            - generic [ref=f18e215]:
+              - generic [ref=f18e216]: Response · Playbook
+              - heading "Isolate Compromised Host" [level=1] [ref=f18e217]
+              - paragraph [ref=f18e218]: Immediately quarantines a host upon confirmed compromise — blocks network, notifies SOC.
+              - generic [ref=f18e219]: Active
+          - generic [ref=f18e221]:
+            - button "Edit" [ref=f18e222] [cursor=pointer]
+            - button "Run now" [disabled]
+        - generic [ref=f18e227]:
+          - tablist [ref=f18e229]:
+            - tab "Overview" [ref=f18e230] [cursor=pointer]
+            - tab "Steps (4)" [selected] [ref=f18e232] [cursor=pointer]
+            - tab "History" [ref=f18e234] [cursor=pointer]
+            - tab "Trigger config" [ref=f18e236] [cursor=pointer]
+            - tab "Settings" [ref=f18e238] [cursor=pointer]
+            - tab "Audit" [ref=f18e240] [cursor=pointer]
+          - tabpanel "Steps (4)" [ref=f18e242]:
+            - list [ref=f18e244]:
+              - listitem [ref=f18e245]:
+                - generic [ref=f18e246]: "1"
+                - generic [ref=f18e247]:
+                  - generic [ref=f18e248]: Verify alert severity >= High
+                  - generic [ref=f18e249]: condition
+              - listitem [ref=f18e250]:
+                - generic [ref=f18e251]: "2"
+                - generic [ref=f18e252]:
+                  - generic [ref=f18e253]: Block host at firewall
+                  - generic [ref=f18e254]: action
+              - listitem [ref=f18e255]:
+                - generic [ref=f18e256]: "3"
+                - generic [ref=f18e257]:
+                  - generic [ref=f18e258]: Disable AD account
+                  - generic [ref=f18e259]: action
+              - listitem [ref=f18e260]:
+                - generic [ref=f18e261]: "4"
+                - generic [ref=f18e262]:
+                  - generic [ref=f18e263]: Notify SOC channel
+                  - generic [ref=f18e264]: action
+          - text:     
+  - generic:
+    - list "Notifications"

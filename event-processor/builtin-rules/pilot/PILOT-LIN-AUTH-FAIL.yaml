@@ -1,0 +1,20 @@
+id: 5103
+name: PILOT-LIN-AUTH-FAIL
+dataTypes:
+  - linux
+  - syslog
+category: Credential Access
+technique: "T1110 - Brute Force"
+adversary: origin
+description: Linux SSH/sudo authentication failure.
+references:
+  - https://attack.mitre.org/techniques/T1110/
+deduplicateBy:
+  - origin.host
+  - origin.user
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+where: >
+  raw.matches("(?i).*(Failed password|authentication failure|Invalid user).*")

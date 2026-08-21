@@ -1,0 +1,36 @@
+id: d6e7f8a9-b0c1-2345-defa-456789012316
+title: SMBExec-Style Service Execution via ADMIN Share
+status: stable
+logsource:
+  product: windows
+  service: system
+level: high
+tags:
+  - attack.lateral_movement
+  - attack.execution
+  - attack.T1021
+  - attack.T1021.002
+detection:
+  selection:
+    EventID: 7045
+    ServiceName|contains:
+      - 'BTOBTO'
+      - 'execute'
+    ServiceFileName|contains:
+      - '%COMSPEC%'
+      - 'cmd.exe /Q /c'
+  condition: selection
+falsepositives:
+  - Penetration testing frameworks with similar service names
+impact:
+  confidentiality: high
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - ServiceName
+groupBy:
+  - ComputerName
+mitre:
+  tactic: lateral-movement
+  technique: T1021.002

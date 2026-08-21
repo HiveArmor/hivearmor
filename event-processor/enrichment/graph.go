@@ -4,20 +4,21 @@ package enrichment
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/hivearmor/event-processor/internal/httpclient"
 )
 
 // GraphContext holds entity-graph enrichment data for an alert.
 type GraphContext struct {
-	SourceIPRiskScore  float64  `json:"sourceIpRiskScore,omitempty"`
-	SourceIPMalicious  bool     `json:"sourceIpMalicious,omitempty"`
-	SourceIPCountry    string   `json:"sourceIpCountry,omitempty"`
-	RelatedUsers       []string `json:"relatedUsers,omitempty"`
-	RelatedHosts       []string `json:"relatedHosts,omitempty"`
-	RecentAlertCount   int64    `json:"recentAlertCount,omitempty"`
+	SourceIPRiskScore float64  `json:"sourceIpRiskScore,omitempty"`
+	SourceIPMalicious bool     `json:"sourceIpMalicious,omitempty"`
+	SourceIPCountry   string   `json:"sourceIpCountry,omitempty"`
+	RelatedUsers      []string `json:"relatedUsers,omitempty"`
+	RelatedHosts      []string `json:"relatedHosts,omitempty"`
+	RecentAlertCount  int64    `json:"recentAlertCount,omitempty"`
 }
 
 var (
@@ -32,12 +33,7 @@ func InitGraph(url, user, pass string) {
 	graphOSURL = url
 	graphOSUser = user
 	graphOSPass = pass
-	graphClient = &http.Client{
-		Timeout: 5 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+	graphClient = httpclient.MustClient(5 * time.Second)
 }
 
 // EnrichAlertDoc queries OpenSearch for context about the adversary IP and merges
@@ -137,16 +133,26 @@ func queryGraphContext(ip string) *GraphContext {
 			Total struct{ Value int64 } `json:"total"`
 		} `json:"hits"`
 		Aggregations struct {
-			TotalAlerts struct{ Value int64 `json:"value"` } `json:"total_alerts"`
+			TotalAlerts struct {
+				Value int64 `json:"value"`
+			} `json:"total_alerts"`
 			RelatedUsers struct {
-				Buckets []struct{ Key string `json:"key"` } `json:"buckets"`
+				Buckets []struct {
+					Key string `json:"key"`
+				} `json:"buckets"`
 			} `json:"related_users"`
 			RelatedHosts struct {
-				Buckets []struct{ Key string `json:"key"` } `json:"buckets"`
+				Buckets []struct {
+					Key string `json:"key"`
+				} `json:"buckets"`
 			} `json:"related_hosts"`
-			MaxRisk struct{ Value *float64 `json:"value"` } `json:"max_risk"`
+			MaxRisk struct {
+				Value *float64 `json:"value"`
+			} `json:"max_risk"`
 			Country struct {
-				Buckets []struct{ Key string `json:"key"` } `json:"buckets"`
+				Buckets []struct {
+					Key string `json:"key"`
+				} `json:"buckets"`
 			} `json:"country"`
 		} `json:"aggregations"`
 	}
@@ -190,4 +196,3 @@ func queryGraphContext(ip string) *GraphContext {
 
 	return ctx
 }
-

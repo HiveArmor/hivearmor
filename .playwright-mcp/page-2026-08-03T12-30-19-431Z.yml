@@ -1,0 +1,295 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e3]:
+    - link "Skip to main content" [ref=f2e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f2e5]:
+      - generic [ref=f2e6]:
+        - generic [ref=f2e12]: HiveArmor
+        - generic [ref=f2e13]: Security operations
+      - generic [ref=f2e14]:
+        - button "All authorized tenants" [ref=f2e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f2e24] [cursor=pointer]:
+          - generic [ref=f2e29]: ⌘ K
+        - generic [ref=f2e30]: Production
+      - generic [ref=f2e31]:
+        - 'status "Data pipeline: Critical - Bad Gateway" [ref=f2e1206]'
+        - status "Live events per second" [ref=f2e35]:
+          - generic [ref=f2e37]: 12,840 EPS
+        - button "Notifications" [ref=f2e38] [cursor=pointer]
+        - button "Help" [ref=f2e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f2e47]:
+      - generic [ref=f2e48]:
+        - region "COMMAND" [ref=f2e49]:
+          - generic [ref=f2e50]:
+            - button "Mission Control" [ref=f2e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f2e58] [cursor=pointer]
+            - button "Alerts" [ref=f2e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f2e67] [cursor=pointer]
+            - button "Incidents" [ref=f2e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f2e79]:
+          - generic [ref=f2e80]:
+            - button "Search & Hunt" [ref=f2e81] [cursor=pointer]
+            - button "Investigations" [ref=f2e86] [cursor=pointer]
+            - button "Entities" [ref=f2e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f2e97] [cursor=pointer]
+        - region "DEFEND" [ref=f2e103]:
+          - generic [ref=f2e104]:
+            - button "Detection Rules" [ref=f2e105] [cursor=pointer]
+            - button "Playbooks" [ref=f2e109] [cursor=pointer]
+            - button "Response Library" [ref=f2e114] [cursor=pointer]
+        - region "POSTURE" [ref=f2e118]:
+          - generic [ref=f2e119]:
+            - button "Assets" [ref=f2e120] [cursor=pointer]
+            - button "Identities" [ref=f2e125] [cursor=pointer]
+            - button "Active Directory" [ref=f2e132] [cursor=pointer]
+            - button "Exposure" [ref=f2e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f2e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f2e156] [cursor=pointer]
+            - button "Compliance" [ref=f2e162] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f2e167]:
+          - generic [ref=f2e168]:
+            - button "Endpoints" [ref=f2e169] [cursor=pointer]
+            - button "File Quarantine" [ref=f2e173] [cursor=pointer]
+            - button "File Integrity" [ref=f2e179] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f2e186]:
+          - button "Studio" [ref=f2e188] [cursor=pointer]
+        - region "REPORT" [ref=f2e193]:
+          - button "Scheduled Reports" [ref=f2e195] [cursor=pointer]
+      - generic [ref=f2e200]:
+        - button "User menu" [ref=f2e203] [cursor=pointer]:
+          - generic [ref=f2e204]: MC
+        - button "Pin sidebar open" [ref=f2e205] [cursor=pointer]
+    - main [ref=f2e208]:
+      - generic [ref=f2e212]:
+        - generic [ref=f2e213]:
+          - generic [ref=f2e218]:
+            - generic [ref=f2e219]: DEFEND
+            - heading "Detection Engineering" [level=1] [ref=f2e220]
+          - generic [ref=f2e221]:
+            - generic [ref=f2e222]:
+              - text: Rule health and coverage
+              - generic [ref=f2e229]: J
+              - generic [ref=f2e230]: /
+              - generic [ref=f2e231]: K
+              - generic [ref=f2e232]: navigate
+            - button "Import" [ref=f2e233] [cursor=pointer]
+            - button "Sigma sync" [disabled] [ref=f2e237]
+            - button "Create rule" [ref=f2e242] [cursor=pointer]
+        - generic [ref=f2e244]:
+          - generic [ref=f2e245]:
+            - strong [ref=f2e246]: "Design fixture:"
+            - text: fictional detection content and execution telemetry are enabled.
+          - generic [ref=f2e247]: Production never receives these records.
+        - navigation "Detection engineering views" [ref=f2e248]:
+          - button "Rules 48" [ref=f2e249] [cursor=pointer]:
+            - text: Rules
+            - generic [ref=f2e252]: "48"
+          - button "Rule monitoring 42" [ref=f2e253] [cursor=pointer]:
+            - text: Rule monitoring
+            - generic [ref=f2e256]: "42"
+          - button "ATT&CK coverage 12" [ref=f2e257] [cursor=pointer]:
+            - text: ATT&CK coverage
+            - generic [ref=f2e260]: "12"
+          - button "Test console" [ref=f2e261] [cursor=pointer]
+        - region "Detection rule test console" [ref=f2e2404]:
+          - generic [ref=f2e2405]:
+            - generic [ref=f2e2409]:
+              - strong [ref=f2e2410]: Single-event sandbox
+              - generic [ref=f2e2411]: In-memory evaluation · no alert side effects
+            - combobox "Detection rule" [ref=f2e2413] [cursor=pointer]:
+              - option "Encoded PowerShell with network retrieval" [selected]
+              - option "Rare privileged authentication followed by execution"
+              - option "Suspicious LSASS memory access"
+              - option "First-seen external destination from managed host"
+              - option "Kerberoasting service ticket activity"
+              - option "Remote service creation from administrative share"
+              - option "Cloud role assignment outside change window"
+              - option "DNS tunneling with high-entropy subdomains"
+              - option "Executable written to user startup directory"
+              - option "Multiple failed logons followed by success"
+              - option "Unsigned binary launched from temporary path"
+              - option "Mailbox forwarding rule created"
+              - option "Encoded PowerShell with network retrieval · Variant 2"
+              - option "Rare privileged authentication followed by execution · Variant 2"
+              - option "Suspicious LSASS memory access · Variant 2"
+              - option "First-seen external destination from managed host · Variant 2"
+              - option "Kerberoasting service ticket activity · Variant 2"
+              - option "Remote service creation from administrative share · Variant 2"
+              - option "Cloud role assignment outside change window · Variant 2"
+              - option "DNS tunneling with high-entropy subdomains · Variant 2"
+              - option "Executable written to user startup directory · Variant 2"
+              - option "Multiple failed logons followed by success · Variant 2"
+              - option "Unsigned binary launched from temporary path · Variant 2"
+              - option "Mailbox forwarding rule created · Variant 2"
+              - option "Encoded PowerShell with network retrieval · Variant 3"
+              - option "Rare privileged authentication followed by execution · Variant 3"
+              - option "Suspicious LSASS memory access · Variant 3"
+              - option "First-seen external destination from managed host · Variant 3"
+              - option "Kerberoasting service ticket activity · Variant 3"
+              - option "Remote service creation from administrative share · Variant 3"
+              - option "Cloud role assignment outside change window · Variant 3"
+              - option "DNS tunneling with high-entropy subdomains · Variant 3"
+              - option "Executable written to user startup directory · Variant 3"
+              - option "Multiple failed logons followed by success · Variant 3"
+              - option "Unsigned binary launched from temporary path · Variant 3"
+              - option "Mailbox forwarding rule created · Variant 3"
+              - option "Encoded PowerShell with network retrieval · Variant 4"
+              - option "Rare privileged authentication followed by execution · Variant 4"
+              - option "Suspicious LSASS memory access · Variant 4"
+              - option "First-seen external destination from managed host · Variant 4"
+              - option "Kerberoasting service ticket activity · Variant 4"
+              - option "Remote service creation from administrative share · Variant 4"
+              - option "Cloud role assignment outside change window · Variant 4"
+              - option "DNS tunneling with high-entropy subdomains · Variant 4"
+              - option "Executable written to user startup directory · Variant 4"
+              - option "Multiple failed logons followed by success · Variant 4"
+              - option "Unsigned binary launched from temporary path · Variant 4"
+              - option "Mailbox forwarding rule created · Variant 4"
+            - combobox "Sample test event" [ref=f2e2415] [cursor=pointer]:
+              - option "Blank JSON event"
+              - option "Encoded PowerShell process start" [selected]
+              - option "Privileged authentication sequence"
+              - option "High-entropy DNS query"
+            - button "Historical preview" [disabled] [ref=f2e2416]
+            - button "Run test" [active] [ref=f2e2420] [cursor=pointer]
+          - status [ref=f2e2423]:
+            - strong [ref=f2e2427]: Safe test boundary.
+            - generic [ref=f2e2428]: Fictional event samples are isolated from production metrics.
+          - generic [ref=f2e2429]:
+            - generic [ref=f2e2430]:
+              - generic [ref=f2e2431]:
+                - strong [ref=f2e2437]: Detection definition
+                - generic [ref=f2e2438]: YAML · Sigma-compatible
+              - code [ref=f2e2442]:
+                - generic [ref=f2e2443]:
+                  - textbox "Editor content" [ref=f2e2444]
+                  - textbox [ref=f2e2445]
+                  - generic [ref=f2e2447]:
+                    - generic [ref=f2e2448]: "1"
+                    - generic [ref=f2e2451]: "2"
+                    - generic [ref=f2e2453]:
+                      - generic [ref=f2e2454] [cursor=pointer]: 
+                      - generic [ref=f2e2455]: "3"
+                    - generic [ref=f2e2456]: "4"
+                    - generic [ref=f2e2458]:
+                      - generic [ref=f2e2459] [cursor=pointer]: 
+                      - generic [ref=f2e2460]: "5"
+                    - generic [ref=f2e2461]:
+                      - generic [ref=f2e2462] [cursor=pointer]: 
+                      - generic [ref=f2e2463]: "6"
+                    - generic [ref=f2e2464]: "7"
+                    - generic [ref=f2e2466]: "8"
+                    - generic [ref=f2e2468]: "9"
+                    - generic [ref=f2e2470]:
+                      - generic [ref=f2e2471] [cursor=pointer]: 
+                      - generic [ref=f2e2472]: "10"
+                    - generic [ref=f2e2473]: "11"
+                    - generic [ref=f2e2475]: "12"
+                  - generic [ref=f2e2496]:
+                    - generic [ref=f2e2497]: "title: Encoded PowerShell with network retrieval"
+                    - generic [ref=f2e2499]: "status: experimental"
+                    - generic [ref=f2e2501]: "logsource:"
+                    - generic [ref=f2e2503]: "category: endpoint"
+                    - generic [ref=f2e2505]: "detection:"
+                    - generic [ref=f2e2507]: "selection:"
+                    - generic [ref=f2e2509]: "event.action: powershell"
+                    - generic [ref=f2e2511]: "condition: selection"
+                    - generic [ref=f2e2513]: "level: critical"
+                    - generic [ref=f2e2515]: "tags:"
+                    - generic [ref=f2e2517]: "- attack.t1059.001"
+            - generic [ref=f2e2521]:
+              - generic [ref=f2e2522]:
+                - strong [ref=f2e2529]: Test event
+                - generic [ref=f2e2530]: JSON · bounded single record
+              - code [ref=f2e2534]:
+                - generic [ref=f2e2535]:
+                  - textbox "Editor content" [ref=f2e2536]
+                  - textbox [ref=f2e2537]
+                  - generic [ref=f2e2539]:
+                    - generic [ref=f2e2540]:
+                      - generic [ref=f2e2542] [cursor=pointer]: 
+                      - generic [ref=f2e2543]: "1"
+                    - generic [ref=f2e2544]: "2"
+                    - generic [ref=f2e2546]:
+                      - generic [ref=f2e2547] [cursor=pointer]: 
+                      - generic [ref=f2e2548]: "3"
+                    - generic [ref=f2e2549]: "4"
+                    - generic [ref=f2e2551]: "5"
+                    - generic [ref=f2e2553]:
+                      - generic [ref=f2e2554] [cursor=pointer]: 
+                      - generic [ref=f2e2555]: "6"
+                    - generic [ref=f2e2556]: "7"
+                    - generic [ref=f2e2558]: "8"
+                    - generic [ref=f2e2561]: "9"
+                    - generic [ref=f2e2563]:
+                      - generic [ref=f2e2564] [cursor=pointer]: 
+                      - generic [ref=f2e2565]: "10"
+                    - generic [ref=f2e2566]: "11"
+                    - generic [ref=f2e2568]: "12"
+                    - generic [ref=f2e2570]:
+                      - generic [ref=f2e2571] [cursor=pointer]: 
+                      - generic [ref=f2e2572]: "13"
+                    - generic [ref=f2e2573]: "14"
+                    - generic [ref=f2e2575]: "15"
+                    - generic [ref=f2e2577]: "16"
+                  - generic [ref=f2e2618]:
+                    - generic [ref=f2e2619]: "{"
+                    - generic [ref=f2e2621]: "\"@timestamp\": \"2026-08-03T13:15:42Z\","
+                    - generic [ref=f2e2623]: "\"event\": {"
+                    - generic [ref=f2e2625]: "\"action\": \"powershell\""
+                    - generic [ref=f2e2627]: "},"
+                    - generic [ref=f2e2629]: "\"process\": {"
+                    - generic [ref=f2e2631]: "\"name\": \"powershell.exe\","
+                    - generic [ref=f2e2633]: "\"command_line\": \"powershell.exe -enc"
+                    - generic [ref=f2e2635]: RmljdGlvbmFsRGF0YQ=="
+                    - generic [ref=f2e2637]: "},"
+                    - generic [ref=f2e2639]: "\"host\": {"
+                    - generic [ref=f2e2641]: "\"name\": \"FIN-WKS-044\""
+                    - generic [ref=f2e2643]: "},"
+                    - generic [ref=f2e2645]: "\"user\": {"
+                    - generic [ref=f2e2647]: "\"name\": \"a.patel\""
+                    - generic [ref=f2e2649]: "}"
+                    - generic [ref=f2e2651]: "}"
+            - complementary [ref=f2e2654]:
+              - generic [ref=f2e2656]:
+                - strong [ref=f2e2657]: Evaluation
+                - generic [ref=f2e2658]: validation and match trace
+              - generic [ref=f2e2659]:
+                - heading "Preflight" [level=3] [ref=f2e2660]
+                - generic [ref=f2e2661]:
+                  - generic [ref=f2e2662]: Detection block found
+                  - generic [ref=f2e2667]: Condition path found
+                  - generic [ref=f2e2672]: Event JSON is valid
+              - generic [ref=f2e2695]:
+                - strong [ref=f2e2699]: Event matched
+                - paragraph [ref=f2e2700]: The fictional event satisfied the selection and condition path.
+                - generic [ref=f2e2701]:
+                  - generic [ref=f2e2702]:
+                    - term [ref=f2e2703]: Duration
+                    - definition [ref=f2e2704]: 37 ms
+                  - generic [ref=f2e2705]:
+                    - term [ref=f2e2706]: Fields evaluated
+                    - definition [ref=f2e2707]: "5"
+                - generic [ref=f2e2708]:
+                  - generic [ref=f2e2709]: Matched fields
+                  - code [ref=f2e2710]: "@timestamp"
+                  - code [ref=f2e2711]: event
+                  - code [ref=f2e2712]: process
+                  - code [ref=f2e2713]: host
+                  - code [ref=f2e2714]: user
+              - generic [ref=f2e2683]:
+                - generic [ref=f2e2684]: No alerts created
+                - generic [ref=f2e2688]: No actions executed
+        - generic [ref=f2e1196]:
+          - generic [ref=f2e1197]:
+            - generic [ref=f2e1198]:
+              - generic [ref=f2e1200]: Connected
+              - generic [ref=f2e1201]: •
+              - generic [ref=f2e1203]: Live
+            - generic [ref=f2e1204]: 12840 eps
+          - generic: Rule snapshot 18:46
+  - generic:
+    - list "Notifications"
+  - generic [ref=f2e2692]:
+    - alert
+    - alert

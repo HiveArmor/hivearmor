@@ -1,0 +1,36 @@
+id: ha-azure-010
+title: Azure Policy Assignment Deleted
+status: stable
+description: Detects deletion of an Azure Policy assignment which enforces compliance and security baselines. Removing policies can allow non-compliant resources to be created without alerts.
+logsource:
+  product: azure
+  service: activitylogs
+level: medium
+tags:
+  - attack.defense_evasion
+  - attack.T1562
+detection:
+  selection:
+    operationName: Microsoft.Authorization/policyAssignments/delete
+    resultType: Success
+  condition: selection
+falsepositives:
+  - Authorized cloud governance team removing deprecated policies
+  - Subscription decommissioning cleanup
+fields:
+  - operationName
+  - caller
+  - resourceId
+  - subscriptionId
+impact:
+  confidentiality: low
+  integrity: high
+  availability: low
+deduplicateBy:
+  - caller
+  - resourceId
+groupBy:
+  - caller
+mitre:
+  tactic: defense-evasion
+  technique: T1562

@@ -1,0 +1,62 @@
+/**
+ * HiveArmor PatternFly 6 overrides.
+ * PatternFly provides behavior and accessibility foundations.
+ * These overrides ensure PF components match HiveArmor design tokens.
+ * All colors reference CSS custom properties — no hardcoded hex.
+ */
+
+/* Reset PF background colors to HiveArmor tokens */
+:root {
+  --pf-v6-global--BackgroundColor--100: var(--ha-surface-primary);
+  --pf-v6-global--BackgroundColor--200: var(--ha-surface-raised);
+  --pf-v6-global--Color--100: var(--ha-text-primary);
+  --pf-v6-global--Color--200: var(--ha-text-secondary);
+  --pf-v6-global--BorderColor--100: var(--ha-border);
+  --pf-v6-global--primary-color--100: var(--ha-primary);
+  --pf-v6-global--link--Color: var(--ha-primary);
+  --pf-v6-global--FontFamily--text: var(--ha-font-ui);
+  --pf-v6-global--FontSize--sm: var(--ha-text-sm);
+  --pf-v6-global--FontSize--md: var(--ha-text-base);
+}
+
+/* PF buttons */
+.pf-v6-c-button.pf-m-primary {
+  background-color: var(--ha-primary);
+  color: var(--ha-foreground-on-action);
+  border-color: var(--ha-primary);
+}
+.pf-v6-c-button.pf-m-primary:hover {
+  background-color: var(--ha-action-primary-hover);
+}
+
+/* PF modal */
+.pf-v6-c-modal-box {
+  background-color: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  box-shadow: var(--ha-shadow-lg);
+}
+.pf-v6-c-modal-box__header {
+  border-bottom: 1px solid var(--ha-border);
+}
+.pf-v6-c-modal-box__footer {
+  border-top: 1px solid var(--ha-border);
+}
+
+/* PF dropdown */
+.pf-v6-c-dropdown__menu {
+  background-color: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  box-shadow: var(--ha-shadow-md);
+}
+
+/* PF wizard */
+.pf-v6-c-wizard {
+  background-color: var(--ha-surface-primary);
+}
+.pf-v6-c-wizard__main {
+  background-color: var(--ha-surface-primary);
+}
+.pf-v6-c-wizard__nav {
+  background-color: var(--ha-surface-raised);
+  border-right: 1px solid var(--ha-border);
+}

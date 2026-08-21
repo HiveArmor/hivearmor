@@ -1,0 +1,33 @@
+Phase 4 — Incident Investigation Workspace — Combined Frontend Summary
+Date: 2026-07-21
+
+Sprint S-4A (Backend): Evidence schema + REST API — see phase4-s4a-backend.txt
+Sprint S-4B (Backend): Timeline + Notes backend  — see phase4-s4b-backend.txt
+Sprint S-4C (Frontend): Evidence Board           — 439/439 tests pass (26 new, see phase4-s4c-vitest.txt)
+Sprint S-4D (Frontend): Investigation Timeline   — 476/476 tests pass (37 new, see phase4-s4d-vitest.txt)
+
+Frontend cumulative test count: 476 / 476 pass
+TypeScript errors: 0
+
+Phase 4 deliverables:
+  - Evidence Board: real API data (useEvidenceItems), drag cards, debounced save, 409 conflict handling
+  - AddEvidenceModal: 4 tabs (From Alerts / Note / URL / Artifact)
+  - InvestigationTimeline: dual-mode component — API (incidentId prop) + legacy MITRE view
+    - Loading skeleton, empty state, error+retry
+    - 5 event types with CSS-var colours and lucide icons
+  - InvestigationNotes: full CRUD — list (newest-first), add, delete own notes
+    - Markdown preview toggle (regex-based, no lib)
+    - Author avatar, relative timestamps
+  - Incidents/[id] page: 4 tabs — Evidence | Timeline | Entity Graph | Notes
+  - DEMO_TIMELINE moved to __fixtures__/timeline.fixture.ts (not in production paths)
+  - DEMO_EVIDENCE moved to __fixtures__/evidence.fixture.ts (not in production paths)
+
+Phase 4 exit criteria met:
+  [x] DEMO_EVIDENCE removed from production code paths
+  [x] DEMO_TIMELINE removed from production code paths
+  [x] Evidence items persist to database and survive page refresh
+  [x] Board layout (positions) persist and survive page refresh (version check + 409)
+  [x] Version conflict (409) handled gracefully with user toast
+  [x] Timeline aggregates event types from real data
+  [x] Notes tab functional with persistence
+  [x] All frontend tests pass

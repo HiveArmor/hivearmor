@@ -2,6 +2,7 @@ package com.hivearmor.service;
 
 import com.hivearmor.config.ApplicationProperties;
 import com.hivearmor.config.Constants;
+import com.hivearmor.config.HaAirGapConfig;
 import com.hivearmor.domain.User;
 import com.hivearmor.domain.application_events.enums.ApplicationEventType;
 import com.hivearmor.domain.incident.UtmIncident;
@@ -69,17 +70,20 @@ public class MailService {
     private final ApplicationEventService eventService;
     private final ApplicationProperties applicationProperties;
     private final List<BaseMailSender> mailSenders;
+    private final HaAirGapConfig haAirGapConfig;
 
     public MailService(MessageSource messageSource,
                        SpringTemplateEngine templateEngine,
                        ApplicationEventService eventService,
                        ApplicationProperties applicationProperties,
-                       List<BaseMailSender> mailSenders) {
+                       List<BaseMailSender> mailSenders,
+                       HaAirGapConfig haAirGapConfig) {
         this.messageSource = messageSource;
         this.templateEngine = templateEngine;
         this.eventService = eventService;
         this.applicationProperties = applicationProperties;
         this.mailSenders = mailSenders;
+        this.haAirGapConfig = haAirGapConfig;
         // Note: Java8TimeDialect removed in Thymeleaf 3.1+ — Java 8 date/time is natively supported
     }
 
@@ -123,6 +127,10 @@ public class MailService {
      * @param to Address to send the testing email
      */
     public void sendCheckEmail(List<String> to) throws MessagingException {
+        if (haAirGapConfig.isAirGap()) {
+            log.warn("Air-gap mode active — SMTP dispatch disabled");
+            return;
+        }
         try {
             JavaMailSender javaMailSender = getJavaMailSender();
             javaMailSender.send(this.getMimeMessage(javaMailSender, to, Constants.CFG.get(Constants.PROP_MAIL_FROM)));
@@ -136,6 +144,10 @@ public class MailService {
     }
 
     public void sendCheckEmail(List<String> to, MailConfig config) throws MessagingException {
+        if (haAirGapConfig.isAirGap()) {
+            log.warn("Air-gap mode active — SMTP dispatch disabled");
+            return;
+        }
         try {
             JavaMailSender javaMailSender = getJavaMailSender(config.getHost(), config.getUsername(), config.getPassword(), Constants.PROP_EMAIL_PROTOCOL_VALUE, config.getPort(), config.getAuthType());
             javaMailSender.send(this.getMimeMessage(javaMailSender, to, config.getFrom()));
@@ -150,6 +162,10 @@ public class MailService {
 
     @Async
     public void sendEmail(List<String> to, String subject, String content, boolean isMultipart, boolean isHtml) {
+        if (haAirGapConfig.isAirGap()) {
+            log.warn("Air-gap mode active — SMTP dispatch disabled");
+            return;
+        }
         log.debug("Send email[multipart '{}' and html '{}'] to '{}' with subject '{}' and content={}", isMultipart, isHtml,
                 to, subject, content);
         final String ctx = CLASS_NAME + ".sendEmail";
@@ -177,6 +193,10 @@ public class MailService {
 
     @Async
     public void sendEmailWithAttachment(String emailsTo, String subject, String content, InputStream attach) {
+        if (haAirGapConfig.isAirGap()) {
+            log.warn("Air-gap mode active — SMTP dispatch disabled");
+            return;
+        }
 
         try {
             JavaMailSender javaMailSender = getJavaMailSender();
@@ -266,6 +286,10 @@ public class MailService {
 
     @Async
     public void sendAlertEmail(List<String> emailsTo, UtmAlert alert, List<Event> relatedLogs) {
+        if (haAirGapConfig.isAirGap()) {
+            log.warn("Air-gap mode active — SMTP dispatch disabled");
+            return;
+        }
         final String ctx = CLASS_NAME + ".sendAlertEmail";
         try {
             JavaMailSender javaMailSender = getJavaMailSender();
@@ -306,6 +330,10 @@ public class MailService {
 
     @Async
     public void sendIncidentEmail(List<String> emailsTo, List<UtmAlert> alerts, UtmIncident incident) {
+        if (haAirGapConfig.isAirGap()) {
+            log.warn("Air-gap mode active — SMTP dispatch disabled");
+            return;
+        }
         final String ctx = CLASS_NAME + ".sendIncidentEmail";
         try {
             JavaMailSender javaMailSender = getJavaMailSender();
@@ -415,6 +443,10 @@ public class MailService {
 
     @Async
     public void sendComplianceReportEmail(String emailTo, String subject, String content, String filename, byte[] attachment) {
+        if (haAirGapConfig.isAirGap()) {
+            log.warn("Air-gap mode active — SMTP dispatch disabled");
+            return;
+        }
         final String ctx = CLASS_NAME + ".sendComplianceReportEmail";
         try {
             JavaMailSender javaMailSender = getJavaMailSender();

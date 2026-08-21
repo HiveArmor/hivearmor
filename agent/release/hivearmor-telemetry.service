@@ -1,0 +1,17 @@
+[Unit]
+Description=HiveArmor observed host telemetry (SCA/SBOM)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/opt/hivearmor/agent/hivearmor_agent_service telemetry-loop 127.0.0.1 yes
+WorkingDirectory=/opt/hivearmor/agent
+EnvironmentFile=-/etc/hivearmor/agent.env
+Environment=HA_AGENT_ID=staging-vm
+Restart=on-failure
+RestartSec=15
+# Do not put HA_INTERNAL_KEY in this unit.
+
+[Install]
+WantedBy=multi-user.target

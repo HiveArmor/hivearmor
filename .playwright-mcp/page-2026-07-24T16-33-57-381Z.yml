@@ -1,0 +1,96 @@
+- generic [ref=f1e33]:
+  - banner [ref=f1e34]:
+    - generic [ref=f1e35]: HiveArmor
+    - generic [ref=f1e42]:
+      - 'generic "Data pipeline: Critical - Internal Server Error" [ref=f1e43]'
+      - generic "Reconnecting..." [ref=f1e46]: 0 EPS
+      - button "Notifications" [ref=f1e48] [cursor=pointer]
+      - button "Help" [ref=f1e53] [cursor=pointer]
+      - button "User menu" [ref=f1e58] [cursor=pointer]:
+        - generic [ref=f1e59]: AA
+        - generic [ref=f1e60]: admin
+  - navigation [ref=f1e61]:
+    - generic [ref=f1e62]:
+      - generic [ref=f1e63]:
+        - generic [ref=f1e64]: COMMAND
+        - generic [ref=f1e65]:
+          - button "Analyst Queue" [ref=f1e66] [cursor=pointer]
+          - button "Alerts" [ref=f1e71] [cursor=pointer]
+          - button "Correlated Findings" [ref=f1e77] [cursor=pointer]
+          - button "Incidents" [ref=f1e84] [cursor=pointer]
+      - generic [ref=f1e91]:
+        - generic [ref=f1e92]: INVESTIGATE
+        - generic [ref=f1e93]:
+          - button "Search & Hunt" [ref=f1e94] [cursor=pointer]
+          - button "Investigations" [ref=f1e100] [cursor=pointer]
+          - button "Entities" [ref=f1e105] [cursor=pointer]
+      - generic [ref=f1e113]:
+        - generic [ref=f1e114]: DEFEND
+        - generic [ref=f1e115]:
+          - button "Detection Rules" [ref=f1e116] [cursor=pointer]
+          - button "Response Playbooks" [ref=f1e121] [cursor=pointer]
+      - generic [ref=f1e126]:
+        - generic [ref=f1e127]: POSTURE
+        - generic [ref=f1e128]:
+          - button "Assets" [ref=f1e129] [cursor=pointer]
+          - button "Identities" [ref=f1e135] [cursor=pointer]
+          - button "Active Directory" [ref=f1e143] [cursor=pointer]
+          - button "Exposure" [ref=f1e151] [cursor=pointer]
+          - button "Sensors" [ref=f1e158] [cursor=pointer]
+          - button "Compliance" [ref=f1e163] [cursor=pointer]
+      - generic [ref=f1e169]:
+        - generic [ref=f1e170]: DASHBOARDS
+        - button "Studio" [ref=f1e172] [cursor=pointer]
+      - generic [ref=f1e178]:
+        - generic [ref=f1e179]: REPORT
+        - button "Scheduled Reports" [ref=f1e181] [cursor=pointer]
+      - generic [ref=f1e187]:
+        - generic [ref=f1e188]: ADMINISTRATION
+        - generic [ref=f1e189]:
+          - button "Users" [ref=f1e190] [cursor=pointer]
+          - button "Integrations" [ref=f1e205] [cursor=pointer]
+          - button "Notifications" [ref=f1e210] [cursor=pointer]
+          - button "Audit Log" [ref=f1e216] [cursor=pointer]
+          - button "Settings" [ref=f1e222] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f1e229] [cursor=pointer]
+  - main [ref=f1e232]:
+    - generic [ref=f1e233]:
+      - generic [ref=f1e234]:
+        - heading "Mission Control" [level=1] [ref=f1e236]
+        - generic [ref=f1e237]: "Last updated: 22:03:54"
+      - generic [ref=f1e238]:
+        - generic [ref=f1e239]:
+          - generic [ref=f1e240]: Active Alerts
+          - generic [ref=f1e241]: "0"
+        - generic [ref=f1e243]:
+          - generic [ref=f1e244]: Critical
+          - generic [ref=f1e245]: "0"
+        - generic [ref=f1e249]:
+          - generic [ref=f1e250]: High
+          - generic [ref=f1e251]: "0"
+        - generic [ref=f1e255]:
+          - generic [ref=f1e256]: Medium
+          - generic [ref=f1e257]: "0"
+        - generic [ref=f1e261]:
+          - generic [ref=f1e262]: Live EPS
+          - generic [ref=f1e263]: "0"
+      - generic [ref=f1e268]:
+        - generic [ref=f1e269]: Could not load alert summary.
+        - button "Retry" [ref=f1e270] [cursor=pointer]
+      - generic [ref=f1e271]:
+        - generic [ref=f1e272]: Live feeds disconnected. Alert counts and EPS may be out of date.
+        - button "Reconnect" [ref=f1e273] [cursor=pointer]
+      - generic [ref=f1e274]:
+        - generic [ref=f1e275]: No alerts in the selected time range.
+        - generic [ref=f1e278]:
+          - generic [ref=f1e279]:
+            - generic [ref=f1e280]: Live Alerts
+            - generic [ref=f1e281]: Connected
+          - generic [ref=f1e283]: No recent alerts.
+      - generic [ref=f1e286]:
+        - generic [ref=f1e287]: 🛡️
+        - generic [ref=f1e288]: No open incidents
+        - generic [ref=f1e289]: All incidents have been resolved or none have been created.
+      - generic [ref=f1e290]:
+        - generic [ref=f1e291]: Disconnected
+        - generic [ref=f1e294]: 0 eps

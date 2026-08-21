@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func RegisterAgent(cnf *config.Config, UTMKey string) error {
+func RegisterAgent(cnf *config.Config, enrollmentToken string) error {
 	connection, err := GetAgentManagerConnection(cnf)
 	if err != nil {
 		return fmt.Errorf("error connecting to Agent Manager: %v", err)
@@ -19,7 +19,7 @@ func RegisterAgent(cnf *config.Config, UTMKey string) error {
 
 	agentClient := NewAgentServiceClient(connection)
 	ctx, cancel := context.WithCancel(context.Background())
-	ctx = metadata.AppendToOutgoingContext(ctx, "connection-key", UTMKey)
+	ctx = metadata.AppendToOutgoingContext(ctx, "enrollment-token", enrollmentToken)
 	defer cancel()
 
 	ip, err := utils.GetIPAddress()
@@ -42,7 +42,7 @@ func RegisterAgent(cnf *config.Config, UTMKey string) error {
 		Ip:             ip,
 		Hostname:       osInfo.Hostname,
 		Os:             osInfo.OsType,
-		Platform:       osInfo.Platform,
+		Platform:       enrollmentPlatform(osInfo.OsType, osInfo.Platform),
 		Version:        version.Version,
 		RegisterBy:     osInfo.CurrentUser,
 		Mac:            osInfo.Mac,

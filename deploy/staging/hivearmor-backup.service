@@ -1,0 +1,14 @@
+[Unit]
+Description=HiveArmor staging PostgreSQL dump and OpenSearch snapshot
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/HiveArmor-v1/deploy/staging
+ExecStart=/home/ubuntu/HiveArmor-v1/deploy/staging/run-siem009-backup-restore.sh --mode backup
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

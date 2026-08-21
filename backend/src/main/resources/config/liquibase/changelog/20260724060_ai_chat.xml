@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <!-- Sprint 25 — AI Chat history table (S25-T01) -->
+    <changeSet id="20260724060-1" author="hivearmor">
+        <createTable tableName="ha_ai_chat_history">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_login" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="context_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="context_id" type="VARCHAR(255)"/>
+            <column name="messages_json" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueDate="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueDate="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_ai_chat_history_user_context" tableName="ha_ai_chat_history">
+            <column name="user_login"/>
+            <column name="context_type"/>
+            <column name="context_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

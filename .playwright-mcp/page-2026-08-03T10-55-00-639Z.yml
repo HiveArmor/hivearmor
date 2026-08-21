@@ -1,0 +1,200 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e5]:
+      - generic [ref=e6]: HiveArmor
+      - generic [ref=e14]:
+        - button "All authorized tenants" [ref=e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=e24] [cursor=pointer]:
+          - generic [ref=e29]: ⌘ K
+      - generic [ref=e31]:
+        - 'status "Data pipeline: Critical - Bad Gateway" [ref=e212]'
+        - button "Notifications" [ref=e38] [cursor=pointer]
+        - button "Help" [ref=e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=e47]:
+      - generic [ref=e48]:
+        - region "COMMAND" [ref=e49]:
+          - generic [ref=e50]:
+            - button "Mission Control" [ref=e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=e58] [cursor=pointer]
+            - button "Alerts" [ref=e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=e67] [cursor=pointer]
+            - button "Incidents" [ref=e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=e79]:
+          - generic [ref=e80]:
+            - button "Search & Hunt" [ref=e81] [cursor=pointer]
+            - button "Investigations" [ref=e86] [cursor=pointer]
+            - button "Entities" [ref=e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=e97] [cursor=pointer]
+        - region "DEFEND" [ref=e103]:
+          - generic [ref=e104]:
+            - button "Detection Rules" [ref=e105] [cursor=pointer]
+            - button "Playbooks" [ref=e109] [cursor=pointer]
+            - button "Response Library" [ref=e114] [cursor=pointer]
+        - region "POSTURE" [ref=e118]:
+          - generic [ref=e119]:
+            - button "Assets" [ref=e120] [cursor=pointer]
+            - button "Identities" [ref=e125] [cursor=pointer]
+            - button "Active Directory" [ref=e132] [cursor=pointer]
+            - button "Exposure" [ref=e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=e156] [cursor=pointer]
+            - button "Compliance" [ref=e162] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=e167]:
+          - generic [ref=e168]:
+            - button "Endpoints" [ref=e169] [cursor=pointer]
+            - button "File Quarantine" [ref=e173] [cursor=pointer]
+            - button "File Integrity" [ref=e179] [cursor=pointer]
+        - region "DASHBOARDS" [ref=e186]:
+          - button "Studio" [ref=e188] [cursor=pointer]
+        - region "REPORT" [ref=e193]:
+          - button "Scheduled Reports" [ref=e195] [cursor=pointer]
+      - generic [ref=e200]:
+        - button "User menu" [ref=e203] [cursor=pointer]:
+          - generic [ref=e204]: MC
+        - button "Pin sidebar open" [ref=e205] [cursor=pointer]
+    - main [ref=e208]:
+      - generic [ref=e213]:
+        - region "Threat relationship controls" [ref=e288]:
+          - generic [ref=e289]:
+            - button "Relationship filters" [ref=e290] [cursor=pointer]:
+              - generic [ref=e293]: "17"
+            - textbox "Find entity in constellation" [ref=e298]:
+              - /placeholder: Find an entity, IP, process, or domain
+            - generic [ref=e299]:
+              - generic [ref=e300]: Window
+              - combobox "Window" [ref=e301] [cursor=pointer]:
+                - option "Last 1 hour"
+                - option "Last 4 hours"
+                - option "Last 24 hours" [selected]
+                - option "Last 7 days"
+                - option "Last 30 days"
+            - generic [ref=e302]:
+              - generic [ref=e303]: Hops
+              - combobox "Hops" [ref=e304] [cursor=pointer]:
+                - option "1 hop"
+                - option "2 hops" [selected]
+                - option "3 hops"
+            - generic [ref=e305]:
+              - generic [ref=e306]: Risk
+              - combobox "Risk" [ref=e307] [cursor=pointer]:
+                - option "All risk" [selected]
+                - option "40+"
+                - option "60+"
+                - option "80+"
+            - generic "Graph view controls" [ref=e308]:
+              - button "Pause graph layout" [ref=e309] [cursor=pointer]
+              - button "Zoom out" [ref=e313] [cursor=pointer]
+              - button "Zoom in" [ref=e315] [cursor=pointer]
+              - button "Fit graph to view" [ref=e317] [cursor=pointer]
+              - button "Exit full graph view" [active] [pressed] [ref=e892] [cursor=pointer]
+              - button "Reset relationship workspace" [ref=e327] [cursor=pointer]
+        - main [ref=e331]:
+          - region "Threat relationship visualization" [ref=e532]:
+            - generic:
+              - generic: Internal
+              - generic: External
+              - generic: Critical risk
+              - generic: High risk
+              - generic: Node size = alert volume
+            - generic "Threat relationship graph workspace" [ref=e533]:
+              - img "Threat constellation relationship graph" [ref=e534]
+          - complementary "Selected entity details" [ref=e735]:
+            - generic [ref=e736]:
+              - generic [ref=e737]:
+                - generic [ref=e738]: HOST ENTITY
+                - heading "FIN-WKS-044" [level=2] [ref=e739]
+                - code [ref=e742]: entity-host-00001
+              - button "Close entity details" [ref=e743] [cursor=pointer]
+            - generic [ref=e747]:
+              - generic [ref=e748]:
+                - strong [ref=e749]: "97"
+                - generic [ref=e750]: /100 risk
+              - generic [ref=e751]:
+                - generic [ref=e752]:
+                  - term [ref=e753]: Scope
+                  - definition [ref=e754]: internal
+                - generic [ref=e755]:
+                  - term [ref=e756]: Trend
+                  - definition [ref=e757]: new
+                - generic [ref=e758]:
+                  - term [ref=e759]: Alerts
+                  - definition [ref=e760]: "7"
+                - generic [ref=e761]:
+                  - term [ref=e762]: Anomalies
+                  - definition [ref=e763]: "9"
+            - generic [ref=e764]:
+              - heading "Entity context" [level=3] [ref=e765]
+              - generic [ref=e769]:
+                - generic [ref=e770]:
+                  - term [ref=e771]: Criticality
+                  - definition [ref=e772]: Mission critical
+                - generic [ref=e773]:
+                  - term [ref=e774]: First seen
+                  - definition [ref=e775]: 16 Jul 2026, 13:16
+                - generic [ref=e776]:
+                  - term [ref=e777]: Last seen
+                  - definition [ref=e778]: 3 Aug 2026, 13:16
+                - generic [ref=e779]:
+                  - term [ref=e780]: Sources
+                  - definition [ref=e781]: "3"
+              - generic [ref=e782]:
+                - generic [ref=e783]: Endpoint telemetry
+                - generic [ref=e784]: Identity provider
+                - generic [ref=e785]: Network security
+            - generic [ref=e786]:
+              - heading "Visible connections 6" [level=3] [ref=e787]:
+                - text: Visible connections
+                - generic [ref=e792]: "6"
+              - list [ref=e793]:
+                - listitem [ref=e794]:
+                  - button "10.44.18.118 Uses address · 18 events 68" [ref=e795] [cursor=pointer]:
+                    - generic [ref=e801]:
+                      - strong [ref=e802]: 10.44.18.118
+                      - generic [ref=e803]: Uses address · 18 events
+                    - emphasis [ref=e804]: "68"
+                - listitem [ref=e807]:
+                  - button "10.44.0.12 Queried DNS · 24 events 24" [ref=e808] [cursor=pointer]:
+                    - generic [ref=e814]:
+                      - strong [ref=e815]: 10.44.0.12
+                      - generic [ref=e816]: Queried DNS · 24 events
+                    - emphasis [ref=e817]: "24"
+                - listitem [ref=e820]:
+                  - button "powershell.exe Executed on · 9 events 84" [ref=e821] [cursor=pointer]:
+                    - generic [ref=e827]:
+                      - strong [ref=e828]: powershell.exe
+                      - generic [ref=e829]: Executed on · 9 events
+                    - emphasis [ref=e830]: "84"
+                - listitem [ref=e833]:
+                  - button "sarah.chen Authenticated to · 12 events 91" [ref=e834] [cursor=pointer]:
+                    - generic [ref=e838]:
+                      - strong [ref=e839]: sarah.chen
+                      - generic [ref=e840]: Authenticated to · 12 events
+                    - emphasis [ref=e841]: "91"
+                - listitem [ref=e844]:
+                  - button "198.51.100.42 Connected to · 7 events 88" [ref=e845] [cursor=pointer]:
+                    - generic [ref=e851]:
+                      - strong [ref=e852]: 198.51.100.42
+                      - generic [ref=e853]: Connected to · 7 events
+                    - emphasis [ref=e854]: "88"
+                - listitem [ref=e857]:
+                  - button "Remote Desktop Accessed service · 6 events 64" [ref=e858] [cursor=pointer]:
+                    - generic [ref=e871]:
+                      - strong [ref=e872]: Remote Desktop
+                      - generic [ref=e873]: Accessed service · 6 events
+                    - emphasis [ref=e874]: "64"
+            - generic [ref=e877]:
+              - button "Hunt entity" [ref=e878] [cursor=pointer]
+              - button "Expand" [ref=e882] [cursor=pointer]
+              - button "Open dossier" [ref=e887] [cursor=pointer]
+        - generic [ref=e538]:
+          - generic [ref=e539]:
+            - generic [ref=e540]:
+              - generic [ref=e542]: Connected
+              - generic [ref=e543]: •
+              - generic [ref=e545]: Live
+            - generic [ref=e546]: 12840 eps
+          - generic: Snapshot 16:22:42 · Projection stable
+  - generic:
+    - list "Notifications"

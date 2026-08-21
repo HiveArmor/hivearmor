@@ -6,7 +6,7 @@ package auditd
 import (
 	"context"
 
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"github.com/hivearmor/agent/utils"
 )
 
@@ -24,7 +24,7 @@ func (a *AuditdCollector) Name() string {
 }
 
 // Start is a no-op on non-Linux platforms
-func (a *AuditdCollector) Start(ctx context.Context, queue chan *plugins.Log) {
+func (a *AuditdCollector) Start(ctx context.Context, queue chan<- *plugins.Log) {
 	utils.Logger.Info("auditd collector not supported on this platform, skipping")
 }
 

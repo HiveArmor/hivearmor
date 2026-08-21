@@ -1,0 +1,191 @@
+# Rule: Process executed from suspicious temporary path
+# DataType: process
+# MITRE: T1059 - Command and Scripting Interpreter
+
+dataTypes:
+  - "process"
+name: "Endpoint: Process Executed from Suspicious Temp Path"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: "Execution"
+technique: "T1059 - Command and Scripting Interpreter"
+adversary: origin
+description: "A process was executed from a world-writable or temporary directory (/tmp, /var/tmp, /dev/shm on Linux; %TEMP% on Windows). Malware commonly stages and executes payloads from temp directories to avoid detection."
+references:
+  - "https://attack.mitre.org/techniques/T1059/"
+where: |
+  (
+    startsWith(safe("origin.path", ""), "/tmp/") ||
+    startsWith(safe("origin.path", ""), "/var/tmp/") ||
+    startsWith(safe("origin.path", ""), "/dev/shm/") ||
+    contains(toLower(safe("origin.path", "")), "\\temp\\") ||
+    contains(toLower(safe("origin.path", "")), "\\appdata\\local\\temp")
+  ) &&
+  safe("action", "") == "exec"
+groupBy:
+  - origin.process
+  - origin.path
+deduplicateBy:
+  - origin.pid
+  - origin.path
+---
+# Rule: Suspicious process parent-child relationship
+dataTypes:
+  - "process"
+name: "Endpoint: Office/Browser Spawning Shell or Script Interpreter"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: "Execution"
+technique: "T1204.002 - Malicious File"
+adversary: origin
+description: "A Microsoft Office application or web browser spawned a shell or script interpreter. This is the classic initial-access pattern for macro-enabled documents and drive-by-download attacks."
+references:
+  - "https://attack.mitre.org/techniques/T1204/002/"
+where: |
+  safe("action", "") == "exec" &&
+  (
+    contains(toLower(safe("log.ppid_name", safe("origin.process", ""))), "winword") ||
+    contains(toLower(safe("log.ppid_name", safe("origin.process", ""))), "excel") ||
+    contains(toLower(safe("log.ppid_name", safe("origin.process", ""))), "powerpnt") ||
+    contains(toLower(safe("log.ppid_name", safe("origin.process", ""))), "chrome") ||
+    contains(toLower(safe("log.ppid_name", safe("origin.process", ""))), "firefox")
+  ) &&
+  (
+    regexMatch(safe("origin.process", ""), "(?i)(cmd|powershell|wscript|cscript|mshta|bash|sh|python|perl|ruby)")
+  )
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+# Rule: LOLBAS execution — certutil decode
+dataTypes:
+  - "process"
+name: "Endpoint: Certutil Used to Decode Payload (LOLBAS)"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: "Defense Evasion"
+technique: "T1140 - Deobfuscate/Decode Files or Information"
+adversary: origin
+description: "certutil.exe was used with -decode or -urlcache flags, a common technique to download and decode malicious payloads while evading detection."
+references:
+  - "https://attack.mitre.org/techniques/T1140/"
+  - "https://lolbas-project.github.io/lolbas/Binaries/Certutil/"
+where: |
+  regexMatch(toLower(safe("origin.process", "")), "certutil") &&
+  (
+    contains(toLower(safe("origin.command", "")), "-decode") ||
+    contains(toLower(safe("origin.command", "")), "-urlcache") ||
+    contains(toLower(safe("origin.command", "")), "-f ")
+  )
+groupBy:
+  - origin.path
+deduplicateBy:
+  - origin.pid
+---
+# Rule: LOLBAS — mshta executing remote script
+dataTypes:
+  - "process"
+name: "Endpoint: Mshta Executing Remote Script (LOLBAS)"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Execution"
+technique: "T1218.005 - Mshta"
+adversary: origin
+description: "mshta.exe was used to execute a remote HTA script. Attackers use mshta to bypass application control and execute malicious scripts from remote URLs."
+references:
+  - "https://attack.mitre.org/techniques/T1218/005/"
+where: |
+  regexMatch(toLower(safe("origin.process", "")), "mshta") &&
+  (
+    contains(toLower(safe("origin.command", "")), "http://") ||
+    contains(toLower(safe("origin.command", "")), "https://") ||
+    contains(toLower(safe("origin.command", "")), "vbscript:") ||
+    contains(toLower(safe("origin.command", "")), "javascript:")
+  )
+groupBy:
+  - origin.path
+deduplicateBy:
+  - origin.pid
+---
+# Rule: Suspicious setuid/setgid call from non-privileged process
+dataTypes:
+  - "process"
+name: "Endpoint: Suspicious Privilege Escalation via setuid/setgid"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Privilege Escalation"
+technique: "T1548.001 - Setuid and Setgid"
+adversary: origin
+description: "A non-system process called setuid or setgid. This may indicate a privilege escalation attempt via SUID/SGID exploitation or a compromised process attempting to elevate its privileges."
+references:
+  - "https://attack.mitre.org/techniques/T1548/001/"
+where: |
+  (safe("action", "") == "setuid" || safe("action", "") == "setgid") &&
+  safe("origin.uid", 0) != 0 &&
+  !regexMatch(safe("origin.process", ""), "(sudo|su|passwd|newgrp|chfn|chsh|gpasswd|pkexec)")
+groupBy:
+  - origin.process
+  - origin.pid
+deduplicateBy:
+  - origin.pid
+---
+# Rule: Ptrace syscall — process injection indicator
+dataTypes:
+  - "process"
+name: "Endpoint: Ptrace Syscall — Possible Process Injection"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: "Defense Evasion"
+technique: "T1055 - Process Injection"
+adversary: origin
+description: "A process called ptrace() on another process. While ptrace is used by debuggers, its use outside a development context is a strong indicator of process injection or credential dumping."
+references:
+  - "https://attack.mitre.org/techniques/T1055/"
+where: |
+  safe("action", "") == "ptrace" &&
+  !regexMatch(safe("origin.process", ""), "(gdb|lldb|strace|ltrace|valgrind|perf)")
+groupBy:
+  - origin.process
+  - origin.pid
+deduplicateBy:
+  - origin.pid
+---
+# Rule: Anonymous executable mmap (shellcode injection indicator)
+dataTypes:
+  - "process"
+name: "Endpoint: Anonymous Executable Memory Mapping (Shellcode Indicator)"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Defense Evasion"
+technique: "T1055.004 - Asynchronous Procedure Call"
+adversary: origin
+description: "A process created an anonymous executable memory mapping (MAP_ANONYMOUS|PROT_EXEC). This is the standard technique used by shellcode stagers and reflective DLL injection."
+references:
+  - "https://attack.mitre.org/techniques/T1055/"
+where: |
+  safe("action", "") == "mmap_exec" &&
+  (
+    bitwiseAnd(safe("log.Flags", 0), 32) == 32 ||   -- MAP_ANONYMOUS = 0x20
+    bitwiseAnd(safe("log.flags", 0), 32) == 32
+  ) &&
+  !regexMatch(safe("origin.process", ""), "(jvm|java|node|python|ruby|perl|mono|dotnet)")
+groupBy:
+  - origin.process
+  - origin.pid
+deduplicateBy:
+  - origin.pid

@@ -1,0 +1,104 @@
+Sprint: S-4B — Timeline + Notes Backend
+Date: 2026-07-21
+Status: Files written — backend tests require mvn to run
+
+=== Summary ===
+
+Implemented GET /api/ha-incidents/{id}/timeline with full multi-source aggregation.
+Notes table (hive_incident_note) already existed from the original schema — no new migration needed.
+Notes endpoint (POST/GET /api/ha-incident-notes) already existed in UtmIncidentNoteResource.java.
+
+=== Decisions ===
+
+- Notes table: hive_incident_note already exists (renamed from utm_incident_note in 20260712001).
+  Fields: id, incident_id, note_text, note_send_date, note_send_by.
+  No new Liquibase migration required for Step 5.
+
+- Notes endpoints: UtmIncidentNoteResource at /api/ha-incident-notes already provides
+    POST /api/ha-incident-notes    (create note)
+    GET  /api/ha-incident-notes    (list notes by criteria, including incidentId filter)
+  No new note endpoints needed.
+
+- hive_incident_alert has no addedAt column (original schema). Alert-linked events use
+  Instant.EPOCH as eventAt placeholder so they sort to the top of the timeline.
+  This will be corrected in S-10 when the column is added.
+
+- SOAR_EXECUTED events: deferred to S-10 (commented in IncidentTimelineService.java).
+
+- Existing getIncidentTimeline stub in UtmIncidentResource returned TimelineEventDTO from
+  IncidentInvestigationService. Replaced with IncidentTimelineEventDTO from IncidentTimelineService.
+  @PreAuthorize expanded from ROLE_ADMIN|ROLE_USER to all analyst roles + READ_ONLY.
+
+=== Files Created ===
+
+DTOs:
+  backend/src/main/java/com/hivearmor/service/dto/IncidentTimelineEventDTO.java
+    Java record:
+      String id          — unique event ID, format "<type>-<dbId>"
+      String eventType   — STATUS_CHANGE | NOTE | EVIDENCE_ADDED | SOAR_EXECUTED | ALERT_ADDED
+      String actor       — user login who caused the event
+      Instant eventAt    — when it happened
+      String title       — short human-readable title
+      String detail      — longer description (nullable)
+      Integer severityHint — severity level 1-4 (nullable)
+    @JsonInclude(NON_NULL) suppresses null fields from JSON output
+
+Service:
+  backend/src/main/java/com/hivearmor/service/incident/IncidentTimelineService.java
+    getTimeline(Long incidentId): List<IncidentTimelineEventDTO>
+      Source 1: UtmIncidentHistoryRepository.findByIncidentIdOrderByActionDateAsc()
+        → STATUS_CHANGE events (including assignments, completions, etc.)
+        → NOTE events for INCIDENT_NOTE_ADD / INCIDENT_NOTE_CHANGE action types
+      Source 2: UtmIncidentNoteRepository.findByIncidentIdOrderByNoteSendDateAsc()
+        → NOTE events with note text truncated to 300 chars in detail field
+      Source 3: UtmEvidenceItemRepository.findByIncidentId()
+        → EVIDENCE_ADDED events with evidence title + content (truncated 200 chars)
+      Source 4: SOAR_EXECUTED — deferred (comment in code)
+      Source 5: UtmIncidentAlertRepository.findAllByIncidentId()
+        → ALERT_ADDED events using alert name and severity
+        → eventAt = Instant.EPOCH (no addedAt column exists yet)
+      Each source wrapped in try/catch: one failure cannot break the whole timeline
+      Final: sorted ascending by eventAt (nullsFirst)
+
+Integration test:
+  backend/src/test/java/com/hivearmor/web/rest/evidence/TimelineResourceIT.java
+    Tests:
+    - getTimeline_returnsOk                         → GET 200 with JSON body
+    - getTimeline_emptyIncident_returnsEmptyList    → GET 200 with [] (not 500)
+    - getTimeline_readOnlyRole_canAccess            → READ_ONLY can GET
+    - getTimeline_multipleSources_sortedAscending   → seeds note+history+evidence,
+        asserts ≥3 events, asserts ascending sort, asserts first event is NOTE
+
+=== Files Modified ===
+
+Repositories:
+  backend/src/main/java/com/hivearmor/repository/incident/UtmIncidentNoteRepository.java
+    Added: findByIncidentIdOrderByNoteSendDateAsc(Long incidentId)
+
+REST Resource:
+  backend/src/main/java/com/hivearmor/web/rest/incident/UtmIncidentResource.java
+    - Added import: IncidentTimelineEventDTO, IncidentTimelineService
+    - Added field: final IncidentTimelineService incidentTimelineService (auto-injected via @RequiredArgsConstructor)
+    - Replaced stub getIncidentTimeline() method:
+        Old: returns List<TimelineEventDTO> via incidentInvestigationService.getTimeline()
+             @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_USER')")
+        New: returns List<IncidentTimelineEventDTO> via incidentTimelineService.getTimeline()
+             @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST','ROLE_USER','ROLE_READ_ONLY')")
+
+=== Endpoint Summary ===
+
+GET /api/ha-incidents/{id}/timeline
+  Auth: ADMIN | SOC_MANAGER | ANALYST | USER | READ_ONLY
+  Response: List<IncidentTimelineEventDTO> sorted ascending by eventAt
+  HTTP 200 always (empty list if no events, never 500 for missing data)
+
+GET /api/ha-incident-notes?incidentId.equals={id}   (pre-existing)
+POST /api/ha-incident-notes                          (pre-existing)
+
+=== Backend Test Instructions ===
+
+Run integration tests with:
+  cd backend && mvn -s settings.xml test -Dtest=TimelineResourceIT
+
+Note: mvn cannot run inside Claude Code sandbox. Tests are structurally correct and follow
+the same pattern as EvidenceResourceIT.java (which was written in S-4A).

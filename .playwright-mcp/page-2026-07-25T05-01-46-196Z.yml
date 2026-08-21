@@ -1,0 +1,73 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - generic [ref=f1e5]: HiveArmor
+    - generic [ref=f1e12]:
+      - 'generic "Data pipeline: Critical - Internal Server Error" [ref=f1e224]'
+      - generic "Reconnecting..." [ref=f1e16]: 0 EPS
+      - button "Notifications" [ref=f1e18] [cursor=pointer]
+      - button "Help" [ref=f1e23] [cursor=pointer]
+      - button "User menu" [ref=f1e28] [cursor=pointer]:
+        - generic [ref=f1e29]: AA
+        - generic [ref=f1e30]: admin
+  - navigation [ref=f1e31]:
+    - generic [ref=f1e32]:
+      - generic [ref=f1e33]:
+        - generic [ref=f1e34]: COMMAND
+        - generic [ref=f1e35]:
+          - button "Analyst Queue" [ref=f1e36] [cursor=pointer]
+          - button "Alerts" [ref=f1e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f1e47] [cursor=pointer]
+          - button "Incidents" [ref=f1e54] [cursor=pointer]
+      - generic [ref=f1e61]:
+        - generic [ref=f1e62]: INVESTIGATE
+        - generic [ref=f1e63]:
+          - button "Search & Hunt" [ref=f1e64] [cursor=pointer]
+          - button "Investigations" [ref=f1e70] [cursor=pointer]
+          - button "Entities" [ref=f1e75] [cursor=pointer]
+      - generic [ref=f1e83]:
+        - generic [ref=f1e84]: DEFEND
+        - generic [ref=f1e85]:
+          - button "Detection Rules" [ref=f1e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f1e91] [cursor=pointer]
+      - generic [ref=f1e96]:
+        - generic [ref=f1e97]: POSTURE
+        - generic [ref=f1e98]:
+          - button "Assets" [ref=f1e99] [cursor=pointer]
+          - button "Identities" [ref=f1e105] [cursor=pointer]
+          - button "Active Directory" [ref=f1e113] [cursor=pointer]
+          - button "Exposure" [ref=f1e121] [cursor=pointer]
+          - button "Sensors" [ref=f1e128] [cursor=pointer]
+          - button "Compliance" [ref=f1e133] [cursor=pointer]
+      - generic [ref=f1e139]:
+        - generic [ref=f1e140]: DASHBOARDS
+        - button "Studio" [ref=f1e142] [cursor=pointer]
+      - generic [ref=f1e148]:
+        - generic [ref=f1e149]: REPORT
+        - button "Scheduled Reports" [ref=f1e151] [cursor=pointer]
+      - generic [ref=f1e157]:
+        - generic [ref=f1e158]: ADMINISTRATION
+        - generic [ref=f1e159]:
+          - button "Users" [ref=f1e160] [cursor=pointer]
+          - button "Integrations" [ref=f1e175] [cursor=pointer]
+          - button "Notifications" [ref=f1e180] [cursor=pointer]
+          - button "Audit Log" [ref=f1e186] [cursor=pointer]
+          - button "Settings" [ref=f1e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f1e199] [cursor=pointer]
+  - main [ref=f1e202]:
+    - generic [ref=f1e203]:
+      - generic [ref=f1e205]:
+        - heading "Alerts" [level=1] [ref=f1e209]
+        - generic [ref=f1e210]: —
+      - generic [ref=f1e211]:
+        - generic [ref=f1e212]:
+          - textbox "KQL filter input" [active] [ref=f1e213]:
+            - /placeholder: severity:critical AND status:open  ·  title:"brute force"
+            - text: badfield:value
+          - generic [ref=f1e230]: Unknown field or invalid syntax
+        - button "Add filter" [ref=f1e215] [cursor=pointer]: + Add filter
+        - button "Select columns" [ref=f1e217] [cursor=pointer]: Fields
+      - generic [ref=f1e225]:
+        - generic [ref=f1e226]:
+          - generic [ref=f1e227]: "severity: critical"
+          - 'button "Remove filter: severity: critical" [ref=f1e228] [cursor=pointer]': ×
+        - button "Clear all" [ref=f1e229] [cursor=pointer]

@@ -1,0 +1,45 @@
+id: c7d8e9f0-a1b2-3456-cdef-567890123457
+title: Network Share Discovery and Enumeration
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: medium
+tags:
+  - attack.discovery
+  - attack.T1135
+detection:
+  selection_net:
+    Image|endswith:
+      - '\net.exe'
+      - '\net1.exe'
+    CommandLine|contains:
+      - ' view'
+      - ' use'
+  selection_powershell:
+    CommandLine|contains:
+      - 'Get-WmiObject Win32_Share'
+      - 'Get-SmbShare'
+      - 'gwmi Win32_Share'
+  selection_nltest:
+    Image|endswith: '\nltest.exe'
+    CommandLine|contains:
+      - '/dclist:'
+      - '/dsgetsite'
+      - '/trusted_domains'
+  condition: selection_net or selection_powershell or selection_nltest
+falsepositives:
+  - System administrators performing share inventory
+  - Network discovery tools
+impact:
+  confidentiality: medium
+  integrity: low
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: discovery
+  technique: T1135

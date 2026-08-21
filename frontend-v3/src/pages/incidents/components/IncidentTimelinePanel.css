@@ -1,0 +1,178 @@
+.incident-timeline {
+  padding: 14px;
+}
+
+.incident-timeline__list {
+  position: relative;
+  display: grid;
+  gap: 0;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.incident-timeline__list::before {
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  left: 106px;
+  width: 1px;
+  background: var(--ha-border-default);
+  content: '';
+}
+
+.incident-timeline__event {
+  position: relative;
+  display: grid;
+  grid-template-columns: 92px 28px minmax(0, 1fr);
+  gap: 10px;
+  min-height: 70px;
+  padding: 7px 0;
+}
+
+.incident-timeline__time {
+  padding-top: 8px;
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+  text-align: right;
+}
+
+.incident-timeline__time time,
+.incident-timeline__time span {
+  display: block;
+}
+
+.incident-timeline__time span {
+  margin-top: 2px;
+  color: var(--ha-foreground-disabled);
+}
+
+.incident-timeline__marker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  margin-top: 3px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--ha-action-primary) 42%, var(--ha-border-default));
+  border-radius: 8px;
+  background: var(--ha-surface-elevated);
+  color: var(--ha-action-secondary);
+  box-shadow: 0 0 0 4px var(--ha-surface-panel);
+}
+
+.incident-timeline__marker[data-type='alert_added'] {
+  border-color: color-mix(in srgb, var(--ha-severity-critical) 44%, var(--ha-border-default));
+  color: var(--ha-severity-critical);
+}
+
+.incident-timeline__marker[data-type='status_changed'] {
+  border-color: color-mix(in srgb, var(--ha-state-info) 44%, var(--ha-border-default));
+  color: var(--ha-state-info);
+}
+
+.incident-timeline__marker[data-type='evidence_added'] {
+  border-color: color-mix(in srgb, var(--ha-state-healthy) 44%, var(--ha-border-default));
+  color: var(--ha-state-healthy);
+}
+
+.incident-timeline__card {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--ha-border-subtle);
+  border-radius: var(--ha-radius-control);
+  background: var(--ha-surface-elevated);
+}
+
+.incident-timeline__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.incident-timeline__meta strong {
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-metadata);
+  font-weight: 680;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.incident-timeline__meta span {
+  overflow: hidden;
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.incident-timeline__card p {
+  margin: 0;
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-compact);
+  line-height: 1.5;
+}
+
+.incident-timeline[data-compact='true'] {
+  padding: 0;
+}
+
+.incident-timeline[data-compact='true'] .incident-timeline__list::before {
+  left: 12px;
+}
+
+.incident-timeline[data-compact='true'] .incident-timeline__event {
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 9px;
+  min-height: 58px;
+  padding: 4px 0;
+}
+
+.incident-timeline[data-compact='true'] .incident-timeline__time {
+  display: none;
+}
+
+.incident-timeline[data-compact='true'] .incident-timeline__marker {
+  width: 25px;
+  height: 25px;
+  margin-top: 5px;
+  border-radius: 7px;
+}
+
+.incident-timeline[data-compact='true'] .incident-timeline__card {
+  padding: 8px 10px;
+}
+
+@media (max-width: 560px) {
+  .incident-timeline {
+    padding: 10px;
+  }
+
+  .incident-timeline__list::before {
+    left: 12px;
+  }
+
+  .incident-timeline__event {
+    grid-template-columns: 26px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .incident-timeline__time {
+    display: none;
+  }
+
+  .incident-timeline__marker {
+    width: 25px;
+    height: 25px;
+  }
+
+  .incident-timeline__meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+}

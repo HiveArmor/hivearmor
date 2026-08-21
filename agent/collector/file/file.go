@@ -9,13 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/threatwinds/go-sdk/entities"
-	"github.com/threatwinds/go-sdk/plugins"
 	"github.com/hivearmor/agent/agent"
 	"github.com/hivearmor/agent/collector/configwatcher"
 	"github.com/hivearmor/agent/collector/schema"
 	"github.com/hivearmor/agent/config"
 	"github.com/hivearmor/agent/utils"
+	"github.com/hivearmor/sdk/entities"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 const pollInterval = 1 * time.Second
@@ -33,7 +33,7 @@ type fileWatcher struct {
 type FileCollector struct {
 	watchers map[string]*fileWatcher // key: dataType+path
 	mu       sync.RWMutex
-	queue    chan *plugins.Log
+	queue    chan<- *plugins.Log
 }
 
 // New creates a new FileCollector.
@@ -63,7 +63,7 @@ func (fc *FileCollector) Stop() {
 
 // Start begins watching for configuration changes using fsnotify.
 // It performs an initial reconciliation and then reacts to config file changes.
-func (fc *FileCollector) Start(ctx context.Context, queue chan *plugins.Log) {
+func (fc *FileCollector) Start(ctx context.Context, queue chan<- *plugins.Log) {
 	fc.queue = queue
 	configwatcher.Watch(ctx, "file collector", func() {
 		fc.reconcile(ctx)
@@ -268,13 +268,7 @@ func (fc *FileCollector) tailFile(ctx context.Context, w *fileWatcher) {
 				DataSource: hostname,
 				Raw:        validatedLog,
 			}
-			select {
-			case fc.queue <- log:
-			default:
-				agent.LogsDropped.Add(1)
-				agent.WriteToDLQ("file", log)
-				utils.Logger.LogF(400, "file collector: LogQueue full; dropping log from %s", w.path)
-			}
+			agent.Offer(fc.queue, "file", log)
 		}
 
 		time.Sleep(pollInterval)

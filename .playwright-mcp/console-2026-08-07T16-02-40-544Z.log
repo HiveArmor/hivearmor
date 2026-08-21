@@ -1,0 +1,120 @@
+[     160ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     258ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     271ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   30230ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   60239ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[   90242ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  120256ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  150261ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  180255ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  210259ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  240261ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  270253ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  300261ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  330259ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  360259ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  390252ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  420259ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  450263ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  480269ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  510258ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[  512444ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at EntityListPage (http://localhost:3000/src/pages/entities/EntityListPage.tsx:812:39)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13096:13)
+    at HTMLUnknownElement.callCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3142:11)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3162:14)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3201:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15990:5)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36)
+[  512445ms] [ERROR] Error handled by React Router default ErrorBoundary: TypeError: Cannot read properties of undefined (reading 'map')
+    at EntityListPage (http://localhost:3000/src/pages/entities/EntityListPage.tsx:812:39)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13096:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15500:6)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15299:21)
+    at flushSyncCallbacks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:7802:19) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3780
+[  512445ms] [ERROR] Error handled by React Router default ErrorBoundary: TypeError: Cannot read properties of undefined (reading 'map')
+    at EntityListPage (http://localhost:3000/src/pages/entities/EntityListPage.tsx:812:39)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13096:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15500:6)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15299:21)
+    at flushSyncCallbacks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:7802:19) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3780
+[  512446ms] TypeError: Cannot read properties of undefined (reading 'map')
+    at EntityListPage (http://localhost:3000/src/pages/entities/EntityListPage.tsx:812:39)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13096:13)
+    at HTMLUnknownElement.callCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3142:11)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3162:14)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3201:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15990:5)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36)
+[  512446ms] [ERROR] Error handled by React Router default ErrorBoundary: TypeError: Cannot read properties of undefined (reading 'map')
+    at EntityListPage (http://localhost:3000/src/pages/entities/EntityListPage.tsx:812:39)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13096:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15500:6)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15193:21)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15304:19) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3780
+[  512446ms] [ERROR] Error handled by React Router default ErrorBoundary: TypeError: Cannot read properties of undefined (reading 'map')
+    at EntityListPage (http://localhost:3000/src/pages/entities/EntityListPage.tsx:812:39)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13096:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15500:6)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15193:21)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15304:19) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3780
+[  512447ms] [ERROR] The above error occurred in the <EntityListPage> component:
+
+    at EntityListPage (http://localhost:3000/src/pages/entities/EntityListPage.tsx:270:19)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx?t=1786117881132:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, RenderErrorBoundary. @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11718
+[  512447ms] [ERROR] React Router caught the following error during render TypeError: Cannot read properties of undefined (reading 'map')
+    at EntityListPage (http://localhost:3000/src/pages/entities/EntityListPage.tsx:812:39)
+    at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:9632:19)
+    at updateFunctionComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12122:19)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13096:13)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36)
+    at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15500:6)
+    at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15193:21)
+    at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15304:19) {componentStack: 
+    at EntityListPage (http://localhost:3000/src/…ack_react-query.js?v=d60f55b8:2995:31)
+    at App} @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3810

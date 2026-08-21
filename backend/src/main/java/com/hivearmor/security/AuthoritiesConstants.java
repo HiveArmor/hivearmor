@@ -13,6 +13,11 @@ public final class AuthoritiesConstants {
 
     public static final String PRE_VERIFICATION_USER = "ROLE_PRE_VERIFICATION_USER";
 
+    public static final String ANALYST = "ROLE_ANALYST";
+
+    public static final String SOC_MANAGER = "ROLE_SOC_MANAGER";
+
+    public static final String READ_ONLY = "ROLE_READ_ONLY";
 
     private AuthoritiesConstants() {
     }

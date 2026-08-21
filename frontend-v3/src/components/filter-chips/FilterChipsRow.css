@@ -1,0 +1,63 @@
+/**
+ * FilterChipsRow styles
+ */
+
+.filter-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 24px;
+  background: var(--ha-background);
+  border-bottom: 1px solid var(--ha-border);
+}
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 8px;
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-primary);
+}
+
+.filter-chip__label {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-primary);
+}
+
+.filter-chip__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 2px;
+  background: none;
+  border: none;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+
+.filter-chip__remove:hover {
+  color: var(--ha-critical);
+}
+
+.filter-chips-row__clear-all {
+  margin-left: auto;
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: var(--ha-text-xs);
+  color: var(--ha-primary);
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 120ms ease;
+}
+
+.filter-chips-row__clear-all:hover {
+  opacity: 0.8;
+}

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Sprint 43 — Evidence custody chain table (INC-007) -->
+    <changeSet id="20260813003" author="hivearmor">
+        <createTable tableName="evidence_custody">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="evidence_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="incident_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="actor" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="action" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="text"/>
+            <column name="tenant_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="evidence_custody" indexName="idx_evidence_custody_evidence">
+            <column name="evidence_id"/>
+        </createIndex>
+
+        <createIndex tableName="evidence_custody" indexName="idx_evidence_custody_incident">
+            <column name="incident_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

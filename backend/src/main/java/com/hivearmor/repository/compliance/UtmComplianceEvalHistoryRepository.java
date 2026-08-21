@@ -12,4 +12,11 @@ public interface UtmComplianceEvalHistoryRepository extends JpaRepository<UtmCom
 
     List<UtmComplianceEvalHistory> findByFrameworkIdAndEvaluatedAtAfterOrderByEvaluatedAtAsc(
         Long frameworkId, Instant after);
+
+    java.util.Optional<UtmComplianceEvalHistory> findFirstByFrameworkIdOrderByEvaluatedAtDesc(Long frameworkId);
+
+    @org.springframework.data.jpa.repository.Query(
+        "SELECT h FROM UtmComplianceEvalHistory h WHERE h.evaluatedAt = " +
+        "(SELECT MAX(h2.evaluatedAt) FROM UtmComplianceEvalHistory h2 WHERE h2.frameworkId = h.frameworkId)")
+    List<UtmComplianceEvalHistory> findLatestPerFramework();
 }

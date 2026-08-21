@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <!-- S24-T01: create ha_compliance_result table (base columns only).
+         The client_id column is added separately by changeset 20260724051. -->
+    <changeSet id="20260724051a" author="hivearmor">
+        <createTable tableName="ha_compliance_result">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="control_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="control_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="framework" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="evaluated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ha_compliance_result" indexName="idx_ha_compliance_result_control_id">
+            <column name="control_id"/>
+        </createIndex>
+
+        <createIndex tableName="ha_compliance_result" indexName="idx_ha_compliance_result_evaluated_at">
+            <column name="evaluated_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

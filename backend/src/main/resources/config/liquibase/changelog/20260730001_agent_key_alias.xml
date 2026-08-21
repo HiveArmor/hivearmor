@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        Adds agent-provisioning support to the existing api_keys table.
+
+        Changes:
+          1. agent_alias  — human-readable machine name chosen by the admin at key
+                            creation time (e.g. "web-server-01"). Stored separately
+                            from `name` so existing generic API-key rows are unaffected.
+          2. agent_mode   — installation mode chosen at provisioning time: "log" or "edr".
+          3. is_agent_key — flag that distinguishes agent-provisioning keys from generic
+                            API keys, so the two flows remain independent.
+          4. UNIQUE(name, user_id) — prevents the same admin from accidentally creating
+                            two keys with identical aliases. Different admins or tenants
+                            may reuse the same name.
+    -->
+
+    <changeSet id="20260730001-agent-key-1" author="hivearmor">
+        <!-- agent_alias: the human name for the target machine -->
+        <addColumn tableName="api_keys">
+            <column name="agent_alias" type="varchar(255)" defaultValue="">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- agent_mode: "log" or "edr" -->
+        <addColumn tableName="api_keys">
+            <column name="agent_mode" type="varchar(20)" defaultValue="log">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- is_agent_key: true for keys generated via the Add Agent UX -->
+        <addColumn tableName="api_keys">
+            <column name="is_agent_key" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20260730001-agent-key-2" author="hivearmor">
+        <!--
+            Unique constraint on (name, user_id) so the same admin cannot create
+            two agent-provisioning keys with identical aliases.
+
+            NOTE: existing rows all have distinct (name, user_id) combinations because
+            ApiKeyService.createApiKey() already rejects duplicates at the service layer.
+            This constraint makes that invariant explicit at the database level.
+        -->
+        <addUniqueConstraint
+            tableName="api_keys"
+            columnNames="name, user_id"
+            constraintName="uq_api_keys_name_userid"/>
+    </changeSet>
+
+</databaseChangeLog>

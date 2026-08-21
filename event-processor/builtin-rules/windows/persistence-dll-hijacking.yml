@@ -1,0 +1,45 @@
+id: b2c3d4e5-f6a7-8901-bcde-012345678932
+title: DLL Hijacking via Suspicious DLL Placement
+status: stable
+logsource:
+  product: windows
+  category: file_event
+level: high
+tags:
+  - attack.persistence
+  - attack.defense_evasion
+  - attack.T1574
+  - attack.T1574.001
+detection:
+  selection:
+    TargetFilename|endswith: '.dll'
+    TargetFilename|contains:
+      - '\Users\Public\'
+      - '\AppData\Local\Temp\'
+      - '\Downloads\'
+  selection_system_impersonation:
+    TargetFilename|endswith:
+      - '\wbemcomn.dll'
+      - '\fxsst.dll'
+      - '\cryptbase.dll'
+      - '\dwmapi.dll'
+      - '\windowscodecs.dll'
+    TargetFilename|contains:
+      - '\Users\'
+      - '\Temp\'
+  condition: selection or selection_system_impersonation
+falsepositives:
+  - Software installers placing DLLs in user directories
+  - Developer workflow compiling and placing DLLs
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - TargetFilename
+groupBy:
+  - ComputerName
+mitre:
+  tactic: persistence
+  technique: T1574.001

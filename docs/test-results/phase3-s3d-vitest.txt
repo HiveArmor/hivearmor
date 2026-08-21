@@ -1,0 +1,41 @@
+Sprint: S-3D — Alerts + Incidents Grid Migration
+Date: 2026-07-21
+TS errors: 0
+Vitest: 413/413 pass (0 failures)
+New tests: 15 (7 alerts-grid + 8 incidents-grid)
+Prior count: 398
+
+Files created:
+  frontend-v2/src/app/(app)/alerts/__tests__/alerts-grid.test.ts
+  frontend-v2/src/app/(app)/incidents/__tests__/incidents-grid.test.ts
+
+Files modified:
+  frontend-v2/src/app/(app)/alerts/page.tsx
+    - Added SiemDataGrid + IDatasource + ColDef + cell renderer imports
+    - Added ALERT_GRID_COL_DEFS (8 columns)
+    - Added AlertsListGrid sub-component (IDatasource → alertService.search())
+    - Replaced list view <table> with <AlertsListGrid>
+    - Board view preserved exactly as-is
+    - All preserved: SSE banner, bulk toolbar, AlertDetailPanel, SOAR launcher
+
+  frontend-v2/src/app/(app)/incidents/page.tsx
+    - Added SiemDataGrid + IDatasource + ColDef + cell renderer imports (useMemo added)
+    - Added INCIDENT_GRID_COL_DEFS (8 columns, includes SlaIndicatorCell)
+    - Added IncidentsListGrid sub-component (IDatasource → incidentService.list())
+    - Added gridRefreshToken state — bumped on create to force grid reload
+    - Replaced table view with <IncidentsListGrid>
+    - Board view preserved exactly as-is
+    - All preserved: create incident modal, detail panel, assign/priority/status controls
+
+Column defs — alerts:
+  timestamp (TimestampCell, 160), severity (SeverityCell, 100),
+  name (TruncatedTextCell, flex:2), dataSource (140), status (StatusCell, 120),
+  tags (150), assignedTo (130), actions (80)
+
+Column defs — incidents:
+  incidentCreatedDate (TimestampCell, 160), incidentSeverity (SeverityCell, 100),
+  incidentName (TruncatedTextCell, flex:2), incidentStatus (StatusCell, 120),
+  incidentAssignedTo (UserCell, 130), slaDeadline (SlaIndicatorCell, 130),
+  alertCount (100), actions (80)
+
+gridId values: "alerts-list", "incidents-list"

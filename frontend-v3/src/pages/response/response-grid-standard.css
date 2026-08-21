@@ -1,0 +1,58 @@
+/** Shared data-density and clipping contract for every Response Automation grid. */
+.response-grid.ag-theme-quartz-dark.ha-grid {
+  --ag-header-height: 34px;
+  --ag-cell-horizontal-padding: 10px;
+  --ag-row-hover-color: var(--ha-surface-hover);
+  --ag-selected-row-background-color: var(--ha-surface-selected);
+}
+
+.response-grid .ag-cell {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.response-grid .ag-cell-wrapper,
+.response-grid .ag-cell-value {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.response-grid .ag-cell-value {
+  overflow: hidden;
+}
+
+.response-grid .gov-primary-cell,
+.response-grid .gov-policy-cell,
+.response-grid .act-primary-cell,
+.response-grid .act-context-cell,
+.response-grid .resp-primary-cell,
+.response-grid .resp-context-cell {
+  height: auto;
+  max-height: 100%;
+  gap: 2px;
+  line-height: 1.1;
+}
+
+.response-grid .gov-primary-cell strong,
+.response-grid .gov-policy-cell strong,
+.response-grid .act-primary-cell strong,
+.response-grid .act-context-cell strong,
+.response-grid .resp-primary-cell strong,
+.response-grid .resp-context-cell strong {
+  line-height: 14px;
+}
+
+.response-grid .gov-primary-cell small,
+.response-grid .gov-policy-cell small,
+.response-grid .act-primary-cell small,
+.response-grid .act-context-cell small,
+.response-grid .resp-primary-cell small,
+.response-grid .resp-context-cell small {
+  display: block;
+  line-height: 12px;
+}

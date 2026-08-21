@@ -1,0 +1,35 @@
+id: ha-net-006
+title: Potential DNS Tunneling via Unusually Long Query
+status: stable
+description: Detects DNS queries with unusually long subdomain labels, which are commonly used by DNS tunneling tools to exfiltrate data or receive C2 commands by encoding payloads within DNS query names.
+logsource:
+  product: network
+  service: dns
+level: high
+tags:
+  - attack.exfiltration
+  - attack.T1048.003
+detection:
+  selection:
+    event.action: query
+    dns.question.name|re: '^[a-zA-Z0-9+/=]{40,}\.'
+  condition: selection
+falsepositives:
+  - Certificate transparency log monitors querying long-label subdomains
+  - Legitimate CDN providers using content-hash-based subdomains
+fields:
+  - source.ip
+  - dns.question.name
+  - dns.question.type
+impact:
+  confidentiality: high
+  integrity: low
+  availability: low
+deduplicateBy:
+  - source.ip
+  - dns.question.name
+groupBy:
+  - source.ip
+mitre:
+  tactic: exfiltration
+  technique: T1048.003

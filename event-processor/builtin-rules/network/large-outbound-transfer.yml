@@ -1,0 +1,41 @@
+id: ha-net-003
+title: Unusually Large Outbound Data Transfer
+status: stable
+description: Detects single outbound network connections or sessions with an unusually large byte count, which may indicate data exfiltration. The threshold of 100 MB in a single flow is configurable per environment.
+logsource:
+  product: network
+  service: flow
+level: high
+tags:
+  - attack.exfiltration
+  - attack.T1048
+detection:
+  selection:
+    network.direction: outbound
+    network.bytes|gte: 104857600
+  filter_cdn:
+    destination.ip|cidr:
+      - 104.16.0.0/13
+      - 151.101.0.0/16
+  condition: selection and not filter_cdn
+falsepositives:
+  - Authorized backup jobs uploading large data sets to cloud storage
+  - Software distribution systems pushing OS images or large installers
+fields:
+  - source.ip
+  - destination.ip
+  - destination.port
+  - network.bytes
+  - network.direction
+impact:
+  confidentiality: critical
+  integrity: low
+  availability: low
+deduplicateBy:
+  - source.ip
+  - destination.ip
+groupBy:
+  - source.ip
+mitre:
+  tactic: exfiltration
+  technique: T1048

@@ -1,0 +1,40 @@
+id: 5a6d5b4e-3c1f-4a2b-8e9d-7f0c2a1b3e4d
+title: LSASS Memory Dump via Sysmon
+status: stable
+logsource:
+  product: windows
+  category: process_access
+level: critical
+tags:
+  - attack.credential_access
+  - attack.T1003
+  - attack.T1003.001
+detection:
+  selection:
+    TargetImage|endswith: '\lsass.exe'
+    GrantedAccess|contains:
+      - '0x1010'
+      - '0x1038'
+      - '0x40'
+      - '0x1fffff'
+  filter_legitimate:
+    SourceImage|contains:
+      - 'C:\Windows\System32\'
+      - 'C:\Windows\SysWOW64\'
+  condition: selection and not filter_legitimate
+falsepositives:
+  - Security software such as AV or EDR solutions
+  - Legitimate process memory diagnostic tools
+  - Windows Error Reporting (WerFault.exe)
+impact:
+  confidentiality: critical
+  integrity: low
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - SourceImage
+groupBy:
+  - ComputerName
+mitre:
+  tactic: credential-access
+  technique: T1003.001

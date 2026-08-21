@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260724070-1" author="hivearmor" context="dev,prod">
+        <createTable tableName="ha_alert_signal">
+            <column name="id"             type="BIGSERIAL"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="alert_id"       type="VARCHAR(64)"><constraints nullable="false"/></column>
+            <column name="signal_type"    type="VARCHAR(32)"><constraints nullable="false"/></column>
+            <column name="alert_name"     type="VARCHAR(255)"/>
+            <column name="data_type"      type="VARCHAR(64)"/>
+            <column name="severity"       type="INT"/>
+            <column name="recorded_by"    type="VARCHAR(128)"/>
+            <column name="recorded_at"    type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"><constraints nullable="false"/></column>
+        </createTable>
+        <addUniqueConstraint tableName="ha_alert_signal"
+                             columnNames="alert_id, signal_type"
+                             constraintName="uk_ha_alert_signal_alert_type"/>
+        <createIndex tableName="ha_alert_signal" indexName="ix_ha_alert_signal_type">
+            <column name="signal_type"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260724070-2" author="hivearmor" context="dev,prod">
+        <createTable tableName="ha_rule_gen_session">
+            <column name="id"             type="BIGSERIAL"><constraints primaryKey="true" nullable="false"/></column>
+            <column name="status"         type="VARCHAR(32)" defaultValue="pending_review"><constraints nullable="false"/></column>
+            <column name="rule_name"      type="VARCHAR(255)"/>
+            <column name="rule_yaml"      type="TEXT"><constraints nullable="false"/></column>
+            <column name="signal_key"     type="VARCHAR(255)"/>
+            <column name="requested_by"   type="VARCHAR(128)"/>
+            <column name="approved_path"  type="VARCHAR(1024)"/>
+            <column name="created_at"     type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"><constraints nullable="false"/></column>
+            <column name="updated_at"     type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"><constraints nullable="false"/></column>
+        </createTable>
+        <createIndex tableName="ha_rule_gen_session" indexName="ix_ha_rule_gen_session_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

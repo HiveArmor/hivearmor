@@ -1,0 +1,135 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e12]: HiveArmor
+        - generic [ref=e13]: Security operations
+      - generic [ref=e14]:
+        - button "All authorized tenants" [ref=e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=e24] [cursor=pointer]:
+          - generic [ref=e29]: ⌘ K
+        - generic [ref=e30]: Production
+      - generic [ref=e31]:
+        - 'status "Data pipeline: Healthy" [ref=e32]'
+        - status "Live events per second" [ref=e35]:
+          - generic [ref=e37]: 0 EPS
+        - button "Notifications" [ref=e38] [cursor=pointer]
+        - button "Help" [ref=e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=e47]:
+      - generic [ref=e48]:
+        - region "COMMAND" [ref=e49]:
+          - generic [ref=e50]:
+            - button "Mission Control" [ref=e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=e58] [cursor=pointer]
+            - button "Alerts" [ref=e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=e67] [cursor=pointer]
+            - button "Incidents" [ref=e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=e79]:
+          - generic [ref=e80]:
+            - button "Search & Hunt" [ref=e81] [cursor=pointer]
+            - button "Investigations" [ref=e86] [cursor=pointer]
+            - button "Entities" [ref=e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=e97] [cursor=pointer]
+        - region "DEFEND" [ref=e103]:
+          - generic [ref=e104]:
+            - button "Detection Rules" [ref=e105] [cursor=pointer]
+            - button "Playbooks" [ref=e109] [cursor=pointer]
+            - button "Response Library" [ref=e114] [cursor=pointer]
+        - region "POSTURE" [ref=e118]:
+          - generic [ref=e119]:
+            - button "Assets" [ref=e120] [cursor=pointer]
+            - button "Identities" [ref=e125] [cursor=pointer]
+            - button "Active Directory" [ref=e132] [cursor=pointer]
+            - button "Exposure" [ref=e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=e156] [cursor=pointer]
+            - button "Sensors" [ref=e162] [cursor=pointer]
+            - button "Compliance" [ref=e166] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=e171]:
+          - generic [ref=e172]:
+            - button "Endpoints" [ref=e173] [cursor=pointer]
+            - button "File Quarantine" [ref=e177] [cursor=pointer]
+            - button "File Integrity" [ref=e183] [cursor=pointer]
+            - button "Agent Policies" [ref=e190] [cursor=pointer]
+        - region "DASHBOARDS" [ref=e195]:
+          - button "Studio" [ref=e197] [cursor=pointer]
+        - region "REPORT" [ref=e202]:
+          - button "Scheduled Reports" [ref=e204] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=e209]:
+          - generic [ref=e210]:
+            - button "Users" [ref=e211] [cursor=pointer]
+            - button "Integrations" [ref=e225] [cursor=pointer]
+            - button "Notifications" [ref=e229] [cursor=pointer]
+            - button "Audit Log" [ref=e234] [cursor=pointer]
+            - button "Settings" [ref=e239] [cursor=pointer]
+      - generic [ref=e244]:
+        - button "User menu" [ref=e247] [cursor=pointer]:
+          - generic [ref=e248]: AA
+        - button "Pin sidebar open" [ref=e249] [cursor=pointer]
+    - main [ref=e252]:
+      - region [ref=e253]:
+        - generic [ref=e254]:
+          - generic [ref=e255]:
+            - generic [ref=e256]: Command / Mission Control
+            - heading "Mission Control" [level=1] [ref=e257]
+            - paragraph [ref=e258]: Prioritized risk, intervention work, telemetry health, and team capacity for the current shift.
+          - generic "Dashboard context and actions" [ref=e259]:
+            - generic [ref=e260]: All authorized tenants
+            - generic [ref=e261]: Last 24 hours
+            - generic [ref=e265]: Live · 07:46
+            - button "Refresh" [ref=e266] [cursor=pointer]
+        - generic "Operational summary" [ref=e272]
+        - generic [ref=e291]:
+          - article [ref=e292]:
+            - generic [ref=e293]:
+              - generic [ref=e294]:
+                - heading "Alert and incident trend" [level=2] [ref=e295]
+                - paragraph [ref=e296]: Use the relationship between alert volume and promoted incidents to identify investigation pressure.
+              - generic [ref=e297]: 24-hour view
+            - generic [ref=e298]: Historical alert and incident trend is unavailable from the current API contract. Live metrics remain active.
+          - article [ref=e300]:
+            - generic [ref=e301]:
+              - generic [ref=e302]:
+                - heading "Operational health" [level=2] [ref=e303]
+                - paragraph [ref=e304]: Processing, coverage, readiness, and integration state.
+              - link "View sensors" [ref=e305] [cursor=pointer]:
+                - /url: /posture/sensors
+            - generic [ref=e306]:
+              - generic [ref=e307]:
+                - generic [ref=e309]:
+                  - generic [ref=e310]: Live data ingestion
+                  - strong [ref=e311]: Connected
+                - generic [ref=e314]: 0 EPS
+              - generic [ref=e315]:
+                - generic [ref=e317]:
+                  - generic [ref=e318]: Alert summary service
+                  - strong [ref=e319]: Available
+                - generic [ref=e322]: Current alert counts
+          - article [ref=e323]:
+            - generic [ref=e324]:
+              - generic [ref=e325]:
+                - heading "Priority work stream" [level=2] [ref=e326]
+                - paragraph [ref=e327]: Ranked by severity, SLA exposure, and current ownership.
+              - link "Open analyst queue" [ref=e328] [cursor=pointer]:
+                - /url: /queue
+            - generic [ref=e329]: Loading priority work…
+          - article [ref=e330]:
+            - generic [ref=e331]:
+              - generic [ref=e332]:
+                - heading "Analyst workload" [level=2] [ref=e333]
+                - paragraph [ref=e334]: Assigned work, capacity, and SLA exposure.
+              - link "Manage queue" [ref=e335] [cursor=pointer]:
+                - /url: /queue
+            - generic [ref=e336]: Analyst-capacity data is not exposed by the current API contract.
+          - article [ref=e338]:
+            - generic [ref=e339]:
+              - generic [ref=e340]:
+                - heading "Recent activity" [level=2] [ref=e341]
+                - paragraph [ref=e342]: Operational changes requiring shared shift awareness.
+              - link "View activity" [ref=e343] [cursor=pointer]:
+                - /url: /incidents
+            - generic [ref=e344]: Recent activity requires an audit-stream endpoint and is not represented by mock production data.
+  - generic:
+    - list "Notifications"

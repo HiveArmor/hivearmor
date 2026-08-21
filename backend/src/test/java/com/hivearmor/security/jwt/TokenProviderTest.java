@@ -179,6 +179,37 @@ class TokenProviderTest {
         );
     }
 
+    @Test
+    void hmacSha512KeyMaterial_shortKey_expandsTo64Bytes() {
+        byte[] shortKey = new byte[48];
+        byte[] expanded = TokenProvider.hmacSha512KeyMaterial(shortKey);
+        assertThat(expanded).hasSize(TokenProvider.HS512_MIN_KEY_BYTES);
+        assertThat(expanded).isNotEqualTo(shortKey);
+    }
+
+    @Test
+    void hmacSha512KeyMaterial_64ByteKey_isUnchanged() {
+        byte[] fullKey = new byte[64];
+        fullKey[0] = 7;
+        assertThat(TokenProvider.hmacSha512KeyMaterial(fullKey)).isSameAs(fullKey);
+    }
+
+    @Test
+    void createToken_48ByteSecret_signsWithHs512() throws Exception {
+        String shortSecret = java.util.Base64.getEncoder().encodeToString(new byte[48]);
+        JHipsterProperties properties = new JHipsterProperties();
+        properties.getSecurity().getAuthentication().getJwt().setBase64Secret(shortSecret);
+        properties.getSecurity().getAuthentication().getJwt().setTokenValidityInSeconds(86400L);
+        properties.getSecurity().getAuthentication().getJwt().setTokenValidityInSecondsForRememberMe(2592000L);
+        TokenProvider shortKeyProvider = new TokenProvider(properties);
+        shortKeyProvider.afterPropertiesSet();
+
+        String token = shortKeyProvider.createToken(buildAuthentication("ops", AuthoritiesConstants.ADMIN), false, true);
+
+        assertNotNull(token);
+        assertTrue(shortKeyProvider.validateToken(token));
+    }
+
     // ── helpers ───────────────────────────────────────────────────────────────
 
     private Authentication buildAuthentication(String username, String role) {

@@ -1,0 +1,37 @@
+id: ha-aws-010
+title: KMS Key Scheduled for Deletion
+status: stable
+description: Detects when an AWS KMS customer-managed key is scheduled for deletion. Deleting CMKs causes permanent and irreversible loss of all data encrypted with that key, making this an indicator of destructive activity or ransomware.
+logsource:
+  product: aws
+  service: cloudtrail
+level: high
+tags:
+  - attack.impact
+  - attack.T1485
+detection:
+  selection:
+    eventName: ScheduleKeyDeletion
+  condition: selection
+falsepositives:
+  - Authorised key lifecycle management and rotation procedures
+  - Decommissioning of test or development KMS keys with documented approval
+fields:
+  - eventName
+  - requestParameters.keyId
+  - requestParameters.pendingWindowInDays
+  - userIdentity.arn
+  - sourceIPAddress
+  - awsRegion
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: high
+deduplicateBy:
+  - requestParameters.keyId
+  - awsRegion
+groupBy:
+  - userIdentity.arn
+mitre:
+  tactic: impact
+  technique: T1485

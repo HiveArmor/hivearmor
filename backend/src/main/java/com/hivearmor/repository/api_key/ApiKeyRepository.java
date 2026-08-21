@@ -26,4 +26,10 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
     Optional<ApiKey> findByNameAndUserId(@NotNull String name, Long userId);
 
     List<ApiKey> findAllByExpiresAtAfterAndExpiresAtLessThanEqual(Instant now, Instant fiveDaysFromNow);
+
+    /**
+     * Returns all agent-provisioning keys for a given user.
+     * Used by HaAgentKeyService to list only keys created via the Add Agent UX.
+     */
+    List<ApiKey> findAllByUserIdAndIsAgentKeyTrue(Long userId);
 }

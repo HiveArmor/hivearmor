@@ -1,0 +1,247 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+html {
+  scrollbar-color: var(--ha-scrollbar-thumb) transparent;
+  scrollbar-width: thin;
+}
+
+body {
+  background-color: var(--ha-background);
+  color: var(--ha-text-primary);
+  font-family: var(--ha-font-ui);
+  font-size: var(--ha-text-base);
+  font-weight: var(--ha-weight-normal);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Numeric data always uses tabular nums */
+.ha-numeric,
+[data-numeric],
+time {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Monospace: code, IPs, hashes, query fields */
+.ha-mono,
+code,
+pre,
+kbd {
+  font-family: var(--ha-font-mono);
+  font-size: var(--ha-text-sm);
+}
+
+/* Focus ring — consistent across all interactive elements */
+:focus-visible {
+  outline: 2px solid var(--ha-primary);
+  outline-offset: 2px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: var(--ha-scrollbar-size);
+  height: var(--ha-scrollbar-size);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ha-scrollbar-thumb);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ha-scrollbar-thumb-hover);
+}
+
+/* Selection color */
+::selection {
+  background: color-mix(in srgb, var(--ha-action-primary) 32%, transparent);
+  color: var(--ha-text-primary);
+}
+
+/* Links */
+a {
+  color: var(--ha-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+[role='button'],
+a,
+input,
+select,
+textarea {
+  scroll-margin: var(--ha-space-4);
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid CanvasText;
+  }
+}
+
+/* Skeleton loading animation */
+@keyframes ha-skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.ha-skeleton {
+  animation: ha-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* Toast slide-in animation */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Shimmer animation for loading placeholders */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Pulse animation for live indicators */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.8);
+  }
+}
+
+/* EPS badge pulse animation */
+@keyframes ha-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+}
+
+/* Spin animation for loading spinners */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Skip navigation — WCAG 2.4.1 */
+.skip-nav {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  text-decoration: none;
+  font-family: var(--ha-font-ui);
+  font-size: var(--ha-text-base);
+}
+.skip-nav:focus {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  width: auto;
+  height: auto;
+  padding: var(--ha-space-2) var(--ha-space-4);
+  background: var(--ha-surface-raised);
+  color: var(--ha-primary);
+  border: 1px solid var(--ha-primary);
+  border-radius: var(--ha-radius-base);
+  z-index: var(--ha-z-modal);
+  outline: 2px solid var(--ha-primary);
+  outline-offset: 2px;
+}
+
+/* Focus Mode — hides chrome for NOC/SOC big-screen display */
+/* No animated transitions — respects prefers-reduced-motion */
+@media (prefers-reduced-motion: no-preference) {
+  .ha-focus-mode header,
+  .ha-focus-mode nav {
+    visibility: hidden;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .ha-focus-mode #main-content {
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-focus-mode header,
+  .ha-focus-mode nav {
+    visibility: hidden;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .ha-focus-mode #main-content {
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+  }
+}

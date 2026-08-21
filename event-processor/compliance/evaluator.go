@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 // ComplianceHit is produced when an event satisfies a ControlMapping's CEL condition.

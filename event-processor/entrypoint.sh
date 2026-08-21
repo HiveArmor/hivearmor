@@ -132,6 +132,16 @@ stderr_logfile_maxbytes=0
 INPUTS
 fi
 
+# stats plugin writes statistics to OpenSearch on a timer; needs engine socket for config
+if [ -f /usr/local/bin/com.hivearmor.stats.plugin ]; then
+    add_companion "com.hivearmor.stats.plugin" /usr/local/bin/com.hivearmor.stats.plugin
+fi
+
+# feeds plugin processes threat intelligence feeds; participates in analysis pipeline
+if [ -f /usr/local/bin/com.hivearmor.feeds.plugin ]; then
+    add_companion "com.hivearmor.feeds.plugin" /usr/local/bin/com.hivearmor.feeds.plugin
+fi
+
 # compliance-orchestrator only needs backend + opensearch, no socket dependency
 cat >> "$SUPERVISORD_CONF" <<'ORCH'
 

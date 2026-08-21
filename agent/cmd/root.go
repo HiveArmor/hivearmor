@@ -3,8 +3,8 @@ package cmd
 import (
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/hivearmor/agent/serv"
+	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
@@ -13,7 +13,8 @@ var rootCmd = &cobra.Command{
 	Long: `HiveArmor Agent CLI
 
 Usage Examples:
-  hivearmor_agent install <server_address> <ha_key> <skip_cert_validation(yes/no)>
+  hivearmor_agent install <server_address> <skip_cert_validation(yes/no)> --enrollment-token-file <path|->
+  hivearmor_agent rotate-credential --credential-file <path|->
   hivearmor_agent enable-integration <integration> <protocol> [--tls]
   hivearmor_agent disable-integration <integration> <protocol>
   hivearmor_agent change-port <integration> <protocol> <new_port>
@@ -35,6 +36,7 @@ TLS Integration Examples:
 Note:
   - Make sure to run commands with appropriate permissions.
   - All commands require administrative privileges.
+	- Enrollment and device credentials are accepted only from protected files or standard input.
   - For detailed logs, check the service log file.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		serv.RunService()

@@ -1,0 +1,25 @@
+
+ RUN  v4.1.10 /Users/encryptshell/GIT/UTMStack-11/frontend-v2
+
+
+ Test Files  46 passed (46)
+      Tests  567 passed (567)
+   Start at  01:53:25
+   Duration  659ms (transform 845ms, setup 264ms, import 1.01s, tests 439ms, environment 2ms)
+
+
+--- S-6B Summary ---
+Sprint: S-6B — Widget Catalogue + Edit Mode
+Date: 2026-07-21
+Tests before: 547/547
+Tests after: 567/567 (20 new)
+TS errors before: 0
+TS errors after: 0
+
+Files created:
+  frontend-v2/src/components/dashboard/widget-catalogue.tsx
+  frontend-v2/src/components/dashboard/dashboard-edit-utils.ts
+  frontend-v2/src/components/dashboard/__tests__/dashboard-edit-utils.test.ts
+
+Files modified:
+  frontend-v2/src/app/(app)/dashboard/render/[id]/[name]/page.tsx

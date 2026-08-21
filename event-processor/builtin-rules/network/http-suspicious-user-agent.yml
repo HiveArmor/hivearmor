@@ -1,0 +1,47 @@
+id: ha-net-010
+title: Suspicious HTTP User-Agent String
+status: stable
+description: Detects HTTP requests with user-agent strings commonly associated with exploitation frameworks, vulnerability scanners, or offensive security tools, which may indicate web-based attack activity.
+logsource:
+  product: network
+  service: http
+level: medium
+tags:
+  - attack.initial_access
+  - attack.T1190
+detection:
+  selection:
+    http.request.method:
+      - GET
+      - POST
+    http.request.headers.user_agent|contains:
+      - 'sqlmap'
+      - 'nikto'
+      - 'masscan'
+      - 'nmap'
+      - 'python-requests'
+      - 'zgrab'
+      - 'nuclei'
+      - 'gobuster'
+  condition: selection
+falsepositives:
+  - Authorized penetration testers running scheduled assessments from named systems
+  - Internal security tooling using script-based HTTP clients
+fields:
+  - source.ip
+  - destination.ip
+  - http.request.method
+  - http.request.headers.user_agent
+  - url.full
+impact:
+  confidentiality: medium
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - source.ip
+  - http.request.headers.user_agent
+groupBy:
+  - source.ip
+mitre:
+  tactic: initial-access
+  technique: T1190

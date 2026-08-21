@@ -3,7 +3,6 @@ package rules
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,7 +13,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/event-processor/internal/httpclient"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 var (
@@ -61,12 +61,11 @@ func InitEngine(osURL, user, pass string) {
 	searchBase = osURL
 	searchUser = user
 	searchPass = pass
-	searchClient = &http.Client{
-		Timeout: 10 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
+	client, err := httpclient.NewSecureClient(10 * time.Second)
+	if err != nil {
+		log.Fatalf("rules engine tls client: %v", err)
 	}
+	searchClient = client
 }
 
 func getCEL() *plugins.CELCache {
@@ -140,7 +139,7 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 
 func buildAlert(event *plugins.Event, rule *Rule) *plugins.Alert {
 	alert := &plugins.Alert{
-		Id:            uuid.New().String(),
+		Id:            deterministicAlertID(event.Id, rule),
 		Timestamp:     time.Now().UTC().Format(time.RFC3339Nano),
 		Name:          rule.Name,
 		Category:      rule.Category,
@@ -183,6 +182,14 @@ func buildAlert(event *plugins.Event, rule *Rule) *plugins.Alert {
 		alert.Target = event.Origin
 	}
 	return alert
+}
+
+func deterministicAlertID(eventID string, rule *Rule) string {
+	if eventID == "" || rule == nil {
+		return uuid.New().String()
+	}
+	name := fmt.Sprintf("%s:%d:%s", eventID, rule.ID, rule.Name)
+	return uuid.NewSHA1(uuid.NameSpaceOID, []byte(name)).String()
 }
 
 // buildBoolQuery converts a slice of Expressions into an OpenSearch bool query map.
@@ -366,9 +373,13 @@ func eventToMap(e *plugins.Event) map[string]any {
 
 	if e.Origin != nil {
 		m["origin"] = sideToMap(e.Origin)
+	} else {
+		m["origin"] = sideToMap(&plugins.Side{})
 	}
 	if e.Target != nil {
 		m["target"] = sideToMap(e.Target)
+	} else {
+		m["target"] = sideToMap(&plugins.Side{})
 	}
 	return m
 }

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        S-3B-QUEUE: Create hive_investigation_task table.
+        This table stores analyst investigation tasks that appear in the
+        composite analyst queue alongside alerts, incidents, and offenses.
+    -->
+    <changeSet id="20260720002-investigation-task" author="hivearmor" context="dev,prod">
+
+        <createSequence sequenceName="hive_investigation_task_seq"
+                        startValue="1"
+                        incrementBy="1"/>
+
+        <createTable tableName="hive_investigation_task">
+            <column name="id" type="bigint" defaultValueSequenceNext="hive_investigation_task_seq">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="title" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="description" type="text">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- P1 / P2 / P3 / P4 -->
+            <column name="task_priority" type="varchar(2)" defaultValue="P3">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- OPEN / IN_PROGRESS / COMPLETED -->
+            <column name="status" type="varchar(20)" defaultValue="OPEN">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="assigned_to" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="due_date" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="created_by" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="timestamp" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="timestamp" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="incident_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="hive_investigation_task"
+                     indexName="idx_investigation_task_status">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="hive_investigation_task"
+                     indexName="idx_investigation_task_assigned_to">
+            <column name="assigned_to"/>
+        </createIndex>
+
+        <createIndex tableName="hive_investigation_task"
+                     indexName="idx_investigation_task_incident_id">
+            <column name="incident_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

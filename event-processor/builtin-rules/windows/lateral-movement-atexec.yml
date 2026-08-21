@@ -1,0 +1,40 @@
+id: b0c1d2e3-f4a5-6789-bcde-890123456720
+title: Atexec-Style Scheduled Task Lateral Movement via AT Service
+status: stable
+logsource:
+  product: windows
+  service: security
+level: high
+tags:
+  - attack.lateral_movement
+  - attack.execution
+  - attack.T1053
+  - attack.T1053.002
+detection:
+  selection:
+    EventID: 4698
+    TaskName|contains:
+      - '\At'
+    TaskContent|contains:
+      - 'cmd.exe /C'
+      - 'powershell -e'
+  selection_net:
+    EventID: 4624
+    LogonType: '3'
+    AuthenticationPackageName: 'NTLM'
+  condition: selection or selection_net
+falsepositives:
+  - Legacy scheduled task creation by administrators
+  - AT command usage in maintenance scripts
+impact:
+  confidentiality: high
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - TaskName
+groupBy:
+  - ComputerName
+mitre:
+  tactic: lateral-movement
+  technique: T1053.002

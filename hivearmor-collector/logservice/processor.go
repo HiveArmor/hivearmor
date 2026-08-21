@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 
 	"github.com/hivearmor/hivearmor-collector/agent"
 	"github.com/hivearmor/hivearmor-collector/config"

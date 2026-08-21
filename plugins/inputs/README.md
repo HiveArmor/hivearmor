@@ -9,7 +9,7 @@
 
 ## Overview
 
-The Inputs plugin is the primary log ingestion gateway for HiveArmor. Every event that enters the correlation pipeline passes through this plugin first. It authenticates inbound connections, normalises log metadata, and forwards each event to the Event Processor engine over a local Unix socket using backpressure-aware delivery.
+The Inputs plugin is the primary log ingestion gateway for HiveArmor. Every event that enters the correlation pipeline passes through this plugin first. It authenticates inbound connections, normalises log metadata, wraps each event in the versioned `ha.raw-event.v1` contract, and publishes it to the durable raw-event topic using backpressure-aware delivery. The local Unix-socket path remains a compatibility fallback during the production-pilot migration.
 
 The plugin exposes two authenticated transport endpoints:
 
@@ -32,8 +32,11 @@ Direct HTTP sources             ─┘          │
                                             │  normalise metadata
                                             │  buffer (per-CPU channel)
                                             ▼
-                              Event Processor engine
-                              (Unix socket: sockets/engine_server.sock)
+                              Redpanda / Kafka
+                              (hivearmor.raw.events)
+                                            │
+                                            ▼
+                              Event Processor consumer
                                             │
                                             ▼
                               Correlation → OpenSearch
@@ -86,9 +89,12 @@ The plugin loads TLS credentials from the path configured in `certsFolder` (plug
 1. An authenticated log event is received over gRPC or HTTPS.
 2. Missing metadata fields (`id`, `tenant_id`, `data_type`, `data_source`, `timestamp`) are populated with safe defaults.
 3. The event is enqueued into an in-memory channel. Channel capacity is `NumCPU * 100`. If the channel is full the plugin returns `503 Service Unavailable` to the caller, which must retry.
-4. One sender goroutine per CPU drains the channel and forwards events to the Event Processor engine over a local gRPC/Unix socket (`sockets/engine_server.sock`). A shared secret (`INPUTS_SOCKET_SECRET` env var) is written to the socket before the gRPC handshake to prevent unauthorized local access.
-5. Each sender waits for an engine `Ack` before signalling the original caller. This makes delivery confirmation end-to-end reliable: a `200 OK` or gRPC `Ack` response to the caller means the event has been accepted by the engine.
-6. If the engine connection breaks, the sender restarts automatically after a 5-second delay.
+4. When `KAFKA_BROKER` is configured, one sender goroutine per CPU validates the normalized record, wraps it in `ha.raw-event.v1`, and publishes it synchronously to `hivearmor.raw.events` with `acks=all`, a 4 MiB batch cap and automatic topic creation disabled.
+5. Kafka records are keyed by `tenantId:connectorId` and carry schema, event, tenant, connector, content-type, and producer headers. A success response means the broker accepted the record; it does not mean detection processing has completed.
+6. When Kafka is configured it is the only production path. Broker write failures retry with exponential backoff and then return an error so the agent keeps the unprocessed spool row. The local Unix socket is used only when Kafka is not configured; it is not a Kafka fallback.
+7. The Event Processor validates the envelope and its cross-field/header invariants before accepting the embedded `plugins.Log`. Malformed records are published to `hivearmor.raw.events.quarantine` with a redacted reason and then the original offset is committed. Unwrapped legacy records are counted and accepted only during the documented deprecation window.
+
+The authoritative envelope and migration policy are documented in [`docs/contracts/raw-event-envelope-v1.md`](../../docs/contracts/raw-event-envelope-v1.md). The machine-readable schema is [`docs/contracts/schemas/ha-raw-event-v1.schema.json`](../../docs/contracts/schemas/ha-raw-event-v1.schema.json).
 
 ---
 
@@ -105,12 +111,12 @@ All HTTP endpoints require TLS 1.3. Plaintext HTTP is not served.
 
 ### Log submission format (`POST /v1/logs`)
 
-The request body must be a JSON-encoded `plugins.Log` proto message. All fields are optional — the plugin fills in defaults where values are missing:
+The request body must be a JSON-encoded `plugins.Log` proto message. Compatibility handlers still fill selected missing values before publication:
 
 | Field | Default when absent |
 |---|---|
 | `id` | New UUID v4 |
-| `tenant_id` | `ce66672c-e36d-4761-a8c8-90058fee1a24` (default tenant) |
+| `tenant_id` | Legacy default tenant (compatibility only; secure enrollment must supply the authoritative tenant before a multi-tenant pilot) |
 | `data_type` | `generic` |
 | `data_source` | `unknown` |
 | `timestamp` | Current UTC time (RFC 3339 nanoseconds) |
@@ -159,10 +165,12 @@ The plugin is not user-configurable. All configuration is injected by the Event 
 | `internalKey` | Shared internal key for intra-service calls |
 | `backend` | Backend HTTP base URL for connection-key fetch |
 
-One environment variable is read directly:
+The delivery path reads these environment variables directly:
 
 | Variable | Default | Description |
 |---|---|---|
+| `KAFKA_BROKER` | unset | Comma-separated broker addresses. Required for the production-pilot durable path. |
+| `HIVEARMOR_VERSION` | `development` | Producer version recorded in the raw-event envelope. Release builds must set an immutable version. |
 | `INPUTS_SOCKET_SECRET` | `change-me-in-production` | Shared secret for the local engine Unix socket. Must be set in production. |
 
 ---
@@ -171,10 +179,11 @@ One environment variable is read directly:
 
 The plugin is designed for high-throughput workloads:
 
-- One sender goroutine per CPU core runs concurrently, each with its own engine connection.
+- One sender goroutine per CPU core drains the bounded input channel. Kafka publishing batches up to 100 records with a 5 ms batch timeout while retaining synchronous delivery confirmation.
 - The in-memory channel buffer (`NumCPU * 100` slots) absorbs short bursts without blocking callers.
 - When the buffer is full the plugin signals the caller to retry (`503` over HTTP; stream error over gRPC). The caller is responsible for retry logic — the plugin does not drop events silently.
-- Delivery to the engine is confirmed with an `Ack` before the caller receives a success response, so a caller can treat a successful response as a guarantee of engine acceptance.
+- Kafka delivery uses `acks=all`, five attempts, and bounded backoff. A caller can treat success as broker acceptance, not as completed normalization, detection, or indexing.
+- The socket compatibility path still waits for an engine `Ack` before returning success.
 - Auth key sync is cached in memory with a per-type refresh cooldown, so high connection rates do not generate unbounded RPCs against AgentManager.
 
 ---

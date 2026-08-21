@@ -1,0 +1,39 @@
+id: ha-aws-003
+title: S3 Bucket ACL Set to Public
+status: stable
+description: Detects when an S3 bucket ACL is modified to allow public access, which may result in unintended data exposure or exfiltration staging.
+logsource:
+  product: aws
+  service: cloudtrail
+level: high
+tags:
+  - attack.exfiltration
+  - attack.T1537
+detection:
+  selection_put_acl:
+    eventName: PutBucketAcl
+  selection_public_grant:
+    requestParameters.AccessControlPolicy.AccessControlList.Grant.Grantee.URI|contains:
+      - AllUsers
+      - AuthenticatedUsers
+  condition: selection_put_acl and selection_public_grant
+falsepositives:
+  - Public static website hosting with intentional public access
+  - Data sharing buckets explicitly authorised by the data owner
+fields:
+  - eventName
+  - requestParameters.bucketName
+  - userIdentity.arn
+  - sourceIPAddress
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - requestParameters.bucketName
+  - userIdentity.arn
+groupBy:
+  - requestParameters.bucketName
+mitre:
+  tactic: exfiltration
+  technique: T1537

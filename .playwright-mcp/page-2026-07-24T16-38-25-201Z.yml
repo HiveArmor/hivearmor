@@ -1,0 +1,78 @@
+- generic [ref=f28e3]:
+  - banner [ref=f28e4]:
+    - generic [ref=f28e5]: HiveArmor
+    - generic [ref=f28e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f28e13]'
+      - generic "Reconnecting..." [ref=f28e16]: 0 EPS
+      - button "Notifications" [ref=f28e18] [cursor=pointer]
+      - button "Help" [ref=f28e23] [cursor=pointer]
+      - button "User menu" [ref=f28e28] [cursor=pointer]:
+        - generic [ref=f28e29]: AA
+        - generic [ref=f28e30]: admin
+  - navigation [ref=f28e31]:
+    - generic [ref=f28e32]:
+      - generic [ref=f28e33]:
+        - generic [ref=f28e34]: COMMAND
+        - generic [ref=f28e35]:
+          - button "Analyst Queue" [ref=f28e36] [cursor=pointer]
+          - button "Alerts" [ref=f28e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f28e47] [cursor=pointer]
+          - button "Incidents" [ref=f28e54] [cursor=pointer]
+      - generic [ref=f28e61]:
+        - generic [ref=f28e62]: INVESTIGATE
+        - generic [ref=f28e63]:
+          - button "Search & Hunt" [ref=f28e64] [cursor=pointer]
+          - button "Investigations" [ref=f28e70] [cursor=pointer]
+          - button "Entities" [ref=f28e75] [cursor=pointer]
+      - generic [ref=f28e83]:
+        - generic [ref=f28e84]: DEFEND
+        - generic [ref=f28e85]:
+          - button "Detection Rules" [ref=f28e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f28e91] [cursor=pointer]
+      - generic [ref=f28e96]:
+        - generic [ref=f28e97]: POSTURE
+        - generic [ref=f28e98]:
+          - button "Assets" [ref=f28e99] [cursor=pointer]
+          - button "Identities" [ref=f28e105] [cursor=pointer]
+          - button "Active Directory" [ref=f28e113] [cursor=pointer]
+          - button "Exposure" [ref=f28e121] [cursor=pointer]
+          - button "Sensors" [ref=f28e128] [cursor=pointer]
+          - button "Compliance" [ref=f28e133] [cursor=pointer]
+      - generic [ref=f28e139]:
+        - generic [ref=f28e140]: DASHBOARDS
+        - button "Studio" [ref=f28e142] [cursor=pointer]
+      - generic [ref=f28e148]:
+        - generic [ref=f28e149]: REPORT
+        - button "Scheduled Reports" [ref=f28e151] [cursor=pointer]
+      - generic [ref=f28e157]:
+        - generic [ref=f28e158]: ADMINISTRATION
+        - generic [ref=f28e159]:
+          - button "Users" [ref=f28e160] [cursor=pointer]
+          - button "Integrations" [ref=f28e175] [cursor=pointer]
+          - button "Notifications" [ref=f28e180] [cursor=pointer]
+          - button "Audit Log" [ref=f28e186] [cursor=pointer]
+          - button "Settings" [ref=f28e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f28e199] [cursor=pointer]
+  - main [ref=f28e202]:
+    - generic [ref=f28e203]:
+      - generic [ref=f28e204]:
+        - heading "Vulnerabilities" [level=1] [ref=f28e207]
+        - generic [ref=f28e208]: CVE management and vulnerability scanning
+      - alert [ref=f28e209]:
+        - strong [ref=f28e210]: "Development Required:"
+        - text: This screen is not connected to any backend. It is a planning placeholder only.
+      - generic [ref=f28e211]:
+        - heading "Vulnerability Management — Coming Soon" [level=2] [ref=f28e217]
+        - paragraph [ref=f28e218]: This feature requires full-stack development.
+        - generic [ref=f28e219]:
+          - paragraph [ref=f28e220]:
+            - strong [ref=f28e221]: "GAP-BE-01:"
+            - text: No backend implementation exists for vulnerability management.
+          - paragraph [ref=f28e222]:
+            - strong [ref=f28e223]: "Required:"
+            - text: VulnerabilityResource.java, hive_vulnerability table, vulnerability scanner service.
+          - paragraph [ref=f28e224]:
+            - strong [ref=f28e225]: "Next steps:"
+            - text: Frontend implementation will begin after the backend API is deployed and verified.
+        - link "View GAP-BE-01 details in .plan/features/" [ref=f28e226] [cursor=pointer]:
+          - /url: /.plan/features/

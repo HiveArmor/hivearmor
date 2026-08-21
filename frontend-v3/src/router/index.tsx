@@ -1,0 +1,1060 @@
+/**
+ * Router — React Router v6 routes for HiveArmor frontend-v3.
+ * All routes except /login and /login/tfa are wrapped in AuthGuard.
+ * All page components are lazy-loaded for code splitting.
+ */
+
+/* eslint-disable react-refresh/only-export-components */
+
+import React from 'react';
+
+import { createBrowserRouter, Navigate } from 'react-router-dom';
+
+import { AppLayout } from './AppLayout';
+import { AuthGuard } from './AuthGuard';
+
+import { msspRoutes } from '@/features/mssp/routes/msspRoutes';
+
+// ── Admin pages ──────────────────────────────────────────────────────────────
+const RuleGenerationPage = React.lazy(() =>
+  import('@/pages/admin/rule-generation/RuleGenerationPage').then(m => ({ default: m.RuleGenerationPage }))
+);
+const AdminAuditPage = React.lazy(() =>
+  import('@/pages/admin/audit/AdminAuditPage').then(m => ({ default: m.AdminAuditPage }))
+);
+const AuditPage = React.lazy(() =>
+  import('@/pages/admin/audit/AuditPage').then(m => ({ default: m.AuditPage }))
+);
+const AdminConnectionKeysPage = React.lazy(() =>
+  import('@/pages/admin/connection-keys/AdminConnectionKeysPage').then(m => ({ default: m.AdminConnectionKeysPage }))
+);
+const DataParsingPage = React.lazy(() =>
+  import('@/pages/admin/data-parsing/DataParsingPage').then(m => ({ default: m.DataParsingPage }))
+);
+const AdminIntegrationsPage = React.lazy(() =>
+  import('@/pages/admin/integrations/AdminIntegrationsPage').then(m => ({ default: m.AdminIntegrationsPage }))
+);
+const AdminNotificationsPage = React.lazy(() =>
+  import('@/pages/admin/notifications/AdminNotificationsPage').then(m => ({ default: m.AdminNotificationsPage }))
+);
+const RetentionPage = React.lazy(() =>
+  import('@/pages/admin/retention/RetentionPage').then(m => ({ default: m.RetentionPage }))
+);
+const RuleImportPage = React.lazy(() => import('@/pages/admin/RuleImportPage'));
+const RuleTestingPage = React.lazy(() => import('@/pages/admin/RuleTestingPage'));
+const ScimConfigPage = React.lazy(() => import('@/pages/admin/ScimConfigPage'));
+const SsoProvidersPage = React.lazy(() => import('@/pages/admin/SsoProvidersPage'));
+const AdminSettingsPage = React.lazy(() =>
+  import('@/pages/admin/settings/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage }))
+);
+const PlatformSettingsPage = React.lazy(() =>
+  import('@/pages/admin/settings/PlatformSettingsPage').then(m => ({ default: m.PlatformSettingsPage }))
+);
+const PipelineSignalsPage = React.lazy(() =>
+  import('@/pages/admin/pipeline-signals/PipelineSignalsPage').then(m => ({ default: m.PipelineSignalsPage }))
+);
+const AdminTenantsPage = React.lazy(() =>
+  import('@/pages/admin/tenants/AdminTenantsPage').then(m => ({ default: m.AdminTenantsPage }))
+);
+const TenantsPage = React.lazy(() =>
+  import('@/pages/admin/tenants/TenantsPage').then(m => ({ default: m.TenantsPage }))
+);
+const AdminUsersPage = React.lazy(() =>
+  import('@/pages/admin/users/AdminUsersPage').then(m => ({ default: m.AdminUsersPage }))
+);
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+const SystemSettingsPage = React.lazy(() =>
+  import('@/pages/settings/SystemSettingsPage').then(m => ({ default: m.SystemSettingsPage }))
+);
+const ApiKeyPage = React.lazy(() =>
+  import('@/pages/settings/ApiKeyPage').then(m => ({ default: m.ApiKeyPage }))
+);
+
+// ── Inputs ────────────────────────────────────────────────────────────────────
+const DataSourceStatusPage = React.lazy(() =>
+  import('@/pages/inputs/DataSourceStatusPage').then(m => ({ default: m.DataSourceStatusPage }))
+);
+
+// ── Admin — Threat Intel ──────────────────────────────────────────────────────
+const ThreatIntelAdminPage = React.lazy(() =>
+  import('@/pages/admin/threat-intel/ThreatIntelAdminPage').then(m => ({ default: m.ThreatIntelAdminPage }))
+);
+
+// ── Alert pages ───────────────────────────────────────────────────────────────
+const AlertSeverityBoardPage = React.lazy(() =>
+  import('@/pages/alerts/AlertSeverityBoardPage').then(m => ({ default: m.AlertSeverityBoardPage }))
+);
+const AlertsListPage = React.lazy(() =>
+  import('@/pages/alerts/AlertsListPage').then(m => ({ default: m.AlertsListPage }))
+);
+const AlertInvestigationPage = React.lazy(() =>
+  import('@/pages/alerts/AlertInvestigationPage').then(m => ({ default: m.AlertInvestigationPage }))
+);
+
+// ── Analyst queue ─────────────────────────────────────────────────────────────
+const AnalystQueuePage = React.lazy(() =>
+  import('@/pages/analyst-queue/AnalystQueuePage').then(m => ({ default: m.AnalystQueuePage }))
+);
+
+// ── Auth pages (kept lazy — shown after redirect, not blocking) ───────────────
+const AccessDeniedPage = React.lazy(() =>
+  import('@/pages/auth/AccessDeniedPage').then(m => ({ default: m.AccessDeniedPage }))
+);
+const LoginPage = React.lazy(() =>
+  import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage }))
+);
+const OidcCallbackPage = React.lazy(() => import('@/pages/auth/OidcCallbackPage'));
+const TfaPage = React.lazy(() =>
+  import('@/pages/auth/TfaPage').then(m => ({ default: m.TfaPage }))
+);
+
+// ── Command center ────────────────────────────────────────────────────────────
+const CommandCenterPage = React.lazy(() =>
+  import('@/pages/command-center/CommandCenterPage').then(m => ({ default: m.CommandCenterPage }))
+);
+
+// ── Compliance ────────────────────────────────────────────────────────────────
+const CompliancePage = React.lazy(() =>
+  import('@/pages/compliance/CompliancePage').then(m => ({ default: m.CompliancePage }))
+);
+
+// ── Constellation ─────────────────────────────────────────────────────────────
+const ThreatConstellationPage = React.lazy(() =>
+  import('@/pages/constellation/ThreatConstellationPage').then(m => ({ default: m.ThreatConstellationPage }))
+);
+
+// ── Correlated findings (Phase 4 production workbench) ──────────────────────
+const CorrelatedFindingDetailPage = React.lazy(() =>
+  import('@/pages/correlated-findings/CorrelatedFindingDetailPage').then(m => ({ default: m.CorrelatedFindingDetailPage }))
+);
+const CorrelatedFindingsPage = React.lazy(() =>
+  import('@/pages/correlated-findings/CorrelatedFindingsPage').then(m => ({ default: m.CorrelatedFindingsPage }))
+);
+
+// ── Dashboards ────────────────────────────────────────────────────────────────
+const DashboardGalleryPage = React.lazy(() =>
+  import('@/pages/dashboards/DashboardGalleryPage').then(m => ({ default: m.DashboardGalleryPage }))
+);
+const DashboardStudioPage = React.lazy(() =>
+  import('@/pages/dashboards/DashboardStudioPage').then(m => ({ default: m.DashboardStudioPage }))
+);
+const DashboardViewPage = React.lazy(() =>
+  import('@/pages/dashboards/DashboardViewPage').then(m => ({ default: m.DashboardViewPage }))
+);
+const MetricsBuilderPage = React.lazy(() =>
+  import('@/pages/dashboards/MetricsBuilderPage').then(m => ({ default: m.MetricsBuilderPage }))
+);
+
+// ── Detection rules ───────────────────────────────────────────────────────────
+const DetectionRulesPage = React.lazy(() =>
+  import('@/pages/detection-rules/DetectionRulesPage').then(m => ({ default: m.DetectionRulesPage }))
+);
+const RuleEditorPage = React.lazy(() =>
+  import('@/pages/detection-rules/RuleEditorPage').then(m => ({ default: m.RuleEditorPage }))
+);
+const RuleTestPage = React.lazy(() =>
+  import('@/pages/detection-rules/RuleTestPage').then(m => ({ default: m.RuleTestPage }))
+);
+
+// ── Entities ──────────────────────────────────────────────────────────────────
+const EntityDetailPage = React.lazy(() =>
+  import('@/pages/entities/EntityDetailPage').then(m => ({ default: m.EntityDetailPage }))
+);
+const EntityDossierPage = React.lazy(() =>
+  import('@/pages/entities/EntityDossierPage').then(m => ({ default: m.EntityDossierPage }))
+);
+const EntityInventoryPage = React.lazy(() =>
+  import('@/pages/entities/EntityInventoryPage').then(m => ({ default: m.EntityInventoryPage }))
+);
+// EntityListPage retired in Sprint 45 — replaced by EntityInventoryPage
+
+// ── Incidents ─────────────────────────────────────────────────────────────────
+const IncidentDetailPage = React.lazy(() =>
+  import('@/pages/incidents/IncidentDetailPage').then(m => ({ default: m.IncidentDetailPage }))
+);
+const IncidentListPage = React.lazy(() =>
+  import('@/pages/incidents/IncidentListPage').then(m => ({ default: m.IncidentListPage }))
+);
+
+// ── Intelligence ──────────────────────────────────────────────────────────────
+const HiveIntelligencePage = React.lazy(() =>
+  import('@/pages/intelligence/HiveIntelligencePage').then(m => ({ default: m.HiveIntelligencePage }))
+);
+
+// ── Investigations ────────────────────────────────────────────────────────────
+const InvestigationDetailPage = React.lazy(() =>
+  import('@/pages/investigations/InvestigationDetailPage').then(m => ({ default: m.InvestigationDetailPage }))
+);
+const InvestigationsPage = React.lazy(() =>
+  import('@/pages/investigations/InvestigationsPage').then(m => ({ default: m.InvestigationsPage }))
+);
+
+// ── Not found ─────────────────────────────────────────────────────────────────
+const NotFoundPage = React.lazy(() =>
+  import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage }))
+);
+
+// ── Posture ───────────────────────────────────────────────────────────────────
+const ActiveDirectoryPage = React.lazy(() =>
+  import('@/pages/posture/active-directory/ActiveDirectoryPage').then(m => ({ default: m.ActiveDirectoryPage }))
+);
+const AssetsPage = React.lazy(() =>
+  import('@/pages/posture/assets/AssetsPage').then(m => ({ default: m.AssetsPage }))
+);
+const ExposurePage = React.lazy(() =>
+  import('@/pages/posture/exposure/ExposurePage').then(m => ({ default: m.ExposurePage }))
+);
+const IdentitiesPage = React.lazy(() =>
+  import('@/pages/posture/identities/IdentitiesPage').then(m => ({ default: m.IdentitiesPage }))
+);
+const ReadinessMatrixPage = React.lazy(() =>
+  import('@/pages/posture/readiness/ReadinessMatrixPage').then(m => ({ default: m.ReadinessMatrixPage }))
+);
+const SensorGridPage = React.lazy(() =>
+  import('@/pages/posture/sensors/SensorGridPage').then(m => ({ default: m.SensorGridPage }))
+);
+const VulnerabilitiesPage = React.lazy(() =>
+  import('@/pages/posture/vulnerabilities/VulnerabilitiesPage').then(m => ({ default: m.VulnerabilitiesPage }))
+);
+
+// ── Reports ───────────────────────────────────────────────────────────────────
+const AfterActionReportsPage = React.lazy(() =>
+  import('@/pages/reports/AfterActionReportsPage').then(m => ({ default: m.AfterActionReportsPage }))
+);
+const IncidentReportsPage = React.lazy(() =>
+  import('@/pages/reports/IncidentReportsPage').then(m => ({ default: m.IncidentReportsPage }))
+);
+const ReportTemplatesPage = React.lazy(() =>
+  import('@/pages/reports/ReportTemplatesPage').then(m => ({ default: m.ReportTemplatesPage }))
+);
+const ScheduledReportsPage = React.lazy(() =>
+  import('@/pages/reports/ScheduledReportsPage').then(m => ({ default: m.ScheduledReportsPage }))
+);
+const SitrepReportPage = React.lazy(() =>
+  import('@/pages/reports/SitrepReportPage').then(m => ({ default: m.SitrepReportPage }))
+);
+
+// ── Response / SOAR ───────────────────────────────────────────────────────────
+const PlaybookBuilderPage = React.lazy(() =>
+  import('@/pages/response/PlaybookBuilderPage').then(m => ({ default: m.PlaybookBuilderPage }))
+);
+const ResponseLibraryPage = React.lazy(() =>
+  import('@/pages/response/ResponseLibraryPage').then(m => ({ default: m.ResponseLibraryPage }))
+);
+const PlaybookDetailPage = React.lazy(() =>
+  import('@/pages/response/PlaybookDetailPage').then(m => ({ default: m.PlaybookDetailPage }))
+);
+const PlaybooksPage = React.lazy(() =>
+  import('@/pages/response/PlaybooksPage').then(m => ({ default: m.PlaybooksPage }))
+);
+const ResponseActivityPage = React.lazy(() =>
+  import('@/pages/response/ResponseActivityPage').then(m => ({ default: m.ResponseActivityPage }))
+);
+const ResponseAuthorityPage = React.lazy(() =>
+  import('@/pages/response/ResponseAuthorityPage').then(m => ({ default: m.ResponseAuthorityPage }))
+);
+const ResponseAuthorityEditorPage = React.lazy(() =>
+  import('@/pages/response/ResponseAuthorityEditorPage').then(m => ({ default: m.ResponseAuthorityEditorPage }))
+);
+const ResponsePlaybooksPage = React.lazy(() =>
+  import('@/pages/response/ResponsePlaybooksPage').then(m => ({ default: m.ResponsePlaybooksPage }))
+);
+
+// ── Search / Hunt ─────────────────────────────────────────────────────────────
+const SearchHuntPage = React.lazy(() =>
+  import('@/pages/search-hunt/SearchHuntPage').then(m => ({ default: m.SearchHuntPage }))
+);
+
+// ── EDR ───────────────────────────────────────────────────────────────────────
+const EndpointTimelinePage = React.lazy(() =>
+  import('@/pages/edr/EndpointTimelinePage').then(m => ({ default: m.EndpointTimelinePage }))
+);
+const FileQuarantinePage = React.lazy(() =>
+  import('@/pages/edr/FileQuarantinePage').then(m => ({ default: m.FileQuarantinePage }))
+);
+const FimDashboardPage = React.lazy(() =>
+  import('@/pages/edr/FimDashboardPage').then(m => ({ default: m.FimDashboardPage }))
+);
+const AgentPoliciesPage = React.lazy(() =>
+  import('@/pages/edr/AgentPoliciesPage').then(m => ({ default: m.AgentPoliciesPage }))
+);
+const EndpointsListPage = React.lazy(() =>
+  import('@/pages/edr/endpoints/EndpointsListPage').then(m => ({ default: m.EndpointsListPage }))
+);
+
+// ── UEBA ──────────────────────────────────────────────────────────────────────
+const RiskDashboardPage = React.lazy(() =>
+  import('@/pages/ueba/risk/RiskDashboardPage').then(m => ({ default: m.RiskDashboardPage }))
+);
+
+// ── Posture / New ─────────────────────────────────────────────────────────────
+const CisBenchmarkPage = React.lazy(() =>
+  import('@/pages/posture/cis-benchmark/CisBenchmarkPage').then(m => ({ default: m.CisBenchmarkPage }))
+);
+
+export const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  msspRoutes,
+  {
+    path: '/login/tfa',
+    element: <TfaPage />,
+  },
+  {
+    path: '/access-denied',
+    element: <AccessDeniedPage />,
+  },
+  // Public OIDC callback route — MUST NOT be behind AuthGuard
+  // The backend redirects here with ?token=<jwt>&source=oidc after a successful
+  // OIDC PKCE flow. This page stores the JWT and navigates to the app root.
+  {
+    path: '/oidc-callback',
+    element: <OidcCallbackPage />,
+  },
+  {
+    path: '/',
+    element: <AppLayout />,
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/dashboard" replace />,
+      },
+      {
+        path: 'dashboard',
+        element: (
+          <AuthGuard>
+            <CommandCenterPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'command',
+        element: <Navigate to="/dashboard" replace />,
+      },
+      {
+        path: 'queue',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <AnalystQueuePage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'alerts',
+        element: (
+          <AuthGuard>
+            <AlertsListPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'alerts/:id',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <AlertInvestigationPage />
+          </AuthGuard>
+        ),
+      },
+      // Canonical route: alerts/board
+      {
+        path: 'alerts/board',
+        element: (
+          <AuthGuard>
+            <AlertSeverityBoardPage />
+          </AuthGuard>
+        ),
+      },
+      // Legacy redirect: alerts/severity → /alerts/board
+      {
+        path: 'alerts/severity',
+        element: <Navigate to="/alerts/board" replace />,
+      },
+      // Canonical route: correlated-findings
+      {
+        path: 'correlated-findings',
+        element: (
+          <AuthGuard>
+            <CorrelatedFindingsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'correlated-findings/:id',
+        element: (
+          <AuthGuard>
+            <CorrelatedFindingDetailPage />
+          </AuthGuard>
+        ),
+      },
+      // Legacy redirects: offenses → /correlated-findings
+      {
+        path: 'offenses',
+        element: <Navigate to="/correlated-findings" replace />,
+      },
+      {
+        path: 'offenses/:id',
+        element: <Navigate to="/correlated-findings" replace />,
+      },
+      {
+        path: 'incidents',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <IncidentListPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'incidents/:id',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <IncidentDetailPage />
+          </AuthGuard>
+        ),
+      },
+      // Canonical route: search
+      {
+        path: 'search',
+        element: (
+          <AuthGuard>
+            <SearchHuntPage />
+          </AuthGuard>
+        ),
+      },
+      // Legacy redirect: hunt → /search
+      {
+        path: 'hunt',
+        element: <Navigate to="/search" replace />,
+      },
+      // EDR — Endpoint Timeline
+      {
+        path: 'edr/timeline/:agentId',
+        element: (
+          <AuthGuard>
+            <EndpointTimelinePage />
+          </AuthGuard>
+        ),
+      },
+      // EDR — File Quarantine
+      {
+        path: 'edr/quarantine',
+        element: (
+          <AuthGuard>
+            <FileQuarantinePage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'response/quarantine',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <FileQuarantinePage />
+          </AuthGuard>
+        ),
+      },
+      // EDR — File Integrity Monitoring Dashboard
+      {
+        path: 'edr/fim',
+        element: (
+          <AuthGuard>
+            <FimDashboardPage />
+          </AuthGuard>
+        ),
+      },
+      // EDR — Agent Policy Management
+      {
+        path: 'edr/policies',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <AgentPoliciesPage />
+          </AuthGuard>
+        ),
+      },
+      // EDR — Endpoints list (agent selector, entry point for timeline)
+      {
+        path: 'edr/endpoints',
+        element: (
+          <AuthGuard>
+            <EndpointsListPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'investigations',
+        element: (
+          <AuthGuard>
+            <InvestigationsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'investigations/:id',
+        element: (
+          <AuthGuard>
+            <InvestigationDetailPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'entities',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <EntityInventoryPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'entities/inventory',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <EntityInventoryPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'entities/:id/dossier',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <EntityDossierPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'entities/:id',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <EntityDetailPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'constellation',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <ThreatConstellationPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'intelligence',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <HiveIntelligencePage />
+          </AuthGuard>
+        ),
+      },
+      // Canonical route: detection-rules
+      {
+        path: 'detection-rules',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <DetectionRulesPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'detection-rules/new',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <RuleEditorPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'detection-rules/:id',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <RuleEditorPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'detection-rules/:id/edit',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <RuleEditorPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'detection-rules/:id/test',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <RuleTestPage />
+          </AuthGuard>
+        ),
+      },
+      // Legacy redirects: rules → /detection-rules
+      {
+        path: 'rules',
+        element: <Navigate to="/detection-rules" replace />,
+      },
+      {
+        path: 'rules/new',
+        element: <Navigate to="/detection-rules/new" replace />,
+      },
+      {
+        path: 'rules/:id/edit',
+        element: <Navigate to="/detection-rules" replace />,
+      },
+      {
+        path: 'rules/:id/test',
+        element: <Navigate to="/detection-rules" replace />,
+      },
+      {
+        path: 'response/library',
+        element: (
+          <AuthGuard>
+            <ResponseLibraryPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'response/playbooks',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <ResponsePlaybooksPage />
+          </AuthGuard>
+        ),
+      },
+      // Legacy — retained temporarily for regression comparison during Phase 7 migration.
+      {
+        path: 'response/playbooks-legacy',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <PlaybooksPage />
+          </AuthGuard>
+        ),
+      },
+      // NOTE: /new MUST be registered before /:id/edit to prevent "new" matching as an id
+      {
+        path: 'response/playbooks/new',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <PlaybookBuilderPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'response/playbooks/:id/edit',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <PlaybookBuilderPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'response/playbooks/:id',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <PlaybookDetailPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'response/activity',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <ResponseActivityPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'response/authority/policies/new',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <ResponseAuthorityEditorPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'response/authority/policies/:id/edit',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <ResponseAuthorityEditorPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'response/authority/delegations/new',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <ResponseAuthorityEditorPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'response/authority/delegations/:id/edit',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <ResponseAuthorityEditorPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'response/authority',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <ResponseAuthorityPage />
+          </AuthGuard>
+        ),
+      },
+       {
+         path: 'posture/assets',
+         element: (
+           <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+             <AssetsPage />
+           </AuthGuard>
+         ),
+      },
+      {
+        path: 'posture/identities',
+        element: (
+          <AuthGuard>
+            <IdentitiesPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'posture/active-directory',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <ActiveDirectoryPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'posture/exposure',
+        element: (
+          <AuthGuard>
+            <ExposurePage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'posture/sensors',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <SensorGridPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'posture/vulnerabilities',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <VulnerabilitiesPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'posture/cis-benchmark',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <CisBenchmarkPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'posture/readiness',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <ReadinessMatrixPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'compliance',
+        element: (
+          <AuthGuard>
+            <CompliancePage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'dashboards',
+        element: (
+          <AuthGuard>
+            <DashboardGalleryPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'dashboards/studio',
+        element: (
+          <AuthGuard>
+            <DashboardStudioPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'dashboards/:id',
+        element: (
+          <AuthGuard>
+            <DashboardViewPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'dashboards/:id/edit',
+        element: (
+          <AuthGuard>
+            <DashboardStudioPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'dashboards/metrics/builder',
+        element: (
+          <AuthGuard>
+            <MetricsBuilderPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'reports/sitrep',
+        element: (
+          <AuthGuard>
+            <SitrepReportPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'reports/incidents',
+        element: (
+          <AuthGuard>
+            <IncidentReportsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'reports/after-action',
+        element: (
+          <AuthGuard>
+            <AfterActionReportsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'reports/scheduled',
+        element: (
+          <AuthGuard>
+            <ScheduledReportsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'reports/templates',
+        element: (
+          <AuthGuard>
+            <ReportTemplatesPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/users',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <AdminUsersPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/tenants',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <TenantsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/tenants-old',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <AdminTenantsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/retention',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <RetentionPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/data-parsing',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <DataParsingPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/integrations',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <AdminIntegrationsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/notifications',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <AdminNotificationsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/connection-keys',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <AdminConnectionKeysPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/audit',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <AuditPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/audit-old',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <AdminAuditPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/settings',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <PlatformSettingsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/pipeline-signals',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <PipelineSignalsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/settings-old',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <AdminSettingsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/rule-generation',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <RuleGenerationPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/rules/import',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN', 'ROLE_ANALYST']}>
+            <RuleImportPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/rules/test',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN', 'ROLE_ANALYST']}>
+            <RuleTestingPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/scim',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <ScimConfigPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/sso',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <SsoProvidersPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/threat-intel',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <ThreatIntelAdminPage />
+          </AuthGuard>
+        ),
+      },
+      // ── Settings (S20-T01) ────────────────────────────────────────────────
+      // Non-admin users are blocked by AuthGuard before any TanStack Query
+      // fires, so /api/ha-admin/settings/* is never requested by non-admins
+      // (Req 1.4, 13.4).
+      {
+        path: 'settings/system',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <SystemSettingsPage />
+          </AuthGuard>
+        ),
+      },
+      // ── Settings (S20-T02) ────────────────────────────────────────────────
+      // Non-admin users are blocked by AuthGuard before any TanStack Query
+      // fires, so /api/ha-admin/api-keys/* is never requested by non-admins
+      // (Req 7.1, 13.4).
+      {
+        path: 'settings/api-keys',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+            <ApiKeyPage />
+          </AuthGuard>
+        ),
+      },
+      // ── Inputs (S20-T03) ──────────────────────────────────────────────────
+      // ROLE_ADMIN and ROLE_OPERATOR may access the data sources page.
+      // AuthGuard blocks all other roles before useDataSources fires, so
+      // /api/ha-inputs/sources is never requested by unauthorised users
+      // (Req 10.1, 13.4).
+      {
+        path: 'inputs/sources',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN', 'ROLE_OPERATOR']}>
+            <DataSourceStatusPage />
+          </AuthGuard>
+        ),
+      },
+      // ── UEBA — Risk Dashboard (Sprint 29, task 7.1) ───────────────────────
+      {
+        path: 'ueba/risk',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_ADMIN']}>
+            <RiskDashboardPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: '*',
+        element: <NotFoundPage />,
+      },
+    ],
+  },
+]);

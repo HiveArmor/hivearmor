@@ -16,7 +16,7 @@ import (
 	"github.com/netsampler/goflow2/decoders/netflowlegacy"
 	tehmaze "github.com/tehmaze/netflow"
 	"github.com/tehmaze/netflow/session"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"github.com/hivearmor/agent/collector/configwatcher"
 	"github.com/hivearmor/agent/collector/schema"
 	"github.com/hivearmor/agent/config"
@@ -100,7 +100,7 @@ type NetflowCollector struct {
 	isEnabled      bool
 	port           string
 	mu             sync.RWMutex
-	queue          chan *plugins.Log
+	queue          chan<- *plugins.Log
 }
 
 // New creates a new NetflowCollector.
@@ -124,7 +124,7 @@ func (nc *NetflowCollector) Stop() {
 
 // Start begins watching for configuration changes using fsnotify.
 // It performs an initial reconciliation and then reacts to config file changes.
-func (nc *NetflowCollector) Start(ctx context.Context, queue chan *plugins.Log) {
+func (nc *NetflowCollector) Start(ctx context.Context, queue chan<- *plugins.Log) {
 	nc.queue = queue
 
 	// Start cache cleanup goroutine

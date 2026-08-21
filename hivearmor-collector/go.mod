@@ -3,13 +3,13 @@ module github.com/hivearmor/hivearmor-collector
 go 1.25.5
 
 require (
-	github.com/hivearmor/shared v0.0.0
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/elastic/go-sysinfo v1.15.4
 	github.com/glebarez/sqlite v1.11.0
 	github.com/google/uuid v1.6.0
+	github.com/hivearmor/sdk v0.0.0
+	github.com/hivearmor/shared v0.0.0
 	github.com/kardianos/service v1.2.4
-	github.com/threatwinds/go-sdk v1.1.26
 	github.com/threatwinds/logger v1.2.3
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.11
@@ -18,7 +18,6 @@ require (
 )
 
 require (
-	github.com/hivearmor/shared v0.0.0
 	cel.dev/expr v0.25.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
@@ -104,4 +103,7 @@ require (
 	modernc.org/sqlite v1.44.3 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
+
 replace github.com/hivearmor/shared => ../shared
+
+replace github.com/hivearmor/sdk => ../sdk

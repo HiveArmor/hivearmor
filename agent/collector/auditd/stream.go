@@ -5,10 +5,10 @@ package auditd
 
 import (
 	"github.com/elastic/go-libaudit/v2/auparse"
-	"github.com/threatwinds/go-sdk/plugins"
 	"github.com/hivearmor/agent/agent"
 	"github.com/hivearmor/agent/config"
 	"github.com/hivearmor/agent/utils"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 const (
@@ -22,12 +22,12 @@ const (
 
 // eventStream implements libaudit.Stream interface for reassembled events
 type eventStream struct {
-	queue    chan *plugins.Log
+	queue    chan<- *plugins.Log
 	hostname string
 }
 
 // newEventStream creates a new eventStream
-func newEventStream(queue chan *plugins.Log, hostname string) *eventStream {
+func newEventStream(queue chan<- *plugins.Log, hostname string) *eventStream {
 	return &eventStream{
 		queue:    queue,
 		hostname: hostname,
@@ -54,14 +54,8 @@ func (s *eventStream) ReassemblyComplete(msgs []*auparse.AuditMessage) {
 		Raw:        jsonOutput,
 	}
 
-	// Non-blocking send: drop events if queue is full to prevent backpressure
-	select {
-	case s.queue <- log:
-	default:
-		agent.LogsDropped.Add(1)
-		agent.WriteToDLQ("auditd", log)
-		utils.Logger.ErrorF("auditd: queue full, dropping event (sequence=%d)", msgs[0].Sequence)
-	}
+	// Persist first; a full memory queue is retried from unprocessed spool rows.
+	agent.Offer(s.queue, "auditd", log)
 }
 
 // EventsLost is called when events were lost due to buffer overflow or rate limiting.

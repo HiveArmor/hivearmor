@@ -1,0 +1,35 @@
+S-8A: Entities Backend + Entities Page — Vitest results
+Run: 2026-07-21
+Suites:
+  src/services/__tests__/entity.service.test.ts
+  src/components/entities/__tests__/entity-badge.test.ts
+
+Test Files  2 passed (2)
+Tests       10 passed (10)
+Duration    ~173ms
+
+entity.service tests (7):
+  search() > returns empty array for blank query
+  search() > calls GET /api/ha-entities/search?q=<term>
+  search() > appends type param when specified
+  getTimeline() > calls correct timeline URL
+  getGraph() > calls correct graph URL
+
+entity-badge tests (5):
+  EntityBadge > supports all 5 entity types without throwing
+  EntityBadge > each entity type produces a distinct icon class
+  EntityBadge > ip type uses Globe icon color
+  EntityBadge > process type uses Terminal icon color
+  EntityBadge > host type uses Monitor icon
+
+TypeScript: tsc --noEmit → 0 errors
+
+Backend: EntityGraphResourceIT.java — 6 tests
+  search_withValidQuery_returns200
+  search_emptyQuery_returnsEmptyArray
+  search_unauthenticated_returns401
+  timeline_validEntity_returns200WithArray
+  timeline_invalidEntityType_returns400
+  graph_validEntity_returnsGraphStructure
+  graph_unauthenticated_returns401
+(Run: cd backend && mvn -s settings.xml test -Dtest=EntityGraphResourceIT)

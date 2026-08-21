@@ -1,0 +1,35 @@
+id: ha-azure-005
+title: Azure Diagnostic Settings Deleted
+status: stable
+description: Detects deletion of Azure diagnostic settings which forward logs to a storage account or Log Analytics workspace. Removing these settings can blind defenders to subsequent attacker activity.
+logsource:
+  product: azure
+  service: activitylogs
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.T1562.008
+detection:
+  selection:
+    operationName: Microsoft.Insights/diagnosticSettings/delete
+    resultType: Success
+  condition: selection
+falsepositives:
+  - Authorized administrators decommissioning old diagnostic configurations
+  - Automated cleanup pipelines removing deprecated settings
+fields:
+  - operationName
+  - caller
+  - resourceId
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: low
+deduplicateBy:
+  - caller
+  - resourceId
+groupBy:
+  - resourceId
+mitre:
+  tactic: defense-evasion
+  technique: T1562.008

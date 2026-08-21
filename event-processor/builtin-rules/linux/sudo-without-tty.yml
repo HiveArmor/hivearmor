@@ -1,0 +1,39 @@
+id: ha-linux-004
+title: Sudo Execution Without TTY
+status: stable
+description: Detects sudo command execution in a non-interactive (no TTY) context which is indicative of automated or scripted privilege escalation.
+logsource:
+  product: linux
+  service: auditd
+level: medium
+tags:
+  - attack.privilege_escalation
+  - attack.T1548.003
+detection:
+  selection:
+    type: EXECVE
+    a0: sudo
+  filter_tty:
+    tty: '?'
+  condition: selection and not filter_tty
+falsepositives:
+  - Legitimate automation frameworks (Ansible, cron jobs using sudo)
+  - CI/CD pipelines with passwordless sudo configured
+fields:
+  - a0
+  - a1
+  - uid
+  - tty
+  - comm
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: low
+deduplicateBy:
+  - uid
+  - a1
+groupBy:
+  - uid
+mitre:
+  tactic: privilege_escalation
+  technique: T1548.003

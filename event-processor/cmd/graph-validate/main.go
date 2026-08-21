@@ -22,7 +22,7 @@ import (
 
 	"github.com/hivearmor/event-processor/enterprise/graph"
 	"github.com/hivearmor/event-processor/rules"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 const (

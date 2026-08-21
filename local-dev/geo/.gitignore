@@ -1,0 +1,2 @@
+# MaxMind MMDB binary — download locally, do not commit
+*.mmdb

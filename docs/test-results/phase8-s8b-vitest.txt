@@ -1,0 +1,34 @@
+S-8B: SOC AI Backend + Hive Intelligence Page — Vitest results
+Run: 2026-07-21
+Suites:
+  src/services/__tests__/soc-ai.service.test.ts (hiveQuery / hiveEnrichAlert)
+  src/components/hive-intelligence/__tests__/ai-chat-panel.test.ts
+
+Test Files  2 passed (2)
+Tests       8 passed (8)
+Duration    ~153ms
+
+soc-ai.service (hive endpoints, 4 tests):
+  hiveQuery() > calls POST /api/ha-soc-ai/query with prompt
+  hiveQuery() > returns SocAiResponse with answer field
+  hiveQuery() > passes optional context in body
+  hiveEnrichAlert() > calls POST /api/ha-soc-ai/enrich-alert with alertId
+
+ai-chat-panel (4 tests):
+  AiChatPanel > defines 4 suggested prompts
+  AiChatPanel > all suggested prompts are non-empty strings
+  AiChatPanel > includes a MITRE prompt
+  AiChatPanel > includes an alerts summary prompt
+
+TypeScript: tsc --noEmit → 0 errors
+
+Backend tests: SocAiQueryResourceIT.java — 6 tests (requires mvn)
+  query_noAiKey_returnsGracefulFallback
+  query_emptyPrompt_returns400
+  query_unauthenticated_returns401
+  query_readOnlyRole_returns403
+  enrichAlert_noAiKey_returnsGracefulFallback
+  enrichAlert_missingAlertId_returns400
+
+Note: LLM provider / API key needed for real AI responses.
+      Without SOC_AI_BASE_URL, all endpoints return graceful fallback responses.

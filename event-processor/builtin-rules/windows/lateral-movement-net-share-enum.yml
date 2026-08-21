@@ -1,0 +1,40 @@
+id: a9b0c1d2-e3f4-5678-abcd-789012345619
+title: Windows Admin Share Enumeration via Net Commands
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: medium
+tags:
+  - attack.lateral_movement
+  - attack.discovery
+  - attack.T1135
+detection:
+  selection:
+    Image|endswith:
+      - '\net.exe'
+      - '\net1.exe'
+    CommandLine|contains:
+      - ' view '
+      - ' share '
+      - ' use '
+  filter_local:
+    CommandLine|contains:
+      - 'localhost'
+      - '127.0.0.1'
+  condition: selection and not filter_local
+falsepositives:
+  - Legitimate network share enumeration by administrators
+  - Asset management software
+impact:
+  confidentiality: medium
+  integrity: low
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: lateral-movement
+  technique: T1135

@@ -5,8 +5,60 @@ import (
 	"testing"
 	"time"
 
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/agent/models"
+	"github.com/hivearmor/sdk/plugins"
 )
+
+func TestEnqueueUnprocessedDoesNotMarkProcessedWhenQueueIsFull(t *testing.T) {
+	db := withTestSpool(t)
+	if err := db.Create(&models.Log{ID: "retry-keep", Log: "payload", Type: "syslog", DataSource: "host", Processed: false}); err != nil {
+		t.Fatal(err)
+	}
+	original := LogQueue
+	t.Cleanup(func() { LogQueue = original })
+	LogQueue = make(chan *plugins.Log, 1)
+	LogQueue <- &plugins.Log{Id: "fill"}
+
+	processor := &LogProcessor{db: db}
+	processor.enqueueUnprocessed(10)
+
+	var rows []models.Log
+	if err := db.FindUnprocessed(&rows, 10); err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0].ID != "retry-keep" || rows[0].Processed {
+		t.Fatalf("unprocessed rows = %+v, want retry-keep still unprocessed", rows)
+	}
+}
+
+func TestEnqueueUnprocessedPlacesSpoolRowOnQueue(t *testing.T) {
+	db := withTestSpool(t)
+	if err := db.Create(&models.Log{ID: "retry-send", Log: "payload", Type: "syslog", DataSource: "host", Processed: false}); err != nil {
+		t.Fatal(err)
+	}
+	original := LogQueue
+	t.Cleanup(func() { LogQueue = original })
+	LogQueue = make(chan *plugins.Log, 4)
+
+	processor := &LogProcessor{db: db}
+	processor.enqueueUnprocessed(10)
+
+	select {
+	case got := <-LogQueue:
+		if got.Id != "retry-send" || got.Raw != "payload" || got.DataType != "syslog" {
+			t.Fatalf("queued log = %+v", got)
+		}
+	default:
+		t.Fatal("expected unprocessed row to be queued")
+	}
+	var rows []models.Log
+	if err := db.FindUnprocessed(&rows, 10); err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0].Processed {
+		t.Fatalf("row must stay unprocessed until ack: %+v", rows)
+	}
+}
 
 func TestCleanCountedLogs_DoesNotDeadlockWhenQueueFull(t *testing.T) {
 	originalCap := 10

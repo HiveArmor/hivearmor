@@ -1,0 +1,138 @@
+Sprint S-3A — Vitest Baseline + Package Installation Results
+Generated: 2026-07-20
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PACKAGES VERIFIED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  vitest              4.1.10   (dev)   — installed from npm
+  @vitest/coverage-v8 4.1.10   (dev)   — installed from npm
+  jsdom               latest   (dev)   — installed from npm
+  ag-grid-community   36.0.1   (exact) — approved version
+  ag-grid-react       36.0.1   (exact) — approved version
+
+  Node: v24.16.0 | Platform: darwin-arm64
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BASELINE (before any config changes)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Command: npx vitest run
+  Test Files: 4 failed | 27 passed (31)
+  Tests:      3 failed | 313 passed (316)
+
+  Pre-existing failures:
+  1. src/lib/__tests__/route-permissions.test.ts
+     > canAccessRoute > analyst can access analyst routes
+     Cause: test expected canAccessRoute("/rules", [ROLES.USER]) → true,
+            but /rules was restricted to MANAGER_ROLES (ADMIN, SOC_MANAGER)
+            in a prior sprint. Test was stale.
+
+  2. src/services/__tests__/integration.service.test.ts
+     > getModulesWithIntegrations > calls /api/ha-server-modules/modules-with-integrations
+     Cause: assertion used old path "/utm-server-modules/modules-with-integrations"
+            instead of renamed "/ha-server-modules/modules-with-integrations"
+
+  3. src/components/admin/__tests__/admin-panels.test.ts
+     > DEMO_ROLES > Viewer has read-only permissions (no write/delete)
+     Cause: test asserted all modules have read=true, but admin-shared.ts
+            intentionally sets Viewer read=false for "Settings" module
+
+  4. src/services/__tests__/collector.service.test.ts (FILE-LEVEL)
+     Cause: file uses Node.js built-in test runner (node:test), not Vitest.
+            All 5 tests pass when run via node --experimental-strip-types,
+            but Vitest reports "No test suite found" — structural mismatch.
+            Resolved by adding to vitest.config.ts exclude list.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FIXES APPLIED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. src/lib/__tests__/route-permissions.test.ts
+     Changed: canAccessRoute("/rules", [ROLES.USER]) → expect false (not true)
+     Reason: /rules is correctly restricted to MANAGER_ROLES per route-permissions.ts:26
+
+  2. src/services/__tests__/integration.service.test.ts:152
+     Changed: "/utm-server-modules/modules-with-integrations"
+           → "/ha-server-modules/modules-with-integrations"
+     Reason: endpoint was renamed to ha-* prefix during HiveArmor rebrand
+
+  3. src/components/admin/__tests__/admin-panels.test.ts:95-103
+     Changed: forEach check for read=true on ALL modules
+           → check read=!READ_DENIED.includes(mod) where READ_DENIED=["Settings"]
+     Reason: aligns test with actual Viewer permission definition in admin-shared.ts
+
+  4. vitest.config.ts — excluded collector.service.test.ts from Vitest run
+     Reason: file uses node:test runner, not Vitest; excluded alongside
+             agent.service.test.ts which was already excluded for the same reason
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CONFIG CHANGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  frontend-v2/vitest.config.ts
+    + setupFiles: ["src/test/setup.ts"]
+    + coverage.provider: "v8"
+    + coverage.reporter: ["text", "json-summary"]
+    + coverage.include: src/lib/**, src/services/**, src/components/**, src/store/**
+    + exclude: added collector.service.test.ts
+
+  frontend-v2/src/test/setup.ts  (NEW)
+    + ResizeObserver polyfill (required by AG Grid, chart components)
+    + matchMedia polyfill (required by theme-aware components)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINAL RESULTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Command: npx vitest run
+  Test Files: 30 passed (30)
+  Tests:      316 passed (316)
+  Duration:   ~460ms
+
+  ✓ All tests pass
+  ✓ 0 failures
+  ✓ setup.ts loaded (setup duration: 148ms)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TEST FILE INVENTORY (30 files, 316 tests)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Phase  | File                                                    | Tests
+  -------+---------------------------------------------------------+-------
+  S-2A   | layout/__tests__/sidebar-ia.test.ts                     |   11
+  S-2A   | layout/__tests__/siem-page-header.test.ts               |    7
+  S-2C   | lib/__tests__/roles.test.ts                             |   23
+  S-2C   | lib/__tests__/route-permissions.test.ts                 |    7
+  S-2D   | layout/__tests__/siem-toolbar.test.ts                   |   18
+  S-2D   | admin/__tests__/admin-panels.test.ts                    |   38
+         | services/__tests__/integration.service.test.ts          |   ~20
+         | services/__tests__/compliance-posture.service.test.ts   |   ~10
+         | services/__tests__/threat-intel.service.test.ts         |    8
+         | components/incidents/__tests__/assignee-selector.test.ts|    5
+         | (+ 20 other service/component test files)               |  ~169
+  -------+---------------------------------------------------------+-------
+  TOTAL  |                                                          |   316
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXCLUDED FILES (vitest.config.ts)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  agent.service.test.ts     — uses node:test runner (pre-existing exclusion)
+  collector.service.test.ts — uses node:test runner (added S-3A)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXIT CRITERIA — ALL MET ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [✓] ag-grid-community@36.0.1 installed (exact version)
+  [✓] ag-grid-react@36.0.1 installed (exact version)
+  [✓] vitest@4.1.10 installed and binary confirmed working
+  [✓] @vitest/coverage-v8 installed
+  [✓] jsdom installed
+  [✓] Baseline recorded: 313/316 pass, 3 pre-existing failures documented
+  [✓] All 3 test logic failures fixed (stale assertions corrected)
+  [✓] collector.service.test.ts excluded (node:test runner, not Vitest)
+  [✓] vitest.config.ts updated: setupFiles + coverage config added
+  [✓] src/test/setup.ts created: ResizeObserver + matchMedia polyfills
+  [✓] Final result: 316/316 pass, 0 failures, 30 test files

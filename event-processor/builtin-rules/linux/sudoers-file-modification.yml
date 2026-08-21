@@ -1,0 +1,38 @@
+id: ha-linux-011
+title: Sudoers File Modification
+status: stable
+description: Detects modifications to /etc/sudoers or files in /etc/sudoers.d/ which can grant elevated privileges to accounts or allow passwordless sudo execution.
+logsource:
+  product: linux
+  service: auditd
+level: high
+tags:
+  - attack.privilege_escalation
+  - attack.T1548.003
+  - attack.persistence
+detection:
+  selection:
+    type: PATH
+    name|contains:
+      - /etc/sudoers
+      - /etc/sudoers.d/
+  condition: selection
+falsepositives:
+  - Authorized system administrators modifying sudo access
+  - Configuration management tools (Ansible, Puppet)
+fields:
+  - name
+  - uid
+  - comm
+impact:
+  confidentiality: low
+  integrity: high
+  availability: low
+deduplicateBy:
+  - name
+  - uid
+groupBy:
+  - uid
+mitre:
+  tactic: privilege_escalation
+  technique: T1548.003

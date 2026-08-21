@@ -1,0 +1,39 @@
+id: ha-aws-008
+title: EC2 Instance Launched with IMDSv1 Enabled
+status: stable
+description: Detects EC2 instances launched with the Instance Metadata Service version 1 (IMDSv1) enabled. IMDSv1 is susceptible to SSRF attacks that can be used to steal IAM credentials from the metadata endpoint.
+logsource:
+  product: aws
+  service: cloudtrail
+level: medium
+tags:
+  - attack.credential_access
+  - attack.T1552.005
+detection:
+  selection:
+    eventName: RunInstances
+  selection_imdsv1:
+    requestParameters.metadataOptions.httpTokens: optional
+  condition: selection and selection_imdsv1
+falsepositives:
+  - Legacy applications that require IMDSv1 and are pending migration
+  - Automated AMI builds using older tooling that does not support IMDSv2
+fields:
+  - eventName
+  - requestParameters.instanceType
+  - requestParameters.metadataOptions.httpTokens
+  - userIdentity.arn
+  - sourceIPAddress
+  - awsRegion
+impact:
+  confidentiality: high
+  integrity: low
+  availability: low
+deduplicateBy:
+  - userIdentity.arn
+  - awsRegion
+groupBy:
+  - userIdentity.arn
+mitre:
+  tactic: credential-access
+  technique: T1552.005

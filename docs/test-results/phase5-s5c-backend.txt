@@ -1,0 +1,75 @@
+Sprint: S-5C — Investigation Sessions Backend
+Date: 2026-07-21
+Status: COMPLETE (backend files written; mvn test must be run manually)
+
+─── Files Created ───────────────────────────────────────────────────────────────
+
+Liquibase:
+  backend/src/main/resources/config/liquibase/changelog/20260721003_add_investigation_sessions.xml
+    changeSet 20260721003-1: hive_investigation_session table + 2 indexes (created_by, status)
+    changeSet 20260721003-2: hive_session_item table + FK to session ON DELETE CASCADE + index (session_id)
+
+Domain entities:
+  backend/src/main/java/com/hivearmor/domain/UtmInvestigationSession.java
+    @Entity @Table(name="hive_investigation_session") @EntityListeners(AuditingEntityListener)
+    Fields: id, sessionName, description, status(DEFAULT=ACTIVE), createdBy, assignedTo,
+            incidentId(nullable Long, no FK), createdAt(@CreatedDate), updatedAt(@LastModifiedDate)
+
+  backend/src/main/java/com/hivearmor/domain/UtmSessionItem.java
+    @Entity @Table(name="hive_session_item") @EntityListeners(AuditingEntityListener)
+    Fields: id, session(@ManyToOne LAZY), itemType, itemRef, itemSnapshot(jsonb), note,
+            addedBy, addedAt(@CreatedDate)
+
+Repositories:
+  backend/src/main/java/com/hivearmor/repository/UtmInvestigationSessionRepository.java
+    - findByCreatedByOrderByCreatedAtDesc(String, Pageable)
+    - findAllByOrderByCreatedAtDesc(Pageable)
+    - findByStatusOrderByCreatedAtDesc(String)
+
+  backend/src/main/java/com/hivearmor/repository/UtmSessionItemRepository.java
+    - findBySessionIdOrderByAddedAtDesc(Long)
+    - findBySessionIdAndItemTypeOrderByAddedAtDesc(Long, String)
+
+DTOs (Java records):
+  backend/src/main/java/com/hivearmor/service/dto/InvestigationSessionDTO.java
+  backend/src/main/java/com/hivearmor/service/dto/SessionItemDTO.java
+
+Service:
+  backend/src/main/java/com/hivearmor/service/session/InvestigationSessionService.java
+    Methods: listSessions, createSession, getSession, updateSession, updateSessionAdmin,
+             deleteSession, pinItem, listItems, listItemsByType, unpinItem, convertToIncident
+    convertToIncident: creates real UtmIncident (name+description+status+severity+createdDate+priority)
+                       sets session.status=CONVERTED + session.incidentId=new id; returns incidentId
+    TODO S-10: link ALERT-type items to hive_incident_alert after SOAR integration
+
+REST Resource:
+  backend/src/main/java/com/hivearmor/web/rest/session/InvestigationSessionResource.java
+    POST   /api/ha-investigation-sessions              → 201, hasAnyRole(ADMIN,SOC_MANAGER,ANALYST,USER)
+    GET    /api/ha-investigation-sessions              → 200+X-Total-Count, all roles incl READ_ONLY
+    GET    /api/ha-investigation-sessions/{id}         → 200, all roles
+    PUT    /api/ha-investigation-sessions/{id}         → 200, hasAnyRole(ADMIN,SOC_MANAGER,ANALYST,USER)
+    DELETE /api/ha-investigation-sessions/{id}         → 204, hasAnyRole(ADMIN,SOC_MANAGER,ANALYST,USER)
+    POST   /api/ha-investigation-sessions/{id}/items   → 201, hasAnyRole(ADMIN,SOC_MANAGER,ANALYST,USER)
+    GET    /api/ha-investigation-sessions/{id}/items   → 200 (optional ?type= filter), all roles
+    DELETE /api/ha-investigation-sessions/{id}/items/{itemId} → 204, hasAnyRole(ADMIN,SOC_MANAGER,ANALYST,USER)
+    POST   /api/ha-investigation-sessions/{id}/convert-to-incident → 200 {incidentId}, ANALYST+
+
+Integration test:
+  backend/src/test/java/com/hivearmor/web/rest/session/InvestigationSessionResourceIT.java
+    Tests: createSession → 201, READ_ONLY POST → 403, listSessions → 200+X-Total-Count,
+           adminSeesAll, readOnly GET → 200, pinItem → 201, listItems → 200,
+           listItems with ?type= filter, unpinItem → 204, unpinItem other user → 403,
+           convertToIncident → 200 with incidentId
+
+─── Files Modified ───────────────────────────────────────────────────────────────
+
+  backend/src/main/resources/config/liquibase/master.xml
+    Added: <include file="config/liquibase/changelog/20260721003_add_investigation_sessions.xml"/>
+
+─── Backend Tests ────────────────────────────────────────────────────────────────
+
+Run with:
+  cd backend && mvn -s settings.xml test -Dtest=InvestigationSessionResourceIT
+
+Test count: 11 tests in InvestigationSessionResourceIT
+Frontend TS errors: N/A (backend-only sprint)

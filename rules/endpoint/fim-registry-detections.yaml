@@ -1,0 +1,107 @@
+# Windows Registry FIM Detection Rules
+# DataType: fim-registry
+
+dataTypes:
+  - "fim-registry"
+name: "Registry FIM: Autorun Key Modified — Startup Persistence"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: "Persistence"
+technique: "T1547.001 - Boot or Logon Autostart Execution: Registry Run Keys"
+adversary: origin
+description: "A Windows registry Run or RunOnce key was modified. Attackers add entries to autorun keys to execute malicious code on every user login or system boot."
+references:
+  - "https://attack.mitre.org/techniques/T1547/001/"
+where: |
+  (safe("action", "") == "CREATE" || safe("action", "") == "MODIFY") &&
+  regexMatch(toLower(safe("origin.file", "")), "software\\\\microsoft\\\\windows\\\\currentversion\\\\(run|runonce)")
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+dataTypes:
+  - "fim-registry"
+name: "Registry FIM: WinLogon Modified — Credential Access or Persistence"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Credential Access"
+technique: "T1547.004 - Winlogon Helper DLL"
+adversary: origin
+description: "The Windows Winlogon registry key was modified. Attackers replace Userinit or Shell values to hijack the logon process and execute malware at every login, or to intercept credentials."
+references:
+  - "https://attack.mitre.org/techniques/T1547/004/"
+where: |
+  (safe("action", "") == "MODIFY") &&
+  regexMatch(toLower(safe("origin.file", "")), "software\\\\microsoft\\\\windows nt\\\\currentversion\\\\winlogon")
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+dataTypes:
+  - "fim-registry"
+name: "Registry FIM: Services Key Modified — Malicious Service Installation"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 3
+category: "Persistence"
+technique: "T1543.003 - Create or Modify System Process: Windows Service"
+adversary: origin
+description: "The Windows Services registry key was modified. Attackers install malicious services to achieve persistent, privileged execution that survives reboots."
+references:
+  - "https://attack.mitre.org/techniques/T1543/003/"
+where: |
+  safe("action", "") == "CREATE" &&
+  regexMatch(toLower(safe("origin.file", "")), "system\\\\currentcontrolset\\\\services\\\\")
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+dataTypes:
+  - "fim-registry"
+name: "Registry FIM: AppInit DLLs Modified — DLL Injection Persistence"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: "Persistence"
+technique: "T1546.010 - AppInit DLLs"
+adversary: origin
+description: "The AppInit_DLLs registry key was modified. Any DLL listed here is loaded into every process that loads User32.dll — an effective but detectable persistence and DLL injection technique."
+references:
+  - "https://attack.mitre.org/techniques/T1546/010/"
+where: |
+  safe("action", "") == "MODIFY" &&
+  regexMatch(toLower(safe("origin.file", "")), "software\\\\microsoft\\\\windows nt\\\\currentversion\\\\windows.*appinit_dlls")
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+dataTypes:
+  - "fim-registry"
+name: "Registry FIM: Image File Execution Options — Debugger Hijack"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: "Privilege Escalation"
+technique: "T1546.012 - Image File Execution Options Injection"
+adversary: origin
+description: "An Image File Execution Options (IFEO) Debugger value was set. Attackers set IFEO Debugger entries to hijack accessibility tools (sethc.exe, osk.exe) and execute SYSTEM-privilege shells from the login screen."
+references:
+  - "https://attack.mitre.org/techniques/T1546/012/"
+where: |
+  safe("action", "") == "CREATE" || safe("action", "") == "MODIFY" &&
+  regexMatch(toLower(safe("origin.file", "")), "software\\\\microsoft\\\\windows nt\\\\currentversion\\\\image file execution options\\\\.*debugger")
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file

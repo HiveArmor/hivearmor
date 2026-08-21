@@ -1,0 +1,61 @@
+- generic [ref=f42e3]:
+  - banner [ref=f42e4]:
+    - generic [ref=f42e5]: HiveArmor
+    - generic [ref=f42e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f42e13]'
+      - generic "Reconnecting..." [ref=f42e16]: 0 EPS
+      - button "Notifications" [ref=f42e18] [cursor=pointer]
+      - button "Help" [ref=f42e23] [cursor=pointer]
+      - button "User menu" [ref=f42e28] [cursor=pointer]:
+        - generic [ref=f42e29]: AA
+        - generic [ref=f42e30]: admin
+  - navigation [ref=f42e31]:
+    - generic [ref=f42e32]:
+      - generic [ref=f42e33]:
+        - generic [ref=f42e34]: COMMAND
+        - generic [ref=f42e35]:
+          - button "Analyst Queue" [ref=f42e36] [cursor=pointer]
+          - button "Alerts" [ref=f42e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f42e47] [cursor=pointer]
+          - button "Incidents" [ref=f42e54] [cursor=pointer]
+      - generic [ref=f42e61]:
+        - generic [ref=f42e62]: INVESTIGATE
+        - generic [ref=f42e63]:
+          - button "Search & Hunt" [ref=f42e64] [cursor=pointer]
+          - button "Investigations" [ref=f42e70] [cursor=pointer]
+          - button "Entities" [ref=f42e75] [cursor=pointer]
+      - generic [ref=f42e83]:
+        - generic [ref=f42e84]: DEFEND
+        - generic [ref=f42e85]:
+          - button "Detection Rules" [ref=f42e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f42e91] [cursor=pointer]
+      - generic [ref=f42e96]:
+        - generic [ref=f42e97]: POSTURE
+        - generic [ref=f42e98]:
+          - button "Assets" [ref=f42e99] [cursor=pointer]
+          - button "Identities" [ref=f42e105] [cursor=pointer]
+          - button "Active Directory" [ref=f42e113] [cursor=pointer]
+          - button "Exposure" [ref=f42e121] [cursor=pointer]
+          - button "Sensors" [ref=f42e128] [cursor=pointer]
+          - button "Compliance" [ref=f42e133] [cursor=pointer]
+      - generic [ref=f42e139]:
+        - generic [ref=f42e140]: DASHBOARDS
+        - button "Studio" [ref=f42e142] [cursor=pointer]
+      - generic [ref=f42e148]:
+        - generic [ref=f42e149]: REPORT
+        - button "Scheduled Reports" [ref=f42e151] [cursor=pointer]
+      - generic [ref=f42e157]:
+        - generic [ref=f42e158]: ADMINISTRATION
+        - generic [ref=f42e159]:
+          - button "Users" [ref=f42e160] [cursor=pointer]
+          - button "Integrations" [ref=f42e175] [cursor=pointer]
+          - button "Notifications" [ref=f42e180] [cursor=pointer]
+          - button "Audit Log" [ref=f42e186] [cursor=pointer]
+          - button "Settings" [ref=f42e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f42e199] [cursor=pointer]
+  - main [ref=f42e202]:
+    - generic [ref=f42e203]:
+      - generic [ref=f42e205]:
+        - heading "Report Templates" [level=1] [ref=f42e207]
+        - button "New Template" [ref=f42e209] [cursor=pointer]
+      - generic [ref=f42e213]: Error loading report templates. Please try again.

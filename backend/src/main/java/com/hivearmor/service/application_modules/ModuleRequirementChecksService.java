@@ -3,7 +3,6 @@ package com.hivearmor.service.application_modules;
 import com.hivearmor.config.Constants;
 import com.hivearmor.domain.application_modules.enums.ModuleRequirementStatus;
 import com.hivearmor.domain.application_modules.types.ModuleRequirement;
-import com.hivearmor.domain.index_pattern.enums.SystemIndexPattern;
 import com.hivearmor.service.elasticsearch.ElasticsearchService;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +25,8 @@ public class ModuleRequirementChecksService {
     public ModuleRequirement checkWindowsEvents() throws Exception {
         final String ctx = CLASSNAME + ".checkWindowsEvents";
         try {
-            boolean indexExist = elasticsearchService.indexExist(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.LOGS_WINDOWS));
+            // ADMIN_GLOBAL: intentionally uses global log pattern for infrastructure disk management
+            boolean indexExist = elasticsearchService.indexExist("v3-hive-log-*");
 
             ModuleRequirement requirement = new ModuleRequirement();
             requirement.setCheckName(Constants.MODULE_CHECK_WINEVENTLOG);

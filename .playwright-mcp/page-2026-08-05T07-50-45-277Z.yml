@@ -1,0 +1,46 @@
+- generic [ref=f52e4]:
+  - complementary [ref=f52e5]:
+    - generic [ref=f52e6]:
+      - generic [ref=f52e7]: HiveArmor
+      - generic [ref=f52e14]:
+        - text: Enterprise security operations
+        - heading "See the signal. Coordinate the response." [level=2] [ref=f52e15]
+        - paragraph [ref=f52e16]: Hybrid Intelligence & Visibility Engine for Advanced Response, Monitoring, Orchestration and Resilience.
+      - generic "Platform capabilities" [ref=f52e17]:
+        - generic [ref=f52e18]:
+          - strong [ref=f52e19]: Unified visibility
+          - text: Across tenants and telemetry
+        - generic [ref=f52e20]:
+          - strong [ref=f52e21]: Analyst-led response
+          - text: Evidence before action
+        - generic [ref=f52e22]:
+          - strong [ref=f52e23]: Operational resilience
+          - text: Health and risk in context
+  - main [ref=f52e24]:
+    - generic [ref=f52e25]:
+      - text: Secure access
+      - heading "Sign in to HiveArmor" [level=1] [ref=f52e26]
+      - paragraph [ref=f52e27]: Use your organization credentials to access the security operations workspace.
+      - form "Sign in" [ref=f52e28]:
+        - generic [ref=f52e29]:
+          - generic [ref=f52e31]:
+            - text: Work email or username
+            - generic [ref=f52e32]: "*"
+          - textbox "Work email or username" [active] [ref=f52e34]
+        - generic [ref=f52e35]:
+          - generic [ref=f52e37]:
+            - text: Password
+            - generic [ref=f52e38]: "*"
+          - generic [ref=f52e40]:
+            - textbox "Password" [ref=f52e41]
+            - button "Show password" [ref=f52e42] [cursor=pointer]
+        - generic [ref=f52e46]:
+          - generic [ref=f52e47] [cursor=pointer]:
+            - checkbox "Remember this device" [ref=f52e48]
+            - generic [ref=f52e49]: Remember this device
+          - button "Forgot password?" [ref=f52e50] [cursor=pointer]
+        - button "Sign in" [ref=f52e51] [cursor=pointer]
+        - button "Continue with organization SSO" [ref=f52e54] [cursor=pointer]
+      - generic [ref=f52e55]:
+        - generic [ref=f52e56]: Authentication service available
+        - generic [ref=f52e57]: Protected enterprise access

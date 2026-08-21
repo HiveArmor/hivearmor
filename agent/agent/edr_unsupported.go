@@ -3,6 +3,7 @@
 package agent
 
 import (
+	"context"
 	"fmt"
 	"runtime"
 
@@ -11,6 +12,11 @@ import (
 
 func startEdrCollectorOS(cnf *config.Config) {
 	// No-op on unsupported platforms.
+}
+
+func startEdrCollectorWithContextOS(cnf *config.Config, ctx context.Context) {
+	// No-op on unsupported platforms (macOS EDR uses ESF in serv/service.go).
+	_ = ctx
 }
 
 func applyNetworkIsolation(isoType string, allowedIPs []string) error {

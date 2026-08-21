@@ -4,10 +4,10 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/threatwinds/go-sdk/catcher"
 	"github.com/hivearmor/agent-manager/config"
 	"github.com/hivearmor/agent-manager/models"
 	"github.com/hivearmor/agent-manager/utils"
+	"github.com/threatwinds/go-sdk/catcher"
 	"github.com/utmstack/config-client-go/types"
 )
 
@@ -43,20 +43,24 @@ func parseAgentToProto(agent models.Agent) *Agent {
 		catcher.Error("failed to get last seen status for agent", err, map[string]any{"agent": agent.ID, "process": "agent-manager"})
 	}
 	agentResult := &Agent{
-		Id:             uint32(agent.ID),
-		Ip:             agent.Ip,
-		Status:         agentStatus,
-		Hostname:       agent.Hostname,
-		Os:             agent.Os,
-		Platform:       agent.Platform,
-		Version:        agent.Version,
-		AgentKey:       agent.AgentKey,
-		LastSeen:       lastSeen,
-		Aliases:        agent.Aliases,
-		Addresses:      agent.Addresses,
-		Mac:            agent.Mac,
-		OsMajorVersion: agent.OsMajorVersion,
-		OsMinorVersion: agent.OsMinorVersion,
+		Id:       uint32(agent.ID),
+		Ip:       agent.Ip,
+		Status:   agentStatus,
+		Hostname: agent.Hostname,
+		Os:       agent.Os,
+		Platform: agent.Platform,
+		Version:  agent.Version,
+		// Device credentials and hashes are never projected through list APIs.
+		AgentKey:          "",
+		AgentUuid:         agent.AgentUUID,
+		TenantId:          agent.TenantID,
+		CredentialVersion: agent.CredentialVersion,
+		LastSeen:          lastSeen,
+		Aliases:           agent.Aliases,
+		Addresses:         agent.Addresses,
+		Mac:               agent.Mac,
+		OsMajorVersion:    agent.OsMajorVersion,
+		OsMinorVersion:    agent.OsMinorVersion,
 	}
 	return agentResult
 }
@@ -115,8 +119,9 @@ func modelToProtoCollector(model models.Collector) *Collector {
 		catcher.Error("failed to get last seen status for collector", err, map[string]any{"model": model.ID, "process": "agent-manager"})
 	}
 	return &Collector{
-		Id:           int32(model.ID),
-		CollectorKey: model.CollectorKey,
+		Id: int32(model.ID),
+		// Collector secrets are never projected through list APIs.
+		CollectorKey: "",
 		Ip:           model.Ip,
 		Hostname:     model.Hostname,
 		Version:      model.Version,

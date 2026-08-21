@@ -1,0 +1,65 @@
+- generic [ref=f26e3]:
+  - banner [ref=f26e4]:
+    - generic [ref=f26e5]: HiveArmor
+    - generic [ref=f26e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f26e13]'
+      - generic "Reconnecting..." [ref=f26e16]: 0 EPS
+      - button "Notifications" [ref=f26e18] [cursor=pointer]
+      - button "Help" [ref=f26e23] [cursor=pointer]
+      - button "User menu" [ref=f26e28] [cursor=pointer]:
+        - generic [ref=f26e29]: AA
+        - generic [ref=f26e30]: admin
+  - navigation [ref=f26e31]:
+    - generic [ref=f26e32]:
+      - generic [ref=f26e33]:
+        - generic [ref=f26e34]: COMMAND
+        - generic [ref=f26e35]:
+          - button "Analyst Queue" [ref=f26e36] [cursor=pointer]
+          - button "Alerts" [ref=f26e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f26e47] [cursor=pointer]
+          - button "Incidents" [ref=f26e54] [cursor=pointer]
+      - generic [ref=f26e61]:
+        - generic [ref=f26e62]: INVESTIGATE
+        - generic [ref=f26e63]:
+          - button "Search & Hunt" [ref=f26e64] [cursor=pointer]
+          - button "Investigations" [ref=f26e70] [cursor=pointer]
+          - button "Entities" [ref=f26e75] [cursor=pointer]
+      - generic [ref=f26e83]:
+        - generic [ref=f26e84]: DEFEND
+        - generic [ref=f26e85]:
+          - button "Detection Rules" [ref=f26e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f26e91] [cursor=pointer]
+      - generic [ref=f26e96]:
+        - generic [ref=f26e97]: POSTURE
+        - generic [ref=f26e98]:
+          - button "Assets" [ref=f26e99] [cursor=pointer]
+          - button "Identities" [ref=f26e105] [cursor=pointer]
+          - button "Active Directory" [ref=f26e113] [cursor=pointer]
+          - button "Exposure" [ref=f26e121] [cursor=pointer]
+          - button "Sensors" [ref=f26e128] [cursor=pointer]
+          - button "Compliance" [ref=f26e133] [cursor=pointer]
+      - generic [ref=f26e139]:
+        - generic [ref=f26e140]: DASHBOARDS
+        - button "Studio" [ref=f26e142] [cursor=pointer]
+      - generic [ref=f26e148]:
+        - generic [ref=f26e149]: REPORT
+        - button "Scheduled Reports" [ref=f26e151] [cursor=pointer]
+      - generic [ref=f26e157]:
+        - generic [ref=f26e158]: ADMINISTRATION
+        - generic [ref=f26e159]:
+          - button "Users" [ref=f26e160] [cursor=pointer]
+          - button "Integrations" [ref=f26e175] [cursor=pointer]
+          - button "Notifications" [ref=f26e180] [cursor=pointer]
+          - button "Audit Log" [ref=f26e186] [cursor=pointer]
+          - button "Settings" [ref=f26e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f26e199] [cursor=pointer]
+  - main [ref=f26e202]:
+    - generic [ref=f26e203]:
+      - generic [ref=f26e204]:
+        - generic [ref=f26e205]:
+          - generic [ref=f26e206]:
+            - heading "Assets" [level=1] [ref=f26e207]
+            - generic [ref=f26e208]: "0"
+          - button "Refreshing..." [disabled] [ref=f26e210]
+        - generic [ref=f26e211]: Managed clients and network-discovered hosts.
+      - generic [ref=f26e212]: Loading assets...

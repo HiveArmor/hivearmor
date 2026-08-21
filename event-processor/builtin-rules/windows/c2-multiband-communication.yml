@@ -1,0 +1,42 @@
+id: c9d0e1f2-a3b4-5678-cdef-789012345669
+title: Multiband C2 Communication via Multiple Protocols
+status: stable
+logsource:
+  product: windows
+  category: network_connection
+level: high
+tags:
+  - attack.command_and_control
+  - attack.T1026
+detection:
+  selection_dns_and_http:
+    Image|endswith:
+      - '\powershell.exe'
+      - '\rundll32.exe'
+    DestinationPort:
+      - 53
+      - 80
+      - 443
+    Initiated: 'true'
+  filter_legit:
+    DestinationIp|startswith:
+      - '10.'
+      - '192.168.'
+      - '172.16.'
+  condition: selection_dns_and_http and not filter_legit
+falsepositives:
+  - Legitimate applications that use DNS and HTTP simultaneously
+  - Enterprise update services combining DNS and HTTP
+impact:
+  confidentiality: high
+  integrity: medium
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - Image
+  - DestinationIp
+groupBy:
+  - ComputerName
+mitre:
+  tactic: command-and-control
+  technique: T1026

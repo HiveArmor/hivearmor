@@ -1,0 +1,57 @@
+# HiveArmor PowerShell Script Block telemetry filter — version 1.0.0
+# DataType: powershell
+#
+# Normalizes the JSON envelope emitted by the Windows ETW collector for
+# Microsoft-Windows-PowerShell Event ID 4104. The original payload remains in
+# Event.raw while detection-facing fields are promoted into the engine schema.
+
+pipeline:
+  - dataTypes:
+      - powershell
+    steps:
+      - json:
+          source: raw
+          where: 'startsWith("raw", "{")'
+
+      - rename:
+          from:
+            - log.hostname
+          to: origin.host
+          where: 'exists("log.hostname")'
+
+      - rename:
+          from:
+            - log.userName
+          to: origin.user
+          where: 'exists("log.userName")'
+
+      - rename:
+          from:
+            - log.sourceIp
+          to: origin.ip
+          where: 'exists("log.sourceIp")'
+
+      - rename:
+          from:
+            - log.processName
+          to: origin.process
+          where: 'exists("log.processName")'
+
+      - add:
+          function: string
+          params:
+            key: origin.process
+            value: powershell.exe
+          where: '!exists("origin.process")'
+
+      - rename:
+          from:
+            - log.eventType
+          to: action
+          where: 'exists("log.eventType")'
+
+      - rename:
+          from:
+            - log.severity
+          to: severity
+          where: 'exists("log.severity")'

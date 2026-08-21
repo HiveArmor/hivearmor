@@ -3,12 +3,13 @@ package enrichment
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/hivearmor/event-processor/internal/httpclient"
 )
 
 type tiEntry struct {
@@ -18,22 +19,17 @@ type tiEntry struct {
 }
 
 var (
-	tiMu    sync.RWMutex
-	tiCache = map[string]tiEntry{}
-	tiOnce  sync.Once
-	tiClient *http.Client
+	tiMu                  sync.RWMutex
+	tiCache               = map[string]tiEntry{}
+	tiOnce                sync.Once
+	tiClient              *http.Client
 	osURL, osUser, osPass string
 )
 
 // InitFeeds configures the threat intel enrichment.
 func InitFeeds(url, user, pass string) {
 	osURL, osUser, osPass = url, user, pass
-	tiClient = &http.Client{
-		Timeout: 5 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+	tiClient = httpclient.MustClient(5 * time.Second)
 	go tiRefreshLoop()
 }
 
@@ -54,7 +50,7 @@ func loadThreatIntel() {
 		"query": map[string]any{
 			"term": map[string]any{"type": "threat-intel"},
 		},
-		"size": 10000,
+		"size":    10000,
 		"_source": []string{"ip", "malicious", "source", "tags"},
 	}
 	body, _ := json.Marshal(query)
@@ -72,10 +68,10 @@ func loadThreatIntel() {
 		Hits struct {
 			Hits []struct {
 				Source struct {
-					IP       string `json:"ip"`
-					Malicious bool   `json:"malicious"`
-					Source   string `json:"source"`
-					Tags     []string `json:"tags"`
+					IP        string   `json:"ip"`
+					Malicious bool     `json:"malicious"`
+					Source    string   `json:"source"`
+					Tags      []string `json:"tags"`
 				} `json:"_source"`
 			} `json:"hits"`
 		} `json:"hits"`

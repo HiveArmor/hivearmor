@@ -1,0 +1,37 @@
+id: ha-net-008
+title: ICMP Covert Channel — Large Payload
+status: stable
+description: Detects ICMP echo request or reply packets with abnormally large payloads exceeding the standard 64-byte size, which is a classic indicator of ICMP tunneling used for covert C2 communication.
+logsource:
+  product: network
+  service: flow
+level: medium
+tags:
+  - attack.command_and_control
+  - attack.T1095
+detection:
+  selection:
+    network.transport: icmp
+    network.bytes|gte: 512
+    network.direction: outbound
+  condition: selection
+falsepositives:
+  - Network diagnostic tools that use larger ICMP payloads to test MTU or path characteristics
+  - Authorized network monitoring platforms using custom ICMP probe sizes
+fields:
+  - source.ip
+  - destination.ip
+  - network.bytes
+  - network.transport
+impact:
+  confidentiality: high
+  integrity: low
+  availability: low
+deduplicateBy:
+  - source.ip
+  - destination.ip
+groupBy:
+  - source.ip
+mitre:
+  tactic: command-and-control
+  technique: T1095

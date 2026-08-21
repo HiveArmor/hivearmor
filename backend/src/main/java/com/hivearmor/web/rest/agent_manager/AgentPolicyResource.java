@@ -17,6 +17,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/agent-policies")
+@org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
 public class AgentPolicyResource {
 
     private static final String CLASSNAME = "AgentPolicyResource";

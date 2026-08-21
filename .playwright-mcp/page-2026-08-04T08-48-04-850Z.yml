@@ -1,0 +1,668 @@
+- generic [ref=f9e1]:
+  - generic [ref=f9e5]:
+    - link "Skip to main content" [ref=f9e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f9e7]:
+      - generic [ref=f9e8]:
+        - generic [ref=f9e14]: HiveArmor
+        - generic [ref=f9e15]: Security operations
+      - generic [ref=f9e16]:
+        - button "All authorized tenants" [ref=f9e18] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f9e26] [cursor=pointer]:
+          - generic [ref=f9e31]: ⌘ K
+        - generic [ref=f9e32]: Production
+      - generic [ref=f9e33]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=f9e34]'
+        - status "Live events per second" [ref=f9e37]:
+          - generic [ref=f9e39]: 0 EPS
+        - button "Notifications" [ref=f9e40] [cursor=pointer]
+        - button "Help" [ref=f9e45] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f9e49]:
+      - generic [ref=f9e50]:
+        - region "COMMAND" [ref=f9e51]:
+          - generic [ref=f9e52]:
+            - button "Mission Control" [ref=f9e53] [cursor=pointer]
+            - button "Analyst Queue" [ref=f9e60] [cursor=pointer]
+            - button "Alerts" [ref=f9e64] [cursor=pointer]
+            - button "Correlated Findings" [ref=f9e69] [cursor=pointer]
+            - button "Incidents" [ref=f9e75] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f9e81]:
+          - generic [ref=f9e82]:
+            - button "Search & Hunt" [ref=f9e83] [cursor=pointer]
+            - button "Investigations" [ref=f9e88] [cursor=pointer]
+            - button "Entities" [ref=f9e92] [cursor=pointer]
+            - button "Threat Constellation" [ref=f9e99] [cursor=pointer]
+        - region "DEFEND" [ref=f9e105]:
+          - generic [ref=f9e106]:
+            - button "Detection Rules" [ref=f9e107] [cursor=pointer]
+            - button "Playbooks" [ref=f9e111] [cursor=pointer]
+            - button "Response Library" [ref=f9e116] [cursor=pointer]
+        - region "POSTURE" [ref=f9e120]:
+          - generic [ref=f9e121]:
+            - button "Assets" [ref=f9e122] [cursor=pointer]
+            - button "Identities" [ref=f9e127] [cursor=pointer]
+            - button "Active Directory" [ref=f9e134] [cursor=pointer]
+            - button "Exposure" [ref=f9e141] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f9e147] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f9e158] [cursor=pointer]
+            - button "Sensors" [ref=f9e164] [cursor=pointer]
+            - button "Compliance" [ref=f9e168] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f9e173]:
+          - generic [ref=f9e174]:
+            - button "Endpoints" [ref=f9e175] [cursor=pointer]
+            - button "File Quarantine" [ref=f9e179] [cursor=pointer]
+            - button "File Integrity" [ref=f9e185] [cursor=pointer]
+            - button "Agent Policies" [ref=f9e192] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f9e197]:
+          - button "Studio" [ref=f9e199] [cursor=pointer]
+        - region "REPORT" [ref=f9e204]:
+          - button "Scheduled Reports" [ref=f9e206] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f9e211]:
+          - generic [ref=f9e212]:
+            - button "Users" [ref=f9e213] [cursor=pointer]
+            - button "Integrations" [ref=f9e227] [cursor=pointer]
+            - button "Notifications" [ref=f9e231] [cursor=pointer]
+            - button "Audit Log" [ref=f9e236] [cursor=pointer]
+            - button "Settings" [ref=f9e241] [cursor=pointer]
+      - generic [ref=f9e246]:
+        - button "User menu" [ref=f9e249] [cursor=pointer]:
+          - generic [ref=f9e250]: AA
+        - button "Pin sidebar open" [ref=f9e251] [cursor=pointer]
+    - main [ref=f9e254]:
+      - region [ref=f9e255]:
+        - generic [ref=f9e256]:
+          - generic [ref=f9e262]:
+            - generic [ref=f9e263]: INVESTIGATION
+            - heading "Search & Hunt" [level=1] [ref=f9e264]
+          - generic [ref=f9e265]: ⌘/Ctrl + Enter to run · J/K event navigation
+        - generic [ref=f9e269]:
+          - combobox [ref=f9e271]:
+            - generic "Hunt query editor" [ref=f9e272]:
+              - code [ref=f9e275]:
+                - generic [ref=f9e276]:
+                  - textbox "KQL search query. Press Enter to run, Shift Enter for a new line, or use arrow keys for suggestions." [ref=f9e277]
+                  - textbox [ref=f9e278]
+              - generic: Start typing for KQL suggestions · Enter loads the newest 100 events
+          - generic "Search controls" [ref=f9e287]:
+            - button "Toggle filters and field values" [pressed] [ref=f9e288] [cursor=pointer]
+            - button "KQL" [ref=f9e291] [cursor=pointer]
+            - button "Time range selector" [ref=f9e299] [cursor=pointer]:
+              - generic [ref=f9e302]: Last 4 hours
+            - button "History" [ref=f9e305] [cursor=pointer]
+            - button "Saved hunts" [ref=f9e310] [cursor=pointer]
+            - button "Save" [disabled] [ref=f9e315]
+            - button "Run search" [active] [ref=f9e320] [cursor=pointer]
+          - status [ref=f9e323]:
+            - generic [ref=f9e324]: Query complete
+            - generic [ref=f9e326]: 170 events
+            - generic [ref=f9e331]: 17 ms
+            - generic [ref=f9e335]: Snapshot 14:18:03
+        - generic [ref=f9e341]:
+          - complementary "Filter and field browser" [ref=f9e342]:
+            - generic [ref=f9e343]:
+              - strong [ref=f9e348]: Fields & values
+              - generic [ref=f9e349]: 17 fields
+            - generic [ref=f9e350]:
+              - generic [ref=f9e354]: Filter available fields
+              - textbox "Filter available fields /" [ref=f9e355]:
+                - /placeholder: Filter fields
+              - generic [ref=f9e356]: /
+            - generic [ref=f9e357]:
+              - generic [ref=f9e358]: FIELD
+              - generic [ref=f9e359]: COVERAGE
+            - generic [ref=f9e360]:
+              - generic [ref=f9e361]:
+                - button "Event 6" [expanded] [ref=f9e362] [cursor=pointer]:
+                  - generic [ref=f9e365]: Event
+                  - emphasis [ref=f9e366]: "6"
+                - list [ref=f9e367]:
+                  - listitem [ref=f9e368]:
+                    - button "@timestamp date —" [ref=f9e369] [cursor=pointer]:
+                      - generic [ref=f9e370]:
+                        - strong [ref=f9e371]: "@timestamp"
+                        - generic [ref=f9e372]: date
+                      - emphasis [ref=f9e373]: —
+                    - button "Add @timestamp as a result column" [disabled] [ref=f9e374]
+                  - listitem [ref=f9e376]:
+                    - button "event.severity number —" [ref=f9e377] [cursor=pointer]:
+                      - generic [ref=f9e378]:
+                        - strong [ref=f9e379]: event.severity
+                        - generic [ref=f9e380]: number
+                      - emphasis [ref=f9e381]: —
+                    - button "Add event.severity as a result column" [disabled] [ref=f9e382]
+                  - listitem [ref=f9e384]:
+                    - button "event.category keyword —" [ref=f9e385] [cursor=pointer]:
+                      - generic [ref=f9e386]:
+                        - strong [ref=f9e387]: event.category
+                        - generic [ref=f9e388]: keyword
+                      - emphasis [ref=f9e389]: —
+                    - button "Add event.category as a result column" [ref=f9e390] [cursor=pointer]
+                  - listitem [ref=f9e392]:
+                    - button "event.action keyword —" [ref=f9e393] [cursor=pointer]:
+                      - generic [ref=f9e394]:
+                        - strong [ref=f9e395]: event.action
+                        - generic [ref=f9e396]: keyword
+                      - emphasis [ref=f9e397]: —
+                    - button "Add event.action as a result column" [disabled] [ref=f9e398]
+                  - listitem [ref=f9e400]:
+                    - button "event.outcome keyword —" [ref=f9e401] [cursor=pointer]:
+                      - generic [ref=f9e402]:
+                        - strong [ref=f9e403]: event.outcome
+                        - generic [ref=f9e404]: keyword
+                      - emphasis [ref=f9e405]: —
+                    - button "Add event.outcome as a result column" [ref=f9e406] [cursor=pointer]
+                  - listitem [ref=f9e408]:
+                    - button "message text —" [ref=f9e409] [cursor=pointer]:
+                      - generic [ref=f9e410]:
+                        - strong [ref=f9e411]: message
+                        - generic [ref=f9e412]: text
+                      - emphasis [ref=f9e413]: —
+                    - button "Add message as a result column" [ref=f9e414] [cursor=pointer]
+              - generic [ref=f9e416]:
+                - button "Host 2" [expanded] [ref=f9e417] [cursor=pointer]:
+                  - generic [ref=f9e420]: Host
+                  - emphasis [ref=f9e421]: "2"
+                - list [ref=f9e422]:
+                  - listitem [ref=f9e423]:
+                    - button "host.name keyword —" [ref=f9e424] [cursor=pointer]:
+                      - generic [ref=f9e425]:
+                        - strong [ref=f9e426]: host.name
+                        - generic [ref=f9e427]: keyword
+                      - emphasis [ref=f9e428]: —
+                    - button "Add host.name as a result column" [disabled] [ref=f9e429]
+                  - listitem [ref=f9e431]:
+                    - button "host.ip ip —" [ref=f9e432] [cursor=pointer]:
+                      - generic [ref=f9e433]:
+                        - strong [ref=f9e434]: host.ip
+                        - generic [ref=f9e435]: ip
+                      - emphasis [ref=f9e436]: —
+                    - button "Add host.ip as a result column" [ref=f9e437] [cursor=pointer]
+              - generic [ref=f9e439]:
+                - button "Identity 2" [expanded] [ref=f9e440] [cursor=pointer]:
+                  - generic [ref=f9e443]: Identity
+                  - emphasis [ref=f9e444]: "2"
+                - list [ref=f9e445]:
+                  - listitem [ref=f9e446]:
+                    - button "user.name keyword —" [ref=f9e447] [cursor=pointer]:
+                      - generic [ref=f9e448]:
+                        - strong [ref=f9e449]: user.name
+                        - generic [ref=f9e450]: keyword
+                      - emphasis [ref=f9e451]: —
+                    - button "Add user.name as a result column" [disabled] [ref=f9e452]
+                  - listitem [ref=f9e454]:
+                    - button "user.domain keyword —" [ref=f9e455] [cursor=pointer]:
+                      - generic [ref=f9e456]:
+                        - strong [ref=f9e457]: user.domain
+                        - generic [ref=f9e458]: keyword
+                      - emphasis [ref=f9e459]: —
+                    - button "Add user.domain as a result column" [ref=f9e460] [cursor=pointer]
+              - generic [ref=f9e462]:
+                - button "Network 5" [expanded] [ref=f9e463] [cursor=pointer]:
+                  - generic [ref=f9e466]: Network
+                  - emphasis [ref=f9e467]: "5"
+                - list [ref=f9e468]:
+                  - listitem [ref=f9e469]:
+                    - button "source.ip ip —" [ref=f9e470] [cursor=pointer]:
+                      - generic [ref=f9e471]:
+                        - strong [ref=f9e472]: source.ip
+                        - generic [ref=f9e473]: ip
+                      - emphasis [ref=f9e474]: —
+                    - button "Add source.ip as a result column" [disabled] [ref=f9e475]
+                  - listitem [ref=f9e477]:
+                    - button "source.port number —" [ref=f9e478] [cursor=pointer]:
+                      - generic [ref=f9e479]:
+                        - strong [ref=f9e480]: source.port
+                        - generic [ref=f9e481]: number
+                      - emphasis [ref=f9e482]: —
+                    - button "Add source.port as a result column" [ref=f9e483] [cursor=pointer]
+                  - listitem [ref=f9e485]:
+                    - button "destination.ip ip —" [ref=f9e486] [cursor=pointer]:
+                      - generic [ref=f9e487]:
+                        - strong [ref=f9e488]: destination.ip
+                        - generic [ref=f9e489]: ip
+                      - emphasis [ref=f9e490]: —
+                    - button "Add destination.ip as a result column" [ref=f9e491] [cursor=pointer]
+                  - listitem [ref=f9e493]:
+                    - button "destination.port number —" [ref=f9e494] [cursor=pointer]:
+                      - generic [ref=f9e495]:
+                        - strong [ref=f9e496]: destination.port
+                        - generic [ref=f9e497]: number
+                      - emphasis [ref=f9e498]: —
+                    - button "Add destination.port as a result column" [ref=f9e499] [cursor=pointer]
+                  - listitem [ref=f9e501]:
+                    - button "source.geo.country_name keyword —" [ref=f9e502] [cursor=pointer]:
+                      - generic [ref=f9e503]:
+                        - strong [ref=f9e504]: source.geo.country_name
+                        - generic [ref=f9e505]: keyword
+                      - emphasis [ref=f9e506]: —
+                    - button "Add source.geo.country_name as a result column" [ref=f9e507] [cursor=pointer]
+              - button "Source 2" [ref=f9e510] [cursor=pointer]:
+                - generic [ref=f9e513]: Source
+                - emphasis [ref=f9e514]: "2"
+          - main "Hunt results workspace" [ref=f9e515]:
+            - region "Event distribution over time" [ref=f9e568]:
+              - generic [ref=f9e569]:
+                - generic [ref=f9e570]:
+                  - strong [ref=f9e571]: Event distribution
+                  - generic [ref=f9e572]: Click a bucket to narrow the active time range
+                - generic [ref=f9e573]: 49 buckets
+              - img "Event histogram" [ref=f9e575]
+            - generic [ref=f9e579]:
+              - generic [ref=f9e580]:
+                - strong [ref=f9e581]: Events
+                - generic [ref=f9e582]: 1–100 loaded · more available
+              - generic [ref=f9e583]:
+                - generic [ref=f9e584]:
+                  - generic [ref=f9e585]: Rows
+                  - group "Result row density" [ref=f9e586]:
+                    - button "Compact rows" [pressed] [ref=f9e587] [cursor=pointer]
+                    - button "Standard rows" [ref=f9e593] [cursor=pointer]
+                    - button "Comfortable rows" [ref=f9e599] [cursor=pointer]
+                - button "Columns" [ref=f9e606] [cursor=pointer]
+            - generic "Hunt event results. Use arrow keys to navigate and Enter to open event context." [ref=f9e612]:
+              - generic [ref=f9e616]:
+                - grid [ref=f9e618]:
+                  - rowgroup [ref=f9e619]:
+                    - row [ref=f9e620]:
+                      - columnheader [ref=f9e621]:
+                        - checkbox "Column with Header Selection" [ref=f9e622] [cursor=pointer]
+                        - text:  
+                        - generic: 
+                      - columnheader "Event time" [ref=f9e623]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Severity" [ref=f9e626]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Source" [ref=f9e629]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Action" [ref=f9e632]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Host" [ref=f9e635]:
+                        - text: 
+                        - generic:      
+                      - columnheader "User" [ref=f9e638]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Source IP" [ref=f9e641]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Event summary" [ref=f9e644]:
+                        - text: 
+                        - generic:      
+                      - columnheader "Alerts" [ref=f9e647]:
+                        - text: 
+                        - generic:      
+                    - row [ref=f9e650] [cursor=pointer]:
+                      - gridcell [ref=f9e651]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e652]
+                        - text: 
+                      - gridcell "2026-08-04 08:45:55.000 Z" [ref=f9e653]
+                      - gridcell [ref=f9e654]
+                      - gridcell "AWS CloudTrail" [ref=f9e657]
+                      - gridcell "ConsoleLogin" [ref=f9e658]
+                      - gridcell "SRV-northstar-01" [ref=f9e659]
+                      - gridcell "svc_monitor" [ref=f9e660]
+                      - gridcell "10.94.83.242" [ref=f9e661]
+                      - gridcell "[Northstar Finance] ConsoleLogin by svc_monitor@NORTHSTAR.IO on SRV-northstar-01 from 10.94.83.242" [ref=f9e662]
+                      - gridcell "—" [ref=f9e663]
+                    - row [ref=f9e664] [cursor=pointer]:
+                      - gridcell [ref=f9e665]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e666]
+                        - text: 
+                      - gridcell "2026-08-04 08:43:25.000 Z" [ref=f9e667]
+                      - gridcell [ref=f9e668]
+                      - gridcell "FortiGate" [ref=f9e671]
+                      - gridcell "logon_failed" [ref=f9e672]
+                      - gridcell "SRV-northstar-01" [ref=f9e673]
+                      - gridcell "svc_monitor" [ref=f9e674]
+                      - gridcell "10.254.145.151" [ref=f9e675]
+                      - gridcell "[Northstar Finance] logon_failed by svc_monitor@NORTHSTAR.IO on SRV-northstar-01 from 10.254.145.151" [ref=f9e676]
+                      - gridcell "—" [ref=f9e677]
+                    - row [ref=f9e678] [cursor=pointer]:
+                      - gridcell [ref=f9e679]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e680]
+                        - text: 
+                      - gridcell "2026-08-04 08:43:01.000 Z" [ref=f9e681]
+                      - gridcell [ref=f9e682]
+                      - gridcell "Windows Security" [ref=f9e685]
+                      - gridcell "ConsoleLogin" [ref=f9e686]
+                      - gridcell "WKS-acme-11" [ref=f9e687]
+                      - gridcell "svc_monitor" [ref=f9e688]
+                      - gridcell "10.149.149.222" [ref=f9e689]
+                      - gridcell "[Acme Corp] ConsoleLogin by svc_monitor@ACME.LOCAL on WKS-acme-11 from 10.149.149.222" [ref=f9e690]
+                      - gridcell "—" [ref=f9e691]
+                    - row [ref=f9e692] [cursor=pointer]:
+                      - gridcell [ref=f9e693]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e694]
+                        - text: 
+                      - gridcell "2026-08-04 08:42:39.000 Z" [ref=f9e695]
+                      - gridcell [ref=f9e696]
+                      - gridcell "AWS CloudTrail" [ref=f9e699]
+                      - gridcell "logon_success" [ref=f9e700]
+                      - gridcell "WKS-northstar-10" [ref=f9e701]
+                      - gridcell "j.doe" [ref=f9e702]
+                      - gridcell "10.138.39.117" [ref=f9e703]
+                      - gridcell "[Northstar Finance] logon_success by j.doe@NORTHSTAR.IO on WKS-northstar-10 from 10.138.39.117" [ref=f9e704]
+                      - gridcell "—" [ref=f9e705]
+                    - row [ref=f9e706] [cursor=pointer]:
+                      - gridcell [ref=f9e707]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e708]
+                        - text: 
+                      - gridcell "2026-08-04 08:36:26.000 Z" [ref=f9e709]
+                      - gridcell [ref=f9e710]
+                      - gridcell "AWS CloudTrail" [ref=f9e713]
+                      - gridcell "connection_accepted" [ref=f9e714]
+                      - gridcell "SRV-acme-01" [ref=f9e715]
+                      - gridcell "svc_monitor" [ref=f9e716]
+                      - gridcell "10.15.231.187" [ref=f9e717]
+                      - gridcell "[Acme Corp] connection_accepted by svc_monitor@ACME.LOCAL on SRV-acme-01 from 10.15.231.187" [ref=f9e718]
+                      - gridcell "—" [ref=f9e719]
+                    - row [ref=f9e720] [cursor=pointer]:
+                      - gridcell [ref=f9e721]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e722]
+                        - text: 
+                      - gridcell "2026-08-04 08:36:03.000 Z" [ref=f9e723]
+                      - gridcell [ref=f9e724]
+                      - gridcell "Windows Security" [ref=f9e727]
+                      - gridcell "process_started" [ref=f9e728]
+                      - gridcell "FW-acme-01" [ref=f9e729]
+                      - gridcell "admin" [ref=f9e730]
+                      - gridcell "10.235.206.220" [ref=f9e731]
+                      - gridcell "[Acme Corp] process_started by admin@ACME.LOCAL on FW-acme-01 from 10.235.206.220" [ref=f9e732]
+                      - gridcell "—" [ref=f9e733]
+                    - row [ref=f9e734] [cursor=pointer]:
+                      - gridcell [ref=f9e735]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e736]
+                        - text: 
+                      - gridcell "2026-08-04 08:34:08.000 Z" [ref=f9e737]
+                      - gridcell [ref=f9e738]
+                      - gridcell "Linux Syslog" [ref=f9e741]
+                      - gridcell "dns_query" [ref=f9e742]
+                      - gridcell "WKS-acme-11" [ref=f9e743]
+                      - gridcell "b.admin" [ref=f9e744]
+                      - gridcell "10.253.139.225" [ref=f9e745]
+                      - gridcell "[Acme Corp] dns_query by b.admin@ACME.LOCAL on WKS-acme-11 from 10.253.139.225" [ref=f9e746]
+                      - gridcell "—" [ref=f9e747]
+                    - row [ref=f9e748] [cursor=pointer]:
+                      - gridcell [ref=f9e749]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e750]
+                        - text: 
+                      - gridcell "2026-08-04 08:33:24.000 Z" [ref=f9e751]
+                      - gridcell [ref=f9e752]
+                      - gridcell "Sysmon" [ref=f9e755]
+                      - gridcell "connection_accepted" [ref=f9e756]
+                      - gridcell "FW-acme-01" [ref=f9e757]
+                      - gridcell "a.analyst" [ref=f9e758]
+                      - gridcell "10.83.29.23" [ref=f9e759]
+                      - gridcell "[Acme Corp] connection_accepted by a.analyst@ACME.LOCAL on FW-acme-01 from 10.83.29.23" [ref=f9e760]
+                      - gridcell "—" [ref=f9e761]
+                    - row [ref=f9e762] [cursor=pointer]:
+                      - gridcell [ref=f9e763]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e764]
+                        - text: 
+                      - gridcell "2026-08-04 08:32:53.000 Z" [ref=f9e765]
+                      - gridcell [ref=f9e766]
+                      - gridcell "Linux Syslog" [ref=f9e769]
+                      - gridcell "connection_denied" [ref=f9e770]
+                      - gridcell "WKS-northstar-11" [ref=f9e771]
+                      - gridcell "svc_monitor" [ref=f9e772]
+                      - gridcell "10.61.142.225" [ref=f9e773]
+                      - gridcell "[Northstar Finance] connection_denied by svc_monitor@NORTHSTAR.IO on WKS-northstar-11 from 10.61.142.225" [ref=f9e774]
+                      - gridcell "—" [ref=f9e775]
+                    - row [ref=f9e776] [cursor=pointer]:
+                      - gridcell [ref=f9e777]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e778]
+                        - text: 
+                      - gridcell "2026-08-04 08:31:28.000 Z" [ref=f9e779]
+                      - gridcell [ref=f9e780]
+                      - gridcell "Sysmon" [ref=f9e783]
+                      - gridcell "ConsoleLogin" [ref=f9e784]
+                      - gridcell "SRV-northstar-02" [ref=f9e785]
+                      - gridcell "svc_monitor" [ref=f9e786]
+                      - gridcell "10.17.27.231" [ref=f9e787]
+                      - gridcell "[Northstar Finance] ConsoleLogin by svc_monitor@NORTHSTAR.IO on SRV-northstar-02 from 10.17.27.231" [ref=f9e788]
+                      - gridcell "—" [ref=f9e789]
+                    - row [ref=f9e790] [cursor=pointer]:
+                      - gridcell [ref=f9e791]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e792]
+                        - text: 
+                      - gridcell "2026-08-04 08:27:41.000 Z" [ref=f9e793]
+                      - gridcell [ref=f9e794]
+                      - gridcell "Sysmon" [ref=f9e797]
+                      - gridcell "dns_query" [ref=f9e798]
+                      - gridcell "WKS-northstar-11" [ref=f9e799]
+                      - gridcell "admin" [ref=f9e800]
+                      - gridcell "10.174.202.183" [ref=f9e801]
+                      - gridcell "[Northstar Finance] dns_query by admin@NORTHSTAR.IO on WKS-northstar-11 from 10.174.202.183" [ref=f9e802]
+                      - gridcell "—" [ref=f9e803]
+                    - row [ref=f9e804] [cursor=pointer]:
+                      - gridcell [ref=f9e805]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e806]
+                        - text: 
+                      - gridcell "2026-08-04 08:25:34.000 Z" [ref=f9e807]
+                      - gridcell [ref=f9e808]
+                      - gridcell "Sysmon" [ref=f9e811]
+                      - gridcell "connection_accepted" [ref=f9e812]
+                      - gridcell "WKS-northstar-11" [ref=f9e813]
+                      - gridcell "a.analyst" [ref=f9e814]
+                      - gridcell "10.6.175.88" [ref=f9e815]
+                      - gridcell "[Northstar Finance] connection_accepted by a.analyst@NORTHSTAR.IO on WKS-northstar-11 from 10.6.175.88" [ref=f9e816]
+                      - gridcell "—" [ref=f9e817]
+                    - row [ref=f9e818] [cursor=pointer]:
+                      - gridcell [ref=f9e819]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e820]
+                        - text: 
+                      - gridcell "2026-08-04 08:22:52.000 Z" [ref=f9e821]
+                      - gridcell [ref=f9e822]
+                      - gridcell "Sysmon" [ref=f9e825]
+                      - gridcell "dns_query" [ref=f9e826]
+                      - gridcell "SRV-acme-02" [ref=f9e827]
+                      - gridcell "a.analyst" [ref=f9e828]
+                      - gridcell "10.228.234.239" [ref=f9e829]
+                      - gridcell "[Acme Corp] dns_query by a.analyst@ACME.LOCAL on SRV-acme-02 from 10.228.234.239" [ref=f9e830]
+                      - gridcell "—" [ref=f9e831]
+                    - row [ref=f9e832] [cursor=pointer]:
+                      - gridcell [ref=f9e833]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e834]
+                        - text: 
+                      - gridcell "2026-08-04 08:21:00.000 Z" [ref=f9e835]
+                      - gridcell [ref=f9e836]
+                      - gridcell "Sysmon" [ref=f9e839]
+                      - gridcell "logon_success" [ref=f9e840]
+                      - gridcell "SRV-northstar-01" [ref=f9e841]
+                      - gridcell "j.doe" [ref=f9e842]
+                      - gridcell "10.156.215.131" [ref=f9e843]
+                      - gridcell "[Northstar Finance] logon_success by j.doe@NORTHSTAR.IO on SRV-northstar-01 from 10.156.215.131" [ref=f9e844]
+                      - gridcell "—" [ref=f9e845]
+                    - row [ref=f9e846] [cursor=pointer]:
+                      - gridcell [ref=f9e847]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e848]
+                        - text: 
+                      - gridcell "2026-08-04 08:20:51.000 Z" [ref=f9e849]
+                      - gridcell [ref=f9e850]
+                      - gridcell "AWS CloudTrail" [ref=f9e853]
+                      - gridcell "logon_success" [ref=f9e854]
+                      - gridcell "FW-northstar-01" [ref=f9e855]
+                      - gridcell "svc_monitor" [ref=f9e856]
+                      - gridcell "10.175.209.239" [ref=f9e857]
+                      - gridcell "[Northstar Finance] logon_success by svc_monitor@NORTHSTAR.IO on FW-northstar-01 from 10.175.209.239" [ref=f9e858]
+                      - gridcell "—" [ref=f9e859]
+                    - row [ref=f9e860] [cursor=pointer]:
+                      - gridcell [ref=f9e861]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e862]
+                        - text: 
+                      - gridcell "2026-08-04 08:19:54.000 Z" [ref=f9e863]
+                      - gridcell [ref=f9e864]
+                      - gridcell "AWS CloudTrail" [ref=f9e867]
+                      - gridcell "connection_denied" [ref=f9e868]
+                      - gridcell "WKS-acme-11" [ref=f9e869]
+                      - gridcell "a.analyst" [ref=f9e870]
+                      - gridcell "10.166.6.88" [ref=f9e871]
+                      - gridcell "[Acme Corp] connection_denied by a.analyst@ACME.LOCAL on WKS-acme-11 from 10.166.6.88" [ref=f9e872]
+                      - gridcell "—" [ref=f9e873]
+                    - row [ref=f9e874] [cursor=pointer]:
+                      - gridcell [ref=f9e875]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e876]
+                        - text: 
+                      - gridcell "2026-08-04 08:18:54.000 Z" [ref=f9e877]
+                      - gridcell [ref=f9e878]
+                      - gridcell "AWS CloudTrail" [ref=f9e881]
+                      - gridcell "logon_success" [ref=f9e882]
+                      - gridcell "FW-northstar-01" [ref=f9e883]
+                      - gridcell "svc_monitor" [ref=f9e884]
+                      - gridcell "10.215.171.243" [ref=f9e885]
+                      - gridcell "[Northstar Finance] logon_success by svc_monitor@NORTHSTAR.IO on FW-northstar-01 from 10.215.171.243" [ref=f9e886]
+                      - gridcell "—" [ref=f9e887]
+                    - row [ref=f9e888] [cursor=pointer]:
+                      - gridcell [ref=f9e889]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e890]
+                        - text: 
+                      - gridcell "2026-08-04 08:17:06.000 Z" [ref=f9e891]
+                      - gridcell [ref=f9e892]
+                      - gridcell "Linux Syslog" [ref=f9e895]
+                      - gridcell "process_started" [ref=f9e896]
+                      - gridcell "WKS-northstar-11" [ref=f9e897]
+                      - gridcell "admin" [ref=f9e898]
+                      - gridcell "10.154.130.123" [ref=f9e899]
+                      - gridcell "[Northstar Finance] process_started by admin@NORTHSTAR.IO on WKS-northstar-11 from 10.154.130.123" [ref=f9e900]
+                      - gridcell "—" [ref=f9e901]
+                    - row [ref=f9e902] [cursor=pointer]:
+                      - gridcell [ref=f9e903]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e904]
+                        - text: 
+                      - gridcell "2026-08-04 08:12:56.000 Z" [ref=f9e905]
+                      - gridcell [ref=f9e906]
+                      - gridcell "Windows Security" [ref=f9e909]
+                      - gridcell "logon_failed" [ref=f9e910]
+                      - gridcell "FW-northstar-01" [ref=f9e911]
+                      - gridcell "j.doe" [ref=f9e912]
+                      - gridcell "10.178.32.173" [ref=f9e913]
+                      - gridcell "[Northstar Finance] logon_failed by j.doe@NORTHSTAR.IO on FW-northstar-01 from 10.178.32.173" [ref=f9e914]
+                      - gridcell "—" [ref=f9e915]
+                    - row [ref=f9e916] [cursor=pointer]:
+                      - gridcell [ref=f9e917]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e918]
+                        - text: 
+                      - gridcell "2026-08-04 08:10:53.000 Z" [ref=f9e919]
+                      - gridcell [ref=f9e920]
+                      - gridcell "Sysmon" [ref=f9e923]
+                      - gridcell "connection_accepted" [ref=f9e924]
+                      - gridcell "FW-northstar-01" [ref=f9e925]
+                      - gridcell "admin" [ref=f9e926]
+                      - gridcell "10.233.199.152" [ref=f9e927]
+                      - gridcell "[Northstar Finance] connection_accepted by admin@NORTHSTAR.IO on FW-northstar-01 from 10.233.199.152" [ref=f9e928]
+                      - gridcell "—" [ref=f9e929]
+                    - row [ref=f9e930] [cursor=pointer]:
+                      - gridcell [ref=f9e931]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e932]
+                        - text: 
+                      - gridcell "2026-08-04 08:08:37.000 Z" [ref=f9e933]
+                      - gridcell [ref=f9e934]
+                      - gridcell "FortiGate" [ref=f9e937]
+                      - gridcell "logon_success" [ref=f9e938]
+                      - gridcell "WKS-acme-10" [ref=f9e939]
+                      - gridcell "j.doe" [ref=f9e940]
+                      - gridcell "10.214.227.174" [ref=f9e941]
+                      - gridcell "[Acme Corp] logon_success by j.doe@ACME.LOCAL on WKS-acme-10 from 10.214.227.174" [ref=f9e942]
+                      - gridcell "—" [ref=f9e943]
+                    - row [ref=f9e944] [cursor=pointer]:
+                      - gridcell [ref=f9e945]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e946]
+                        - text: 
+                      - gridcell "2026-08-04 08:07:43.000 Z" [ref=f9e947]
+                      - gridcell [ref=f9e948]
+                      - gridcell "Sysmon" [ref=f9e951]
+                      - gridcell "dns_query" [ref=f9e952]
+                      - gridcell "FW-acme-01" [ref=f9e953]
+                      - gridcell "svc_monitor" [ref=f9e954]
+                      - gridcell "10.26.244.183" [ref=f9e955]
+                      - gridcell "[Acme Corp] dns_query by svc_monitor@ACME.LOCAL on FW-acme-01 from 10.26.244.183" [ref=f9e956]
+                      - gridcell "—" [ref=f9e957]
+                    - row [ref=f9e958] [cursor=pointer]:
+                      - gridcell [ref=f9e959]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e960]
+                        - text: 
+                      - gridcell "2026-08-04 08:07:09.000 Z" [ref=f9e961]
+                      - gridcell [ref=f9e962]
+                      - gridcell "Windows Security" [ref=f9e965]
+                      - gridcell "process_started" [ref=f9e966]
+                      - gridcell "WKS-northstar-10" [ref=f9e967]
+                      - gridcell "svc_monitor" [ref=f9e968]
+                      - gridcell "10.136.213.123" [ref=f9e969]
+                      - gridcell "[Northstar Finance] process_started by svc_monitor@NORTHSTAR.IO on WKS-northstar-10 from 10.136.213.123" [ref=f9e970]
+                      - gridcell "—" [ref=f9e971]
+                    - row [ref=f9e972] [cursor=pointer]:
+                      - gridcell [ref=f9e973]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e974]
+                        - text: 
+                      - gridcell "2026-08-04 08:06:10.000 Z" [ref=f9e975]
+                      - gridcell [ref=f9e976]
+                      - gridcell "Sysmon" [ref=f9e979]
+                      - gridcell "logon_success" [ref=f9e980]
+                      - gridcell "WKS-northstar-11" [ref=f9e981]
+                      - gridcell "b.admin" [ref=f9e982]
+                      - gridcell "10.13.206.179" [ref=f9e983]
+                      - gridcell "[Northstar Finance] logon_success by b.admin@NORTHSTAR.IO on WKS-northstar-11 from 10.13.206.179" [ref=f9e984]
+                      - gridcell "—" [ref=f9e985]
+                    - row [ref=f9e986] [cursor=pointer]:
+                      - gridcell [ref=f9e987]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e988]
+                        - text: 
+                      - gridcell "2026-08-04 08:06:08.000 Z" [ref=f9e989]
+                      - gridcell [ref=f9e990]
+                      - gridcell "Linux Syslog" [ref=f9e993]
+                      - gridcell "ConsoleLogin" [ref=f9e994]
+                      - gridcell "WKS-acme-11" [ref=f9e995]
+                      - gridcell "a.analyst" [ref=f9e996]
+                      - gridcell "10.105.195.104" [ref=f9e997]
+                      - gridcell "[Acme Corp] ConsoleLogin by a.analyst@ACME.LOCAL on WKS-acme-11 from 10.105.195.104" [ref=f9e998]
+                      - gridcell "—" [ref=f9e999]
+                    - row [ref=f9e1000] [cursor=pointer]:
+                      - gridcell [ref=f9e1001]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e1002]
+                        - text: 
+                      - gridcell "2026-08-04 08:03:23.000 Z" [ref=f9e1003]
+                      - gridcell [ref=f9e1004]
+                      - gridcell "Windows Security" [ref=f9e1007]
+                      - gridcell "connection_denied" [ref=f9e1008]
+                      - gridcell "SRV-northstar-01" [ref=f9e1009]
+                      - gridcell "b.admin" [ref=f9e1010]
+                      - gridcell "10.157.131.215" [ref=f9e1011]
+                      - gridcell "[Northstar Finance] connection_denied by b.admin@NORTHSTAR.IO on SRV-northstar-01 from 10.157.131.215" [ref=f9e1012]
+                      - gridcell "—" [ref=f9e1013]
+                    - row [ref=f9e1014] [cursor=pointer]:
+                      - gridcell [ref=f9e1015]:
+                        - checkbox "Press Space to toggle row selection (unchecked)" [ref=f9e1016]
+                        - text: 
+                      - gridcell "2026-08-04 08:02:51.000 Z" [ref=f9e1017]
+                      - gridcell [ref=f9e1018]
+                      - gridcell "Linux Syslog" [ref=f9e1021]
+                      - gridcell "ConsoleLogin" [ref=f9e1022]
+                      - gridcell "WKS-acme-10" [ref=f9e1023]
+                      - gridcell "admin" [ref=f9e1024]
+                      - gridcell "10.156.191.48" [ref=f9e1025]
+                      - gridcell "[Acme Corp] ConsoleLogin by admin@ACME.LOCAL on WKS-acme-10 from 10.156.191.48" [ref=f9e1026]
+                      - gridcell "—" [ref=f9e1027]
+                - text:     
+            - navigation "Hunt result pages" [ref=f9e1028]:
+              - generic [ref=f9e1029]: 170 matching events
+              - strong [ref=f9e1030]:
+                - text: Page 1
+                - generic [ref=f9e1031]: 1–100
+              - generic [ref=f9e1032]:
+                - button "Previous" [disabled] [ref=f9e1033]
+                - button "Next" [ref=f9e1036] [cursor=pointer]
+        - generic [ref=f9e522]:
+          - generic [ref=f9e523]:
+            - generic [ref=f9e525]: Connected
+            - generic [ref=f9e526]: •
+            - generic [ref=f9e528]: Live
+          - generic [ref=f9e529]: 0 eps
+  - generic:
+    - list "Notifications"
+  - generic [ref=f9e531]:
+    - alert
+    - alert

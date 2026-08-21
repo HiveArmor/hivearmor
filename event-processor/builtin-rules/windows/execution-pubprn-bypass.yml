@@ -1,0 +1,36 @@
+id: f0a1b2c3-d4e5-6789-fabc-890123456730
+title: PubPrn.vbs Script Proxy Execution Bypass
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.execution
+  - attack.defense_evasion
+  - attack.T1216
+  - attack.T1216.001
+detection:
+  selection:
+    CommandLine|contains:
+      - 'pubprn.vbs'
+      - 'PubPrn.vbs'
+    CommandLine|contains:
+      - 'script:'
+      - 'http://'
+      - 'https://'
+  condition: selection
+falsepositives:
+  - Legitimate printer publication via PubPrn
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: execution
+  technique: T1216.001

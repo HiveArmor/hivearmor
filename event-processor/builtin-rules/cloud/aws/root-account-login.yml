@@ -1,0 +1,37 @@
+id: ha-aws-002
+title: AWS Root Account Console Login
+status: stable
+description: Detects console sign-in events using the AWS root account. Root account usage outside of break-glass scenarios indicates a high-risk condition and likely policy violation.
+logsource:
+  product: aws
+  service: cloudtrail
+level: high
+tags:
+  - attack.privilege_escalation
+  - attack.T1078.004
+detection:
+  selection:
+    eventName: ConsoleLogin
+    userIdentity.type: Root
+  condition: selection
+falsepositives:
+  - Emergency break-glass root access authorised by security team
+  - Initial account setup activities
+fields:
+  - eventName
+  - userIdentity.type
+  - sourceIPAddress
+  - awsRegion
+  - responseElements.ConsoleLogin
+impact:
+  confidentiality: high
+  integrity: high
+  availability: high
+deduplicateBy:
+  - sourceIPAddress
+  - awsRegion
+groupBy:
+  - userIdentity.type
+mitre:
+  tactic: privilege-escalation
+  technique: T1078.004

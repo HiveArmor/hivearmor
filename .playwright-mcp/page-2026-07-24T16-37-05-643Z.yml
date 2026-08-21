@@ -1,0 +1,65 @@
+- generic [ref=f19e3]:
+  - banner [ref=f19e4]:
+    - generic [ref=f19e5]: HiveArmor
+    - generic [ref=f19e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f19e13]'
+      - generic "Reconnecting..." [ref=f19e16]: 0 EPS
+      - button "Notifications" [ref=f19e18] [cursor=pointer]
+      - button "Help" [ref=f19e23] [cursor=pointer]
+      - button "User menu" [ref=f19e28] [cursor=pointer]:
+        - generic [ref=f19e29]: AA
+        - generic [ref=f19e30]: admin
+  - navigation [ref=f19e31]:
+    - generic [ref=f19e32]:
+      - generic [ref=f19e33]:
+        - generic [ref=f19e34]: COMMAND
+        - generic [ref=f19e35]:
+          - button "Analyst Queue" [ref=f19e36] [cursor=pointer]
+          - button "Alerts" [ref=f19e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f19e47] [cursor=pointer]
+          - button "Incidents" [ref=f19e54] [cursor=pointer]
+      - generic [ref=f19e61]:
+        - generic [ref=f19e62]: INVESTIGATE
+        - generic [ref=f19e63]:
+          - button "Search & Hunt" [ref=f19e64] [cursor=pointer]
+          - button "Investigations" [ref=f19e70] [cursor=pointer]
+          - button "Entities" [ref=f19e75] [cursor=pointer]
+      - generic [ref=f19e83]:
+        - generic [ref=f19e84]: DEFEND
+        - generic [ref=f19e85]:
+          - button "Detection Rules" [ref=f19e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f19e91] [cursor=pointer]
+      - generic [ref=f19e96]:
+        - generic [ref=f19e97]: POSTURE
+        - generic [ref=f19e98]:
+          - button "Assets" [ref=f19e99] [cursor=pointer]
+          - button "Identities" [ref=f19e105] [cursor=pointer]
+          - button "Active Directory" [ref=f19e113] [cursor=pointer]
+          - button "Exposure" [ref=f19e121] [cursor=pointer]
+          - button "Sensors" [ref=f19e128] [cursor=pointer]
+          - button "Compliance" [ref=f19e133] [cursor=pointer]
+      - generic [ref=f19e139]:
+        - generic [ref=f19e140]: DASHBOARDS
+        - button "Studio" [ref=f19e142] [cursor=pointer]
+      - generic [ref=f19e148]:
+        - generic [ref=f19e149]: REPORT
+        - button "Scheduled Reports" [ref=f19e151] [cursor=pointer]
+      - generic [ref=f19e157]:
+        - generic [ref=f19e158]: ADMINISTRATION
+        - generic [ref=f19e159]:
+          - button "Users" [ref=f19e160] [cursor=pointer]
+          - button "Integrations" [ref=f19e175] [cursor=pointer]
+          - button "Notifications" [ref=f19e180] [cursor=pointer]
+          - button "Audit Log" [ref=f19e186] [cursor=pointer]
+          - button "Settings" [ref=f19e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f19e199] [cursor=pointer]
+  - main [ref=f19e202]:
+    - generic [ref=f19e203]:
+      - generic [ref=f19e205]:
+        - generic [ref=f19e206]:
+          - heading "Detection Rules" [level=1] [ref=f19e207]
+          - generic [ref=f19e208]: "0"
+        - button "Refresh" [ref=f19e210] [cursor=pointer]
+      - generic [ref=f19e219]:
+        - button "Sigma Sync" [ref=f19e220] [cursor=pointer]
+        - button "Create Rule" [ref=f19e227] [cursor=pointer]

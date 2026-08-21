@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivearmor.config.Constants;
 import com.hivearmor.domain.chart_builder.types.query.FilterType;
 import com.hivearmor.domain.chart_builder.types.query.OperatorType;
-import com.hivearmor.domain.index_pattern.enums.SystemIndexPattern;
 import com.hivearmor.domain.shared_types.alert.UtmAlert;
+import com.hivearmor.multitenancy.MsspIndexResolver;
 import com.hivearmor.service.elasticsearch.ElasticsearchService;
 import com.hivearmor.service.elasticsearch.SearchUtil;
 import org.opensearch.client.opensearch.core.SearchRequest;
@@ -54,6 +54,9 @@ public class AlertSseService {
     // Lazy to avoid circular-dependency issues during startup.
     @Autowired @Lazy
     private ElasticsearchService elasticsearchService;
+
+    @Autowired
+    private MsspIndexResolver indexResolver;
 
     // ── Emitter lifecycle ────────────────────────────────────────────────────
 
@@ -110,7 +113,7 @@ public class AlertSseService {
 
             SearchRequest.Builder srb = new SearchRequest.Builder();
             srb.query(SearchUtil.toQuery(filters))
-               .index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS))
+               .index(indexResolver.resolveAlertIndexPattern())
                .size(50);
             SearchUtil.applySort(srb, Sort.by(Sort.Order.asc(Constants.timestamp)));
 

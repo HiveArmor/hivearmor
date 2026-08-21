@@ -1,0 +1,40 @@
+id: e1f2a3b4-c5d6-7890-efab-901234567811
+title: PsExec Remote Execution Detection
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.lateral_movement
+  - attack.T1021
+  - attack.T1021.002
+  - attack.execution
+detection:
+  selection_image:
+    Image|endswith:
+      - '\psexec.exe'
+      - '\psexec64.exe'
+      - '\PsExec.exe'
+  selection_service:
+    ParentCommandLine|contains:
+      - 'PSEXESVC'
+    Image|endswith: '\cmd.exe'
+  selection_pipe:
+    CommandLine|contains: '\psexecsvc'
+  condition: selection_image or selection_service or selection_pipe
+falsepositives:
+  - Authorized IT administrators using PsExec for remote management
+  - Software deployment processes
+impact:
+  confidentiality: high
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - Image
+groupBy:
+  - ComputerName
+mitre:
+  tactic: lateral-movement
+  technique: T1021.002

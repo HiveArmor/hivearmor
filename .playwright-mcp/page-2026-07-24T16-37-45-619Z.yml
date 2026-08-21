@@ -1,0 +1,11 @@
+- generic [ref=f24e2]:
+  - heading "Unexpected Application Error!" [level=2] [ref=f24e3]
+  - heading "Cannot read properties of undefined (reading 'length')" [level=3] [ref=f24e4]
+  - generic [ref=f24e5]: "TypeError: Cannot read properties of undefined (reading 'length') at cellRenderer (http://localhost:3000/src/pages/response/ResponseAuthorityPage.tsx:273:43) at renderWithHooks (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:9632:19) at mountIndeterminateComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:12362:12) at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:13089:41) at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15982:12) at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15568:12) at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15517:36) at renderRootSync (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15500:6) at recoverFromConcurrentError (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15193:21) at performSyncWorkOnRoot (http://localhost:3000/node_modules/.vite/deps/react-dom-DZQ9hRBr.js?v=fbd45312:15304:19)"
+  - paragraph [ref=f24e6]: 💿 Hey developer 👋
+  - paragraph [ref=f24e7]:
+    - text: You can provide a way better UX than this when your app throws errors by providing your own
+    - code [ref=f24e8]: ErrorBoundary
+    - text: or
+    - code [ref=f24e9]: errorElement
+    - text: prop on your route.

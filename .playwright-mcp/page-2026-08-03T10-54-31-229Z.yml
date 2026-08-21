@@ -1,0 +1,112 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e5]:
+      - generic [ref=e6]: HiveArmor
+      - generic [ref=e14]:
+        - button "All authorized tenants" [ref=e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=e24] [cursor=pointer]:
+          - generic [ref=e29]: ⌘ K
+      - generic [ref=e31]:
+        - 'status "Data pipeline: Critical - Bad Gateway" [ref=e212]'
+        - button "Notifications" [ref=e38] [cursor=pointer]
+        - button "Help" [ref=e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=e47]:
+      - generic [ref=e48]:
+        - region "COMMAND" [ref=e49]:
+          - generic [ref=e50]:
+            - button "Mission Control" [ref=e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=e58] [cursor=pointer]
+            - button "Alerts" [ref=e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=e67] [cursor=pointer]
+            - button "Incidents" [ref=e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=e79]:
+          - generic [ref=e80]:
+            - button "Search & Hunt" [ref=e81] [cursor=pointer]
+            - button "Investigations" [ref=e86] [cursor=pointer]
+            - button "Entities" [ref=e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=e97] [cursor=pointer]
+        - region "DEFEND" [ref=e103]:
+          - generic [ref=e104]:
+            - button "Detection Rules" [ref=e105] [cursor=pointer]
+            - button "Playbooks" [ref=e109] [cursor=pointer]
+            - button "Response Library" [ref=e114] [cursor=pointer]
+        - region "POSTURE" [ref=e118]:
+          - generic [ref=e119]:
+            - button "Assets" [ref=e120] [cursor=pointer]
+            - button "Identities" [ref=e125] [cursor=pointer]
+            - button "Active Directory" [ref=e132] [cursor=pointer]
+            - button "Exposure" [ref=e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=e156] [cursor=pointer]
+            - button "Compliance" [ref=e162] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=e167]:
+          - generic [ref=e168]:
+            - button "Endpoints" [ref=e169] [cursor=pointer]
+            - button "File Quarantine" [ref=e173] [cursor=pointer]
+            - button "File Integrity" [ref=e179] [cursor=pointer]
+        - region "DASHBOARDS" [ref=e186]:
+          - button "Studio" [ref=e188] [cursor=pointer]
+        - region "REPORT" [ref=e193]:
+          - button "Scheduled Reports" [ref=e195] [cursor=pointer]
+      - generic [ref=e200]:
+        - button "User menu" [ref=e203] [cursor=pointer]:
+          - generic [ref=e204]: MC
+        - button "Pin sidebar open" [ref=e205] [cursor=pointer]
+    - main [ref=e208]:
+      - generic [ref=e213]:
+        - region "Threat relationship controls" [ref=e288]:
+          - generic [ref=e289]:
+            - button "Relationship filters" [ref=e290] [cursor=pointer]:
+              - generic [ref=e293]: "17"
+            - textbox "Find entity in constellation" [ref=e298]:
+              - /placeholder: Find an entity, IP, process, or domain
+            - generic [ref=e299]:
+              - generic [ref=e300]: Window
+              - combobox "Window" [ref=e301] [cursor=pointer]:
+                - option "Last 1 hour"
+                - option "Last 4 hours"
+                - option "Last 24 hours" [selected]
+                - option "Last 7 days"
+                - option "Last 30 days"
+            - generic [ref=e302]:
+              - generic [ref=e303]: Hops
+              - combobox "Hops" [ref=e304] [cursor=pointer]:
+                - option "1 hop"
+                - option "2 hops" [selected]
+                - option "3 hops"
+            - generic [ref=e305]:
+              - generic [ref=e306]: Risk
+              - combobox "Risk" [ref=e307] [cursor=pointer]:
+                - option "All risk" [selected]
+                - option "40+"
+                - option "60+"
+                - option "80+"
+            - generic "Graph view controls" [ref=e308]:
+              - button "Pause graph layout" [ref=e309] [cursor=pointer]
+              - button "Zoom out" [ref=e313] [cursor=pointer]
+              - button "Zoom in" [ref=e315] [cursor=pointer]
+              - button "Fit graph to view" [ref=e317] [cursor=pointer]
+              - button "Exit full graph view" [active] [pressed] [ref=e717] [cursor=pointer]
+              - button "Reset relationship workspace" [ref=e327] [cursor=pointer]
+        - main [ref=e331]:
+          - region "Threat relationship visualization" [ref=e532]:
+            - generic:
+              - generic: Internal
+              - generic: External
+              - generic: Critical risk
+              - generic: High risk
+              - generic: Node size = alert volume
+            - generic "Threat relationship graph workspace" [ref=e533]:
+              - img "Threat constellation relationship graph" [ref=e534]
+        - generic [ref=e538]:
+          - generic [ref=e539]:
+            - generic [ref=e540]:
+              - generic [ref=e542]: Connected
+              - generic [ref=e543]: •
+              - generic [ref=e545]: Live
+            - generic [ref=e546]: 12840 eps
+          - generic: Snapshot 16:22:42 · Projection stable
+  - generic:
+    - list "Notifications"

@@ -1,0 +1,73 @@
+- generic [ref=f22e3]:
+  - banner [ref=f22e4]:
+    - generic [ref=f22e5]: HiveArmor
+    - generic [ref=f22e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f22e13]'
+      - generic "Reconnecting..." [ref=f22e16]: 0 EPS
+      - button "Notifications" [ref=f22e18] [cursor=pointer]
+      - button "Help" [ref=f22e23] [cursor=pointer]
+      - button "User menu" [ref=f22e28] [cursor=pointer]:
+        - generic [ref=f22e29]: AA
+        - generic [ref=f22e30]: admin
+  - navigation [ref=f22e31]:
+    - generic [ref=f22e32]:
+      - generic [ref=f22e33]:
+        - generic [ref=f22e34]: COMMAND
+        - generic [ref=f22e35]:
+          - button "Analyst Queue" [ref=f22e36] [cursor=pointer]
+          - button "Alerts" [ref=f22e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f22e47] [cursor=pointer]
+          - button "Incidents" [ref=f22e54] [cursor=pointer]
+      - generic [ref=f22e61]:
+        - generic [ref=f22e62]: INVESTIGATE
+        - generic [ref=f22e63]:
+          - button "Search & Hunt" [ref=f22e64] [cursor=pointer]
+          - button "Investigations" [ref=f22e70] [cursor=pointer]
+          - button "Entities" [ref=f22e75] [cursor=pointer]
+      - generic [ref=f22e83]:
+        - generic [ref=f22e84]: DEFEND
+        - generic [ref=f22e85]:
+          - button "Detection Rules" [ref=f22e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f22e91] [cursor=pointer]
+      - generic [ref=f22e96]:
+        - generic [ref=f22e97]: POSTURE
+        - generic [ref=f22e98]:
+          - button "Assets" [ref=f22e99] [cursor=pointer]
+          - button "Identities" [ref=f22e105] [cursor=pointer]
+          - button "Active Directory" [ref=f22e113] [cursor=pointer]
+          - button "Exposure" [ref=f22e121] [cursor=pointer]
+          - button "Sensors" [ref=f22e128] [cursor=pointer]
+          - button "Compliance" [ref=f22e133] [cursor=pointer]
+      - generic [ref=f22e139]:
+        - generic [ref=f22e140]: DASHBOARDS
+        - button "Studio" [ref=f22e142] [cursor=pointer]
+      - generic [ref=f22e148]:
+        - generic [ref=f22e149]: REPORT
+        - button "Scheduled Reports" [ref=f22e151] [cursor=pointer]
+      - generic [ref=f22e157]:
+        - generic [ref=f22e158]: ADMINISTRATION
+        - generic [ref=f22e159]:
+          - button "Users" [ref=f22e160] [cursor=pointer]
+          - button "Integrations" [ref=f22e175] [cursor=pointer]
+          - button "Notifications" [ref=f22e180] [cursor=pointer]
+          - button "Audit Log" [ref=f22e186] [cursor=pointer]
+          - button "Settings" [ref=f22e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f22e199] [cursor=pointer]
+  - main [ref=f22e202]:
+    - generic [ref=f22e203]:
+      - generic [ref=f22e204]:
+        - 'heading "Warning alert: Playbook Execution Blocked" [level=4] [ref=f22e208]':
+          - generic [ref=f22e209]: "Warning alert:"
+          - text: Playbook Execution Blocked
+        - generic [ref=f22e210]: Automated playbook execution ("Run Now") is disabled pending a security remediation in the HiveArmor backend (GAP-SEC-08). Playbook management (view, create, edit, delete) is available. Contact your administrator for status on this remediation.
+      - generic [ref=f22e212]:
+        - generic [ref=f22e213]:
+          - heading "Response Playbooks" [level=1] [ref=f22e214]
+          - text: —
+        - button "New Playbook" [ref=f22e216] [cursor=pointer]
+      - group "Status filter" [ref=f22e219]:
+        - button "All" [pressed] [ref=f22e221] [cursor=pointer]
+        - button "Active" [ref=f22e224] [cursor=pointer]
+        - button "Inactive" [ref=f22e227] [cursor=pointer]
+        - button "Draft" [ref=f22e230] [cursor=pointer]
+      - generic [ref=f22e232]: Loading playbooks...

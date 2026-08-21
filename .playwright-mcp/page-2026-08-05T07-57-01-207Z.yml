@@ -1,0 +1,985 @@
+- generic [ref=f53e1]:
+  - generic [ref=f53e5]:
+    - link "Skip to main content" [ref=f53e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f53e7]:
+      - generic [ref=f53e8]:
+        - generic [ref=f53e14]: HiveArmor
+        - generic [ref=f53e15]: Security operations
+      - generic [ref=f53e16]:
+        - generic [ref=f53e17]:
+          - button "All authorized tenants" [expanded] [ref=f53e18] [cursor=pointer]
+          - menu "Tenant scope" [ref=f53e1640]:
+            - textbox "Search tenants" [active] [ref=f53e1645]:
+              - /placeholder: Search tenants…
+            - generic [ref=f53e1646]: Select tenant scope
+            - generic [ref=f53e1647]:
+              - menuitemradio "All authorized tenants View events across all tenants you have access to" [checked] [ref=f53e1648] [cursor=pointer]:
+                - generic [ref=f53e1649]:
+                  - strong [ref=f53e1650]: All authorized tenants
+                  - generic [ref=f53e1651]: View events across all tenants you have access to
+              - menuitemradio "Workmates1 Primary workspace · EDR + Log collection" [ref=f53e1654] [cursor=pointer]:
+                - generic [ref=f53e1655]:
+                  - strong [ref=f53e1656]: Workmates1
+                  - generic [ref=f53e1657]: Primary workspace · EDR + Log collection
+              - menuitemradio "CWM Cloud Workload Management · Cloud + Network" [ref=f53e1658] [cursor=pointer]:
+                - generic [ref=f53e1659]:
+                  - strong [ref=f53e1660]: CWM
+                  - generic [ref=f53e1661]: Cloud Workload Management · Cloud + Network
+              - menuitemradio "Workmates2 Secondary workspace · Endpoint monitoring" [ref=f53e1662] [cursor=pointer]:
+                - generic [ref=f53e1663]:
+                  - strong [ref=f53e1664]: Workmates2
+                  - generic [ref=f53e1665]: Secondary workspace · Endpoint monitoring
+        - button "Search alerts, incidents, entities…" [ref=f53e26] [cursor=pointer]:
+          - generic [ref=f53e31]: ⌘ K
+        - generic [ref=f53e32]: Production
+      - generic [ref=f53e33]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=f53e34]'
+        - status "Live events per second" [ref=f53e37]:
+          - generic [ref=f53e39]: 0 EPS
+        - button "Notifications" [ref=f53e40] [cursor=pointer]
+        - button "Help" [ref=f53e45] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f53e49]:
+      - generic [ref=f53e50]:
+        - region "COMMAND" [ref=f53e51]:
+          - generic [ref=f53e52]:
+            - button "Mission Control" [ref=f53e53] [cursor=pointer]
+            - button "Analyst Queue" [ref=f53e60] [cursor=pointer]
+            - button "Alerts" [ref=f53e64] [cursor=pointer]
+            - button "Correlated Findings" [ref=f53e69] [cursor=pointer]
+            - button "Incidents" [ref=f53e75] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f53e81]:
+          - generic [ref=f53e82]:
+            - button "Search & Hunt" [ref=f53e83] [cursor=pointer]
+            - button "Investigations" [ref=f53e88] [cursor=pointer]
+            - button "Entities" [ref=f53e92] [cursor=pointer]
+            - button "Threat Constellation" [ref=f53e99] [cursor=pointer]
+        - region "DEFEND" [ref=f53e105]:
+          - generic [ref=f53e106]:
+            - button "Detection Rules" [ref=f53e107] [cursor=pointer]
+            - button "Playbooks" [ref=f53e111] [cursor=pointer]
+            - button "Response Library" [ref=f53e116] [cursor=pointer]
+        - region "POSTURE" [ref=f53e120]:
+          - generic [ref=f53e121]:
+            - button "Assets" [ref=f53e122] [cursor=pointer]
+            - button "Identities" [ref=f53e127] [cursor=pointer]
+            - button "Active Directory" [ref=f53e134] [cursor=pointer]
+            - button "Exposure" [ref=f53e141] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f53e147] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f53e158] [cursor=pointer]
+            - button "Sensors" [ref=f53e164] [cursor=pointer]
+            - button "Compliance" [ref=f53e168] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f53e173]:
+          - generic [ref=f53e174]:
+            - button "Endpoints" [ref=f53e175] [cursor=pointer]
+            - button "File Quarantine" [ref=f53e179] [cursor=pointer]
+            - button "File Integrity" [ref=f53e185] [cursor=pointer]
+            - button "Agent Policies" [ref=f53e192] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f53e197]:
+          - button "Studio" [ref=f53e199] [cursor=pointer]
+        - region "REPORT" [ref=f53e204]:
+          - button "Scheduled Reports" [ref=f53e206] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f53e211]:
+          - generic [ref=f53e212]:
+            - button "Users" [ref=f53e213] [cursor=pointer]
+            - button "Integrations" [ref=f53e227] [cursor=pointer]
+            - button "Notifications" [ref=f53e231] [cursor=pointer]
+            - button "Audit Log" [ref=f53e236] [cursor=pointer]
+            - button "Settings" [ref=f53e241] [cursor=pointer]
+      - generic [ref=f53e246]:
+        - button "User menu" [ref=f53e249] [cursor=pointer]:
+          - generic [ref=f53e250]: AA
+        - button "Pin sidebar open" [ref=f53e251] [cursor=pointer]
+    - main [ref=f53e254]:
+      - generic [ref=f53e255]:
+        - generic [ref=f53e256]:
+          - generic [ref=f53e264]:
+            - generic [ref=f53e265]: Detection operations
+            - heading "Alerts" [level=1] [ref=f53e266]
+          - generic [ref=f53e267]:
+            - generic [ref=f53e270]:
+              - strong [ref=f53e271]: Live intake
+              - generic [ref=f53e272]: Rows updated 13:26
+            - link "Severity board" [ref=f53e273] [cursor=pointer]:
+              - /url: /alerts/board
+            - generic [ref=f53e278]:
+              - button "Live" [ref=f53e279] [cursor=pointer]
+              - button "Historical" [ref=f53e282] [cursor=pointer]
+        - generic "Alert queue controls and priority summary" [ref=f53e284]:
+          - region "Alert priority snapshot" [ref=f53e285]:
+            - 'button "Current scope: 37. matching alerts" [ref=f53e286] [cursor=pointer]':
+              - generic [ref=f53e289]:
+                - generic [ref=f53e290]: Current scope
+                - strong [ref=f53e291]: "37"
+                - emphasis [ref=f53e292]: matching alerts
+            - 'button "Critical open: 0. needs immediate review" [ref=f53e295] [cursor=pointer]':
+              - generic [ref=f53e299]:
+                - generic [ref=f53e300]: Critical open
+                - strong [ref=f53e301]: "0"
+                - emphasis [ref=f53e302]: needs immediate review
+            - 'button "SLA pressure: 0. at risk or breached" [ref=f53e305] [cursor=pointer]':
+              - generic [ref=f53e310]:
+                - generic [ref=f53e311]: SLA pressure
+                - strong [ref=f53e312]: "0"
+                - emphasis [ref=f53e313]: at risk or breached
+            - 'button "Unassigned: 37. without an owner" [ref=f53e316] [cursor=pointer]':
+              - generic [ref=f53e321]:
+                - generic [ref=f53e322]: Unassigned
+                - strong [ref=f53e323]: "37"
+                - emphasis [ref=f53e324]: without an owner
+            - 'button "Intel matches: 0. enriched indicators" [ref=f53e327] [cursor=pointer]':
+              - generic [ref=f53e331]:
+                - generic [ref=f53e332]: Intel matches
+                - strong [ref=f53e333]: "0"
+                - emphasis [ref=f53e334]: enriched indicators
+          - navigation "Alert queue views" [ref=f53e337]:
+            - strong [ref=f53e340]: Views
+            - generic [ref=f53e341]:
+              - button [ref=f53e342] [cursor=pointer]:
+                - strong [ref=f53e344]: Needs triage
+              - button [ref=f53e345] [cursor=pointer]:
+                - strong [ref=f53e347]: My priority
+              - button [ref=f53e348] [cursor=pointer]:
+                - strong [ref=f53e350]: Critical
+                - emphasis [ref=f53e351]: "0"
+              - button [ref=f53e352] [cursor=pointer]:
+                - strong [ref=f53e354]: SLA risk
+                - emphasis [ref=f53e355]: "0"
+              - button [ref=f53e356] [cursor=pointer]:
+                - strong [ref=f53e358]: Unassigned
+                - emphasis [ref=f53e359]: "37"
+              - button [ref=f53e360] [cursor=pointer]:
+                - strong [ref=f53e362]: Intel matches
+                - emphasis [ref=f53e363]: "0"
+              - button [ref=f53e364] [cursor=pointer]:
+                - strong [ref=f53e366]: All alerts
+            - 'generic "Keyboard triage shortcuts: J and K navigate, Space selects, A assigns, C classifies" [ref=f53e367]': J/K
+          - generic [ref=f53e371]:
+            - generic [ref=f53e372]:
+              - combobox "Alert query" [ref=f53e376]
+              - generic [ref=f53e377]: ⇧ F
+              - button "Run" [ref=f53e378] [cursor=pointer]
+            - generic [ref=f53e379]: Use field colon value conditions joined by AND or OR. Arrow keys select autocomplete suggestions. Press Enter to run.
+            - generic [ref=f53e380]:
+              - button "Add filter" [ref=f53e382] [cursor=pointer]
+              - button "Time range selector" [disabled] [ref=f53e385]:
+                - generic [ref=f53e388]: Last 24 hours
+              - button "Select columns" [ref=f53e392] [cursor=pointer]: Fields
+              - generic "Row density" [ref=f53e395]:
+                - button "compact row density" [ref=f53e396] [cursor=pointer]
+                - button "standard row density" [ref=f53e399] [cursor=pointer]
+                - button "comfortable row density" [ref=f53e402] [cursor=pointer]
+              - button "Refresh alert queue" [ref=f53e405] [cursor=pointer]
+          - generic "Active alert filters" [ref=f53e411]:
+            - generic [ref=f53e414]:
+              - strong [ref=f53e415]: Status
+              - text: active
+              - button "Remove Status filter" [ref=f53e416] [cursor=pointer]
+            - button "Clear filters" [ref=f53e420] [cursor=pointer]
+          - generic [ref=f53e421]:
+            - generic [ref=f53e422]:
+              - strong [ref=f53e423]: "37"
+              - generic [ref=f53e424]: matching alerts
+              - generic [ref=f53e426]:
+                - text: snapshot
+                - time [ref=f53e427]: 13:26
+            - generic [ref=f53e428]:
+              - generic [ref=f53e429]: Virtual queue · 100-row blocks
+              - generic [ref=f53e430]: ·Double-click opens investigation
+        - generic "Alert triage queue" [ref=f53e435]:
+          - generic [ref=f53e439]:
+            - grid [ref=f53e441]:
+              - rowgroup [ref=f53e442]:
+                - row [ref=f53e443]:
+                  - columnheader [ref=f53e444]:
+                    - text: 
+                    - generic: 
+                  - columnheader "Severity" [ref=f53e445]:
+                    - text: 
+                    - generic:      
+                  - columnheader "Detected" [ref=f53e448]:
+                    - text: 
+                    - generic [ref=f53e451] [cursor=pointer]:
+                      - text: 
+                      - generic [ref=f53e452]: 
+                      - text:    
+                  - columnheader "Risk" [ref=f53e453]:
+                    - text: 
+                    - generic:      
+                  - columnheader "Alert reason" [ref=f53e456]:
+                    - text: 
+                    - generic:      
+                  - columnheader "Primary entity" [ref=f53e459]:
+                    - text: 
+                    - generic: 
+                  - columnheader "Status" [ref=f53e462]:
+                    - text: 
+                    - generic:      
+                  - columnheader "Owner" [ref=f53e465]:
+                    - text: 
+                    - generic:      
+                  - columnheader "SLA" [ref=f53e468]:
+                    - text: 
+                    - generic:      
+                  - columnheader "ATT&CK" [ref=f53e471]:
+                    - text: 
+                    - generic:      
+                  - columnheader "Tenant" [ref=f53e474]:
+                    - text: 
+                    - generic:      
+                  - columnheader "Actions" [ref=f53e477]:
+                    - text: 
+                    - generic: 
+                - row [ref=f53e479]:
+                  - gridcell [ref=f53e480]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e481] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e482]:
+                    - 'generic "Severity: Low" [ref=f53e483]':
+                      - strong [ref=f53e485]: Low
+                  - gridcell "39m ago 12:47" [ref=f53e486]:
+                    - generic "05/08/2026, 12:47:10" [ref=f53e487]:
+                      - strong [ref=f53e488]: 39m ago
+                      - generic [ref=f53e489]: 12:47
+                  - gridcell "—" [ref=f53e490]
+                  - gridcell "Brute force detected 2VTJ0J8BxaxMk94eb2ja Credential Access" [ref=f53e492]:
+                    - generic "Brute force detected" [ref=f53e493]:
+                      - strong [ref=f53e494]: Brute force detected
+                      - generic [ref=f53e495]:
+                        - generic [ref=f53e496]: 2VTJ0J8BxaxMk94eb2ja
+                        - generic [ref=f53e497]: ·
+                        - generic [ref=f53e498]: Credential Access
+                  - gridcell "Unavailable" [ref=f53e499]
+                  - gridcell "Open" [ref=f53e501]
+                  - gridcell "Unassigned" [ref=f53e503]
+                  - gridcell "—" [ref=f53e505]
+                  - gridcell "—" [ref=f53e507]
+                  - gridcell [ref=f53e509]
+                  - gridcell [ref=f53e510]:
+                    - group "Quick actions for Brute force detected" [ref=f53e511]:
+                      - button "Change status for Brute force detected" [ref=f53e512] [cursor=pointer]
+                      - button "Add analyst note for Brute force detected" [ref=f53e516] [cursor=pointer]
+                      - button "Apply tags for Brute force detected" [ref=f53e520] [cursor=pointer]
+                      - button "Add to or create incident for Brute force detected" [ref=f53e524] [cursor=pointer]
+                - row [ref=f53e527]:
+                  - gridcell [ref=f53e528]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e529] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e530]:
+                    - 'generic "Severity: Low" [ref=f53e531]':
+                      - strong [ref=f53e533]: Low
+                  - gridcell "42m ago 12:44" [ref=f53e534]:
+                    - generic "05/08/2026, 12:44:22" [ref=f53e535]:
+                      - strong [ref=f53e536]: 42m ago
+                      - generic [ref=f53e537]: 12:44
+                  - gridcell "—" [ref=f53e538]
+                  - gridcell "Data exfiltration risk O1TJ0J8BxaxMk94ebWhn Exfiltration" [ref=f53e540]:
+                    - generic "Data exfiltration risk" [ref=f53e541]:
+                      - strong [ref=f53e542]: Data exfiltration risk
+                      - generic [ref=f53e543]:
+                        - generic [ref=f53e544]: O1TJ0J8BxaxMk94ebWhn
+                        - generic [ref=f53e545]: ·
+                        - generic [ref=f53e546]: Exfiltration
+                  - gridcell "Unavailable" [ref=f53e547]
+                  - gridcell "Open" [ref=f53e549]
+                  - gridcell "Unassigned" [ref=f53e551]
+                  - gridcell "—" [ref=f53e553]
+                  - gridcell "—" [ref=f53e555]
+                  - gridcell [ref=f53e557]
+                  - gridcell [ref=f53e558]:
+                    - group "Quick actions for Data exfiltration risk" [ref=f53e559]:
+                      - button "Change status for Data exfiltration risk" [ref=f53e560] [cursor=pointer]
+                      - button "Add analyst note for Data exfiltration risk" [ref=f53e564] [cursor=pointer]
+                      - button "Apply tags for Data exfiltration risk" [ref=f53e568] [cursor=pointer]
+                      - button "Add to or create incident for Data exfiltration risk" [ref=f53e572] [cursor=pointer]
+                - row [ref=f53e575]:
+                  - gridcell [ref=f53e576]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e577] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e578]:
+                    - 'generic "Severity: Low" [ref=f53e579]':
+                      - strong [ref=f53e581]: Low
+                  - gridcell "44m ago 12:42" [ref=f53e582]:
+                    - generic "05/08/2026, 12:42:28" [ref=f53e583]:
+                      - strong [ref=f53e584]: 44m ago
+                      - generic [ref=f53e585]: 12:42
+                  - gridcell "—" [ref=f53e586]
+                  - gridcell "Brute force detected OVTJ0J8BxaxMk94ebWhn Credential Access" [ref=f53e588]:
+                    - generic "Brute force detected" [ref=f53e589]:
+                      - strong [ref=f53e590]: Brute force detected
+                      - generic [ref=f53e591]:
+                        - generic [ref=f53e592]: OVTJ0J8BxaxMk94ebWhn
+                        - generic [ref=f53e593]: ·
+                        - generic [ref=f53e594]: Credential Access
+                  - gridcell "Unavailable" [ref=f53e595]
+                  - gridcell "Open" [ref=f53e597]
+                  - gridcell "Unassigned" [ref=f53e599]
+                  - gridcell "—" [ref=f53e601]
+                  - gridcell "—" [ref=f53e603]
+                  - gridcell [ref=f53e605]
+                  - gridcell [ref=f53e606]:
+                    - group "Quick actions for Brute force detected" [ref=f53e607]:
+                      - button "Change status for Brute force detected" [ref=f53e608] [cursor=pointer]
+                      - button "Add analyst note for Brute force detected" [ref=f53e612] [cursor=pointer]
+                      - button "Apply tags for Brute force detected" [ref=f53e616] [cursor=pointer]
+                      - button "Add to or create incident for Brute force detected" [ref=f53e620] [cursor=pointer]
+                - row [ref=f53e623]:
+                  - gridcell [ref=f53e624]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e625] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e626]:
+                    - 'generic "Severity: Medium" [ref=f53e627]':
+                      - strong [ref=f53e629]: Medium
+                  - gridcell "49m ago 12:37" [ref=f53e630]:
+                    - generic "05/08/2026, 12:37:04" [ref=f53e631]:
+                      - strong [ref=f53e632]: 49m ago
+                      - generic [ref=f53e633]: 12:37
+                  - gridcell "—" [ref=f53e634]
+                  - gridcell "Suspicious process execution 21TJ0J8BxaxMk94eb2ja Execution" [ref=f53e636]:
+                    - generic "Suspicious process execution" [ref=f53e637]:
+                      - strong [ref=f53e638]: Suspicious process execution
+                      - generic [ref=f53e639]:
+                        - generic [ref=f53e640]: 21TJ0J8BxaxMk94eb2ja
+                        - generic [ref=f53e641]: ·
+                        - generic [ref=f53e642]: Execution
+                  - gridcell "Unavailable" [ref=f53e643]
+                  - gridcell "Open" [ref=f53e645]
+                  - gridcell "Unassigned" [ref=f53e647]
+                  - gridcell "—" [ref=f53e649]
+                  - gridcell "—" [ref=f53e651]
+                  - gridcell [ref=f53e653]
+                  - gridcell [ref=f53e654]:
+                    - group "Quick actions for Suspicious process execution" [ref=f53e655]:
+                      - button "Change status for Suspicious process execution" [ref=f53e656] [cursor=pointer]
+                      - button "Add analyst note for Suspicious process execution" [ref=f53e660] [cursor=pointer]
+                      - button "Apply tags for Suspicious process execution" [ref=f53e664] [cursor=pointer]
+                      - button "Add to or create incident for Suspicious process execution" [ref=f53e668] [cursor=pointer]
+                - row [ref=f53e671]:
+                  - gridcell [ref=f53e672]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e673] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e674]:
+                    - 'generic "Severity: Low" [ref=f53e675]':
+                      - strong [ref=f53e677]: Low
+                  - gridcell "55m ago 12:31" [ref=f53e678]:
+                    - generic "05/08/2026, 12:31:38" [ref=f53e679]:
+                      - strong [ref=f53e680]: 55m ago
+                      - generic [ref=f53e681]: 12:31
+                  - gridcell "—" [ref=f53e682]
+                  - gridcell "Suspicious process execution MFTJ0J8BxaxMk94ebWhn Execution" [ref=f53e684]:
+                    - generic "Suspicious process execution" [ref=f53e685]:
+                      - strong [ref=f53e686]: Suspicious process execution
+                      - generic [ref=f53e687]:
+                        - generic [ref=f53e688]: MFTJ0J8BxaxMk94ebWhn
+                        - generic [ref=f53e689]: ·
+                        - generic [ref=f53e690]: Execution
+                  - gridcell "Unavailable" [ref=f53e691]
+                  - gridcell "Open" [ref=f53e693]
+                  - gridcell "Unassigned" [ref=f53e695]
+                  - gridcell "—" [ref=f53e697]
+                  - gridcell "—" [ref=f53e699]
+                  - gridcell [ref=f53e701]
+                  - gridcell [ref=f53e702]:
+                    - group "Quick actions for Suspicious process execution" [ref=f53e703]:
+                      - button "Change status for Suspicious process execution" [ref=f53e704] [cursor=pointer]
+                      - button "Add analyst note for Suspicious process execution" [ref=f53e708] [cursor=pointer]
+                      - button "Apply tags for Suspicious process execution" [ref=f53e712] [cursor=pointer]
+                      - button "Add to or create incident for Suspicious process execution" [ref=f53e716] [cursor=pointer]
+                - row [ref=f53e719]:
+                  - gridcell [ref=f53e720]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e721] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e722]:
+                    - 'generic "Severity: Low" [ref=f53e723]':
+                      - strong [ref=f53e725]: Low
+                  - gridcell "57m ago 12:29" [ref=f53e726]:
+                    - generic "05/08/2026, 12:29:06" [ref=f53e727]:
+                      - strong [ref=f53e728]: 57m ago
+                      - generic [ref=f53e729]: 12:29
+                  - gridcell "—" [ref=f53e730]
+                  - gridcell "C2 communication detected i1TJ0J8BxaxMk94ebmij Command and Control" [ref=f53e732]:
+                    - generic "C2 communication detected" [ref=f53e733]:
+                      - strong [ref=f53e734]: C2 communication detected
+                      - generic [ref=f53e735]:
+                        - generic [ref=f53e736]: i1TJ0J8BxaxMk94ebmij
+                        - generic [ref=f53e737]: ·
+                        - generic [ref=f53e738]: Command and Control
+                  - gridcell "Unavailable" [ref=f53e739]
+                  - gridcell "Open" [ref=f53e741]
+                  - gridcell "Unassigned" [ref=f53e743]
+                  - gridcell "—" [ref=f53e745]
+                  - gridcell "—" [ref=f53e747]
+                  - gridcell [ref=f53e749]
+                  - gridcell [ref=f53e750]:
+                    - group "Quick actions for C2 communication detected" [ref=f53e751]:
+                      - button "Change status for C2 communication detected" [ref=f53e752] [cursor=pointer]
+                      - button "Add analyst note for C2 communication detected" [ref=f53e756] [cursor=pointer]
+                      - button "Apply tags for C2 communication detected" [ref=f53e760] [cursor=pointer]
+                      - button "Add to or create incident for C2 communication detected" [ref=f53e764] [cursor=pointer]
+                - row [ref=f53e767]:
+                  - gridcell [ref=f53e768]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e769] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e770]:
+                    - 'generic "Severity: Low" [ref=f53e771]':
+                      - strong [ref=f53e773]: Low
+                  - gridcell "1h ago 12:22" [ref=f53e774]:
+                    - generic "05/08/2026, 12:22:18" [ref=f53e775]:
+                      - strong [ref=f53e776]: 1h ago
+                      - generic [ref=f53e777]: 12:22
+                  - gridcell "—" [ref=f53e778]
+                  - gridcell "Suspicious process execution MVTJ0J8BxaxMk94ebWhn Execution" [ref=f53e780]:
+                    - generic "Suspicious process execution" [ref=f53e781]:
+                      - strong [ref=f53e782]: Suspicious process execution
+                      - generic [ref=f53e783]:
+                        - generic [ref=f53e784]: MVTJ0J8BxaxMk94ebWhn
+                        - generic [ref=f53e785]: ·
+                        - generic [ref=f53e786]: Execution
+                  - gridcell "Unavailable" [ref=f53e787]
+                  - gridcell "Open" [ref=f53e789]
+                  - gridcell "Unassigned" [ref=f53e791]
+                  - gridcell "—" [ref=f53e793]
+                  - gridcell "—" [ref=f53e795]
+                  - gridcell [ref=f53e797]
+                  - gridcell [ref=f53e798]:
+                    - group "Quick actions for Suspicious process execution" [ref=f53e799]:
+                      - button "Change status for Suspicious process execution" [ref=f53e800] [cursor=pointer]
+                      - button "Add analyst note for Suspicious process execution" [ref=f53e804] [cursor=pointer]
+                      - button "Apply tags for Suspicious process execution" [ref=f53e808] [cursor=pointer]
+                      - button "Add to or create incident for Suspicious process execution" [ref=f53e812] [cursor=pointer]
+                - row [ref=f53e815]:
+                  - gridcell [ref=f53e816]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e817] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e818]:
+                    - 'generic "Severity: Medium" [ref=f53e819]':
+                      - strong [ref=f53e821]: Medium
+                  - gridcell "1h ago 12:20" [ref=f53e822]:
+                    - generic "05/08/2026, 12:20:56" [ref=f53e823]:
+                      - strong [ref=f53e824]: 1h ago
+                      - generic [ref=f53e825]: 12:20
+                  - gridcell "—" [ref=f53e826]
+                  - gridcell "Privilege escalation NFTJ0J8BxaxMk94ebWhn Privilege Escalation" [ref=f53e828]:
+                    - generic "Privilege escalation" [ref=f53e829]:
+                      - strong [ref=f53e830]: Privilege escalation
+                      - generic [ref=f53e831]:
+                        - generic [ref=f53e832]: NFTJ0J8BxaxMk94ebWhn
+                        - generic [ref=f53e833]: ·
+                        - generic [ref=f53e834]: Privilege Escalation
+                  - gridcell "Unavailable" [ref=f53e835]
+                  - gridcell "Open" [ref=f53e837]
+                  - gridcell "Unassigned" [ref=f53e839]
+                  - gridcell "—" [ref=f53e841]
+                  - gridcell "—" [ref=f53e843]
+                  - gridcell [ref=f53e845]
+                  - gridcell [ref=f53e846]:
+                    - group "Quick actions for Privilege escalation" [ref=f53e847]:
+                      - button "Change status for Privilege escalation" [ref=f53e848] [cursor=pointer]
+                      - button "Add analyst note for Privilege escalation" [ref=f53e852] [cursor=pointer]
+                      - button "Apply tags for Privilege escalation" [ref=f53e856] [cursor=pointer]
+                      - button "Add to or create incident for Privilege escalation" [ref=f53e860] [cursor=pointer]
+                - row [ref=f53e863]:
+                  - gridcell [ref=f53e864]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e865] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e866]:
+                    - 'generic "Severity: Low" [ref=f53e867]':
+                      - strong [ref=f53e869]: Low
+                  - gridcell "1h ago 12:19" [ref=f53e870]:
+                    - generic "05/08/2026, 12:19:39" [ref=f53e871]:
+                      - strong [ref=f53e872]: 1h ago
+                      - generic [ref=f53e873]: 12:19
+                  - gridcell "—" [ref=f53e874]
+                  - gridcell "Suspicious process execution PFTJ0J8BxaxMk94ebWhn Execution" [ref=f53e876]:
+                    - generic "Suspicious process execution" [ref=f53e877]:
+                      - strong [ref=f53e878]: Suspicious process execution
+                      - generic [ref=f53e879]:
+                        - generic [ref=f53e880]: PFTJ0J8BxaxMk94ebWhn
+                        - generic [ref=f53e881]: ·
+                        - generic [ref=f53e882]: Execution
+                  - gridcell "Unavailable" [ref=f53e883]
+                  - gridcell "Open" [ref=f53e885]
+                  - gridcell "Unassigned" [ref=f53e887]
+                  - gridcell "—" [ref=f53e889]
+                  - gridcell "—" [ref=f53e891]
+                  - gridcell [ref=f53e893]
+                  - gridcell [ref=f53e894]:
+                    - group "Quick actions for Suspicious process execution" [ref=f53e895]:
+                      - button "Change status for Suspicious process execution" [ref=f53e896] [cursor=pointer]
+                      - button "Add analyst note for Suspicious process execution" [ref=f53e900] [cursor=pointer]
+                      - button "Apply tags for Suspicious process execution" [ref=f53e904] [cursor=pointer]
+                      - button "Add to or create incident for Suspicious process execution" [ref=f53e908] [cursor=pointer]
+                - row [ref=f53e911]:
+                  - gridcell [ref=f53e912]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e913] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e914]:
+                    - 'generic "Severity: Medium" [ref=f53e915]':
+                      - strong [ref=f53e917]: Medium
+                  - gridcell "1h ago 12:17" [ref=f53e918]:
+                    - generic "05/08/2026, 12:17:44" [ref=f53e919]:
+                      - strong [ref=f53e920]: 1h ago
+                      - generic [ref=f53e921]: 12:17
+                  - gridcell "—" [ref=f53e922]
+                  - gridcell "Suspicious process execution jFTJ0J8BxaxMk94ebmij Execution" [ref=f53e924]:
+                    - generic "Suspicious process execution" [ref=f53e925]:
+                      - strong [ref=f53e926]: Suspicious process execution
+                      - generic [ref=f53e927]:
+                        - generic [ref=f53e928]: jFTJ0J8BxaxMk94ebmij
+                        - generic [ref=f53e929]: ·
+                        - generic [ref=f53e930]: Execution
+                  - gridcell "Unavailable" [ref=f53e931]
+                  - gridcell "Open" [ref=f53e933]
+                  - gridcell "Unassigned" [ref=f53e935]
+                  - gridcell "—" [ref=f53e937]
+                  - gridcell "—" [ref=f53e939]
+                  - gridcell [ref=f53e941]
+                  - gridcell [ref=f53e942]:
+                    - group "Quick actions for Suspicious process execution" [ref=f53e943]:
+                      - button "Change status for Suspicious process execution" [ref=f53e944] [cursor=pointer]
+                      - button "Add analyst note for Suspicious process execution" [ref=f53e948] [cursor=pointer]
+                      - button "Apply tags for Suspicious process execution" [ref=f53e952] [cursor=pointer]
+                      - button "Add to or create incident for Suspicious process execution" [ref=f53e956] [cursor=pointer]
+                - row [ref=f53e959]:
+                  - gridcell [ref=f53e960]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e961] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e962]:
+                    - 'generic "Severity: Medium" [ref=f53e963]':
+                      - strong [ref=f53e965]: Medium
+                  - gridcell "1h ago 12:13" [ref=f53e966]:
+                    - generic "05/08/2026, 12:13:22" [ref=f53e967]:
+                      - strong [ref=f53e968]: 1h ago
+                      - generic [ref=f53e969]: 12:13
+                  - gridcell "—" [ref=f53e970]
+                  - gridcell "Lateral movement attempt OFTJ0J8BxaxMk94ebWhn Lateral Movement" [ref=f53e972]:
+                    - generic "Lateral movement attempt" [ref=f53e973]:
+                      - strong [ref=f53e974]: Lateral movement attempt
+                      - generic [ref=f53e975]:
+                        - generic [ref=f53e976]: OFTJ0J8BxaxMk94ebWhn
+                        - generic [ref=f53e977]: ·
+                        - generic [ref=f53e978]: Lateral Movement
+                  - gridcell "Unavailable" [ref=f53e979]
+                  - gridcell "Open" [ref=f53e981]
+                  - gridcell "Unassigned" [ref=f53e983]
+                  - gridcell "—" [ref=f53e985]
+                  - gridcell "—" [ref=f53e987]
+                  - gridcell [ref=f53e989]
+                  - gridcell [ref=f53e990]:
+                    - group "Quick actions for Lateral movement attempt" [ref=f53e991]:
+                      - button "Change status for Lateral movement attempt" [ref=f53e992] [cursor=pointer]
+                      - button "Add analyst note for Lateral movement attempt" [ref=f53e996] [cursor=pointer]
+                      - button "Apply tags for Lateral movement attempt" [ref=f53e1000] [cursor=pointer]
+                      - button "Add to or create incident for Lateral movement attempt" [ref=f53e1004] [cursor=pointer]
+                - row [ref=f53e1007]:
+                  - gridcell [ref=f53e1008]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1009] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1010]:
+                    - 'generic "Severity: Low" [ref=f53e1011]':
+                      - strong [ref=f53e1013]: Low
+                  - gridcell "1h ago 12:10" [ref=f53e1014]:
+                    - generic "05/08/2026, 12:10:47" [ref=f53e1015]:
+                      - strong [ref=f53e1016]: 1h ago
+                      - generic [ref=f53e1017]: 12:10
+                  - gridcell "—" [ref=f53e1018]
+                  - gridcell "C2 communication detected 11TJ0J8BxaxMk94eb2ja Command and Control" [ref=f53e1020]:
+                    - generic "C2 communication detected" [ref=f53e1021]:
+                      - strong [ref=f53e1022]: C2 communication detected
+                      - generic [ref=f53e1023]:
+                        - generic [ref=f53e1024]: 11TJ0J8BxaxMk94eb2ja
+                        - generic [ref=f53e1025]: ·
+                        - generic [ref=f53e1026]: Command and Control
+                  - gridcell "Unavailable" [ref=f53e1027]
+                  - gridcell "Open" [ref=f53e1029]
+                  - gridcell "Unassigned" [ref=f53e1031]
+                  - gridcell "—" [ref=f53e1033]
+                  - gridcell "—" [ref=f53e1035]
+                  - gridcell [ref=f53e1037]
+                  - gridcell [ref=f53e1038]:
+                    - group "Quick actions for C2 communication detected" [ref=f53e1039]:
+                      - button "Change status for C2 communication detected" [ref=f53e1040] [cursor=pointer]
+                      - button "Add analyst note for C2 communication detected" [ref=f53e1044] [cursor=pointer]
+                      - button "Apply tags for C2 communication detected" [ref=f53e1048] [cursor=pointer]
+                      - button "Add to or create incident for C2 communication detected" [ref=f53e1052] [cursor=pointer]
+                - row [ref=f53e1055]:
+                  - gridcell [ref=f53e1056]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1057] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1058]:
+                    - 'generic "Severity: Medium" [ref=f53e1059]':
+                      - strong [ref=f53e1061]: Medium
+                  - gridcell "2h ago 11:55" [ref=f53e1062]:
+                    - generic "05/08/2026, 11:55:20" [ref=f53e1063]:
+                      - strong [ref=f53e1064]: 2h ago
+                      - generic [ref=f53e1065]: 11:55
+                  - gridcell "—" [ref=f53e1066]
+                  - gridcell "Data exfiltration risk hlTJ0J8BxaxMk94ebmij Exfiltration" [ref=f53e1068]:
+                    - generic "Data exfiltration risk" [ref=f53e1069]:
+                      - strong [ref=f53e1070]: Data exfiltration risk
+                      - generic [ref=f53e1071]:
+                        - generic [ref=f53e1072]: hlTJ0J8BxaxMk94ebmij
+                        - generic [ref=f53e1073]: ·
+                        - generic [ref=f53e1074]: Exfiltration
+                  - gridcell "Unavailable" [ref=f53e1075]
+                  - gridcell "Open" [ref=f53e1077]
+                  - gridcell "Unassigned" [ref=f53e1079]
+                  - gridcell "—" [ref=f53e1081]
+                  - gridcell "—" [ref=f53e1083]
+                  - gridcell [ref=f53e1085]
+                  - gridcell [ref=f53e1086]:
+                    - group "Quick actions for Data exfiltration risk" [ref=f53e1087]:
+                      - button "Change status for Data exfiltration risk" [ref=f53e1088] [cursor=pointer]
+                      - button "Add analyst note for Data exfiltration risk" [ref=f53e1092] [cursor=pointer]
+                      - button "Apply tags for Data exfiltration risk" [ref=f53e1096] [cursor=pointer]
+                      - button "Add to or create incident for Data exfiltration risk" [ref=f53e1100] [cursor=pointer]
+                - row [ref=f53e1103]:
+                  - gridcell [ref=f53e1104]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1105] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1106]:
+                    - 'generic "Severity: Low" [ref=f53e1107]':
+                      - strong [ref=f53e1109]: Low
+                  - gridcell "2h ago 11:51" [ref=f53e1110]:
+                    - generic "05/08/2026, 11:51:02" [ref=f53e1111]:
+                      - strong [ref=f53e1112]: 2h ago
+                      - generic [ref=f53e1113]: 11:51
+                  - gridcell "—" [ref=f53e1114]
+                  - gridcell "Lateral movement attempt N1TJ0J8BxaxMk94ebWhn Lateral Movement" [ref=f53e1116]:
+                    - generic "Lateral movement attempt" [ref=f53e1117]:
+                      - strong [ref=f53e1118]: Lateral movement attempt
+                      - generic [ref=f53e1119]:
+                        - generic [ref=f53e1120]: N1TJ0J8BxaxMk94ebWhn
+                        - generic [ref=f53e1121]: ·
+                        - generic [ref=f53e1122]: Lateral Movement
+                  - gridcell "Unavailable" [ref=f53e1123]
+                  - gridcell "Open" [ref=f53e1125]
+                  - gridcell "Unassigned" [ref=f53e1127]
+                  - gridcell "—" [ref=f53e1129]
+                  - gridcell "—" [ref=f53e1131]
+                  - gridcell [ref=f53e1133]
+                  - gridcell [ref=f53e1134]:
+                    - group "Quick actions for Lateral movement attempt" [ref=f53e1135]:
+                      - button "Change status for Lateral movement attempt" [ref=f53e1136] [cursor=pointer]
+                      - button "Add analyst note for Lateral movement attempt" [ref=f53e1140] [cursor=pointer]
+                      - button "Apply tags for Lateral movement attempt" [ref=f53e1144] [cursor=pointer]
+                      - button "Add to or create incident for Lateral movement attempt" [ref=f53e1148] [cursor=pointer]
+                - row [ref=f53e1151]:
+                  - gridcell [ref=f53e1152]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1153] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1154]:
+                    - 'generic "Severity: Low" [ref=f53e1155]':
+                      - strong [ref=f53e1157]: Low
+                  - gridcell "2h ago 11:45" [ref=f53e1158]:
+                    - generic "05/08/2026, 11:45:36" [ref=f53e1159]:
+                      - strong [ref=f53e1160]: 2h ago
+                      - generic [ref=f53e1161]: 11:45
+                  - gridcell "—" [ref=f53e1162]
+                  - gridcell "Lateral movement attempt M1TJ0J8BxaxMk94ebWhn Lateral Movement" [ref=f53e1164]:
+                    - generic "Lateral movement attempt" [ref=f53e1165]:
+                      - strong [ref=f53e1166]: Lateral movement attempt
+                      - generic [ref=f53e1167]:
+                        - generic [ref=f53e1168]: M1TJ0J8BxaxMk94ebWhn
+                        - generic [ref=f53e1169]: ·
+                        - generic [ref=f53e1170]: Lateral Movement
+                  - gridcell "Unavailable" [ref=f53e1171]
+                  - gridcell "Open" [ref=f53e1173]
+                  - gridcell "Unassigned" [ref=f53e1175]
+                  - gridcell "—" [ref=f53e1177]
+                  - gridcell "—" [ref=f53e1179]
+                  - gridcell [ref=f53e1181]
+                  - gridcell [ref=f53e1182]:
+                    - group "Quick actions for Lateral movement attempt" [ref=f53e1183]:
+                      - button "Change status for Lateral movement attempt" [ref=f53e1184] [cursor=pointer]
+                      - button "Add analyst note for Lateral movement attempt" [ref=f53e1188] [cursor=pointer]
+                      - button "Apply tags for Lateral movement attempt" [ref=f53e1192] [cursor=pointer]
+                      - button "Add to or create incident for Lateral movement attempt" [ref=f53e1196] [cursor=pointer]
+                - row [ref=f53e1199]:
+                  - gridcell [ref=f53e1200]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1201] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1202]:
+                    - 'generic "Severity: Low" [ref=f53e1203]':
+                      - strong [ref=f53e1205]: Low
+                  - gridcell "2h ago 11:30" [ref=f53e1206]:
+                    - generic "05/08/2026, 11:30:44" [ref=f53e1207]:
+                      - strong [ref=f53e1208]: 2h ago
+                      - generic [ref=f53e1209]: 11:30
+                  - gridcell "—" [ref=f53e1210]
+                  - gridcell "Brute force detected ilTJ0J8BxaxMk94ebmij Credential Access" [ref=f53e1212]:
+                    - generic "Brute force detected" [ref=f53e1213]:
+                      - strong [ref=f53e1214]: Brute force detected
+                      - generic [ref=f53e1215]:
+                        - generic [ref=f53e1216]: ilTJ0J8BxaxMk94ebmij
+                        - generic [ref=f53e1217]: ·
+                        - generic [ref=f53e1218]: Credential Access
+                  - gridcell "Unavailable" [ref=f53e1219]
+                  - gridcell "Open" [ref=f53e1221]
+                  - gridcell "Unassigned" [ref=f53e1223]
+                  - gridcell "—" [ref=f53e1225]
+                  - gridcell "—" [ref=f53e1227]
+                  - gridcell [ref=f53e1229]
+                  - gridcell [ref=f53e1230]:
+                    - group "Quick actions for Brute force detected" [ref=f53e1231]:
+                      - button "Change status for Brute force detected" [ref=f53e1232] [cursor=pointer]
+                      - button "Add analyst note for Brute force detected" [ref=f53e1236] [cursor=pointer]
+                      - button "Apply tags for Brute force detected" [ref=f53e1240] [cursor=pointer]
+                      - button "Add to or create incident for Brute force detected" [ref=f53e1244] [cursor=pointer]
+                - row [ref=f53e1247]:
+                  - gridcell [ref=f53e1248]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1249] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1250]:
+                    - 'generic "Severity: Medium" [ref=f53e1251]':
+                      - strong [ref=f53e1253]: Medium
+                  - gridcell "2h ago 11:19" [ref=f53e1254]:
+                    - generic "05/08/2026, 11:19:18" [ref=f53e1255]:
+                      - strong [ref=f53e1256]: 2h ago
+                      - generic [ref=f53e1257]: 11:19
+                  - gridcell "—" [ref=f53e1258]
+                  - gridcell "Privilege escalation h1TJ0J8BxaxMk94ebmij Privilege Escalation" [ref=f53e1260]:
+                    - generic "Privilege escalation" [ref=f53e1261]:
+                      - strong [ref=f53e1262]: Privilege escalation
+                      - generic [ref=f53e1263]:
+                        - generic [ref=f53e1264]: h1TJ0J8BxaxMk94ebmij
+                        - generic [ref=f53e1265]: ·
+                        - generic [ref=f53e1266]: Privilege Escalation
+                  - gridcell "Unavailable" [ref=f53e1267]
+                  - gridcell "Open" [ref=f53e1269]
+                  - gridcell "Unassigned" [ref=f53e1271]
+                  - gridcell "—" [ref=f53e1273]
+                  - gridcell "—" [ref=f53e1275]
+                  - gridcell [ref=f53e1277]
+                  - gridcell [ref=f53e1278]:
+                    - group "Quick actions for Privilege escalation" [ref=f53e1279]:
+                      - button "Change status for Privilege escalation" [ref=f53e1280] [cursor=pointer]
+                      - button "Add analyst note for Privilege escalation" [ref=f53e1284] [cursor=pointer]
+                      - button "Apply tags for Privilege escalation" [ref=f53e1288] [cursor=pointer]
+                      - button "Add to or create incident for Privilege escalation" [ref=f53e1292] [cursor=pointer]
+                - row [ref=f53e1295]:
+                  - gridcell [ref=f53e1296]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1297] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1298]:
+                    - 'generic "Severity: Low" [ref=f53e1299]':
+                      - strong [ref=f53e1301]: Low
+                  - gridcell "2h ago 11:19" [ref=f53e1302]:
+                    - generic "05/08/2026, 11:19:11" [ref=f53e1303]:
+                      - strong [ref=f53e1304]: 2h ago
+                      - generic [ref=f53e1305]: 11:19
+                  - gridcell "—" [ref=f53e1306]
+                  - gridcell "Suspicious process execution 3VTJ0J8BxaxMk94eb2ja Execution" [ref=f53e1308]:
+                    - generic "Suspicious process execution" [ref=f53e1309]:
+                      - strong [ref=f53e1310]: Suspicious process execution
+                      - generic [ref=f53e1311]:
+                        - generic [ref=f53e1312]: 3VTJ0J8BxaxMk94eb2ja
+                        - generic [ref=f53e1313]: ·
+                        - generic [ref=f53e1314]: Execution
+                  - gridcell "Unavailable" [ref=f53e1315]
+                  - gridcell "Open" [ref=f53e1317]
+                  - gridcell "Unassigned" [ref=f53e1319]
+                  - gridcell "—" [ref=f53e1321]
+                  - gridcell "—" [ref=f53e1323]
+                  - gridcell [ref=f53e1325]
+                  - gridcell [ref=f53e1326]:
+                    - group "Quick actions for Suspicious process execution" [ref=f53e1327]:
+                      - button "Change status for Suspicious process execution" [ref=f53e1328] [cursor=pointer]
+                      - button "Add analyst note for Suspicious process execution" [ref=f53e1332] [cursor=pointer]
+                      - button "Apply tags for Suspicious process execution" [ref=f53e1336] [cursor=pointer]
+                      - button "Add to or create incident for Suspicious process execution" [ref=f53e1340] [cursor=pointer]
+                - row [ref=f53e1343]:
+                  - gridcell [ref=f53e1344]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1345] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1346]:
+                    - 'generic "Severity: Low" [ref=f53e1347]':
+                      - strong [ref=f53e1349]: Low
+                  - gridcell "2h ago 11:17" [ref=f53e1350]:
+                    - generic "05/08/2026, 11:17:54" [ref=f53e1351]:
+                      - strong [ref=f53e1352]: 2h ago
+                      - generic [ref=f53e1353]: 11:17
+                  - gridcell "—" [ref=f53e1354]
+                  - gridcell "Data exfiltration risk 4FTJ0J8BxaxMk94eb2ja Exfiltration" [ref=f53e1356]:
+                    - generic "Data exfiltration risk" [ref=f53e1357]:
+                      - strong [ref=f53e1358]: Data exfiltration risk
+                      - generic [ref=f53e1359]:
+                        - generic [ref=f53e1360]: 4FTJ0J8BxaxMk94eb2ja
+                        - generic [ref=f53e1361]: ·
+                        - generic [ref=f53e1362]: Exfiltration
+                  - gridcell "Unavailable" [ref=f53e1363]
+                  - gridcell "Open" [ref=f53e1365]
+                  - gridcell "Unassigned" [ref=f53e1367]
+                  - gridcell "—" [ref=f53e1369]
+                  - gridcell "—" [ref=f53e1371]
+                  - gridcell [ref=f53e1373]
+                  - gridcell [ref=f53e1374]:
+                    - group "Quick actions for Data exfiltration risk" [ref=f53e1375]:
+                      - button "Change status for Data exfiltration risk" [ref=f53e1376] [cursor=pointer]
+                      - button "Add analyst note for Data exfiltration risk" [ref=f53e1380] [cursor=pointer]
+                      - button "Apply tags for Data exfiltration risk" [ref=f53e1384] [cursor=pointer]
+                      - button "Add to or create incident for Data exfiltration risk" [ref=f53e1388] [cursor=pointer]
+                - row [ref=f53e1391]:
+                  - gridcell [ref=f53e1392]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1393] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1394]:
+                    - 'generic "Severity: Low" [ref=f53e1395]':
+                      - strong [ref=f53e1397]: Low
+                  - gridcell "2h ago 11:06" [ref=f53e1398]:
+                    - generic "05/08/2026, 11:06:07" [ref=f53e1399]:
+                      - strong [ref=f53e1400]: 2h ago
+                      - generic [ref=f53e1401]: 11:06
+                  - gridcell "—" [ref=f53e1402]
+                  - gridcell "Data exfiltration risk 3lTJ0J8BxaxMk94eb2ja Exfiltration" [ref=f53e1404]:
+                    - generic "Data exfiltration risk" [ref=f53e1405]:
+                      - strong [ref=f53e1406]: Data exfiltration risk
+                      - generic [ref=f53e1407]:
+                        - generic [ref=f53e1408]: 3lTJ0J8BxaxMk94eb2ja
+                        - generic [ref=f53e1409]: ·
+                        - generic [ref=f53e1410]: Exfiltration
+                  - gridcell "Unavailable" [ref=f53e1411]
+                  - gridcell "Open" [ref=f53e1413]
+                  - gridcell "Unassigned" [ref=f53e1415]
+                  - gridcell "—" [ref=f53e1417]
+                  - gridcell "—" [ref=f53e1419]
+                  - gridcell [ref=f53e1421]
+                  - gridcell [ref=f53e1422]:
+                    - group "Quick actions for Data exfiltration risk" [ref=f53e1423]:
+                      - button "Change status for Data exfiltration risk" [ref=f53e1424] [cursor=pointer]
+                      - button "Add analyst note for Data exfiltration risk" [ref=f53e1428] [cursor=pointer]
+                      - button "Apply tags for Data exfiltration risk" [ref=f53e1432] [cursor=pointer]
+                      - button "Add to or create incident for Data exfiltration risk" [ref=f53e1436] [cursor=pointer]
+                - row [ref=f53e1439]:
+                  - gridcell [ref=f53e1440]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1441] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1442]:
+                    - 'generic "Severity: Low" [ref=f53e1443]':
+                      - strong [ref=f53e1445]: Low
+                  - gridcell "2h ago 11:03" [ref=f53e1446]:
+                    - generic "05/08/2026, 11:03:07" [ref=f53e1447]:
+                      - strong [ref=f53e1448]: 2h ago
+                      - generic [ref=f53e1449]: 11:03
+                  - gridcell "—" [ref=f53e1450]
+                  - gridcell "Lateral movement attempt jlTJ0J8BxaxMk94ebmij Lateral Movement" [ref=f53e1452]:
+                    - generic "Lateral movement attempt" [ref=f53e1453]:
+                      - strong [ref=f53e1454]: Lateral movement attempt
+                      - generic [ref=f53e1455]:
+                        - generic [ref=f53e1456]: jlTJ0J8BxaxMk94ebmij
+                        - generic [ref=f53e1457]: ·
+                        - generic [ref=f53e1458]: Lateral Movement
+                  - gridcell "Unavailable" [ref=f53e1459]
+                  - gridcell "Open" [ref=f53e1461]
+                  - gridcell "Unassigned" [ref=f53e1463]
+                  - gridcell "—" [ref=f53e1465]
+                  - gridcell "—" [ref=f53e1467]
+                  - gridcell [ref=f53e1469]
+                  - gridcell [ref=f53e1470]:
+                    - group "Quick actions for Lateral movement attempt" [ref=f53e1471]:
+                      - button "Change status for Lateral movement attempt" [ref=f53e1472] [cursor=pointer]
+                      - button "Add analyst note for Lateral movement attempt" [ref=f53e1476] [cursor=pointer]
+                      - button "Apply tags for Lateral movement attempt" [ref=f53e1480] [cursor=pointer]
+                      - button "Add to or create incident for Lateral movement attempt" [ref=f53e1484] [cursor=pointer]
+                - row [ref=f53e1487]:
+                  - gridcell [ref=f53e1488]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1489] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1490]:
+                    - 'generic "Severity: Low" [ref=f53e1491]':
+                      - strong [ref=f53e1493]: Low
+                  - gridcell "2h ago 10:58" [ref=f53e1494]:
+                    - generic "05/08/2026, 10:58:26" [ref=f53e1495]:
+                      - strong [ref=f53e1496]: 2h ago
+                      - generic [ref=f53e1497]: 10:58
+                  - gridcell "—" [ref=f53e1498]
+                  - gridcell "Suspicious process execution hVTJ0J8BxaxMk94ebmij Execution" [ref=f53e1500]:
+                    - generic "Suspicious process execution" [ref=f53e1501]:
+                      - strong [ref=f53e1502]: Suspicious process execution
+                      - generic [ref=f53e1503]:
+                        - generic [ref=f53e1504]: hVTJ0J8BxaxMk94ebmij
+                        - generic [ref=f53e1505]: ·
+                        - generic [ref=f53e1506]: Execution
+                  - gridcell "Unavailable" [ref=f53e1507]
+                  - gridcell "Open" [ref=f53e1509]
+                  - gridcell "Unassigned" [ref=f53e1511]
+                  - gridcell "—" [ref=f53e1513]
+                  - gridcell "—" [ref=f53e1515]
+                  - gridcell [ref=f53e1517]
+                  - gridcell [ref=f53e1518]:
+                    - group "Quick actions for Suspicious process execution" [ref=f53e1519]:
+                      - button "Change status for Suspicious process execution" [ref=f53e1520] [cursor=pointer]
+                      - button "Add analyst note for Suspicious process execution" [ref=f53e1524] [cursor=pointer]
+                      - button "Apply tags for Suspicious process execution" [ref=f53e1528] [cursor=pointer]
+                      - button "Add to or create incident for Suspicious process execution" [ref=f53e1532] [cursor=pointer]
+                - row [ref=f53e1535]:
+                  - gridcell [ref=f53e1536]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1537] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1538]:
+                    - 'generic "Severity: Low" [ref=f53e1539]':
+                      - strong [ref=f53e1541]: Low
+                  - gridcell "2h ago 10:57" [ref=f53e1542]:
+                    - generic "05/08/2026, 10:57:25" [ref=f53e1543]:
+                      - strong [ref=f53e1544]: 2h ago
+                      - generic [ref=f53e1545]: 10:57
+                  - gridcell "—" [ref=f53e1546]
+                  - gridcell "Privilege escalation MlTJ0J8BxaxMk94ebWhn Privilege Escalation" [ref=f53e1548]:
+                    - generic "Privilege escalation" [ref=f53e1549]:
+                      - strong [ref=f53e1550]: Privilege escalation
+                      - generic [ref=f53e1551]:
+                        - generic [ref=f53e1552]: MlTJ0J8BxaxMk94ebWhn
+                        - generic [ref=f53e1553]: ·
+                        - generic [ref=f53e1554]: Privilege Escalation
+                  - gridcell "Unavailable" [ref=f53e1555]
+                  - gridcell "Open" [ref=f53e1557]
+                  - gridcell "Unassigned" [ref=f53e1559]
+                  - gridcell "—" [ref=f53e1561]
+                  - gridcell "—" [ref=f53e1563]
+                  - gridcell [ref=f53e1565]
+                  - gridcell [ref=f53e1566]:
+                    - group "Quick actions for Privilege escalation" [ref=f53e1567]:
+                      - button "Change status for Privilege escalation" [ref=f53e1568] [cursor=pointer]
+                      - button "Add analyst note for Privilege escalation" [ref=f53e1572] [cursor=pointer]
+                      - button "Apply tags for Privilege escalation" [ref=f53e1576] [cursor=pointer]
+                      - button "Add to or create incident for Privilege escalation" [ref=f53e1580] [cursor=pointer]
+                - row [ref=f53e1583]:
+                  - gridcell [ref=f53e1584]:
+                    - checkbox "Press Space to toggle row selection (unchecked)" [ref=f53e1585] [cursor=pointer]
+                    - text: 
+                  - gridcell [ref=f53e1586]:
+                    - 'generic "Severity: Medium" [ref=f53e1587]':
+                      - strong [ref=f53e1589]: Medium
+                  - gridcell "3h ago 10:46" [ref=f53e1590]:
+                    - generic "05/08/2026, 10:46:32" [ref=f53e1591]:
+                      - strong [ref=f53e1592]: 3h ago
+                      - generic [ref=f53e1593]: 10:46
+                  - gridcell "—" [ref=f53e1594]
+                  - gridcell "Suspicious process execution 3FTJ0J8BxaxMk94eb2ja Execution" [ref=f53e1596]:
+                    - generic "Suspicious process execution" [ref=f53e1597]:
+                      - strong [ref=f53e1598]: Suspicious process execution
+                      - generic [ref=f53e1599]:
+                        - generic [ref=f53e1600]: 3FTJ0J8BxaxMk94eb2ja
+                        - generic [ref=f53e1601]: ·
+                        - generic [ref=f53e1602]: Execution
+                  - gridcell "Unavailable" [ref=f53e1603]
+                  - gridcell "Open" [ref=f53e1605]
+                  - gridcell "Unassigned" [ref=f53e1607]
+                  - gridcell "—" [ref=f53e1609]
+                  - gridcell "—" [ref=f53e1611]
+                  - gridcell [ref=f53e1613]
+                  - gridcell [ref=f53e1614]:
+                    - group "Quick actions for Suspicious process execution" [ref=f53e1615]:
+                      - button "Change status for Suspicious process execution" [ref=f53e1616] [cursor=pointer]
+                      - button "Add analyst note for Suspicious process execution" [ref=f53e1620] [cursor=pointer]
+                      - button "Apply tags for Suspicious process execution" [ref=f53e1624] [cursor=pointer]
+                      - button "Add to or create incident for Suspicious process execution" [ref=f53e1628] [cursor=pointer]
+            - text:     
+        - generic [ref=f53e1631]:
+          - generic [ref=f53e1632]:
+            - generic [ref=f53e1634]: Connected
+            - generic [ref=f53e1635]: •
+            - generic [ref=f53e1637]: Live
+          - generic [ref=f53e1638]: 0 eps
+  - generic:
+    - list "Notifications"

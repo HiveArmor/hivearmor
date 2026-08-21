@@ -2,6 +2,9 @@ FROM golang:1.26 AS builder
 
 WORKDIR /build
 
+# Copy SDK first (required by replace directive in go.mod)
+COPY sdk/ /build/sdk/
+
 # Build the engine
 COPY event-processor/go.mod event-processor/go.sum ./engine/
 WORKDIR /build/engine
@@ -53,6 +56,21 @@ RUN go mod download
 COPY plugins/inputs/ .
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/com.hivearmor.inputs.plugin .
 
+WORKDIR /build
+COPY plugins/stats/go.mod plugins/stats/go.sum ./stats/
+WORKDIR /build/stats
+RUN go mod download
+COPY plugins/stats/ .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/com.hivearmor.stats.plugin .
+
+WORKDIR /build
+COPY shared/ /shared/
+COPY plugins/feeds/go.mod plugins/feeds/go.sum ./feeds/
+WORKDIR /build/feeds
+RUN go mod download
+COPY plugins/feeds/ .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/com.hivearmor.feeds.plugin .
+
 # --- Runtime image ---
 FROM debian:bookworm-slim
 
@@ -65,6 +83,8 @@ COPY --from=builder /out/com.hivearmor.alerts.plugin                   /usr/loca
 COPY --from=builder /out/com.hivearmor.geolocation.plugin              /usr/local/bin/com.hivearmor.geolocation.plugin
 COPY --from=builder /out/com.hivearmor.compliance-orchestrator.plugin  /usr/local/bin/com.hivearmor.compliance-orchestrator.plugin
 COPY --from=builder /out/com.hivearmor.inputs.plugin                   /usr/local/bin/com.hivearmor.inputs.plugin
+COPY --from=builder /out/com.hivearmor.stats.plugin                    /usr/local/bin/com.hivearmor.stats.plugin
+COPY --from=builder /out/com.hivearmor.feeds.plugin                    /usr/local/bin/com.hivearmor.feeds.plugin
 
 COPY event-processor/entrypoint.sh /entrypoint.sh
 COPY event-processor/wait-for-socket.sh /wait-for-socket.sh
@@ -72,6 +92,10 @@ RUN chmod +x /entrypoint.sh /wait-for-socket.sh
 
 # Bundle default GeoLite2 CSVs (can be overridden by volume mount at runtime)
 COPY event-processor/geolocation-bundle/ /workdir/geolocation/
+
+# Create MMDB mount point for MaxMind geo fallback (air-gap or volume-mounted deployments)
+RUN mkdir -p /opt/hivearmor/geo
+# COPY GeoLite2-City.mmdb /opt/hivearmor/geo/GeoLite2-City.mmdb
 
 # Bundle built-in detection rules (including graph_offense rules)
 COPY event-processor/builtin-rules/ /workdir/rules/

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs><linearGradient id="hivearmor-brand" x1="5" y1="27" x2="26" y2="5" gradientUnits="userSpaceOnUse"><stop stop-color="#FF6A00"/><stop offset="1" stop-color="#F0AE0B"/></linearGradient></defs>
+  <rect width="32" height="32" rx="6" fill="#0B0919"/>
+  <path d="M16 4L6 9.5V16c0 5.25 4.25 10.15 10 11.5C21.75 26.15 26 21.25 26 16V9.5L16 4Z" fill="#F0AE0B" fill-opacity="0.13" stroke="url(#hivearmor-brand)" stroke-width="1.5"/>
+  <path d="M13 16l2 2 4-4" stroke="#F0AE0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

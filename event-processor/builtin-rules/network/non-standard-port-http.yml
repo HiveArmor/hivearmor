@@ -1,0 +1,53 @@
+id: ha-net-013
+title: HTTP Traffic on Non-Standard Port
+status: stable
+description: Detects HTTP or HTTPS traffic on non-standard ports that may indicate malware communicating over unusual ports to evade firewall rules that block standard web ports, or web services deliberately avoiding detection.
+logsource:
+  product: network
+  service: flow
+level: low
+tags:
+  - attack.command_and_control
+  - attack.T1571
+detection:
+  selection:
+    network.transport: tcp
+    network.direction: outbound
+    network.bytes|gte: 1024
+  filter_standard:
+    destination.port:
+      - 80
+      - 443
+      - 8080
+      - 8443
+      - 3000
+      - 5000
+      - 8000
+      - 9000
+  filter_internal:
+    destination.ip|cidr:
+      - 10.0.0.0/8
+      - 172.16.0.0/12
+      - 192.168.0.0/16
+  condition: selection and not filter_standard and not filter_internal
+falsepositives:
+  - Authorized internal services running on custom ports documented in IT inventory
+  - VPN services and remote access tools using non-standard TCP ports
+fields:
+  - source.ip
+  - destination.ip
+  - destination.port
+  - network.bytes
+  - network.transport
+impact:
+  confidentiality: medium
+  integrity: low
+  availability: low
+deduplicateBy:
+  - source.ip
+  - destination.port
+groupBy:
+  - source.ip
+mitre:
+  tactic: command-and-control
+  technique: T1571

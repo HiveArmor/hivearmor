@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"github.com/hivearmor/agent/config"
 	"github.com/hivearmor/agent/models"
 	"github.com/hivearmor/agent/utils"
@@ -91,7 +91,7 @@ func (inst *syslogInstance) setNewPort(proto string, port string) {
 
 // --- Port enable/disable ---
 
-func (inst *syslogInstance) enablePort(proto string, enableTLS bool, queue chan *plugins.Log) error {
+func (inst *syslogInstance) enablePort(proto string, enableTLS bool, queue chan<- *plugins.Log) error {
 	switch proto {
 	case "tcp":
 		if enableTLS {
@@ -122,7 +122,7 @@ func (inst *syslogInstance) disablePort(proto string) {
 	}
 }
 
-func (inst *syslogInstance) enableTCP(queue chan *plugins.Log) {
+func (inst *syslogInstance) enableTCP(queue chan<- *plugins.Log) {
 	inst.mu.Lock()
 	if inst.TCPListener.IsEnabled || inst.TCPListener.Port == "" {
 		inst.mu.Unlock()
@@ -187,7 +187,7 @@ func (inst *syslogInstance) enableTCP(queue chan *plugins.Log) {
 	}()
 }
 
-func (inst *syslogInstance) enableUDP(queue chan *plugins.Log) {
+func (inst *syslogInstance) enableUDP(queue chan<- *plugins.Log) {
 	inst.mu.Lock()
 	if inst.UDPListener.IsEnabled || inst.UDPListener.Port == "" {
 		inst.mu.Unlock()

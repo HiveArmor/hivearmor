@@ -1,0 +1,364 @@
+- generic [active] [ref=f3e1]:
+  - generic [ref=f3e5]:
+    - link "Skip to main content" [ref=f3e6] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f3e7]:
+      - generic [ref=f3e8]:
+        - generic [ref=f3e14]: HiveArmor
+        - generic [ref=f3e15]: Security operations
+      - generic [ref=f3e16]:
+        - button "All authorized tenants" [ref=f3e18] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f3e26] [cursor=pointer]:
+          - generic [ref=f3e31]: ⌘ K
+        - generic [ref=f3e32]: Production
+      - generic [ref=f3e33]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=f3e34]'
+        - status "Live events per second" [ref=f3e37]:
+          - generic [ref=f3e39]: 0 EPS
+        - button "Notifications" [ref=f3e40] [cursor=pointer]
+        - button "Help" [ref=f3e45] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f3e49]:
+      - generic [ref=f3e50]:
+        - region "COMMAND" [ref=f3e51]:
+          - generic [ref=f3e52]:
+            - button "Mission Control" [ref=f3e53] [cursor=pointer]
+            - button "Analyst Queue" [ref=f3e60] [cursor=pointer]
+            - button "Alerts" [ref=f3e64] [cursor=pointer]
+            - button "Correlated Findings" [ref=f3e69] [cursor=pointer]
+            - button "Incidents" [ref=f3e75] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f3e81]:
+          - generic [ref=f3e82]:
+            - button "Search & Hunt" [ref=f3e83] [cursor=pointer]
+            - button "Investigations" [ref=f3e88] [cursor=pointer]
+            - button "Entities" [ref=f3e92] [cursor=pointer]
+            - button "Threat Constellation" [ref=f3e99] [cursor=pointer]
+        - region "DEFEND" [ref=f3e105]:
+          - generic [ref=f3e106]:
+            - button "Detection Rules" [ref=f3e107] [cursor=pointer]
+            - button "Playbooks" [ref=f3e111] [cursor=pointer]
+            - button "Response Library" [ref=f3e116] [cursor=pointer]
+        - region "POSTURE" [ref=f3e120]:
+          - generic [ref=f3e121]:
+            - button "Assets" [ref=f3e122] [cursor=pointer]
+            - button "Identities" [ref=f3e127] [cursor=pointer]
+            - button "Active Directory" [ref=f3e134] [cursor=pointer]
+            - button "Exposure" [ref=f3e141] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f3e147] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f3e158] [cursor=pointer]
+            - button "Sensors" [ref=f3e164] [cursor=pointer]
+            - button "Compliance" [ref=f3e168] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f3e173]:
+          - generic [ref=f3e174]:
+            - button "Endpoints" [ref=f3e175] [cursor=pointer]
+            - button "File Quarantine" [ref=f3e179] [cursor=pointer]
+            - button "File Integrity" [ref=f3e185] [cursor=pointer]
+            - button "Agent Policies" [ref=f3e192] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f3e197]:
+          - button "Studio" [ref=f3e199] [cursor=pointer]
+        - region "REPORT" [ref=f3e204]:
+          - button "Scheduled Reports" [ref=f3e206] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f3e211]:
+          - generic [ref=f3e212]:
+            - button "Users" [ref=f3e213] [cursor=pointer]
+            - button "Integrations" [ref=f3e227] [cursor=pointer]
+            - button "Notifications" [ref=f3e231] [cursor=pointer]
+            - button "Audit Log" [ref=f3e236] [cursor=pointer]
+            - button "Settings" [ref=f3e241] [cursor=pointer]
+      - generic [ref=f3e246]:
+        - button "User menu" [ref=f3e249] [cursor=pointer]:
+          - generic [ref=f3e250]: AA
+        - button "Pin sidebar open" [ref=f3e251] [cursor=pointer]
+    - main [ref=f3e254]:
+      - generic [ref=f3e255]:
+        - generic [ref=f3e256]:
+          - generic [ref=f3e263]:
+            - generic [ref=f3e264]: INVESTIGATION
+            - heading "Threat Constellation" [level=1] [ref=f3e265]
+            - paragraph [ref=f3e266]: Evidence-backed entity and activity relationships
+          - generic [ref=f3e267]:
+            - generic [ref=f3e268]: fresh
+            - button "Refresh" [ref=f3e275] [cursor=pointer]
+        - region "Relationship graph summary" [ref=f3e281]:
+          - article [ref=f3e282]:
+            - generic [ref=f3e283]: Visible entities
+            - strong [ref=f3e288]: "39"
+            - generic [ref=f3e289]: 0 external
+          - article [ref=f3e290]:
+            - generic [ref=f3e291]: Relationships
+            - strong [ref=f3e296]: "0"
+            - generic [ref=f3e297]: 0 authorized
+          - article [ref=f3e298]:
+            - generic [ref=f3e299]: Highest risk
+            - strong [ref=f3e302]: "94"
+            - generic [ref=f3e303]: normalized /100
+          - article [ref=f3e304]:
+            - generic [ref=f3e305]: Alert references
+            - strong [ref=f3e308]: "267"
+            - generic [ref=f3e309]: across visible entities
+          - article [ref=f3e310]:
+            - generic [ref=f3e311]: Activity window
+            - strong [ref=f3e315]: 24h
+            - generic [ref=f3e316]: 2 relationship hops
+          - article [ref=f3e317]:
+            - generic [ref=f3e318]: Snapshot
+            - strong [ref=f3e324]: 10:23:35
+            - generic [ref=f3e325]: 56 ms query
+        - region "Threat relationship controls" [ref=f3e326]:
+          - generic [ref=f3e327]:
+            - button "Relationship filters" [ref=f3e328] [cursor=pointer]:
+              - generic [ref=f3e331]: "17"
+            - textbox "Find entity in constellation" [ref=f3e336]:
+              - /placeholder: Find an entity, IP, process, or domain
+            - generic [ref=f3e337]:
+              - generic [ref=f3e338]: Window
+              - combobox "Window" [ref=f3e339] [cursor=pointer]:
+                - option "Last 1 hour"
+                - option "Last 4 hours"
+                - option "Last 24 hours" [selected]
+                - option "Last 7 days"
+                - option "Last 30 days"
+            - generic [ref=f3e340]:
+              - generic [ref=f3e341]: Hops
+              - combobox "Hops" [ref=f3e342] [cursor=pointer]:
+                - option "1 hop"
+                - option "2 hops" [selected]
+                - option "3 hops"
+            - generic [ref=f3e343]:
+              - generic [ref=f3e344]: Risk
+              - combobox "Risk" [ref=f3e345] [cursor=pointer]:
+                - option "All risk" [selected]
+                - option "40+"
+                - option "60+"
+                - option "80+"
+            - generic "Graph view controls" [ref=f3e346]:
+              - button "Pause relationship flow" [ref=f3e347] [cursor=pointer]
+              - button "Zoom out" [ref=f3e351] [cursor=pointer]
+              - button "Zoom in" [ref=f3e353] [cursor=pointer]
+              - button "Fit graph to view" [ref=f3e355] [cursor=pointer]
+              - button "Enter full graph view" [ref=f3e359] [cursor=pointer]
+              - button "Reset relationship workspace" [ref=f3e365] [cursor=pointer]
+        - main [ref=f3e369]:
+          - complementary "Accessible graph inventory" [ref=f3e370]:
+            - tablist "Graph inventory" [ref=f3e372]:
+              - tab "Entities 39" [selected] [ref=f3e373] [cursor=pointer]:
+                - text: Entities
+                - generic [ref=f3e375]: "39"
+              - tab "Links 0" [ref=f3e376] [cursor=pointer]:
+                - text: Links
+                - generic [ref=f3e381]: "0"
+            - listbox "Visible entities" [ref=f3e382]:
+              - option "203.0.113.88 IP address · 22 alerts 94" [ref=f3e383] [cursor=pointer]:
+                - generic [ref=f3e390]:
+                  - strong [ref=f3e391]: 203.0.113.88
+                  - generic [ref=f3e392]: IP address · 22 alerts
+                - emphasis [ref=f3e393]: "94"
+              - option "payload.ps1 File · 6 alerts 92" [ref=f3e394] [cursor=pointer]:
+                - generic [ref=f3e401]:
+                  - strong [ref=f3e402]: payload.ps1
+                  - generic [ref=f3e403]: File · 6 alerts
+                - emphasis [ref=f3e404]: "92"
+              - option "198.51.100.30 IP address · 21 alerts 92" [ref=f3e405] [cursor=pointer]:
+                - generic [ref=f3e412]:
+                  - strong [ref=f3e413]: 198.51.100.30
+                  - generic [ref=f3e414]: IP address · 21 alerts
+                - emphasis [ref=f3e415]: "92"
+              - option "wm1-admin-svc-01 User · 17 alerts 91" [ref=f3e416] [cursor=pointer]:
+                - generic [ref=f3e421]:
+                  - strong [ref=f3e422]: wm1-admin-svc-01
+                  - generic [ref=f3e423]: User · 17 alerts
+                - emphasis [ref=f3e424]: "91"
+              - option "wm2-admin-svc-01 User · 10 alerts 90" [ref=f3e425] [cursor=pointer]:
+                - generic [ref=f3e430]:
+                  - strong [ref=f3e431]: wm2-admin-svc-01
+                  - generic [ref=f3e432]: User · 10 alerts
+                - emphasis [ref=f3e433]: "90"
+              - option "data-sync-pro.com Domain · 16 alerts 89" [ref=f3e434] [cursor=pointer]:
+                - generic [ref=f3e441]:
+                  - strong [ref=f3e442]: data-sync-pro.com
+                  - generic [ref=f3e443]: Domain · 16 alerts
+                - emphasis [ref=f3e444]: "89"
+              - option "DC-004 Host · 11 alerts 88" [ref=f3e445] [cursor=pointer]:
+                - generic [ref=f3e449]:
+                  - strong [ref=f3e450]: DC-004
+                  - generic [ref=f3e451]: Host · 11 alerts
+                - emphasis [ref=f3e452]: "88"
+              - option "DC-005 Host · 9 alerts 86" [ref=f3e453] [cursor=pointer]:
+                - generic [ref=f3e457]:
+                  - strong [ref=f3e458]: DC-005
+                  - generic [ref=f3e459]: Host · 9 alerts
+                - emphasis [ref=f3e460]: "86"
+              - option "203.0.113.50 IP address · 15 alerts 85" [ref=f3e461] [cursor=pointer]:
+                - generic [ref=f3e468]:
+                  - strong [ref=f3e469]: 203.0.113.50
+                  - generic [ref=f3e470]: IP address · 15 alerts
+                - emphasis [ref=f3e471]: "85"
+              - option "oliver.schmidt User · 12 alerts 84" [ref=f3e472] [cursor=pointer]:
+                - generic [ref=f3e477]:
+                  - strong [ref=f3e478]: oliver.schmidt
+                  - generic [ref=f3e479]: User · 12 alerts
+                - emphasis [ref=f3e480]: "84"
+              - option "ENG-SRV-015 Host · 13 alerts 83" [ref=f3e481] [cursor=pointer]:
+                - generic [ref=f3e485]:
+                  - strong [ref=f3e486]: ENG-SRV-015
+                  - generic [ref=f3e487]: Host · 13 alerts
+                - emphasis [ref=f3e488]: "83"
+              - option "fast-download.xyz Domain · 11 alerts 81" [ref=f3e489] [cursor=pointer]:
+                - generic [ref=f3e496]:
+                  - strong [ref=f3e497]: fast-download.xyz
+                  - generic [ref=f3e498]: Domain · 11 alerts
+                - emphasis [ref=f3e499]: "81"
+              - option "FIN-WKS-022 Host · 10 alerts 80" [ref=f3e500] [cursor=pointer]:
+                - generic [ref=f3e504]:
+                  - strong [ref=f3e505]: FIN-WKS-022
+                  - generic [ref=f3e506]: Host · 10 alerts
+                - emphasis [ref=f3e507]: "80"
+              - option "api-tracker.xyz Domain · 9 alerts 79" [ref=f3e508] [cursor=pointer]:
+                - generic [ref=f3e515]:
+                  - strong [ref=f3e516]: api-tracker.xyz
+                  - generic [ref=f3e517]: Domain · 9 alerts
+                - emphasis [ref=f3e518]: "79"
+              - option "anna.kowalski User · 9 alerts 79" [ref=f3e519] [cursor=pointer]:
+                - generic [ref=f3e524]:
+                  - strong [ref=f3e525]: anna.kowalski
+                  - generic [ref=f3e526]: User · 9 alerts
+                - emphasis [ref=f3e527]: "79"
+              - option "svc-deploy User · 0 alerts 78" [ref=f3e528] [cursor=pointer]:
+                - generic [ref=f3e533]:
+                  - strong [ref=f3e534]: svc-deploy
+                  - generic [ref=f3e535]: User · 0 alerts
+                - emphasis [ref=f3e536]: "78"
+              - option "203.0.113.77 IP address · 10 alerts 78" [ref=f3e537] [cursor=pointer]:
+                - generic [ref=f3e544]:
+                  - strong [ref=f3e545]: 203.0.113.77
+                  - generic [ref=f3e546]: IP address · 10 alerts
+                - emphasis [ref=f3e547]: "78"
+              - option "FIN-WKS-013 Host · 8 alerts 76" [ref=f3e548] [cursor=pointer]:
+                - generic [ref=f3e552]:
+                  - strong [ref=f3e553]: FIN-WKS-013
+                  - generic [ref=f3e554]: Host · 8 alerts
+                - emphasis [ref=f3e555]: "76"
+              - option "quinn.taylor User · 8 alerts 75" [ref=f3e556] [cursor=pointer]:
+                - generic [ref=f3e561]:
+                  - strong [ref=f3e562]: quinn.taylor
+                  - generic [ref=f3e563]: User · 8 alerts
+                - emphasis [ref=f3e564]: "75"
+              - option "mshta.exe Process · 0 alerts 70" [ref=f3e565] [cursor=pointer]:
+                - generic [ref=f3e572]:
+                  - strong [ref=f3e573]: mshta.exe
+                  - generic [ref=f3e574]: Process · 0 alerts
+                - emphasis [ref=f3e575]: "70"
+              - option "10.1.10.15 IP address · 6 alerts 68" [ref=f3e576] [cursor=pointer]:
+                - generic [ref=f3e583]:
+                  - strong [ref=f3e584]: 10.1.10.15
+                  - generic [ref=f3e585]: IP address · 6 alerts
+                - emphasis [ref=f3e586]: "68"
+              - option "ENG-SRV-002 Host · 0 alerts 63" [ref=f3e587] [cursor=pointer]:
+                - generic [ref=f3e591]:
+                  - strong [ref=f3e592]: ENG-SRV-002
+                  - generic [ref=f3e593]: Host · 0 alerts
+                - emphasis [ref=f3e594]: "63"
+              - option "FIN-WKS-028 Host · 6 alerts 63" [ref=f3e595] [cursor=pointer]:
+                - generic [ref=f3e599]:
+                  - strong [ref=f3e600]: FIN-WKS-028
+                  - generic [ref=f3e601]: Host · 6 alerts
+                - emphasis [ref=f3e602]: "63"
+              - option "10.1.10.120 IP address · 5 alerts 63" [ref=f3e603] [cursor=pointer]:
+                - generic [ref=f3e610]:
+                  - strong [ref=f3e611]: 10.1.10.120
+                  - generic [ref=f3e612]: IP address · 5 alerts
+                - emphasis [ref=f3e613]: "63"
+              - option "FIN-WKS-020 Host · 5 alerts 62" [ref=f3e614] [cursor=pointer]:
+                - generic [ref=f3e618]:
+                  - strong [ref=f3e619]: FIN-WKS-020
+                  - generic [ref=f3e620]: Host · 5 alerts
+                - emphasis [ref=f3e621]: "62"
+              - option "HR-LPT-010 Host · 4 alerts 52" [ref=f3e622] [cursor=pointer]:
+                - generic [ref=f3e626]:
+                  - strong [ref=f3e627]: HR-LPT-010
+                  - generic [ref=f3e628]: Host · 4 alerts
+                - emphasis [ref=f3e629]: "52"
+              - option "10.2.1.1 IP address · 2 alerts 47" [ref=f3e630] [cursor=pointer]:
+                - generic [ref=f3e637]:
+                  - strong [ref=f3e638]: 10.2.1.1
+                  - generic [ref=f3e639]: IP address · 2 alerts
+                - emphasis [ref=f3e640]: "47"
+              - option "victor.ross User · 3 alerts 46" [ref=f3e641] [cursor=pointer]:
+                - generic [ref=f3e646]:
+                  - strong [ref=f3e647]: victor.ross
+                  - generic [ref=f3e648]: User · 3 alerts
+                - emphasis [ref=f3e649]: "46"
+              - option "10.1.5.1 IP address · 2 alerts 45" [ref=f3e650] [cursor=pointer]:
+                - generic [ref=f3e657]:
+                  - strong [ref=f3e658]: 10.1.5.1
+                  - generic [ref=f3e659]: IP address · 2 alerts
+                - emphasis [ref=f3e660]: "45"
+              - option "10.1.5.200 IP address · 2 alerts 43" [ref=f3e661] [cursor=pointer]:
+                - generic [ref=f3e668]:
+                  - strong [ref=f3e669]: 10.1.5.200
+                  - generic [ref=f3e670]: IP address · 2 alerts
+                - emphasis [ref=f3e671]: "43"
+              - option "10.1.5.100 IP address · 2 alerts 42" [ref=f3e672] [cursor=pointer]:
+                - generic [ref=f3e679]:
+                  - strong [ref=f3e680]: 10.1.5.100
+                  - generic [ref=f3e681]: IP address · 2 alerts
+                - emphasis [ref=f3e682]: "42"
+              - option "mail.internal Domain · 2 alerts 40" [ref=f3e683] [cursor=pointer]:
+                - generic [ref=f3e690]:
+                  - strong [ref=f3e691]: mail.internal
+                  - generic [ref=f3e692]: Domain · 2 alerts
+                - emphasis [ref=f3e693]: "40"
+              - option "10.2.1.100 IP address · 1 alerts 39" [ref=f3e694] [cursor=pointer]:
+                - generic [ref=f3e701]:
+                  - strong [ref=f3e702]: 10.2.1.100
+                  - generic [ref=f3e703]: IP address · 1 alerts
+                - emphasis [ref=f3e704]: "39"
+              - option "192.168.1.1 IP address · 1 alerts 36" [ref=f3e705] [cursor=pointer]:
+                - generic [ref=f3e712]:
+                  - strong [ref=f3e713]: 192.168.1.1
+                  - generic [ref=f3e714]: IP address · 1 alerts
+                - emphasis [ref=f3e715]: "36"
+              - option "vpn.internal Domain · 1 alerts 33" [ref=f3e716] [cursor=pointer]:
+                - generic [ref=f3e723]:
+                  - strong [ref=f3e724]: vpn.internal
+                  - generic [ref=f3e725]: Domain · 1 alerts
+                - emphasis [ref=f3e726]: "33"
+              - option "wm1.corp.local Domain · 1 alerts 32" [ref=f3e727] [cursor=pointer]:
+                - generic [ref=f3e734]:
+                  - strong [ref=f3e735]: wm1.corp.local
+                  - generic [ref=f3e736]: Domain · 1 alerts
+                - emphasis [ref=f3e737]: "32"
+              - option "wm2.corp.local Domain · 1 alerts 31" [ref=f3e738] [cursor=pointer]:
+                - generic [ref=f3e745]:
+                  - strong [ref=f3e746]: wm2.corp.local
+                  - generic [ref=f3e747]: Domain · 1 alerts
+                - emphasis [ref=f3e748]: "31"
+              - option "corp.hivearmor.local Domain · 1 alerts 30" [ref=f3e749] [cursor=pointer]:
+                - generic [ref=f3e756]:
+                  - strong [ref=f3e757]: corp.hivearmor.local
+                  - generic [ref=f3e758]: Domain · 1 alerts
+                - emphasis [ref=f3e759]: "30"
+              - option "10.1.5.30 IP address · 5 alerts 28" [ref=f3e760] [cursor=pointer]:
+                - generic [ref=f3e767]:
+                  - strong [ref=f3e768]: 10.1.5.30
+                  - generic [ref=f3e769]: IP address · 5 alerts
+                - emphasis [ref=f3e770]: "28"
+          - region "Threat relationship visualization" [ref=f3e771]:
+            - generic:
+              - generic: Internal
+              - generic: External
+              - generic: Critical risk
+              - generic: High risk
+              - generic: Node size = alert volume
+              - generic: Moving arrows = observed direction
+            - generic "Threat relationship graph workspace" [ref=f3e772]:
+              - img "Threat constellation relationship graph" [ref=f3e773]
+        - generic [ref=f3e778]:
+          - generic [ref=f3e779]:
+            - generic [ref=f3e780]:
+              - generic [ref=f3e782]: Connected
+              - generic [ref=f3e783]: •
+              - generic [ref=f3e785]: Live
+            - generic [ref=f3e786]: 0 eps
+          - generic: Snapshot 10:23:35 · Projection stable
+  - generic:
+    - list "Notifications"

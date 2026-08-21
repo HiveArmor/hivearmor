@@ -13,12 +13,11 @@
       "name": "frontend-v2 (Next.js dev)",
       "runtimeExecutable": "node",
       "runtimeArgs": [
-        "/Users/encryptshell/GIT/UTMStack-11/frontend-v2/node_modules/.ignored/next/dist/bin/next",
+        "/Users/encryptshell/GIT/UTMStack-11/frontend-v2/node_modules/next/dist/bin/next",
         "dev",
         "--port", "56946"
       ],
       "env": {
-        "NODE_PATH": "/Users/encryptshell/GIT/UTMStack-11/frontend-v2/node_modules/.ignored",
         "BACKEND_URL": "http://localhost:8088"
       },
       "port": 56946,
@@ -29,12 +28,11 @@
       "name": "frontend-v2 (Next.js dev alt)",
       "runtimeExecutable": "node",
       "runtimeArgs": [
-        "/Users/encryptshell/GIT/UTMStack-11/frontend-v2/node_modules/.ignored/next/dist/bin/next",
+        "/Users/encryptshell/GIT/UTMStack-11/frontend-v2/node_modules/next/dist/bin/next",
         "dev",
         "--port", "56947"
       ],
       "env": {
-        "NODE_PATH": "/Users/encryptshell/GIT/UTMStack-11/frontend-v2/node_modules/.ignored",
         "BACKEND_URL": "http://localhost:8088"
       },
       "port": 56947,
@@ -101,6 +99,14 @@
         "INGEST_PORT": "8090"
       },
       "port": 8090,
+      "autoPort": false
+    }
+  ,
+    {
+      "name": "Neo4j Browser",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "-f", "local-dev/docker-compose.yml", "ps", "neo4j"],
+      "port": 7474,
       "autoPort": false
     }
   ]

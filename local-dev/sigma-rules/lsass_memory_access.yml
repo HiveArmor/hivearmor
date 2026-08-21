@@ -1,0 +1,33 @@
+title: LSASS Memory Access via Process Open
+id: a8d2c7f1-5e4b-4d9a-b6c3-1f8e2a7d4b5c
+status: test
+level: critical
+description: Detects processes accessing LSASS memory which may indicate credential dumping
+author: HiveArmor Threat Research
+date: 2024/02/20
+modified: 2025/02/01
+references:
+  - https://attack.mitre.org/techniques/T1003/001/
+tags:
+  - attack.credential_access
+  - attack.t1003.001
+logsource:
+  category: process_access
+  product: windows
+detection:
+  selection:
+    TargetImage|endswith: '\lsass.exe'
+    GrantedAccess|contains:
+      - '0x1010'
+      - '0x1038'
+      - '0x1F0FFF'
+  filter_known:
+    SourceImage|endswith:
+      - '\csrss.exe'
+      - '\smss.exe'
+      - '\wininit.exe'
+      - '\MsMpEng.exe'
+  condition: selection and not filter_known
+falsepositives:
+  - Antivirus solutions
+  - Windows Defender

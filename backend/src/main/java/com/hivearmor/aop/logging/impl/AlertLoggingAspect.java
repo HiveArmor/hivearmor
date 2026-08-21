@@ -4,8 +4,8 @@ import com.hivearmor.config.Constants;
 import com.hivearmor.domain.UtmAlertLog;
 import com.hivearmor.domain.chart_builder.types.query.FilterType;
 import com.hivearmor.domain.chart_builder.types.query.OperatorType;
-import com.hivearmor.domain.index_pattern.enums.SystemIndexPattern;
 import com.hivearmor.domain.shared_types.alert.UtmAlert;
+import com.hivearmor.multitenancy.MsspIndexResolver;
 import com.hivearmor.security.SecurityUtils;
 import com.hivearmor.service.UtmAlertLogService;
 import com.hivearmor.service.elasticsearch.ElasticsearchService;
@@ -40,11 +40,14 @@ public class AlertLoggingAspect {
     private final Logger log = LoggerFactory.getLogger(AlertLoggingAspect.class);
     private final ElasticsearchService elasticsearchService;
     private final UtmAlertLogService alertLogService;
+    private final MsspIndexResolver indexResolver;
 
     public AlertLoggingAspect(ElasticsearchService elasticsearchService,
-                              UtmAlertLogService alertLogService) {
+                              UtmAlertLogService alertLogService,
+                              MsspIndexResolver indexResolver) {
         this.elasticsearchService = elasticsearchService;
         this.alertLogService = alertLogService;
+        this.indexResolver = indexResolver;
     }
 
     @Pointcut("execution(void com.hivearmor.service.impl.UtmAlertServiceImpl.updateStatus(..))")
@@ -338,7 +341,7 @@ public class AlertLoggingAspect {
             Object[] args = joinPoint.getArgs();
             Query query = (Query) args[0];
             String incidentName = (String) args[1];
-            Integer incidentId = (Integer) args[2];
+            Number incidentId = (Number) args[2];
             Instant incidentCreationDate = (Instant) args[3];
             String incidentCreatedBy = (String) args[4];
             String incidentSource = (String) args[5];
@@ -399,7 +402,7 @@ public class AlertLoggingAspect {
             List<FilterType> filters = new ArrayList<>();
             filters.add(new FilterType(Constants.alertIdKeyword, OperatorType.IS_ONE_OF_TERMS, ids));
             SearchRequest request = SearchRequest.of(s -> s.query(SearchUtil.toQuery(filters))
-                .index(Constants.SYS_INDEX_PATTERN.get(SystemIndexPattern.ALERTS)));
+                .index(indexResolver.resolveAlertIndexPattern()));
             HitsMetadata<UtmAlert> hits = elasticsearchService.search(request, UtmAlert.class).hits();
             if (hits.total().value() <= 0)
                 return Collections.emptyList();

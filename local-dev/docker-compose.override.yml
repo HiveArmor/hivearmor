@@ -25,12 +25,14 @@ services:
       - EVENTPROCESSOR_INJECT_KEY=${EVENTPROCESSOR_INJECT_KEY:-change-me-in-production}
       - INPUTS_SOCKET_SECRET=${INPUTS_SOCKET_SECRET:-change-me-in-production}
       - OTLP_PORT=4317
+      - BASELINE_MIN_SAMPLES=0
       # compliance-orchestrator config
       - BACKEND_URL=http://backend:8080
     volumes:
       - ep_pipeline:/workdir/pipeline
       - ep_logs:/workdir/logs
       - ep_rules:/workdir/rules
+      - ./rules/test:/workdir/rules/test:ro
       - ./certs:/cert:ro
       - ../filters:/workdir/pipeline/filters:ro
       - ./hivearmor_plugins.yaml:/workdir/pipeline/hivearmor_plugins.yaml:ro
@@ -55,3 +57,12 @@ services:
         limits:
           memory: 2048M
     restart: unless-stopped
+
+  eventprocessor-worker:
+    environment:
+      - BASELINE_MIN_SAMPLES=0
+      - POSTGRESQL_HOST=postgres
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USER=postgres
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_DB=hivearmor

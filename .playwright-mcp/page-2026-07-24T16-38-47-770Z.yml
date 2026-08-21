@@ -1,0 +1,59 @@
+- generic [ref=f31e3]:
+  - banner [ref=f31e4]:
+    - generic [ref=f31e5]: HiveArmor
+    - generic [ref=f31e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f31e13]'
+      - generic "Reconnecting..." [ref=f31e16]: 0 EPS
+      - button "Notifications" [ref=f31e18] [cursor=pointer]
+      - button "Help" [ref=f31e23] [cursor=pointer]
+      - button "User menu" [ref=f31e28] [cursor=pointer]:
+        - generic [ref=f31e29]: AA
+        - generic [ref=f31e30]: admin
+  - navigation [ref=f31e31]:
+    - generic [ref=f31e32]:
+      - generic [ref=f31e33]:
+        - generic [ref=f31e34]: COMMAND
+        - generic [ref=f31e35]:
+          - button "Analyst Queue" [ref=f31e36] [cursor=pointer]
+          - button "Alerts" [ref=f31e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f31e47] [cursor=pointer]
+          - button "Incidents" [ref=f31e54] [cursor=pointer]
+      - generic [ref=f31e61]:
+        - generic [ref=f31e62]: INVESTIGATE
+        - generic [ref=f31e63]:
+          - button "Search & Hunt" [ref=f31e64] [cursor=pointer]
+          - button "Investigations" [ref=f31e70] [cursor=pointer]
+          - button "Entities" [ref=f31e75] [cursor=pointer]
+      - generic [ref=f31e83]:
+        - generic [ref=f31e84]: DEFEND
+        - generic [ref=f31e85]:
+          - button "Detection Rules" [ref=f31e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f31e91] [cursor=pointer]
+      - generic [ref=f31e96]:
+        - generic [ref=f31e97]: POSTURE
+        - generic [ref=f31e98]:
+          - button "Assets" [ref=f31e99] [cursor=pointer]
+          - button "Identities" [ref=f31e105] [cursor=pointer]
+          - button "Active Directory" [ref=f31e113] [cursor=pointer]
+          - button "Exposure" [ref=f31e121] [cursor=pointer]
+          - button "Sensors" [ref=f31e128] [cursor=pointer]
+          - button "Compliance" [ref=f31e133] [cursor=pointer]
+      - generic [ref=f31e139]:
+        - generic [ref=f31e140]: DASHBOARDS
+        - button "Studio" [ref=f31e142] [cursor=pointer]
+      - generic [ref=f31e148]:
+        - generic [ref=f31e149]: REPORT
+        - button "Scheduled Reports" [ref=f31e151] [cursor=pointer]
+      - generic [ref=f31e157]:
+        - generic [ref=f31e158]: ADMINISTRATION
+        - generic [ref=f31e159]:
+          - button "Users" [ref=f31e160] [cursor=pointer]
+          - button "Integrations" [ref=f31e175] [cursor=pointer]
+          - button "Notifications" [ref=f31e180] [cursor=pointer]
+          - button "Audit Log" [ref=f31e186] [cursor=pointer]
+          - button "Settings" [ref=f31e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f31e199] [cursor=pointer]
+  - main [ref=f31e202]:
+    - generic [ref=f31e204]:
+      - heading "Detection Coverage" [level=1] [ref=f31e207]
+      - generic [ref=f31e208]: MITRE ATT&CK technique coverage

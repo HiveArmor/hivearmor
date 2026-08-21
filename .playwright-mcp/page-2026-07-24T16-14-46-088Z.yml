@@ -1,0 +1,78 @@
+- generic [ref=e33]:
+  - banner [ref=e34]:
+    - generic [ref=e35]: HiveArmor
+    - generic [ref=e42]:
+      - 'generic "Data pipeline: Critical - Internal Server Error" [ref=e43]'
+      - generic "Reconnecting..." [ref=e46]: 0 EPS
+      - button "Notifications" [ref=e48] [cursor=pointer]
+      - button "Help" [ref=e53] [cursor=pointer]
+      - button "User menu" [ref=e58] [cursor=pointer]:
+        - generic [ref=e60]: admin
+  - navigation [ref=e61]:
+    - generic [ref=e62]:
+      - generic [ref=e63]:
+        - generic [ref=e64]: COMMAND
+        - generic [ref=e65]:
+          - button "Alerts" [ref=e66] [cursor=pointer]
+          - button "Correlated Findings" [ref=e72] [cursor=pointer]
+      - generic [ref=e79]:
+        - generic [ref=e80]: INVESTIGATE
+        - generic [ref=e81]:
+          - button "Search & Hunt" [ref=e82] [cursor=pointer]
+          - button "Investigations" [ref=e88] [cursor=pointer]
+          - button "Entities" [ref=e93] [cursor=pointer]
+      - generic [ref=e101]:
+        - generic [ref=e102]: POSTURE
+        - generic [ref=e103]:
+          - button "Assets" [ref=e104] [cursor=pointer]
+          - button "Identities" [ref=e110] [cursor=pointer]
+          - button "Exposure" [ref=e118] [cursor=pointer]
+          - button "Compliance" [ref=e125] [cursor=pointer]
+      - generic [ref=e131]:
+        - generic [ref=e132]: DASHBOARDS
+        - button "Studio" [ref=e134] [cursor=pointer]
+      - generic [ref=e140]:
+        - generic [ref=e141]: REPORT
+        - button "Scheduled Reports" [ref=e143] [cursor=pointer]
+    - button "Collapse sidebar" [ref=e150] [cursor=pointer]
+  - main [ref=e153]:
+    - generic [ref=e154]:
+      - generic [ref=e155]:
+        - heading "Mission Control" [level=1] [ref=e157]
+        - generic [ref=e158]: "Last updated: 21:44:24"
+      - generic [ref=e159]:
+        - generic [ref=e160]:
+          - generic [ref=e161]: Active Alerts
+          - generic [ref=e162]: "0"
+        - generic [ref=e164]:
+          - generic [ref=e165]: Critical
+          - generic [ref=e166]: "0"
+        - generic [ref=e170]:
+          - generic [ref=e171]: High
+          - generic [ref=e172]: "0"
+        - generic [ref=e176]:
+          - generic [ref=e177]: Medium
+          - generic [ref=e178]: "0"
+        - generic [ref=e182]:
+          - generic [ref=e183]: Live EPS
+          - generic [ref=e184]: "0"
+      - generic [ref=e189]:
+        - generic [ref=e190]: Could not load alert summary.
+        - button "Retry" [ref=e191] [cursor=pointer]
+      - generic [ref=e192]:
+        - generic [ref=e193]: Live feeds disconnected. Alert counts and EPS may be out of date.
+        - button "Reconnect" [ref=e194] [cursor=pointer]
+      - generic [ref=e195]:
+        - generic [ref=e196]: No alerts in the selected time range.
+        - generic [ref=e199]:
+          - generic [ref=e200]:
+            - generic [ref=e201]: Live Alerts
+            - generic [ref=e202]: Connected
+          - generic [ref=e204]: No recent alerts.
+      - generic [ref=e207]:
+        - generic [ref=e208]: 🛡️
+        - generic [ref=e209]: No open incidents
+        - generic [ref=e210]: All incidents have been resolved or none have been created.
+      - generic [ref=e211]:
+        - generic [ref=e212]: Disconnected
+        - generic [ref=e215]: 0 eps

@@ -1,0 +1,178 @@
+/* ActivityTimeline — Sprint 46 */
+
+.ha-activity-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ha-activity-timeline__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-activity-timeline__header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  margin: 0;
+}
+
+.ha-activity-timeline__total {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--ha-foreground-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ha-activity-timeline__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ha-activity-timeline__filter-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ha-foreground-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.ha-activity-timeline__filter-chip:hover {
+  border-color: var(--ha-border-strong);
+}
+
+.ha-activity-timeline__filter-chip[data-active='true'] {
+  background: var(--ha-action-primary);
+  border-color: var(--ha-action-primary);
+  color: var(--ha-foreground-on-action, var(--ha-surface-app));
+}
+
+.ha-activity-timeline__loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.ha-activity-timeline__empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--ha-foreground-tertiary);
+  font-size: 13px;
+}
+
+.ha-activity-timeline__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.ha-activity-timeline__event {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--ha-surface-panel);
+  border: 1px solid var(--ha-border-subtle);
+  transition: border-color 0.15s;
+}
+
+.ha-activity-timeline__event:hover {
+  border-color: var(--ha-border-default);
+}
+
+.ha-activity-timeline__event[data-severity='critical'] {
+  border-left: 3px solid var(--ha-severity-critical);
+}
+
+.ha-activity-timeline__event[data-severity='high'] {
+  border-left: 3px solid var(--ha-severity-high);
+}
+
+.ha-activity-timeline__event[data-severity='medium'] {
+  border-left: 3px solid var(--ha-severity-medium);
+}
+
+.ha-activity-timeline__event[data-severity='low'] {
+  border-left: 3px solid var(--ha-severity-low);
+}
+
+.ha-activity-timeline__event-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-secondary);
+  flex-shrink: 0;
+}
+
+.ha-activity-timeline__event-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ha-activity-timeline__event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.ha-activity-timeline__event-type {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  text-transform: capitalize;
+}
+
+.ha-activity-timeline__event-time {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-activity-timeline__event-desc {
+  font-size: 12px;
+  color: var(--ha-foreground-secondary);
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ha-activity-timeline__event-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 10px;
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-activity-timeline__event-meta span[data-severity='critical'] {
+  color: var(--ha-severity-critical);
+}
+
+.ha-activity-timeline__event-meta span[data-severity='high'] {
+  color: var(--ha-severity-high);
+}
+
+.ha-activity-timeline__event-meta span[data-severity='medium'] {
+  color: var(--ha-severity-medium);
+}
+
+.ha-activity-timeline__loading-more {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+}

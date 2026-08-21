@@ -1,0 +1,72 @@
+# HiveArmor Network Connection Telemetry filter — version 1.0.0
+# DataType: netconn
+#
+# Processes events from:
+#   - agent/collector/netconn.Collector (all platforms)
+#   - agent/collector/etw.Collector Windows Kernel-Network (Windows)
+#   - agent/collector/esf.Collector NETWORKFLOW (macOS)
+
+pipeline:
+  - dataTypes:
+      - netconn
+    steps:
+      - json:
+          source: raw
+          where: 'startsWith("raw", "{")'
+
+      - rename:
+          from:
+            - log.srcIp
+            - log.SrcIP
+          to: origin.ip
+          where: 'exists("log.srcIp") || exists("log.SrcIP")'
+
+      - rename:
+          from:
+            - log.dstIp
+            - log.DstIP
+          to: target.ip
+          where: 'exists("log.dstIp") || exists("log.DstIP")'
+
+      - rename:
+          from:
+            - log.srcPort
+            - log.SrcPort
+          to: origin.port
+          where: 'exists("log.srcPort") || exists("log.SrcPort")'
+
+      - rename:
+          from:
+            - log.dstPort
+            - log.DstPort
+          to: target.port
+          where: 'exists("log.dstPort") || exists("log.DstPort")'
+
+      - rename:
+          from:
+            - log.protocol
+            - log.Protocol
+            - log.proto
+          to: protocol
+          where: 'exists("log.protocol") || exists("log.Protocol") || exists("log.proto")'
+
+      - rename:
+          from:
+            - log.processName
+            - log.ProcessName
+          to: origin.process
+          where: 'exists("log.processName") || exists("log.ProcessName")'
+
+      - rename:
+          from:
+            - log.pid
+            - log.PID
+          to: origin.pid
+          where: 'exists("log.pid") || exists("log.PID")'
+
+      - rename:
+          from:
+            - log.action
+            - log.Action
+          to: action
+          where: 'exists("log.action") || exists("log.Action")'

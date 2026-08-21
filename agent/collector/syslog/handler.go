@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/threatwinds/go-sdk/entities"
-	"github.com/threatwinds/go-sdk/plugins"
 	"github.com/hivearmor/agent/agent"
 	"github.com/hivearmor/agent/config"
 	"github.com/hivearmor/agent/models"
 	"github.com/hivearmor/agent/utils"
+	"github.com/hivearmor/sdk/entities"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 // resolveRemoteAddr extracts the IP from addr and replaces localhost with hostname.
@@ -70,7 +70,7 @@ func (inst *syslogInstance) readLoop(ctx context.Context, reader *bufio.Reader, 
 	}
 }
 
-func (inst *syslogInstance) handleConnectionTCP(c net.Conn, queue chan *plugins.Log) {
+func (inst *syslogInstance) handleConnectionTCP(c net.Conn, queue chan<- *plugins.Log) {
 	defer c.Close()
 	reader := bufio.NewReader(c)
 	remoteAddr := resolveRemoteAddr(c.RemoteAddr().String())
@@ -101,7 +101,7 @@ func (inst *syslogInstance) handleConnectionTCP(c net.Conn, queue chan *plugins.
 	inst.readLoop(inst.TCPListener.CTX, reader, remoteAddr, msgChannel, nil)
 }
 
-func (inst *syslogInstance) handleTLSConnection(conn net.Conn, queue chan *plugins.Log) {
+func (inst *syslogInstance) handleTLSConnection(conn net.Conn, queue chan<- *plugins.Log) {
 	defer conn.Close()
 
 	remoteAddr := resolveRemoteAddr(conn.RemoteAddr().String())
@@ -132,7 +132,7 @@ func (inst *syslogInstance) handleTLSConnection(conn net.Conn, queue chan *plugi
 }
 
 // handleMessage processes messages from the channel and sends them to the queue.
-func (inst *syslogInstance) handleMessage(ctx context.Context, logsChannel chan models.MSGDS, queue chan *plugins.Log) {
+func (inst *syslogInstance) handleMessage(ctx context.Context, logsChannel chan models.MSGDS, queue chan<- *plugins.Log) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -153,13 +153,7 @@ func (inst *syslogInstance) handleMessage(ctx context.Context, logsChannel chan 
 				DataSource: msgDS.DataSource,
 				Raw:        message,
 			}
-			select {
-			case queue <- log:
-			default:
-				agent.LogsDropped.Add(1)
-				agent.WriteToDLQ("syslog", log)
-				utils.Logger.LogF(400, "syslog: LogQueue full; dropping event from %s", msgDS.DataSource)
-			}
+			agent.Offer(queue, "syslog", log)
 		}
 	}
 }

@@ -1,0 +1,18 @@
+- id: 9901
+  dataTypes: [linux, wineventlog, syslog]
+  name: "Test: Port Scan Followed by Exploit Attempt"
+  category: sequence
+  technique: "T1046 - Network Service Discovery"
+  adversary: origin
+  impact:
+    confidentiality: 3
+    integrity: 2
+    availability: 1
+  description: "Sequential pattern: port scan then exploit from same source within 5m."
+  where: "true"
+  sequence:
+    - where: 'equals("log.action", "port_scan")'
+      within: "5m"
+    - where: 'equals("log.action", "exploit_attempt")'
+      within: "3m"
+  deduplicateBy: [origin.ip]

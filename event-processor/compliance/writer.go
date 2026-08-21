@@ -2,7 +2,6 @@ package compliance
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,7 +9,8 @@ import (
 	"sync"
 	"time"
 
-	sdkos "github.com/threatwinds/go-sdk/os"
+	"github.com/hivearmor/event-processor/internal/httpclient"
+	sdkos "github.com/hivearmor/sdk/os"
 )
 
 var (
@@ -27,12 +27,7 @@ func InitWriter(osURL, user, pass string) {
 		writerURL = osURL
 		writerUser = user
 		writerPass = pass
-		writerHTTP = &http.Client{
-			Timeout: 10 * time.Second,
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			},
-		}
+		writerHTTP = httpclient.MustClient(10 * time.Second)
 	})
 }
 
@@ -43,7 +38,7 @@ func WriteComplianceEvidence(hits []ComplianceHit) {
 		return
 	}
 
-	idx := sdkos.BuildCurrentDayIndex("v3-hive", "compliance-evidence")
+	idx := sdkos.BuildCurrentDayIndex("compliance-evidence")
 	now := time.Now().UTC()
 
 	// Build an NDJSON bulk request body.
@@ -57,15 +52,15 @@ func WriteComplianceEvidence(hits []ComplianceHit) {
 		expiresAt := now.AddDate(0, 0, retentionDays).UTC().Format(time.RFC3339)
 
 		doc := map[string]any{
-			"@timestamp":            h.Timestamp,
-			"mappingId":             h.MappingID,
-			"controlId":             h.ControlID,
-			"mappingType":           h.MappingType,
-			"eventId":               h.EventID,
-			"weight":                h.Weight,
-			"evidenceExpiresAt":     expiresAt,
-			"dataType":              h.DataType,
-			"tenantId":              h.TenantID,
+			"@timestamp":        h.Timestamp,
+			"mappingId":         h.MappingID,
+			"controlId":         h.ControlID,
+			"mappingType":       h.MappingType,
+			"eventId":           h.EventID,
+			"weight":            h.Weight,
+			"evidenceExpiresAt": expiresAt,
+			"dataType":          h.DataType,
+			"tenantId":          h.TenantID,
 		}
 
 		docJSON, err := json.Marshal(doc)

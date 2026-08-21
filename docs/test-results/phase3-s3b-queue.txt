@@ -1,0 +1,52 @@
+Sprint: S-3B-QUEUE — Queue Backend + Frontend Service
+Date:   2026-07-20
+
+== TypeScript ==
+Errors: 0  (npx tsc --noEmit)
+
+== Vitest ==
+Total:   383 passed / 383 (0 failures)
+New tests added: 8  (queue.service.test.ts)
+
+== Files Created ==
+
+Backend:
+  backend/src/main/java/com/hivearmor/domain/UtmInvestigationTask.java
+  backend/src/main/java/com/hivearmor/repository/UtmInvestigationTaskRepository.java
+  backend/src/main/java/com/hivearmor/service/dto/QueueItemDTO.java
+  backend/src/main/java/com/hivearmor/service/queue/QueueService.java
+  backend/src/main/java/com/hivearmor/web/rest/queue/QueueResource.java
+  backend/src/main/java/com/hivearmor/web/rest/task/InvestigationTaskResource.java
+  backend/src/main/resources/config/liquibase/changelog/20260720002_add_investigation_task.xml
+  backend/src/test/java/com/hivearmor/web/rest/queue/QueueResourceIT.java
+
+Files Modified:
+  backend/src/main/resources/config/liquibase/master.xml  (added 20260720002 entry)
+
+Frontend:
+  frontend-v2/src/types/queue.ts
+  frontend-v2/src/services/queue.service.ts
+  frontend-v2/src/services/__tests__/queue.service.test.ts
+
+== Backend Tests ==
+QueueResourceIT.java contains 4 integration tests:
+  - getQueue_returnsOkWithXTotalCount
+  - getQueue_typeTaskFilter_returnsOnlyTasks
+  - getQueue_readOnlyUser_canGet
+  - getQueue_xTotalCountHeaderPresent
+
+Run manually: cd backend && mvn -s settings.xml test -Dtest=QueueResourceIT
+(Cannot run in sandbox — requires Maven + Postgres + Spring Boot context)
+
+== Priority Score Formula ==
+score = (severityWeight * 0.4) + (ageScore * 0.3) + (assignedToMeScore * 0.2) + (typeWeight * 0.1)
+  severityWeight : critical=100, high=75, medium=50, low=25
+  ageScore       : min(hours_since_created, 100)
+  assignedToMeScore : 100 if assignedTo == currentUser else 0
+  typeWeight     : ALERT=80, INCIDENT=60, OFFENSE=40, TASK=20
+
+== Notes ==
+- fetchAlerts / fetchIncidents / fetchOffenses return empty lists (stubs) until
+  OpenSearch/IncidentRepository integration is wired in S-3C.
+- getToken() uses try/catch instead of window check so localStorage stubs work
+  in node-environment Vitest tests.

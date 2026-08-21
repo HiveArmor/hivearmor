@@ -1,0 +1,38 @@
+id: a1b2c3d4-e5f6-7890-abcd-901234567831
+title: Suspicious Registry Run Key Persistence
+status: stable
+logsource:
+  product: windows
+  category: registry_set
+level: medium
+tags:
+  - attack.persistence
+  - attack.T1547
+  - attack.T1547.001
+detection:
+  selection:
+    TargetObject|contains:
+      - '\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
+      - '\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce'
+      - '\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Userinit'
+      - '\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run'
+  filter_legit:
+    Details|contains:
+      - 'C:\Program Files\'
+      - 'C:\Windows\System32\'
+  condition: selection and not filter_legit
+falsepositives:
+  - Legitimate software installation adding startup entries
+  - System management tools
+impact:
+  confidentiality: low
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - TargetObject
+groupBy:
+  - ComputerName
+mitre:
+  tactic: persistence
+  technique: T1547.001

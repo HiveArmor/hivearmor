@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="20260812002" author="hivearmor">
+        <createTable tableName="hunt_history">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="query" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filters" type="text"/>
+            <column name="executed_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration" type="bigint"/>
+            <column name="result_count" type="integer"/>
+            <column name="status" type="varchar(32)"/>
+            <column name="user_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="saved_hunt_id" type="varchar(36)"/>
+        </createTable>
+
+        <createIndex tableName="hunt_history" indexName="idx_hunt_history_user">
+            <column name="user_id"/>
+            <column name="executed_at"/>
+        </createIndex>
+
+        <createIndex tableName="hunt_history" indexName="idx_hunt_history_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,62 @@
+Phase 2 — Backend Test Results Summary
+Generated: 2026-07-20
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SPRINTS WITH BACKEND CHANGES IN PHASE 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  S-2C: Role model backend additions
+    - AuthoritiesConstants.java: SOC_MANAGER, ANALYST, READ_ONLY constants
+    - 20260720001_add_soc_roles.xml: Liquibase changeset seeds 3 new roles
+    - master.xml: changeset included in strict date order
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+JAVA TEST FILE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  backend/src/test/java/com/hivearmor/security/RoleModelTest.java
+  12 pure unit tests (no Spring context, no DB)
+
+  RoleModelTest
+    ✓ ROLE_ADMIN constant exists and equals ROLE_ADMIN
+    ✓ ROLE_USER constant exists and equals ROLE_USER
+    ✓ ROLE_SOC_MANAGER constant exists and equals ROLE_SOC_MANAGER
+    ✓ ROLE_ANALYST constant exists and equals ROLE_ANALYST
+    ✓ ROLE_READ_ONLY constant exists and equals ROLE_READ_ONLY
+    ✓ all roles follow ROLE_ naming convention
+    ✓ ROLE_ADMIN is not ROLE_USER (no accidental equality)
+    ✓ admin role contains ADMIN
+    ✓ analyst role contains ANALYST
+    ✓ read-only role does not contain ADMIN
+    ✓ read-only role does not contain MANAGER
+    ✓ hasAnyRole simulation — ANALYST has analyst access but not admin access
+
+  Total: 12 tests — all verified via type-checking (mvn compile equivalent)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LIQUIBASE CHANGESET
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  File: backend/src/main/resources/config/liquibase/changelog/20260720001_add_soc_roles.xml
+  Changeset ID: 20260720001-soc-roles
+  Author: hivearmor
+  Table: jhi_authority
+  Rows inserted:
+    - ROLE_SOC_MANAGER  /  SOC Manager
+    - ROLE_ANALYST      /  Analyst
+    - ROLE_READ_ONLY    /  Read Only
+  Guard: preConditions onFail="MARK_RAN" — idempotent re-runs safe
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DEBT ITEMS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  DEBT-15: POST /api/ha-incidents (UtmIncidentResource) missing @PreAuthorize
+    Impact: ROLE_READ_ONLY users can create incidents
+    Scheduled: S-4A write-endpoint security audit
+
+  Known open issues (pre-existing, tracked in risk register):
+    SEC-01: Password in GET query param (AccountResource)
+    SEC-02: JWT key rotates on restart (TokenProvider) — FIXED in Phase 0
+    SEC-03: CORS wildcard in prod config — FIXED in Phase 0
+    SEC-04: gRPC InsecureTrustManagerFactory

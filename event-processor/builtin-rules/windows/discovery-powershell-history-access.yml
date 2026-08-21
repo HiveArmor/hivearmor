@@ -1,0 +1,34 @@
+id: a5b6c7d8-e9f0-1234-abcd-345678901255
+title: PowerShell History File Access for Credential Discovery
+status: stable
+logsource:
+  product: windows
+  category: file_access
+level: medium
+tags:
+  - attack.discovery
+  - attack.credential_access
+  - attack.T1552
+  - attack.T1552.004
+detection:
+  selection:
+    TargetFilename|contains:
+      - '\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt'
+  filter_powershell:
+    Image|endswith: '\powershell.exe'
+  condition: selection and not filter_powershell
+falsepositives:
+  - Backup software backing up user profile directories
+  - Security audit tools reviewing history files
+impact:
+  confidentiality: medium
+  integrity: low
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - Image
+groupBy:
+  - ComputerName
+mitre:
+  tactic: discovery
+  technique: T1552.004

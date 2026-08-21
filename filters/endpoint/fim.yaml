@@ -1,0 +1,100 @@
+# HiveArmor File Integrity Monitoring (FIM) filter — version 1.0.0
+# DataType: fim
+#
+# Processes events emitted by agent/collector/fim.Collector.
+# Raw payload is a JSON object with origin.* and log.* fields already
+# in the HiveArmor Standard Event Schema — minimal transformation needed.
+#
+# Fields emitted:
+#   action              — CREATE / MODIFY / DELETE / RENAME / PERMISSION_CHANGE
+#   origin.file         — full absolute file path
+#   origin.filename     — base filename
+#   origin.path         — parent directory
+#   origin.sha256       — SHA-256 of new content
+#   origin.md5          — MD5 of new content
+#   origin.sizeInBytes  — file size in bytes
+#   origin.user         — UID:GID (POSIX) or SID (Windows)
+#   log.old_hash        — previous SHA-256 (on MODIFY)
+#   log.old_permissions — previous octal permissions
+#   log.new_permissions — new octal permissions
+#   log.old_owner       — previous owner
+#   log.new_owner       — new owner
+#   hostname            — agent hostname
+#   @timestamp          — RFC3339Nano event time
+
+pipeline:
+  - dataTypes:
+      - fim
+    steps:
+      # -----------------------------------------------------------------------
+      # PHASE 1: EXTRACTION
+      # -----------------------------------------------------------------------
+
+      # Parse JSON payload from agent FIM collector.
+      - json:
+          source: raw
+          where: 'startsWith("raw", "{")'
+
+      # Fallback: copy raw to log.message for non-JSON input (should not occur).
+      - grok:
+          patterns:
+            - field_name: log.message
+              pattern: '{{.greedy}}'
+          source: raw
+          where: 'not startsWith("raw", "{")'
+
+      # -----------------------------------------------------------------------
+      # PHASE 2: ENRICHMENT
+      # -----------------------------------------------------------------------
+
+      # Derive severity from action type and monitored path.
+      - lookup:
+          field: action
+          map:
+            DELETE:           HIGH
+            MODIFY:           MEDIUM
+            CREATE:           LOW
+            RENAME:           LOW
+            PERMISSION_CHANGE: HIGH
+          dest: log.severity
+          default: INFO
+
+      # Escalate severity for critical system paths.
+      - set:
+          field: log.severity
+          value: CRITICAL
+          where: >
+            startsWith("origin.file", "/etc/shadow") or
+            startsWith("origin.file", "/etc/passwd") or
+            startsWith("origin.file", "/etc/sudoers") or
+            contains("origin.file", "/root/.ssh/") or
+            contains("origin.file", "\\System32\\") or
+            contains("origin.file", "\\SysWOW64\\") or
+            startsWith("origin.file", "/Library/LaunchDaemons/")
+
+      # -----------------------------------------------------------------------
+      # PHASE 3: NORMALIZATION
+      # -----------------------------------------------------------------------
+
+      # Ensure action is uppercase.
+      - upper:
+          fields:
+            - action
+
+      # Populate log.message as a human-readable summary.
+      - template:
+          dest: log.message
+          template: 'FIM {{.action}}: {{.origin.file}}'
+          where: 'exists("origin.file") and exists("action")'
+
+      # -----------------------------------------------------------------------
+      # PHASE 4: ALERT FIELDS
+      # -----------------------------------------------------------------------
+
+      - set:
+          field: log.category
+          value: file-integrity-monitoring
+
+      - set:
+          field: log.dataType
+          value: fim

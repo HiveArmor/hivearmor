@@ -1,0 +1,42 @@
+# Positive: Kerberoasting — event 4769 with RC4 encryption (type 23), non-machine account,
+#   followed by ≥3 events from same IP (afterEvents count=3).
+# Negative: machine account names ending in $ are excluded by the rule's where clause.
+rule: rules/windows/kerberoasting_detection.yml
+description: "Kerberoasting — RC4 TGS request with afterEvents threshold"
+
+# Trigger event
+events:
+  - timestamp: "2026-01-15T11:00:00Z"
+    dataType: wineventlog
+    origin:
+      ip: "192.168.1.50"
+      host: "WORKSTATION02"
+      user: "pentest"
+    target:
+      user: "svc_sql"
+    log:
+      eventCode: "4769"
+      channel: "Security"
+      eventDataTicketEncryptionType: "23"
+      eventDataServiceName: "svc_sql"
+      eventDataTicketOptions: "1082195456"
+      message: "A Kerberos service ticket was requested"
+
+  # Correlation events — same origin IP, 3 more requests within 15m
+  - timestamp: "2026-01-15T11:01:00Z"
+    dataType: wineventlog
+    origin:
+      ip: "192.168.1.50"
+      host: "WORKSTATION02"
+      user: "pentest"
+    log:
+      eventCode: "4769"
+      channel: "Security"
+      message: "A Kerberos service ticket was requested"
+
+repeat: 4
+
+expect:
+  alert: true
+  severity: "2"
+  name: "Kerberoasting Attack Detection"

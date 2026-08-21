@@ -1,0 +1,50 @@
+# USB / Removable Media Detection Rules
+# DataType: usb
+
+dataTypes:
+  - "usb"
+name: "USB: Removable Media Device Inserted"
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 1
+category: "Initial Access"
+technique: "T1091 - Replication Through Removable Media"
+adversary: origin
+description: "A USB or removable media device was inserted into the endpoint. Removable media is a common initial access vector (Stuxnet, BadUSB, weaponized USB drops) and a primary data exfiltration path."
+references:
+  - "https://attack.mitre.org/techniques/T1091/"
+where: |
+  safe("action", "") == "USB_ARRIVE"
+groupBy:
+  - log.device_vid
+  - log.device_pid
+  - origin.user
+deduplicateBy:
+  - log.device_instance
+---
+dataTypes:
+  - "usb"
+name: "USB: Unusual USB Device Type — Possible HID Attack"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: "Initial Access"
+technique: "T1200 - Hardware Additions"
+adversary: origin
+description: "A USB Human Interface Device (HID) or unrecognized device type was inserted. BadUSB and Rubber Ducky attacks use HID emulation to inject keystrokes. Any HID device that is not a known keyboard or mouse should be investigated."
+references:
+  - "https://attack.mitre.org/techniques/T1200/"
+where: |
+  safe("action", "") == "USB_ARRIVE" &&
+  (
+    contains(toLower(safe("log.device_desc", "")), "hid") ||
+    contains(toLower(safe("log.device_desc", "")), "keyboard") ||
+    contains(toLower(safe("log.device_desc", "")), "composite")
+  )
+groupBy:
+  - log.device_vid
+  - log.device_pid
+deduplicateBy:
+  - log.device_instance

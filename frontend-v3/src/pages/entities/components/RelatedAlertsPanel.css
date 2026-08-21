@@ -1,0 +1,190 @@
+/* RelatedAlertsPanel — Sprint 46 */
+
+.ha-alerts-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ha-alerts-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-alerts-panel__header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  margin: 0;
+}
+
+.ha-alerts-panel__total {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--ha-foreground-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.ha-alerts-panel__loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.ha-alerts-panel__empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--ha-foreground-tertiary);
+  font-size: 13px;
+}
+
+.ha-alerts-panel__table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ha-alerts-panel__row {
+  display: grid;
+  grid-template-columns: 80px 1fr 140px 80px 100px 140px;
+  gap: 8px;
+  padding: 8px 12px;
+  align-items: center;
+  border-bottom: 1px solid var(--ha-border-subtle);
+  font-size: 12px;
+}
+
+.ha-alerts-panel__row:last-child {
+  border-bottom: none;
+}
+
+.ha-alerts-panel__row--header {
+  background: var(--ha-surface-elevated);
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--ha-foreground-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.ha-alerts-panel__row:not(.ha-alerts-panel__row--header) {
+  background: var(--ha-surface-panel);
+}
+
+.ha-alerts-panel__row:not(.ha-alerts-panel__row--header):hover {
+  background: var(--ha-surface-elevated);
+}
+
+.ha-alerts-panel__severity {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.ha-alerts-panel__severity[data-level='critical'] {
+  color: var(--ha-severity-critical);
+}
+
+.ha-alerts-panel__severity[data-level='high'] {
+  color: var(--ha-severity-high);
+}
+
+.ha-alerts-panel__severity[data-level='medium'] {
+  color: var(--ha-severity-medium);
+}
+
+.ha-alerts-panel__severity[data-level='low'] {
+  color: var(--ha-severity-low);
+}
+
+.ha-alerts-panel__title {
+  color: var(--ha-foreground-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ha-alerts-panel__rule {
+  color: var(--ha-foreground-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ha-alerts-panel__role {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-align: center;
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-alerts-panel__role[data-role='source'] {
+  background: color-mix(in srgb, var(--ha-severity-high) 12%, transparent);
+  color: var(--ha-severity-high);
+}
+
+.ha-alerts-panel__role[data-role='target'] {
+  background: color-mix(in srgb, var(--ha-severity-critical) 12%, transparent);
+  color: var(--ha-severity-critical);
+}
+
+.ha-alerts-panel__role[data-role='actor'] {
+  background: color-mix(in srgb, var(--ha-intelligence-primary) 12%, transparent);
+  color: var(--ha-intelligence-primary);
+}
+
+.ha-alerts-panel__technique {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--ha-intelligence-primary);
+}
+
+.ha-alerts-panel__time {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-alerts-panel__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-alerts-panel__pagination {
+  display: flex;
+  gap: 8px;
+}
+
+.ha-alerts-panel__pagination button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 4px;
+  background: var(--ha-surface-panel);
+  color: var(--ha-foreground-secondary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ha-alerts-panel__pagination button:hover:not(:disabled) {
+  border-color: var(--ha-border-strong);
+  color: var(--ha-foreground-primary);
+}
+
+.ha-alerts-panel__pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

@@ -1,0 +1,498 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e12]: HiveArmor
+        - generic [ref=e13]: Security operations
+      - generic [ref=e14]:
+        - button "All authorized tenants" [ref=e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=e24] [cursor=pointer]:
+          - generic [ref=e29]: ⌘ K
+        - generic [ref=e30]: Production
+      - generic [ref=e31]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=e256]'
+        - status "Live events per second" [ref=e257]:
+          - generic [ref=e37]: 0 EPS
+        - button "Notifications" [ref=e38] [cursor=pointer]
+        - button "Help" [ref=e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=e47]:
+      - generic [ref=e48]:
+        - region "COMMAND" [ref=e49]:
+          - generic [ref=e50]:
+            - button "Mission Control" [ref=e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=e58] [cursor=pointer]
+            - button "Alerts" [ref=e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=e67] [cursor=pointer]
+            - button "Incidents" [ref=e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=e79]:
+          - generic [ref=e80]:
+            - button "Search & Hunt" [ref=e81] [cursor=pointer]
+            - button "Investigations" [ref=e86] [cursor=pointer]
+            - button "Entities" [ref=e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=e97] [cursor=pointer]
+        - region "DEFEND" [ref=e103]:
+          - generic [ref=e104]:
+            - button "Detection Rules" [ref=e105] [cursor=pointer]
+            - button "Playbooks" [ref=e109] [cursor=pointer]
+            - button "Response Library" [ref=e114] [cursor=pointer]
+        - region "POSTURE" [ref=e118]:
+          - generic [ref=e119]:
+            - button "Assets" [ref=e120] [cursor=pointer]
+            - button "Identities" [ref=e125] [cursor=pointer]
+            - button "Active Directory" [ref=e132] [cursor=pointer]
+            - button "Exposure" [ref=e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=e156] [cursor=pointer]
+            - button "Sensors" [ref=e162] [cursor=pointer]
+            - button "Compliance" [ref=e166] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=e171]:
+          - generic [ref=e172]:
+            - button "Endpoints" [ref=e173] [cursor=pointer]
+            - button "File Quarantine" [ref=e177] [cursor=pointer]
+            - button "File Integrity" [ref=e183] [cursor=pointer]
+            - button "Agent Policies" [ref=e190] [cursor=pointer]
+        - region "DASHBOARDS" [ref=e195]:
+          - button "Studio" [ref=e197] [cursor=pointer]
+        - region "REPORT" [ref=e202]:
+          - button "Scheduled Reports" [ref=e204] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=e209]:
+          - generic [ref=e210]:
+            - button "Users" [ref=e211] [cursor=pointer]
+            - button "Integrations" [ref=e225] [cursor=pointer]
+            - button "Notifications" [ref=e229] [cursor=pointer]
+            - button "Audit Log" [ref=e234] [cursor=pointer]
+            - button "Settings" [ref=e239] [cursor=pointer]
+      - generic [ref=e244]:
+        - button "User menu" [ref=e247] [cursor=pointer]:
+          - generic [ref=e248]: AA
+        - button "Pin sidebar open" [ref=e249] [cursor=pointer]
+    - main [ref=e252]:
+      - generic [ref=e258]:
+        - generic [ref=e259]:
+          - generic [ref=e265]:
+            - generic [ref=e266]: ENTITY INTELLIGENCE
+            - heading "Entity Inventory" [level=1] [ref=e267]
+          - generic "Live updates active" [ref=e871]: ● Live
+        - region "Entity inventory summary" [ref=e268]:
+          - article [ref=e269]:
+            - generic [ref=e275]:
+              - generic [ref=e276]: Total entities
+              - strong [ref=e277]: —
+          - article [ref=e278]:
+            - generic [ref=e283]:
+              - generic [ref=e284]: High risk
+              - strong [ref=e285]: —
+          - article [ref=e286]:
+            - generic [ref=e291]:
+              - generic [ref=e292]: Rising
+              - strong [ref=e293]: —
+          - article [ref=e294]:
+            - generic [ref=e298]:
+              - generic [ref=e299]: Active alerts
+              - strong [ref=e300]: —
+          - article [ref=e301]:
+            - generic [ref=e305]:
+              - generic [ref=e306]: New 24h
+              - strong [ref=e307]: —
+        - generic [ref=e308]:
+          - complementary "Entity filters" [ref=e309]:
+            - generic [ref=e310]:
+              - textbox "Search entities by name or value" [active] [ref=e314]:
+                - /placeholder: Search entities…
+                - text: FIN-WKS
+              - button "Clear search" [ref=e1539] [cursor=pointer]
+            - group "Entity type" [ref=e315]:
+              - generic [ref=e317] [cursor=pointer]:
+                - checkbox "Host" [ref=e318]
+                - generic [ref=e319]: Host
+              - generic [ref=e320] [cursor=pointer]:
+                - checkbox "User" [ref=e321]
+                - generic [ref=e322]: User
+              - generic [ref=e323] [cursor=pointer]:
+                - checkbox "IP" [ref=e324]
+                - generic [ref=e325]: IP
+              - generic [ref=e326] [cursor=pointer]:
+                - checkbox "Domain" [ref=e327]
+                - generic [ref=e328]: Domain
+            - group "Risk level" [ref=e329]:
+              - generic [ref=e331] [cursor=pointer]:
+                - checkbox "Critical" [ref=e332]
+                - generic [ref=e333]: Critical
+              - generic [ref=e334] [cursor=pointer]:
+                - checkbox "High" [ref=e335]
+                - generic [ref=e336]: High
+              - generic [ref=e337] [cursor=pointer]:
+                - checkbox "Medium" [ref=e338]
+                - generic [ref=e339]: Medium
+              - generic [ref=e340] [cursor=pointer]:
+                - checkbox "Low" [ref=e341]
+                - generic [ref=e342]: Low
+            - group "Criticality" [ref=e343]:
+              - generic [ref=e345] [cursor=pointer]:
+                - checkbox "Critical" [ref=e346]
+                - generic [ref=e347]: Critical
+              - generic [ref=e348] [cursor=pointer]:
+                - checkbox "High" [ref=e349]
+                - generic [ref=e350]: High
+              - generic [ref=e351] [cursor=pointer]:
+                - checkbox "Medium" [ref=e352]
+                - generic [ref=e353]: Medium
+              - generic [ref=e354] [cursor=pointer]:
+                - checkbox "Low" [ref=e355]
+                - generic [ref=e356]: Low
+              - generic [ref=e357] [cursor=pointer]:
+                - checkbox "Unclassified" [ref=e358]
+                - generic [ref=e359]: Unclassified
+            - group "Toggles" [ref=e360]:
+              - generic [ref=e362] [cursor=pointer]:
+                - checkbox "Active alerts only" [ref=e363]
+                - generic [ref=e364]: Active alerts only
+              - generic [ref=e365] [cursor=pointer]:
+                - checkbox "Rising trend only" [ref=e366]
+                - generic [ref=e367]: Rising trend only
+          - generic [ref=e368]:
+            - generic "Entity intelligence inventory" [ref=e370]:
+              - generic [ref=e374]:
+                - generic [ref=e375]: Loading...
+                - grid [ref=e376]:
+                  - rowgroup [ref=e377]:
+                    - row [ref=e378]:
+                      - columnheader "Type" [ref=e379]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Value" [ref=e382]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Display Name" [ref=e385]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Risk" [ref=e388]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Trend" [ref=e391]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Criticality" [ref=e394]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Alerts" [ref=e397]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Last Seen" [ref=e400]:
+                        - text: 
+                        - generic: 
+                      - columnheader "Sources" [ref=e403]:
+                        - text: 
+                        - generic: 
+                    - row [ref=e1187]:
+                      - gridcell "host" [ref=e686]
+                      - gridcell "FIN-WKS-001" [ref=e691]
+                      - gridcell "Finance Workstation 001" [ref=e692]
+                      - gridcell [ref=e693]:
+                        - generic "Risk score 88, level critical, trend rising" [ref=e694]:
+                          - strong [ref=e695]: "88"
+                          - generic [ref=e696]: ↑
+                      - gridcell "↑ rising" [ref=e697]
+                      - gridcell "high" [ref=e699]
+                      - gridcell "15" [ref=e700]
+                      - gridcell "31m ago" [ref=e1188]
+                      - gridcell "endpoint, network" [ref=e702]
+                    - row [ref=e1544]:
+                      - gridcell "host" [ref=e1545]
+                      - gridcell "FIN-WKS-022" [ref=e1550]
+                      - gridcell "Finance Workstation 022" [ref=e1551]
+                      - gridcell [ref=e1552]:
+                        - generic "Risk score 80, level critical, trend rising" [ref=e1553]:
+                          - strong [ref=e1554]: "80"
+                          - generic [ref=e1555]: ↑
+                      - gridcell "↑ rising" [ref=e1556]
+                      - gridcell "high" [ref=e1558]
+                      - gridcell "10" [ref=e1559]
+                      - gridcell "31m ago" [ref=e1560]
+                      - gridcell "endpoint, network" [ref=e1561]
+                    - row [ref=e1562]:
+                      - gridcell "host" [ref=e1563]
+                      - gridcell "FIN-WKS-013" [ref=e1568]
+                      - gridcell "Finance Workstation 013" [ref=e1569]
+                      - gridcell [ref=e1570]:
+                        - generic "Risk score 76, level high, trend rising" [ref=e1571]:
+                          - strong [ref=e1572]: "76"
+                          - generic [ref=e1573]: ↑
+                      - gridcell "↑ rising" [ref=e1574]
+                      - gridcell "high" [ref=e1576]
+                      - gridcell "8" [ref=e1577]
+                      - gridcell "31m ago" [ref=e1578]
+                      - gridcell "endpoint, network" [ref=e1579]
+                    - row [ref=e1580]:
+                      - gridcell "host" [ref=e1581]
+                      - gridcell "FIN-WKS-002" [ref=e1586]
+                      - gridcell "Finance Workstation 002" [ref=e1587]
+                      - gridcell [ref=e1588]:
+                        - generic "Risk score 74, level high, trend stable" [ref=e1589]:
+                          - strong [ref=e1590]: "74"
+                          - generic [ref=e1591]: →
+                      - gridcell "→ stable" [ref=e1592]
+                      - gridcell "high" [ref=e1594]
+                      - gridcell "7" [ref=e1595]
+                      - gridcell "1d ago" [ref=e1596]
+                      - gridcell "endpoint, network" [ref=e1597]
+                    - row [ref=e1598]:
+                      - gridcell "host" [ref=e1599]
+                      - gridcell "FIN-WKS-030" [ref=e1604]
+                      - gridcell "Finance Workstation 030" [ref=e1605]
+                      - gridcell [ref=e1606]:
+                        - generic "Risk score 73, level high, trend stable" [ref=e1607]:
+                          - strong [ref=e1608]: "73"
+                          - generic [ref=e1609]: →
+                      - gridcell "→ stable" [ref=e1610]
+                      - gridcell "high" [ref=e1612]
+                      - gridcell "7" [ref=e1613]
+                      - gridcell "1d ago" [ref=e1614]
+                      - gridcell "endpoint, network" [ref=e1615]
+                    - row [ref=e1616]:
+                      - gridcell "host" [ref=e1617]
+                      - gridcell "FIN-WKS-017" [ref=e1622]
+                      - gridcell "Finance Workstation 017" [ref=e1623]
+                      - gridcell [ref=e1624]:
+                        - generic "Risk score 71, level high, trend stable" [ref=e1625]:
+                          - strong [ref=e1626]: "71"
+                          - generic [ref=e1627]: →
+                      - gridcell "→ stable" [ref=e1628]
+                      - gridcell "high" [ref=e1630]
+                      - gridcell "7" [ref=e1631]
+                      - gridcell "1d ago" [ref=e1632]
+                      - gridcell "endpoint, network" [ref=e1633]
+                    - row [ref=e1634]:
+                      - gridcell "host" [ref=e1635]
+                      - gridcell "FIN-WKS-010" [ref=e1640]
+                      - gridcell "Finance Workstation 010" [ref=e1641]
+                      - gridcell [ref=e1642]:
+                        - generic "Risk score 70, level high, trend rising" [ref=e1643]:
+                          - strong [ref=e1644]: "70"
+                          - generic [ref=e1645]: ↑
+                      - gridcell "↑ rising" [ref=e1646]
+                      - gridcell "high" [ref=e1648]
+                      - gridcell "8" [ref=e1649]
+                      - gridcell "31m ago" [ref=e1650]
+                      - gridcell "endpoint, network" [ref=e1651]
+                    - row [ref=e1652]:
+                      - gridcell "host" [ref=e1653]
+                      - gridcell "FIN-WKS-003" [ref=e1658]
+                      - gridcell "Finance Workstation 003" [ref=e1659]
+                      - gridcell [ref=e1660]:
+                        - generic "Risk score 68, level high, trend rising" [ref=e1661]:
+                          - strong [ref=e1662]: "68"
+                          - generic [ref=e1663]: ↑
+                      - gridcell "↑ rising" [ref=e1664]
+                      - gridcell "high" [ref=e1666]
+                      - gridcell "9" [ref=e1667]
+                      - gridcell "31m ago" [ref=e1668]
+                      - gridcell "endpoint, network" [ref=e1669]
+                    - row [ref=e1670]:
+                      - gridcell "host" [ref=e1671]
+                      - gridcell "FIN-WKS-023" [ref=e1676]
+                      - gridcell "Finance Workstation 023" [ref=e1677]
+                      - gridcell [ref=e1678]:
+                        - generic "Risk score 66, level high, trend stable" [ref=e1679]:
+                          - strong [ref=e1680]: "66"
+                          - generic [ref=e1681]: →
+                      - gridcell "→ stable" [ref=e1682]
+                      - gridcell "high" [ref=e1684]
+                      - gridcell "5" [ref=e1685]
+                      - gridcell "1d ago" [ref=e1686]
+                      - gridcell "endpoint, network" [ref=e1687]
+                    - row [ref=e1688]:
+                      - gridcell "host" [ref=e1689]
+                      - gridcell "FIN-WKS-014" [ref=e1694]
+                      - gridcell "Finance Workstation 014" [ref=e1695]
+                      - gridcell [ref=e1696]:
+                        - generic "Risk score 64, level high, trend stable" [ref=e1697]:
+                          - strong [ref=e1698]: "64"
+                          - generic [ref=e1699]: →
+                      - gridcell "→ stable" [ref=e1700]
+                      - gridcell "high" [ref=e1702]
+                      - gridcell "5" [ref=e1703]
+                      - gridcell "1d ago" [ref=e1704]
+                      - gridcell "endpoint, network" [ref=e1705]
+                    - row [ref=e1706]:
+                      - gridcell "host" [ref=e1707]
+                      - gridcell "FIN-WKS-007" [ref=e1712]
+                      - gridcell "Finance Workstation 007" [ref=e1713]
+                      - gridcell [ref=e1714]:
+                        - generic "Risk score 63, level high, trend stable" [ref=e1715]:
+                          - strong [ref=e1716]: "63"
+                          - generic [ref=e1717]: →
+                      - gridcell "→ stable" [ref=e1718]
+                      - gridcell "high" [ref=e1720]
+                      - gridcell "5" [ref=e1721]
+                      - gridcell "1d ago" [ref=e1722]
+                      - gridcell "endpoint, network" [ref=e1723]
+                    - row [ref=e1724]:
+                      - gridcell "host" [ref=e1725]
+                      - gridcell "FIN-WKS-028" [ref=e1730]
+                      - gridcell "Finance Workstation 028" [ref=e1731]
+                      - gridcell [ref=e1732]:
+                        - generic "Risk score 63, level high, trend rising" [ref=e1733]:
+                          - strong [ref=e1734]: "63"
+                          - generic [ref=e1735]: ↑
+                      - gridcell "↑ rising" [ref=e1736]
+                      - gridcell "high" [ref=e1738]
+                      - gridcell "6" [ref=e1739]
+                      - gridcell "31m ago" [ref=e1740]
+                      - gridcell "endpoint, network" [ref=e1741]
+                    - row [ref=e1742]:
+                      - gridcell "host" [ref=e1743]
+                      - gridcell "FIN-WKS-020" [ref=e1748]
+                      - gridcell "Finance Workstation 020" [ref=e1749]
+                      - gridcell [ref=e1750]:
+                        - generic "Risk score 62, level high, trend rising" [ref=e1751]:
+                          - strong [ref=e1752]: "62"
+                          - generic [ref=e1753]: ↑
+                      - gridcell "↑ rising" [ref=e1754]
+                      - gridcell "medium" [ref=e1756]
+                      - gridcell "5" [ref=e1757]
+                      - gridcell "31m ago" [ref=e1758]
+                      - gridcell "endpoint, network" [ref=e1759]
+                    - row [ref=e1760]:
+                      - gridcell "host" [ref=e1761]
+                      - gridcell "FIN-WKS-012" [ref=e1766]
+                      - gridcell "Finance Workstation 012" [ref=e1767]
+                      - gridcell [ref=e1768]:
+                        - generic "Risk score 60, level high, trend stable" [ref=e1769]:
+                          - strong [ref=e1770]: "60"
+                          - generic [ref=e1771]: →
+                      - gridcell "→ stable" [ref=e1772]
+                      - gridcell "medium" [ref=e1774]
+                      - gridcell "5" [ref=e1775]
+                      - gridcell "3d ago" [ref=e1776]
+                      - gridcell "endpoint, network" [ref=e1777]
+                    - row [ref=e1778]:
+                      - gridcell "host" [ref=e1779]
+                      - gridcell "FIN-WKS-026" [ref=e1784]
+                      - gridcell "Finance Workstation 026" [ref=e1785]
+                      - gridcell [ref=e1786]:
+                        - generic "Risk score 55, level medium, trend stable" [ref=e1787]:
+                          - strong [ref=e1788]: "55"
+                          - generic [ref=e1789]: →
+                      - gridcell "→ stable" [ref=e1790]
+                      - gridcell "medium" [ref=e1792]
+                      - gridcell "3" [ref=e1793]
+                      - gridcell "2d ago" [ref=e1794]
+                      - gridcell "endpoint, network" [ref=e1795]
+                    - row [ref=e1796]:
+                      - gridcell "host" [ref=e1797]
+                      - gridcell "FIN-WKS-021" [ref=e1802]
+                      - gridcell "Finance Workstation 021" [ref=e1803]
+                      - gridcell [ref=e1804]:
+                        - generic "Risk score 53, level medium, trend stable" [ref=e1805]:
+                          - strong [ref=e1806]: "53"
+                          - generic [ref=e1807]: →
+                      - gridcell "→ stable" [ref=e1808]
+                      - gridcell "medium" [ref=e1810]
+                      - gridcell "3" [ref=e1811]
+                      - gridcell "2d ago" [ref=e1812]
+                      - gridcell "endpoint, network" [ref=e1813]
+                    - row [ref=e1814]:
+                      - gridcell "host" [ref=e1815]
+                      - gridcell "FIN-WKS-004" [ref=e1820]
+                      - gridcell "Finance Workstation 004" [ref=e1821]
+                      - gridcell [ref=e1822]:
+                        - generic "Risk score 52, level medium, trend stable" [ref=e1823]:
+                          - strong [ref=e1824]: "52"
+                          - generic [ref=e1825]: →
+                      - gridcell "→ stable" [ref=e1826]
+                      - gridcell "high" [ref=e1828]
+                      - gridcell "3" [ref=e1829]
+                      - gridcell "2d ago" [ref=e1830]
+                      - gridcell "endpoint, network" [ref=e1831]
+                    - row [ref=e1832]:
+                      - gridcell "host" [ref=e1833]
+                      - gridcell "FIN-WKS-015" [ref=e1838]
+                      - gridcell "Finance Workstation 015" [ref=e1839]
+                      - gridcell [ref=e1840]:
+                        - generic "Risk score 49, level medium, trend stable" [ref=e1841]:
+                          - strong [ref=e1842]: "49"
+                          - generic [ref=e1843]: →
+                      - gridcell "→ stable" [ref=e1844]
+                      - gridcell "medium" [ref=e1846]
+                      - gridcell "2" [ref=e1847]
+                      - gridcell "3d ago" [ref=e1848]
+                      - gridcell "endpoint, network" [ref=e1849]
+                    - row [ref=e1850]:
+                      - gridcell "host" [ref=e1851]
+                      - gridcell "FIN-WKS-024" [ref=e1856]
+                      - gridcell "Finance Workstation 024" [ref=e1857]
+                      - gridcell [ref=e1858]:
+                        - generic "Risk score 47, level medium, trend stable" [ref=e1859]:
+                          - strong [ref=e1860]: "47"
+                          - generic [ref=e1861]: →
+                      - gridcell "→ stable" [ref=e1862]
+                      - gridcell "medium" [ref=e1864]
+                      - gridcell "2" [ref=e1865]
+                      - gridcell "3d ago" [ref=e1866]
+                      - gridcell "endpoint, network" [ref=e1867]
+                    - row [ref=e1868]:
+                      - gridcell "host" [ref=e1869]
+                      - gridcell "FIN-WKS-005" [ref=e1874]
+                      - gridcell "Finance Workstation 005" [ref=e1875]
+                      - gridcell [ref=e1876]:
+                        - generic "Risk score 46, level medium, trend stable" [ref=e1877]:
+                          - strong [ref=e1878]: "46"
+                          - generic [ref=e1879]: →
+                      - gridcell "→ stable" [ref=e1880]
+                      - gridcell "medium" [ref=e1882]
+                      - gridcell "2" [ref=e1883]
+                      - gridcell "4d ago" [ref=e1884]
+                      - gridcell "endpoint, network" [ref=e1885]
+                    - row [ref=e1886]:
+                      - gridcell "host" [ref=e1887]
+                      - gridcell "FIN-WKS-019" [ref=e1892]
+                      - gridcell "Finance Workstation 019" [ref=e1893]
+                      - gridcell [ref=e1894]:
+                        - generic "Risk score 42, level medium, trend stable" [ref=e1895]:
+                          - strong [ref=e1896]: "42"
+                          - generic [ref=e1897]: →
+                      - gridcell "→ stable" [ref=e1898]
+                      - gridcell "medium" [ref=e1900]
+                      - gridcell "2" [ref=e1901]
+                      - gridcell "4d ago" [ref=e1902]
+                      - gridcell "endpoint, network" [ref=e1903]
+                    - row [ref=e1904]:
+                      - gridcell "host" [ref=e1905]
+                      - gridcell "FIN-WKS-029" [ref=e1910]
+                      - gridcell "Finance Workstation 029" [ref=e1911]
+                      - gridcell [ref=e1912]:
+                        - generic "Risk score 41, level medium, trend stable" [ref=e1913]:
+                          - strong [ref=e1914]: "41"
+                          - generic [ref=e1915]: →
+                      - gridcell "→ stable" [ref=e1916]
+                      - gridcell "medium" [ref=e1918]
+                      - gridcell "2" [ref=e1919]
+                      - gridcell "4d ago" [ref=e1920]
+                      - gridcell "endpoint, network" [ref=e1921]
+                    - row [ref=e1922]:
+                      - gridcell "host" [ref=e1923]
+                      - gridcell "FIN-WKS-006" [ref=e1928]
+                      - gridcell "Finance Workstation 006" [ref=e1929]
+                      - gridcell [ref=e1930]:
+                        - generic "Risk score 39, level medium, trend declining" [ref=e1931]:
+                          - strong [ref=e1932]: "39"
+                          - generic [ref=e1933]: ↓
+                      - gridcell "↓ declining" [ref=e1934]
+                      - gridcell "medium" [ref=e1936]
+                      - gridcell "1" [ref=e1937]
+                      - gridcell "7d ago" [ref=e1938]
+                      - gridcell "endpoint, network" [ref=e1939]
+                - text:     
+            - generic [ref=e859]:
+              - generic [ref=e860]: 30 entities
+              - strong [ref=e861]:
+                - text: Page 1
+                - generic [ref=e862]: 1–30
+              - generic [ref=e863]:
+                - button "Previous" [disabled] [ref=e864]
+                - button "Next" [disabled] [ref=e867]
+  - generic:
+    - list "Notifications"

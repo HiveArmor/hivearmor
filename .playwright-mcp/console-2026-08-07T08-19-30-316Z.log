@@ -1,0 +1,486 @@
+[     403ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:17230
+[     635ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     635ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/ha-incidents/11/entities:0
+[     650ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/overview/health:0
+[     688ms] [ERROR] Warning: Each child in a list should have a unique "key" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s 
+
+Check the render method of `IncidentDetailPage`.  
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d60f55b8:52
+[     691ms] [ERROR] Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s%s undefined  You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at IncidentTimelinePanel.tsx:115. 
+    at IncidentTimelinePanel (http://localhost:3000/src/pages/incidents/components/IncidentTimelinePanel.tsx:52:41)
+    at section
+    at div
+    at div
+    at section
+    at section
+    at div
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d60f55b8:52
+[     691ms] [ERROR] Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s%s undefined  You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at IncidentTimelinePanel.tsx:115. 
+    at IncidentTimelinePanel (http://localhost:3000/src/pages/incidents/components/IncidentTimelinePanel.tsx:52:41)
+    at section
+    at div
+    at div
+    at section
+    at section
+    at div
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d60f55b8:52
+[     691ms] [ERROR] Warning: Each child in a list should have a unique "key" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s 
+
+Check the render method of `IncidentTimelinePanel`.  
+    at li
+    at IncidentTimelinePanel (http://localhost:3000/src/pages/incidents/components/IncidentTimelinePanel.tsx:52:41)
+    at section
+    at div
+    at div
+    at section
+    at section
+    at div
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d60f55b8:52
+[     691ms] [ERROR] Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s%s undefined  You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at IncidentTimelinePanel.tsx:115. 
+    at IncidentTimelinePanel (http://localhost:3000/src/pages/incidents/components/IncidentTimelinePanel.tsx:52:41)
+    at section
+    at div
+    at div
+    at section
+    at section
+    at div
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d60f55b8:52
+[     691ms] [ERROR] Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s%s undefined  You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at IncidentTimelinePanel.tsx:115. 
+    at IncidentTimelinePanel (http://localhost:3000/src/pages/incidents/components/IncidentTimelinePanel.tsx:52:41)
+    at section
+    at div
+    at div
+    at section
+    at section
+    at div
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d60f55b8:52
+[     693ms] Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `IncidentTimelinePanel`.
+    at createFiberFromTypeAndProps (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16466:12)
+    at createFiberFromElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16481:16)
+    at reconcileSingleElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8849:22)
+    at reconcileChildFibers (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8879:56)
+    at reconcileChildren (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11924:49)
+    at updateHostComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12287:4)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13102:32)
+    at HTMLUnknownElement.callCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3142:11)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3162:14)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3201:32)
+[     693ms] Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `IncidentTimelinePanel`.
+    at createFiberFromTypeAndProps (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16466:12)
+    at createFiberFromElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16481:16)
+    at reconcileSingleElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8849:22)
+    at reconcileChildFibers (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8879:56)
+    at reconcileChildren (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11924:49)
+    at updateHostComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12287:4)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13102:32)
+    at HTMLUnknownElement.callCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3142:11)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3162:14)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3201:32)
+[     693ms] [ERROR] Error handled by React Router default ErrorBoundary: Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `IncidentTimelinePanel`.
+    at createFiberFromTypeAndProps (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16466:12)
+    at createFiberFromElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16481:16)
+    at reconcileSingleElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8849:22)
+    at reconcileChildFibers (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8879:56)
+    at reconcileChildren (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11924:49)
+    at updateHostComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12287:4)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13102:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3780
+[     693ms] [ERROR] Error handled by React Router default ErrorBoundary: Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `IncidentTimelinePanel`.
+    at createFiberFromTypeAndProps (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16466:12)
+    at createFiberFromElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16481:16)
+    at reconcileSingleElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8849:22)
+    at reconcileChildFibers (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8879:56)
+    at reconcileChildren (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11924:49)
+    at updateHostComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12287:4)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13102:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3780
+[     695ms] [ERROR] Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s%s undefined  You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at IncidentTimelinePanel.tsx:115. 
+    at IncidentTimelinePanel (http://localhost:3000/src/pages/incidents/components/IncidentTimelinePanel.tsx:52:41)
+    at section
+    at div
+    at div
+    at section
+    at section
+    at div
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d60f55b8:52
+[     695ms] [ERROR] Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s%s undefined  You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at IncidentTimelinePanel.tsx:115. 
+    at IncidentTimelinePanel (http://localhost:3000/src/pages/incidents/components/IncidentTimelinePanel.tsx:52:41)
+    at section
+    at div
+    at div
+    at section
+    at section
+    at div
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d60f55b8:52
+[     695ms] [ERROR] Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s%s undefined  You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at IncidentTimelinePanel.tsx:115. 
+    at IncidentTimelinePanel (http://localhost:3000/src/pages/incidents/components/IncidentTimelinePanel.tsx:52:41)
+    at section
+    at div
+    at div
+    at section
+    at section
+    at div
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d60f55b8:52
+[     695ms] [ERROR] Warning: React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s%s undefined  You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check your code at IncidentTimelinePanel.tsx:115. 
+    at IncidentTimelinePanel (http://localhost:3000/src/pages/incidents/components/IncidentTimelinePanel.tsx:52:41)
+    at section
+    at div
+    at div
+    at section
+    at section
+    at div
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App @ http://localhost:3000/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=d60f55b8:52
+[     696ms] Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `IncidentTimelinePanel`.
+    at createFiberFromTypeAndProps (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16466:12)
+    at createFiberFromElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16481:16)
+    at reconcileSingleElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8849:22)
+    at reconcileChildFibers (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8879:56)
+    at reconcileChildren (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11924:49)
+    at updateHostComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12287:4)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13102:32)
+    at HTMLUnknownElement.callCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3142:11)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3162:14)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3201:32)
+[     696ms] Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `IncidentTimelinePanel`.
+    at createFiberFromTypeAndProps (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16466:12)
+    at createFiberFromElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16481:16)
+    at reconcileSingleElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8849:22)
+    at reconcileChildFibers (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8879:56)
+    at reconcileChildren (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11924:49)
+    at updateHostComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12287:4)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13102:32)
+    at HTMLUnknownElement.callCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3142:11)
+    at Object.invokeGuardedCallbackDev (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3162:14)
+    at invokeGuardedCallback (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:3201:32)
+[     696ms] [ERROR] Error handled by React Router default ErrorBoundary: Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `IncidentTimelinePanel`.
+    at createFiberFromTypeAndProps (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16466:12)
+    at createFiberFromElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16481:16)
+    at reconcileSingleElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8849:22)
+    at reconcileChildFibers (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8879:56)
+    at reconcileChildren (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11924:49)
+    at updateHostComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12287:4)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13102:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3780
+[     696ms] [ERROR] Error handled by React Router default ErrorBoundary: Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `IncidentTimelinePanel`.
+    at createFiberFromTypeAndProps (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16466:12)
+    at createFiberFromElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16481:16)
+    at reconcileSingleElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8849:22)
+    at reconcileChildFibers (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8879:56)
+    at reconcileChildren (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11924:49)
+    at updateHostComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12287:4)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13102:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36) @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3780
+[     697ms] [ERROR] The above error occurred in the <span> component:
+
+    at span
+    at li
+    at ol
+    at section
+    at IncidentTimelinePanel (http://localhost:3000/src/pages/incidents/components/IncidentTimelinePanel.tsx:52:41)
+    at section
+    at div
+    at div
+    at section
+    at section
+    at div
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, RenderErrorBoundary. @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11718
+[     697ms] [ERROR] React Router caught the following error during render Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `IncidentTimelinePanel`.
+    at createFiberFromTypeAndProps (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16466:12)
+    at createFiberFromElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16481:16)
+    at reconcileSingleElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8849:22)
+    at reconcileChildFibers (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8879:56)
+    at reconcileChildren (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11924:49)
+    at updateHostComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12287:4)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13102:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36) {componentStack: 
+    at span
+    at li
+    at ol
+    at section
+  …ack_react-query.js?v=d60f55b8:2995:31)
+    at App} @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3810
+[     697ms] [ERROR] The above error occurred in the <span> component:
+
+    at span
+    at li
+    at ol
+    at section
+    at IncidentTimelinePanel (http://localhost:3000/src/pages/incidents/components/IncidentTimelinePanel.tsx:52:41)
+    at section
+    at div
+    at div
+    at section
+    at section
+    at div
+    at div
+    at IncidentDetailPage (http://localhost:3000/src/pages/incidents/IncidentDetailPage.tsx:168:17)
+    at AuthGuard (http://localhost:3000/src/router/AuthGuard.tsx:20:29)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at Outlet (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4229:27)
+    at Suspense
+    at main
+    at div
+    at AppLayout (http://localhost:3000/src/router/AppLayout.tsx:22:24)
+    at RenderedRoute (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3821:10)
+    at RenderErrorBoundary (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3788:5)
+    at DataRoutes (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:5096:10)
+    at Router (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4249:20)
+    at RouterProvider (http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:4929:10)
+    at Suspense
+    at AppInner (http://localhost:3000/src/App.tsx:18:30)
+    at QueryClientProvider (http://localhost:3000/node_modules/.vite/deps/@tanstack_react-query.js?v=d60f55b8:2995:31)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, RenderErrorBoundary. @ http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11718
+[     697ms] [ERROR] React Router caught the following error during render Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+Check the render method of `IncidentTimelinePanel`.
+    at createFiberFromTypeAndProps (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16466:12)
+    at createFiberFromElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:16481:16)
+    at reconcileSingleElement (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8849:22)
+    at reconcileChildFibers (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:8879:56)
+    at reconcileChildren (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:11924:49)
+    at updateHostComponent (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:12287:4)
+    at beginWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:13102:32)
+    at beginWork$1 (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15982:12)
+    at performUnitOfWork (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15568:12)
+    at workLoopSync (http://localhost:3000/node_modules/.vite/deps/react-dom-BEjadErz.js?v=d60f55b8:15517:36) {componentStack: 
+    at span
+    at li
+    at ol
+    at section
+  …ack_react-query.js?v=d60f55b8:2995:31)
+    at App} @ http://localhost:3000/node_modules/.vite/deps/react-router-dom.js?v=d60f55b8:3810

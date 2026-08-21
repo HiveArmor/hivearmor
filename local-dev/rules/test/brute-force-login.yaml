@@ -1,0 +1,54 @@
+# Correlation Rule: Brute Force Login Attempt
+# Detects repeated authentication failures from the same source IP,
+# indicating a possible credential-stuffing or brute-force attack.
+# MITRE ATT&CK: T1110 — Brute Force (Credential Access)
+
+id: rule-brute-force-login
+name: "Brute Force Login Attempt"
+description: "Detects more than 5 failed login attempts from same source IP within 10 minutes"
+severity: high
+enabled: true
+
+mitre:
+  tactic: "Credential Access"
+  technique: "T1110"
+  subtechnique: ""
+  name: "Brute Force"
+
+# Match condition — which events feed this rule
+match:
+  index: "v3-hive-log-*"
+  filter:
+    - field: "event.category"
+      operator: "equals"
+      value: "authentication"
+    - field: "event.outcome"
+      operator: "equals"
+      value: "failure"
+
+# Correlation — CEL expression for threshold aggregation
+# Groups failed auth events by source IP, fires when count exceeds 5 in 10 minutes.
+# The CEL expression `size(events) > 5` evaluates the collected event window
+# after groupBy and timeWindow constraints are applied by the engine.
+correlation:
+  type: "threshold"
+  groupBy: ["source.ip"]
+  timeWindow: "10m"
+  threshold: 5
+  cel: |
+    size(events) > 5
+
+# Alert template — generated when correlation condition is met
+alert:
+  title: "Brute Force Login: {{source.ip}} → {{destination.ip}}"
+  description: "{{size(events)}} failed login attempts from {{source.ip}} in 10 minutes"
+  riskScore: 75
+  entities:
+    - field: "source.ip"
+      type: "ip"
+    - field: "destination.ip"
+      type: "ip"
+    - field: "user.name"
+      type: "user"
+    - field: "host.name"
+      type: "host"

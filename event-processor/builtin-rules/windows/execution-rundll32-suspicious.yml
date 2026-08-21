@@ -1,0 +1,40 @@
+id: e3f4a5b6-c7d8-9012-efab-123456789023
+title: Suspicious Rundll32 Execution with Remote or Unusual Content
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.execution
+  - attack.defense_evasion
+  - attack.T1218
+  - attack.T1218.011
+detection:
+  selection:
+    Image|endswith: '\rundll32.exe'
+    CommandLine|contains:
+      - 'javascript:'
+      - 'http://'
+      - 'https://'
+      - ',DllRegisterServer'
+      - ',DllInstall'
+  selection_no_dll:
+    Image|endswith: '\rundll32.exe'
+    CommandLine|re: '^.*rundll32\.exe\s*$'
+  condition: selection or selection_no_dll
+falsepositives:
+  - Legitimate software using Rundll32 for DLL execution
+  - Windows component registration via Rundll32
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: execution
+  technique: T1218.011

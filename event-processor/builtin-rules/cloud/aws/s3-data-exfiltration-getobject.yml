@@ -1,0 +1,54 @@
+id: ha-aws-009
+title: Unusual S3 GetObject Activity from External IP
+status: stable
+description: Detects a high volume of S3 GetObject API calls from an IP address that is not a known AWS service or internal range, which may indicate bulk data exfiltration from cloud storage.
+logsource:
+  product: aws
+  service: cloudtrail
+level: medium
+tags:
+  - attack.exfiltration
+  - attack.T1530
+detection:
+  selection:
+    eventName: GetObject
+    userAgent|contains:
+      - aws-cli
+      - python-boto
+      - curl
+      - wget
+  filter_aws_services:
+    sourceIPAddress|startswith:
+      - '10.'
+      - '172.16.'
+      - '172.17.'
+      - '172.18.'
+      - '172.19.'
+      - '172.20.'
+      - '172.31.'
+      - '192.168.'
+    sourceIPAddress|contains:
+      - amazonaws.com
+  condition: selection and not filter_aws_services
+falsepositives:
+  - Authorised bulk data migrations or backup operations from external systems
+  - Analytics pipelines pulling data from S3 with known external IPs
+fields:
+  - eventName
+  - requestParameters.bucketName
+  - requestParameters.key
+  - sourceIPAddress
+  - userAgent
+  - userIdentity.arn
+impact:
+  confidentiality: high
+  integrity: low
+  availability: low
+deduplicateBy:
+  - sourceIPAddress
+  - requestParameters.bucketName
+groupBy:
+  - sourceIPAddress
+mitre:
+  tactic: exfiltration
+  technique: T1530

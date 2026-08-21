@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -16,5 +17,5 @@ import java.util.List;
 public interface UtmConfigurationParameterRepository extends JpaRepository<UtmConfigurationParameter, Long>, JpaSpecificationExecutor<UtmConfigurationParameter> {
     List<UtmConfigurationParameter> findAllBySectionId(Long sectionId);
 
-
+    Optional<UtmConfigurationParameter> findByConfParamShort(String confParamShort);
 }

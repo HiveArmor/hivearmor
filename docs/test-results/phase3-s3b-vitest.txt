@@ -1,0 +1,181 @@
+Sprint S-3B — AG Grid Theme + SiemDataGrid + Cell Renderers — Test Results
+Generated: 2026-07-20
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILES CREATED / MODIFIED (S-3B)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  CREATED   frontend-v2/src/lib/hivearmor-ag-grid-theme.ts
+            AG Grid v36 theme via themeQuartz.withParams().
+            Exports: haAgGridTheme (rowHeight:36) and haAgGridThemeCompact (rowHeight:28)
+            Tokens: all sourced from HiveArmor design-system palette.
+            Scrollbar params removed — not typed in ThemeDefaultParams v36.
+            modalOverlayBackgroundColor used (overlayBackgroundColor is invalid v36 name).
+
+  CREATED   frontend-v2/src/components/ui/grid-cells.tsx
+            6 cell renderers: SeverityCell, StatusCell, TimestampCell,
+            HostCell, UserCell, TruncatedTextCell.
+            All use CustomCellRendererProps from ag-grid-react.
+
+  CREATED   frontend-v2/src/components/ui/siem-data-grid.tsx
+            Generic SiemDataGrid<TData> wrapper on AgGridReact.
+            rowModelType: "infinite" (InfiniteRowModelModule registered).
+            Multi-row checkbox selection. Column state + density persisted
+            in localStorage at ha-grid:{gridId} (schemaVersion: 1).
+            Density toggle (compact 28px / normal 36px rows).
+            Re-exports: ColDef, IDatasource, IGetRowsParams, GridApi, ColumnState.
+
+  MODIFIED  frontend-v2/vitest.config.ts
+            No new config changes for S-3B (esbuild JSX transform was
+            evaluated but not needed — tests follow no-JSX-import pattern).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NEW TEST FILES (S-3B)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  frontend-v2/src/lib/__tests__/ag-grid-theme.test.ts
+  frontend-v2/src/components/ui/__tests__/grid-cells.test.ts
+  frontend-v2/src/components/ui/__tests__/siem-data-grid.test.ts
+
+  Pattern: pure logic + type contract (no JSX imports).
+  Follows established project convention — @vitejs/plugin-react is not
+  installed; tsx component files cannot be imported directly in Vitest.
+  All React component tests test extracted pure logic (value maps, formatters,
+  hash functions, schema shapes, localStorage round-trips).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TYPESCRIPT ERRORS FIXED DURING S-3B
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. hivearmor-ag-grid-theme.ts — scrollbarThumbColor / scrollbarThumbHoverColor
+     / scrollbarTrackColor: not in ThemeDefaultParams v36. Removed.
+     Scrollbar styling must be done via global CSS (::webkit-scrollbar).
+
+  2. hivearmor-ag-grid-theme.ts — overlayBackgroundColor: renamed to
+     modalOverlayBackgroundColor in v36. Fixed.
+
+  3. hivearmor-ag-grid-theme.ts — rowBackgroundColor: not valid (use
+     oddRowBackgroundColor). Fixed in prior session.
+
+  4. hivearmor-ag-grid-theme.ts — rowBorderColor: not valid (use borderColor).
+     Fixed in prior session.
+
+  5. siem-data-grid.tsx — params.node.rowIndex: GetRowIdParams does not expose
+     node. Fixed with fallback "row". Fixed in prior session.
+
+  Final result: npx tsc --noEmit — 0 errors.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TEST RESULTS — S-3B NEW TESTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ag-grid-theme.test.ts (13 tests):
+    haAgGridTheme:
+      ✓ is defined and non-null
+      ✓ exposes a withParams method
+      ✓ exposes a withPart method
+      ✓ exposes a withoutPart method
+    haAgGridThemeCompact:
+      ✓ is defined and non-null
+      ✓ exposes a withParams method
+      ✓ is a distinct object from haAgGridTheme
+      ✓ can be further extended via withParams without throwing
+    theme API contract:
+      ✓ withParams returns a new distinct theme object
+      ✓ withParams on compact returns a new theme object
+      ✓ withParams on normal theme returns a new distinct object
+    theme token spot-checks:
+      ✓ haAgGridTheme has a params property
+      ✓ haAgGridThemeCompact has a params property
+
+  grid-cells.test.ts (26 tests):
+    SeverityCell — resolveLevel:
+      ✓ maps numeric 4 to critical
+      ✓ maps numeric 3 to high
+      ✓ maps numeric 2 to medium
+      ✓ maps numeric 1 to low
+      ✓ maps unmapped numeric to info
+      ✓ lowercases a string severity
+      ✓ passes through a lowercase string
+      ✓ lowercases mixed case
+    TimestampCell — formatTimestamp:
+      ✓ returns null for null
+      ✓ returns null for undefined
+      ✓ returns null for invalid date string
+      ✓ formats a valid ISO string
+      ✓ formats a Date object
+      ✓ formats epoch ms
+    TimestampCell — toIsoDisplay:
+      ✓ appends UTC suffix
+      ✓ has no T separator between date and time
+      ✓ is 23 characters long (YYYY-MM-DD HH:MM:SS UTC)
+    UserCell — avatarColor:
+      ✓ returns a string from the AVATAR_COLORS array
+      ✓ is deterministic — same name always yields same color
+      ✓ different names can yield different colors
+      ✓ handles empty string without throwing
+      ✓ handles a very long name without throwing
+    HostCell — value shape detection:
+      ✓ detects a plain string as not-an-object
+      ✓ detects {host, ip} as object
+      ✓ detects null as not-an-object
+      ✓ detects {} (empty object) as object
+
+  siem-data-grid.test.ts (20 tests):
+    GridDensity type:
+      ✓ compact is a valid density value
+      ✓ normal is a valid density value
+      ✓ the two values are distinct
+    GridStateSnapshot:
+      ✓ constructs a valid snapshot with schemaVersion 1
+      ✓ accepts columnState with colId entries
+      ✓ gridId must equal the ha-grid:{gridId} key suffix
+    localStorage ha-grid persistence:
+      ✓ round-trips a full snapshot
+      ✓ returns null when key is absent
+      ✓ returns null when schemaVersion is wrong
+      ✓ returns null when gridId does not match the key
+      ✓ returns null for malformed JSON
+      ✓ overwrites on re-save — latest density wins
+      ✓ persists column order when columnState has multiple entries
+    density toggle:
+      ✓ toggles compact → normal
+      ✓ toggles normal → compact
+    SiemDataGrid configuration defaults:
+      ✓ default blockSize is 50
+      ✓ default maxBlocks is 10
+      ✓ getRowId falls back to 'row' for rows without id
+      ✓ getRowId uses id when present
+      ✓ getRowId uses alertId when id is absent
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FULL SUITE FINAL RESULTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Command:    npx vitest run
+  Test Files: 33 passed (33)     [was 30 in S-3A]
+  Tests:      375 passed (375)   [was 316 in S-3A]
+  Duration:   ~500ms
+  vitest:     4.1.10
+
+  New test files added (S-3B): 3
+  New tests added (S-3B): 59
+  Pre-existing tests retained: 316
+  0 failures — clean green suite
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXIT CRITERIA — ALL MET ✓
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [✓] hivearmor-ag-grid-theme.ts created — haAgGridTheme + haAgGridThemeCompact
+  [✓] grid-cells.tsx created — 6 cell renderers (Severity, Status, Timestamp,
+       Host, User, TruncatedText)
+  [✓] siem-data-grid.tsx created — generic SiemDataGrid<TData> wrapper,
+       InfiniteRowModel, multi-row selection, state persistence, density toggle
+  [✓] npx tsc --noEmit — 0 TypeScript errors
+  [✓] ag-grid-theme.test.ts — 13 tests passing
+  [✓] grid-cells.test.ts — 26 tests passing
+  [✓] siem-data-grid.test.ts — 20 tests passing
+  [✓] Full suite: 375/375 pass, 0 failures, 33 files
+  [✓] Results file written: docs/test-results/phase3-s3b-vitest.txt
+

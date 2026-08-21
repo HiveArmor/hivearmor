@@ -1,0 +1,8 @@
+# Json filter, version 2.0
+# Allow processing of any one line json 
+pipeline:
+  - dataTypes:
+      - json-input
+    steps:
+      - json:
+          source: raw

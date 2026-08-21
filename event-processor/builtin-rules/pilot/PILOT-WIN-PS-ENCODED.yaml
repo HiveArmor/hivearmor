@@ -1,0 +1,22 @@
+id: 5101
+name: PILOT-WIN-PS-ENCODED
+dataTypes:
+  - powershell
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Execution
+technique: "T1059.001 - Command and Scripting Interpreter: PowerShell"
+adversary: origin
+description: Encoded PowerShell command line (-EncodedCommand / -enc).
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(-EncodedCommand|-enc)([ =]|$).*")'

@@ -1,0 +1,60 @@
+- generic [ref=f33e3]:
+  - banner [ref=f33e4]:
+    - generic [ref=f33e5]: HiveArmor
+    - generic [ref=f33e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f33e13]'
+      - generic "Reconnecting..." [ref=f33e16]: 0 EPS
+      - button "Notifications" [ref=f33e18] [cursor=pointer]
+      - button "Help" [ref=f33e23] [cursor=pointer]
+      - button "User menu" [ref=f33e28] [cursor=pointer]:
+        - generic [ref=f33e29]: AA
+        - generic [ref=f33e30]: admin
+  - navigation [ref=f33e31]:
+    - generic [ref=f33e32]:
+      - generic [ref=f33e33]:
+        - generic [ref=f33e34]: COMMAND
+        - generic [ref=f33e35]:
+          - button "Analyst Queue" [ref=f33e36] [cursor=pointer]
+          - button "Alerts" [ref=f33e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f33e47] [cursor=pointer]
+          - button "Incidents" [ref=f33e54] [cursor=pointer]
+      - generic [ref=f33e61]:
+        - generic [ref=f33e62]: INVESTIGATE
+        - generic [ref=f33e63]:
+          - button "Search & Hunt" [ref=f33e64] [cursor=pointer]
+          - button "Investigations" [ref=f33e70] [cursor=pointer]
+          - button "Entities" [ref=f33e75] [cursor=pointer]
+      - generic [ref=f33e83]:
+        - generic [ref=f33e84]: DEFEND
+        - generic [ref=f33e85]:
+          - button "Detection Rules" [ref=f33e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f33e91] [cursor=pointer]
+      - generic [ref=f33e96]:
+        - generic [ref=f33e97]: POSTURE
+        - generic [ref=f33e98]:
+          - button "Assets" [ref=f33e99] [cursor=pointer]
+          - button "Identities" [ref=f33e105] [cursor=pointer]
+          - button "Active Directory" [ref=f33e113] [cursor=pointer]
+          - button "Exposure" [ref=f33e121] [cursor=pointer]
+          - button "Sensors" [ref=f33e128] [cursor=pointer]
+          - button "Compliance" [ref=f33e133] [cursor=pointer]
+      - generic [ref=f33e139]:
+        - generic [ref=f33e140]: DASHBOARDS
+        - button "Studio" [ref=f33e142] [cursor=pointer]
+      - generic [ref=f33e148]:
+        - generic [ref=f33e149]: REPORT
+        - button "Scheduled Reports" [ref=f33e151] [cursor=pointer]
+      - generic [ref=f33e157]:
+        - generic [ref=f33e158]: ADMINISTRATION
+        - generic [ref=f33e159]:
+          - button "Users" [ref=f33e160] [cursor=pointer]
+          - button "Integrations" [ref=f33e175] [cursor=pointer]
+          - button "Notifications" [ref=f33e180] [cursor=pointer]
+          - button "Audit Log" [ref=f33e186] [cursor=pointer]
+          - button "Settings" [ref=f33e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f33e199] [cursor=pointer]
+  - main [ref=f33e202]:
+    - generic [ref=f33e204]:
+      - heading "Active Directory Monitoring" [level=2] [ref=f33e210]
+      - paragraph [ref=f33e211]: Active Directory health monitoring, change tracking, and authentication anomaly detection will be available in an upcoming release.
+      - paragraph [ref=f33e212]: Contact your HiveArmor administrator for availability.

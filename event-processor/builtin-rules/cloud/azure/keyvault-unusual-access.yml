@@ -1,0 +1,39 @@
+id: ha-azure-003
+title: Unusual Access to Azure Key Vault
+status: stable
+description: Detects unusual or bulk secret retrieval operations from Azure Key Vault that may indicate credential theft or data exfiltration attempts by an attacker with compromised cloud credentials.
+logsource:
+  product: azure
+  service: keyvault
+level: high
+tags:
+  - attack.credential_access
+  - attack.T1552.001
+detection:
+  selection:
+    operationName:
+      - SecretGet
+      - KeyGet
+      - CertificateGet
+    resultType: Success
+  condition: selection
+falsepositives:
+  - Authorized applications bulk-reading secrets during startup
+  - DevOps pipelines retrieving configuration at deploy time
+fields:
+  - operationName
+  - identity.claim.oid
+  - resourceId
+  - properties.clientInfo
+impact:
+  confidentiality: critical
+  integrity: low
+  availability: low
+deduplicateBy:
+  - identity.claim.oid
+  - resourceId
+groupBy:
+  - identity.claim.oid
+mitre:
+  tactic: credential-access
+  technique: T1552.001

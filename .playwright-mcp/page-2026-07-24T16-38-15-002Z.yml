@@ -1,0 +1,68 @@
+- generic [ref=f27e3]:
+  - banner [ref=f27e4]:
+    - generic [ref=f27e5]: HiveArmor
+    - generic [ref=f27e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f27e13]'
+      - generic "Reconnecting..." [ref=f27e16]: 0 EPS
+      - button "Notifications" [ref=f27e18] [cursor=pointer]
+      - button "Help" [ref=f27e23] [cursor=pointer]
+      - button "User menu" [ref=f27e28] [cursor=pointer]:
+        - generic [ref=f27e29]: AA
+        - generic [ref=f27e30]: admin
+  - navigation [ref=f27e31]:
+    - generic [ref=f27e32]:
+      - generic [ref=f27e33]:
+        - generic [ref=f27e34]: COMMAND
+        - generic [ref=f27e35]:
+          - button "Analyst Queue" [ref=f27e36] [cursor=pointer]
+          - button "Alerts" [ref=f27e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f27e47] [cursor=pointer]
+          - button "Incidents" [ref=f27e54] [cursor=pointer]
+      - generic [ref=f27e61]:
+        - generic [ref=f27e62]: INVESTIGATE
+        - generic [ref=f27e63]:
+          - button "Search & Hunt" [ref=f27e64] [cursor=pointer]
+          - button "Investigations" [ref=f27e70] [cursor=pointer]
+          - button "Entities" [ref=f27e75] [cursor=pointer]
+      - generic [ref=f27e83]:
+        - generic [ref=f27e84]: DEFEND
+        - generic [ref=f27e85]:
+          - button "Detection Rules" [ref=f27e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f27e91] [cursor=pointer]
+      - generic [ref=f27e96]:
+        - generic [ref=f27e97]: POSTURE
+        - generic [ref=f27e98]:
+          - button "Assets" [ref=f27e99] [cursor=pointer]
+          - button "Identities" [ref=f27e105] [cursor=pointer]
+          - button "Active Directory" [ref=f27e113] [cursor=pointer]
+          - button "Exposure" [ref=f27e121] [cursor=pointer]
+          - button "Sensors" [ref=f27e128] [cursor=pointer]
+          - button "Compliance" [ref=f27e133] [cursor=pointer]
+      - generic [ref=f27e139]:
+        - generic [ref=f27e140]: DASHBOARDS
+        - button "Studio" [ref=f27e142] [cursor=pointer]
+      - generic [ref=f27e148]:
+        - generic [ref=f27e149]: REPORT
+        - button "Scheduled Reports" [ref=f27e151] [cursor=pointer]
+      - generic [ref=f27e157]:
+        - generic [ref=f27e158]: ADMINISTRATION
+        - generic [ref=f27e159]:
+          - button "Users" [ref=f27e160] [cursor=pointer]
+          - button "Integrations" [ref=f27e175] [cursor=pointer]
+          - button "Notifications" [ref=f27e180] [cursor=pointer]
+          - button "Audit Log" [ref=f27e186] [cursor=pointer]
+          - button "Settings" [ref=f27e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f27e199] [cursor=pointer]
+  - main [ref=f27e202]:
+    - generic [ref=f27e203]:
+      - alert [ref=f27e204]:
+        - strong [ref=f27e205]: Multi-tenancy isolation not enabled (GAP-MT-03)
+        - paragraph [ref=f27e206]: Identity data from all tenants is currently visible. Do not use this feature in production multi-tenant deployments until the backend resolves GAP-MT-03.
+      - generic [ref=f27e207]:
+        - generic [ref=f27e208]:
+          - generic [ref=f27e209]:
+            - heading "Identities" [level=1] [ref=f27e210]
+            - generic [ref=f27e211]: "0"
+          - button "Refreshing..." [disabled] [ref=f27e213]
+        - generic [ref=f27e214]: User and service account risk posture across the managed estate.
+      - generic [ref=f27e215]: Loading identities...

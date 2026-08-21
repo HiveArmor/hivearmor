@@ -12,7 +12,7 @@ set -euo pipefail
 # Prerequisites: docker compose up -d (all services healthy)
 # Environment overrides:
 #   OPENSEARCH_INITIAL_ADMIN_PASSWORD  (default: LocalDev@2024!)
-#   EVENTPROCESSOR_INJECT_KEY          (default: change-me-generate-with-openssl-rand-hex-32)
+#   EVENTPROCESSOR_INJECT_KEY          (default: localdev-inject-key-2024)
 # ---------------------------------------------------------------------------
 
 PASS=0; FAIL=0; WARN=0
@@ -31,7 +31,7 @@ OS_BASE="https://localhost:9200"
 OS_CREDS="admin:${OS_PASS}"
 
 EP_INGEST="http://localhost:8090"
-INJECT_KEY="${EVENTPROCESSOR_INJECT_KEY:-change-me-generate-with-openssl-rand-hex-32}"
+INJECT_KEY="${EVENTPROCESSOR_INJECT_KEY:-localdev-inject-key-2024}"
 
 CONSOLE_URL="http://localhost:8081"
 
@@ -54,7 +54,7 @@ fi
 # ---------------------------------------------------------------------------
 echo "[2] Required topics present..."
 TOPICS=$(docker exec "$REDPANDA_CTR" rpk topic list 2>&1 || true)
-for TOPIC in "hivearmor.raw.events" "hivearmor.processed.events" "hivearmor.alerts" "hivearmor.compliance.evidence"; do
+for TOPIC in "hivearmor.raw.events" "hivearmor.raw.events.quarantine" "hivearmor.raw.events.retry" "hivearmor.processed.events" "hivearmor.alerts" "hivearmor.compliance.evidence"; do
   if echo "$TOPICS" | grep -q "$TOPIC"; then
     pass "Topic: $TOPIC"
   else

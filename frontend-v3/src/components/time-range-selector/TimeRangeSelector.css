@@ -1,0 +1,223 @@
+.ha-time-range {
+  position: relative;
+}
+
+.ha-time-range__trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--ha-surface-input, var(--ha-surface-raised));
+  border: 1px solid var(--ha-border-default, var(--ha-border));
+  border-radius: var(--ha-radius-control, var(--ha-radius-base, 4px));
+  color: var(--ha-foreground-primary, var(--ha-text-primary));
+  font: var(--ha-type-compact, 12px/1.45 var(--ha-font-ui, Inter, sans-serif));
+  cursor: pointer;
+  transition: border-color var(--ha-transition-fast, 140ms ease);
+  white-space: nowrap;
+}
+
+.ha-time-range__trigger:hover:not(:disabled) {
+  border-color: var(--ha-border-strong, var(--ha-border));
+}
+
+.ha-time-range__trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ha-time-range__panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 280px;
+  background: var(--ha-surface-elevated, var(--ha-surface-raised));
+  border: 1px solid var(--ha-border-default, var(--ha-border));
+  border-radius: var(--ha-radius-panel, var(--ha-radius-md, 6px));
+  box-shadow: var(--ha-shadow-control, var(--ha-shadow-overlay));
+  z-index: var(--ha-z-modal, 300);
+  overflow: visible;
+}
+
+.ha-time-range__tabs {
+  display: flex;
+  border-bottom: 1px solid var(--ha-border-subtle, var(--ha-border));
+}
+
+.ha-time-range__tabs button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--ha-foreground-secondary, var(--ha-text-secondary));
+  font: var(--ha-type-compact, 12px/1.45 var(--ha-font-ui, Inter, sans-serif));
+  cursor: pointer;
+  transition: color var(--ha-transition-fast, 140ms ease), border-color var(--ha-transition-fast, 140ms ease);
+}
+
+.ha-time-range__tabs button:hover {
+  color: var(--ha-foreground-primary, var(--ha-text-primary));
+}
+
+.ha-time-range__tabs button[data-active] {
+  color: var(--ha-action-primary, var(--ha-primary));
+  border-bottom-color: var(--ha-action-primary, var(--ha-primary));
+}
+
+.ha-time-range__presets {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.ha-time-range__preset {
+  display: block;
+  width: 100%;
+  padding: 7px 14px;
+  background: transparent;
+  border: none;
+  color: var(--ha-foreground-primary, var(--ha-text-primary));
+  font: var(--ha-type-compact, 12px/1.45 var(--ha-font-ui, Inter, sans-serif));
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--ha-transition-fast, 140ms ease);
+}
+
+.ha-time-range__preset:hover {
+  background: var(--ha-surface-hover, rgba(255, 255, 255, 0.04));
+}
+
+.ha-time-range__preset[data-selected] {
+  background: var(--ha-fill-primary-subtle, rgba(97, 196, 190, 0.1));
+  color: var(--ha-action-primary, var(--ha-primary));
+}
+
+.ha-time-range__relative,
+.ha-time-range__absolute {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ha-time-range__relative p {
+  margin: 0;
+  color: var(--ha-foreground-secondary, var(--ha-text-secondary));
+  font: var(--ha-type-compact, 12px/1.45 var(--ha-font-ui, Inter, sans-serif));
+}
+
+.ha-time-range__relative-inputs {
+  display: flex;
+  gap: 8px;
+}
+
+.ha-time-range__relative-inputs input,
+.ha-time-range__relative-inputs select {
+  flex: 1;
+  padding: 6px 10px;
+  background: var(--ha-surface-input, var(--ha-surface-primary));
+  border: 1px solid var(--ha-border-default, var(--ha-border));
+  border-radius: var(--ha-radius-control, var(--ha-radius-base, 4px));
+  color: var(--ha-foreground-primary, var(--ha-text-primary));
+  font: var(--ha-type-compact, 12px/1.45 var(--ha-font-ui, Inter, sans-serif));
+  color-scheme: dark;
+}
+
+.ha-time-range__relative-inputs input:focus,
+.ha-time-range__relative-inputs select:focus {
+  outline: none;
+  border-color: var(--ha-border-focus, var(--ha-primary));
+}
+
+.ha-time-range__absolute label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ha-time-range__absolute label span {
+  color: var(--ha-foreground-secondary, var(--ha-text-secondary));
+  font: var(--ha-type-metadata, 11px/1.4 var(--ha-font-ui, Inter, sans-serif));
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ha-time-range__absolute input {
+  padding: 7px 10px;
+  background: var(--ha-surface-input, var(--ha-surface-primary));
+  border: 1px solid var(--ha-border-default, var(--ha-border));
+  border-radius: var(--ha-radius-control, var(--ha-radius-base, 4px));
+  color: var(--ha-foreground-primary, var(--ha-text-primary));
+  font: var(--ha-type-compact, 12px/1.45 var(--ha-font-mono, monospace));
+  width: 100%;
+}
+
+.ha-time-range__absolute input:focus {
+  outline: none;
+  border-color: var(--ha-border-focus, var(--ha-primary));
+}
+
+.ha-time-range__absolute input::placeholder {
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-time-range__hint {
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata, 11px/1.4 var(--ha-font-ui, Inter, sans-serif));
+}
+
+.ha-time-range__absolute input[type="datetime-local"] {
+  padding: 6px 10px;
+  background: var(--ha-surface-input, var(--ha-surface-primary));
+  border: 1px solid var(--ha-border-default, var(--ha-border));
+  border-radius: var(--ha-radius-control, var(--ha-radius-base, 4px));
+  color: var(--ha-foreground-primary, var(--ha-text-primary));
+  font: var(--ha-type-compact, 12px/1.45 var(--ha-font-mono, monospace));
+  color-scheme: dark;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.ha-time-range__absolute input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+}
+
+.ha-time-range__absolute input[type="datetime-local"]:focus {
+  outline: none;
+  border-color: var(--ha-border-focus, var(--ha-primary));
+}
+
+.ha-time-range__apply {
+  align-self: flex-end;
+  padding: 6px 16px;
+  background: var(--ha-action-primary, var(--ha-primary));
+  border: none;
+  border-radius: var(--ha-radius-control, var(--ha-radius-base, 4px));
+  color: var(--ha-foreground-on-action, #0b0919);
+  font: var(--ha-type-compact, 12px/1.45 var(--ha-font-ui, Inter, sans-serif));
+  font-weight: var(--ha-weight-medium, 500);
+  cursor: pointer;
+  transition: opacity var(--ha-transition-fast, 140ms ease);
+}
+
+.ha-time-range__apply:hover {
+  opacity: 0.9;
+}
+
+.ha-time-range__apply:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+
+/* Force dark color scheme on the panel and all its inputs to prevent white native pickers */
+.ha-time-range__panel,
+.ha-time-range__panel * {
+  color-scheme: dark;
+}

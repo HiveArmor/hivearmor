@@ -47,4 +47,7 @@ public class ApiKey implements Serializable {
 
     @Column(name = "key_prefix", length = 8)
     private String keyPrefix;
+
+    @Column(name = "is_agent_key", nullable = false)
+    private boolean isAgentKey = false;
 }

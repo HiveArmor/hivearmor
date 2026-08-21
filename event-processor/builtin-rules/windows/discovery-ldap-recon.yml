@@ -1,0 +1,39 @@
+id: d2e3f4a5-b6c7-8901-defa-012345678952
+title: LDAP Reconnaissance Queries Against Active Directory
+status: stable
+logsource:
+  product: windows
+  service: security
+level: medium
+tags:
+  - attack.discovery
+  - attack.T1018
+  - attack.T1069
+  - attack.T1087
+detection:
+  selection:
+    EventID: 4662
+    ObjectType|contains:
+      - 'domainDNS'
+      - 'domainPolicy'
+      - 'user'
+    AccessMask: '0x0'
+  filter_legitimate:
+    SubjectUserName|endswith: '$'
+  condition: selection and not filter_legitimate
+falsepositives:
+  - Legitimate AD administration tools
+  - Enterprise SIEM/SOAR querying AD for context
+  - Automated provisioning systems
+impact:
+  confidentiality: medium
+  integrity: low
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - SubjectUserName
+groupBy:
+  - ComputerName
+mitre:
+  tactic: discovery
+  technique: T1087

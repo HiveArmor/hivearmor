@@ -3,18 +3,20 @@ package writer
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/hivearmor/event-processor/enrichment"
-	sdkos "github.com/threatwinds/go-sdk/os"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/event-processor/internal/httpclient"
+	sdkos "github.com/hivearmor/sdk/os"
+	"github.com/hivearmor/sdk/plugins"
 )
 
 var (
@@ -30,26 +32,48 @@ func InitAlertWriter(osURL, user, pass string) {
 	alertOSURL = osURL
 	alertOSUser = user
 	alertOSPass = pass
-	alertHTTP = &http.Client{
-		Timeout: 10 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
+	client, err := httpclient.NewSecureClient(10 * time.Second)
+	if err != nil {
+		log.Fatalf("alert writer tls client: %v", err)
+	}
+	alertHTTP = client
+}
+
+// WriteAlert indexes an alert, skipping duplicates. Errors are logged; Kafka
+// and socket commit paths must call WriteAlertSync instead.
+func WriteAlert(alert *plugins.Alert) {
+	if err := WriteAlertSync(alert, alertOSURL, alertOSUser, alertOSPass); err != nil {
+		log.Printf("writer: alert write failed id=%s: %v", alertID(alert), err)
 	}
 }
 
-// WriteAlert indexes an alert, skipping duplicates.
-func WriteAlert(alert *plugins.Alert) {
+func alertID(alert *plugins.Alert) string {
 	if alert == nil {
-		return
+		return ""
+	}
+	return alert.Id
+}
+
+// WriteAlertSync writes one alert and returns classified HTTP/transport errors.
+func WriteAlertSync(alert *plugins.Alert, osURL, user, pass string) error {
+	if alert == nil {
+		return nil
 	}
 	alert.LastUpdate = time.Now().UTC().Format(time.RFC3339Nano)
 
-	if isDuplicate(alert) {
-		return
+	client := alertHTTP
+	if client == nil {
+		secure, err := httpclient.NewSecureClient(10 * time.Second)
+		if err != nil {
+			return fmt.Errorf("alert tls client: %w", err)
+		}
+		client = secure
 	}
 
-	// Check for parent alert via groupBy
+	if isDuplicate(alert) {
+		return nil
+	}
+
 	parentID := findParentAlert(alert)
 	if parentID != "" {
 		alert.ParentId = parentID
@@ -57,21 +81,28 @@ func WriteAlert(alert *plugins.Alert) {
 
 	doc := alertToDoc(alert)
 	enrichment.EnrichAlertDoc(doc)
-	idx := sdkos.BuildCurrentDayIndex("v3-hive", "alert")
+	idx := AlertIndex(alert)
 	body, err := json.Marshal(doc)
 	if err != nil {
-		return
+		return fmt.Errorf("marshal alert: %w", err)
 	}
-	url := fmt.Sprintf("%s/%s/_doc/%s", alertOSURL, idx, alert.Id)
-	req, _ := http.NewRequest("PUT", url, bytes.NewReader(body))
-	req.SetBasicAuth(alertOSUser, alertOSPass)
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := alertHTTP.Do(req)
+	url := fmt.Sprintf("%s/%s/_doc/%s", osURL, idx, alert.Id)
+	req, err := http.NewRequest("PUT", url, bytes.NewReader(body))
 	if err != nil {
-		return
+		return err
+	}
+	req.SetBasicAuth(user, pass)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("write alert %s: %w", alert.Id, err)
 	}
 	defer resp.Body.Close()
-	io.Copy(io.Discard, resp.Body)
+	_, _ = io.Copy(io.Discard, resp.Body)
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("write alert %s: HTTP %d", alert.Id, resp.StatusCode)
+	}
+	return nil
 }
 
 // isDuplicate checks if a matching alert was already indexed in the last 7 days.
@@ -108,7 +139,7 @@ func isDuplicate(alert *plugins.Alert) bool {
 		"size":  1,
 	}
 	body, _ := json.Marshal(query)
-	req, _ := http.NewRequest("POST", alertOSURL+"/v3-hive-alert-*/_search", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", alertOSURL+"/"+sdkos.BuildTenantIndexPattern("alert", tenantPrefixFromAlert(alert))+"/_search", bytes.NewReader(body))
 	req.SetBasicAuth(alertOSUser, alertOSPass)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := alertHTTP.Do(req)
@@ -163,7 +194,7 @@ func findParentAlert(alert *plugins.Alert) string {
 		"size": 1,
 	}
 	body, _ := json.Marshal(query)
-	req, _ := http.NewRequest("POST", alertOSURL+"/v3-hive-alert-*/_search", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", alertOSURL+"/"+sdkos.BuildTenantIndexPattern("alert", tenantPrefixFromAlert(alert))+"/_search", bytes.NewReader(body))
 	req.SetBasicAuth(alertOSUser, alertOSPass)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := alertHTTP.Do(req)
@@ -195,17 +226,28 @@ func alertToDoc(a *plugins.Alert) map[string]any {
 		"dataSource":    a.DataSource,
 		"tenantId":      a.TenantId,
 		"tenantName":    a.TenantName,
+		"tenantPrefix":  tenantPrefixFromAlert(a),
 		"category":      a.Category,
 		"technique":     a.Technique,
 		"description":   a.Description,
 		"references":    a.References,
-		"severity":      a.Severity,
+		"severity":      numericSeverity(a.Severity),
+		"riskScore":     a.ImpactScore,
 		"impactScore":   a.ImpactScore,
 		"deduplicateBy": a.DeduplicateBy,
 		"groupBy":       a.GroupBy,
 		"parentId":      a.ParentId,
 		"isIncident":    a.ImpactScore >= 9,
 		"status":        1,
+	}
+	if a.DataSource != "" {
+		doc["dataSources"] = []string{a.DataSource}
+	}
+	if techniqueID, techniqueName := splitTechnique(a.Technique); techniqueID != "" {
+		doc["mitreTechniqueId"] = techniqueID
+		if techniqueName != "" {
+			doc["mitreTechniqueName"] = techniqueName
+		}
 	}
 	if a.Impact != nil {
 		doc["impact"] = map[string]any{
@@ -225,9 +267,27 @@ func alertToDoc(a *plugins.Alert) map[string]any {
 		for _, ev := range a.Events {
 			evIDs = append(evIDs, ev.Id)
 		}
+		// sourceEventIds is the canonical alert-to-event association consumed by
+		// the API. eventIds remains during the compatibility window.
+		doc["sourceEventIds"] = evIDs
 		doc["eventIds"] = evIDs
 	}
 	return doc
+}
+
+func splitTechnique(value string) (string, string) {
+	parts := strings.SplitN(strings.TrimSpace(value), " - ", 2)
+	if len(parts) == 0 {
+		return "", ""
+	}
+	id := strings.TrimSpace(parts[0])
+	if !strings.HasPrefix(strings.ToUpper(id), "T") {
+		return "", ""
+	}
+	if len(parts) == 1 {
+		return id, ""
+	}
+	return id, strings.TrimSpace(parts[1])
 }
 
 // flatGet retrieves a value from a nested map using dot-path, returns string.
@@ -247,6 +307,46 @@ func flatGet(doc map[string]any, path string) string {
 		return flatGet(sub, parts[1])
 	}
 	return ""
+}
+
+// AlertIndex is the OpenSearch write index for a detection alert.
+// Tenant-scoped alerts use v3-hive-alert-<prefix>-YYYY.MM.DD to match
+// MsspIndexResolver("alert").
+func AlertIndex(alert *plugins.Alert) string {
+	return sdkos.BuildTenantIndex("alert", tenantPrefixFromAlert(alert))
+}
+
+func tenantPrefixFromAlert(alert *plugins.Alert) string {
+	if alert == nil {
+		return ""
+	}
+	for _, event := range alert.Events {
+		if event != nil && event.GetTenantPrefix() != "" {
+			return event.GetTenantPrefix()
+		}
+	}
+	return ""
+}
+
+// numericSeverity writes a long so severity-board aggregations and range
+// filters can run. Engine CEL rules store "1"/"2"/"3" as strings.
+func numericSeverity(raw string) int {
+	trimmed := strings.TrimSpace(raw)
+	if n, err := strconv.Atoi(trimmed); err == nil {
+		return n
+	}
+	switch strings.ToLower(trimmed) {
+	case "critical":
+		return 9
+	case "high":
+		return 8
+	case "medium":
+		return 5
+	case "low":
+		return 2
+	default:
+		return 0
+	}
 }
 
 var _ = context.Background

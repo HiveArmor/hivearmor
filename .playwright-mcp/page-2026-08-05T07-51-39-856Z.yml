@@ -1,0 +1,173 @@
+- generic [active] [ref=f52e1]:
+  - generic [ref=f52e61]:
+    - link "Skip to main content" [ref=f52e62] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f52e63]:
+      - generic [ref=f52e64]:
+        - generic [ref=f52e70]: HiveArmor
+        - generic [ref=f52e71]: Security operations
+      - generic [ref=f52e72]:
+        - button "All authorized tenants" [ref=f52e74] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f52e82] [cursor=pointer]:
+          - generic [ref=f52e87]: ⌘ K
+        - generic [ref=f52e88]: Production
+      - generic [ref=f52e89]:
+        - 'status "Data pipeline: Critical - Internal Server Error" [ref=f52e90]'
+        - status "Live events per second" [ref=f52e93]:
+          - generic [ref=f52e95]: 0 EPS
+        - button "Notifications" [ref=f52e96] [cursor=pointer]
+        - button "Help" [ref=f52e101] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f52e105]:
+      - generic [ref=f52e106]:
+        - region "COMMAND" [ref=f52e107]:
+          - generic [ref=f52e108]:
+            - button "Mission Control" [ref=f52e109] [cursor=pointer]
+            - button "Analyst Queue" [ref=f52e116] [cursor=pointer]
+            - button "Alerts" [ref=f52e120] [cursor=pointer]
+            - button "Correlated Findings" [ref=f52e125] [cursor=pointer]
+            - button "Incidents" [ref=f52e131] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f52e137]:
+          - generic [ref=f52e138]:
+            - button "Search & Hunt" [ref=f52e139] [cursor=pointer]
+            - button "Investigations" [ref=f52e144] [cursor=pointer]
+            - button "Entities" [ref=f52e148] [cursor=pointer]
+            - button "Threat Constellation" [ref=f52e155] [cursor=pointer]
+        - region "DEFEND" [ref=f52e161]:
+          - generic [ref=f52e162]:
+            - button "Detection Rules" [ref=f52e163] [cursor=pointer]
+            - button "Playbooks" [ref=f52e167] [cursor=pointer]
+            - button "Response Library" [ref=f52e172] [cursor=pointer]
+        - region "POSTURE" [ref=f52e176]:
+          - generic [ref=f52e177]:
+            - button "Assets" [ref=f52e178] [cursor=pointer]
+            - button "Identities" [ref=f52e183] [cursor=pointer]
+            - button "Active Directory" [ref=f52e190] [cursor=pointer]
+            - button "Exposure" [ref=f52e197] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f52e203] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f52e214] [cursor=pointer]
+            - button "Sensors" [ref=f52e220] [cursor=pointer]
+            - button "Compliance" [ref=f52e224] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f52e229]:
+          - generic [ref=f52e230]:
+            - button "Endpoints" [ref=f52e231] [cursor=pointer]
+            - button "File Quarantine" [ref=f52e235] [cursor=pointer]
+            - button "File Integrity" [ref=f52e241] [cursor=pointer]
+            - button "Agent Policies" [ref=f52e248] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f52e253]:
+          - button "Studio" [ref=f52e255] [cursor=pointer]
+        - region "REPORT" [ref=f52e260]:
+          - button "Scheduled Reports" [ref=f52e262] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f52e267]:
+          - generic [ref=f52e268]:
+            - button "Users" [ref=f52e269] [cursor=pointer]
+            - button "Integrations" [ref=f52e283] [cursor=pointer]
+            - button "Notifications" [ref=f52e287] [cursor=pointer]
+            - button "Audit Log" [ref=f52e292] [cursor=pointer]
+            - button "Settings" [ref=f52e297] [cursor=pointer]
+      - generic [ref=f52e302]:
+        - button "User menu" [ref=f52e305] [cursor=pointer]:
+          - generic [ref=f52e306]: AA
+        - button "Pin sidebar open" [ref=f52e307] [cursor=pointer]
+    - main [ref=f52e310]:
+      - generic [ref=f52e311]:
+        - generic [ref=f52e313]:
+          - generic [ref=f52e314]:
+            - heading "Analyst Queue" [level=1] [ref=f52e315]
+            - generic "37 open alerts" [ref=f52e316]: "37"
+          - generic [ref=f52e317]:
+            - button "Time range selector" [ref=f52e319] [cursor=pointer]:
+              - generic [ref=f52e322]: Last 24 hours
+            - button "Refresh queue" [ref=f52e325] [cursor=pointer]
+            - generic [ref=f52e331]:
+              - button "≡≡≡" [ref=f52e332] [cursor=pointer]
+              - button "≡≡" [ref=f52e333] [cursor=pointer]
+              - button "≡" [ref=f52e334] [cursor=pointer]
+            - button "Saved Views" [ref=f52e336] [cursor=pointer]
+        - alert [ref=f52e337]:
+          - generic [ref=f52e338]: Failed to load queue — could not reach the backend.
+          - button "Retry" [ref=f52e339] [cursor=pointer]
+        - generic [ref=f52e344]:
+          - combobox [ref=f52e345]:
+            - option "Severity" [selected]
+            - option "Critical"
+            - option "High"
+            - option "Medium"
+            - option "Low"
+          - combobox [ref=f52e346]:
+            - option "Status" [selected]
+            - option "Open"
+            - option "In Progress"
+            - option "Resolved"
+            - option "False Positive"
+          - textbox "Search alerts..." [ref=f52e347]
+        - generic [ref=f52e353]:
+          - grid:
+            - rowgroup [ref=f52e355]:
+              - row [ref=f52e356]:
+                - columnheader [ref=f52e357]:
+                  - text:  
+                  - generic: 
+                - columnheader "ID" [ref=f52e358]:
+                  - text: 
+                  - generic:      
+                - columnheader "Severity" [ref=f52e361]:
+                  - text: 
+                  - generic [ref=f52e364] [cursor=pointer]:
+                    - text: 
+                    - generic [ref=f52e365]: 
+                    - text:    
+                - columnheader "Type" [ref=f52e366]:
+                  - text: 
+                  - generic:      
+                - columnheader "Title" [ref=f52e369]:
+                  - text: 
+                  - generic:      
+                - columnheader "Tenant" [ref=f52e372]:
+                  - text: 
+                  - generic:      
+                - columnheader "Status" [ref=f52e375]:
+                  - text: 
+                  - generic:      
+                - columnheader "Assignee" [ref=f52e378]:
+                  - text: 
+                  - generic:      
+                - columnheader "Alerts" [ref=f52e381]:
+                  - text: 
+                  - generic:      
+                - columnheader "Created" [ref=f52e384]:
+                  - text: 
+                  - generic:      
+                - columnheader "Last Activity" [ref=f52e387]:
+                  - text: 
+                  - generic:      
+                - columnheader "SLA" [ref=f52e390]:
+                  - text: 
+                  - generic: 
+                - columnheader [ref=f52e393]:
+                  - text: 
+                  - generic: 
+              - row [ref=f52e394]:
+                - gridcell [ref=f52e395]:
+                  - checkbox "Press Space to toggle row selection (unchecked)" [ref=f52e396] [cursor=pointer]
+                  - text: 
+                - gridcell [ref=f52e397]
+                - gridcell [ref=f52e398]
+                - gridcell [ref=f52e402]
+                - gridcell [ref=f52e406]
+                - gridcell "—" [ref=f52e407]
+                - gridcell [ref=f52e408]
+                - gridcell "—" [ref=f52e412]
+                - gridcell [ref=f52e413]
+                - gridcell "—" [ref=f52e414]
+                - gridcell "—" [ref=f52e415]
+                - gridcell "—" [ref=f52e416]
+                - gridcell [ref=f52e417]
+          - text:     
+        - generic [ref=f52e418]:
+          - generic [ref=f52e419]:
+            - generic [ref=f52e421]: Connected
+            - generic [ref=f52e422]: •
+            - generic [ref=f52e424]: Live
+          - generic [ref=f52e425]: 0 eps
+  - generic:
+    - list "Notifications"

@@ -42,6 +42,12 @@ func (d *DB) Create(data interface{}) error {
 	return nil
 }
 
+func (d *DB) Exec(statement string, args ...interface{}) error {
+	d.locker.Lock()
+	defer d.locker.Unlock()
+	return d.conn.Exec(statement, args...).Error
+}
+
 func (d *DB) Upsert(data interface{}, query string, updates map[string]interface{}, args ...interface{}) error {
 	d.locker.Lock()
 	defer d.locker.Unlock()
@@ -112,6 +118,15 @@ func (d *DB) Delete(data interface{}, query string, hardDelete bool, args ...int
 		return err
 	}
 	return nil
+}
+
+// Transaction executes fn under the database transaction boundary. The DB-wide
+// mutex prevents an in-process create/consume race while PostgreSQL row locks
+// protect concurrent agent-manager replicas.
+func (d *DB) Transaction(fn func(*gorm.DB) error) error {
+	d.locker.Lock()
+	defer d.locker.Unlock()
+	return d.conn.Transaction(fn)
 }
 
 func GetDB() *DB {

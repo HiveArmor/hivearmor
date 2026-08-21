@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="20260812001" author="hivearmor">
+        <createTable tableName="saved_hunts">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="text"/>
+            <column name="query" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filters" type="text"/>
+            <column name="schedule" type="varchar(64)"/>
+            <column name="tags" type="text"/>
+            <column name="created_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="shared" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_run_at" type="timestamp"/>
+            <column name="run_count" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="saved_hunts" indexName="idx_saved_hunts_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex tableName="saved_hunts" indexName="idx_saved_hunts_created_by">
+            <column name="created_by"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

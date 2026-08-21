@@ -1,0 +1,44 @@
+/* EntityPreviewPopover — hover-triggered popover */
+
+.ent-preview-popover {
+  position: relative;
+  display: inline-flex;
+}
+
+.ent-preview-popover__trigger {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.ent-preview-popover__content {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 1000;
+  animation: ent-popover-fade-in 0.15s ease-out;
+}
+
+.ent-preview-popover__loading,
+.ent-preview-popover__error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+  padding: 20px;
+  background: var(--ha-surface-elevated);
+  border: 1px solid var(--ha-border-default);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--ha-foreground-secondary);
+}
+
+@keyframes ent-popover-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

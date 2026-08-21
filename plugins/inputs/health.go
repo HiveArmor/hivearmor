@@ -22,7 +22,7 @@ func CheckAgentManagerHealth() {
 	for {
 		pConfig := plugins.PluginCfg("com.hivearmor")
 		agentManager := pConfig.Get("agentManager").String()
-		internalKey := pConfig.Get("internalKey").String()
+		internalKey := hiveArmorInternalKey()
 
 		if agentManager == "" {
 			_ = catcher.Error("Could not connect to the Agent Manager. This is a common occurrence during the startup process and typically resolves on its own after a short while.", fmt.Errorf("configuration is empty"), map[string]any{"process": "plugin_com.hivearmor.inputs"})

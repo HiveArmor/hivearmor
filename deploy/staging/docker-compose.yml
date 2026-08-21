@@ -1,0 +1,324 @@
+# HiveArmor staging-minimum SIEM (PILOT-07).
+# Host publishes only HTTPS UI and agent gRPC. local-dev/docker-compose.yml remains lab-only.
+#
+#   cd deploy/staging && cp .env.example .env && docker compose --env-file .env up -d --build
+
+name: hivearmor-staging
+
+networks:
+  edge:
+  data:
+    internal: true
+
+services:
+  postgres:
+    image: hivearmor/postgres:local
+    build:
+      context: ../../docker/postgres
+    pull_policy: never
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../local-dev/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks: [data]
+    command: ["postgres", "-c", "shared_buffers=256MB", "-c", "max_connections=1000"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  opensearch:
+    image: hivearmor/opensearch:local
+    build:
+      context: ../..
+      dockerfile: etc/opensearch/2.x/Dockerfile
+    pull_policy: never
+    environment:
+      - cluster.name=hivearmor
+      - node.name=node1
+      - discovery.type=single-node
+      - bootstrap.memory_lock=false
+      - bootstrap.system_call_filter=false
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD:?set OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - JAVA_HOME=/usr/share/opensearch/jdk
+      - action.auto_create_index=true
+      - path.repo=/usr/share/opensearch
+      - OPENSEARCH_JAVA_OPTS=-Xms1024m -Xmx1024m
+      - network.host=0.0.0.0
+      - plugins.security.ssl.http.pemcert_filepath=certificates/opensearch.crt
+      - plugins.security.ssl.http.pemkey_filepath=certificates/opensearch.key
+      - plugins.security.ssl.http.pemtrustedcas_filepath=certificates/ca.crt
+      - plugins.security.ssl.transport.pemcert_filepath=certificates/opensearch.crt
+      - plugins.security.ssl.transport.pemkey_filepath=certificates/opensearch.key
+      - plugins.security.ssl.transport.pemtrustedcas_filepath=certificates/ca.crt
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+      - ../../local-dev/certs:/usr/share/opensearch/config/certificates:ro
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sk https://localhost:9200/_cluster/health -u admin:${OPENSEARCH_INITIAL_ADMIN_PASSWORD} | grep -qE 'green|yellow' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+    restart: unless-stopped
+
+  redpanda:
+    image: redpandadata/redpanda:v23.3.21
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092
+      - --advertise-kafka-addr internal://redpanda:9092
+      - --rpc-addr redpanda:33145
+      - --advertise-rpc-addr redpanda:33145
+      - --smp 1
+      - --memory 768M
+      - --mode dev-container
+      - --default-log-level=warn
+    volumes:
+      # Named volume so broker state survives container recreate (still single-node staging).
+      - redpanda_data:/var/lib/redpanda/data
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy.*true'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  agentmanager:
+    image: hivearmor/agent-manager:local
+    build:
+      context: ../..
+      dockerfile: agent-manager/Dockerfile
+    pull_policy: never
+    environment:
+      - DB_PATH=/data/hivearmor.db
+      - INTERNAL_KEY=${INTERNAL_KEY:?set INTERNAL_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:?set ENCRYPTION_KEY}
+      - HA_HOST=http://backend:8080
+      - DB_USER=postgres
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=agentmanager
+      - PANEL_SERV_NAME=http://backend:8080
+    volumes:
+      - ../../local-dev/certs:/cert:ro
+      - updates_data:/updates
+      - updates_data:/dependencies
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks: [data, edge]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  backend:
+    image: hivearmor/backend:local
+    build:
+      context: ../..
+      dockerfile: backend/Dockerfile
+    pull_policy: never
+    environment:
+      - SERVER_NAME=${SERVER_NAME:-localhost}
+      - DB_USER=postgres
+      - DB_PASS=${POSTGRES_PASSWORD}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=hivearmor
+      - ELASTICSEARCH_HOST=opensearch
+      - ELASTICSEARCH_PORT=9200
+      - ELASTICSEARCH_USER=admin
+      - ELASTICSEARCH_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - INTERNAL_KEY=${INTERNAL_KEY}
+      - ALLOW_LEGACY_TELEMETRY_INTERNAL_KEY=${ALLOW_LEGACY_TELEMETRY_INTERNAL_KEY:-false}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - HIVEARMOR_ENCRYPTION_KEY=${HIVEARMOR_ENCRYPTION_KEY:?set HIVEARMOR_ENCRYPTION_KEY}
+      - HA_PIPELINE_SIGNALS_SAMPLE_FILE=/var/hivearmor-slo-soak/latest.json
+      - HA_PIPELINE_SIGNALS_SAMPLE_DIR=/var/hivearmor-slo-soak
+      - GRPC_AGENT_MANAGER_HOST=agentmanager
+      - GRPC_AGENT_MANAGER_PORT=9000
+      - EVENT_PROCESSOR_HOST=eventprocessor
+      - EVENT_PROCESSOR_PORT=9002
+      - APP_TFA_ENABLED=${APP_TFA_ENABLED:-false}
+      - SPRING_DEVTOOLS_RESTART_ENABLED=false
+      - ELASTICSEARCH_CA_CERT=/cert/ca.crt
+      - JHIPSTER_CORS_ALLOWED_ORIGINS=${JHIPSTER_CORS_ALLOWED_ORIGINS:-https://localhost}
+      - LLM_PROVIDER=disabled
+    volumes:
+      - datasources_data:/etc/hivearmor
+      - updates_data:/updates
+      - updates_data:/dependencies
+      - ../../local-dev/certs:/cert:ro
+      - /home/ubuntu/hivearmor-slo-soak:/var/hivearmor-slo-soak:ro
+    networks: [data]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+      agentmanager:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/healthcheck || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+      start_period: 120s
+    restart: unless-stopped
+
+  eventprocessor:
+    image: hivearmor/event-processor:local
+    build:
+      context: ../..
+      dockerfile: event-processor/Dockerfile
+    pull_policy: never
+    environment:
+      - HA_PROFILE=staging
+      - WORK_DIR=/workdir
+      - MODE=manager
+      - NODE_NAME=manager
+      - OPENSEARCH_HOST=opensearch
+      - OPENSEARCH_PORT=9200
+      - OPENSEARCH_USER=admin
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - OPENSEARCH_CA_CERT=/cert/ca.crt
+      - BACKEND_URL=http://backend:8080
+      - INTERNAL_KEY=${INTERNAL_KEY}
+      - INPUTS_SOCKET_SECRET=${INPUTS_SOCKET_SECRET:?set INPUTS_SOCKET_SECRET}
+      - POSTGRESQL_HOST=postgres
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USER=postgres
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_DB=hivearmor
+      - KAFKA_BROKER=redpanda:9092
+      - KAFKA_ENABLED=true
+      - KAFKA_WORKERS=1
+    volumes:
+      - ep_pipeline:/workdir/pipeline
+      - ../../filters:/workdir/pipeline/filters:ro
+      - ep_logs:/workdir/logs
+      - ep_sockets:/workdir/sockets
+      - ../../local-dev/certs:/cert:ro
+      - ./hivearmor_plugins.yaml:/workdir/pipeline/hivearmor_plugins.yaml:ro
+    networks: [data]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+      backend:
+        condition: service_started
+      redpanda:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  eventprocessor-worker:
+    image: hivearmor/event-processor:local
+    pull_policy: never
+    environment:
+      - HA_PROFILE=staging
+      - WORK_DIR=/workdir
+      - MODE=worker
+      - NODE_NAME=worker
+      - OPENSEARCH_HOST=opensearch
+      - OPENSEARCH_PORT=9200
+      - OPENSEARCH_USER=admin
+      - OPENSEARCH_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - OPENSEARCH_CA_CERT=/cert/ca.crt
+      - BACKEND_URL=http://backend:8080
+      - INTERNAL_KEY=${INTERNAL_KEY}
+      - INPUTS_SOCKET_SECRET=${INPUTS_SOCKET_SECRET}
+      - POSTGRESQL_HOST=postgres
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USER=postgres
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_DB=hivearmor
+      - KAFKA_BROKER=redpanda:9092
+      - KAFKA_ENABLED=false
+    volumes:
+      - ep_pipeline:/workdir/pipeline
+      - ../../filters:/workdir/pipeline/filters:ro
+      - ep_logs:/workdir/logs
+      - ep_sockets:/workdir/sockets
+      - ../../local-dev/certs:/cert:ro
+      - ./hivearmor_plugins.yaml:/workdir/pipeline/hivearmor_plugins.yaml:ro
+    ports:
+      - "50051:50051"
+    networks: [data, edge]
+    depends_on:
+      eventprocessor:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  frontend-v3:
+    image: hivearmor/frontend-v3:local
+    build:
+      context: ../../frontend-v3
+      dockerfile: Dockerfile
+    pull_policy: never
+    networks: [data]
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  edge:
+    image: nginx:1.27-alpine
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx-edge.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../../local-dev/certs:/etc/nginx/certs:ro
+    networks: [edge, data]
+    depends_on:
+      frontend-v3:
+        condition: service_healthy
+      agentmanager:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  opensearch_data:
+  redpanda_data:
+  updates_data:
+  datasources_data:
+  ep_pipeline:
+  ep_logs:
+  ep_sockets:

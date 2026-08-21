@@ -28,6 +28,11 @@ on:
         required: false
         type: number
         default: 1
+      require_signing:
+        required: false
+        type: boolean
+        default: true
+        description: "Fail instead of publishing an unsigned artifact when signing credentials are unavailable"
 
       # ---- Windows / GCP KMS (used only when os=windows) ----
       gcp_project_id:
@@ -116,13 +121,14 @@ jobs:
           name: ${{ inputs.artifact_name }}
           path: ./unsigned
 
-      # Check if signing credentials are available; if not, passthrough unsigned binaries.
-      # This keeps the job green so downstream jobs always receive an artifact.
+      # Production releases fail closed when signing credentials are absent.
+      # Explicitly non-production calls may retain an unsigned development artifact.
       - name: Check signing prerequisites
         id: prereq
         env:
           WINDOWS_KEY: ${{ secrets.GCP_WINDOWS_SIGNER_SA_KEY }}
           MACOS_CERT: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          REQUIRE_SIGNING: ${{ inputs.require_signing }}
         run: |
           ENABLED=false
           if [[ "${{ inputs.os }}" == "windows" && -n "$WINDOWS_KEY" ]]; then
@@ -132,7 +138,11 @@ jobs:
           fi
           echo "SIGNING_ENABLED=$ENABLED" >> "$GITHUB_ENV"
           if [ "$ENABLED" = "false" ]; then
-            echo "::warning::Signing credentials not configured for ${{ inputs.os }} — binaries will be uploaded unsigned."
+            if [ "$REQUIRE_SIGNING" = "true" ]; then
+              echo "::error::Signing credentials are required for ${{ inputs.os }} release artifacts."
+              exit 1
+            fi
+            echo "::warning::Signing credentials not configured for non-production ${{ inputs.os }} artifact — artifact remains unsigned."
           fi
 
       # =========================================================

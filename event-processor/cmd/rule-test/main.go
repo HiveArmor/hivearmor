@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"google.golang.org/protobuf/types/known/structpb"
 	"gopkg.in/yaml.v3"
 )

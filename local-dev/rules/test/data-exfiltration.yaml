@@ -1,0 +1,76 @@
+# Correlation Rule: Data Exfiltration Detected
+# Detects large cumulative outbound data transfers to a single external IP address
+# by summing the network.bytes field for all matching events grouped by source and
+# destination IP. Fires when total bytes exceed 100MB (104857600 bytes) within 1 hour.
+#
+# This rule uses aggregation correlation (sum) rather than simple event counting.
+# The engine collects all outbound network events sharing the same source.ip and
+# destination.ip, computes sum(network.bytes), and evaluates the CEL expression
+# to determine if the threshold is exceeded.
+#
+# Rationale: Legitimate file transfers rarely send 100MB+ to a single external IP
+# in one hour. Sustained high-volume outbound transfers often indicate data theft
+# via alternative protocols (FTP, custom tunnels, cloud upload, DNS over HTTPS).
+#
+# MITRE ATT&CK: T1048 — Exfiltration Over Alternative Protocol (Exfiltration)
+
+id: rule-data-exfiltration
+name: "Data Exfiltration Detected"
+description: "Detects cumulative outbound data transfer exceeding 100MB to a single external IP within 1 hour"
+severity: critical
+enabled: true
+
+mitre:
+  tactic: "Exfiltration"
+  technique: "T1048"
+  subtechnique: ""
+  name: "Exfiltration Over Alternative Protocol"
+
+# Match condition — which events feed this rule
+# Filters for outbound network events. The engine collects all matching events and
+# passes them to the aggregation correlation stage where network.bytes is summed.
+match:
+  index: "v3-hive-log-*"
+  filter:
+    - field: "network.direction"
+      operator: "equals"
+      value: "outbound"
+
+# Correlation — CEL expression for sum aggregation
+# Type "aggregation" means the engine computes an aggregate function over a numeric
+# field (network.bytes) for events sharing the same groupBy key within the time window.
+#
+# Aggregation logic:
+#   - Function: sum — adds network.bytes across all events in the group
+#   - groupBy: [source.ip, destination.ip] — isolates transfers per source-destination pair
+#   - timeWindow: 1h — sliding window of 1 hour
+#   - threshold: sum > 104857600 (100MB in bytes)
+#
+# The CEL expression `sum(events, "network.bytes") > 104857600` instructs the engine
+# to sum the network.bytes field across all collected events in the group window.
+# When the cumulative total exceeds 100MB, the rule fires.
+#
+# This catches both single large transfers and many small transfers that collectively
+# exceed the threshold — a common exfiltration technique to avoid per-event detection.
+correlation:
+  type: "aggregation"
+  function: "sum"
+  field: "network.bytes"
+  groupBy: ["source.ip", "destination.ip"]
+  timeWindow: "1h"
+  threshold: 104857600
+  cel: |
+    sum(events, "network.bytes") > 104857600
+
+# Alert template — generated when aggregation condition is met
+alert:
+  title: "Data Exfiltration: {{source.ip}} → {{destination.ip}}"
+  description: "{{sum(network.bytes)}} bytes transferred from {{source.ip}} to {{destination.ip}} in 1 hour"
+  riskScore: 95
+  entities:
+    - field: "source.ip"
+      type: "ip"
+    - field: "destination.ip"
+      type: "ip"
+    - field: "host.name"
+      type: "host"

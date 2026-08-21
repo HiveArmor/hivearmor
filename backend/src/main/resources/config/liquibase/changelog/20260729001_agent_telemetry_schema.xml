@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        Vulnerability findings table.
+        One row per (agent_id, cve_id, purl) triple — upserted on each SBOM scan.
+        The indexed columns support the common filter patterns:
+          - All CVEs for one agent (agent_id)
+          - All agents affected by one CVE (cve_id)
+          - CISA KEV priority queue (is_kev = true ORDER BY cvss_v3 DESC)
+    -->
+    <changeSet id="20260729001-vuln-1" author="hivearmor">
+        <createTable tableName="ha_vuln_finding">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="agent_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="agent_hostname" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cve_id" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="purl" type="varchar(1000)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="package_name" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="installed_version" type="varchar(200)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="fixed_version" type="varchar(200)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cvss_v3" type="double">
+                <constraints nullable="true"/>
+            </column>
+            <column name="severity" type="varchar(20)">
+                <constraints nullable="true"/>
+            </column>
+            <!-- CISA Known Exploited Vulnerabilities flag — escalates to Critical when true -->
+            <column name="is_kev" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="references_json" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="published_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+            <column name="first_seen_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_seen_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="ha_vuln_finding"
+                             columnNames="agent_id, cve_id, purl"
+                             constraintName="uq_ha_vuln_agent_cve_purl"/>
+
+        <createIndex tableName="ha_vuln_finding" indexName="idx_ha_vuln_agent">
+            <column name="agent_id"/>
+        </createIndex>
+        <createIndex tableName="ha_vuln_finding" indexName="idx_ha_vuln_cve">
+            <column name="cve_id"/>
+        </createIndex>
+        <createIndex tableName="ha_vuln_finding" indexName="idx_ha_vuln_kev">
+            <column name="is_kev"/>
+            <column name="cvss_v3"/>
+        </createIndex>
+        <createIndex tableName="ha_vuln_finding" indexName="idx_ha_vuln_severity">
+            <column name="severity"/>
+        </createIndex>
+    </changeSet>
+
+    <!--
+        SCA (Security Configuration Assessment) per-check results.
+        One row per (agent_id, check_id, scan_at) — replaced on each scan.
+    -->
+    <changeSet id="20260729001-sca-1" author="hivearmor">
+        <createTable tableName="ha_sca_result">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="agent_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="agent_hostname" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="check_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="check_title" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pack_id" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+            <!-- L1 or L2 -->
+            <column name="level" type="varchar(10)">
+                <constraints nullable="true"/>
+            </column>
+            <!-- PASS, FAIL, NOT_APPLICABLE, ERROR -->
+            <column name="status" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="observed_value" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="expected_value" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="remediation" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <!-- JSON array of MITRE ATT&CK technique IDs -->
+            <column name="mitre_json" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <!-- JSON array of compliance framework tags e.g. ["pci-dss-8.3.6","hipaa-164.312.b"] -->
+            <column name="compliance_tags_json" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="scanned_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="ha_sca_result"
+                             columnNames="agent_id, check_id"
+                             constraintName="uq_ha_sca_agent_check"/>
+
+        <createIndex tableName="ha_sca_result" indexName="idx_ha_sca_agent">
+            <column name="agent_id"/>
+        </createIndex>
+        <createIndex tableName="ha_sca_result" indexName="idx_ha_sca_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="ha_sca_result" indexName="idx_ha_sca_check">
+            <column name="check_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!--
+        SCA per-agent summary — one row per (agent_id, pack_id), updated after each scan.
+        Provides fast aggregate stats without scanning the full ha_sca_result table.
+    -->
+    <changeSet id="20260729001-sca-2" author="hivearmor">
+        <createTable tableName="ha_sca_summary">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="agent_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="agent_hostname" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="pack_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pass_count" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fail_count" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="na_count" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="error_count" type="int" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <!-- score_pct = pass / (pass + fail + error) * 100 -->
+            <column name="score_pct" type="double" defaultValueNumeric="0.0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scanned_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="ha_sca_summary"
+                             columnNames="agent_id, pack_id"
+                             constraintName="uq_ha_sca_summary_agent_pack"/>
+
+        <createIndex tableName="ha_sca_summary" indexName="idx_ha_sca_summary_agent">
+            <column name="agent_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!--
+        Agent vitals time-series — written every 30s by PUT /api/ha-telemetry/vitals/:agentId.
+        Retained for 7 days; used by the SensorGridPage sparkline and health column.
+    -->
+    <changeSet id="20260729001-vitals-1" author="hivearmor">
+        <createTable tableName="ha_agent_vitals">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="agent_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cpu_pct" type="double">
+                <constraints nullable="true"/>
+            </column>
+            <column name="ram_mb" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="queue_depth" type="int">
+                <constraints nullable="true"/>
+            </column>
+            <column name="events_per_sec" type="double">
+                <constraints nullable="true"/>
+            </column>
+            <column name="dropped_total" type="bigint" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_error" type="varchar(1000)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="sampled_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ha_agent_vitals" indexName="idx_ha_vitals_agent_time">
+            <column name="agent_id"/>
+            <column name="sampled_at"/>
+        </createIndex>
+    </changeSet>
+
+    <!--
+        SBOM component inventory — one row per (agent_id, purl).
+        Replaced on each full SBOM scan; delta scans only update changed rows.
+    -->
+    <changeSet id="20260729001-sbom-1" author="hivearmor">
+        <createTable tableName="ha_sbom_component">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="agent_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scan_id" type="varchar(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="purl" type="varchar(1000)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="name" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="varchar(200)">
+                <constraints nullable="true"/>
+            </column>
+            <!-- OS, LANGUAGE, CONTAINER, BROWSER_EXTENSION -->
+            <column name="component_type" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="sha256" type="varchar(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="scanned_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ha_sbom_component" indexName="idx_ha_sbom_agent">
+            <column name="agent_id"/>
+        </createIndex>
+        <createIndex tableName="ha_sbom_component" indexName="idx_ha_sbom_purl">
+            <column name="purl"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

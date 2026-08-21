@@ -7,7 +7,7 @@ import (
 	"github.com/hivearmor/event-processor/enterprise/risk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

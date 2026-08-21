@@ -1,0 +1,43 @@
+.ha-live-update-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--ha-border-subtle);
+  background: var(--ha-surface-elevated);
+  font: var(--ha-type-compact);
+  color: var(--ha-foreground-secondary);
+  white-space: nowrap;
+}
+
+.ha-live-update-indicator__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+/* Connected — green */
+.ha-live-update-indicator[data-status='connected'] .ha-live-update-indicator__dot {
+  background: var(--ha-severity-low);
+  box-shadow: 0 0 4px var(--ha-severity-low);
+}
+
+/* Reconnecting — yellow */
+.ha-live-update-indicator[data-status='reconnecting'] .ha-live-update-indicator__dot {
+  background: var(--ha-severity-medium);
+  box-shadow: 0 0 4px var(--ha-severity-medium);
+  animation: ha-reconnect-pulse 1.2s ease-in-out infinite;
+}
+
+/* Disconnected — red */
+.ha-live-update-indicator[data-status='disconnected'] .ha-live-update-indicator__dot {
+  background: var(--ha-severity-critical);
+  box-shadow: 0 0 4px var(--ha-severity-critical);
+}
+
+@keyframes ha-reconnect-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

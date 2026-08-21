@@ -1,0 +1,43 @@
+id: d4e5f6a7-b8c9-0123-defa-234567890134
+title: Suspicious File Written to Startup Folder
+status: stable
+logsource:
+  product: windows
+  category: file_event
+level: medium
+tags:
+  - attack.persistence
+  - attack.T1547
+  - attack.T1547.001
+detection:
+  selection:
+    TargetFilename|contains:
+      - '\Microsoft\Windows\Start Menu\Programs\Startup\'
+      - '\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\'
+    TargetFilename|endswith:
+      - '.exe'
+      - '.bat'
+      - '.cmd'
+      - '.vbs'
+      - '.ps1'
+      - '.lnk'
+  filter_legit:
+    Image|contains:
+      - 'C:\Program Files\'
+      - 'C:\Windows\System32\'
+  condition: selection and not filter_legit
+falsepositives:
+  - Legitimate software creating startup shortcuts
+  - Enterprise management tools
+impact:
+  confidentiality: low
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - TargetFilename
+groupBy:
+  - ComputerName
+mitre:
+  tactic: persistence
+  technique: T1547.001

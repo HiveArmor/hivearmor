@@ -1,0 +1,214 @@
+- generic [active] [ref=f163e1]:
+  - generic [ref=f163e3]:
+    - link "Skip to main content" [ref=f163e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f163e5]:
+      - generic [ref=f163e6]:
+        - generic [ref=f163e12]: HiveArmor
+        - generic [ref=f163e13]: Security operations
+      - generic [ref=f163e14]:
+        - button "All authorized tenants" [ref=f163e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f163e24] [cursor=pointer]:
+          - generic [ref=f163e29]: ⌘ K
+        - generic [ref=f163e30]: Production
+      - generic [ref=f163e31]:
+        - 'status "Data pipeline: Critical - An unexpected error occurred. Reference this correlation ID when contacting support." [ref=f163e32]'
+        - status "Live events per second" [ref=f163e35]:
+          - generic [ref=f163e37]: 0 EPS
+        - button "Notifications" [ref=f163e38] [cursor=pointer]
+        - button "Help" [ref=f163e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f163e47]:
+      - generic [ref=f163e48]:
+        - region "COMMAND" [ref=f163e49]:
+          - generic [ref=f163e50]:
+            - button "Mission Control" [ref=f163e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f163e58] [cursor=pointer]
+            - button "Alerts" [ref=f163e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f163e67] [cursor=pointer]
+            - button "Incidents" [ref=f163e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f163e79]:
+          - generic [ref=f163e80]:
+            - button "Search & Hunt" [ref=f163e81] [cursor=pointer]
+            - button "Investigations" [ref=f163e86] [cursor=pointer]
+            - button "Entities" [ref=f163e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f163e97] [cursor=pointer]
+        - region "DEFEND" [ref=f163e103]:
+          - generic [ref=f163e104]:
+            - button "Detection Rules" [ref=f163e105] [cursor=pointer]
+            - button "Playbooks" [ref=f163e109] [cursor=pointer]
+            - button "Response Library" [ref=f163e114] [cursor=pointer]
+        - region "POSTURE" [ref=f163e118]:
+          - generic [ref=f163e119]:
+            - button "Assets" [ref=f163e120] [cursor=pointer]
+            - button "Identities" [ref=f163e125] [cursor=pointer]
+            - button "Active Directory" [ref=f163e132] [cursor=pointer]
+            - button "Exposure" [ref=f163e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f163e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f163e156] [cursor=pointer]
+            - button "Sensors" [ref=f163e162] [cursor=pointer]
+            - button "Compliance" [ref=f163e166] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f163e171]:
+          - generic [ref=f163e172]:
+            - button "Endpoints" [ref=f163e173] [cursor=pointer]
+            - button "File Quarantine" [ref=f163e177] [cursor=pointer]
+            - button "File Integrity" [ref=f163e183] [cursor=pointer]
+            - button "Agent Policies" [ref=f163e190] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f163e195]:
+          - button "Studio" [ref=f163e197] [cursor=pointer]
+        - region "REPORT" [ref=f163e202]:
+          - button "Scheduled Reports" [ref=f163e204] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f163e209]:
+          - generic [ref=f163e210]:
+            - button "Users" [ref=f163e211] [cursor=pointer]
+            - button "Integrations" [ref=f163e225] [cursor=pointer]
+            - button "Notifications" [ref=f163e229] [cursor=pointer]
+            - button "Audit Log" [ref=f163e234] [cursor=pointer]
+            - button "Settings" [ref=f163e239] [cursor=pointer]
+      - generic [ref=f163e244]:
+        - button "User menu" [ref=f163e247] [cursor=pointer]:
+          - generic [ref=f163e248]: AA
+        - button "Pin sidebar open" [ref=f163e249] [cursor=pointer]
+    - main [ref=f163e252]:
+      - generic [ref=f163e253]:
+        - generic [ref=f163e254]:
+          - generic [ref=f163e255]:
+            - button "Back to alerts" [ref=f163e256] [cursor=pointer]
+            - generic [ref=f163e259]:
+              - generic [ref=f163e260]: Detections
+              - generic [ref=f163e263]: Alerts
+              - strong [ref=f163e266]: Investigation
+            - generic [ref=f163e267]: Updated —
+            - 'status "Live update connection: Live" [ref=f163e274]':
+              - generic [ref=f163e276]: Live
+          - generic [ref=f163e277]:
+            - generic [ref=f163e282]:
+              - generic [ref=f163e283]:
+                - generic [ref=f163e284]: Critical
+                - generic [ref=f163e285]: "2"
+                - generic [ref=f163e286]: e2e-alert-exfiltration-001
+                - button "Copy alert ID" [ref=f163e287] [cursor=pointer]
+              - 'heading "Data Exfiltration: 10.1.5.44 → 203.0.113.88" [level=1] [ref=f163e291]'
+            - generic [ref=f163e292]:
+              - button "Guide" [ref=f163e293] [cursor=pointer]
+              - button "Ask Hive" [disabled] [ref=f163e298]
+              - button "Promote to incident" [disabled] [ref=f163e302]
+          - generic [ref=f163e305]:
+            - generic [ref=f163e306]:
+              - generic [ref=f163e307]: Risk
+              - strong [ref=f163e308]: 95/100
+            - generic [ref=f163e309]:
+              - generic [ref=f163e310]: Confidence
+              - strong [ref=f163e311]: —
+            - generic [ref=f163e312]:
+              - generic [ref=f163e313]: Verdict
+              - strong [ref=f163e314]: Unknown
+            - generic [ref=f163e315]:
+              - generic [ref=f163e316]: Asset
+              - strong [ref=f163e317]: Unmapped
+            - generic [ref=f163e318]:
+              - generic [ref=f163e319]: Tenant
+              - strong [ref=f163e320]: Current tenant
+            - generic [ref=f163e321]:
+              - generic [ref=f163e322]: Detected
+              - strong [ref=f163e323]: —
+            - generic [ref=f163e324]:
+              - generic [ref=f163e325]: SLA
+              - strong [ref=f163e326]: Not set
+        - navigation "Alert investigation views" [ref=f163e327]:
+          - tablist [ref=f163e328]:
+            - tab "Investigation board" [selected] [ref=f163e329] [cursor=pointer]
+            - tab "Event details" [ref=f163e334] [cursor=pointer]
+            - tab "History & response" [ref=f163e338] [cursor=pointer]
+          - button "Shortcuts" [ref=f163e344] [cursor=pointer]
+        - tabpanel "Investigation board" [ref=f163e347]:
+          - region [ref=f163e348]:
+            - generic [ref=f163e352]:
+              - strong [ref=f163e353]: Attack chain
+              - generic [ref=f163e354]: Observed evidence by ATT&CK tactic
+            - generic [ref=f163e360]:
+              - strong [ref=f163e361]: Attack-chain mapping unavailable
+              - generic [ref=f163e362]: Awaiting backend contract ALT-002. No evidence was inferred.
+          - generic [ref=f163e363]:
+            - complementary [ref=f163e364]:
+              - generic [ref=f163e365]:
+                - heading "Why it fired" [level=2] [ref=f163e371]
+                - generic [ref=f163e372]:
+                  - paragraph [ref=f163e373]: 157286400 bytes transferred from 10.1.5.44 to 203.0.113.88 in 1 hour
+                  - generic [ref=f163e374]:
+                    - generic [ref=f163e375]:
+                      - term [ref=f163e376]: Rule
+                      - definition [ref=f163e377]: Not provided
+                    - generic [ref=f163e378]:
+                      - term [ref=f163e379]: Detector
+                      - definition [ref=f163e380]: exfiltration
+                    - generic [ref=f163e381]:
+                      - term [ref=f163e382]: Source
+                      - definition [ref=f163e383]: Alert detail API
+              - generic [ref=f163e384]:
+                - heading "Observed capabilities" [level=2] [ref=f163e389]
+                - generic [ref=f163e396]:
+                  - strong [ref=f163e397]: Behavior capability analysis unavailable
+                  - generic [ref=f163e398]: Awaiting backend contract ALT-008. No evidence was inferred.
+              - heading "Investigation scope" [level=2] [ref=f163e404]
+            - region "Synchronized investigation canvas" [ref=f163e406]:
+              - generic [ref=f163e407]:
+                - generic [ref=f163e413]:
+                  - strong [ref=f163e414]: Execution story
+                  - generic [ref=f163e415]: Select an event to synchronize process and evidence context
+                - generic [ref=f163e416]:
+                  - generic [ref=f163e417]: J
+                  - generic [ref=f163e418]: K
+                  - generic [ref=f163e419]: navigate
+              - generic [ref=f163e420]:
+                - region "Ordered execution story" [ref=f163e421]:
+                  - generic [ref=f163e427]:
+                    - strong [ref=f163e428]: Execution story unavailable
+                    - generic [ref=f163e429]: Awaiting backend contract ALT-002. No evidence was inferred.
+                - region "Process lineage panel" [ref=f163e430]:
+                  - generic [ref=f163e431]:
+                    - strong [ref=f163e437]: Process lineage
+                    - generic [ref=f163e438]: 0 processes
+                  - generic [ref=f163e444]:
+                    - strong [ref=f163e445]: Process lineage unavailable
+                    - generic [ref=f163e446]: Awaiting backend contract ALT-003. No evidence was inferred.
+            - complementary [ref=f163e447]:
+              - generic [ref=f163e448]:
+                - generic [ref=f163e449]:
+                  - heading "Priority indicators" [level=2] [ref=f163e460]
+                  - generic [ref=f163e461]: "0"
+                - generic [ref=f163e468]:
+                  - strong [ref=f163e469]: Enriched indicators unavailable
+                  - generic [ref=f163e470]: Awaiting backend contract ALT-005. No evidence was inferred.
+              - generic [ref=f163e471]:
+                - heading "Response console" [level=2] [ref=f163e477]
+                - generic [ref=f163e478]:
+                  - button "Promote to incident e2e-alert-exfiltration-001" [disabled] [ref=f163e479]:
+                    - generic [ref=f163e484]:
+                      - strong [ref=f163e485]: Promote to incident
+                      - generic [ref=f163e486]: e2e-alert-exfiltration-001
+                  - paragraph [ref=f163e489]: All disruptive actions require target preview, authorization, and confirmation.
+          - region "Entity relationship graph" [ref=f163e492]:
+            - generic [ref=f163e493]:
+              - heading "Entity graph" [level=2] [ref=f163e500]
+              - generic [ref=f163e501]: 0 nodes
+            - strong [ref=f163e504]: No entity relationships found
+          - generic [ref=f163e505]:
+            - generic [ref=f163e506]:
+              - strong [ref=f163e512]: Evidence dock
+              - navigation "Evidence categories" [ref=f163e513]:
+                - button "Network 0" [ref=f163e514] [cursor=pointer]:
+                  - text: Network
+                  - generic [ref=f163e520]: "0"
+                - button "Indicators 0" [ref=f163e521] [cursor=pointer]:
+                  - text: Indicators
+                  - generic [ref=f163e531]: "0"
+                - button "Related alerts 0" [ref=f163e532] [cursor=pointer]:
+                  - text: Related alerts
+                  - generic [ref=f163e536]: "0"
+                - button "Fields" [ref=f163e537] [cursor=pointer]
+                - button "Raw event" [ref=f163e541] [cursor=pointer]
+            - generic [ref=f163e551]:
+              - strong [ref=f163e552]: Network activity unavailable
+              - generic [ref=f163e553]: Awaiting backend contract ALT-004. No evidence was inferred.
+  - generic:
+    - list "Notifications"

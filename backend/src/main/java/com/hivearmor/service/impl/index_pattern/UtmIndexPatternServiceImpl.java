@@ -1,28 +1,17 @@
 package com.hivearmor.service.impl.index_pattern;
 
-import com.hivearmor.config.Constants;
 import com.hivearmor.domain.index_pattern.UtmIndexPattern;
-import com.hivearmor.domain.index_pattern.enums.SystemIndexPattern;
 import com.hivearmor.repository.index_pattern.UtmIndexPatternRepository;
 import com.hivearmor.service.index_pattern.UtmIndexPatternService;
-import com.hivearmor.util.events.IndexPatternsReadyEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Service Implementation for managing UtmIndexPattern.
@@ -35,34 +24,11 @@ public class UtmIndexPatternServiceImpl implements UtmIndexPatternService {
     private static final String CLASSNAME = "UtmIndexPatternServiceImpl";
 
     private final UtmIndexPatternRepository indexPatternRepository;
-    private final ApplicationEventPublisher publisher;
 
-    public UtmIndexPatternServiceImpl(UtmIndexPatternRepository utmIndexPatternRepository, ApplicationEventPublisher publisher) {
+    public UtmIndexPatternServiceImpl(UtmIndexPatternRepository utmIndexPatternRepository) {
         this.indexPatternRepository = utmIndexPatternRepository;
-        this.publisher = publisher;
     }
 
-    @Order()
-    @EventListener(ApplicationReadyEvent.class)
-    public void init() {
-        final String ctx = CLASSNAME + ".init";
-
-        try {
-            Map<Long, String> patterns = indexPatternRepository.findAll(Sort.by("id").ascending()).stream()
-                .collect(Collectors.toMap(UtmIndexPattern::getId, UtmIndexPattern::getPattern));
-
-            if (CollectionUtils.isEmpty(patterns))
-                throw new Exception("There is no system index patterns configured");
-
-            Constants.SYS_INDEX_PATTERN.put(SystemIndexPattern.LOGS, patterns.get(1L));
-            Constants.SYS_INDEX_PATTERN.put(SystemIndexPattern.ALERTS, patterns.get(2L));
-            Constants.SYS_INDEX_PATTERN.put(SystemIndexPattern.LOGS_WINDOWS, patterns.get(8L));
-
-            publisher.publishEvent(new IndexPatternsReadyEvent(this));
-        } catch (Exception e) {
-            throw new RuntimeException(ctx + ": " + e.getMessage());
-        }
-    }
 
 
     /**

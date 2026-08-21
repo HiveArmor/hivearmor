@@ -14,6 +14,7 @@ import com.hivearmor.service.UtmAlertService;
 import com.hivearmor.service.application_events.ApplicationEventService;
 import com.hivearmor.service.dto.incident.AddToIncidentDTO;
 import com.hivearmor.service.dto.incident.AlertIncidentStatusChangeDTO;
+import com.hivearmor.service.dto.incident.ConvertedIncidentDTO;
 import com.hivearmor.service.dto.incident.NewIncidentDTO;
 import com.hivearmor.service.dto.incident.RelatedIncidentAlertsDTO;
 import com.hivearmor.service.incident.util.ResolveIncidentStatus;
@@ -159,7 +160,68 @@ public class UtmIncidentService {
         utmIncidentHistoryService.createHistory(IncidentHistoryActionEnum.INCIDENT_CREATED, savedIncident.getId(), "Incident Created", historyMessage);
 
         return savedIncident;
+    }
 
+    public ConvertedIncidentDTO convertAlertsToIncident(List<String> alertIds, String incidentName,
+                                                        Integer incidentId, String incidentSource) {
+        final String ctx = CLASSNAME + ".convertAlertsToIncident";
+        try {
+            List<UtmAlert> alerts = utmAlertService.getAlertsByIds(alertIds);
+            List<RelatedIncidentAlertsDTO> related = new ArrayList<>();
+            for (UtmAlert alert : alerts) {
+                related.add(toRelatedAlert(alert));
+            }
+            if (related.isEmpty()) {
+                for (String alertId : alertIds) {
+                    RelatedIncidentAlertsDTO fallback = new RelatedIncidentAlertsDTO();
+                    fallback.setAlertId(alertId);
+                    fallback.setAlertName(incidentName);
+                    fallback.setAlertStatus(2);
+                    fallback.setAlertSeverity(0);
+                    related.add(fallback);
+                }
+            }
+
+            UtmIncident saved;
+            if (incidentId == null || incidentId == 0) {
+                NewIncidentDTO dto = new NewIncidentDTO();
+                dto.setIncidentName(incidentName);
+                dto.setIncidentDescription(incidentName);
+                dto.setAlertList(related);
+                saved = createIncident(dto);
+            } else {
+                AddToIncidentDTO add = new AddToIncidentDTO();
+                add.setIncidentId(incidentId.longValue());
+                add.setAlertList(related);
+                saved = addAlertsIncident(add);
+            }
+
+            String source = incidentSource == null || incidentSource.isBlank() ? "alert" : incidentSource;
+            utmAlertService.convertToIncident(alertIds, incidentName, saved.getId(), source);
+
+            ConvertedIncidentDTO response = new ConvertedIncidentDTO();
+            response.setId(saved.getId());
+            response.setTitle(saved.getIncidentName());
+            response.setIncidentName(saved.getIncidentName());
+            response.setIncidentDescription(saved.getIncidentDescription());
+            response.setIncidentStatus(saved.getIncidentStatus() == null ? null : saved.getIncidentStatus().name());
+            response.setIncidentSeverity(saved.getIncidentSeverity());
+            response.setCreatedAt(saved.getIncidentCreatedDate() == null ? null : saved.getIncidentCreatedDate().toString());
+            return response;
+        } catch (IncidentAlertConflictException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException(ctx + ": " + e.getMessage(), e);
+        }
+    }
+
+    private RelatedIncidentAlertsDTO toRelatedAlert(UtmAlert alert) {
+        RelatedIncidentAlertsDTO dto = new RelatedIncidentAlertsDTO();
+        dto.setAlertId(alert.getId());
+        dto.setAlertName(alert.getName() == null ? alert.getId() : alert.getName());
+        dto.setAlertStatus(alert.getStatus() == null ? 2 : alert.getStatus());
+        dto.setAlertSeverity(alert.getSeverity() == null ? 0 : alert.getSeverity());
+        return dto;
     }
 
     /**
@@ -292,6 +354,9 @@ public class UtmIncidentService {
     }
 
     private void validateAlertsNotAlreadyLinked(List<RelatedIncidentAlertsDTO> alertList, String ctx) {
+        if (alertList == null || alertList.isEmpty()) {
+            return;
+        }
 
         List<String> alertIds = alertList.stream()
                 .map(RelatedIncidentAlertsDTO::getAlertId)

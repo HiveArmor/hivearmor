@@ -1,0 +1,114 @@
+# Network Connection Anomaly Detection Rules
+# DataType: netconn
+
+dataTypes:
+  - "netconn"
+name: "NetConn: Large Outbound Data Transfer — Possible Exfiltration"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: "Exfiltration"
+technique: "T1048 - Exfiltration Over Alternative Protocol"
+adversary: origin
+description: "An unusually large outbound data transfer was detected from a single process. This may indicate data exfiltration."
+references:
+  - "https://attack.mitre.org/techniques/T1048/"
+where: |
+  safe("action", "") == "connect" &&
+  safe("log.bytes_sent", 0) > 104857600
+groupBy:
+  - origin.process
+  - target.ip
+deduplicateBy:
+  - origin.pid
+  - target.ip
+---
+dataTypes:
+  - "netconn"
+name: "NetConn: Unusual Outbound Port — Possible Reverse Shell or C2"
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: "Command and Control"
+technique: "T1571 - Non-Standard Port"
+adversary: origin
+description: "A process established an outbound connection to a non-standard port. Attackers use non-standard ports to evade port-based firewall rules and blend with legitimate traffic."
+references:
+  - "https://attack.mitre.org/techniques/T1571/"
+where: |
+  safe("action", "") == "connect" &&
+  safe("target.port", 0) > 0 &&
+  safe("target.port", 0) != 80 &&
+  safe("target.port", 0) != 443 &&
+  safe("target.port", 0) != 22 &&
+  safe("target.port", 0) != 25 &&
+  safe("target.port", 0) != 53 &&
+  safe("target.port", 0) != 587 &&
+  safe("target.port", 0) != 993 &&
+  safe("target.port", 0) != 995 &&
+  safe("target.port", 0) != 3389 &&
+  !startsWith(safe("target.ip", ""), "10.") &&
+  !startsWith(safe("target.ip", ""), "192.168.") &&
+  !startsWith(safe("target.ip", ""), "172.")
+groupBy:
+  - origin.process
+  - target.port
+deduplicateBy:
+  - origin.process
+  - target.port
+---
+dataTypes:
+  - "netconn"
+name: "NetConn: New Listening Port — Possible Backdoor"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: "Persistence"
+technique: "T1090 - Proxy"
+adversary: origin
+description: "A new listening socket was bound to an unexpected port. Malware and backdoors open listening ports to receive reverse shell connections."
+references:
+  - "https://attack.mitre.org/techniques/T1090/"
+where: |
+  safe("action", "") == "bind" &&
+  safe("origin.port", 0) > 1024 &&
+  safe("origin.port", 0) != 3389 &&
+  safe("origin.port", 0) != 5900 &&
+  !regexMatch(safe("origin.process", ""), "(nginx|apache|httpd|sshd|postgres|mysql|redis|elasticsearch|grafana|docker)")
+groupBy:
+  - origin.process
+  - origin.port
+deduplicateBy:
+  - origin.process
+  - origin.port
+---
+dataTypes:
+  - "netconn"
+name: "NetConn: Browser Connecting to Non-HTTP Port — Possible C2 via Browser"
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: "Command and Control"
+technique: "T1071.001 - Application Layer Protocol: Web Protocols"
+adversary: origin
+description: "A browser process established a non-HTTP/HTTPS connection. This may indicate a malicious browser extension performing C2 communication over a non-standard protocol."
+references:
+  - "https://attack.mitre.org/techniques/T1071/001/"
+where: |
+  safe("action", "") == "connect" &&
+  regexMatch(safe("origin.process", ""), "(?i)(chrome|chromium|firefox|msedge|safari|opera)") &&
+  safe("target.port", 0) != 80 &&
+  safe("target.port", 0) != 443 &&
+  safe("target.port", 0) != 8080 &&
+  safe("target.port", 0) != 8443
+groupBy:
+  - origin.process
+  - target.port
+deduplicateBy:
+  - origin.process
+  - target.ip
+  - target.port

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/plugins"
 	"github.com/hivearmor/agent/agent"
 	"github.com/hivearmor/agent/collector/file"
 	"github.com/hivearmor/agent/collector/netflow"
@@ -17,7 +17,7 @@ import (
 // Collector is the interface that every collector must implement.
 type Collector interface {
 	Name() string
-	Start(ctx context.Context, queue chan *plugins.Log)
+	Start(ctx context.Context, queue chan<- *plugins.Log)
 	Stop()
 }
 
@@ -67,7 +67,7 @@ func StartAll(ctx context.Context) {
 }
 
 // runCollector runs a collector with panic recovery.
-func runCollector(ctx context.Context, c Collector, queue chan *plugins.Log) {
+func runCollector(ctx context.Context, c Collector, queue chan<- *plugins.Log) {
 	defer func() {
 		if r := recover(); r != nil {
 			utils.Logger.ErrorF("panic in collector %s: %v", c.Name(), r)

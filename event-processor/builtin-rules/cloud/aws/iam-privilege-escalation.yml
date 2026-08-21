@@ -1,0 +1,50 @@
+id: ha-aws-004
+title: IAM Privilege Escalation via Policy Attachment
+status: stable
+description: Detects IAM actions that commonly indicate privilege escalation attempts, such as attaching admin-level managed policies, creating new admin users, or updating inline policies to grant elevated permissions.
+logsource:
+  product: aws
+  service: cloudtrail
+level: high
+tags:
+  - attack.privilege_escalation
+  - attack.T1078.004
+  - attack.T1098
+detection:
+  selection:
+    eventName:
+      - AttachUserPolicy
+      - AttachGroupPolicy
+      - AttachRolePolicy
+      - PutUserPolicy
+      - PutGroupPolicy
+      - PutRolePolicy
+      - CreatePolicyVersion
+      - SetDefaultPolicyVersion
+      - AddUserToGroup
+  selection_admin_policy:
+    requestParameters.policyArn|contains:
+      - AdministratorAccess
+      - PowerUserAccess
+  condition: selection and selection_admin_policy
+falsepositives:
+  - Authorised IAM administrators performing legitimate policy changes
+  - Automated infrastructure provisioning via IaC pipelines
+fields:
+  - eventName
+  - requestParameters.policyArn
+  - requestParameters.userName
+  - userIdentity.arn
+  - sourceIPAddress
+impact:
+  confidentiality: high
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - userIdentity.arn
+  - requestParameters.policyArn
+groupBy:
+  - userIdentity.arn
+mitre:
+  tactic: privilege-escalation
+  technique: T1078.004

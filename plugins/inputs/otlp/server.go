@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const maxRecvMsgSize = 64 * 1024 * 1024 // 64 MB
+const maxRecvMsgSize = 4 * 1024 * 1024
 
 // logsServiceServer implements the OTLP Logs Service.
 type logsServiceServer struct {

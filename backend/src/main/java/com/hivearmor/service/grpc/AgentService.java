@@ -61,6 +61,70 @@ public  abstract class AgentService
         com.hivearmor.service.grpc.ListRequest request,
         com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListAgentsCommandsResponse> done);
 
+    /**
+     * <code>rpc CreateEnrollmentToken(.agent.CreateEnrollmentTokenRequest) returns (.agent.CreateEnrollmentTokenResponse);</code>
+     */
+    public abstract void createEnrollmentToken(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.CreateEnrollmentTokenRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.CreateEnrollmentTokenResponse> done);
+
+    /**
+     * <code>rpc ListEnrollmentTokens(.agent.ListEnrollmentTokensRequest) returns (.agent.ListEnrollmentTokensResponse);</code>
+     */
+    public abstract void listEnrollmentTokens(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.ListEnrollmentTokensRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListEnrollmentTokensResponse> done);
+
+    /**
+     * <code>rpc RevokeEnrollmentToken(.agent.RevokeEnrollmentTokenRequest) returns (.agent.EnrollmentToken);</code>
+     */
+    public abstract void revokeEnrollmentToken(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.EnrollmentToken> done);
+
+    /**
+     * <code>rpc RotateAgentCredential(.agent.AgentCredentialRequest) returns (.agent.AgentCredentialResponse);</code>
+     */
+    public abstract void rotateAgentCredential(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.AgentCredentialRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.AgentCredentialResponse> done);
+
+    /**
+     * <code>rpc RevokeAgentCredential(.agent.AgentCredentialRequest) returns (.agent.AgentCredentialResponse);</code>
+     */
+    public abstract void revokeAgentCredential(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.AgentCredentialRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.AgentCredentialResponse> done);
+
+    /**
+     * <code>rpc ListEnrollmentAuditEvents(.agent.ListEnrollmentAuditEventsRequest) returns (.agent.ListEnrollmentAuditEventsResponse);</code>
+     */
+    public abstract void listEnrollmentAuditEvents(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse> done);
+
+    /**
+     * <code>rpc VerifyConnectorIdentity(.agent.VerifyConnectorIdentityRequest) returns (.agent.VerifyConnectorIdentityResponse);</code>
+     */
+    public abstract void verifyConnectorIdentity(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.VerifyConnectorIdentityRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.VerifyConnectorIdentityResponse> done);
+
+    /**
+     * <code>rpc ListConnectorAuthorization(.agent.ListConnectorAuthorizationRequest) returns (.agent.ListConnectorAuthorizationResponse);</code>
+     */
+    public abstract void listConnectorAuthorization(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.ListConnectorAuthorizationRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListConnectorAuthorizationResponse> done);
+
   }
 
   public static com.google.protobuf.Service newReflectiveService(
@@ -114,6 +178,70 @@ public  abstract class AgentService
         impl.listAgentCommands(controller, request, done);
       }
 
+      @java.lang.Override
+      public  void createEnrollmentToken(
+          com.google.protobuf.RpcController controller,
+          com.hivearmor.service.grpc.CreateEnrollmentTokenRequest request,
+          com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.CreateEnrollmentTokenResponse> done) {
+        impl.createEnrollmentToken(controller, request, done);
+      }
+
+      @java.lang.Override
+      public  void listEnrollmentTokens(
+          com.google.protobuf.RpcController controller,
+          com.hivearmor.service.grpc.ListEnrollmentTokensRequest request,
+          com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListEnrollmentTokensResponse> done) {
+        impl.listEnrollmentTokens(controller, request, done);
+      }
+
+      @java.lang.Override
+      public  void revokeEnrollmentToken(
+          com.google.protobuf.RpcController controller,
+          com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest request,
+          com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.EnrollmentToken> done) {
+        impl.revokeEnrollmentToken(controller, request, done);
+      }
+
+      @java.lang.Override
+      public  void rotateAgentCredential(
+          com.google.protobuf.RpcController controller,
+          com.hivearmor.service.grpc.AgentCredentialRequest request,
+          com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.AgentCredentialResponse> done) {
+        impl.rotateAgentCredential(controller, request, done);
+      }
+
+      @java.lang.Override
+      public  void revokeAgentCredential(
+          com.google.protobuf.RpcController controller,
+          com.hivearmor.service.grpc.AgentCredentialRequest request,
+          com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.AgentCredentialResponse> done) {
+        impl.revokeAgentCredential(controller, request, done);
+      }
+
+      @java.lang.Override
+      public  void listEnrollmentAuditEvents(
+          com.google.protobuf.RpcController controller,
+          com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest request,
+          com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse> done) {
+        impl.listEnrollmentAuditEvents(controller, request, done);
+      }
+
+      @java.lang.Override
+      public  void verifyConnectorIdentity(
+          com.google.protobuf.RpcController controller,
+          com.hivearmor.service.grpc.VerifyConnectorIdentityRequest request,
+          com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.VerifyConnectorIdentityResponse> done) {
+        impl.verifyConnectorIdentity(controller, request, done);
+      }
+
+      @java.lang.Override
+      public  void listConnectorAuthorization(
+          com.google.protobuf.RpcController controller,
+          com.hivearmor.service.grpc.ListConnectorAuthorizationRequest request,
+          com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListConnectorAuthorizationResponse> done) {
+        impl.listConnectorAuthorization(controller, request, done);
+      }
+
     };
   }
 
@@ -148,6 +276,22 @@ public  abstract class AgentService
             return impl.agentStream(controller, (com.hivearmor.service.grpc.BidirectionalStream)request);
           case 5:
             return impl.listAgentCommands(controller, (com.hivearmor.service.grpc.ListRequest)request);
+          case 6:
+            return impl.createEnrollmentToken(controller, (com.hivearmor.service.grpc.CreateEnrollmentTokenRequest)request);
+          case 7:
+            return impl.listEnrollmentTokens(controller, (com.hivearmor.service.grpc.ListEnrollmentTokensRequest)request);
+          case 8:
+            return impl.revokeEnrollmentToken(controller, (com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest)request);
+          case 9:
+            return impl.rotateAgentCredential(controller, (com.hivearmor.service.grpc.AgentCredentialRequest)request);
+          case 10:
+            return impl.revokeAgentCredential(controller, (com.hivearmor.service.grpc.AgentCredentialRequest)request);
+          case 11:
+            return impl.listEnrollmentAuditEvents(controller, (com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest)request);
+          case 12:
+            return impl.verifyConnectorIdentity(controller, (com.hivearmor.service.grpc.VerifyConnectorIdentityRequest)request);
+          case 13:
+            return impl.listConnectorAuthorization(controller, (com.hivearmor.service.grpc.ListConnectorAuthorizationRequest)request);
           default:
             throw new java.lang.AssertionError("Can't get here.");
         }
@@ -174,6 +318,22 @@ public  abstract class AgentService
             return com.hivearmor.service.grpc.BidirectionalStream.getDefaultInstance();
           case 5:
             return com.hivearmor.service.grpc.ListRequest.getDefaultInstance();
+          case 6:
+            return com.hivearmor.service.grpc.CreateEnrollmentTokenRequest.getDefaultInstance();
+          case 7:
+            return com.hivearmor.service.grpc.ListEnrollmentTokensRequest.getDefaultInstance();
+          case 8:
+            return com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest.getDefaultInstance();
+          case 9:
+            return com.hivearmor.service.grpc.AgentCredentialRequest.getDefaultInstance();
+          case 10:
+            return com.hivearmor.service.grpc.AgentCredentialRequest.getDefaultInstance();
+          case 11:
+            return com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest.getDefaultInstance();
+          case 12:
+            return com.hivearmor.service.grpc.VerifyConnectorIdentityRequest.getDefaultInstance();
+          case 13:
+            return com.hivearmor.service.grpc.ListConnectorAuthorizationRequest.getDefaultInstance();
           default:
             throw new java.lang.AssertionError("Can't get here.");
         }
@@ -200,6 +360,22 @@ public  abstract class AgentService
             return com.hivearmor.service.grpc.BidirectionalStream.getDefaultInstance();
           case 5:
             return com.hivearmor.service.grpc.ListAgentsCommandsResponse.getDefaultInstance();
+          case 6:
+            return com.hivearmor.service.grpc.CreateEnrollmentTokenResponse.getDefaultInstance();
+          case 7:
+            return com.hivearmor.service.grpc.ListEnrollmentTokensResponse.getDefaultInstance();
+          case 8:
+            return com.hivearmor.service.grpc.EnrollmentToken.getDefaultInstance();
+          case 9:
+            return com.hivearmor.service.grpc.AgentCredentialResponse.getDefaultInstance();
+          case 10:
+            return com.hivearmor.service.grpc.AgentCredentialResponse.getDefaultInstance();
+          case 11:
+            return com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse.getDefaultInstance();
+          case 12:
+            return com.hivearmor.service.grpc.VerifyConnectorIdentityResponse.getDefaultInstance();
+          case 13:
+            return com.hivearmor.service.grpc.ListConnectorAuthorizationResponse.getDefaultInstance();
           default:
             throw new java.lang.AssertionError("Can't get here.");
         }
@@ -256,6 +432,70 @@ public  abstract class AgentService
       com.hivearmor.service.grpc.ListRequest request,
       com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListAgentsCommandsResponse> done);
 
+  /**
+   * <code>rpc CreateEnrollmentToken(.agent.CreateEnrollmentTokenRequest) returns (.agent.CreateEnrollmentTokenResponse);</code>
+   */
+  public abstract void createEnrollmentToken(
+      com.google.protobuf.RpcController controller,
+      com.hivearmor.service.grpc.CreateEnrollmentTokenRequest request,
+      com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.CreateEnrollmentTokenResponse> done);
+
+  /**
+   * <code>rpc ListEnrollmentTokens(.agent.ListEnrollmentTokensRequest) returns (.agent.ListEnrollmentTokensResponse);</code>
+   */
+  public abstract void listEnrollmentTokens(
+      com.google.protobuf.RpcController controller,
+      com.hivearmor.service.grpc.ListEnrollmentTokensRequest request,
+      com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListEnrollmentTokensResponse> done);
+
+  /**
+   * <code>rpc RevokeEnrollmentToken(.agent.RevokeEnrollmentTokenRequest) returns (.agent.EnrollmentToken);</code>
+   */
+  public abstract void revokeEnrollmentToken(
+      com.google.protobuf.RpcController controller,
+      com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest request,
+      com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.EnrollmentToken> done);
+
+  /**
+   * <code>rpc RotateAgentCredential(.agent.AgentCredentialRequest) returns (.agent.AgentCredentialResponse);</code>
+   */
+  public abstract void rotateAgentCredential(
+      com.google.protobuf.RpcController controller,
+      com.hivearmor.service.grpc.AgentCredentialRequest request,
+      com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.AgentCredentialResponse> done);
+
+  /**
+   * <code>rpc RevokeAgentCredential(.agent.AgentCredentialRequest) returns (.agent.AgentCredentialResponse);</code>
+   */
+  public abstract void revokeAgentCredential(
+      com.google.protobuf.RpcController controller,
+      com.hivearmor.service.grpc.AgentCredentialRequest request,
+      com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.AgentCredentialResponse> done);
+
+  /**
+   * <code>rpc ListEnrollmentAuditEvents(.agent.ListEnrollmentAuditEventsRequest) returns (.agent.ListEnrollmentAuditEventsResponse);</code>
+   */
+  public abstract void listEnrollmentAuditEvents(
+      com.google.protobuf.RpcController controller,
+      com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest request,
+      com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse> done);
+
+  /**
+   * <code>rpc VerifyConnectorIdentity(.agent.VerifyConnectorIdentityRequest) returns (.agent.VerifyConnectorIdentityResponse);</code>
+   */
+  public abstract void verifyConnectorIdentity(
+      com.google.protobuf.RpcController controller,
+      com.hivearmor.service.grpc.VerifyConnectorIdentityRequest request,
+      com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.VerifyConnectorIdentityResponse> done);
+
+  /**
+   * <code>rpc ListConnectorAuthorization(.agent.ListConnectorAuthorizationRequest) returns (.agent.ListConnectorAuthorizationResponse);</code>
+   */
+  public abstract void listConnectorAuthorization(
+      com.google.protobuf.RpcController controller,
+      com.hivearmor.service.grpc.ListConnectorAuthorizationRequest request,
+      com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListConnectorAuthorizationResponse> done);
+
   public static final
       com.google.protobuf.Descriptors.ServiceDescriptor
       getDescriptor() {
@@ -308,6 +548,46 @@ public  abstract class AgentService
           com.google.protobuf.RpcUtil.<com.hivearmor.service.grpc.ListAgentsCommandsResponse>specializeCallback(
             done));
         return;
+      case 6:
+        this.createEnrollmentToken(controller, (com.hivearmor.service.grpc.CreateEnrollmentTokenRequest)request,
+          com.google.protobuf.RpcUtil.<com.hivearmor.service.grpc.CreateEnrollmentTokenResponse>specializeCallback(
+            done));
+        return;
+      case 7:
+        this.listEnrollmentTokens(controller, (com.hivearmor.service.grpc.ListEnrollmentTokensRequest)request,
+          com.google.protobuf.RpcUtil.<com.hivearmor.service.grpc.ListEnrollmentTokensResponse>specializeCallback(
+            done));
+        return;
+      case 8:
+        this.revokeEnrollmentToken(controller, (com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest)request,
+          com.google.protobuf.RpcUtil.<com.hivearmor.service.grpc.EnrollmentToken>specializeCallback(
+            done));
+        return;
+      case 9:
+        this.rotateAgentCredential(controller, (com.hivearmor.service.grpc.AgentCredentialRequest)request,
+          com.google.protobuf.RpcUtil.<com.hivearmor.service.grpc.AgentCredentialResponse>specializeCallback(
+            done));
+        return;
+      case 10:
+        this.revokeAgentCredential(controller, (com.hivearmor.service.grpc.AgentCredentialRequest)request,
+          com.google.protobuf.RpcUtil.<com.hivearmor.service.grpc.AgentCredentialResponse>specializeCallback(
+            done));
+        return;
+      case 11:
+        this.listEnrollmentAuditEvents(controller, (com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest)request,
+          com.google.protobuf.RpcUtil.<com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse>specializeCallback(
+            done));
+        return;
+      case 12:
+        this.verifyConnectorIdentity(controller, (com.hivearmor.service.grpc.VerifyConnectorIdentityRequest)request,
+          com.google.protobuf.RpcUtil.<com.hivearmor.service.grpc.VerifyConnectorIdentityResponse>specializeCallback(
+            done));
+        return;
+      case 13:
+        this.listConnectorAuthorization(controller, (com.hivearmor.service.grpc.ListConnectorAuthorizationRequest)request,
+          com.google.protobuf.RpcUtil.<com.hivearmor.service.grpc.ListConnectorAuthorizationResponse>specializeCallback(
+            done));
+        return;
       default:
         throw new java.lang.AssertionError("Can't get here.");
     }
@@ -334,6 +614,22 @@ public  abstract class AgentService
         return com.hivearmor.service.grpc.BidirectionalStream.getDefaultInstance();
       case 5:
         return com.hivearmor.service.grpc.ListRequest.getDefaultInstance();
+      case 6:
+        return com.hivearmor.service.grpc.CreateEnrollmentTokenRequest.getDefaultInstance();
+      case 7:
+        return com.hivearmor.service.grpc.ListEnrollmentTokensRequest.getDefaultInstance();
+      case 8:
+        return com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest.getDefaultInstance();
+      case 9:
+        return com.hivearmor.service.grpc.AgentCredentialRequest.getDefaultInstance();
+      case 10:
+        return com.hivearmor.service.grpc.AgentCredentialRequest.getDefaultInstance();
+      case 11:
+        return com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest.getDefaultInstance();
+      case 12:
+        return com.hivearmor.service.grpc.VerifyConnectorIdentityRequest.getDefaultInstance();
+      case 13:
+        return com.hivearmor.service.grpc.ListConnectorAuthorizationRequest.getDefaultInstance();
       default:
         throw new java.lang.AssertionError("Can't get here.");
     }
@@ -360,6 +656,22 @@ public  abstract class AgentService
         return com.hivearmor.service.grpc.BidirectionalStream.getDefaultInstance();
       case 5:
         return com.hivearmor.service.grpc.ListAgentsCommandsResponse.getDefaultInstance();
+      case 6:
+        return com.hivearmor.service.grpc.CreateEnrollmentTokenResponse.getDefaultInstance();
+      case 7:
+        return com.hivearmor.service.grpc.ListEnrollmentTokensResponse.getDefaultInstance();
+      case 8:
+        return com.hivearmor.service.grpc.EnrollmentToken.getDefaultInstance();
+      case 9:
+        return com.hivearmor.service.grpc.AgentCredentialResponse.getDefaultInstance();
+      case 10:
+        return com.hivearmor.service.grpc.AgentCredentialResponse.getDefaultInstance();
+      case 11:
+        return com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse.getDefaultInstance();
+      case 12:
+        return com.hivearmor.service.grpc.VerifyConnectorIdentityResponse.getDefaultInstance();
+      case 13:
+        return com.hivearmor.service.grpc.ListConnectorAuthorizationResponse.getDefaultInstance();
       default:
         throw new java.lang.AssertionError("Can't get here.");
     }
@@ -470,6 +782,126 @@ public  abstract class AgentService
           com.hivearmor.service.grpc.ListAgentsCommandsResponse.class,
           com.hivearmor.service.grpc.ListAgentsCommandsResponse.getDefaultInstance()));
     }
+
+    public  void createEnrollmentToken(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.CreateEnrollmentTokenRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.CreateEnrollmentTokenResponse> done) {
+      channel.callMethod(
+        getDescriptor().getMethods().get(6),
+        controller,
+        request,
+        com.hivearmor.service.grpc.CreateEnrollmentTokenResponse.getDefaultInstance(),
+        com.google.protobuf.RpcUtil.generalizeCallback(
+          done,
+          com.hivearmor.service.grpc.CreateEnrollmentTokenResponse.class,
+          com.hivearmor.service.grpc.CreateEnrollmentTokenResponse.getDefaultInstance()));
+    }
+
+    public  void listEnrollmentTokens(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.ListEnrollmentTokensRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListEnrollmentTokensResponse> done) {
+      channel.callMethod(
+        getDescriptor().getMethods().get(7),
+        controller,
+        request,
+        com.hivearmor.service.grpc.ListEnrollmentTokensResponse.getDefaultInstance(),
+        com.google.protobuf.RpcUtil.generalizeCallback(
+          done,
+          com.hivearmor.service.grpc.ListEnrollmentTokensResponse.class,
+          com.hivearmor.service.grpc.ListEnrollmentTokensResponse.getDefaultInstance()));
+    }
+
+    public  void revokeEnrollmentToken(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.EnrollmentToken> done) {
+      channel.callMethod(
+        getDescriptor().getMethods().get(8),
+        controller,
+        request,
+        com.hivearmor.service.grpc.EnrollmentToken.getDefaultInstance(),
+        com.google.protobuf.RpcUtil.generalizeCallback(
+          done,
+          com.hivearmor.service.grpc.EnrollmentToken.class,
+          com.hivearmor.service.grpc.EnrollmentToken.getDefaultInstance()));
+    }
+
+    public  void rotateAgentCredential(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.AgentCredentialRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.AgentCredentialResponse> done) {
+      channel.callMethod(
+        getDescriptor().getMethods().get(9),
+        controller,
+        request,
+        com.hivearmor.service.grpc.AgentCredentialResponse.getDefaultInstance(),
+        com.google.protobuf.RpcUtil.generalizeCallback(
+          done,
+          com.hivearmor.service.grpc.AgentCredentialResponse.class,
+          com.hivearmor.service.grpc.AgentCredentialResponse.getDefaultInstance()));
+    }
+
+    public  void revokeAgentCredential(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.AgentCredentialRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.AgentCredentialResponse> done) {
+      channel.callMethod(
+        getDescriptor().getMethods().get(10),
+        controller,
+        request,
+        com.hivearmor.service.grpc.AgentCredentialResponse.getDefaultInstance(),
+        com.google.protobuf.RpcUtil.generalizeCallback(
+          done,
+          com.hivearmor.service.grpc.AgentCredentialResponse.class,
+          com.hivearmor.service.grpc.AgentCredentialResponse.getDefaultInstance()));
+    }
+
+    public  void listEnrollmentAuditEvents(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse> done) {
+      channel.callMethod(
+        getDescriptor().getMethods().get(11),
+        controller,
+        request,
+        com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse.getDefaultInstance(),
+        com.google.protobuf.RpcUtil.generalizeCallback(
+          done,
+          com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse.class,
+          com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse.getDefaultInstance()));
+    }
+
+    public  void verifyConnectorIdentity(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.VerifyConnectorIdentityRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.VerifyConnectorIdentityResponse> done) {
+      channel.callMethod(
+        getDescriptor().getMethods().get(12),
+        controller,
+        request,
+        com.hivearmor.service.grpc.VerifyConnectorIdentityResponse.getDefaultInstance(),
+        com.google.protobuf.RpcUtil.generalizeCallback(
+          done,
+          com.hivearmor.service.grpc.VerifyConnectorIdentityResponse.class,
+          com.hivearmor.service.grpc.VerifyConnectorIdentityResponse.getDefaultInstance()));
+    }
+
+    public  void listConnectorAuthorization(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.ListConnectorAuthorizationRequest request,
+        com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.ListConnectorAuthorizationResponse> done) {
+      channel.callMethod(
+        getDescriptor().getMethods().get(13),
+        controller,
+        request,
+        com.hivearmor.service.grpc.ListConnectorAuthorizationResponse.getDefaultInstance(),
+        com.google.protobuf.RpcUtil.generalizeCallback(
+          done,
+          com.hivearmor.service.grpc.ListConnectorAuthorizationResponse.class,
+          com.hivearmor.service.grpc.ListConnectorAuthorizationResponse.getDefaultInstance()));
+    }
   }
 
   public static BlockingInterface newBlockingStub(
@@ -506,6 +938,46 @@ public  abstract class AgentService
     public com.hivearmor.service.grpc.ListAgentsCommandsResponse listAgentCommands(
         com.google.protobuf.RpcController controller,
         com.hivearmor.service.grpc.ListRequest request)
+        throws com.google.protobuf.ServiceException;
+
+    public com.hivearmor.service.grpc.CreateEnrollmentTokenResponse createEnrollmentToken(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.CreateEnrollmentTokenRequest request)
+        throws com.google.protobuf.ServiceException;
+
+    public com.hivearmor.service.grpc.ListEnrollmentTokensResponse listEnrollmentTokens(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.ListEnrollmentTokensRequest request)
+        throws com.google.protobuf.ServiceException;
+
+    public com.hivearmor.service.grpc.EnrollmentToken revokeEnrollmentToken(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest request)
+        throws com.google.protobuf.ServiceException;
+
+    public com.hivearmor.service.grpc.AgentCredentialResponse rotateAgentCredential(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.AgentCredentialRequest request)
+        throws com.google.protobuf.ServiceException;
+
+    public com.hivearmor.service.grpc.AgentCredentialResponse revokeAgentCredential(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.AgentCredentialRequest request)
+        throws com.google.protobuf.ServiceException;
+
+    public com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse listEnrollmentAuditEvents(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest request)
+        throws com.google.protobuf.ServiceException;
+
+    public com.hivearmor.service.grpc.VerifyConnectorIdentityResponse verifyConnectorIdentity(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.VerifyConnectorIdentityRequest request)
+        throws com.google.protobuf.ServiceException;
+
+    public com.hivearmor.service.grpc.ListConnectorAuthorizationResponse listConnectorAuthorization(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.ListConnectorAuthorizationRequest request)
         throws com.google.protobuf.ServiceException;
   }
 
@@ -585,6 +1057,102 @@ public  abstract class AgentService
         controller,
         request,
         com.hivearmor.service.grpc.ListAgentsCommandsResponse.getDefaultInstance());
+    }
+
+
+    public com.hivearmor.service.grpc.CreateEnrollmentTokenResponse createEnrollmentToken(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.CreateEnrollmentTokenRequest request)
+        throws com.google.protobuf.ServiceException {
+      return (com.hivearmor.service.grpc.CreateEnrollmentTokenResponse) channel.callBlockingMethod(
+        getDescriptor().getMethods().get(6),
+        controller,
+        request,
+        com.hivearmor.service.grpc.CreateEnrollmentTokenResponse.getDefaultInstance());
+    }
+
+
+    public com.hivearmor.service.grpc.ListEnrollmentTokensResponse listEnrollmentTokens(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.ListEnrollmentTokensRequest request)
+        throws com.google.protobuf.ServiceException {
+      return (com.hivearmor.service.grpc.ListEnrollmentTokensResponse) channel.callBlockingMethod(
+        getDescriptor().getMethods().get(7),
+        controller,
+        request,
+        com.hivearmor.service.grpc.ListEnrollmentTokensResponse.getDefaultInstance());
+    }
+
+
+    public com.hivearmor.service.grpc.EnrollmentToken revokeEnrollmentToken(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.RevokeEnrollmentTokenRequest request)
+        throws com.google.protobuf.ServiceException {
+      return (com.hivearmor.service.grpc.EnrollmentToken) channel.callBlockingMethod(
+        getDescriptor().getMethods().get(8),
+        controller,
+        request,
+        com.hivearmor.service.grpc.EnrollmentToken.getDefaultInstance());
+    }
+
+
+    public com.hivearmor.service.grpc.AgentCredentialResponse rotateAgentCredential(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.AgentCredentialRequest request)
+        throws com.google.protobuf.ServiceException {
+      return (com.hivearmor.service.grpc.AgentCredentialResponse) channel.callBlockingMethod(
+        getDescriptor().getMethods().get(9),
+        controller,
+        request,
+        com.hivearmor.service.grpc.AgentCredentialResponse.getDefaultInstance());
+    }
+
+
+    public com.hivearmor.service.grpc.AgentCredentialResponse revokeAgentCredential(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.AgentCredentialRequest request)
+        throws com.google.protobuf.ServiceException {
+      return (com.hivearmor.service.grpc.AgentCredentialResponse) channel.callBlockingMethod(
+        getDescriptor().getMethods().get(10),
+        controller,
+        request,
+        com.hivearmor.service.grpc.AgentCredentialResponse.getDefaultInstance());
+    }
+
+
+    public com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse listEnrollmentAuditEvents(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.ListEnrollmentAuditEventsRequest request)
+        throws com.google.protobuf.ServiceException {
+      return (com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse) channel.callBlockingMethod(
+        getDescriptor().getMethods().get(11),
+        controller,
+        request,
+        com.hivearmor.service.grpc.ListEnrollmentAuditEventsResponse.getDefaultInstance());
+    }
+
+
+    public com.hivearmor.service.grpc.VerifyConnectorIdentityResponse verifyConnectorIdentity(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.VerifyConnectorIdentityRequest request)
+        throws com.google.protobuf.ServiceException {
+      return (com.hivearmor.service.grpc.VerifyConnectorIdentityResponse) channel.callBlockingMethod(
+        getDescriptor().getMethods().get(12),
+        controller,
+        request,
+        com.hivearmor.service.grpc.VerifyConnectorIdentityResponse.getDefaultInstance());
+    }
+
+
+    public com.hivearmor.service.grpc.ListConnectorAuthorizationResponse listConnectorAuthorization(
+        com.google.protobuf.RpcController controller,
+        com.hivearmor.service.grpc.ListConnectorAuthorizationRequest request)
+        throws com.google.protobuf.ServiceException {
+      return (com.hivearmor.service.grpc.ListConnectorAuthorizationResponse) channel.callBlockingMethod(
+        getDescriptor().getMethods().get(13),
+        controller,
+        request,
+        com.hivearmor.service.grpc.ListConnectorAuthorizationResponse.getDefaultInstance());
     }
 
   }

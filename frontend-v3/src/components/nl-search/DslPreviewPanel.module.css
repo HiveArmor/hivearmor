@@ -1,0 +1,83 @@
+/* DslPreviewPanel CSS Module — Sprint 26
+ *
+ * Colors: --ha-* design tokens only. No raw hex values (NoRawHexInvariant).
+ * Confidence bar styles added in task 3.2.
+ */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: 6px;
+}
+
+.explanation {
+  color: var(--ha-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* ── Monaco wrapper ─────────────────────────────────────────────────────── */
+
+.monacoWrapper {
+  border: 1px solid var(--ha-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.monacoFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 240px;
+  background: var(--ha-background);
+  color: var(--ha-text-secondary);
+  font-size: 0.8125rem;
+}
+
+/* ── Action row ─────────────────────────────────────────────────────────── */
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.editToggle {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: 4px;
+  color: var(--ha-text-primary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.375rem 0.875rem;
+  height: 34px;
+}
+
+.editToggle:hover {
+  border-color: var(--ha-primary);
+  color: var(--ha-primary);
+}
+
+/* ── Confidence bar (populated in task 3.2) ─────────────────────────────── */
+
+.confidenceBar {
+  position: relative;
+  height: 6px;
+  background: var(--ha-border);
+  border-radius: 3px;
+}
+
+.confidenceFill {
+  position: absolute;
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.15s ease;
+}
+
+.confidenceBar[data-band='high']   .confidenceFill { background: var(--ha-positive); }
+.confidenceBar[data-band='medium'] .confidenceFill { background: var(--ha-high); }
+.confidenceBar[data-band='low']    .confidenceFill { background: var(--ha-critical); }

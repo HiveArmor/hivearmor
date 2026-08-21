@@ -1,0 +1,63 @@
+Sprint: S-6A — GridStack Install + DashboardCanvas
+Date: 2026-07-21
+Phase: 6
+
+────────────────────────────────────────────────────────────
+VERIFICATION
+────────────────────────────────────────────────────────────
+GridStack version:  13.0.0 (pre-installed)
+TypeScript errors:  0
+Vitest tests:       547 passed / 547 total (0 failures)
+Tests before sprint: 535
+New tests added:    12 (dashboard-canvas.test.ts)
+
+────────────────────────────────────────────────────────────
+FILES CREATED
+────────────────────────────────────────────────────────────
+frontend-v2/src/components/dashboard/dashboard-canvas.tsx
+  - "use client" — SSR-safe (GridStack dynamically imported)
+  - GridWidget interface: id, x, y, w, h, widgetType, config
+  - LegacyGridInfo interface: widgetId, cols, rows, x, y
+  - fromLegacyGridInfo() named export: maps cols→w, rows→h, defaults w=4/h=3/x=0/y=0
+  - DashboardCanvas default export: GridStack v13 init via dynamic import
+  - Props: widgets, editable, onLayoutChange, onWidgetRemove, renderWidget
+  - GridStack options: column=12, cellHeight=80, margin=8, animate=true
+  - Draggable handle: .widget-drag-handle
+  - Resize handle: se
+  - editable=false → grid.disable(); editable=true → grid.enable()
+  - onLayoutChange debounced 800ms via debounceRef
+  - Cleanup: grid.destroy(false) + clearTimeout on unmount
+
+frontend-v2/src/components/dashboard/dashboard-canvas-loader.tsx
+  - "use client" dynamic wrapper with ssr:false
+  - Loading fallback: animate-pulse skeleton
+  - Re-exports GridWidget type and fromLegacyGridInfo
+
+frontend-v2/src/components/dashboard/__tests__/dashboard-canvas.test.ts
+  - 12 pure-logic tests (no JSX)
+  - fromLegacyGridInfo: 9 tests covering all field mappings and defaults
+  - Debounce: 3 tests using vi.useFakeTimers (800ms, 3-rapid-calls, reset behaviour)
+
+────────────────────────────────────────────────────────────
+FILES MODIFIED
+────────────────────────────────────────────────────────────
+frontend-v2/src/app/globals.css
+  - Added @import "gridstack/dist/gridstack.min.css" (after @tailwind directives)
+  - Added GridStack HiveArmor theme overrides:
+    .grid-stack { background: transparent }
+    .grid-stack-item-content { --ha-surface-raised background, --ha-border, border-radius: 6px }
+    .grid-stack-placeholder > .placeholder-content { rgba(50,214,197,0.08) bg, --ha-primary dashed border }
+    .widget-drag-handle { cursor: grab / grabbing }
+
+────────────────────────────────────────────────────────────
+SPRINT EXIT CRITERIA
+────────────────────────────────────────────────────────────
+[x] GridStack 13.0.0 confirmed installed
+[x] @import gridstack CSS added to globals.css
+[x] HiveArmor theme overrides added (--ha-* CSS vars only)
+[x] DashboardCanvas component created with dynamic import (SSR-safe)
+[x] fromLegacyGridInfo exported as named export from dashboard-canvas.tsx
+[x] dashboard-canvas-loader.tsx wrapper with ssr:false
+[x] Test file: 12 tests covering fromLegacyGridInfo + debounce logic
+[x] npx tsc --noEmit → 0 errors
+[x] npx vitest run → 547/547 pass (0 failures)

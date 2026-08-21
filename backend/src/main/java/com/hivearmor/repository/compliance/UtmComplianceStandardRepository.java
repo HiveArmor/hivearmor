@@ -18,6 +18,8 @@ public interface UtmComplianceStandardRepository extends JpaRepository<UtmCompli
 
     Optional<UtmComplianceStandard> findByStandardNameLike(String standardName);
 
+    Optional<UtmComplianceStandard> findByStandardName(String standardName);
+
     void deleteAllBySystemOwnerIsTrueAndIdNotIn(List<Long> standardIds);
 
     Optional<UtmComplianceStandard> findFirstBySystemOwnerIsTrueOrderByIdDesc();

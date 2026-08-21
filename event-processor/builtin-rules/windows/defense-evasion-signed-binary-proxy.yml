@@ -1,0 +1,39 @@
+id: a9b0c1d2-e3f4-5678-abcd-789012345649
+title: Signed Binary Proxy Execution via Odbcconf
+status: stable
+logsource:
+  product: windows
+  category: process_creation
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.execution
+  - attack.T1218
+detection:
+  selection:
+    Image|endswith: '\odbcconf.exe'
+    CommandLine|contains:
+      - '/a {'
+      - 'REGSVR'
+      - '/f '
+  selection_regsvr32:
+    Image|endswith: '\regsvr32.exe'
+    CommandLine|contains:
+      - '/s /n /u /i:'
+      - 'scrobj.dll'
+  condition: selection or selection_regsvr32
+falsepositives:
+  - ODBC driver configuration
+  - Legitimate COM server registration
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - CommandLine
+groupBy:
+  - ComputerName
+mitre:
+  tactic: defense-evasion
+  technique: T1218

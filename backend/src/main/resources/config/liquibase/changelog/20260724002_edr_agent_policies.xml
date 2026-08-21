@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260724002-1" author="hivearmor">
+        <createTable tableName="ha_agent_policy">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="os_type" type="varchar(20)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="file_paths" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="registry_paths" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="network_monitor" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="process_monitor" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_agent_ids" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ha_agent_policy" indexName="idx_agent_policy_os_type">
+            <column name="os_type"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

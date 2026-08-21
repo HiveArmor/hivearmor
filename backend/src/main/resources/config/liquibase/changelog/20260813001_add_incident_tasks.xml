@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Sprint 43 — Incident workbench task management table (INC-002) -->
+    <changeSet id="20260813001" author="hivearmor">
+        <createTable tableName="incident_tasks">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="incident_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="text"/>
+            <column name="status" type="varchar(32)" defaultValue="open">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assignee" type="varchar(255)"/>
+            <column name="priority" type="varchar(32)" defaultValue="medium">
+                <constraints nullable="false"/>
+            </column>
+            <column name="due_at" type="timestamp"/>
+            <column name="created_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="checklist" type="jsonb"/>
+            <column name="version" type="integer" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_at" type="timestamp"/>
+        </createTable>
+
+        <createIndex tableName="incident_tasks" indexName="idx_incident_tasks_incident">
+            <column name="incident_id"/>
+        </createIndex>
+
+        <createIndex tableName="incident_tasks" indexName="idx_incident_tasks_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex tableName="incident_tasks" indexName="idx_incident_tasks_assignee">
+            <column name="assignee"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

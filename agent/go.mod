@@ -8,20 +8,24 @@ require (
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/glebarez/sqlite v1.11.0
 	github.com/google/uuid v1.6.0
+	github.com/hivearmor/sdk v0.0.0
+	github.com/hivearmor/shared v0.0.0
 	github.com/kardianos/service v1.2.4
 	github.com/netsampler/goflow2 v1.3.7
 	github.com/spf13/cobra v1.10.2
+	github.com/stretchr/testify v1.11.1
 	github.com/tehmaze/netflow v0.0.0-20240303214733-8c13bb004068
-	github.com/threatwinds/go-sdk v1.1.26
 	github.com/threatwinds/logger v1.2.3
-	github.com/hivearmor/shared v0.0.0
 	golang.org/x/sys v0.46.0
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.11
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.31.1
 )
 
 replace github.com/hivearmor/shared => ../shared
+
+replace github.com/hivearmor/sdk => ../sdk
 
 require (
 	cel.dev/expr v0.25.2 // indirect
@@ -30,6 +34,7 @@ require (
 	github.com/bytedance/sonic v1.15.2 // indirect
 	github.com/bytedance/sonic/loader v0.5.1 // indirect
 	github.com/cloudwego/base64x v0.1.7 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/elastic/go-windows v1.0.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.13 // indirect
@@ -56,6 +61,7 @@ require (
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/opensearch-project/opensearch-go/v4 v4.6.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.3.1 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.59.1 // indirect
@@ -77,7 +83,6 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	howett.net/plist v1.0.1 // indirect
 	modernc.org/libc v1.67.6 // indirect
 	modernc.org/mathutil v1.7.1 // indirect

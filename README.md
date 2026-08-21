@@ -25,7 +25,7 @@ Log source → Agent/Collector → gRPC → EventProcessor
 
 | Service | Technology |
 |---|---|
-| UI | Next.js 14 + React 18 (TypeScript) |
+| UI | React 18 + Vite (TypeScript) |
 | API | Java 17 + Spring Boot 3.3 + JHipster 8 |
 | Correlation Engine | Go 1.25.5 (event-processor + 17 plugins) |
 | Agent | Go 1.25.5 |
@@ -42,8 +42,8 @@ cd local-dev
 cp .env.example .env   # fill in required secrets
 docker compose up -d
 
-# 2. Start the Next.js dev server
-cd frontend-v2
+# 2. Start the Vite dev server
+cd frontend-v3
 npm install
 npm run dev
 # → http://localhost:3000   (admin / localdev123!)

@@ -1,0 +1,44 @@
+id: d0e1f2a3-b4c5-6789-defa-890123456770
+title: Cobalt Strike Beacon Indicators in Process or Network
+status: stable
+logsource:
+  product: windows
+  category: network_connection
+level: critical
+tags:
+  - attack.command_and_control
+  - attack.T1071
+  - attack.T1071.001
+  - attack.T1573
+detection:
+  selection_jitter:
+    DestinationPort:
+      - 443
+      - 80
+    Initiated: 'true'
+    Image|endswith:
+      - '\svchost.exe'
+      - '\rundll32.exe'
+      - '\regsvr32.exe'
+  selection_pipe:
+    PipeName|contains:
+      - 'msagent_'
+      - 'postex_'
+      - 'mojo.'
+  condition: selection_jitter or selection_pipe
+falsepositives:
+  - Legitimate services initiating HTTPS connections
+  - Security testing in authorized environments
+impact:
+  confidentiality: critical
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - Image
+  - DestinationIp
+groupBy:
+  - ComputerName
+mitre:
+  tactic: command-and-control
+  technique: T1071.001

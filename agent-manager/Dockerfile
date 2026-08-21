@@ -5,11 +5,18 @@ WORKDIR /src
 
 # shared/ is a replace directive dependency of agent-manager/go.mod
 COPY shared/ /shared/
+COPY agent-manager/go.mod agent-manager/go.sum ./
+
+# Keep dependency resolution reproducible and independently cacheable from
+# source edits. HTTP/1.1 avoids intermittent proxy HTTP/2 stream resets seen
+# during clean release builds; go.sum remains the authority and is not mutated.
+RUN --mount=type=cache,target=/go/pkg/mod \
+    GODEBUG=http2client=0 go mod download
+
 COPY agent-manager/ .
 
-RUN go mod tidy && go mod download
-
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /agent-manager .
+RUN --mount=type=cache,target=/go/pkg/mod \
+    CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /agent-manager .
 
 # Stage 2: Runtime
 FROM debian:bookworm-slim

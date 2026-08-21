@@ -1,0 +1,45 @@
+id: ha-linux-003
+title: Curl Pipe to Bash Execution
+status: stable
+description: Detects the classic curl-pipe-bash pattern used to download and execute remote scripts, a common technique in initial access and lateral movement.
+logsource:
+  product: linux
+  service: auditd
+level: high
+tags:
+  - attack.execution
+  - attack.T1059.004
+  - attack.initial_access
+  - attack.T1190
+detection:
+  selection:
+    type: EXECVE
+    a0: curl
+    a1|contains:
+      - '|'
+  selection_bash:
+    type: EXECVE
+    a0: bash
+    a1: '-'
+  condition: selection or selection_bash
+falsepositives:
+  - Legitimate automated installation scripts (rare in production environments)
+  - DevOps bootstrap scripts in controlled CI/CD pipelines
+fields:
+  - a0
+  - a1
+  - a2
+  - uid
+  - comm
+impact:
+  confidentiality: high
+  integrity: high
+  availability: high
+deduplicateBy:
+  - a0
+  - uid
+groupBy:
+  - uid
+mitre:
+  tactic: execution
+  technique: T1059.004

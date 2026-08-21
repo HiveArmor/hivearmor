@@ -1,0 +1,142 @@
+# Advanced Network Connection Detection Rules
+# DataType: netconn
+
+dataTypes:
+  - "netconn"
+name: "NetConn: Connection to Tor Exit Node"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: "Command and Control"
+technique: "T1090.003 - Proxy: Multi-hop Proxy"
+adversary: origin
+description: "A connection was made to a known Tor network IP address. Adversaries use the Tor anonymisation network to hide C2 infrastructure, exfiltrate data, and conduct reconnaissance while masking their true location."
+references:
+  - "https://attack.mitre.org/techniques/T1090/003/"
+where: |
+  safe("action", "") == "connect" &&
+  safe("log.tcp_state", "") == "ESTABLISHED" &&
+  (safe("target.port", 0) == 9050 || safe("target.port", 0) == 9001 || safe("target.port", 0) == 9030)
+groupBy:
+  - origin.process
+  - target.ip
+deduplicateBy:
+  - origin.process
+  - target.ip
+---
+dataTypes:
+  - "netconn"
+name: "NetConn: High-Frequency Connections — Beaconing"
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+category: "Command and Control"
+technique: "T1071 - Application Layer Protocol"
+adversary: origin
+description: "A single process made an unusually high number of connections to the same remote IP in a short time window. Regular, high-frequency connections are characteristic of C2 beaconing behaviour."
+references:
+  - "https://attack.mitre.org/techniques/T1071/"
+where: |
+  safe("action", "") == "connect"
+groupBy:
+  - origin.process
+  - target.ip
+deduplicateBy:
+  - origin.process
+  - target.ip
+correlation:
+  - indexPattern: "v3-hive-netconn-*"
+    with:
+      - field: "origin.process"
+        operator: filter_term
+        value: "{{.origin.process}}"
+      - field: "target.ip"
+        operator: filter_term
+        value: "{{.target.ip}}"
+      - field: "action"
+        operator: filter_term
+        value: "connect"
+    within: 5m
+    count: 50
+---
+dataTypes:
+  - "netconn"
+name: "NetConn: SMB Connection from Non-Standard Process"
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: "Lateral Movement"
+technique: "T1021.002 - Remote Services: SMB/Windows Admin Shares"
+adversary: origin
+description: "An outbound SMB connection (port 445 or 139) was made from a process that is not a standard Windows system process. SMB from unexpected processes indicates lateral movement or ransomware spreading via network shares."
+references:
+  - "https://attack.mitre.org/techniques/T1021/002/"
+where: |
+  safe("action", "") == "connect" &&
+  (safe("target.port", 0) == 445 || safe("target.port", 0) == 139) &&
+  !regexMatch(safe("origin.process", ""), "(?i)(svchost|system|lsass|explorer|mmc|robocopy|xcopy|net\\.exe)")
+groupBy:
+  - origin.process
+  - target.ip
+deduplicateBy:
+  - origin.process
+  - target.ip
+---
+dataTypes:
+  - "netconn"
+name: "NetConn: RDP Outbound from Non-Privileged Process"
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: "Lateral Movement"
+technique: "T1021.001 - Remote Services: Remote Desktop Protocol"
+adversary: origin
+description: "An outbound RDP connection (port 3389) was initiated by a non-standard process. Lateral movement tools (like Impacket, BloodHound) establish RDP connections programmatically to move through a network."
+references:
+  - "https://attack.mitre.org/techniques/T1021/001/"
+where: |
+  safe("action", "") == "connect" &&
+  safe("target.port", 0) == 3389 &&
+  !regexMatch(safe("origin.process", ""), "(?i)(mstsc|rdpclip|tstheme|csrss|svchost)")
+groupBy:
+  - origin.process
+  - target.ip
+deduplicateBy:
+  - origin.process
+  - target.ip
+---
+dataTypes:
+  - "netconn"
+name: "NetConn: Database Port Exposed to External Network"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Exfiltration"
+technique: "T1048 - Exfiltration Over Alternative Protocol"
+adversary: origin
+description: "A database service (MySQL 3306, PostgreSQL 5432, MongoDB 27017, Redis 6379, Elasticsearch 9200) accepted a connection from an external (non-RFC1918) IP address. Database services should never be directly accessible from the internet."
+references:
+  - "https://attack.mitre.org/techniques/T1048/"
+where: |
+  safe("action", "") == "accept" &&
+  (
+    safe("origin.port", 0) == 3306 ||
+    safe("origin.port", 0) == 5432 ||
+    safe("origin.port", 0) == 27017 ||
+    safe("origin.port", 0) == 6379 ||
+    safe("origin.port", 0) == 9200
+  ) &&
+  !startsWith(safe("target.ip", ""), "10.") &&
+  !startsWith(safe("target.ip", ""), "192.168.") &&
+  !startsWith(safe("target.ip", ""), "172.")
+groupBy:
+  - origin.process
+  - origin.port
+deduplicateBy:
+  - origin.port
+  - target.ip

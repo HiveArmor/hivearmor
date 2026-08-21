@@ -1,0 +1,120 @@
+- generic [ref=f46e3]:
+  - banner [ref=f46e4]:
+    - generic [ref=f46e5]: HiveArmor
+    - generic [ref=f46e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f46e13]'
+      - generic "Reconnecting..." [ref=f46e16]: 0 EPS
+      - button "Notifications" [ref=f46e18] [cursor=pointer]
+      - button "Help" [ref=f46e23] [cursor=pointer]
+      - button "User menu" [ref=f46e28] [cursor=pointer]:
+        - generic [ref=f46e29]: AA
+        - generic [ref=f46e30]: admin
+  - navigation [ref=f46e31]:
+    - generic [ref=f46e32]:
+      - generic [ref=f46e33]:
+        - generic [ref=f46e34]: COMMAND
+        - generic [ref=f46e35]:
+          - button "Analyst Queue" [ref=f46e36] [cursor=pointer]
+          - button "Alerts" [ref=f46e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f46e47] [cursor=pointer]
+          - button "Incidents" [ref=f46e54] [cursor=pointer]
+      - generic [ref=f46e61]:
+        - generic [ref=f46e62]: INVESTIGATE
+        - generic [ref=f46e63]:
+          - button "Search & Hunt" [ref=f46e64] [cursor=pointer]
+          - button "Investigations" [ref=f46e70] [cursor=pointer]
+          - button "Entities" [ref=f46e75] [cursor=pointer]
+      - generic [ref=f46e83]:
+        - generic [ref=f46e84]: DEFEND
+        - generic [ref=f46e85]:
+          - button "Detection Rules" [ref=f46e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f46e91] [cursor=pointer]
+      - generic [ref=f46e96]:
+        - generic [ref=f46e97]: POSTURE
+        - generic [ref=f46e98]:
+          - button "Assets" [ref=f46e99] [cursor=pointer]
+          - button "Identities" [ref=f46e105] [cursor=pointer]
+          - button "Active Directory" [ref=f46e113] [cursor=pointer]
+          - button "Exposure" [ref=f46e121] [cursor=pointer]
+          - button "Sensors" [ref=f46e128] [cursor=pointer]
+          - button "Compliance" [ref=f46e133] [cursor=pointer]
+      - generic [ref=f46e139]:
+        - generic [ref=f46e140]: DASHBOARDS
+        - button "Studio" [ref=f46e142] [cursor=pointer]
+      - generic [ref=f46e148]:
+        - generic [ref=f46e149]: REPORT
+        - button "Scheduled Reports" [ref=f46e151] [cursor=pointer]
+      - generic [ref=f46e157]:
+        - generic [ref=f46e158]: ADMINISTRATION
+        - generic [ref=f46e159]:
+          - button "Users" [ref=f46e160] [cursor=pointer]
+          - button "Integrations" [ref=f46e175] [cursor=pointer]
+          - button "Notifications" [ref=f46e180] [cursor=pointer]
+          - button "Audit Log" [ref=f46e186] [cursor=pointer]
+          - button "Settings" [ref=f46e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f46e199] [cursor=pointer]
+  - main [ref=f46e202]:
+    - generic [ref=f46e203]:
+      - heading "Data Retention" [level=1] [ref=f46e207]
+      - generic [ref=f46e208]:
+        - generic [ref=f46e210]:
+          - generic [ref=f46e211]:
+            - generic [ref=f46e212]: Default Retention Policy
+            - generic [ref=f46e213]: Applied to data types without a specific policy
+          - generic [ref=f46e214]:
+            - spinbutton [ref=f46e215]: "30"
+            - generic [ref=f46e216]: days
+            - button "Save Default" [ref=f46e217] [cursor=pointer]
+        - grid [ref=f46e226]:
+          - rowgroup [ref=f46e227]:
+            - row [ref=f46e228]:
+              - columnheader "Data Type" [ref=f46e229]:
+                - generic:      
+              - columnheader "Retention Period" [ref=f46e232]:
+                - generic:      
+              - columnheader "Last Modified" [ref=f46e235]:
+                - generic:      
+              - columnheader "Modified By" [ref=f46e238]:
+                - generic:      
+              - columnheader "Actions" [ref=f46e241]:
+                - generic: 
+            - row [ref=f46e243]:
+              - gridcell "alerts" [ref=f46e244]
+              - gridcell "90 days" [ref=f46e245]:
+                - generic [ref=f46e246]:
+                  - generic [ref=f46e247]: "90"
+                  - generic [ref=f46e248]: days
+              - gridcell "—" [ref=f46e249]
+              - gridcell [ref=f46e250]
+              - gridcell [ref=f46e251]:
+                - button "Edit" [ref=f46e252] [cursor=pointer]
+            - row [ref=f46e254]:
+              - gridcell "logs" [ref=f46e255]
+              - gridcell "30 days" [ref=f46e256]:
+                - generic [ref=f46e257]:
+                  - generic [ref=f46e258]: "30"
+                  - generic [ref=f46e259]: days
+              - gridcell "—" [ref=f46e260]
+              - gridcell [ref=f46e261]
+              - gridcell [ref=f46e262]:
+                - button "Edit" [ref=f46e263] [cursor=pointer]
+            - row [ref=f46e265]:
+              - gridcell "metrics" [ref=f46e266]
+              - gridcell "365 days" [ref=f46e267]:
+                - generic [ref=f46e268]:
+                  - generic [ref=f46e269]: "365"
+                  - generic [ref=f46e270]: days
+              - gridcell "—" [ref=f46e271]
+              - gridcell [ref=f46e272]
+              - gridcell [ref=f46e273]:
+                - button "Edit" [ref=f46e274] [cursor=pointer]
+            - row [ref=f46e276]:
+              - gridcell "flows" [ref=f46e277]
+              - gridcell "7 days" [ref=f46e278]:
+                - generic [ref=f46e279]:
+                  - generic [ref=f46e280]: "7"
+                  - generic [ref=f46e281]: days
+              - gridcell "—" [ref=f46e282]
+              - gridcell [ref=f46e283]
+              - gridcell [ref=f46e284]:
+                - button "Edit" [ref=f46e285] [cursor=pointer]

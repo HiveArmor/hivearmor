@@ -1,0 +1,34 @@
+id: f6a7b8c9-d0e1-2345-fabc-456789012336
+title: AppInit DLLs Registry Key Modification
+status: stable
+logsource:
+  product: windows
+  category: registry_set
+level: high
+tags:
+  - attack.persistence
+  - attack.T1546
+  - attack.T1546.010
+detection:
+  selection:
+    TargetObject|contains:
+      - '\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs'
+      - '\SOFTWARE\Wow6432Node\Microsoft\Windows NT\CurrentVersion\Windows\AppInit_DLLs'
+  filter_empty:
+    Details: ''
+  condition: selection and not filter_empty
+falsepositives:
+  - Accessibility software using AppInit DLL injection
+  - Legitimate DRM software that uses AppInit mechanism
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - ComputerName
+  - TargetObject
+groupBy:
+  - ComputerName
+mitre:
+  tactic: persistence
+  technique: T1546.010

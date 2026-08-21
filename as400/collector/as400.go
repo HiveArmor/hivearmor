@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/threatwinds/go-sdk/entities"
-	"github.com/threatwinds/go-sdk/plugins"
+	"github.com/hivearmor/sdk/entities"
+	"github.com/hivearmor/sdk/plugins"
 	"github.com/hivearmor/as400/config"
 	"github.com/hivearmor/as400/logservice"
 	"github.com/hivearmor/as400/utils"

@@ -41,10 +41,10 @@ spring:
     liquibase:
         contexts: dev
     mail:
-        host: localhost
-        port: 25
-        username: test@domain.local
-        password: Admin123.
+        host: ${SMTP_HOST:localhost}
+        port: ${SMTP_PORT:25}
+        username: ${SMTP_USER:test@domain.local}
+        password: ${SMTP_PASS:Admin123.}
         protocol: smtp
     messages:
         cache-duration: PT1S # 1 second, see the ISO 8601 standard
@@ -62,7 +62,7 @@ server:
 jhipster:
     # CORS is only enabled by default with the "dev" profile
     cors:
-        allowed-origins: 'http://localhost:3000,http://localhost:4200,http://127.0.0.1:3000,http://localhost:56946,http://localhost:56947,http://localhost:8080,http://localhost:51009,http://localhost:49767,http://localhost:65309,http://localhost:58635'
+        allowed-origins: 'http://localhost:3000,http://localhost:4200,http://127.0.0.1:3000,http://localhost:4176,http://127.0.0.1:4176,http://localhost:56946,http://localhost:56947,http://localhost:8080,http://localhost:51009,http://localhost:49767,http://localhost:65309,http://localhost:58635'
         allowed-methods: 'GET,POST,PUT,DELETE,PATCH,OPTIONS'
         allowed-headers: '*'
         exposed-headers: 'Authorization,Link,X-Total-Count'
@@ -94,3 +94,14 @@ grpc:
     server:
         address: ${GRPC_AGENT_MANAGER_HOST}
         port: ${GRPC_AGENT_MANAGER_PORT}
+
+springdoc:
+    swagger-ui:
+        path: /api/ha-docs
+    api-docs:
+        path: /api/ha-openapi
+
+hivearmor:
+    # 32-byte AES-256 key for encrypting OIDC client secrets at rest (local dev only).
+    # Must be a Base64-encoded 32-byte value. Do NOT reuse ENCRYPTION_KEY (JWT, 64 bytes).
+    encryption-key: ${HIVEARMOR_ENCRYPTION_KEY:XDv9ooNP0JE2FhMyGDJDPHcostNIRsYNdqEVkXMlyDc=}

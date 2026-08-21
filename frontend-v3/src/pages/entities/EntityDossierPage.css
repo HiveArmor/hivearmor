@@ -1,0 +1,155 @@
+.ha-dossier-page {
+  display: flex;
+  height: calc(100dvh - var(--ha-masthead-height));
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ha-surface-app);
+  color: var(--ha-foreground-primary);
+}
+
+.ha-dossier-page__topbar {
+  display: flex;
+  min-height: 50px;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ha-border-default);
+  background: var(--ha-surface-panel);
+}
+
+.ha-dossier-page__back,
+.ha-dossier-page__refresh {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-base);
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-secondary);
+  cursor: pointer;
+}
+
+.ha-dossier-page__back:hover,
+.ha-dossier-page__back:focus-visible,
+.ha-dossier-page__refresh:hover,
+.ha-dossier-page__refresh:focus-visible {
+  border-color: var(--ha-border-focus);
+  color: var(--ha-action-primary);
+  outline: none;
+}
+
+.ha-dossier-page__topbar-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.ha-dossier-page__topbar-title span {
+  color: var(--ha-action-primary);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.ha-dossier-page__topbar-title strong { margin-top: 1px; font-size: 12px; }
+.ha-dossier-page__topbar-spacer { flex: 1; }
+
+.ha-dossier-page__scroll {
+  min-height: 0;
+  flex: 1;
+  padding: 10px 12px 14px;
+  overflow: auto;
+  scrollbar-color: var(--ha-scrollbar-thumb) transparent;
+  scrollbar-width: thin;
+}
+
+.ha-dossier-page__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ha-dossier-page__left,
+.ha-dossier-page__right {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ha-dossier-page__tabs {
+  position: sticky;
+  z-index: 4;
+  top: -10px;
+  display: flex;
+  min-height: 38px;
+  align-items: flex-end;
+  gap: 0;
+  margin-top: 10px;
+  border-bottom: 1px solid var(--ha-border-default);
+  background: var(--ha-surface-app);
+}
+
+.ha-dossier-page__tabs button {
+  height: 37px;
+  padding: 0 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--ha-foreground-secondary);
+  font-size: 10px;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.ha-dossier-page__tabs button:hover,
+.ha-dossier-page__tabs button:focus-visible { color: var(--ha-foreground-primary); outline: none; }
+.ha-dossier-page__tabs button[aria-selected='true'] { border-bottom-color: var(--ha-action-primary); color: var(--ha-action-primary); }
+
+.ha-dossier-page__tab-content { min-height: 360px; padding-top: 8px; }
+.ha-dossier-page__status { height: 28px; flex: none; }
+.ha-dossier-page__status .status-dock { position: static; width: 100%; height: 28px; }
+
+.ha-dossier-page__skeleton,
+.ha-dossier-page__tab-skeleton {
+  border: 1px solid var(--ha-border-subtle);
+  background: var(--ha-surface-elevated);
+  animation: dossier-pulse 1.3s ease-in-out infinite;
+}
+
+.ha-dossier-page__skeleton--header { height: 92px; margin: 12px; }
+.ha-dossier-page__skeleton-grid { display: grid; min-height: 520px; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 12px 12px; }
+.ha-dossier-page__tab-skeleton { min-height: 360px; }
+
+.ha-dossier-page__error {
+  display: flex;
+  min-height: 360px;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 24px;
+  color: var(--ha-foreground-secondary);
+  text-align: center;
+}
+
+.ha-dossier-page__error h2 { margin: 0; color: var(--ha-foreground-primary); font-size: 15px; }
+.ha-dossier-page__error p { max-width: 440px; margin: 0; font-size: 10px; line-height: 1.5; }
+.ha-dossier-page__error button { height: 28px; padding: 0 10px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-base); background: var(--ha-surface-elevated); color: var(--ha-foreground-primary); font-size: 10px; cursor: pointer; }
+
+@keyframes dossier-pulse { 50% { opacity: .48; } }
+
+@media (max-width: 1024px) {
+  .ha-dossier-page__grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-dossier-page__skeleton,
+  .ha-dossier-page__tab-skeleton { animation: none; }
+}

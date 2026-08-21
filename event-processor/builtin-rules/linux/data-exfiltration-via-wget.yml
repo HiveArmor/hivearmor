@@ -1,0 +1,50 @@
+id: ha-linux-014
+title: Potential Data Exfiltration via wget or curl POST
+status: stable
+description: Detects use of wget or curl to POST data to external hosts, which may indicate data exfiltration activity.
+logsource:
+  product: linux
+  service: auditd
+level: medium
+tags:
+  - attack.exfiltration
+  - attack.T1048.003
+  - attack.command_and_control
+  - attack.T1071.001
+detection:
+  selection_wget:
+    type: EXECVE
+    a0: wget
+    a1|contains:
+      - '--post-data'
+      - '--post-file'
+  selection_curl:
+    type: EXECVE
+    a0: curl
+    a1|contains:
+      - '-d '
+      - '--data'
+      - '-F '
+      - '--form'
+  condition: selection_wget or selection_curl
+falsepositives:
+  - Legitimate web application form submissions or API calls via scripts
+  - Authorized data uploads to backup or monitoring services
+fields:
+  - a0
+  - a1
+  - a2
+  - uid
+  - comm
+impact:
+  confidentiality: high
+  integrity: low
+  availability: low
+deduplicateBy:
+  - a0
+  - uid
+groupBy:
+  - uid
+mitre:
+  tactic: exfiltration
+  technique: T1048.003

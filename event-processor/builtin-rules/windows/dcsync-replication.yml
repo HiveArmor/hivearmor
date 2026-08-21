@@ -1,0 +1,42 @@
+id: 3d9b1e5f-7a2c-4f8b-b3e4-1c6a0d2f8e5b
+title: DCSync Replication Rights Abuse
+status: stable
+logsource:
+  product: windows
+  service: security
+level: critical
+tags:
+  - attack.credential_access
+  - attack.T1003
+  - attack.T1003.006
+detection:
+  selection:
+    EventID: 4662
+    ObjectType|contains: 'domainDNS'
+    AccessMask|contains:
+      - '0x100'
+      - '0x40'
+    Properties|contains:
+      - '1131f6aa-9c07-11d1-f79f-00c04fc2dcd2'
+      - '1131f6ad-9c07-11d1-f79f-00c04fc2dcd2'
+      - '89e95b76-444d-4c62-991a-0facbeda640c'
+  filter_system:
+    SubjectUserName|endswith: '$'
+  condition: selection and not filter_system
+falsepositives:
+  - Active Directory replication between domain controllers
+  - Backup solutions that require domain replication access
+  - Azure AD Connect or similar identity synchronization tools
+impact:
+  confidentiality: critical
+  integrity: high
+  availability: low
+deduplicateBy:
+  - ComputerName
+  - SubjectUserName
+groupBy:
+  - ComputerName
+  - SubjectDomainName
+mitre:
+  tactic: credential-access
+  technique: T1003.006

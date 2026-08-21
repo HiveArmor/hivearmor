@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+    <changeSet id="20260725003-saved-hunts" author="hivearmor">
+        <createTable tableName="ha_saved_hunt">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="hunt_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="query_dsl" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="nl_query" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="filter_json" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_shared" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_used_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ha_saved_hunt" indexName="idx_saved_hunt_owner">
+            <column name="created_by"/>
+        </createIndex>
+
+        <createIndex tableName="ha_saved_hunt" indexName="idx_saved_hunt_shared">
+            <column name="is_shared"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

@@ -24,7 +24,7 @@ public interface UtmAlertService {
 
     void updateNotes(String alertId, String message) throws ElasticsearchIndexDocumentUpdateException;
 
-    void convertToIncident(List<String> eventIds, String incidentName, Integer incidentId, String incidentSource) throws ElasticsearchIndexDocumentUpdateException;
+    void convertToIncident(List<String> eventIds, String incidentName, long incidentId, String incidentSource) throws ElasticsearchIndexDocumentUpdateException;
 
     List<UtmAlert> getAlertsByIds(List<String> ids) throws UtmElasticsearchException;
 

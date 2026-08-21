@@ -1,0 +1,137 @@
+# Advanced FIM Detection Rules — Part 2
+# DataType: fim
+
+dataTypes:
+  - "fim"
+name: "FIM: Package Manager Configuration Modified"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: "Defense Evasion"
+technique: "T1195.001 - Supply Chain Compromise: Compromise Software Dependencies"
+adversary: origin
+description: "A package manager repository configuration file was modified (/etc/apt/sources.list, /etc/yum.repos.d/). Attackers modify repo configs to serve malicious packages via supply-chain attacks."
+references:
+  - "https://attack.mitre.org/techniques/T1195/001/"
+where: |
+  (safe("action", "") == "MODIFY" || safe("action", "") == "CREATE") &&
+  (
+    startsWith(safe("origin.path", ""), "/etc/apt/") ||
+    startsWith(safe("origin.path", ""), "/etc/yum.repos.d/") ||
+    startsWith(safe("origin.path", ""), "/etc/dnf/") ||
+    safe("origin.file", "") == "/etc/apt/sources.list"
+  )
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+dataTypes:
+  - "fim"
+name: "FIM: Root SSH Host Key Modified"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: "Credential Access"
+technique: "T1557 - Adversary-in-the-Middle"
+adversary: origin
+description: "An SSH host key file was modified. Legitimate host keys are generated once during installation; modification indicates a potential MITM attack or rootkit replacing authentication keys."
+references:
+  - "https://attack.mitre.org/techniques/T1557/"
+where: |
+  (safe("action", "") == "MODIFY" || safe("action", "") == "CREATE") &&
+  startsWith(safe("origin.path", ""), "/etc/ssh/") &&
+  regexMatch(safe("origin.file", ""), "ssh_host_(rsa|ecdsa|ed25519|dsa)_key")
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+dataTypes:
+  - "fim"
+name: "FIM: /proc/sysrq-trigger Write — System Destabilisation"
+impact:
+  confidentiality: 1
+  integrity: 1
+  availability: 3
+category: "Impact"
+technique: "T1499 - Endpoint Denial of Service"
+adversary: origin
+description: "A write was detected to /proc/sysrq-trigger, which can trigger emergency kernel operations including system crash (c), immediate reboot (b), or killing all processes (k). This is a reliable indicator of a destructive attack."
+references:
+  - "https://attack.mitre.org/techniques/T1499/"
+where: |
+  safe("action", "") == "MODIFY" &&
+  safe("origin.file", "") == "/proc/sysrq-trigger"
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+dataTypes:
+  - "fim"
+name: "FIM: LD_PRELOAD Configuration Modified"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Defense Evasion"
+technique: "T1574.006 - Dynamic Linker Hijacking"
+adversary: origin
+description: "The /etc/ld.so.preload file was modified. This file forces all processes to load specified shared libraries — a classic technique for installing rootkit hooks that intercept system calls system-wide."
+references:
+  - "https://attack.mitre.org/techniques/T1574/006/"
+where: |
+  (safe("action", "") == "MODIFY" || safe("action", "") == "CREATE") &&
+  safe("origin.file", "") == "/etc/ld.so.preload"
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+dataTypes:
+  - "fim"
+name: "FIM: Docker Socket Permissions Changed"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Privilege Escalation"
+technique: "T1611 - Escape to Host"
+adversary: origin
+description: "The Docker daemon socket permissions were changed. Granting world-writable access to /var/run/docker.sock is equivalent to root access — any user who can write to the socket can escape the container and compromise the host."
+references:
+  - "https://attack.mitre.org/techniques/T1611/"
+where: |
+  safe("action", "") == "PERMISSION_CHANGE" &&
+  safe("origin.file", "") == "/var/run/docker.sock"
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+dataTypes:
+  - "fim"
+name: "FIM: SUID/SGID Bit Set on File"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: "Privilege Escalation"
+technique: "T1548.001 - Setuid and Setgid"
+adversary: origin
+description: "A file was granted SUID (4000) or SGID (2000) permission bits. SUID/SGID files execute with elevated (owner) privileges — adding these bits to an attacker-controlled binary is a privilege escalation technique."
+references:
+  - "https://attack.mitre.org/techniques/T1548/001/"
+where: |
+  safe("action", "") == "PERMISSION_CHANGE" &&
+  (
+    toInt(safe("log.new_permissions", "0"), 0) & 2048 == 2048 ||   -- SUID = 04000
+    toInt(safe("log.new_permissions", "0"), 0) & 1024 == 1024       -- SGID = 02000
+  )
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file

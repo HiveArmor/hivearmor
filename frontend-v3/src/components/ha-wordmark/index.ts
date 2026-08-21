@@ -1,0 +1,1 @@
+export { HaWordmark } from './HaWordmark';

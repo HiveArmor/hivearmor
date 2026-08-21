@@ -147,6 +147,7 @@ public class EdrResource {
 
     // ---- Quarantine ----
 
+    @Deprecated(since = "2026-08-11", forRemoval = true)
     @GetMapping("/quarantine")
     public ResponseEntity<List<EdrQuarantineDTO>> listQuarantine(
             @RequestParam(required = false) String agentId,
@@ -167,6 +168,7 @@ public class EdrResource {
         }
     }
 
+    @Deprecated(since = "2026-08-11", forRemoval = true)
     @PostMapping("/quarantine")
     public ResponseEntity<EdrQuarantineDTO> quarantineFile(@RequestBody EdrQuarantineDTO dto) {
         final String ctx = CLASSNAME + ".quarantineFile";
@@ -181,6 +183,7 @@ public class EdrResource {
         }
     }
 
+    @Deprecated(since = "2026-08-11", forRemoval = true)
     @PostMapping("/quarantine/{id}/restore")
     public ResponseEntity<EdrQuarantineDTO> restoreFile(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".restoreFile";
@@ -199,6 +202,7 @@ public class EdrResource {
 
     // ---- Isolation ----
 
+    @Deprecated(since = "2026-08-11", forRemoval = true)
     @GetMapping("/isolation")
     public ResponseEntity<List<EdrIsolationDTO>> listIsolations(
             @RequestParam(required = false) String status,
@@ -218,6 +222,7 @@ public class EdrResource {
         }
     }
 
+    @Deprecated(since = "2026-08-11", forRemoval = true)
     @PostMapping("/isolation")
     public ResponseEntity<EdrIsolationDTO> isolateAgent(@RequestBody EdrIsolationDTO dto) {
         final String ctx = CLASSNAME + ".isolateAgent";
@@ -234,6 +239,7 @@ public class EdrResource {
         }
     }
 
+    @Deprecated(since = "2026-08-11", forRemoval = true)
     @PostMapping("/isolation/{id}/lift")
     public ResponseEntity<EdrIsolationDTO> liftIsolation(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".liftIsolation";

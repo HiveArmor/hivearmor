@@ -1,0 +1,8 @@
+.ha-wordmark {
+  font-family: var(--ha-font-ui);
+  font-size: var(--ha-text-xl);
+  font-weight: 700;
+  color: var(--ha-primary);
+  text-align: center;
+  margin-bottom: 24px;
+}

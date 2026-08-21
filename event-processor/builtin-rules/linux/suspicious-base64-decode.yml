@@ -1,0 +1,47 @@
+id: ha-linux-015
+title: Suspicious Base64 Decode and Execute Pattern
+status: stable
+description: Detects the pattern of decoding base64-encoded content and piping it to a shell interpreter, a technique used to obfuscate payloads and evade detection.
+logsource:
+  product: linux
+  service: auditd
+level: high
+tags:
+  - attack.defense_evasion
+  - attack.T1027
+  - attack.execution
+  - attack.T1059.004
+detection:
+  selection_base64:
+    type: EXECVE
+    a0: base64
+    a1|contains:
+      - '-d'
+      - '--decode'
+  selection_openssl:
+    type: EXECVE
+    a0: openssl
+    a1|contains:
+      - base64
+      - '-d'
+  condition: selection_base64 or selection_openssl
+falsepositives:
+  - Legitimate use of base64 decoding in scripts for encoded configuration or certificates
+  - Software deployment pipelines that encode/decode binary assets
+fields:
+  - a0
+  - a1
+  - uid
+  - comm
+impact:
+  confidentiality: medium
+  integrity: high
+  availability: medium
+deduplicateBy:
+  - a0
+  - uid
+groupBy:
+  - uid
+mitre:
+  tactic: defense_evasion
+  technique: T1027

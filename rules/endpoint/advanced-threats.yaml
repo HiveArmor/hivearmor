@@ -1,0 +1,457 @@
+# WMI, Scheduled Task, Memory, IPC, and Service Detection Rules
+# DataTypes: wmi, scheduled-task, memory, service
+
+dataTypes:
+  - "wmi"
+name: "WMI: Event Subscription Created — Persistent Execution"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: "Persistence"
+technique: "T1546.003 - WMI Event Subscription"
+adversary: origin
+description: "A WMI event subscription was created. WMI subscriptions fire scripts when specific system events occur (process start, logon, timer) and are a fileless, highly persistent malware execution method."
+references:
+  - "https://attack.mitre.org/techniques/T1546/003/"
+where: |
+  safe("dataType", "") == "wmi" &&
+  regexMatch(safe("eventType", ""), "WMI_ACTIVITY_(5860|5861)")
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "wmi"
+name: "WMI: Consumer Bound to Filter — WMI Persistence Completed"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: "Persistence"
+technique: "T1546.003 - WMI Event Subscription"
+adversary: origin
+description: "A WMI FilterToConsumerBinding was registered (Event ID 5861), completing the WMI persistence installation. This is the final step in installing a WMI subscription backdoor."
+references:
+  - "https://attack.mitre.org/techniques/T1546/003/"
+where: |
+  safe("dataType", "") == "wmi" &&
+  regexMatch(safe("eventType", ""), "WMI_ACTIVITY_5861")
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "scheduled-task"
+name: "Scheduled Task: Task Registered by Non-Admin Process"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: "Persistence"
+technique: "T1053.005 - Scheduled Task/Job: Scheduled Task"
+adversary: origin
+description: "A Windows scheduled task was registered by a non-administrative process. Malware registers scheduled tasks to re-execute itself after reboots, even when run by unprivileged users."
+references:
+  - "https://attack.mitre.org/techniques/T1053.005/"
+where: |
+  safe("dataType", "") == "scheduled-task" &&
+  safe("eventType", "") == "TASK_REGISTERED" &&
+  safe("origin.uid", 0) != 0 &&
+  !regexMatch(safe("origin.process", ""), "(?i)(taskschd|svchost|system)")
+groupBy:
+  - origin.process
+  - taskName
+deduplicateBy:
+  - taskName
+---
+dataTypes:
+  - "scheduled-task"
+name: "Scheduled Task: Task Deleted — Anti-Forensics"
+impact:
+  confidentiality: 1
+  integrity: 2
+  availability: 1
+category: "Defense Evasion"
+technique: "T1070 - Indicator Removal"
+adversary: origin
+description: "A scheduled task was deleted. Malware deletes its scheduled task after execution to remove forensic evidence."
+references:
+  - "https://attack.mitre.org/techniques/T1070/"
+where: |
+  safe("dataType", "") == "scheduled-task" &&
+  safe("eventType", "") == "TASK_DELETED"
+groupBy:
+  - taskName
+deduplicateBy:
+  - taskName
+---
+dataTypes:
+  - "process"
+name: "Service: Malicious Service Installed"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 3
+category: "Persistence"
+technique: "T1543.003 - Create or Modify System Process: Windows Service"
+adversary: origin
+description: "A Windows service was installed using sc.exe create or binPath with a suspicious executable path. Attackers install services pointing to malicious binaries for persistent, SYSTEM-privilege execution."
+references:
+  - "https://attack.mitre.org/techniques/T1543/003/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(toLower(safe("origin.process", "")), "sc\\.exe") &&
+  regexMatch(toLower(safe("origin.command", "")), "create.*binpath") &&
+  (
+    contains(toLower(safe("origin.command", "")), "\\temp\\") ||
+    contains(toLower(safe("origin.command", "")), "\\appdata\\") ||
+    regexMatch(toLower(safe("origin.command", "")), "cmd.*\\/c|powershell|mshta|wscript|cscript")
+  )
+groupBy:
+  - origin.command
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Service: Windows Defender Service Stopped"
+impact:
+  confidentiality: 1
+  integrity: 2
+  availability: 3
+category: "Defense Evasion"
+technique: "T1562.001 - Impair Defenses"
+adversary: origin
+description: "The Windows Defender (WinDefend) service was stopped. Attackers stop Defender before deploying malware to prevent detection and remediation."
+references:
+  - "https://attack.mitre.org/techniques/T1562/001/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(toLower(safe("origin.command", "")), "(sc.*stop|net stop).*(windefend|msmpeng|wdfilter|mpssvc|wdsecurityservice)")
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Memory: Process Hollowing Indicator — CreateRemoteThread + WriteProcessMemory"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Defense Evasion"
+technique: "T1055.012 - Process Hollowing"
+adversary: origin
+description: "A process was detected performing operations consistent with process hollowing (CreateRemoteThread, WriteProcessMemory, or VirtualAllocEx on another process). Process hollowing injects malicious code into a legitimate process to evade detection."
+references:
+  - "https://attack.mitre.org/techniques/T1055/012/"
+where: |
+  safe("action", "") == "mmap_exec" &&
+  safe("origin.uid", 0) != 0 &&
+  !regexMatch(safe("origin.process", ""), "(installer|setup|msiexec|wuauclt|trustedinstaller)")
+groupBy:
+  - origin.process
+  - origin.pid
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Memory: LSASS Memory Access — Credential Dumping"
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: "Credential Access"
+technique: "T1003.001 - OS Credential Dumping: LSASS Memory"
+adversary: origin
+description: "A process accessed LSASS (Local Security Authority Subsystem Service) process memory. This is the primary technique used by Mimikatz and other credential dumping tools to extract plaintext passwords and NTLM hashes."
+references:
+  - "https://attack.mitre.org/techniques/T1003/001/"
+where: |
+  safe("action", "") == "exec" &&
+  (
+    regexMatch(toLower(safe("origin.command", "")), "(procdump|task_dump).*lsass") ||
+    (regexMatch(toLower(safe("origin.command", "")), "comsvcs\\.dll,minidump") && regexMatch(toLower(safe("origin.command", "")), "lsass"))
+  )
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "fim"
+name: "FIM: Windows SAM Hive Accessed — Credential Theft"
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: "Credential Access"
+technique: "T1003.002 - OS Credential Dumping: Security Account Manager"
+adversary: origin
+description: "The Windows SAM (Security Account Manager) database file was accessed or copied. The SAM file contains hashed local account credentials. Copying it enables offline password cracking attacks."
+references:
+  - "https://attack.mitre.org/techniques/T1003.002/"
+where: |
+  (safe("action", "") == "CREATE" || safe("action", "") == "MODIFY") &&
+  regexMatch(toLower(safe("origin.file", "")), "windows\\\\system32\\\\config\\\\(sam|security|system)$")
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+dataTypes:
+  - "fim"
+name: "FIM: Web Shell Deployed to Web Server Directory"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Persistence"
+technique: "T1505.003 - Server Software Component: Web Shell"
+adversary: origin
+description: "A file with a web script extension (php, asp, aspx, jsp, jspx) was created in a web server document root. Web shells provide persistent remote code execution through the web server."
+references:
+  - "https://attack.mitre.org/techniques/T1505/003/"
+where: |
+  safe("action", "") == "CREATE" &&
+  (
+    startsWith(safe("origin.path", ""), "/var/www/") ||
+    startsWith(safe("origin.path", ""), "/srv/www/") ||
+    startsWith(safe("origin.path", ""), "/usr/share/nginx/") ||
+    contains(toLower(safe("origin.path", "")), "\\inetpub\\wwwroot\\")
+  ) &&
+  regexMatch(toLower(safe("origin.filename", "")), "\\.(php|asp|aspx|jsp|jspx|shtml|cfm|cgi)$")
+groupBy:
+  - origin.file
+deduplicateBy:
+  - origin.file
+---
+dataTypes:
+  - "process"
+name: "Process: Exfil via Cloud Storage CLI Tools"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: "Exfiltration"
+technique: "T1567.002 - Exfiltration to Cloud Storage"
+adversary: origin
+description: "A cloud storage CLI tool (aws s3, gsutil, azcopy, rclone) was used to upload data. Attackers use legitimate cloud storage tools to exfiltrate data to attacker-controlled cloud buckets."
+references:
+  - "https://attack.mitre.org/techniques/T1567/002/"
+where: |
+  safe("action", "") == "exec" &&
+  (
+    (regexMatch(safe("origin.process", ""), "aws") && regexMatch(safe("origin.command", ""), "s3.*cp|s3.*sync")) ||
+    (regexMatch(safe("origin.process", ""), "gsutil") && regexMatch(safe("origin.command", ""), "cp|rsync")) ||
+    regexMatch(safe("origin.process", ""), "azcopy|rclone")
+  )
+groupBy:
+  - origin.user
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Data Compressed for Exfiltration"
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+category: "Collection"
+technique: "T1560 - Archive Collected Data"
+adversary: origin
+description: "Large amounts of data were compressed using tar, zip, 7z, or rar before likely exfiltration. Compressing and archiving data is a standard pre-exfiltration step to reduce transfer size."
+references:
+  - "https://attack.mitre.org/techniques/T1560/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(safe("origin.process", ""), "^(tar|zip|7z|rar|gzip|bzip2|xz)$") &&
+  (
+    regexMatch(safe("origin.command", ""), " -c | -r ") ||
+    regexMatch(safe("origin.command", ""), " a ")
+  ) &&
+  regexMatch(safe("origin.command", ""), "/(etc|home|root|var|tmp|srv|opt)/")
+groupBy:
+  - origin.user
+  - origin.process
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "netconn"
+name: "NetConn: Outbound ICMP to External — Possible Covert Channel"
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+category: "Command and Control"
+technique: "T1095 - Non-Application Layer Protocol"
+adversary: origin
+description: "An unusual volume of ICMP packets was sent to external hosts. ICMP covert channels (ping tunneling) use ICMP echo payloads to carry C2 data through firewalls that allow ICMP."
+references:
+  - "https://attack.mitre.org/techniques/T1095/"
+where: |
+  safe("protocol", "") == "ICMP" &&
+  safe("action", "") == "connect" &&
+  !startsWith(safe("target.ip", ""), "10.") &&
+  !startsWith(safe("target.ip", ""), "192.168.")
+groupBy:
+  - origin.process
+  - target.ip
+deduplicateBy:
+  - origin.process
+  - target.ip
+correlation:
+  - indexPattern: "v3-hive-netconn-*"
+    with:
+      - field: "origin.process"
+        operator: filter_term
+        value: "{{.origin.process}}"
+      - field: "target.ip"
+        operator: filter_term
+        value: "{{.target.ip}}"
+      - field: "protocol"
+        operator: filter_term
+        value: "ICMP"
+    within: 2m
+    count: 20
+---
+dataTypes:
+  - "driver-load"
+name: "Driver Load: Vulnerable Driver Loaded — Known BYOVD"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 3
+category: "Defense Evasion"
+technique: "T1068 - Exploitation for Privilege Escalation"
+adversary: origin
+description: "A driver with a known vulnerability was loaded. Bring Your Own Vulnerable Driver (BYOVD) attacks load a legitimate but vulnerable driver to escalate privileges or disable EDR kernel callbacks. Common BYOVD drivers include RTCore64.sys, DBUtil_2_3.sys, and ene.sys."
+references:
+  - "https://attack.mitre.org/techniques/T1068/"
+  - "https://github.com/magicsword-io/LOLDrivers"
+where: |
+  safe("dataType", "") == "driver-load" &&
+  regexMatch(toLower(safe("log.module_name", "")),
+    "(rtcore64|dbutil_2_3|ene\\.sys|gdrv\\.sys|rtp\\.sys|cpuid\\.sys|bs_rcio64|bsmi\\.sys|physmem\\.sys|inable64|glckio2)")
+groupBy:
+  - log.module_name
+  - origin.process
+deduplicateBy:
+  - log.module_name
+---
+dataTypes:
+  - "usb"
+name: "USB: Multiple Devices in Short Time — Possible USB Fuzzing"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: "Initial Access"
+technique: "T1200 - Hardware Additions"
+adversary: origin
+description: "Multiple USB devices were inserted in a short time window on the same host. Rapid USB device insertions are characteristic of USB fuzzing attacks, USB device enumeration, or automated multi-device attack tools."
+references:
+  - "https://attack.mitre.org/techniques/T1200/"
+where: |
+  safe("action", "") == "USB_ARRIVE"
+groupBy:
+  - hostname
+deduplicateBy:
+  - hostname
+correlation:
+  - indexPattern: "v3-hive-usb-*"
+    with:
+      - field: "hostname"
+        operator: filter_term
+        value: "{{.hostname}}"
+      - field: "action"
+        operator: filter_term
+        value: "USB_ARRIVE"
+    within: 30s
+    count: 5
+---
+dataTypes:
+  - "process"
+name: "Process: Mount Command Used on Sensitive Device"
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 2
+category: "Defense Evasion"
+technique: "T1564 - Hide Artifacts"
+adversary: origin
+description: "The mount command was used to mount a device file (e.g., /dev/sda1) or a bind mount on a sensitive path. Attackers mount additional filesystems to access restricted data or hide malicious files."
+references:
+  - "https://attack.mitre.org/techniques/T1564/"
+where: |
+  safe("action", "") == "exec" &&
+  safe("origin.process", "") == "mount" &&
+  regexMatch(safe("origin.command", ""), "/dev/s[dr]|--bind")
+groupBy:
+  - origin.user
+  - origin.command
+deduplicateBy:
+  - origin.pid
+---
+dataTypes:
+  - "process"
+name: "Process: Lateral Movement via SSH Key Spray"
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: "Lateral Movement"
+technique: "T1021.004 - Remote Services: SSH"
+adversary: origin
+description: "An SSH command was executed targeting multiple different hosts in a short time window. This pattern is consistent with automated lateral movement using harvested SSH private keys."
+references:
+  - "https://attack.mitre.org/techniques/T1021/004/"
+where: |
+  safe("action", "") == "exec" &&
+  regexMatch(safe("origin.process", ""), "^ssh$") &&
+  regexMatch(safe("origin.command", ""), " -i .*id_(rsa|ecdsa|ed25519)")
+groupBy:
+  - origin.user
+deduplicateBy:
+  - origin.pid
+correlation:
+  - indexPattern: "v3-hive-process-*"
+    with:
+      - field: "origin.user"
+        operator: filter_term
+        value: "{{.origin.user}}"
+      - field: "origin.process"
+        operator: filter_term
+        value: "ssh"
+    within: 5m
+    count: 5
+---
+dataTypes:
+  - "fim"
+name: "FIM: Malware Indicator — Suspicious File Extension Created"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 3
+category: "Impact"
+technique: "T1486 - Data Encrypted for Impact"
+adversary: origin
+description: "A file with an extension associated with ransomware or malware dropper activity was created. Known ransomware families append distinctive extensions to encrypted files."
+references:
+  - "https://attack.mitre.org/techniques/T1486/"
+where: |
+  safe("action", "") == "CREATE" &&
+  regexMatch(toLower(safe("origin.filename", "")),
+    "\\.(locky|cerber|zepto|wallet|xtbl|encrypted|crypt|locked|ecc|vxlock|wncry|wncryt|onion|kraken|dharma|stop|djvu|ransomed)$")
+groupBy:
+  - origin.path
+deduplicateBy:
+  - origin.path

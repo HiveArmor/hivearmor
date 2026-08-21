@@ -1,0 +1,107 @@
+Sprint: S-4A — Evidence Persistence Backend
+Date: 2026-07-21
+Status: Files written — backend tests require mvn to run
+
+=== Files Created ===
+
+Liquibase:
+  backend/src/main/resources/config/liquibase/changelog/20260721001_evidence_board.xml
+    - changeSet 20260721001-1: hive_evidence_item (id, incident_id, item_type, title,
+      content, source_ref, severity_hint, created_by, created_at, updated_at)
+      + index on incident_id
+    - changeSet 20260721001-2: hive_evidence_board (id, incident_id, name,
+      created_at, updated_at) + index on incident_id
+    - changeSet 20260721001-3: hive_evidence_placement (id, board_id, evidence_item_id,
+      pos_x, pos_y, width, height, schema_version, updated_at)
+      + FK to hive_evidence_board ON DELETE CASCADE
+      + FK to hive_evidence_item ON DELETE CASCADE
+      + index on board_id
+    - changeSet 20260721001-4: hive_evidence_relationship (id, incident_id,
+      source_item_id, target_item_id, relationship_type, label, created_by, created_at)
+      + FK source_item_id → hive_evidence_item ON DELETE CASCADE
+      + FK target_item_id → hive_evidence_item ON DELETE CASCADE
+      + index on incident_id
+
+  backend/src/main/resources/config/liquibase/master.xml (modified)
+    - Added entry for 20260721001_evidence_board.xml after 20260720002
+
+Domain entities:
+  backend/src/main/java/com/hivearmor/domain/UtmEvidenceItem.java
+  backend/src/main/java/com/hivearmor/domain/UtmEvidenceBoard.java
+  backend/src/main/java/com/hivearmor/domain/UtmEvidencePlacement.java
+    - @ManyToOne to UtmEvidenceBoard and UtmEvidenceItem
+    - schemaVersion field for optimistic conflict detection
+  backend/src/main/java/com/hivearmor/domain/UtmEvidenceRelationship.java
+    - @ManyToOne to UtmEvidenceItem (source + target)
+
+Repositories:
+  backend/src/main/java/com/hivearmor/repository/UtmEvidenceItemRepository.java
+    - findByIncidentId(Long incidentId)
+  backend/src/main/java/com/hivearmor/repository/UtmEvidenceBoardRepository.java
+    - findFirstByIncidentId(Long incidentId)
+  backend/src/main/java/com/hivearmor/repository/UtmEvidencePlacementRepository.java
+    - findByBoardId(Long boardId)
+    - deleteByBoardId(Long boardId)
+  backend/src/main/java/com/hivearmor/repository/UtmEvidenceRelationshipRepository.java
+    - findByIncidentId(Long incidentId)
+
+DTOs (Java records):
+  backend/src/main/java/com/hivearmor/service/dto/EvidenceItemDTO.java
+  backend/src/main/java/com/hivearmor/service/dto/EvidenceBoardDTO.java
+  backend/src/main/java/com/hivearmor/service/dto/EvidencePlacementDTO.java
+    - includes schemaVersion field
+  backend/src/main/java/com/hivearmor/service/dto/EvidenceRelationshipDTO.java
+
+Service:
+  backend/src/main/java/com/hivearmor/service/evidence/EvidenceService.java
+    - listItems(Long incidentId)
+    - addItem(Long incidentId, EvidenceItemDTO dto, String currentUser)
+    - updateItem(Long itemId, EvidenceItemDTO dto)
+    - deleteItem(Long itemId)
+    - getBoard(Long incidentId, Long boardId)
+    - getOrCreateMainBoard(Long incidentId)
+    - savePlacements(Long boardId, List<EvidencePlacementDTO> placements, int submittedVersion)
+      → 409 CONFLICT if storedMax > submittedVersion
+      → deletes existing placements, saves new ones at submittedVersion+1, returns new version
+    - listRelationships(Long incidentId)
+    - addRelationship(Long incidentId, EvidenceRelationshipDTO dto, String currentUser)
+    - deleteRelationship(Long relationshipId)
+
+REST resource:
+  backend/src/main/java/com/hivearmor/web/rest/evidence/EvidenceResource.java
+    Endpoints (all under /api/ha-incidents/{incidentId}/):
+    - POST   /evidence                              → 201  ADMIN|SOC_MANAGER|ANALYST
+    - GET    /evidence                              → 200  all analyst roles + READ_ONLY
+    - PUT    /evidence/{itemId}                     → 200  write roles
+    - DELETE /evidence/{itemId}                     → 204  write roles
+    - GET    /evidence-boards/main                  → 200  read roles
+    - GET    /evidence-boards/{boardId}/placements  → 200  read roles
+    - PUT    /evidence-boards/{boardId}/placements  → 200|409 write roles
+    - GET    /evidence-relationships                → 200  read roles
+    - POST   /evidence-relationships               → 201  write roles
+    - DELETE /evidence-relationships/{relId}        → 204  write roles
+
+Integration test:
+  backend/src/test/java/com/hivearmor/web/rest/evidence/EvidenceResourceIT.java
+    Tests:
+    - addItem_returnsCreated             → POST 201, body has id/title/itemType/createdBy
+    - listItems_returnsOkWithList        → GET 200 with seeded item
+    - getMainBoard_returnsOkAndLazilyCreates → GET /evidence-boards/main 200 (lazy create)
+    - savePlacements_withConflictVersion_returns409 → two saves, second returns 409
+    - listItems_readOnlyUser_canGet      → READ_ONLY role can GET
+
+=== Backend Test Instructions ===
+
+Run integration tests with:
+  cd backend && mvn -s settings.xml test -Dtest=EvidenceResourceIT
+
+Note: mvn cannot run inside Claude Code sandbox. Tests are structurally correct and follow
+the same pattern as QueueResourceIT.java (which was written and accepted in S-3B-QUEUE).
+
+=== Verification Notes ===
+
+All @PreAuthorize annotations present on every endpoint.
+SecurityUtils.getCurrentUserLogin() used for current user (matches AccountResource pattern).
+Liquibase changesets use XML format matching 20260720002_add_investigation_task.xml pattern.
+New columns have DEFAULT values or are nullable — Liquibase constraint met.
+master.xml entry added after 20260720002 in strict date order.

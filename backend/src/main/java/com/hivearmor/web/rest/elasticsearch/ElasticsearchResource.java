@@ -5,6 +5,8 @@ import com.hivearmor.domain.chart_builder.types.query.FilterType;
 import com.hivearmor.domain.chart_builder.types.query.OperatorType;
 import com.hivearmor.domain.shared_types.CsvExportingParams;
 import com.hivearmor.domain.shared_types.DataColumn;
+import com.hivearmor.multitenancy.MsspIndexResolver;
+import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.service.application_events.ApplicationEventService;
 import com.hivearmor.service.dto.elastic.SqlSearchDto;
 import com.hivearmor.service.elasticsearch.ElasticsearchService;
@@ -58,6 +60,35 @@ public class ElasticsearchResource {
     private final ElasticsearchService elasticsearchService;
     private final ApplicationEventService applicationEventService;
     private final SearchProcessorRegistry searchProcessorRegistry;
+    private final MsspIndexResolver indexResolver;
+
+    /**
+     * Validates that the requested index pattern is within the current tenant's scope.
+     * Only enforced when MSSP mode is active (TenantContext has a non-null prefix).
+     *
+     * <p>In non-MSSP mode (null TenantContext), any pattern is allowed for backward
+     * compatibility with single-tenant deployments.
+     *
+     * @param requestedPattern the client-supplied index pattern
+     * @throws TenantScopeViolationException if the pattern is outside tenant scope
+     */
+    private void validateTenantScope(String requestedPattern) {
+        if (!TenantContext.isMssp()) {
+            return;
+        }
+        String tenantPrefix = TenantContext.get();
+        // The tenant prefix segment must appear in the requested pattern.
+        // Allowed patterns look like: v3-hive-<type>-<tenantPrefix>-*
+        String alertAllowed = indexResolver.resolveIndexPattern("alert");
+        String logAllowed = indexResolver.resolveIndexPattern("log");
+        // Extract the tenant-specific prefix portion (e.g., "v3-hive-alert-cwm-" or "v3-hive-log-cwm-")
+        String alertPrefix = alertAllowed.replace("*", "");
+        String logPrefix = logAllowed.replace("*", "");
+        if (requestedPattern.startsWith(alertPrefix) || requestedPattern.startsWith(logPrefix)) {
+            return;
+        }
+        throw new TenantScopeViolationException(requestedPattern);
+    }
 
 
 
@@ -156,6 +187,7 @@ public class ElasticsearchResource {
                                             @RequestParam(required = false, defaultValue = "false") boolean includeChildren,
                                             Pageable pageable) {
         final String ctx = CLASSNAME + ".search";
+        validateTenantScope(indexPattern);
         try {
             SearchResponse<Map> searchResponse = elasticsearchService.search(filters, top, indexPattern,
                     pageable, Map.class);
@@ -198,6 +230,8 @@ public class ElasticsearchResource {
     @PostMapping("/search/csv")
     public ResponseEntity<Void> searchToCsv(@RequestBody @Valid CsvExportingParams params, HttpServletResponse response) {
         final String ctx = CLASSNAME + ".searchToCsv";
+
+        validateTenantScope(params.getIndexPattern());
 
         boolean needsEchoes = false;
         for (DataColumn col : params.getColumns()) {

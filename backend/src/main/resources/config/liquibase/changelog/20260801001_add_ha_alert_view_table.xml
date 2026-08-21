@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Sprint 36 — Saved alert views table (S36-T03) -->
+    <changeSet id="20260801001-1" author="hivearmor">
+        <createTable tableName="ha_alert_view">
+            <column name="id" type="bigserial" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filter_ast" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sort" type="varchar(512)"/>
+            <column name="visible_columns" type="jsonb"/>
+            <column name="density" type="varchar(20)" defaultValue="default"/>
+            <column name="is_shared" type="boolean" defaultValueBoolean="false"/>
+            <column name="is_default" type="boolean" defaultValueBoolean="false"/>
+            <column name="version" type="int" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="ha_alert_view"
+                                 baseColumnNames="owner_id"
+                                 constraintName="fk_ha_alert_view_owner"
+                                 referencedTableName="jhi_user"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Seed built-in views (IDs 1–6). IDs 1–10 are reserved for system views. -->
+    <changeSet id="20260801001-2" author="hivearmor">
+        <insert tableName="ha_alert_view">
+            <column name="id" valueNumeric="1"/>
+            <column name="name" value="Needs triage"/>
+            <column name="owner_id" valueNumeric="1"/>
+            <column name="filter_ast" value='{"type":"bool","must":[{"type":"term","field":"status","value":"active"}]}'/>
+            <column name="sort" value="-severity,id"/>
+            <column name="is_shared" valueBoolean="true"/>
+            <column name="is_default" valueBoolean="false"/>
+            <column name="version" valueNumeric="1"/>
+        </insert>
+        <insert tableName="ha_alert_view">
+            <column name="id" valueNumeric="2"/>
+            <column name="name" value="My priority"/>
+            <column name="owner_id" valueNumeric="1"/>
+            <column name="filter_ast" value='{"type":"bool","must":[{"type":"term","field":"status","value":"active"},{"type":"term","field":"assignee","value":"me"}]}'/>
+            <column name="sort" value="-severity,id"/>
+            <column name="is_shared" valueBoolean="true"/>
+            <column name="is_default" valueBoolean="false"/>
+            <column name="version" valueNumeric="1"/>
+        </insert>
+        <insert tableName="ha_alert_view">
+            <column name="id" valueNumeric="3"/>
+            <column name="name" value="Critical"/>
+            <column name="owner_id" valueNumeric="1"/>
+            <column name="filter_ast" value='{"type":"bool","must":[{"type":"term","field":"status","value":"active"},{"type":"term","field":"severity","value":"critical"}]}'/>
+            <column name="sort" value="-severity,id"/>
+            <column name="is_shared" valueBoolean="true"/>
+            <column name="is_default" valueBoolean="false"/>
+            <column name="version" valueNumeric="1"/>
+        </insert>
+        <insert tableName="ha_alert_view">
+            <column name="id" valueNumeric="4"/>
+            <column name="name" value="SLA risk"/>
+            <column name="owner_id" valueNumeric="1"/>
+            <column name="filter_ast" value='{"type":"bool","must":[{"type":"term","field":"status","value":"active"},{"type":"term","field":"sla","value":"at_risk"}]}'/>
+            <column name="sort" value="-severity,id"/>
+            <column name="is_shared" valueBoolean="true"/>
+            <column name="is_default" valueBoolean="false"/>
+            <column name="version" valueNumeric="1"/>
+        </insert>
+        <insert tableName="ha_alert_view">
+            <column name="id" valueNumeric="5"/>
+            <column name="name" value="Unassigned"/>
+            <column name="owner_id" valueNumeric="1"/>
+            <column name="filter_ast" value='{"type":"bool","must":[{"type":"term","field":"status","value":"active"},{"type":"term","field":"assignee","value":"unassigned"}]}'/>
+            <column name="sort" value="-severity,id"/>
+            <column name="is_shared" valueBoolean="true"/>
+            <column name="is_default" valueBoolean="false"/>
+            <column name="version" valueNumeric="1"/>
+        </insert>
+        <insert tableName="ha_alert_view">
+            <column name="id" valueNumeric="6"/>
+            <column name="name" value="Intel matches"/>
+            <column name="owner_id" valueNumeric="1"/>
+            <column name="filter_ast" value='{"type":"bool","must":[{"type":"term","field":"status","value":"active"},{"type":"term","field":"threatIntel","value":"matched"}]}'/>
+            <column name="sort" value="-severity,id"/>
+            <column name="is_shared" valueBoolean="true"/>
+            <column name="is_default" valueBoolean="false"/>
+            <column name="version" valueNumeric="1"/>
+        </insert>
+
+        <!-- Reset the sequence so next user-created view starts after ID 10 -->
+        <sql>SELECT setval('ha_alert_view_id_seq', 10, true);</sql>
+    </changeSet>
+
+</databaseChangeLog>

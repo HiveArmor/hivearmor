@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.6.xsd">
+
+  <!-- Sprint 23 — T04: add contact_email to ha_client for MSSP portal PUT support -->
+  <changeSet id="20260724060-1" author="hivearmor">
+    <addColumn tableName="ha_client">
+      <column name="contact_email" type="VARCHAR(255)"/>
+    </addColumn>
+  </changeSet>
+
+</databaseChangeLog>

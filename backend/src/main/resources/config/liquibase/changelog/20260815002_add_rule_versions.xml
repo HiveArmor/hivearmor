@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Sprint 47 — Rule version history table (DET-016) -->
+    <changeSet id="20260815002" author="hivearmor">
+        <createTable tableName="rule_versions">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="rule_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expression" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="filters" type="text"/>
+            <column name="changes" type="text"/>
+            <column name="author" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createIndex tableName="rule_versions" indexName="idx_rule_versions_rule">
+            <column name="rule_id"/>
+            <column name="version"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

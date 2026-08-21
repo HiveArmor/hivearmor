@@ -1,0 +1,44 @@
+Sprint: S-5A — Dynamic Field Browser
+Date: 2026-07-21
+Result: PASS
+
+Test counts:
+  Before S-5A: 476 tests (40 test files)
+  After S-5A:  492 tests (41 test files)
+  New tests:   16
+
+Test file created:
+  frontend-v2/src/app/(app)/logs/__tests__/field-browser.test.ts
+
+TypeScript errors: 0
+
+Files created:
+  frontend-v2/src/app/(app)/logs/__tests__/field-browser.test.ts
+
+Files modified:
+  frontend-v2/src/services/elastic.service.ts
+    - Added FieldDef interface (name, type, searchable, aggregatable, hitPercent?)
+    - Added getIndexFieldDefs(indexPattern) method
+      → GET /api/elasticsearch/index/properties?indexPattern={pattern}
+      → Fallback: /api/ha-logs/fields?index={pattern}
+  frontend-v2/src/app/(app)/logs/page.tsx
+    - Added useQuery import from @tanstack/react-query
+    - Removed DEFAULT_FIELD_DEFS constant (15 hardcoded fields)
+    - Added useQuery({ queryKey: ['index-fields', indexPattern], ... staleTime: 5min })
+    - Added hitPercents state + useEffect for lazy top-10 hit percentages when panel open
+    - Added fieldBrowserFields useMemo (ElasticFieldDef → FieldBrowser FieldDef conversion)
+    - Field browser panel: loading skeleton (8 rows) / error+retry / empty / normal states
+
+Features implemented:
+  - Dynamic field loading from real index schema via getIndexFieldDefs()
+  - TanStack Query v5 caching (5 min staleTime)
+  - Loading skeleton: 8 animated rows (animate-pulse)
+  - Error state: "Could not load fields" + Retry button (calls refetchFields)
+  - Empty state: "No fields found for this index"
+  - Lazy hit percentages: fetched for top 10 fields only when panel is open (leftOpen=true)
+  - No hardcoded field list — removed DEFAULT_FIELD_DEFS entirely
+
+Vitest output:
+  Test Files  41 passed (41)
+  Tests       492 passed (492)
+  Duration    ~718ms

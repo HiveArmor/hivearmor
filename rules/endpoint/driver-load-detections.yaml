@@ -1,0 +1,45 @@
+# Driver/Kernel Module Load Detection Rules
+# DataType: driver-load
+
+dataTypes:
+  - "driver-load"
+name: "Driver Load: Unsigned or Unexpected Kernel Module Loaded"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 3
+category: "Defense Evasion"
+technique: "T1014 - Rootkit"
+adversary: origin
+description: "A kernel module was loaded via init_module or finit_module syscall. Rootkits, keyloggers, and advanced malware use kernel modules to hide their presence and intercept system calls. Any unexpected kernel module load should be investigated."
+references:
+  - "https://attack.mitre.org/techniques/T1014/"
+where: |
+  (safe("action", "") == "init_module" || safe("action", "") == "finit_module") &&
+  !regexMatch(safe("log.module_name", ""), "^(ext4|xfs|btrfs|nfs|cifs|fat|vfat|ntfs|overlay|aufs|fuse|loop|dm_|md_|raid|intel_|amd_|nvidia|radeon|snd_|usb_|usbhid|hid_|bluetooth|ath|iwl|rtl|bnx|e1000|virtio|vmxnet|xennet)")
+groupBy:
+  - log.module_name
+  - origin.process
+deduplicateBy:
+  - log.module_name
+---
+dataTypes:
+  - "driver-load"
+name: "Driver Load: macOS Kernel Extension Loaded"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: "Defense Evasion"
+technique: "T1547.006 - Boot or Logon Autostart Execution: Kernel Modules and Extensions"
+adversary: origin
+description: "A macOS kernel extension (kext) was loaded. Kernel extensions run in kernel space and have unrestricted system access. Malicious kexts are used by sophisticated threat actors for persistent rootkit-level access."
+references:
+  - "https://attack.mitre.org/techniques/T1547/006/"
+where: |
+  safe("action", "") == "ES_KEXTLOAD" ||
+  safe("eventType", "") == "ES_KEXTLOAD"
+groupBy:
+  - origin.process
+deduplicateBy:
+  - origin.process

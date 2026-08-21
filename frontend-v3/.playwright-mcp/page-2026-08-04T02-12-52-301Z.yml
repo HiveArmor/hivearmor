@@ -1,0 +1,267 @@
+- generic [active] [ref=f23e1]:
+  - generic [ref=f23e3]:
+    - link "Skip to main content" [ref=f23e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f23e5]:
+      - generic [ref=f23e6]:
+        - generic [ref=f23e12]: HiveArmor
+        - generic [ref=f23e13]: Security operations
+      - generic [ref=f23e14]:
+        - button "All authorized tenants" [ref=f23e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f23e24] [cursor=pointer]:
+          - generic [ref=f23e29]: ⌘ K
+        - generic [ref=f23e30]: Production
+      - generic [ref=f23e31]:
+        - 'status "Data pipeline: Critical - Bad Gateway" [ref=f23e536]'
+        - status "Live events per second" [ref=f23e35]:
+          - generic [ref=f23e37]: 12,840 EPS
+        - button "Notifications" [ref=f23e38] [cursor=pointer]
+        - button "Help" [ref=f23e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f23e47]:
+      - generic [ref=f23e48]:
+        - region "COMMAND" [ref=f23e49]:
+          - generic [ref=f23e50]:
+            - button "Mission Control" [ref=f23e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f23e58] [cursor=pointer]
+            - button "Alerts" [ref=f23e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f23e67] [cursor=pointer]
+            - button "Incidents" [ref=f23e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f23e79]:
+          - generic [ref=f23e80]:
+            - button "Search & Hunt" [ref=f23e81] [cursor=pointer]
+            - button "Investigations" [ref=f23e86] [cursor=pointer]
+            - button "Entities" [ref=f23e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f23e97] [cursor=pointer]
+        - region "DEFEND" [ref=f23e103]:
+          - generic [ref=f23e104]:
+            - button "Detection Rules" [ref=f23e105] [cursor=pointer]
+            - button "Playbooks" [ref=f23e109] [cursor=pointer]
+            - button "Response Library" [ref=f23e114] [cursor=pointer]
+        - region "POSTURE" [ref=f23e118]:
+          - generic [ref=f23e119]:
+            - button "Assets" [ref=f23e120] [cursor=pointer]
+            - button "Identities" [ref=f23e125] [cursor=pointer]
+            - button "Active Directory" [ref=f23e132] [cursor=pointer]
+            - button "Exposure" [ref=f23e139] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f23e145] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f23e156] [cursor=pointer]
+            - button "Compliance" [ref=f23e162] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f23e167]:
+          - generic [ref=f23e168]:
+            - button "Endpoints" [ref=f23e169] [cursor=pointer]
+            - button "File Quarantine" [ref=f23e173] [cursor=pointer]
+            - button "File Integrity" [ref=f23e179] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f23e186]:
+          - button "Studio" [ref=f23e188] [cursor=pointer]
+        - region "REPORT" [ref=f23e193]:
+          - button "Scheduled Reports" [ref=f23e195] [cursor=pointer]
+      - generic [ref=f23e200]:
+        - button "User menu" [ref=f23e203] [cursor=pointer]:
+          - generic [ref=f23e204]: MC
+        - button "Pin sidebar open" [ref=f23e205] [cursor=pointer]
+    - main [ref=f23e208]:
+      - generic [ref=f23e209]:
+        - generic [ref=f23e210]:
+          - generic [ref=f23e211]:
+            - generic [ref=f23e212]: Response
+            - heading "Activity Log" [level=1] [ref=f23e213]
+          - generic [ref=f23e214]:
+            - generic "Demonstration data" [ref=f23e215]
+            - button "Refresh" [disabled]
+            - button "Export" [disabled]
+        - toolbar "Activity log filters" [ref=f23e216]:
+          - searchbox "Search activity log" [ref=f23e218]
+          - generic [ref=f23e219]:
+            - generic [ref=f23e222]:
+              - generic [ref=f23e223]: Result
+              - combobox "Status filter" [ref=f23e224] [cursor=pointer]:
+                - option "All results" [selected]
+                - option "Success"
+                - option "Failed"
+                - option "Blocked"
+            - generic [ref=f23e225]:
+              - generic [ref=f23e226]: Window
+              - combobox "Time range filter" [ref=f23e227] [cursor=pointer]:
+                - option "Last hour"
+                - option "Last 6h"
+                - option "Last 24h" [selected]
+                - option "Last 7d"
+                - option "Last 30d"
+                - option "All time"
+          - generic [ref=f23e228]:
+            - status [ref=f23e229]: Updating
+            - generic [ref=f23e235]: 31 executions
+        - generic [ref=f23e241]:
+          - grid:
+            - rowgroup [ref=f23e243]:
+              - row "Time Playbook Trigger Linked entity Executed by Result Duration" [ref=f23e244]:
+                - columnheader "Time" [ref=f23e245]:
+                  - generic [ref=f23e537] [cursor=pointer]: 
+                  - generic:      
+                - columnheader "Playbook" [ref=f23e249]:
+                  - generic [ref=f23e539] [cursor=pointer]: 
+                  - generic:      
+                - columnheader "Trigger" [ref=f23e253]:
+                  - generic [ref=f23e541] [cursor=pointer]: 
+                  - generic:      
+                - columnheader "Linked entity" [ref=f23e257]:
+                  - generic [ref=f23e543] [cursor=pointer]: 
+                  - generic:      
+                - columnheader "Executed by" [ref=f23e261]:
+                  - generic [ref=f23e545] [cursor=pointer]: 
+                  - generic:      
+                - columnheader "Result" [ref=f23e265]:
+                  - generic [ref=f23e547] [cursor=pointer]: 
+                  - generic:      
+                - columnheader "Duration" [ref=f23e269]:
+                  - generic [ref=f23e549] [cursor=pointer]: 
+                  - generic:      
+                - columnheader [ref=f23e273]:
+                  - text: 
+                  - generic: 
+              - row [ref=f23e275]:
+                - gridcell "3 Aug, 18:30:00" [ref=f23e276]
+                - gridcell "Host Isolation — Endpoint Compromise" [ref=f23e277]
+                - gridcell [ref=f23e278]
+                - gridcell [ref=f23e282]:
+                  - link "ALT-20240401-00177" [ref=f23e554] [cursor=pointer]:
+                    - /url: /alerts/ALT-20240401-00177
+                - gridcell "Maya Chen" [ref=f23e288]
+                - gridcell [ref=f23e289]:
+                  - 'generic "Status: Success" [ref=f23e559]': Success
+                - gridcell "1.2s" [ref=f23e294]
+                - gridcell [ref=f23e295]:
+                  - button "View execution detail" [ref=f23e563] [cursor=pointer]
+              - row [ref=f23e299]:
+                - gridcell "3 Aug, 18:53:01" [ref=f23e300]
+                - gridcell "Account Suspension — Credential Theft" [ref=f23e301]
+                - gridcell [ref=f23e302]
+                - gridcell [ref=f23e306]:
+                  - link "ALT-20240401-00183" [ref=f23e569] [cursor=pointer]:
+                    - /url: /alerts/ALT-20240401-00183
+                - gridcell "Omar Haddad" [ref=f23e312]
+                - gridcell [ref=f23e313]:
+                  - 'generic "Status: Success" [ref=f23e574]': Success
+                - gridcell "1.6s" [ref=f23e318]
+                - gridcell [ref=f23e319]:
+                  - button "View execution detail" [ref=f23e578] [cursor=pointer]
+              - row [ref=f23e323]:
+                - gridcell "3 Aug, 19:16:02" [ref=f23e324]
+                - gridcell "Network Block — C2 Destination" [ref=f23e325]
+                - gridcell [ref=f23e326]
+                - gridcell [ref=f23e330]:
+                  - link "INC-2026-0098" [ref=f23e584] [cursor=pointer]:
+                    - /url: /incidents/INC-2026-0098
+                - gridcell "Elena Rossi" [ref=f23e336]
+                - gridcell [ref=f23e337]:
+                  - 'generic "Status: Success" [ref=f23e589]': Success
+                - gridcell "2.0s" [ref=f23e342]
+                - gridcell [ref=f23e343]:
+                  - button "View execution detail" [ref=f23e593] [cursor=pointer]
+              - row [ref=f23e347]:
+                - gridcell "3 Aug, 17:39:03" [ref=f23e348]
+                - gridcell "Enrichment — IP Reputation Lookup" [ref=f23e349]
+                - gridcell [ref=f23e350]
+                - gridcell [ref=f23e354]:
+                  - link "ALT-20240402-00014" [ref=f23e599] [cursor=pointer]:
+                    - /url: /alerts/ALT-20240402-00014
+                - gridcell "James Okafor" [ref=f23e360]
+                - gridcell [ref=f23e361]:
+                  - 'generic "Status: Failed" [ref=f23e604]': Failed
+                - gridcell "2.4s" [ref=f23e367]
+                - gridcell [ref=f23e368]:
+                  - button "View execution detail" [ref=f23e609] [cursor=pointer]
+              - row [ref=f23e372]:
+                - gridcell "3 Aug, 18:02:04" [ref=f23e373]
+                - gridcell "ServiceNow Incident — High Severity Alert" [ref=f23e374]
+                - gridcell "Manual" [ref=f23e375]
+                - gridcell [ref=f23e377]:
+                  - link "ALT-20240402-00022" [ref=f23e613] [cursor=pointer]:
+                    - /url: /alerts/ALT-20240402-00022
+                - gridcell "SOAR Automation" [ref=f23e383]
+                - gridcell [ref=f23e384]:
+                  - 'generic "Status: Success" [ref=f23e618]': Success
+                - gridcell "2.8s" [ref=f23e389]
+                - gridcell [ref=f23e390]:
+                  - button "View execution detail" [ref=f23e622] [cursor=pointer]
+              - row [ref=f23e394]:
+                - gridcell "3 Aug, 18:25:05" [ref=f23e395]
+                - gridcell "Cloud Role Revocation — Privilege Escalation" [ref=f23e396]
+                - gridcell [ref=f23e397]
+                - gridcell [ref=f23e401]:
+                  - link "INC-2026-0098" [ref=f23e628] [cursor=pointer]:
+                    - /url: /incidents/INC-2026-0098
+                - gridcell "BLOCKED — SEC-08" [ref=f23e407]
+                - gridcell [ref=f23e408]:
+                  - 'generic "Status: Blocked" [ref=f23e633]': Blocked
+                - gridcell "—" [ref=f23e413]
+                - gridcell [ref=f23e414]:
+                  - button "View execution detail" [ref=f23e637] [cursor=pointer]
+              - row [ref=f23e418]:
+                - gridcell "3 Aug, 16:48:06" [ref=f23e419]
+                - gridcell "Slack Notification — Critical Alert Digest" [ref=f23e420]
+                - gridcell [ref=f23e421]
+                - gridcell [ref=f23e425]:
+                  - link "ALT-20240401-00183" [ref=f23e643] [cursor=pointer]:
+                    - /url: /alerts/ALT-20240401-00183
+                - gridcell "Omar Haddad" [ref=f23e431]
+                - gridcell [ref=f23e432]:
+                  - 'generic "Status: Success" [ref=f23e648]': Success
+                - gridcell "3.5s" [ref=f23e437]
+                - gridcell [ref=f23e438]:
+                  - button "View execution detail" [ref=f23e652] [cursor=pointer]
+              - row [ref=f23e442]:
+                - gridcell "3 Aug, 17:11:07" [ref=f23e443]
+                - gridcell "Process Termination — Malicious Execution" [ref=f23e444]
+                - gridcell [ref=f23e445]
+                - gridcell [ref=f23e449]:
+                  - link "ALT-20240401-00201" [ref=f23e658] [cursor=pointer]:
+                    - /url: /alerts/ALT-20240401-00201
+                - gridcell "Elena Rossi" [ref=f23e455]
+                - gridcell [ref=f23e456]:
+                  - 'generic "Status: Success" [ref=f23e663]': Success
+                - gridcell "3.9s" [ref=f23e461]
+                - gridcell [ref=f23e462]:
+                  - button "View execution detail" [ref=f23e667] [cursor=pointer]
+              - row [ref=f23e466]:
+                - gridcell "3 Aug, 15:34:08" [ref=f23e467]
+                - gridcell "Password Reset — Brute Force Detection" [ref=f23e468]
+                - gridcell "Manual" [ref=f23e469]
+                - gridcell [ref=f23e471]:
+                  - link "INC-2026-0098" [ref=f23e671] [cursor=pointer]:
+                    - /url: /incidents/INC-2026-0098
+                - gridcell "James Okafor" [ref=f23e477]
+                - gridcell [ref=f23e478]:
+                  - 'generic "Status: Success" [ref=f23e676]': Success
+                - gridcell "4.3s" [ref=f23e483]
+                - gridcell [ref=f23e484]:
+                  - button "View execution detail" [ref=f23e680] [cursor=pointer]
+              - row [ref=f23e488]:
+                - gridcell "3 Aug, 15:57:09" [ref=f23e489]
+                - gridcell "DNS Sinkhole — Domain Block" [ref=f23e490]
+                - gridcell "Manual" [ref=f23e491]
+                - gridcell [ref=f23e493]:
+                  - link "ALT-20240402-00022" [ref=f23e684] [cursor=pointer]:
+                    - /url: /alerts/ALT-20240402-00022
+                - gridcell "SOAR Automation" [ref=f23e499]
+                - gridcell [ref=f23e500]:
+                  - 'generic "Status: Failed" [ref=f23e689]': Failed
+                - gridcell "4.7s" [ref=f23e506]
+                - gridcell [ref=f23e507]:
+                  - button "View execution detail" [ref=f23e694] [cursor=pointer]
+              - row [ref=f23e511]:
+                - gridcell "3 Aug, 16:20:10" [ref=f23e512]
+                - gridcell "Alert Enrichment — User Risk Scoring" [ref=f23e513]
+                - gridcell [ref=f23e514]
+                - gridcell [ref=f23e518]:
+                  - link "ALT-20240401-00177" [ref=f23e700] [cursor=pointer]:
+                    - /url: /alerts/ALT-20240401-00177
+                - gridcell "Maya Chen" [ref=f23e524]
+                - gridcell [ref=f23e525]:
+                  - 'generic "Status: Success" [ref=f23e705]': Success
+                - gridcell "5.1s" [ref=f23e530]
+                - gridcell [ref=f23e531]:
+                  - button "View execution detail" [ref=f23e709] [cursor=pointer]
+          - text:     
+  - generic:
+    - list "Notifications"

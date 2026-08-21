@@ -1,0 +1,82 @@
+# HiveArmor Module Load (DLL/Shared Library) filter — version 1.0.0
+# DataType: module-load
+#
+# Processes shared library / DLL load events emitted by:
+#   - agent/collector/ebpf.Collector  (Linux: mmap PROT_EXEC on file-backed mappings)
+#   - agent/collector/etw.Collector   (Windows: Kernel-Process Image Load events)
+#   - agent/collector/esf.Collector   (macOS: ES_EVENT_TYPE_NOTIFY_MMAP)
+#
+# These events capture dynamic library loading at runtime — critical for detecting:
+#   - DLL sideloading (T1574.002)
+#   - Reflective DLL injection (T1055.001)
+#   - Shared library hijacking (T1574.006)
+#   - LD_PRELOAD abuse on Linux (T1574.006)
+
+pipeline:
+  - dataTypes:
+      - module-load
+    steps:
+      # Parse the JSON payload from agent collectors.
+      - json:
+          source: raw
+          where: 'startsWith("raw", "{")'
+
+      # Normalise module/library path.
+      - rename:
+          from:
+            - log.modulePath
+            - log.ModulePath
+            - log.filePath
+            - log.FilePath
+            - log.imagePath
+          to: log.module_path
+          where: 'exists("log.modulePath") || exists("log.ModulePath") || exists("log.filePath") || exists("log.imagePath")'
+
+      # Normalise module/library name (basename).
+      - rename:
+          from:
+            - log.moduleName
+            - log.ModuleName
+          to: log.module_name
+          where: 'exists("log.moduleName") || exists("log.ModuleName")'
+
+      # Normalise loading process PID.
+      - rename:
+          from:
+            - log.pid
+            - log.PID
+          to: origin.pid
+          where: 'exists("log.pid") || exists("log.PID")'
+
+      # Normalise loading process name.
+      - rename:
+          from:
+            - log.processName
+            - log.Comm
+            - log.comm
+          to: origin.process
+          where: 'exists("log.processName") || exists("log.Comm") || exists("log.comm")'
+
+      # Normalise SHA-256 hash of the loaded module (from ETW ImageLoad on Windows).
+      - rename:
+          from:
+            - log.sha256
+            - log.SHA256
+          to: origin.sha256
+          where: 'exists("log.sha256") || exists("log.SHA256")'
+
+      # Normalise action.
+      - rename:
+          from:
+            - log.action
+            - log.Action
+          to: action
+          where: 'exists("log.action") || exists("log.Action")'
+
+      # Module loads are INFO by default; individual rules escalate severity.
+      - add:
+          function: string
+          params:
+            key: severity
+            value: "INFO"
+          where: 'safe("severity", "") == ""'

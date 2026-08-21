@@ -1,0 +1,23 @@
+# Positive: Service created with image path under %systemroot% (event 7045).
+# Negative: Path outside systemroot should not fire.
+rule: rules/windows/suspicious_event_as_the_binary_may_have_been_dropped_using_windows_dmin_shares.yml
+description: "Admin-share dropped binary — service image path under %systemroot%"
+
+events:
+  - timestamp: "2026-01-15T10:00:00Z"
+    dataType: wineventlog
+    origin:
+      ip: "192.168.10.5"
+      host: "DC01"
+    target:
+      user: "SYSTEM"
+    log:
+      eventCode: "7045"
+      channel: "System"
+      eventDataImagePath: "%systemroot%\\system32\\malicious.exe"
+      message: "A service was installed in the system"
+
+expect:
+  alert: true
+  severity: "2"
+  name: "Windows: New Windows Service Created to start from windows root path. Suspicious event as the binary may have been dropped using Windows Admin Shares"

@@ -1,0 +1,79 @@
+- generic [ref=f4e3]:
+  - banner [ref=f4e4]:
+    - generic [ref=f4e5]: HiveArmor
+    - generic [ref=f4e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f4e13]'
+      - generic "Reconnecting..." [ref=f4e16]: 0 EPS
+      - button "Notifications" [ref=f4e18] [cursor=pointer]
+      - button "Help" [ref=f4e23] [cursor=pointer]
+      - button "User menu" [ref=f4e28] [cursor=pointer]:
+        - generic [ref=f4e29]: AA
+        - generic [ref=f4e30]: admin
+  - navigation [ref=f4e31]:
+    - generic [ref=f4e32]:
+      - generic [ref=f4e33]:
+        - generic [ref=f4e34]: COMMAND
+        - generic [ref=f4e35]:
+          - button "Analyst Queue" [ref=f4e36] [cursor=pointer]
+          - button "Alerts" [ref=f4e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f4e47] [cursor=pointer]
+          - button "Incidents" [ref=f4e54] [cursor=pointer]
+      - generic [ref=f4e61]:
+        - generic [ref=f4e62]: INVESTIGATE
+        - generic [ref=f4e63]:
+          - button "Search & Hunt" [ref=f4e64] [cursor=pointer]
+          - button "Investigations" [ref=f4e70] [cursor=pointer]
+          - button "Entities" [ref=f4e75] [cursor=pointer]
+      - generic [ref=f4e83]:
+        - generic [ref=f4e84]: DEFEND
+        - generic [ref=f4e85]:
+          - button "Detection Rules" [ref=f4e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f4e91] [cursor=pointer]
+      - generic [ref=f4e96]:
+        - generic [ref=f4e97]: POSTURE
+        - generic [ref=f4e98]:
+          - button "Assets" [ref=f4e99] [cursor=pointer]
+          - button "Identities" [ref=f4e105] [cursor=pointer]
+          - button "Active Directory" [ref=f4e113] [cursor=pointer]
+          - button "Exposure" [ref=f4e121] [cursor=pointer]
+          - button "Sensors" [ref=f4e128] [cursor=pointer]
+          - button "Compliance" [ref=f4e133] [cursor=pointer]
+      - generic [ref=f4e139]:
+        - generic [ref=f4e140]: DASHBOARDS
+        - button "Studio" [ref=f4e142] [cursor=pointer]
+      - generic [ref=f4e148]:
+        - generic [ref=f4e149]: REPORT
+        - button "Scheduled Reports" [ref=f4e151] [cursor=pointer]
+      - generic [ref=f4e157]:
+        - generic [ref=f4e158]: ADMINISTRATION
+        - generic [ref=f4e159]:
+          - button "Users" [ref=f4e160] [cursor=pointer]
+          - button "Integrations" [ref=f4e175] [cursor=pointer]
+          - button "Notifications" [ref=f4e180] [cursor=pointer]
+          - button "Audit Log" [ref=f4e186] [cursor=pointer]
+          - button "Settings" [ref=f4e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f4e199] [cursor=pointer]
+  - main [ref=f4e202]:
+    - generic [ref=f4e203]:
+      - generic [ref=f4e204]:
+        - generic [ref=f4e205]:
+          - button "Back to Incidents" [ref=f4e206] [cursor=pointer]:
+            - generic [ref=f4e209]: Incidents
+          - generic [ref=f4e210]: INC-1
+          - generic "low severity" [ref=f4e211]: Low
+          - generic [ref=f4e215]: P3
+          - generic [ref=f4e216]: COMPLETED
+          - generic [ref=f4e217]: admin
+        - generic [ref=f4e218]:
+          - button "Close Incident" [ref=f4e219] [cursor=pointer]
+          - button "Add Evidence" [ref=f4e224] [cursor=pointer]
+          - button "More actions" [ref=f4e227] [cursor=pointer]
+      - tablist [ref=f4e234]:
+        - tab "Overview" [ref=f4e235] [cursor=pointer]
+        - tab "Timeline" [ref=f4e237] [cursor=pointer]
+        - tab "Evidence" [ref=f4e239] [cursor=pointer]
+        - tab "Alerts" [selected] [ref=f4e241] [cursor=pointer]
+        - tab "Tasks" [ref=f4e243] [cursor=pointer]
+        - tab "Sessions" [ref=f4e245] [cursor=pointer]
+      - tabpanel "Alerts" [ref=f4e247]:
+        - generic [ref=f4e248]: Loading linked alerts...

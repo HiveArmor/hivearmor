@@ -1,0 +1,33 @@
+Sprint: S-3C — Analyst Queue Page
+Date: 2026-07-21
+TS errors: 0
+Vitest: 398/398 pass (15 new tests, 0 failures)
+
+Files created:
+  frontend-v2/src/app/(app)/queue/page.tsx
+    - Full Analyst Queue page replacing placeholder
+    - SiemDataGrid with IDatasource (infinite row model)
+    - Type filter chips (ALL / ALERT / INCIDENT / OFFENSE / TASK)
+    - Assigned-to-me toggle (filters by currentUser.login)
+    - Row click: INCIDENT → /incidents/{id}, OFFENSE → /offenses/{id}
+    - 8 column defs using TypeBadgeCell, SeverityCell, TruncatedTextCell,
+      StatusCell, UserCell, TimestampCell, SlaIndicatorCell
+
+  frontend-v2/src/components/queue/__tests__/queue-cells.test.ts
+    - 15 pure-logic tests, no JSX
+    - getSlaStatus: null/undefined/empty → 'none'; past → 'overdue';
+      <24h → 'warning'; ≥24h → 'ok' (vi.useFakeTimers anchor: 2026-07-21T12:00Z)
+    - getTypeBadgeColour: ALERT→red, INCIDENT→amber, OFFENSE→violet,
+      TASK→blue, UNKNOWN/empty→grey
+
+Files modified:
+  frontend-v2/src/components/ui/grid-cells.tsx
+    - Added TypeBadgeCell: ALERT (red), INCIDENT (amber), OFFENSE (violet),
+      TASK (blue) — CSS vars only, no hardcoded hex
+    - Added SlaIndicatorCell: null→"—", past→"⚠ Overdue" (ha-critical),
+      <24h→"Xh left" (ha-high), ok→formatted date (ha-text-secondary)
+
+Vitest breakdown:
+  Before: 383 tests across 32 test files
+  After:  398 tests across 35 test files (+15 new queue-cells tests)
+  All 398 pass, 0 failures

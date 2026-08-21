@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260819002-enrollment-audit-retention" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM hive_retention_policy WHERE data_type = 'ENROLLMENT_AUDIT'</sqlCheck>
+        </preConditions>
+        <insert tableName="hive_retention_policy">
+            <column name="name" value="Enrollment audit (append-only source)"/>
+            <column name="data_type" value="ENROLLMENT_AUDIT"/>
+            <column name="retention_days" valueNumeric="2555"/>
+            <column name="compression_enabled" valueBoolean="false"/>
+            <column name="archive_target" value="NONE"/>
+        </insert>
+        <comment>Source table enrollment_audit_events is never pruned. retention_days is operator copy-hold guidance for exported NDJSON/pg_dump files.</comment>
+    </changeSet>
+</databaseChangeLog>

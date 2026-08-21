@@ -1,0 +1,61 @@
+- generic [ref=f41e3]:
+  - banner [ref=f41e4]:
+    - generic [ref=f41e5]: HiveArmor
+    - generic [ref=f41e12]:
+      - 'generic "Data pipeline: Healthy" [ref=f41e13]'
+      - generic "Reconnecting..." [ref=f41e16]: 0 EPS
+      - button "Notifications" [ref=f41e18] [cursor=pointer]
+      - button "Help" [ref=f41e23] [cursor=pointer]
+      - button "User menu" [ref=f41e28] [cursor=pointer]:
+        - generic [ref=f41e29]: AA
+        - generic [ref=f41e30]: admin
+  - navigation [ref=f41e31]:
+    - generic [ref=f41e32]:
+      - generic [ref=f41e33]:
+        - generic [ref=f41e34]: COMMAND
+        - generic [ref=f41e35]:
+          - button "Analyst Queue" [ref=f41e36] [cursor=pointer]
+          - button "Alerts" [ref=f41e41] [cursor=pointer]
+          - button "Correlated Findings" [ref=f41e47] [cursor=pointer]
+          - button "Incidents" [ref=f41e54] [cursor=pointer]
+      - generic [ref=f41e61]:
+        - generic [ref=f41e62]: INVESTIGATE
+        - generic [ref=f41e63]:
+          - button "Search & Hunt" [ref=f41e64] [cursor=pointer]
+          - button "Investigations" [ref=f41e70] [cursor=pointer]
+          - button "Entities" [ref=f41e75] [cursor=pointer]
+      - generic [ref=f41e83]:
+        - generic [ref=f41e84]: DEFEND
+        - generic [ref=f41e85]:
+          - button "Detection Rules" [ref=f41e86] [cursor=pointer]
+          - button "Response Playbooks" [ref=f41e91] [cursor=pointer]
+      - generic [ref=f41e96]:
+        - generic [ref=f41e97]: POSTURE
+        - generic [ref=f41e98]:
+          - button "Assets" [ref=f41e99] [cursor=pointer]
+          - button "Identities" [ref=f41e105] [cursor=pointer]
+          - button "Active Directory" [ref=f41e113] [cursor=pointer]
+          - button "Exposure" [ref=f41e121] [cursor=pointer]
+          - button "Sensors" [ref=f41e128] [cursor=pointer]
+          - button "Compliance" [ref=f41e133] [cursor=pointer]
+      - generic [ref=f41e139]:
+        - generic [ref=f41e140]: DASHBOARDS
+        - button "Studio" [ref=f41e142] [cursor=pointer]
+      - generic [ref=f41e148]:
+        - generic [ref=f41e149]: REPORT
+        - button "Scheduled Reports" [ref=f41e151] [cursor=pointer]
+      - generic [ref=f41e157]:
+        - generic [ref=f41e158]: ADMINISTRATION
+        - generic [ref=f41e159]:
+          - button "Users" [ref=f41e160] [cursor=pointer]
+          - button "Integrations" [ref=f41e175] [cursor=pointer]
+          - button "Notifications" [ref=f41e180] [cursor=pointer]
+          - button "Audit Log" [ref=f41e186] [cursor=pointer]
+          - button "Settings" [ref=f41e192] [cursor=pointer]
+    - button "Collapse sidebar" [ref=f41e199] [cursor=pointer]
+  - main [ref=f41e202]:
+    - generic [ref=f41e203]:
+      - heading "Scheduled Reports" [level=1] [ref=f41e207]
+      - generic [ref=f41e209]:
+        - heading "Access Restricted" [level=3] [ref=f41e213]
+        - paragraph [ref=f41e214]: Scheduled Reports requires the Analyst role or higher.

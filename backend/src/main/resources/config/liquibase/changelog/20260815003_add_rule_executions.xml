@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- Sprint 47 — Rule execution history table (DET-009) -->
+    <changeSet id="20260815003" author="hivearmor">
+        <createTable tableName="rule_executions">
+            <column name="id" type="varchar(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="rule_id" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="started_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_at" type="timestamp"/>
+            <column name="duration" type="bigint"/>
+            <column name="status" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alerts_generated" type="integer" defaultValueNumeric="0"/>
+            <column name="events_scanned" type="bigint" defaultValueNumeric="0"/>
+            <column name="errors" type="text"/>
+            <column name="triggered_by" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="rule_executions" indexName="idx_rule_executions_rule">
+            <column name="rule_id"/>
+            <column name="started_at"/>
+        </createIndex>
+
+        <createIndex tableName="rule_executions" indexName="idx_rule_executions_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
