@@ -1,8 +1,8 @@
 # HiveArmor AI handoff
 
-Last reconciled: **2026-08-23 10:44:00 IST (UTC+05:30)**
+Last reconciled: **2026-08-23 11:26:10 IST (UTC+05:30)**
 Repository: `/Users/encryptshell/GIT/HiveArmor-v1`
-Baseline inspected: `staging/siem-mvp` at `be1845f61f36960f04733291b1b19822790282c5`
+Baseline inspected: local `main` after merge commit `0d9152d` (the handoff closeout commit follows that merge)
 
 This directory is the durable, model-neutral continuation record for HiveArmor. It is intentionally layered so a local Codex session using Amazon Bedrock can load only the context required for the active slice.
 

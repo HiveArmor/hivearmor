@@ -1,8 +1,8 @@
 # Current product state
 
-Snapshot time: **2026-08-23 10:44:00 IST (UTC+05:30)**
-Baseline inspected: `staging/siem-mvp` at `be1845f61f36960f04733291b1b19822790282c5`
-Worktree: dirty before these frontend slices. `.claude/settings.local.json`, `deploy/staging/run-windows-live-ingest.ps1`, hunt backend edits in `HaHuntService.java`, `HuntEventDetailService.java` and `HuntFieldRegistry.java`, their new source-includes test, and hunt validation helpers are unrelated user/Cursor-owned changes. Compliance, Dashboard Operations, Reporting Operations and Pipeline Operations frontend/handoff changes coexist in the same worktree; preserve every unrelated path and do not attribute its behavior to these slices.
+Snapshot time: **2026-08-23 11:26:10 IST (UTC+05:30)**
+Baseline inspected: local `main` after merge commit `0d9152d` (the handoff closeout commit follows that merge)
+Integration state: the Governance control-plane commit `3a45651` and staging checkpoint `db700a4` are merged into local `main` by `0d9152d`. The checkpoint's product code, hunt backend work, tests, validation helpers and durable documentation were preserved. Local `.claude/settings.local.json`, generated `.playwright-mcp` artifacts and two browser-review PNGs were intentionally excluded. No remote push was performed.
 
 ## Repository and design constraints
 
