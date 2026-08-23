@@ -124,7 +124,7 @@ public class HaHuntService {
             .query(session.query())
             .size(request.getLimit())
             .sort(session.sort())
-            .source(s -> s.filter(f -> f.includes(session.projection())))
+            .source(s -> s.filter(f -> f.includes(fieldRegistry.sourceIncludes(session.projection()))))
             .trackTotalHits(t -> t.count(TOTAL_HITS_THRESHOLD))
             .allowPartialSearchResults(true)
             .timeout("30s");
@@ -417,46 +417,153 @@ public class HaHuntService {
         dto.setTimestamp(string(source, "@timestamp"));
         dto.setIngestedAt(string(source, "ingestedAt"));
         Map<String, Object> event = nested(source, "event");
+        Map<String, Object> log = nested(source, "log");
+        Map<String, Object> origin = nested(source, "origin");
+        Map<String, Object> target = nested(source, "target");
         Object severity = event.get("severity");
         if (severity == null) {
             severity = source.get("severity");
         }
         dto.setSeverity(HuntEventDTO.mapSeverity(severity));
-        dto.setCategory(string(event, "category"));
-        dto.setAction(string(event, "action"));
+        dto.setCategory(firstNonBlank(
+            string(event, "category"),
+            string(source, "dataType"),
+            string(log, "channel")));
+        dto.setAction(firstNonBlank(
+            string(event, "action"),
+            string(source, "action"),
+            string(log, "eventName")));
         dto.setDataSource(string(source, "dataSource"));
-        dto.setDataset(string(nested(source, "data_stream"), "dataset"));
-        dto.setHost(string(nested(source, "host"), "name"));
-        if (dto.getHost() == null) {
-            dto.setHost(string(nested(source, "origin"), "host"));
-        }
-        dto.setUser(string(nested(source, "user"), "name"));
-        if (dto.getUser() == null) {
-            dto.setUser(string(nested(source, "origin"), "user"));
-        }
-        dto.setSourceIp(string(nested(source, "source"), "ip"));
-        dto.setDestinationIp(string(nested(source, "destination"), "ip"));
-        dto.setMessage(string(source, "message"));
-        if (dto.getMessage() == null) {
-            dto.setMessage(string(source, "name"));
-        }
-        String visibleBy = string(source, "visibleBy");
-        dto.setTenantId(visibleBy == null ? "authorized" : visibleBy);
-        dto.setTenantName(visibleBy == null ? "Authorized scope" : visibleBy);
+        dto.setDataset(firstNonBlank(
+            string(nested(source, "data_stream"), "dataset"),
+            string(source, "dataType"),
+            string(log, "channel")));
+        dto.setHost(firstNonBlank(
+            string(nested(source, "host"), "name"),
+            string(origin, "host"),
+            string(source, "origin.host"),
+            string(log, "computer"),
+            hostFromDataSource(string(source, "dataSource"))));
+        dto.setUser(firstNonBlank(
+            string(nested(source, "user"), "name"),
+            string(origin, "user"),
+            string(source, "origin.user"),
+            string(target, "user"),
+            string(source, "target.user"),
+            string(log, "eventDataTargetUserName"),
+            string(log, "eventDataSubjectUserName")));
+        dto.setSourceIp(firstNonBlank(
+            string(nested(source, "source"), "ip"),
+            string(origin, "ip"),
+            string(source, "origin.ip"),
+            string(log, "eventDataIpAddress")));
+        dto.setDestinationIp(firstNonBlank(
+            string(nested(source, "destination"), "ip"),
+            string(target, "ip"),
+            string(source, "target.ip")));
+        dto.setMessage(firstNonBlank(
+            string(source, "message"),
+            string(source, "name"),
+            string(log, "eventName"),
+            summarizeLog(log, dto.getAction(), dto.getCategory()),
+            summarizeNetconn(dto.getAction(), dto.getSourceIp(), dto.getDestinationIp())));
+        String tenantId = firstNonBlank(string(source, "tenantId"), string(source, "visibleBy"));
+        String tenantName = firstNonBlank(string(source, "tenantName"), string(source, "visibleBy"));
+        dto.setTenantId(tenantId == null ? "authorized" : tenantId);
+        dto.setTenantName(tenantName == null ? "Authorized scope" : tenantName);
         dto.setAlertCount(0);
         Map<String, Object> normalized = new LinkedHashMap<>();
         sessionSafePut(normalized, "@timestamp", dto.getTimestamp());
-        sessionSafePut(normalized, "event.severity", event.get("severity"));
+        sessionSafePut(normalized, "event.severity", severity);
         sessionSafePut(normalized, "event.category", dto.getCategory());
         sessionSafePut(normalized, "event.action", dto.getAction());
-        sessionSafePut(normalized, "event.outcome", string(event, "outcome"));
+        sessionSafePut(normalized, "event.outcome", firstNonBlank(string(event, "outcome"), string(source, "actionResult")));
         sessionSafePut(normalized, "host.name", dto.getHost());
         sessionSafePut(normalized, "user.name", dto.getUser());
         sessionSafePut(normalized, "source.ip", dto.getSourceIp());
         sessionSafePut(normalized, "destination.ip", dto.getDestinationIp());
         sessionSafePut(normalized, "dataSource", dto.getDataSource());
+        sessionSafePut(normalized, "dataType", string(source, "dataType"));
+        sessionSafePut(normalized, "log.eventCode", log.get("eventCode"));
+        sessionSafePut(normalized, "log.channel", log.get("channel"));
         dto.setNormalized(normalized);
         return dto;
+    }
+
+    private static String hostFromDataSource(String dataSource) {
+        if (dataSource == null || dataSource.isBlank()) {
+            return null;
+        }
+        String value = dataSource.trim();
+        int paren = value.indexOf(" (");
+        if (paren > 0) {
+            value = value.substring(0, paren).trim();
+        }
+        return value.isEmpty() || "-".equals(value) ? null : value;
+    }
+
+    private static String summarizeNetconn(String action, String sourceIp, String destinationIp) {
+        if (action == null && sourceIp == null && destinationIp == null) {
+            return null;
+        }
+        StringBuilder summary = new StringBuilder();
+        if (action != null) {
+            summary.append(action);
+        }
+        if (sourceIp != null || destinationIp != null) {
+            if (summary.length() > 0) {
+                summary.append(' ');
+            }
+            summary.append(sourceIp == null ? "?" : sourceIp)
+                .append(" → ")
+                .append(destinationIp == null ? "?" : destinationIp);
+        }
+        return summary.length() == 0 ? null : summary.toString();
+    }
+
+    private static String summarizeLog(Map<String, Object> log, String action, String category) {
+        if (log == null || log.isEmpty()) {
+            return null;
+        }
+        Object code = log.get("eventCode");
+        Object channel = log.get("channel");
+        if (code == null && channel == null) {
+            return null;
+        }
+        StringBuilder summary = new StringBuilder();
+        if (channel != null && !String.valueOf(channel).isBlank()) {
+            summary.append(channel);
+        }
+        if (code != null) {
+            if (summary.length() > 0) {
+                summary.append(' ');
+            }
+            summary.append("event ").append(code);
+        }
+        if (action != null && !action.isBlank() && summary.indexOf(action) < 0) {
+            if (summary.length() > 0) {
+                summary.append(" — ");
+            }
+            summary.append(action);
+        } else if (category != null && !category.isBlank() && summary.length() == 0) {
+            summary.append(category);
+        }
+        return summary.length() == 0 ? null : summary.toString();
+    }
+
+    private static String firstNonBlank(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String value : values) {
+            if (value != null) {
+                String trimmed = value.trim();
+                if (!trimmed.isEmpty() && !"-".equals(trimmed)) {
+                    return trimmed;
+                }
+            }
+        }
+        return null;
     }
 
     private List<HistogramBucketDTO> extractHistogram(Aggregate aggregate, String interval) {

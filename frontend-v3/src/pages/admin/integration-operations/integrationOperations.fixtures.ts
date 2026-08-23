@@ -1,0 +1,41 @@
+import type { IntegrationOperationsInventory } from './integrationOperations.types';
+
+const at=(minutes:number):string=>new Date(Date.UTC(2026,7,22,14,30)-minutes*60_000).toISOString();
+
+export const integrationOperationsFixture:IntegrationOperationsInventory={
+  snapshotAt:at(0),bounded:true,tenantScoped:true,partial:false,warnings:[],
+  connectors:[
+    {id:'conn-crowdstrike',name:'CrowdStrike Falcon',vendor:'CrowdStrike',kind:'EDR',role:'bidirectional',state:'healthy',stateLabel:'Operational',version:'3.8.2',environment:'Production',endpointLabel:'US-2 cloud',credentialAlias:'falcon-prod',owner:'Endpoint Security',support:'Vendor supported',lastObservedAt:at(1),lastSuccessAt:at(1),latencyMs:184,operations24h:18420,failures24h:2,capabilities:['Alerts','Host enrichment','Containment'],evidence:'Health receipt · OAuth token valid'},
+    {id:'conn-entra',name:'Microsoft Entra ID',vendor:'Microsoft',kind:'Identity',role:'ingest',state:'healthy',stateLabel:'Receiving events',version:'2.4.0',environment:'Production',endpointLabel:'Northwind tenant',credentialAlias:'entra-audit-prod',owner:'Identity Security',support:'Microsoft supported',lastObservedAt:at(0),lastSuccessAt:at(0),latencyMs:96,operations24h:92315,failures24h:0,capabilities:['Sign-ins','Audit','Risk events'],evidence:'Watermark current · 3 permissions granted'},
+    {id:'conn-aws',name:'AWS Organizations',vendor:'Amazon Web Services',kind:'Cloud',role:'ingest',state:'degraded',stateLabel:'Partial account coverage',version:'1.9.4',environment:'Production',endpointLabel:'18 of 20 accounts',credentialAlias:'aws-org-security',owner:'Cloud Security',support:'HiveArmor maintained',lastObservedAt:at(4),lastSuccessAt:at(4),latencyMs:312,operations24h:147201,failures24h:128,capabilities:['CloudTrail','GuardDuty','IAM'],evidence:'2 member accounts require role refresh'},
+    {id:'conn-servicenow',name:'ServiceNow SecOps',vendor:'ServiceNow',kind:'Case management',role:'response',state:'healthy',stateLabel:'Operational',version:'4.1.1',environment:'Production',endpointLabel:'northwind.service-now.com',credentialAlias:'servicenow-soc-prod',owner:'SOC Platform',support:'Partner supported',lastObservedAt:at(2),lastSuccessAt:at(3),latencyMs:244,operations24h:86,failures24h:1,capabilities:['Create incident','Update case','Attach evidence'],evidence:'Connection alias resolved at runtime'},
+    {id:'conn-slack',name:'SOC Slack workspace',vendor:'Slack',kind:'Collaboration',role:'notification',state:'healthy',stateLabel:'Verified',version:null,environment:'Production',endpointLabel:'#soc-priority',credentialAlias:'slack-soc-prod',owner:'SOC Operations',support:'Internal configuration',lastObservedAt:at(6),lastSuccessAt:at(6),latencyMs:122,operations24h:58,failures24h:0,capabilities:['Alert delivery','Interactive approval'],evidence:'Signed test receipt verified'},
+    {id:'conn-pagerduty',name:'PagerDuty SOC escalation',vendor:'PagerDuty',kind:'On-call',role:'notification',state:'offline',stateLabel:'Routing key rejected',version:'Events API v2',environment:'Production',endpointLabel:'SOC primary service',credentialAlias:'pagerduty-soc-prod',owner:'SOC Operations',support:'Vendor supported',lastObservedAt:at(27),lastSuccessAt:at(165),latencyMs:null,operations24h:14,failures24h:7,capabilities:['Trigger','Acknowledge','Resolve'],evidence:'Last delivery receipt · HTTP 403'},
+    {id:'conn-jira',name:'Jira Security Engineering',vendor:'Atlassian',kind:'Ticketing',role:'response',state:'unconfigured',stateLabel:'Setup incomplete',version:null,environment:'Staging',endpointLabel:'security-eng project',credentialAlias:null,owner:null,support:'Community maintained',lastObservedAt:null,lastSuccessAt:null,latencyMs:null,operations24h:null,failures24h:null,capabilities:['Create issue','Comment','Transition'],evidence:'Credential and field mapping required'},
+  ],
+  destinations:[
+    {id:'dest-soc-mail',name:'SOC priority email',channelType:'email',state:'healthy',stateLabel:'Verified',credentialAlias:'smtp-soc-prod',endpointLabel:'soc-priority@northwind.example',routes:2,delivered24h:184,failed24h:0,lastTestedAt:at(42),lastTestReceipt:'rcpt-6fd2d8',secretProtected:true},
+    {id:'dest-slack',name:'SOC Slack priority',channelType:'slack',state:'healthy',stateLabel:'Verified',credentialAlias:'slack-soc-prod',endpointLabel:'#soc-priority',routes:3,delivered24h:58,failed24h:0,lastTestedAt:at(90),lastTestReceipt:'rcpt-a2451c',secretProtected:true},
+    {id:'dest-pagerduty',name:'PagerDuty SOC escalation',channelType:'pagerduty',state:'offline',stateLabel:'Test failed',credentialAlias:'pagerduty-soc-prod',endpointLabel:'SOC primary service',routes:2,delivered24h:7,failed24h:7,lastTestedAt:at(27),lastTestReceipt:'rcpt-0b18aa',secretProtected:true},
+    {id:'dest-teams',name:'Incident command Teams',channelType:'teams',state:'degraded',stateLabel:'No recent test',credentialAlias:'teams-incident-command',endpointLabel:'Incident Command',routes:1,delivered24h:12,failed24h:1,lastTestedAt:at(1440*8),lastTestReceipt:'rcpt-1d902f',secretProtected:true},
+  ],
+  routes:[
+    {id:'route-critical',name:'Critical alert escalation',destinationId:'dest-pagerduty',destinationName:'PagerDuty SOC escalation',enabled:true,minimumSeverity:'Critical',sources:['Alert'],eventTypes:['Created','SLA breach'],throttleMinutes:5,escalation:'SOC manager after 10m',lastFiredAt:at(27)},
+    {id:'route-high',name:'High and critical analyst notice',destinationId:'dest-slack',destinationName:'SOC Slack priority',enabled:true,minimumSeverity:'High',sources:['Alert','Finding'],eventTypes:['Created'],throttleMinutes:2,escalation:null,lastFiredAt:at(6)},
+    {id:'route-incident',name:'Incident lifecycle email',destinationId:'dest-soc-mail',destinationName:'SOC priority email',enabled:true,minimumSeverity:'Medium',sources:['Incident'],eventTypes:['Opened','Owner changed','Closed'],throttleMinutes:0,escalation:null,lastFiredAt:at(12)},
+    {id:'route-command',name:'Incident command activation',destinationId:'dest-teams',destinationName:'Incident command Teams',enabled:true,minimumSeverity:'Critical',sources:['Incident'],eventTypes:['Declared'],throttleMinutes:15,escalation:'Incident commander',lastFiredAt:at(188)},
+  ],
+  keys:[
+    {id:'key-collector',name:'Collector production',keyPrefix:'ha_k7n4Q',scopes:['read_logs'],status:'active',createdAt:at(1440*31),expiresAt:at(-1440*59),revokedAt:null,lastUsedAt:at(1)},
+    {id:'key-ci',name:'Detection CI',keyPrefix:'ha_3fR8x',scopes:['manage_rules','read_alerts'],status:'active',createdAt:at(1440*14),expiresAt:at(-1440*76),revokedAt:null,lastUsedAt:at(18)},
+    {id:'key-ir-export',name:'IR evidence export',keyPrefix:'ha_n2M5p',scopes:['read_alerts','read_incidents'],status:'active',createdAt:at(1440*4),expiresAt:at(-1440*3),revokedAt:null,lastUsedAt:null},
+    {id:'key-old',name:'Legacy automation',keyPrefix:'ha_x1V6c',scopes:['admin'],status:'revoked',createdAt:at(1440*180),expiresAt:null,revokedAt:at(1440*12),lastUsedAt:at(1440*13)},
+  ],
+  activity:[
+    {id:'act-1',occurredAt:at(1),category:'connector',operation:'Health observation',target:'Microsoft Entra ID',result:'success',durationMs:96,actor:'system',correlationId:'int-6f24a9',detail:'Audit watermark advanced and permission check passed.'},
+    {id:'act-2',occurredAt:at(6),category:'delivery',operation:'Route dispatch',target:'SOC Slack priority',result:'success',durationMs:122,actor:'notification-router',correlationId:'del-e4af18',detail:'High severity alert delivered; provider receipt recorded.'},
+    {id:'act-3',occurredAt:at(27),category:'delivery',operation:'Route dispatch',target:'PagerDuty SOC escalation',result:'failed',durationMs:388,actor:'notification-router',correlationId:'del-0b18aa',detail:'Provider rejected the routing key. Retry held pending credential review.'},
+    {id:'act-4',occurredAt:at(31),category:'configuration',operation:'Connector update',target:'AWS Organizations',result:'warning',durationMs:null,actor:'anika.shah',correlationId:'cfg-583af1',detail:'Role alias updated; 2 member accounts did not validate.'},
+    {id:'act-5',occurredAt:at(48),category:'credential',operation:'Key used',target:'Detection CI',result:'success',durationMs:41,actor:'service:detection-ci',correlationId:'api-3a44de',detail:'Authenticated manage_rules request.'},
+  ],
+};

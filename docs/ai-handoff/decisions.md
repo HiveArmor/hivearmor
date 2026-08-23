@@ -236,8 +236,40 @@ Decision: keep `local-dev/docker-compose.yml` as the lab. Ship `deploy/staging/`
 
 Reason: local-dev still publishes data ports and lab secrets. A dedicated profile is the PILOT-07 topology without claiming a VM that was not provided.
 
-## 2026-08-23 10:44:00 IST (UTC+05:30) — Audit evidence, retention and configuration change remain separate authority domains
+## 2026-08-21 16:37:00 IST (UTC+05:30) — Every remaining page uses an OEM research gate and evidence-honest vertical slices
 
-Decision: consolidate governance visibility into one control plane while preserving distinct trust boundaries. Audit is a read-only evidence projection and cannot claim immutability without a proof contract. Retention presents effective lifecycle consequences and legal-hold precedence rather than a single editable day count. Platform configuration presents masked effective values, not a direct edit form. Proposal, export, approval, rollout and rollback remain disabled in production until `GOV-001`–`GOV-010` provide version, scope, preview, authority and receipts. Legacy `/ha-settings` is a migration candidate, not deprecated merely because the frontend prefers `/ha-admin/settings`.
+Decision: execute `remaining-page-program.md` one route family at a time. Before implementation, compare at least three relevant official primary sources, including two product/OEM workflows where available, and preserve the conclusions in a domain research note. Use the strongest workflow patterns without copying vendor branding or inventing unsupported data. A visually complete page is not a backend or production-readiness claim.
 
-Reason: NIST log-management guidance and Elastic/Splunk administration separate evidence handling from storage lifecycle, while ServiceNow-style governance treats impactful changes as traceable before/after decisions. The checked-in backend has useful Admin-only reads and immediate mutations but lacks the evidence and change-control guarantees required to present those writes as an enterprise governance workflow.
+For Compliance Assurance specifically, treat `/api/ha-posture/score` and `/frameworks` as aggregate technical signals only. Do not call a score certification or compliance, auto-select a framework, render an empty fictional control ledger, or use undocumented legacy evidence/report endpoints. Progressive control/evidence/action/report functionality waits for `CMP-001`–`CMP-009`.
+
+Reason: Microsoft Purview, AWS Audit Manager and ServiceNow GRC converge on scoped assessments, controls, evidence lineage, actions and governed reporting. The checked-in backend currently provides only aggregate fields and global repositories, so an honest inventory plus explicit capability boundary is safer and more useful than simulated completeness.
+
+## 2026-08-21 17:06:45 IST (UTC+05:30) — Dashboards are governed operational definitions, not independent chart entities
+
+Decision: use one frontend dashboard definition for discovery, runtime and Studio. Managed content is clone-only; global tenant/time/variables are explicit; every panel reports source, state and freshness; drilldowns are governed pivots. Production may normalize legacy dashboard metadata for discovery, but it does not execute or mutate through unsecured, unbounded entity routes. Full behavior and saving remain fixture-only until `DSH-001`–`DSH-010` exist.
+
+Reason: Splunk, Elastic, Sentinel Workbooks and Grafana converge on shared context, governed drilldowns, managed content, permissions and version history. The checked-in backend splits dashboard, layout and visualization execution without tenant/version/query-budget guarantees, so visually pretending those guarantees would be unsafe.
+
+## 2026-08-21 17:37:57 IST (UTC+05:30) — Reports are governed communication artifacts, not generic metadata rows
+
+Decision: use one lifecycle across generated reports, schedules and templates, with route-specific type entry points for SITREP, incident and after-action views. Treat the checked-in report CRUD and compliance-backed schedule JSON as compatibility discovery only. Production generation, preview, approval, signed download, distribution and retention fail closed until `REP-001`–`REP-010` provide tenant/snapshot/field-permission, evidence-citation, redaction, execution-identity and immutable-audit guarantees.
+
+Reason: Splunk separates definition, owner permissions, schedule, execution and delivery; Microsoft separates workbook/template access from referenced-resource access; ServiceNow treats post-incident review as a time-stamped workflow record; and NIST integrates lessons learned across incident response. A nullable report URL and a recipient list cannot safely represent these guarantees.
+
+## 2026-08-21 18:46:15 IST (UTC+05:30) — Pipeline operations use one measured source-to-index model and fail-closed replay
+
+Decision: consolidate pipeline signals, source inventory and parser administration into Flow, Sources, Parsers, Failures and Capacity views. Label every operational value as directly measured, configured or unavailable; do not derive health from one cluster value or invent thresholds. Preserve the live-verified raw envelope, spool, quarantine and soak evidence. In production, source onboarding and replay remain preview-only until durable tenant-bound, secret-safe, versioned and audited contracts exist under `ING-001`–`ING-010`.
+
+Reason: Splunk, Elastic, Sentinel and OpenSearch converge on topology plus throughput/latency/freshness/failure provenance, while the checked-in APIs provide only pieces of that model. A unified evidence-honest workspace gives operators a coherent mental model without pretending aggregate cluster health, stored parser counters or an in-memory source POST are production controls.
+
+## 2026-08-22 20:54:37 IST (UTC+05:30) — Connections, credentials, delivery and access are separate governed objects
+
+Decision: consolidate the four legacy admin screens into one operations workbench, but keep configured connections, delivery destinations, routing policy, credential aliases and service API keys as distinct models. Production may read legacy integration metadata, admin notification rules and the hash-only API-key inventory. It must not call the unguarded raw notification-channel/config entity surfaces or present the notification-rule mock test as delivered. Connector/delivery setup remains a reviewable preview until `INO-001`–`INO-010` provide versioned tenant scope, write-only secrets, bounded egress, real receipts, durable retry/dead-letter and audit.
+
+Reason: Sentinel, Elastic, Splunk and ServiceNow converge on catalog-versus-instance separation, guided validation, reusable credential references and observable lifecycle. The checked-in notification dispatch can make arbitrary external calls from raw stored JSON without the authorization, redaction and SSRF boundary required for safe enterprise administration.
+
+## 2026-08-22 21:39:31 IST (UTC+05:30) — Identity lifecycle is governed by effective authority, not user CRUD
+
+Decision: consolidate directory, tenant, access-review, federation and identity-audit visibility into one control plane while keeping platform-global, MSSP-delegated and tenant-local authority distinct. Production may read the protected user, tenant, OIDC and SCIM projections and the protected `/users/authorities` compatibility catalogue. It must not call the unprotected legacy `/authority` CRUD or simulate invitations, access decisions, session revocation, break-glass activation or immutable audit. Those operations remain fail closed until `IAM-001`–`IAM-010` provide tenant-derived scope, effective capabilities, optimistic version, idempotency, separation of duties and audit.
+
+Reason: Microsoft Entra, Azure Lighthouse, Okta and Splunk converge on lifecycle, effective scope, federation/provisioning provenance and periodic review. The checked-in backend has useful but fragmented resources; a visually complete lifecycle over direct CRUD would overstate authorization and governance guarantees.

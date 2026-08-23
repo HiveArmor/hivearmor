@@ -1,8 +1,8 @@
 # Current product state
 
 Snapshot time: **2026-08-23 10:44:00 IST (UTC+05:30)**
-Baseline inspected: `main` at `be1845f61f36960f04733291b1b19822790282c5`
-Worktree: a concurrent checkout moved from `staging/siem-mvp` to `main` after creating safety checkpoint `db700a4`. Governance-owned files were recovered selectively; earlier Cursor/user changes remain preserved in that checkpoint and are not claimed or silently merged by this slice.
+Baseline inspected: `staging/siem-mvp` at `be1845f61f36960f04733291b1b19822790282c5`
+Worktree: dirty before these frontend slices. `.claude/settings.local.json`, `deploy/staging/run-windows-live-ingest.ps1`, hunt backend edits in `HaHuntService.java`, `HuntEventDetailService.java` and `HuntFieldRegistry.java`, their new source-includes test, and hunt validation helpers are unrelated user/Cursor-owned changes. Compliance, Dashboard Operations, Reporting Operations and Pipeline Operations frontend/handoff changes coexist in the same worktree; preserve every unrelated path and do not attribute its behavior to these slices.
 
 ## Repository and design constraints
 
@@ -31,8 +31,8 @@ Mandatory implementation references:
 | 5 | Search, hunt, entities, constellation | UI substantially redesigned; search/entity backend contracts and real-backend verification exist in mixed states. Re-audit before claiming production ready. |
 | 6 | Detection engineering | Rule inventory/editor/test workflows redesigned; backend readiness is mixed and must be checked against the contract register. |
 | 7 | Response automation | Builder, library/detail, activity and authority/governance workflows redesigned. New SOAR/governance contracts are not all implemented. |
-| 8 | Posture and exposure | Assets has a canonical partial backend slice. Identities, Active Directory and exposure UI are implemented with explicit missing/partial states. Vulnerability Operations and CIS Benchmark Posture UIs are implemented and zero-row live-verified against their existing partial APIs. Contextual vulnerability priority/remediation remains under `VUL-001`–`VUL-007`; authoritative configuration applicability/provenance/lifecycle remains under `CIS-001`–`CIS-008`. Compliance is paused behind the production-minimum backend program. |
-| 9 | Operations and administration | Governance & Platform Settings is `UI IMPLEMENTED`, `CONTRACT RECORDED` and `FIXTURE-BROWSER VERIFIED` on the active branch. Production remains blocked by `GOV-001`–`GOV-010`. Earlier operations slices are preserved in checkpoint `db700a4` and require explicit branch reconciliation. |
+| 8 | Posture and exposure | Assets has a canonical partial backend slice. Identities, Active Directory and exposure UI are implemented with explicit missing/partial states. Vulnerability Operations and CIS Benchmark Posture UIs are implemented and zero-row live-verified against their existing partial APIs. Compliance Assurance is `UI IMPLEMENTED`, `CONTRACT RECORDED` and `FIXTURE-BROWSER VERIFIED` as of 2026-08-21 over the partial aggregate posture APIs; canonical tenant-scoped assessment/control/evidence workflows remain `CMP-001`–`CMP-009`. Phase 8 is not `PRODUCTION READY`. |
+| 9 | Operations and administration | Dashboard, Reporting, Pipeline & Ingestion, Integration & Notification, Identity & Tenancy, and Governance & Platform Settings are `UI IMPLEMENTED`, `CONTRACT RECORDED` and `FIXTURE-BROWSER VERIFIED`. Production remains blocked by the route-family contracts, including `GOV-001`–`GOV-010`. Orphan operational workflows are next. |
 
 ## Production-readiness warning
 
@@ -49,7 +49,7 @@ The presence of a frontend route, fixture view or API controller is not evidence
 
 ## Current active slice
 
-Orphan operational workflows are next, but first reconcile safety checkpoint `db700a4` with the intended target branch so earlier Cursor/user work is not lost or duplicated. Then inventory UEBA/risk/timeline ownership, endpoint timeline/quarantine/FIM/policies and threat-intelligence routes before selecting one bounded route family. Governance & Platform Settings is complete as a frontend slice across `/admin/audit`, `/admin/retention`, `/admin/settings` and `/settings/system`; production uses only the existing safe reads while unsupported mutations fail closed. Read `remaining-page-program.md`, `research/governance-platform-settings.md` and `GOV-001`–`GOV-010`.
+Orphan operational workflows are the next planned slice: first reconcile UEBA/risk/timeline ownership, endpoint timeline/quarantine/FIM/policies and threat-intelligence routes against the navigation and checked-in backend, then execute one bounded route family at a time. Governance & Platform Settings is now complete as a frontend slice across `/admin/audit`, `/admin/retention`, `/admin/settings` and `/settings/system`; production reads only the current Admin audit, retention and masked settings projections, while unsupported change/export/legal-hold/API-lifecycle mutations fail closed. Its backend requirements are `GOV-001`–`GOV-010`; legacy `/ha-settings` was not falsely marked deprecated.
 
 `PILOT-00` is `CODE COMPLETE`: the producer and consumer implement and test `ha.raw-event.v1`; broker acknowledgement is `acks=all`; keys and headers carry tenant/event/schema/producer identity; legacy unwrapped records are validated and counted under a dated compatibility policy; and the topology, schema, ownership/deprecation map and pilot threat model are checked in. This is not live broker acceptance evidence.
 

@@ -41,12 +41,16 @@ public class HuntEventDetailService {
         }
         SearchRequest.Builder builder = new SearchRequest.Builder()
             .query(Query.of(q -> q.ids(i -> i.values(List.of(eventId)))))
-            .source(s -> s.filter(f -> f.includes(fieldRegistry.boundedProjection(List.of(
+            .size(1);
+        // Raw JSON needs the full physical document. Bounded ECS-only includes strip HiveArmor fields.
+        if (!includeRaw) {
+            List<String> logical = fieldRegistry.boundedProjection(List.of(
                 "host.ip", "host.os.name", "user.domain", "source.port", "destination.port",
                 "process.name", "process.command_line", "process.pid", "file.name", "file.path",
                 "file.hash.sha256", "network.direction", "network.transport", "network.bytes"
-            )))))
-            .size(1);
+            ));
+            builder.source(s -> s.filter(f -> f.includes(fieldRegistry.sourceIncludes(logical))));
+        }
         if (session.pitId() == null || session.pitId().isBlank()) {
             builder.index(session.indices()).ignoreUnavailable(true).allowNoIndices(true);
         } else {
@@ -63,41 +67,82 @@ public class HuntEventDetailService {
         Map<String, Object> user = nested(source, "user");
         Map<String, Object> sourceNetwork = nested(source, "source");
         Map<String, Object> destination = nested(source, "destination");
+        Map<String, Object> origin = nested(source, "origin");
+        Map<String, Object> target = nested(source, "target");
+        Map<String, Object> log = nested(source, "log");
+
+        Object severityValue = event.get("severity") != null ? event.get("severity") : source.get("severity");
+        String category = firstNonBlank(string(event.get("category")), string(source.get("dataType")), string(log.get("channel")));
+        String action = firstNonBlank(string(event.get("action")), string(source.get("action")), string(log.get("eventName")));
+        String hostName = firstNonBlank(
+            string(host.get("name")),
+            string(origin.get("host")),
+            string(source.get("origin.host")),
+            string(log.get("computer")));
+        String userName = firstNonBlank(
+            string(user.get("name")),
+            string(origin.get("user")),
+            string(source.get("origin.user")),
+            string(target.get("user")),
+            string(source.get("target.user")),
+            string(log.get("eventDataTargetUserName")),
+            string(log.get("eventDataSubjectUserName")));
+        String sourceIp = firstNonBlank(
+            string(sourceNetwork.get("ip")),
+            string(origin.get("ip")),
+            string(source.get("origin.ip")),
+            string(log.get("eventDataIpAddress")));
+        String destinationIp = firstNonBlank(
+            string(destination.get("ip")),
+            string(target.get("ip")),
+            string(source.get("target.ip")));
+        String message = firstNonBlank(
+            string(source.get("message")),
+            string(source.get("name")),
+            string(log.get("eventName")));
+        String dataset = firstNonBlank(
+            string(nested(source, "data_stream").get("dataset")),
+            string(source.get("dataType")),
+            string(log.get("channel")));
+        String tenantId = firstNonBlank(string(source.get("tenantId")), string(source.get("visibleBy")), "authorized");
+        String tenantName = firstNonBlank(string(source.get("tenantName")), string(source.get("visibleBy")), "Authorized scope");
 
         Map<String, Object> normalized = new LinkedHashMap<>();
         put(normalized, "@timestamp", source.get("@timestamp"));
-        put(normalized, "event.severity", event.get("severity"));
-        put(normalized, "event.category", event.get("category"));
-        put(normalized, "event.action", event.get("action"));
-        put(normalized, "event.outcome", event.get("outcome"));
-        put(normalized, "host.name", host.get("name") != null ? host.get("name") : nested(source, "origin").get("host"));
+        put(normalized, "event.severity", severityValue);
+        put(normalized, "event.category", category);
+        put(normalized, "event.action", action);
+        put(normalized, "event.outcome", firstNonBlank(string(event.get("outcome")), string(source.get("actionResult"))));
+        put(normalized, "host.name", hostName);
         put(normalized, "host.ip", host.get("ip"));
-        put(normalized, "user.name", user.get("name") != null ? user.get("name") : nested(source, "origin").get("user"));
-        put(normalized, "user.domain", user.get("domain"));
-        put(normalized, "source.ip", sourceNetwork.get("ip"));
+        put(normalized, "user.name", userName);
+        put(normalized, "user.domain", firstNonBlank(string(user.get("domain")), string(origin.get("domain")), string(log.get("eventDataSubjectDomainName"))));
+        put(normalized, "source.ip", sourceIp);
         put(normalized, "source.port", sourceNetwork.get("port"));
-        put(normalized, "destination.ip", destination.get("ip"));
+        put(normalized, "destination.ip", destinationIp);
         put(normalized, "destination.port", destination.get("port"));
         put(normalized, "dataSource", source.get("dataSource"));
+        put(normalized, "dataType", source.get("dataType"));
+        put(normalized, "log.eventCode", log.get("eventCode"));
+        put(normalized, "log.channel", log.get("channel"));
 
         List<Map<String, Object>> pivots = pivotGenerator.generate(source);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("id", hit.id());
         result.put("timestamp", string(source.get("@timestamp")));
         result.put("ingestedAt", string(source.get("ingestedAt")));
-        result.put("severity", HuntEventDTO.mapSeverity(
-            event.get("severity") != null ? event.get("severity") : source.get("severity")));
-        result.put("category", string(event.get("category")));
-        result.put("action", string(event.get("action")));
+        result.put("severity", HuntEventDTO.mapSeverity(severityValue));
+        result.put("category", category);
+        result.put("action", action);
         result.put("dataSource", string(source.get("dataSource")));
-        result.put("dataset", string(nested(source, "data_stream").get("dataset")));
-        result.put("host", string(host.get("name") != null ? host.get("name") : nested(source, "origin").get("host")));
-        result.put("user", string(user.get("name") != null ? user.get("name") : nested(source, "origin").get("user")));
-        result.put("sourceIp", string(sourceNetwork.get("ip")));
-        result.put("destinationIp", string(destination.get("ip")));
-        result.put("message", string(source.get("message") != null ? source.get("message") : source.get("name")));
-        result.put("tenantId", string(source.getOrDefault("visibleBy", "authorized")));
-        result.put("tenantName", string(source.getOrDefault("visibleBy", "Authorized scope")));
+        result.put("dataset", dataset);
+        result.put("host", hostName);
+        result.put("user", userName);
+        result.put("sourceIp", sourceIp);
+        result.put("destinationIp", destinationIp);
+        result.put("message", message);
+        result.put("tenantId", tenantId);
+        result.put("tenantName", tenantName);
         result.put("alertCount", 0);
         result.put("normalized", normalized);
         result.put("sourceIndex", hit.index());
@@ -120,11 +165,36 @@ public class HuntEventDetailService {
     }
 
     private static void put(Map<String, Object> target, String key, Object value) {
-        if (value != null) target.put(key, value);
+        if (value != null) {
+            if (value instanceof String text) {
+                String trimmed = text.trim();
+                if (trimmed.isEmpty() || "-".equals(trimmed)) {
+                    return;
+                }
+                target.put(key, trimmed);
+                return;
+            }
+            target.put(key, value);
+        }
     }
 
     private static String string(Object value) {
         return value == null ? null : String.valueOf(value);
+    }
+
+    private static String firstNonBlank(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String value : values) {
+            if (value != null) {
+                String trimmed = value.trim();
+                if (!trimmed.isEmpty() && !"-".equals(trimmed)) {
+                    return trimmed;
+                }
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")

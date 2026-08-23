@@ -50,9 +50,6 @@ const PipelineSignalsPage = React.lazy(() =>
 const AdminTenantsPage = React.lazy(() =>
   import('@/pages/admin/tenants/AdminTenantsPage').then(m => ({ default: m.AdminTenantsPage }))
 );
-const TenantsPage = React.lazy(() =>
-  import('@/pages/admin/tenants/TenantsPage').then(m => ({ default: m.TenantsPage }))
-);
 const AdminUsersPage = React.lazy(() =>
   import('@/pages/admin/users/AdminUsersPage').then(m => ({ default: m.AdminUsersPage }))
 );
@@ -856,7 +853,7 @@ export const router = createBrowserRouter([
         path: 'admin/tenants',
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <TenantsPage />
+            <AdminUsersPage initialView="tenants" />
           </AuthGuard>
         ),
       },

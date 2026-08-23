@@ -3,8 +3,6 @@
 Updated: **2026-08-23 10:44:00 IST (UTC+05:30)**
 Execution model: one vertical slice at a time; inspect frontend/backend first, compare multiple official OEM workflows, implement honest UI, record contracts, validate, browser-review, then advance.
 
-Branch note: completed-slice statuses below reflect the preserved program state in safety checkpoint `db700a4`. Reconcile that checkpoint with the intended target branch before assuming every earlier route is present on `main`.
-
 ## Mandatory per-page research gate
 
 Every page slice must compare at least three relevant official primary sources, including two product/OEM workflows where available and one authoritative standard when applicable. Record source URL, retrieval date, paraphrased conclusion, HiveArmor implication and refresh trigger under `docs/ai-handoff/research/`. Research informs workflow structure; it does not authorize stack changes, copied branding, unsupported backend state or licensed content reproduction.

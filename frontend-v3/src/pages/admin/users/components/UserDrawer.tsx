@@ -100,8 +100,8 @@ export function UserDrawer({
 
   // Update user mutation
   const updateMutation = useMutation({
-    mutationFn: (data: { login: string; formData: UserFormData }) =>
-      updateUser(data.login, data.formData),
+    mutationFn: (data: { user: UserDTO; formData: UserFormData }) =>
+      updateUser(data.user, data.formData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       onSuccess();
@@ -168,7 +168,7 @@ export function UserDrawer({
     if (mode === 'create') {
       createMutation.mutate(formData);
     } else if (user) {
-      updateMutation.mutate({ login: user.login, formData });
+      updateMutation.mutate({ user, formData });
     }
   };
 

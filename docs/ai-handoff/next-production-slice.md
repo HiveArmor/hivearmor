@@ -2,23 +2,106 @@
 
 Updated: **2026-08-23 10:44:00 IST (UTC+05:30)**
 
-## Active — Branch reconciliation, then Orphan Operational Workflows
+## Active — Orphan Operational Workflows
 
+Routes: to be selected after route/navigation/backend ownership inventory across UEBA and risk timelines, endpoint timeline/quarantine/FIM/policies, and threat-intelligence operations.
 Status: **PLANNED**; no production-readiness claim.
+Program: `docs/ai-handoff/remaining-page-program.md`.
 
-Before new implementation, reconcile safety checkpoint `db700a4` from `staging/siem-mvp` with the intended target branch. Do not cherry-pick or discard it blindly: it contains earlier Cursor/user work plus the pre-checkout state. After reconciliation, inventory UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies and threat-intelligence routes, frontend services and backend controllers, then select one coherent bounded route family. Follow `remaining-page-program.md`.
+Required next actions:
+
+1. Inventory every visible and hidden route, navigation entry, frontend service and backend controller for UEBA, risk/timeline, endpoint operations, quarantine, FIM, agent policy and threat intelligence. Select one coherent route family; do not redesign all orphan routes at once.
+2. Reconcile existing production-capable backend work and legacy overlaps before registering gaps or deprecations. Preserve the user's requirement that deprecation is recorded only after a successor and cutover evidence exist.
+3. Research at least three official primary sources for the selected family, including two OEM workflows where available, and preserve the offline note before implementation.
+4. Implement bounded, cancellable, keyboard-operable enterprise workflows with honest permissions, freshness, partial failure, progressive context and investigation/response pivots. Keep unsupported mutations disabled.
+5. Timestamp the contract and handoff closeout, scan production artifacts for fixture records, run focused/full gates and complete authenticated dark/light browser review.
 
 ## Completed this slice — Governance and Platform Settings
 
 Routes: `/admin/audit`, `/admin/retention`, `/admin/settings`, `/settings/system`.
-Status: **UI IMPLEMENTED**, **CONTRACT RECORDED** and **FIXTURE-BROWSER VERIFIED**. Type-check, zero-warning lint, focused tests, the complete 1,092-test suite and production build passed before the safety checkout; the same recovered files are revalidated on `main` in this slice. Not `BACKEND IMPLEMENTED`, real-backend `LIVE VERIFIED` or `PRODUCTION READY` for `GOV-001`–`GOV-010`.
+Status: **UI IMPLEMENTED**, **CONTRACT RECORDED** and **FIXTURE-BROWSER VERIFIED**. Type-check, zero-warning lint, focused tests, the complete 1,092-test suite and production build passed. Not `BACKEND IMPLEMENTED`, real-backend `LIVE VERIFIED` or `PRODUCTION READY` for `GOV-001`–`GOV-010`.
 
 - Consolidated disconnected audit, retention and settings pages into one compact control plane with Audit ledger, Retention, Configuration, Change control and API lifecycle views.
-- Corrected the audit wire contract to the checked-in `actor`/`actionType` array response, bounded the first projection to 100 and added cancellation/partial-result handling.
-- Added keyboard navigation, progressive full-height context, lifecycle consequences, secret-safe effective settings and deliberately disabled proposal/export flows where backend authority is incomplete.
-- Fictional depth is dynamically imported only when `import.meta.env.DEV && VITE_USE_FOUNDATION_FIXTURES=true`; production receives none of those records.
-- Legacy `/ha-settings` remains at unknown migration state and is not deprecated without successor cutover and lifecycle headers.
+- Corrected the audit wire contract to the checked-in `actor`/`actionType` array response, bounded its first projection to 100 and added cancellation/partial-result handling across all three existing reads.
+- Added dense keyboard navigation, progressive full-height evidence context, a lifecycle consequence model, secret-safe effective settings and deliberately disabled proposal/export workflows where backend authority is incomplete.
+- Browser review caught and fixed document growth when the context drawer opened, then added modal focus entry/trapping/Escape behavior. Fixture-mode shell polling was suppressed so the fresh review tab reports zero console warnings/errors.
+- The API lifecycle fixture and durable contracts explicitly keep legacy `/ha-settings` at unknown migration state; it is not marked deprecated until successor, consumer cutover and lifecycle headers exist.
+- Fictional governance depth is dynamically imported only when `import.meta.env.DEV && VITE_USE_FOUNDATION_FIXTURES=true`; the production artifact contains none of the scanned fixture records.
 - Research: `research/governance-platform-settings.md`. Contracts: `GOV-001`–`GOV-010`.
+
+## Completed this slice — Identity, Tenancy and MSSP Administration
+
+Routes: `/admin/users`, `/admin/tenants`, with linked `/admin/sso`, `/admin/scim` and existing `/mssp/tenants` administration surfaces.
+Status: **UI IMPLEMENTED**, **CONTRACT RECORDED** and **FIXTURE-BROWSER VERIFIED**. Type-check, zero-warning lint, focused tests, the complete 1,088-test suite and production build passed. Not `BACKEND IMPLEMENTED`, real-backend `LIVE VERIFIED` or `PRODUCTION READY` for `IAM-001`–`IAM-010`.
+
+- Consolidated the basic user grid and tenant placeholder into one compact control plane with Directory, Tenants, Access reviews, Federation and Audit activity views.
+- Added source, effective-role, tenant-scope, MFA, review and freshness context; global/delegated/tenant-local administration boundaries; dense keyboard navigation; full-height progressive context and explicit partial/unavailable states.
+- Corrected the existing user update call to the backend's `PUT /users` contract and changed the authority catalogue read to protected `/users/authorities`; the new frontend does not call unsafe legacy `/authority` CRUD.
+- Production reads only the existing protected user, tenant, OIDC and SCIM surfaces with cancellation and partial-result handling. Invitation, review, session, break-glass and immutable-audit mutations remain disabled.
+- Fictional membership, review and audit depth is dynamically imported only when `import.meta.env.DEV && VITE_USE_FOUNDATION_FIXTURES=true`.
+- The production artifact was scanned for identity fixture markers after build. An initial static dynamic import emitted a lazy fixture chunk despite the runtime guard; the import was changed to a development-only Vite-ignored module path, the build dropped from 242 to 241 chunks, the fixture-marker scan passed, and a fresh development reload still loaded the fixture correctly.
+- Authenticated fixture review covered Directory, Tenants, Access reviews, Federation and Audit activity; tenant/review context drawers; view-specific workflow setup; deep-link state; and the read-only audit boundary at 1280×720. The browser pass caught and corrected the generic workflow action on Federation/Audit activity. The deliverable tab remains open at `/admin/users`.
+- Research: `research/identity-tenancy-administration.md`. Contracts: `IAM-001`–`IAM-010`.
+
+## Completed this slice — Integration and Notification Operations
+
+Routes: `/admin/integrations`, `/admin/notifications`, `/admin/connection-keys`, `/settings/api-keys`.
+Status: **UI IMPLEMENTED**, **CONTRACT RECORDED** and **FIXTURE-BROWSER VERIFIED**. Type-check, zero-warning lint, focused tests, the complete 1,084-test suite and production build passed. Not `BACKEND IMPLEMENTED`, real-backend `LIVE VERIFIED` or `PRODUCTION READY` for `INO-001`–`INO-010`.
+
+- Consolidated four disconnected administration screens into one workbench with Operations, Connections, Delivery, Service access and Activity views.
+- Added a catalog-to-activation trust chain, connector ownership/support/environment/credential-alias semantics, explicit measured-versus-unreported health and keyboard-operable dense inventories with full-height context.
+- Added distinct reusable delivery destinations, routing policies and receipt semantics; added one-time API-key compatibility while keeping unavailable production mutation paths fail closed.
+- Production reads only legacy connector metadata, admin notification rules and the hardened API-key list with cancellation and partial-result handling. Unsafe secret-bearing channel/config entities and simulated notification tests are not called.
+- Fictional connector, delivery and audit records are dynamically imported only when `import.meta.env.DEV && VITE_USE_FOUNDATION_FIXTURES=true`.
+- Authenticated fixture review covered Operations, Connections, Delivery, Service access and Activity; connector/destination drawers; mode-specific guided setup; compatibility routes; reloadable activity deep links; and the shared sticky status surfaces at 1280×720. Browser warning/error logs were empty. The deliverable tab remains open at `/admin/integrations?view=connectors`.
+- Research: `research/integration-notification-operations.md`. Contracts: `INO-001`–`INO-010`.
+
+## Completed this slice — Pipeline and Ingestion Administration
+
+Routes: `/admin/pipeline-signals`, `/inputs/sources`, `/admin/data-parsing`.
+Status: **UI IMPLEMENTED**, **CONTRACT RECORDED** and **FIXTURE-BROWSER VERIFIED**. Not `BACKEND IMPLEMENTED`, real-backend `LIVE VERIFIED` for the new operator contracts or `PRODUCTION READY`.
+
+- Reconciled and preserved the previously live-verified pipeline-signals/soak evidence, raw envelope, agent spool and quarantine topic.
+- Added one source-to-index workspace with Flow, Sources, Parsers, Failures and Capacity views, direct-measurement provenance and explicit unavailable/partial states.
+- Added dense keyboard-operable source/parser/failure inventories, progressive context drawers, governed source onboarding and fail-closed replay preview.
+- Production uses the existing endpoints with cancellation and partial-result handling; unsafe in-memory source creation and unavailable replay actions remain disabled.
+- Authenticated fixture review covered all five views, dense inventories, source/failure context, onboarding and replay safeguards at 1280×720. The admin-capable development fixture profile is compile-time excluded from production. The deliverable tab remains open at `/admin/pipeline-signals`.
+- Research: `research/pipeline-ingestion-operations.md`. Contracts: `ING-001`–`ING-010`.
+
+## Completed this slice — Reporting and SOC Communications
+
+Routes: `/reports/scheduled`, `/reports/templates`, `/reports/sitrep`, `/reports/incidents`, `/reports/after-action`.
+Status: **UI IMPLEMENTED**, **CONTRACT RECORDED** and **FIXTURE-BROWSER VERIFIED**. Focused checks, the complete 1,075-test suite and the production build passed. Not `BACKEND IMPLEMENTED`, real-backend `LIVE VERIFIED` or `PRODUCTION READY` for `REP-001`–`REP-010`.
+
+- Consolidated five disconnected screens into one generated/scheduled/template lifecycle with route-specific report-type entry views.
+- Added compact inventory/health measures, search/type filtering, snapshot/scope honesty, classification/redaction/approval/freshness signals, schedule run-as/recipient/delivery health and template provenance.
+- Added keyboard-operable dense rows, explicit selection/context drawer, governed generation setup, permission/loading/error/partial/empty/legacy states, sticky operational status and development-only fictional data.
+- Production continues to read the legacy report and scheduled-report endpoints but labels the unproven contract and withholds generation/distribution actions.
+- Authenticated fixture review covered schedules, templates, generated SITREP and incident facets, record context, and the governed-generation dialog at 1280×720 with no console warnings or errors. The review tab remains open at `/reports/incidents`.
+- Research: `research/reporting-soc-communications.md`. Contracts: `REP-001`–`REP-010`.
+
+## Completed this slice — Dashboard Operations
+
+Routes: `/dashboards`, `/dashboards/:id`, `/dashboards/studio`, `/dashboards/:id/edit`.
+Status: **UI IMPLEMENTED**, **CONTRACT RECORDED** and **FIXTURE-BROWSER VERIFIED**. Not `BACKEND IMPLEMENTED`, `LIVE VERIFIED` or `PRODUCTION READY` for `DSH-001`–`DSH-010`.
+
+- Unified incompatible dashboard services and DTOs behind one canonical frontend definition with development-only fixture loading.
+- Added a compact discovery gallery with access, owner, managed state, health, freshness, source coverage, search/filter/sort, grid/list density, keyboard navigation and sticky operational status.
+- Added a governed runtime with global tenant/time/variable controls, a 12-column responsive panel grid, per-panel source/state/freshness, partial/stale states, detail provenance and investigation pivots.
+- Added a three-pane low-code Studio with panel catalogue, canvas, inspector, readiness validation, unsaved-change guard and fixture-only draft saves. Production mutation and unsafe legacy panel execution fail closed.
+- Authenticated fixture review at `http://127.0.0.1:4178` covered gallery, `SOC Mission Overview` runtime, and clean/add-panel Studio states. The review caught and corrected the `Not configured` source-readiness defect; the runtime tab is left open.
+- Research: `research/dashboard-operations-workspace.md`. Contracts: `DSH-001`–`DSH-010`.
+
+## Completed this slice — Compliance Assurance
+
+Route: `/compliance`.
+Status: **UI IMPLEMENTED**, **CONTRACT RECORDED** and **FIXTURE-BROWSER VERIFIED**; focused type/lint/tests, full 1,075-test suite and production build passed. Not `BACKEND IMPLEMENTED`, `LIVE VERIFIED` or `PRODUCTION READY` for `CMP-001`–`CMP-009`.
+
+- Replaced the auto-selected empty control grid and false “controls compliant” copy with an evidence-honest framework/assessment inventory over `/api/ha-posture/score` and `/frameworks`.
+- Added assurance boundary, compact aggregate/freshness measures, search/filter/sort, cancellable cached queries, virtual grid, icon density, keyboard navigation, permission/error/stale/empty states, sticky footer/status and explicit full-height framework context.
+- Added development-only fictional aggregates behind `import.meta.env.DEV && VITE_USE_FOUNDATION_FIXTURES=true`; production calls only the backend.
+- Authenticated fixture review at `http://127.0.0.1:4178/compliance` confirmed the assessment inventory, explicit framework drawer, compact sticky status surfaces and zero browser console warnings/errors. The deliverable tab is left open for operator review.
+- Research: `research/compliance-assurance-workspace.md`. Contracts: `CMP-001`–`CMP-009`.
 
 ## Completed this slice — E2E agent→detect + staging UI walk LIVE
 
@@ -360,7 +443,7 @@ Status: `LIVE VERIFIED` on staging Ubuntu for `hivearmor-telemetry.service` (`te
 - Packaged `hivearmor-telemetry.service` and `linux-telemetry.env.example` ship with Linux agent archives.
 - Staging: unit active, env mode `0600`, unit has no `HA_INTERNAL_KEY`, `EnvironmentFiles=/etc/hivearmor/agent.env`, SCA `scanned_at=2026-08-19 12:58:18 UTC` matches `ActiveEnterTimestamp`. Agent `staging-vm`: 4 SCA checks (HA-LOGIN-01 FAIL, SSH N/A, USER PASS) and 400 SBOM components.
 
-## Active — Wave 2 live staging install
+## Historical active record — Wave 2 live staging install (superseded as the active page slice)
 
 Work ID: `PILOT-07` live install  
 Contracts: `SIEM-008`, ACC-01/04/05/06/10/11/14

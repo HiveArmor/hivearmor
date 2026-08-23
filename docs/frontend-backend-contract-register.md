@@ -1,6 +1,9 @@
+Warning: truncated output (original token count: 82070)
+Total output lines: 2422
+
 # HiveArmor Frontend–Backend Contract Register
 
-Last updated: 2026-08-18 13:37:18 IST (UTC+05:30)  
+Last updated: 2026-08-22 20:54:37 IST (UTC+05:30)
 Owner: Frontend design and backend integration  
 Status: Living reference — append every redesigned frontend route before backend stitching
 
@@ -1291,843 +1294,116 @@ This reconciliation supersedes the earlier checked-in audit for implementation s
 |---|---|---|---|
 | ENT-V01 / ENT-001 | `PARTIAL` | Tenant-resolved index pattern, multi-filter search, deterministic `search_after`, exact total, canonical row pivots, and a hard 100-row maximum are implemented at `GET /ha-entities`. | The inventory cursor is unsigned Base64 sort JSON and is not authorization/filter/snapshot-bound. Add snapshot/PIT metadata, exactness flags, bounded field projection, safe unknown-type metadata, freshness, permissions/redaction, record versions, partial failures, and stable cursor validation. |
 | ENT-V02 / ENT-002 | `PARTIAL` | `GET /ha-entities/summary` returns total/high-risk/rising/active-alert/new-24h counters plus type/risk/criticality/source facets under the same tenant-resolved query filters. | Add snapshot identity and exactness, tenant/tag/recency facets, safe labels/availability, deferred-facet state, ingestion freshness, and independently reportable aggregation failures. |
-| ENT-003 | `PARTIAL` | `GET /ha-entities/{id}/preview` returns identity, risk, criticality, baseline deviation, 24h/7d activity, 30d alert summary, tags, and HMAC-signed pivot descriptors. | Bind preview to the list snapshot/window; add provenance, tenant/redaction/permissions/version, source coverage and incident summary, payload budget metadata, `409 SNAPSHOT_EXPIRED`, and non-disclosing unauthorized behavior. Optional enrichment failures must not collapse into a generic `500`. |
-| ENT-004 | `PARTIAL` | `EntityPivotService` HMAC-SHA256 signs four pivot parameter maps. | The hunt descriptor targets `/hunt` while the application route is `/search`, and descriptors separate route/parameters without a verified execution handoff. Add expiry, tenant/authorization/source-version binding and a server-validated pivot resolver. Ensure Search, Alerts, and Incidents consume the resolved filter; do not require the browser to rebuild it. |
-| ENT-005 | `PARTIAL` | Tenant-keyed SSE registration, rate limiting, 30-minute emitters, in-memory replay via `Last-Event-ID`, and entity risk/discovery/trend/alert/baseline events are implemented. The frontend now keeps the active cursor page stable and exposes an explicit newer-data refresh. | Add snapshot-available, entity merge/retirement, source degradation/recovery, heartbeat and replay-gap semantics. Return a resumability boundary so a lost in-memory buffer triggers a safe list/summary refresh rather than silent data loss. |
-| ENT-V04 | `IMPLEMENTED` | Backend and frontend now both authorize `ROLE_SOC_ANALYST`, `ROLE_SOC_MANAGER`, `ROLE_ANALYST`, and `ROLE_ADMIN` for the entity inventory and dossier routes. | Keep this role matrix covered by controller/router authorization tests and field-level authorization as sensitive entity attributes are added. |
-| ENT-V05 | `PARTIAL` | Host, user, IP, and domain are implemented consistently in the new service/types and render with entity-specific icons. | Publish the versioned expanded vocabulary (service, cloud, process, file, application, unknown) with server labels and unknown fallback behavior before those types enter the index. |
-| ENT-006 | `PARTIAL` | `GET /ha-entities/{id}/dossier?window={days}` assembles identity, risk profile/history/drivers, baseline, source coverage, ATT&CK techniques, and summary for 1–90 days. | Source and technique enrichment are blocking and all-or-nothing. Add bounded include projections, parallel/independent failure handling, data completeness, missing-data/partial-failure arrays, snapshot/version/permissions, criticality and risk provenance, confidence, peer cohort, sample sufficiency, ingestion freshness, and separate observation versus ingestion time. |
-| ENT-007 | `PARTIAL` | Activity uses an OpenSearch PIT with a cursor carrying PIT ID, `search_after`, and fixed time bounds; type filtering and total/window are returned. | The cursor is unsigned Base64 and exposes the PIT identifier, the server permits 200 rows, and no progressive normalized/raw event-detail endpoint exists. Sign and authorization-bind the cursor, enforce the 50-row target, add detail/FLS/redaction/pivots, exactness/freshness/partial-failure metadata, and explicit PIT expiry handling. |
-| ENT-008 | `PARTIAL` | Related alerts resolve the entity type/value server-side and return cursor-paginated rows with role, severity/status/time filters and a 100-row maximum. | Sign and bind the cursor, enforce the 25-row target, and add snapshot/exactness/partial-failure metadata, category/permission-aware alert pivot, ingestion freshness, and non-disclosing entity authorization behavior. |
-| ENT-009 | `PARTIAL` | Relationship rows include direction, strength, evidence, first/last seen, event count, related entity summary, filters, cursor, and total. The frontend provides both an accessible list and a lazy graph. | Enforce the 50-row target; sign/bind the cursor; add confidence/scoring explanation, evidence/source exactness, tenant/redaction, truncation/expansion metadata and signed dossier/constellation pivots. The fallback that assigns unresolved related entities risk `0/low` must expose an unknown/incomplete state instead. |
-| ENT-010 | `PARTIAL` | Preview and execute endpoints exist with a five-minute, single-use in-memory token; create-new and link-existing paths return incident/link counts. | Add `Idempotency-Key`, durable/shared token storage, audit and record versions, duplicate outcome, policy/approval checks, tenant compatibility, optimistic concurrency and rollback behavior. The execute service currently validates the token only against `entityId`; bind and revalidate `incidentId`, `createNew`, previewed target version and authorization so the browser cannot change the target after preview. |
-
-Frontend integration recorded **2026-08-11 14:46:18 IST (UTC+0530)**: the inventory now uses a fixed 100-row cursor page, progressive full-height context drawer, explicit stable-view SSE refresh, keyboard open flow, entity-specific icons, sticky pagination, and the shared operational status dock. The dossier now provides URL-addressable tabs, bounded window selection, progressive loading skeletons, sticky controls, and the same status dock. These frontend changes do not mark the remaining backend items above complete.
-
-### ENT-001 — Bounded, snapshot-stable entity inventory
-
-Status: `REQUIRED`  
-Consumer: entity queue, filter/sort controls, keyboard navigation, and sticky cursor footer
-
-```http
-GET /ha-entities?search={text}&types=host,user,ip&riskLevels=critical,high&activityWindow=30d&tenantScope=authorized&sort=risk_desc&cursor={cursor}&limit=100&fields=id,name,type,risk,trend,criticality,baseline,alerts,incidents,lastSeen,sources,tenant
-```
-
-Response returns `items`, `nextCursor`, `hasMore`, `snapshotAt`, `totalApproximate`, `totalIsExact`, `summary`, `partialFailures`, and `contractState=complete`. Sort is deterministic with an opaque stable tie-breaker; cursors are bound to the authorization, tenant, filter, field projection, sort, and snapshot. Maximum page size is 100. Search covers authorized entity names/IDs, normalized addresses, tenant labels, and tags without exposing redacted values. The endpoint accepts cancellation and bounded projections; it never hydrates timelines, graphs, raw events, or full risk evidence in list rows.
-
-Each item includes:
-
-- opaque ID, canonical type, primary label and safe secondary identifier;
-- calculated risk score/level, prior score, trend, calculation timestamp, validity, source and confidence;
-- asset/entity criticality as a separate field with its own source;
-- baseline deviation with metric/unit and comparison window, not an unexplained multiplier;
-- bounded active alert and incident counts with count exactness;
-- first/last observed time, source count and at most three source labels plus full count;
-- tenant display label, redaction state, available actions, and record version.
-
-Unknown or unsupported types use a stable `unknown` value plus server display label. `lastSeen` means event observation time; ingestion freshness is returned separately. Offset paging remains a compatibility fallback only and must be advertised as `contractState=legacy` so the UI does not imply snapshot stability or exact totals.
-
-### ENT-002 — Inventory summary and filter facets
-
-Status: `REQUIRED`  
-Consumer: compact KPI strip and filter menus
-
-`summary` describes the same authorization and snapshot as the rows: approximate total, high-risk count, rising/new-risk count, active linked alerts, and entities observed within 24 hours. Bounded facets cover canonical type, risk level, criticality, tenant, source, tag, alert presence, and activity recency. Each facet includes value, safe label, approximate count, selection state, availability, and snapshot. Expensive facets may be deferred or unavailable; the browser never derives organization-wide counts from the current 100-row page.
-
-### ENT-003 — Progressive lightweight entity preview
-
-Status: `REQUIRED`  
-Consumer: full-height inventory context drawer
-
-```http
-GET /ha-entities/{entityId}/preview?snapshot={snapshot}&window=30d
-```
-
-The preview stays below 40 KB compressed and returns the entity identity, risk and criticality with provenance, baseline comparison, bounded active-alert/incident summaries, last activity, tags, source coverage, tenant display, redaction state, permissions, record version, and canonical signed pivots. Full timelines, event bodies, relationship graphs, recommendations, raw records, and long risk histories remain deferred to the dossier endpoints. A list snapshot that has expired returns `409 SNAPSHOT_EXPIRED` with a safe refresh action; an unauthorized entity returns `404` where existence itself is restricted.
-
-### ENT-004 — Authorized entity pivots and dossier handoff
-
-Status: `REQUIRED`  
-Consumer: Hunt this entity and Open dossier actions
-
-The server returns pivot descriptors rather than requiring the browser to infer a query field from the entity type. A hunt pivot includes a signed canonical query reference, language/version, tenant policy, time-window policy, source entity/version, expiry, and target route. A dossier pivot includes an opaque route ID and permitted tabs. Pivot execution revalidates authorization, field visibility, entity merges/aliases, and cross-tenant rules. Raw display names, IP addresses, or IDs are never concatenated into trusted routes or datastore clauses without server validation.
-
-### ENT-005 — Resumable risk and freshness updates
-
-Status: `REQUIRED`  
-Consumer: operational status dock, stale state, and safe refresh behavior
-
-```http
-GET /ha-entities/stream
-Accept: text/event-stream
-Last-Event-ID: {eventId}
-```
-
-Small events announce inventory snapshot availability, risk recalculation completion, entity merge/retirement, source degradation/recovery, and heartbeat. They do not push full rows or silently reorder the active analyst viewport. The client marks the current snapshot stale and offers or performs a bounded refresh according to user activity. Resume gaps require a summary/list refetch. EPS represents the authorized event pipeline and is never mislabeled as entity throughput.
-
-### ENT-006 — Progressive entity dossier core and explainable risk
-
-Status: `REQUIRED`  
-Consumer: `/entities/{id}` persistent header, overview, risk explanation, baseline, provenance, and permissions
-
-```http
-GET /ha-entities/{entityId}/dossier?window=30d&include=core,risk,baseline,coverage,techniques
-```
-
-The first bounded response includes canonical identity/type/aliases, tenant, business context, status, tags, first/last observed, watchlist state, active alert/incident/anomaly counts, asset criticality, calculated risk, prior risk/trend, calculation/validity times, model/rule version, confidence, and permissions. Risk drivers return a server-authored label and explanation, contribution, source, evidence count/reference, observed window, and whether the driver is still active. Baseline metrics return the current and baseline values, units, peer cohort, comparison window, direction, confidence, and minimum sample sufficiency. Coverage lists contributing sources, ingestion freshness, degradation, redaction, and source-specific last observation.
-
-The current `GET /ha-entities/{id}` is `PARTIAL`: it returns core score/count data and attempts 30-day OpenSearch enrichment in the blocking request. OpenSearch failure is swallowed and produces empty enrichment indistinguishable from no observations. Split optional enrichment into independently failing projections and return `dataCompleteness`, `missingData[]`, `partialFailures[]`, `snapshotAt`, and `recordVersion`. The browser must never explain a score by inventing reasons from the numeric value.
-
-### ENT-007 — Snapshot-bound entity activity
-
-Status: `REQUIRED`  
-Consumer: Activity tab, cursor footer, and progressive event drawer
-
-```http
-GET /ha-entities/{entityId}/activity?from={iso}&to={iso}&cursor={cursor}&limit=50&fields=id,timestamp,severity,source,category,action,host,user,sourceIp,summary,alertCount
-GET /ha-entities/{entityId}/activity/{eventId}?snapshot={snapshot}&views=normalized,raw,pivots
-```
-
-The list returns a deterministic bounded projection with opaque event IDs, cursor/snapshot metadata, exactness, partial source failures, and ingestion freshness. Event detail applies field-level security and progressively returns normalized fields, raw data when permitted, provenance, integrity, redactions, and signed pivots. The checked-in `/events` endpoint is `PARTIAL`: it returns at most 200 raw array items, has no cursor/snapshot/count, defaults to an IP field when the entity type is omitted, exposes only timestamp/source/message, and converts datastore failure into an empty list. Empty, failed, redacted, stale, and expired states must remain distinct.
-
-### ENT-008 — Bounded related-alert projection
-
-Status: `REQUIRED`  
-Consumer: Alerts tab and alert investigation handoff
-
-```http
-GET /ha-entities/{entityId}/alerts?from={iso}&to={iso}&status=active&cursor={cursor}&limit=25
-```
-
-Return alert identity/title, symbolic severity, status, category, rule, observed time, entity role, incident link, snapshot, total approximation, cursor, and permission-aware route descriptor. The checked-in endpoint is `PARTIAL`: it returns a maximum of 100 array rows without cursor, total, incident context, snapshot, or partial-failure state and defaults to the wrong entity lookup field when type is absent. The entity type/field mapping is resolved server-side from the entity record, never trusted from a browser query parameter.
-
-### ENT-009 — Evidence-backed entity relationships
-
-Status: `REQUIRED`  
-Consumer: relationship preview, accessible relationship list, and Threat Constellation handoff
-
-```http
-GET /ha-entities/{entityId}/relationships?from={iso}&to={iso}&types={optional}&cursor={cursor}&limit=50
-```
-
-Each relationship returns an opaque related-entity reference, canonical type/label, directed relationship type and label, first/last observed, event/evidence counts, confidence, source coverage, tenant/redaction state, risk summary, and signed dossier/constellation pivots. The response includes truncation and expansion cursors. The accessible list is canonical; a graph is a secondary visualization and never the sole representation. Current associated-user/host term aggregations are insufficient because they omit direction, evidence, time, confidence, IDs, truncation, and authorization state.
-
-### ENT-010 — Previewed incident linking
-
-Status: `REQUIRED`  
-Consumer: Add entity to incident drawer
-
-```http
-POST /ha-entities/{entityId}/incident-link/preview
-POST /ha-entities/{entityId}/incident-link
-Idempotency-Key: {uuid}
-```
-
-Preview returns authorized incident candidates with relevance reasons, duplicate-link state, entity/incident tenant compatibility, target status/version, policy warnings, approval requirements, and an opaque preview token. Execution accepts only the token plus idempotency key, revalidates entity aliases/merges and incident state, and returns incident ID, audit ID, resulting link, and record versions. The existing `POST /ha-incidents/{incidentId}/entities` is `PARTIAL`: it accepts a raw browser-supplied entity ID and has no preview, duplicate outcome, optimistic version, idempotency, relevance, or per-action permission contract.
-
-### CON-001 — Unified bounded constellation projection
-
-#### Backend implementation reconciliation — 2026-08-11 16:24:51 IST (UTC+05:30)
-
-Kiro's newer `/api/ha-constellation` implementation is present and supersedes the legacy split `/api/ha-graph/nodes` and `/api/ha-graph/edges` path for the redesigned route. The routed frontend now consumes the snapshot API; this record preserves the remaining production gaps instead of reopening completed backend work.
-
-| Contract | Status | Verified implementation | Remaining backend work |
-|---|---|---|---|
-| CON-001 | `PARTIAL` | `POST /ha-constellation/explore` is role-protected, tenant-index-resolved, supports entity/query/incident/alert seeds, performs bounded BFS traversal, batch-enriches canonical entities, returns one graph snapshot with clusters/pivots, and exposes created/expiry time, totals, truncation and explored hops. The routed frontend now uses this endpoint with cancellation and keeps the canvas code-split. | Enforce server-side maxima for every browser-supplied node/edge limit; accept absolute observation bounds, relationship types, minimum risk/evidence, timeout and blocked terms; return scope/criticality/sources/first-last observed, permissions/redaction, exactness, query duration, source freshness and independently reportable partial failures. A query seed currently executes raw `query_string` text over up to 100 logs; publish the supported grammar, validate complexity, and return structured diagnostics. Add `/api/ha-constellation/**` to the OpenAPI group, which currently matches only `/api/ha-graph/**`. |
-| CON-002 | `PARTIAL` | `POST /ha-constellation/explore/{snapshotId}/expand` validates tenant-owned in-memory snapshots and node membership, returns graph deltas, marks expanded nodes, applies per-expansion limits and prunes above 500 nodes. The routed frontend now merges deltas without replacing the analyst's active view. | Clamp expansion inputs at the controller boundary; preserve original time/filter/authorization policy explicitly; add direction/relation/entity/evidence filters, deterministic continuation cursors for high-degree nodes, delta/version IDs, pruning reasons, undo/history metadata, optimistic snapshot version and RFC 9457 expiry/conflict responses. Snapshot storage is process-local, restart-sensitive and limited to ten snapshots per tenant; publish these semantics or use a shared bounded store. |
-| CON-003 | `PARTIAL` | `GET /ha-constellation/relationships/{relationshipId}` is role-protected and returns connected entities, summary, bounded supporting events and alerts, a derived pattern and timeline. The routed frontend now loads this only after explicit edge selection and distinguishes loading, empty and failed evidence from the edge summary. | Bind evidence requests to the originating snapshot/tenant authorization version, return cursor pagination and exact/truncated counts, source/mapping/rule provenance, confidence explanation, redaction/FLS state, partial failures and signed event/alert/hunt pivots. Replace custom `{error}` bodies with RFC 9457 `ProblemDetail`; do not include exception messages in generic 500 responses. |
-| CON-004 | `PARTIAL` | `GraphPivotService` generates HMAC-SHA256 descriptors, uses opaque entity IDs, and filters isolate/block descriptors to SOC manager/admin roles. | Add expiry, tenant, snapshot, authorization and entity-version binding plus a server-side pivot resolver. The hunt route is `/hunt` while the canonical route is `/search`; action routes `/response-actions/isolate` and `/response-actions/block` are not application routes. The Search, Alerts, Incidents and response consumers do not verify or resolve the signature. Until that handoff exists, the frontend exposes only non-destructive navigation and must not execute response pivots. |
-| CON-005 | `PARTIAL` | Tenant/snapshot-scoped SSE registration, connection rate limiting, 30-minute emitters, in-memory event replay and `Last-Event-ID` handling are implemented. The routed frontend now connects with authenticated fetch SSE, keeps the graph stable, and offers an explicit refresh when changes arrive. | Add heartbeat, source degradation/recovery, replay-gap and snapshot-replacement events with a documented event envelope and sequence/version. Replay is process-local; return an explicit resumability boundary so a missing buffer triggers bounded refresh. Verify that tenant context lookup is consistent between snapshot creation (`TenantContext.get`) and stream ownership (`getClientPrefix`). |
-
-Frontend integration record — **2026-08-11 16:24:51 IST (UTC+05:30)**: the production route was moved from the inconsistent legacy split projection to snapshot exploration, delta expansion and progressive relationship evidence. Foundation fixtures remain development-only and production-disabled through the existing Vite/build aliases. No backend endpoint or security policy was modified by this frontend pass.
-
-Status: `REQUIRED`  
-Consumer: `/constellation` initial seed, filters, summary, graph canvas, and accessible inventory
-
-```http
-POST /ha-graph/explore
-```
-
-The request supplies an opaque seed entity reference or authorized seed query, tenant scope, absolute time bounds, entity and relationship types, minimum risk, hop depth, per-hop vertex limit, total node/edge limits, minimum confidence/evidence thresholds, optional blocked terms, and a request timeout. The response returns a single snapshot-bound projection containing canonical entity IDs/types/labels, internal/external/redacted scope, risk/criticality/alert summary, first/last observed, source coverage, stable layout hints, directed evidence-backed edges, query duration, exactness, truncation, expansion cursors, permissions, and partial failures.
-
-The checked-in split `GET /ha-graph/nodes` plus `GET /ha-graph/edges` implementation is `PARTIAL` and can produce inconsistent snapshots. Nodes are independent top-term aggregations, only cover five adversary/target fields, set every risk score to zero, ignore `minRisk` and `depth`, and convert datastore failure into an indistinguishable empty `200`. Edges scan the latest 1,000 alerts, ignore requested edge filters, collapse each side to the first available value, use random edge IDs, do not return confidence/evidence/source metadata, and do not reliably calculate the complete first/last observation window. The former frontend sent `type[]` while the controller accepts repeated `type`; this mismatch has been corrected in the browser but requires OpenAPI coverage.
-
-### CON-002 — Cursor-based node expansion and graph history
-
-Status: `REQUIRED`  
-Consumer: selected-node Expand, per-hop loading, undo/reset, and large-graph performance
-
-```http
-POST /ha-graph/explore/{snapshotId}/expand
-```
-
-Expansion accepts a signed node reference, direction, allowed relation/entity types, a per-hop limit, cursor, confidence/evidence threshold, and blocked terms. It returns only the graph delta plus deterministic continuation cursors, updated truncation totals, and an expiry. Expansion must preserve the original authorization scope and snapshot window. The browser can merge deltas, undo a hop locally, or reset to the initial seed without refetching every node. The current global `depth` parameter is capped at two, does not drive bounded per-node expansion, and cannot prevent high-degree entities from flooding the workspace.
-
-### CON-003 — Progressive relationship evidence
-
-Status: `REQUIRED`  
-Consumer: relationship selection panel, evidence counts, provenance, and event/alert pivots
-
-```http
-GET /ha-graph/relationships/{relationshipId}?snapshot={snapshotId}&cursor={cursor}&limit=25
-```
-
-Return stable directed endpoints, server-authored relationship label, confidence and scoring explanation, first/last observed, event/alert/evidence counts, contributing sources, mapping/rule version, redaction state, and a bounded evidence preview with signed Search & Hunt and alert pivots. The graph edge is a summary, never proof by itself. Current co-occurrence-derived edges have no stable identity or inspectable evidence contract and cannot support defensible analyst decisions.
-
-### CON-004 — Canonical entity pivots and permission descriptors
-
-Status: `REQUIRED`  
-Consumer: Open dossier, Hunt entity, add-to-investigation actions, and internal/external styling
-
-Every node returns a canonical opaque `entityId`, entity type, scope classification, tenant/redaction state, and permission-aware route descriptors for dossier, hunt, and incident/investigation actions. The frontend must not construct a dossier route from an OpenSearch term or trust the node type supplied by the browser. The current graph node ID is `type:value`, has no canonical entity reference, and the former frontend generated the invalid route `/entities/{type}/{id}`.
-
-### CON-005 — Constellation freshness stream and recoverable partial states
-
-Status: `REQUIRED`  
-Consumer: status dock, stale/degraded indicators, and bounded refresh
-
-```http
-GET /ha-graph/stream?snapshot={snapshotId}
-Accept: text/event-stream
-Last-Event-ID: {eventId}
-```
-
-Small authorized events announce material relationship changes, risk recalculation, source degradation/recovery, snapshot expiry, and heartbeat. Events mark the projection stale; they do not push full graph payloads or silently reposition nodes. Resume gaps require a bounded refresh. All graph responses distinguish no relationships, forbidden scope, datastore failure, timeout, partial source failure, truncation, redaction, and expired snapshot instead of returning the same empty arrays.
-
----
-
-## Route: `/detection-rules` — Detection Engineering Inventory
-
-Frontend files: `frontend-v3/src/pages/detection-rules/DetectionRulesPage.tsx`, `columnDefs.tsx`, `detectionRules.service.ts`, and `detectionRules.types.ts`.
-
-### Current contract audit
-
-| ID | Status | Contract | Notes |
-|---|---|---|---|
-| DET-001 | `DEPRECATED` | `GET /correlation-rule/search-by-filters` | Retained compatibility projection only. The backend returns `UtmCorrelationRulesDTO` (`name`, `definition`, `systemOwner`, object-valued `dataTypes`) while modern consumers use the canonical `/ha-detection-rules` inventory. |
-| DET-002 | `DEPRECATED` | `GET /correlation-rule/search-by-filters` | Offset-paged legacy inventory; it is not a supported substitute for modern health, execution, facet, freshness, or cursor contracts. |
-| DET-003 | `DEPRECATED` | `PUT /correlation-rule/activate-deactivate` | Retained for old clients. New consumers use `/ha-detection-rules/bulk/status` and must not introduce additional dependencies on this query-parameter mutation. |
-| DET-004 | `DEPRECATED` | `POST /correlation-rule`, `PUT /correlation-rule` | Retained compatibility mutations returning `204`. New rule authoring uses `/ha-detection-rules` draft/review/approval lifecycle. |
-| DET-005 | `DEPRECATED` | `GET /correlation-rule/{id}/versions`, `GET /versions/{vNum}`, `POST /rollback/{vNum}` | Legacy opaque snapshots remain readable during migration. Modern full detail/version/revert contracts are authoritative. |
-| DET-006 | `DEPRECATED` | `POST /correlation-rule/test` | Synthetic legacy dry run. Native CEL historical preview uses `/ha-detection-rules/preview`; isolated Sigma evaluation uses `/ha-rules/test`. |
-| DET-007 | `MISMATCH` | `POST /ha-sigma-sync/trigger` | The backend returns `staged`, `skipped`, and `message`; the former frontend expected `synced`, `errors`, and error details. The browser now normalizes the response, but production needs a first-class staged-review projection and explicit activate/dismiss consequences. |
-| DET-014 | `PARTIAL` | `POST /ha-rules/test` | The Sigma single-event evaluator accepts YAML plus one JSON event and returns a match boolean, fields, and explanation. This supports the isolated sandbox, but it omits structured syntax/schema diagnostics, engine/version metadata, phase duration, field availability, resource limits, audit correlation, and an explicit side-effect boundary. Historical preview remains covered by DET-011. |
-| DET-016 | `DEPRECATED` | `POST /correlation-rule`, `PUT /correlation-rule`, authoring lifecycle | Superseded by the canonical `/ha-detection-rules` authoring lifecycle. No frontend-v3 route may fall back to these endpoints. |
-
-### Modern detection backend implementation audit
-
-This audit supersedes the legacy `/correlation-rule` observations above for the routed frontend-v3 experience. It records what is present in the checked-in backend without treating response shape alone as production completion.
-
-| Contract | Backend status | Checked implementation | Verified at |
-|---|---|---|---|
-| DET-008 | `IMPLEMENTED` | `GET /api/ha-detection-rules` provides tenant-resolved cursor inventory, filters, summary, facets, health, and canonical string IDs. The routed UI now consumes this API and preserves its IDs. The projection still needs normalized telemetry requirements and 24-hour alert volume instead of overloading tags. | 2026-08-11 17:35:44 IST |
-| DET-009 | `PARTIAL` | `GET /executions`, `POST /{id}/manual-run`, and `POST /{id}/gap-fill` exist and persist execution jobs. Impact preview, cancellation, phase timing, completeness, and verified worker execution semantics remain required. | 2026-08-11 17:35:44 IST |
-| DET-010 | `PARTIAL` | Bulk status, export, duplicate, and delete endpoints exist. Preview, optimistic concurrency, idempotency, immutable audit references, and repository lookups scoped by both rule ID and tenant are not consistently enforced. | 2026-08-11 17:35:44 IST |
-| DET-011 | `PARTIAL` | Authoritative CEL validation exists. Historical preview currently returns a simulated empty result and does not execute a tenant-authorized OpenSearch query, expose scan completeness/cost, samples/histogram, or support cancellation. | 2026-08-11 17:35:44 IST |
-| DET-012 | `PARTIAL` | Sigma validate/preview/execute plus managed-update check/apply routes exist. The routed import wizard is not yet backed by a stable generated DTO, signature/provenance verification, preview token, idempotency, or version-conflict contract. | 2026-08-11 17:35:44 IST |
-| DET-013 | `IMPLEMENTED` | Tenant-partitioned SSE supports bounded replay, reset, heartbeat, execution, error, health, lifecycle, and import events. The routed page still needs to consume these deltas instead of relying only on the shared EPS stream and query invalidation. | 2026-08-11 17:35:44 IST |
-| DET-014 | `PARTIAL` | `POST /api/ha-rules/test` evaluates Sigma YAML against one isolated JSON event. A native CEL single-event evaluator with the same no-side-effect boundary is missing, so CEL authoring uses bounded historical preview only. | 2026-08-11 17:35:44 IST |
-| DET-015 | `IMPLEMENTED` | `GET /api/ha-detection-rules/coverage` returns the server-owned ATT&CK matrix, gaps, counts, and coverage score. Technique detail, readiness/freshness evidence, snapshot identity, and available-content recommendations remain an enhancement. | 2026-08-11 17:35:44 IST |
-| DET-016 | `PARTIAL` | Full detail, create, draft patch, immutable versions, submit-review, approve, reject, and revert routes exist. Mutations accept `userId` from the request or fall back to `system`, several services load by ID before checking tenant, and active/managed content lacks a safe create-revision/fork workflow. Actor identity must come from the authenticated principal. | 2026-08-11 17:35:44 IST |
-
-Backend completion rule for this route: a contract is only marked complete after tenant-isolation tests, authenticated-principal attribution, canonical DTO/OpenAPI generation, real datastore execution where claimed, idempotency/concurrency behavior, and frontend-v3 integration tests pass against the running backend.
-
-### DET-008 — Bounded detection-rule inventory, facets, and summary
-
-Status: `REQUIRED`  
-Consumer: health KPIs, persistent filters, dense grid, and footer paging
-
-```http
-GET /ha-detection-rules?scope={tenantScope}&q={query}&active={state}&health={state}&origin={managed|custom}&severity={severity}&technique={id}&cursor={cursor}&limit=100&sort={field:direction}&fields={projection}
-GET /ha-detection-rules/summary?scope={tenantScope}&filters={canonicalFilterToken}
-```
-
-The list returns stable rule ID/name, symbolic severity, enabled state, managed/custom provenance, data requirements, ATT&CK tactic/technique, schedule/lookback, last execution status/time/duration/message, gap state, 24-hour alert count, current version, modified time/actor, per-record capabilities, and exactness. Summary and facets share the list snapshot and include installed/enabled/healthy/degraded counts, alert volume, technique coverage, server time, freshness, and partial failures. Use opaque cursor pagination with deterministic ordering; browser-supplied projection fields are allow-listed and the compressed page is bounded.
-
-### DET-009 — Rule execution monitoring, history, and gap repair
-
-Status: `REQUIRED`  
-Consumer: Rule Monitoring view, degraded filters, and execution drawer
-
-```http
-GET  /ha-detection-rules/executions?ruleId={optional}&health={optional}&from={iso}&to={iso}&cursor={cursor}&limit=100
-POST /ha-detection-rules/{ruleId}/manual-run/preview
-POST /ha-detection-rules/{ruleId}/manual-run
-POST /ha-detection-rules/bulk/gap-fill/preview
-POST /ha-detection-rules/bulk/gap-fill
-```
-
-Execution rows include scheduled/actual windows, status, duration phases, searched records, matches, alerts, warnings/errors, data-source completeness, gap interval, retry state, engine/node version, and audit references. Manual and gap-fill operations require a bounded time range, impact/cost preview, approval policy, idempotency key, asynchronous job ID, cancellation where safe, and progress. A failed datastore is never represented as zero matches.
-
-### DET-010 — Versioned, previewed lifecycle mutations and bulk operations
-
-Status: `REQUIRED`  
-Consumer: enable/disable controls, selected-row actions, delete, duplicate, export, and rollback
-
-```http
-POST /ha-detection-rules/bulk/status/preview
-POST /ha-detection-rules/bulk/status
-POST /ha-detection-rules/bulk/export
-POST /ha-detection-rules/{ruleId}/duplicate
-POST /ha-detection-rules/{ruleId}/delete-preview
-DELETE /ha-detection-rules/{ruleId}
-If-Match: "rule-version"
-Idempotency-Key: {uuid}
-```
-
-Preview reports selected, eligible, excluded, managed-content restrictions, active schedules/jobs, open alerts/incidents, exceptions/actions, coverage change, and approval requirements. Execute returns updated row projections or per-record outcomes plus audit/job IDs. The server revalidates tenant, role, current version, content ownership, and policy; managed content cannot be silently overwritten by custom edits.
-
-### DET-011 — Authoritative validation and cancellable historical preview
-
-Status: `REQUIRED`  
-Consumer: custom-rule editor and `/detection-rules/:id/test`
-
-```http
-POST /ha-detection-rules/validate
-POST /ha-detection-rules/preview
-DELETE /ha-detection-rules/preview/{executionId}
-```
-
-Validation returns structured diagnostics with code, severity, message, JSON/YAML path, line/column range, field availability/type, required integrations, ATT&CK validity, schedule/lookback safety, and engine compatibility. Preview accepts an unsaved version plus authorized tenant/time scope, bounded result projection and maximum cost; it returns execution ID, histogram, exact/approximate count, event samples with signed hunt pivots, duration/cost, source completeness, truncation, warnings, and cancellation state. Test data is never mixed with production alerts or rule metrics.
-
-### DET-012 — Safe Sigma import, staged updates, and Detection-as-Code provenance
-
-Status: `REQUIRED`  
-Consumer: Import, Sigma sync, managed/custom provenance, update review, and rollback
-
-```http
-POST /ha-detection-rules/import/validate
-POST /ha-detection-rules/import/preview
-POST /ha-detection-rules/import
-GET  /ha-detection-rules/managed-updates?cursor={cursor}&limit=50
-POST /ha-detection-rules/managed-updates/{updateId}/apply-preview
-POST /ha-detection-rules/managed-updates/{updateId}/apply
-```
-
-Validation and preview report format/version, signatures/provenance, duplicates/conflicts, unsupported fields, missing integrations, ATT&CK mappings, actions/exception dependencies, overwritten fields, and per-rule eligibility. Apply is staged, audited, idempotent, and returns per-rule results. Managed-content modifications retain upstream and local versions plus a field-level diff; sensitive connector material is never exported or imported as rule content.
-
-### DET-013 — Resumable detection-health and content-update stream
-
-Status: `REQUIRED`  
-Consumer: status dock, stale indicators, row patching, and update badges
-
-```http
-GET /ha-detection-rules/stream?scope={tenantScope}&snapshot={snapshotId}
-Accept: text/event-stream
-Last-Event-ID: {eventId}
-```
-
-Events announce execution health changes, gap creation/repair, material alert-count deltas, content updates, rule lifecycle changes, integration degradation, and heartbeat. Payloads are small projected deltas and never reorder rows unexpectedly. Resume gaps emit reset; the frontend preserves stale rows while requesting a bounded replacement snapshot.
-
-### DET-015 — Snapshot-bound ATT&CK coverage and available-content recommendations
-
-Status: `REQUIRED`  
-Consumer: Detection Engineering ATT&CK matrix, readiness drill-down, telemetry gaps, and “find available content”
-
-```http
-GET /ha-detection-rules/coverage?scope={tenantScope}&framework=enterprise&version={version}&platform={optional}&mode={enabled|installed|available}&snapshot={optional}
-GET /ha-detection-rules/coverage/{techniqueId}?scope={tenantScope}&snapshot={snapshotId}&cursor={cursor}&limit=50
-```
-
-The summary returns the authoritative ATT&CK framework/version, ordered tactics and techniques, enabled/installed/available rule counts, mapped data sources, data-source readiness/freshness, last successful execution, degraded/partial sources, coverage confidence, applicable tenant scope, and a stable snapshot ID. Technique detail returns bounded mapped-rule projections and available managed-content candidates with prerequisite integrations, license/entitlement, content version, conflicts, and activation eligibility. “No mapped rule,” “mapped but disabled,” “enabled but unhealthy,” “telemetry unavailable,” “forbidden,” and “framework data unavailable” are distinct states. Available content is recommendation data from the server and is never inferred from a small browser page.
-
-### DET-016 — Canonical rule-authoring projection and gated publish lifecycle
-
-Status: `REQUIRED`  
-Consumer: `/detection-rules/new` and `/detection-rules/{id}/edit`
-
-```http
-GET  /ha-detection-rules/{ruleId}/authoring?version={optional}
-POST /ha-detection-rules/drafts
-PUT  /ha-detection-rules/{ruleId}/draft
-POST /ha-detection-rules/{ruleId}/publish/preview
-POST /ha-detection-rules/{ruleId}/publish
-If-Match: "rule-version"
-Idempotency-Key: {uuid}
-```
-
-The authoring projection returns canonical rule language/version, definition, lifecycle state, managed/custom provenance, upstream and local versions, normalized data-source identifiers, field schema/readiness, ATT&CK mappings, schedule and late-event lookback, threshold, grouping/deduplication, suppression, alert/incident behavior, response actions, exceptions, author/owner, capabilities, current ETag, and last authoritative validation/preview references. Draft mutation accepts the same stable IDs rather than persistence entities and returns the complete normalized projection plus version and ETag; creation returns `201` with a canonical ID and Location.
-
-Publish preview combines DET-011 validation and historical preview with expected volume, performance/cost, coverage change, source degradation, connector/action blast radius, approval requirements, managed-content override diff, conflicts, and explicit test-data isolation. Publish is blocked on stale version, missing authoritative validation, expired preview, missing source/field permissions, unsafe schedule/lookback, unresolved critical diagnostics, or required approval. Successful publish returns the immutable version, effective activation time, audit/job IDs, and updated inventory projection. Partial action configuration is never represented as a fully published rule.
-
----
-
-## Route: `/response/playbooks/new`, `/response/playbooks/:id/edit` — Low-code SOAR Playbook Builder
-
-Audit timestamp: **2026-08-09 12:10:59 IST (UTC+05:30)**  
-Frontend files: `frontend-v3/src/pages/response/PlaybookBuilderPage.tsx`, `playbookNodes.tsx`, `components/ActionPalette.tsx`, `components/NodeConfigPanel.tsx`, `services/playbookService.ts`, and `services/responseActionService.ts`.
-
-This audit covers the newly redesigned graph authoring workflow. It does not reopen the older response-page contracts that Kiro has already implemented; the entries below record only capabilities the current backend cannot yet provide to the new builder.
-
-Legacy endpoint deprecation registered: **2026-08-11 18:20:37 IST (UTC+05:30)**. All `/api/soar/**` routes are retained only as a compatibility surface and now emit `Deprecation`, `Sunset`, `Link: </api/ha-playbooks>; rel="successor-version"`, and HTTP `Warning` lifecycle headers. New frontend and integration work must use the secured canonical `/api/ha-playbooks` family. Planned sunset is **2027-12-31**; removal remains conditional on an integration inventory and migration review.
-
-### Current contract audit
-
-| ID | Status | Contract | Notes |
-|---|---|---|---|
-| RESP-013 | `PARTIAL` | `GET/POST/PUT /ha-playbooks` | The secured modern controller and DTO support a linear ordered `steps` array and partial repository persistence. Node positions and next-edge hints can be preserved temporarily inside arbitrary step configuration, but list/update/activation and execution paths still contain incomplete stub behavior, and the server does not validate graph topology, branch handles, loops, reusable blocks, inputs/outputs, immutable versions, ETags, or draft/published lifecycle. |
-| RESP-014 | `PARTIAL` | `GET /response/actions` | Reconciled **2026-08-12 10:52:32 IST (UTC+05:30)**. Kiro's role-protected catalog is now the frontend source and supplies action identity, target type, basic parameters/descriptions/defaults, simulated integration status, risk level and required role. It remains an unbounded static registry and does not expose connector type/instance or authoritative health/freshness, tenant availability, typed outputs, secrets references, data classification/redaction, stable action versions, approval/rollback declarations, timeout/retry/idempotency/rate-limit/test-mode capabilities, or per-action permission denials. The older `GET /ha-response-actions/library` is deprecated in favor of `/response/actions`; it remains compatibility-only and now advertises lifecycle headers. |
-| RESP-015 | `DEPRECATED` | `/soar/playbooks` and `/ha-playbooks` | The legacy `/api/soar/**` resource accepts an opaque graph-like definition and is now explicitly deprecated in favor of `/api/ha-playbooks`, with lifecycle headers registered on 2026-08-11 18:20:37 IST. Compatibility remains until the integration inventory is migrated; the frontend must use only the canonical secured surface. The modern resource still needs the versioned graph and lifecycle contract below before it is a complete authoring authority. |
-| RESP-016 | `MISSING` | Validate, simulate, publish preview, publish | The current execute/SSE/cancel flow runs a saved playbook, but there is no side-effect-free unsaved-graph simulation, structured graph validation, blast-radius preview, approval gate, immutable publish version, or rollback contract. |
-| RESP-018 | `MISSING` | `GET /ha-playbooks/activity` and execution monitoring | The redesigned frontend previously requested a global activity route that is not present in the checked-in secured playbook controller. The current backend can start and stream one in-memory execution, but it does not provide a tenant-scoped global execution ledger, health summary, opaque bidirectional cursors, pinned versions, resumable node traces, redacted input/output projections, connector degradation, audit correlation, export jobs, or snapshot metadata. |
-| RESP-019 | `MISSING` | Governed Hive Intelligence playbook coauthoring | Kiro's generic `/ha-ai/chat`, `/ha-ai/triage`, `/ha-ai/incident-summary`, `/ha-soc-ai/query`, and `/ha-soc-ai/enrich-alert` capabilities are acknowledged as implemented and are not reopened here. They return chat text, summaries, or action strings; they do not return permission-filtered, schema-valid, auditable graph patches bound to a playbook draft. |
-| RESP-020 | `MISSING` | Response approval queue, authority policy, delegation, and decision audit | Kiro's role-protected response-action catalogue, playbook execution, per-playbook history, SSE stream, and administrator cancellation endpoints are acknowledged. The generic `/authority` role CRUD is an application-administration concern and is not a response-approval service. No checked-in backend endpoint provides a tenant-scoped pending-action queue, blast-radius projection, multi-level human decision, separation of duties, time-bound delegated authority, change-window/emergency policy, optimistic decision state, or immutable response-governance ledger. |
-| RESP-021 | `PARTIAL` | Quarantine and endpoint containment operations | Kiro's secured paged `/ha-edr/quarantine` list plus single/bulk restore/delete actions are implemented and retained. Missing pieces are enriched evidence and summary projections, cursor/snapshot/freshness semantics, secured canonical endpoint-isolation inventory, action history, preview/approval/idempotency for disruptive actions, resumable delivery state, and consistent SOC-manager authorization. |
-
-### RESP-013 — Canonical versioned graph authoring and draft persistence
-
-Status: `REQUIRED`  
-Recorded: **2026-08-09 12:10:59 IST (UTC+05:30)**  
-Consumer: visual canvas, undo-safe draft save, reopen/edit, reusable blocks, and deterministic execution
-
-```http
-GET  /ha-playbooks/{playbookId}/authoring?version={optional}
-POST /ha-playbooks/drafts
-PUT  /ha-playbooks/{playbookId}/draft
-If-Match: "playbook-version"
-Idempotency-Key: {uuid}
-```
-
-The canonical projection returns stable playbook, version, node, port, and edge IDs; viewport-independent node positions; trigger configuration; typed nodes and branch handles; edge conditions; loop bounds; bounded parallel/fan-in policies; reusable sub-playbook references with pinned version compatibility; typed data transforms; deterministic failure, fallback, compensation, and join semantics; declared inputs/outputs and variable types; tenant/environment scope; owner; tags; lifecycle state; capability descriptors; ETag; and created/modified actor/time. The server validates referential integrity and returns the normalized graph rather than persisting browser-only shapes. Draft creation returns `201`, Location, canonical ID, version, ETag, and the complete projection. Concurrent edits fail with `409`/`412` and the latest version metadata; graph or connector validation errors use stable codes and node/edge pointers.
-
-### RESP-014 — Permission-aware connector action catalog and typed schemas
-
-Status: `REQUIRED`  
-Recorded: **2026-08-09 12:10:59 IST (UTC+05:30)**  
-Frontend/backend reconciliation: **2026-08-12 10:52:32 IST (UTC+05:30)**  
-Consumer: searchable block library, configuration inspector, variables, readiness, and governance
-
-```http
-GET /ha-playbooks/action-catalog?scope={tenantScope}&q={query}&category={optional}&cursor={cursor}&limit=100
-GET /ha-playbooks/action-catalog/{actionId}
-```
-
-Each action returns a stable action/version and connector type/instance reference; symbolic icon key; category and description; tenant availability; connection/authentication/health/freshness state; execution permission and denial reason; JSON-schema-equivalent parameter definition with safe defaults and secret-reference fields; typed outputs; data classifications and redaction rules; risk/blast-radius classification; approval and justification requirements; rollback/compensating-action capability; supported timeout, retry, idempotency, concurrency, rate-limit, and test-mode behavior. Pages use opaque cursors and deterministic ordering. Connector credentials, tokens, and secret values are never returned to the browser, fixtures, export, or execution trace.
-
-The current `/response/actions` baseline is intentionally retained while the canonical paged catalog is built. The redesigned `/response/library` consumes only fields the baseline actually returns; missing approval, rollback, output-schema, connector-instance and usage metadata is displayed as **not reported** or **determined during preview**, never inferred in production. Catalog browsing is side-effect free and only pivots into a versioned playbook draft. The service imports fictional action records dynamically only when the explicit development fixture flag is enabled.
-
-### RESP-015 — Authoritative graph validation and compile preview
-
-Status: `REQUIRED`  
-Recorded: **2026-08-09 12:10:59 IST (UTC+05:30)**  
-Consumer: readiness inspector, Validate, Save draft, and Publish eligibility
-
-```http
-POST /ha-playbooks/validate
-POST /ha-playbooks/{playbookId}/publish/preview
-```
-
-Validation accepts an unsaved canonical graph plus ETag and returns a short-lived validation reference, normalized graph hash, engine/schema versions, and structured diagnostics with severity, stable code, message, node/edge/parameter pointer, suggested correction, and permission-sensitive detail. Checks include reachable start/end paths, illegal cycles, explicit branch outcomes, bounded loop depth/iterations, variable type compatibility, missing outputs, connector readiness, secret references, tenant scope, RBAC/ABAC, timeout/retry limits, high-impact approval placement, compensating actions, concurrency, estimated execution/cost limits, and unsupported engine features.
-
-Publish preview additionally returns a graph/version diff; affected connectors and tenant scope; bounded target/blast-radius estimates; side effects and irreversible actions; approval policy and eligible approvers; source or connector degradation; schedule/concurrency collision; unresolved warnings; and preview expiry. A failed dependency is not represented as a clean validation result.
-
-### RESP-016 — Side-effect-free simulation and resumable debugger
-
-Status: `REQUIRED`  
-Recorded: **2026-08-09 12:10:59 IST (UTC+05:30)**  
-Consumer: Test inspector, per-node trace, breakpoints, cancellation, and safe low-code iteration
-
-```http
-POST   /ha-playbooks/simulations
-GET    /ha-playbooks/simulations/{simulationId}
-GET    /ha-playbooks/simulations/{simulationId}/stream
-DELETE /ha-playbooks/simulations/{simulationId}
-Accept: text/event-stream
-Last-Event-ID: {eventId}
-```
-
-Simulation accepts an unsaved graph or immutable version plus an explicitly authorized fictional/sample event reference, breakpoints, bounded overrides, execution limits, and a mandatory `sideEffects=false` policy. It returns a simulation ID, authoritative graph hash, expiry, and resumable small events for queued/running/paused/skipped/succeeded/failed/cancelled nodes. Node traces include phase timing, redacted typed inputs/outputs, branch decision, retry, warnings, and error codes. Operators can continue, step, skip an eligible block, or provide a bounded temporary override without mutating the draft. Cancellation is idempotent. Simulation never creates alerts/incidents, contacts external systems, changes endpoints/identities/network controls, or contaminates production metrics and audit outcomes.
-
-### RESP-017 — Governed publish, immutable versions, activation, and rollback
-
-Status: `REQUIRED`  
-Recorded: **2026-08-09 12:10:59 IST (UTC+05:30)**  
-Consumer: Publish, Enable after publish, history/diff, execution pinning, and emergency rollback
-
-```http
-POST /ha-playbooks/{playbookId}/publish
-POST /ha-playbooks/{playbookId}/versions/{version}/activation-preview
-PATCH /ha-playbooks/{playbookId}/versions/{version}/activation
-POST /ha-playbooks/{playbookId}/versions/{version}/rollback-preview
-POST /ha-playbooks/{playbookId}/versions/{version}/rollback
-If-Match: "playbook-version"
-Idempotency-Key: {uuid}
-```
-
-Publish requires an unexpired validation and preview reference bound to the exact graph hash, current ETag, stated change reason, and approval evidence when policy requires it. Success creates an immutable version and returns effective activation state/time, graph hash, audit ID, capabilities, and updated inventory projection. Executions pin the immutable version used. Activation and rollback preview report running jobs, schedules/automation-rule references, connector and permission changes, affected tenants, and safe rollback boundary. The server revalidates scope, permissions, connector readiness, policy, version, and idempotency at execution time; the browser cannot self-approve or activate an unvalidated draft.
-
-### RESP-018 — Bounded execution inventory, node traces, and collaboration history
-
-Status: `REQUIRED`  
-Recorded: **2026-08-09 12:10:59 IST (UTC+05:30)**  
-Refined for `/response/activity`: **2026-08-09 14:40:07 IST (UTC+05:30)**  
-Consumer: execution monitoring, graph overlays, audit review, version comparison, and team authoring
-
-```http
-GET /ha-playbooks/executions?search={optional}&status={optional}&trigger={optional}&playbookId={optional}&tenantScope=authorized&from={iso}&to={iso}&cursor={cursor}&limit=100
-GET /ha-playbooks/executions/summary?tenantScope=authorized&from={iso}&to={iso}&snapshot={optional}
-GET /ha-playbooks/{playbookId}/executions?cursor={cursor}&limit=100&status={optional}&from={optional}&to={optional}
-GET /ha-playbooks/executions/{executionId}/trace?cursor={cursor}&limit=100
-GET /ha-playbooks/executions/{executionId}/stream
-POST /ha-playbooks/executions/export
-GET /ha-playbooks/executions/export/{jobId}
-GET /ha-playbooks/{playbookId}/versions?cursor={cursor}&limit=50
-GET /ha-playbooks/{playbookId}/audit?cursor={cursor}&limit=100
-```
-
-The global ledger supports the complete symbolic lifecycle (`queued`, `running`, `awaiting_approval`, `succeeded`, `partial`, `failed`, `cancelled`, and `blocked`) without collapsing policy blocks, connector degradation, or partial completion into generic failure. Execution rows return tenant-safe summary, pinned playbook version, trigger source, status, start/end/duration, current node and bounded progress, outcome counts, initiating actor/automation rule, linked alert/incident context, approval references, connector/source degradation, retry/warning counts, cancellation/retry capability, correlation ID, and audit ID. Summary metrics are computed over the same authorization, filters, time window, and snapshot as the rows and return exactness, partial failures, running/approval/failure/partial counts, success rate, median duration, connector degradation, server time, and freshness; the browser never infers organization-wide health from one page.
-
-Trace records are bounded, ordered, redacted, progressively loaded, and use stable node IDs. Each node exposes timing, retry and wait state, typed safe input/output summaries, branch result, error code, and explicit redacted-field labels—never credentials, secret references, restricted raw events, or model chain-of-thought. Cursor ordering is deterministic in both directions and bound to the authorization/filter snapshot. Resumable events update active runs without silently reordering the analyst's page; a resume gap marks the snapshot stale and triggers bounded replacement. Export is an asynchronous, audited, permission-checked job bound to the filters and snapshot with expiry and row limits, not a browser reconstruction of whatever rows happen to be loaded. Version/audit projections include actor/time/reason, lifecycle change, graph summary and server-authored diff reference without credentials or raw secrets. Conflict/lock hints may assist collaboration but do not replace optimistic concurrency; comments, approvals, and audit records remain server-authoritative.
-
-### RESP-019 — Governed AI coauthoring with structured, reviewable graph patches
-
-Status: `REQUIRED`  
-Recorded: **2026-08-09 12:29:44 IST (UTC+05:30)**  
-Consumer: Hive Intelligence inspector, natural-language playbook drafting, rationale/confidence review, and explicit analyst apply/dismiss
-
-```http
-POST   /ha-playbooks/ai/sessions
-POST   /ha-playbooks/ai/sessions/{sessionId}/messages
-GET    /ha-playbooks/ai/sessions/{sessionId}/stream
-DELETE /ha-playbooks/ai/sessions/{sessionId}
-POST   /ha-playbooks/{playbookId}/versions/{version}/ai/explain
-Accept: text/event-stream
-Last-Event-ID: {eventId}
-```
-
-This new builder contract extends—rather than duplicates—the already implemented generic HiveArmor AI chat, alert-triage, incident-summary, and synchronous SOC-AI query endpoints. A session request carries the authorized tenant/environment scope; unsaved canonical graph and graph hash/ETag; user objective; permitted action-catalog schema/version; normalized trigger and prior-step field schemas; tenant response policy; and explicit data-minimization options. The backend derives identity and permissions from the security context, removes secrets and disallowed raw fields before model invocation, limits prompt/context/output size, and treats external connector descriptions, event content, and retrieved documents as untrusted data rather than instructions.
-
-The response is a bounded ordered set of structured proposals, never executable prose. Each proposal returns a stable proposal ID; operation (`add_node`, `update_node`, `add_edge`, `remove_edge`, or `explain`); canonical graph patch with stable schema pointers; title, rationale, assumptions, confidence and confidence basis; risk/blast-radius class; required connector, permissions, secrets, approvals, and compensating action; validation/policy findings; source/provenance references; model/provider/version; prompt-policy version; expiry; and the exact input graph hash. Streaming events distinguish planning, context retrieval, proposal, policy warning, completion, cancellation, degradation, and error states and are resumable without duplicated proposals.
-
-Every proposal is an untrusted draft. The analyst accepts or rejects proposals individually, and acceptance only mutates the current draft under RESP-013 optimistic concurrency. AI cannot save, approve, publish, activate, schedule, simulate with side effects, or execute a playbook; it cannot self-authorize a connector or widen tenant/entity scope. After any accepted patch, the server reruns RESP-015 validation and publish preview against the resulting graph. High-impact or irreversible actions always retain deterministic policy gates and eligible-human approval independent of AI confidence.
-
-Audit records bind session/proposal IDs, actor, tenant scope, graph before/after hashes, accepted/rejected disposition and reason, source references, redaction policy, model/provider/version, token/cost/latency, safety classification, and final authoritative validation reference. Retention, export, model-training use, regional routing, air-gapped/local-provider behavior, rate limits, cancellation, provider outage, quota exhaustion, low confidence, missing permission, stale graph, and prompt-injection detection are explicit policy/capability states. Raw prompts, event bodies, secrets, connector credentials, and model chain-of-thought are not written to ordinary application logs or returned as audit detail.
-
-### RESP-020 — Governed response approvals, delegated authority, and immutable decisions
-
-Status: `REQUIRED`  
-Recorded: **2026-08-09 15:06:06 IST (UTC+05:30)**  
-Consumer: `/response/authority` approval queue, blast-radius review, policy/delegation views, emergency authority, and decision history
-
-```http
-GET  /ha-response-governance/approvals?state={state}&risk={risk}&tenantScope=authorized&search={optional}&cursor={cursor}&limit=100
-GET  /ha-response-governance/summary?tenantScope=authorized&snapshot={optional}
-GET  /ha-response-governance/approvals/{approvalId}
-POST /ha-response-governance/approvals/{approvalId}/decision
-GET  /ha-response-governance/stream
-GET  /ha-response-governance/policies?tenantScope=authorized&cursor={cursor}&limit=100
-GET  /ha-response-governance/policies/{policyId}
-GET  /ha-response-governance/delegations?tenantScope=authorized&status={optional}&cursor={cursor}&limit=100
-GET  /ha-response-governance/delegations/{delegationId}
-GET  /ha-response-governance/audit?tenantScope=authorized&from={iso}&to={iso}&cursor={cursor}&limit=100
-POST /ha-response-governance/policies/preview
-POST /ha-response-governance/policies
-PUT  /ha-response-governance/policies/{policyId}
-POST /ha-response-governance/delegations/preview
-POST /ha-response-governance/delegations
-PUT  /ha-response-governance/delegations/{delegationId}
-POST /ha-response-governance/emergency-access/requests
-If-Match: "approval-or-policy-version"
-Idempotency-Key: {uuid}
-```
-
-The approval list is an opaque-cursor, deterministic, tenant-authorized projection ordered by decision urgency and stable ID. Each row returns approval/execution/playbook/version identifiers; action and target summary; risk and approval tier; requester and request time; expiry/SLA; tenant-safe linked alert or incident reference; policy gate; approval count; connector readiness; change-window state; and current lifecycle (`pending`, `approved`, `rejected`, `expired`, or `cancelled`). Summary metrics are computed over the same authorization and snapshot and distinguish due-soon, critical-risk, restricted-window, approved, rejected, and connector-warning counts. Filtering does not cause the browser to infer organization-wide totals from the loaded rows.
-
-The detail projection returns the bounded target set or an explicit count/truncation marker; target type and estimated affected users/downtime; confidence and evidence summary; reversible/irreversible classification; authoritative rollback or compensating-action guidance; required permission; eligible approver groups; multi-level/minimum approval requirements; separation-of-duties result; connector and change-calendar validation; and redacted audit/correlation references. It never returns connector credentials, secret references, unrestricted raw events, hidden tenant identifiers, or AI chain-of-thought. Large target sets and evidence collections are progressively cursor-loaded rather than embedded in the queue.
-
-A decision body includes `decision`, mandatory rationale, explicit blast-radius acknowledgement, and `expectedState=pending`. The server derives actor, role, tenant and eligible authority from the authenticated security context; requesters cannot approve their own action unless an explicit versioned policy permits it. Approval does not blindly execute: immediately before continuing, the server revalidates expiry, action/playbook version, target scope, connector readiness, change window, current incident/alert authorization, policy version, approval count and idempotency. Stale, expired, already-decided, widened-target, changed-policy, lost-permission and connector-unavailable outcomes return stable conflict/policy error codes. Reject, expire and cancel are terminal decisions and do not start the disruptive action.
-
-Policy and delegation changes use preview/confirm semantics with versioned diffs, impacted actions/tenants, effective time, approver-path simulation, lockout warnings, and rollback plan. Delegations are least-privilege, action/tenant scoped, time bounded, attributable to a principal, and cannot silently grant their creator a broader tier. Emergency access requires a reason, incident/change reference, strict expiry, independent approval where configured, conspicuous active state, notification and post-use review. Change-freeze exceptions and multi-level approval paths remain deterministic server policy; Hive Intelligence may explain risk but cannot approve, delegate, waive separation of duties or create emergency authority.
-
-Editor refinement recorded **2026-08-09 15:35:52 IST (UTC+05:30)**: the policy and delegation authoring routes require single-record reads plus create/update mutations. Every mutation accepts `expectedVersion`, mandatory `changeReason`, explicit draft/publish intent, and an idempotency key; update additionally requires `If-Match`. Draft save may persist an inactive or monitor-only version, but publish must run the authoritative preview, authorization, tenant-scope, separation-of-duties, approver-group viability, time-window, rollback, lockout and emergency-tier checks atomically. Responses return the new version and audit reference. A stale version is `409`, invalid governance is `422` with stable field/policy errors, forbidden scope escalation is `403`, and a duplicate idempotency key returns the original result. Deleting an active policy or delegation is intentionally not part of this UI contract; retirement is an audited status transition.
-
-Every request, view-sensitive mutation, decision, policy/delegation change, emergency grant, execution resume/revalidation and rollback writes an immutable audit event with actor, tenant, reason, before/after version, target-count/hash, policy/approval references, correlation ID, source IP/session where permitted, and outcome. Resumable events notify eligible approvers of new, changed, expired and decided requests without duplicating decisions. Audit export is asynchronous, permission checked, snapshot bound and redacted. Retention, legal hold and regional controls are server policy.
-
-### RESP-021 — Unified quarantine and endpoint-containment operations
-
-Status: `PARTIAL`  
-Recorded: **2026-08-09 21:51:15 IST (UTC+05:30)**  
-Consumer: `/response/quarantine` and compatibility route `/edr/quarantine`
-
-Kiro's secured `GET /ha-edr/quarantine`, `PATCH /ha-edr/quarantine/{id}`, and `POST /ha-edr/quarantine/bulk` implementations are acknowledged and remain the canonical implemented file-quarantine baseline. They provide bounded Spring pages sorted by quarantine time, agent/status filters, and single/bulk restore or delete for `ROLE_ANALYST` and `ROLE_ADMIN`. This entry does not reopen those capabilities. The older parallel `/edr/quarantine` and `/edr/isolation` controller is not a safe replacement: its methods have no visible `@PreAuthorize`, its list shape differs, and it creates a second authority for the same records.
-
-The workbench still requires the following missing or partial contracts:
-
-```http
-GET /ha-edr/quarantine/summary?tenantScope=authorized&snapshot={optional}
-GET /ha-edr/quarantine?search={optional}&status={optional}&verdict={optional}&agentId={optional}&source={optional}&from={iso}&to={iso}&tenantScope=authorized&cursor={cursor}&limit=100&snapshot={optional}
-GET /ha-edr/quarantine/{quarantineId}
-GET /ha-edr/quarantine/{quarantineId}/history?cursor={cursor}&limit=100
-POST /ha-edr/quarantine/{quarantineId}/restore-preview
-POST /ha-edr/quarantine/{quarantineId}/restore
-POST /ha-edr/quarantine/{quarantineId}/delete-preview
-DELETE /ha-edr/quarantine/{quarantineId}
-
-GET /ha-edr/isolations/summary?tenantScope=authorized&snapshot={optional}
-GET /ha-edr/isolations?search={optional}&status={optional}&targetType={optional}&tenantScope=authorized&cursor={cursor}&limit=100&snapshot={optional}
-GET /ha-edr/isolations/{isolationId}
-GET /ha-edr/isolations/{isolationId}/history?cursor={cursor}&limit=100
-POST /ha-edr/isolations/{isolationId}/release-preview
-POST /ha-edr/isolations/{isolationId}/release
-GET /ha-edr/containment/stream
-If-Match: "record-version"
-Idempotency-Key: {uuid}
-```
-
-List responses use opaque deterministic cursors and a stable authorization/filter snapshot; include `items`, `nextCursor`, `hasMore`, `snapshotAt`, exact-or-approximate total metadata, source freshness, and explicit partial failures. File rows add verdict and provenance, threat/detection identity, full hash availability, original-path redaction state, size, signer/publisher trust, first/last observed, prevalence or affected-device count, source connector, delivery state, linked alert/incident/execution references, capability flags, and record version. Endpoint rows add target type and canonical entity ID, isolation mode and exceptions, management-channel preservation, agent/platform/version, online/freshness and command-delivery state, initiating policy/person, expiry, blast radius, linked response execution, release eligibility, and version. Summary values are computed over the same scope and snapshot—not inferred from one page.
-
-Detail and history preserve chain of custody without returning quarantine-store secrets: observation and detection evidence references, server-authored disposition rationale, original and quarantine locations with field-level redaction, integrity/hash verification, action submission/delivery/verification/failure events, connector correlation IDs, actor and policy/approval references, and immutable audit IDs. Large observation or affected-endpoint collections remain progressively cursor-loaded. Offline, queued, failed, restored/released, permanently deleted, expired, redacted, forbidden, stale, unsupported-platform, and source-unavailable states are distinct.
-
-Restore, permanent delete, isolate, and release use preview/confirm semantics. Preview returns current target state, scope/prevalence, running-process or business-service impact, signer/trust warnings, current connector and agent readiness, delivery timeout, reversibility, rollback guidance, policy/approval requirement, conflicting actions, and a short-lived token bound to the exact record version and target hash. Execute requires that token, mandatory analyst rationale, approval reference where policy requires it, `If-Match`, and `Idempotency-Key`; the server revalidates permission, tenant/entity scope, evidence/version, connector health, change window, and separation of duties atomically. Bulk actions return per-record eligible/excluded/outcome entries and never collapse partial delivery into success. `ROLE_SOC_MANAGER` access must be deliberate and consistent with governance policy rather than accidentally excluded by the current file endpoint role expression.
-
-The resumable stream emits small state deltas for submitted, queued, delivered, verified, failed, restored/released, deleted, expired, and connector-freshness changes. `Last-Event-ID` resume gaps mark the projection stale and force bounded replacement. Mutation completion links to the immutable response activity ledger under `RESP-018`; it is not represented by optimistic browser state alone.
-
-Frontend/backend reconciliation recorded **2026-08-11 22:34:29 IST (UTC+05:30)**: `/response/quarantine` now cancels superseded file-inventory requests, retains bounded page data during refresh, polls at a controlled interval, labels loaded-page metrics honestly, excludes ineligible/offline/pending records from bulk mutations, confirms both restore and permanent delete, exposes connector/delivery state, and routes endpoint release through a governed authority review rather than presenting an unsupported success path. This is frontend hardening only and does not change `RESP-021` from `PARTIAL`; the summary/detail/history, cursor/snapshot, preview/confirm, idempotency, release, canonical isolation inventory, and resumable stream contracts above remain open.
-
-The legacy `EdrResource` methods for `GET|POST /edr/quarantine`, `POST /edr/quarantine/{id}/restore`, `GET|POST /edr/isolation`, and `POST /edr/isolation/{id}/lift` were marked `@Deprecated(since = "2026-08-11", forRemoval = true)` at **2026-08-11 22:34:29 IST (UTC+05:30)**. They must not receive new frontend consumers. Before removal, the backend should add standard `Deprecation`, `Sunset`, and successor `Link` response headers, migrate any remaining callers to `/ha-edr/*`, and preserve an auditable compatibility window.
-
-### AST-001 — Safe unified asset inventory, facets, summary, and snapshot pagination
-
-Status: `PARTIAL — BACKEND IMPLEMENTED 2026-08-10 13:25:39 IST`  
-Recorded: **2026-08-10 11:31:45 IST (UTC+05:30)**  
-Consumer: `/posture/assets` inventory, category views, risk/exposure/coverage filters, and sticky pagination
-
-The checked-in backend already provides paged discovery records through `GET /ha-network-scans` and `GET /ha-network-scans/search-by-filters`, a new-asset count, property-value search, asset groups/types, and single scan detail. Those implemented legacy capabilities are acknowledged and are not reopened. However, `GET /ha-clients` remains an unbounded `List<UtmClient>` persistence-entity response and `GET /ha-clients/{id}` returns the same entity type. `UtmClient` includes credential/licence fields such as `clientUser`, `clientPass`, and `clientLicenceId`; stripping them in the browser mapper is only defense in depth, not an acceptable server disclosure boundary. Neither `UtmClientResource` nor `UtmNetworkScanResource` has visible resource-level method authorization in the checked-in implementation. The production Asset Intelligence page therefore requires a canonical, explicitly authorized, safe DTO projection rather than wiring the browser to either persistence model.
-
-```http
-GET /ha-assets?search={optional}&category={optional}&risk={optional}&exposure={optional}&sensorHealth={optional}&onboarding={optional}&criticality={optional}&owner={optional}&tag={optional}&tenantScope=authorized&cursor={cursor}&limit=50&sort=riskScore:desc&snapshot={optional}
-GET /ha-assets/summary?tenantScope=authorized&snapshot={optional}&filtersHash={optional}
-GET /ha-assets/facets?tenantScope=authorized&snapshot={optional}&search={optional}&category={optional}&limit=50
-```
-
-The list returns bounded safe fields only: canonical asset/entity ID, display name, category/role, criticality, symbolic risk and exposure levels plus normalized scores, coverage/onboarding state, platform summary, safe network/cloud identity, owner/team, active alert/vulnerability/attack-path counts, first/last seen, discovery-source labels, tags, capability flags, and record/snapshot version. It never returns client passwords, usernames used for service authentication, licence IDs/secrets, connector credentials, agent keys, raw configuration, hidden tenant IDs, or unrestricted event content. Summary and facets are computed over the exact same authorization, filter hash, and snapshot as rows and declare exact/approximate totals, server time, source freshness, and partial failures. Opaque cursor ordering uses the explicit sort key plus stable asset ID; back/forward navigation may use signed adjacent cursors without offset scans. `ETag`/`If-None-Match` and a short server-declared TTL support stable caching without silently serving a changed authorization scope.
-
-### AST-002 — Progressive asset detail, risk evidence, coverage, and activity
-
-Status: `PARTIAL — BACKEND IMPLEMENTED 2026-08-10 13:25:39 IST`  
-Recorded: **2026-08-10 11:31:45 IST (UTC+05:30)**  
-Consumer: full-height Asset Intelligence context drawer and investigation pivots
-
-```http
-GET /ha-assets/{assetId}
-GET /ha-assets/{assetId}/risk-drivers?cursor={cursor}&limit=50&snapshot={optional}
-GET /ha-assets/{assetId}/recommendations?state={optional}&cursor={cursor}&limit=50&snapshot={optional}
-GET /ha-assets/{assetId}/coverage?cursor={cursor}&limit=50&snapshot={optional}
-GET /ha-assets/{assetId}/activity?from={iso}&to={iso}&cursor={cursor}&limit=100&snapshot={optional}
-```
-
-The core detail is a fast bounded projection; evidence-heavy panels load only after the analyst opens the corresponding tab. It returns canonical identity, aliases, business ownership and criticality, first/last seen, lifecycle/onboarding, platform, explicitly redacted network/cloud identifiers, source freshness, and authorized pivot/capability descriptors. Risk drivers distinguish alerts, vulnerabilities, exposure paths, configuration, and identity risk and provide stable evidence references, counts, normalized severity, calculation/model/rule version, and freshness—never inferred browser explanations. Recommendations include state, priority, owner, exposure reduction, remediation reference, and applicability. Coverage names each authorized sensor/source with health, last observation, expected cadence, degradation reason, and confidence impact. Activity is deterministic and cursor bounded. Missing, stale, redacted, permission-denied, partial-source, unsupported, and never-observed states remain distinct.
-
-### AST-003 — Governed asset classification and ownership changes
-
-Status: `REQUIRED`  
-Recorded: **2026-08-10 11:31:45 IST (UTC+05:30)**  
-Consumer: future Asset Intelligence edit/bulk-classification flow; no mutation is currently exposed by the redesigned page
-
-```http
-POST  /ha-assets/changes/preview
-PATCH /ha-assets/{assetId}
-POST  /ha-assets/bulk-changes/preview
-POST  /ha-assets/bulk-changes
-GET   /ha-assets/{assetId}/audit?cursor={cursor}&limit=100
-If-Match: "asset-record-version"
-Idempotency-Key: {uuid}
-```
-
-Changes are restricted to policy-authorized metadata such as criticality, owner/team, approved tags, lifecycle classification, and merge/alias review; they cannot overwrite sensor facts, canonical identifiers, or risk evidence. Preview returns eligible/excluded targets, before/after diff, scope and downstream risk/policy impact, validation warnings, required role/approval, and an expiring token bound to exact target/version hashes. Execute requires mandatory rationale, optimistic version, idempotency, tenant revalidation, and per-record outcomes. Bulk operations never collapse partial failure into success. Audit records actor, time, reason, before/after values, source, approval/policy and correlation references. Existing legacy `updateType`, `updateGroup`, and custom-asset mutations are not adopted until equivalent explicit authorization, tenant isolation, optimistic concurrency, idempotency, DTO validation, and immutable audit behavior are verified.
-
-### AST-004 — Asset delta stream and snapshot-bound export
-
-Status: `REQUIRED`  
-Recorded: **2026-08-10 11:31:45 IST (UTC+05:30)**  
-Consumer: live freshness/status dock, stable analyst review, and large authorized exports
-
-```http
-GET  /ha-assets/stream
-POST /ha-assets/exports
-GET  /ha-assets/exports/{jobId}
-Accept: text/event-stream
-Last-Event-ID: {eventId}
-```
-
-The resumable stream emits small authorized deltas for discovery, disappearance, sensor health, risk/exposure, ownership/classification, and source-freshness changes. It does not insert or reorder rows in the analyst's current snapshot; the UI marks newer data available and performs a bounded replacement when requested. Resume gaps and authorization changes invalidate the snapshot explicitly. Export is an asynchronous, audited, permission-checked job bound to the exact filters, authorization scope, projection and snapshot, with row/size limits, redaction metadata, expiry, cancellation and partial-source status. It is never reconstructed from loaded browser pages.
-
-### Asset Intelligence backend implementation record
-
-Recorded: **2026-08-10 13:25:39 IST (UTC+05:30)**
-
-| Contract | Implemented in this backend pass | Remaining before `COMPLETE` |
-|---|---|---|
-| AST-001 | Added the explicitly authorized canonical `GET /api/ha-assets` boundary over the existing discovery repository. It returns a credential-free DTO only, applies bounded search/category/risk/exposure/coverage/onboarding filters, caps pages at 100, uses risk-plus-ID keyset pagination, HMAC-signed cursors bound to principal/tenant/filter/snapshot, exact total metadata, a same-filter summary, safe source labels/capabilities and private revalidation caching. The frontend production service now uses `/ha-assets`, caches adjacent cursor tokens, and no longer models or strips `/ha-clients` credential/licence properties. | Resolve `tenantScope=authorized` to the complete multi-tenant authorization set rather than only the active tenant context; add authoritative exposure/criticality/owner/tag projections, grouped facets, ETags tied to an authorization/snapshot version, source freshness/partial failures, previous cursors, database indexes and measured p95/payload gates. The temporary compatibility `content` fields and numeric page hints can be removed after all consumers adopt `items`/cursor semantics. |
-| AST-002 | Added `GET /api/ha-assets/{assetId}` with the same explicit read authorization and a bounded safe identity projection, aliases, metric-backed risk-driver references, source coverage/cadence/health, explicit non-projection states for credentials/licences, and data provenance. The drawer lazily requests this detail only after explicit row selection. | Add cursor subresources for risk drivers, recommendations, coverage and activity; authoritative vulnerability/exposure/alert/entity correlation; real classification, integrity, redaction and permission descriptors; canonical signed pivots; and missing/stale/forbidden/partial-source state integration tests. |
-| AST-003 | No mutation was enabled. Legacy direct entity/updateType/updateGroup/custom-asset mutations remain outside the canonical page. | Implement preview tokens, optimistic record versions, idempotency, rationale, authorization/approval, per-target outcomes and immutable audit before exposing edit controls. |
-| AST-004 | No stream or export capability was simulated. | Implement resumable authorized deltas plus asynchronous snapshot-bound, redacted and audited export/cancellation. |
-
-Verification recorded **2026-08-10 13:25:39 IST (UTC+05:30)**: Java 17 main compilation, frontend TypeScript checking, five focused Asset Intelligence UI tests and three isolated signed-cursor backend tests passed. Repository-wide Maven tests remain subject to the unrelated global test-compilation blocker recorded under the Search & Hunt implementation entry.
-
-Repository quality-gate rerun recorded **2026-08-10 13:29:39 IST (UTC+05:30)**: the frontend production build passed. The full frontend suite passed 1,002 of 1,005 tests; the three failures are pre-existing checks in Correlated Findings lazy-routing, Alert Triage raw-envelope normalization and Alert Investigation keyboard-story selection. Full lint remains blocked by 36 errors and 14 warnings across existing masthead, alert, constellation, correlation, entity, incident and Search import/hook files; no Asset Intelligence file is listed. The backend full Maven lifecycle again stopped at test compilation with nine stale references: missing `HaRuleGenerationResource`, alert-stream tests missing `HaSseRateLimiter`, and alert-bulk tests missing `InvestigationEventPublisher`. Main compilation and the isolated Search/Asset backend tests remain green.
-
-Focused revalidation recorded **2026-08-10 13:32:43 IST (UTC+05:30)** after route-role alignment and final detail-query cleanup: TypeScript, scoped lint for all modified Search/Asset frontend files, and 178 focused Search & Hunt plus Asset Intelligence tests passed.
-
-### Live Docker integration implementation record
-
-Recorded: **2026-08-10 14:47:45 IST (UTC+05:30)**  
-Environment: fixture-disabled frontend on `127.0.0.1:4176` against the running local Docker backend, PostgreSQL and OpenSearch services
-
-| Contract / boundary | Completed and verified with the real backend | Remaining work retained in this register |
-|---|---|---|
-| HNT-001 / HNT-002 / HNT-003 | Verified authenticated `*:*` execution, real OpenSearch records, 100-row bounded projection, histogram, exact/approximate totals, signed cursor continuation, page 2 (`101–200`), schema, query capabilities, field-value discovery, event detail, status and structured query errors. Fixed cursor continuation so the output-only `includeHistogram` flag no longer changes query identity. Added a regression test for cursor fingerprint stability. Fixed frontend grid-column aliases so only canonical backend field names are sent as the projection. Blank Enter now deterministically requests newest 100 and correctly renders a valid zero-event current window rather than a failed snapshot. | Complete authorized-tenant expansion, field-level security/redaction, authoritative asynchronous task cancellation, durable search-session storage, adjacent/back cursors, and tenant-isolation/performance integration tests before marking the hunt contracts complete. |
-| HNT error boundary | Added highest-precedence hunt exception handling and live-verified unsupported fields as HTTP 422 `HUNT_FIELD_UNSUPPORTED` rather than a generic HTTP 500. | Extend the same RFC 9457 precedence audit across older generic exception handlers and add controller integration tests once the repository-wide backend test-compilation blockers are repaired. |
-| AST-001 / AST-002 | Live-verified the credential-free canonical asset list/detail against PostgreSQL. Fixed PostgreSQL-safe risk ordering and stable ID tie-breaking. Injected one observed local-development Docker backend container through the existing custom-asset path solely as real integration data; no fictional fixture record entered production storage. The canonical response exposes safe inventory data only. | No endpoint agents are enrolled in the current Docker environment. Authoritative platform classification, exposure/criticality/owner/tag enrichment, facets, source freshness, previous cursors, progressive subresources, tenant-isolation tests and measured query/index performance remain partial. |
-| Authentication bootstrap | Public OIDC discovery and PKCE entry routes are now explicitly permitted while OIDC administration remains role protected. Public credential login, enabled-provider discovery and password-reset requests no longer inherit stale bearer tokens or trigger authenticated-session logout handling. Live credential login and dashboard navigation passed. | Add backend security integration tests for public-versus-admin OIDC routes and public auth requests after the global stale-test compilation failures are resolved. |
-| Local Docker delivery | Corrected the backend image WAR path for the repository-root Compose build context. Corrected the Spring relaxed-binding CORS environment key and added only the local review origins (`localhost`/`127.0.0.1:4176`) to the dev allowlist; production CORS policy is unchanged. | Keep review origins environment-scoped. Do not promote local-development origins to production configuration. |
-
-Verification at **2026-08-10 14:47:45 IST (UTC+05:30)**: frontend TypeScript and production build passed; scoped lint for every modified integration file passed; 21 focused authentication/Search tests passed; the full frontend suite passed 1,005 of 1,008 tests. The three failures remain the previously recorded Correlated Findings lazy-route source assertion, Alert Triage envelope expectation and Alert Investigation keyboard-story fixture mismatch. Full lint remains blocked by 36 errors and 12 warnings across unrelated existing masthead, alert, constellation, correlation, entity and incident files. Backend Java 17 production main compilation/package passed with tests skipped; the normal Maven lifecycle remains blocked during global test compilation by unrelated stale `HaRuleGenerationResource`, alert-stream rate-limiter and alert-bulk publisher test references.
-
-### INT-001 — Mission Control pipeline-health endpoint alignment
-
-Status: `VERIFIED`  
-Recorded: **2026-08-10 14:47:45 IST (UTC+05:30)**  
-Implemented and live-verified: **2026-08-10 15:29:49 IST (UTC+05:30)**  
-Consumer: shared masthead pipeline indicator and `/dashboard` Mission Control
-
-The former `/api/overview/health` mismatch is resolved by the explicitly authorized `GET /api/ha-operational-health` projection. It returns only redacted `UP`, `DEGRADED` or `DOWN` state, a safe analyst message and server check time; the server caches the bounded OpenSearch reachability check for ten seconds and exposes no credentials, topology or management detail. The shared masthead consumes this route and uses a neutral unavailable state for transport/permission failure rather than falsely declaring a critical pipeline incident. The fixture-disabled browser displayed `Data pipeline: Healthy` against the real Docker backend.
-
----
-
-## Route: `/posture/identities` — Identity Security Posture
-
-Recorded: **2026-08-12 11:24:03 IST (UTC+05:30)**  
-Frontend: `frontend-v3/src/pages/posture/identities/IdentitiesPage.tsx`  
-Canonical reuse: `GET /ha-entities?types=user`, `GET /ha-entities/summary?types=user`, and `GET /ha-entities/{id}/preview`
-
-The redesigned page deliberately separates identity compromise risk, effective privilege, authentication strength, account state, and control coverage. It follows the enterprise risky-identity workflow: prioritize the identity, explain the correlated risk signals, show recent authentication activity and effective-access blast radius, then hand any disruptive action to a governed preview/approval workflow. The generic entity API remains the canonical identity observation source; identity posture enrichments are additive and must not fork another identity inventory.
-
-### Backend implementation reconciliation
-
-| ID | Status | Implemented or verified | Remaining before `COMPLETE` |
-|---|---|---|---|
-| IDP-001 | `PARTIAL` | The canonical entity inventory supports a bounded 100-row maximum, user-type filter, risk filter, search, deterministic `search_after`, risk/activity/alert/name ordering, tenant-resolved indexes, summary counts, cancellation and progressive preview. The frontend now requests 50 rows, uses cursor continuation, stable caching, and never imports fixture records unless `VITE_USE_FOUNDATION_FIXTURES=true` in development. | Add a first-class identity posture projection covering human, guest, service, workload and application identities; authoritative directory ID/UPN/display/owner/department/status; tenant and source freshness; exactness/snapshot; signed principal/filter/snapshot-bound cursors; previous-cursor semantics; redaction/permissions; partial source failures; and measured payload/latency budgets. Generic tags are not an authoritative substitute for identity kind or privilege. |
-| IDP-002 | `MISSING` | Generic entity risk score, trend, alert count, baseline deviation, activity count and alert summary are available. | Return identity-specific user/sign-in/session risk separately, with risk state (`at_risk`, `confirmed_compromised`, `remediated`, `dismissed`), detection type, real-time/offline source, confidence, first/last detected, validity, model/rule version, correlated-account set, evidence references and provenance. Add bounded cursor-paginated risk detections and risky sign-ins; do not require the browser to infer a compromise narrative from a score. |
-| IDP-003 | `MISSING` | None of the current generic entity routes authoritatively describes MFA, phishing-resistant authentication, passwordless capability, Conditional Access, leaked credentials, session state or password age. The production UI therefore renders these values as unknown and disables their facets. | Provide authentication/control posture: MFA enrollment and methods, phishing-resistant method availability, passwordless state, Conditional Access evaluation/coverage, legacy authentication, credential exposure with restricted evidence, password/key age, active/risky sessions, token/device context and coverage freshness. Apply field-level security so privileged credential and session data cannot leak through counts or filters. |
-| IDP-004 | `MISSING` | The entity relationship API provides general evidence-backed relationships but not authoritative directory effective access. | Add direct/inherited roles, nested groups, service-principal grants, delegated/application permissions, ownership, resource reachability, sensitive target criticality and lateral-movement paths. Return bounded top paths plus truncation/expansion metadata, scoring explanation, evidence, tenant/redaction and signed entity/constellation pivots. Preserve unknown rather than mapping an unresolved path to zero risk. |
-| IDP-005 | `MISSING` | The generic preview returns 24h/7d activity totals; entity dossier activity is separately available. | Add a snapshot-bound identity timeline that interleaves risk detections, sign-ins, token/session events, MFA challenges, access-policy decisions, privilege/group changes, credential events and remediation. Cursor pages must preserve observation versus ingestion time, source, device/network/location, result, risk state, redaction and partial-failure semantics. Detail is progressive and bounded; raw provider records require explicit permission. |
-| IDP-006 | `MISSING` | Existing Hive Intelligence APIs are generic; the frontend labels the identity assistant surface Hive Intelligence and shows no production narrative when authoritative signal provenance is absent. | Add a governed identity-risk summary/recommendation endpoint using only permission-filtered evidence references. Return factual assertions with citations, uncertainty, missing-data warnings, model/prompt/version, generated time, expiry and safe suggested next steps. Defend against prompt injection in directory/log content. AI output must never dismiss risk, block an identity, revoke a session, reset credentials or publish a policy autonomously. |
-| IDP-007 | `MISSING` | The response builder and governance framework can receive an identity target, but no identity-specific preview/execute contract is checked in. | Add idempotent preview/approval/execute contracts for confirm compromised/safe, dismiss risk, require secure password change, revoke sessions/tokens, block/unblock sign-in, require step-up authentication and disable identity/device. Preview resolves exact target/version/tenant, blast radius, sessions/resources affected, connector health, rollback/recovery, policy gate and approver. Execute revalidates token, authorization and target version, returns per-operation outcomes, emits an immutable audit event, and never accepts a browser-authored blast radius. |
-| IDP-008 | `MISSING` | Entity SSE exists for risk changes and discoveries, but the identity posture page currently uses the shared pipeline status only. | Add resumable identity posture updates for risk/state/control/privilege/session/source changes with heartbeat, replay boundary and permission filtering. Events mark the active snapshot stale; they do not silently reorder the analyst's current page. Add a bounded snapshot export with asynchronous status, audit, expiration and field-level redaction. |
-| IDP-V01 | `IMPLEMENTED` | The legacy `/api/ha-entities-legacy` controller family was already separated from the canonical `com.hivearmor.web.rest.entity.HaEntityResource`. At **2026-08-12 11:24:03 IST**, it was registered in `HaDeprecationFilter`; responses now advertise `Deprecation: true`, the shared sunset and `Link: </api/ha-entities>; rel="successor-version"`. | Retain only for the published compatibility window, measure callers, migrate remaining consumers, then remove it through the normal API lifecycle. Do not add new identity-posture behavior to the legacy controller. |
-
-Frontend integration recorded **2026-08-12 11:24:03 IST (UTC+05:30)**: the Identity Security page now provides risk-ranked views, compact filters, 50-row cursor continuation, request cancellation, stable query caching, icon density selection, keyboard navigation, distinct loading/empty/partial/permission states, full-height progressive context, risk/access/authentication/activity tabs, Hive Intelligence framing, investigation pivots and preview-only response handoff. Development fixtures are dynamically imported only under the explicit foundation-fixture flag; production preserves unavailable identity posture fields as unknown and disables unsupported facets.
-
-Verification recorded **2026-08-12 11:32:34 IST (UTC+05:30)**: identity-focused Vitest and ESLint passed, frontend TypeScript checking passed, the complete frontend suite passed **1,035/1,035 tests**, the production Vite build passed, and the backend compiled successfully with the repository-required Temurin 17 runtime. Repository-wide ESLint remains blocked only by pre-existing findings outside this Identity Security change; the affected files are recorded in the implementation handoff.
-
----
-
-## Route: `/posture/active-directory` — Active Directory Security
-
-Recorded: **2026-08-12 12:06:24 IST (UTC+05:30)**  
-Frontend: `frontend-v3/src/pages/posture/active-directory/ActiveDirectoryPage.tsx`  
-Production integration state: **backend required; no authoritative `/api/ha-ad/*` implementation exists in the checked-in backend**
-
-The former page was a role-gated “coming soon” placeholder and its three service methods returned empty arrays. The redesigned frontend is domain-first: it correlates sensor and replication health, prioritized identity security posture assessments, Tier-0 paths, trust boundaries, privileged directory changes, identity infrastructure, evidence and governed response preview. Production now shows an explicit integration-required state rather than interpreting an empty stub as a healthy directory. Fictional directory records are dynamically imported only when the development foundation-fixture flag is enabled.
-
-### Backend implementation reconciliation
+| ENT-003 | `PARTIAL` | `GET /ha-entities/{id}/preview` returns identity, risk, criticality, baseline deviation, 24h/7d activity, 30d alert summary, tags, and HMAC-signed pivot descriptors. | Bind preview to the list snapshot/window; add provenance, tenant/redaction/permissions/version, source coverage and incident summary, payload budget metadata, `409 …32070 tokens truncated… page, total/facets, owner/team/access, managed/draft/published state, required-source health, freshness, favorite/recent metadata and RFC 9457 errors. Cross-tenant, redacted and permission-denied tests are mandatory. |
+| DSH-002 | `MISSING` | Dashboard, visualization and layout entities are mutated independently. No canonical definition DTO, optimistic version, ETag, draft/publish state or atomic save exists. | Add one versioned dashboard definition containing metadata, variables, panel references/layout, filters, defaults and access policy. Create/update/clone/publish/archive require expected version, validation, idempotency and immutable audit. Managed definitions are clone-only outside authorized content administration. |
+| DSH-003 | `PARTIAL` | `UtmDashboardVisualization` stores layout coordinates, while the dashboard entity separately references visualizations; no typed variable/panel schema or atomic consistency guarantee exists. | Define versioned schemas for variable types, panel configuration, layout bounds, query reference, transformations, visualization options and accessible alternatives. Validate panel minimum/maximum dimensions, source capability, variable dependencies and duplicate identifiers server-side; save atomically. |
+| DSH-004 | `PARTIAL` | `/api/ha-visualizations/run` executes legacy visualization requests; it lacks explicit per-request cancellation, tenant/source authorization evidence, query budget, snapshot/freshness/partial-source metadata and can follow an unbounded default path. | Add bounded, cancellable panel execution using allowlisted sources/fields/operators, maximum lookback/buckets/rows/bytes/time, stable cache keys, opaque continuation where tabular, snapshot and observed/generated timestamps, query duration, scanned volume, partial-source errors and redaction. Cancellation must terminate downstream work. |
+| DSH-005 | `MISSING` | Entity ownership strings and a system-owner flag do not provide folder/team/role permissions, favorites, shares or field-level access. | Add owner/team/role/folder access with inherited permissions, explicit view/edit/admin/share/export capabilities, tenant scope, favorites/recent views, permission version and audit. Sharing/export must enforce field-level security and authorized recipients. |
+| DSH-006 | `MISSING` | No definition history, comparison, rollback or publication ledger is exposed. | Add cursor-paged immutable version history with actor, reason, timestamp, structured delta and publication state. Compare and restore create a new version; they never destroy history. |
+| DSH-007 | `MISSING` | Existing visualization metadata does not provide governed dashboard/Hunt/entity/incident drilldowns or context-preservation rules. | Add allowlisted typed drilldowns that bind dashboard version, panel, global variables, clicked value, tenant/time scope and field permissions. Internal pivots use canonical route parameters; external URLs require template allowlisting and audit. No arbitrary script or raw URL execution. |
+| DSH-008 | `MISSING` | No snapshot-bound asynchronous dashboard report/export/share job is exposed. | Add asynchronous render/export jobs with dashboard version, time/tenant context, field permission, redaction, progress, cancellation, expiry, signed download and immutable audit. Scheduled delivery requires versioned templates, authorized recipients and destination health. |
+| DSH-009 | `PARTIAL` | Legacy `/ha-dashboards`, `/ha-dashboard-visualizations` and `/ha-visualizations` entity CRUD coexist without a canonical successor or standard deprecation metadata. | After DSH-001–DSH-008 cut over, publish versioned successors and advertise `Deprecation`, `Sunset` and successor `Link` headers on old routes for at least two releases. Record consumer telemetry and removal gates. Do not remove or mark deprecated until the successor is deployed. |
+| DSH-010 | `MISSING` | Panel execution health, cache outcome, source dependency and query diagnostics are not projected to operators. | Add permission-filtered per-panel execution diagnostics and aggregate dashboard health: request/trace id, cache status, duration, freshness, scanned volume, dependency state, partial failures and retry guidance. Raw query plans and sensitive index details remain privileged. |
+
+Frontend integration recorded **2026-08-21 17:06:45 IST (UTC+05:30)**: unified the incompatible dashboard type/service layers behind a canonical frontend model; added an enterprise gallery, explicit keyboard selection, access/health/freshness inventory, compact governed runtime with global time/tenant/variables, per-panel state/freshness/provenance, investigation pivots and detail drawer; and added a three-pane low-code Studio with panel catalogue, 12-column canvas, inspector, local readiness and fixture-only draft saving. Production normalizes legacy definitions for discovery but marks panel execution unavailable and disables unsafe canonical saves. Development fixtures load only when `import.meta.env.DEV && VITE_USE_FOUNDATION_FIXTURES=true`.
+
+## Route family: `/reports/scheduled`, `/reports/templates`, `/reports/sitrep`, `/reports/incidents`, `/reports/after-action` — Reporting Operations
+
+Reconciled: **2026-08-21 17:37:57 IST (UTC+05:30)**
+
+Frontend: `frontend-v3/src/pages/reports/`
+Existing backend surfaces inspected: `/api/ha-reports`, `/api/ha-reports/scheduled`, `/api/ha-report-sections`, `/api/utm-reports`, `/api/ha-custom-reports`, and the separate compliance report/export/schedule controllers
+
+The existing report entity CRUD and compliance-schedule adapter are retained as compatibility reads. They do not prove a generated artifact, tenant-safe source snapshot, recipient authorization, redaction, approval, delivery, retention or immutable report history. The frontend therefore labels production results as legacy compatibility mode and withholds generation/distribution mutations until canonical contracts exist.
 
 | ID | Status | Checked-in capability | Required backend contract |
 |---|---|---|---|
-| ADP-001 | `MISSING` | No canonical Active Directory posture inventory or summary endpoint exists. Old frontend stubs proposed `/api/ha-ad/domain-summary` but never called a backend. | Add explicitly authorized, tenant/domain-scoped `GET /api/ha-ad/posture` and `/posture/summary`. Return posture score with calculation version, domain/forest identity, functional level, exact/approximate counts, source freshness, partial failures, permissions and a signed principal/domain/filter/snapshot-bound cursor. Cap rows at 100, use deterministic keyset order, support previous/next navigation and publish payload/p95 budgets. |
-| ADP-002 | `MISSING` | No bounded posture-assessment contract exists. | Add cursor-paginated `/api/ha-ad/assessments` plus progressive `/{assessmentId}` evidence. Cover identity infrastructure, accounts, Group Policy, certificates/AD CS, hybrid security and trusts. Return severity, state, score impact, exposed-object count, ATT&CK mapping, factual rule/version, evidence references, affected entities, recommendation, ownership, due date and calculation timestamps. Assessment state must not be inferred in the browser. |
-| ADP-003 | `MISSING` | No domain-controller sensor or replication projection exists. | Add bounded domain/controller/infrastructure projections for DC, AD CS, AD FS, Entra Connect, DNS and sensors with OS/version, site, FSMO roles, monitoring state, required-audit coverage, replication partner/lag/failure, last success, source freshness and explicit unknown/partial semantics. Health aggregation must disclose contributing gaps and never equate missing telemetry with healthy. |
-| ADP-004 | `MISSING` | No Active Directory trust inventory or validation endpoint exists. | Add forest/domain trust relationships with type, direction, transitivity, selective authentication, SID filtering/quarantine, encryption/protocol posture, validation result, last verified time, business owner, evidence and risk explanation. Scope sensitive trust attributes through field-level authorization and return only redacted counts to unauthorized callers. |
-| ADP-005 | `MISSING` | Generic entity relationships do not authoritatively model directory privilege or domain-compromise reachability. | Add snapshot-bound Tier-0 and lateral-movement path inventory/expansion. Model direct/nested group membership, ACL/control rights, sessions, local admin, delegation, AD CS and DCSync edges with evidence, validity window, critical target, scoring explanation, truncation/expansion cursors and canonical constellation/entity pivots. Paths are observations, not permissions to mutate directory state. |
-| ADP-006 | `MISSING` | No normalized privileged directory-change feed exists. | Add cursor-paginated `/api/ha-ad/changes` across group/role membership, account control, password/credential, GPO, trust, directory ACL, certificate template/CA and identity-infrastructure changes. Preserve observation and ingestion times, actor/target IDs, before/after diff with field-level redaction, authorization/change-ticket correlation, source, evidence, risk and partial failure. Add a resumable authorized stream that marks an active snapshot stale without silently reordering it. |
-| ADP-007 | `MISSING` | Generic Hive Intelligence and SOAR endpoints do not provide a governed directory posture decision. | Add a permission-filtered Hive Intelligence summary/recommendation endpoint with evidence citations, uncertainty, missing-source warnings, model/prompt/version, generated/expiry times and prompt-injection defenses. Add preview/approval/execute contracts for directory hardening/remediation with exact object/version/domain resolution, blast radius, replication and service dependencies, connector health, rollback/recovery, idempotency, optimistic version, separation of duties, per-target outcomes and immutable audit. AI cannot approve or execute a directory mutation. |
-| ADP-008 | `MISSING` | No Active Directory posture export or auditable exception workflow exists. | Add asynchronous snapshot-bound redacted export, assessment assignment/due-date/exception/accept-risk workflow, evidence-backed resolution, re-evaluation state and immutable audit. Exceptions require expiry and approver; a frontend-authored “resolved” state is never authoritative. |
+| REP-001 | `PARTIAL` | `/api/ha-reports` returns pageable legacy `UtmReport` entities, but the frontend contract does not receive page metadata; the entity has no tenant/snapshot/lifecycle model and route-level authorization is inconsistent. | Add a tenant-derived, role-authorized maximum-100 cursor-paged reporting inventory with same-snapshot totals/facets and stable report ID, type, lifecycle state, classification, owner, template/version, tenant/time scope, source freshness, approval, artifact formats, redaction profile and generated/expiry timestamps. Bind signed cursors to principal, scope, filters, order and snapshot; use RFC 9457 errors. |
+| REP-002 | `MISSING` | No canonical versioned report-template aggregate exists. Legacy report sections, report rows and dashboard references are independently mutable. | Add versioned draft/published/retired templates with typed ordered sections, data-query references, required/optional sources, accessible render alternatives, classification, redaction profile, locale/timezone, brand/layout options, optimistic version, validation and immutable audit. Managed templates are clone-only outside content administration. |
+| REP-003 | `MISSING` | Generic report creation stores metadata; it does not create a snapshot-bound asynchronous generation job or durable artifact. | Add asynchronous generation jobs that bind template/version, requesting principal, tenant/entity/incident/time scope, source snapshots and field permissions. Return job ID/state/progress, cancellation/retry eligibility, warnings/partial sources, measured duration/volume, artifact hashes, expiry and signed-download descriptors. Cancellation must stop downstream work. |
+| REP-004 | `PARTIAL` | `/api/ha-reports/scheduled` stores extended schedule fields as JSON in a legacy compliance schedule row, derives no tenant or user owner, uses a fixed compliance ID, calculates no next run and `run` merely updates `lastExecutionTime`. | Add a tenant-scoped scheduler with validated cron/cadence, timezone and DST policy, schedule window/priority, concurrency/misfire rule, immutable template version or explicit upgrade policy, run-as service identity, recipient/destination allowlists, output format, retry/backoff/dead-letter, last/next run, delivery health and execution history. Manual run queues the same generation pipeline and is idempotent. |
+| REP-005 | `MISSING` | No report review, redaction review, approval, publication or distribution workflow exists. | Add versioned review with section comments, factual/citation checks, redaction preview, explicit approver/separation-of-duties policy, approve/reject reason, publication version and authorized delivery. Delivery cannot broaden the generating principal's field/tenant permissions and must revalidate recipients/destinations at send time. |
+| REP-006 | `MISSING` | No typed SITREP, incident-report or after-action schema is exposed. | Define typed schemas: SITREP covers queue/incident/detection/source posture, decisions and actions due; incident report covers scope, evidence-linked timeline, impact, response and validation; after-action covers root cause, control gaps, response metrics, lessons and owned improvement actions. Every narrative assertion links to authorized evidence or is explicitly analyst-authored/inferred. |
+| REP-007 | `MISSING` | No canonical artifact preview/download, classification watermark, field-level redaction or retention/legal-hold contract exists. | Add safe HTML preview plus PDF/CSV/JSON artifact descriptors; content-disposition, MIME, size, SHA-256, classification/watermark, redacted/excluded field counts, signed short-lived download and audited access. Apply retention policy, expiry, archive and legal hold without overwriting immutable published versions. |
+| REP-008 | `MISSING` | No bounded generation, delivery or approval history is available; legacy application-event logging is not a report audit ledger. | Add cursor-paged immutable report/job/schedule/delivery audit with actor/service identity, tenant/scope, template/artifact versions, state transition, reason, destination class (not secret), trace/request ID and timestamps. Expose aggregate queue, latency, failure, stale-source and delivery-health signals without leaking recipients or report content. |
+| REP-009 | `MISSING` | No governed Hive Intelligence report coauthoring contract exists. | Add permission-filtered narrative drafts grounded only in cited report evidence. Return factual versus inferred assertions, citations, uncertainty, missing-source warnings, model/prompt/policy versions and generated/expiry time with prompt-injection defenses. AI cannot change evidence, approve, publish, distribute, expand scope or silently regenerate an approved artifact. |
+| REP-010 | `PARTIAL` | Legacy `/ha-reports`, report-section/custom-report and compliance report routes overlap without a designated successor or standard deprecation metadata. | After REP-001–REP-009 successors are deployed, inventory consumers and advertise `Deprecation`, `Sunset` and successor `Link` headers for at least two releases with usage telemetry and removal gates. Do not mark routes deprecated merely because this frontend no longer promotes them. |
 
-Frontend integration recorded **2026-08-12 12:06:24 IST (UTC+05:30)**: implemented four coordinated views, 50-row cursor navigation, request cancellation, stable query caching, compact domain/risk/category/time filters, keyboard navigation, icon density selection, full-height progressive domain/assessment/change/infrastructure detail, trust and Tier-0 exposure context, Hive Intelligence framing, hunt pivots, governed response preview, sticky pagination and the shared operational dock. The production service intentionally returns `contractState: missing` until ADP-001 through ADP-008 ship.
+Frontend integration recorded **2026-08-21 17:37:57 IST (UTC+05:30)**: consolidated five disconnected routes into one compact reporting lifecycle with generated, scheduled and template views; same-workspace report-type deep links; snapshot/scope/freshness/classification/redaction/approval signals; delivery health and run-as context; dense keyboard-operable tables; explicit context drawer; safe permission, loading, error, partial, empty and legacy-compatibility states; a governed generation setup dialog; sticky lifecycle/status surfaces; and Hive Intelligence boundaries. Fictional records load only in development when `VITE_USE_FOUNDATION_FIXTURES=true`; production uses existing APIs, labels their unproven guarantees and leaves canonical generation/distribution actions disabled.
 
-Verification recorded **2026-08-12 12:08:53 IST (UTC+05:30)**: four focused Active Directory UI tests passed; scoped ESLint for every modified Active Directory file passed; TypeScript checking passed; the complete frontend suite passed **1,034/1,034 tests**; and the production Vite build passed. Repository-wide lint remains blocked by the pre-existing masthead, query-client, correlation, alert, incident-stream and Search Manager findings listed in the implementation handoff; no Active Directory file is implicated.
+## Route family: `/admin/pipeline-signals`, `/inputs/sources`, `/admin/data-parsing` — Pipeline and Ingestion Administration
 
-Browser revalidation recorded **2026-08-12 12:16:10 IST (UTC+05:30)**: the fixture build rendered the full-height virtualized assessment grid with sticky pagination/status; assessment evidence and Tier-0 exposure drawers passed; domains/trusts, privileged changes and infrastructure transitions passed without schema bleed; and the final post-fix TypeScript, scoped ESLint and production build rerun passed. View-specific grids are remounted and rows are schema-guarded so cached records from a prior view cannot render through another view's column definitions.
+Reconciled: **2026-08-21 18:46:15 IST (UTC+05:30)**
 
----
+Frontend: `frontend-v3/src/pages/admin/pipeline-operations/`
+Existing backend surfaces inspected: `/api/ha-pipeline-signals`, `/api/ha-inputs/sources`, `/api/ha-parsers`, `ha.raw-event.v1`, `hivearmor.raw.events.quarantine`, the reserved retry topic, `SIEM-004` and `SIEM-009` evidence.
 
-## Route: `/posture/exposure` — Exposure Management
-
-Recorded: **2026-08-12 13:53:03 IST (UTC+05:30)**  
-Frontend: `frontend-v3/src/pages/posture/exposure/ExposurePage.tsx`  
-Production integration state: **backend required; no authoritative exposure-graph or attack-path API exists in the checked-in backend**
-
-The former route was an inline-styled construction placeholder that offered three mutually exclusive model choices and exposed no operational workflow. The product direction is now resolved as a correlated graph model: asset, identity, vulnerability, configuration, reachability and criticality evidence produce entry-to-impact paths; asset/CVE exposure scores remain contributing signals rather than competing page models. The frontend prioritizes active attack paths, shared choke points, exposed critical assets and control changes with the largest projected reduction. The generic asset and entity contracts remain canonical sources, but the browser never fabricates graph edges, exploitability or a safe posture from those partial projections.
-
-### Backend implementation reconciliation
+This reconciliation preserves the existing live-verified pipeline-signal/soak work, raw envelope, agent spool and quarantine topic. It does not re-register those capabilities as missing. It records the bounded operator contracts that are absent or incomplete above those foundations. Existing routes remain compatibility surfaces and are not deprecated until a deployed successor, consumer telemetry and sunset policy exist.
 
 | ID | Status | Checked-in capability | Required backend contract |
 |---|---|---|---|
-| EXP-001 | `MISSING` | The canonical asset list exposes optional risk/exposure/path counts, and entity relationships provide investigation context, but neither is an authoritative, snapshot-consistent exposure graph. | Add explicitly authorized `GET /api/ha-exposure/summary` and cursor-paginated `/attack-paths`. Scope by complete authorized tenants and optional canonical asset, risk, external/hybrid/internal scope, state and calculation window. Return calculation/model version, exact-or-approximate totals, `snapshotAt`, source freshness, coverage, partial failures, permission/redaction descriptors and signed principal/scope/filter/snapshot-bound adjacent cursors. Cap pages at 100 and publish payload/p95 budgets. |
-| EXP-002 | `MISSING` | No backend service generates entry-to-impact attack paths. | Add deterministic graph generation across canonical asset/entity identity, vulnerability, misconfiguration, external reachability, session, privilege, network, cloud and data relationships. Each path needs stable ID/version, entry and critical target, ordered evidence-backed nodes/edges, hop/weak-point/critical-asset counts, symbolic risk plus explainable score components, verified/probable/unverified exploitability, ATT&CK techniques, state, owner, first seen, calculated/valid-through times, truncation markers and graph coverage. Missing data is unknown—not absence of risk. |
-| EXP-003 | `MISSING` | Generic relationship detail cannot prove path reachability or exploitability. | Add progressive `/attack-paths/{pathId}` and bounded evidence/edge expansion subresources. Preserve observation and ingestion time, source, confidence, validation method, edge direction, temporal validity and field-level redaction. Raw scans, credentials, secrets and unrestricted logs require dedicated permission. External reachability and exploitable conditions must name their validation method and freshness. |
-| EXP-004 | `MISSING` | No shared weak-point aggregation exists. | Add cursor-paginated `/choke-points` computed over the same graph snapshot, authorization and filters as the path inventory. Return canonical entity, converging path count, exposed critical-asset count, internet reachability, exposure drivers, evidence references and path-expansion cursor. Prevent hidden-tenant and redacted-node inference through counts. |
-| EXP-005 | `MISSING` | Asset criticality is planned under `AST-001`/`AST-003`, but critical-asset exposure is not implemented. | Add `/critical-assets` and governed classification integration. Return business classification/provenance, owner, path count, shortest validated path, top entry points, internet reachability, risk and calculation freshness. Manual/automated classification changes require optimistic version, rationale, permission and immutable audit; criticality must not be browser-authored. |
-| EXP-006 | `MISSING` | Existing vulnerability, asset, identity and AD projections do not calculate cross-domain exposure reduction. | Add `/remediations` ranked by projected path and critical-asset reduction with control category, affected path references, effort, disruption, dependencies, owner, due date, state, confidence and calculation version. A recommendation is explanatory; projected reduction must be recomputed after source or graph changes and must not be presented as guaranteed risk removal. |
-| EXP-007 | `MISSING` | Generic SOAR authoring can accept a target, but there is no exposure-specific governed plan preview. | Add preview/approval/execute contracts for creating an exposure remediation plan and applying supported control changes. Preview resolves exact targets/versions, current path snapshot, dependencies, blast radius, service impact, connector health, rollback/recovery, maintenance window, policy gate and approvers. Execute requires an unexpired scope/user/version-bound token, idempotency and optimistic versions; returns per-target outcomes, new graph-recalculation job and immutable audit. The frontend never executes a path recommendation directly. |
-| EXP-008 | `MISSING` | Generic Hive Intelligence endpoints do not return a governed exposure explanation. | Add permission-filtered Hive Intelligence path/choke-point summaries with evidence citations, factual-versus-inferred assertions, uncertainty, missing-source warnings, model/prompt/version, generated/expiry times and prompt-injection defenses. AI can propose reviewable investigation or control-plan changes; it cannot classify criticality, accept risk, approve or execute remediation autonomously. |
-| EXP-009 | `MISSING` | No exposure snapshot stream, exception ledger or export exists. | Add resumable authorization-filtered deltas for new/removed/changed paths, choke points, critical assets, source coverage and calculation completion. Deltas mark the active snapshot stale and never silently reorder it. Add expiring risk acceptance with rationale/approver/scope, evidence-backed resolution/reopen, asynchronous snapshot-bound redacted export and immutable audit. |
+| ING-001 | `PARTIAL` | `GET /api/ha-inputs/sources` exposes source identity, state, EPS, last event, type and selected host health, but returns an unbounded list without canonical tenant/snapshot/filter/page semantics. | Add a tenant-derived, role-authorized maximum-100 cursor page with deterministic order, same-snapshot totals/facets, stable source ID, source/collector type, lifecycle state, owner/team, authorized scope, health provenance, observed/generated timestamps and RFC 9457 failures. Bind cursors to principal, scope, filters, order and snapshot. |
+| ING-002 | `PARTIAL` | `POST /api/ha-inputs/sources` creates an in-memory UUID record and ignores most submitted connector configuration; restart durability, optimistic version, idempotency, audit and canonical creation response are absent. | Add durable versioned draft/activate/pause/retire source lifecycle with validated type-specific configuration, tenant-derived ownership, idempotency key, optimistic version/ETag, `Location`, immutable audit and safe secret references. Activation requires successful authoritative validation; deletion becomes governed retirement when evidence depends on a source. |
+| ING-003 | `PARTIAL` | Existing enrolled-agent and signed raw-event work proves part of device identity and revocation, while generic source setup has no unified credential/secret/test lifecycle. | Add source-type-specific identity and secret-reference contracts with create/rotate/revoke/test state, expiry, last validation, connector capability, least-privilege guidance and audit. Secret values are write-only and never returned, logged or embedded in diagnostics. Reuse enrolled-device identity where applicable rather than creating parallel credentials. |
+| ING-004 | `PARTIAL` | Source rows expose EPS and last event; `/api/ha-pipeline-signals` exposes aggregate cluster/host-sampler/soak data. Per-source freshness policy, acknowledged lag, bounded queue/backpressure and field-quality evidence are not projected. | Add per-source measured throughput, accepted/rejected/dropped counts, event/ingest/observed timestamps, freshness age versus configured policy, queue depth/age, broker lag, backpressure state, loss/duplicate counters, normalized coverage and partial dependency errors. Every value includes provenance and measurement window; configured thresholds are returned by the server and never invented by the UI. |
+| ING-005 | `PARTIAL` | `/api/ha-parsers` provides persisted admin CRUD, but lists are unbounded and parser rows lack authoritative validation, immutable versions, fixtures/samples, deploy state, rollback and runtime execution telemetry. | Add tenant/global-scoped maximum-100 parser inventory and versioned draft/validate/test/approve/deploy/rollback lifecycle. Validation/test use bounded redacted samples and return structured diagnostics, normalized-field diffs, compatibility/schema version, measured duration and no side effects. Deployment and rollback are optimistic, idempotent and audited. |
+| ING-006 | `PARTIAL` | Current parser records contain type/configuration and a stored `lastMatchedCount`; no canonical schema-quality or lineage projection proves runtime normalization. | Add bounded field/schema coverage by source/parser/version with matched/unmatched/failed counts, required-field presence, type conflicts, sample window, source-to-normalized lineage, observed/generated timestamps and permission-filtered progressive examples. Stored configuration counters must not be represented as live telemetry. |
+| ING-007 | `PARTIAL` | Malformed raw records are written to `hivearmor.raw.events.quarantine` with redacted reason and commit-after-write behavior under `SIEM-004`; no secured operator API groups or pages quarantine/retry failures. | Add tenant-scoped cursor-paged failure groups and progressive items with channel/stage, normalized reason code, first/last seen, affected sources/parsers/versions, count, retry eligibility, provenance and redacted summary. Raw payload access requires separate privilege, field-level redaction and audited just-in-time retrieval. |
+| ING-008 | `MISSING` | A retry topic is reserved, but no governed operator preview/confirm API exists for quarantine repair, parser-version replay or bounded retry. | Add preview-then-confirm replay with immutable source snapshot, maximum event/byte/time bounds, target parser/schema version, expected effect, excluded/redacted count, blast-radius/duplicate warning, permission version, reason, approval when policy requires, idempotency key, progress/cancel and immutable audit. Replay preserves original event identity and provenance and cannot bypass normal validation/detection controls. |
+| ING-009 | `PARTIAL` | Admin `GET /api/ha-pipeline-signals` and soak history are live-verified for measured OpenSearch/PostgreSQL/host-sampler signals under `SIEM-009`; no complete per-stage topology, capacity budget or dependency-error projection exists. | Extend the measured projection with stable stage/dependency identifiers, in-flight/throughput/failure/latency windows, configured capacity/SLO provenance, partial dependency errors, request/trace ID and bounded historical points. Preserve the explicit distinction between observation, configured policy and derived status; do not infer health from one cluster value. |
+| ING-010 | `PARTIAL` | Parser routes are admin-only; source routes allow Admin/Analyst while the frontend route includes Admin/Operator. Three legacy pages now share one workspace but backend role semantics and successor/deprecation policy are not aligned. | Define least-privilege view/onboard/test/activate/parser-admin/replay permissions and enforce the same matrix in route guards and backend methods with tenant tests. After canonical successors deploy, advertise `Deprecation`, `Sunset` and successor `Link` headers for at least two releases with consumer telemetry. Do not mark current endpoints deprecated before that cutover. |
 
-Frontend integration recorded **2026-08-12 13:53:03 IST (UTC+05:30)**: implemented coordinated attack-path, choke-point, critical-asset and remediation-impact views; six actionable summary measures; compact risk/scope/state/window filters; URL asset scoping; 50-row opaque-cursor navigation; request cancellation; stable caching; keyboard navigation; icon density selection; sticky pagination and operational status; full-height path/evidence/remediation context; Hive Intelligence framing; hunt and constellation pivots; and governed plan handoff. Development fixtures are dynamically imported only with `VITE_USE_FOUNDATION_FIXTURES=true`; production intentionally returns `contractState: missing` and never interprets missing graph data as safe.
+Frontend integration recorded **2026-08-21 18:46:15 IST (UTC+05:30)**: replaced three disconnected pages with one compact source-to-index workspace spanning Flow, Sources, Parsers, Failures and Capacity; added explicit measured/unavailable provenance, partial-source warnings, dense keyboard-operable inventories, progressive context drawers, governed onboarding and replay previews, and shared sticky operational status. Production reads the three existing endpoints with request cancellation and partial-result handling but leaves unsafe source/replay mutations disabled. Fictional source/parser/failure records are dynamically imported only when `import.meta.env.DEV && VITE_USE_FOUNDATION_FIXTURES=true`.
 
-Verification recorded **2026-08-12 14:03:00 IST (UTC+05:30)**: exposure-focused TypeScript, ESLint and four workflow/state tests passed; the complete frontend suite passed **1,038/1,038 tests**; and the production build passed. Browser validation covered all four views, the path/evidence/remediation tabs, hunt/graph/plan pivots, row-density controls and full-height geometry. At a 1280×720 viewport, the virtual grid ended at 654px, sticky pagination occupied 654–692px, and the 28px operational dock occupied 692–720px with no alert state or overlap. Repository-wide lint remains blocked only by the previously recorded unrelated masthead, query-client, correlation, alert, incident-stream and Search Manager findings; no Exposure Management file is implicated.
+## Route family: `/admin/integrations`, `/admin/notifications`, `/admin/connection-keys`, `/settings/api-keys` — Integration and Notification Operations
 
----
+Reconciled: **2026-08-22 20:54:37 IST (UTC+05:30)**
 
-## Route: `/posture/vulnerabilities` — Vulnerability Operations
+Frontend: `frontend-v3/src/pages/admin/integration-operations/`
+Existing backend surfaces inspected: `/api/ha-integrations`, `/api/ha-integration-confs`, `/api/ha-notification-rules`, `/api/notification-channels`, `/api/notification-routes`, `/api/notifications`, `/api/ha-connection-keys`, `/api/ha-admin/api-keys`
 
-Recorded: **2026-08-13 18:36:41 IST (UTC+05:30)**  
-Frontend: `frontend-v3/src/pages/posture/vulnerabilities/VulnerabilitiesPage.tsx`  
-Existing backend: `GET /api/ha-vuln/findings`, `/findings/summary`, `/findings/agent/{agentId}`  
-Production integration state: **partial; basic CVE inventory exists, contextual priority and governed remediation do not**
-
-The checked-in JDBC service provides package/agent CVE observations, CVSS v3, severity, a KEV boolean, fix version, description and first/last-seen timestamps with offset pagination. The redesigned frontend consumes only those defensible fields. It does not synthesize EPSS, exploitability, exposure, business criticality, remediation state or an enterprise risk score.
-
-### Backend implementation reconciliation
+The checked-in API-key service is the strongest current foundation: it generates server-side tokens, persists bcrypt hashes, returns plaintext once, exposes fixed scopes, computes expiry/revocation state and protects management methods with `ROLE_ADMIN`. The legacy integration resources return persistence entities with no explicit controller guard or runtime-health contract. The notification-rule test is explicitly simulated. The newer notification-channel service can make real email/webhook/provider calls, but its controller has no explicit role guard, returns raw entities containing `configJson`, and dispatches arbitrary URLs with an unconfigured `RestTemplate`; the redesigned production frontend therefore does not call or mutate that unsafe surface.
 
 | ID | Status | Checked-in capability | Required backend contract |
 |---|---|---|---|
-| VUL-001 | `PARTIAL` | Tenant predicate `tenant_id = TenantContext.clientId` on list/detail/summary. Keyset cursor `X-Next-Cursor` / `X-Has-More` with CVSS/KEV/id order; offset still accepted when cursor is blank. Size 1–100. RFC 9457 on JDBC failure. | Coverage/redaction metadata, signed snapshot cursors, payload budgets, unique tenant+finding keys, and backfill of untagged historical rows. |
-| VUL-002 | `PARTIAL` | `GET /api/ha-vuln/findings/{findingId}` returns stored finding including `references_json`. EPSS fields are projected only when stored (`epssState=reported`); otherwise `unavailable`. `EpssEnrichmentService` writes FIRST.org scores onto existing columns when reachable and not air-gapped. Staging backend has no data-network egress, so host-side FIRST fetch is the live path. | Affected-assets/evidence subresources, CVSS vector/source, KEV catalog metadata, signed pivots. |
-| VUL-003 | `MISSING` | No enterprise priority model. Sort remains CVSS then KEV then id. Stored EPSS is optional evidence, not a computed rank. | Explainable priority using verified exploitation, stored EPSS, exposure, criticality and confidence. Unknown data must never become zero risk. |
-| VUL-004 | `PARTIAL` | Summary uses the same tenant and list filters and stamps `snapshotAt`. List and summary remain separate JDBC queries. | Same-snapshot facets, coverage and partial-failure disclosure. |
-| VUL-005 | `PARTIAL` | `GET /findings/{id}/remediation` returns `{state:unavailable, reason}`. `GET /api/ha-vuln/remediation-connectors` lists apt/wua/ansible as `not_configured`. `POST .../execute` returns 503 `VUL_REMEDIATION_UNAVAILABLE`. HiveArmor does not invent patch jobs. | Governed preview/approval/execute with connector, idempotency, audit and verification. |
-| VUL-006 | `MISSING` | No resumable change stream, history or export endpoint exists. | Add authorization-filtered deltas for new/changed/resolved/reopened findings, KEV/EPSS/fix changes, source coverage and verification completion with replay boundary and heartbeat. Deltas mark the current page stale and never silently reorder it. Add cursor-paged lifecycle/history plus asynchronous snapshot-bound, redacted, expiring and audited export/cancellation. |
-| VUL-007 | `MISSING` | No governed Hive Intelligence vulnerability explanation exists. | Add permission-filtered priority/remediation summaries grounded only in returned evidence references. Include factual versus inferred assertions, citations, uncertainty, missing-source warnings, model/prompt/version, generated/expiry time and prompt-injection defenses. AI may draft investigation or remediation-plan changes; it cannot accept risk, dismiss a finding, approve or execute remediation autonomously. |
+| INO-001 | `PARTIAL` | `/ha-integrations` provides pageable legacy integration metadata, but returns `UtmIntegration` entities, has no explicit route/method authorization, no tenant/owner/environment/support/version fields and no deterministic bounded frontend envelope. | Add an admin-authorized, tenant-derived maximum-100 cursor-paged connector catalog/configured-instance inventory. Separate catalog definition from configured connection; return stable ID, provider/support, version/update state, capability/direction, environment, owner/team, authorized scope, lifecycle, health evidence, observed/generated timestamps, totals/facets, partial failures and RFC 9457 errors. Bind signed cursors to principal, scope, filters, order and snapshot. |
+| INO-002 | `MISMATCH` | Frontend legacy update calls `PUT /ha-integrations/{id}` and test calls `POST /ha-integrations/{id}/test`; checked-in integration resource updates at `PUT /ha-integrations` and exposes no test endpoint. Entity create/update accepts fields that do not match the frontend DTO. | Publish one versioned draft/configure/validate/activate/pause/retire aggregate with narrow DTOs, `Location`, optimistic version/ETag, idempotency and immutable audit. Preserve old routes as compatibility only after consumer inventory; do not mark them deprecated until the successor is deployed and advertises `Deprecation`, `Sunset` and successor `Link`. |
+| INO-003 | `PARTIAL` | `/ha-integration-confs` persists `confValue` and returns the persistence entity. No write-only secret classification, vault reference, rotation, expiry or read redaction was found; updating config marks a module restart flag. | Separate endpoint/connection attributes from credentials. Accept secret material write-only into a managed secret store and return only opaque credential aliases plus type, version, expiry, rotation/validation state and permissions. Never return, log or audit raw secret values. Support controlled overlap rotation, immediate revoke and environment/child aliases. |
+| INO-004 | `MISSING` | Integration rows expose no authoritative validation, activation or runtime receipt. | Add type-specific bounded dry validation with DNS/TLS/auth/capability/permission checks, redacted diagnostics, measured latency, provider request/receipt ID, observed time and expiry. Activation requires a current successful validation and authorized scope. Runtime health distinguishes configuration, provider reachability, permission, data/activity freshness and partial dependency failures; unknown is not healthy. |
+| INO-005 | `PARTIAL` | `/ha-notification-rules` is admin-protected and supports unbounded CRUD, but stores destination configuration in rule JSON and its `/test` always returns a mocked success without dispatch. | Separate reusable destination records from routing policy. Destination DTOs expose channel, safe endpoint label, credential alias, verification and health—not configuration secrets. A test queues a real bounded delivery and returns a job/receipt whose state reaches provider accepted/delivered/failed; a simulated enqueue cannot be success. List endpoints are bounded and tenant-scoped. |
+| INO-006 | `PARTIAL` | Notification routes support severity/source/type matches, enablement, one throttle interval and last-fired time. They lack precedence, deduplication, quiet windows, escalation, retry/dead-letter and delivery history. | Add versioned ordered routing with typed source/event/severity/entity/tenant predicates, destination references, dedup key/window, suppression/quiet/maintenance windows, grouping, rate limit, escalation/fallback and dry-run explanation. Evaluation is server-authoritative, deterministic, idempotent and audited. |
+| INO-007 | `PARTIAL` | `NotificationChannelService` directly calls email, Slack, generic webhook, Teams and PagerDuty and records only last-test time/result. Failures are logged and a route timestamp is updated; no durable job, retry/dead-letter or delivery receipt ledger exists. | Add durable delivery jobs and attempts with idempotency/dedup key, redacted payload descriptor, destination/version, provider receipt, state transitions, bounded exponential retry+jitter, Retry-After, expiry, dead-letter reason, authorized replay/cancel and cursor-paged immutable history. Expose aggregate success/failure/latency/backlog health without leaking recipient or message content. |
+| INO-008 | `REQUIRED` | Generic webhook/Slack/Teams URLs are parsed from returned/stored JSON and invoked through a default `RestTemplate`; no SSRF/egress, redirect, DNS re-resolution, signing, payload or response budget is visible. | Enforce HTTPS and allowlisted provider/tenant egress; deny loopback, private, link-local and metadata destinations after every DNS resolution/redirect; cap redirects, body/response, connect/read time and concurrency; sign generic webhooks with rotatable timestamped secrets; verify configuration ownership; redact diagnostics; and audit target class rather than secrets. Add SSRF/rebinding/redirect/timeout tests. |
+| INO-009 | `PARTIAL` | `/ha-admin/api-keys` is admin-protected, uses one-time token return plus bcrypt storage, validates a fixed scope set, exposes expiry/last-use and revokes by timestamp. List is unbounded and keys have no tenant/service identity/owner, rotation, source restriction, per-key rate policy or usage ledger. `/ha-connection-keys` remains a separate user-bound legacy implementation. | Make the hashed API-key service canonical with maximum-100 cursor inventory, tenant/service identity, owner/contact, least-privilege scope discovery, required expiry policy, source/IP or workload constraints where applicable, rate/budget, last-used provenance, anomaly signal, overlap rotation and immutable create/use/rotate/revoke audit. Keep plaintext response one-time and never persist it client-side. Define migration from legacy connection keys before deprecation. |
+| INO-010 | `PARTIAL` | Four frontend routes previously exposed disconnected admin CRUDs; backend role protection is inconsistent across integration/config/channel resources and multiple notification/key models overlap without a successor map. | Define least-privilege catalogue/view/configure/secret-admin/test/activate/delivery-replay/key-admin permissions and enforce them in controller and service methods with tenant, field-redaction and cross-role tests. Publish an endpoint ownership/successor map and consumer telemetry. Only then advertise standard deprecation headers for at least two releases; no existing route is marked deprecated by this frontend slice. |
 
-Frontend integration recorded **2026-08-13 18:36:41 IST (UTC+05:30)**: replaced the inline CVE dashboard with a compact fleet summary; real CVE/severity/KEV/first-seen filters; 50-row cancellable server pagination and stable caching; virtualized dense grid; keyboard navigation; icon row-density selection; explicit loading, permission, dependency, stale-refresh and safe-empty states; sticky pager/status dock; and a full-height actual-field drawer with copy, hunt and asset pivots. The browser labels the current order as CVSS/KEV rather than enterprise risk and does not expose unsupported remediation actions.
+Frontend integration recorded **2026-08-22 20:54:37 IST (UTC+05:30)**: replaced four disconnected CRUD screens with one compact workbench spanning Operations, Connections, Delivery, Service access and Activity; added catalog-to-activation trust-chain guidance, owner/support/environment/credential-alias separation, measured/unknown health states, reusable destination and routing views, delivery-receipt semantics, dense keyboard-operable inventories, progressive full-height context, one-time API-key compatibility, governed setup previews and shared sticky operational status. Production reads only the legacy integration metadata, admin notification rules and hardened API-key list with cancellation and partial-result handling. Unsafe channel/config entity routes and simulated delivery tests are not called. Fictional connector/delivery/activity records are dynamically imported only when `import.meta.env.DEV && VITE_USE_FOUNDATION_FIXTURES=true`.
 
----
+## Route family: `/admin/users`, `/admin/tenants`, `/admin/sso`, `/admin/scim`, `/mssp/tenants` — Identity, Tenancy and MSSP Administration
 
-## Route: `/posture/cis-benchmark` — CIS Benchmark Posture
+Reconciled: **2026-08-22 21:39:31 IST (UTC+05:30)**
 
-Recorded: **2026-08-13 18:57:57 IST (UTC+05:30)**  
-Frontend: `frontend-v3/src/pages/posture/cis-benchmark/CisBenchmarkPage.tsx`  
-Existing backend: `GET /api/ha-cis/results`, `/results/summary`, `/results/agent/{agentId}` and `POST /api/ha-telemetry/sca`  
-Production integration state: **partial; current-result SCA storage exists, applicability, provenance and remediation lifecycle do not**
+Frontend: `frontend-v3/src/pages/admin/identity-administration/`
+Existing backend surfaces inspected: `/api/users`, `/api/users/authorities`, `/api/authority`, `/api/ha-tenants`, `/api/ha-mssp/tenants`, `/api/ha-mssp/tenants/{tenantId}/members`, `/api/ha-oidc/providers`, `/api/ha-oidc/enabled-providers`, `/api/ha-oidc/authorize`, `/api/ha-oidc/callback`, `/api/ha-admin/scim/token/**`, `/api/ha-scim/v2/Users`, and `/api/ha-scim/v2/Groups`.
 
-The checked-in JDBC service provides current per-agent check observations with status, level, observed/expected values, remediation text, mappings and scan time. The summary stores per-agent/pack counts and a pass rate. The redesigned frontend labels this a technical assessment projection, computes the fleet rate from aggregate counts rather than averaging endpoint percentages, and does not claim compliance, applicability or remediation completion.
-
-### Backend implementation reconciliation
+This reconciliation preserves Kiro's checked-in administration, MSSP, OIDC and SCIM capabilities. It records only the missing or mismatched guarantees needed by the new control plane. The protected authority catalogue at `/api/users/authorities` is the frontend's compatibility read. The legacy `/api/authority` CRUD is not a safe successor and is not considered deprecated until it is secured and advertises the standard lifecycle headers.
 
 | ID | Status | Checked-in capability | Required backend contract |
 |---|---|---|---|
-| CIS-001 | `PARTIAL` | Tenant predicate on list/detail/summary/catalog. Keyset cursor `scanned_at,id` with `X-Next-Cursor`. Size 1–100. RFC 9457 on JDBC failure. Offset still accepted without cursor. Unique SCA identity is `(tenant_id, agent_id, pack_id, pack_version, check_id)`. | Signed snapshot cursors, coverage/redaction metadata, backfill of untagged historical rows. |
-| CIS-002 | `PARTIAL` | `GET /api/ha-cis/results/summary` returns all current per-agent/pack summaries and can filter one agent. The browser can aggregate their count fields. | Add a bounded same-authorization, same-filter, same-snapshot summary and facets with eligible/assessed/reporting/stale endpoint counts; pass/fail/error/not-applicable/not-assessed counts; benchmark/profile/version/platform coverage; exactness and partial-source metadata. Define the rate denominator explicitly. Do not silently combine incompatible packs or average percentages without weighting. Bound or cursor-page the per-endpoint breakdown. |
-| CIS-003 | `PARTIAL` | Device headers `X-HiveArmor-Agent-Id` + `X-Agent-Key` verified by `VerifyConnectorIdentity`. Forged key **401** on staging. Signed `telemetry-once` from enrolled agent **9** accepted (4 SCA rows) at **2026-08-19 21:45:00 IST**. Unique key includes tenant/pack/version. `ALLOW_LEGACY_TELEMETRY_INTERNAL_KEY=true` remains for `telemetry-loop`. Pack `ha-linux-observed-ssh` is observed, not official CIS. Agent **8** remains revoked. | Typed schema/version validation, payload/rate limits, idempotent scan ID. Disable legacy INTERNAL_KEY after telemetry-loop stops using it. |
-| CIS-004 | `PARTIAL` | `GET /api/ha-cis/catalog` merges `ha_cis_pack_catalog` with observed summaries. Shipped pack `ha-linux-observed-ssh` is `SHIPPED_OBSERVED` / not official CIS. Official CIS row is `LICENSE_REQUIRED_NOT_SHIPPED` with no benchmark check text. | Hash/signature, platform applicability assignment audit. Unsupported or not-assessed must stay distinct from not applicable. |
-| CIS-005 | `PARTIAL` | `GET /api/ha-cis/results/{resultId}` returns the stored current check including observed/expected values, remediation text, ATT&CK and compliance tags. No collection-command provenance, history subresource or attestation is invented. | Add bounded evidence and history subresources. Return collection source/command/file/registry/policy identifiers, normalized and redacted evidence, artifact hash/reference, observation/ingestion time, producer/parser/pack versions, confidence/integrity and canonical pivots. Control mappings need framework/version/provenance and must not imply attestation. Sensitive raw evidence requires field permission and audit. |
-| CIS-006 | `PARTIAL` | `POST /api/ha-cis/actions/preview` and `POST /api/ha-cis/actions` return 503 `CIS_MUTATION_UNAVAILABLE`. HiveArmor does not invent configuration mutations. | Add governed preview/approval/execute with connector, idempotency, audit and a linked fresh assessment. |
-| CIS-007 | `MISSING` | Current tables retain only the latest result per agent/check and latest summary per agent/pack. No trend, delta stream or export exists. | Persist immutable scan/result history and add cursor-paged drift/change timelines. Add resumable authorized deltas for new scans, changed outcomes, pack/assignment changes, source coverage and verification completion; deltas mark a snapshot stale and never silently reorder it. Add asynchronous snapshot-bound, redacted, expiring, audited export and cancellation. |
-| CIS-008 | `MISSING` | No governed Hive Intelligence configuration-assessment explanation exists. | Add permission-filtered summaries and remediation-plan drafts grounded in evidence references with factual versus inferred assertions, citations, uncertainty, missing-source warnings, model/prompt/version, generated/expiry time and prompt-injection defenses. AI cannot decide applicability, claim compliance, approve exceptions, accept risk, modify configuration or authorize execution. |
+| IAM-001 | `PARTIAL` | Admin-protected `/api/users` supports pageable list/create/update/delete and `/api/users/authorities` returns authority names. The list filters only by login; the DTO/entity boundary exposes fields that are not an administration projection, update uses the collection route, create collapses expected conflicts into a generic server error, and source/MFA/sign-in/membership/review/version data are absent. | Add a tenant-derived, role-authorized maximum-100 cursor page with deterministic order, same-snapshot totals/facets, stable principal ID, display/email, source, lifecycle state, effective roles/capabilities, tenant memberships, MFA/authentication posture, last sign-in, review state and observed/generated timestamps. Bind cursors to principal/scope/filter/order/snapshot; redact enrollment/authenticator secrets; use optimistic version, idempotency and RFC 9457 errors for mutations. |
+| IAM-002 | `MISSING` | No authoritative invitation or joiner/mover/leaver lifecycle exists. Direct user create/update/delete cannot represent expiry, acceptance, suspension, offboarding or downstream revocation. | Add invite preview/create/resend/revoke/accept and JML state transitions with normalized email, tenant/role scope, inviter authority, expiry, idempotency, separation-of-duties checks, downstream provisioning status and immutable audit. Offboarding suspends sessions/tokens and preserves referenced evidence; hard delete is not the default lifecycle action. |
+| IAM-003 | `MISMATCH` | `/api/authority` exposes generic CRUD without the class-level `ROLE_ADMIN` guard used by `/api/users`; it projects role names only and has no capability, scope, inheritance, conflict or version model. The new frontend does not call it. | Protect or retire the legacy resource immediately. Add a canonical tenant-aware role/capability catalogue and effective-access preview using the same authorization engine as runtime requests. Create/update/retire require optimistic version, protected built-in roles, conflict/SoD validation, reason and immutable audit. After a successor is deployed, advertise `Deprecation`, `Sunset` and successor `Link` headers and monitor consumers before removal. |
+| IAM-004 | `PARTIAL` | Admin-protected `/api/ha-tenants` provides pageable platform tenant CRUD. It does not return authoritative membership/privilege/federation/activity/freshness summaries; direct delete has no dependency preview, governed retirement, optimistic version or audit evidence. | Add a maximum-100 tenant inventory with stable opaque ID, prefix/domain, lifecycle, administration model, owner, region/residency, licence, member/privileged/federation counts, last activity and source freshness. Create/change/retire require derived platform authority, idempotency, optimistic version, dependency/blast-radius preview and immutable audit. |
+| IAM-005 | `PARTIAL` | MSSP tenant and membership endpoints are authority-protected for `MSSP_ADMIN` and support membership CRUD, but member listing is unbounded, public numeric identifiers are used, and delegation validity, customer visibility, invitation/review/SoD, optimistic version and audit are absent. | Add cursor-paged delegated tenant/membership inventory with customer tenant boundary, opaque IDs, delegated role/capability/data scope, valid-from/until, source, status, reviewer, customer-visible reason and permission version. Govern invite/change/revoke with preview, SoD, expiry, idempotency and immutable customer/auditor-visible evidence. |
+| IAM-006 | `PARTIAL` | Admin OIDC provider CRUD and public enabled-provider/authorize/callback routes exist. Provider metadata does not prove tenant/domain routing, claim/group mapping, configuration test, signing-key/secret rotation state, optimistic version, safe redirect policy or immutable audit. | Add versioned provider drafts with tenant/domain routing, issuer/discovery validation, allowlisted redirect origins, PKCE/state/nonce policy, claim/group mappings to effective roles, requested scopes, key/secret reference and rotation health. Test is side-effect-free and returns structured diagnostics; activation/rollback are audited and idempotent. |
+| IAM-007 | `PARTIAL` | SCIM Users/Groups and admin one-time token lifecycle exist, with bearer filtering and a token-status projection. There is no bounded provisioning receipt/failure ledger, tenant/group-to-role mapping version, reconciliation job, token overlap policy or progressive object provenance. | Add tenant-aware SCIM connection/configuration, write-only credential rotation with overlap/expiry, versioned group-role mapping, cursor-paged provisioning receipts/failures, reconciliation preview/job/progress/cancel, retry/dead-letter state and immutable audit. SCIM deactivation must revoke effective access according to policy without destroying evidence. |
+| IAM-008 | `MISSING` | No access-review/recertification API, reviewer assignment, recommendation, decision or expiry enforcement is exposed. | Add scheduled and on-demand access reviews for privileged roles, tenant memberships, service identities and dormant accounts. Return scope, owner/reviewers, cadence, due date, item counts, evidence/recommendation, decision/reason, escalation and enforcement result. Use cursor pages, optimistic decisions, SoD, resumable progress and immutable audit. |
+| IAM-009 | `MISSING` | No administrative session inventory, risk/step-up state, session revocation, emergency-access activation or post-use review contract exists. | Add principal-bound cursor-paged sessions with device/client/IP/region, issued/last-used/expires, authentication strength, risk, tenant/scope and revocation state. Revoke and break-glass operations require step-up, reason, time-bound scope, approval/exception policy, idempotency, rapid propagation, monitoring and mandatory post-use review. Never return tokens. |
+| IAM-010 | `MISSING` | Existing mutation/application logs do not provide one immutable, tenant-aware identity governance ledger or resumable delta stream. | Add a cursor-paged append-only identity/tenant/federation/review/session audit with actor/service identity, authority and tenant scope, target/type, before/after version-safe delta, reason, approval/reference, request/trace ID, result and server timestamp. Provide permission-filtered export/retention/legal hold and resumable authorization-filtered deltas; sensitive values remain redacted. |
 
-Frontend integration recorded **2026-08-13 18:57:57 IST (UTC+05:30)**: replaced the inline assessment table with a compact failed-check priority workspace; weighted fleet technical-rate and explicit fail/error/not-applicable/coverage measures; exact check, outcome, profile and endpoint filters; 50-row cancellable server pagination and stable caching; virtualized dense grid; keyboard navigation; icon row-density controls; explicit permission, dependency, partial-summary, stale-refresh and safe-empty states; sticky pagination/status dock; and a full-height observed/expected/remediation context drawer with copy, hunt, asset and compliance pivots. Unsupported rescan, exception and remediation mutations are visibly withheld.
+Frontend integration recorded **2026-08-22 21:39:31 IST (UTC+05:30)**: replaced the generic user table and tenant placeholder with a compact Identity & Tenancy control plane covering Directory, Tenants, Access reviews, Federation and Audit activity. It provides authority/scope/source/MFA/review/freshness context, keyboard navigation, dense bounded tables, full-height progressive detail, explicit global/delegated/tenant-local administration boundaries, partial-result handling and safe contract-unavailable states. Production reads only the existing protected user, tenant, OIDC and SCIM projections and disables unsupported workflows; fictional review/audit/membership depth is dynamically imported only when `import.meta.env.DEV && VITE_USE_FOUNDATION_FIXTURES=true`.
+
+Verification recorded **2026-08-22 21:55:08 IST (UTC+05:30)**: focused Identity/SSO/SCIM tests passed **16/16**, final TypeScript and zero-warning repository lint passed, the complete frontend suite passed **1,088/1,088 tests**, the production Vite build passed, and authenticated foundation-fixture review covered all five control-plane views, progressive context and governed setup at 1280×720. Browser review corrected the generic primary action so Federation routes to configuration and Audit activity remains read-only. A production-artifact marker scan caught and removed a lazily emitted identity-fixture chunk; the rebuilt artifact contains no identity fixture records while development fixture reload still passes. No backend endpoint was changed or deprecated in code.
 
 ## Route family: `/admin/audit`, `/admin/retention`, `/admin/settings`, `/settings/system` — Governance and Platform Settings
 
@@ -2152,7 +1428,6 @@ The checked-in backend already provides an Admin-only, offset-paged OpenSearch a
 | GOV-010 | `PARTIAL` | Deprecation filters appear on selected responses, but no governed API lifecycle inventory with owner, consumers, successor, migration evidence, sunset/removal gate or exception exists. Licence, migration and system-health administration remain fragmented and are not represented by one safe platform projection. | Add an Admin/Auditor API lifecycle registry plus read-safe platform metadata: route/version/owner, caller telemetry without secrets, successor and migration %, deprecation/sunset/removal gate/exception, licence entitlement/expiry without licence material, database/schema migration state, dependency health and generated/observed timestamps. Lifecycle changes use GOV-009 governance and cannot be inferred from frontend non-use. |
 
 Frontend integration recorded **2026-08-23 10:18:14 IST (UTC+05:30)**: replaced the disconnected audit, retention and partial settings screens with one compact control plane spanning Audit ledger, Retention, Configuration, Change control and API lifecycle. Added dense keyboard navigation, bounded initial projections, cancellation, partial-result handling, progressive full-height evidence context, secret-safe effective configuration, explicit integrity/authority limits and disabled governed-workflow previews. Production reads only `/ha-audit-log`, `/ha-retention-policies` and `/ha-admin/settings`; unsupported change, legal-hold, export and lifecycle workflows remain unavailable. Fictional depth is dynamically imported only when `import.meta.env.DEV && VITE_USE_FOUNDATION_FIXTURES=true`. No backend endpoint was added, implemented or marked deprecated in code.
-
 
 ## Cross-cutting detection-ingestion acceptance
 
@@ -2270,4 +1545,9 @@ This reconciliation does not reopen Kiro's completed route work or the live raw-
 | 2026-08-21 13:05:00 IST (UTC+05:30) | `/api/ha-agent-enrollments`, Windows role matrix | Windows host role matrix LIVE: Admin 200, SOC Manager 200, Analyst 403, SOC Manager tenant 3812 403. Unauthorized-tenant check uses SOC token. Not `PRODUCTION READY`. |
 | 2026-08-21 13:00:00 IST (UTC+05:30) | `/api/ha-agent-enrollments`, Windows `HiveArmorAgent` SCM | ACC-02 LIVE on Windows Server 2019: Admin token create, install agent 13, SCM lifecycle, rotate (one 1056 race recovered), revoke, secret-free audit. Role matrix skipped. Skip-cert yes. Not `PRODUCTION READY`. |
 | 2026-08-19 21:45:00 IST (UTC+05:30) | `/api/ha-cis/catalog`, `/api/ha-vuln/remediation-connectors`, `/api/ha-telemetry/*` | Staging LIVE: catalog 2 packs, connectors not_configured, forged 401, FIRST probe 200 with no invented placeholder EPSS, signed telemetry-once agent 9 (4 SCA rows). Legacy INTERNAL_KEY still allowed. Not `PRODUCTION READY`. |
+| 2026-08-21 16:37:00 IST (UTC+05:30) | `/compliance`, `/api/ha-posture/**`, legacy `/api/ha-compliance/frameworks` and `/api/compliance/**` | Audited the aggregate posture resource, DTOs, repositories and legacy evidence/report/config surfaces before redesign. Recorded tenant/snapshot/paging/scoring, bounded controls, evidence provenance, assessment/applicability/ownership, improvement-action/exception/remediation, report/export, history/deltas, Hive Intelligence and legacy deprecation requirements as `CMP-001`–`CMP-009`. The UI consumes only real aggregate fields and does not infer attestation or fabricate control evidence. No backend endpoint was added or deprecated in code in this slice. |
+| 2026-08-21 17:37:57 IST (UTC+05:30) | `/reports/scheduled`, `/reports/templates`, `/reports/sitrep`, `/reports/incidents`, `/reports/after-action` | Audited generic report CRUD, compliance-backed schedule storage and separate report/export controllers before consolidating the UI. Recorded bounded tenant inventory, versioned templates, snapshot-bound asynchronous generation, governed scheduler/delivery, review/redaction/approval, typed SOC communications, artifact retention, immutable audit, Hive Intelligence and compatibility-route migration as `REP-001`–`REP-010`. No backend endpoint was added, implemented or deprecated in code in this frontend slice. |
+| 2026-08-21 18:46:15 IST (UTC+05:30) | `/admin/pipeline-signals`, `/inputs/sources`, `/admin/data-parsing` | Reconciled the live pipeline-signals/soak evidence, raw envelope, agent spool and quarantine topic before replacing the disconnected frontend pages. Recorded only the missing bounded source lifecycle, identity/secret operations, per-source freshness/backpressure/quality, parser version/test/deploy, schema lineage, grouped failure inventory, governed replay, expanded measured topology and role/deprecation requirements as `ING-001`–`ING-010`. No backend endpoint was added, implemented or deprecated in code in this frontend slice. |
+| 2026-08-22 20:54:37 IST (UTC+05:30) | `/admin/integrations`, `/admin/notifications`, `/admin/connection-keys`, `/settings/api-keys` | Audited legacy integration entities/config, notification rules, real notification-channel dispatch, user-bound connection keys and the newer hash-only API-key service before unifying the UI. Recorded bounded connector lifecycle, secret aliases, validation/health, destination/routing, durable delivery/retry, webhook egress security, service-key lifecycle and role/migration requirements as `INO-001`–`INO-010`. No backend endpoint was added, implemented or deprecated in code in this frontend slice. |
+| 2026-08-22 21:39:31 IST (UTC+05:30) | `/admin/users`, `/admin/tenants`, `/admin/sso`, `/admin/scim`, `/mssp/tenants` | Audited the protected user/tenant/MSSP/OIDC/SCIM resources and the unprotected legacy authority CRUD before consolidating administration. Preserved implemented Kiro capabilities and recorded only the missing or mismatched bounded directory, invitation/JML, effective-role, tenant lifecycle, delegated-membership, federation, SCIM receipts, access-review, session/break-glass and immutable-audit guarantees as `IAM-001`–`IAM-010`. The frontend now reads `/users/authorities`, fixes the existing user-update contract to `PUT /users`, and does not adopt `/authority`. No backend endpoint was added, implemented or marked deprecated in code in this frontend slice. |
 | 2026-08-23 10:18:14 IST (UTC+05:30) | `/admin/audit`, `/admin/retention`, `/admin/settings`, `/settings/system` | Reconciled Kiro's Admin-only audit list, retention CRUD and masked typed settings aggregate before consolidating governance administration. Recorded only the remaining bounded audit evidence/integrity/export, effective retention/legal hold, versioned configuration/change control and API lifecycle/migration requirements as `GOV-001`–`GOV-010`. The production frontend reads the three existing safe projections and does not invoke unsupported mutations. Legacy `/ha-settings` is recorded for successor migration but is not marked deprecated until the successor and lifecycle headers are live. No backend endpoint was added, implemented or deprecated in code in this frontend slice. |
