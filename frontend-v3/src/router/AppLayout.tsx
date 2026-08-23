@@ -19,10 +19,13 @@ import { type SystemInfo, useSystemInfoStore } from '@/store/systemInfoStore';
 
 import './AppLayout.css';
 
+const visualFixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
 export function AppLayout(): JSX.Element {
   const { collapsed } = useSidebarStore();
 
   useEffect(() => {
+    if (visualFixtureMode) return;
     const token = localStorage.getItem('hivearmor_auth_token');
     if (!token) return;
 

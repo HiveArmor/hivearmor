@@ -1,8 +1,8 @@
 # Current product state
 
-Snapshot time: **2026-08-18 20:40:00 IST (UTC+05:30)**  
-Baseline inspected: `main` at `b749b485b45644e40cf0c27dc516d86b7fd9887e`  
-Worktree: heavily dirty before and during this slice (`197` modified, `278` deleted, `718` untracked at snapshot). Treat every unrelated change as user-owned; these counts include the still-uncommitted pilot work and are not a claim that this slice owns all listed paths.
+Snapshot time: **2026-08-23 10:44:00 IST (UTC+05:30)**
+Baseline inspected: `main` at `be1845f61f36960f04733291b1b19822790282c5`
+Worktree: a concurrent checkout moved from `staging/siem-mvp` to `main` after creating safety checkpoint `db700a4`. Governance-owned files were recovered selectively; earlier Cursor/user changes remain preserved in that checkpoint and are not claimed or silently merged by this slice.
 
 ## Repository and design constraints
 
@@ -32,7 +32,7 @@ Mandatory implementation references:
 | 6 | Detection engineering | Rule inventory/editor/test workflows redesigned; backend readiness is mixed and must be checked against the contract register. |
 | 7 | Response automation | Builder, library/detail, activity and authority/governance workflows redesigned. New SOAR/governance contracts are not all implemented. |
 | 8 | Posture and exposure | Assets has a canonical partial backend slice. Identities, Active Directory and exposure UI are implemented with explicit missing/partial states. Vulnerability Operations and CIS Benchmark Posture UIs are implemented and zero-row live-verified against their existing partial APIs. Contextual vulnerability priority/remediation remains under `VUL-001`–`VUL-007`; authoritative configuration applicability/provenance/lifecycle remains under `CIS-001`–`CIS-008`. Compliance is paused behind the production-minimum backend program. |
-| 9 | Operations and administration | Not the active scope. |
+| 9 | Operations and administration | Governance & Platform Settings is `UI IMPLEMENTED`, `CONTRACT RECORDED` and `FIXTURE-BROWSER VERIFIED` on the active branch. Production remains blocked by `GOV-001`–`GOV-010`. Earlier operations slices are preserved in checkpoint `db700a4` and require explicit branch reconciliation. |
 
 ## Production-readiness warning
 
@@ -49,7 +49,7 @@ The presence of a frontend route, fixture view or API controller is not evidence
 
 ## Current active slice
 
-Production-minimum single-node SIEM pilot backend — secure real-agent enrollment, identity-derived tenant ingress, durable raw-event delivery, deterministic detection/alert persistence, canonical `frontend-v3` installation, recovery and release evidence. Read `production-minimum-backend-plan.md`, `backend-implementation-ledger.md`, the `SIEM-001`–`SIEM-010` contracts and `research/production-siem-foundation.md` before changing code.
+Orphan operational workflows are next, but first reconcile safety checkpoint `db700a4` with the intended target branch so earlier Cursor/user work is not lost or duplicated. Then inventory UEBA/risk/timeline ownership, endpoint timeline/quarantine/FIM/policies and threat-intelligence routes before selecting one bounded route family. Governance & Platform Settings is complete as a frontend slice across `/admin/audit`, `/admin/retention`, `/admin/settings` and `/settings/system`; production uses only the existing safe reads while unsupported mutations fail closed. Read `remaining-page-program.md`, `research/governance-platform-settings.md` and `GOV-001`–`GOV-010`.
 
 `PILOT-00` is `CODE COMPLETE`: the producer and consumer implement and test `ha.raw-event.v1`; broker acknowledgement is `acks=all`; keys and headers carry tenant/event/schema/producer identity; legacy unwrapped records are validated and counted under a dated compatibility policy; and the topology, schema, ownership/deprecation map and pilot threat model are checked in. This is not live broker acceptance evidence.
 

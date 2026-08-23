@@ -34,7 +34,7 @@ export function useAuthBootstrap(): { isBootstrapping: boolean } {
           firstName: 'Maya',
           lastName: 'Chen',
           email: 'maya.chen@example.test',
-          roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER'],
+          roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'],
           langKey: 'en',
         },
         'foundation-visual-validation-token'

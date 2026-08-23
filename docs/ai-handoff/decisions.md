@@ -236,3 +236,8 @@ Decision: keep `local-dev/docker-compose.yml` as the lab. Ship `deploy/staging/`
 
 Reason: local-dev still publishes data ports and lab secrets. A dedicated profile is the PILOT-07 topology without claiming a VM that was not provided.
 
+## 2026-08-23 10:44:00 IST (UTC+05:30) — Audit evidence, retention and configuration change remain separate authority domains
+
+Decision: consolidate governance visibility into one control plane while preserving distinct trust boundaries. Audit is a read-only evidence projection and cannot claim immutability without a proof contract. Retention presents effective lifecycle consequences and legal-hold precedence rather than a single editable day count. Platform configuration presents masked effective values, not a direct edit form. Proposal, export, approval, rollout and rollback remain disabled in production until `GOV-001`–`GOV-010` provide version, scope, preview, authority and receipts. Legacy `/ha-settings` is a migration candidate, not deprecated merely because the frontend prefers `/ha-admin/settings`.
+
+Reason: NIST log-management guidance and Elastic/Splunk administration separate evidence handling from storage lifecycle, while ServiceNow-style governance treats impactful changes as traceable before/after decisions. The checked-in backend has useful Admin-only reads and immediate mutations but lacks the evidence and change-control guarantees required to present those writes as an enterprise governance workflow.

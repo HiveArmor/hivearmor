@@ -1,8 +1,8 @@
 # HiveArmor AI handoff
 
-Last reconciled: **2026-08-18 20:40:00 IST (UTC+05:30)**  
-Repository: `/Users/encryptshell/GIT/HiveArmor-v1`  
-Baseline inspected: `main` at `b749b485b45644e40cf0c27dc516d86b7fd9887e`
+Last reconciled: **2026-08-23 10:44:00 IST (UTC+05:30)**
+Repository: `/Users/encryptshell/GIT/HiveArmor-v1`
+Baseline inspected: `main` at `be1845f61f36960f04733291b1b19822790282c5`; earlier Cursor/user work is preserved in safety checkpoint `db700a4` on `staging/siem-mvp` and must be reconciled before merge.
 
 This directory is the durable, model-neutral continuation record for HiveArmor. It is intentionally layered so a local Codex session using Amazon Bedrock can load only the context required for the active slice.
 

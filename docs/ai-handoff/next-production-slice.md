@@ -1,6 +1,24 @@
 # Next production slice
 
-Updated: **2026-08-21 16:15:00 IST (UTC+05:30)**
+Updated: **2026-08-23 10:44:00 IST (UTC+05:30)**
+
+## Active — Branch reconciliation, then Orphan Operational Workflows
+
+Status: **PLANNED**; no production-readiness claim.
+
+Before new implementation, reconcile safety checkpoint `db700a4` from `staging/siem-mvp` with the intended target branch. Do not cherry-pick or discard it blindly: it contains earlier Cursor/user work plus the pre-checkout state. After reconciliation, inventory UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies and threat-intelligence routes, frontend services and backend controllers, then select one coherent bounded route family. Follow `remaining-page-program.md`.
+
+## Completed this slice — Governance and Platform Settings
+
+Routes: `/admin/audit`, `/admin/retention`, `/admin/settings`, `/settings/system`.
+Status: **UI IMPLEMENTED**, **CONTRACT RECORDED** and **FIXTURE-BROWSER VERIFIED**. Type-check, zero-warning lint, focused tests, the complete 1,092-test suite and production build passed before the safety checkout; the same recovered files are revalidated on `main` in this slice. Not `BACKEND IMPLEMENTED`, real-backend `LIVE VERIFIED` or `PRODUCTION READY` for `GOV-001`–`GOV-010`.
+
+- Consolidated disconnected audit, retention and settings pages into one compact control plane with Audit ledger, Retention, Configuration, Change control and API lifecycle views.
+- Corrected the audit wire contract to the checked-in `actor`/`actionType` array response, bounded the first projection to 100 and added cancellation/partial-result handling.
+- Added keyboard navigation, progressive full-height context, lifecycle consequences, secret-safe effective settings and deliberately disabled proposal/export flows where backend authority is incomplete.
+- Fictional depth is dynamically imported only when `import.meta.env.DEV && VITE_USE_FOUNDATION_FIXTURES=true`; production receives none of those records.
+- Legacy `/ha-settings` remains at unknown migration state and is not deprecated without successor cutover and lifecycle headers.
+- Research: `research/governance-platform-settings.md`. Contracts: `GOV-001`–`GOV-010`.
 
 ## Completed this slice — E2E agent→detect + staging UI walk LIVE
 
