@@ -70,7 +70,7 @@ const foundationVisualUser: HaUser = {
   firstName: 'Maya',
   lastName: 'Chen',
   email: 'maya.chen@example.test',
-  roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER'],
+  roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'],
   langKey: 'en',
 };
 const foundationVisualToken = 'foundation-visual-validation-token';

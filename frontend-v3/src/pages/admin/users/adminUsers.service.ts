@@ -77,8 +77,9 @@ export async function createUser(data: UserFormData): Promise<UserDTO> {
  * ADM-01 §2
  * Backend verified: hasRole('ROLE_ADMIN')
  */
-export async function updateUser(login: string, data: UserFormData): Promise<UserDTO> {
-  return apiClient.put<UserDTO>(`/users/${login}`, {
+export async function updateUser(user: UserDTO, data: UserFormData): Promise<UserDTO> {
+  return apiClient.put<UserDTO>('/users', {
+    id: user.id,
     login: data.login,
     email: data.email,
     firstName: data.firstName,
@@ -107,5 +108,6 @@ export async function deleteUser(login: string): Promise<void> {
  * Frontend route guard (ROLE_ADMIN) is a UX convenience only, not a security gate.
  */
 export async function getAuthorities(): Promise<AuthorityDTO[]> {
-  return apiClient.get<AuthorityDTO[]>('/authority');
+  const names = await apiClient.get<string[]>('/users/authorities');
+  return names.map((name) => ({ id: name, name }));
 }

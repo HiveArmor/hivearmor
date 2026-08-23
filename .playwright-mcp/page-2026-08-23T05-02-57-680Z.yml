@@ -1,0 +1,214 @@
+- generic [ref=f4e1]:
+  - generic [ref=f4e3]:
+    - link "Skip to main content" [ref=f4e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f4e5]:
+      - generic [ref=f4e6]:
+        - generic [ref=f4e12]: HiveArmor
+        - generic [ref=f4e13]: Security operations
+      - generic [ref=f4e14]:
+        - button "All authorized tenants" [ref=f4e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f4e24] [cursor=pointer]:
+          - generic [ref=f4e29]: ⌘ K
+        - generic [ref=f4e30]: Production
+      - generic [ref=f4e31]:
+        - 'status "Data pipeline: Unavailable - Full authentication is required to access this resource" [ref=f4e32]'
+        - status "Live events per second" [ref=f4e35]:
+          - generic [ref=f4e37]: 12,840 EPS
+        - button "Notifications" [ref=f4e38] [cursor=pointer]
+        - button "Help" [ref=f4e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f4e47]:
+      - generic [ref=f4e48]:
+        - region "COMMAND" [ref=f4e49]:
+          - generic [ref=f4e50]:
+            - button "Mission Control" [ref=f4e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f4e58] [cursor=pointer]
+            - button "Alerts" [ref=f4e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f4e67] [cursor=pointer]
+            - button "Incidents" [ref=f4e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f4e79]:
+          - generic [ref=f4e80]:
+            - button "Search & Hunt" [ref=f4e81] [cursor=pointer]
+            - button "Investigations" [ref=f4e86] [cursor=pointer]
+            - button "Entities" [ref=f4e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f4e97] [cursor=pointer]
+        - region "DEFEND" [ref=f4e103]:
+          - generic [ref=f4e104]:
+            - button "Detection Rules" [ref=f4e105] [cursor=pointer]
+            - button "Playbooks" [ref=f4e109] [cursor=pointer]
+            - button "Response Approvals" [ref=f4e114] [cursor=pointer]
+            - button "Quarantine & Containment" [ref=f4e122] [cursor=pointer]
+            - button "Response Library" [ref=f4e128] [cursor=pointer]
+        - region "POSTURE" [ref=f4e132]:
+          - generic [ref=f4e133]:
+            - button "Assets" [ref=f4e134] [cursor=pointer]
+            - button "Identities" [ref=f4e139] [cursor=pointer]
+            - button "Active Directory" [ref=f4e146] [cursor=pointer]
+            - button "Exposure" [ref=f4e153] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f4e159] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f4e170] [cursor=pointer]
+            - button "Sensors" [ref=f4e176] [cursor=pointer]
+            - button "Compliance" [ref=f4e180] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f4e185]:
+          - generic [ref=f4e186]:
+            - button "Endpoints" [ref=f4e187] [cursor=pointer]
+            - button "File Integrity" [ref=f4e191] [cursor=pointer]
+            - button "Agent Policies" [ref=f4e198] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f4e203]:
+          - generic [ref=f4e204]:
+            - button "Operational Dashboards" [ref=f4e205] [cursor=pointer]
+            - button "Dashboard Studio" [ref=f4e212] [cursor=pointer]
+        - region "REPORT" [ref=f4e217]:
+          - generic [ref=f4e218]:
+            - button "Reporting Operations" [ref=f4e219] [cursor=pointer]
+            - button "Report Templates" [ref=f4e224] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f4e230]:
+          - generic [ref=f4e231]:
+            - button "Identity & Tenancy" [ref=f4e232] [cursor=pointer]
+            - button "Integrations & Delivery" [ref=f4e246] [cursor=pointer]
+            - button "Audit Log" [ref=f4e250] [cursor=pointer]
+            - button "Pipeline & Ingestion" [ref=f4e255] [cursor=pointer]
+            - button "Settings" [ref=f4e259] [cursor=pointer]
+      - generic [ref=f4e264]:
+        - button "User menu" [ref=f4e267] [cursor=pointer]:
+          - generic [ref=f4e268]: MC
+        - button "Pin sidebar open" [ref=f4e269] [cursor=pointer]
+    - main [ref=f4e272]:
+      - generic [ref=f4e273]:
+        - generic [ref=f4e274]:
+          - generic [ref=f4e283]:
+            - generic [ref=f4e284]: ADMINISTRATION · GOVERNANCE CONTROL PLANE
+            - heading "Audit, Retention & Settings" [level=1] [ref=f4e285]
+          - generic [ref=f4e286]:
+            - generic [ref=f4e287]: J/K navigate Esc close
+            - button "Refresh" [ref=f4e288] [cursor=pointer]
+        - generic [ref=f4e295]:
+          - strong [ref=f4e299]: "Design fixture:"
+          - text: fictional audit, retention and configuration-governance records are enabled.
+          - generic [ref=f4e300]: Production never receives these records.
+        - region "Governance operations summary" [ref=f4e301]:
+          - generic [ref=f4e302]:
+            - generic [ref=f4e303]: Audit events
+            - strong [ref=f4e304]: 18,422
+            - generic [ref=f4e305]: loaded or exact total
+          - generic [ref=f4e306]:
+            - generic [ref=f4e307]: Denied · 24h
+            - strong [ref=f4e308]: "7"
+            - generic [ref=f4e309]: authorization outcomes
+          - generic [ref=f4e310]:
+            - generic [ref=f4e311]: Legal holds
+            - strong [ref=f4e312]: "6"
+            - generic [ref=f4e313]: preservation overrides
+          - generic [ref=f4e314]:
+            - generic [ref=f4e315]: Pending changes
+            - strong [ref=f4e316]: "1"
+            - generic [ref=f4e317]: approval required
+          - generic [ref=f4e318]:
+            - generic [ref=f4e319]: Config drift
+            - strong [ref=f4e320]: "2"
+            - generic [ref=f4e321]: unreconciled instances
+          - generic [ref=f4e322]:
+            - generic [ref=f4e323]: Deprecated APIs
+            - strong [ref=f4e324]: "1"
+            - generic [ref=f4e325]: tracked consumers
+        - navigation "Governance workspaces" [ref=f4e326]:
+          - tab "Audit ledger 6" [ref=f4e327] [cursor=pointer]:
+            - text: Audit ledger
+            - generic [ref=f4e332]: "6"
+          - tab "Retention 5" [ref=f4e333] [cursor=pointer]:
+            - text: Retention
+            - generic [ref=f4e337]: "5"
+          - tab "Configuration 4" [ref=f4e338] [cursor=pointer]:
+            - text: Configuration
+            - generic [ref=f4e342]: "4"
+          - tab "Change control 3" [active] [selected] [ref=f4e343] [cursor=pointer]:
+            - text: Change control
+            - generic [ref=f4e349]: "3"
+          - tab "API lifecycle 4" [ref=f4e350] [cursor=pointer]:
+            - text: API lifecycle
+            - generic [ref=f4e354]: "4"
+        - generic [ref=f4e355]:
+          - generic [ref=f4e356]:
+            - textbox "Search changes" [ref=f4e543]:
+              - /placeholder: Search changes…
+            - generic [ref=f4e361]: /
+          - combobox "Filter changes state" [ref=f4e544]:
+            - option "All states" [selected]
+            - option "Healthy"
+            - option "Needs attention"
+            - option "Critical"
+            - option "Pending"
+            - option "Approved"
+            - option "Rejected"
+            - option "Deprecated"
+            - option "Not reported"
+          - button "Refresh current view" [ref=f4e366] [cursor=pointer]
+          - generic [ref=f4e372]: Snapshot 23 Aug 2026, 15:50 · governed administration
+        - main [ref=f4e373]:
+          - table [ref=f4e546]:
+            - rowgroup [ref=f4e547]:
+              - row [ref=f4e548]:
+                - columnheader "Requested" [ref=f4e549]
+                - columnheader "Change" [ref=f4e550]
+                - columnheader "Category" [ref=f4e551]
+                - columnheader "Scope" [ref=f4e552]
+                - columnheader "Risk" [ref=f4e553]
+                - columnheader "Approvals" [ref=f4e554]
+                - columnheader "Window" [ref=f4e555]
+                - columnheader "State" [ref=f4e556]
+                - columnheader [ref=f4e557]
+            - rowgroup [ref=f4e558]:
+              - row [ref=f4e559] [cursor=pointer]:
+                - cell "23 Aug 2026, 15:48 Priya Nair" [ref=f4e560]:
+                  - text: 23 Aug 2026, 15:48
+                  - generic [ref=f4e561]: Priya Nair
+                - cell "Tighten privileged session timeout chg-2026-0088 · draft v42" [ref=f4e562]:
+                  - strong [ref=f4e563]: Tighten privileged session timeout
+                  - generic [ref=f4e564]: chg-2026-0088 · draft v42
+                - cell "Security" [ref=f4e565]
+                - cell "Platform administrators" [ref=f4e566]
+                - cell "Medium" [ref=f4e567]
+                - cell "0/1 · Security Platform" [ref=f4e569]
+                - cell "Next maintenance window" [ref=f4e570]
+                - cell "Pending" [ref=f4e571]
+                - cell [ref=f4e574]
+              - row [ref=f4e577] [cursor=pointer]:
+                - cell "23 Aug 2026, 15:15 Elena Rossi" [ref=f4e578]:
+                  - text: 23 Aug 2026, 15:15
+                  - generic [ref=f4e579]: Elena Rossi
+                - cell "Extend network-flow archive chg-2026-0087 · approved v19" [ref=f4e580]:
+                  - strong [ref=f4e581]: Extend network-flow archive
+                  - generic [ref=f4e582]: chg-2026-0087 · approved v19
+                - cell "Retention" [ref=f4e583]
+                - cell "Northwind Financial" [ref=f4e584]
+                - cell "High" [ref=f4e585]
+                - cell "2/2 · Data owner + Compliance" [ref=f4e587]
+                - cell "24 Aug · 02:00 IST" [ref=f4e588]
+                - cell "Approved" [ref=f4e589]
+                - cell [ref=f4e592]
+              - row [ref=f4e595] [cursor=pointer]:
+                - cell "23 Aug 2026, 12:40 Marcus Cole" [ref=f4e596]:
+                  - text: 23 Aug 2026, 12:40
+                  - generic [ref=f4e597]: Marcus Cole
+                - cell "Rotate Hive Intelligence endpoint chg-2026-0086 · closed v7" [ref=f4e598]:
+                  - strong [ref=f4e599]: Rotate Hive Intelligence endpoint
+                  - generic [ref=f4e600]: chg-2026-0086 · closed v7
+                - cell "Ai" [ref=f4e601]
+                - cell "Platform" [ref=f4e602]
+                - cell "High" [ref=f4e603]
+                - cell "1/2 · AI governance denied" [ref=f4e605]
+                - cell "Not scheduled" [ref=f4e606]
+                - cell "Rejected" [ref=f4e607]
+                - cell [ref=f4e610]
+        - generic [ref=f4e489]:
+          - generic [ref=f4e490]: Read evidence is separate from change authority
+          - strong [ref=f4e495]: Fixture workflow · no policy or setting changed
+          - generic [ref=f4e496]: Integrity asserted by fixture
+        - generic [ref=f4e497]:
+          - generic [ref=f4e498]:
+            - generic [ref=f4e500]: Connected
+            - generic [ref=f4e501]: •
+            - generic [ref=f4e503]: Live
+          - generic [ref=f4e504]: 12840 eps
+  - generic:
+    - list "Notifications"

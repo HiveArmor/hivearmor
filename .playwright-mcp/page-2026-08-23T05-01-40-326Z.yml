@@ -1,0 +1,273 @@
+- generic [ref=f4e1]:
+  - generic [ref=f4e3]:
+    - link "Skip to main content" [ref=f4e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f4e5]:
+      - generic [ref=f4e6]:
+        - generic [ref=f4e12]: HiveArmor
+        - generic [ref=f4e13]: Security operations
+      - generic [ref=f4e14]:
+        - button "All authorized tenants" [ref=f4e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f4e24] [cursor=pointer]:
+          - generic [ref=f4e29]: ⌘ K
+        - generic [ref=f4e30]: Production
+      - generic [ref=f4e31]:
+        - 'status "Data pipeline: Unavailable - Full authentication is required to access this resource" [ref=f4e32]'
+        - status "Live events per second" [ref=f4e35]:
+          - generic [ref=f4e37]: 12,840 EPS
+        - button "Notifications" [ref=f4e38] [cursor=pointer]
+        - button "Help" [ref=f4e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f4e47]:
+      - generic [ref=f4e48]:
+        - region "COMMAND" [ref=f4e49]:
+          - generic [ref=f4e50]:
+            - button "Mission Control" [ref=f4e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f4e58] [cursor=pointer]
+            - button "Alerts" [ref=f4e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f4e67] [cursor=pointer]
+            - button "Incidents" [ref=f4e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f4e79]:
+          - generic [ref=f4e80]:
+            - button "Search & Hunt" [ref=f4e81] [cursor=pointer]
+            - button "Investigations" [ref=f4e86] [cursor=pointer]
+            - button "Entities" [ref=f4e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f4e97] [cursor=pointer]
+        - region "DEFEND" [ref=f4e103]:
+          - generic [ref=f4e104]:
+            - button "Detection Rules" [ref=f4e105] [cursor=pointer]
+            - button "Playbooks" [ref=f4e109] [cursor=pointer]
+            - button "Response Approvals" [ref=f4e114] [cursor=pointer]
+            - button "Quarantine & Containment" [ref=f4e122] [cursor=pointer]
+            - button "Response Library" [ref=f4e128] [cursor=pointer]
+        - region "POSTURE" [ref=f4e132]:
+          - generic [ref=f4e133]:
+            - button "Assets" [ref=f4e134] [cursor=pointer]
+            - button "Identities" [ref=f4e139] [cursor=pointer]
+            - button "Active Directory" [ref=f4e146] [cursor=pointer]
+            - button "Exposure" [ref=f4e153] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f4e159] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f4e170] [cursor=pointer]
+            - button "Sensors" [ref=f4e176] [cursor=pointer]
+            - button "Compliance" [ref=f4e180] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f4e185]:
+          - generic [ref=f4e186]:
+            - button "Endpoints" [ref=f4e187] [cursor=pointer]
+            - button "File Integrity" [ref=f4e191] [cursor=pointer]
+            - button "Agent Policies" [ref=f4e198] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f4e203]:
+          - generic [ref=f4e204]:
+            - button "Operational Dashboards" [ref=f4e205] [cursor=pointer]
+            - button "Dashboard Studio" [ref=f4e212] [cursor=pointer]
+        - region "REPORT" [ref=f4e217]:
+          - generic [ref=f4e218]:
+            - button "Reporting Operations" [ref=f4e219] [cursor=pointer]
+            - button "Report Templates" [ref=f4e224] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f4e230]:
+          - generic [ref=f4e231]:
+            - button "Identity & Tenancy" [ref=f4e232] [cursor=pointer]
+            - button "Integrations & Delivery" [ref=f4e246] [cursor=pointer]
+            - button "Audit Log" [ref=f4e250] [cursor=pointer]
+            - button "Pipeline & Ingestion" [ref=f4e255] [cursor=pointer]
+            - button "Settings" [ref=f4e259] [cursor=pointer]
+      - generic [ref=f4e264]:
+        - button "User menu" [ref=f4e267] [cursor=pointer]:
+          - generic [ref=f4e268]: MC
+        - button "Pin sidebar open" [ref=f4e269] [cursor=pointer]
+    - main [ref=f4e272]:
+      - generic [ref=f4e273]:
+        - generic [ref=f4e274]:
+          - generic [ref=f4e283]:
+            - generic [ref=f4e284]: ADMINISTRATION · GOVERNANCE CONTROL PLANE
+            - heading "Audit, Retention & Settings" [level=1] [ref=f4e285]
+          - generic [ref=f4e286]:
+            - generic [ref=f4e287]: J/K navigate Esc close
+            - button "Refresh" [ref=f4e288] [cursor=pointer]
+            - button "Propose change" [ref=f4e294] [cursor=pointer]
+        - generic [ref=f4e295]:
+          - strong [ref=f4e299]: "Design fixture:"
+          - text: fictional audit, retention and configuration-governance records are enabled.
+          - generic [ref=f4e300]: Production never receives these records.
+        - region "Governance operations summary" [ref=f4e301]:
+          - generic [ref=f4e302]:
+            - generic [ref=f4e303]: Audit events
+            - strong [ref=f4e304]: 18,422
+            - generic [ref=f4e305]: loaded or exact total
+          - generic [ref=f4e306]:
+            - generic [ref=f4e307]: Denied · 24h
+            - strong [ref=f4e308]: "7"
+            - generic [ref=f4e309]: authorization outcomes
+          - generic [ref=f4e310]:
+            - generic [ref=f4e311]: Legal holds
+            - strong [ref=f4e312]: "6"
+            - generic [ref=f4e313]: preservation overrides
+          - generic [ref=f4e314]:
+            - generic [ref=f4e315]: Pending changes
+            - strong [ref=f4e316]: "1"
+            - generic [ref=f4e317]: approval required
+          - generic [ref=f4e318]:
+            - generic [ref=f4e319]: Config drift
+            - strong [ref=f4e320]: "2"
+            - generic [ref=f4e321]: unreconciled instances
+          - generic [ref=f4e322]:
+            - generic [ref=f4e323]: Deprecated APIs
+            - strong [ref=f4e324]: "1"
+            - generic [ref=f4e325]: tracked consumers
+        - navigation "Governance workspaces" [ref=f4e326]:
+          - tab "Audit ledger 6" [ref=f4e327] [cursor=pointer]:
+            - text: Audit ledger
+            - generic [ref=f4e332]: "6"
+          - tab "Retention 5" [ref=f4e333] [cursor=pointer]:
+            - text: Retention
+            - generic [ref=f4e337]: "5"
+          - tab "Configuration 4" [selected] [ref=f4e338] [cursor=pointer]:
+            - text: Configuration
+            - generic [ref=f4e342]: "4"
+          - tab "Change control 3" [ref=f4e343] [cursor=pointer]:
+            - text: Change control
+            - generic [ref=f4e349]: "3"
+          - tab "API lifecycle 4" [ref=f4e350] [cursor=pointer]:
+            - text: API lifecycle
+            - generic [ref=f4e354]: "4"
+        - generic [ref=f4e355]:
+          - generic [ref=f4e356]:
+            - textbox "Search configuration" [ref=f4e360]:
+              - /placeholder: Search configuration…
+            - generic [ref=f4e361]: /
+          - combobox "Filter configuration state" [ref=f4e365]:
+            - option "All states" [selected]
+            - option "Healthy"
+            - option "Needs attention"
+            - option "Critical"
+            - option "Pending"
+            - option "Approved"
+            - option "Rejected"
+            - option "Deprecated"
+            - option "Not reported"
+          - button "Refresh current view" [ref=f4e366] [cursor=pointer]
+          - generic [ref=f4e372]: Snapshot 23 Aug 2026, 15:50 · governed administration
+        - main [ref=f4e373]:
+          - generic [ref=f4e375]:
+            - generic [ref=f4e376]:
+              - generic [ref=f4e380]:
+                - strong [ref=f4e381]: Effective configuration, not an edit form
+                - generic [ref=f4e382]: Values are masked where required. Submit configuration changes through review, impact preview, approval, validation and rollout.
+              - button "Propose change" [ref=f4e383] [cursor=pointer]
+            - generic [ref=f4e384]:
+              - article [ref=f4e385]:
+                - generic [ref=f4e391]:
+                  - strong [ref=f4e392]: General
+                  - generic [ref=f4e393]: Loaded
+                - generic [ref=f4e394]:
+                  - generic [ref=f4e395]:
+                    - term [ref=f4e396]: Site name
+                    - definition [ref=f4e397]: HiveArmor
+                  - generic [ref=f4e398]:
+                    - term [ref=f4e399]: Timezone
+                    - definition [ref=f4e400]: Asia/Kolkata
+                  - generic [ref=f4e401]:
+                    - term [ref=f4e402]: Locale
+                    - definition [ref=f4e403]: en
+                - generic [ref=f4e404]:
+                  - generic [ref=f4e405]: Server-masked projection
+                  - button "Review change path" [ref=f4e406] [cursor=pointer]
+              - article [ref=f4e409]:
+                - generic [ref=f4e415]:
+                  - strong [ref=f4e416]: Security policy
+                  - generic [ref=f4e417]: MFA required
+                - generic [ref=f4e418]:
+                  - generic [ref=f4e419]:
+                    - term [ref=f4e420]: Session timeout
+                    - definition [ref=f4e421]: 60 minutes
+                  - generic [ref=f4e422]:
+                    - term [ref=f4e423]: Minimum password
+                    - definition [ref=f4e424]: 14 characters
+                  - generic [ref=f4e425]:
+                    - term [ref=f4e426]: MFA
+                    - definition [ref=f4e427]: Required
+                - generic [ref=f4e428]:
+                  - generic [ref=f4e429]: Server-masked projection
+                  - button "Review change path" [ref=f4e430] [cursor=pointer]
+              - article [ref=f4e433]:
+                - generic [ref=f4e439]:
+                  - strong [ref=f4e440]: Email delivery
+                  - generic [ref=f4e441]: Configured
+                - generic [ref=f4e442]:
+                  - generic [ref=f4e443]:
+                    - term [ref=f4e444]: SMTP endpoint
+                    - definition [ref=f4e445]: smtp.security.example.test
+                  - generic [ref=f4e446]:
+                    - term [ref=f4e447]: Port / TLS
+                    - definition [ref=f4e448]: 587 / required
+                  - generic [ref=f4e449]:
+                    - term [ref=f4e450]: Credential
+                    - definition [ref=f4e451]: Masked · write only
+                - generic [ref=f4e452]:
+                  - generic [ref=f4e453]: Server-masked projection
+                  - button "Review change path" [ref=f4e454] [cursor=pointer]
+              - article [ref=f4e457]:
+                - generic [ref=f4e463]:
+                  - strong [ref=f4e464]: Hive Intelligence
+                  - generic [ref=f4e465]: Configured
+                - generic [ref=f4e466]:
+                  - generic [ref=f4e467]:
+                    - term [ref=f4e468]: Provider
+                    - definition [ref=f4e469]: custom
+                  - generic [ref=f4e470]:
+                    - term [ref=f4e471]: Model
+                    - definition [ref=f4e472]: governed-soc-model
+                  - generic [ref=f4e473]:
+                    - term [ref=f4e474]: Credential
+                    - definition [ref=f4e475]: Masked · write only
+                - generic [ref=f4e476]:
+                  - generic [ref=f4e477]: Server-masked projection
+                  - button "Review change path" [ref=f4e478] [cursor=pointer]
+            - generic [ref=f4e486]:
+              - strong [ref=f4e487]: Change safety boundary
+              - generic [ref=f4e488]: The checked-in API applies updates immediately and does not provide version, dry-run diff, approval, rollout receipt or rollback. Production submission stays disabled until that authority exists.
+        - generic [ref=f4e489]:
+          - generic [ref=f4e490]: Read evidence is separate from change authority
+          - strong [ref=f4e495]: Fixture workflow · no policy or setting changed
+          - generic [ref=f4e496]: Integrity asserted by fixture
+        - generic [ref=f4e497]:
+          - generic [ref=f4e498]:
+            - generic [ref=f4e500]: Connected
+            - generic [ref=f4e501]: •
+            - generic [ref=f4e503]: Live
+          - generic [ref=f4e504]: 12840 eps
+        - dialog [ref=f4e506]:
+          - generic [ref=f4e507]:
+            - generic [ref=f4e508]:
+              - text: PLATFORM CHANGE
+              - heading "Propose a configuration change" [level=2] [ref=f4e509]
+            - button "Close workflow" [active] [ref=f4e510] [cursor=pointer]
+          - generic [ref=f4e514]:
+            - paragraph [ref=f4e515]: Create a reviewed change without exposing secret material or applying it directly.
+            - generic [ref=f4e516]:
+              - generic [ref=f4e517]: Select
+              - generic [ref=f4e518]: Diff
+              - generic [ref=f4e519]: Validate
+              - generic [ref=f4e520]: Approve
+              - generic [ref=f4e521]: Roll out
+            - generic [ref=f4e522]:
+              - generic [ref=f4e523]:
+                - generic [ref=f4e524]: Configuration group
+                - combobox "Configuration group" [ref=f4e525]:
+                  - option "Security policy" [disabled] [selected]
+              - generic [ref=f4e526]:
+                - generic [ref=f4e527]: Setting
+                - combobox "Setting" [ref=f4e528]:
+                  - option "Select a setting" [disabled] [selected]
+              - generic [ref=f4e529]:
+                - generic [ref=f4e530]: Requested value
+                - textbox "Requested value" [ref=f4e531]:
+                  - /placeholder: Enter proposed value
+              - generic [ref=f4e532]:
+                - generic [ref=f4e533]: Change reason
+                - textbox "Change reason" [ref=f4e534]:
+                  - /placeholder: Operational justification
+            - generic [ref=f4e535]: Visual fixture only. No policy, setting or export job will be created.
+          - generic [ref=f4e540]:
+            - button "Cancel" [ref=f4e541] [cursor=pointer]
+            - button "Continue to diff" [disabled] [ref=f4e542]
+  - generic:
+    - list "Notifications"

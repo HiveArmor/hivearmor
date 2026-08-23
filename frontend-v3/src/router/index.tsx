@@ -22,8 +22,8 @@ const RuleGenerationPage = React.lazy(() =>
 const AdminAuditPage = React.lazy(() =>
   import('@/pages/admin/audit/AdminAuditPage').then(m => ({ default: m.AdminAuditPage }))
 );
-const AuditPage = React.lazy(() =>
-  import('@/pages/admin/audit/AuditPage').then(m => ({ default: m.AuditPage }))
+const GovernanceOperationsPage = React.lazy(() =>
+  import('@/pages/admin/governance-operations/GovernanceOperationsPage').then(m => ({ default: m.GovernanceOperationsPage }))
 );
 const AdminConnectionKeysPage = React.lazy(() =>
   import('@/pages/admin/connection-keys/AdminConnectionKeysPage').then(m => ({ default: m.AdminConnectionKeysPage }))
@@ -37,9 +37,6 @@ const AdminIntegrationsPage = React.lazy(() =>
 const AdminNotificationsPage = React.lazy(() =>
   import('@/pages/admin/notifications/AdminNotificationsPage').then(m => ({ default: m.AdminNotificationsPage }))
 );
-const RetentionPage = React.lazy(() =>
-  import('@/pages/admin/retention/RetentionPage').then(m => ({ default: m.RetentionPage }))
-);
 const RuleImportPage = React.lazy(() => import('@/pages/admin/RuleImportPage'));
 const RuleTestingPage = React.lazy(() => import('@/pages/admin/RuleTestingPage'));
 const ScimConfigPage = React.lazy(() => import('@/pages/admin/ScimConfigPage'));
@@ -47,26 +44,17 @@ const SsoProvidersPage = React.lazy(() => import('@/pages/admin/SsoProvidersPage
 const AdminSettingsPage = React.lazy(() =>
   import('@/pages/admin/settings/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage }))
 );
-const PlatformSettingsPage = React.lazy(() =>
-  import('@/pages/admin/settings/PlatformSettingsPage').then(m => ({ default: m.PlatformSettingsPage }))
-);
 const PipelineSignalsPage = React.lazy(() =>
   import('@/pages/admin/pipeline-signals/PipelineSignalsPage').then(m => ({ default: m.PipelineSignalsPage }))
 );
 const AdminTenantsPage = React.lazy(() =>
   import('@/pages/admin/tenants/AdminTenantsPage').then(m => ({ default: m.AdminTenantsPage }))
 );
-const TenantsPage = React.lazy(() =>
-  import('@/pages/admin/tenants/TenantsPage').then(m => ({ default: m.TenantsPage }))
-);
 const AdminUsersPage = React.lazy(() =>
   import('@/pages/admin/users/AdminUsersPage').then(m => ({ default: m.AdminUsersPage }))
 );
 
 // ── Settings ──────────────────────────────────────────────────────────────────
-const SystemSettingsPage = React.lazy(() =>
-  import('@/pages/settings/SystemSettingsPage').then(m => ({ default: m.SystemSettingsPage }))
-);
 const ApiKeyPage = React.lazy(() =>
   import('@/pages/settings/ApiKeyPage').then(m => ({ default: m.ApiKeyPage }))
 );
@@ -865,7 +853,7 @@ export const router = createBrowserRouter([
         path: 'admin/tenants',
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <TenantsPage />
+            <AdminUsersPage initialView="tenants" />
           </AuthGuard>
         ),
       },
@@ -881,7 +869,7 @@ export const router = createBrowserRouter([
         path: 'admin/retention',
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <RetentionPage />
+            <GovernanceOperationsPage initialView="retention" />
           </AuthGuard>
         ),
       },
@@ -921,7 +909,7 @@ export const router = createBrowserRouter([
         path: 'admin/audit',
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <AuditPage />
+            <GovernanceOperationsPage initialView="audit" />
           </AuthGuard>
         ),
       },
@@ -937,7 +925,7 @@ export const router = createBrowserRouter([
         path: 'admin/settings',
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <PlatformSettingsPage />
+            <GovernanceOperationsPage initialView="configuration" />
           </AuthGuard>
         ),
       },
@@ -1013,7 +1001,7 @@ export const router = createBrowserRouter([
         path: 'settings/system',
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <SystemSettingsPage />
+            <GovernanceOperationsPage initialView="configuration" />
           </AuthGuard>
         ),
       },

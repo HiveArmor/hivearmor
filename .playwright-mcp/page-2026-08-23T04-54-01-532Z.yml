@@ -1,0 +1,52 @@
+- generic [ref=f1e4]:
+  - complementary [ref=f1e5]:
+    - generic [ref=f1e6]:
+      - generic [ref=f1e7]: HiveArmor
+      - generic [ref=f1e14]:
+        - text: Enterprise security operations
+        - heading "See the signal. Coordinate the response." [level=2] [ref=f1e15]
+        - paragraph [ref=f1e16]: Hybrid Intelligence & Visibility Engine for Advanced Response, Monitoring, Orchestration and Resilience.
+      - generic "Platform capabilities" [ref=f1e17]:
+        - generic [ref=f1e18]:
+          - strong [ref=f1e19]: Unified visibility
+          - text: Across tenants and telemetry
+        - generic [ref=f1e20]:
+          - strong [ref=f1e21]: Analyst-led response
+          - text: Evidence before action
+        - generic [ref=f1e22]:
+          - strong [ref=f1e23]: Operational resilience
+          - text: Health and risk in context
+  - main [ref=f1e24]:
+    - generic [ref=f1e25]:
+      - text: Secure access
+      - heading "Sign in to HiveArmor" [level=1] [ref=f1e26]
+      - paragraph [ref=f1e27]: Use your organization credentials to access the security operations workspace.
+      - form "Sign in" [ref=f1e28]:
+        - generic [ref=f1e29]:
+          - generic [ref=f1e31]:
+            - text: Work email or username
+            - generic [ref=f1e32]: "*"
+          - textbox "Work email or username" [active] [ref=f1e34]
+        - generic [ref=f1e35]:
+          - generic [ref=f1e37]:
+            - text: Password
+            - generic [ref=f1e38]: "*"
+          - generic [ref=f1e40]:
+            - textbox "Password" [ref=f1e41]
+            - button "Show password" [ref=f1e42] [cursor=pointer]
+        - generic [ref=f1e46]:
+          - generic [ref=f1e47] [cursor=pointer]:
+            - checkbox "Remember this device" [ref=f1e48]
+            - generic [ref=f1e49]: Remember this device
+          - button "Forgot password?" [ref=f1e50] [cursor=pointer]
+        - button "Sign in" [ref=f1e51] [cursor=pointer]
+        - button "Continue with organization SSO" [ref=f1e54] [cursor=pointer]
+      - generic [ref=f1e55]:
+        - generic [ref=f1e56]: Organization identity
+        - button "Continue with Google Workspace Test" [ref=f1e58] [cursor=pointer]
+        - button "Continue with Google Workspace Test 2" [ref=f1e59] [cursor=pointer]
+        - button "Continue with T06-Check1-Provider" [ref=f1e60] [cursor=pointer]
+        - button "Show all 9 identity providers" [ref=f1e61] [cursor=pointer]
+      - generic [ref=f1e62]:
+        - generic [ref=f1e63]: Authentication service available
+        - generic [ref=f1e64]: Protected enterprise access

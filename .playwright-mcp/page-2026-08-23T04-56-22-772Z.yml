@@ -1,0 +1,311 @@
+- generic [ref=f3e1]:
+  - generic [ref=f3e3]:
+    - link "Skip to main content" [ref=f3e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f3e5]:
+      - generic [ref=f3e6]:
+        - generic [ref=f3e12]: HiveArmor
+        - generic [ref=f3e13]: Security operations
+      - generic [ref=f3e14]:
+        - button "All authorized tenants" [ref=f3e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f3e24] [cursor=pointer]:
+          - generic [ref=f3e29]: ⌘ K
+        - generic [ref=f3e30]: Production
+      - generic [ref=f3e31]:
+        - 'status "Data pipeline: Unavailable - Full authentication is required to access this resource" [ref=f3e549]'
+        - status "Live events per second" [ref=f3e35]:
+          - generic [ref=f3e37]: 12,840 EPS
+        - button "Notifications" [ref=f3e38] [cursor=pointer]
+        - button "Help" [ref=f3e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f3e47]:
+      - generic [ref=f3e48]:
+        - region "COMMAND" [ref=f3e49]:
+          - generic [ref=f3e50]:
+            - button "Mission Control" [ref=f3e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f3e58] [cursor=pointer]
+            - button "Alerts" [ref=f3e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f3e67] [cursor=pointer]
+            - button "Incidents" [ref=f3e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f3e79]:
+          - generic [ref=f3e80]:
+            - button "Search & Hunt" [ref=f3e81] [cursor=pointer]
+            - button "Investigations" [ref=f3e86] [cursor=pointer]
+            - button "Entities" [ref=f3e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f3e97] [cursor=pointer]
+        - region "DEFEND" [ref=f3e103]:
+          - generic [ref=f3e104]:
+            - button "Detection Rules" [ref=f3e105] [cursor=pointer]
+            - button "Playbooks" [ref=f3e109] [cursor=pointer]
+            - button "Response Approvals" [ref=f3e114] [cursor=pointer]
+            - button "Quarantine & Containment" [ref=f3e122] [cursor=pointer]
+            - button "Response Library" [ref=f3e128] [cursor=pointer]
+        - region "POSTURE" [ref=f3e132]:
+          - generic [ref=f3e133]:
+            - button "Assets" [ref=f3e134] [cursor=pointer]
+            - button "Identities" [ref=f3e139] [cursor=pointer]
+            - button "Active Directory" [ref=f3e146] [cursor=pointer]
+            - button "Exposure" [ref=f3e153] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f3e159] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f3e170] [cursor=pointer]
+            - button "Sensors" [ref=f3e176] [cursor=pointer]
+            - button "Compliance" [ref=f3e180] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f3e185]:
+          - generic [ref=f3e186]:
+            - button "Endpoints" [ref=f3e187] [cursor=pointer]
+            - button "File Integrity" [ref=f3e191] [cursor=pointer]
+            - button "Agent Policies" [ref=f3e198] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f3e203]:
+          - generic [ref=f3e204]:
+            - button "Operational Dashboards" [ref=f3e205] [cursor=pointer]
+            - button "Dashboard Studio" [ref=f3e212] [cursor=pointer]
+        - region "REPORT" [ref=f3e217]:
+          - generic [ref=f3e218]:
+            - button "Reporting Operations" [ref=f3e219] [cursor=pointer]
+            - button "Report Templates" [ref=f3e224] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f3e230]:
+          - generic [ref=f3e231]:
+            - button "Identity & Tenancy" [ref=f3e232] [cursor=pointer]
+            - button "Integrations & Delivery" [ref=f3e246] [cursor=pointer]
+            - button "Audit Log" [ref=f3e250] [cursor=pointer]
+            - button "Pipeline & Ingestion" [ref=f3e255] [cursor=pointer]
+            - button "Settings" [ref=f3e259] [cursor=pointer]
+      - generic [ref=f3e264]:
+        - button "User menu" [ref=f3e267] [cursor=pointer]:
+          - generic [ref=f3e268]: MC
+        - button "Pin sidebar open" [ref=f3e269] [cursor=pointer]
+    - main [ref=f3e272]:
+      - generic [ref=f3e273]:
+        - generic [ref=f3e274]:
+          - generic [ref=f3e283]:
+            - generic [ref=f3e284]: ADMINISTRATION · GOVERNANCE CONTROL PLANE
+            - heading "Audit, Retention & Settings" [level=1] [ref=f3e285]
+          - generic [ref=f3e286]:
+            - generic [ref=f3e287]: J/K navigate Esc close
+            - button "Refresh" [ref=f3e288] [cursor=pointer]
+            - button "Propose policy" [ref=f3e550] [cursor=pointer]
+        - generic [ref=f3e295]:
+          - strong [ref=f3e299]: "Design fixture:"
+          - text: fictional audit, retention and configuration-governance records are enabled.
+          - generic [ref=f3e300]: Production never receives these records.
+        - region "Governance operations summary" [ref=f3e301]:
+          - generic [ref=f3e302]:
+            - generic [ref=f3e303]: Audit events
+            - strong [ref=f3e304]: 18,422
+            - generic [ref=f3e305]: loaded or exact total
+          - generic [ref=f3e306]:
+            - generic [ref=f3e307]: Denied · 24h
+            - strong [ref=f3e308]: "7"
+            - generic [ref=f3e309]: authorization outcomes
+          - generic [ref=f3e310]:
+            - generic [ref=f3e311]: Legal holds
+            - strong [ref=f3e312]: "6"
+            - generic [ref=f3e313]: preservation overrides
+          - generic [ref=f3e314]:
+            - generic [ref=f3e315]: Pending changes
+            - strong [ref=f3e316]: "1"
+            - generic [ref=f3e317]: approval required
+          - generic [ref=f3e318]:
+            - generic [ref=f3e319]: Config drift
+            - strong [ref=f3e320]: "2"
+            - generic [ref=f3e321]: unreconciled instances
+          - generic [ref=f3e322]:
+            - generic [ref=f3e323]: Deprecated APIs
+            - strong [ref=f3e324]: "1"
+            - generic [ref=f3e325]: tracked consumers
+        - navigation "Governance workspaces" [ref=f3e326]:
+          - tab "Audit ledger 6" [ref=f3e327] [cursor=pointer]:
+            - text: Audit ledger
+            - generic [ref=f3e332]: "6"
+          - tab "Retention 5" [selected] [ref=f3e333] [cursor=pointer]:
+            - text: Retention
+            - generic [ref=f3e337]: "5"
+          - tab "Configuration 4" [ref=f3e338] [cursor=pointer]:
+            - text: Configuration
+            - generic [ref=f3e342]: "4"
+          - tab "Change control 3" [ref=f3e343] [cursor=pointer]:
+            - text: Change control
+            - generic [ref=f3e349]: "3"
+          - tab "API lifecycle 4" [ref=f3e350] [cursor=pointer]:
+            - text: API lifecycle
+            - generic [ref=f3e354]: "4"
+        - generic [ref=f3e355]:
+          - generic [ref=f3e356]:
+            - textbox "Search retention" [ref=f3e551]:
+              - /placeholder: Search retention…
+            - generic [ref=f3e361]: /
+          - combobox "Filter retention state" [ref=f3e552]:
+            - option "All states" [selected]
+            - option "Healthy"
+            - option "Needs attention"
+            - option "Critical"
+            - option "Pending"
+            - option "Approved"
+            - option "Rejected"
+            - option "Deprecated"
+            - option "Not reported"
+          - button "Refresh current view" [ref=f3e366] [cursor=pointer]
+          - generic [ref=f3e372]: Snapshot 23 Aug 2026, 15:50 · governed administration
+        - main [ref=f3e373]:
+          - generic [ref=f3e374]:
+            - generic [ref=f3e553]:
+              - generic [ref=f3e559]:
+                - strong [ref=f3e560]: Hot / searchable
+                - generic [ref=f3e561]: Active detection and investigation
+              - generic [ref=f3e568]:
+                - strong [ref=f3e569]: Archive / cold
+                - generic [ref=f3e570]: Cost and access trade-off
+              - generic [ref=f3e577]:
+                - strong [ref=f3e578]: Hold evaluation
+                - generic [ref=f3e579]: Preservation overrides deletion
+              - generic [ref=f3e586]:
+                - strong [ref=f3e587]: Delete
+                - generic [ref=f3e588]: Irreversible, policy-authorized action
+            - table [ref=f3e590]:
+              - rowgroup [ref=f3e591]:
+                - row [ref=f3e592]:
+                  - columnheader "Data class" [ref=f3e593]
+                  - columnheader "Searchable retention" [ref=f3e594]
+                  - columnheader "Archive target" [ref=f3e595]
+                  - columnheader "Compression" [ref=f3e596]
+                  - columnheader "Legal holds" [ref=f3e597]
+                  - columnheader "Volume" [ref=f3e598]
+                  - columnheader "Last change" [ref=f3e599]
+                  - columnheader "State" [ref=f3e600]
+                  - columnheader [ref=f3e601]
+              - rowgroup [ref=f3e602]:
+                - row [active] [ref=f3e603] [cursor=pointer]:
+                  - cell "Security audit evidence AUDIT" [ref=f3e604]:
+                    - generic [ref=f3e611]:
+                      - strong [ref=f3e612]: Security audit evidence
+                      - generic [ref=f3e613]: AUDIT
+                  - cell "2555 days source immutable" [ref=f3e614]:
+                    - text: 2555 days
+                    - generic [ref=f3e615]: source immutable
+                  - cell "S3 s3://security-evidence/audit" [ref=f3e616]:
+                    - text: S3
+                    - generic [ref=f3e617]: s3://security-evidence/audit
+                  - cell "Enabled" [ref=f3e618]
+                  - cell "2" [ref=f3e619]
+                  - cell "1.8 TB" [ref=f3e620]
+                  - cell "22 Aug 2026, 15:50" [ref=f3e621]
+                  - cell "Healthy" [ref=f3e622]
+                  - cell [ref=f3e625]
+                - row [ref=f3e628] [cursor=pointer]:
+                  - cell "Endpoint telemetry ENDPOINT_EVENT" [ref=f3e629]:
+                    - generic [ref=f3e636]:
+                      - strong [ref=f3e637]: Endpoint telemetry
+                      - generic [ref=f3e638]: ENDPOINT_EVENT
+                  - cell "365 days" [ref=f3e639]
+                  - cell "S3 s3://security-archive/endpoint" [ref=f3e640]:
+                    - text: S3
+                    - generic [ref=f3e641]: s3://security-archive/endpoint
+                  - cell "Enabled" [ref=f3e642]
+                  - cell "1" [ref=f3e643]
+                  - cell "42.4 TB" [ref=f3e644]
+                  - cell "20 Aug 2026, 15:50" [ref=f3e645]
+                  - cell "Healthy" [ref=f3e646]
+                  - cell [ref=f3e649]
+                - row [ref=f3e652] [cursor=pointer]:
+                  - cell "Network flows NETWORK_FLOW" [ref=f3e653]:
+                    - generic [ref=f3e660]:
+                      - strong [ref=f3e661]: Network flows
+                      - generic [ref=f3e662]: NETWORK_FLOW
+                  - cell "365 days" [ref=f3e663]
+                  - cell "S3 s3://security-archive/network" [ref=f3e664]:
+                    - text: S3
+                    - generic [ref=f3e665]: s3://security-archive/network
+                  - cell "Enabled" [ref=f3e666]
+                  - cell "0" [ref=f3e667]
+                  - cell "68.1 TB" [ref=f3e668]
+                  - cell "23 Aug 2026, 15:21" [ref=f3e669]
+                  - cell "Pending" [ref=f3e670]
+                  - cell [ref=f3e673]
+                - row [ref=f3e676] [cursor=pointer]:
+                  - cell "Authentication events AUTH_LOG" [ref=f3e677]:
+                    - generic [ref=f3e684]:
+                      - strong [ref=f3e685]: Authentication events
+                      - generic [ref=f3e686]: AUTH_LOG
+                  - cell "730 days" [ref=f3e687]
+                  - cell "S3 s3://security-archive/identity" [ref=f3e688]:
+                    - text: S3
+                    - generic [ref=f3e689]: s3://security-archive/identity
+                  - cell "Enabled" [ref=f3e690]
+                  - cell "3" [ref=f3e691]
+                  - cell "6.2 TB" [ref=f3e692]
+                  - cell "17 Aug 2026, 15:50" [ref=f3e693]
+                  - cell "Healthy" [ref=f3e694]
+                  - cell [ref=f3e697]
+                - row [ref=f3e700] [cursor=pointer]:
+                  - cell "Enrollment audit ENROLLMENT_AUDIT" [ref=f3e701]:
+                    - generic [ref=f3e708]:
+                      - strong [ref=f3e709]: Enrollment audit
+                      - generic [ref=f3e710]: ENROLLMENT_AUDIT
+                  - cell "2555 days source immutable" [ref=f3e711]:
+                    - text: 2555 days
+                    - generic [ref=f3e712]: source immutable
+                  - cell "NONE" [ref=f3e713]
+                  - cell "Disabled" [ref=f3e714]
+                  - cell "0" [ref=f3e715]
+                  - cell "18 GB" [ref=f3e716]
+                  - cell "15 Aug 2026, 07:50" [ref=f3e717]
+                  - cell "Healthy" [ref=f3e718]
+                  - cell [ref=f3e721]
+          - complementary "Security audit evidence context" [ref=f3e724]:
+            - generic [ref=f3e725]:
+              - generic [ref=f3e726]:
+                - generic [ref=f3e727]: RETENTION CONTEXT
+                - strong [ref=f3e728]: Security audit evidence
+              - button "Close context" [ref=f3e729] [cursor=pointer]
+            - generic [ref=f3e733]:
+              - generic [ref=f3e734]:
+                - generic [ref=f3e739]:
+                  - strong [ref=f3e740]: Security audit evidence
+                  - generic [ref=f3e741]: AUDIT
+                - generic [ref=f3e742]: Healthy
+              - generic [ref=f3e744]:
+                - heading "Lifecycle policy" [level=3] [ref=f3e745]
+                - generic [ref=f3e746]:
+                  - generic [ref=f3e747]:
+                    - term [ref=f3e748]: Searchable retention
+                    - definition [ref=f3e749]: 2555 days
+                  - generic [ref=f3e750]:
+                    - term [ref=f3e751]: Archive
+                    - definition [ref=f3e752]: S3
+                  - generic [ref=f3e753]:
+                    - term [ref=f3e754]: Compression
+                    - definition [ref=f3e755]: Enabled
+                  - generic [ref=f3e756]:
+                    - term [ref=f3e757]: Source immutable
+                    - definition [ref=f3e758]: "Yes"
+              - generic [ref=f3e759]:
+                - heading "Impact and exceptions" [level=3] [ref=f3e760]
+                - generic [ref=f3e761]:
+                  - generic [ref=f3e762]:
+                    - term [ref=f3e763]: Legal holds
+                    - definition [ref=f3e764]: "2"
+                  - generic [ref=f3e765]:
+                    - term [ref=f3e766]: Estimated volume
+                    - definition [ref=f3e767]: 1.8 TB
+                  - generic [ref=f3e768]:
+                    - term [ref=f3e769]: Archive path
+                    - definition [ref=f3e770]: s3://security-evidence/audit
+                  - generic [ref=f3e771]:
+                    - term [ref=f3e772]: Last changed
+                    - definition [ref=f3e773]: 22 Aug 2026, 15:50
+              - generic [ref=f3e774]:
+                - button "Preview impact" [disabled] [ref=f3e775]
+                - button "Propose revision" [disabled] [ref=f3e776]
+              - generic [ref=f3e777]: Displayed evidence does not grant mutation authority. Every governed action requires server-side role, scope, policy, version and audit validation.
+            - button "Close" [ref=f3e784] [cursor=pointer]
+        - generic [ref=f3e532]:
+          - generic [ref=f3e533]: Read evidence is separate from change authority
+          - strong [ref=f3e538]: Fixture workflow · no policy or setting changed
+          - generic [ref=f3e539]: Integrity asserted by fixture
+        - generic [ref=f3e540]:
+          - generic [ref=f3e541]:
+            - generic [ref=f3e543]: Connected
+            - generic [ref=f3e544]: •
+            - generic [ref=f3e546]: Live
+          - generic [ref=f3e547]: 12840 eps
+  - generic:
+    - list "Notifications"

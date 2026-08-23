@@ -416,6 +416,82 @@ No production-readiness claim is made by this baseline entry.
 - OpenSearch: cluster yellow, store 3,239,131 bytes, 6 `v3-hive-*` indices, snapshot `SUCCESS`, renamed restore 1 document matched, restore-drill index deleted.
 - `hivearmor-backup.timer` enabled (next ~2026-08-20 00:11 UTC). Snapshots are on the primary data volume. Redpanda was not backed up. **`STAGING CANDIDATE`. Not `PRODUCTION READY`.**
 
+## 2026-08-21 16:41:45 IST (UTC+05:30) — Compliance Assurance frontend slice
 
+- Repository baseline: `staging/siem-mvp` / `be1845f61f36960f04733291b1b19822790282c5`.
+- Worktree had unrelated Cursor/user changes before this slice: `.claude/settings.local.json` and untracked `deploy/staging/run-windows-live-ingest.ps1`. They were preserved. Fourteen status entries existed after the compliance and handoff changes; this entry does not claim unrelated paths.
+- Initial combined validation command used `frontend-v3/src/...` paths while its working directory was already `frontend-v3`; `rg` returned a path-not-found error and the `&&` chain stopped before type-checking. No test result was inferred from that failed invocation.
+- Corrected `npm run type-check` — **passed**.
+- Repository `npm run lint -- --quiet` — **passed with zero warnings**.
+- Focused `npm run test -- --run src/pages/compliance/CompliancePage.test.tsx` — **4/4 passed**. Coverage includes evidence-boundary copy, aggregate rendering, assessment-state filtering, explicit drawer selection/contract gaps and permission denial.
+- Complete `npm run test` — **1,075/1,075 passed across 177 files**. Two existing non-fatal jsdom “navigation not implemented” notices were emitted; exit status was zero.
+- `npm run build` — **passed** (`tsc --noEmit` and `node scripts/build.mjs`, exit status zero).
+- `git diff --check` — **passed** after removing new Markdown trailing whitespace.
+- Backend inspection covered `HaPostureResource`, `ComplianceFrameworkScoreResource`, posture DTOs, framework/evaluation repositories and the legacy evidence/report/config route families. No backend code or database record was changed. Gaps are timestamped as `CMP-001`–`CMP-009`.
+- Research compared official Microsoft Purview Compliance Manager, AWS Audit Manager, ServiceNow GRC, NIST CSF and CIS Implementation Group sources. Conclusions and refresh triggers are in `research/compliance-assurance-workspace.md`.
+- `2026-08-21 16:47:43 IST`: authenticated foundation-fixture browser review at `http://127.0.0.1:4178/compliance` — **passed**. The compact workspace, six-row virtual assessment inventory, explicit HIPAA framework context drawer, keyboard-oriented labels, sticky status/footer and fixture boundary rendered without overlap. Browser console warning/error query returned an empty set.
+- The deliverable browser tab was left open for operator review. This is `FIXTURE-BROWSER VERIFIED`, not real-backend `LIVE VERIFIED` or `PRODUCTION READY`.
+- Final worktree inspection showed concurrent/unrelated hunt backend edits in `HaHuntService.java`, `HuntEventDetailService.java` and `HuntFieldRegistry.java` in addition to the previously recorded user/Cursor paths. They were preserved and excluded from this slice's validation claims.
 
+## 2026-08-21 17:16:00 IST (UTC+05:30) — Dashboard Operations frontend slice
 
+- Repository baseline remained `staging/siem-mvp` / `be1845f61f36960f04733291b1b19822790282c5`. Pre-existing and concurrent user/Cursor paths were preserved, including hunt backend changes, `.claude/settings.local.json`, the Windows ingest helper, temporary UI token and validation driver.
+- Backend inspection covered `UtmDashboardResource`, `UtmDashboardVisualizationResource`, `UtmVisualizationResource`, entities/repositories and both incompatible frontend service/type layers. No backend code or database record was changed. Gaps are timestamped as `DSH-001`–`DSH-010`.
+- Initial `npm run type-check` failed on TypeScript discriminated-union narrowing inside renderer callbacks; the renderer now binds the narrowed data locally. A combined gate then stopped at three lint warnings (memo dependency and two non-null assertions); all three were corrected. These failures were not treated as passes.
+- Corrected `npm run type-check` — **passed**. Repository `npm run lint -- --quiet` — **passed with zero warnings**.
+- Focused dashboard tests — **24/24 passed across 4 files**; the final post-browser-fix focused rerun passed **8/8 across 2 files**.
+- Complete `npm run test` — **1,075/1,075 passed across 177 files**. Two existing non-fatal jsdom navigation notices were emitted; exit status was zero.
+- `npm run build` — **passed** before browser review and again after the readiness correction. `git diff --check` passed after removing one Markdown trailing-space finding.
+- Official research compared Splunk Dashboard Studio, Elastic dashboards, Microsoft Sentinel/Azure Workbooks and Grafana. Conclusions and refresh triggers are preserved in `research/dashboard-operations-workspace.md`.
+- Authenticated foundation-fixture browser review at `http://127.0.0.1:4178` covered the six-dashboard inventory, Mission Overview panel runtime, ECharts, table/feed panels, global controls and clean/add-panel Studio states. Gallery/runtime geometry had no observed overlap at 1280×720. Browser review caught `Not configured` being truthy in Studio readiness; a clean new tab confirmed the corrected `Draft requires attention · sources` state.
+- The deliverable browser tab is left open at `/dashboards/101`. This is `FIXTURE-BROWSER VERIFIED`, not real-backend `LIVE VERIFIED` or `PRODUCTION READY`.
+
+## 2026-08-21 17:48:31 IST (UTC+05:30) — Reporting Operations frontend slice
+
+- Repository baseline remained `staging/siem-mvp` / `be1845f61f36960f04733291b1b19822790282c5`. Existing user/Cursor changes to hunt services/tests and staging validation helpers were preserved and excluded from this slice's claims.
+- Backend inspection covered `HaReportsResource`, `UtmReportResource`, report/schedule entities and the current frontend report service. No backend code, database row, schedule or external delivery was changed. Canonical gaps are timestamped as `REP-001`–`REP-010`; legacy endpoints are not marked deprecated until a deployed successor exists.
+- The first focused report-test run failed because the updated page uses router navigation while the access test lacked a router. After adding `MemoryRouter`, the next run exposed the missing report-service mock and an outdated restricted-state expectation. Both were corrected; neither failed run was counted as a pass.
+- Corrected `npm run type-check` — **passed**. Repository `npm run lint -- --quiet` — **passed with zero warnings**.
+- Focused `npm run test -- --run src/pages/reports` — **14/14 passed across 6 files**.
+- Complete `npm run test` — **1,075/1,075 passed across 177 files**. Two existing non-fatal jsdom “navigation not implemented” notices were emitted; exit status was zero.
+- `npm run build` — **passed** (`tsc --noEmit` and the Vite production build). `git diff --check` passed before browser review.
+- Official research compared Splunk scheduled reporting/permissions/PDF generation, Microsoft Sentinel and Azure Workbooks, ServiceNow Security Operations post-incident review, and NIST SP 800-61 Rev. 3. Durable conclusions are in `research/reporting-soc-communications.md`.
+- Authenticated foundation-fixture browser review on `http://127.0.0.1:4178` covered `/reports/scheduled`, `/reports/templates`, `/reports/sitrep` and `/reports/incidents`; schedule context, governed generation, route-specific facets and the compact status dock rendered without observed overlap at 1280×720. The queue action remained disabled because the authoritative generation contract is unavailable. Browser warning/error logs were empty.
+- The deliverable browser tab is left open at `/reports/incidents`. This is `FIXTURE-BROWSER VERIFIED`, not real-backend `LIVE VERIFIED` or `PRODUCTION READY`.
+
+## 2026-08-22 20:34:04 IST (UTC+05:30) — Pipeline and Ingestion Administration frontend slice
+
+- Repository baseline remained `staging/siem-mvp` / `be1845f61f36960f04733291b1b19822790282c5`. Existing user/Cursor changes to hunt backend services/tests, `.claude/settings.local.json` and staging validation helpers were preserved and excluded from this slice's claims.
+- Backend inspection covered the pipeline-signals resource/DTO, source controller/service/DTOs, parser controller/entities, raw envelope, quarantine/retry topics and existing `SIEM-004`/`SIEM-009` evidence. No backend code, database row, broker record, parser or source was changed. Reconciled operator gaps are timestamped as `ING-001`–`ING-010`; current endpoints are not marked deprecated before a deployed successor exists.
+- Initial `npm run type-check` failed on one unused icon import and the first lint run found two import/order issues in the service; those were corrected. A later final lint gate found one test type-import order issue; it was corrected. None of the failed commands was treated as a pass.
+- Corrected `npm run type-check` — **passed**. Repository `npm run lint -- --quiet` — **passed with zero warnings**.
+- Focused pipeline/source-wizard tests — **17/17 passed across 3 files**.
+- Complete `npm run test` — **1,079/1,079 passed across 178 files**. Two existing non-fatal jsdom “navigation not implemented” notices were emitted; exit status was zero.
+- `npm run build` — **passed** (`tsc --noEmit` and the production bundle). `git diff --check` — **passed**.
+- Official research compared Splunk Monitoring Console/indexing diagnostics, Elastic Logstash pipeline monitoring, Microsoft Sentinel connector health and OpenSearch/Data Prepper monitoring/DLQ guidance. Durable conclusions and refresh triggers are in `research/pipeline-ingestion-operations.md`.
+- The first fixture-browser attempt correctly failed closed because the development fixture identity lacked `ROLE_ADMIN`. The fixture-only identity was granted `ROLE_ADMIN` in both synchronous bootstrap paths; production authentication and route authorization are unchanged. Type-check and lint passed after that correction.
+- Authenticated foundation-fixture browser review at `http://127.0.0.1:4178/admin/pipeline-signals` covered Flow, Sources, Parsers, Failures and Capacity; the source/failure drawers; the guarded source-onboarding dialog; and the disabled dry-run/queue replay actions at 1280×720. The reviewed overview rendered without observed overlap, and the deliverable tab remains open for operator review.
+- This is `FIXTURE-BROWSER VERIFIED`, not real-backend `LIVE VERIFIED` for the new `ING-*` contracts or `PRODUCTION READY`.
+## 2026-08-22 21:12:17 IST (UTC+05:30) — Integration and Notification Operations frontend slice
+
+- Repository baseline remained `staging/siem-mvp` / `be1845f61f36960f04733291b1b19822790282c5`. Existing user/Cursor changes, completed operations slices and staging helpers were preserved; no backend code, secret, external delivery or database record was changed.
+- Backend inspection covered the legacy integration/config resources, notification rules, notification-channel dispatch, legacy connection keys and the hardened admin API-key resource. The UI intentionally does not call secret-bearing config/channel entities or the simulated notification test route. Reconciled gaps are timestamped as `INO-001`–`INO-010`; no current endpoint was marked deprecated without a deployed successor.
+- The first implementation gate found unused imports and import-order issues; the first focused test revision exposed one ambiguous text locator. These were corrected and were not counted as passes.
+- Browser review caught two additional defects before closeout: service-key setup reused connector/provider fields, and `/admin/integrations?view=activity` did not survive route remount/reload. Setup is now mode-specific for connector, destination, route and key workflows; the wrapper now derives supported query views from the URL.
+- Final `npm run type-check` — **passed**. Final repository `npm run lint -- --quiet` — **passed with zero warnings**.
+- Focused Integration Operations tests — **5/5 passed**. Complete `npm run test` — **1,084/1,084 passed across 179 files**. Two existing non-fatal jsdom navigation notices were emitted; exit status was zero.
+- Final `npm run build` — **passed** (`tsc --noEmit` and the production bundle). Final `git diff --check` — **passed** after the documentation closeout.
+- Official research compared Microsoft Sentinel content/data connectors, Elastic integrations/Fleet, Splunk data-input onboarding and ServiceNow connections/credentials/aliases. Durable conclusions and refresh triggers are preserved in `research/integration-notification-operations.md`.
+- Authenticated foundation-fixture browser review at `http://127.0.0.1:4178` covered Operations, Connections, Delivery, Service access and Activity; full-height connector/destination context; mode-specific setup dialogs; `/admin/notifications`, `/admin/connection-keys` and `/settings/api-keys`; and the reloadable Activity deep link. Browser warning/error logs were empty at 1280×720.
+- The deliverable browser tab remains open at `/admin/integrations?view=connectors`. This is `FIXTURE-BROWSER VERIFIED`, not real-backend `LIVE VERIFIED` or `PRODUCTION READY`.
+
+## 2026-08-22 21:55:08 IST (UTC+05:30) — Identity, Tenancy and MSSP Administration frontend slice
+
+- Repository baseline remained `staging/siem-mvp` / `be1845f61f36960f04733291b1b19822790282c5`. Existing user/Cursor changes, completed operations slices, hunt backend work and staging helpers were preserved; no backend code, identity, tenant, credential or database record was changed.
+- Backend inspection covered protected user and tenant CRUD, protected MSSP tenant/membership operations, OIDC administration/runtime flows, SCIM token/Users/Groups and the unprotected legacy authority resource. The frontend uses protected `/users/authorities`, corrects update to `PUT /users`, and does not call `/authority`. Reconciled requirements are timestamped as `IAM-001`–`IAM-010`; no endpoint was falsely marked deprecated.
+- Official research compared Microsoft Entra administration/access reviews/emergency access, Azure Lighthouse cross-tenant administration, Okta lifecycle/SCIM and Splunk roles/capabilities/workloads. Durable conclusions and refresh triggers are in `research/identity-tenancy-administration.md`.
+- The first focused test run passed 15/16 and exposed an ambiguous drawer-text assertion; the locator was corrected to the drawer's accessible role/name. The corrected focused Identity/SSO/SCIM run passed **16/16 across 3 files**.
+- Initial final `npm run type-check` and repository `npm run lint -- --quiet` passed. Complete `npm run test` passed **1,088/1,088 across 180 files**; two existing non-fatal jsdom navigation notices were emitted and exit status was zero. `npm run build` and `git diff --check` passed.
+- Authenticated foundation-fixture browser review at `http://127.0.0.1:4178/admin/users` covered Directory, Tenants, Access reviews, Federation and Audit activity; tenant and review context drawers; governed setup; URL-backed view changes; the shared sticky status surfaces; and 1280×720 layout. The pass found that the generic header action opened an invitation from Audit activity and did not distinguish Federation. It was corrected to view-specific Invite/Onboard/Review/Configure actions, with Audit activity remaining read-only; focused type/lint/test gates passed again.
+- A post-build fixture-marker scan then found the statically analyzable dynamic import had still emitted `identityAdministration.fixtures` as a lazy production chunk. The service now uses a development-only Vite-ignored module path. The rebuilt artifact dropped from 242 to 241 lazy chunks and `rg` found none of the identity fixture markers; a clean fixture-browser reload still rendered the authorized design records. Final TypeScript, zero-warning lint, all **1,088/1,088 tests**, build and `git diff --check` passed after this correction.
+- The deliverable browser tab remains open at `/admin/users`. This is `FIXTURE-BROWSER VERIFIED`, not real-backend `LIVE VERIFIED` or `PRODUCTION READY`.

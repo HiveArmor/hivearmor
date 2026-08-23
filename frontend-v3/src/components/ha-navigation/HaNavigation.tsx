@@ -69,42 +69,26 @@ const ENDPOINT_ITEMS: NavItemSpec[] = [
   { label: 'Agent Policies', icon: 'Settings', route: '/edr/policies', roles: ['ROLE_ADMIN'] },
 ];
 
-// Section: DASHBOARDS (placeholder — dynamic list from API in real implementation)
+// Section: DASHBOARDS — inventory is the safe entry point; Studio is role-gated.
 const DASHBOARDS_ITEMS: NavItemSpec[] = [
-  { label: 'Studio', icon: 'Pencil', route: '/dashboards/studio', roles: [] },
+  { label: 'Operational Dashboards', icon: 'LayoutDashboard', route: '/dashboards', roles: [] },
+  { label: 'Dashboard Studio', icon: 'Pencil', route: '/dashboards/studio', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
 ];
 
-// Section: REPORT
-// Note: SITREP, Incident Reports, and AAR are hidden until backend endpoints are implemented
-// These can be shown by setting VITE_FEATURE_SITREP_ENABLED, VITE_FEATURE_INCIDENT_REPORTS_ENABLED,
-// and VITE_FEATURE_AAR_ENABLED to 'true' respectively
+// Section: REPORT — one governed lifecycle with route-specific entry views.
 const REPORT_ITEMS: NavItemSpec[] = [
-  { label: 'Scheduled Reports', icon: 'Clock', route: '/reports/scheduled', roles: [] },
-  // Conditionally include SITREP if feature flag is enabled
-  ...(import.meta.env.VITE_FEATURE_SITREP_ENABLED === 'true'
-    ? [{ label: 'Security SITREP', icon: 'FileText' as const, route: '/reports/sitrep', roles: [] }]
-    : []),
-  // Conditionally include Incident Reports if feature flag is enabled
-  ...(import.meta.env.VITE_FEATURE_INCIDENT_REPORTS_ENABLED === 'true'
-    ? [{ label: 'Incident Reports', icon: 'FileMinus' as const, route: '/reports/incidents', roles: [] }]
-    : []),
-  // Conditionally include After-Action Review if feature flag is enabled
-  ...(import.meta.env.VITE_FEATURE_AAR_ENABLED === 'true'
-    ? [{ label: 'After-Action Review', icon: 'ClipboardCheck' as const, route: '/reports/after-action', roles: [] }]
-    : []),
+  { label: 'Reporting Operations', icon: 'FileText', route: '/reports/scheduled', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  { label: 'Report Templates', icon: 'ClipboardCheck', route: '/reports/templates', roles: ['ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
 ];
 
 const MSSP_ADMIN_AUTHORITY = "MSSP_ADMIN";
 
 // Section: ADMINISTRATION (only shown to ROLE_ADMIN)
 const ADMINISTRATION_ITEMS: NavItemSpec[] = [
-  { label: 'Users', icon: 'UserCog', route: '/admin/users', roles: ['ROLE_ADMIN'] },
-  // Tenants hidden until PD-01 multi-tenancy is implemented
-  // { label: 'Tenants', icon: 'Building', route: '/admin/tenants', roles: ['ROLE_ADMIN'] },
-  { label: 'Integrations', icon: 'Plug', route: '/admin/integrations', roles: ['ROLE_ADMIN'] },
-  { label: 'Notifications', icon: 'Bell', route: '/admin/notifications', roles: ['ROLE_ADMIN'] },
+  { label: 'Identity & Tenancy', icon: 'UserCog', route: '/admin/users', roles: ['ROLE_ADMIN'] },
+  { label: 'Integrations & Delivery', icon: 'Plug', route: '/admin/integrations', roles: ['ROLE_ADMIN'] },
   { label: 'Audit Log', icon: 'ClipboardList', route: '/admin/audit', roles: ['ROLE_ADMIN'] },
-  { label: 'Pipeline signals', icon: 'Activity', route: '/admin/pipeline-signals', roles: ['ROLE_ADMIN'] },
+  { label: 'Pipeline & Ingestion', icon: 'Activity', route: '/admin/pipeline-signals', roles: ['ROLE_ADMIN'] },
   { label: 'Settings', icon: 'Settings', route: '/admin/settings', roles: ['ROLE_ADMIN'] },
 ];
 

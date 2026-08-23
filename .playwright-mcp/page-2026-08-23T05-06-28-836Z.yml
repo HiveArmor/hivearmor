@@ -1,0 +1,221 @@
+- generic [ref=f5e1]:
+  - generic [ref=f5e3]:
+    - link "Skip to main content" [ref=f5e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f5e5]:
+      - generic [ref=f5e6]: HiveArmor
+      - generic [ref=f5e14]:
+        - button "All authorized tenants" [ref=f5e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f5e24] [cursor=pointer]:
+          - generic [ref=f5e29]: ⌘ K
+      - generic [ref=f5e31]:
+        - 'status "Data pipeline: Unavailable - Full authentication is required to access this resource" [ref=f5e32]'
+        - button "Notifications" [ref=f5e38] [cursor=pointer]
+        - button "Help" [ref=f5e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f5e47]:
+      - generic [ref=f5e48]:
+        - region "COMMAND" [ref=f5e49]:
+          - generic [ref=f5e50]:
+            - button "Mission Control" [ref=f5e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f5e58] [cursor=pointer]
+            - button "Alerts" [ref=f5e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f5e67] [cursor=pointer]
+            - button "Incidents" [ref=f5e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f5e79]:
+          - generic [ref=f5e80]:
+            - button "Search & Hunt" [ref=f5e81] [cursor=pointer]
+            - button "Investigations" [ref=f5e86] [cursor=pointer]
+            - button "Entities" [ref=f5e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f5e97] [cursor=pointer]
+        - region "DEFEND" [ref=f5e103]:
+          - generic [ref=f5e104]:
+            - button "Detection Rules" [ref=f5e105] [cursor=pointer]
+            - button "Playbooks" [ref=f5e109] [cursor=pointer]
+            - button "Response Approvals" [ref=f5e114] [cursor=pointer]
+            - button "Quarantine & Containment" [ref=f5e122] [cursor=pointer]
+            - button "Response Library" [ref=f5e128] [cursor=pointer]
+        - region "POSTURE" [ref=f5e132]:
+          - generic [ref=f5e133]:
+            - button "Assets" [ref=f5e134] [cursor=pointer]
+            - button "Identities" [ref=f5e139] [cursor=pointer]
+            - button "Active Directory" [ref=f5e146] [cursor=pointer]
+            - button "Exposure" [ref=f5e153] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f5e159] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f5e170] [cursor=pointer]
+            - button "Sensors" [ref=f5e176] [cursor=pointer]
+            - button "Compliance" [ref=f5e180] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f5e185]:
+          - generic [ref=f5e186]:
+            - button "Endpoints" [ref=f5e187] [cursor=pointer]
+            - button "File Integrity" [ref=f5e191] [cursor=pointer]
+            - button "Agent Policies" [ref=f5e198] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f5e203]:
+          - generic [ref=f5e204]:
+            - button "Operational Dashboards" [ref=f5e205] [cursor=pointer]
+            - button "Dashboard Studio" [ref=f5e212] [cursor=pointer]
+        - region "REPORT" [ref=f5e217]:
+          - generic [ref=f5e218]:
+            - button "Reporting Operations" [ref=f5e219] [cursor=pointer]
+            - button "Report Templates" [ref=f5e224] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f5e230]:
+          - generic [ref=f5e231]:
+            - button "Identity & Tenancy" [ref=f5e232] [cursor=pointer]
+            - button "Integrations & Delivery" [ref=f5e246] [cursor=pointer]
+            - button "Audit Log" [ref=f5e250] [cursor=pointer]
+            - button "Pipeline & Ingestion" [ref=f5e255] [cursor=pointer]
+            - button "Settings" [ref=f5e259] [cursor=pointer]
+      - generic [ref=f5e264]:
+        - generic [ref=f5e265]:
+          - generic [ref=f5e266]:
+            - button "User menu" [expanded] [active] [ref=f5e267] [cursor=pointer]:
+              - generic [ref=f5e268]: MC
+              - generic [ref=f5e502]:
+                - strong [ref=f5e503]: maya.chen
+                - generic [ref=f5e504]: Account
+            - button "Close user menu" [ref=f5e505]
+            - menu "Account actions" [ref=f5e506]:
+              - generic [ref=f5e507]:
+                - strong [ref=f5e508]: Maya Chen
+                - generic [ref=f5e509]: maya.chen@example.test
+              - menuitem "My Profile" [ref=f5e510] [cursor=pointer]
+              - menuitem "Change Password" [ref=f5e514] [cursor=pointer]
+              - menuitem "Sign Out" [ref=f5e519] [cursor=pointer]
+          - button "Switch to light mode" [ref=f5e523] [cursor=pointer]
+        - button "Pin sidebar open" [ref=f5e269] [cursor=pointer]:
+          - generic [ref=f5e530]: Pin open
+    - main [ref=f5e272]:
+      - generic [ref=f5e273]:
+        - generic [ref=f5e274]:
+          - generic [ref=f5e283]:
+            - generic [ref=f5e284]: ADMINISTRATION · GOVERNANCE CONTROL PLANE
+            - heading "Audit, Retention & Settings" [level=1] [ref=f5e285]
+          - generic [ref=f5e286]:
+            - generic [ref=f5e287]: J/K navigate Esc close
+            - button "Refresh" [ref=f5e288] [cursor=pointer]
+        - generic [ref=f5e294]:
+          - strong [ref=f5e298]: "Design fixture:"
+          - text: fictional audit, retention and configuration-governance records are enabled.
+          - generic [ref=f5e299]: Production never receives these records.
+        - region "Governance operations summary" [ref=f5e300]:
+          - generic [ref=f5e301]:
+            - generic [ref=f5e302]: Audit events
+            - strong [ref=f5e303]: 18,422
+            - generic [ref=f5e304]: loaded or exact total
+          - generic [ref=f5e305]:
+            - generic [ref=f5e306]: Denied · 24h
+            - strong [ref=f5e307]: "7"
+            - generic [ref=f5e308]: authorization outcomes
+          - generic [ref=f5e309]:
+            - generic [ref=f5e310]: Legal holds
+            - strong [ref=f5e311]: "6"
+            - generic [ref=f5e312]: preservation overrides
+          - generic [ref=f5e313]:
+            - generic [ref=f5e314]: Pending changes
+            - strong [ref=f5e315]: "1"
+            - generic [ref=f5e316]: approval required
+          - generic [ref=f5e317]:
+            - generic [ref=f5e318]: Config drift
+            - strong [ref=f5e319]: "2"
+            - generic [ref=f5e320]: unreconciled instances
+          - generic [ref=f5e321]:
+            - generic [ref=f5e322]: Deprecated APIs
+            - strong [ref=f5e323]: "0"
+            - generic [ref=f5e324]: tracked consumers
+        - navigation "Governance workspaces" [ref=f5e325]:
+          - tab "Audit ledger 6" [ref=f5e326] [cursor=pointer]:
+            - text: Audit ledger
+            - generic [ref=f5e331]: "6"
+          - tab "Retention 5" [ref=f5e332] [cursor=pointer]:
+            - text: Retention
+            - generic [ref=f5e336]: "5"
+          - tab "Configuration 4" [ref=f5e337] [cursor=pointer]:
+            - text: Configuration
+            - generic [ref=f5e341]: "4"
+          - tab "Change control 3" [ref=f5e342] [cursor=pointer]:
+            - text: Change control
+            - generic [ref=f5e348]: "3"
+          - tab "API lifecycle 4" [selected] [ref=f5e349] [cursor=pointer]:
+            - text: API lifecycle
+            - generic [ref=f5e353]: "4"
+        - generic [ref=f5e354]:
+          - generic [ref=f5e355]:
+            - textbox "Search lifecycle" [ref=f5e359]:
+              - /placeholder: Search lifecycle…
+            - generic [ref=f5e360]: /
+          - combobox "Filter lifecycle state" [ref=f5e364]:
+            - option "All states" [selected]
+            - option "Healthy"
+            - option "Needs attention"
+            - option "Critical"
+            - option "Pending"
+            - option "Approved"
+            - option "Rejected"
+            - option "Deprecated"
+            - option "Not reported"
+          - button "Refresh current view" [ref=f5e365] [cursor=pointer]
+          - generic [ref=f5e371]: Snapshot 23 Aug 2026, 15:50 · governed administration
+        - main [ref=f5e372]:
+          - table [ref=f5e375]:
+            - rowgroup [ref=f5e376]:
+              - row [ref=f5e377]:
+                - columnheader "API surface" [ref=f5e378]
+                - columnheader "Lifecycle" [ref=f5e379]
+                - columnheader "Successor" [ref=f5e380]
+                - columnheader "Deprecated" [ref=f5e381]
+                - columnheader "Sunset" [ref=f5e382]
+                - columnheader "Consumers" [ref=f5e383]
+                - columnheader "Owner" [ref=f5e384]
+                - columnheader [ref=f5e385]
+            - rowgroup [ref=f5e386]:
+              - row [ref=f5e387] [cursor=pointer]:
+                - cell [ref=f5e388]:
+                  - strong [ref=f5e389]: /api/ha-admin/settings
+                - cell "Current" [ref=f5e390]
+                - cell "—" [ref=f5e393]
+                - cell "Not reported" [ref=f5e394]
+                - cell "Not reported" [ref=f5e395]
+                - cell "2" [ref=f5e396]
+                - cell "Platform Security" [ref=f5e397]
+                - cell [ref=f5e398]
+              - row [ref=f5e401] [cursor=pointer]:
+                - cell [ref=f5e402]:
+                  - strong [ref=f5e403]: /api/ha-settings
+                - cell "Unknown" [ref=f5e404]
+                - cell "/api/ha-admin/settings" [ref=f5e407]
+                - cell "Not reported" [ref=f5e408]
+                - cell "Not reported" [ref=f5e409]
+                - cell "1" [ref=f5e410]
+                - cell "Platform Security" [ref=f5e411]
+                - cell [ref=f5e412]
+              - row [ref=f5e415] [cursor=pointer]:
+                - cell [ref=f5e416]:
+                  - strong [ref=f5e417]: /api/ha-audit-log
+                - cell "Current" [ref=f5e418]
+                - cell "—" [ref=f5e421]
+                - cell "Not reported" [ref=f5e422]
+                - cell "Not reported" [ref=f5e423]
+                - cell "1" [ref=f5e424]
+                - cell "Security Governance" [ref=f5e425]
+                - cell [ref=f5e426]
+              - row [ref=f5e429] [cursor=pointer]:
+                - cell [ref=f5e430]:
+                  - strong [ref=f5e431]: /api/ha-retention-policies
+                - cell "Current" [ref=f5e432]
+                - cell "—" [ref=f5e435]
+                - cell "Not reported" [ref=f5e436]
+                - cell "Not reported" [ref=f5e437]
+                - cell "1" [ref=f5e438]
+                - cell "Data Platform" [ref=f5e439]
+                - cell [ref=f5e440]
+        - generic [ref=f5e443]:
+          - generic [ref=f5e444]: Read evidence is separate from change authority
+          - strong [ref=f5e449]: Fixture workflow · no policy or setting changed
+          - generic [ref=f5e450]: Integrity asserted by fixture
+        - generic [ref=f5e451]:
+          - generic [ref=f5e452]:
+            - generic [ref=f5e454]: Connected
+            - generic [ref=f5e455]: •
+            - generic [ref=f5e457]: Live
+          - generic [ref=f5e458]: 12840 eps
+  - generic:
+    - list "Notifications"

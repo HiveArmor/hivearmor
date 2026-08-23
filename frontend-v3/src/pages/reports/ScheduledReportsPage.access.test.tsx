@@ -4,6 +4,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ScheduledReportsPage } from './ScheduledReportsPage';
@@ -14,6 +15,7 @@ import type { HaUser } from '@/store/auth.store';
 const fetchScheduledReports = vi.hoisted(() => vi.fn());
 
 vi.mock('./reports.service', () => ({
+  fetchReportsByType: vi.fn().mockResolvedValue([]),
   fetchScheduledReports,
   deleteScheduledReport: vi.fn(),
   pauseScheduledReport: vi.fn(),
@@ -36,9 +38,11 @@ function userWithRoles(roles: string[]): HaUser {
 function renderPage(): void {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
-    <QueryClientProvider client={queryClient}>
-      <ScheduledReportsPage />
-    </QueryClientProvider>,
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <ScheduledReportsPage />
+      </QueryClientProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -58,7 +62,7 @@ describe('ScheduledReportsPage access', () => {
     });
     renderPage();
     expect(await screen.findByText('No scheduled reports')).toBeVisible();
-    expect(screen.queryByText('Access Restricted')).toBeNull();
+    expect(screen.queryByText('Reporting access restricted')).toBeNull();
   });
 
   it('keeps users without Analyst-or-higher on the restricted empty state', async () => {
@@ -70,7 +74,7 @@ describe('ScheduledReportsPage access', () => {
       selectedTenantId: 1,
     });
     renderPage();
-    expect(await screen.findByText('Access Restricted')).toBeVisible();
+    expect(await screen.findByText('Reporting access restricted')).toBeVisible();
     expect(fetchScheduledReports).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,262 @@
+- generic [active] [ref=f3e1]:
+  - generic [ref=f3e3]:
+    - link "Skip to main content" [ref=f3e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=f3e5]:
+      - generic [ref=f3e6]:
+        - generic [ref=f3e12]: HiveArmor
+        - generic [ref=f3e13]: Security operations
+      - generic [ref=f3e14]:
+        - button "All authorized tenants" [ref=f3e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=f3e24] [cursor=pointer]:
+          - generic [ref=f3e29]: ⌘ K
+        - generic [ref=f3e30]: Production
+      - generic [ref=f3e31]:
+        - 'status "Data pipeline: Healthy" [ref=f3e32]'
+        - status "Live events per second" [ref=f3e35]:
+          - generic [ref=f3e37]: 12,840 EPS
+        - button "Notifications" [ref=f3e38] [cursor=pointer]
+        - button "Help" [ref=f3e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f3e47]:
+      - generic [ref=f3e48]:
+        - region "COMMAND" [ref=f3e49]:
+          - generic [ref=f3e50]:
+            - button "Mission Control" [ref=f3e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=f3e58] [cursor=pointer]
+            - button "Alerts" [ref=f3e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=f3e67] [cursor=pointer]
+            - button "Incidents" [ref=f3e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=f3e79]:
+          - generic [ref=f3e80]:
+            - button "Search & Hunt" [ref=f3e81] [cursor=pointer]
+            - button "Investigations" [ref=f3e86] [cursor=pointer]
+            - button "Entities" [ref=f3e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=f3e97] [cursor=pointer]
+        - region "DEFEND" [ref=f3e103]:
+          - generic [ref=f3e104]:
+            - button "Detection Rules" [ref=f3e105] [cursor=pointer]
+            - button "Playbooks" [ref=f3e109] [cursor=pointer]
+            - button "Response Approvals" [ref=f3e114] [cursor=pointer]
+            - button "Quarantine & Containment" [ref=f3e122] [cursor=pointer]
+            - button "Response Library" [ref=f3e128] [cursor=pointer]
+        - region "POSTURE" [ref=f3e132]:
+          - generic [ref=f3e133]:
+            - button "Assets" [ref=f3e134] [cursor=pointer]
+            - button "Identities" [ref=f3e139] [cursor=pointer]
+            - button "Active Directory" [ref=f3e146] [cursor=pointer]
+            - button "Exposure" [ref=f3e153] [cursor=pointer]
+            - button "Vulnerabilities" [ref=f3e159] [cursor=pointer]
+            - button "CIS Benchmark" [ref=f3e170] [cursor=pointer]
+            - button "Sensors" [ref=f3e176] [cursor=pointer]
+            - button "Compliance" [ref=f3e180] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=f3e185]:
+          - generic [ref=f3e186]:
+            - button "Endpoints" [ref=f3e187] [cursor=pointer]
+            - button "File Integrity" [ref=f3e191] [cursor=pointer]
+            - button "Agent Policies" [ref=f3e198] [cursor=pointer]
+        - region "DASHBOARDS" [ref=f3e203]:
+          - generic [ref=f3e204]:
+            - button "Operational Dashboards" [ref=f3e205] [cursor=pointer]
+            - button "Dashboard Studio" [ref=f3e212] [cursor=pointer]
+        - region "REPORT" [ref=f3e217]:
+          - generic [ref=f3e218]:
+            - button "Reporting Operations" [ref=f3e219] [cursor=pointer]
+            - button "Report Templates" [ref=f3e224] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=f3e230]:
+          - generic [ref=f3e231]:
+            - button "Identity & Tenancy" [ref=f3e232] [cursor=pointer]
+            - button "Integrations & Delivery" [ref=f3e246] [cursor=pointer]
+            - button "Audit Log" [ref=f3e250] [cursor=pointer]
+            - button "Pipeline & Ingestion" [ref=f3e255] [cursor=pointer]
+            - button "Settings" [ref=f3e259] [cursor=pointer]
+      - generic [ref=f3e264]:
+        - button "User menu" [ref=f3e267] [cursor=pointer]:
+          - generic [ref=f3e268]: MC
+        - button "Pin sidebar open" [ref=f3e269] [cursor=pointer]
+    - main [ref=f3e272]:
+      - generic [ref=f3e273]:
+        - generic [ref=f3e274]:
+          - generic [ref=f3e283]:
+            - generic [ref=f3e284]: ADMINISTRATION · GOVERNANCE CONTROL PLANE
+            - heading "Audit, Retention & Settings" [level=1] [ref=f3e285]
+          - generic [ref=f3e286]:
+            - generic [ref=f3e287]: J/K navigate Esc close
+            - button "Refresh" [ref=f3e288] [cursor=pointer]
+            - button "Export evidence" [ref=f3e294] [cursor=pointer]
+        - generic [ref=f3e295]:
+          - strong [ref=f3e299]: "Design fixture:"
+          - text: fictional audit, retention and configuration-governance records are enabled.
+          - generic [ref=f3e300]: Production never receives these records.
+        - region "Governance operations summary" [ref=f3e301]:
+          - generic [ref=f3e302]:
+            - generic [ref=f3e303]: Audit events
+            - strong [ref=f3e304]: 18,422
+            - generic [ref=f3e305]: loaded or exact total
+          - generic [ref=f3e306]:
+            - generic [ref=f3e307]: Denied · 24h
+            - strong [ref=f3e308]: "7"
+            - generic [ref=f3e309]: authorization outcomes
+          - generic [ref=f3e310]:
+            - generic [ref=f3e311]: Legal holds
+            - strong [ref=f3e312]: "6"
+            - generic [ref=f3e313]: preservation overrides
+          - generic [ref=f3e314]:
+            - generic [ref=f3e315]: Pending changes
+            - strong [ref=f3e316]: "1"
+            - generic [ref=f3e317]: approval required
+          - generic [ref=f3e318]:
+            - generic [ref=f3e319]: Config drift
+            - strong [ref=f3e320]: "2"
+            - generic [ref=f3e321]: unreconciled instances
+          - generic [ref=f3e322]:
+            - generic [ref=f3e323]: Deprecated APIs
+            - strong [ref=f3e324]: "1"
+            - generic [ref=f3e325]: tracked consumers
+        - navigation "Governance workspaces" [ref=f3e326]:
+          - tab "Audit ledger 6" [selected] [ref=f3e327] [cursor=pointer]:
+            - text: Audit ledger
+            - generic [ref=f3e332]: "6"
+          - tab "Retention 5" [ref=f3e333] [cursor=pointer]:
+            - text: Retention
+            - generic [ref=f3e337]: "5"
+          - tab "Configuration 4" [ref=f3e338] [cursor=pointer]:
+            - text: Configuration
+            - generic [ref=f3e342]: "4"
+          - tab "Change control 3" [ref=f3e343] [cursor=pointer]:
+            - text: Change control
+            - generic [ref=f3e349]: "3"
+          - tab "API lifecycle 4" [ref=f3e350] [cursor=pointer]:
+            - text: API lifecycle
+            - generic [ref=f3e354]: "4"
+        - generic [ref=f3e355]:
+          - generic [ref=f3e356]:
+            - textbox "Search audit" [ref=f3e360]:
+              - /placeholder: Search audit…
+            - generic [ref=f3e361]: /
+          - combobox "Filter audit state" [ref=f3e365]:
+            - option "All states" [selected]
+            - option "Healthy"
+            - option "Needs attention"
+            - option "Critical"
+            - option "Pending"
+            - option "Approved"
+            - option "Rejected"
+            - option "Deprecated"
+            - option "Not reported"
+          - button "Refresh current view" [ref=f3e366] [cursor=pointer]
+          - generic [ref=f3e372]: Snapshot 23 Aug 2026, 15:50 · read-only evidence
+        - main [ref=f3e373]:
+          - table [ref=f3e376]:
+            - rowgroup [ref=f3e377]:
+              - row [ref=f3e378]:
+                - columnheader "Occurred" [ref=f3e379]
+                - columnheader "Actor" [ref=f3e380]
+                - columnheader "Action" [ref=f3e381]
+                - columnheader "Resource" [ref=f3e382]
+                - columnheader "Scope" [ref=f3e383]
+                - columnheader "Source IP" [ref=f3e384]
+                - columnheader "Result" [ref=f3e385]
+                - columnheader [ref=f3e386]
+            - rowgroup [ref=f3e387]:
+              - row [ref=f3e388] [cursor=pointer]:
+                - cell "23 Aug 2026, 15:48" [ref=f3e389]
+                - cell [ref=f3e390]:
+                  - strong [ref=f3e391]: priya.nair
+                - cell "Settings Change Requested Requested session timeout change from 60 to 45 minutes." [ref=f3e392]:
+                  - generic [ref=f3e398]:
+                    - strong [ref=f3e399]: Settings Change Requested
+                    - generic [ref=f3e400]: Requested session timeout change from 60 to 45 minutes.
+                - cell "Platform-setting security.sessionTimeout" [ref=f3e401]:
+                  - strong [ref=f3e402]: Platform-setting
+                  - generic [ref=f3e403]: security.sessionTimeout
+                - cell "All authorized tenants" [ref=f3e404]
+                - cell "10.44.2.18" [ref=f3e405]
+                - cell "Pending" [ref=f3e406]
+                - cell [ref=f3e409]
+              - row [ref=f3e412] [cursor=pointer]:
+                - cell "23 Aug 2026, 15:42" [ref=f3e413]
+                - cell [ref=f3e414]:
+                  - strong [ref=f3e415]: system
+                - cell "Retention Policy Evaluated Lifecycle evaluation completed; no indices eligible for transition." [ref=f3e416]:
+                  - generic [ref=f3e422]:
+                    - strong [ref=f3e423]: Retention Policy Evaluated
+                    - generic [ref=f3e424]: Lifecycle evaluation completed; no indices eligible for transition.
+                - cell "Retention-policy ENDPOINT_EVENT" [ref=f3e425]:
+                  - strong [ref=f3e426]: Retention-policy
+                  - generic [ref=f3e427]: ENDPOINT_EVENT
+                - cell "Northwind Financial" [ref=f3e428]
+                - cell "—" [ref=f3e429]
+                - cell "Healthy" [ref=f3e430]
+                - cell [ref=f3e433]
+              - row [ref=f3e436] [cursor=pointer]:
+                - cell "23 Aug 2026, 15:33" [ref=f3e437]
+                - cell [ref=f3e438]:
+                  - strong [ref=f3e439]: omar.haddad
+                - cell "Authorization Denied Cross-tenant configuration read denied by platform authorization policy." [ref=f3e440]:
+                  - generic [ref=f3e446]:
+                    - strong [ref=f3e447]: Authorization Denied
+                    - generic [ref=f3e448]: Cross-tenant configuration read denied by platform authorization policy.
+                - cell "Tenant harbor-health" [ref=f3e449]:
+                  - strong [ref=f3e450]: Tenant
+                  - generic [ref=f3e451]: harbor-health
+                - cell "Harbor Health" [ref=f3e452]
+                - cell "10.44.9.31" [ref=f3e453]
+                - cell "Critical" [ref=f3e454]
+                - cell [ref=f3e457]
+              - row [ref=f3e460] [cursor=pointer]:
+                - cell "23 Aug 2026, 15:21" [ref=f3e461]
+                - cell [ref=f3e462]:
+                  - strong [ref=f3e463]: maya.chen
+                - cell "Retention Change Approved Approved warm-tier transition after 30 days and deletion after 365 days." [ref=f3e464]:
+                  - generic [ref=f3e470]:
+                    - strong [ref=f3e471]: Retention Change Approved
+                    - generic [ref=f3e472]: Approved warm-tier transition after 30 days and deletion after 365 days.
+                - cell "Retention-policy NETWORK_FLOW" [ref=f3e473]:
+                  - strong [ref=f3e474]: Retention-policy
+                  - generic [ref=f3e475]: NETWORK_FLOW
+                - cell "Northwind Financial" [ref=f3e476]
+                - cell "10.44.3.11" [ref=f3e477]
+                - cell "Approved" [ref=f3e478]
+                - cell [ref=f3e481]
+              - row [ref=f3e484] [cursor=pointer]:
+                - cell "23 Aug 2026, 15:09" [ref=f3e485]
+                - cell [ref=f3e486]:
+                  - strong [ref=f3e487]: hive-intelligence
+                - cell "Ai Provider Probe Governed provider connectivity probe succeeded; secret material was not returned." [ref=f3e488]:
+                  - generic [ref=f3e494]:
+                    - strong [ref=f3e495]: Ai Provider Probe
+                    - generic [ref=f3e496]: Governed provider connectivity probe succeeded; secret material was not returned.
+                - cell "Ai-provider bedrock-primary" [ref=f3e497]:
+                  - strong [ref=f3e498]: Ai-provider
+                  - generic [ref=f3e499]: bedrock-primary
+                - cell "Platform" [ref=f3e500]
+                - cell "—" [ref=f3e501]
+                - cell "Healthy" [ref=f3e502]
+                - cell [ref=f3e505]
+              - row [ref=f3e508] [cursor=pointer]:
+                - cell "23 Aug 2026, 14:47" [ref=f3e509]
+                - cell [ref=f3e510]:
+                  - strong [ref=f3e511]: platform-admin
+                - cell "Api Key Revoked Revoked service credential after owner-requested rotation." [ref=f3e512]:
+                  - generic [ref=f3e518]:
+                    - strong [ref=f3e519]: Api Key Revoked
+                    - generic [ref=f3e520]: Revoked service credential after owner-requested rotation.
+                - cell "Service-credential ingest-lab-02" [ref=f3e521]:
+                  - strong [ref=f3e522]: Service-credential
+                  - generic [ref=f3e523]: ingest-lab-02
+                - cell "Northwind Financial" [ref=f3e524]
+                - cell "10.44.1.20" [ref=f3e525]
+                - cell "Healthy" [ref=f3e526]
+                - cell [ref=f3e529]
+        - generic [ref=f3e532]:
+          - generic [ref=f3e533]: Read evidence is separate from change authority
+          - strong [ref=f3e538]: Fixture workflow · no policy or setting changed
+          - generic [ref=f3e539]: Integrity asserted by fixture
+        - generic [ref=f3e540]:
+          - generic [ref=f3e541]:
+            - generic [ref=f3e543]: Connected
+            - generic [ref=f3e544]: •
+            - generic [ref=f3e546]: Live
+          - generic [ref=f3e547]: 12840 eps
+  - generic:
+    - list "Notifications"

@@ -127,6 +127,29 @@ public class HuntFieldRegistry {
         return List.copyOf(projection);
     }
 
+    /**
+     * Expands the logical ECS allowlist into OpenSearch {@code _source} includes that also cover
+     * HiveArmor physical event fields ({@code action}, {@code origin.*}, {@code log.*}, etc.).
+     *
+     * <p>Without these physical includes, {@code _source} filtering drops everything except
+     * {@code @timestamp}/{@code dataSource} on agent-ingested documents, leaving Search &amp; Hunt
+     * grids blank for Action/Host/User and Raw JSON nearly empty.
+     */
+    public List<String> sourceIncludes(Collection<String> logicalProjection) {
+        Set<String> includes = new LinkedHashSet<>();
+        if (logicalProjection != null) {
+            includes.addAll(logicalProjection);
+        }
+        // Always pull the HiveArmor physical shape that backs the logical hunt columns.
+        includes.addAll(List.of(
+            "action", "actionResult", "severity", "dataType", "protocol", "raw", "log", "name", "message",
+            "origin", "origin.host", "origin.user", "origin.ip", "origin.domain", "origin.process",
+            "target", "target.host", "target.user", "target.ip",
+            "tenantId", "tenantName", "tenantPrefix", "id", "visibleBy"
+        ));
+        return List.copyOf(includes);
+    }
+
     public List<String> freeTextFields() {
         return List.of("message", "process.command_line", "host.name", "user.name", "file.path");
     }

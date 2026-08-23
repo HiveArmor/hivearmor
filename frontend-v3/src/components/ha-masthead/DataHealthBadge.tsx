@@ -16,12 +16,15 @@ interface HealthStatus {
   message?: string;
 }
 
+const visualFixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
 export function DataHealthBadge(): JSX.Element {
   const [health, setHealth] = useState<HealthStatus>({ status: 'healthy' });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!visualFixtureMode);
   const debouncedHealth = useDebounce(health, 300);
 
   useEffect(() => {
+    if (visualFixtureMode) return;
     let mounted = true;
 
     const fetchHealth = async (): Promise<void> => {

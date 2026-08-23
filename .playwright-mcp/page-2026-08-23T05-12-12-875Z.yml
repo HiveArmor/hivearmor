@@ -1,0 +1,163 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e12]: HiveArmor
+        - generic [ref=e13]: Security operations
+      - generic [ref=e14]:
+        - button "All authorized tenants" [ref=e16] [cursor=pointer]
+        - button "Search alerts, incidents, entities…" [ref=e24] [cursor=pointer]:
+          - generic [ref=e29]: ⌘ K
+        - generic [ref=e30]: Production
+      - generic [ref=e31]:
+        - 'status "Data pipeline: Healthy" [ref=e32]'
+        - status "Live events per second" [ref=e35]:
+          - generic [ref=e37]: 12,840 EPS
+        - button "Notifications" [ref=e38] [cursor=pointer]
+        - button "Help" [ref=e43] [cursor=pointer]
+    - navigation "Primary navigation" [ref=e47]:
+      - generic [ref=e48]:
+        - region "COMMAND" [ref=e49]:
+          - generic [ref=e50]:
+            - button "Mission Control" [ref=e51] [cursor=pointer]
+            - button "Analyst Queue" [ref=e58] [cursor=pointer]
+            - button "Alerts" [ref=e62] [cursor=pointer]
+            - button "Correlated Findings" [ref=e67] [cursor=pointer]
+            - button "Incidents" [ref=e73] [cursor=pointer]
+        - region "INVESTIGATE" [ref=e79]:
+          - generic [ref=e80]:
+            - button "Search & Hunt" [ref=e81] [cursor=pointer]
+            - button "Investigations" [ref=e86] [cursor=pointer]
+            - button "Entities" [ref=e90] [cursor=pointer]
+            - button "Threat Constellation" [ref=e97] [cursor=pointer]
+        - region "DEFEND" [ref=e103]:
+          - generic [ref=e104]:
+            - button "Detection Rules" [ref=e105] [cursor=pointer]
+            - button "Playbooks" [ref=e109] [cursor=pointer]
+            - button "Response Approvals" [ref=e114] [cursor=pointer]
+            - button "Quarantine & Containment" [ref=e122] [cursor=pointer]
+            - button "Response Library" [ref=e128] [cursor=pointer]
+        - region "POSTURE" [ref=e132]:
+          - generic [ref=e133]:
+            - button "Assets" [ref=e134] [cursor=pointer]
+            - button "Identities" [ref=e139] [cursor=pointer]
+            - button "Active Directory" [ref=e146] [cursor=pointer]
+            - button "Exposure" [ref=e153] [cursor=pointer]
+            - button "Vulnerabilities" [ref=e159] [cursor=pointer]
+            - button "CIS Benchmark" [ref=e170] [cursor=pointer]
+            - button "Sensors" [ref=e176] [cursor=pointer]
+            - button "Compliance" [ref=e180] [cursor=pointer]
+        - region "ENDPOINT DEFENSE" [ref=e185]:
+          - generic [ref=e186]:
+            - button "Endpoints" [ref=e187] [cursor=pointer]
+            - button "File Integrity" [ref=e191] [cursor=pointer]
+            - button "Agent Policies" [ref=e198] [cursor=pointer]
+        - region "DASHBOARDS" [ref=e203]:
+          - generic [ref=e204]:
+            - button "Operational Dashboards" [ref=e205] [cursor=pointer]
+            - button "Dashboard Studio" [ref=e212] [cursor=pointer]
+        - region "REPORT" [ref=e217]:
+          - generic [ref=e218]:
+            - button "Reporting Operations" [ref=e219] [cursor=pointer]
+            - button "Report Templates" [ref=e224] [cursor=pointer]
+        - region "ADMINISTRATION" [ref=e230]:
+          - generic [ref=e231]:
+            - button "Identity & Tenancy" [ref=e232] [cursor=pointer]
+            - button "Integrations & Delivery" [ref=e246] [cursor=pointer]
+            - button "Audit Log" [ref=e250] [cursor=pointer]
+            - button "Pipeline & Ingestion" [ref=e255] [cursor=pointer]
+            - button "Settings" [ref=e259] [cursor=pointer]
+      - generic [ref=e264]:
+        - button "User menu" [ref=e267] [cursor=pointer]:
+          - generic [ref=e268]: MC
+        - button "Pin sidebar open" [ref=e269] [cursor=pointer]
+    - main [ref=e272]:
+      - generic [ref=e273]:
+        - generic [ref=e274]:
+          - generic [ref=e283]:
+            - generic [ref=e284]: ADMINISTRATION · GOVERNANCE CONTROL PLANE
+            - heading "Audit, Retention & Settings" [level=1] [ref=e285]
+          - generic [ref=e286]:
+            - generic [ref=e287]: J/K navigate Esc close
+            - button "Refresh" [ref=e288] [cursor=pointer]
+            - button "Export evidence" [ref=e294] [cursor=pointer]
+        - generic [ref=e295]:
+          - strong [ref=e299]: "Design fixture:"
+          - text: fictional audit, retention and configuration-governance records are enabled.
+          - generic [ref=e300]: Production never receives these records.
+        - region "Governance operations summary" [ref=e301]:
+          - generic [ref=e302]:
+            - generic [ref=e303]: Audit events
+            - strong [ref=e304]: —
+            - generic [ref=e305]: loaded or exact total
+          - generic [ref=e306]:
+            - generic [ref=e307]: Denied · 24h
+            - strong [ref=e308]: —
+            - generic [ref=e309]: authorization outcomes
+          - generic [ref=e310]:
+            - generic [ref=e311]: Legal holds
+            - strong [ref=e312]: —
+            - generic [ref=e313]: preservation overrides
+          - generic [ref=e314]:
+            - generic [ref=e315]: Pending changes
+            - strong [ref=e316]: —
+            - generic [ref=e317]: approval required
+          - generic [ref=e318]:
+            - generic [ref=e319]: Config drift
+            - strong [ref=e320]: —
+            - generic [ref=e321]: unreconciled instances
+          - generic [ref=e322]:
+            - generic [ref=e323]: Deprecated APIs
+            - strong [ref=e324]: —
+            - generic [ref=e325]: tracked consumers
+        - navigation "Governance workspaces" [ref=e326]:
+          - tab "Audit ledger 0" [selected] [ref=e327] [cursor=pointer]:
+            - text: Audit ledger
+            - generic [ref=e332]: "0"
+          - tab "Retention 0" [ref=e333] [cursor=pointer]:
+            - text: Retention
+            - generic [ref=e337]: "0"
+          - tab "Configuration 0" [ref=e338] [cursor=pointer]:
+            - text: Configuration
+            - generic [ref=e342]: "0"
+          - tab "Change control 0" [ref=e343] [cursor=pointer]:
+            - text: Change control
+            - generic [ref=e349]: "0"
+          - tab "API lifecycle 0" [ref=e350] [cursor=pointer]:
+            - text: API lifecycle
+            - generic [ref=e354]: "0"
+        - generic [ref=e355]:
+          - generic [ref=e356]:
+            - textbox "Search audit" [ref=e360]:
+              - /placeholder: Search audit…
+            - generic [ref=e361]: /
+          - combobox "Filter audit state" [ref=e365]:
+            - option "All states" [selected]
+            - option "Healthy"
+            - option "Needs attention"
+            - option "Critical"
+            - option "Pending"
+            - option "Approved"
+            - option "Rejected"
+            - option "Deprecated"
+            - option "Not reported"
+          - button "Refresh current view" [ref=e366] [cursor=pointer]
+          - generic [ref=e372]: Snapshot Not reported · read-only evidence
+        - main [ref=e373]:
+          - generic [ref=e375]:
+            - strong [ref=e378]: Loading governance control plane
+            - generic [ref=e379]: Retrieving the authorized audit, lifecycle and secret-safe configuration projection.
+        - generic [ref=e380]:
+          - generic [ref=e381]: Read evidence is separate from change authority
+          - strong [ref=e386]: Fixture workflow · no policy or setting changed
+          - generic [ref=e387]: Integrity proof not reported
+        - generic [ref=e388]:
+          - generic [ref=e389]:
+            - generic [ref=e391]: Connected
+            - generic [ref=e392]: •
+            - generic [ref=e394]: Live
+          - generic [ref=e395]: 12840 eps
+  - generic:
+    - list "Notifications"

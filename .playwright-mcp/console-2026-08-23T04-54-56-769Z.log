@@ -1,0 +1,53 @@
+[     122ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://127.0.0.1:4179/node_modules/.vite/deps/react-dom-BEjadErz.js?v=7588124f:17230
+[     171ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[     179ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-admin/system-info:0
+[     182ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[     200ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-admin/system-info:0
+[   30176ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[   60163ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[   90177ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  120171ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  150175ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  180168ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  210175ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  240168ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  270197ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  300167ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  330179ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  360171ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  372535ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://127.0.0.1:4179/node_modules/.vite/deps/react-dom-BEjadErz.js?v=7588124f:17230
+[  372721ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  372721ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-admin/system-info:0
+[  372727ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  372727ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-admin/system-info:0
+[  402779ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  432763ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  462774ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  492769ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  522774ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  552767ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  566826ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://127.0.0.1:4179/node_modules/.vite/deps/react-dom-BEjadErz.js?v=7588124f:17230
+[  566920ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  566921ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-admin/system-info:0
+[  566925ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  566925ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-admin/system-info:0
+[  596884ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  626903ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  656885ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  686905ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  716882ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  746879ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  765857ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://127.0.0.1:4179/node_modules/.vite/deps/react-dom-BEjadErz.js?v=7588124f:17230
+[  765987ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  765987ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-admin/system-info:0
+[  765987ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  765987ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-admin/system-info:0
+[  795984ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  825983ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  855986ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  885987ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  915988ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  945984ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[  975996ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[ 1005979ms] [ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:4179/api/ha-operational-health:0
+[ 1022432ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ http://127.0.0.1:4179/node_modules/.vite/deps/react-dom-BEjadErz.js?v=7588124f:17230
