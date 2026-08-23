@@ -91,6 +91,8 @@ const jsBuild = spawnSync(ESBUILD, [
   '--alias:@/pages/response/response.fixtures=./src/pages/response/response.fixture-disabled.ts',
   '--alias:@/pages/edr/fileQuarantine.fixtures=./src/pages/edr/fileQuarantine.fixture-disabled.ts',
   '--alias:@/pages/posture/assets/assets.fixtures=./src/pages/posture/assets/assets.fixture-disabled.ts',
+  '--alias:@/pages/posture/active-directory/active-directory.fixtures=./src/pages/posture/active-directory/active-directory.fixture-disabled.ts',
+  '--alias:@/pages/posture/exposure/exposure.fixtures=./src/pages/posture/exposure/exposure.fixture-disabled.ts',
   '--splitting=true',
   '--minify',
   '--sourcemap',

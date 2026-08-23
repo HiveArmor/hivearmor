@@ -37,6 +37,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
@@ -295,6 +296,13 @@ public class UtmVisualizationResource {
         }
     }
 
+    /**
+     * Execute a visualization query against OpenSearch.
+     * Restricted to analyst-tier roles — same bar as SOC AI / investigation mutations
+     * ({@code ROLE_ADMIN|ROLE_SOC_MANAGER|ROLE_ANALYST}). Blocks unprivileged ROLE_USER
+     * from arbitrary index query execution (SEC-06).
+     */
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST')")
     @PostMapping("/ha-visualizations/run")
     public ResponseEntity<List<?>> run(@RequestBody @Valid UtmVisualizationDto visualization,
                                        @RequestParam(value = "page", required = false) Integer page,

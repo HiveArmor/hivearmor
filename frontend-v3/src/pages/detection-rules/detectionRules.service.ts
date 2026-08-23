@@ -3,6 +3,7 @@
  * API calls per DEF-01 spec §3
  */
 
+import { DET_011_VALIDATE_PREVIEW } from './detectionRules.capabilities';
 import type {
   DetectionExecution,
   RuleAuthoringDiagnostic,
@@ -504,10 +505,11 @@ export async function fetchRuleExecutions(signal?: AbortSignal): Promise<{ avail
   });
   const data = await handleResponse<{
     items: Array<{
-      id: string; ruleId: string; startedAt?: string | null; completedAt?: string | null;
+      id: string; ruleId: string; ruleName?: string | null; startedAt?: string | null; completedAt?: string | null;
       duration?: number | null; status: 'completed' | 'failed' | 'timeout' | 'cancelled' | 'queued' | 'running';
       alertsGenerated?: number | null; eventsScanned?: number | null; errors?: string[] | string | null;
-      triggeredBy?: 'schedule' | 'manual' | 'gap_fill';
+      triggeredBy?: 'schedule' | 'manual' | 'gap_fill' | 'gap-fill';
+      gapDurationMinutes?: number | null;
     }>;
   }>(response);
   const statusMap: Record<string, DetectionExecution['status']> = { completed: 'succeeded', failed: 'failed', timeout: 'failed', cancelled: 'warning', queued: 'running', running: 'running' };
@@ -516,9 +518,9 @@ export async function fetchRuleExecutions(signal?: AbortSignal): Promise<{ avail
     items: data.items.map((item) => ({
       id: item.id,
       ruleId: item.ruleId,
-      ruleName: item.ruleId,
+      ruleName: item.ruleName ?? item.ruleId,
       status: statusMap[item.status] ?? 'warning',
-      runType: item.triggeredBy === 'gap_fill' ? 'gap-fill' : item.triggeredBy === 'manual' ? 'manual' : 'scheduled',
+      runType: item.triggeredBy === 'gap_fill' || item.triggeredBy === 'gap-fill' ? 'gap-fill' : item.triggeredBy === 'manual' ? 'manual' : 'scheduled',
       startedAt: item.startedAt ?? null,
       durationMs: item.duration ?? null,
       searchDurationMs: null,
@@ -527,10 +529,31 @@ export async function fetchRuleExecutions(signal?: AbortSignal): Promise<{ avail
       matches: null,
       alertsCreated: item.alertsGenerated ?? null,
       sourceCoverage: null,
-      gapDurationMinutes: null,
+      gapDurationMinutes: item.gapDurationMinutes ?? null,
       message: Array.isArray(item.errors) ? item.errors.join(' · ') : item.errors ?? (item.status === 'completed' ? 'Execution completed.' : item.status),
     })),
   };
+}
+
+/** DET-009: POST /ha-detection-rules/{id}/gap-fill (SOC Manager / Admin). */
+export async function triggerDetectionGapFill(
+  ruleId: DetectionRule['id'],
+  from: string,
+  to: string,
+): Promise<{ executionId?: string; status?: string; gapsDetected?: number }> {
+  if (fixtureMode) {
+    return { executionId: `fixture-gap-${ruleId}`, status: 'queued', gapsDetected: 1 };
+  }
+  const response = await fetch(`${DETECTION_BASE}/${encodeURIComponent(String(ruleId))}/gap-fill`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ from, to }),
+  });
+  return handleResponse<{ executionId?: string; status?: string; gapsDetected?: number }>(response);
 }
 
 export async function testDetectionSandbox(
@@ -589,7 +612,9 @@ export async function testDetectionSandbox(
     explanation: result.explanation ?? 'The in-memory evaluator completed.',
     durationMs: 0,
     evaluatedFields: 0,
-    warnings: ['Historical preview and source-completeness metrics require DET-011.'],
+    warnings: DET_011_VALIDATE_PREVIEW
+      ? ['Single-event sandbox completed. Use Historical preview for bounded DET-011 dry-run against indexed events.']
+      : ['Historical preview is not available from the detection rules API.'],
   };
 }
 

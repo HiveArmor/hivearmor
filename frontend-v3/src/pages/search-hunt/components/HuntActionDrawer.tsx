@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { useMutation } from '@tanstack/react-query';
-import { CheckCircle2, ShieldCheck, X } from 'lucide-react';
+import { CheckCircle2, Clock3, ShieldCheck, X } from 'lucide-react';
 
 import { executeHuntAction, searchHuntFixtureMode } from '../searchHunt.service';
 import type { HuntActionRequest } from '../searchHunt.types';
@@ -40,6 +40,7 @@ export function HuntActionDrawer({ mode, eventIds, searchId, onClose }: HuntActi
   if (!mode) return null;
   const copy = labels[mode];
   const valid = eventIds.length > 0 && reason.trim().length >= 8 && (mode !== 'add_evidence' || incidentId.trim().length > 0) && (mode === 'add_evidence' || title.trim().length > 0);
+  const outcome = mutation.data?.outcome;
 
   const submit = (): void => {
     mutation.mutate({ type: mode, eventIds, searchId, title: title.trim() || undefined, incidentId: incidentId.trim() || undefined, reason: reason.trim() });
@@ -54,9 +55,35 @@ export function HuntActionDrawer({ mode, eventIds, searchId, onClose }: HuntActi
         <div className="hunt-action-scope"><strong>{eventIds.length}</strong><span>selected event{eventIds.length === 1 ? '' : 's'}</span><small>Server revalidates tenant, permissions, retention, and snapshot membership.</small></div>
         {mode === 'add_evidence' ? <label><span>Incident ID</span><input value={incidentId} onChange={(event) => setIncidentId(event.target.value)} placeholder="INC-2026-00418" autoFocus /></label> : <label><span>{mode === 'create_incident' ? 'Incident title' : 'Investigation name'}</span><input value={title} onChange={(event) => setTitle(event.target.value)} autoFocus /></label>}
         <label><span>Analyst reason</span><textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Describe why these events belong in this workflow…" rows={4} /></label>
-        <div className="hunt-action-guardrails"><strong>Before execution</strong><ul><li>Only event references from this authorized search snapshot are submitted.</li><li>Field-level redactions and chain-of-custody metadata remain intact.</li><li>The backend returns an audit ID for every successful mutation.</li></ul></div>
+        <div className="hunt-action-guardrails"><strong>Before execution</strong><ul><li>Only event references from this authorized search snapshot are submitted.</li><li>Field-level redactions and chain-of-custody metadata remain intact.</li><li>Escalate and investigation require SOC Manager approval before any resource is created.</li></ul></div>
         {mutation.isError && <div className="hunt-action-error" role="alert">The workflow could not be completed. No partial success was reported.</div>}
-        {mutation.data && <div className="hunt-action-success" role="status"><CheckCircle2 size={16} /><span><strong>Workflow completed</strong><small>{mutation.data.targetId} · {mutation.data.auditId}</small></span></div>}
+        {outcome === 'created' && (
+          <div className="hunt-action-success" role="status">
+            <CheckCircle2 size={16} />
+            <span>
+              <strong>Workflow completed</strong>
+              <small>{mutation.data?.targetId} · {mutation.data?.auditId}</small>
+            </span>
+          </div>
+        )}
+        {outcome === 'approval_pending' && (
+          <div className="hunt-action-pending" role="status">
+            <Clock3 size={16} />
+            <span>
+              <strong>Approval requested</strong>
+              <small>No resource created. Approval ID · {mutation.data?.approvalId ?? mutation.data?.targetId}</small>
+            </span>
+          </div>
+        )}
+        {outcome === 'simulated' && (
+          <div className="hunt-action-notice" role="status">
+            <ShieldCheck size={16} />
+            <span>
+              <strong>Simulated only</strong>
+              <small>No incident, investigation, or evidence was created.</small>
+            </span>
+          </div>
+        )}
       </div>
       <footer><button type="button" className="hunt-button hunt-button--primary" disabled={!valid || mutation.isPending || mutation.isSuccess} onClick={submit}>{mutation.isPending ? 'Submitting…' : copy.action}</button><button type="button" className="hunt-button" onClick={onClose}>{mutation.isSuccess ? 'Done' : 'Cancel'}</button></footer>
     </aside>

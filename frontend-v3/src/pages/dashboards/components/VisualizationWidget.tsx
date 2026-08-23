@@ -3,11 +3,14 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Maximize2, AlertCircle } from 'lucide-react';
 
-import { runVisualization } from '../dashboards.service';
+import {
+  GAP_SEC_06_RESOLVED,
+  canRunVisualization,
+  runVisualization,
+} from '../dashboards.service';
 import type { VisualizationDTO, FilterDTO } from '../dashboards.types';
 
-// GAP-SEC-06 gate: Set to true only after backend @PreAuthorize fix is confirmed deployed
-const GAP_SEC_06_RESOLVED = false;
+import { useAuthStore } from '@/store/auth.store';
 
 export interface VisualizationWidgetProps {
   visualization: VisualizationDTO;
@@ -23,18 +26,19 @@ export function VisualizationWidget({
   onExpand,
 }: VisualizationWidgetProps): JSX.Element {
   const [lastRefreshedAt, setLastRefreshedAt] = useState<number>(Date.now());
+  const userRoles = useAuthStore((state) => state.user?.roles);
+  const canRun = GAP_SEC_06_RESOLVED && canRunVisualization(userRoles);
 
-  // GAP-SEC-06: POST /api/ha-visualizations/run has no @PreAuthorize.
-  // Query is disabled until the security fix is confirmed deployed.
+  // SEC-06: backend @PreAuthorize gates run; UI skips the call when unauthorized.
   const { data, isLoading, isError, dataUpdatedAt, refetch } = useQuery({
     queryKey: ['visualization-run', visualization.id, filters],
     queryFn: () => {
-      if (!GAP_SEC_06_RESOLVED) {
-        return Promise.reject(new Error('GAP_SEC_06'));
+      if (!canRun) {
+        return Promise.reject(new Error('VISUALIZATION_RUN_UNAUTHORIZED'));
       }
       return runVisualization({ visualizationId: visualization.id, filters: filters ?? null });
     },
-    enabled: GAP_SEC_06_RESOLVED,
+    enabled: canRun,
     staleTime: (refreshTime ?? 300) * 1000,
     refetchInterval: refreshTime ? refreshTime * 1000 : false,
   });
@@ -55,7 +59,6 @@ export function VisualizationWidget({
   };
 
   const renderWidgetBody = (): JSX.Element => {
-    // GAP-SEC-06: block execution until backend fix deployed
     if (!GAP_SEC_06_RESOLVED) {
       return (
         <div
@@ -80,6 +83,35 @@ export function VisualizationWidget({
             }}
           >
             Visualization data unavailable — security fix GAP-SEC-06 pending deployment
+          </div>
+        </div>
+      );
+    }
+
+    if (!canRun) {
+      return (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              padding: '8px 12px',
+              background: 'color-mix(in srgb, var(--ha-high) 10%, transparent)',
+              border: '1px solid var(--ha-high)',
+              borderRadius: 'var(--ha-radius-base)',
+              fontSize: 'var(--ha-text-sm)',
+              color: 'var(--ha-high)',
+              textAlign: 'center',
+            }}
+          >
+            Required permission: Analyst, SOC Manager, or Platform Administrator
           </div>
         </div>
       );

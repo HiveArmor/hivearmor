@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -25,6 +26,15 @@ import java.util.List;
 @RequestMapping("/api/agent-manager")
 public class AgentManagerResource {
     private static final String CLASSNAME = "AgentManagerResource";
+    /** Broader read access for sensor inventory pages. */
+    private static final String READ_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN', 'ROLE_SOC_MANAGER', 'ROLE_ANALYST', 'ROLE_USER')";
+    /** Command history / capability checks — operators only. */
+    private static final String COMMAND_READ_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN', 'ROLE_SOC_MANAGER', 'ROLE_ANALYST')";
+    /** Attribute updates and other mutates — Admin / SOC Manager. */
+    private static final String MUTATE_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN', 'ROLE_SOC_MANAGER')";
     private final Logger log = LoggerFactory.getLogger(UtmModuleResource.class);
     private final AgentGrpcService agentGrpcService;
 
@@ -40,6 +50,7 @@ public class AgentManagerResource {
     }
 
     @GetMapping("/agents")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<AgentDTO>> listAgents(
             @RequestParam(required = false) Integer pageNumber,
             @RequestParam(required = false) Integer pageSize,
@@ -69,6 +80,7 @@ public class AgentManagerResource {
     }
 
     @GetMapping("/agents-with-commands")
+    @PreAuthorize(COMMAND_READ_AUTH)
     public ResponseEntity<List<AgentDTO>> listAgentsWithCommands(
             @RequestParam(required = false) Integer pageNumber,
             @RequestParam(required = false) Integer pageSize,
@@ -97,6 +109,7 @@ public class AgentManagerResource {
     }
 
     @GetMapping("/agent-by-hostname")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<AgentDTO> getAgentByHostname(
             @RequestParam @NotNull String hostname) {
         final String ctx = CLASSNAME + ".getAgentByHostname";
@@ -114,6 +127,7 @@ public class AgentManagerResource {
     }
 
     @GetMapping("/agent-commands")
+    @PreAuthorize(COMMAND_READ_AUTH)
     public ResponseEntity<List<AgentCommandDTO>> listAgentCommands(
             @RequestParam(required = false) Integer pageNumber,
             @RequestParam(required = false) Integer pageSize,
@@ -150,6 +164,7 @@ public class AgentManagerResource {
     }
 
     @GetMapping("/can-run-command")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Boolean> canRunCommand(@RequestParam String hostname) {
         final String ctx = CLASSNAME + ".canRunCommand";
         try {
@@ -172,6 +187,7 @@ public class AgentManagerResource {
      * or with status {@code 500 (Internal Server Error)} if the agent manager didn't respond to the call.
      */
     @PostMapping("/update-agent-attrs")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<AuthResponseDTO> updateAgentAttributes (@Valid @RequestBody AgentRequestVM agentRequestVM) {
         final String ctx = CLASSNAME + ".updateAgentAttributes";
         try {

@@ -13,22 +13,25 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Service for creating and executing response action jobs asynchronously.
+ * Service for creating and tracking response action jobs.
  *
- * <p>Handles the full lifecycle of a response job:
+ * <p>Handles the lifecycle of a response job:
  * <ol>
  *   <li>Create a new job in PostgreSQL with status {@code "queued"}</li>
- *   <li>Dispatch async execution (simulated 5-second delay)</li>
- *   <li>Transition status: queued → running → completed/failed</li>
- *   <li>On completion, publish SSE event via InvestigationEventPublisher (when available)</li>
+ *   <li>Async transition: queued → running → {@code unsupported}</li>
+ *   <li>Remote containment is <strong>not</strong> executed — jobs finish honestly as unsupported</li>
+ *   <li>Publish SSE event via InvestigationEventPublisher when available</li>
  * </ol>
  *
- * <p>Sprint 41 — ALT-010 Part 2: Response action execution and job tracking.
+ * <p>Sprint 41 — ALT-010 Part 2: Response action job tracking (honesty fix: no fabricated success).
  */
 @Service
 public class ResponseJobService {
 
     private static final Logger log = LoggerFactory.getLogger(ResponseJobService.class);
+
+    static final String UNSUPPORTED_MESSAGE =
+        "Remote response execution is not implemented; no host or account was changed.";
 
     private final ResponseJobRepository responseJobRepository;
 
@@ -76,52 +79,38 @@ public class ResponseJobService {
     }
 
     /**
-     * Executes a response job asynchronously. Simulates execution with a 5-second delay,
-     * then updates status to "completed" with a result message.
+     * Marks a response job as {@code unsupported} asynchronously.
      *
-     * <p>Status transitions: queued → running (on start) → completed/failed (on finish).
+     * <p>Remote host containment (isolate, kill process, quarantine, etc.) is not wired
+     * through a real agent ProcessCommand path from this service. Fabricating
+     * "isolated successfully" after a sleep would mislead operators — instead the job
+     * transitions queued → running → unsupported with an explicit message.
      *
-     * <p>On completion, publishes a {@code response.status} SSE event via
+     * <p>On finish, publishes a {@code response.status} SSE event via
      * InvestigationEventPublisher if it is available.
      *
-     * @param job the job to execute
+     * @param job the job to finalize
      */
     @Async
     public void executeAsync(ResponseJob job) {
         try {
-            // Transition: queued → running
             job.setStatus("running");
             job.setStartedAt(Instant.now());
             responseJobRepository.save(job);
-            log.info("Job [{}] transitioned to running", job.getId());
+            log.info("Job [{}] transitioned to running (remote execution not implemented)", job.getId());
 
-            // Simulate execution (5-second delay)
-            Thread.sleep(5000);
-
-            // Transition: running → completed
-            job.setStatus("completed");
+            job.setStatus("unsupported");
             job.setCompletedAt(Instant.now());
-            job.setResult(buildResultMessage(job));
+            job.setErrorCode("NOT_IMPLEMENTED");
+            job.setErrorMessage(UNSUPPORTED_MESSAGE);
+            job.setResult(buildUnsupportedResult(job));
             responseJobRepository.save(job);
-            log.info("Job [{}] completed successfully: {}", job.getId(), job.getResult());
-
-            // Publish SSE event if publisher is available
-            publishStatusEvent(job);
-
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            // Transition: running → failed
-            job.setStatus("failed");
-            job.setCompletedAt(Instant.now());
-            job.setErrorCode("INTERRUPTED");
-            job.setErrorMessage("Job execution was interrupted");
-            responseJobRepository.save(job);
-            log.warn("Job [{}] was interrupted", job.getId());
+            log.info("Job [{}] marked unsupported — remote execution not implemented: {}",
+                job.getId(), job.getActionId());
 
             publishStatusEvent(job);
 
         } catch (Exception e) {
-            // Transition: running → failed
             job.setStatus("failed");
             job.setCompletedAt(Instant.now());
             job.setErrorCode("EXECUTION_ERROR");
@@ -156,20 +145,11 @@ public class ResponseJobService {
     }
 
     /**
-     * Builds a human-readable result message based on the action and target.
+     * Honest result text — never claims successful containment.
      */
-    private String buildResultMessage(ResponseJob job) {
-        return switch (job.getActionId()) {
-            case "isolate_host" -> "Host " + job.getTargetId() + " isolated from network successfully";
-            case "kill_process" -> "Process " + job.getTargetId() + " terminated successfully";
-            case "block_ip" -> "IP " + job.getTargetId() + " blocked at firewall successfully";
-            case "disable_account" -> "Account " + job.getTargetId() + " disabled in Active Directory";
-            case "quarantine_file" -> "File " + job.getTargetId() + " quarantined successfully";
-            case "revoke_sessions" -> "All sessions for " + job.getTargetId() + " revoked";
-            case "collect_forensics" -> "Forensic artifacts collected from " + job.getTargetId();
-            case "run_scan" -> "Antivirus scan completed on " + job.getTargetId();
-            default -> "Action " + job.getActionId() + " completed on " + job.getTargetId();
-        };
+    private String buildUnsupportedResult(ResponseJob job) {
+        return "Action " + job.getActionId() + " on " + job.getTargetId()
+            + " was not executed: remote response dispatch is not implemented.";
     }
 
     /**

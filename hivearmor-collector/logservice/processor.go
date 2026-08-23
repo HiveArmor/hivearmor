@@ -17,6 +17,7 @@ import (
 	"github.com/hivearmor/hivearmor-collector/conn"
 	"github.com/hivearmor/hivearmor-collector/database"
 	"github.com/hivearmor/hivearmor-collector/models"
+	"github.com/hivearmor/hivearmor-collector/spool"
 	"github.com/hivearmor/hivearmor-collector/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -32,28 +33,51 @@ type LogProcessor struct {
 var (
 	processor     LogProcessor
 	processorOnce sync.Once
-	LogQueue      = make(chan *plugins.Log)
+	processorInitErr error
+	LogQueue      = make(chan *plugins.Log, 10000)
 	timeToSleep   = 10 * time.Second
 	timeCLeanLogs = 10 * time.Minute
+	// unprocessedRetryInterval re-queues durable spool rows after a send or
+	// broker failure. Retention reclaim stays on the slower ticker.
+	unprocessedRetryInterval = 15 * time.Second
 )
 
-func GetLogProcessor() LogProcessor {
+func init() {
+	spool.RetentionLookup = GetDataRetention
+}
+
+func GetLogProcessor() (*LogProcessor, error) {
 	processorOnce.Do(func() {
+		db, err := database.GetDB()
+		if err != nil {
+			processorInitErr = err
+			return
+		}
 		processor = LogProcessor{
-			db:             database.GetDB(),
+			db:             db,
 			connErrWritten: false,
 			ackErrWritten:  false,
 			sendErrWritten: false,
 		}
 	})
-	return processor
+	if processorInitErr != nil {
+		return nil, processorInitErr
+	}
+	return &processor, nil
 }
 
 func (l *LogProcessor) ProcessLogs(cnf *config.Config, ctx context.Context) {
 	go l.CleanCountedLogs()
+	go l.monitorQueueDepth(ctx)
 
 	for {
-		ctxEof, cancelEof := context.WithCancel(context.Background())
+		select {
+		case <-ctx.Done():
+			utils.Logger.Info("ProcessLogs stopping due to context cancellation")
+			return
+		default:
+		}
+
 		connection, err := conn.GetCorrelationConnection(cnf)
 		if err != nil {
 			if !l.connErrWritten {
@@ -68,6 +92,7 @@ func (l *LogProcessor) ProcessLogs(cnf *config.Config, ctx context.Context) {
 		plClient := createClient(client, ctx)
 		l.connErrWritten = false
 
+		ctxEof, cancelEof := context.WithCancel(context.Background())
 		go l.handleAcknowledgements(plClient, ctxEof, cancelEof)
 		l.processLogs(plClient, ctxEof, cancelEof)
 	}
@@ -107,12 +132,10 @@ func (l *LogProcessor) handleAcknowledgements(plClient plugins.Integration_Proce
 
 			l.ackErrWritten = false
 
-			l.db.Lock()
 			err = l.db.Update(&models.Log{}, "id", ack.LastId, "processed", true)
 			if err != nil {
 				utils.Logger.ErrorF("failed to update log: %v", err)
 			}
-			l.db.Unlock()
 		}
 	}
 }
@@ -124,21 +147,24 @@ func (l *LogProcessor) processLogs(plClient plugins.Integration_ProcessLogClient
 			utils.Logger.Info("context done, exiting processLogs")
 			return
 		case newLog := <-LogQueue:
-			id, err := uuid.NewRandom()
-			if err != nil {
-				utils.Logger.ErrorF("failed to generate uuid: %v", err)
-				continue
+			// Collectors spool before enqueue. Only persist here when the
+			// durable path was unavailable and the memory queue still accepted
+			// the record.
+			if newLog.Id == "" {
+				id, err := uuid.NewRandom()
+				if err != nil {
+					utils.Logger.ErrorF("failed to generate uuid: %v", err)
+					continue
+				}
+
+				newLog.Id = id.String()
+				err = l.db.Create(&models.Log{ID: newLog.Id, Log: newLog.Raw, Type: newLog.DataType, CreatedAt: time.Now(), DataSource: newLog.DataSource, Processed: false})
+				if err != nil {
+					utils.Logger.ErrorF("failed to save log: %v", err)
+				}
 			}
 
-			newLog.Id = id.String()
-			l.db.Lock()
-			err = l.db.Create(&models.Log{ID: newLog.Id, Log: newLog.Raw, Type: newLog.DataType, CreatedAt: time.Now(), DataSource: newLog.DataSource, Processed: false})
-			if err != nil {
-				utils.Logger.ErrorF("failed to save log: %v :log: %s", err, newLog.Raw)
-			}
-			l.db.Unlock()
-
-			err = plClient.Send(newLog)
+			err := plClient.Send(newLog)
 			if err != nil {
 				if strings.Contains(err.Error(), "EOF") {
 					time.Sleep(timeToSleep)
@@ -148,7 +174,7 @@ func (l *LogProcessor) processLogs(plClient plugins.Integration_ProcessLogClient
 				st, ok := status.FromError(err)
 				if ok && (st.Code() == codes.Unavailable || st.Code() == codes.Canceled) {
 					if !l.sendErrWritten {
-						utils.Logger.ErrorF("failed to send log: %v :log: %s", err, newLog.Raw)
+						utils.Logger.ErrorF("failed to send log: %v", err)
 						l.sendErrWritten = true
 					}
 					time.Sleep(timeToSleep)
@@ -156,7 +182,7 @@ func (l *LogProcessor) processLogs(plClient plugins.Integration_ProcessLogClient
 					return
 				} else {
 					if !l.sendErrWritten {
-						utils.Logger.ErrorF("failed to send log: %v :log: %s", err, newLog.Raw)
+						utils.Logger.ErrorF("failed to send log: %v", err)
 						l.sendErrWritten = true
 					}
 					time.Sleep(timeToSleep)
@@ -169,39 +195,84 @@ func (l *LogProcessor) processLogs(plClient plugins.Integration_ProcessLogClient
 }
 
 func (l *LogProcessor) CleanCountedLogs() {
-	ticker := time.NewTicker(timeCLeanLogs)
+	retryTicker := time.NewTicker(unprocessedRetryInterval)
+	retentionTicker := time.NewTicker(timeCLeanLogs)
+	defer retryTicker.Stop()
+	defer retentionTicker.Stop()
+	for {
+		select {
+		case <-retryTicker.C:
+			l.enqueueUnprocessed(500)
+		case <-retentionTicker.C:
+			l.reclaimProcessedRetention()
+		}
+	}
+}
+
+func (l *LogProcessor) reclaimProcessedRetention() {
+	dataRetention, err := GetDataRetention()
+	if err != nil {
+		utils.Logger.ErrorF("error getting data retention: %s", err)
+		return
+	}
+	_, err = l.db.DeleteOld(&models.Log{}, dataRetention)
+	if err != nil {
+		utils.Logger.ErrorF("error deleting old logs: %s", err)
+	}
+}
+
+func (l *LogProcessor) enqueueUnprocessed(limit int) {
+	unprocessed := make([]models.Log, 0, limit)
+	if err := l.db.FindUnprocessed(&unprocessed, limit); err != nil {
+		if utils.Logger != nil {
+			utils.Logger.LogF(400, "logprocessor: error finding unprocessed logs: %s", err)
+		}
+		return
+	}
+	for _, log := range unprocessed {
+		entry := &plugins.Log{
+			Id:         log.ID,
+			Raw:        log.Log,
+			DataType:   log.Type,
+			DataSource: log.DataSource,
+			Timestamp:  log.CreatedAt.Format(time.RFC3339Nano),
+		}
+		select {
+		case LogQueue <- entry:
+		default:
+			// Queue still full — record remains processed=false and will be
+			// retried on the next tick. Not a silent drop.
+			if utils.Logger != nil {
+				utils.Logger.LogF(400, "logprocessor: LogQueue full during retry; deferring log id=%s", log.ID)
+			}
+		}
+	}
+}
+
+// monitorQueueDepth logs when the queue is under backpressure. It does not
+// drop events; unprocessed SQLite rows remain until acknowledged.
+func (l *LogProcessor) monitorQueueDepth(ctx context.Context) {
+	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
-	for range ticker.C {
-		dataRetention, err := GetDataRetention()
-		if err != nil {
-			utils.Logger.ErrorF("error getting data retention: %s", err)
-			continue
-		}
-		l.db.Lock()
-		_, err = l.db.DeleteOld(&models.Log{}, dataRetention)
-		if err != nil {
-			utils.Logger.ErrorF("error deleting old logs: %s", err)
-		}
-		l.db.Unlock()
-
-		unprocessed := make([]models.Log, 0, 10)
-		l.db.Lock()
-		found, err := l.db.Find(&unprocessed, "processed", false)
-		l.db.Unlock()
-		if err != nil {
-			utils.Logger.ErrorF("error finding unprocessed logs: %s", err)
-			continue
-		}
-
-		if found {
-			for _, log := range unprocessed {
-				LogQueue <- &plugins.Log{
-					Id:         log.ID,
-					Raw:        log.Log,
-					DataType:   log.Type,
-					DataSource: log.DataSource,
-					Timestamp:  log.CreatedAt.Format(time.RFC3339Nano),
-				}
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			depth := len(LogQueue)
+			cap := cap(LogQueue)
+			if cap == 0 {
+				continue
+			}
+			pct := float64(depth) / float64(cap) * 100
+			dropped := spool.LogsDropped.Load()
+			if dropped > 0 {
+				utils.Logger.LogF(400, "logprocessor: total logs dropped since start (spool quota/unavailable): %d", dropped)
+			}
+			if pct > 90 {
+				utils.Logger.ErrorF("logprocessor: LogQueue near capacity: depth=%d/%d (%.0f%%); unprocessed rows remain in spool", depth, cap, pct)
+			} else if pct > 50 {
+				utils.Logger.LogF(400, "logprocessor: LogQueue depth=%d/%d (%.0f%%)", depth, cap, pct)
 			}
 		}
 	}

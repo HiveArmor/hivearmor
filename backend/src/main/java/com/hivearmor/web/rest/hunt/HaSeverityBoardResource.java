@@ -28,7 +28,7 @@ import java.util.Map;
  * workload board with overview counters, severity lanes (each containing up to
  * {@code laneLimit} alert previews), and a 12-bucket trend histogram.
  *
- * <p>Requires {@code ROLE_SOC_ANALYST} or higher authority.
+ * <p>Requires {@code ROLE_ANALYST} (or legacy {@code ROLE_SOC_ANALYST}) or higher authority.
  *
  * <p>Sprint 37 — ALT-023 (Requirement 1).
  */
@@ -40,8 +40,9 @@ public class HaSeverityBoardResource {
     private static final Logger log = LoggerFactory.getLogger(HaSeverityBoardResource.class);
     private static final String CLASSNAME = "HaSeverityBoardResource";
 
+    /** Align with HaAlertQueueResource — ROLE_ANALYST is the canonical SOC analyst authority. */
     private static final String SEVERITY_BOARD_AUTH =
-        "hasAnyAuthority('ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_SOC_LEAD', 'ROLE_ADMIN')";
+        "hasAnyAuthority('ROLE_SOC_ANALYST', 'ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_SOC_LEAD', 'ROLE_ADMIN')";
 
     private final HaSeverityBoardService haSeverityBoardService;
     private final HaSeverityBoardSseService severityBoardSseService;

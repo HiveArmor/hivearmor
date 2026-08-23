@@ -314,7 +314,8 @@ DELETE /api/ha-parsers/{id}
 GET    /api/ha-connection-keys
 POST   /api/ha-connection-keys
 DELETE /api/ha-connection-keys/{id}
-GET    /api/ha-audit-log             (NOT /api/ha-audit-log/export — that export does NOT exist)
+GET    /api/ha-audit-log
+GET    /api/ha-audit-log/export      (ADMIN-only NDJSON; safe fields; no payload)
 GET    /api/ha-agent-enrollments/audit
 GET    /api/ha-agent-enrollments/audit/export
 GET    /api/ha-settings

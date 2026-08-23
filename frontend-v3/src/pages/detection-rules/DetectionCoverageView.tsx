@@ -6,6 +6,7 @@ import {
   Layers3, Search, ShieldCheck, Target, X,
 } from 'lucide-react';
 
+import { DET_014_DISABLED_TITLE } from './detectionRules.capabilities';
 import { detectionRulesFixtureMode } from './detectionRules.service';
 import type { DetectionRule } from './detectionRules.types';
 import { fetchCoverage } from './services/detection.service';
@@ -151,7 +152,7 @@ export default function DetectionCoverageView({ rules, onOpenRule }: DetectionCo
           <section className="detection-coverage-detail__summary"><div><small>READINESS</small><strong data-readiness={selected.readiness}>{selected.readiness}</strong></div><div><small>MAPPED RULES</small><strong>{selected.mappedCount}</strong></div></section>
           <section><h3>Required telemetry</h3>{selected.dataTypes.length ? <div className="detection-drawer__chips">{selected.dataTypes.map((dataType) => <span key={dataType}>{dataType}</span>)}</div> : <p>Telemetry requirements are not reported by the current coverage projection.</p>}<p>Coverage and recent detection activity are separate from source readiness. Source completeness remains visible only when the backend reports it.</p></section>
           <section><h3>Mapped rules</h3><div className="detection-coverage-detail__rules">{selected.rules.length ? selected.rules.map((rule) => <button key={rule.id} type="button" onClick={() => onOpenRule(rule)}><span data-active={rule.ruleActive}>{rule.ruleActive ? 'Active' : 'Inactive'}</span><div><strong>{rule.ruleName}</strong><small>{rule.health ?? 'unknown'}{rule.dataTypes.length ? ` · ${rule.dataTypes.join(', ')}` : ''}</small></div><ChevronRight size={14} /></button>) : <p>Mapped rule detail is outside the loaded inventory page.</p>}</div></section>
-          <footer><button type="button" disabled title="Requires DET-014 available-content recommendations">Find available content</button><button type="button" onClick={() => selected.rules[0] && onOpenRule(selected.rules[0])}>Open mapped rule <ChevronRight size={14} /></button></footer>
+          <footer><button type="button" disabled title={DET_014_DISABLED_TITLE}>Find available content</button><button type="button" onClick={() => selected.rules[0] && onOpenRule(selected.rules[0])}>Open mapped rule <ChevronRight size={14} /></button></footer>
         </aside>}
       </div>
     </section>

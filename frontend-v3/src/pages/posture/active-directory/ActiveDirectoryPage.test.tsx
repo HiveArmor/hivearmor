@@ -65,6 +65,9 @@ describe('ActiveDirectoryPage', () => {
     useQuery.mockReturnValue(state({ data: { ...page, items: [], total: 0, contractState: 'missing', partialFailures: [{ source: 'ad', message: 'Backend required.' }] } }));
     const { rerender } = render(<ActiveDirectoryPage />);
     expect(screen.getByText('Active Directory backend integration required')).toBeDefined();
+    expect(screen.getByText(/empty KPIs here mean the contract is missing/)).toBeDefined();
+    expect(screen.getByText('Contract not implemented')).toBeDefined();
+    expect(screen.queryByRole('grid', { name: 'Active Directory posture inventory' })).toBeNull();
     useQuery.mockReturnValue(state({ data: { ...page, items: [], total: 0 } }));
     rerender(<ActiveDirectoryPage />);
     expect(screen.getByText('No directory observations available')).toBeDefined();

@@ -51,6 +51,7 @@ import type {
   AlertTriageDetail,
 } from './alertTriage.types';
 import { IncidentLinkDialog } from './components/IncidentLinkDialog';
+import { AssignmentDialog } from './components/AssignmentDialog';
 import { NoteDialog } from './components/NoteDialog';
 import { TagDialog } from './components/TagDialog';
 
@@ -275,6 +276,7 @@ export function AlertsListPage(): JSX.Element {
   const queryInputRef = useRef<HTMLInputElement>(null);
   const user = useAuthStore((state) => state.user);
   const canTriage = useAuthStore((state) => state.hasAnyRole(['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']));
+  const canAssign = useAuthStore((state) => state.hasAnyRole(['ROLE_SOC_MANAGER', 'ROLE_ADMIN']));
   const activeTenantId = useAuthStore((state) => state.selectedTenantId);
 
   const linkedSeverityValue = searchParams.get('severity');
@@ -319,6 +321,7 @@ export function AlertsListPage(): JSX.Element {
   const [activeAction, setActiveAction] = useState<AlertTriageAction | null>(null);
   const [noteDialogAlert, setNoteDialogAlert] = useState<string | null>(null);
   const [tagDialogAlert, setTagDialogAlert] = useState<string | null>(null);
+  const [assignmentDialogIds, setAssignmentDialogIds] = useState<string[] | null>(null);
   const [incidentLinkDialogAlert, setIncidentLinkDialogAlert] = useState<string | null>(null);
 
   const [drawerAlertId, setDrawerAlertId] = useState<string | null>(null);
@@ -358,7 +361,7 @@ export function AlertsListPage(): JSX.Element {
   const openActionForIds = useCallback((action: AlertTriageAction, ids: string[]): void => {
     if (!canTriage || !ids.length) return;
 
-    // Dispatch note, tag, promote to their dedicated dialogs
+    // Dispatch note, tag, promote, assign to their dedicated dialogs
     if (action === 'note') {
       setNoteDialogAlert(ids[0]);
       return;
@@ -371,10 +374,20 @@ export function AlertsListPage(): JSX.Element {
       setIncidentLinkDialogAlert(ids[0]);
       return;
     }
+    if (action === 'assign') {
+      if (alertTriageFixtureMode) {
+        setSelectedRows(ids.map((id) => ({ id } as AlertQueueRecord)));
+        setActiveAction(action);
+        return;
+      }
+      if (!canAssign) return;
+      setAssignmentDialogIds(ids);
+      return;
+    }
 
     setSelectedRows(ids.map((id) => ({ id } as AlertQueueRecord)));
     setActiveAction(action);
-  }, [canTriage]);
+  }, [canAssign, canTriage]);
 
   const activeColumns = useMemo<ColDef<AlertQueueRecord>[]>(() => createAlertTriageColumns(
     (action: AlertRowQuickAction, alertId: string) => openActionForIds(action, [alertId]),
@@ -598,7 +611,10 @@ export function AlertsListPage(): JSX.Element {
       if (node?.data) { event.preventDefault(); node.setSelected(!node.isSelected()); }
       return;
     }
-    if (event.key.toLowerCase() === 'a' && selectedRows.length) { event.preventDefault(); requestAction('assign'); }
+    if (event.key.toLowerCase() === 'a' && selectedRows.length && (alertTriageFixtureMode || canAssign)) {
+      event.preventDefault();
+      requestAction('assign');
+    }
     if (event.key.toLowerCase() === 'c' && selectedRows.length) { event.preventDefault(); requestAction('true_positive'); }
   };
 
@@ -801,7 +817,14 @@ export function AlertsListPage(): JSX.Element {
                   <button type="button" onClick={() => requestAction('acknowledge')} disabled={!canTriage}><CircleDot size={14} />Acknowledge</button>
                   <button type="button" onClick={() => requestAction('true_positive')} disabled={!canTriage}><ShieldAlert size={14} />True positive</button>
                   <button type="button" onClick={() => requestAction('false_positive')} disabled={!canTriage}><CheckCircle2 size={14} />False positive</button>
-                  <button type="button" onClick={() => requestAction('assign')} disabled={!canTriage}><UserRound size={14} />Assign</button>
+                  <button
+                    type="button"
+                    onClick={() => requestAction('assign')}
+                    disabled={!(alertTriageFixtureMode || canAssign)}
+                    title={!(alertTriageFixtureMode || canAssign) ? 'Required permission: SOC Manager' : undefined}
+                  >
+                    <UserRound size={14} />Assign
+                  </button>
                   <button type="button" onClick={() => requestAction('tag')} disabled={!canTriage}><Tag size={14} />Tag</button>
                   <button type="button" onClick={() => requestAction('promote')} disabled={!canTriage}><Radar size={14} />Promote</button>
                 </div>
@@ -855,12 +878,29 @@ export function AlertsListPage(): JSX.Element {
       {tagDialogAlert && (
         <TagDialog
           alertId={tagDialogAlert}
-          currentTags={[]}
+          currentTags={
+            selectedRows.find((row) => row.id === tagDialogAlert)?.tags
+              ?? queryClient.getQueryData<AlertTriageDetail>(['alert', 'triage', tagDialogAlert])?.tags
+              ?? []
+          }
           onSuccess={() => {
             setTagDialogAlert(null);
-            queryClient.invalidateQueries({ queryKey: ['alert'] });
+            refreshQueue();
+            void queryClient.invalidateQueries({ queryKey: ['alert'] });
           }}
           onCancel={() => setTagDialogAlert(null)}
+        />
+      )}
+
+      {assignmentDialogIds && (
+        <AssignmentDialog
+          alertIds={assignmentDialogIds}
+          onSuccess={() => {
+            setAssignmentDialogIds(null);
+            refreshQueue();
+            void queryClient.invalidateQueries({ queryKey: ['alert'] });
+          }}
+          onCancel={() => setAssignmentDialogIds(null)}
         />
       )}
 

@@ -10,6 +10,7 @@ import type { ApiLifecycleEntry, GovernanceAuditEvent, GovernanceChangeRequest, 
 
 import { StatusDock } from '@/components/status-dock';
 import { useEpsStream } from '@/hooks/useEpsStream';
+import { downloadAuditLogExport } from '@/services/auditLog.service';
 import { useAuthStore } from '@/store/auth.store';
 
 const viewRoutes:Record<GovernanceView,string>={audit:'/admin/audit',retention:'/admin/retention',configuration:'/admin/settings',changes:'/admin/audit?view=changes',lifecycle:'/admin/audit?view=lifecycle'};
@@ -58,8 +59,87 @@ function LifecycleDetail({value}:{value:ApiLifecycleEntry}):JSX.Element{return <
 function DetailHero({icon,title,subtitle,state}:{icon:JSX.Element;title:string;subtitle:string;state:string}):JSX.Element{return <section className="gov-detail-hero"><span>{icon}</span><div><strong>{title}</strong><small>{subtitle}</small></div><StateBadge state={state}/></section>}
 function DetailCard({title,rows}:{title:string;rows:readonly (readonly [string,string])[]}):JSX.Element{return <section className="gov-card"><h3>{title}</h3><dl>{rows.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></section>}
 
-function GovernanceDialog({kind,fixture,onClose}:{kind:'retention'|'configuration'|'export';fixture:boolean;onClose:()=>void}):JSX.Element{const dialogRef=useRef<HTMLElement>(null);const content=kind==='retention'?{eyebrow:'DATA LIFECYCLE',title:'Propose a retention revision',description:'Stage a versioned policy change with impact, exception and rollback context.',steps:['Define','Impact','Holds','Approve','Schedule'],fields:[['Data class','Select a governed data class'],['Requested retention','365 days'],['Business reason','Regulatory or operational requirement'],['Effective scope','Authorized tenant or platform']] }:kind==='configuration'?{eyebrow:'PLATFORM CHANGE',title:'Propose a configuration change',description:'Create a reviewed change without exposing secret material or applying it directly.',steps:['Select','Diff','Validate','Approve','Roll out'],fields:[['Configuration group','Security policy'],['Setting','Select a setting'],['Requested value','Enter proposed value'],['Change reason','Operational justification']] }:{eyebrow:'AUDIT EVIDENCE',title:'Export audit evidence',description:'Define a bounded, redacted export job with purpose and retention.',steps:['Scope','Fields','Redact','Generate','Retrieve'],fields:[['Time range','Last 24 hours'],['Tenant scope','All authorized tenants'],['Evidence purpose','Audit or investigation reference'],['Output format','JSONL + manifest']]};useEffect(()=>{dialogRef.current?.querySelector<HTMLElement>('button, select, input')?.focus();},[]);const containFocus=(event:React.KeyboardEvent<HTMLElement>):void=>{if(event.key==='Escape'){event.preventDefault();onClose();return;}if(event.key!=='Tab')return;const focusable=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), select:not(:disabled), input:not(:disabled), [tabindex]:not([tabindex="-1"])'));if(!focusable.length)return;const first=focusable[0];const last=focusable[focusable.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}};return <div className="gov-dialog-backdrop" role="presentation"><section ref={dialogRef} className="gov-dialog" role="dialog" aria-modal="true" aria-labelledby="gov-dialog-title" onKeyDown={containFocus}><header><div><span>{content.eyebrow}</span><h2 id="gov-dialog-title">{content.title}</h2></div><button className="gov-icon-button" type="button" onClick={onClose} aria-label="Close workflow"><X size={14}/></button></header><div className="gov-dialog__body"><p>{content.description}</p><div className="gov-stepper">{content.steps.map((step,index)=><span key={step} data-active={index===0||undefined}>{step}</span>)}</div><div className="gov-form-grid">{content.fields.map(([label,placeholder],index)=><label className={index>1?'gov-field gov-field--wide':'gov-field'} key={label}><span>{label}</span>{index<2?<select defaultValue=""><option value="" disabled>{placeholder}</option></select>:<input placeholder={placeholder}/>}</label>)}</div><section className="gov-notice"><ShieldCheck/><span>{fixture?'Visual fixture only. No policy, setting or export job will be created.':'The authoritative version, preview, approval and job contract is incomplete; submission remains disabled.'}</span></section></div><footer><button className="gov-button" type="button" onClick={onClose}>Cancel</button><button className="gov-button gov-button--primary" type="button" disabled>Continue to {content.steps[1].toLowerCase()}</button></footer></section></div>}
-
+function GovernanceDialog({kind,fixture,onClose}:{kind:'retention'|'configuration'|'export';fixture:boolean;onClose:()=>void}):JSX.Element{
+  const dialogRef=useRef<HTMLElement>(null);
+  const [exportBusy,setExportBusy]=useState(false);
+  const [exportError,setExportError]=useState<string|null>(null);
+  const content=kind==='retention'?{eyebrow:'DATA LIFECYCLE',title:'Propose a retention revision',description:'Stage a versioned policy change with impact, exception and rollback context.',steps:['Define','Impact','Holds','Approve','Schedule'],fields:[['Data class','Select a governed data class'],['Requested retention','365 days'],['Business reason','Regulatory or operational requirement'],['Effective scope','Authorized tenant or platform']] as const}:kind==='configuration'?{eyebrow:'PLATFORM CHANGE',title:'Propose a configuration change',description:'Create a reviewed change without exposing secret material or applying it directly.',steps:['Select','Diff','Validate','Approve','Roll out'],fields:[['Configuration group','Security policy'],['Setting','Select a setting'],['Requested value','Enter proposed value'],['Change reason','Operational justification']] as const}:{eyebrow:'AUDIT EVIDENCE',title:'Export audit evidence',description:'Download a bounded NDJSON projection via GET /api/ha-audit-log/export. Payload and secret fields are omitted.',steps:['Scope','Fields','Redact','Generate','Retrieve'],fields:[['Time range','Last 24 hours'],['Tenant scope','All authorized tenants'],['Evidence purpose','Audit or investigation reference'],['Output format','NDJSON (safe fields)']] as const};
+  useEffect(()=>{dialogRef.current?.querySelector<HTMLElement>('button, select, input')?.focus();},[]);
+  const containFocus=(event:React.KeyboardEvent<HTMLElement>):void=>{
+    if(event.key==='Escape'){event.preventDefault();onClose();return;}
+    if(event.key!=='Tab')return;
+    const focusable=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), select:not(:disabled), input:not(:disabled), [tabindex]:not([tabindex="-1"])'));
+    if(!focusable.length)return;
+    const first=focusable[0];
+    const last=focusable[focusable.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+  };
+  const primaryLabel=kind==='export'?(exportBusy?'Downloading…':'Download NDJSON'):`Continue to ${content.steps[1].toLowerCase()}`;
+  const primaryDisabled=kind==='export'?fixture||exportBusy:true;
+  const onPrimary=async():Promise<void>=>{
+    if(kind!=='export'||fixture||exportBusy)return;
+    setExportError(null);
+    setExportBusy(true);
+    try{
+      await downloadAuditLogExport();
+      onClose();
+    }catch(err){
+      setExportError(err instanceof Error?err.message:'Audit export failed.');
+    }finally{
+      setExportBusy(false);
+    }
+  };
+  const notice=fixture
+    ?'Visual fixture only. No policy, setting or export job will be created.'
+    :kind==='export'
+      ?'Live download uses GET /api/ha-audit-log/export (Platform Administrator). Payload is never included.'
+      :'The authoritative version, preview, approval and job contract is incomplete; submission remains disabled.';
+  return (
+    <div className="gov-dialog-backdrop" role="presentation">
+      <section ref={dialogRef} className="gov-dialog" role="dialog" aria-modal="true" aria-labelledby="gov-dialog-title" onKeyDown={containFocus}>
+        <header>
+          <div>
+            <span>{content.eyebrow}</span>
+            <h2 id="gov-dialog-title">{content.title}</h2>
+          </div>
+          <button className="gov-icon-button" type="button" onClick={onClose} aria-label="Close workflow"><X size={14}/></button>
+        </header>
+        <div className="gov-dialog__body">
+          <p>{content.description}</p>
+          <div className="gov-stepper">
+            {content.steps.map((step,index)=>(
+              <span key={step} data-active={index===0||undefined}>{step}</span>
+            ))}
+          </div>
+          <div className="gov-form-grid">
+            {content.fields.map(([label,placeholder],index)=>(
+              <label className={index > 1 ? 'gov-field gov-field--wide' : 'gov-field'} key={label}>
+                <span>{label}</span>
+                {index < 2 ? (
+                  <select defaultValue="" disabled={kind==='export'}>
+                    <option value="" disabled>{placeholder}</option>
+                  </select>
+                ) : (
+                  <input placeholder={placeholder} disabled={kind==='export'}/>
+                )}
+              </label>
+            ))}
+          </div>
+          <section className="gov-notice">
+            <ShieldCheck/>
+            <span>{notice}</span>
+          </section>
+          {exportError ? <p className="gov-detail-copy" role="alert">{exportError}</p> : null}
+        </div>
+        <footer>
+          <button className="gov-button" type="button" onClick={onClose}>Cancel</button>
+          <button className="gov-button gov-button--primary" type="button" disabled={primaryDisabled} onClick={()=>{void onPrimary();}}>{primaryLabel}</button>
+        </footer>
+      </section>
+    </div>
+  );
+}
 function StateBadge({state}:{state:string}):JSX.Element{return <span className="gov-state" data-state={state}><i/>{words(state)}</span>}
 function RiskBadge({risk}:{risk:string}):JSX.Element{return <span className="gov-risk" data-risk={risk}>{words(risk)}</span>}
 function ContractState({icon,title,detail}:{icon:JSX.Element;title:string;detail:string}):JSX.Element{return <div className="gov-contract-state">{icon}<strong>{title}</strong><span>{detail}</span><small><LockKeyhole size={11}/>No browser-inferred governance</small></div>}

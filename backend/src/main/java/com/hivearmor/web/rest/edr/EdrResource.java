@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,15 @@ import java.util.Map;
 public class EdrResource {
 
     private static final String CLASSNAME = "EdrResource";
+    /** Inventory / event reads — match HaEdrResource breadth. */
+    private static final String READ_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN', 'ROLE_SOC_MANAGER', 'ROLE_ANALYST', 'ROLE_USER')";
+    /**
+     * Containment and rule mutations — Admin / SOC Manager.
+     * (HaEdr quarantine mutates also allow ROLE_ANALYST; legacy /api/edr stay stricter.)
+     */
+    private static final String MUTATE_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN', 'ROLE_SOC_MANAGER')";
     private final Logger log = LoggerFactory.getLogger(EdrResource.class);
     private final EdrService edrService;
     private final ApplicationEventService eventService;
@@ -35,6 +45,7 @@ public class EdrResource {
     // ---- Rules ----
 
     @GetMapping("/rules")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<EdrRuleDTO>> listRules() {
         final String ctx = CLASSNAME + ".listRules";
         try {
@@ -48,6 +59,7 @@ public class EdrResource {
     }
 
     @GetMapping("/rules/{id}")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<EdrRuleDTO> getRule(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".getRule";
         try {
@@ -63,6 +75,7 @@ public class EdrResource {
     }
 
     @PostMapping("/rules")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<EdrRuleDTO> createRule(@RequestBody EdrRuleDTO dto) {
         final String ctx = CLASSNAME + ".createRule";
         try {
@@ -77,6 +90,7 @@ public class EdrResource {
     }
 
     @PutMapping("/rules/{id}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<EdrRuleDTO> updateRule(@PathVariable Long id, @RequestBody EdrRuleDTO dto) {
         final String ctx = CLASSNAME + ".updateRule";
         try {
@@ -92,6 +106,7 @@ public class EdrResource {
     }
 
     @DeleteMapping("/rules/{id}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> deleteRule(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".deleteRule";
         try {
@@ -108,6 +123,7 @@ public class EdrResource {
     // ---- Events ----
 
     @GetMapping("/events")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<EdrEventDTO>> queryEvents(
             @RequestParam(required = false) String agentId,
             @RequestParam(required = false) String eventType,
@@ -149,6 +165,7 @@ public class EdrResource {
 
     @Deprecated(since = "2026-08-11", forRemoval = true)
     @GetMapping("/quarantine")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<EdrQuarantineDTO>> listQuarantine(
             @RequestParam(required = false) String agentId,
             @RequestParam(required = false) String status,
@@ -170,6 +187,7 @@ public class EdrResource {
 
     @Deprecated(since = "2026-08-11", forRemoval = true)
     @PostMapping("/quarantine")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<EdrQuarantineDTO> quarantineFile(@RequestBody EdrQuarantineDTO dto) {
         final String ctx = CLASSNAME + ".quarantineFile";
         try {
@@ -185,6 +203,7 @@ public class EdrResource {
 
     @Deprecated(since = "2026-08-11", forRemoval = true)
     @PostMapping("/quarantine/{id}/restore")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<EdrQuarantineDTO> restoreFile(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".restoreFile";
         try {
@@ -204,6 +223,7 @@ public class EdrResource {
 
     @Deprecated(since = "2026-08-11", forRemoval = true)
     @GetMapping("/isolation")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<EdrIsolationDTO>> listIsolations(
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
@@ -224,6 +244,7 @@ public class EdrResource {
 
     @Deprecated(since = "2026-08-11", forRemoval = true)
     @PostMapping("/isolation")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<EdrIsolationDTO> isolateAgent(@RequestBody EdrIsolationDTO dto) {
         final String ctx = CLASSNAME + ".isolateAgent";
         try {
@@ -241,6 +262,7 @@ public class EdrResource {
 
     @Deprecated(since = "2026-08-11", forRemoval = true)
     @PostMapping("/isolation/{id}/lift")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<EdrIsolationDTO> liftIsolation(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".liftIsolation";
         try {
@@ -259,6 +281,7 @@ public class EdrResource {
     // ---- Response actions ----
 
     @PostMapping("/actions/kill-process")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Map<String, String>> killProcess(@RequestBody Map<String, Object> body) {
         final String ctx = CLASSNAME + ".killProcess";
         try {

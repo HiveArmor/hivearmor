@@ -26,6 +26,8 @@ export interface DashboardPanel {
   queryLabel: string;
   source: string;
   state: DashboardPanelState;
+  /** Present when the panel maps to a stored visualization that `/ha-visualizations/run` can execute. */
+  visualizationId?: number;
   updatedAt?: string;
   drilldown?: string;
   position: { x: number; y: number; w: number; h: number };

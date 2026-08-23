@@ -6,7 +6,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from 'react';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Binary,
@@ -53,6 +53,7 @@ import type { LucideIcon } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import {
+  enrichAlertWithAi,
   fetchAlertActivity,
   fetchAlertEventDetail,
   fetchAlertGuide,
@@ -82,7 +83,9 @@ import { useInvestigationStream } from './hooks/useInvestigationStream';
 
 import { ErrorState } from '@/components/error-state/ErrorState';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
+import { useToastStore } from '@/components/toast-stack/toastStore';
 import { foundationAlertInvestigation } from '@/pages/alerts/alertInvestigation.fixtures';
+import { useAuthStore } from '@/store/auth.store';
 
 import './AlertInvestigationPage.css';
 
@@ -478,6 +481,8 @@ function AlertInvestigationSkeleton(): JSX.Element {
 export function AlertInvestigationPage(): JSX.Element {
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const addToast = useToastStore((state) => state.addToast);
+  const canAskHive = useAuthStore((state) => state.hasAnyRole(['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']));
   const [workspaceTab, setWorkspaceTab] = useState<WorkspaceTab>('board');
   const [evidenceTab, setEvidenceTab] = useState<EvidenceTab>('network');
   const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
@@ -489,6 +494,26 @@ export function AlertInvestigationPage(): JSX.Element {
   const [fixtureActionResult, setFixtureActionResult] = useState<string | null>(null);
   const [activityCursor, setActivityCursor] = useState<string | undefined>(undefined);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+
+  const enrichMutation = useMutation({
+    mutationFn: () => enrichAlertWithAi(id),
+    onSuccess: (result) => {
+      setAiSummary(result.summary);
+      addToast({
+        variant: 'success',
+        title: 'Hive enrichment ready',
+        description: result.summary.slice(0, 180) || 'Enrichment completed.',
+      });
+    },
+    onError: (error: Error) => {
+      addToast({
+        variant: 'danger',
+        title: 'Ask Hive failed',
+        description: error.message,
+      });
+    },
+  });
 
   const investigationQuery = useQuery({
     queryKey: ['alert-investigation', id],
@@ -811,8 +836,20 @@ export function AlertInvestigationPage(): JSX.Element {
             <button className="alert-command-button" type="button" onClick={() => setGuideOpen((open) => !open)}>
               <BookOpenCheck size={15} aria-hidden="true" /> Guide
             </button>
-            <button className="alert-command-button" type="button" disabled title="AI analysis contract will be connected in backend stitching">
-              <Bot size={15} aria-hidden="true" /> Ask Hive
+            <button
+              className="alert-command-button"
+              type="button"
+              disabled={!canAskHive || enrichMutation.isPending || !id}
+              title={canAskHive ? 'Enrich this alert with Hive Intelligence' : 'Required permission: Analyst'}
+              onClick={() => {
+                if (fixtureMode) {
+                  setAiSummary('Fixture mode: Ask Hive is simulated and no model was called.');
+                  return;
+                }
+                enrichMutation.mutate();
+              }}
+            >
+              <Bot size={15} aria-hidden="true" /> {enrichMutation.isPending ? 'Asking…' : 'Ask Hive'}
             </button>
             {primaryAction && (
               <button
@@ -837,6 +874,17 @@ export function AlertInvestigationPage(): JSX.Element {
           <Metric label="Detected" value={formatDateTime(investigation.occurredAt)} />
           <Metric label="SLA" value={investigation.slaDeadline ? formatDateTime(investigation.slaDeadline) : 'Not set'} />
         </div>
+
+        {aiSummary && (
+          <section className="investigation-guide" aria-label="Ask Hive enrichment">
+            <div>
+              <Bot size={17} aria-hidden="true" />
+              <div><strong>Ask Hive</strong><span>SOC AI enrichment</span></div>
+            </div>
+            <p style={{ margin: 0, color: 'var(--ha-text-secondary)', font: 'var(--ha-type-compact)' }}>{aiSummary}</p>
+            <button className="alert-icon-button" type="button" onClick={() => setAiSummary(null)} aria-label="Dismiss Ask Hive result"><X size={15} /></button>
+          </section>
+        )}
 
         {guideOpen && (
           <section className="investigation-guide" aria-label="Investigation guide">
@@ -1400,7 +1448,7 @@ export function AlertInvestigationPage(): JSX.Element {
           onConfirm={() => {
             setFixtureActionResult(fixtureMode
               ? `${pendingAction.label} simulated; no endpoint or asset was changed.`
-              : 'Response execution is unavailable until contract ALT-010 is implemented.');
+              : 'Open History & response to run governed response actions.');
             setPendingAction(null);
           }}
         />

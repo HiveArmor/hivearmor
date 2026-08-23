@@ -38,7 +38,10 @@ func (p *program) run() {
 		utils.Logger.Fatal("error getting config: %v", err)
 	}
 
-	db := database.GetDB()
+	db, err := database.GetDB()
+	if err != nil {
+		utils.Logger.Fatal("error opening log spool database: %v", err)
+	}
 	err = db.Migrate(models.Log{})
 	if err != nil {
 		utils.Logger.ErrorF("error migrating logs table: %v", err)
@@ -52,7 +55,10 @@ func (p *program) run() {
 
 	go pb.StartPing(cnf, ctx)
 
-	logProcessor := logservice.GetLogProcessor()
+	logProcessor, err := logservice.GetLogProcessor()
+	if err != nil {
+		utils.Logger.Fatal("error initializing log processor: %v", err)
+	}
 	go logProcessor.ProcessLogs(cnf, ctx)
 
 	// Start HiveArmor log collector

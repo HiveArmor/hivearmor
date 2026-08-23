@@ -25,7 +25,8 @@ vi.mock('./alertTriage.service', async (importOriginal) => {
   const fixtures = await import('./alertTriage.fixtures');
   return {
     ...actual,
-    alertTriageFixtureMode: true,
+    // Fixture-off drawer behavior: live action gating against real contracts.
+    alertTriageFixtureMode: false,
     fetchAlertTriageDetail: vi.fn((id: string) => Promise.resolve(fixtures.getFoundationAlertDetail(id))),
   };
 });
@@ -150,6 +151,36 @@ describe('Alert triage drawer experience', () => {
     fireEvent.click(getByRole('tab', { name: 'Response' }));
     fireEvent.click(getByRole('button', { name: /Acknowledge and review/ }));
     expect(onRequestAction).toHaveBeenCalledWith('acknowledge', ['ALT-7F3A91']);
+  });
+
+  it('enables tag and gates assign by SOC Manager permission when fixtures are off', async () => {
+    const onRequestAction = vi.fn();
+    const authStore = await import('@/store/auth.store');
+    authStore.useAuthStore.setState({
+      user: {
+        id: 7,
+        login: 'analyst',
+        firstName: 'Ana',
+        lastName: 'Lyst',
+        email: 'ana@example.test',
+        roles: ['ROLE_ANALYST'],
+        langKey: 'en',
+      },
+      isAuthenticated: true,
+    });
+
+    const { findByRole, getByRole } = renderDrawer(onRequestAction);
+    expect(await findByRole('heading', { name: /Signed utility spawned/ })).toBeInTheDocument();
+
+    fireEvent.click(getByRole('tab', { name: 'Response' }));
+    const tagButton = getByRole('button', { name: /Add triage tags/ });
+    expect(tagButton).not.toBeDisabled();
+    fireEvent.click(tagButton);
+    expect(onRequestAction).toHaveBeenCalledWith('tag', ['ALT-7F3A91']);
+
+    const assignButton = getByRole('button', { name: /Assign owner/ });
+    expect(assignButton).toBeDisabled();
+    expect(assignButton).toHaveAttribute('title', 'Required permission: SOC Manager');
   });
 
   it('has no serious or critical WCAG violations in the default triage view', async () => {

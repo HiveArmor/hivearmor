@@ -74,6 +74,11 @@ describe('IncidentDetailPage service', () => {
     expect(typeof updateIncidentDetail).toBe('function');
   });
 
+  it('should export updateEvidenceItem against the nested evidence-items contract', async () => {
+    const { updateEvidenceItem } = await import('./incidentDetail.service');
+    expect(typeof updateEvidenceItem).toBe('function');
+  });
+
   it('should export closeIncident function', async () => {
     const { closeIncident } = await import('./incidentDetail.service');
     expect(typeof closeIncident).toBe('function');

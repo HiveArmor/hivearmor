@@ -52,7 +52,7 @@ async function listLive(signal?:AbortSignal):Promise<GovernanceInventory>{
     auditResult.status==='rejected'?'Audit ledger unavailable':'',
     retentionResult.status==='rejected'?'Retention inventory unavailable':'',
     settingsResult.status==='rejected'?'Secret-safe platform settings unavailable':'',
-    'Audit totals, integrity proofs, tenant scope, correlation IDs and export jobs are not returned by the current list contract',
+    'Audit totals, integrity proofs, tenant scope and correlation IDs are not returned by the current list contract; NDJSON export is available at GET /api/ha-audit-log/export',
     'Legal holds, effective index lifecycle state, volume impact and exception workflows are not exposed',
     'Configuration preview, versioned change requests, approvals, rollout, rollback, drift and API lifecycle inventory are not exposed',
   ].filter(Boolean);

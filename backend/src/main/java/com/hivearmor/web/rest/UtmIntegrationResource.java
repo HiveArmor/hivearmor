@@ -1,6 +1,7 @@
 package com.hivearmor.web.rest;
 
 import com.hivearmor.domain.UtmIntegration;
+import com.hivearmor.security.AuthoritiesConstants;
 import com.hivearmor.service.UtmIntegrationQueryService;
 import com.hivearmor.service.UtmIntegrationService;
 import com.hivearmor.service.dto.UtmIntegrationCriteria;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import tech.jhipster.web.util.ResponseUtil;
 
@@ -49,6 +51,7 @@ public class UtmIntegrationResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping("/ha-integrations")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<UtmIntegration> createUtmIntegration(@RequestBody UtmIntegration utmIntegration) throws URISyntaxException {
         log.debug("REST request to save UtmIntegration : {}", utmIntegration);
         if (utmIntegration.getId() != null) {
@@ -70,6 +73,7 @@ public class UtmIntegrationResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping("/ha-integrations")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<UtmIntegration> updateUtmIntegration(@RequestBody UtmIntegration utmIntegration) throws URISyntaxException {
         log.debug("REST request to update UtmIntegration : {}", utmIntegration);
         if (utmIntegration.getId() == null) {
@@ -128,6 +132,7 @@ public class UtmIntegrationResource {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping("/ha-integrations/{id}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Void> deleteUtmIntegration(@PathVariable Long id) {
         log.debug("REST request to delete UtmIntegration : {}", id);
         utmIntegrationService.delete(id);

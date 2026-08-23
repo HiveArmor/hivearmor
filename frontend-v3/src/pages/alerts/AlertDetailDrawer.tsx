@@ -31,6 +31,7 @@ import { alertTriageFixtureMode, fetchAlertTriageDetail } from './alertTriage.se
 import type { AlertTriageAction, AlertTriageDetail } from './alertTriage.types';
 
 import { getSeverityLabel, numericToSeverityLevel } from '@/lib/severity';
+import { useAuthStore } from '@/store/auth.store';
 
 export interface AlertDetailDrawerProps {
   alertId: string | null;
@@ -210,6 +211,8 @@ function HistoryView({ alert }: { alert: AlertTriageDetail }): JSX.Element {
 }
 
 function ResponseView({ alert, onRequestAction }: { alert: AlertTriageDetail; onRequestAction?: AlertDetailDrawerProps['onRequestAction'] }): JSX.Element {
+  const canAssign = useAuthStore((state) => state.hasAnyRole(['ROLE_SOC_MANAGER', 'ROLE_ADMIN']));
+  const assignEnabled = Boolean(onRequestAction) && (alertTriageFixtureMode || canAssign);
   const request = (action: AlertTriageAction): void => onRequestAction?.(action, [alert.id]);
   return (
     <div className="alert-drawer-view">
@@ -220,8 +223,22 @@ function ResponseView({ alert, onRequestAction }: { alert: AlertTriageDetail; on
           <button type="button" onClick={() => request('acknowledge')} disabled={!onRequestAction || alert.statusCode >= 5}><ClipboardCheck size={15} aria-hidden="true" /><span><strong>Acknowledge and review</strong><small>Move this alert into active investigation.</small></span></button>
           <button type="button" onClick={() => request('true_positive')} disabled={!onRequestAction || alert.statusCode >= 5}><ShieldAlert size={15} aria-hidden="true" /><span><strong>Classify true positive</strong><small>Record a verified security outcome.</small></span></button>
           <button type="button" onClick={() => request('false_positive')} disabled={!onRequestAction || alert.statusCode >= 5}><CheckCircle2 size={15} aria-hidden="true" /><span><strong>Classify false positive</strong><small>Requires reason and detection feedback.</small></span></button>
-          <button type="button" onClick={() => request('assign')} disabled={!alertTriageFixtureMode || !onRequestAction} title={!alertTriageFixtureMode ? 'Requires backend contract ALT-017' : undefined}><UserRound size={15} aria-hidden="true" /><span><strong>Assign owner</strong><small>{alertTriageFixtureMode ? 'Preview analyst workload and eligibility.' : 'Backend contract ALT-017 required.'}</small></span></button>
-          <button type="button" onClick={() => request('tag')} disabled={!alertTriageFixtureMode || !onRequestAction} title={!alertTriageFixtureMode ? 'Requires aligned tags contract ALT-018' : undefined}><Tag size={15} aria-hidden="true" /><span><strong>Add triage tags</strong><small>{alertTriageFixtureMode ? 'Apply consistent classification labels.' : 'Aligned tags contract ALT-018 required.'}</small></span></button>
+          <button
+            type="button"
+            onClick={() => request('assign')}
+            disabled={!assignEnabled}
+            title={!assignEnabled && !alertTriageFixtureMode ? 'Required permission: SOC Manager' : undefined}
+          >
+            <UserRound size={15} aria-hidden="true" />
+            <span>
+              <strong>Assign owner</strong>
+              <small>{assignEnabled ? 'Preview analyst workload and eligibility.' : 'Required permission: SOC Manager'}</small>
+            </span>
+          </button>
+          <button type="button" onClick={() => request('tag')} disabled={!onRequestAction}>
+            <Tag size={15} aria-hidden="true" />
+            <span><strong>Add triage tags</strong><small>Apply consistent classification labels.</small></span>
+          </button>
         </div>
       </section>
     </div>

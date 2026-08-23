@@ -1,15 +1,23 @@
 import { useMemo, useState } from 'react';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AlertTriangle, CheckCircle2, ChevronRight, Database,
   Filter, Gauge, History, RefreshCw, Search, TimerReset, X,
 } from 'lucide-react';
 
-import { fetchRuleExecutions } from './detectionRules.service';
+import {
+  DET_009_ALERT_PIVOT,
+  DET_009_ALERT_PIVOT_DISABLED_TITLE,
+  DET_009_EXECUTIONS,
+  DET_009_GAP_FILL,
+  DET_009_GAP_FILL_DISABLED_TITLE,
+} from './detectionRules.capabilities';
+import { fetchRuleExecutions, triggerDetectionGapFill } from './detectionRules.service';
 import type { DetectionExecution, DetectionExecutionStatus, DetectionRule } from './detectionRules.types';
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
+import { useAuthStore } from '@/store/auth.store';
 
 interface DetectionMonitoringViewProps {
   rules: DetectionRule[];
@@ -44,16 +52,30 @@ function statusLabel(status: DetectionExecutionStatus): string {
   return status === 'succeeded' ? 'Succeeded' : status === 'warning' ? 'Warning' : status === 'failed' ? 'Failed' : 'Running';
 }
 
+function gapWindow(execution: DetectionExecution): { from: string; to: string } | null {
+  if (!execution.startedAt || execution.gapDurationMinutes == null) return null;
+  const to = new Date(execution.startedAt);
+  if (Number.isNaN(to.getTime())) return null;
+  const from = new Date(to.getTime() - execution.gapDurationMinutes * 60_000);
+  return { from: from.toISOString(), to: to.toISOString() };
+}
+
 export function DetectionMonitoringView({ rules, onOpenRule }: DetectionMonitoringViewProps): JSX.Element {
+  const queryClient = useQueryClient();
+  const roles = useAuthStore((state) => state.user?.roles ?? []);
+  const canGapFill = roles.some((role) => role === 'ROLE_ADMIN' || role === 'ROLE_SOC_MANAGER');
   const [range, setRange] = useState('24h');
   const [status, setStatus] = useState<'all' | DetectionExecutionStatus>('all');
   const [onlyGaps, setOnlyGaps] = useState(false);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<DetectionExecution | null>(null);
+  const [gapMessage, setGapMessage] = useState<string | null>(null);
+  const [gapFilling, setGapFilling] = useState(false);
 
   const executionsQuery = useQuery({
     queryKey: ['detection-rule-executions', range],
     queryFn: ({ signal }) => fetchRuleExecutions(signal),
+    enabled: DET_009_EXECUTIONS,
     staleTime: 30_000,
     gcTime: 5 * 60_000,
   });
@@ -72,6 +94,27 @@ export function DetectionMonitoringView({ rules, onOpenRule }: DetectionMonitori
   const durations = allExecutions.map((run) => run.durationMs).filter((value): value is number => value != null).sort((a, b) => a - b);
   const p95 = durations.length ? durations[Math.min(durations.length - 1, Math.floor(durations.length * .95))] : null;
   const selectedRule = selected ? rules.find((rule) => rule.id === selected.ruleId) : undefined;
+  const executionsAvailable = DET_009_EXECUTIONS && Boolean(executionsQuery.data?.available) && !executionsQuery.isError;
+
+  const runGapFill = async (): Promise<void> => {
+    if (!selected || !DET_009_GAP_FILL || !canGapFill) return;
+    const window = gapWindow(selected);
+    if (!window) {
+      setGapMessage('Gap window could not be derived from this execution.');
+      return;
+    }
+    setGapFilling(true);
+    setGapMessage(null);
+    try {
+      const result = await triggerDetectionGapFill(selected.ruleId, window.from, window.to);
+      setGapMessage(`Gap fill queued${result.executionId ? ` · ${result.executionId}` : ''}${result.gapsDetected != null ? ` · ${result.gapsDetected} window(s)` : ''}.`);
+      await queryClient.invalidateQueries({ queryKey: ['detection-rule-executions'] });
+    } catch (error) {
+      setGapMessage(error instanceof Error ? error.message : 'Gap fill could not be started.');
+    } finally {
+      setGapFilling(false);
+    }
+  };
 
   return (
     <section className="detection-monitoring" aria-label="Rule execution monitoring">
@@ -83,8 +126,11 @@ export function DetectionMonitoringView({ rules, onOpenRule }: DetectionMonitori
         <button type="button" className="detection-icon-button" aria-label="Refresh execution monitoring" onClick={() => void executionsQuery.refetch()}><RefreshCw size={15} className={executionsQuery.isFetching ? 'detection-spin' : ''} /></button>
       </div>
 
-      {!executionsQuery.data?.available && !executionsQuery.isLoading && (
-        <div className="detection-contract-warning" role="status"><AlertTriangle size={14} /><span><strong>Execution history unavailable.</strong> DET-009 is required for exact runs, phase timings, gaps, manual runs and safe gap repair. Inventory values are not presented as execution records.</span></div>
+      {!DET_009_EXECUTIONS && (
+        <div className="detection-contract-warning" role="status"><AlertTriangle size={14} /><span><strong>Execution history unavailable.</strong> DET-009 executions are not exposed by the backend. Inventory values are not presented as execution records.</span></div>
+      )}
+      {DET_009_EXECUTIONS && executionsQuery.isError && (
+        <div className="detection-contract-warning" role="alert"><AlertTriangle size={14} /><span><strong>Execution history request failed.</strong> {executionsQuery.error instanceof Error ? executionsQuery.error.message : 'The DET-009 executions endpoint did not respond.'}</span></div>
       )}
 
       <div className="detection-monitoring__kpis">
@@ -105,9 +151,9 @@ export function DetectionMonitoringView({ rules, onOpenRule }: DetectionMonitori
           {executionsQuery.isLoading ? <div className="detection-grid-loading" aria-label="Loading execution history">{Array.from({ length: 8 }, (_, index) => <span key={index} />)}</div> : executions.length ? (
             <table className="detection-monitoring__table">
               <thead><tr><th>Last run</th><th>Rule</th><th>Response</th><th>Run type</th><th>Duration</th><th>Events</th><th>Matches</th><th>Alerts</th><th>Gap</th><th><span className="sr-only">Open</span></th></tr></thead>
-              <tbody>{executions.map((run) => <tr key={run.id} data-selected={selected?.id === run.id} onClick={() => setSelected(run)}><td><time>{formatTime(run.startedAt)}</time></td><td><strong>{run.ruleName}</strong><small>{run.id}</small></td><td><span className="detection-execution-status" data-status={run.status}>{statusLabel(run.status)}</span></td><td>{run.runType}</td><td>{formatDuration(run.durationMs)}</td><td>{run.eventsScanned?.toLocaleString() ?? '—'}</td><td>{run.matches ?? '—'}</td><td>{run.alertsCreated ?? '—'}</td><td>{run.gapDurationMinutes == null ? '—' : `${run.gapDurationMinutes}m`}</td><td><button type="button" aria-label={`Open execution details for ${run.ruleName}`} onClick={(event) => { event.stopPropagation(); setSelected(run); }}><ChevronRight size={14} /></button></td></tr>)}</tbody>
+              <tbody>{executions.map((run) => <tr key={run.id} data-selected={selected?.id === run.id} onClick={() => { setSelected(run); setGapMessage(null); }}><td><time>{formatTime(run.startedAt)}</time></td><td><strong>{run.ruleName}</strong><small>{run.id}</small></td><td><span className="detection-execution-status" data-status={run.status}>{statusLabel(run.status)}</span></td><td>{run.runType}</td><td>{formatDuration(run.durationMs)}</td><td>{run.eventsScanned?.toLocaleString() ?? '—'}</td><td>{run.matches ?? '—'}</td><td>{run.alertsCreated ?? '—'}</td><td>{run.gapDurationMinutes == null ? '—' : `${run.gapDurationMinutes}m`}</td><td><button type="button" aria-label={`Open execution details for ${run.ruleName}`} onClick={(event) => { event.stopPropagation(); setSelected(run); setGapMessage(null); }}><ChevronRight size={14} /></button></td></tr>)}</tbody>
             </table>
-          ) : <div className="detection-state"><History size={30} /><h2>{executionsQuery.data?.available ? 'No executions match these filters' : 'Execution history is not connected'}</h2><p>{executionsQuery.data?.available ? 'Broaden the response or gap filters.' : 'The rule inventory remains usable while the execution-history contract is implemented.'}</p></div>}
+          ) : <div className="detection-state"><History size={30} /><h2>{executionsAvailable ? 'No executions match these filters' : 'Execution history is not connected'}</h2><p>{executionsAvailable ? 'Broaden the response or gap filters.' : 'The rule inventory remains usable while the DET-009 executions contract is reachable.'}</p></div>}
         </div>
 
         {selected && <aside className="detection-execution-detail" aria-label="Execution details">
@@ -115,8 +161,37 @@ export function DetectionMonitoringView({ rules, onOpenRule }: DetectionMonitori
           <div className="detection-execution-detail__status"><span className="detection-execution-status" data-status={selected.status}>{statusLabel(selected.status)}</span><span>{selected.runType}</span><time>{formatTime(selected.startedAt)}</time></div>
           <section><h3>Outcome</h3><p>{selected.message}</p><dl><div><dt>Events searched</dt><dd>{selected.eventsScanned?.toLocaleString() ?? 'Unavailable'}</dd></div><div><dt>Matches</dt><dd>{selected.matches ?? 'Unavailable'}</dd></div><div><dt>Alerts created</dt><dd>{selected.alertsCreated ?? 'Unavailable'}</dd></div><div><dt>Source completeness</dt><dd>{selected.sourceCoverage == null ? 'Unavailable' : `${selected.sourceCoverage}%`}</dd></div></dl></section>
           <section><h3>Execution phases</h3><div className="detection-execution-phases"><div><span>Search</span><i style={{ '--phase-width': `${selected.durationMs ? Math.round((selected.searchDurationMs ?? 0) / selected.durationMs * 100) : 0}%` } as React.CSSProperties} /><strong>{formatDuration(selected.searchDurationMs)}</strong></div><div><span>Alert indexing</span><i style={{ '--phase-width': `${selected.durationMs ? Math.round((selected.alertDurationMs ?? 0) / selected.durationMs * 100) : 0}%` } as React.CSSProperties} /><strong>{formatDuration(selected.alertDurationMs)}</strong></div><div><span>Total</span><i style={{ '--phase-width': '100%' } as React.CSSProperties} /><strong>{formatDuration(selected.durationMs)}</strong></div></div></section>
-          {selected.gapDurationMinutes != null && <section className="detection-execution-detail__gap"><h3><TimerReset size={13} /> Coverage gap</h3><p>{selected.gapDurationMinutes} minutes remain uncovered. Preview scope, expected executions and alert side effects before starting a fill.</p><button type="button" disabled title="Requires DET-009 preview and gap-fill contracts">Preview gap fill</button></section>}
-          <footer><button type="button" disabled title="Requires an execution-scoped alert pivot"><Database size={14} /> View generated alerts</button><button type="button" onClick={() => selectedRule && onOpenRule(selectedRule)} disabled={!selectedRule}>Open rule <ChevronRight size={14} /></button></footer>
+          {selected.gapDurationMinutes != null && (
+            <section className="detection-execution-detail__gap">
+              <h3><TimerReset size={13} /> Coverage gap</h3>
+              <p>{selected.gapDurationMinutes} minutes remain uncovered. Gap fill re-runs the rule for the missed window and may create alerts.</p>
+              <button
+                type="button"
+                disabled={!DET_009_GAP_FILL || !canGapFill || gapFilling}
+                title={
+                  !DET_009_GAP_FILL
+                    ? 'DET-009 gap-fill is not exposed by the backend'
+                    : !canGapFill
+                      ? DET_009_GAP_FILL_DISABLED_TITLE
+                      : 'Queue DET-009 gap-fill for the uncovered window'
+                }
+                onClick={() => void runGapFill()}
+              >
+                {gapFilling ? 'Queuing…' : 'Fill coverage gap'}
+              </button>
+              {gapMessage && <p role="status">{gapMessage}</p>}
+            </section>
+          )}
+          <footer>
+            <button
+              type="button"
+              disabled={!DET_009_ALERT_PIVOT}
+              title={DET_009_ALERT_PIVOT ? 'Open alerts from this execution' : DET_009_ALERT_PIVOT_DISABLED_TITLE}
+            >
+              <Database size={14} /> View generated alerts
+            </button>
+            <button type="button" onClick={() => selectedRule && onOpenRule(selectedRule)} disabled={!selectedRule}>Open rule <ChevronRight size={14} /></button>
+          </footer>
         </aside>}
       </div>
     </section>

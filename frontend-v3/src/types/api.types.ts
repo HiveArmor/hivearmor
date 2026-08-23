@@ -99,24 +99,35 @@ export interface OpenAlertCountResponse {
 
 // ===== Incidents =====
 
+/** Body for POST /api/ha-incidents — matches NewIncidentDTO (alerts required). */
 export interface CreateIncidentRequest {
-  title: string;
-  description?: string;
-  severity: SeverityLevel;
-  assigneeId?: number;
-  tenantId?: number;
+  incidentName: string;
+  incidentDescription?: string;
+  incidentAssignedTo?: string;
+  alertList: Array<{
+    alertId: string;
+    alertName: string;
+    alertStatus: number;
+    alertSeverity: number;
+  }>;
 }
 
+/** Body for POST /api/ha-incidents/add-alerts — matches AddToIncidentDTO. */
 export interface AddAlertsToIncidentRequest {
   incidentId: number;
-  alertIds: string[];
+  alertList: Array<{
+    alertId: string;
+    alertName: string;
+    alertStatus: number;
+    alertSeverity: number;
+  }>;
 }
 
+/** Body for PUT /api/ha-incidents/change-status — matches UtmIncident status fields. */
 export interface ChangeIncidentStatusRequest {
   id: number;
-  status: AlertStatus;
-  assigneeId?: number;
-  note?: string;
+  incidentStatus: 'OPEN' | 'IN_REVIEW' | 'COMPLETED' | 'MERGED';
+  incidentSolution?: string | null;
 }
 
 export interface UserRef {

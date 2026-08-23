@@ -18,12 +18,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.constraints.NotBlank;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -33,6 +36,19 @@ public class OffenseResource {
     private static final String CLASSNAME = "OffenseResource";
     private static final String OFFENSE_INDEX = "v3-hive-offense-*";
     private static final String ALERT_INDEX = "v3-hive-alert-*";
+
+    /** Mirrors {@code HaCorrelatedFindingsResource} status/authz for correlated findings. */
+    private static final String ALERT_QUEUE_AUTH =
+        "hasAuthority('ROLE_SOC_ANALYST') or hasAuthority('ROLE_SOC_MANAGER') " +
+        "or hasAuthority('ROLE_ANALYST') or hasAuthority('ROLE_ADMIN')";
+
+    /**
+     * Allowlisted offense statuses only. User input never enters the Painless source —
+     * scripts are compile-time constants keyed by this set.
+     */
+    private static final Set<String> ALLOWED_STATUSES = Set.of(
+        "open", "closed", "new", "reviewing", "confirmed", "dismissed", "promoted"
+    );
 
     private final Logger log = LoggerFactory.getLogger(OffenseResource.class);
     private final ElasticsearchService elasticsearchService;
@@ -117,21 +133,28 @@ public class OffenseResource {
 
     /**
      * PUT /api/offenses/{id}/status
-     * Body: {"status": "closed"}  — update the status field via updateByQuery.
+     * Body: {"status": "closed"} — update status via updateByQuery with a fixed script
+     * (allowlisted enum only; no string-built Painless from request input).
      */
     @PutMapping("/offenses/{id}/status")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
     public ResponseEntity<Void> updateOffenseStatus(
             @PathVariable @NotBlank String id,
             @RequestBody Map<String, String> body) {
         final String ctx = CLASSNAME + ".updateOffenseStatus";
         try {
-            String newStatus = body.get("status");
-            if (newStatus == null || newStatus.isBlank()) {
+            String rawStatus = body != null ? body.get("status") : null;
+            if (rawStatus == null || rawStatus.isBlank()) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            String status = rawStatus.trim().toLowerCase(Locale.ROOT);
+            String script = statusUpdateScript(status);
+            if (script == null) {
                 return ResponseEntity.badRequest().build();
             }
 
             Query query = Query.of(q -> q.ids(i -> i.values(id)));
-            String script = "ctx._source.status = '" + newStatus.replace("'", "\\'") + "'";
             elasticsearchService.updateByQuery(query, OFFENSE_INDEX, script);
 
             return ResponseEntity.ok().build();
@@ -141,6 +164,26 @@ public class OffenseResource {
             applicationEventService.createEvent(msg, ApplicationEventType.ERROR);
             return ResponseUtil.buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, msg);
         }
+    }
+
+    /**
+     * Returns a fixed Painless assignment for an allowlisted status, or {@code null}
+     * when the value is not permitted. Never interpolates request strings into script source.
+     */
+    private static String statusUpdateScript(String status) {
+        if (!ALLOWED_STATUSES.contains(status)) {
+            return null;
+        }
+        return switch (status) {
+            case "open" -> "ctx._source.status = 'open'";
+            case "closed" -> "ctx._source.status = 'closed'";
+            case "new" -> "ctx._source.status = 'new'";
+            case "reviewing" -> "ctx._source.status = 'reviewing'";
+            case "confirmed" -> "ctx._source.status = 'confirmed'";
+            case "dismissed" -> "ctx._source.status = 'dismissed'";
+            case "promoted" -> "ctx._source.status = 'promoted'";
+            default -> null;
+        };
     }
 
     /**

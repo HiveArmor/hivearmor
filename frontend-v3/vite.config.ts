@@ -174,6 +174,24 @@ export default defineConfig(({ command }) => ({
             : './src/pages/posture/assets/assets.fixture-disabled.ts'
         ),
       },
+      {
+        find: '@/pages/posture/active-directory/active-directory.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/pages/posture/active-directory/active-directory.fixtures.ts'
+            : './src/pages/posture/active-directory/active-directory.fixture-disabled.ts'
+        ),
+      },
+      {
+        find: '@/pages/posture/exposure/exposure.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/pages/posture/exposure/exposure.fixtures.ts'
+            : './src/pages/posture/exposure/exposure.fixture-disabled.ts'
+        ),
+      },
       { find: /^@\//, replacement: resolve(__dirname, './src') + '/' },
     ],
   },

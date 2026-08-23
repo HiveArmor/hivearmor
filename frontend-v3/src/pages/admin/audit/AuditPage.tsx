@@ -1,6 +1,6 @@
 /**
  * AuditPage.tsx — Audit Log viewer (ADM-07)
- * Read-only grid with server-side pagination, filters, and CSV export
+ * Read-only grid with server-side pagination, filters, and NDJSON export
  */
 
 import { useState } from 'react';
@@ -16,6 +16,7 @@ import { SiemPageHeader } from '@/components/ha-page-header/SiemPageHeader';
 import { LoadingState } from '@/components/loading-state/LoadingState';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { ApiError, apiClient } from '@/lib/apiClient';
+import { downloadAuditLogExport } from '@/services/auditLog.service';
 import { useAuthStore } from '@/store/auth.store';
 
 interface AuditLogDTO {
@@ -56,6 +57,8 @@ export function AuditPage(): JSX.Element {
     page: 0,
     size: 100,
   });
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['audit-log', filters],
@@ -66,13 +69,30 @@ export function AuditPage(): JSX.Element {
   const auditStatus = error instanceof ApiError ? error.status : null;
   const auditErrorMessage =
     auditStatus !== null
-      ? `GET /api/ha-audit-log returned HTTP ${String(auditStatus)}. The audit grid stays empty until that endpoint succeeds. CSV export is not available — GET /api/ha-audit-log/export does not exist.`
+      ? `GET /api/ha-audit-log returned HTTP ${String(auditStatus)}. The audit grid stays empty until that endpoint succeeds.`
       : error instanceof Error
         ? error.message
         : 'GET /api/ha-audit-log could not be reached.';
 
   const handlePageChange = (page: number): void => {
     setFilters({ ...filters, page });
+  };
+
+  const handleExport = async (): Promise<void> => {
+    setExportError(null);
+    setExporting(true);
+    try {
+      await downloadAuditLogExport({
+        from: filters.from || undefined,
+        to: filters.to || undefined,
+        action: filters.action || undefined,
+        user: filters.user || undefined,
+      });
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : 'Audit export failed.');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const SeverityCell = (params: { value: unknown }): JSX.Element => {
@@ -178,14 +198,33 @@ export function AuditPage(): JSX.Element {
             <HaButton
               variant="secondary"
               icon={<Download size={16} />}
-              isDisabled
-              title="CSV export is not available. GET /api/ha-audit-log/export does not exist."
+              isDisabled={exporting}
+              onClick={() => {
+                void handleExport();
+              }}
+              title="Download NDJSON via GET /api/ha-audit-log/export (safe fields; payload omitted)"
             >
-              Export CSV
+              {exporting ? 'Exporting…' : 'Export NDJSON'}
             </HaButton>
           ) : undefined
         }
       />
+
+      {exportError !== null && (
+        <div
+          style={{
+            margin: '12px 24px 0',
+            padding: '8px 12px',
+            fontSize: 'var(--ha-text-sm)',
+            color: 'var(--ha-critical)',
+            border: '1px solid var(--ha-border)',
+            borderRadius: 'var(--ha-radius-base)',
+            background: 'color-mix(in srgb, var(--ha-critical) 12%, transparent)',
+          }}
+        >
+          {exportError}
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div

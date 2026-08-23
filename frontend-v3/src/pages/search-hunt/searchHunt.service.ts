@@ -8,6 +8,7 @@ import type {
   HuntEventDetailResponse,
   HuntFieldDefinition,
   HuntFieldValuesResponse,
+  HuntPromotionApproval,
   HuntSearchRequest,
   HuntSearchResponse,
   PromotionPreview,
@@ -23,9 +24,18 @@ import type {
   EventDTO,
 } from './searchHunt.types';
 
-import { apiClient } from '@/lib/apiClient';
+import { ApiError, apiClient } from '@/lib/apiClient';
 
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
+/** True when the backend rejected execute because manager approval is required. */
+export function isHuntApprovalRequiredError(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false;
+  const body = error.body as { error?: string; message?: string; detail?: string };
+  const code = body.error ?? '';
+  const text = `${body.message ?? ''} ${body.detail ?? ''} ${error.message}`;
+  return code === 'APPROVAL_REQUIRED' || text.includes('APPROVAL_REQUIRED');
+}
 
 export async function executeHunt(request: HuntSearchRequest, signal?: AbortSignal): Promise<HuntSearchResponse> {
   if (fixtureMode) {
@@ -83,21 +93,46 @@ const HUNT_ACTION_MAP: Record<HuntActionRequest['type'], 'create_evidence' | 'cr
 };
 
 export async function executeHuntAction(request: HuntActionRequest): Promise<HuntActionResponse> {
+  // Fixture mode must never claim a real incident/evidence/investigation was created.
   if (fixtureMode) {
-    return Promise.resolve({ targetId: `SIM-${request.type.toUpperCase()}`, auditId: 'AUDIT-FIXTURE' });
+    return {
+      outcome: 'simulated',
+      targetId: `SIM-${request.type.toUpperCase()}`,
+      auditId: 'AUDIT-FIXTURE',
+    };
   }
   const action = HUNT_ACTION_MAP[request.type];
   const preview = await previewPromotion({ action, eventIds: request.eventIds, searchId: request.searchId });
+  const title = request.title?.trim() || preview.preview.title;
+  const description = request.reason;
+
+  if (preview.approvalRequired === true) {
+    const approval = await requestHuntPromotionApproval({
+      action,
+      eventIds: request.eventIds,
+      searchId: request.searchId,
+      previewToken: preview.previewToken,
+      rationale: description.trim() || title,
+    });
+    return {
+      outcome: 'approval_pending',
+      targetId: approval.approvalId,
+      auditId: approval.approvalId,
+      approvalId: approval.approvalId,
+    };
+  }
+
   const result = await executePromotion({
     action,
     eventIds: request.eventIds,
     searchId: request.searchId,
-    title: request.title?.trim() || preview.preview.title,
-    description: request.reason,
+    title,
+    description,
     previewToken: preview.previewToken,
     parameters: request.incidentId ? { incidentId: request.incidentId } : undefined,
   });
   return {
+    outcome: 'created',
     targetId: result.resultId,
     auditId: result.actionId,
   };
@@ -243,7 +278,18 @@ export async function previewPromotion(body: {
   return apiClient.post<PromotionPreview>('/ha-hunts/actions/preview', body);
 }
 
-/** HNT-007: Execute a promotion action */
+/** HNT-007: Request SOC Manager approval when preview.approvalRequired is true */
+export async function requestHuntPromotionApproval(body: {
+  action: string;
+  eventIds: string[];
+  searchId: string;
+  previewToken: string;
+  rationale: string;
+}): Promise<HuntPromotionApproval> {
+  return apiClient.post<HuntPromotionApproval>('/ha-hunts/approvals', body);
+}
+
+/** HNT-007: Execute a promotion action (pass parameters.approvalId when gated) */
 export async function executePromotion(body: {
   action: string;
   eventIds: string[];

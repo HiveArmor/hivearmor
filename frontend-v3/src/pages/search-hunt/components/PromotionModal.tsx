@@ -1,13 +1,10 @@
 /**
- * PromotionModal — Promotion action workflow (preview + execute).
+ * PromotionModal — Promotion action workflow (preview + execute / approval request).
  *
- * Handles the full promotion lifecycle:
- * 1. Action bar appears when events are selected (Create Evidence, Create Investigation, Escalate to Incident)
- * 2. Button click calls previewPromotion() to get entity extraction and suggestions
- * 3. Modal shows preview: action type, event count, entities (chips), editable title/description, warnings
- * 4. Confirm calls executePromotion() with previewToken
- * 5. Success → toast with link to created resource; deselect events
- * 6. Failure → error toast with retry option
+ * Honesty rules:
+ * - When preview.approvalRequired, Confirm requests SOC Manager approval — it does not claim promotion success.
+ * - Execute only runs when approval is not required (or when an approved approvalId is supplied later).
+ * - Fixture mode is handled upstream; this modal always talks to live promote/approval APIs.
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -16,6 +13,7 @@ import { useMutation } from '@tanstack/react-query';
 import {
   AlertTriangle,
   CheckCircle2,
+  Clock3,
   ExternalLink,
   FileText,
   Scale,
@@ -26,9 +24,11 @@ import {
 
 import {
   executePromotion,
+  isHuntApprovalRequiredError,
   previewPromotion,
+  requestHuntPromotionApproval,
 } from '../searchHunt.service';
-import type { PromotionPreview, PromotionResult } from '../searchHunt.types';
+import type { HuntPromotionApproval, PromotionPreview, PromotionResult } from '../searchHunt.types';
 
 export type PromotionAction = 'create_evidence' | 'create_investigation' | 'escalate_incident';
 
@@ -102,6 +102,10 @@ export function PromotionActionBar({
   );
 }
 
+type TerminalState =
+  | { kind: 'created'; result: PromotionResult }
+  | { kind: 'approval_pending'; approval: HuntPromotionApproval };
+
 export function PromotionModal({
   selectedEventIds,
   searchId,
@@ -113,8 +117,8 @@ export function PromotionModal({
   const [preview, setPreview] = useState<PromotionPreview | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [result, setResult] = useState<PromotionResult | null>(null);
-  const [showError, setShowError] = useState(false);
+  const [terminal, setTerminal] = useState<TerminalState | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const previewMutation = useMutation({
     mutationFn: (params: { action: string; eventIds: string[]; searchId: string }) =>
@@ -134,13 +138,37 @@ export function PromotionModal({
       title: string;
       description: string;
       previewToken: string;
+      parameters?: Record<string, string>;
     }) => executePromotion(params),
     onSuccess: (data) => {
-      setResult(data);
-      setShowError(false);
+      setTerminal({ kind: 'created', result: data });
+      setErrorMessage(null);
+    },
+    onError: (error: unknown) => {
+      if (isHuntApprovalRequiredError(error)) {
+        setErrorMessage(
+          'Manager approval is required. Request approval first — this action was not executed.',
+        );
+      } else {
+        setErrorMessage('Promotion failed. Check the event selection and try again.');
+      }
+    },
+  });
+
+  const approvalMutation = useMutation({
+    mutationFn: (params: {
+      action: string;
+      eventIds: string[];
+      searchId: string;
+      previewToken: string;
+      rationale: string;
+    }) => requestHuntPromotionApproval(params),
+    onSuccess: (data) => {
+      setTerminal({ kind: 'approval_pending', approval: data });
+      setErrorMessage(null);
     },
     onError: () => {
-      setShowError(true);
+      setErrorMessage('Approval request failed. No promotion was executed.');
     },
   });
 
@@ -148,8 +176,8 @@ export function PromotionModal({
     (selectedAction: PromotionAction): void => {
       setAction(selectedAction);
       setPreview(null);
-      setResult(null);
-      setShowError(false);
+      setTerminal(null);
+      setErrorMessage(null);
       previewMutation.mutate({
         action: selectedAction,
         eventIds: selectedEventIds,
@@ -172,8 +200,21 @@ export function PromotionModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const approvalRequired = preview?.approvalRequired === true;
+
   const handleConfirm = useCallback((): void => {
     if (!action || !preview) return;
+    const rationale = description.trim() || title.trim();
+    if (approvalRequired) {
+      approvalMutation.mutate({
+        action,
+        eventIds: selectedEventIds,
+        searchId,
+        previewToken: preview.previewToken,
+        rationale,
+      });
+      return;
+    }
     executeMutation.mutate({
       action,
       eventIds: selectedEventIds,
@@ -182,25 +223,34 @@ export function PromotionModal({
       description: description.trim(),
       previewToken: preview.previewToken,
     });
-  }, [action, preview, selectedEventIds, searchId, title, description, executeMutation]);
+  }, [
+    action,
+    preview,
+    approvalRequired,
+    selectedEventIds,
+    searchId,
+    title,
+    description,
+    executeMutation,
+    approvalMutation,
+  ]);
 
   const handleRetry = useCallback((): void => {
-    setShowError(false);
+    setErrorMessage(null);
     handleConfirm();
   }, [handleConfirm]);
 
   const handleClose = useCallback((): void => {
     setAction(null);
     setPreview(null);
-    setResult(null);
-    setShowError(false);
+    setTerminal(null);
+    setErrorMessage(null);
     onClose();
   }, [onClose]);
 
-  // On success, notify parent to deselect and close
+  // Close after a created promotion; approval-pending waits for explicit dismiss.
   useEffect(() => {
-    if (result) {
-      // Allow the success state to display briefly
+    if (terminal?.kind === 'created') {
       const timer = setTimeout(() => {
         onSuccess();
         handleClose();
@@ -208,14 +258,14 @@ export function PromotionModal({
       return () => clearTimeout(timer);
     }
     return undefined;
-  }, [result, onSuccess, handleClose]);
+  }, [terminal, onSuccess, handleClose]);
 
   if (!action) return null;
 
   const actionMeta = ACTION_LABELS[action];
   const ActionIcon = actionMeta.icon;
   const isLoading = previewMutation.isPending;
-  const isExecuting = executeMutation.isPending;
+  const isBusy = executeMutation.isPending || approvalMutation.isPending;
 
   return (
     <div className="hunt-promotion-overlay" role="dialog" aria-modal="true" aria-labelledby="promotion-modal-title">
@@ -251,7 +301,7 @@ export function PromotionModal({
             </div>
           )}
 
-          {preview && !result && (
+          {preview && !terminal && (
             <>
               <div className="hunt-promotion-modal__summary">
                 <span className="hunt-promotion-modal__action-type">
@@ -262,6 +312,19 @@ export function PromotionModal({
                   {preview.eventCount} event{preview.eventCount !== 1 ? 's' : ''}
                 </span>
               </div>
+
+              {approvalRequired && (
+                <div className="hunt-promotion-modal__approval" role="status">
+                  <Clock3 size={14} />
+                  <div>
+                    <strong>Manager approval required</strong>
+                    <p>
+                      Escalate and investigation promotions (and large evidence batches) cannot execute until a
+                      SOC Manager approves. Confirming will request approval — it will not create the resource yet.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {preview.warnings.length > 0 && (
                 <div className="hunt-promotion-modal__warnings" role="alert">
@@ -311,10 +374,10 @@ export function PromotionModal({
                 />
               </div>
 
-              {showError && (
+              {errorMessage && (
                 <div className="hunt-promotion-modal__error" role="alert">
                   <AlertTriangle size={16} />
-                  <span>Promotion failed. Check the event selection and try again.</span>
+                  <span>{errorMessage}</span>
                   <button type="button" className="hunt-button" onClick={handleRetry}>
                     Retry
                   </button>
@@ -323,7 +386,7 @@ export function PromotionModal({
             </>
           )}
 
-          {result && (
+          {terminal?.kind === 'created' && (
             <div className="hunt-promotion-modal__success" role="status">
               <CheckCircle2 size={24} />
               <h3>Promotion Successful</h3>
@@ -331,25 +394,41 @@ export function PromotionModal({
                 {actionMeta.title} completed. Resource created successfully.
               </p>
               <a
-                href={result.url}
+                href={terminal.result.url}
                 className="hunt-button hunt-button--primary"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <ExternalLink size={13} />
-                View {result.resultType}
+                View {terminal.result.resultType}
               </a>
+            </div>
+          )}
+
+          {terminal?.kind === 'approval_pending' && (
+            <div className="hunt-promotion-modal__pending" role="status">
+              <Clock3 size={24} />
+              <h3>Approval requested</h3>
+              <p>
+                No incident, investigation, or evidence was created. A SOC Manager must approve before execute.
+              </p>
+              <small className="hunt-promotion-modal__pending-id">
+                Approval ID · {terminal.approval.approvalId}
+              </small>
+              <p className="hunt-promotion-modal__pending-status">
+                Status: {terminal.approval.status}
+              </p>
             </div>
           )}
         </div>
 
-        {preview && !result && (
+        {preview && !terminal && (
           <footer className="hunt-promotion-modal__footer">
             <button
               type="button"
               className="hunt-button"
               onClick={handleClose}
-              disabled={isExecuting}
+              disabled={isBusy}
             >
               Cancel
             </button>
@@ -357,10 +436,24 @@ export function PromotionModal({
               type="button"
               className="hunt-button hunt-button--primary"
               onClick={handleConfirm}
-              disabled={isExecuting || !title.trim()}
+              disabled={isBusy || !title.trim()}
             >
               <Scale size={13} />
-              {isExecuting ? 'Promoting…' : 'Confirm'}
+              {isBusy
+                ? approvalRequired
+                  ? 'Requesting…'
+                  : 'Promoting…'
+                : approvalRequired
+                  ? 'Request approval'
+                  : 'Confirm'}
+            </button>
+          </footer>
+        )}
+
+        {terminal?.kind === 'approval_pending' && (
+          <footer className="hunt-promotion-modal__footer">
+            <button type="button" className="hunt-button hunt-button--primary" onClick={() => { onSuccess(); handleClose(); }}>
+              Done
             </button>
           </footer>
         )}

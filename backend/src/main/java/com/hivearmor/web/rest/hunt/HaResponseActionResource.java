@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
  *   <li>ALT-010 Part 2: Action execution and job tracking (added in Task 5)</li>
  * </ul>
  *
- * <p>Authorization: Requires {@code ROLE_SOC_ANALYST}, {@code ROLE_SOC_MANAGER},
- * or {@code ROLE_ADMIN}.
+ * <p>Authorization: Requires {@code ROLE_ANALYST} (or legacy {@code ROLE_SOC_ANALYST}),
+ * {@code ROLE_SOC_MANAGER}, or {@code ROLE_ADMIN}.
  */
 @RestController
 @RequestMapping("/api")
@@ -49,7 +49,8 @@ public class HaResponseActionResource {
     private static final String CLASSNAME = "HaResponseActionResource";
 
     private static final String RESPONSE_ACTION_AUTH =
-        "hasAuthority('ROLE_SOC_ANALYST') or hasAuthority('ROLE_SOC_MANAGER') or hasAuthority('ROLE_ADMIN')";
+        "hasAuthority('ROLE_SOC_ANALYST') or hasAuthority('ROLE_ANALYST') "
+            + "or hasAuthority('ROLE_SOC_MANAGER') or hasAuthority('ROLE_ADMIN')";
 
     private final ResponseActionRegistry registry;
     private final TokenProvider tokenProvider;

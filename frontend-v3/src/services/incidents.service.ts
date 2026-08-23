@@ -89,6 +89,7 @@ export async function addAlertsToIncident(req: AddAlertsToIncidentRequest): Prom
   return apiClient.post<void>('/ha-incidents/add-alerts', req);
 }
 
+/** PUT /ha-incidents/change-status — body uses incidentStatus enum names (OPEN|IN_REVIEW|COMPLETED|MERGED). */
 export async function changeIncidentStatus(req: ChangeIncidentStatusRequest): Promise<void> {
   return apiClient.put<void>('/ha-incidents/change-status', req);
 }
@@ -97,8 +98,16 @@ export async function getIncidentEntityGraph(id: number | string): Promise<Entit
   return apiClient.get<EntityGraph>(`/ha-incidents/${id}/entity-graph`);
 }
 
+/**
+ * GET /ha-incidents/{id}/evidence — OpenSearch evidence projection returns { items, total }.
+ * Prefer fetchEvidenceItems (/evidence-items) for the JPA investigation board used by the workbench.
+ */
 export async function getIncidentEvidence(id: number | string): Promise<EvidenceItem[]> {
-  return apiClient.get<EvidenceItem[]>(`/ha-incidents/${id}/evidence`);
+  const response = await apiClient.get<{ items?: EvidenceItem[]; total?: number } | EvidenceItem[]>(
+    `/ha-incidents/${id}/evidence`
+  );
+  if (Array.isArray(response)) return response;
+  return response.items ?? [];
 }
 
 export async function getIncidentTimeline(id: number | string): Promise<TimelineEvent[]> {

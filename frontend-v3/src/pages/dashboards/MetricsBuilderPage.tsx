@@ -10,14 +10,18 @@ import Editor from '@monaco-editor/react';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
+import { GAP_SEC_06_RESOLVED, canRunVisualization } from './dashboards.service';
 import type { MetricWidgetConfig } from './studio/renderers/MetricRenderer';
 import { MetricRenderer } from './studio/renderers/MetricRenderer';
 
 import { HaChart } from '@/components/ha-chart';
 import { SiemDataGrid } from '@/components/siem-data-grid';
+import { useAuthStore } from '@/store/auth.store';
 
 export function MetricsBuilderPage(): React.JSX.Element {
   const navigate = useNavigate();
+  const userRoles = useAuthStore((state) => state.user?.roles);
+  const canRun = GAP_SEC_06_RESOLVED && canRunVisualization(userRoles);
   const [vizName, setVizName] = useState<string>('Untitled Metric');
   const [chartType, setChartType] = useState<ChartType>('line');
   const [queryJson, setQueryJson] = useState<string>(DEFAULT_QUERY);
@@ -65,10 +69,13 @@ export function MetricsBuilderPage(): React.JSX.Element {
   });
 
   const handleRunPreview = async (): Promise<void> => {
+    if (!canRun) {
+      setPreviewData(null);
+      return;
+    }
     setIsRunning(true);
     try {
-      // GAP-SEC-06: POST /api/ha-visualizations/run has no @PreAuthorize
-      // Frontend restricts this page to ROLE_ADMIN, but backend does not enforce role on this endpoint
+      // SEC-06: backend @PreAuthorize; skip call when caller lacks analyst-tier roles
       const response = await fetch('/api/ha-visualizations/run', {
         method: 'POST',
         headers: {
@@ -82,6 +89,11 @@ export function MetricsBuilderPage(): React.JSX.Element {
       });
 
       if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error(
+            'Required permission: Analyst, SOC Manager, or Platform Administrator',
+          );
+        }
         throw new Error(`Preview failed: ${response.statusText}`);
       }
 
@@ -189,7 +201,7 @@ export function MetricsBuilderPage(): React.JSX.Element {
 
         <button
           onClick={handleRunPreview}
-          disabled={isRunning}
+          disabled={isRunning || !canRun}
           style={{
             fontSize: 'var(--ha-text-base)',
             color: 'var(--ha-text-primary)',
@@ -197,10 +209,10 @@ export function MetricsBuilderPage(): React.JSX.Element {
             border: 'none',
             borderRadius: '4px',
             padding: '6px 16px',
-            cursor: isRunning ? 'not-allowed' : 'pointer',
-            opacity: isRunning ? 0.6 : 1,
+            cursor: isRunning || !canRun ? 'not-allowed' : 'pointer',
+            opacity: isRunning || !canRun ? 0.6 : 1,
           }}
-          title="Ctrl+Enter / Cmd+Enter"
+          title={canRun ? 'Ctrl+Enter / Cmd+Enter' : 'Required permission: Analyst, SOC Manager, or Platform Administrator'}
         >
           {isRunning ? 'Running…' : 'Run Preview'}
         </button>

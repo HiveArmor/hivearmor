@@ -64,6 +64,9 @@ describe('ExposurePage', () => {
     useQuery.mockReturnValue(state({ data: { ...page, items: [], total: 0, contractState: 'missing', partialFailures: [{ source: 'graph', message: 'Backend required.' }] } }));
     const { rerender } = render(<ExposurePage />);
     expect(screen.getByText('Exposure graph integration required')).toBeDefined();
+    expect(screen.getByText(/empty KPIs here mean the contract is missing/)).toBeDefined();
+    expect(screen.getByText('Contract not implemented')).toBeDefined();
+    expect(screen.queryByRole('grid', { name: 'Attack paths exposure inventory' })).toBeNull();
     useQuery.mockReturnValue(state({ data: { ...page, items: [], total: 0 } }));
     rerender(<ExposurePage />);
     expect(screen.getByText('No active attack paths were generated')).toBeDefined();

@@ -37,8 +37,5 @@ export interface FilterDTO {
   [key: string]: unknown;
 }
 
-export interface ChartDataResponse {
-  // Placeholder for chart data structure
-  // Shape depends on visualization type
-  [key: string]: unknown;
-}
+/** Parsed visualization run payload — typically a list of chart-specific result rows. */
+export type ChartDataResponse = unknown;

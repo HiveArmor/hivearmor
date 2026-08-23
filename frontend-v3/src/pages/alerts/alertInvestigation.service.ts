@@ -328,3 +328,14 @@ export async function fetchJobStatus(jobId: string): Promise<ResponseJob> {
     `/response/jobs/${encodeURIComponent(jobId)}`
   );
 }
+
+export interface AlertEnrichmentResult {
+  summary: string;
+  tactics: string[];
+  recommendedActions: string[];
+}
+
+/** Ask Hive — POST /ha-soc-ai/enrich-alert (graceful when AI is not configured). */
+export async function enrichAlertWithAi(alertId: string): Promise<AlertEnrichmentResult> {
+  return apiClient.post<AlertEnrichmentResult>('/ha-soc-ai/enrich-alert', { alertId });
+}

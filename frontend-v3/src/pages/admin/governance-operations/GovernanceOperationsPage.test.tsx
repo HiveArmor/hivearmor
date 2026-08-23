@@ -11,6 +11,7 @@ import { useAuthStore } from '@/store/auth.store';
 const listMock=vi.hoisted(()=>vi.fn());
 vi.mock('./governanceOperations.service',()=>({governanceOperationsService:{fixtureMode:true,list:listMock}}));
 vi.mock('@/hooks/useEpsStream',()=>({useEpsStream:()=>({connected:true,eps:12840})}));
+vi.mock('@/services/auditLog.service',()=>({downloadAuditLogExport:vi.fn()}));
 
 function renderPage(initialView:'audit'|'retention'|'configuration'='audit'):void{
   const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
@@ -49,6 +50,16 @@ describe('GovernanceOperationsPage',()=>{
     expect(screen.getByRole('button',{name:/Continue to diff/i})).toBeDisabled();
     fireEvent.keyDown(dialog,{key:'Escape'});
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('keeps fixture-mode audit export disabled with honest copy',async()=>{
+    renderPage();
+    fireEvent.click(await screen.findByRole('button',{name:'Export evidence'}));
+    const dialog=screen.getByRole('dialog',{name:'Export audit evidence'});
+    expect(dialog).toBeVisible();
+    expect(screen.getByText(/Visual fixture only/)).toBeVisible();
+    expect(screen.getByText(/GET \/api\/ha-audit-log\/export/)).toBeVisible();
+    expect(screen.getByRole('button',{name:/Download NDJSON/i})).toBeDisabled();
   });
 
   it('fails closed for non-administrators before loading data',()=>{

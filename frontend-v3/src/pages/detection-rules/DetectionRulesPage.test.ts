@@ -99,6 +99,30 @@ describe('columnDefs', () => {
   });
 });
 
+describe('detection rules capability gates (F10)', () => {
+  it('enables DET-009 executions and gap-fill when HaDetectionRuleResource mappings exist', async () => {
+    const caps = await import('./detectionRules.capabilities');
+    expect(caps.DET_009_EXECUTIONS).toBe(true);
+    expect(caps.DET_009_GAP_FILL).toBe(true);
+    expect(caps.DET_009_ALERT_PIVOT).toBe(false);
+    expect(caps.DET_009_ALERT_PIVOT_DISABLED_TITLE.length).toBeGreaterThan(10);
+  });
+
+  it('enables DET-011 validate/preview and keeps DET-014 disabled without a backend mapping', async () => {
+    const caps = await import('./detectionRules.capabilities');
+    expect(caps.DET_011_VALIDATE_PREVIEW).toBe(true);
+    expect(caps.DET_014_AVAILABLE_CONTENT).toBe(false);
+    expect(caps.DET_014_DISABLED_TITLE).toContain('DET-014');
+  });
+
+  it('exports gap-fill against /api/ha-detection-rules', async () => {
+    const module = await import('./detectionRules.service');
+    expect(typeof module.triggerDetectionGapFill).toBe('function');
+    expect(typeof module.previewRuleDraft).toBe('function');
+    expect(typeof module.fetchRuleExecutions).toBe('function');
+  });
+});
+
 describe('detection rules foundation fixtures', () => {
   it('provide unique, operationally complete fictional records', async () => {
     const { foundationDetectionRules } = await import('./detectionRules.fixtures');

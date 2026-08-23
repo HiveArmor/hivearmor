@@ -3,7 +3,7 @@
  * Full-canvas dashboard viewer using GridStack.js 13 for widget layout.
  *
  * SECURITY GAPS:
- * - GAP-SEC-06: POST /api/ha-visualizations/run has no @PreAuthorize
+ * - SEC-06: POST /api/ha-visualizations/run requires ROLE_ADMIN|ROLE_SOC_MANAGER|ROLE_ANALYST
  * - GAP-SEC-12: GET /api/ha-dashboards/{id} has no @PreAuthorize
  * - GAP-MT-05: No tenant_id on UtmDashboard — all users see all dashboards
  */

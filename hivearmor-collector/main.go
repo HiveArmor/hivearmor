@@ -95,13 +95,17 @@ func main() {
 
 		case "clean-logs":
 			fmt.Println("Cleaning old logs ...")
-			db := database.GetDB()
+			db, err := database.GetDB()
+			if err != nil {
+				fmt.Println("Error opening log spool database: ", err)
+				os.Exit(1)
+			}
 			datR, err := logservice.GetDataRetention()
 			if err != nil {
 				fmt.Println("Error getting retention: ", err)
 				os.Exit(1)
 			}
-			_, err = db.DeleteOld(models.Log{}, datR)
+			_, err = db.DeleteOld(&models.Log{}, datR)
 			if err != nil {
 				fmt.Println("Error cleaning logs: ", err)
 				os.Exit(1)

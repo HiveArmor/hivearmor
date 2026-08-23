@@ -119,9 +119,15 @@ export interface HuntActionRequest {
   reason: string;
 }
 
+/** Outcome of a hunt promotion attempt — never invent a "created" success. */
+export type HuntActionOutcome = 'created' | 'approval_pending' | 'simulated';
+
 export interface HuntActionResponse {
+  /** Resource id when created; approval id when pending; simulation token when simulated. */
   targetId: string;
   auditId: string;
+  outcome: HuntActionOutcome;
+  approvalId?: string;
 }
 
 // Compatibility aliases retained for existing tests and older consumers.
@@ -276,6 +282,11 @@ export interface PromotionPreview {
   };
   warnings: string[];
   previewToken: string;
+  /** Escalate/investigation and large evidence batches require SOC Manager approval. */
+  approvalRequired?: boolean;
+  approvalRequestPath?: string;
+  permissionVersion?: string;
+  expiresInSeconds?: number;
 }
 
 /** HNT-007: Promotion execution result */
@@ -285,6 +296,23 @@ export interface PromotionResult {
   resultId: string;
   status: string;
   url: string;
+}
+
+/** HNT-007: SOC Manager approval request (POST /ha-hunts/approvals) */
+export interface HuntPromotionApproval {
+  approvalId: string;
+  searchId: string;
+  action: string;
+  status: string;
+  requester: string;
+  tenantKey: string;
+  requestRationale: string;
+  decisionRationale?: string | null;
+  decidedBy?: string | null;
+  decidedAt?: string | null;
+  consumedAt?: string | null;
+  expiresAt?: string | null;
+  createdAt?: string | null;
 }
 
 /** HNT-009: Query operator definition */

@@ -109,6 +109,7 @@ export function ResponseActionsPanel({ targetId, alertId: _alertId }: ResponseAc
     refetchInterval: (query) => {
       const status = query.state.data?.status;
       if (status === 'queued' || status === 'running') return 3000;
+      // unsupported/simulated are terminal honest outcomes (no remote execution)
       return false;
     },
   });
@@ -121,6 +122,14 @@ export function ResponseActionsPanel({ targetId, alertId: _alertId }: ResponseAc
 
     if (job.status === 'completed') {
       showSuccessToast('Action completed', job.result ?? 'Response action executed successfully.');
+      setActiveJobId(null);
+    } else if (job.status === 'unsupported' || job.status === 'simulated') {
+      showErrorToast(
+        'Action not executed',
+        job.error?.message
+          ?? job.result
+          ?? 'Remote response execution is not implemented; no host or account was changed.',
+      );
       setActiveJobId(null);
     } else if (job.status === 'failed') {
       showErrorToast('Action failed', job.error?.message ?? 'Response action failed.');
@@ -491,7 +500,9 @@ function ActiveJobIndicator({
 }): JSX.Element {
   const isActive = job.status === 'queued' || job.status === 'running';
   const isFailed = job.status === 'failed';
+  const isUnsupported = job.status === 'unsupported' || job.status === 'simulated';
   const isCompleted = job.status === 'completed';
+  const isTerminalNonSuccess = isFailed || isUnsupported;
 
   // Elapsed time counter
   const [elapsed, setElapsed] = useState(0);
@@ -522,7 +533,7 @@ function ActiveJobIndicator({
   // Determine step states
   const queuedDone = job.status !== 'queued';
   const runningActive = job.status === 'running';
-  const runningDone = isCompleted || isFailed;
+  const runningDone = isCompleted || isTerminalNonSuccess;
 
   return (
     <div className="response-job-indicator" data-status={job.status}>
@@ -538,18 +549,18 @@ function ActiveJobIndicator({
         <div className={`response-job__step${runningActive ? ' response-job__step--active' : runningDone ? ' response-job__step--done' : ''}`}>
           <span className="response-job__step-dot">
             {runningDone
-              ? (isFailed ? <X size={10} aria-hidden="true" /> : <Check size={10} aria-hidden="true" />)
+              ? (isTerminalNonSuccess ? <X size={10} aria-hidden="true" /> : <Check size={10} aria-hidden="true" />)
               : runningActive ? <span className="response-job__pulse-dot" /> : null}
           </span>
           <span className="response-job__step-label">Running</span>
         </div>
         <div className="response-job__step-line" data-done={runningDone} />
-        <div className={`response-job__step${isCompleted ? ' response-job__step--done' : isFailed ? ' response-job__step--failed' : ''}`}>
+        <div className={`response-job__step${isCompleted ? ' response-job__step--done' : isTerminalNonSuccess ? ' response-job__step--failed' : ''}`}>
           <span className="response-job__step-dot">
             {isCompleted && <Check size={10} aria-hidden="true" />}
-            {isFailed && <X size={10} aria-hidden="true" />}
+            {isTerminalNonSuccess && <X size={10} aria-hidden="true" />}
           </span>
-          <span className="response-job__step-label">{isFailed ? 'Failed' : 'Completed'}</span>
+          <span className="response-job__step-label">{isUnsupported ? 'Not executed' : isFailed ? 'Failed' : 'Completed'}</span>
         </div>
       </div>
 
@@ -569,12 +580,18 @@ function ActiveJobIndicator({
         </div>
       )}
 
-      {/* Failure banner */}
-      {isFailed && (
+      {/* Failure / unsupported banner */}
+      {isTerminalNonSuccess && (
         <div className="response-job__banner response-job__banner--error">
           <AlertTriangle size={14} aria-hidden="true" />
-          <span>{job.error?.message ?? 'Action failed'}</span>
-          {job.error?.retryable && (
+          <span>
+            {job.error?.message
+              ?? job.result
+              ?? (isUnsupported
+                ? 'Remote response execution is not implemented; no host or account was changed.'
+                : 'Action failed')}
+          </span>
+          {isFailed && job.error?.retryable && (
             <button type="button" onClick={onRetry} className="response-job__retry-btn">
               <RefreshCw size={12} aria-hidden="true" /> Retry
             </button>

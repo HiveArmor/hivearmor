@@ -39,7 +39,7 @@ function ActionsCellRenderer(): JSX.Element {
     pointerEvents: 'none',
   };
 
-  const tooltip = 'Remote agent actions are blocked — security issue GAP-SEC-05 is pending remediation';
+  const tooltip = 'Remote agent actions stay blocked — agent-manager command path is INTERNAL_KEY-only (GAP-SEC-05)';
 
   return (
     <div
@@ -62,8 +62,10 @@ function ActionsCellRenderer(): JSX.Element {
 /**
  * SensorGridPage — Sensor health monitoring (POS-05)
  *
- * GAP-SEC-05: All EDR action buttons are blocked pending security remediation.
- * /api/edr/actions/* endpoints have no @PreAuthorize annotations.
+ * GAP-SEC-05: Remote action buttons stay disabled.
+ * Backend REST (/api/edr/*, /api/agent-manager mutate) is now @PreAuthorize-gated,
+ * but agent-manager gRPC command dispatch remains INTERNAL_KEY-only with no ROLE_*.
+ * Do not enable kill/isolate/restart until a real role-aware command path exists.
  *
  * Add Agent: the "+ Add Agent" button opens AddAgentDrawer, which generates a
  * one-click install script containing an auto-expiring connection key.
@@ -226,7 +228,7 @@ export function SensorGridPage(): JSX.Element {
       <HaInlineBanner
         variant="warning"
         title="EDR actions blocked (GAP-SEC-05)"
-        description="Remote EDR actions (Kill Process, Isolate Host, Run Scan) are blocked pending security remediation. The /api/edr/actions/* endpoints have no authorization gate. Contact your platform administrator."
+        description="Remote agent actions (Kill Process, Isolate Host, Restart, Push Config) stay disabled. REST mutate endpoints are role-gated, but agent-manager still accepts commands only via INTERNAL_KEY (no ROLE_* on the gRPC path). Enabling UI actions would still be dishonest."
         isDismissible={false}
       />
 

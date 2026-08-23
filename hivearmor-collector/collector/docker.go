@@ -16,6 +16,7 @@ import (
 	"github.com/hivearmor/hivearmor-collector/config"
 	"github.com/hivearmor/hivearmor-collector/logservice"
 	"github.com/hivearmor/hivearmor-collector/models"
+	"github.com/hivearmor/hivearmor-collector/spool"
 	"github.com/hivearmor/hivearmor-collector/utils"
 )
 
@@ -179,8 +180,6 @@ func (d *DockerCollector) handleDockerEvent(event events.Message) {
 	case d.eventChan <- containerEvent:
 	case <-d.ctx.Done():
 		return
-	default:
-		utils.Logger.Info("Event channel is full, dropping event")
 	}
 
 	switch event.Action {
@@ -343,42 +342,21 @@ func (d *DockerCollector) processAndSendLogLine(line string, container models.Co
 
 	enrichedLog := models.EnrichLogWithContainer(cleaned, container.Name)
 
-	if logservice.LogQueue != nil {
-		osInfo, err := utils.GetOsInfo()
-		if err != nil {
-			utils.Logger.ErrorF("Failed to get OS info: %v", err)
-			return err
-		}
-
-		utmLog := &plugins.Log{
-			Raw:        enrichedLog,
-			DataType:   config.DataType,
-			DataSource: osInfo.Hostname,
-		}
-
-		d.sendToHiveArmor(utmLog)
+	osInfo, err := utils.GetOsInfo()
+	if err != nil {
+		utils.Logger.ErrorF("Failed to get OS info: %v", err)
+		return err
 	}
 
+	utmLog := &plugins.Log{
+		Raw:        enrichedLog,
+		DataType:   config.DataType,
+		DataSource: osInfo.Hostname,
+	}
+
+	// Durable spool first; a full memory queue retains the event in SQLite.
+	spool.Offer(logservice.LogQueue, "docker", utmLog)
 	return nil
-}
-
-func (d *DockerCollector) sendToHiveArmor(utmLog *plugins.Log) {
-	select {
-	case logservice.LogQueue <- utmLog:
-	case <-d.ctx.Done():
-		return
-	default:
-		select {
-		case <-time.After(100 * time.Millisecond):
-			select {
-			case logservice.LogQueue <- utmLog:
-			default:
-				// Drop log if queue is still full
-			}
-		case <-d.ctx.Done():
-			return
-		}
-	}
 }
 
 func (d *DockerCollector) convertContainer(c dockercontainer.Summary) models.Container {

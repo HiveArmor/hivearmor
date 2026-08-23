@@ -34,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.http.ResponseEntity;
@@ -58,6 +59,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/api")
 public class UtmCorrelationRulesResource {
     private static final String CLASSNAME = "UtmCorrelationRulesResource";
+
+    /** Detection mutate auth — mirrors {@code HaDetectionRuleResource.SOC_MANAGER_AUTH}. */
+    private static final String SOC_MANAGER_AUTH =
+        "hasAuthority('ROLE_SOC_MANAGER') or hasAuthority('ROLE_ADMIN')";
+
     private final Logger log = LoggerFactory.getLogger(UtmCorrelationRulesResource.class);
 
     private final ApplicationEventService applicationEventService;
@@ -101,6 +107,7 @@ public class UtmCorrelationRulesResource {
      * @return the {@link ResponseEntity} with status {@code 204 (No Content)}, with status {@code 400 (Bad Request)}, or with status {@code 500 (Internal)} if errors occurred.
      */
     @PostMapping("/correlation-rule")
+    @PreAuthorize(SOC_MANAGER_AUTH)
     @AuditEvent(
         attemptType = ApplicationEventType.CORRELATION_RULE_CREATE_ATTEMPT,
         attemptMessage = "Attempting to create correlation rule: {name}",
@@ -130,6 +137,7 @@ public class UtmCorrelationRulesResource {
      * @return the {@link ResponseEntity} with status {@code 204 (No Content)}, with status {@code 400 (Bad Request)}, or with status {@code 500 (Internal)} if errors occurred.
      */
     @PutMapping("/correlation-rule/activate-deactivate")
+    @PreAuthorize(SOC_MANAGER_AUTH)
     @AuditEvent(
         attemptType = ApplicationEventType.CORRELATION_RULE_UPDATE_ATTEMPT,
         attemptMessage = "Attempting to change activation status for correlation rule with ID: {id}",
@@ -162,6 +170,7 @@ public class UtmCorrelationRulesResource {
      * @return the {@link ResponseEntity} with status {@code 204 (No Content)}, with status {@code 400 (Bad Request)}, or with status {@code 500 (Internal)} if errors occurred.
      */
     @PutMapping("/correlation-rule")
+    @PreAuthorize(SOC_MANAGER_AUTH)
     @AuditEvent(
         attemptType = ApplicationEventType.CORRELATION_RULE_UPDATE_ATTEMPT,
         attemptMessage = "Attempting to update correlation rule: {name}",
@@ -260,6 +269,7 @@ public class UtmCorrelationRulesResource {
      * @return the {@link ResponseEntity} with status {@code 204 (No Content)}, with status {@code 400 (Bad Request)}, or with status {@code 500 (Internal)} if errors occurred.
      */
     @DeleteMapping("/correlation-rule/{id}")
+    @PreAuthorize(SOC_MANAGER_AUTH)
     @AuditEvent(
         attemptType = ApplicationEventType.CORRELATION_RULE_DELETE_ATTEMPT,
         attemptMessage = "Attempting to delete correlation rule with ID: {id}",
@@ -319,6 +329,7 @@ public class UtmCorrelationRulesResource {
     }
 
     @PostMapping("/correlation-rule/{id}/rollback/{vNum}")
+    @PreAuthorize(SOC_MANAGER_AUTH)
     public ResponseEntity<UtmCorrelationRulesDTO> rollbackRule(@PathVariable Long id,
                                                                 @PathVariable Integer vNum) {
         final String ctx = CLASSNAME + ".rollbackRule";
@@ -338,6 +349,7 @@ public class UtmCorrelationRulesResource {
     // ── Dry-run test ───────────────────────────────────────────────────────────
 
     @PostMapping("/correlation-rule/test")
+    @PreAuthorize(SOC_MANAGER_AUTH)
     public ResponseEntity<RuleTestResultDTO> testRule(@RequestBody RuleTestRequestDTO request) {
         final String ctx = CLASSNAME + ".testRule";
         try {
@@ -376,6 +388,7 @@ public class UtmCorrelationRulesResource {
     // ── Sigma import ───────────────────────────────────────────────────────────
 
     @PostMapping("/correlation-rule/import")
+    @PreAuthorize(SOC_MANAGER_AUTH)
     public ResponseEntity<SigmaImportResultDTO> importRules(@RequestBody SigmaImportRequestDTO request) {
         final String ctx = CLASSNAME + ".importRules";
         try {
@@ -429,6 +442,7 @@ public class UtmCorrelationRulesResource {
     }
 
     @PostMapping("/correlation-rule/packs/{packName}/install")
+    @PreAuthorize(SOC_MANAGER_AUTH)
     public ResponseEntity<SigmaImportResultDTO> installPack(@PathVariable String packName) {
         final String ctx = CLASSNAME + ".installPack";
         try {
@@ -489,6 +503,7 @@ public class UtmCorrelationRulesResource {
     // ── Bulk operations ────────────────────────────────────────────────────────
 
     @PutMapping("/correlation-rule/bulk-enable")
+    @PreAuthorize(SOC_MANAGER_AUTH)
     public ResponseEntity<Void> bulkEnable(@RequestBody List<Long> ids) {
         final String ctx = CLASSNAME + ".bulkEnable";
         try {
@@ -505,6 +520,7 @@ public class UtmCorrelationRulesResource {
     }
 
     @PutMapping("/correlation-rule/bulk-disable")
+    @PreAuthorize(SOC_MANAGER_AUTH)
     public ResponseEntity<Void> bulkDisable(@RequestBody List<Long> ids) {
         final String ctx = CLASSNAME + ".bulkDisable";
         try {
@@ -521,6 +537,7 @@ public class UtmCorrelationRulesResource {
     }
 
     @DeleteMapping("/correlation-rule/bulk")
+    @PreAuthorize(SOC_MANAGER_AUTH)
     public ResponseEntity<Void> bulkDelete(@RequestBody List<Long> ids) {
         final String ctx = CLASSNAME + ".bulkDelete";
         try {

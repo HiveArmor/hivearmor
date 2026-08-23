@@ -2,7 +2,12 @@
  * Incidents Service Tests
  */
 
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 describe('incidents.service', () => {
   it('exports getIncidents function', async () => {
@@ -58,5 +63,17 @@ describe('incidents.service', () => {
   it('exports getUsersAssigned function', async () => {
     const module = await import('./incidents.service');
     expect(typeof module.getUsersAssigned).toBe('function');
+  });
+
+  it('unwraps OpenSearch evidence envelope { items, total }', async () => {
+    const { getIncidentEvidence } = await import('./incidents.service');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      items: [{ id: 'ev-1', title: 'Artifact', type: 'note', source: 'analyst', timestamp: '2026-08-23T10:00:00Z', content: '', addedBy: 'a', addedAt: '2026-08-23T10:00:00Z' }],
+      total: 1,
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } })));
+
+    const items = await getIncidentEvidence(12);
+    expect(items).toHaveLength(1);
+    expect(items[0]?.id).toBe('ev-1');
   });
 });
