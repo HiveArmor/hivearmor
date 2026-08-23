@@ -14,18 +14,19 @@ vi.mock('./sensorRemoteActions.capabilities', async (importOriginal) => {
   };
 });
 
-import { apiClient } from '@/lib/apiClient';
-import { canEnableRemoteSensorActions } from './sensorRemoteActions.capabilities';
+import {
+  canEnableRemoteSensorActions,
+  REMOTE_SENSOR_ACTION_ROLES,
+  REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED,
+  REMOTE_SENSOR_ACTIONS_REST_GATED,
+} from './sensorRemoteActions.capabilities';
 import {
   hasRemoteSensorActionRole,
   isolateSensor,
   killSensorProcess,
 } from './sensorRemoteActions.service';
-import {
-  REMOTE_SENSOR_ACTION_ROLES,
-  REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED,
-  REMOTE_SENSOR_ACTIONS_REST_GATED,
-} from './sensorRemoteActions.capabilities';
+
+import { apiClient } from '@/lib/apiClient';
 
 describe('sensorRemoteActions.capabilities', () => {
   it('documents REST as gated and live verify as off by default', () => {

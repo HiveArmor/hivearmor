@@ -3,12 +3,12 @@
  * Callers must gate with canEnableRemoteSensorActions() + ROLE_ADMIN|ROLE_SOC_MANAGER.
  */
 
-import { apiClient } from '@/lib/apiClient';
-
 import {
   canEnableRemoteSensorActions,
   REMOTE_SENSOR_ACTION_ROLES,
 } from './sensorRemoteActions.capabilities';
+
+import { apiClient } from '@/lib/apiClient';
 
 export interface IsolateSensorRequest {
   agentId: string;
