@@ -1,5 +1,5 @@
-import type { EChartsOption } from 'echarts';
 import { useQuery } from '@tanstack/react-query';
+import type { EChartsOption } from 'echarts';
 import { AlertTriangle } from 'lucide-react';
 
 import {

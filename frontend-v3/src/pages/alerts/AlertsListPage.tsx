@@ -50,8 +50,8 @@ import type {
   AlertTriageAction,
   AlertTriageDetail,
 } from './alertTriage.types';
-import { IncidentLinkDialog } from './components/IncidentLinkDialog';
 import { AssignmentDialog } from './components/AssignmentDialog';
+import { IncidentLinkDialog } from './components/IncidentLinkDialog';
 import { NoteDialog } from './components/NoteDialog';
 import { TagDialog } from './components/TagDialog';
 
