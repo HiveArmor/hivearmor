@@ -32,6 +32,7 @@ import com.hivearmor.opensearch.parsers.TermAggregateParser;
 import com.hivearmor.opensearch.types.BucketAggregation;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.text.StringEscapeUtils;
+import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
@@ -177,16 +178,14 @@ public class UtmAlertServiceImpl implements UtmAlertService {
                     "ctx._source.statusLabel='%2$s';" +
                     "ctx._source.statusObservation=\"%3$s\";";
 
-            List<FilterType> filters = new ArrayList<>();
-            filters.add(new FilterType(Constants.alertIdKeyword, OperatorType.IS_ONE_OF_TERMS_OR, alertIds));
-            filters.add(new FilterType(Constants.alertParentIdKeyword, OperatorType.IS_ONE_OF_TERMS_OR, alertIds));
-
             String script = String.format(ruleScript, status,
                     AlertStatus.getByCode(status).getName(), StringEscapeUtils.escapeJava(statusObservation));
 
             script = UnicodeReplacer.replaceUnicode(script);
 
-            elasticsearchService.updateByQuery(SearchUtil.toQuery(filters),
+            // Match by document _id, alertId (v3), legacy id, or parentId so status
+            // updates persist across both pipeline schemas (F07 smoke regression).
+            elasticsearchService.updateByQuery(buildAlertIdsQuery(alertIds),
                     indexResolver.resolveAlertIndexPattern(), script);
 
             long duration = System.currentTimeMillis() - start;
@@ -216,12 +215,8 @@ public class UtmAlertServiceImpl implements UtmAlertService {
             String script = String.format("if (ctx._source.tags == null) { ctx._source.tags = []; } " +
                     "if (!ctx._source.tags.contains('%s')) { ctx._source.tags.add('%s'); }", Constants.FALSE_POSITIVE_TAG, Constants.FALSE_POSITIVE_TAG);
 
-            List<FilterType> filters = new ArrayList<>();
-            filters.add(new FilterType(Constants.alertIdKeyword, OperatorType.IS_ONE_OF_TERMS_OR, alertIds));
-            filters.add(new FilterType(Constants.alertParentIdKeyword, OperatorType.IS_ONE_OF_TERMS_OR, alertIds));
-
             elasticsearchService.updateByQuery(
-                    SearchUtil.toQuery(filters),
+                    buildAlertIdsQuery(alertIds),
                     indexResolver.resolveAlertIndexPattern(),
                     script
             );
@@ -397,5 +392,26 @@ public class UtmAlertServiceImpl implements UtmAlertService {
         } catch (Exception e) {
             throw new UtmElasticsearchException(ctx + ": " + e.getMessage());
         }
+    }
+
+    /**
+     * Builds an OpenSearch query that matches alert documents by any known identifier field.
+     *
+     * <p>v3 alert documents store the identifier in {@code alertId} (and as {@code _id}),
+     * while older indexes used {@code id} / {@code parentId}. Matching only {@code id.keyword}
+     * caused silent no-ops on status updates (HTTP 200, zero documents updated).
+     */
+    static Query buildAlertIdsQuery(List<String> alertIds) {
+        List<FieldValue> termsValues = alertIds.stream().map(FieldValue::of).toList();
+        return Query.of(q -> q.bool(b -> b
+            .should(s -> s.ids(i -> i.values(alertIds)))
+            .should(s -> s.terms(t -> t.field(Constants.alertDocumentIdKeyword)
+                .terms(tv -> tv.value(termsValues))))
+            .should(s -> s.terms(t -> t.field(Constants.alertIdKeyword)
+                .terms(tv -> tv.value(termsValues))))
+            .should(s -> s.terms(t -> t.field(Constants.alertParentIdKeyword)
+                .terms(tv -> tv.value(termsValues))))
+            .minimumShouldMatch("1")
+        ));
     }
 }

@@ -185,9 +185,11 @@ func (x *ListRequest) GetSortBy() string {
 }
 
 type AuthResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Key           string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    uint32                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Key   string                 `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
+	// Tenant bound at collector registration. Zero means unbound (fail-closed at verify).
+	TenantId      int64 `protobuf:"varint,3,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -234,6 +236,13 @@ func (x *AuthResponse) GetKey() string {
 		return x.Key
 	}
 	return ""
+}
+
+func (x *AuthResponse) GetTenantId() int64 {
+	if x != nil {
+		return x.TenantId
+	}
+	return 0
 }
 
 type DeleteRequest struct {
@@ -306,10 +315,11 @@ const file_common_proto_rawDesc = "" +
 	"pageNumber\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12!\n" +
 	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\x12\x17\n" +
-	"\asort_by\x18\x04 \x01(\tR\x06sortBy\"0\n" +
+	"\asort_by\x18\x04 \x01(\tR\x06sortBy\"M\n" +
 	"\fAuthResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\rR\x02id\x12\x10\n" +
-	"\x03key\x18\x02 \x01(\tR\x03key\"f\n" +
+	"\x03key\x18\x02 \x01(\tR\x03key\x12\x1b\n" +
+	"\ttenant_id\x18\x03 \x01(\x03R\btenantId\"f\n" +
 	"\rDeleteRequest\x12\x1d\n" +
 	"\n" +
 	"deleted_by\x18\x01 \x01(\tR\tdeletedBy\x12\x19\n" +

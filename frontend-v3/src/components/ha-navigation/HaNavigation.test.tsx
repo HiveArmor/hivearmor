@@ -52,6 +52,44 @@ describe('HaNavigation', () => {
     expect(screen.getByRole('button', { name: 'Threat Constellation' })).toBeVisible();
   });
 
+  it('exposes usable orphaned routes for an analyst', () => {
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.getByRole('button', { name: 'Hive Intelligence' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'UEBA Risk' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Response Activity' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Detection Coverage' })).toBeVisible();
+  });
+
+  it('keeps admin-only orphaned routes out of the analyst rail', () => {
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.queryByRole('button', { name: 'API Keys' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Data Sources' })).not.toBeInTheDocument();
+  });
+
+  it('exposes API Keys and Data Sources for administrators', () => {
+    useAuthStore.setState({
+      user: {
+        id: 2,
+        login: 'admin',
+        firstName: 'Ada',
+        lastName: 'Admin',
+        email: 'ada@example.test',
+        roles: ['ROLE_ADMIN'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.getByRole('button', { name: 'API Keys' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Data Sources' })).toBeVisible();
+  });
+
   it('pins the navigation open from the keyboard-accessible control', () => {
     renderNavigation();
     fireEvent.click(screen.getByRole('button', { name: 'Pin sidebar open' }));
@@ -71,13 +109,15 @@ describe('HaNavigation', () => {
     expect(screen.getByRole('button', { name: 'Switch to dark mode' })).toBeVisible();
   });
 
-  it('keeps account access in the navigation footer in collapsed and expanded states', () => {
+  it('keeps account access in the navigation footer without dead profile links', () => {
     renderNavigation();
     const userMenu = screen.getByRole('button', { name: 'User menu' });
     expect(userMenu).toBeVisible();
     fireEvent.click(userMenu);
     expect(screen.getByRole('menu', { name: 'Account actions' })).toBeVisible();
-    expect(screen.getByRole('menuitem', { name: 'My Profile' })).toBeVisible();
+    expect(screen.queryByRole('menuitem', { name: 'My Profile' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Change Password' })).not.toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'Sign Out' })).toBeVisible();
   });
 
   it('keeps section separators visible in both sidebar states and uses compact expanded rows', () => {

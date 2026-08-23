@@ -24,6 +24,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -354,6 +357,92 @@ class HaAlertBulkResourceTest {
         // Verify each result includes the correct alertId
         assert "ALT-001".equals(results.get(0).get("alertId")) : "First result should reference ALT-001";
         assert "ALT-002".equals(results.get(1).get("alertId")) : "Second result should reference ALT-002";
+    }
+
+    /**
+     * Missing Idempotency-Key MUST return 400 MISSING_HEADER — never 500.
+     *
+     * Validates: F07 smoke — Idempotency-Key required with clear 400.
+     */
+    @Test
+    void executeStatus_missingIdempotencyKey_returns400() throws Exception {
+        String body = objectMapper.writeValueAsString(new java.util.LinkedHashMap<String, Object>() {{
+            put("alertIds", List.of("alert-1"));
+            put("targetStatus", "in_review");
+            put("previewToken", "some-token");
+        }});
+
+        mockMvc.perform(post(STATUS_ENDPOINT)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.errorCode").value("MISSING_HEADER"))
+            .andExpect(jsonPath("$.message").value("Idempotency-Key header is required"));
+
+        verifyNoInteractions(osClient);
+        verifyNoInteractions(idempotencyService);
+    }
+
+    /**
+     * Blank Idempotency-Key is treated the same as missing.
+     */
+    @Test
+    void executeStatus_blankIdempotencyKey_returns400() throws Exception {
+        String body = objectMapper.writeValueAsString(new java.util.LinkedHashMap<String, Object>() {{
+            put("alertIds", List.of("alert-1"));
+            put("targetStatus", "in_review");
+            put("previewToken", "some-token");
+        }});
+
+        mockMvc.perform(post(STATUS_ENDPOINT)
+                .header("Idempotency-Key", "   ")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.errorCode").value("MISSING_HEADER"));
+
+        verifyNoInteractions(osClient);
+    }
+
+    /**
+     * Idempotency cache write failures must not turn a successful mutation into HTTP 500
+     * (F07 smoke: OpenSearch updated then storeResult threw jsonb mapping error → 500).
+     */
+    @Test
+    void executeStatus_idempotencyStoreFailure_stillReturns200() throws Exception {
+        HaAlertBulkResource resource = new HaAlertBulkResource(
+            osClient, indexResolver, objectMapper, userRepository, idempotencyService, investigationEventPublisher);
+
+        TenantContext.set("test-tenant");
+        when(indexResolver.resolveAlertIndexPattern()).thenReturn("v3-hive-alert-test-tenant-*");
+        when(osClient.execute(any())).thenThrow(new RuntimeException("OpenSearch connection refused"));
+        when(idempotencyService.findCachedResponse(anyString(), anyString(), anyLong()))
+            .thenReturn(Optional.empty());
+        doThrow(new RuntimeException("column response_json is of type jsonb but expression is of type character varying"))
+            .when(idempotencyService).storeResult(anyString(), anyString(), anyLong(), any(), anyString());
+
+        java.util.Map<String, Object> previewBody = new java.util.LinkedHashMap<>();
+        previewBody.put("alertIds", List.of("alert-1"));
+        previewBody.put("targetStatus", "in_review");
+        org.springframework.http.ResponseEntity<?> previewResponse = resource.previewStatusChange(previewBody);
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> previewResult = (java.util.Map<String, Object>) previewResponse.getBody();
+        String previewToken = (String) previewResult.get("previewToken");
+
+        TenantContext.set("test-tenant");
+        java.util.Map<String, Object> executeBody = new java.util.LinkedHashMap<>();
+        executeBody.put("alertIds", List.of("alert-1"));
+        executeBody.put("targetStatus", "in_review");
+        executeBody.put("previewToken", previewToken);
+
+        org.springframework.http.ResponseEntity<?> executeResponse =
+            resource.executeStatusChange("idem-store-fail-key", executeBody);
+
+        assert executeResponse.getStatusCode().value() == 200
+            : "Expected 200 even when idempotency store fails, got " + executeResponse.getStatusCode().value();
+        verify(idempotencyService).storeResult(anyString(), anyString(), anyLong(), any(), anyString());
     }
 
     // ──────────────────────────────────────────────────────────────────────────

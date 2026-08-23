@@ -94,7 +94,7 @@ func (l *LogProcessor) ProcessLogs(cnf *config.Config, ctx context.Context) {
 
 		ctxEof, cancelEof := context.WithCancel(context.Background())
 		go l.handleAcknowledgements(plClient, ctxEof, cancelEof)
-		l.processLogs(plClient, ctxEof, cancelEof)
+		l.processLogs(cnf, plClient, ctxEof, cancelEof)
 	}
 }
 
@@ -140,7 +140,7 @@ func (l *LogProcessor) handleAcknowledgements(plClient plugins.Integration_Proce
 	}
 }
 
-func (l *LogProcessor) processLogs(plClient plugins.Integration_ProcessLogClient, ctx context.Context, cancel context.CancelFunc) {
+func (l *LogProcessor) processLogs(cnf *config.Config, plClient plugins.Integration_ProcessLogClient, ctx context.Context, cancel context.CancelFunc) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -162,6 +162,11 @@ func (l *LogProcessor) processLogs(plClient plugins.Integration_ProcessLogClient
 				if err != nil {
 					utils.Logger.ErrorF("failed to save log: %v", err)
 				}
+			}
+
+			if err := BindTenant(cnf, newLog); err != nil {
+				spool.WriteToDLQ("send:tenant-unbound", newLog)
+				continue
 			}
 
 			err := plClient.Send(newLog)
@@ -222,6 +227,7 @@ func (l *LogProcessor) reclaimProcessedRetention() {
 }
 
 func (l *LogProcessor) enqueueUnprocessed(limit int) {
+	cnf, cnfErr := config.GetCurrentConfig()
 	unprocessed := make([]models.Log, 0, limit)
 	if err := l.db.FindUnprocessed(&unprocessed, limit); err != nil {
 		if utils.Logger != nil {
@@ -236,6 +242,13 @@ func (l *LogProcessor) enqueueUnprocessed(limit int) {
 			DataType:   log.Type,
 			DataSource: log.DataSource,
 			Timestamp:  log.CreatedAt.Format(time.RFC3339Nano),
+		}
+		if cnfErr != nil || BindTenant(cnf, entry) != nil {
+			// Leave unprocessed for retry once tenant is configured; avoid DLQ spam.
+			if utils.Logger != nil {
+				utils.Logger.LogF(400, "logprocessor: skipping unprocessed log without tenant binding id=%s", log.ID)
+			}
+			continue
 		}
 		select {
 		case LogQueue <- entry:

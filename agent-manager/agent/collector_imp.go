@@ -124,25 +124,37 @@ func InitCollectorService() {
 }
 
 func (s *CollectorService) RegisterCollector(ctx context.Context, req *RegisterRequest) (*AuthResponse, error) {
+	tenantID := req.GetTenantId()
+
 	collector := &models.Collector{
 		Ip:       req.GetIp(),
 		Hostname: req.GetHostname(),
 		Version:  req.GetVersion(),
 		Module:   models.CollectorModule(req.GetCollector().String()),
+		TenantID: tenantID,
 	}
 
 	oldCollector := &models.Collector{}
 	err := s.DBConnection.GetFirst(oldCollector, "hostname = ? and module = ?", collector.Hostname, string(collector.Module))
 	if err == nil {
-		if oldCollector.Ip == collector.Ip {
-			return &AuthResponse{
-				Id:  uint32(oldCollector.ID),
-				Key: oldCollector.CollectorKey,
-			}, nil
-		} else {
+		if oldCollector.Ip != collector.Ip {
 			catcher.Error("collector already registered with different IP", nil, map[string]any{"hostname": oldCollector.Hostname, "module": oldCollector.Module, "id": oldCollector.ID, "process": "agent-manager"})
 			return nil, status.Errorf(codes.AlreadyExists, "hostname has already been registered")
 		}
+
+		boundTenant, err := bindExistingCollectorTenant(s, oldCollector, tenantID)
+		if err != nil {
+			return nil, err
+		}
+		return &AuthResponse{
+			Id:       uint32(oldCollector.ID),
+			Key:      oldCollector.CollectorKey,
+			TenantId: boundTenant,
+		}, nil
+	}
+
+	if tenantID <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "tenant is required for collector registration")
 	}
 
 	key := uuid.New().String()
@@ -163,11 +175,46 @@ func (s *CollectorService) RegisterCollector(ctx context.Context, req *RegisterR
 		LastPing:      time.Now(),
 	}
 
-	catcher.Info("Collector registered correctly", map[string]any{"hostname": collector.Hostname, "module": collector.Module, "id": collector.ID, "process": "agent-manager"})
+	catcher.Info("Collector registered correctly", map[string]any{"hostname": collector.Hostname, "module": collector.Module, "id": collector.ID, "tenant_id": collector.TenantID, "process": "agent-manager"})
 	return &AuthResponse{
-		Id:  uint32(collector.ID),
-		Key: key,
+		Id:       uint32(collector.ID),
+		Key:      key,
+		TenantId: collector.TenantID,
 	}, nil
+}
+
+// bindExistingCollectorTenant returns the stored tenant for a re-registering
+// collector. Unbound rows (tenant_id=0) may be bound once. Conflicting tenants fail closed.
+func bindExistingCollectorTenant(s *CollectorService, old *models.Collector, requested int64) (int64, error) {
+	bound, needsUpdate, err := resolveCollectorTenantOnReregister(old.TenantID, requested)
+	if err != nil {
+		return 0, err
+	}
+	if !needsUpdate {
+		return bound, nil
+	}
+	if err := s.DBConnection.Upsert(&models.Collector{}, "id = ?", map[string]interface{}{"tenant_id": bound}, old.ID); err != nil {
+		catcher.Error("failed to bind collector tenant", err, map[string]any{"collector_id": old.ID, "process": "agent-manager"})
+		return 0, status.Error(codes.Internal, "failed to bind collector tenant")
+	}
+	old.TenantID = bound
+	catcher.Info("Collector tenant bound on re-registration", map[string]any{"collector_id": old.ID, "tenant_id": bound, "process": "agent-manager"})
+	return bound, nil
+}
+
+// resolveCollectorTenantOnReregister decides the tenant for an existing collector.
+// needsUpdate is true when an unbound row should be persisted with requested.
+func resolveCollectorTenantOnReregister(stored, requested int64) (bound int64, needsUpdate bool, err error) {
+	if stored > 0 {
+		if requested > 0 && requested != stored {
+			return 0, false, status.Error(codes.FailedPrecondition, "collector tenant binding conflict")
+		}
+		return stored, false, nil
+	}
+	if requested <= 0 {
+		return 0, false, status.Error(codes.FailedPrecondition, "collector identity has no tenant binding")
+	}
+	return requested, true, nil
 }
 
 func (s *CollectorService) DeleteCollector(ctx context.Context, req *DeleteRequest) (*AuthResponse, error) {

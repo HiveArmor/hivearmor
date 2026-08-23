@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
-import type { ColDef } from 'ag-grid-community';
+import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { Activity, Plus } from 'lucide-react';
 
 import { AddAgentDrawer } from './AddAgentDrawer';
@@ -19,42 +19,143 @@ import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity, ROW_HEIGHTS } from '@/hooks/useRowDensity';
 import { apiClient } from '@/lib/apiClient';
 import { hasAuthority } from '@/lib/auth/hasAuthority';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import {
+  canEnableRemoteSensorActions,
+  REMOTE_SENSOR_ACTIONS_BLOCKED_DESCRIPTION,
+  REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE,
+} from '@/services/sensorRemoteActions.capabilities';
+import {
+  isolateSensor,
+  killSensorProcess,
+} from '@/services/sensorRemoteActions.service';
 import type { SensorDTO } from '@/types/sensor.types';
 
-/**
- * ActionsCellRenderer — GAP-SEC-05 Compliance
- * Renders disabled remote action buttons with explanatory tooltip.
- * AgentManager gRPC remote command path has no role verification.
- */
-function ActionsCellRenderer(): JSX.Element {
-  const btnStyle: React.CSSProperties = {
-    background: 'var(--ha-surface-raised)',
-    border: '1px solid var(--ha-border)',
-    borderRadius: 'var(--ha-radius-sm)',
-    color: 'var(--ha-text-secondary)',
-    cursor: 'not-allowed',
-    opacity: 0.45,
-    padding: '4px 8px',
-    fontSize: 'var(--ha-text-xs)',
-    pointerEvents: 'none',
-  };
+/** Agent list JSON may expose numeric `id` from AgentDTO while SensorDTO uses agentId. */
+type SensorRow = SensorDTO & { id?: number | string };
 
-  const tooltip = 'Remote agent actions stay blocked — agent-manager command path is INTERNAL_KEY-only (GAP-SEC-05)';
+function resolveAgentId(sensor: SensorRow | undefined): string | null {
+  if (!sensor) return null;
+  if (sensor.agentId) return String(sensor.agentId);
+  if (sensor.id !== undefined && sensor.id !== null) return String(sensor.id);
+  return null;
+}
+
+function ActionButton(props: {
+  label: string;
+  ariaLabel: string;
+  disabled: boolean;
+  title: string;
+  onClick?: () => void;
+  danger?: boolean;
+}): JSX.Element {
+  const { label, ariaLabel, disabled, title, onClick, danger } = props;
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      title={title}
+      aria-label={ariaLabel}
+      onClick={disabled ? undefined : onClick}
+      style={{
+        background: 'var(--ha-surface-raised)',
+        border: '1px solid var(--ha-border)',
+        borderRadius: 'var(--ha-radius-sm)',
+        color: danger ? 'var(--ha-critical)' : 'var(--ha-text-secondary)',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.45 : 1,
+        padding: '4px 8px',
+        fontSize: 'var(--ha-text-xs)',
+        pointerEvents: disabled ? 'none' : 'auto',
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+async function dispatchIsolate(agentId: string, hostname: string): Promise<void> {
+  if (!window.confirm(`Isolate host ${hostname || agentId}?`)) return;
+  try {
+    await isolateSensor({ agentId, hostname, reason: 'SensorGrid isolate' });
+    showSuccessToast('Isolate command dispatched');
+  } catch (err) {
+    showErrorToast(err instanceof Error ? err.message : 'Isolate failed');
+  }
+}
+
+async function dispatchKill(agentId: string, hostname: string): Promise<void> {
+  const raw = window.prompt('Process PID to terminate on this sensor:');
+  if (raw === null) return;
+  const pid = Number.parseInt(raw.trim(), 10);
+  if (!Number.isFinite(pid) || pid <= 0) {
+    showErrorToast('Enter a valid positive PID');
+    return;
+  }
+  if (!window.confirm(`Kill PID ${pid} on ${hostname || agentId}?`)) return;
+  try {
+    await killSensorProcess({ agentId, pid });
+    showSuccessToast('Kill process command dispatched');
+  } catch (err) {
+    showErrorToast(err instanceof Error ? err.message : 'Kill process failed');
+  }
+}
+
+/**
+ * ActionsCellRenderer — role-aware remote actions.
+ * Enable only when REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED flips true AND caller
+ * has Platform Administrator or SOC Manager. Calls JWT → /api/edr/* → ProcessCommand.
+ * No React hooks here — AG Grid may remount cell renderers freely.
+ */
+function ActionsCellRenderer(params: ICellRendererParams<SensorRow>): JSX.Element {
+  const sensor = params.data;
+  const agentId = resolveAgentId(sensor);
+  const hostname = sensor?.hostname ?? '';
+  const roleOk = hasAuthority('ROLE_ADMIN') || hasAuthority('ROLE_SOC_MANAGER');
+  const pathReady = canEnableRemoteSensorActions();
+  const canMutate = pathReady && roleOk && Boolean(agentId);
+
+  const blockedTitle = !pathReady
+    ? REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE
+    : !roleOk
+      ? 'Required permission: Platform Administrator or SOC Manager'
+      : !agentId
+        ? 'Sensor is missing an agent id'
+        : '';
+
+  const noHandlerTitle = 'No agent ProcessCommand handler for this action';
 
   return (
     <div
       style={{ display: 'flex', gap: 4, alignItems: 'center', height: '100%' }}
-      title={tooltip}
+      title={!canMutate ? blockedTitle : undefined}
     >
-      <button disabled style={btnStyle} aria-label="Restart Agent (blocked)">
-        Restart
-      </button>
-      <button disabled style={btnStyle} aria-label="Push Config (blocked)">
-        Config
-      </button>
-      <button disabled style={btnStyle} aria-label="Collect Logs (blocked)">
-        Logs
-      </button>
+      <ActionButton
+        label="Isolate"
+        ariaLabel={canMutate ? 'Isolate host' : 'Isolate host (blocked)'}
+        disabled={!canMutate}
+        title={canMutate ? 'Isolate host via ProcessCommand (EDR_ISOLATE)' : blockedTitle}
+        danger
+        onClick={() => {
+          if (agentId) void dispatchIsolate(agentId, hostname);
+        }}
+      />
+      <ActionButton
+        label="Kill"
+        ariaLabel={canMutate ? 'Kill process' : 'Kill process (blocked)'}
+        disabled={!canMutate}
+        title={canMutate ? 'Kill process via ProcessCommand (EDR_KILL)' : blockedTitle}
+        danger
+        onClick={() => {
+          if (agentId) void dispatchKill(agentId, hostname);
+        }}
+      />
+      <ActionButton
+        label="Restart"
+        ariaLabel="Restart agent (unavailable)"
+        disabled
+        title={noHandlerTitle}
+      />
     </div>
   );
 }
@@ -62,21 +163,17 @@ function ActionsCellRenderer(): JSX.Element {
 /**
  * SensorGridPage — Sensor health monitoring (POS-05)
  *
- * GAP-SEC-05: Remote action buttons stay disabled.
- * Backend REST (/api/edr/*, /api/agent-manager mutate) is now @PreAuthorize-gated,
- * but agent-manager gRPC command dispatch remains INTERNAL_KEY-only with no ROLE_*.
- * Do not enable kill/isolate/restart until a real role-aware command path exists.
- *
- * Add Agent: the "+ Add Agent" button opens AddAgentDrawer, which generates a
- * one-click install script containing an auto-expiring connection key.
+ * Remote isolate/kill: JWT → @PreAuthorize EDR REST → ProcessCommand.
+ * UI stays disabled until REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED (one-flag flip).
+ * Restart has no agent handler — remains unavailable regardless of the flag.
  */
 export function SensorGridPage(): JSX.Element {
   const [density] = useRowDensity();
   const { eps, connected: epsConnected } = useEpsStream();
   const [addAgentOpen, setAddAgentOpen] = useState(false);
   const canProvisionAgent = hasAuthority('ROLE_ADMIN');
+  const remoteActionsReady = canEnableRemoteSensorActions();
 
-  // Fetch sensors from agent-manager
   const {
     data: sensors = [],
     isLoading,
@@ -87,14 +184,12 @@ export function SensorGridPage(): JSX.Element {
     queryFn: () => apiClient.get<SensorDTO[]>('/agent-manager/agents'),
   });
 
-  // Compute active/total counts
   const activeSensors = useMemo(
     () => sensors.filter((s) => s.connectionStatus === 'ACTIVE').length,
     [sensors]
   );
   const totalSensors = sensors.length;
 
-  // Column definitions per POS-05 spec §7.1
   const columnDefs: ColDef<SensorDTO>[] = [
     {
       field: 'hostname',
@@ -208,7 +303,7 @@ export function SensorGridPage(): JSX.Element {
     },
     {
       headerName: 'Actions',
-      width: 200,
+      width: 220,
       cellRenderer: ActionsCellRenderer,
       sortable: false,
       filter: false,
@@ -224,15 +319,15 @@ export function SensorGridPage(): JSX.Element {
         backgroundColor: 'var(--ha-background)',
       }}
     >
-      {/* GAP-SEC-05 Warning Banner */}
-      <HaInlineBanner
-        variant="warning"
-        title="EDR actions blocked (GAP-SEC-05)"
-        description="Remote agent actions (Kill Process, Isolate Host, Restart, Push Config) stay disabled. REST mutate endpoints are role-gated, but agent-manager still accepts commands only via INTERNAL_KEY (no ROLE_* on the gRPC path). Enabling UI actions would still be dishonest."
-        isDismissible={false}
-      />
+      {!remoteActionsReady && (
+        <HaInlineBanner
+          variant="warning"
+          title={REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE}
+          description={REMOTE_SENSOR_ACTIONS_BLOCKED_DESCRIPTION}
+          isDismissible={false}
+        />
+      )}
 
-      {/* Page header — includes Add Agent button */}
       <div
         style={{
           height: '48px',
@@ -266,24 +361,22 @@ export function SensorGridPage(): JSX.Element {
           </span>
         </div>
 
-        {/* Right side: density selector + Add Agent */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <DensitySelector />
           {canProvisionAgent && (
-          <HaButton
-            variant="primary"
-            icon={<Plus size={16} />}
-            onClick={() => setAddAgentOpen(true)}
-          >
-            Add Agent
-          </HaButton>
+            <HaButton
+              variant="primary"
+              icon={<Plus size={16} />}
+              onClick={() => setAddAgentOpen(true)}
+            >
+              Add Agent
+            </HaButton>
           )}
         </div>
       </div>
 
       <AgentPackageCatalog />
 
-      {/* Content area - all four states */}
       <div style={{ flex: 1, padding: '16px' }}>
         {isLoading && <LoadingState message="Loading sensors..." />}
 
@@ -301,13 +394,13 @@ export function SensorGridPage(): JSX.Element {
             description="Download an agent package above, or use Add Agent to generate a keyed one-click install script. Process-log tests do not register a sensor row."
             action={
               canProvisionAgent ? (
-              <HaButton
-                variant="primary"
-                icon={<Plus size={16} />}
-                onClick={() => setAddAgentOpen(true)}
-              >
-                Add Agent
-              </HaButton>
+                <HaButton
+                  variant="primary"
+                  icon={<Plus size={16} />}
+                  onClick={() => setAddAgentOpen(true)}
+                >
+                  Add Agent
+                </HaButton>
               ) : undefined
             }
           />
@@ -326,7 +419,6 @@ export function SensorGridPage(): JSX.Element {
 
       <StatusDock sseConnected={epsConnected} eps={eps} />
 
-      {/* Add Agent provisioning drawer */}
       <AddAgentDrawer
         isOpen={addAgentOpen}
         onClose={() => setAddAgentOpen(false)}

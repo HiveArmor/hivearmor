@@ -18,8 +18,9 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Verifies legacy EdrResource containment mutates are role-gated (F03).
- * Agent event ingest remains without method-level ROLE_* (agent auth path).
+ * Verifies legacy EdrResource containment mutates are role-gated (F03 / SensorGrid path).
+ * SensorGrid isolate/kill call these JWT endpoints; backend then uses ProcessCommand
+ * with INTERNAL_KEY on the gRPC hop only. Agent event ingest remains without method-level ROLE_*.
  */
 class EdrResourcePreAuthorizeTest {
 

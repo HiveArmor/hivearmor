@@ -128,6 +128,7 @@ func modelToProtoCollector(model models.Collector) *Collector {
 		Status:       Status(collectorStatus),
 		LastSeen:     lastSeen,
 		Module:       CollectorModule(CollectorModule_value[string(model.Module)]),
+		TenantId:     model.TenantID,
 	}
 }
 

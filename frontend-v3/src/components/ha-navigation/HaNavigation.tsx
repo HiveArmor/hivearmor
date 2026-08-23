@@ -31,20 +31,25 @@ const COMMAND_ITEMS: NavItemSpec[] = [
   { label: 'Incidents', icon: 'Target', route: '/incidents', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
 ];
 
+// Section: COMMAND — intentionally not listed:
+// - /alerts/board — severity board is linked from AlertsListPage, not a primary nav entry
+
 // Section: INVESTIGATE
 const INVESTIGATE_ITEMS: NavItemSpec[] = [
   { label: 'Search & Hunt', icon: 'Search', route: '/search', roles: [] },
   { label: 'Investigations', icon: 'Monitor', route: '/investigations', roles: [] },
   { label: 'Entities', icon: 'Users', route: '/entities', roles: [] },
-  { label: 'Threat Constellation', icon: 'GitBranch', route: '/constellation', roles: [] },
-  // Hive Intelligence hidden until SEC-GAP-14 resolved (PD-05)
-  // { label: 'Hive Intelligence', icon: 'Brain', route: '/intelligence', roles: [] },
+  { label: 'Threat Constellation', icon: 'GitBranch', route: '/constellation', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  // SEC-GAP-14 path prefix fixed to /api/ha-threat-intel/* — page is LIVE_API usable
+  { label: 'Hive Intelligence', icon: 'Brain', route: '/intelligence', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  { label: 'UEBA Risk', icon: 'UserSearch', route: '/ueba/risk', roles: ['ROLE_ANALYST', 'ROLE_ADMIN'] },
 ];
 
 // Section: DEFEND
 const DEFEND_ITEMS: NavItemSpec[] = [
   { label: 'Detection Rules', icon: 'Zap', route: '/detection-rules', roles: ['ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Playbooks', icon: 'BookOpen', route: '/response/playbooks', roles: ['ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  { label: 'Response Activity', icon: 'History', route: '/response/activity', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Response Approvals', icon: 'Gavel', route: '/response/authority', roles: ['ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Quarantine & Containment', icon: 'ShieldOff', route: '/response/quarantine', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Response Library', icon: 'Library', route: '/response/library', roles: [] },
@@ -58,10 +63,10 @@ const POSTURE_ITEMS: NavItemSpec[] = [
   { label: 'Exposure', icon: 'ShieldOff', route: '/posture/exposure', roles: [] },
   { label: 'Vulnerabilities', icon: 'Bug', route: '/posture/vulnerabilities', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'CIS Benchmark', icon: 'ClipboardCheck', route: '/posture/cis-benchmark', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  { label: 'Detection Coverage', icon: 'Grid3x3', route: '/posture/readiness', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Sensors', icon: 'Activity', route: '/posture/sensors', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Compliance', icon: 'CheckSquare', route: '/compliance', roles: [] },
 ];
-
 // Section: ENDPOINT DEFENSE
 const ENDPOINT_ITEMS: NavItemSpec[] = [
   { label: 'Endpoints', icon: 'Monitor', route: '/edr/endpoints', roles: [] },
@@ -69,13 +74,16 @@ const ENDPOINT_ITEMS: NavItemSpec[] = [
   { label: 'Agent Policies', icon: 'Settings', route: '/edr/policies', roles: ['ROLE_ADMIN'] },
 ];
 
-// Section: DASHBOARDS — inventory is the safe entry point; Studio is role-gated.
+// Section: DASHBOARDS — gallery is the safe entry point; Studio is role-gated.
+// Intentionally hidden: /dashboards/metrics/builder — studio sub-tool, not a top-level entry
 const DASHBOARDS_ITEMS: NavItemSpec[] = [
   { label: 'Operational Dashboards', icon: 'LayoutDashboard', route: '/dashboards', roles: [] },
   { label: 'Dashboard Studio', icon: 'Pencil', route: '/dashboards/studio', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
 ];
 
-// Section: REPORT — one governed lifecycle with route-specific entry views.
+// Section: REPORT — scheduled + templates are the governed entry points.
+// Intentionally hidden (stub / STATIC_UI, no honest LIVE_API surface yet):
+// - /reports/sitrep, /reports/incidents, /reports/after-action
 const REPORT_ITEMS: NavItemSpec[] = [
   { label: 'Reporting Operations', icon: 'FileText', route: '/reports/scheduled', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Report Templates', icon: 'ClipboardCheck', route: '/reports/templates', roles: ['ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
@@ -84,9 +92,17 @@ const REPORT_ITEMS: NavItemSpec[] = [
 const MSSP_ADMIN_AUTHORITY = "MSSP_ADMIN";
 
 // Section: ADMINISTRATION (only shown to ROLE_ADMIN)
+// Intentionally hidden — reachable via hub tabs or deep-link only (avoid nav clutter):
+// - /admin/retention, /admin/notifications → Governance / Integrations tab views
+// - /admin/data-parsing → Pipeline Operations parsers tab
+// - /admin/connection-keys, /admin/threat-intel, /admin/scim, /admin/sso — specialized admin surfaces
+// - /admin/rule-generation, /admin/rules/import, /admin/rules/test — detection tooling, not nav hubs
+// - /admin/*-old, /response/playbooks-legacy, /settings/system — aliases / deprecated
 const ADMINISTRATION_ITEMS: NavItemSpec[] = [
   { label: 'Identity & Tenancy', icon: 'UserCog', route: '/admin/users', roles: ['ROLE_ADMIN'] },
   { label: 'Integrations & Delivery', icon: 'Plug', route: '/admin/integrations', roles: ['ROLE_ADMIN'] },
+  { label: 'API Keys', icon: 'KeyRound', route: '/settings/api-keys', roles: ['ROLE_ADMIN'] },
+  { label: 'Data Sources', icon: 'Database', route: '/inputs/sources', roles: ['ROLE_ADMIN'] },
   { label: 'Audit Log', icon: 'ClipboardList', route: '/admin/audit', roles: ['ROLE_ADMIN'] },
   { label: 'Pipeline & Ingestion', icon: 'Activity', route: '/admin/pipeline-signals', roles: ['ROLE_ADMIN'] },
   { label: 'Settings', icon: 'Settings', route: '/admin/settings', roles: ['ROLE_ADMIN'] },

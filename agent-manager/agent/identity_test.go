@@ -95,17 +95,69 @@ func TestAuthorizationFromAgentOmitsSecrets(t *testing.T) {
 	}
 }
 
-func TestVerifiedCollectorSecretRejectsWrongKeyAndHasNoTenant(t *testing.T) {
-	collector := models.Collector{CollectorKey: "collector-secret"}
+func TestVerifiedCollectorIdentityBindsTenantAndRejectsUnbound(t *testing.T) {
+	collector := models.Collector{CollectorKey: "collector-secret", TenantID: 11}
 	collector.ID = 4
-	got, err := verifiedCollectorSecret(collector, "collector-secret")
+	got, err := verifiedCollectorIdentity(collector, "collector-secret")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.GetTenantId() != 0 || got.GetUuid() != "collector:4" {
-		t.Fatalf("collector identity must remain unbound: %#v", got)
+	if got.GetTenantId() != 11 || got.GetUuid() != "collector:4" || got.GetConnectorType() != ConnectorType_COLLECTOR {
+		t.Fatalf("unexpected collector identity: %#v", got)
 	}
-	if _, err := verifiedCollectorSecret(collector, "wrong"); status.Code(err) != codes.Unauthenticated {
+	if strings.Contains(got.String(), "collector-secret") {
+		t.Fatal("identity response leaked credential material")
+	}
+	if _, err := verifiedCollectorIdentity(collector, "wrong"); status.Code(err) != codes.Unauthenticated {
 		t.Fatalf("got %v, want Unauthenticated", err)
+	}
+
+	unbound := collector
+	unbound.TenantID = 0
+	if _, err := verifiedCollectorIdentity(unbound, "collector-secret"); status.Code(err) != codes.FailedPrecondition {
+		t.Fatalf("got %v, want FailedPrecondition for unbound collector", err)
+	}
+}
+
+func TestResolveCollectorTenantOnReregister(t *testing.T) {
+	tests := []struct {
+		name        string
+		stored      int64
+		requested   int64
+		want        int64
+		wantUpdate  bool
+		wantCode    codes.Code
+	}{
+		{name: "return stored", stored: 7, requested: 0, want: 7},
+		{name: "same tenant ok", stored: 7, requested: 7, want: 7},
+		{name: "conflict", stored: 7, requested: 9, wantCode: codes.FailedPrecondition},
+		{name: "still unbound", stored: 0, requested: 0, wantCode: codes.FailedPrecondition},
+		{name: "bind unbound", stored: 0, requested: 42, want: 42, wantUpdate: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, needsUpdate, err := resolveCollectorTenantOnReregister(test.stored, test.requested)
+			if test.wantCode != codes.OK {
+				if status.Code(err) != test.wantCode {
+					t.Fatalf("got %v, want %v", err, test.wantCode)
+				}
+				return
+			}
+			if err != nil || got != test.want || needsUpdate != test.wantUpdate {
+				t.Fatalf("got %d update=%v err=%v, want %d update=%v", got, needsUpdate, err, test.want, test.wantUpdate)
+			}
+		})
+	}
+}
+
+func TestAuthorizationFromCollectorIncludesTenant(t *testing.T) {
+	collector := models.Collector{CollectorKey: "must-not-leak", TenantID: 99}
+	collector.ID = 8
+	got := authorizationFromCollector(collector)
+	if got.GetId() != 8 || got.GetTenantId() != 99 || got.GetUuid() != "collector:8" {
+		t.Fatalf("unexpected authorization %#v", got)
+	}
+	if strings.Contains(got.String(), "must-not-leak") {
+		t.Fatal("authorization projection leaked credential material")
 	}
 }

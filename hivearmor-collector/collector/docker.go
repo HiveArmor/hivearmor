@@ -355,7 +355,13 @@ func (d *DockerCollector) processAndSendLogLine(line string, container models.Co
 	}
 
 	// Durable spool first; a full memory queue retains the event in SQLite.
-	spool.Offer(logservice.LogQueue, "docker", utmLog)
+	// Tenant binding is fail-closed: unbound collectors DLQ and do not enqueue.
+	cnf, err := config.GetCurrentConfig()
+	if err != nil {
+		spool.WriteToDLQ("docker:config", utmLog)
+		return err
+	}
+	logservice.OfferBound(cnf, "docker", utmLog)
 	return nil
 }
 

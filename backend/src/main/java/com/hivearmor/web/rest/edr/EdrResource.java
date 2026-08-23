@@ -242,6 +242,10 @@ public class EdrResource {
         }
     }
 
+    /**
+     * SensorGrid isolate path: JWT + MUTATE_AUTH → EdrService → ProcessCommand(EDR_ISOLATE).
+     * INTERNAL_KEY is applied only on the server-side gRPC client interceptor.
+     */
     @Deprecated(since = "2026-08-11", forRemoval = true)
     @PostMapping("/isolation")
     @PreAuthorize(MUTATE_AUTH)
@@ -279,6 +283,9 @@ public class EdrResource {
     }
 
     // ---- Response actions ----
+    // SensorGrid (frontend-v3) uses these JWT + @PreAuthorize mutates; the backend
+    // then dispatches PanelService.ProcessCommand over gRPC with INTERNAL_KEY
+    // (service identity only — never exposed to the browser). ROLE_* is enforced here.
 
     @PostMapping("/actions/kill-process")
     @PreAuthorize(MUTATE_AUTH)

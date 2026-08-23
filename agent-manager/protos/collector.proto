@@ -27,6 +27,8 @@ message RegisterRequest {
   string hostname = 2;
   string version = 3;
   CollectorModule collector = 4;
+  // Required for new collector registrations. Bound into collector identity.
+  int64 tenant_id = 5;
 }
 
 message ListCollectorResponse {
@@ -43,6 +45,7 @@ message Collector {
   string version = 6;
   CollectorModule module = 7;
   string last_seen = 8;
+  int64 tenant_id = 9;
 }
 
 message CollectorMessages {

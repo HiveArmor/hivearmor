@@ -37,6 +37,9 @@ func (p *program) run() {
 	if err != nil {
 		utils.Logger.Fatal("error getting config: %v", err)
 	}
+	if err := cnf.RequireTenant(); err != nil {
+		utils.Logger.Fatal("collector tenant binding required: %v", err)
+	}
 
 	db, err := database.GetDB()
 	if err != nil {

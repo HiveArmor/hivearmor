@@ -23,6 +23,7 @@ type Config struct {
 	CollectorID        uint   `yaml:"collector-id"`
 	CollectorKey       string `yaml:"collector-key"`
 	SkipCertValidation bool   `yaml:"insecure"`
+	TenantID           int64  `yaml:"tenant-id"`
 }
 
 func GetInitialConfig() (*Config, string) {
@@ -34,6 +35,9 @@ func GetInitialConfig() (*Config, string) {
 		cnf.SkipCertValidation = true
 	} else {
 		cnf.SkipCertValidation = false
+	}
+	if tenantID, err := ParseTenantID(); err == nil {
+		cnf.TenantID = tenantID
 	}
 	return &cnf, os.Args[3]
 }
@@ -88,6 +92,7 @@ func GetCurrentConfig() (*Config, error) {
 		cnf.CollectorID = encryptConfig.CollectorID
 		cnf.CollectorKey = collectorKey
 		cnf.SkipCertValidation = encryptConfig.SkipCertValidation
+		cnf.TenantID = encryptConfig.TenantID
 
 		if !uuidExists {
 			if err := SaveConfig(&cnf); err != nil {
@@ -123,6 +128,7 @@ func SaveConfig(cnf *Config) error {
 		CollectorID:        cnf.CollectorID,
 		CollectorKey:       collectorKey,
 		SkipCertValidation: cnf.SkipCertValidation,
+		TenantID:           cnf.TenantID,
 	}
 
 	if err := utils.WriteYAML(ConfigurationFile, encryptConf); err != nil {

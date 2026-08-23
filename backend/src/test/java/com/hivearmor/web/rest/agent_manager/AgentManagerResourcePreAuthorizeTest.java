@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Verifies AgentManagerResource endpoints carry role gates (F03 / GAP-SEC-05 REST layer).
+ * Mutating agent commands from the UI must not bypass this layer — browser never holds INTERNAL_KEY;
+ * gRPC ProcessCommand is reached only after JWT @PreAuthorize (see EdrResource kill/isolate).
  */
 class AgentManagerResourcePreAuthorizeTest {
 

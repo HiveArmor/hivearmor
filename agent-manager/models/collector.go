@@ -17,4 +17,6 @@ type Collector struct {
 	Version      string          `json:"version" gorm:"type:varchar(100)"`
 	Module       CollectorModule `json:"module" gorm:"type:varchar(100)"`
 	DeletedBy    string          `json:"deletedBy" gorm:"type:varchar(255)"`
+	// TenantID binds collector identity for ingress. Zero means unbound (verify fails closed).
+	TenantID int64 `json:"tenantId" gorm:"index;not null;default:0"`
 }

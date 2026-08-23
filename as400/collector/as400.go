@@ -177,11 +177,18 @@ func (c *AS400Collector) processCollectorLogs(stdout io.ReadCloser) {
 			continue
 		}
 
-		logservice.LogQueue <- &plugins.Log{
+		entry := &plugins.Log{
 			DataType:   string(config.DataType),
 			DataSource: c.hostname,
 			Raw:        validatedLog,
 		}
+		cnf, err := config.GetCurrentConfig()
+		if err != nil || cnf.RequireTenant() != nil {
+			utils.Logger.ErrorF("skipping log without tenant binding: %v", err)
+			continue
+		}
+		entry.TenantId = cnf.TenantString()
+		logservice.LogQueue <- entry
 	}
 
 	if err := scanner.Err(); err != nil {

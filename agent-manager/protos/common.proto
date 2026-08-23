@@ -25,6 +25,8 @@ enum ConnectorType{
 message AuthResponse {
   uint32 id = 1;
   string key = 2;
+  // Tenant bound at collector registration. Zero means unbound (fail-closed at verify).
+  int64 tenant_id = 3;
 }
 
 message DeleteRequest {

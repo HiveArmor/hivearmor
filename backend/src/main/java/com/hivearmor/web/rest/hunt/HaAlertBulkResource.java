@@ -59,12 +59,13 @@ public class HaAlertBulkResource {
         "completed", 5,
         "closed", 5,
         "true_positive", 6,
-        "false_positive", 7
+        "false_positive", 7,
+        "benign_positive", 8
     );
 
     /** Statuses that require a reasonCode. */
     private static final Set<String> REASON_REQUIRED_STATUSES = Set.of(
-        "closed", "completed", "true_positive", "false_positive"
+        "closed", "completed", "true_positive", "false_positive", "benign_positive"
     );
 
     /** Preview tokens — UUID → PreviewData, expires after 10 minutes. */
@@ -290,12 +291,13 @@ public class HaAlertBulkResource {
             response.put("targetStatus", targetStatus);
             response.put("processedAt", Instant.now().toString());
 
-            // Store result for idempotency
+            // Store result for idempotency — never fail the mutation if cache write fails
             try {
                 String responseJson = objectMapper.writeValueAsString(response);
                 idempotencyService.storeResult(idempotencyKey, tenantPrefix, userId, body, responseJson);
-            } catch (JsonProcessingException e) {
-                log.warn("Failed to serialize response for idempotency cache: {}", e.getMessage());
+            } catch (Exception e) {
+                log.warn("Failed to store idempotency result (mutation already applied): {}",
+                    e.getMessage());
             }
 
             return ResponseEntity.ok(response);
@@ -576,12 +578,13 @@ public class HaAlertBulkResource {
             response.put("results", results);
             response.put("processedAt", Instant.now().toString());
 
-            // Store result for idempotency
+            // Store result for idempotency — never fail the mutation if cache write fails
             try {
                 String responseJson = objectMapper.writeValueAsString(response);
                 idempotencyService.storeResult(idempotencyKey, tenantPrefix, userId, body, responseJson);
-            } catch (JsonProcessingException e) {
-                log.warn("Failed to serialize response for idempotency cache: {}", e.getMessage());
+            } catch (Exception e) {
+                log.warn("Failed to store idempotency result (mutation already applied): {}",
+                    e.getMessage());
             }
 
             return ResponseEntity.ok(response);
@@ -857,12 +860,13 @@ public class HaAlertBulkResource {
             response.put("results", results);
             response.put("processedAt", Instant.now().toString());
 
-            // Store result for idempotency
+            // Store result for idempotency — never fail the mutation if cache write fails
             try {
                 String responseJson = objectMapper.writeValueAsString(response);
                 idempotencyService.storeResult(idempotencyKey, tenantPrefix, userId, body, responseJson);
-            } catch (JsonProcessingException e) {
-                log.warn("Failed to serialize response for idempotency cache: {}", e.getMessage());
+            } catch (Exception e) {
+                log.warn("Failed to store idempotency result (mutation already applied): {}",
+                    e.getMessage());
             }
 
             return ResponseEntity.ok(response);

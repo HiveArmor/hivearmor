@@ -73,6 +73,8 @@ public final class Constants {
     // - Alert index common fields
     // ----------------------------------------------------------------------------------
     public static final String alertIdKeyword = "id.keyword";
+    /** Document field used by v3 alert indexes (e2e + current pipeline). */
+    public static final String alertDocumentIdKeyword = "alertId.keyword";
     public static final String alertParentIdKeyword = "parentId.keyword";
     public static final String alertStatus = "status";
     public static final String alertTags = "tags";

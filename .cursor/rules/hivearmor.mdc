@@ -120,7 +120,7 @@ Do not mark a session complete if any gate fails.
 | ID | Gap | What to avoid in new code |
 |---|---|---|
 | SEC-03 | CorrelatedFindings status endpoint vulnerable | Status control stays disabled until backend fix deployed |
-| SEC-05 | AgentManager no role check | Remote action buttons stay disabled until backend fix deployed |
+| SEC-05 | Agent-manager gRPC is INTERNAL_KEY-only (by design) | REST mutates are ROLE_ADMIN\|SOC_MANAGER; SensorGrid isolate/kill stay disabled until `REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED` flips after ProcessCommand→agent proof |
 | SEC-06 | runVisualization no @PreAuthorize | Gate constant `GAP_SEC_06_RESOLVED = false` — do not remove |
 
 ## Role Labels — Use Human Names, Not ROLE_ Constants
@@ -247,7 +247,10 @@ GET /api/ha-entities/{id}/events
 GET /api/ha-entities/{id}/risk
 
 # Sensors / Agents
-GET /api/agent-manager/agents
+GET  /api/agent-manager/agents
+# SensorGrid remote containment (JWT + ROLE_ADMIN|ROLE_SOC_MANAGER → ProcessCommand)
+POST /api/edr/isolation                    (isolate host; UI gated by REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED)
+POST /api/edr/actions/kill-process         (kill PID; UI gated by REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED)
 
 # Threat Intel
 GET  /api/ha-threat-intel/feeds

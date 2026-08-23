@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { KeyRound, LogOut, User } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAuthStore } from '@/store/auth.store';
@@ -19,6 +19,7 @@ export function UserAvatarMenu({ compact = false, placement = 'bottom' }: UserAv
   const auth = useAuthStore();
   const user = auth.user;
   const logout = auth.logout;
+  const hasRole = auth.hasRole;
   const navigate = useNavigate();
 
   if (!user) return <></>;
@@ -32,6 +33,7 @@ export function UserAvatarMenu({ compact = false, placement = 'bottom' }: UserAv
     .map((part) => part.charAt(0))
     .join('')
     .toUpperCase() || accountLabel.slice(0, 2).toUpperCase();
+  const isAdmin = hasRole('ROLE_ADMIN');
   const close = (): void => setIsOpen(false);
 
   const handleSignOut = (): void => {
@@ -77,10 +79,19 @@ export function UserAvatarMenu({ compact = false, placement = 'bottom' }: UserAv
               <strong>{displayName}</strong>
               <span>{user.email}</span>
             </div>
-            <button type="button" role="menuitem" onClick={() => goTo('/profile')}><User size={15} aria-hidden="true" />My Profile</button>
-            <button type="button" role="menuitem" onClick={() => goTo('/account/change-password')}><KeyRound size={15} aria-hidden="true" />Change Password</button>
-            <span className="ha-user-menu__separator" aria-hidden="true" />
-            <button type="button" role="menuitem" data-tone="danger" onClick={handleSignOut}><LogOut size={15} aria-hidden="true" />Sign Out</button>
+            {/* No /profile or /account/change-password routes — hide dead links.
+                Admins get platform settings; password change has no dedicated UI page. */}
+            {isAdmin && (
+              <>
+                <button type="button" role="menuitem" onClick={() => goTo('/admin/settings')}>
+                  <Settings size={15} aria-hidden="true" />Settings
+                </button>
+                <span className="ha-user-menu__separator" aria-hidden="true" />
+              </>
+            )}
+            <button type="button" role="menuitem" data-tone="danger" onClick={handleSignOut}>
+              <LogOut size={15} aria-hidden="true" />Sign Out
+            </button>
           </div>
         </>
       )}

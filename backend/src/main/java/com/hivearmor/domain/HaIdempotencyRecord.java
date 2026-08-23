@@ -1,6 +1,8 @@
 package com.hivearmor.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -38,6 +40,7 @@ public class HaIdempotencyRecord implements Serializable {
     @Column(name = "request_hash", nullable = false, length = 64)
     private String requestHash;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "response_json", columnDefinition = "jsonb")
     private String responseJson;
 

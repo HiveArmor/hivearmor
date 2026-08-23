@@ -60,10 +60,17 @@ func (s *AgentService) VerifyConnectorIdentity(ctx context.Context, req *VerifyC
 			})
 			return nil, status.Error(codes.Internal, "failed to verify connector identity")
 		}
-		if _, err := verifiedCollectorSecret(collector, req.GetPresentedKey()); err != nil {
+		identity, err := verifiedCollectorIdentity(collector, req.GetPresentedKey())
+		if err != nil {
 			return nil, err
 		}
-		return nil, status.Error(codes.FailedPrecondition, "collector identity has no tenant binding")
+		catcher.Info("connector identity verified", map[string]any{
+			"process":        "agent-manager",
+			"connector_id":   identity.Id,
+			"connector_type": "collector",
+			"tenant_id":      identity.TenantId,
+		})
+		return identity, nil
 	default:
 		return nil, status.Error(codes.InvalidArgument, "connector type is required")
 	}
@@ -134,13 +141,17 @@ func verifiedAgentIdentity(agent models.Agent, presentedKey string) (*VerifyConn
 	}, nil
 }
 
-func verifiedCollectorSecret(collector models.Collector, presentedKey string) (*VerifyConnectorIdentityResponse, error) {
+func verifiedCollectorIdentity(collector models.Collector, presentedKey string) (*VerifyConnectorIdentityResponse, error) {
 	if strings.TrimSpace(collector.CollectorKey) == "" || !credentialMatches(collector.CollectorKey, presentedKey) {
 		return nil, status.Error(codes.Unauthenticated, "invalid key")
+	}
+	if collector.TenantID <= 0 {
+		return nil, status.Error(codes.FailedPrecondition, "collector identity has no tenant binding")
 	}
 	return &VerifyConnectorIdentityResponse{
 		Id:            uint32(collector.ID),
 		Uuid:          fmt.Sprintf("collector:%d", collector.ID),
+		TenantId:      collector.TenantID,
 		ConnectorType: ConnectorType_COLLECTOR,
 	}, nil
 }
@@ -164,7 +175,7 @@ func authorizationFromCollector(collector models.Collector) *ConnectorAuthorizat
 	return &ConnectorAuthorization{
 		Id:            uint32(collector.ID),
 		Uuid:          fmt.Sprintf("collector:%d", collector.ID),
-		TenantId:      0,
+		TenantId:      collector.TenantID,
 		Revoked:       false,
 		ConnectorType: ConnectorType_COLLECTOR,
 	}
