@@ -9,10 +9,10 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
 import { HaAuthContainer } from '@/components/ha-auth-container';
+import { HaBrandLockup } from '@/components/ha-brand-lockup';
 import { HaButton } from '@/components/ha-button';
 import { HaFormGroup } from '@/components/ha-form-group';
 import { HaInlineBanner } from '@/components/ha-inline-banner';
-import { HaWordmark } from '@/components/ha-wordmark';
 import { getAccount, verifyTfaCode } from '@/services/auth.service';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -140,7 +140,10 @@ export function TfaPage(): JSX.Element {
 
   return (
     <HaAuthContainer>
-      <HaWordmark />
+      <div className="tfa-identity">
+        <HaBrandLockup variant="mark" size={40} decorative />
+        <span className="tfa-identity__name">HiveArmor</span>
+      </div>
 
       {/* Step indicator */}
       <div className="tfa-step-indicator" aria-label="Step 2 of 2: Verify identity">

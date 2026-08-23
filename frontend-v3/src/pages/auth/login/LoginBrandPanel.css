@@ -1,0 +1,108 @@
+.login-brand {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 100%;
+  gap: clamp(24px, 3.5vh, 44px);
+  transition: opacity 180ms ease;
+}
+
+.login-brand--pending {
+  opacity: 0.94;
+}
+
+.login-brand__identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 620px;
+}
+
+.login-brand__full-name {
+  margin: 0;
+  max-width: 620px;
+  color: var(--ha-foreground-secondary);
+  font-size: clamp(15px, 1.05vw, 17px);
+  font-weight: 450;
+  line-height: 1.5;
+}
+
+.login-brand__accent {
+  width: 72px;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, var(--ha-brand-primary), var(--ha-brand-hot));
+}
+
+.login-brand__hero {
+  max-width: 560px;
+  margin-top: auto;
+  margin-bottom: clamp(16px, 4vh, 56px);
+}
+
+.login-brand__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ha-brand-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.login-brand__eyebrow::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ha-brand-hot);
+  opacity: 0.9;
+}
+
+.login-brand__headline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12em;
+  margin: 18px 0 16px;
+  font-size: clamp(36px, 3.6vw, 54px);
+  font-weight: 650;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.login-brand__headline-line {
+  color: var(--ha-foreground-primary);
+}
+
+.login-brand__emphasis {
+  color: var(--ha-brand-hot);
+}
+
+.login-brand__lede {
+  margin: 0;
+  max-width: 460px;
+  color: var(--ha-foreground-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.login-brand__lede--secondary {
+  margin-top: 8px;
+  color: var(--ha-foreground-tertiary);
+  font-size: 14px;
+}
+
+@media (max-height: 800px) {
+  .login-brand__headline {
+    font-size: clamp(32px, 3.2vw, 46px);
+  }
+
+  .login-brand__hero {
+    margin-bottom: 12px;
+  }
+}

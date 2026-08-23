@@ -1,21 +1,26 @@
-import { useEffect, useState } from 'react';
+/**
+ * LoginPage — AUTH-01 authentication gate.
+ * Auth logic stays here; brand/auth panels are presentation-only.
+ */
+
+import { useEffect, useMemo, useState } from 'react';
+import type { FormEvent, KeyboardEvent } from 'react';
 
 import { useMutation } from '@tanstack/react-query';
-import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { AgenticReasoningFabric } from './login/AgenticReasoningFabric';
+import { LOGIN_CREDENTIALS_ERROR } from './login/login.constants';
+import { LoginAuthPanel } from './login/LoginAuthPanel';
+import { LoginBrandPanel } from './login/LoginBrandPanel';
+
 import { HaAuthContainer } from '@/components/ha-auth-container';
-import { HaButton } from '@/components/ha-button';
-import { HaFormGroup } from '@/components/ha-form-group';
-import { HaInlineBanner } from '@/components/ha-inline-banner';
-import { HiveArmorLogo } from '@/components/ha-masthead/HiveArmorLogo';
 import { useEnabledSsoProviders } from '@/hooks/useSsoProviders';
+import { filterProductionSsoProviders } from '@/lib/ssoProviders';
 import { authenticate, getAccount } from '@/services/auth.service';
 import { buildAuthorizeUrl } from '@/services/ssoService';
 import { useAuthStore } from '@/store/auth.store';
 import type { AuthenticateRequest } from '@/types/api.types';
-
-import './LoginPage.css';
 
 export function LoginPage(): JSX.Element {
   const navigate = useNavigate();
@@ -30,15 +35,24 @@ export function LoginPage(): JSX.Element {
   const [passwordError, setPasswordError] = useState('');
   const [serverError, setServerError] = useState('');
   const [securityNotice, setSecurityNotice] = useState('');
-  const [showAllSso, setShowAllSso] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
+  const [selectedSsoId, setSelectedSsoId] = useState('');
   const { data: ssoProviders, isLoading: ssoLoading, isError: ssoError } = useEnabledSsoProviders();
 
+  const productionProviders = useMemo(
+    () => filterProductionSsoProviders(ssoProviders),
+    [ssoProviders],
+  );
+
   useEffect(() => {
-    // Bootstrap validates the stored token before this route renders. Redirect
-    // only from authoritative auth state; a stale/fixture token in localStorage
-    // must not bounce between /login and /dashboard while validation fails.
     if (isAuthenticated) navigate('/dashboard', { replace: true });
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (productionProviders.length === 1) {
+      setSelectedSsoId(String(productionProviders[0].id));
+    }
+  }, [productionProviders]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -50,6 +64,8 @@ export function LoginPage(): JSX.Element {
       setSecurityNotice('Your session expired. Sign in again to continue securely.');
     } else if (params.get('sso') === 'prompt') {
       setSecurityNotice('Choose your organization identity provider below, or continue with HiveArmor credentials.');
+    } else if (params.get('error') === 'oidc_callback_failed') {
+      setServerError('Organization sign-in could not be completed. Try again or use HiveArmor credentials.');
     }
   }, [location.search]);
 
@@ -100,7 +116,7 @@ export function LoginPage(): JSX.Element {
         if (status === 423) {
           navigate('/login?locked=true', { replace: true });
         } else if (status === 401) {
-          setServerError('The credentials could not be verified. Check your details and try again.');
+          setServerError(LOGIN_CREDENTIALS_ERROR);
         } else {
           setServerError('HiveArmor authentication is temporarily unavailable. Please try again.');
         }
@@ -110,7 +126,7 @@ export function LoginPage(): JSX.Element {
     },
   });
 
-  const handleSubmit = (event: React.FormEvent): void => {
+  const handleSubmit = (event: FormEvent): void => {
     event.preventDefault();
     setUsernameError('');
     setPasswordError('');
@@ -127,113 +143,52 @@ export function LoginPage(): JSX.Element {
     if (!invalid) mutation.mutate({ username: username.trim(), password, rememberMe });
   };
 
-  const brandPanel = (
-    <div className="login-brand">
-      <div className="login-brand__identity"><HiveArmorLogo size={42} /><span className="login-brand__name">HiveArmor</span></div>
-      <div className="login-brand__copy">
-        <span className="login-brand__eyebrow">Enterprise security operations</span>
-        <h2>See the signal. Coordinate the response.</h2>
-        <p>Hybrid Intelligence &amp; Visibility Engine for Advanced Response, Monitoring, Orchestration and Resilience.</p>
-      </div>
-      <div className="login-brand__signals" aria-label="Platform capabilities">
-        <div className="login-brand__signal"><strong>Unified visibility</strong><span>Across tenants and telemetry</span></div>
-        <div className="login-brand__signal"><strong>Analyst-led response</strong><span>Evidence before action</span></div>
-        <div className="login-brand__signal"><strong>Operational resilience</strong><span>Health and risk in context</span></div>
-      </div>
-    </div>
-  );
+  const handlePasswordKeyEvent = (event: KeyboardEvent<HTMLInputElement>): void => {
+    setCapsLockOn(event.getModifierState('CapsLock'));
+  };
+
+  const handleSsoContinue = (): void => {
+    const providerId = Number(selectedSsoId);
+    if (!Number.isFinite(providerId) || providerId <= 0) {
+      setSecurityNotice('Select your organization identity provider to continue.');
+      return;
+    }
+    window.location.href = buildAuthorizeUrl(providerId, `${window.location.origin}/oidc-callback`);
+  };
 
   return (
-    <HaAuthContainer variant="split" aside={brandPanel}>
-      <div className="login-form__identity"><HiveArmorLogo size={34} /><span>HiveArmor</span></div>
-      <span className="login-form__eyebrow">Secure access</span>
-      <h1 className="login-heading">Sign in to HiveArmor</h1>
-      <p className="login-subtitle">Use your organization credentials to access the security operations workspace.</p>
-
-      {securityNotice && <HaInlineBanner variant="info" description={securityNotice} isDismissible={false} />}
-      {serverError && <HaInlineBanner variant={serverError.includes('credentials') ? 'danger' : 'warning'} description={serverError} isDismissible={false} />}
-
-      <form className="login-form" onSubmit={handleSubmit} aria-label="Sign in" noValidate>
-        <HaFormGroup label="Work email or username" isRequired fieldId="username">
-          <input
-            id="username"
-            className="ha-text-input"
-            type="text"
-            aria-label="Work email or username"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            autoComplete="username"
-            autoFocus
-            aria-invalid={Boolean(usernameError)}
-            aria-describedby={usernameError ? 'username-error' : undefined}
-            disabled={mutation.isPending}
-            maxLength={255}
-          />
-          {usernameError && <div id="username-error" className="field-error">{usernameError}</div>}
-        </HaFormGroup>
-
-        <HaFormGroup label="Password" isRequired fieldId="password">
-          <div className="password-input-wrapper">
-            <input
-              id="password"
-              className="ha-text-input"
-              type={showPassword ? 'text' : 'password'}
-              aria-label="Password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              aria-invalid={Boolean(passwordError)}
-              aria-describedby={passwordError ? 'password-error' : undefined}
-              disabled={mutation.isPending}
-              maxLength={255}
-            />
-            <button type="button" className="password-toggle" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'} disabled={mutation.isPending}>
-              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-          {passwordError && <div id="password-error" className="field-error">{passwordError}</div>}
-        </HaFormGroup>
-
-        <div className="login-form__utility">
-          <label className="remember-me-label">
-            <input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} disabled={mutation.isPending} />
-            <span>Remember this device</span>
-          </label>
-          <button type="button" className="auth-link" onClick={() => setSecurityNotice('Password recovery is managed by your organization identity administrator or service desk.')} disabled={mutation.isPending}>Forgot password?</button>
-        </div>
-
-        <HaButton type="submit" variant="primary" isBlock isLoading={mutation.isPending} isDisabled={mutation.isPending} aria-busy={mutation.isPending}>
-          {mutation.isPending ? 'Signing in…' : 'Sign in'}
-        </HaButton>
-        <div className="auth-footer">
-          <button type="button" className="auth-link" onClick={() => navigate('/login?sso=prompt')} disabled={mutation.isPending}>Continue with organization SSO</button>
-        </div>
-      </form>
-
-      {!ssoLoading && !ssoError && ssoProviders && ssoProviders.length > 0 && (
-        <div className="sso-section">
-          <div className="sso-divider" aria-hidden="true"><span className="sso-divider-label">Organization identity</span></div>
-          {(showAllSso ? ssoProviders : ssoProviders.slice(0, 3)).map((provider) => (
-            <button key={provider.id} type="button" className="sso-provider-button" onClick={() => { window.location.href = buildAuthorizeUrl(provider.id, `${window.location.origin}/oidc-callback`); }}>
-              Continue with {provider.providerName}
-            </button>
-          ))}
-          {ssoProviders.length > 3 && (
-            <button
-              type="button"
-              className="auth-link sso-more"
-              onClick={() => setShowAllSso((open) => !open)}
-            >
-              {showAllSso ? 'Show fewer identity providers' : `Show all ${ssoProviders.length} identity providers`}
-            </button>
-          )}
-        </div>
-      )}
-
-      <div className="login-trust-row">
-        <span className="login-system-status">Authentication service available</span>
-        <span className="login-trust-mark"><ShieldCheck size={13} aria-hidden="true" />Protected enterprise access</span>
-      </div>
+    <HaAuthContainer
+      variant="fullscreen"
+      atmosphere={<AgenticReasoningFabric />}
+      aside={<LoginBrandPanel isPending={mutation.isPending} />}
+    >
+      <LoginAuthPanel
+        username={username}
+        password={password}
+        showPassword={showPassword}
+        rememberMe={rememberMe}
+        usernameError={usernameError}
+        passwordError={passwordError}
+        serverError={serverError}
+        securityNotice={securityNotice}
+        capsLockOn={capsLockOn}
+        isPending={mutation.isPending}
+        selectedSsoId={selectedSsoId}
+        productionProviders={ssoLoading || ssoError ? [] : productionProviders}
+        onUsernameChange={setUsername}
+        onPasswordChange={setPassword}
+        onTogglePassword={() => setShowPassword((visible) => !visible)}
+        onRememberMeChange={setRememberMe}
+        onForgotPassword={() =>
+          setSecurityNotice(
+            'Password recovery is managed by your organization identity administrator or service desk.',
+          )
+        }
+        onSubmit={handleSubmit}
+        onPasswordKeyEvent={handlePasswordKeyEvent}
+        onSelectedSsoChange={setSelectedSsoId}
+        onSsoContinue={handleSsoContinue}
+      />
     </HaAuthContainer>
   );
 }

@@ -1,0 +1,16 @@
+.ha-brand-lockup {
+  display: block;
+  flex-shrink: 0;
+  user-select: none;
+  pointer-events: none;
+}
+
+.ha-brand-lockup--mark {
+  object-fit: contain;
+}
+
+.ha-brand-lockup--lockup {
+  max-width: min(100%, 320px);
+  object-fit: contain;
+  object-position: left center;
+}

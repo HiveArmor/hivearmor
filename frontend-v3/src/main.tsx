@@ -19,7 +19,6 @@ import './styles/global.css';
 import './styles/patternfly-overrides.css';
 import './styles/tokens.css';
 import './styles/foundation.css';
-import './pages/auth/LoginPage.css';
 import './components/ha-auth-container/HaAuthContainer.css';
 
 const rootElement = document.getElementById('root');

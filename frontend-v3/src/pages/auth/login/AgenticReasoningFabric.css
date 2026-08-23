@@ -1,0 +1,291 @@
+.agentic-fabric {
+  /* Shared 20s reasoning cycle — keep in sync with AgentStateIndicator */
+  --agentic-cycle: 20s;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.agentic-fabric__glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+}
+
+.agentic-fabric__glow--warm {
+  width: 58%;
+  height: 70%;
+  top: 4%;
+  left: -4%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--ha-brand-primary) 18%, transparent),
+    color-mix(in srgb, var(--ha-brand-hot) 7%, transparent) 45%,
+    transparent 72%
+  );
+  opacity: 0.55;
+  animation: agentic-glow-warm 26s ease-in-out infinite;
+}
+
+.agentic-fabric__glow--cool {
+  width: 42%;
+  height: 55%;
+  top: 22%;
+  right: -6%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--ha-surface-panel) 55%, transparent),
+    transparent 70%
+  );
+  opacity: 0.38;
+  animation: agentic-glow-cool 30s ease-in-out infinite;
+}
+
+.agentic-fabric__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.agentic-fabric__hex {
+  opacity: 0.12;
+}
+
+/* Soft ambient pulse — same period, staggered start within cycle */
+.agentic-fabric__hex--a { animation: agentic-hex var(--agentic-cycle) ease-in-out infinite; }
+.agentic-fabric__hex--b { animation: agentic-hex var(--agentic-cycle) ease-in-out infinite; animation-delay: calc(var(--agentic-cycle) * -0.12); }
+.agentic-fabric__hex--c { animation: agentic-hex var(--agentic-cycle) ease-in-out infinite; animation-delay: calc(var(--agentic-cycle) * -0.28); }
+.agentic-fabric__hex--d { animation: agentic-hex var(--agentic-cycle) ease-in-out infinite; animation-delay: calc(var(--agentic-cycle) * -0.08); }
+.agentic-fabric__hex--e { animation: agentic-hex var(--agentic-cycle) ease-in-out infinite; animation-delay: calc(var(--agentic-cycle) * -0.36); }
+.agentic-fabric__hex--f { animation: agentic-hex var(--agentic-cycle) ease-in-out infinite; animation-delay: calc(var(--agentic-cycle) * -0.2); }
+.agentic-fabric__hex--g { animation: agentic-hex var(--agentic-cycle) ease-in-out infinite; animation-delay: calc(var(--agentic-cycle) * -0.44); }
+.agentic-fabric__hex--h { animation: agentic-hex var(--agentic-cycle) ease-in-out infinite; animation-delay: calc(var(--agentic-cycle) * -0.24); }
+
+.agentic-fabric__path {
+  opacity: 0.14;
+  stroke-dasharray: 5 9;
+}
+
+/*
+  Phases (shared with AgentStateIndicator):
+  0–25%  CORRELATING — inbound path + telemetry signal
+  25–50% CONTEXT — cluster nodes + correlate path
+  50–75% REASONING — reason core/ring + reason path
+  75–100% RESPONSE — outbound signal + bridge; settle
+*/
+.agentic-fabric__path--telemetry {
+  animation: agentic-path-correlate var(--agentic-cycle) ease-in-out infinite;
+}
+
+.agentic-fabric__path--correlate {
+  animation: agentic-path-context var(--agentic-cycle) ease-in-out infinite;
+}
+
+.agentic-fabric__path--reason {
+  animation: agentic-path-reason var(--agentic-cycle) ease-in-out infinite;
+}
+
+.agentic-fabric__path--bridge {
+  opacity: 0.06;
+  animation: agentic-path-bridge var(--agentic-cycle) ease-in-out infinite;
+}
+
+.agentic-fabric__path--alt {
+  opacity: 0.1;
+  animation: agentic-path-context var(--agentic-cycle) ease-in-out infinite;
+  animation-delay: calc(var(--agentic-cycle) * -0.05);
+}
+
+.agentic-fabric__node {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0.28;
+}
+
+.agentic-fabric__node--1 { animation: agentic-node-correlate var(--agentic-cycle) ease-in-out infinite; }
+.agentic-fabric__node--2 { animation: agentic-node-correlate var(--agentic-cycle) ease-in-out infinite; animation-delay: calc(var(--agentic-cycle) * -0.04); }
+.agentic-fabric__node--3 { animation: agentic-node-context var(--agentic-cycle) ease-in-out infinite; }
+.agentic-fabric__node--4 { animation: agentic-node-context var(--agentic-cycle) ease-in-out infinite; animation-delay: calc(var(--agentic-cycle) * -0.04); }
+.agentic-fabric__node--5 { animation: agentic-node-context var(--agentic-cycle) ease-in-out infinite; animation-delay: calc(var(--agentic-cycle) * -0.08); }
+.agentic-fabric__node--6 { animation: agentic-node-response var(--agentic-cycle) ease-in-out infinite; }
+
+.agentic-fabric__reason-glow {
+  opacity: 0.18;
+  animation: agentic-reason-glow var(--agentic-cycle) ease-in-out infinite;
+}
+
+.agentic-fabric__reason-ring {
+  opacity: 0.26;
+  animation: agentic-reason-ring var(--agentic-cycle) ease-in-out infinite;
+}
+
+.agentic-fabric__reason-core {
+  opacity: 0.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: agentic-reason-core var(--agentic-cycle) ease-in-out infinite;
+}
+
+.agentic-fabric__signal {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: var(--ha-brand-hot);
+  opacity: 0;
+}
+
+/* Telemetry arrives into fabric — phase 0–25% */
+.agentic-fabric__signal--in {
+  animation: agentic-signal-in var(--agentic-cycle) linear infinite;
+}
+
+/* Governed response leaves reasoning node toward auth — phase 75–100% */
+.agentic-fabric__signal--out {
+  animation: agentic-signal-out var(--agentic-cycle) linear infinite;
+}
+
+@keyframes agentic-glow-warm {
+  0%, 100% { opacity: 0.48; transform: translate(0, 0) scale(1); }
+  50% { opacity: 0.62; transform: translate(1.5%, 1%) scale(1.03); }
+}
+
+@keyframes agentic-glow-cool {
+  0%, 100% { opacity: 0.32; transform: translate(0, 0); }
+  50% { opacity: 0.42; transform: translate(-1%, 1.5%); }
+}
+
+@keyframes agentic-hex {
+  0%, 100% { opacity: 0.09; }
+  12%, 22% { opacity: 0.16; }
+  37%, 47% { opacity: 0.18; }
+  62%, 72% { opacity: 0.15; }
+  87% { opacity: 0.1; }
+}
+
+@keyframes agentic-path-correlate {
+  0%, 4% { opacity: 0.1; }
+  8%, 22% { opacity: 0.32; }
+  28%, 100% { opacity: 0.12; }
+}
+
+@keyframes agentic-path-context {
+  0%, 22% { opacity: 0.1; }
+  28%, 47% { opacity: 0.3; }
+  55%, 100% { opacity: 0.12; }
+}
+
+@keyframes agentic-path-reason {
+  0%, 47% { opacity: 0.1; }
+  52%, 72% { opacity: 0.34; }
+  80%, 100% { opacity: 0.12; }
+}
+
+@keyframes agentic-path-bridge {
+  0%, 72% { opacity: 0.04; }
+  78%, 90% { opacity: 0.14; }
+  96%, 100% { opacity: 0.04; }
+}
+
+@keyframes agentic-node-correlate {
+  0%, 4% { opacity: 0.24; transform: scale(1); }
+  10%, 22% { opacity: 0.78; transform: scale(1.16); }
+  30%, 100% { opacity: 0.28; transform: scale(1); }
+}
+
+@keyframes agentic-node-context {
+  0%, 24% { opacity: 0.24; transform: scale(1); }
+  30%, 47% { opacity: 0.8; transform: scale(1.16); }
+  55%, 100% { opacity: 0.28; transform: scale(1); }
+}
+
+@keyframes agentic-node-response {
+  0%, 72% { opacity: 0.24; transform: scale(1); }
+  78%, 90% { opacity: 0.72; transform: scale(1.12); }
+  96%, 100% { opacity: 0.28; transform: scale(1); }
+}
+
+@keyframes agentic-reason-glow {
+  0%, 48% { opacity: 0.14; }
+  55%, 70% { opacity: 0.52; }
+  80%, 100% { opacity: 0.16; }
+}
+
+@keyframes agentic-reason-ring {
+  0%, 48% { opacity: 0.2; }
+  55%, 70% { opacity: 0.7; }
+  80%, 100% { opacity: 0.24; }
+}
+
+@keyframes agentic-reason-core {
+  0%, 48% { opacity: 0.48; transform: scale(1); }
+  55%, 70% { opacity: 0.95; transform: scale(1.22); }
+  80%, 100% { opacity: 0.52; transform: scale(1); }
+}
+
+@keyframes agentic-signal-in {
+  0%, 2% { left: 4%; top: 24%; opacity: 0; }
+  5% { opacity: 0.85; }
+  12% { left: 12%; top: 24%; }
+  18% { left: 16%; top: 30%; opacity: 0.8; }
+  24% { left: 24%; top: 30%; opacity: 0; }
+  100% { left: 24%; top: 30%; opacity: 0; }
+}
+
+@keyframes agentic-signal-out {
+  0%, 74% { left: 38%; top: 50%; opacity: 0; }
+  78% { opacity: 0.75; }
+  86% { left: 50%; top: 50%; opacity: 0.45; }
+  94% { left: 62%; top: 50%; opacity: 0; }
+  100% { left: 62%; top: 50%; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agentic-fabric__glow,
+  .agentic-fabric__hex,
+  .agentic-fabric__path,
+  .agentic-fabric__node,
+  .agentic-fabric__reason-glow,
+  .agentic-fabric__reason-ring,
+  .agentic-fabric__reason-core,
+  .agentic-fabric__signal {
+    animation: none !important;
+  }
+
+  .agentic-fabric__glow--warm { opacity: 0.52; transform: none; }
+  .agentic-fabric__glow--cool { opacity: 0.34; transform: none; }
+  .agentic-fabric__hex { opacity: 0.12; }
+  .agentic-fabric__path { opacity: 0.14; }
+  .agentic-fabric__path--bridge { opacity: 0.05; }
+  .agentic-fabric__node { opacity: 0.34; transform: none; }
+  .agentic-fabric__reason-glow { opacity: 0.26; }
+  .agentic-fabric__reason-ring { opacity: 0.34; }
+  .agentic-fabric__reason-core { opacity: 0.62; transform: none; }
+  .agentic-fabric__signal { display: none; }
+}
+
+@media (max-width: 1366px) {
+  .agentic-fabric__hex--g,
+  .agentic-fabric__hex--h,
+  .agentic-fabric__node--5 {
+    display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .agentic-fabric__path--bridge,
+  .agentic-fabric__signal--out,
+  .agentic-fabric__hex--f {
+    display: none;
+  }
+}
+
+@media (max-width: 980px) {
+  .agentic-fabric {
+    display: none;
+  }
+}

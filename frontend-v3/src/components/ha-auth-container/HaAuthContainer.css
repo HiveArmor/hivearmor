@@ -11,7 +11,7 @@
   max-width: 440px;
   overflow: hidden;
   border: 1px solid var(--ha-border-default);
-  border-radius: var(--ha-radius-workspace);
+  border-radius: var(--ha-radius-panel);
   background: var(--ha-surface-panel);
   box-shadow: var(--ha-shadow-medium);
 }
@@ -34,7 +34,8 @@
 
 .ha-auth-container[data-variant='split'] {
   background:
-    radial-gradient(circle at 17% 18%, color-mix(in srgb, var(--ha-action-primary) 10%, transparent), transparent 29%),
+    radial-gradient(circle at 14% 12%, color-mix(in srgb, var(--ha-brand-primary) 9%, transparent), transparent 32%),
+    radial-gradient(circle at 88% 78%, color-mix(in srgb, var(--ha-action-primary) 7%, transparent), transparent 28%),
     var(--ha-surface-app);
 }
 
@@ -53,7 +54,10 @@
   overflow: hidden;
   padding: clamp(44px, 6vw, 84px);
   border-right: 1px solid var(--ha-border-default);
-  background: var(--ha-surface-sidebar);
+  background:
+    radial-gradient(ellipse at 18% 8%, color-mix(in srgb, var(--ha-brand-primary) 14%, transparent), transparent 42%),
+    radial-gradient(ellipse at 86% 92%, color-mix(in srgb, var(--ha-brand-hot) 10%, transparent), transparent 46%),
+    var(--ha-surface-sidebar);
 }
 
 .ha-auth-container[data-variant='split'] .ha-auth-panel {
@@ -77,4 +81,108 @@
   .ha-auth-container[data-variant='split'] .ha-auth-workspace { min-height: 100vh; border: 0; border-radius: 0; }
   .ha-auth-panel,
   .ha-auth-container[data-variant='split'] .ha-auth-panel { align-items: start; padding: 32px 22px; }
+}
+
+/* Continuous HiveArmor canvas — one surface, no hard left/right split */
+.ha-auth-container[data-variant='fullscreen'] {
+  padding: 0;
+  place-items: stretch;
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--ha-brand-primary) 5%, var(--ha-surface-app)) 0%,
+      var(--ha-surface-app) 42%,
+      color-mix(in srgb, var(--ha-surface-panel) 55%, var(--ha-surface-app)) 100%
+    );
+}
+
+.ha-auth-container[data-variant='fullscreen'] .ha-auth-workspace {
+  position: relative;
+  max-width: none;
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(380px, 1fr);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  overflow: hidden;
+}
+
+.ha-auth-container[data-variant='fullscreen'] .ha-auth-aside {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  overflow: hidden;
+  padding: clamp(32px, 4vw, 72px) clamp(32px, 4vw, 64px);
+  border-right: 0;
+  background: transparent;
+}
+
+.ha-auth-container[data-variant='fullscreen'] .ha-auth-panel {
+  position: relative;
+  z-index: 1;
+  place-items: center;
+  align-content: center;
+  justify-items: start;
+  padding: clamp(28px, 3.5vw, 56px) clamp(28px, 4vw, 64px) clamp(28px, 3.5vw, 56px) clamp(20px, 2.5vw, 40px);
+  background: transparent;
+}
+
+.ha-auth-container[data-variant='fullscreen'] .ha-auth-card {
+  position: relative;
+  max-width: 440px;
+  width: 100%;
+  margin-left: clamp(0px, 3vw, 48px);
+  padding: clamp(12px, 1.5vh, 20px) clamp(4px, 0.5vw, 8px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Secure Enclave — subconscious calm, not a card */
+.ha-auth-container[data-variant='fullscreen'] .ha-auth-card::before {
+  content: '';
+  position: absolute;
+  inset: -16% -22%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 48% 42%,
+    color-mix(in srgb, var(--ha-foreground-primary) 5.5%, transparent),
+    color-mix(in srgb, var(--ha-surface-panel) 28%, transparent) 38%,
+    transparent 58%
+  );
+  pointer-events: none;
+}
+
+@media (max-width: 980px) {
+  .ha-auth-container[data-variant='fullscreen'] .ha-auth-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .ha-auth-container[data-variant='fullscreen'] .ha-auth-aside {
+    display: none;
+  }
+
+  .ha-auth-container[data-variant='fullscreen'] .ha-auth-panel {
+    min-height: 100vh;
+    align-items: start;
+    justify-items: stretch;
+    padding: clamp(28px, 5vw, 40px) clamp(20px, 5vw, 24px);
+    background: var(--ha-surface-app);
+  }
+
+  .ha-auth-container[data-variant='fullscreen'] .ha-auth-card {
+    margin-left: 0;
+    max-width: none;
+  }
+
+  .ha-auth-container[data-variant='fullscreen'] .ha-auth-card::before {
+    display: none;
+  }
 }
