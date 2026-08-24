@@ -71,6 +71,15 @@ public class UtmDashboard implements Serializable {
     @Column(name = "sidebar_order")
     private Integer sidebarOrder;
 
+    /**
+     * MSSP tenant scope ({@code ha_client.id}). Null denotes legacy global data —
+     * when {@link com.hivearmor.multitenancy.TenantContext#getClientId()} is null,
+     * list/get/update/delete remain unscoped (same pattern as investigation sessions).
+     * GAP-MT-05 / P1 Spike B — STAGING CANDIDATE.
+     */
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @ManyToMany
     @JoinTable(
             name = "hive_dashboard_visualization",
@@ -216,5 +225,13 @@ public class UtmDashboard implements Serializable {
 
     public void setSidebarOrder(Integer sidebarOrder) {
         this.sidebarOrder = sidebarOrder;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 }

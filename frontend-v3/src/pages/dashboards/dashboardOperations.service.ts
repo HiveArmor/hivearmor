@@ -31,6 +31,8 @@ interface LegacyDashboard {
   userCreated?: string;
   userModified?: string;
   systemOwner?: boolean;
+  /** GAP-MT-05: present when backend returns tenant-scoped dashboards */
+  tenantId?: number | null;
   visualizations?: LegacyVisualization[];
 }
 
@@ -88,7 +90,8 @@ function normalizeDashboard(item: LegacyDashboard): DashboardRecord {
     updatedAt: item.modifiedDate ?? item.createdDate,
     refreshSeconds: item.refreshTime,
     defaultTimeRange: 'Not reported',
-    tenantScope: 'Not reported by legacy contract',
+    tenantScope:
+      item.tenantId != null ? `tenantId=${item.tenantId}` : 'Not reported by legacy contract',
     variables: [],
     panels,
   };

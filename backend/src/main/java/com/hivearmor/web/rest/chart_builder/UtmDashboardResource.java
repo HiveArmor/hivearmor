@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * REST controller for managing UtmDashboard.
@@ -97,6 +98,8 @@ public class UtmDashboardResource {
             applicationEventService.createEvent(msg, ApplicationEventType.ERROR);
             return ResponseEntity.status(HttpStatus.CONFLICT).headers(HeaderUtil.createFailureAlert(ENTITY_NAME, null, msg))
                 .body(result);
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);
@@ -137,6 +140,8 @@ public class UtmDashboardResource {
             applicationEventService.createEvent(msg, ApplicationEventType.ERROR);
             return ResponseEntity.status(HttpStatus.CONFLICT).headers(HeaderUtil.createFailureAlert(ENTITY_NAME, null, msg))
                 .body(result);
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);
@@ -159,6 +164,8 @@ public class UtmDashboardResource {
             Page<UtmDashboard> page = dashboardQueryService.findByCriteria(criteria, pageable);
             HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/ha-dashboards");
             return ResponseEntity.ok().headers(headers).body(page.getContent());
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);
@@ -180,6 +187,8 @@ public class UtmDashboardResource {
         try {
             Optional<UtmDashboard> utmDashboard = utmDashboardService.findOne(id);
             return ResponseUtil.wrapOrNotFound(utmDashboard);
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);
@@ -201,6 +210,8 @@ public class UtmDashboardResource {
         try {
             utmDashboardService.delete(id);
             return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);
@@ -222,6 +233,8 @@ public class UtmDashboardResource {
                 });
             }
             return ResponseEntity.ok().build();
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);

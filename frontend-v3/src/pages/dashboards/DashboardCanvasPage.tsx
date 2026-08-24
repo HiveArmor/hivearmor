@@ -5,7 +5,7 @@
  * SECURITY GAPS:
  * - SEC-06: POST /api/ha-visualizations/run requires ROLE_ADMIN|ROLE_SOC_MANAGER|ROLE_ANALYST
  * - GAP-SEC-12: GET /api/ha-dashboards/{id} has no @PreAuthorize
- * - GAP-MT-05: No tenant_id on UtmDashboard — all users see all dashboards
+ * - GAP-MT-05: CLOSED (STAGING) — backend scopes hive_dashboard.tenant_id via TenantContext
  */
 
 import { useEffect, useRef, useState } from 'react';

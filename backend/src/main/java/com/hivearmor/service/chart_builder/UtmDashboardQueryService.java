@@ -2,6 +2,7 @@ package com.hivearmor.service.chart_builder;
 
 import com.hivearmor.domain.chart_builder.UtmDashboard;
 import com.hivearmor.domain.chart_builder.UtmDashboard_;
+import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.repository.chart_builder.UtmDashboardRepository;
 import com.hivearmor.service.dto.chart_builder.UtmDashboardCriteria;
 import org.slf4j.Logger;
@@ -15,6 +16,13 @@ import tech.jhipster.service.QueryService;
 
 import java.util.List;
 
+/**
+ * Query service for {@link UtmDashboard}.
+ *
+ * <p>GAP-MT-05: when {@link TenantContext#getClientId()} is set, list queries are
+ * forced to that tenant (client-supplied criteria cannot widen scope). Null context
+ * = legacy global list. STAGING CANDIDATE.
+ */
 @Service
 @Transactional(readOnly = true)
 public class UtmDashboardQueryService extends QueryService<UtmDashboard> {
@@ -70,6 +78,12 @@ public class UtmDashboardQueryService extends QueryService<UtmDashboard> {
                 specification = specification.and(
                     buildSpecification(criteria.getSidebarPinned(), root -> root.get("sidebarPinned")));
             }
+        }
+        // Hard tenant gate — do not rely on client-supplied criteria filters.
+        Long tenantId = TenantContext.getClientId();
+        if (tenantId != null) {
+            specification = specification.and(
+                (root, query, cb) -> cb.equal(root.get(UtmDashboard_.tenantId), tenantId));
         }
         return specification;
     }

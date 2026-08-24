@@ -763,4 +763,7 @@
     <!-- P1 Connector SDK — typed vendor connector instances -->
     <include file="/config/liquibase/changelog/20260824002_ha_connector_instance.xml" relativeToChangelogFile="false"/>
 
+    <!-- P1 Spike B — GAP-MT-05 dashboard tenant_id (STAGING CANDIDATE) -->
+    <include file="/config/liquibase/changelog/20260824003_add_dashboard_tenant_id.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>

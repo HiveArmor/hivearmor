@@ -11,6 +11,8 @@ export interface DashboardDTO {
   refreshTime: number | null; // seconds; null means no auto-refresh
   filters: string | null; // JSON-serialised filter object
   visualizations: string; // JSON array of UtmVisualization references
+  /** GAP-MT-05: ha_client.id when MSSP-scoped; null = legacy global dashboard */
+  tenantId?: number | null;
 }
 
 export interface VisualizationDTO {
