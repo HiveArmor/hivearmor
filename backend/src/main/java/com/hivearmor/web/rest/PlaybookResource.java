@@ -309,6 +309,55 @@ public class PlaybookResource {
     }
 
     /**
+     * POST /api/ha-playbooks/executions/{executionId}/approve
+     *
+     * <p>Resumes a playbook paused at an {@code approval} step. STAGING CANDIDATE.
+     */
+    @PostMapping("/ha-playbooks/executions/{executionId}/approve")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Map<String, Object>> approveExecution(@PathVariable String executionId) {
+        try {
+            return ResponseEntity.ok(playbookService.approveExecution(executionId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "conflict"));
+        } catch (Exception e) {
+            log.error("{}: {}", CLASSNAME + ".approveExecution", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * POST /api/ha-playbooks/executions/{executionId}/reject
+     *
+     * <p>Rejects a paused approval gate and fails the execution. Optional body
+     * {@code { "reason": "..." }}. STAGING CANDIDATE.
+     */
+    @PostMapping("/ha-playbooks/executions/{executionId}/reject")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Map<String, Object>> rejectExecution(
+            @PathVariable String executionId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            String reason = null;
+            if (body != null && body.get("reason") != null) {
+                reason = String.valueOf(body.get("reason"));
+            }
+            return ResponseEntity.ok(playbookService.rejectExecution(executionId, reason));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "conflict"));
+        } catch (Exception e) {
+            log.error("{}: {}", CLASSNAME + ".rejectExecution", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
      * DELETE /api/ha-playbooks/{executionId}
      *
      * <p>Cancels the running execution identified by {@code executionId}, broadcasts a
