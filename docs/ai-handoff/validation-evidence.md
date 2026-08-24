@@ -587,3 +587,15 @@ No production-readiness claim is made by this baseline entry.
 - Playbook `isolate_host` consults the mesh; vendor branch returns dry-run (`executed=false`) — no vendor API calls, no secrets in payloads.
 - ADR: `docs/architecture/ADR-20260824-hybrid-response-mesh.md`.
 - Unit: `HybridIsolateRouterTest`, `HybridResponseMeshDispatcherTest`, playbook isolate HA/vendor path tests.
+
+## 2026-08-24 — P1 LLM usage read API (STAGING CANDIDATE)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY). No live staging traffic proof in this slice.
+- Worktree/branch: `.worktrees/p1-llm-usage-api` / `feat/p1-llm-usage-api` from `origin/main`.
+- Added ADMIN-only read API for durable `ha_llm_usage` ledger (#27 writers already ship):
+  - `GET /api/ha-llm-usage` (pageable, `X-Total-Count`, default sort `createdAt,desc`)
+  - `GET /api/ha-llm-usage/summary` (counts by `cascade_decision` only)
+- Safe DTO only: promptId/hash, token counts, cascade decision/reason, userLogin, createdAt — never prompt bodies/secrets.
+- Thin frontend-v3 read-only table on System Settings → AI/LLM (`LlmUsageSection`).
+- Focused backend tests (Temurin 17): `HaLlmUsageServiceTest`, `HaLlmUsageResourceTest` — **6/6 passed**.
+- Frontend: eslint on touched files + `tsc --noEmit` — **passed** (via linked main `node_modules`).

@@ -22,6 +22,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Form } from '@patternfly/react-core';
 
+import { LlmUsageSection } from './LlmUsageSection';
+
 import { HaButton } from '@/components/ha-button/HaButton';
 import { HaFormGroup } from '@/components/ha-form-group/HaFormGroup';
 import { HaInlineBanner } from '@/components/ha-inline-banner/HaInlineBanner';
@@ -143,10 +145,11 @@ export function AiLlmTab(): JSX.Element {
   return (
     <div
       style={{
-        maxWidth: '640px',
+        maxWidth: '960px',
         padding: 'var(--pf-v5-global--spacer--lg, 1.5rem)',
       }}
     >
+      <div style={{ maxWidth: '640px' }}>
       {/* ── Save-level success banner ──────────────────────────────────── */}
       {saveSuccess && (
         <HaInlineBanner
@@ -319,6 +322,9 @@ export function AiLlmTab(): JSX.Element {
           </HaButton>
         </div>
       </Form>
+      </div>
+
+      <LlmUsageSection />
     </div>
   );
 }

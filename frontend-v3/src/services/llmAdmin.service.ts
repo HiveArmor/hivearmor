@@ -16,10 +16,13 @@ import type {
   LlmModelsDTO,
   LlmConfigUpdateDTO,
   OllamaPullProgress,
+  HaLlmUsagePage,
+  HaLlmUsageSummaryDTO,
 } from '@/types/llmAdmin.types';
 import { LlmAdminError } from '@/types/llmAdmin.types';
 
 const BASE = '/api/ha-admin/llm';
+const USAGE_BASE = '/api/ha-llm-usage';
 const JWT_KEY = 'hivearmor_auth_token';
 
 /**
@@ -138,5 +141,36 @@ export const llmAdminService = {
     if (remaining) {
       yield JSON.parse(remaining) as OllamaPullProgress;
     }
+  },
+
+  /**
+   * Pageable durable LLM usage ledger (ADMIN). Safe fields only.
+   *
+   * GET /api/ha-llm-usage?page=&size=
+   */
+  listUsage: async (page = 0, size = 25): Promise<HaLlmUsagePage> => {
+    const r = await fetch(`${USAGE_BASE}?page=${page}&size=${size}`, {
+      method: 'GET',
+      headers: authHeaders(),
+    });
+    if (!r.ok) throw new LlmAdminError(r.status);
+    const totalHeader = r.headers.get('X-Total-Count');
+    const totalCount = totalHeader !== null ? Number.parseInt(totalHeader, 10) : 0;
+    const items = (await r.json()) as HaLlmUsagePage['items'];
+    return { items, totalCount: Number.isFinite(totalCount) ? totalCount : 0 };
+  },
+
+  /**
+   * Cascade-decision counts only.
+   *
+   * GET /api/ha-llm-usage/summary
+   */
+  getUsageSummary: async (): Promise<HaLlmUsageSummaryDTO[]> => {
+    const r = await fetch(`${USAGE_BASE}/summary`, {
+      method: 'GET',
+      headers: authHeaders(),
+    });
+    if (!r.ok) throw new LlmAdminError(r.status);
+    return r.json() as Promise<HaLlmUsageSummaryDTO[]>;
   },
 };
