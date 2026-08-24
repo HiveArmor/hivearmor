@@ -52,6 +52,7 @@ describe('STARTER_PLAYBOOK_TEMPLATES', () => {
       'isolate_host',
       'kill_process',
       'quarantine_file',
+      'create-jira-ticket',
     ]);
     for (const template of STARTER_PLAYBOOK_TEMPLATES) {
       for (const step of template.steps) {

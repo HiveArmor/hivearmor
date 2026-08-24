@@ -2,6 +2,8 @@ package com.hivearmor.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hivearmor.config.Constants;
+import com.hivearmor.config.HaAirGapConfig;
 import com.hivearmor.domain.soar_playbook.UtmPlaybook;
 import com.hivearmor.domain.soar_playbook.UtmPlaybookExecution;
 import com.hivearmor.repository.soar_playbook.UtmPlaybookExecutionRepository;
@@ -41,7 +43,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Step execution dispatches known EDR actions via {@link EdrService} when {@code agentId}
  * is present (from step config or execute request context); webhooks via
- * {@link PlaybookWebhookExecutor}; connector capability actions via
+ * {@link PlaybookWebhookExecutor}; email via {@link MailService}; ticketing via
+ * webhook-to-ticket ({@code create-jira-ticket}); connector capability actions via
  * {@link PlaybookConnectorDispatcher}; unknown actions fail honestly with {@code not_implemented}.
  * Step configs MUST NOT be logged.
  */
@@ -58,6 +61,11 @@ public class PlaybookService {
         "kill_process", "kill-process", "edr.kill-process", "edr.kill_process");
     private static final Set<String> WEBHOOK_IDS = Set.of(
         "send-webhook", "send_webhook", "webhook", "http-webhook");
+    private static final Set<String> EMAIL_IDS = Set.of(
+        "send-email", "send_email", "email", "notify-email");
+    private static final Set<String> TICKET_IDS = Set.of(
+        "create-jira-ticket", "create_jira_ticket", "jira-ticket", "create-ticket",
+        "create_ticket", "webhook-ticket", "webhook_ticket");
 
     private final PlaybookExecutionStreamService playbookExecutionStreamService;
     private final ObjectMapper objectMapper;
@@ -66,6 +74,8 @@ public class PlaybookService {
     private final EdrService edrService;
     private final PlaybookWebhookExecutor webhookExecutor;
     private final PlaybookConnectorDispatcher connectorDispatcher;
+    private final MailService mailService;
+    private final HaAirGapConfig haAirGapConfig;
 
     /** executionUuid → cancelled */
     private final ConcurrentHashMap<String, Boolean> cancelledExecutions = new ConcurrentHashMap<>();
@@ -78,7 +88,9 @@ public class PlaybookService {
                            UtmPlaybookExecutionRepository executionRepository,
                            EdrService edrService,
                            PlaybookWebhookExecutor webhookExecutor,
-                           PlaybookConnectorDispatcher connectorDispatcher) {
+                           PlaybookConnectorDispatcher connectorDispatcher,
+                           MailService mailService,
+                           HaAirGapConfig haAirGapConfig) {
         this.playbookExecutionStreamService = playbookExecutionStreamService;
         this.objectMapper = objectMapper;
         this.playbookRepository = playbookRepository;
@@ -86,6 +98,8 @@ public class PlaybookService {
         this.edrService = edrService;
         this.webhookExecutor = webhookExecutor;
         this.connectorDispatcher = connectorDispatcher;
+        this.mailService = mailService;
+        this.haAirGapConfig = haAirGapConfig;
     }
 
     public String serializeSteps(List<PlaybookStepDTO> steps) {
@@ -645,35 +659,22 @@ public class PlaybookService {
         }
 
         if (WEBHOOK_IDS.contains(normalized)) {
-            String url = firstString(config, "url", "webhookUrl");
-            if (url == null && config.get("params") instanceof Map<?, ?> pm) {
-                Object v = pm.get("url");
-                if (v == null) {
-                    v = pm.get("webhookUrl");
-                }
-                if (v != null) {
-                    url = String.valueOf(v);
-                }
-            }
+            String url = configString(config, "url", "webhookUrl");
             String method = firstString(config, "method", "httpMethod");
-            String body = firstString(config, "body", "payload", "payload_template");
-            if (body == null && config.get("params") instanceof Map<?, ?> pm) {
-                Object v = pm.get("body");
-                if (v == null) {
-                    v = pm.get("payload");
-                }
-                if (v == null) {
-                    v = pm.get("payload_template");
-                }
-                if (v != null) {
-                    body = String.valueOf(v);
-                }
-            }
+            String body = configString(config, "body", "payload", "payload_template");
             try {
                 return StepResult.ok(webhookExecutor.send(url, method, body));
             } catch (Exception e) {
                 return StepResult.fail("Webhook failed: " + safeMsg(e));
             }
+        }
+
+        if (EMAIL_IDS.contains(normalized)) {
+            return runSendEmail(config, playbookName);
+        }
+
+        if (TICKET_IDS.contains(normalized)) {
+            return runCreateTicket(config, playbookName);
         }
 
         if (connectorDispatcher.supports(normalized)) {
@@ -684,9 +685,134 @@ public class PlaybookService {
             }
         }
 
-        // Honest failure for catalogue actions not yet wired (email/jira/…).
+        // Honest failure for catalogue actions not yet wired.
         return StepResult.fail(
             "Action '" + actionId + "' is not implemented in the playbook engine yet");
+    }
+
+    private StepResult runSendEmail(Map<String, Object> config, String playbookName) {
+        if (haAirGapConfig != null && haAirGapConfig.isAirGap()) {
+            return StepResult.fail("Email failed: air-gap mode is active — SMTP dispatch disabled");
+        }
+        String host = Constants.CFG.get(Constants.PROP_MAIL_HOST);
+        if (host == null || host.isBlank()) {
+            return StepResult.fail("Email failed: SMTP host is not configured");
+        }
+
+        String to = configString(config, "to", "recipient", "email");
+        String subject = configString(config, "subject");
+        String body = configString(config, "body", "body_template", "content");
+        if (to == null || to.isBlank()) {
+            return StepResult.fail("send-email requires config.to");
+        }
+        if (subject == null || subject.isBlank()) {
+            subject = "HiveArmor playbook: " + (playbookName != null ? playbookName : "notification");
+        }
+        if (body == null) {
+            body = "";
+        }
+
+        List<String> recipients = new ArrayList<>();
+        for (String part : to.split("[,;]")) {
+            String addr = part.trim();
+            if (!addr.isEmpty()) {
+                recipients.add(addr);
+            }
+        }
+        if (recipients.isEmpty()) {
+            return StepResult.fail("send-email requires at least one recipient in config.to");
+        }
+
+        try {
+            // Validate SMTP is reachable before queueing async send — honest fail if unset/broken.
+            mailService.getJavaMailSender();
+            mailService.sendEmail(recipients, subject, body, false, false);
+            return StepResult.ok(Map.of(
+                "action", "send-email",
+                "recipients", recipients.size(),
+                "status", "queued"));
+        } catch (Exception e) {
+            return StepResult.fail("Email failed: " + safeMsg(e));
+        }
+    }
+
+    private StepResult runCreateTicket(Map<String, Object> config, String playbookName) {
+        String url = configString(config, "url", "webhookUrl");
+        if (url == null || url.isBlank()) {
+            return StepResult.fail(
+                "create-jira-ticket requires config.url or config.webhookUrl (webhook-to-ticket)");
+        }
+
+        String project = configString(config, "project", "projectKey");
+        String summary = configString(config, "summary", "title");
+        String priority = configString(config, "priority");
+        String description = configString(config, "description", "body", "body_template");
+
+        if (summary == null || summary.isBlank()) {
+            summary = "HiveArmor playbook: " + (playbookName != null ? playbookName : "ticket");
+        }
+        if (priority == null || priority.isBlank()) {
+            priority = "Medium";
+        }
+        if (description == null) {
+            description = "";
+        }
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        if (project != null && !project.isBlank()) {
+            payload.put("project", project);
+        }
+        payload.put("summary", summary);
+        payload.put("priority", priority);
+        payload.put("description", description);
+        payload.put("source", "hivearmor");
+        payload.put("playbook", playbookName != null ? playbookName : "");
+
+        String method = firstString(config, "method", "httpMethod");
+        if (method == null || method.isBlank()) {
+            method = "POST";
+        }
+
+        try {
+            String body = objectMapper.writeValueAsString(payload);
+            Map<String, Object> webhookResult = webhookExecutor.send(url, method, body);
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("action", "create-jira-ticket");
+            out.put("mode", "webhook-to-ticket");
+            if (project != null) {
+                out.put("project", project);
+            }
+            out.put("summary", summary);
+            Object statusCode = webhookResult.get("statusCode");
+            if (statusCode != null) {
+                out.put("statusCode", statusCode);
+            }
+            Object host = webhookResult.get("host");
+            if (host != null) {
+                out.put("host", host);
+            }
+            return StepResult.ok(out);
+        } catch (Exception e) {
+            return StepResult.fail("Ticket webhook failed: " + safeMsg(e));
+        }
+    }
+
+    /** Reads a string from top-level config keys, then from nested {@code params}. */
+    private static String configString(Map<String, Object> config, String... keys) {
+        String top = firstString(config, keys);
+        if (top != null) {
+            return top;
+        }
+        Object params = config.get("params");
+        if (params instanceof Map<?, ?> pm) {
+            for (String key : keys) {
+                Object v = pm.get(key);
+                if (v != null && !String.valueOf(v).isBlank()) {
+                    return String.valueOf(v);
+                }
+            }
+        }
+        return null;
     }
 
     // -------------------------------------------------------------------------
