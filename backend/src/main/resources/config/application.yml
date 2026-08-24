@@ -156,6 +156,9 @@ hivearmor:
     directories: ${HIVEARMOR_AGENT_PACKAGE_DIRS:/dependencies/agent,/updates/agent}
   rule-gen:
     output-dir: "${HIVEARMOR_RULE_GEN_OUTPUT_DIR:./rules/generated}"
+  connectors:
+    # Vendor kinetic isolate (CrowdStrike RTR etc.) — keep false; HA agent is primary
+    vendor-isolate-enabled: ${HIVEARMOR_CONNECTOR_VENDOR_ISOLATE:false}
 
 application:
   branding:

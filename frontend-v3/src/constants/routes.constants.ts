@@ -57,6 +57,7 @@ export const ROUTES = {
   ADMIN_USERS: '/admin/users',
   ADMIN_TENANTS: '/admin/tenants',
   ADMIN_INTEGRATIONS: '/admin/integrations',
+  ADMIN_CONNECTORS: '/admin/connectors',
   ADMIN_NOTIFICATIONS: '/admin/notifications',
   ADMIN_CONNECTION_KEYS: '/admin/connection-keys',
   ADMIN_AUDIT: '/admin/audit',

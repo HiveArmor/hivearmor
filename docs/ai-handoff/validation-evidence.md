@@ -521,3 +521,19 @@ No production-readiness claim is made by this baseline entry.
 - Edge was force-recreated after backend IP change (transient nginx 502 otherwise).
 - Frontend-v3 + eventprocessor images rebuilt earlier in session (CEL pack + `REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED=true`).
 
+
+## 2026-08-24 — main merge + staging full-layer redeploy
+
+- PR: https://github.com/HiveArmor/hivearmor/pull/2 merged to `main` as `be9b362` (admin merge; Approver soft-fail, other PR checks green).
+- Staging synced from main (`backend` WAR + src, `frontend-v3`, `event-processor/builtin-rules`, `plugins/soc-ai`) and rebuilt: backend, frontend-v3, eventprocessor (+ worker), edge.
+- Label remains **STAGING CANDIDATE** — not PRODUCTION READY.
+
+
+## 2026-08-24 — P1 Connector SDK (code)
+
+- Typed `HaConnector` registry (5 vendors), Liquibase `ha_connector_instance`, REST `/api/ha-connectors/*`, Admin UI `/admin/connectors`.
+- ADR: `docs/architecture/ADR-20260824-connector-ingest.md` — fetch-alerts dry-run only (no OpenSearch write).
+- Playbook actions: `connector.test`, `pull_alerts`, `disable_user` via `PlaybookConnectorDispatcher`.
+- Unit: HaConnectorConformanceTest, MicrosoftOAuthClientTest, PlaybookConnectorDispatcherTest, PlaybookServiceTest — PASS.
+- Label: **STAGING CANDIDATE** — live vendor credentials not production-verified.
+

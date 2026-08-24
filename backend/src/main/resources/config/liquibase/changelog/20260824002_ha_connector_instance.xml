@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- P1 Connector SDK: typed vendor connector instances with encrypted secrets -->
+    <changeSet id="20260824002-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="ha_connector_instance"/>
+            </not>
+        </preConditions>
+        <createTable tableName="ha_connector_instance">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="connector_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(120)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_ha_connector_instance_name"/>
+            </column>
+            <column name="enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="config_json" type="TEXT"/>
+            <column name="secrets_encrypted" type="TEXT"/>
+            <column name="allowed_capabilities" type="varchar(512)"/>
+            <column name="created_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_tested_at" type="timestamptz"/>
+            <column name="last_test_ok" type="boolean"/>
+            <column name="last_test_message" type="varchar(500)"/>
+        </createTable>
+        <createIndex tableName="ha_connector_instance" indexName="idx_ha_connector_instance_connector_id">
+            <column name="connector_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

@@ -14,6 +14,7 @@ import com.hivearmor.service.dto.PlaybookStepDTO;
 import com.hivearmor.service.dto.edr.EdrIsolationDTO;
 import com.hivearmor.service.dto.edr.EdrQuarantineDTO;
 import com.hivearmor.service.edr.EdrService;
+import com.hivearmor.service.connector.PlaybookConnectorDispatcher;
 import com.hivearmor.service.soar.PlaybookWebhookExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Step execution dispatches known EDR actions via {@link EdrService} when {@code agentId}
  * is present (from step config or execute request context); webhooks via
- * {@link PlaybookWebhookExecutor}; unknown actions fail honestly with {@code not_implemented}.
+ * {@link PlaybookWebhookExecutor}; connector capability actions via
+ * {@link PlaybookConnectorDispatcher}; unknown actions fail honestly with {@code not_implemented}.
  * Step configs MUST NOT be logged.
  */
 @Service
@@ -63,6 +65,7 @@ public class PlaybookService {
     private final UtmPlaybookExecutionRepository executionRepository;
     private final EdrService edrService;
     private final PlaybookWebhookExecutor webhookExecutor;
+    private final PlaybookConnectorDispatcher connectorDispatcher;
 
     /** executionUuid → cancelled */
     private final ConcurrentHashMap<String, Boolean> cancelledExecutions = new ConcurrentHashMap<>();
@@ -74,13 +77,15 @@ public class PlaybookService {
                            UtmPlaybookRepository playbookRepository,
                            UtmPlaybookExecutionRepository executionRepository,
                            EdrService edrService,
-                           PlaybookWebhookExecutor webhookExecutor) {
+                           PlaybookWebhookExecutor webhookExecutor,
+                           PlaybookConnectorDispatcher connectorDispatcher) {
         this.playbookExecutionStreamService = playbookExecutionStreamService;
         this.objectMapper = objectMapper;
         this.playbookRepository = playbookRepository;
         this.executionRepository = executionRepository;
         this.edrService = edrService;
         this.webhookExecutor = webhookExecutor;
+        this.connectorDispatcher = connectorDispatcher;
     }
 
     public String serializeSteps(List<PlaybookStepDTO> steps) {
@@ -668,6 +673,14 @@ public class PlaybookService {
                 return StepResult.ok(webhookExecutor.send(url, method, body));
             } catch (Exception e) {
                 return StepResult.fail("Webhook failed: " + safeMsg(e));
+            }
+        }
+
+        if (connectorDispatcher.supports(normalized)) {
+            try {
+                return StepResult.ok(connectorDispatcher.dispatch(normalized, config));
+            } catch (Exception e) {
+                return StepResult.fail("Connector action failed: " + safeMsg(e));
             }
         }
 

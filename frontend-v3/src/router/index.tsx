@@ -34,6 +34,9 @@ const DataParsingPage = React.lazy(() =>
 const AdminIntegrationsPage = React.lazy(() =>
   import('@/pages/admin/integrations/AdminIntegrationsPage').then(m => ({ default: m.AdminIntegrationsPage }))
 );
+const ConnectorSdkPage = React.lazy(() =>
+  import('@/pages/admin/connectors/ConnectorSdkPage').then(m => ({ default: m.ConnectorSdkPage }))
+);
 const AdminNotificationsPage = React.lazy(() =>
   import('@/pages/admin/notifications/AdminNotificationsPage').then(m => ({ default: m.AdminNotificationsPage }))
 );
@@ -886,6 +889,14 @@ export const router = createBrowserRouter([
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
             <AdminIntegrationsPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/connectors',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN', 'ROLE_SOC_MANAGER']}>
+            <ConnectorSdkPage />
           </AuthGuard>
         ),
       },
