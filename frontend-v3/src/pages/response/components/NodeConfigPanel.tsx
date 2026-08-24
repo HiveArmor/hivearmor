@@ -150,9 +150,14 @@ export function NodeConfigPanel({
         {data.nodeType === 'condition' && (
           <section className="soar-config-section" aria-labelledby="config-condition">
             <header id="config-condition">Decision rule</header>
-            <label className="soar-field"><span>Field or prior output</span><select value={asString(config['field'], 'alert.severity')} onChange={(event) => updateConfig({ field: event.target.value, configured: true })}><option value="alert.severity">alert.severity</option><option value="alert.category">alert.category</option><option value="entity.riskScore">entity.riskScore</option><option value="steps.previous.verdict">steps.previous.verdict</option><option value="incident.status">incident.status</option></select></label>
-            <label className="soar-field"><span>Operator</span><select value={asString(config['operator'], 'gte')} onChange={(event) => updateConfig({ operator: event.target.value })}><option value="eq">equals</option><option value="neq">does not equal</option><option value="gte">is at least</option><option value="contains">contains</option><option value="exists">exists</option></select></label>
-            <label className="soar-field"><span>Value</span><input value={asString(config['value'], 'high')} onChange={(event) => updateConfig({ value: event.target.value })} /></label>
+            <label className="soar-field"><span>Field or prior output</span><select value={asString(config['field'], 'severity')} onChange={(event) => updateConfig({ field: event.target.value, configured: true })} aria-label="Condition field"><option value="severity">severity</option><option value="alert.severity">alert.severity</option><option value="alert.category">alert.category</option><option value="entity.riskScore">entity.riskScore</option><option value="steps.previous.verdict">steps.previous.verdict</option><option value="incident.status">incident.status</option></select></label>
+            <label className="soar-field"><span>Operator</span><select value={asString(config['op'] ?? config['operator'], 'eq')} onChange={(event) => {
+              const next = { ...config, op: event.target.value };
+              delete next['operator'];
+              onUpdate(node.id, { config: next });
+            }} aria-label="Condition operator"><option value="eq">equals</option><option value="neq">does not equal</option><option value="gte">is at least</option><option value="lte">is at most</option><option value="in">is one of</option><option value="contains">contains</option><option value="exists">exists</option></select></label>
+            <label className="soar-field"><span>Value</span><input value={asString(config['value'], 'high')} onChange={(event) => updateConfig({ value: event.target.value })} aria-label="Condition value" /></label>
+            <label className="soar-field"><span>When condition is false</span><select value={asString(config['onFalse'], 'stop_success')} onChange={(event) => updateConfig({ onFalse: event.target.value })} aria-label="Condition onFalse"><option value="stop_success">Stop successfully</option><option value="fail">Fail the run</option><option value="continue">Continue to next step</option></select></label>
             <div className="soar-branch-summary"><span><i data-branch="yes" /> Yes path</span><span><i data-branch="no" /> No path</span></div>
           </section>
         )}
