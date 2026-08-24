@@ -2,6 +2,7 @@ package com.hivearmor.service.connector;
 
 import com.hivearmor.domain.connector.HaConnectorInstance;
 import com.hivearmor.repository.connector.HaConnectorInstanceRepository;
+import com.hivearmor.service.connector.impl.AzureEntraConnector;
 import com.hivearmor.service.connector.impl.CrowdStrikeConnector;
 import com.hivearmor.service.connector.impl.OktaConnector;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,8 @@ class PlaybookConnectorDispatcherTest {
     @Mock
     private OktaIdentityClient oktaIdentityClient;
     @Mock
+    private MicrosoftOAuthClient microsoftOAuthClient;
+    @Mock
     private ConnectorAlertIngestService ingestService;
 
     private PlaybookConnectorDispatcher dispatcher;
@@ -40,7 +43,7 @@ class PlaybookConnectorDispatcherTest {
     void setUp() {
         dispatcher = new PlaybookConnectorDispatcher(
             instanceService,
-            new HaConnectorRegistry(oktaIdentityClient, false),
+            new HaConnectorRegistry(microsoftOAuthClient, oktaIdentityClient, false),
             instanceRepository,
             ingestService
         );
@@ -177,6 +180,82 @@ class PlaybookConnectorDispatcherTest {
     }
 
     @Test
+    void disableUserDisablesViaEntra() throws Exception {
+        HaConnectorInstance row = entraRow(11L);
+        when(instanceRepository.findById(11L)).thenReturn(Optional.of(row));
+        when(instanceService.decryptedConfig(11L)).thenReturn(Map.of(
+            "tenant_id", "11111111-1111-1111-1111-111111111111",
+            "client_id", "app-id",
+            "client_secret", "real-secret"
+        ));
+        when(microsoftOAuthClient.fetchAccessToken(
+            anyString(), anyString(), anyString(), eq(MicrosoftOAuthClient.graphScope())
+        )).thenReturn("graph-token");
+        Map<String, Object> patchResult = new LinkedHashMap<>();
+        patchResult.put("ok", true);
+        patchResult.put("httpStatus", 204);
+        patchResult.put("message", "Graph PATCH OK (HTTP 204)");
+        when(microsoftOAuthClient.patchJson(anyString(), eq("graph-token"), eq("{\"accountEnabled\":false}")))
+            .thenReturn(patchResult);
+
+        Map<String, Object> out = dispatcher.dispatch(
+            "disable_user",
+            Map.of("connectorInstanceId", 11L, "userId", "bob@contoso.com")
+        );
+        assertThat(out.get("status")).isEqualTo("disabled");
+        assertThat(out.get("connectorId")).isEqualTo(AzureEntraConnector.ID);
+        assertThat(out.get("ok")).isEqualTo(true);
+        assertThat(out.get("userId")).isEqualTo("bob@contoso.com");
+    }
+
+    @Test
+    void disableUserEntraAcceptsUpnParam() throws Exception {
+        HaConnectorInstance row = entraRow(11L);
+        when(instanceRepository.findById(11L)).thenReturn(Optional.of(row));
+        when(instanceService.decryptedConfig(11L)).thenReturn(Map.of(
+            "tenant_id", "11111111-1111-1111-1111-111111111111",
+            "client_id", "app-id",
+            "client_secret", "real-secret"
+        ));
+        when(microsoftOAuthClient.fetchAccessToken(
+            anyString(), anyString(), anyString(), eq(MicrosoftOAuthClient.graphScope())
+        )).thenReturn("graph-token");
+        Map<String, Object> patchResult = new LinkedHashMap<>();
+        patchResult.put("ok", true);
+        patchResult.put("httpStatus", 204);
+        when(microsoftOAuthClient.patchJson(anyString(), anyString(), anyString()))
+            .thenReturn(patchResult);
+
+        Map<String, Object> out = dispatcher.dispatch(
+            "disable_user",
+            Map.of(
+                "connectorInstanceId", 11L,
+                "params", Map.of("upn", "carol@contoso.com")
+            )
+        );
+        assertThat(out.get("status")).isEqualTo("disabled");
+        assertThat(out.get("userId")).isEqualTo("carol@contoso.com");
+    }
+
+    @Test
+    void disableUserEntraRefusesPlaceholderCredentials() {
+        HaConnectorInstance row = entraRow(11L);
+        when(instanceRepository.findById(11L)).thenReturn(Optional.of(row));
+        when(instanceService.decryptedConfig(11L)).thenReturn(Map.of(
+            "tenant_id", "11111111-1111-1111-1111-111111111111",
+            "client_id", "app-id",
+            "client_secret", "placeholder-secret"
+        ));
+
+        assertThatThrownBy(() -> dispatcher.dispatch(
+            "disable_user",
+            Map.of("connectorInstanceId", 11L, "userId", "u1")
+        ))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("placeholder");
+    }
+
+    @Test
     void pullAlertsRequiresInstanceId() {
         assertThatThrownBy(() -> dispatcher.dispatch("pull_alerts", Map.of()))
             .isInstanceOf(IllegalArgumentException.class)
@@ -212,6 +291,14 @@ class PlaybookConnectorDispatcherTest {
         HaConnectorInstance row = new HaConnectorInstance();
         row.setId(id);
         row.setConnectorId(OktaConnector.ID);
+        row.setEnabled(true);
+        return row;
+    }
+
+    private static HaConnectorInstance entraRow(long id) {
+        HaConnectorInstance row = new HaConnectorInstance();
+        row.setId(id);
+        row.setConnectorId(AzureEntraConnector.ID);
         row.setEnabled(true);
         return row;
     }
