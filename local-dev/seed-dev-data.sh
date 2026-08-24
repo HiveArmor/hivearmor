@@ -295,18 +295,20 @@ if ! $OS_ONLY; then
   done
   ok "  5 correlation rules seeded"
 
-  # ── SOAR Playbooks ────────────────────────────────────────────
+  # ── SOAR Playbooks (canonical /api/ha-playbooks; executable steps only) ──
   log "Seeding SOAR playbooks…"
   PLAYBOOKS=(
-    '{"name":"[SEED] Ransomware Response","description":"Automated ransomware containment — isolate endpoint, create incident, notify SOC manager","active":true}'
-    '{"name":"[SEED] Credential Compromise Response","description":"Disable account, revoke sessions, notify user, open investigation","active":true}'
-    '{"name":"[SEED] Phishing Email Response","description":"Extract IOCs, threat intel lookup, block sender domain, create incident","active":true}'
-    '{"name":"[SEED] Malware Containment","description":"Kill process, quarantine file, isolate host, collect forensic artifacts","active":false}'
+    '{"name":"[SEED] Ransomware Response","description":"STAGING CANDIDATE — notify then isolate (agentId at execute)","triggerType":"alert-triggered","active":false,"steps":[{"stepIndex":0,"stepType":"condition","label":"Ransomware category","config":{"field":"alert.category","op":"eq","value":"ransomware"}},{"stepIndex":1,"stepType":"action","label":"Notify SOC","config":{"actionId":"send-webhook","method":"POST","body":"{\"source\":\"hivearmor\",\"event\":\"seed-ransomware\"}"}},{"stepIndex":2,"stepType":"delay","label":"Confirm window","config":{"delaySeconds":2}},{"stepIndex":3,"stepType":"action","label":"Isolate host","config":{"actionId":"isolate_host","params":{"duration":"24h"}}}]}'
+    '{"name":"[SEED] ATO Webhook Escalate","description":"STAGING CANDIDATE — identity ATO escalate via webhook only (no Okta disable_user)","triggerType":"alert-triggered","active":true,"steps":[{"stepIndex":0,"stepType":"condition","label":"High or critical","config":{"field":"alert.severity","op":"in","value":["high","critical"]}},{"stepIndex":1,"stepType":"delay","label":"Identity review","config":{"delaySeconds":2}},{"stepIndex":2,"stepType":"action","label":"Notify identity channel","config":{"actionId":"send-webhook","method":"POST","body":"{\"source\":\"hivearmor\",\"event\":\"seed-ato\"}"}}]}'
+    '{"name":"[SEED] Phishing Triage","description":"STAGING CANDIDATE — phishing triage delay + webhook","triggerType":"alert-triggered","active":true,"steps":[{"stepIndex":0,"stepType":"delay","label":"Mailbox context","config":{"delaySeconds":2}},{"stepIndex":1,"stepType":"condition","label":"Phishing category","config":{"field":"alert.category","op":"eq","value":"phishing"}},{"stepIndex":2,"stepType":"action","label":"Notify SOC","config":{"actionId":"send-webhook","method":"POST","body":"{\"source\":\"hivearmor\",\"event\":\"seed-phishing\"}"}}]}'
+    '{"name":"[SEED] Malware Containment","description":"STAGING CANDIDATE — quarantine + isolate (agentId at execute)","triggerType":"alert-triggered","active":false,"steps":[{"stepIndex":0,"stepType":"action","label":"Quarantine file","config":{"actionId":"quarantine_file","params":{"path":"/tmp/sample.bin"}}},{"stepIndex":1,"stepType":"action","label":"Isolate host","config":{"actionId":"isolate_host","params":{"duration":"24h"}}},{"stepIndex":2,"stepType":"delay","label":"Follow-up pause","config":{"delaySeconds":5}}]}'
+    '{"name":"[SEED] Brute-Force Triage","description":"STAGING CANDIDATE — brute-force condition + webhook","triggerType":"alert-triggered","active":true,"steps":[{"stepIndex":0,"stepType":"condition","label":"Brute-force category","config":{"field":"alert.category","op":"eq","value":"brute-force"}},{"stepIndex":1,"stepType":"action","label":"Notify SOC","config":{"actionId":"send-webhook","method":"POST","body":"{\"source\":\"hivearmor\",\"event\":\"seed-brute-force\"}"}}]}'
+    '{"name":"[SEED] Lateral Movement Containment","description":"STAGING CANDIDATE — isolate pivot host (agentId at execute)","triggerType":"alert-triggered","active":false,"steps":[{"stepIndex":0,"stepType":"condition","label":"Lateral movement","config":{"field":"alert.technique","op":"eq","value":"lateral-movement"}},{"stepIndex":1,"stepType":"delay","label":"Confirm pivot","config":{"delaySeconds":3}},{"stepIndex":2,"stepType":"action","label":"Isolate host","config":{"actionId":"isolate_host","params":{"duration":"8h"}}}]}'
   )
   for pb in "${PLAYBOOKS[@]}"; do
-    api POST "/api/soar/playbooks" "$pb" > /dev/null 2>&1 || warn "  Playbook may already exist"
+    api POST "/api/ha-playbooks" "$pb" > /dev/null 2>&1 || warn "  Playbook may already exist"
   done
-  ok "  4 SOAR playbooks seeded"
+  ok "  6 SOAR playbooks seeded (with steps)"
 
   # ── Reports ───────────────────────────────────────────────────
   log "Seeding report records…"
@@ -355,7 +357,7 @@ echo "  Incidents: up to 8 seeded (check /incidents)"
 echo "  Investigation Sessions: up to 5 seeded (check /investigate/sessions)"
 echo "  Saved Queries: up to 5 seeded (check /hunt)"
 echo "  Correlation Rules: up to 5 seeded (check /defend/detection-rules)"
-echo "  SOAR Playbooks: up to 4 seeded (check /defend/response)"
+echo "  SOAR Playbooks: up to 6 seeded with steps (check /response/playbooks)"
 echo "  Reports: up to 3 report records + 1 scheduled (check /reports)"
 echo ""
 echo "Indices written:"
