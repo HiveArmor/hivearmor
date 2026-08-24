@@ -124,18 +124,17 @@ func collectWindowsFileEvents(cnf *config.Config) {
 	}
 }
 
-// applyWindowsIsolation blocks all traffic via Windows Firewall rules.
+// applyWindowsIsolation applies host firewall isolation.
+// Allow rules (loopback + management/caller IPs) are installed before the
+// default block policy so FULL isolate cannot cut the agent-manager channel
+// before carve-outs exist. Policy matches Linux: FULL blocks outbound;
+// non-FULL keeps outbound open for remediable lift.
 func applyWindowsIsolation(isoType string, allowedIPs []string) error {
-	// Block all inbound
-	if err := runCmd("netsh", "advfirewall", "set", "allprofiles", "firewallpolicy", "blockinbound,blockoutbound"); err != nil {
-		return fmt.Errorf("applyWindowsIsolation: set policy: %w", err)
-	}
-
 	// Allow loopback (can't really block it via netsh but add a rule for explicitness)
 	_ = runCmd("netsh", "advfirewall", "firewall", "add", "rule",
 		"name=EDR_ALLOW_LOOPBACK", "dir=in", "action=allow", "localip=127.0.0.1")
 
-	// Allow explicit IPs
+	// Allow explicit IPs (includes management host from mergeIsolationAllowlist)
 	for _, ip := range allowedIPs {
 		ip = strings.TrimSpace(ip)
 		if ip == "" {
@@ -145,6 +144,11 @@ func applyWindowsIsolation(isoType string, allowedIPs []string) error {
 			"name=EDR_ALLOWED_"+ip, "dir=in", "action=allow", "remoteip="+ip)
 		_ = runCmd("netsh", "advfirewall", "firewall", "add", "rule",
 			"name=EDR_ALLOWED_OUT_"+ip, "dir=out", "action=allow", "remoteip="+ip)
+	}
+
+	policy := windowsFirewallPolicy(isoType)
+	if err := runCmd("netsh", "advfirewall", "set", "allprofiles", "firewallpolicy", policy); err != nil {
+		return fmt.Errorf("applyWindowsIsolation: set policy: %w", err)
 	}
 	return nil
 }
