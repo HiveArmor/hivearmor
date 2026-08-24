@@ -2,6 +2,7 @@ package com.hivearmor.service.connector;
 
 import com.hivearmor.domain.connector.HaConnectorInstance;
 import com.hivearmor.repository.connector.HaConnectorInstanceRepository;
+import com.hivearmor.service.connector.impl.AwsSecurityHubConnector;
 import com.hivearmor.service.connector.impl.AzureEntraConnector;
 import com.hivearmor.service.connector.impl.CrowdStrikeConnector;
 import com.hivearmor.service.connector.impl.OktaConnector;
@@ -21,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +37,8 @@ class PlaybookConnectorDispatcherTest {
     @Mock
     private MicrosoftOAuthClient microsoftOAuthClient;
     @Mock
+    private AwsNetworkBlockClient awsNetworkBlockClient;
+    @Mock
     private ConnectorAlertIngestService ingestService;
 
     private PlaybookConnectorDispatcher dispatcher;
@@ -43,7 +47,7 @@ class PlaybookConnectorDispatcherTest {
     void setUp() {
         dispatcher = new PlaybookConnectorDispatcher(
             instanceService,
-            new HaConnectorRegistry(microsoftOAuthClient, oktaIdentityClient, false),
+            new HaConnectorRegistry(microsoftOAuthClient, oktaIdentityClient, awsNetworkBlockClient, false),
             instanceRepository,
             ingestService
         );
@@ -54,6 +58,8 @@ class PlaybookConnectorDispatcherTest {
         assertThat(dispatcher.supports("connector.test")).isTrue();
         assertThat(dispatcher.supports("pull_alerts")).isTrue();
         assertThat(dispatcher.supports("disable_user")).isTrue();
+        assertThat(dispatcher.supports("block_ip")).isTrue();
+        assertThat(dispatcher.supports("network.block_ip")).isTrue();
         assertThat(dispatcher.supports("isolate_host")).isFalse();
     }
 
@@ -256,6 +262,98 @@ class PlaybookConnectorDispatcherTest {
     }
 
     @Test
+    void blockIpRequiresIp() {
+        HaConnectorInstance row = awsRow(15L);
+        when(instanceRepository.findById(15L)).thenReturn(Optional.of(row));
+
+        assertThatThrownBy(() -> dispatcher.dispatch(
+            "block_ip",
+            Map.of("connectorInstanceId", 15L)
+        ))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("ip");
+    }
+
+    @Test
+    void blockIpBlocksViaAwsNacl() {
+        HaConnectorInstance row = awsRow(15L);
+        when(instanceRepository.findById(15L)).thenReturn(Optional.of(row));
+        when(instanceService.decryptedConfig(15L)).thenReturn(Map.of(
+            "region", "us-east-1",
+            "access_key_id", "AKIATESTKEYID0001",
+            "secret_access_key", "real-secret-access-key",
+            "network_acl_id", "acl-abc"
+        ));
+        Map<String, Object> apiResult = new LinkedHashMap<>();
+        apiResult.put("ok", true);
+        apiResult.put("httpStatus", 200);
+        apiResult.put("cidr", "203.0.113.44/32");
+        apiResult.put("networkAclId", "acl-abc");
+        apiResult.put("message", "AWS NACL deny entry created (HTTP 200)");
+        when(awsNetworkBlockClient.createNetworkAclDenyEntry(
+            eq("us-east-1"),
+            eq("AKIATESTKEYID0001"),
+            eq("real-secret-access-key"),
+            isNull(),
+            eq("acl-abc"),
+            eq("203.0.113.44/32"),
+            eq(100),
+            eq(false)
+        )).thenReturn(apiResult);
+
+        Map<String, Object> out = dispatcher.dispatch(
+            "block_ip",
+            Map.of("connectorInstanceId", 15L, "ip", "203.0.113.44")
+        );
+        assertThat(out.get("status")).isEqualTo("blocked");
+        assertThat(out.get("connectorId")).isEqualTo(AwsSecurityHubConnector.ID);
+        assertThat(out.get("ok")).isEqualTo(true);
+        assertThat(out.get("ip")).isEqualTo("203.0.113.44");
+    }
+
+    @Test
+    void blockIpDryRunDoesNotCallAws() {
+        HaConnectorInstance row = awsRow(15L);
+        when(instanceRepository.findById(15L)).thenReturn(Optional.of(row));
+        when(instanceService.decryptedConfig(15L)).thenReturn(Map.of(
+            "region", "us-east-1",
+            "access_key_id", "AKIATESTKEYID0001",
+            "secret_access_key", "real-secret-access-key"
+        ));
+
+        Map<String, Object> out = dispatcher.dispatch(
+            "block_ip",
+            Map.of(
+                "connectorInstanceId", 15L,
+                "ip", "203.0.113.44",
+                "dry_run", "true"
+            )
+        );
+        assertThat(out.get("status")).isEqualTo("dry_run");
+        assertThat(out.get("dryRun")).isEqualTo(true);
+        assertThat(out.get("ok")).isEqualTo(true);
+    }
+
+    @Test
+    void blockIpRefusesPlaceholderCredentials() {
+        HaConnectorInstance row = awsRow(15L);
+        when(instanceRepository.findById(15L)).thenReturn(Optional.of(row));
+        when(instanceService.decryptedConfig(15L)).thenReturn(Map.of(
+            "region", "us-east-1",
+            "access_key_id", "placeholder",
+            "secret_access_key", "placeholder",
+            "network_acl_id", "acl-1"
+        ));
+
+        assertThatThrownBy(() -> dispatcher.dispatch(
+            "block_ip",
+            Map.of("connectorInstanceId", 15L, "ip", "203.0.113.1")
+        ))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("placeholder");
+    }
+
+    @Test
     void pullAlertsRequiresInstanceId() {
         assertThatThrownBy(() -> dispatcher.dispatch("pull_alerts", Map.of()))
             .isInstanceOf(IllegalArgumentException.class)
@@ -299,6 +397,14 @@ class PlaybookConnectorDispatcherTest {
         HaConnectorInstance row = new HaConnectorInstance();
         row.setId(id);
         row.setConnectorId(AzureEntraConnector.ID);
+        row.setEnabled(true);
+        return row;
+    }
+
+    private static HaConnectorInstance awsRow(long id) {
+        HaConnectorInstance row = new HaConnectorInstance();
+        row.setId(id);
+        row.setConnectorId(AwsSecurityHubConnector.ID);
         row.setEnabled(true);
         return row;
     }

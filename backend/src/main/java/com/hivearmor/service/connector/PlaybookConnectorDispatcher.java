@@ -2,6 +2,7 @@ package com.hivearmor.service.connector;
 
 import com.hivearmor.domain.connector.HaConnectorInstance;
 import com.hivearmor.repository.connector.HaConnectorInstanceRepository;
+import com.hivearmor.service.connector.impl.AwsSecurityHubConnector;
 import com.hivearmor.service.connector.impl.AzureEntraConnector;
 import com.hivearmor.service.connector.impl.OktaConnector;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,8 @@ import java.util.Set;
  * (not OpenSearch alert indices).
  * {@code disable_user} performs live Okta lifecycle deactivate or Entra
  * {@code accountEnabled=false} when connector is {@code okta} or {@code azure_entra}.
+ * {@code block_ip} performs live AWS EC2 Network ACL deny when connector is
+ * {@code aws_security_hub} (fail-closed without credentials; {@code dry_run=true} skips AWS).
  */
 @Service
 public class PlaybookConnectorDispatcher {
@@ -35,6 +38,8 @@ public class PlaybookConnectorDispatcher {
         "connector.pull_alerts", "pull_alerts", "pull-alerts", "connector.fetch_alerts");
     private static final Set<String> DISABLE_USER_IDS = Set.of(
         "disable_user", "disable-user", "identity.disable_user", "connector.disable_user");
+    private static final Set<String> BLOCK_IP_IDS = Set.of(
+        "block_ip", "block-ip", "network.block_ip", "connector.block_ip");
 
     private final HaConnectorInstanceService instanceService;
     private final HaConnectorRegistry registry;
@@ -57,7 +62,10 @@ public class PlaybookConnectorDispatcher {
             return false;
         }
         String n = actionId.trim().toLowerCase(Locale.ROOT);
-        return TEST_IDS.contains(n) || PULL_IDS.contains(n) || DISABLE_USER_IDS.contains(n);
+        return TEST_IDS.contains(n)
+            || PULL_IDS.contains(n)
+            || DISABLE_USER_IDS.contains(n)
+            || BLOCK_IP_IDS.contains(n);
     }
 
     @Transactional
@@ -90,6 +98,10 @@ public class PlaybookConnectorDispatcher {
 
         if (DISABLE_USER_IDS.contains(n)) {
             return disableUser(row, connector, config);
+        }
+
+        if (BLOCK_IP_IDS.contains(n)) {
+            return blockIp(row, connector, config);
         }
 
         throw new IllegalArgumentException("Unsupported connector action: " + actionId);
@@ -185,6 +197,62 @@ public class PlaybookConnectorDispatcher {
         out.put("status", Boolean.TRUE.equals(result.get("ok")) ? "disabled" : "failed");
         out.putAll(result);
         return out;
+    }
+
+    private Map<String, Object> blockIp(
+            HaConnectorInstance row,
+            HaConnector connector,
+            Map<String, Object> config) {
+        if (!connector.capabilities().contains(ConnectorCapability.BLOCK_IP)) {
+            throw new IllegalStateException(
+                "Connector " + row.getConnectorId() + " does not declare BLOCK_IP");
+        }
+        if (!(connector instanceof AwsSecurityHubConnector aws)) {
+            throw new IllegalStateException(
+                "Live BLOCK_IP is only implemented for aws_security_hub (got: "
+                    + row.getConnectorId() + ")");
+        }
+
+        String ip = firstNonBlank(
+            asString(config.get("ip")),
+            paramString(config, "ip"),
+            asString(config.get("ipAddress")),
+            paramString(config, "ipAddress"),
+            asString(config.get("srcIp")),
+            paramString(config, "srcIp"),
+            asString(config.get("targetId")),
+            paramString(config, "targetId")
+        );
+        if (ip == null || ip.isBlank()) {
+            throw new IllegalArgumentException(
+                "block_ip requires config.ip (IPv4 address)");
+        }
+
+        Map<String, String> merged = new LinkedHashMap<>(instanceService.decryptedConfig(row.getId()));
+        // Playbook step may override dry_run / network_acl_id / rule_number without re-storing secrets.
+        overlayString(merged, config, "dry_run");
+        overlayString(merged, config, "network_acl_id");
+        overlayString(merged, config, "rule_number");
+
+        Map<String, Object> result = aws.blockIp(merged, ip);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("action", "block_ip");
+        out.put("connectorInstanceId", row.getId());
+        out.put("connectorId", row.getConnectorId());
+        if (Boolean.TRUE.equals(result.get("dryRun"))) {
+            out.put("status", "dry_run");
+        } else {
+            out.put("status", Boolean.TRUE.equals(result.get("ok")) ? "blocked" : "failed");
+        }
+        out.putAll(result);
+        return out;
+    }
+
+    private void overlayString(Map<String, String> merged, Map<String, Object> config, String key) {
+        String v = firstNonBlank(asString(config.get(key)), paramString(config, key));
+        if (v != null && !v.isBlank()) {
+            merged.put(key, v);
+        }
     }
 
     private HaConnectorInstance resolveInstance(Map<String, Object> config) {
