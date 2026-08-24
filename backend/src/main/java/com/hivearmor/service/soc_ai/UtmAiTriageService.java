@@ -2,6 +2,8 @@ package com.hivearmor.service.soc_ai;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hivearmor.config.Constants;
+import com.hivearmor.domain.shared_types.alert.UtmAlert;
 import com.hivearmor.domain.soc_ai.UtmAiTriage;
 import com.hivearmor.repository.soc_ai.UtmAiTriageRepository;
 import com.hivearmor.service.UtmAlertService;
@@ -15,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
-import java.util.Locale;
 
 @Service
 @Transactional
@@ -33,7 +34,8 @@ public class UtmAiTriageService {
             UtmAiTriageRepository triageRepository,
             ObjectMapper objectMapper,
             UtmAlertService utmAlertService,
-            @Value("${hivearmor.soc-ai.auto-close-threshold:0.85}") BigDecimal autoCloseThreshold) {
+            @Value("${hivearmor.ai.triage.auto-close-confidence:${hivearmor.soc-ai.auto-close-threshold:0.85}}")
+                BigDecimal autoCloseThreshold) {
         this.triageRepository = triageRepository;
         this.objectMapper = objectMapper;
         this.utmAlertService = utmAlertService;
@@ -55,9 +57,10 @@ public class UtmAiTriageService {
      * Expected keys: classification, confidence, reasoning (String[]), nextSteps (list of {action, details}).
      *
      * <p>STAGING CANDIDATE — runs a minimal agentic FSM after parse:
-     * {@code AUTO_TRIAGE → END} on high-confidence FP, otherwise
-     * {@code AUTO_TRIAGE → ENRICH (stub) → INVESTIGATE (stub) → END}.
+     * {@code AUTO_TRIAGE → END} on high-confidence FP (also mutates OpenSearch status/tag),
+     * otherwise {@code AUTO_TRIAGE → ENRICH (thin stub) → INVESTIGATE (stub) → END}.
      * FSM steps are prepended onto {@code nextSteps} for ledger observability.
+     * Not PRODUCTION READY.
      */
     public UtmAiTriage saveResult(String alertId, String rawJson) {
         UtmAiTriage triage = new UtmAiTriage();
@@ -96,7 +99,12 @@ public class UtmAiTriageService {
 
             // STAGING CANDIDATE — minimal agentic FSM (not PRODUCTION READY).
             List<AgenticTriageState> fsmPath = AgenticTriageFsm.run(highConfidenceFp);
-            persistFsmLedger(triage, fsmPath, highConfidenceFp);
+            Map<String, Object> enrichment = null;
+            if (fsmPath.contains(AgenticTriageState.ENRICH)) {
+                UtmAlert alertDoc = loadAlertSoft(alertId);
+                enrichment = TriageEnrichmentStub.build(parsed, alertDoc);
+            }
+            persistFsmLedger(triage, fsmPath, highConfidenceFp, enrichment);
 
             if (highConfidenceFp) {
                 triage.setStatus("AUTO_CLOSED_FP");
@@ -115,17 +123,26 @@ public class UtmAiTriageService {
     /**
      * Log each FSM transition and prepend step records onto {@code nextSteps}
      * so the ledger is observable without a schema change.
+     * ENRICH steps include structured {@code enrichment} metadata when provided.
      */
     private void persistFsmLedger(
-            UtmAiTriage triage, List<AgenticTriageState> path, boolean highConfidenceFp) {
-        List<Map<String, String>> ledger = new ArrayList<>(path.size());
+            UtmAiTriage triage,
+            List<AgenticTriageState> path,
+            boolean highConfidenceFp,
+            Map<String, Object> enrichment) {
+        List<Map<String, Object>> ledger = new ArrayList<>(path.size());
         for (AgenticTriageState state : path) {
-            String detail = AgenticTriageFsm.detailFor(state, highConfidenceFp);
+            String detail = state == AgenticTriageState.ENRICH && enrichment != null
+                ? TriageEnrichmentStub.summarize(enrichment)
+                : AgenticTriageFsm.detailFor(state, highConfidenceFp);
             log.info("SOC-AI agentic FSM alert={} state={} detail={}",
                 triage.getAlertId(), state.name(), detail);
-            Map<String, String> step = new LinkedHashMap<>(2);
+            Map<String, Object> step = new LinkedHashMap<>(3);
             step.put("action", state.name());
             step.put("details", detail);
+            if (state == AgenticTriageState.ENRICH && enrichment != null) {
+                step.put("enrichment", enrichment);
+            }
             ledger.add(step);
         }
 
@@ -179,7 +196,32 @@ public class UtmAiTriageService {
     }
 
     /**
-     * Mutate OpenSearch alert status through the existing alert service path (system actor).
+     * Extract structured ENRICH metadata from a persisted {@code nextSteps} JSON array.
+     */
+    static Optional<Map<String, Object>> extractEnrichment(String nextStepsJson) {
+        if (nextStepsJson == null || nextStepsJson.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            List<Map<String, Object>> steps = mapper.readValue(
+                nextStepsJson, new TypeReference<List<Map<String, Object>>>() {});
+            for (Map<String, Object> step : steps) {
+                if ("ENRICH".equals(String.valueOf(step.get("action")))
+                    && step.get("enrichment") instanceof Map<?, ?> raw) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> enrichment = (Map<String, Object>) raw;
+                    return Optional.of(enrichment);
+                }
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Mutate OpenSearch alert status (and soft-fail append FP tag) via existing alert service paths.
      * Failures are logged only — ledger AUTO_CLOSED_FP is still persisted (STAGING CANDIDATE).
      */
     private void closeAlertAsFalsePositive(String alertId, BigDecimal confidence) {
@@ -195,11 +237,41 @@ public class UtmAiTriageService {
             log.warn("SOC-AI could not mutate OpenSearch alert status for {}: {}",
                 alertId, e.getMessage());
         }
+
+        // Soft-fail tag so overview filters that exclude "False positive" also drop the alert.
+        try {
+            UtmAlert existing = loadAlertSoft(alertId);
+            List<String> tags = new ArrayList<>();
+            if (existing != null && existing.getTags() != null) {
+                tags.addAll(existing.getTags());
+            }
+            if (!tags.contains(Constants.FALSE_POSITIVE_TAG)) {
+                tags.add(Constants.FALSE_POSITIVE_TAG);
+            }
+            utmAlertService.updateTags(List.of(alertId), tags, false);
+        } catch (Exception e) {
+            log.warn("SOC-AI could not append OpenSearch FP tag for {}: {}",
+                alertId, e.getMessage());
+        }
+    }
+
+    /** Best-effort OpenSearch alert fetch — never throws to callers. */
+    private UtmAlert loadAlertSoft(String alertId) {
+        try {
+            List<UtmAlert> alerts = utmAlertService.getAlertsByIds(List.of(alertId));
+            if (alerts != null && !alerts.isEmpty()) {
+                return alerts.get(0);
+            }
+        } catch (Exception e) {
+            log.debug("SOC-AI could not load alert {} for enrich/tag: {}", alertId, e.getMessage());
+        }
+        return null;
     }
 
     /**
      * FP early-exit when classification is FP/benign and confidence ≥ configured threshold
-     * ({@code hivearmor.soc-ai.auto-close-threshold} / {@code HA_SOC_AI_AUTO_CLOSE_THRESHOLD}, default 0.85).
+     * ({@code hivearmor.ai.triage.auto-close-confidence}, default 0.85;
+     * falls back to {@code hivearmor.soc-ai.auto-close-threshold}).
      */
     static boolean isHighConfidenceFalsePositive(
             String classification, BigDecimal confidence, BigDecimal threshold) {
