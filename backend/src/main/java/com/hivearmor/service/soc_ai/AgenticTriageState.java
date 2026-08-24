@@ -7,7 +7,7 @@ package com.hivearmor.service.soc_ai;
  * AUTO_TRIAGE → END                 (high-confidence FP early exit + OpenSearch status/tag)
  * AUTO_TRIAGE → ENRICH → INVESTIGATE → END
  *   ENRICH: thin stub (IOC key inventory + placeholder relatedEntityCount)
- *   INVESTIGATE: path annotation only (no attack-path product claims)
+ *   INVESTIGATE: thin stub (relatedAlertCount + empty openHypotheses; no attack-path)
  * </pre>
  */
 public enum AgenticTriageState {
