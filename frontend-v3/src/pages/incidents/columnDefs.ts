@@ -81,8 +81,8 @@ export const INCIDENT_COLUMN_DEFS: ColDef<IncidentListItem>[] = [
   },
   {
     field: 'slaDeadline',
-    headerName: 'SLA due',
-    width: 110,
+    headerName: 'SLA',
+    width: 148,
     cellRenderer: SlaDeadlineRenderer,
     sortable: true,
     filter: false,

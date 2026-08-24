@@ -212,6 +212,10 @@ public class EdrService {
     }
 
     public EdrIsolationDTO isolateAgent(EdrIsolationDTO dto, String actionedBy) {
+        // First-party HA agent path (primary). Playbook isolate may fall back to
+        // vendor ISOLATE_HOST dry-run via HybridResponseMeshDispatcher when no
+        // agent is enrolled and hivearmor.connectors.vendor-isolate-enabled=true
+        // (STAGING CANDIDATE — see ADR-20260824-hybrid-response-mesh).
         if (isolationRepo.existsByAgentIdAndStatus(dto.getAgentId(), "ACTIVE")) {
             throw new IllegalStateException("Agent " + dto.getAgentId() + " is already isolated");
         }

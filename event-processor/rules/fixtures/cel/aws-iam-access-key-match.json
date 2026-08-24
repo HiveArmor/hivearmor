@@ -1,0 +1,19 @@
+{
+  "rule": "CEL-AWS-IAM-ACCESS-KEY",
+  "expect": "match",
+  "description": "IAM CreateAccessKey persistence",
+  "event": {
+    "id": "fx-cel-aws-ak-1",
+    "dataType": "aws",
+    "dataSource": "fixture-cloudtrail",
+    "tenantId": "1",
+    "raw": "{\"eventName\":\"CreateAccessKey\",\"userIdentity\":{\"type\":\"IAMUser\"}}",
+    "log": {
+      "eventName": "CreateAccessKey"
+    },
+    "origin": {
+      "user": "arn:aws:iam::111122223333:user/ops",
+      "ip": "10.0.1.11"
+    }
+  }
+}

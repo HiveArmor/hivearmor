@@ -32,6 +32,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -56,6 +57,8 @@ class PlaybookServiceTest {
     @Mock
     private com.hivearmor.service.connector.PlaybookConnectorDispatcher connectorDispatcher;
     @Mock
+    private com.hivearmor.service.connector.HybridResponseMeshDispatcher hybridResponseMesh;
+    @Mock
     private MailService mailService;
     @Mock
     private HaAirGapConfig haAirGapConfig;
@@ -76,6 +79,7 @@ class PlaybookServiceTest {
             edrService,
             webhookExecutor,
             connectorDispatcher,
+            hybridResponseMesh,
             mailService,
             haAirGapConfig
         );
@@ -378,6 +382,77 @@ class PlaybookServiceTest {
         assertThat(exec.getStatus()).isEqualTo("failure");
         assertThat(exec.getErrorMessage()).containsIgnoringCase("webhookUrl");
         verify(webhookExecutor, never()).send(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void executeAsync_isolatePrefersHaAgentViaMesh() throws Exception {
+        when(hybridResponseMesh.planIsolate(true)).thenReturn(
+            new com.hivearmor.service.connector.HybridIsolateRouter.Decision(
+                com.hivearmor.service.connector.HybridIsolateRouter.Path.HA_AGENT,
+                "HA agent enrolled — first-party isolate preferred"
+            )
+        );
+        com.hivearmor.service.dto.edr.EdrIsolationDTO iso = new com.hivearmor.service.dto.edr.EdrIsolationDTO();
+        iso.setStatus("ACTIVE");
+        when(edrService.isolateAgent(any(), anyString())).thenReturn(iso);
+
+        UtmPlaybook pb = new UtmPlaybook();
+        pb.setId(41L);
+        pb.setName("Isolate HA");
+        pb.setStepsJson("["
+            + "{\"stepIndex\":0,\"stepType\":\"action\",\"label\":\"Isolate\","
+            + "\"config\":{\"actionId\":\"isolate_host\",\"agentId\":\"agent-7\"}}"
+            + "]");
+
+        UtmPlaybookExecution exec = runningExec(410L, 41L, "exec-iso-ha", "Isolate HA", 1);
+        when(playbookRepository.findById(41L)).thenReturn(Optional.of(pb));
+        when(executionRepository.findByExecutionUuid("exec-iso-ha")).thenReturn(Optional.of(exec));
+        when(executionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.executeAsync("exec-iso-ha", 41L);
+        TimeUnit.MILLISECONDS.sleep(50);
+
+        assertThat(exec.getStatus()).isEqualTo("success");
+        assertThat(exec.getStepsLog()).contains("HA_AGENT");
+        verify(edrService).isolateAgent(any(), anyString());
+        verify(hybridResponseMesh, never()).vendorIsolateDryRun(nullable(String.class), nullable(String.class));
+    }
+
+    @Test
+    void executeAsync_isolateVendorDryRunWhenNoAgent() throws Exception {
+        when(hybridResponseMesh.planIsolate(false)).thenReturn(
+            new com.hivearmor.service.connector.HybridIsolateRouter.Decision(
+                com.hivearmor.service.connector.HybridIsolateRouter.Path.VENDOR_CONNECTOR,
+                "No HA agent enrolled; vendor ISOLATE_HOST available behind feature flag"
+            )
+        );
+        when(hybridResponseMesh.vendorIsolateDryRun(nullable(String.class), nullable(String.class))).thenReturn(Map.of(
+            "action", "isolate_host",
+            "path", "VENDOR_CONNECTOR",
+            "executed", false,
+            "status", "planned"
+        ));
+
+        UtmPlaybook pb = new UtmPlaybook();
+        pb.setId(42L);
+        pb.setName("Isolate Vendor");
+        pb.setStepsJson("["
+            + "{\"stepIndex\":0,\"stepType\":\"action\",\"label\":\"Isolate\","
+            + "\"config\":{\"actionId\":\"isolate_host\",\"hostname\":\"win-host\"}}"
+            + "]");
+
+        UtmPlaybookExecution exec = runningExec(420L, 42L, "exec-iso-vendor", "Isolate Vendor", 1);
+        when(playbookRepository.findById(42L)).thenReturn(Optional.of(pb));
+        when(executionRepository.findByExecutionUuid("exec-iso-vendor")).thenReturn(Optional.of(exec));
+        when(executionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.executeAsync("exec-iso-vendor", 42L);
+        TimeUnit.MILLISECONDS.sleep(50);
+
+        assertThat(exec.getStatus()).isEqualTo("success");
+        assertThat(exec.getStepsLog()).contains("VENDOR_CONNECTOR");
+        verify(edrService, never()).isolateAgent(any(), anyString());
+        verify(hybridResponseMesh).vendorIsolateDryRun(nullable(String.class), eq("win-host"));
     }
 
     private static UtmPlaybookExecution runningExec(Long id, Long playbookId, String uuid,

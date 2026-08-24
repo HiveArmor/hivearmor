@@ -569,3 +569,12 @@ No production-readiness claim is made by this baseline entry.
 - Mid-isolate (FULL): host firewall **BlockInbound,BlockOutbound** with `EDR_ALLOWED_*_172.31.17.117` (SIEM/AM) + loopback — management channel preserved.
 - `POST /api/edr/isolation/{id}/lift` → **HTTP 200** LIFTED; host restored to **BlockInbound,AllowOutbound** without manual `netsh` (fixes prior stranded-lift gap).
 - HiveArmorAgent remained **RUNNING** through isolate+lift.
+
+
+## 2026-08-24 — P2 hybrid response mesh (code)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY). No live vendor kinetic isolate.
+- Added `HybridIsolateRouter` + `HybridResponseMeshDispatcher`: prefer enrolled HA agent; else vendor `ISOLATE_HOST` only when `hivearmor.connectors.vendor-isolate-enabled=true`.
+- Playbook `isolate_host` consults the mesh; vendor branch returns dry-run (`executed=false`) — no vendor API calls, no secrets in payloads.
+- ADR: `docs/architecture/ADR-20260824-hybrid-response-mesh.md`.
+- Unit: `HybridIsolateRouterTest`, `HybridResponseMeshDispatcherTest`, playbook isolate HA/vendor path tests.

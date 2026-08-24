@@ -1,0 +1,19 @@
+{
+  "rule": "CEL-AWS-CLOUDTRAIL-STOP",
+  "expect": "match",
+  "description": "CloudTrail StopLogging via structured log.eventName",
+  "event": {
+    "id": "fx-cel-aws-stop-1",
+    "dataType": "cloudtrail",
+    "dataSource": "fixture-cloudtrail",
+    "tenantId": "1",
+    "raw": "{\"eventName\":\"StopLogging\",\"eventSource\":\"cloudtrail.amazonaws.com\"}",
+    "log": {
+      "eventName": "StopLogging"
+    },
+    "origin": {
+      "user": "arn:aws:iam::111122223333:user/ops",
+      "ip": "10.0.1.10"
+    }
+  }
+}

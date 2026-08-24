@@ -1,0 +1,16 @@
+{
+  "rule": "CEL-NET-DNS-TOR",
+  "expect": "match",
+  "description": "DNS query for Tor-related domain",
+  "event": {
+    "id": "fx-cel-net-tor-1",
+    "dataType": "dns",
+    "dataSource": "fixture-dns",
+    "tenantId": "1",
+    "raw": "query: check.torproject.org type A from 10.0.2.15",
+    "origin": {
+      "ip": "10.0.2.15",
+      "host": "fx-dns-client"
+    }
+  }
+}

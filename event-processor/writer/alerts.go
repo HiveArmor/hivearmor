@@ -244,10 +244,21 @@ func alertToDoc(a *plugins.Alert) map[string]any {
 		doc["dataSources"] = []string{a.DataSource}
 	}
 	if techniqueID, techniqueName := splitTechnique(a.Technique); techniqueID != "" {
+		// Compatibility camelCase (existing API/contract consumers).
 		doc["mitreTechniqueId"] = techniqueID
 		if techniqueName != "" {
 			doc["mitreTechniqueName"] = techniqueName
 		}
+		// Flattened mitre.* keys (P2 Detection-as-product target shape).
+		// Full OpenSearch mapping migration is deferred; see
+		// docs/hivearmor/p2-detection-as-product-mitre.md.
+		doc["mitre.technique.id"] = techniqueID
+		if techniqueName != "" {
+			doc["mitre.technique.name"] = techniqueName
+		}
+	}
+	if a.Category != "" {
+		doc["mitre.tactic"] = a.Category
 	}
 	if a.Impact != nil {
 		doc["impact"] = map[string]any{

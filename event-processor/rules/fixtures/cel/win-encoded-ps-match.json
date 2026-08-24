@@ -1,0 +1,18 @@
+{
+  "rule": "CEL-WIN-ENCODED-PS",
+  "expect": "match",
+  "description": "Encoded PowerShell (-EncodedCommand) should fire Execution/T1059.001 rule",
+  "event": {
+    "id": "fx-cel-win-encoded-ps-1",
+    "dataType": "powershell",
+    "dataSource": "fixture-agent",
+    "tenantId": "1",
+    "raw": "powershell.exe -NoProfile -EncodedCommand SQBFAFgA",
+    "origin": {
+      "host": "fx-win-01",
+      "process": "powershell.exe",
+      "command": "powershell.exe -NoProfile -EncodedCommand SQBFAFgA",
+      "user": "alice"
+    }
+  }
+}

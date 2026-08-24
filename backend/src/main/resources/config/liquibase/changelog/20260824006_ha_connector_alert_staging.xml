@@ -9,7 +9,7 @@
       ADR-20260824: connector pull staging queue (PostgreSQL sidecar).
       NOT an OpenSearch alert index — never write v3-hive-alert-* from connectors.
     -->
-    <changeSet id="20260824005-1" author="hivearmor">
+    <changeSet id="20260824006-1" author="hivearmor">
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="ha_connector_alert_staging"/>
@@ -65,7 +65,7 @@
             onDelete="CASCADE"/>
     </changeSet>
 
-    <changeSet id="20260824005-2" author="hivearmor">
+    <changeSet id="20260824006-2" author="hivearmor">
         <preConditions onFail="MARK_RAN">
             <tableExists tableName="ha_connector_instance"/>
             <not>

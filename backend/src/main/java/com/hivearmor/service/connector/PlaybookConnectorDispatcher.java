@@ -16,8 +16,10 @@ import java.util.Set;
 /**
  * Resolves playbook actions to typed connector capabilities.
  *
- * <p>First-party HA agent remains preferred for isolate/kill. Vendor kinetic
- * actions stay behind {@code hivearmor.connectors.vendor-isolate-enabled}.
+ * <p>First-party HA agent remains preferred for isolate/kill via
+ * {@link HybridResponseMeshDispatcher}. Vendor kinetic actions stay behind
+ * {@code hivearmor.connectors.vendor-isolate-enabled} and are dry-run only
+ * in the mesh dispatcher (no live vendor calls).
  * {@code pull_alerts} persists to the ADR-20260824 PostgreSQL staging queue
  * (not OpenSearch alert indices).
  * {@code disable_user} performs live Okta lifecycle deactivate when connector is {@code okta}.

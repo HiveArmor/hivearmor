@@ -762,6 +762,33 @@ print(f'OK:{len(items)}')
     -H "$ADMIN_H" -H "X-Tenant-ID: $ALPHA_TENANT_NUM" \
     "$BASE_URL/ha-dashboards/${BETA_DASHBOARD_IDS[0]}")
   assert_status "Alpha GET beta dashboard by ID" "$S" "404"
+
+  echo ""
+  echo "--- Alpha cannot attach visualization to beta dashboard (GAP-MT-05 depth) ---"
+  S=$(curl -s --max-time 10 -o /tmp/iso_alpha_dv_attach.json -w "%{http_code}" \
+    -H "$ADMIN_H" -H "X-Tenant-ID: $ALPHA_TENANT_NUM" \
+    -H "Content-Type: application/json" \
+    -X POST "$BASE_URL/ha-dashboard-visualizations" \
+    -d "{\"idDashboard\":${BETA_DASHBOARD_IDS[0]},\"idVisualization\":1,\"order\":0,\"width\":4,\"height\":3,\"top\":0,\"left\":0}")
+  # Service returns 404; legacy resource may wrap as 4xx/5xx — must not be 2xx create.
+  if [ "$S" -ge 200 ] && [ "$S" -lt 300 ]; then
+    echo -e "  ${RED}✗${NC} Alpha attached viz to beta dashboard (HTTP $S)"; FAIL=$((FAIL+1))
+  else
+    echo -e "  ${GREEN}✓${NC} Alpha cannot attach viz to beta dashboard (HTTP $S)"; PASS=$((PASS+1))
+  fi
+
+  echo ""
+  echo "--- Alpha cannot attach authority to beta dashboard (GAP-MT-05 depth) ---"
+  S=$(curl -s --max-time 10 -o /tmp/iso_alpha_da_attach.json -w "%{http_code}" \
+    -H "$ADMIN_H" -H "X-Tenant-ID: $ALPHA_TENANT_NUM" \
+    -H "Content-Type: application/json" \
+    -X POST "$BASE_URL/ha-dashboard-authorities" \
+    -d "{\"idDashboard\":${BETA_DASHBOARD_IDS[0]},\"authorityName\":\"ROLE_ANALYST\"}")
+  if [ "$S" -ge 200 ] && [ "$S" -lt 300 ]; then
+    echo -e "  ${RED}✗${NC} Alpha attached authority to beta dashboard (HTTP $S)"; FAIL=$((FAIL+1))
+  else
+    echo -e "  ${GREEN}✓${NC} Alpha cannot attach authority to beta dashboard (HTTP $S)"; PASS=$((PASS+1))
+  fi
 else
   echo -e "  ${YELLOW}⚠${NC} Skipping dashboard isolation — tenants or seeded dashboards unavailable"
 fi

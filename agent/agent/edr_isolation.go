@@ -5,10 +5,55 @@ import (
 	"strings"
 )
 
+// edrFirewallRulePrefix is the shared prefix for all Windows isolation rules
+// created by applyWindowsIsolation (loopback + management/caller allowlists).
+const edrFirewallRulePrefix = "EDR_"
+
 // isFullIsolation reports whether isoType requests full network cutover.
 // Matching is case-insensitive; empty defaults to non-FULL (safer for remediability).
 func isFullIsolation(isoType string) bool {
 	return strings.EqualFold(strings.TrimSpace(isoType), "FULL")
+}
+
+// isEdrFirewallRuleName reports whether name is an agent-owned isolation rule.
+func isEdrFirewallRuleName(name string) bool {
+	return strings.HasPrefix(strings.TrimSpace(name), edrFirewallRulePrefix)
+}
+
+// extractEdrFirewallRuleNames parses `netsh advfirewall firewall show rule name=all`
+// output and returns unique rule names owned by the agent (prefix EDR_).
+//
+// The previous lift path piped show-output through findstr and fed whole lines
+// (e.g. "Rule Name:  EDR_ALLOWED_1.2.3.4") into delete, so allowlist rules
+// survived a successful lift. Parsing the Rule Name field avoids that.
+func extractEdrFirewallRuleNames(showOutput string) []string {
+	seen := make(map[string]struct{})
+	out := make([]string, 0)
+
+	for _, raw := range strings.Split(showOutput, "\n") {
+		line := strings.TrimSpace(strings.TrimSuffix(raw, "\r"))
+		if line == "" {
+			continue
+		}
+		lower := strings.ToLower(line)
+		if !strings.HasPrefix(lower, "rule name:") {
+			continue
+		}
+		_, after, ok := strings.Cut(line, ":")
+		if !ok {
+			continue
+		}
+		name := strings.TrimSpace(after)
+		if !isEdrFirewallRuleName(name) {
+			continue
+		}
+		if _, dup := seen[name]; dup {
+			continue
+		}
+		seen[name] = struct{}{}
+		out = append(out, name)
+	}
+	return out
 }
 
 // windowsFirewallPolicy returns the netsh advfirewall firewallpolicy value.

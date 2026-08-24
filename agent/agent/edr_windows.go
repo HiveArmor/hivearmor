@@ -159,11 +159,23 @@ func liftWindowsIsolation() error {
 	if err := runCmd("netsh", "advfirewall", "set", "allprofiles", "firewallpolicy", "blockinbound,allowoutbound"); err != nil {
 		return fmt.Errorf("liftWindowsIsolation: reset policy: %w", err)
 	}
-	// Delete EDR-specific rules
-	_ = runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=EDR_ALLOW_LOOPBACK")
-	_ = exec.Command("cmd", "/c",
-		`for /f "tokens=*" %r in ('netsh advfirewall firewall show rule name=all ^| findstr "EDR_ALLOWED"') do netsh advfirewall firewall delete rule name="%r"`).Run()
+	deleteWindowsEdrFirewallRules()
 	return nil
+}
+
+// deleteWindowsEdrFirewallRules removes every agent-owned isolation rule
+// (EDR_ALLOW_LOOPBACK, EDR_ALLOWED_*, EDR_ALLOWED_OUT_*, and any future EDR_*).
+// Best-effort: policy reset already ran; leftover rules must not block lift success.
+func deleteWindowsEdrFirewallRules() {
+	out, err := exec.Command("netsh", "advfirewall", "firewall", "show", "rule", "name=all").Output()
+	if err != nil {
+		// Fallback: known loopback carve-out when enumeration fails.
+		_ = runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name=EDR_ALLOW_LOOPBACK")
+		return
+	}
+	for _, name := range extractEdrFirewallRuleNames(string(out)) {
+		_ = runCmd("netsh", "advfirewall", "firewall", "delete", "rule", "name="+name)
+	}
 }
 
 // applyNetworkIsolation is the Windows implementation.

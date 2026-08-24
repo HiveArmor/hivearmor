@@ -1,0 +1,18 @@
+{
+  "rule": "CEL-WIN-MIMIKATZ",
+  "expect": "match",
+  "description": "Mimikatz sekurlsa command-line indicator",
+  "event": {
+    "id": "fx-cel-win-mimikatz-1",
+    "dataType": "process",
+    "dataSource": "fixture-agent",
+    "tenantId": "1",
+    "raw": "mimikatz.exe \"privilege::debug\" \"sekurlsa::logonpasswords\" exit",
+    "origin": {
+      "host": "fx-win-04",
+      "process": "mimikatz.exe",
+      "command": "mimikatz.exe privilege::debug sekurlsa::logonpasswords",
+      "user": "attacker"
+    }
+  }
+}

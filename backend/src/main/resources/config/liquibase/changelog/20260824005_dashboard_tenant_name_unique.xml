@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      GAP-MT-05 depth / P1 MSSP dashboard tenancy — unique (tenant_id, name).
+      STAGING CANDIDATE.
+
+      Strategy choice (nullable tenant_id + uniqueness):
+      Dual partial unique indexes — NOT a single UNIQUE(tenant_id, name) and NOT
+      NULLS NOT DISTINCT.
+
+      Why:
+      - tenant_id is nullable for legacy global dashboards (null context = unscoped).
+      - PostgreSQL UNIQUE treats NULLs as distinct, so UNIQUE(tenant_id, name) would
+        allow duplicate global names when tenant_id IS NULL.
+      - NULLS NOT DISTINCT (PG15+) would fix that in one constraint, but is less
+        explicit in Liquibase XML and harder to reason about for operators.
+      - Partial indexes make the rules obvious:
+          * scoped rows: unique per (tenant_id, name) where tenant_id IS NOT NULL
+          * global rows: unique on (name) where tenant_id IS NULL
+      - Also drops legacy uk_dash_name_sys_owner (name, system_owner), which blocked
+        two tenants from sharing a dashboard name even after GAP-MT-05 tenant_id.
+    -->
+    <changeSet id="20260824005-1" author="hivearmor" context="dev,prod">
+        <comment>
+            Replace global/legacy dashboard name uniqueness with tenant-scoped
+            partial unique indexes (nullable tenant_id safe).
+        </comment>
+        <sql splitStatements="false">
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'uk_dash_name_sys_owner'
+                      AND conrelid = 'public.hive_dashboard'::regclass
+                ) THEN
+                    ALTER TABLE public.hive_dashboard DROP CONSTRAINT uk_dash_name_sys_owner;
+                END IF;
+
+                IF EXISTS (
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'hive_dashboard_name_key'
+                      AND conrelid = 'public.hive_dashboard'::regclass
+                ) THEN
+                    ALTER TABLE public.hive_dashboard DROP CONSTRAINT hive_dashboard_name_key;
+                END IF;
+
+                IF EXISTS (
+                    SELECT 1 FROM pg_constraint
+                    WHERE conname = 'uk_hive_dashboard_name'
+                      AND conrelid = 'public.hive_dashboard'::regclass
+                ) THEN
+                    ALTER TABLE public.hive_dashboard DROP CONSTRAINT uk_hive_dashboard_name;
+                END IF;
+            END $$;
+        </sql>
+
+        <sql>
+            CREATE UNIQUE INDEX IF NOT EXISTS uk_hive_dashboard_tenant_name
+                ON public.hive_dashboard (tenant_id, name)
+                WHERE tenant_id IS NOT NULL;
+        </sql>
+        <sql>
+            CREATE UNIQUE INDEX IF NOT EXISTS uk_hive_dashboard_global_name
+                ON public.hive_dashboard (name)
+                WHERE tenant_id IS NULL;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
