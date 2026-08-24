@@ -53,6 +53,11 @@ public class UtmAiTriageService {
     /**
      * Parse and persist the raw JSON response returned by the SOC-AI plugin.
      * Expected keys: classification, confidence, reasoning (String[]), nextSteps (list of {action, details}).
+     *
+     * <p>STAGING CANDIDATE — runs a minimal agentic FSM after parse:
+     * {@code AUTO_TRIAGE → END} on high-confidence FP, otherwise
+     * {@code AUTO_TRIAGE → ENRICH (stub) → INVESTIGATE (stub) → END}.
+     * FSM steps are prepended onto {@code nextSteps} for ledger observability.
      */
     public UtmAiTriage saveResult(String alertId, String rawJson) {
         UtmAiTriage triage = new UtmAiTriage();
@@ -86,12 +91,14 @@ public class UtmAiTriageService {
                 triage.setNextSteps(objectMapper.writeValueAsString(nextSteps));
             }
 
-            // STAGING CANDIDATE — agentic FP early-exit (not PRODUCTION READY).
-            // High-confidence false positive → triage ledger AUTO_CLOSED_FP and OpenSearch
-            // alert status via UtmAlertService.updateStatus (same path as POST /api/ha-alerts/status).
-            // Enrich → investigate FSM and attack-path are deferred.
-            if (isHighConfidenceFalsePositive(
-                    triage.getClassification(), triage.getConfidenceScore(), autoCloseThreshold)) {
+            boolean highConfidenceFp = isHighConfidenceFalsePositive(
+                triage.getClassification(), triage.getConfidenceScore(), autoCloseThreshold);
+
+            // STAGING CANDIDATE — minimal agentic FSM (not PRODUCTION READY).
+            List<AgenticTriageState> fsmPath = AgenticTriageFsm.run(highConfidenceFp);
+            persistFsmLedger(triage, fsmPath, highConfidenceFp);
+
+            if (highConfidenceFp) {
                 triage.setStatus("AUTO_CLOSED_FP");
                 closeAlertAsFalsePositive(alertId, triage.getConfidenceScore());
                 log.info("SOC-AI auto-closed FP for alert {} (confidence={}, threshold={})",
@@ -103,6 +110,72 @@ public class UtmAiTriageService {
         }
 
         return triageRepository.save(triage);
+    }
+
+    /**
+     * Log each FSM transition and prepend step records onto {@code nextSteps}
+     * so the ledger is observable without a schema change.
+     */
+    private void persistFsmLedger(
+            UtmAiTriage triage, List<AgenticTriageState> path, boolean highConfidenceFp) {
+        List<Map<String, String>> ledger = new ArrayList<>(path.size());
+        for (AgenticTriageState state : path) {
+            String detail = AgenticTriageFsm.detailFor(state, highConfidenceFp);
+            log.info("SOC-AI agentic FSM alert={} state={} detail={}",
+                triage.getAlertId(), state.name(), detail);
+            Map<String, String> step = new LinkedHashMap<>(2);
+            step.put("action", state.name());
+            step.put("details", detail);
+            ledger.add(step);
+        }
+
+        try {
+            List<Object> merged = new ArrayList<>(ledger);
+            String existing = triage.getNextSteps();
+            if (existing != null && !existing.isBlank()) {
+                List<Object> fromModel = objectMapper.readValue(
+                    existing, new TypeReference<List<Object>>() {});
+                merged.addAll(fromModel);
+            }
+            triage.setNextSteps(objectMapper.writeValueAsString(merged));
+        } catch (Exception e) {
+            log.warn("SOC-AI could not persist FSM ledger for alert {}: {}",
+                triage.getAlertId(), e.getMessage());
+            try {
+                triage.setNextSteps(objectMapper.writeValueAsString(ledger));
+            } catch (Exception ignored) {
+                // leave nextSteps as previously set from model
+            }
+        }
+    }
+
+    /**
+     * Extract ordered FSM state names from a persisted {@code nextSteps} JSON array.
+     * Recognizes ledger entries whose {@code action} matches an {@link AgenticTriageState}.
+     */
+    static List<String> extractFsmPath(String nextStepsJson) {
+        if (nextStepsJson == null || nextStepsJson.isBlank()) {
+            return List.of();
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            List<Map<String, Object>> steps = mapper.readValue(
+                nextStepsJson, new TypeReference<List<Map<String, Object>>>() {});
+            List<String> path = new ArrayList<>();
+            Set<String> known = new HashSet<>();
+            for (AgenticTriageState s : AgenticTriageState.values()) {
+                known.add(s.name());
+            }
+            for (Map<String, Object> step : steps) {
+                Object action = step.get("action");
+                if (action != null && known.contains(action.toString())) {
+                    path.add(action.toString());
+                }
+            }
+            return path;
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 
     /**
