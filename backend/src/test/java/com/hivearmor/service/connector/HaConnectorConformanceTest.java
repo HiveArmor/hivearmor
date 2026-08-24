@@ -58,6 +58,17 @@ class HaConnectorConformanceTest {
     }
 
     @Test
+    void azureEntraDeclaresDisableUser() {
+        HaConnector entra = registry.require(AzureEntraConnector.ID);
+        assertThat(entra.capabilities()).contains(
+            ConnectorCapability.PULL_AUDIT,
+            ConnectorCapability.DISABLE_USER
+        );
+        assertThat(entra.schema().getCapabilities()).contains(ConnectorCapability.DISABLE_USER);
+        assertThat(entra.schema().getDescription()).containsIgnoringCase("UPN");
+    }
+
+    @Test
     void everyConnectorHasNonEmptySchemaAndCapabilities() {
         for (HaConnector c : registry.all()) {
             ConnectorSchema schema = c.schema();

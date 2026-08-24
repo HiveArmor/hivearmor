@@ -2,6 +2,7 @@ package com.hivearmor.service.connector;
 
 import com.hivearmor.domain.connector.HaConnectorInstance;
 import com.hivearmor.repository.connector.HaConnectorInstanceRepository;
+import com.hivearmor.service.connector.impl.AzureEntraConnector;
 import com.hivearmor.service.connector.impl.OktaConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +23,8 @@ import java.util.Set;
  * in the mesh dispatcher (no live vendor calls).
  * {@code pull_alerts} persists to the ADR-20260824 PostgreSQL staging queue
  * (not OpenSearch alert indices).
- * {@code disable_user} performs live Okta lifecycle deactivate when connector is {@code okta}.
+ * {@code disable_user} performs live Okta lifecycle deactivate or Entra
+ * {@code accountEnabled=false} when connector is {@code okta} or {@code azure_entra}.
  */
 @Service
 public class PlaybookConnectorDispatcher {
@@ -101,10 +103,6 @@ public class PlaybookConnectorDispatcher {
             throw new IllegalStateException(
                 "Connector " + row.getConnectorId() + " does not declare DISABLE_USER");
         }
-        if (!(connector instanceof OktaConnector okta)) {
-            throw new IllegalStateException(
-                "Live DISABLE_USER is only implemented for Okta (got: " + row.getConnectorId() + ")");
-        }
 
         String userId = firstNonBlank(
             asString(config.get("userId")),
@@ -114,10 +112,31 @@ public class PlaybookConnectorDispatcher {
             asString(config.get("username")),
             paramString(config, "username"),
             asString(config.get("login")),
-            paramString(config, "login")
+            paramString(config, "login"),
+            asString(config.get("upn")),
+            paramString(config, "upn")
         );
 
         Map<String, String> merged = instanceService.decryptedConfig(row.getId());
+
+        if (connector instanceof OktaConnector okta) {
+            return disableOktaUser(row, okta, merged, userId, username);
+        }
+        if (connector instanceof AzureEntraConnector entra) {
+            return disableEntraUser(row, entra, merged, userId, username);
+        }
+
+        throw new IllegalStateException(
+            "Live DISABLE_USER is only implemented for Okta and azure_entra (got: "
+                + row.getConnectorId() + ")");
+    }
+
+    private Map<String, Object> disableOktaUser(
+            HaConnectorInstance row,
+            OktaConnector okta,
+            Map<String, String> merged,
+            String userId,
+            String username) {
         if (OktaIdentityClient.looksLikePlaceholder(merged)) {
             throw new IllegalArgumentException("Refusing Okta mutate with placeholder credentials");
         }
@@ -138,6 +157,32 @@ public class PlaybookConnectorDispatcher {
         out.put("connectorInstanceId", row.getId());
         out.put("connectorId", row.getConnectorId());
         out.put("status", Boolean.TRUE.equals(result.get("ok")) ? "deactivated" : "failed");
+        out.putAll(result);
+        return out;
+    }
+
+    private Map<String, Object> disableEntraUser(
+            HaConnectorInstance row,
+            AzureEntraConnector entra,
+            Map<String, String> merged,
+            String userId,
+            String username) {
+        if (MicrosoftOAuthClient.looksLikePlaceholder(merged)) {
+            throw new IllegalArgumentException("Refusing Entra mutate with placeholder credentials");
+        }
+
+        String userKey = firstNonBlank(userId, username);
+        if (userKey == null || userKey.isBlank()) {
+            throw new IllegalArgumentException(
+                "disable_user requires config.userId (Entra object id or UPN)");
+        }
+
+        Map<String, Object> result = entra.disableUser(merged, userKey);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("action", "disable_user");
+        out.put("connectorInstanceId", row.getId());
+        out.put("connectorId", row.getConnectorId());
+        out.put("status", Boolean.TRUE.equals(result.get("ok")) ? "disabled" : "failed");
         out.putAll(result);
         return out;
     }

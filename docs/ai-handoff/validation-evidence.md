@@ -538,6 +538,15 @@ No production-readiness claim is made by this baseline entry.
 - Label: **STAGING CANDIDATE** — live vendor credentials not production-verified.
 
 
+## 2026-08-24 — P1 Entra DISABLE_USER (code)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY). No live Entra tenant exercised; Graph HTTP mocked in unit tests.
+- `AzureEntraConnector` declares `DISABLE_USER`; `disableUser(config, userKey)` PATCHes Graph `/v1.0/users/{id|UPN}` with `{"accountEnabled":false}` via `MicrosoftOAuthClient.patchJson`.
+- Fail-closed without credentials / placeholder secrets; bearer tokens never logged.
+- `PlaybookConnectorDispatcher` live `disable_user` for `okta` and `azure_entra`.
+- Unit: `AzureEntraConnectorTest`, `MicrosoftOAuthClientTest` (patch), `PlaybookConnectorDispatcherTest` (Entra path), `HaConnectorConformanceTest` — see PR CI / local mvn.
+
+
 ## 2026-08-24 — P1 Spike D: EDR isolate live proof (agent 19)
 
 - Label: **STAGING CANDIDATE** (not PRODUCTION READY). No PR — isolate path worked without code change.
