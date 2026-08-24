@@ -14,8 +14,9 @@ import java.time.Instant;
 /**
  * ADR-20260824 staging queue for connector-pulled alerts.
  *
- * <p>Lives in PostgreSQL only — never written to {@code v3-hive-alert-*} OpenSearch
- * indices. Downstream EP bridge requires a follow-up ADR.
+ * <p>Ingest lands in PostgreSQL only. Promote (ADR-20260824-connector-staging-bridge)
+ * may write clearly labeled docs to {@code v3-hive-connector-promoted-*}, never to
+ * {@code v3-hive-alert-*} and never via event-processor {@code /v1/inject}.
  */
 @Entity
 @Table(
@@ -71,6 +72,25 @@ public class HaConnectorAlertStaging implements Serializable {
 
     @Column(name = "ingested_at", nullable = false)
     private Instant ingestedAt;
+
+    /** {@link ConnectorStagingStatus} value. */
+    @Column(name = "status", nullable = false, length = 32)
+    private String status = ConnectorStagingStatus.PENDING;
+
+    @Column(name = "promote_batch_id", length = 64)
+    private String promoteBatchId;
+
+    @Column(name = "promoted_at")
+    private Instant promotedAt;
+
+    @Column(name = "promoted_index", length = 128)
+    private String promotedIndex;
+
+    @Column(name = "promoted_doc_id", length = 128)
+    private String promotedDocId;
+
+    @Column(name = "promote_error", columnDefinition = "TEXT")
+    private String promoteError;
 
     public Long getId() {
         return id;
@@ -182,5 +202,53 @@ public class HaConnectorAlertStaging implements Serializable {
 
     public void setIngestedAt(Instant ingestedAt) {
         this.ingestedAt = ingestedAt;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getPromoteBatchId() {
+        return promoteBatchId;
+    }
+
+    public void setPromoteBatchId(String promoteBatchId) {
+        this.promoteBatchId = promoteBatchId;
+    }
+
+    public Instant getPromotedAt() {
+        return promotedAt;
+    }
+
+    public void setPromotedAt(Instant promotedAt) {
+        this.promotedAt = promotedAt;
+    }
+
+    public String getPromotedIndex() {
+        return promotedIndex;
+    }
+
+    public void setPromotedIndex(String promotedIndex) {
+        this.promotedIndex = promotedIndex;
+    }
+
+    public String getPromotedDocId() {
+        return promotedDocId;
+    }
+
+    public void setPromotedDocId(String promotedDocId) {
+        this.promotedDocId = promotedDocId;
+    }
+
+    public String getPromoteError() {
+        return promoteError;
+    }
+
+    public void setPromoteError(String promoteError) {
+        this.promoteError = promoteError;
     }
 }

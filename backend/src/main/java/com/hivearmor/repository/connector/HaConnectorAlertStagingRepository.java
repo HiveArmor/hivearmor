@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,4 +27,8 @@ public interface HaConnectorAlertStagingRepository extends JpaRepository<HaConne
     long countByConnectorInstanceId(Long connectorInstanceId);
 
     List<HaConnectorAlertStaging> findByIngestBatchIdOrderByIdAsc(String ingestBatchId);
+
+    List<HaConnectorAlertStaging> findByStatusOrderByIdAsc(String status, Pageable pageable);
+
+    List<HaConnectorAlertStaging> findByIdIn(Collection<Long> ids);
 }

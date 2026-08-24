@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+      ADR-20260824-connector-staging-bridge: promote status columns.
+      Does not write v3-hive-alert-*; promote target is v3-hive-connector-promoted-*.
+    -->
+    <changeSet id="20260824008-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="ha_connector_alert_staging"/>
+            <not>
+                <columnExists tableName="ha_connector_alert_staging" columnName="status"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="ha_connector_alert_staging">
+            <column name="status" type="varchar(32)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="promote_batch_id" type="varchar(64)"/>
+            <column name="promoted_at" type="timestamptz"/>
+            <column name="promoted_index" type="varchar(128)"/>
+            <column name="promoted_doc_id" type="varchar(128)"/>
+            <column name="promote_error" type="TEXT"/>
+        </addColumn>
+        <createIndex tableName="ha_connector_alert_staging" indexName="idx_ha_conn_alert_stg_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

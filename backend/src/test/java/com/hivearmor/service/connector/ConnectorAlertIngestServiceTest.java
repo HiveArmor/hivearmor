@@ -90,6 +90,7 @@ class ConnectorAlertIngestServiceTest {
         assertThat(saved.getExternalId()).isEqualTo("det-1");
         assertThat(saved.getConnectorId()).isEqualTo(CrowdStrikeConnector.ID);
         assertThat(saved.getTitle()).isEqualTo("Stub CrowdStrike detection");
+        assertThat(saved.getStatus()).isEqualTo("PENDING");
         assertThat(saved.getIngestBatchId()).isEqualTo(result.getBatchId());
 
         assertThat(row.getLastIngestBatchId()).isEqualTo(result.getBatchId());
