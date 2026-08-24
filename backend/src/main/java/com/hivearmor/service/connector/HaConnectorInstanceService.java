@@ -142,6 +142,17 @@ public class HaConnectorInstanceService {
             .collect(Collectors.toList());
     }
 
+    /**
+     * Decrypted public + secret config for playbook/connector mutate paths.
+     * Callers must not log values.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, String> decryptedConfig(Long id) {
+        HaConnectorInstance row = require(id);
+        HaConnector connector = registry.require(row.getConnectorId());
+        return decryptMergedConfig(row, connector);
+    }
+
     private void applyConfig(
             HaConnectorInstance row,
             HaConnector connector,

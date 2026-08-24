@@ -2,6 +2,7 @@ package com.hivearmor.service.connector;
 
 import com.hivearmor.domain.connector.HaConnectorInstance;
 import com.hivearmor.repository.connector.HaConnectorInstanceRepository;
+import com.hivearmor.service.connector.impl.OktaConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.util.Set;
  * <p>First-party HA agent remains preferred for isolate/kill. Vendor kinetic
  * actions stay behind {@code hivearmor.connectors.vendor-isolate-enabled}.
  * {@code pull_alerts} is a dry-run (ADR-20260824) — does not write OpenSearch.
+ * {@code disable_user} performs live Okta lifecycle deactivate when connector is {@code okta}.
  */
 @Service
 public class PlaybookConnectorDispatcher {
@@ -84,24 +86,59 @@ public class PlaybookConnectorDispatcher {
         }
 
         if (DISABLE_USER_IDS.contains(n)) {
-            if (!connector.capabilities().contains(ConnectorCapability.DISABLE_USER)) {
-                throw new IllegalStateException(
-                    "Connector " + row.getConnectorId() + " does not declare DISABLE_USER");
-            }
-            // Live Okta deactivate is deferred; capability routing is proven here.
-            Map<String, Object> out = new LinkedHashMap<>();
-            out.put("action", "disable_user");
-            out.put("connectorInstanceId", row.getId());
-            out.put("connectorId", row.getConnectorId());
-            out.put("status", "capability_resolved");
-            out.put(
-                "note",
-                "DISABLE_USER capability matched instance; live identity mutate not enabled in this build"
-            );
-            return out;
+            return disableUser(row, connector, config);
         }
 
         throw new IllegalArgumentException("Unsupported connector action: " + actionId);
+    }
+
+    private Map<String, Object> disableUser(
+            HaConnectorInstance row,
+            HaConnector connector,
+            Map<String, Object> config) {
+        if (!connector.capabilities().contains(ConnectorCapability.DISABLE_USER)) {
+            throw new IllegalStateException(
+                "Connector " + row.getConnectorId() + " does not declare DISABLE_USER");
+        }
+        if (!(connector instanceof OktaConnector okta)) {
+            throw new IllegalStateException(
+                "Live DISABLE_USER is only implemented for Okta (got: " + row.getConnectorId() + ")");
+        }
+
+        String userId = firstNonBlank(
+            asString(config.get("userId")),
+            paramString(config, "userId")
+        );
+        String username = firstNonBlank(
+            asString(config.get("username")),
+            paramString(config, "username"),
+            asString(config.get("login")),
+            paramString(config, "login")
+        );
+
+        Map<String, String> merged = instanceService.decryptedConfig(row.getId());
+        if (OktaIdentityClient.looksLikePlaceholder(merged)) {
+            throw new IllegalArgumentException("Refusing Okta mutate with placeholder credentials");
+        }
+
+        if ((userId == null || userId.isBlank()) && (username == null || username.isBlank())) {
+            throw new IllegalArgumentException(
+                "disable_user requires config.userId (or username for Okta login lookup)");
+        }
+
+        String resolvedId = userId;
+        if (resolvedId == null || resolvedId.isBlank()) {
+            resolvedId = okta.resolveUserId(merged, username);
+        }
+
+        Map<String, Object> result = okta.deactivateUser(merged, resolvedId);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("action", "disable_user");
+        out.put("connectorInstanceId", row.getId());
+        out.put("connectorId", row.getConnectorId());
+        out.put("status", Boolean.TRUE.equals(result.get("ok")) ? "deactivated" : "failed");
+        out.putAll(result);
+        return out;
     }
 
     private HaConnectorInstance resolveInstance(Map<String, Object> config) {
@@ -129,6 +166,25 @@ public class PlaybookConnectorDispatcher {
 
         throw new IllegalArgumentException(
             "Connector action requires config.connectorInstanceId or config.connectorId");
+    }
+
+    private static String paramString(Map<String, Object> config, String key) {
+        if (config.get("params") instanceof Map<?, ?> pm) {
+            return asString(pm.get(key));
+        }
+        return null;
+    }
+
+    private static String firstNonBlank(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String v : values) {
+            if (v != null && !v.isBlank() && !"null".equals(v)) {
+                return v.trim();
+            }
+        }
+        return null;
     }
 
     private static Long asLong(Object o) {

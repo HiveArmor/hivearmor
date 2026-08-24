@@ -5,6 +5,7 @@ import com.hivearmor.service.connector.ConnectorCapability;
 import com.hivearmor.service.connector.ConnectorField;
 import com.hivearmor.service.connector.ConnectorSchema;
 import com.hivearmor.service.connector.NormalizedAlert;
+import com.hivearmor.service.connector.OktaIdentityClient;
 
 import java.time.Instant;
 import java.util.EnumSet;
@@ -13,11 +14,21 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Okta — PULL_AUDIT + DISABLE_USER capability declaration (identity actions gated later).
+ * Okta — PULL_AUDIT + live DISABLE_USER (lifecycle deactivate).
  */
 public final class OktaConnector extends AbstractHttpConnector {
 
     public static final String ID = "okta";
+
+    private final OktaIdentityClient identityClient;
+
+    public OktaConnector() {
+        this(new OktaIdentityClient());
+    }
+
+    public OktaConnector(OktaIdentityClient identityClient) {
+        this.identityClient = identityClient != null ? identityClient : new OktaIdentityClient();
+    }
 
     @Override
     public String connectorId() {
@@ -61,8 +72,7 @@ public final class OktaConnector extends AbstractHttpConnector {
             String org = require(config, "org_url").replaceAll("/$", "");
             safeBase(org);
             require(config, "api_token");
-            if (config.values().stream().anyMatch(v ->
-                v != null && v.toLowerCase(java.util.Locale.ROOT).contains("placeholder"))) {
+            if (OktaIdentityClient.looksLikePlaceholder(config)) {
                 return ConnectionTestResult.failure(
                     "Refusing live probe with placeholder credentials"
                 );
@@ -76,9 +86,41 @@ public final class OktaConnector extends AbstractHttpConnector {
         }
     }
 
+    /**
+     * Deactivate an Okta user via lifecycle API.
+     *
+     * @param config merged connector config ({@code org_url}, {@code api_token})
+     * @param userId Okta user id (or login if already resolved by caller)
+     */
+    public Map<String, Object> deactivateUser(Map<String, String> config, String userId) {
+        validateRequiredFields(config);
+        if (OktaIdentityClient.looksLikePlaceholder(config)) {
+            throw new IllegalArgumentException("Refusing Okta mutate with placeholder credentials");
+        }
+        return identityClient.deactivateUser(
+            require(config, "org_url"),
+            require(config, "api_token"),
+            userId
+        );
+    }
+
+    /**
+     * Optional username → Okta user id lookup before deactivate.
+     */
+    public String resolveUserId(Map<String, String> config, String username) {
+        validateRequiredFields(config);
+        if (OktaIdentityClient.looksLikePlaceholder(config)) {
+            throw new IllegalArgumentException("Refusing Okta mutate with placeholder credentials");
+        }
+        return identityClient.resolveUserIdByLogin(
+            require(config, "org_url"),
+            require(config, "api_token"),
+            username
+        );
+    }
+
     @Override
     public List<NormalizedAlert> fetchAlerts(Map<String, String> config, Instant since) {
-        // Audit pull maps to normalized events; empty until live token path is verified.
         validateRequiredFields(config);
         return List.of();
     }
