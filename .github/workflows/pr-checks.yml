@@ -39,12 +39,12 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Dashboard tenant isolation IT (GAP-MT-05)
+      - name: Dashboard tenant isolation IT (GAP-MT-05 + depth)
         env:
           MAVEN_TK: ${{ secrets.GITHUB_TOKEN }}
         run: >
           mvn -B -s settings.xml test
-          -Dtest=DashboardTenantIsolationIT
+          -Dtest=DashboardTenantIsolationIT,DashboardLinkTenantIsolationIT
           -DfailIfNoTests=true
 
   cel_pack:

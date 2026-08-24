@@ -8,6 +8,8 @@
  * - GAP-SEC-12: GET /api/ha-dashboards/{id} has no @PreAuthorize
  * - GAP-MT-05: CLOSED (STAGING CANDIDATE) — backend stamps/scopes hive_dashboard.tenant_id
  *   via TenantContext; null context = legacy global list/get. UI does not redesign tenant UX.
+ * - GAP-MT-05 depth: dashboard-visualization and dashboard-authority CRUD scoped via parent
+ *   dashboard tenant_id (IDOR blocked). Unique name is (tenant_id, name) partial indexes.
  */
 
 import type { ChartDataResponse, DashboardDTO, VisualizationRunRequest } from './dashboards.types';
