@@ -103,6 +103,25 @@ public class MicrosoftOAuthClient {
         }
     }
 
+    /**
+     * Authenticated GET returning parsed JSON body, or empty on non-2xx / network failure.
+     * Callers must not log the bearer token.
+     */
+    public JsonNode getJson(String url, String bearerToken) throws Exception {
+        URI uri = ConnectorUrlGuard.requireHttpsUrl(url);
+        HttpRequest req = HttpRequest.newBuilder(uri)
+            .timeout(TIMEOUT)
+            .header("Authorization", "Bearer " + bearerToken)
+            .header("User-Agent", "HiveArmor-Connector/1.0")
+            .GET()
+            .build();
+        HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+            return MAPPER.createObjectNode();
+        }
+        return MAPPER.readTree(resp.body());
+    }
+
     public static String graphScope() {
         return "https://graph.microsoft.com/.default";
     }

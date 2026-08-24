@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +20,8 @@ import java.util.Set;
  * {@link HybridResponseMeshDispatcher}. Vendor kinetic actions stay behind
  * {@code hivearmor.connectors.vendor-isolate-enabled} and are dry-run only
  * in the mesh dispatcher (no live vendor calls).
- * {@code pull_alerts} is a dry-run (ADR-20260824) — does not write OpenSearch.
+ * {@code pull_alerts} persists to the ADR-20260824 PostgreSQL staging queue
+ * (not OpenSearch alert indices).
  * {@code disable_user} performs live Okta lifecycle deactivate when connector is {@code okta}.
  */
 @Service
@@ -37,14 +37,17 @@ public class PlaybookConnectorDispatcher {
     private final HaConnectorInstanceService instanceService;
     private final HaConnectorRegistry registry;
     private final HaConnectorInstanceRepository instanceRepository;
+    private final ConnectorAlertIngestService ingestService;
 
     public PlaybookConnectorDispatcher(
             HaConnectorInstanceService instanceService,
             HaConnectorRegistry registry,
-            HaConnectorInstanceRepository instanceRepository) {
+            HaConnectorInstanceRepository instanceRepository,
+            ConnectorAlertIngestService ingestService) {
         this.instanceService = instanceService;
         this.registry = registry;
         this.instanceRepository = instanceRepository;
+        this.ingestService = ingestService;
     }
 
     public boolean supports(String actionId) {
@@ -76,14 +79,10 @@ public class PlaybookConnectorDispatcher {
                 throw new IllegalStateException(
                     "Connector " + row.getConnectorId() + " does not declare PULL_ALERTS/PULL_AUDIT");
             }
-            List<Map<String, Object>> alerts = instanceService.fetchAlerts(row.getId(), Instant.now().minusSeconds(3600));
-            Map<String, Object> out = new LinkedHashMap<>();
+            Instant since = Instant.now().minusSeconds(3600);
+            ConnectorIngestResult ingest = ingestService.ingest(row.getId(), since);
+            Map<String, Object> out = new LinkedHashMap<>(ingest.toMap());
             out.put("action", "connector.pull_alerts");
-            out.put("connectorInstanceId", row.getId());
-            out.put("connectorId", row.getConnectorId());
-            out.put("count", alerts.size());
-            out.put("persisted", false);
-            out.put("note", "Dry-run only — ADR-20260824 forbids OpenSearch write from connectors");
             return out;
         }
 
@@ -160,7 +159,7 @@ public class PlaybookConnectorDispatcher {
         }
         if (connectorKey != null && !connectorKey.isBlank()) {
             final String connectorId = connectorKey.trim();
-            List<HaConnectorInstance> rows = instanceRepository.findByConnectorIdOrderByNameAsc(connectorId);
+            var rows = instanceRepository.findByConnectorIdOrderByNameAsc(connectorId);
             Optional<HaConnectorInstance> enabled = rows.stream().filter(HaConnectorInstance::isEnabled).findFirst();
             return enabled.orElseThrow(() -> new IllegalArgumentException(
                 "No enabled connector instance for connectorId=" + connectorId));

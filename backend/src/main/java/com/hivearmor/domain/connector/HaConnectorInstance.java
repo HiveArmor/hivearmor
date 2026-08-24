@@ -60,6 +60,16 @@ public class HaConnectorInstance implements Serializable {
     @Column(name = "last_test_message", length = 500)
     private String lastTestMessage;
 
+    /** Last successful staging ingest (ADR-20260824 PostgreSQL queue). */
+    @Column(name = "last_ingest_at")
+    private Instant lastIngestAt;
+
+    @Column(name = "last_ingest_count")
+    private Integer lastIngestCount;
+
+    @Column(name = "last_ingest_batch_id", length = 64)
+    private String lastIngestBatchId;
+
     public Long getId() {
         return id;
     }
@@ -154,5 +164,29 @@ public class HaConnectorInstance implements Serializable {
 
     public void setLastTestMessage(String lastTestMessage) {
         this.lastTestMessage = lastTestMessage;
+    }
+
+    public Instant getLastIngestAt() {
+        return lastIngestAt;
+    }
+
+    public void setLastIngestAt(Instant lastIngestAt) {
+        this.lastIngestAt = lastIngestAt;
+    }
+
+    public Integer getLastIngestCount() {
+        return lastIngestCount;
+    }
+
+    public void setLastIngestCount(Integer lastIngestCount) {
+        this.lastIngestCount = lastIngestCount;
+    }
+
+    public String getLastIngestBatchId() {
+        return lastIngestBatchId;
+    }
+
+    public void setLastIngestBatchId(String lastIngestBatchId) {
+        this.lastIngestBatchId = lastIngestBatchId;
     }
 }
