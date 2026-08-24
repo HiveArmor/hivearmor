@@ -45,4 +45,5 @@ HiveArmor’s correlation spine is **event-processor → OpenSearch**. AiSOC-sty
 
 - `.plan/research/P1-IMPLEMENTATION-PLAN.md`
 - `ConnectorAlertIngestService` / `HaConnectorResource` ingest-alerts
+- Follow-up: [ADR-20260824-connector-staging-bridge.md](./ADR-20260824-connector-staging-bridge.md) (promote to `v3-hive-connector-promoted-*`)
 - OpenSearch index pattern lock: `v3-hive-<type>-YYYY.MM.DD`

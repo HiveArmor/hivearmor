@@ -3,6 +3,8 @@ package com.hivearmor.web.rest;
 import com.hivearmor.service.connector.ConnectionTestResult;
 import com.hivearmor.service.connector.ConnectorAlertIngestService;
 import com.hivearmor.service.connector.ConnectorIngestResult;
+import com.hivearmor.service.connector.ConnectorPromoteResult;
+import com.hivearmor.service.connector.ConnectorStagingPromoteService;
 import com.hivearmor.service.connector.HaConnectorInstanceService;
 import com.hivearmor.service.dto.connector.ConnectorInstanceDTO;
 import com.hivearmor.service.dto.connector.ConnectorInstanceWriteDTO;
@@ -33,6 +35,8 @@ import java.util.Map;
  * <p>Secrets are never returned. {@code fetch-alerts} remains a dry-run preview.
  * {@code ingest-alerts} persists to the ADR-20260824 PostgreSQL staging queue
  * ({@code ha_connector_alert_staging}) — never to OpenSearch alert indices.
+ * Promote (ADR-20260824-connector-staging-bridge) writes labeled
+ * {@code v3-hive-connector-promoted-*} docs only — never {@code /v1/inject}.
  */
 @RestController
 @RequestMapping("/api")
@@ -44,15 +48,20 @@ public class HaConnectorResource {
         "hasAnyAuthority('ROLE_ADMIN', 'ROLE_SOC_MANAGER')";
     private static final String READ =
         "hasAnyAuthority('ROLE_ADMIN', 'ROLE_SOC_MANAGER')";
+    private static final String PROMOTE =
+        "hasAuthority('ROLE_ADMIN')";
 
     private final HaConnectorInstanceService service;
     private final ConnectorAlertIngestService ingestService;
+    private final ConnectorStagingPromoteService promoteService;
 
     public HaConnectorResource(
             HaConnectorInstanceService service,
-            ConnectorAlertIngestService ingestService) {
+            ConnectorAlertIngestService ingestService,
+            ConnectorStagingPromoteService promoteService) {
         this.service = service;
         this.ingestService = ingestService;
+        this.promoteService = promoteService;
     }
 
     @GetMapping("/ha-connectors/catalog")
@@ -206,5 +215,71 @@ public class HaConnectorResource {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /**
+     * Promote one staged row to {@code v3-hive-connector-promoted-*}
+     * (ADR-20260824-connector-staging-bridge). Admin only. Never {@code /v1/inject}.
+     */
+    @PostMapping("/ha-connectors/staged-alerts/{id}/promote")
+    @PreAuthorize(PROMOTE)
+    public ResponseEntity<?> promoteOne(@PathVariable Long id) {
+        final String ctx = CLASSNAME + ".promoteOne";
+        try {
+            ConnectorPromoteResult result = promoteService.promoteOne(id);
+            return ResponseEntity.ok(result.toMap());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("detail", e.getMessage()));
+        } catch (Exception e) {
+            log.error("{}: {}", ctx, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("detail", "Promote failed"));
+        }
+    }
+
+    /**
+     * Promote a batch of staged rows by id. Admin only.
+     * Body: {@code { "ids": [1, 2, ...] }} (max 100).
+     */
+    @PostMapping("/ha-connectors/staged-alerts/promote")
+    @PreAuthorize(PROMOTE)
+    public ResponseEntity<?> promoteBatch(@RequestBody Map<String, Object> body) {
+        final String ctx = CLASSNAME + ".promoteBatch";
+        try {
+            List<Long> ids = extractIds(body);
+            ConnectorPromoteResult result = promoteService.promoteByIds(ids);
+            return ResponseEntity.ok(result.toMap());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("detail", e.getMessage()));
+        } catch (Exception e) {
+            log.error("{}: {}", ctx, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("detail", "Promote failed"));
+        }
+    }
+
+    private static List<Long> extractIds(Map<String, Object> body) {
+        if (body == null || !body.containsKey("ids")) {
+            throw new IllegalArgumentException("body.ids is required");
+        }
+        Object raw = body.get("ids");
+        if (!(raw instanceof List<?> list) || list.isEmpty()) {
+            throw new IllegalArgumentException("body.ids must be a non-empty array");
+        }
+        List<Long> ids = new java.util.ArrayList<>();
+        for (Object item : list) {
+            if (item instanceof Number n) {
+                ids.add(n.longValue());
+            } else if (item instanceof String s) {
+                try {
+                    ids.add(Long.parseLong(s.trim()));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("invalid staging id: " + item);
+                }
+            } else {
+                throw new IllegalArgumentException("invalid staging id: " + item);
+            }
+        }
+        return ids;
     }
 }

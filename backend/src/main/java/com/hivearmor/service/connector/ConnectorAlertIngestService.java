@@ -1,6 +1,7 @@
 package com.hivearmor.service.connector;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hivearmor.domain.connector.ConnectorStagingStatus;
 import com.hivearmor.domain.connector.HaConnectorAlertStaging;
 import com.hivearmor.domain.connector.HaConnectorInstance;
 import com.hivearmor.repository.connector.HaConnectorAlertStagingRepository;
@@ -170,6 +171,7 @@ public class ConnectorAlertIngestService {
             staging.setRawJson(toJson(alert.getRawEvent()));
             staging.setIngestBatchId(batchId);
             staging.setIngestedAt(now);
+            staging.setStatus(ConnectorStagingStatus.PENDING);
             stagingRepository.save(staging);
             inserted++;
         }
@@ -214,6 +216,7 @@ public class ConnectorAlertIngestService {
         m.put("alertCreatedAt", row.getAlertCreatedAt() != null ? row.getAlertCreatedAt().toString() : null);
         m.put("ingestBatchId", row.getIngestBatchId());
         m.put("ingestedAt", row.getIngestedAt() != null ? row.getIngestedAt().toString() : null);
+        m.put("status", row.getStatus() != null ? row.getStatus() : ConnectorStagingStatus.PENDING);
         m.put("destination", ConnectorIngestResult.DESTINATION);
         return m;
     }
