@@ -56,6 +56,59 @@ export interface ConnectionTestResult {
   httpStatus?: number;
 }
 
+/** Staging row from PostgreSQL queue (ADR-20260824) — not an OpenSearch alert doc. */
+export type ConnectorStagedAlertStatus = 'PENDING' | 'PROMOTED' | 'FAILED' | string;
+
+export interface ConnectorStagedAlert {
+  id: number;
+  connectorInstanceId: number;
+  connectorId: string;
+  externalId: string;
+  title: string | null;
+  severity: string | null;
+  hostname: string | null;
+  srcIp: string | null;
+  alertCreatedAt: string | null;
+  ingestBatchId: string;
+  ingestedAt: string | null;
+  status: ConnectorStagedAlertStatus;
+  destination: string;
+}
+
+export interface ConnectorStagedAlertsResponse {
+  alerts: ConnectorStagedAlert[];
+  count: number;
+  destination: string;
+  persisted: boolean;
+  note: string;
+}
+
+export interface ConnectorPromoteItemResult {
+  id: number;
+  status: string;
+  error?: string;
+  promotedIndex?: string;
+  promotedDocId?: string;
+}
+
+/**
+ * Promote writes labeled `connector-promoted` docs only
+ * (`v3-hive-connector-promoted-*`) — never `v3-hive-alert-*`.
+ */
+export interface ConnectorPromoteResult {
+  promoteBatchId: string;
+  requested: number;
+  promoted: number;
+  failed: number;
+  skipped: number;
+  destinationIndex: string;
+  indexType: string;
+  documentKind: string;
+  correlationStatus: string;
+  note: string;
+  results: ConnectorPromoteItemResult[];
+}
+
 export const connectorService = {
   listCatalog(signal?: AbortSignal): Promise<ConnectorCatalogEntry[]> {
     return apiClient.get<ConnectorCatalogEntry[]>('/ha-connectors/catalog', { signal });
@@ -79,5 +132,29 @@ export const connectorService = {
 
   test(id: number): Promise<ConnectionTestResult> {
     return apiClient.post<ConnectionTestResult>(`/ha-connectors/instances/${id}/test`, {});
+  },
+
+  listStagedAlerts(
+    instanceId: number,
+    options?: { limit?: number; signal?: AbortSignal }
+  ): Promise<ConnectorStagedAlertsResponse> {
+    const limit = options?.limit ?? 50;
+    return apiClient.get<ConnectorStagedAlertsResponse>(
+      `/ha-connectors/instances/${instanceId}/staged-alerts`,
+      { signal: options?.signal, params: { limit } }
+    );
+  },
+
+  promoteStagedAlert(id: number): Promise<ConnectorPromoteResult> {
+    return apiClient.post<ConnectorPromoteResult>(
+      `/ha-connectors/staged-alerts/${id}/promote`,
+      {}
+    );
+  },
+
+  promoteStagedAlerts(ids: number[]): Promise<ConnectorPromoteResult> {
+    return apiClient.post<ConnectorPromoteResult>('/ha-connectors/staged-alerts/promote', {
+      ids,
+    });
   },
 };
