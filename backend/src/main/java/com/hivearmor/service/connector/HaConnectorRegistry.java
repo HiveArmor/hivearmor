@@ -32,6 +32,7 @@ public class HaConnectorRegistry {
     public HaConnectorRegistry(
             MicrosoftOAuthClient microsoftOAuthClient,
             OktaIdentityClient oktaIdentityClient,
+            AwsNetworkBlockClient awsNetworkBlockClient,
             @Value("${hivearmor.connectors.vendor-isolate-enabled:false}") boolean vendorIsolateEnabled) {
         MicrosoftOAuthClient oauth = microsoftOAuthClient != null
             ? microsoftOAuthClient
@@ -39,22 +40,33 @@ public class HaConnectorRegistry {
         OktaIdentityClient okta = oktaIdentityClient != null
             ? oktaIdentityClient
             : new OktaIdentityClient();
+        AwsNetworkBlockClient aws = awsNetworkBlockClient != null
+            ? awsNetworkBlockClient
+            : new AwsNetworkBlockClient();
         register(new CrowdStrikeConnector(vendorIsolateEnabled));
         register(new AzureDefenderConnector(oauth));
         register(new OktaConnector(okta));
         register(new AzureEntraConnector(oauth));
-        register(new AwsSecurityHubConnector());
+        register(new AwsSecurityHubConnector(aws));
         register(new GoogleWorkspaceConnector());
     }
 
     /** Test helper — same catalog with isolate flag. Not used by Spring. */
     public HaConnectorRegistry(boolean vendorIsolateEnabled) {
-        this(new MicrosoftOAuthClient(), new OktaIdentityClient(), vendorIsolateEnabled);
+        this(new MicrosoftOAuthClient(), new OktaIdentityClient(), new AwsNetworkBlockClient(), vendorIsolateEnabled);
     }
 
     /** Test helper — injectable Okta client. Not used by Spring. */
     public HaConnectorRegistry(OktaIdentityClient oktaIdentityClient, boolean vendorIsolateEnabled) {
-        this(new MicrosoftOAuthClient(), oktaIdentityClient, vendorIsolateEnabled);
+        this(new MicrosoftOAuthClient(), oktaIdentityClient, new AwsNetworkBlockClient(), vendorIsolateEnabled);
+    }
+
+    /** Test helper — injectable OAuth + Okta clients. Not used by Spring. */
+    public HaConnectorRegistry(
+            MicrosoftOAuthClient microsoftOAuthClient,
+            OktaIdentityClient oktaIdentityClient,
+            boolean vendorIsolateEnabled) {
+        this(microsoftOAuthClient, oktaIdentityClient, new AwsNetworkBlockClient(), vendorIsolateEnabled);
     }
 
     private void register(HaConnector connector) {

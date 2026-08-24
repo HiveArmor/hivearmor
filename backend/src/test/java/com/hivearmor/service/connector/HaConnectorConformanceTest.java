@@ -69,6 +69,17 @@ class HaConnectorConformanceTest {
     }
 
     @Test
+    void awsSecurityHubDeclaresBlockIp() {
+        HaConnector aws = registry.require(AwsSecurityHubConnector.ID);
+        assertThat(aws.capabilities()).contains(
+            ConnectorCapability.PULL_ALERTS,
+            ConnectorCapability.BLOCK_IP
+        );
+        assertThat(aws.schema().getCapabilities()).contains(ConnectorCapability.BLOCK_IP);
+        assertThat(aws.schema().getDescription()).containsIgnoringCase("NetworkAcl");
+    }
+
+    @Test
     void everyConnectorHasNonEmptySchemaAndCapabilities() {
         for (HaConnector c : registry.all()) {
             ConnectorSchema schema = c.schema();
