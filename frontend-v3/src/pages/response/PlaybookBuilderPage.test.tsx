@@ -200,6 +200,35 @@ describe('PlaybookBuilderPage low-code authoring', () => {
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/response/playbooks/18'));
   });
 
+  it('serializes condition and approval nodes for the #31 engine contract', async () => {
+    renderBuilder();
+
+    setPlaybookName('Condition and approval parity');
+    fireEvent.click(screen.getByRole('tab', { name: 'Logic' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Add Decision block' }));
+    expect(screen.getByLabelText('Condition onFalse')).toHaveValue('stop_success');
+    expect(screen.getByLabelText('Condition operator')).toHaveValue('eq');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Analyst approval block' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+
+    await waitFor(() => expect(mockCreatePlaybook).toHaveBeenCalledTimes(1));
+    const steps = mockCreatePlaybook.mock.calls[0][0].steps as Array<{
+      stepType: string;
+      config: Record<string, unknown>;
+    }>;
+    const condition = steps.find((step) => step.stepType === 'condition');
+    const approval = steps.find((step) => step.stepType === 'approval');
+    expect(condition).toBeTruthy();
+    expect(condition?.config['op']).toBe('eq');
+    expect(condition?.config['field']).toBe('severity');
+    expect(condition?.config['onFalse']).toBe('stop_success');
+    expect(condition?.config['operator']).toBeUndefined();
+    expect(approval).toBeTruthy();
+    expect(approval?.config['actionId']).toBeUndefined();
+    expect(approval?.config['builderNodeType']).toBe('approval');
+  });
+
   it('hydrates and updates an existing graph-backed playbook', async () => {
     mockUseParams.mockReturnValue({ id: '7' });
     mockFetchPlaybook.mockResolvedValue(playbook());

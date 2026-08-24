@@ -54,6 +54,14 @@ import './PlaybookBuilderPage.css';
 
 import { ActionPalette } from './components/ActionPalette';
 import { NodeConfigPanel } from './components/NodeConfigPanel';
+import {
+  defaultApprovalConfig,
+  defaultConditionConfig,
+  hydrateConditionConfig,
+  resolveBuilderNodeType,
+  serializeStepConfig,
+  toEngineStepType,
+} from './playbookBuilder.serialize';
 import { PlaybookNode } from './playbookNodes';
 import type {
   AiPlaybookRecommendation,
@@ -70,7 +78,7 @@ import { useEpsStream } from '@/hooks/useEpsStream';
 import { fixtureAiRecommendations, fixturePlaybookGraph, fixturePlaybookMetadata } from '@/pages/response/playbookBuilder.fixtures';
 import { createPlaybook, fetchPlaybook, updatePlaybook } from '@/services/playbookService';
 import { fetchResponseActionLibrary } from '@/services/responseActionService';
-import type { Playbook, PlaybookStep, PlaybookStepType, PlaybookTriggerType } from '@/types/playbook';
+import type { Playbook, PlaybookStep, PlaybookTriggerType } from '@/types/playbook';
 import type { ResponseAction } from '@/types/responseAction';
 
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
@@ -183,13 +191,6 @@ function emptyGraph(triggerType: PlaybookTriggerType): GraphSnapshot {
   };
 }
 
-function playbookStepType(nodeType: PlaybookNodeType): PlaybookStepType {
-  if (nodeType === 'condition') return 'condition';
-  if (nodeType === 'delay') return 'delay';
-  if (nodeType === 'loop') return 'loop';
-  return 'action';
-}
-
 function riskForAction(action: ResponseAction | undefined): PlaybookRisk {
   if (!action) return 'low';
   const value = `${action.category} ${action.name}`.toLowerCase();
@@ -201,9 +202,9 @@ function riskForAction(action: ResponseAction | undefined): PlaybookRisk {
 function graphFromPlaybook(playbook: Playbook, actions: ResponseAction[]): GraphSnapshot {
   const terminals = terminalNodes(playbook.triggerType);
   const stepNodes: BuilderNode[] = playbook.steps.map((step, index) => {
-    const config = step.config ?? {};
-    const storedType = typeof config['builderNodeType'] === 'string' ? config['builderNodeType'] as PlaybookNodeType : step.stepType;
-    const nodeType: PlaybookNodeType = storedType === 'approval' ? 'approval' : storedType;
+    const rawConfig = step.config ?? {};
+    const nodeType = resolveBuilderNodeType(step);
+    const config = nodeType === 'condition' ? hydrateConditionConfig(rawConfig) : rawConfig;
     const actionId = typeof config['actionId'] === 'string' ? config['actionId'] : undefined;
     const action = actions.find((item) => item.id === actionId);
     const position = config['builderPosition'] && typeof config['builderPosition'] === 'object'
@@ -218,7 +219,7 @@ function graphFromPlaybook(playbook: Playbook, actions: ResponseAction[]): Graph
         label: step.label,
         description: typeof config['builderDescription'] === 'string' ? config['builderDescription'] : action?.description ?? 'Configured response step',
         configured: nodeType === 'action' ? Boolean(actionId) : true,
-        actionId,
+        actionId: nodeType === 'approval' ? undefined : actionId,
         actionCategory: action?.category,
         risk: nodeType === 'action' ? riskForAction(action) : 'none',
         config,
@@ -261,19 +262,21 @@ function graphToSteps(nodes: BuilderNode[], edges: BuilderEdge[]): PlaybookStep[
     .sort((left, right) => left.position.y - right.position.y || left.position.x - right.position.x)
     .map((node, index) => ({
       stepIndex: index,
-      stepType: playbookStepType(node.data.nodeType),
+      stepType: toEngineStepType(node.data.nodeType),
       label: node.data.label,
-      config: {
-        ...node.data.config,
-        actionId: node.data.nodeType === 'approval' ? 'hivearmor.require-approval' : node.data.actionId,
-        builderNodeType: node.data.nodeType,
-        builderNodeId: node.id,
-        builderDescription: node.data.description,
-        builderPosition: node.position,
-        builderNext: edges
+      config: serializeStepConfig(node.data.nodeType, node.data.config, {
+        actionId: node.data.actionId,
+        nodeId: node.id,
+        description: node.data.description,
+        position: node.position,
+        next: edges
           .filter((edge) => edge.source === node.id)
-          .map((edge) => ({ target: edge.target, sourceHandle: edge.sourceHandle ?? undefined, label: typeof edge.label === 'string' ? edge.label : undefined })),
-      },
+          .map((edge) => ({
+            target: edge.target,
+            sourceHandle: edge.sourceHandle ?? undefined,
+            label: typeof edge.label === 'string' ? edge.label : undefined,
+          })),
+      }),
     }));
 }
 
@@ -592,9 +595,9 @@ export function PlaybookBuilderPage(): JSX.Element {
         actionCategory: definition.category,
         risk: definition.risk,
         config: definition.nodeType === 'condition'
-          ? { field: 'alert.severity', operator: 'gte', value: 'high' }
+          ? defaultConditionConfig()
           : definition.nodeType === 'approval'
-            ? { authority: 'ROLE_SOC_MANAGER', sla: '15m', onExpiry: 'stop' }
+            ? defaultApprovalConfig()
             : definition.nodeType === 'delay'
               ? { duration: 5, unit: 'minutes', resume: 'timer' }
             : definition.nodeType === 'loop'

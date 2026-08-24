@@ -67,4 +67,5 @@ export const STEP_NODE_TYPES: Record<PlaybookStepType, PlaybookNodeType> = {
   condition: 'condition',
   delay: 'delay',
   loop: 'loop',
+  approval: 'approval',
 };

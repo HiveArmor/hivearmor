@@ -7,7 +7,7 @@ export type PlaybookTriggerType = 'manual' | 'alert-triggered' | 'scheduled';
 
 export type PlaybookStatus = 'success' | 'failure' | 'running' | 'cancelled';
 
-export type PlaybookStepType = 'condition' | 'action' | 'delay' | 'loop';
+export type PlaybookStepType = 'condition' | 'action' | 'delay' | 'loop' | 'approval';
 
 export interface PlaybookStep {
   stepIndex: number;
