@@ -549,3 +549,14 @@ No production-readiness claim is made by this baseline entry.
 - Host after API lift: firewall **still BlockOutbound** — agent did not restore AllowOutbound (likely management-channel cut by FULL isolate; lift ProcessCommand did not take host effect). Manual restore on Windows: `netsh advfirewall set allprofiles firewallpolicy blockinbound,allowoutbound` (+ delete `EDR_ALLOW_LOOPBACK`) → confirmed **BlockInbound,AllowOutbound** again.
 - Follow-up gap (not fixed in this spike): Windows `applyWindowsIsolation` has no allowlist for agent-manager / SIEM management IPs, so FULL isolate can strand lift delivery.
 
+## 2026-08-24 — P1 EDR FULL-isolate lift fix (code)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY). Code fix only — **live re-proof required** after agent (+ backend) rebuild/redeploy on staging.
+- Root cause: Windows `applyWindowsIsolation` set `blockinbound,blockoutbound` with no management allowlist, so `EDR_LIFT_ISOLATION` could not reach the host after FULL isolate (DB showed LIFTED; firewall stayed BlockOutbound).
+- Agent (primary):
+  - `handleEdrIsolate` always merges `cnf.Server` into the allowlist via `mergeIsolationAllowlist` (resolve hostname→IP when possible; still applies caller `allowedIps`).
+  - Windows installs allow rules **before** setting firewall policy; FULL → `blockinbound,blockoutbound`; non-FULL → `blockinbound,allowoutbound` (remediable).
+- Backend (secondary): when `allowedIps` empty, `EdrService.isolateAgent` injects `grpc.server.address` (`GRPC_AGENT_MANAGER_HOST`) into the command string.
+- Unit tests: `agent/agent/edr_isolation_test.go` (policy + allowlist merge; no Windows required).
+- **Still needs live re-proof** on Windows agent (isolate FULL → confirm management carve-out → lift → host AllowOutbound) before any PRODUCTION READY claim.
+

@@ -6,11 +6,13 @@ import com.hivearmor.service.dto.edr.*;
 import com.hivearmor.service.incident_response.grpc_impl.IncidentResponseCommandService;
 import io.grpc.stub.StreamObserver;
 import com.hivearmor.service.grpc.CommandResult;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.List;
@@ -26,17 +28,20 @@ public class EdrService {
     private final UtmEdrQuarantineRepository quarantineRepo;
     private final UtmEdrIsolationRepository isolationRepo;
     private final IncidentResponseCommandService commandService;
+    private final String agentManagerHost;
 
     public EdrService(UtmEdrRuleRepository ruleRepo,
                       UtmEdrEventRepository eventRepo,
                       UtmEdrQuarantineRepository quarantineRepo,
                       UtmEdrIsolationRepository isolationRepo,
-                      IncidentResponseCommandService commandService) {
+                      IncidentResponseCommandService commandService,
+                      @Value("${grpc.server.address:}") String agentManagerHost) {
         this.ruleRepo = ruleRepo;
         this.eventRepo = eventRepo;
         this.quarantineRepo = quarantineRepo;
         this.isolationRepo = isolationRepo;
         this.commandService = commandService;
+        this.agentManagerHost = agentManagerHost;
     }
 
     // ---- Rules ----
@@ -216,14 +221,21 @@ public class EdrService {
         iso.setIsolationType(dto.getIsolationType() != null ? dto.getIsolationType() : "FULL");
         iso.setStatus("ACTIVE");
         iso.setReason(dto.getReason());
-        iso.setAllowedIps(dto.getAllowedIps());
+        // Belt-and-suspenders: when caller omits allowlist, inject agent-manager host
+        // so the agent command string carries a management carve-out. Agent still
+        // always merges cnf.Server independently (primary fix).
+        String allowedIps = dto.getAllowedIps();
+        if (!StringUtils.hasText(allowedIps) && StringUtils.hasText(agentManagerHost)) {
+            allowedIps = agentManagerHost.trim();
+        }
+        iso.setAllowedIps(allowedIps);
         iso.setIsolatedAt(Instant.now());
         iso.setActionedBy(actionedBy);
         iso.setEdrEventId(dto.getEdrEventId());
         UtmEdrIsolation saved = isolationRepo.save(iso);
 
         String cmd = "EDR_ISOLATE:" + iso.getIsolationType();
-        if (iso.getAllowedIps() != null) cmd += ":" + iso.getAllowedIps();
+        if (StringUtils.hasText(iso.getAllowedIps())) cmd += ":" + iso.getAllowedIps();
         commandService.sendCommand(
             dto.getAgentId(), cmd, "EDR_ACTION", saved.getId().toString(),
             "Isolate agent " + dto.getAgentId(), actionedBy, "",

@@ -129,6 +129,13 @@ func handleEdrIsolate(cnf *config.Config, command string) string {
 	if len(parts) == 2 && parts[1] != "" {
 		allowedIPs = strings.Split(parts[1], ",")
 	}
+	// Always allowlist the management host (cnf.Server) so FULL isolate cannot
+	// strand EDR_LIFT_ISOLATION / ProcessCommand delivery on Windows/Linux.
+	mgmt := ""
+	if cnf != nil {
+		mgmt = cnf.Server
+	}
+	allowedIPs = mergeIsolationAllowlist(mgmt, allowedIPs)
 	if err := applyNetworkIsolation(isoType, allowedIPs); err != nil {
 		return fmt.Sprintf("EDR_ISOLATE error: %v", err)
 	}
