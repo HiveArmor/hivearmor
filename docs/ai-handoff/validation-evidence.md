@@ -560,3 +560,12 @@ No production-readiness claim is made by this baseline entry.
 - Unit tests: `agent/agent/edr_isolation_test.go` (policy + allowlist merge; no Windows required).
 - **Still needs live re-proof** on Windows agent (isolate FULL → confirm management carve-out → lift → host AllowOutbound) before any PRODUCTION READY claim.
 
+
+## 2026-08-24 — P1 EDR isolate lift re-proof (allowlist agent)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY).
+- Built Windows agent via `deploy/staging/build-windows-agent-1056.sh` (includes `edr_isolation` management allowlist from #13).
+- Binary-swap accidentally deleted `config.yml`; revoked prior agent **19** credential, re-enrolled as agent **20** (`EC2AMAZ-8F0Q7DL`) with new package.
+- Mid-isolate (FULL): host firewall **BlockInbound,BlockOutbound** with `EDR_ALLOWED_*_172.31.17.117` (SIEM/AM) + loopback — management channel preserved.
+- `POST /api/edr/isolation/{id}/lift` → **HTTP 200** LIFTED; host restored to **BlockInbound,AllowOutbound** without manual `netsh` (fixes prior stranded-lift gap).
+- HiveArmorAgent remained **RUNNING** through isolate+lift.
