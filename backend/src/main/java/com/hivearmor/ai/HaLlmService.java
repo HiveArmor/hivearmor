@@ -3,11 +3,13 @@ package com.hivearmor.ai;
 import com.hivearmor.repository.UtmConfigurationParameterRepository;
 import com.hivearmor.service.llm.ChatOptions;
 import com.hivearmor.service.llm.HaLlmProvider;
+import com.hivearmor.service.llm.LlmUsageCounter;
 import com.hivearmor.service.llm.ProviderRegistry;
 import com.hivearmor.service.llm.event.LlmConfigChangedEvent;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -55,6 +57,7 @@ public class HaLlmService {
 
     private final ProviderRegistry providers;
     private final UtmConfigurationParameterRepository configRepo;
+    private final LlmUsageCounter usageCounter;
 
     /**
      * Thread-safe reference to the currently active provider.
@@ -65,8 +68,16 @@ public class HaLlmService {
     private final AtomicReference<HaLlmProvider> active = new AtomicReference<>();
 
     public HaLlmService(ProviderRegistry providers, UtmConfigurationParameterRepository configRepo) {
-        this.providers  = providers;
-        this.configRepo = configRepo;
+        this(providers, configRepo, new LlmUsageCounter());
+    }
+
+    @Autowired
+    public HaLlmService(ProviderRegistry providers,
+                        UtmConfigurationParameterRepository configRepo,
+                        LlmUsageCounter usageCounter) {
+        this.providers     = providers;
+        this.configRepo    = configRepo;
+        this.usageCounter  = usageCounter != null ? usageCounter : new LlmUsageCounter();
     }
 
     // =========================================================================
@@ -146,6 +157,7 @@ public class HaLlmService {
      * @see com.hivearmor.service.llm.ChatMessage
      */
     public String chat(List<com.hivearmor.service.llm.ChatMessage> messages, ChatOptions options) {
+        usageCounter.recordRequest();
         return active.get().chat(messages, options);
     }
 
@@ -159,7 +171,21 @@ public class HaLlmService {
      * @return a {@link Flux} of text deltas
      */
     public Flux<String> streamChat(List<com.hivearmor.service.llm.ChatMessage> messages, ChatOptions options) {
+        usageCounter.recordRequest();
         return active.get().streamChat(messages, options);
+    }
+
+    /**
+     * Records prompt/completion token usage when a provider surfaces it.
+     * Safe no-op when both values are unknown (negative).
+     */
+    public void recordTokenUsage(long promptTokens, long completionTokens) {
+        usageCounter.recordTokens(promptTokens, completionTokens);
+    }
+
+    /** Exposes the usage counter for tests and optional admin probes. */
+    public LlmUsageCounter usageCounter() {
+        return usageCounter;
     }
 
     /**
@@ -193,6 +219,7 @@ public class HaLlmService {
      * @throws LlmNotConfiguredException if the active provider is not configured
      */
     public String chat(List<ChatMessage> messages, String systemPrompt) {
+        usageCounter.recordRequest();
         return active.get().chat(toLlmMessages(messages, systemPrompt), null);
     }
 
@@ -207,6 +234,7 @@ public class HaLlmService {
      * @return non-null {@link Flux} of text deltas
      */
     public Flux<String> streamChat(List<ChatMessage> messages, String systemPrompt) {
+        usageCounter.recordRequest();
         return active.get().streamChat(toLlmMessages(messages, systemPrompt), null);
     }
 
