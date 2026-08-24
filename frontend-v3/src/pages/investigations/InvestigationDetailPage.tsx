@@ -32,17 +32,22 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import {
   convertInvestigationToIncident,
+  createInvestigationTask,
   fetchInvestigation,
   fetchInvestigationItems,
+  fetchInvestigationTasks,
   pinInvestigationItem,
   updateInvestigation,
+  updateInvestigationTask,
 } from './investigation.service';
 import type {
   InvestigationDetail,
   InvestigationItemType,
   InvestigationPhase,
   InvestigationSessionItem,
+  InvestigationSessionTask,
   InvestigationStatus,
+  InvestigationTaskStatus,
 } from './investigation.types';
 
 import { EmptyState } from '@/components/empty-state/EmptyState';
@@ -86,6 +91,20 @@ function phaseIndex(phase: InvestigationPhase | undefined): number {
   return Math.max(0, PHASES.findIndex((item) => item.id === (phase ?? 'prepare')));
 }
 
+function isSafeTicketUrl(value: string | null): value is string {
+  if (!value) return false;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
+function nextTaskStatus(status: InvestigationTaskStatus): InvestigationTaskStatus {
+  return status === 'OPEN' ? 'DONE' : 'OPEN';
+}
+
 export function InvestigationDetailPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const investigationId = Number(id);
@@ -97,6 +116,8 @@ export function InvestigationDetailPage(): JSX.Element {
   const activeTab: DetailTab = requestedTab && ['workspace', 'hypotheses', 'artifacts', 'activity', 'knowledge'].includes(requestedTab) ? requestedTab : 'workspace';
   const [artifactType, setArtifactType] = useState<InvestigationItemType | 'ALL'>('ALL');
   const [noteText, setNoteText] = useState('');
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskTicketUrl, setTaskTicketUrl] = useState('');
   const [convertOpen, setConvertOpen] = useState(false);
 
   const detailQuery = useQuery({
@@ -108,6 +129,12 @@ export function InvestigationDetailPage(): JSX.Element {
   const itemsQuery = useQuery({
     queryKey: ['investigation-session-items', investigationId],
     queryFn: ({ signal }) => fetchInvestigationItems(investigationId, signal),
+    enabled: Number.isFinite(investigationId),
+    staleTime: 10_000,
+  });
+  const tasksQuery = useQuery({
+    queryKey: ['investigation-session-tasks', investigationId],
+    queryFn: ({ signal }) => fetchInvestigationTasks(investigationId, signal),
     enabled: Number.isFinite(investigationId),
     staleTime: 10_000,
   });
@@ -124,6 +151,25 @@ export function InvestigationDetailPage(): JSX.Element {
       void queryClient.invalidateQueries({ queryKey: ['investigation-session', investigationId] });
     },
   });
+  const createTaskMutation = useMutation({
+    mutationFn: () => createInvestigationTask(investigationId, {
+      title: taskTitle.trim(),
+      externalTicketUrl: taskTicketUrl.trim() || null,
+    }),
+    onSuccess: () => {
+      setTaskTitle('');
+      setTaskTicketUrl('');
+      void queryClient.invalidateQueries({ queryKey: ['investigation-session-tasks', investigationId] });
+    },
+  });
+  const toggleTaskMutation = useMutation({
+    mutationFn: (task: InvestigationSessionTask) => updateInvestigationTask(investigationId, task.id, task, {
+      status: nextTaskStatus(task.status),
+    }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['investigation-session-tasks', investigationId] });
+    },
+  });
   const convertMutation = useMutation({
     mutationFn: () => convertInvestigationToIncident(investigationId),
     onSuccess: ({ incidentId }) => navigate(`/incidents/${incidentId}`),
@@ -131,6 +177,8 @@ export function InvestigationDetailPage(): JSX.Element {
 
   const investigation = detailQuery.data;
   const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
+  const tasks = useMemo(() => tasksQuery.data ?? [], [tasksQuery.data]);
+  const taskDoneCount = useMemo(() => tasks.filter((task) => task.status === 'DONE').length, [tasks]);
   const filteredItems = artifactType === 'ALL' ? items : items.filter((item) => item.itemType === artifactType);
   const groupedCount = useMemo(() => items.reduce<Record<string, number>>((counts, item) => ({ ...counts, [item.itemType]: (counts[item.itemType] ?? 0) + 1 }), {}), [items]);
 
@@ -186,7 +234,70 @@ export function InvestigationDetailPage(): JSX.Element {
 
               <article className="investigation-section"><header><h2><Network size={15} /> ATT&amp;CK coverage</h2></header><div className="investigation-techniques">{investigation.techniques.length ? investigation.techniques.map((technique) => <span key={technique}>{technique}</span>) : <div className="investigation-capability-empty"><span>Technique mapping is not projected by the current session API.</span></div>}</div></article>
 
-              <article className="investigation-section investigation-section--wide"><header><h2><ClipboardCheck size={15} /> Next analyst decisions</h2><span>{investigation.taskCompleted ?? 0}/{investigation.taskTotal ?? investigation.nextActions.length} complete</span></header>{investigation.nextActions.length ? <ol className="investigation-next-actions">{investigation.nextActions.map((action, index) => <li key={action}><i>{index + 1}</i><span>{action}</span><button type="button" aria-label={`Open action ${action}`}><ArrowRight size={13} /></button></li>)}</ol> : <div className="investigation-capability-empty"><CheckCircle2 size={20} /><span>No outstanding fixture actions. Confirm the conclusion and preserve a knowledge artifact.</span></div>}</article>
+              <article className="investigation-section investigation-section--wide">
+                <header>
+                  <h2><ClipboardCheck size={15} /> Case tasks</h2>
+                  <span>{taskDoneCount}/{tasks.length} complete</span>
+                </header>
+                <form
+                  className="investigation-task-composer"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    if (taskTitle.trim()) createTaskMutation.mutate();
+                  }}
+                >
+                  <input
+                    value={taskTitle}
+                    onChange={(event) => setTaskTitle(event.target.value)}
+                    placeholder="Add a case task…"
+                    aria-label="Case task title"
+                  />
+                  <input
+                    value={taskTicketUrl}
+                    onChange={(event) => setTaskTicketUrl(event.target.value)}
+                    placeholder="External ticket URL (optional)"
+                    aria-label="External ticket URL"
+                  />
+                  <button type="submit" disabled={!taskTitle.trim() || createTaskMutation.isPending}>
+                    <Plus size={14} /> Add
+                  </button>
+                </form>
+                {tasksQuery.isLoading ? (
+                  <div className="investigation-detail-loading"><i /><i /></div>
+                ) : tasks.length ? (
+                  <ul className="investigation-task-list">
+                    {tasks.map((task) => (
+                      <li key={task.id} data-status={task.status.toLowerCase()}>
+                        <button
+                          type="button"
+                          className="investigation-task-toggle"
+                          aria-label={task.status === 'DONE' ? `Reopen task ${task.title}` : `Complete task ${task.title}`}
+                          disabled={toggleTaskMutation.isPending || task.status === 'CANCELLED'}
+                          onClick={() => toggleTaskMutation.mutate(task)}
+                        >
+                          {task.status === 'DONE' ? <CheckCircle2 size={14} /> : <CircleDot size={14} />}
+                        </button>
+                        <div>
+                          <strong data-done={task.status === 'DONE'}>{task.title}</strong>
+                          <small>{task.status}{task.assignee ? ` · ${task.assignee}` : ''}</small>
+                        </div>
+                        {isSafeTicketUrl(task.externalTicketUrl) ? (
+                          <a href={task.externalTicketUrl} target="_blank" rel="noopener noreferrer">
+                            Ticket <ExternalLink size={11} />
+                          </a>
+                        ) : (
+                          <span className="investigation-task-no-ticket">No ticket</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="investigation-capability-empty">
+                    <CheckCircle2 size={20} />
+                    <span>No case tasks yet. Add a task and optionally link an external ticket.</span>
+                  </div>
+                )}
+              </article>
             </section>
           </section>}
 

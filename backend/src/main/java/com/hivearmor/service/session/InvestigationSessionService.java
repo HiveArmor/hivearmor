@@ -2,14 +2,17 @@ package com.hivearmor.service.session;
 
 import com.hivearmor.domain.UtmInvestigationSession;
 import com.hivearmor.domain.UtmSessionItem;
+import com.hivearmor.domain.UtmSessionTask;
 import com.hivearmor.domain.incident.UtmIncident;
 import com.hivearmor.domain.incident.enums.IncidentStatusEnum;
 import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.repository.UtmInvestigationSessionRepository;
 import com.hivearmor.repository.UtmSessionItemRepository;
+import com.hivearmor.repository.UtmSessionTaskRepository;
 import com.hivearmor.repository.incident.UtmIncidentRepository;
 import com.hivearmor.service.dto.InvestigationSessionDTO;
 import com.hivearmor.service.dto.SessionItemDTO;
+import com.hivearmor.service.dto.SessionTaskDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,6 +41,7 @@ public class InvestigationSessionService {
 
     private final UtmInvestigationSessionRepository sessionRepository;
     private final UtmSessionItemRepository itemRepository;
+    private final UtmSessionTaskRepository taskRepository;
     private final UtmIncidentRepository incidentRepository;
 
     // ── Session CRUD ──────────────────────────────────────────────────────────
@@ -195,6 +199,82 @@ public class InvestigationSessionService {
         log.debug("Unpinned item id={} from session id={} by user={}", itemId, sessionId, currentUser);
     }
 
+    // ── Session case tasks (P1 STAGING CANDIDATE) ─────────────────────────────
+
+    /**
+     * List case tasks for a session. Access follows session tenant/owner authz.
+     */
+    @Transactional(readOnly = true)
+    public List<SessionTaskDTO> listTasks(Long sessionId, String currentUser, boolean isAdminOrManager) {
+        loadAuthorizedSession(sessionId, currentUser, isAdminOrManager);
+        return taskRepository.findBySessionIdOrderByCreatedAtAsc(sessionId).stream()
+                .map(this::toTaskDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Create a case task on an authorized session.
+     */
+    public SessionTaskDTO createTask(Long sessionId, SessionTaskDTO dto, String currentUser, boolean isAdminOrManager) {
+        UtmInvestigationSession session = loadAuthorizedSession(sessionId, currentUser, isAdminOrManager);
+
+        UtmSessionTask task = new UtmSessionTask();
+        task.setSession(session);
+        task.setTitle(dto.title().trim());
+        task.setStatus(dto.status() != null && !dto.status().isBlank() ? dto.status() : "OPEN");
+        task.setAssignee(blankToNull(dto.assignee()));
+        task.setExternalTicketUrl(normalizeTicketUrl(dto.externalTicketUrl()));
+        task.setCreatedBy(currentUser);
+        task.setCreatedAt(Instant.now());
+        task.setUpdatedAt(Instant.now());
+
+        UtmSessionTask saved = taskRepository.save(task);
+        session.setUpdatedAt(Instant.now());
+        sessionRepository.save(session);
+
+        log.debug("Created session task id={} on session id={} by user={}", saved.getId(), sessionId, currentUser);
+        return toTaskDTO(saved);
+    }
+
+    /**
+     * Update a case task. Tenant isolation is enforced via the parent session.
+     */
+    public SessionTaskDTO updateTask(Long sessionId, Long taskId, SessionTaskDTO dto,
+                                     String currentUser, boolean isAdminOrManager) {
+        loadAuthorizedSession(sessionId, currentUser, isAdminOrManager);
+        UtmSessionTask task = taskRepository.findByIdAndSessionId(taskId, sessionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Session task not found: " + taskId));
+
+        if (dto.title() != null && !dto.title().isBlank()) {
+            task.setTitle(dto.title().trim());
+        }
+        if (dto.status() != null && !dto.status().isBlank()) {
+            task.setStatus(dto.status());
+        }
+        if (dto.assignee() != null) {
+            task.setAssignee(blankToNull(dto.assignee()));
+        }
+        if (dto.externalTicketUrl() != null) {
+            task.setExternalTicketUrl(normalizeTicketUrl(dto.externalTicketUrl()));
+        }
+        task.setUpdatedAt(Instant.now());
+
+        return toTaskDTO(taskRepository.save(task));
+    }
+
+    /**
+     * Delete a case task. Tenant isolation is enforced via the parent session.
+     */
+    public void deleteTask(Long sessionId, Long taskId, String currentUser, boolean isAdminOrManager) {
+        loadAuthorizedSession(sessionId, currentUser, isAdminOrManager);
+        UtmSessionTask task = taskRepository.findByIdAndSessionId(taskId, sessionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Session task not found: " + taskId));
+        taskRepository.delete(task);
+        log.debug("Deleted session task id={} from session id={} by user={}", taskId, sessionId, currentUser);
+    }
+
     // ── Convert to incident ───────────────────────────────────────────────────
 
     /**
@@ -318,5 +398,39 @@ public class InvestigationSessionService {
                 item.getAddedBy(),
                 item.getAddedAt()
         );
+    }
+
+    private SessionTaskDTO toTaskDTO(UtmSessionTask task) {
+        return new SessionTaskDTO(
+                task.getId(),
+                task.getSession().getId(),
+                task.getTitle(),
+                task.getStatus(),
+                task.getAssignee(),
+                task.getExternalTicketUrl(),
+                task.getCreatedBy(),
+                task.getCreatedAt(),
+                task.getUpdatedAt()
+        );
+    }
+
+    private static String blankToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
+    }
+
+    private static String normalizeTicketUrl(String value) {
+        String trimmed = blankToNull(value);
+        if (trimmed == null) {
+            return null;
+        }
+        String lower = trimmed.toLowerCase();
+        if (!lower.startsWith("http://") && !lower.startsWith("https://")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "externalTicketUrl must be an http(s) URL");
+        }
+        return trimmed;
     }
 }

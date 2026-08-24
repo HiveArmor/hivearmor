@@ -1,6 +1,7 @@
 export type InvestigationStatus = 'ACTIVE' | 'CLOSED' | 'ARCHIVED' | 'CONVERTED';
 export type InvestigationPhase = 'prepare' | 'execute' | 'assess' | 'act' | 'knowledge';
 export type InvestigationItemType = 'LOG_EVENT' | 'ALERT' | 'ENTITY' | 'FINDING' | 'NOTE';
+export type InvestigationTaskStatus = 'OPEN' | 'DONE' | 'CANCELLED';
 export type HypothesisOutcome = 'open' | 'supported' | 'refuted' | 'inconclusive';
 
 export interface InvestigationSession {
@@ -43,6 +44,18 @@ export interface InvestigationSessionItem {
   note: string | null;
   addedBy: string;
   addedAt: string;
+}
+
+export interface InvestigationSessionTask {
+  id: number;
+  sessionId: number;
+  title: string;
+  status: InvestigationTaskStatus;
+  assignee: string | null;
+  externalTicketUrl: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface InvestigationHypothesis {
@@ -114,4 +127,18 @@ export interface PinInvestigationItemInput {
   itemRef: string;
   itemSnapshot?: string;
   note?: string;
+}
+
+export interface CreateInvestigationTaskInput {
+  title: string;
+  status?: InvestigationTaskStatus;
+  assignee?: string | null;
+  externalTicketUrl?: string | null;
+}
+
+export interface UpdateInvestigationTaskInput {
+  title?: string;
+  status?: InvestigationTaskStatus;
+  assignee?: string | null;
+  externalTicketUrl?: string | null;
 }

@@ -1,12 +1,15 @@
 import type {
   CreateInvestigationInput,
+  CreateInvestigationTaskInput,
   InvestigationDetail,
   InvestigationListParams,
   InvestigationPageResult,
   InvestigationSession,
   InvestigationSessionItem,
+  InvestigationSessionTask,
   PinInvestigationItemInput,
   UpdateInvestigationInput,
+  UpdateInvestigationTaskInput,
 } from './investigation.types';
 
 import { useAuthStore } from '@/store/auth.store';
@@ -47,6 +50,15 @@ function normalizeSession(session: InvestigationSession): InvestigationSession {
     assignedTo: session.assignedTo ?? null,
     incidentId: session.incidentId ?? null,
     itemCount: session.itemCount ?? 0,
+  };
+}
+
+function normalizeTask(task: InvestigationSessionTask): InvestigationSessionTask {
+  return {
+    ...task,
+    status: task.status ?? 'OPEN',
+    assignee: task.assignee ?? null,
+    externalTicketUrl: task.externalTicketUrl ?? null,
   };
 }
 
@@ -166,4 +178,89 @@ export async function convertInvestigationToIncident(id: number): Promise<{ inci
   }
   const response = await fetch(`/api/ha-investigation-sessions/${id}/convert-to-incident`, { method: 'POST', headers: headers() });
   return ensureResponse<{ incidentId: number }>(response);
+}
+
+export async function fetchInvestigationTasks(id: number, signal?: AbortSignal): Promise<InvestigationSessionTask[]> {
+  if (fixtureMode) {
+    return [];
+  }
+  const response = await fetch(`/api/ha-investigation-sessions/${id}/tasks`, { headers: headers(), signal });
+  const tasks = await ensureResponse<InvestigationSessionTask[]>(response);
+  return tasks.map(normalizeTask);
+}
+
+export async function createInvestigationTask(id: number, input: CreateInvestigationTaskInput): Promise<InvestigationSessionTask> {
+  if (fixtureMode) {
+    const now = new Date().toISOString();
+    return normalizeTask({
+      id: Date.now(),
+      sessionId: id,
+      title: input.title,
+      status: input.status ?? 'OPEN',
+      assignee: input.assignee ?? null,
+      externalTicketUrl: input.externalTicketUrl ?? null,
+      createdBy: useAuthStore.getState().user?.login ?? 'fixture',
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+  const response = await fetch(`/api/ha-investigation-sessions/${id}/tasks`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({
+      id: null,
+      sessionId: id,
+      title: input.title,
+      status: input.status ?? 'OPEN',
+      assignee: input.assignee ?? null,
+      externalTicketUrl: input.externalTicketUrl ?? null,
+      createdBy: null,
+      createdAt: null,
+      updatedAt: null,
+    }),
+  });
+  return normalizeTask(await ensureResponse<InvestigationSessionTask>(response));
+}
+
+export async function updateInvestigationTask(
+  id: number,
+  taskId: number,
+  current: InvestigationSessionTask,
+  input: UpdateInvestigationTaskInput,
+): Promise<InvestigationSessionTask> {
+  if (fixtureMode) {
+    return normalizeTask({
+      ...current,
+      ...input,
+      title: input.title ?? current.title,
+      status: input.status ?? current.status,
+      assignee: input.assignee !== undefined ? input.assignee : current.assignee,
+      externalTicketUrl: input.externalTicketUrl !== undefined ? input.externalTicketUrl : current.externalTicketUrl,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+  const response = await fetch(`/api/ha-investigation-sessions/${id}/tasks/${taskId}`, {
+    method: 'PUT',
+    headers: headers(),
+    body: JSON.stringify({
+      id: taskId,
+      sessionId: id,
+      title: input.title ?? current.title,
+      status: input.status ?? current.status,
+      assignee: input.assignee !== undefined ? input.assignee : current.assignee,
+      externalTicketUrl: input.externalTicketUrl !== undefined ? input.externalTicketUrl : current.externalTicketUrl,
+      createdBy: current.createdBy,
+      createdAt: current.createdAt,
+      updatedAt: current.updatedAt,
+    }),
+  });
+  return normalizeTask(await ensureResponse<InvestigationSessionTask>(response));
+}
+
+export async function deleteInvestigationTask(id: number, taskId: number): Promise<void> {
+  if (fixtureMode) {
+    return;
+  }
+  const response = await fetch(`/api/ha-investigation-sessions/${id}/tasks/${taskId}`, { method: 'DELETE', headers: headers() });
+  await ensureResponse<void>(response);
 }
