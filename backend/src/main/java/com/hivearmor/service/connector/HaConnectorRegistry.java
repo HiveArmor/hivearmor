@@ -30,20 +30,29 @@ public class HaConnectorRegistry {
     @Autowired
     public HaConnectorRegistry(
             MicrosoftOAuthClient microsoftOAuthClient,
+            OktaIdentityClient oktaIdentityClient,
             @Value("${hivearmor.connectors.vendor-isolate-enabled:false}") boolean vendorIsolateEnabled) {
         MicrosoftOAuthClient oauth = microsoftOAuthClient != null
             ? microsoftOAuthClient
             : new MicrosoftOAuthClient();
+        OktaIdentityClient okta = oktaIdentityClient != null
+            ? oktaIdentityClient
+            : new OktaIdentityClient();
         register(new CrowdStrikeConnector(vendorIsolateEnabled));
         register(new AzureDefenderConnector(oauth));
-        register(new OktaConnector());
+        register(new OktaConnector(okta));
         register(new AzureEntraConnector(oauth));
         register(new AwsSecurityHubConnector());
     }
 
     /** Test helper — same five connectors with isolate flag. Not used by Spring. */
     public HaConnectorRegistry(boolean vendorIsolateEnabled) {
-        this(new MicrosoftOAuthClient(), vendorIsolateEnabled);
+        this(new MicrosoftOAuthClient(), new OktaIdentityClient(), vendorIsolateEnabled);
+    }
+
+    /** Test helper — injectable Okta client. Not used by Spring. */
+    public HaConnectorRegistry(OktaIdentityClient oktaIdentityClient, boolean vendorIsolateEnabled) {
+        this(new MicrosoftOAuthClient(), oktaIdentityClient, vendorIsolateEnabled);
     }
 
     private void register(HaConnector connector) {
