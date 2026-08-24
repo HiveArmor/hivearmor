@@ -5,6 +5,7 @@ import com.hivearmor.service.connector.impl.AzureDefenderConnector;
 import com.hivearmor.service.connector.impl.AzureEntraConnector;
 import com.hivearmor.service.connector.impl.CrowdStrikeConnector;
 import com.hivearmor.service.connector.impl.OktaConnector;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -16,12 +17,17 @@ import java.util.Optional;
 
 /**
  * In-process catalog of typed connectors (hard-capped to the P1 first five).
+ *
+ * <p>The production constructor must be {@code @Autowired}: additional public
+ * test helpers leave Spring with no unambiguous candidate, and it falls back
+ * to a missing no-arg ctor (boot failure).
  */
 @Component
 public class HaConnectorRegistry {
 
     private final Map<String, HaConnector> byId = new LinkedHashMap<>();
 
+    @Autowired
     public HaConnectorRegistry(
             MicrosoftOAuthClient microsoftOAuthClient,
             @Value("${hivearmor.connectors.vendor-isolate-enabled:false}") boolean vendorIsolateEnabled) {
@@ -35,7 +41,7 @@ public class HaConnectorRegistry {
         register(new AwsSecurityHubConnector());
     }
 
-    /** Test helper — same five connectors with isolate flag. */
+    /** Test helper — same five connectors with isolate flag. Not used by Spring. */
     public HaConnectorRegistry(boolean vendorIsolateEnabled) {
         this(new MicrosoftOAuthClient(), vendorIsolateEnabled);
     }
