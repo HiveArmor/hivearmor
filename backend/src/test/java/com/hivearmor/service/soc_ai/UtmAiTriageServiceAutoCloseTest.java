@@ -38,7 +38,7 @@ import static org.mockito.Mockito.when;
  * Unit tests for SOC-AI high-confidence FP auto-close and agentic FSM depth.
  *
  * <p>STAGING CANDIDATE — verifies ledger + OpenSearch status/tag wiring,
- * configurable confidence threshold, and thin ENRICH metadata.
+ * configurable confidence threshold, thin ENRICH metadata, and thin INVESTIGATE metadata.
  * Not PRODUCTION READY.
  */
 @ExtendWith(MockitoExtension.class)
@@ -154,6 +154,7 @@ class UtmAiTriageServiceAutoCloseTest {
             .doesNotContain("ENRICH")
             .doesNotContain("INVESTIGATE");
         assertThat(UtmAiTriageService.extractEnrichment(result.getNextSteps())).isEmpty();
+        assertThat(UtmAiTriageService.extractInvestigate(result.getNextSteps())).isEmpty();
     }
 
     @Test
@@ -196,9 +197,11 @@ class UtmAiTriageServiceAutoCloseTest {
             .containsExactly("AUTO_TRIAGE", "ENRICH", "INVESTIGATE", "END");
         assertThat(result.getNextSteps())
             .contains("enrich stub")
-            .contains("attack-path")
+            .contains("investigate stub")
+            .contains("session linking deferred")
             .contains("escalate")
             .doesNotContain("Neo4j / entity enrichment deferred");
+        assertThat(UtmAiTriageService.extractInvestigate(result.getNextSteps())).isPresent();
         verify(utmAlertService, never()).updateStatus(anyList(), anyInt(), anyString());
     }
 
@@ -262,6 +265,64 @@ class UtmAiTriageServiceAutoCloseTest {
         assertThat(UtmAiTriageService.extractFsmPath(result.getNextSteps()))
             .containsExactly("AUTO_TRIAGE", "ENRICH", "INVESTIGATE", "END");
         assertThat(UtmAiTriageService.extractEnrichment(result.getNextSteps())).isPresent();
+        assertThat(UtmAiTriageService.extractInvestigate(result.getNextSteps())).isPresent();
+    }
+
+    @Test
+    void saveResult_investigateRecordsStructuredMetadataWhenOsMisses() {
+        // Default mock: getAlertsByIds not stubbed → soft load returns null → relatedAlertCount=0
+        String rawJson = """
+            {"classification":"possible incident","confidence":0.88,"reasoning":["beacon"]}
+            """;
+
+        UtmAiTriage result = triageService.saveResult("alert-inv-0", rawJson);
+
+        Optional<Map<String, Object>> investigate =
+            UtmAiTriageService.extractInvestigate(result.getNextSteps());
+        assertThat(investigate).isPresent();
+        Map<String, Object> meta = investigate.orElseThrow();
+        assertThat(meta.get("stub")).isEqualTo(true);
+        assertThat(meta.get("relatedAlertCount")).isEqualTo(0);
+        assertThat(meta.get("openHypotheses")).isEqualTo(List.of());
+        assertThat(meta.get("note").toString())
+            .contains("investigation session linking deferred")
+            .contains("no Neo4j");
+        assertThat(result.getNextSteps()).contains("investigate stub");
+    }
+
+    @Test
+    void saveResult_investigateUsesSoftOpenSearchCountWhenAlertResolvable() throws Exception {
+        UtmAlert alert = new UtmAlert();
+        alert.setId("alert-inv-os");
+        when(utmAlertService.getAlertsByIds(eq(List.of("alert-inv-os"))))
+            .thenReturn(List.of(alert));
+
+        String rawJson = """
+            {"classification":"possible incident","confidence":0.87,"reasoning":["lateral"]}
+            """;
+
+        UtmAiTriage result = triageService.saveResult("alert-inv-os", rawJson);
+
+        Optional<Map<String, Object>> investigate =
+            UtmAiTriageService.extractInvestigate(result.getNextSteps());
+        assertThat(investigate).isPresent();
+        assertThat(investigate.orElseThrow().get("relatedAlertCount")).isEqualTo(1);
+        assertThat(investigate.orElseThrow().get("openHypotheses")).isEqualTo(List.of());
+        // Soft OS load is shared with ENRICH — one getAlertsByIds call
+        verify(utmAlertService).getAlertsByIds(eq(List.of("alert-inv-os")));
+    }
+
+    @Test
+    void saveResult_highConfidenceFp_skipsInvestigateMetadata() {
+        String rawJson = """
+            {"classification":"false positive","confidence":0.90,"reasoning":["known scanner"]}
+            """;
+
+        UtmAiTriage result = triageService.saveResult("alert-fp-no-inv", rawJson);
+
+        assertThat(result.getStatus()).isEqualTo("AUTO_CLOSED_FP");
+        assertThat(UtmAiTriageService.extractInvestigate(result.getNextSteps())).isEmpty();
+        assertThat(result.getNextSteps()).doesNotContain("investigate stub");
     }
 
     @Test
@@ -301,7 +362,9 @@ class UtmAiTriageServiceAutoCloseTest {
             .contains("IOC key inventory")
             .doesNotContain("attack-path product");
         assertThat(AgenticTriageFsm.detailFor(AgenticTriageState.INVESTIGATE, false))
-            .contains("deferred");
+            .contains("openHypotheses")
+            .contains("deferred")
+            .contains("no Neo4j");
     }
 
     @Test
@@ -311,5 +374,22 @@ class UtmAiTriageServiceAutoCloseTest {
         assertThat(enrichment.get("stub")).isEqualTo(true);
         assertThat(enrichment.get("relatedEntityCount")).isEqualTo(0);
         assertThat(TriageEnrichmentStub.summarize(enrichment)).contains("placeholder");
+    }
+
+    @Test
+    void triageInvestigateStub_buildIsHonestPlaceholder() {
+        Map<String, Object> investigate = TriageInvestigateStub.build(0);
+        assertThat(investigate.get("stub")).isEqualTo(true);
+        assertThat(investigate.get("relatedAlertCount")).isEqualTo(0);
+        assertThat(investigate.get("openHypotheses")).isEqualTo(List.of());
+        assertThat(TriageInvestigateStub.summarize(investigate))
+            .contains("session linking deferred")
+            .contains("no Neo4j");
+
+        UtmAlert present = new UtmAlert();
+        present.setId("a1");
+        assertThat(TriageInvestigateStub.build(present).get("relatedAlertCount")).isEqualTo(1);
+        assertThat(TriageInvestigateStub.build((UtmAlert) null).get("relatedAlertCount"))
+            .isEqualTo(0);
     }
 }

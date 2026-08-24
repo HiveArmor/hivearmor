@@ -58,7 +58,7 @@ public class UtmAiTriageService {
      *
      * <p>STAGING CANDIDATE — runs a minimal agentic FSM after parse:
      * {@code AUTO_TRIAGE → END} on high-confidence FP (also mutates OpenSearch status/tag),
-     * otherwise {@code AUTO_TRIAGE → ENRICH (thin stub) → INVESTIGATE (stub) → END}.
+     * otherwise {@code AUTO_TRIAGE → ENRICH (thin stub) → INVESTIGATE (thin stub) → END}.
      * FSM steps are prepended onto {@code nextSteps} for ledger observability.
      * Not PRODUCTION READY.
      */
@@ -100,11 +100,19 @@ public class UtmAiTriageService {
             // STAGING CANDIDATE — minimal agentic FSM (not PRODUCTION READY).
             List<AgenticTriageState> fsmPath = AgenticTriageFsm.run(highConfidenceFp);
             Map<String, Object> enrichment = null;
-            if (fsmPath.contains(AgenticTriageState.ENRICH)) {
+            Map<String, Object> investigate = null;
+            if (fsmPath.contains(AgenticTriageState.ENRICH)
+                || fsmPath.contains(AgenticTriageState.INVESTIGATE)) {
                 UtmAlert alertDoc = loadAlertSoft(alertId);
-                enrichment = TriageEnrichmentStub.build(parsed, alertDoc);
+                if (fsmPath.contains(AgenticTriageState.ENRICH)) {
+                    enrichment = TriageEnrichmentStub.build(parsed, alertDoc);
+                }
+                if (fsmPath.contains(AgenticTriageState.INVESTIGATE)) {
+                    // Soft OS resolvability: 1 when alert doc found, else 0. No related-alert query.
+                    investigate = TriageInvestigateStub.build(alertDoc);
+                }
             }
-            persistFsmLedger(triage, fsmPath, highConfidenceFp, enrichment);
+            persistFsmLedger(triage, fsmPath, highConfidenceFp, enrichment, investigate);
 
             if (highConfidenceFp) {
                 triage.setStatus("AUTO_CLOSED_FP");
@@ -123,25 +131,34 @@ public class UtmAiTriageService {
     /**
      * Log each FSM transition and prepend step records onto {@code nextSteps}
      * so the ledger is observable without a schema change.
-     * ENRICH steps include structured {@code enrichment} metadata when provided.
+     * ENRICH / INVESTIGATE steps include structured stub metadata when provided.
      */
     private void persistFsmLedger(
             UtmAiTriage triage,
             List<AgenticTriageState> path,
             boolean highConfidenceFp,
-            Map<String, Object> enrichment) {
+            Map<String, Object> enrichment,
+            Map<String, Object> investigate) {
         List<Map<String, Object>> ledger = new ArrayList<>(path.size());
         for (AgenticTriageState state : path) {
-            String detail = state == AgenticTriageState.ENRICH && enrichment != null
-                ? TriageEnrichmentStub.summarize(enrichment)
-                : AgenticTriageFsm.detailFor(state, highConfidenceFp);
+            String detail;
+            if (state == AgenticTriageState.ENRICH && enrichment != null) {
+                detail = TriageEnrichmentStub.summarize(enrichment);
+            } else if (state == AgenticTriageState.INVESTIGATE && investigate != null) {
+                detail = TriageInvestigateStub.summarize(investigate);
+            } else {
+                detail = AgenticTriageFsm.detailFor(state, highConfidenceFp);
+            }
             log.info("SOC-AI agentic FSM alert={} state={} detail={}",
                 triage.getAlertId(), state.name(), detail);
-            Map<String, Object> step = new LinkedHashMap<>(3);
+            Map<String, Object> step = new LinkedHashMap<>(4);
             step.put("action", state.name());
             step.put("details", detail);
             if (state == AgenticTriageState.ENRICH && enrichment != null) {
                 step.put("enrichment", enrichment);
+            }
+            if (state == AgenticTriageState.INVESTIGATE && investigate != null) {
+                step.put("investigate", investigate);
             }
             ledger.add(step);
         }
@@ -199,6 +216,18 @@ public class UtmAiTriageService {
      * Extract structured ENRICH metadata from a persisted {@code nextSteps} JSON array.
      */
     static Optional<Map<String, Object>> extractEnrichment(String nextStepsJson) {
+        return extractStepMetadata(nextStepsJson, "ENRICH", "enrichment");
+    }
+
+    /**
+     * Extract structured INVESTIGATE metadata from a persisted {@code nextSteps} JSON array.
+     */
+    static Optional<Map<String, Object>> extractInvestigate(String nextStepsJson) {
+        return extractStepMetadata(nextStepsJson, "INVESTIGATE", "investigate");
+    }
+
+    private static Optional<Map<String, Object>> extractStepMetadata(
+            String nextStepsJson, String actionName, String metadataKey) {
         if (nextStepsJson == null || nextStepsJson.isBlank()) {
             return Optional.empty();
         }
@@ -207,11 +236,11 @@ public class UtmAiTriageService {
             List<Map<String, Object>> steps = mapper.readValue(
                 nextStepsJson, new TypeReference<List<Map<String, Object>>>() {});
             for (Map<String, Object> step : steps) {
-                if ("ENRICH".equals(String.valueOf(step.get("action")))
-                    && step.get("enrichment") instanceof Map<?, ?> raw) {
+                if (actionName.equals(String.valueOf(step.get("action")))
+                    && step.get(metadataKey) instanceof Map<?, ?> raw) {
                     @SuppressWarnings("unchecked")
-                    Map<String, Object> enrichment = (Map<String, Object>) raw;
-                    return Optional.of(enrichment);
+                    Map<String, Object> meta = (Map<String, Object>) raw;
+                    return Optional.of(meta);
                 }
             }
             return Optional.empty();
@@ -263,7 +292,8 @@ public class UtmAiTriageService {
                 return alerts.get(0);
             }
         } catch (Exception e) {
-            log.debug("SOC-AI could not load alert {} for enrich/tag: {}", alertId, e.getMessage());
+            log.debug("SOC-AI could not load alert {} for enrich/investigate/tag: {}",
+                alertId, e.getMessage());
         }
         return null;
     }
