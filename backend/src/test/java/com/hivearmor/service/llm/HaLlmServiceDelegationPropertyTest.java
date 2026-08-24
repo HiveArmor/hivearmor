@@ -77,7 +77,7 @@ class HaLlmServiceDelegationPropertyTest {
         configRepo = mock(UtmConfigurationParameterRepository.class);
         when(configRepo.findByConfParamShort(anyString())).thenReturn(Optional.empty());
 
-        service = new HaLlmService(registry, configRepo);
+        service = new HaLlmService(registry, configRepo, new LlmUsageCounter(), HaPiiRedactor.disabled());
 
         // Manually trigger init() to ensure 'active' is not null.
         // HaLlmService.init() calls reload() which reads configRepo → "disabled" fallback.

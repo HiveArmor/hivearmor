@@ -161,6 +161,11 @@ hivearmor:
     # P2 hybrid response mesh: when true and no HA agent enrolled, playbook isolate
     # plans vendor ISOLATE_HOST as STAGING CANDIDATE dry-run (no live vendor call).
     vendor-isolate-enabled: ${HIVEARMOR_CONNECTOR_VENDOR_ISOLATE:false}
+  llm:
+    # STAGING CANDIDATE — deterministic PII redaction before provider calls (default ON).
+    # Set false for air-gap debug when inspecting unredacted local Ollama prompts.
+    pii-redaction-enabled: ${HIVEARMOR_LLM_PII_REDACTION_ENABLED:true}
+    pii-hostname-redaction-enabled: ${HIVEARMOR_LLM_PII_HOSTNAME_REDACTION_ENABLED:false}
   ai:
     triage:
       # STAGING CANDIDATE — confidence floor for AUTO_CLOSED_FP + OpenSearch status/tag mutation
