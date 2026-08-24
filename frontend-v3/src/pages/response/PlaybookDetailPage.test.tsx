@@ -34,7 +34,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { PlaybookDetailPage } from './PlaybookDetailPage';
+import { PlaybookDetailPage, PlaybookExecutionApprovalActions } from './PlaybookDetailPage';
 
 import type { Playbook, PlaybookAuditEntry, PlaybookExecution, PlaybookStep } from '@/types/playbook';
 
@@ -800,5 +800,43 @@ describe('PlaybookDetailPage', () => {
     expect(screen.getByText('Execution completed successfully.')).toBeDefined();
     expect(screen.getByText('Maya Chen')).toBeDefined();
     expect(screen.getByText('v4')).toBeDefined();
+  });
+});
+
+describe('PlaybookExecutionApprovalActions', () => {
+  it('shows Approve and Reject for Platform Administrator-capable users', () => {
+    const onApprove = vi.fn();
+    const onReject = vi.fn();
+
+    render(
+      <PlaybookExecutionApprovalActions
+        canApprove
+        isPending={false}
+        onApprove={onApprove}
+        onReject={onReject}
+      />
+    );
+
+    expect(screen.getByTestId('playbook-approval-actions')).toBeDefined();
+    fireEvent.click(screen.getByTestId('playbook-approve-btn'));
+    expect(onApprove).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId('playbook-reject-btn'));
+    expect(onReject).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides action buttons and states Platform Administrator requirement when unauthorized', () => {
+    render(
+      <PlaybookExecutionApprovalActions
+        canApprove={false}
+        isPending={false}
+        onApprove={vi.fn()}
+        onReject={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId('playbook-approval-denied')).toBeDefined();
+    expect(screen.getByText(/Required permission: Platform Administrator/i)).toBeDefined();
+    expect(screen.queryByTestId('playbook-approve-btn')).toBeNull();
+    expect(screen.queryByTestId('playbook-reject-btn')).toBeNull();
   });
 });

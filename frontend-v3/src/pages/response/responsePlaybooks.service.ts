@@ -267,17 +267,54 @@ export async function executePlaybookConfirmed(
   );
 }
 
-// ─── RESP-004: Approve / reject ────────────────────────────────────────────
+// ─── RESP-004: Approve / reject (execution-scoped; STAGING CANDIDATE) ──────
+// POST /api/ha-playbooks/executions/{executionId}/approve|reject
+// Backend requires ROLE_ADMIN. Do not log execution payloads or secrets.
 
+export interface PlaybookApprovalDecisionResponse {
+  executionId: string;
+  status: string;
+  approved: boolean;
+  resumeFromStep?: number;
+}
+
+/** Resume a playbook paused at an approval gate. */
+export async function approvePlaybookExecution(
+  executionId: string
+): Promise<PlaybookApprovalDecisionResponse> {
+  return apiClient.post<PlaybookApprovalDecisionResponse>(
+    `/ha-playbooks/executions/${encodeURIComponent(executionId)}/approve`
+  );
+}
+
+/** Reject a paused approval gate; optional reason is stored on the execution. */
+export async function rejectPlaybookExecution(
+  executionId: string,
+  reason?: string
+): Promise<PlaybookApprovalDecisionResponse> {
+  const body =
+    reason !== undefined && reason.trim().length > 0
+      ? { reason: reason.trim() }
+      : undefined;
+  return apiClient.post<PlaybookApprovalDecisionResponse>(
+    `/ha-playbooks/executions/${encodeURIComponent(executionId)}/reject`,
+    body
+  );
+}
+
+/**
+ * @deprecated Prefer {@link approvePlaybookExecution} / {@link rejectPlaybookExecution}.
+ * Kept as a thin adapter for any callers still using the decision union.
+ */
 export async function approveExecution(
-  approvalId: string,
+  executionId: string,
   decision: 'APPROVED' | 'REJECTED',
   rejectionReason?: string
-): Promise<void> {
-  return apiClient.post<void>(`/ha-playbooks/approvals/${approvalId}/decide`, {
-    decision,
-    rejectionReason: rejectionReason ?? null,
-  });
+): Promise<PlaybookApprovalDecisionResponse> {
+  if (decision === 'APPROVED') {
+    return approvePlaybookExecution(executionId);
+  }
+  return rejectPlaybookExecution(executionId, rejectionReason);
 }
 
 // ─── RESP-020: Response governance and human approval queue ───────────────

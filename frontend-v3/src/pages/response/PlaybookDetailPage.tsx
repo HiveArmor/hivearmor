@@ -40,12 +40,14 @@ import type {
   PlaybookPreviewResponse,
 } from './response.types';
 import {
+  approvePlaybookExecution,
   cancelExecution,
   executePlaybookConfirmed,
   fetchPlaybookList,
   fixtureMode,
   openExecutionStream,
   previewPlaybookExecution,
+  rejectPlaybookExecution,
 } from './responsePlaybooks.service';
 
 import { HaButton } from '@/components/ha-button/HaButton';
@@ -313,6 +315,20 @@ function normalizeLegacyStreamEvent(
         stepsCompleted: 0,
         stepsFailed: failed ? 1 : 0,
         stepsSkipped: 0,
+      },
+    };
+  }
+
+  if (type === 'approval_required') {
+    return {
+      eventType: 'APPROVAL_REQUIRED',
+      executionId,
+      timestamp,
+      step: {
+        stepOrder,
+        actionName: payload.stepLabel || 'Approval required',
+        status: 'running',
+        resultSummary: 'Awaiting Platform Administrator approval',
       },
     };
   }
@@ -802,12 +818,72 @@ function AuditTab({ playbookId }: { playbookId: number }): JSX.Element {
 
 // ─── Execution stream viewer ──────────────────────────────────────────────────
 
+/** Presentational approval actions — exported for focused Vitest coverage. */
+export function PlaybookExecutionApprovalActions({
+  canApprove,
+  isPending,
+  onApprove,
+  onReject,
+}: {
+  canApprove: boolean;
+  isPending: boolean;
+  onApprove: () => void;
+  onReject: () => void;
+}): JSX.Element {
+  if (!canApprove) {
+    return (
+      <div className="detail-stream-approval" role="status" data-testid="playbook-approval-denied">
+        <Clock3 size={13} aria-hidden="true" />
+        <span>
+          Execution paused for approval. Required permission: Platform Administrator.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="detail-stream-approval" role="group" aria-label="Playbook approval actions" data-testid="playbook-approval-actions">
+      <Clock3 size={13} aria-hidden="true" />
+      <span>Execution paused — approve to resume or reject to fail this run.</span>
+      <div className="detail-stream-approval__actions">
+        <HaButton
+          variant="primary"
+          isDisabled={isPending}
+          isLoading={isPending}
+          onClick={onApprove}
+          data-testid="playbook-approve-btn"
+          style={{ minWidth: 'unset', padding: '4px 12px', fontSize: 'var(--ha-text-xs)' }}
+        >
+          Approve
+        </HaButton>
+        <HaButton
+          variant="danger"
+          isDisabled={isPending}
+          onClick={onReject}
+          data-testid="playbook-reject-btn"
+          style={{ minWidth: 'unset', padding: '4px 12px', fontSize: 'var(--ha-text-xs)' }}
+        >
+          Reject
+        </HaButton>
+      </div>
+    </div>
+  );
+}
+
 function ExecutionStreamViewer({
   stream,
   onCancel,
+  canApprove,
+  isDecisionPending,
+  onApprove,
+  onReject,
 }: {
   stream: StreamState;
   onCancel: () => void;
+  canApprove: boolean;
+  isDecisionPending: boolean;
+  onApprove: () => void;
+  onReject: () => void;
 }): JSX.Element {
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -818,7 +894,13 @@ function ExecutionStreamViewer({
   }, [stream.events.length]);
 
   const isActive = stream.status === 'running';
+  const isAwaitingApproval = stream.status === 'awaiting_approval';
   const isComplete = stream.status === 'success' || stream.status === 'failure' || stream.status === 'cancelled';
+  const statusLabel = stream.status
+    ? stream.status === 'awaiting_approval'
+      ? 'Awaiting approval'
+      : stream.status.charAt(0).toUpperCase() + stream.status.slice(1).replace(/_/g, ' ')
+    : 'Queued';
 
   return (
     <div className="detail-stream-viewer" role="region" aria-label="Live execution stream" aria-live="polite">
@@ -827,8 +909,8 @@ function ExecutionStreamViewer({
           {isActive && <Activity size={13} className="detail-spin" />}
           {stream.status === 'success' && <CheckCircle2 size={13} style={{ color: 'var(--ha-severity-low)' }} />}
           {stream.status === 'failure' && <ShieldX size={13} style={{ color: 'var(--ha-severity-critical)' }} />}
-          {stream.status === 'awaiting_approval' && <Clock3 size={13} style={{ color: 'var(--ha-severity-high)' }} />}
-          {isActive ? 'Executing…' : stream.status ? stream.status.charAt(0).toUpperCase() + stream.status.slice(1) : 'Queued'}
+          {isAwaitingApproval && <Clock3 size={13} style={{ color: 'var(--ha-severity-high)' }} />}
+          {isActive ? 'Executing…' : statusLabel}
         </span>
         {stream.executionId && (
           <span className="detail-stream-id detail-mono">{stream.executionId}</span>
@@ -843,6 +925,15 @@ function ExecutionStreamViewer({
           </HaButton>
         )}
       </div>
+
+      {isAwaitingApproval && (
+        <PlaybookExecutionApprovalActions
+          canApprove={canApprove}
+          isPending={isDecisionPending}
+          onApprove={onApprove}
+          onReject={onReject}
+        />
+      )}
 
       <div className="detail-stream-body" ref={bodyRef}>
         {stream.events.filter((e) => e.step).map((event) => (
@@ -883,11 +974,14 @@ export function PlaybookDetailPage(): JSX.Element {
   const hasAdminRole = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const hasSocManagerRole = user?.roles?.includes('ROLE_SOC_MANAGER') ?? false;
   const canManage = hasAdminRole || hasSocManagerRole;
+  /** Backend approve/reject endpoints are ROLE_ADMIN-only. */
+  const canApproveExecution = hasAdminRole;
 
   const requestedTab = searchParams.get('tab');
   const initialTab = DETAIL_TAB_KEYS.includes(requestedTab as TabKey) ? requestedTab as TabKey : 'overview';
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [runConfirmOpen, setRunConfirmOpen] = useState(false);
+  const [rejectConfirmOpen, setRejectConfirmOpen] = useState(false);
   const [executionPreview, setExecutionPreview] = useState<PlaybookPreviewResponse | null>(null);
   const [stream, setStream] = useState<StreamState | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -1035,7 +1129,7 @@ export function PlaybookDetailPage(): JSX.Element {
     };
 
     es.addEventListener('message', handleStreamMessage);
-    ['step_started', 'step_completed', 'step_failed', 'playbook_completed', 'playbook_failed']
+    ['step_started', 'step_completed', 'step_failed', 'playbook_completed', 'playbook_failed', 'approval_required']
       .forEach((eventName) => {
         es.addEventListener(eventName, (event) => handleStreamMessage(event as MessageEvent, eventName));
       });
@@ -1057,6 +1151,65 @@ export function PlaybookDetailPage(): JSX.Element {
     }
     setStream(null);
   }, [stream]);
+
+  const approvalMutation = useMutation({
+    mutationFn: async (decision: 'APPROVED' | 'REJECTED') => {
+      const executionId = stream?.executionId;
+      if (!executionId) {
+        throw new Error('No execution awaiting approval');
+      }
+      if (decision === 'APPROVED') {
+        return approvePlaybookExecution(executionId);
+      }
+      return rejectPlaybookExecution(executionId);
+    },
+    onSuccess: (_result, decision) => {
+      setRejectConfirmOpen(false);
+      if (decision === 'APPROVED') {
+        setStream((prev) => (prev ? { ...prev, status: 'running' } : prev));
+        addToast({
+          title: 'Playbook approved',
+          description: 'Execution resumed after Platform Administrator approval.',
+          variant: 'success',
+        });
+      } else {
+        setStream((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: 'failure',
+                summary: {
+                  status: 'failure',
+                  totalDurationMs: 0,
+                  stepsCompleted: prev.stepsCompleted,
+                  stepsFailed: prev.stepsFailed + 1,
+                  stepsSkipped: 0,
+                },
+              }
+            : prev
+        );
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
+          eventSourceRef.current = null;
+        }
+        addToast({
+          title: 'Playbook rejected',
+          description: 'Execution failed after rejection.',
+          variant: 'warning',
+        });
+      }
+      void queryClient.invalidateQueries({ queryKey: ['playbook', numericId] });
+      void queryClient.invalidateQueries({ queryKey: ['playbook-executions', numericId] });
+      void queryClient.invalidateQueries({ queryKey: ['resp-playbook-metrics'] });
+    },
+    onError: () => {
+      addToast({
+        title: 'Approval decision failed',
+        description: 'Could not apply the approval decision. Try again or check your permission.',
+        variant: 'danger',
+      });
+    },
+  });
 
   // Cleanup on unmount
   useEffect(() => {
@@ -1190,7 +1343,14 @@ export function PlaybookDetailPage(): JSX.Element {
 
       {/* ── Live stream viewer (shown when execution is running) ─────────────── */}
       {stream && (
-        <ExecutionStreamViewer stream={stream} onCancel={handleCancelStream} />
+        <ExecutionStreamViewer
+          stream={stream}
+          onCancel={handleCancelStream}
+          canApprove={canApproveExecution}
+          isDecisionPending={approvalMutation.isPending}
+          onApprove={() => approvalMutation.mutate('APPROVED')}
+          onReject={() => setRejectConfirmOpen(true)}
+        />
       )}
 
       {/* ── Tab workbench ────────────────────────────────────────────────────── */}
@@ -1229,6 +1389,17 @@ export function PlaybookDetailPage(): JSX.Element {
         variant="primary"
         onConfirm={() => executeMutation.mutate()}
         onCancel={() => { setRunConfirmOpen(false); setExecutionPreview(null); }}
+      />
+
+      <HaConfirmationModal
+        isOpen={rejectConfirmOpen}
+        title="Reject playbook execution"
+        message="Reject this paused execution? The run will fail and remaining steps will not execute. This decision is recorded in the audit trail."
+        confirmLabel="Reject"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={() => approvalMutation.mutate('REJECTED')}
+        onCancel={() => setRejectConfirmOpen(false)}
       />
     </div>
   );
