@@ -1,0 +1,20 @@
+id: 5255
+name: CEL-WIN-DCSYNC
+dataTypes:
+  - wineventlog
+  - windows
+  - windows-etw
+category: Credential Access
+technique: "T1003.006 - OS Credential Dumping: DCSync"
+adversary: origin
+description: Directory replication / DCSync-style access (Event ID 4662 with replication GUIDs).
+references:
+  - https://attack.mitre.org/techniques/T1003/006/
+deduplicateBy:
+  - origin.host
+  - origin.user
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(4662|event.?id[^0-9]{0,12}4662).*(1131f6aa|1131f6ad|89e95b76|DS-Replication|replicating Directory Changes).*") || raw.matches("(?i).*(DS-Replication-Get-Changes|replicatingDirectoryChanges).*")'

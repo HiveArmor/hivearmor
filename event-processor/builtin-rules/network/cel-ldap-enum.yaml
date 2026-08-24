@@ -1,0 +1,22 @@
+id: 5284
+name: CEL-NET-LDAP-ENUM
+dataTypes:
+  - dns
+  - netconn
+  - netflow
+  - wineventlog
+  - windows
+category: Discovery
+technique: "T1087.002 - Account Discovery: Domain Account"
+adversary: origin
+description: Bulk LDAP enumeration / AD discovery traffic indicators.
+references:
+  - https://attack.mitre.org/techniques/T1087/002/
+deduplicateBy:
+  - origin.ip
+  - origin.host
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+where: 'raw.matches("(?i).*(ldaps?://|objectClass=user|samAccountName|objectCategory=person).*")'

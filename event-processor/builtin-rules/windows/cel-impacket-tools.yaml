@@ -1,0 +1,22 @@
+id: 5262
+name: CEL-WIN-IMPACKET
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+  - syslog
+category: Lateral Movement
+technique: "T1021 - Remote Services"
+adversary: origin
+description: Impacket lateral movement tools (wmiexec/smbexec/psexec/secretsdump).
+references:
+  - https://attack.mitre.org/techniques/T1021/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(wmiexec|smbexec|atexec|secretsdump|GetUserSPNs|GetNPUsers)[.]py.*") || raw.matches("(?i).*impacket.*(wmiexec|smbexec|secretsdump).*")'

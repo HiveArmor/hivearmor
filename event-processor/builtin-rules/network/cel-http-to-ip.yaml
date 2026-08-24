@@ -1,0 +1,20 @@
+id: 5282
+name: CEL-NET-HTTP-TO-IP
+dataTypes:
+  - dns
+  - netconn
+  - netflow
+category: Command and Control
+technique: "T1071.001 - Application Layer Protocol: Web Protocols"
+adversary: origin
+description: HTTP(S) request directly to raw IP (often malware C2).
+references:
+  - https://attack.mitre.org/techniques/T1071/001/
+deduplicateBy:
+  - origin.ip
+  - destination.ip
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 1
+where: 'raw.matches("(?i).*https?://[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}.*")'

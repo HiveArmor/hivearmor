@@ -1,0 +1,20 @@
+id: 5287
+name: CEL-NET-SUSPICIOUS-UA
+dataTypes:
+  - netconn
+  - netflow
+  - dns
+category: Command and Control
+technique: "T1071.001 - Application Layer Protocol: Web Protocols"
+adversary: origin
+description: Suspicious or empty User-Agent often used by malware.
+references:
+  - https://attack.mitre.org/techniques/T1071/001/
+deduplicateBy:
+  - origin.ip
+  - origin.host
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+where: 'raw.matches("(?i).*User-Agent[^\\n]*(curl/|wget/|python-requests|Go-http-client).*")'

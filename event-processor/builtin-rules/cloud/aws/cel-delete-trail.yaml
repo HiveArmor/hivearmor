@@ -1,0 +1,21 @@
+id: 5289
+name: CEL-AWS-DELETE-TRAIL
+dataTypes:
+  - aws
+  - cloudtrail
+category: Defense Evasion
+technique: "T1562.008 - Impair Defenses: Disable or Modify Cloud Logs"
+adversary: origin
+description: CloudTrail DeleteTrail attempts.
+references:
+  - https://attack.mitre.org/techniques/T1562/008/
+deduplicateBy:
+  - origin.ip
+  - origin.user
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+where: >
+  (has(log.eventName) && string(log.eventName) == "DeleteTrail")
+  || raw.matches("(?i).*eventName[\"\'=: ]+DeleteTrail.*")

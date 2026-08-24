@@ -1,0 +1,19 @@
+id: 5285
+name: CEL-NET-SMB-OUTBOUND
+dataTypes:
+  - netconn
+  - netflow
+category: Lateral Movement
+technique: "T1021.002 - Remote Services: SMB/Windows Admin Shares"
+adversary: origin
+description: Outbound SMB (445/139) to unusual external destinations.
+references:
+  - https://attack.mitre.org/techniques/T1021/002/
+deduplicateBy:
+  - origin.ip
+  - destination.ip
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+where: 'raw.matches("(?i).*(dst.?port|destination.?port|dport)[^0-9]{0,12}(445|139).*") && raw.matches("(?i).*(outbound|egress|external|public).*")'

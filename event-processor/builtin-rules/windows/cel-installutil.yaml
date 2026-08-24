@@ -1,0 +1,21 @@
+id: 5258
+name: CEL-WIN-INSTALLUTIL
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Defense Evasion
+technique: "T1218.004 - System Binary Proxy Execution: InstallUtil"
+adversary: origin
+description: InstallUtil used to load/execute assemblies.
+references:
+  - https://attack.mitre.org/techniques/T1218/004/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*InstallUtil(.exe)?[^\\n]*(/logfile=|/LogToConsole=false|/U).*")'

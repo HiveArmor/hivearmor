@@ -1,0 +1,19 @@
+id: 5298
+name: CEL-AZURE-DIR-ROLE
+dataTypes:
+  - azure
+  - azuread
+category: Privilege Escalation
+technique: "T1098.003 - Account Manipulation: Additional Cloud Roles"
+adversary: origin
+description: Azure AD directory role member added (Global Admin etc.).
+references:
+  - https://attack.mitre.org/techniques/T1098/003/
+deduplicateBy:
+  - origin.user
+  - origin.host
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(Add member to role|directoryRoles|Global Administrator|Company Administrator|Privileged Role Administrator).*")'

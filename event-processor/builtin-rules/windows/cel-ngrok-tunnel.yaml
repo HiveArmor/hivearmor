@@ -1,0 +1,22 @@
+id: 5263
+name: CEL-WIN-NGROK
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+  - linux
+category: Command and Control
+technique: "T1572 - Protocol Tunneling"
+adversary: origin
+description: ngrok or similar reverse tunnel client started.
+references:
+  - https://attack.mitre.org/techniques/T1572/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+where: 'raw.matches("(?i).*(ngrok(.exe)?[^\\n]*(tcp|http|start)|cloudflared(.exe)?[^\\n]*tunnel|localtunnel).*")'

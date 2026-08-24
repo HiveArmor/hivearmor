@@ -1,0 +1,21 @@
+id: 5294
+name: CEL-AWS-RUN-INSTANCES
+dataTypes:
+  - aws
+  - cloudtrail
+category: Impact
+technique: "T1496 - Resource Hijacking"
+adversary: origin
+description: EC2 RunInstances (crypto-mining / resource abuse signal).
+references:
+  - https://attack.mitre.org/techniques/T1496/
+deduplicateBy:
+  - origin.ip
+  - origin.user
+impact:
+  confidentiality: 1
+  integrity: 2
+  availability: 3
+where: >
+  (has(log.eventName) && string(log.eventName) == "RunInstances")
+  || raw.matches("(?i).*eventName[\"\'=: ]+RunInstances.*")

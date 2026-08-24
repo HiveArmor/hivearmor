@@ -1,0 +1,24 @@
+id: 5251
+name: CEL-WIN-FAILED-LOGON
+dataTypes:
+  - wineventlog
+  - windows
+  - windows-etw
+category: Credential Access
+technique: "T1110 - Brute Force"
+adversary: origin
+description: Failed Windows logon (Event ID 4625).
+references:
+  - https://attack.mitre.org/techniques/T1110/
+deduplicateBy:
+  - origin.host
+  - origin.user
+  - origin.ip
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 1
+where: >
+  (has(log.eventCode) && (log.eventCode == 4625 || string(log.eventCode) == "4625"))
+  || (has(log.eventId) && (string(log.eventId) == "4625"))
+  || raw.matches("(?i)(event.?id|eventcode)[^0-9]{0,12}4625")

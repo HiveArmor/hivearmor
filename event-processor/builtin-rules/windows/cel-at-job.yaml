@@ -1,0 +1,21 @@
+id: 5267
+name: CEL-WIN-AT-JOB
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Persistence
+technique: "T1053.002 - Scheduled Task/Job: At"
+adversary: origin
+description: Legacy at.exe job creation.
+references:
+  - https://attack.mitre.org/techniques/T1053/002/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+where: 'raw.matches("(?i).*at(.exe)?[^\\n]*([0-9]{1,2}:[0-9]{2}|\\\\|/interactive).*")'

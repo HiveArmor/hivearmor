@@ -1,0 +1,21 @@
+id: 5257
+name: CEL-WIN-CMSTP
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Defense Evasion
+technique: "T1218.003 - System Binary Proxy Execution: CMSTP"
+adversary: origin
+description: CMSTP executing INF/SCT payload (LOLBin).
+references:
+  - https://attack.mitre.org/techniques/T1218/003/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*cmstp(.exe)?[^\\n]*(/s|/au|/ni).*[.](inf|sct).*")'

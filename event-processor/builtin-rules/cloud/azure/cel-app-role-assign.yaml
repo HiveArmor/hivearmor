@@ -1,0 +1,19 @@
+id: 5295
+name: CEL-AZURE-APP-ROLE
+dataTypes:
+  - azure
+  - azuread
+category: Privilege Escalation
+technique: "T1098.003 - Account Manipulation: Additional Cloud Roles"
+adversary: origin
+description: Azure AD application role assignment added.
+references:
+  - https://attack.mitre.org/techniques/T1098/003/
+deduplicateBy:
+  - origin.user
+  - origin.host
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(Add app role assignment|appRoleAssignedTo|Add application role assignment to service principal).*")'

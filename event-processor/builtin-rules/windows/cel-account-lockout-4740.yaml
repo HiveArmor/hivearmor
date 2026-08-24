@@ -1,0 +1,23 @@
+id: 5252
+name: CEL-WIN-ACCOUNT-LOCKOUT
+dataTypes:
+  - wineventlog
+  - windows
+  - windows-etw
+category: Credential Access
+technique: "T1110 - Brute Force"
+adversary: origin
+description: User account locked out (Event ID 4740).
+references:
+  - https://attack.mitre.org/techniques/T1110/
+deduplicateBy:
+  - origin.host
+  - origin.user
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 2
+where: >
+  (has(log.eventCode) && (log.eventCode == 4740 || string(log.eventCode) == "4740"))
+  || (has(log.eventId) && (string(log.eventId) == "4740"))
+  || raw.matches("(?i)(event.?id|eventcode)[^0-9]{0,12}4740")

@@ -1,0 +1,21 @@
+id: 5266
+name: CEL-WIN-COMSVCS-DUMP
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Credential Access
+technique: "T1003.001 - OS Credential Dumping: LSASS Memory"
+adversary: origin
+description: comsvcs.dll MiniDump used against a process (often LSASS).
+references:
+  - https://attack.mitre.org/techniques/T1003/001/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(comsvcs([.]dll)?[^\\n]*MiniDump|rundll32(.exe)?[^\\n]*comsvcs).*")'

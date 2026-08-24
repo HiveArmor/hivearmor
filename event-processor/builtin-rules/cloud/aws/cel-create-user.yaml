@@ -1,0 +1,21 @@
+id: 5291
+name: CEL-AWS-CREATE-USER
+dataTypes:
+  - aws
+  - cloudtrail
+category: Persistence
+technique: "T1136.003 - Create Account: Cloud Account"
+adversary: origin
+description: IAM CreateUser.
+references:
+  - https://attack.mitre.org/techniques/T1136/003/
+deduplicateBy:
+  - origin.ip
+  - origin.user
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: >
+  (has(log.eventName) && string(log.eventName) == "CreateUser")
+  || raw.matches("(?i).*eventName[\"\'=: ]+CreateUser.*")

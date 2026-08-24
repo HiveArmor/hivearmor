@@ -1,0 +1,21 @@
+id: 5260
+name: CEL-WIN-NLTEST
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Discovery
+technique: "T1482 - Domain Trust Discovery"
+adversary: origin
+description: nltest domain trust / DC discovery.
+references:
+  - https://attack.mitre.org/techniques/T1482/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+where: 'raw.matches("(?i).*nltest(.exe)?[^\\n]*(/domain_trusts|/dclist|/trusted_domains).*")'

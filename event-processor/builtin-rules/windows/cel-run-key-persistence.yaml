@@ -1,0 +1,21 @@
+id: 5265
+name: CEL-WIN-RUN-KEY
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Persistence
+technique: "T1547.001 - Boot or Logon Autostart Execution: Registry Run Keys"
+adversary: origin
+description: Registry Run/RunOnce key modification via reg.exe.
+references:
+  - https://attack.mitre.org/techniques/T1547/001/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*reg(.exe)?[^\\n]*(add|import)[^\\n]*(CurrentVersion\\\\Run|CurrentVersion\\\\RunOnce).*")'

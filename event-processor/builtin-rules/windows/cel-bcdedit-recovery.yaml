@@ -1,0 +1,21 @@
+id: 5270
+name: CEL-WIN-BCDEDIT
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Impact
+technique: "T1490 - Inhibit System Recovery"
+adversary: origin
+description: bcdedit disabling recovery / boot status policy (ransomware).
+references:
+  - https://attack.mitre.org/techniques/T1490/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 3
+where: 'raw.matches("(?i).*bcdedit(.exe)?[^\\n]*(recoveryenabled|bootstatuspolicy|ignoreallfailures).*")'

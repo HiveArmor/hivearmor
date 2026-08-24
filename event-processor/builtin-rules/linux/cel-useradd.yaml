@@ -1,0 +1,20 @@
+id: 5276
+name: CEL-LIN-USERADD
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Persistence
+technique: "T1136.001 - Create Account: Local Account"
+adversary: origin
+description: New local user created via useradd/adduser.
+references:
+  - https://attack.mitre.org/techniques/T1136/001/
+deduplicateBy:
+  - origin.host
+  - origin.user
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(useradd|adduser)[^\\n]+.*")'

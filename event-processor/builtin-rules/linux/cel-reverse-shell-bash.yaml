@@ -1,0 +1,20 @@
+id: 5271
+name: CEL-LIN-REVSHELL-BASH
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Execution
+technique: "T1059.004 - Command and Scripting Interpreter: Unix Shell"
+adversary: origin
+description: Bash reverse shell patterns (/dev/tcp, bash -i).
+references:
+  - https://attack.mitre.org/techniques/T1059/004/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: 'raw.matches("(?i).*(/dev/tcp/|bash[^\\n]*-i[^\\n]*>&|/dev/udp/).*")'

@@ -1,0 +1,19 @@
+id: 5300
+name: CEL-AZURE-KEYVAULT
+dataTypes:
+  - azure
+  - azuread
+category: Credential Access
+technique: "T1555 - Credentials from Password Stores"
+adversary: origin
+description: Key Vault access policy or secret get/set change.
+references:
+  - https://attack.mitre.org/techniques/T1555/
+deduplicateBy:
+  - origin.user
+  - origin.host
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(Microsoft[.]KeyVault|Set-AzKeyVaultAccessPolicy|VaultGet|SecretGet|keyvault.*access.?policy).*")'

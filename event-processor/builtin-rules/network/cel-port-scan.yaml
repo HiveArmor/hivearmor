@@ -1,0 +1,18 @@
+id: 5288
+name: CEL-NET-PORT-SCAN
+dataTypes:
+  - netconn
+  - netflow
+category: Discovery
+technique: "T1046 - Network Service Discovery"
+adversary: origin
+description: Port scan / mass connection indicators in flow logs.
+references:
+  - https://attack.mitre.org/techniques/T1046/
+deduplicateBy:
+  - origin.ip
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+where: 'raw.matches("(?i).*(port.?scan|nmap|masscan|zmap|syn.?scan|horizontal.?scan).*")'

@@ -1,0 +1,20 @@
+id: 5280
+name: CEL-LIN-TMP-ELF
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Execution
+technique: "T1204 - User Execution"
+adversary: origin
+description: Executable launched from /tmp or /dev/shm.
+references:
+  - https://attack.mitre.org/techniques/T1204/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+where: 'raw.matches("(?i).*(/tmp/|/dev/shm/|/var/tmp/)[A-Za-z0-9._-]{2,}.*") && raw.matches("(?i).*(execve|started process|COMMAND=|/bin/(ba)?sh -c).*")'

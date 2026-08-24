@@ -1,0 +1,23 @@
+id: 5254
+name: CEL-WIN-KERBEROS-TGS
+dataTypes:
+  - wineventlog
+  - windows
+  - windows-etw
+category: Credential Access
+technique: "T1558.003 - Steal or Forge Kerberos Tickets: Kerberoasting"
+adversary: origin
+description: Kerberos service ticket request (Event ID 4769) — Kerberoasting signal.
+references:
+  - https://attack.mitre.org/techniques/T1558/003/
+deduplicateBy:
+  - origin.host
+  - origin.user
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+where: >
+  (has(log.eventCode) && (log.eventCode == 4769 || string(log.eventCode) == "4769"))
+  || (has(log.eventId) && (string(log.eventId) == "4769"))
+  || raw.matches("(?i)(event.?id|eventcode)[^0-9]{0,12}4769")
