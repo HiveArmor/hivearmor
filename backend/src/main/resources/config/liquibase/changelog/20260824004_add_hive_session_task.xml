@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      P1 — Minimal case tasks on investigation sessions + optional external ticket URL.
+      STAGING CANDIDATE — tenant isolation inherits from parent session authz.
+    -->
+    <changeSet id="20260824004-1" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_session_task">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="session_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_session_task_session"
+                             references="hive_investigation_session(id)"
+                             deleteCascade="true"/>
+            </column>
+            <column name="title" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- OPEN | DONE | CANCELLED -->
+            <column name="status" type="VARCHAR(32)" defaultValue="OPEN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assignee" type="VARCHAR(255)"/>
+            <column name="external_ticket_url" type="VARCHAR(2048)"/>
+            <column name="created_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="hive_session_task" indexName="idx_hive_session_task_session_id">
+            <column name="session_id"/>
+        </createIndex>
+
+        <createIndex tableName="hive_session_task" indexName="idx_hive_session_task_session_status">
+            <column name="session_id"/>
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

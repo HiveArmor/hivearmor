@@ -3,6 +3,7 @@ package com.hivearmor.web.rest.session;
 import com.hivearmor.security.SecurityUtils;
 import com.hivearmor.service.dto.InvestigationSessionDTO;
 import com.hivearmor.service.dto.SessionItemDTO;
+import com.hivearmor.service.dto.SessionTaskDTO;
 import com.hivearmor.service.session.InvestigationSessionService;
 import com.hivearmor.web.rest.errors.BadRequestAlertException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,6 +39,10 @@ import java.util.Map;
  * POST   /api/ha-investigation-sessions/{id}/items   → 201
  * GET    /api/ha-investigation-sessions/{id}/items   → 200
  * DELETE /api/ha-investigation-sessions/{id}/items/{itemId} → 204
+ * GET    /api/ha-investigation-sessions/{id}/tasks   → 200
+ * POST   /api/ha-investigation-sessions/{id}/tasks   → 201
+ * PUT    /api/ha-investigation-sessions/{id}/tasks/{taskId} → 200
+ * DELETE /api/ha-investigation-sessions/{id}/tasks/{taskId} → 204
  * POST   /api/ha-investigation-sessions/{id}/convert-to-incident → 200 {incidentId}
  * S-5C
  */
@@ -292,6 +297,114 @@ public class InvestigationSessionResource {
         String currentUser = getCurrentUser();
         boolean isAdminOrManager = hasAnyRole(authentication, "ROLE_ADMIN", "ROLE_SOC_MANAGER");
         sessionService.unpinItem(id, itemId, currentUser, isAdminOrManager);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ── Session case tasks (P1 STAGING CANDIDATE) ─────────────────────────────
+
+    /**
+     * GET /api/ha-investigation-sessions/{id}/tasks — list case tasks.
+     */
+    @GetMapping("/ha-investigation-sessions/{id}/tasks")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST','ROLE_USER','ROLE_READ_ONLY')")
+    @Operation(
+        summary = "List session case tasks",
+        description = "Returns case tasks for an investigation session. Tenant and ownership checks match session access. (STAGING CANDIDATE)"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Task list"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient privileges"),
+        @ApiResponse(responseCode = "404", description = "Session not found")
+    })
+    public ResponseEntity<List<SessionTaskDTO>> listTasks(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        String currentUser = getCurrentUser();
+        boolean isAdminOrManager = hasAnyRole(authentication, "ROLE_ADMIN", "ROLE_SOC_MANAGER");
+        return ResponseEntity.ok(sessionService.listTasks(id, currentUser, isAdminOrManager));
+    }
+
+    /**
+     * POST /api/ha-investigation-sessions/{id}/tasks — create a case task.
+     */
+    @PostMapping("/ha-investigation-sessions/{id}/tasks")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST','ROLE_USER')")
+    @Operation(
+        summary = "Create session case task",
+        description = "Creates a case task on an investigation session. Optional externalTicketUrl links an external tracker. (STAGING CANDIDATE)"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Task created"),
+        @ApiResponse(responseCode = "400", description = "Invalid request body"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient privileges"),
+        @ApiResponse(responseCode = "404", description = "Session not found")
+    })
+    public ResponseEntity<SessionTaskDTO> createTask(
+            @PathVariable Long id,
+            @Valid @RequestBody SessionTaskDTO dto,
+            Authentication authentication
+    ) throws URISyntaxException {
+        String currentUser = getCurrentUser();
+        boolean isAdminOrManager = hasAnyRole(authentication, "ROLE_ADMIN", "ROLE_SOC_MANAGER");
+        SessionTaskDTO created = sessionService.createTask(id, dto, currentUser, isAdminOrManager);
+        return ResponseEntity
+                .created(new URI("/api/ha-investigation-sessions/" + id + "/tasks/" + created.id()))
+                .body(created);
+    }
+
+    /**
+     * PUT /api/ha-investigation-sessions/{id}/tasks/{taskId} — update a case task.
+     */
+    @PutMapping("/ha-investigation-sessions/{id}/tasks/{taskId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST','ROLE_USER')")
+    @Operation(
+        summary = "Update session case task",
+        description = "Updates title, status, assignee, or external ticket URL for a session case task. (STAGING CANDIDATE)"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Task updated"),
+        @ApiResponse(responseCode = "400", description = "Invalid request body"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient privileges"),
+        @ApiResponse(responseCode = "404", description = "Session or task not found")
+    })
+    public ResponseEntity<SessionTaskDTO> updateTask(
+            @PathVariable Long id,
+            @PathVariable Long taskId,
+            @Valid @RequestBody SessionTaskDTO dto,
+            Authentication authentication
+    ) {
+        String currentUser = getCurrentUser();
+        boolean isAdminOrManager = hasAnyRole(authentication, "ROLE_ADMIN", "ROLE_SOC_MANAGER");
+        return ResponseEntity.ok(sessionService.updateTask(id, taskId, dto, currentUser, isAdminOrManager));
+    }
+
+    /**
+     * DELETE /api/ha-investigation-sessions/{id}/tasks/{taskId} — delete a case task.
+     */
+    @DeleteMapping("/ha-investigation-sessions/{id}/tasks/{taskId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST','ROLE_USER')")
+    @Operation(
+        summary = "Delete session case task",
+        description = "Deletes a case task from an investigation session. (STAGING CANDIDATE)"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Task deleted"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient privileges"),
+        @ApiResponse(responseCode = "404", description = "Session or task not found")
+    })
+    public ResponseEntity<Void> deleteTask(
+            @PathVariable Long id,
+            @PathVariable Long taskId,
+            Authentication authentication
+    ) {
+        String currentUser = getCurrentUser();
+        boolean isAdminOrManager = hasAnyRole(authentication, "ROLE_ADMIN", "ROLE_SOC_MANAGER");
+        sessionService.deleteTask(id, taskId, currentUser, isAdminOrManager);
         return ResponseEntity.noContent().build();
     }
 

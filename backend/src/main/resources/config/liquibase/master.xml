@@ -766,4 +766,8 @@
     <!-- P1 Spike B — GAP-MT-05 dashboard tenant_id (STAGING CANDIDATE) -->
     <include file="/config/liquibase/changelog/20260824003_add_dashboard_tenant_id.xml" relativeToChangelogFile="false"/>
 
+    <!-- P1 — investigation session case tasks + external ticket URL (STAGING CANDIDATE) -->
+    <include file="/config/liquibase/changelog/20260824004_add_hive_session_task.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
+
