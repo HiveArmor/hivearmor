@@ -769,5 +769,8 @@
     <!-- P1 — investigation session case tasks + external ticket URL (STAGING CANDIDATE) -->
     <include file="/config/liquibase/changelog/20260824004_add_hive_session_task.xml" relativeToChangelogFile="false"/>
 
+    <!-- P1 Connector ingest — ADR-20260824 PostgreSQL staging queue (not OpenSearch alert index) -->
+    <include file="/config/liquibase/changelog/20260824005_ha_connector_alert_staging.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 

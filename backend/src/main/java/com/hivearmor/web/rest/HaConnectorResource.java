@@ -1,6 +1,8 @@
 package com.hivearmor.web.rest;
 
 import com.hivearmor.service.connector.ConnectionTestResult;
+import com.hivearmor.service.connector.ConnectorAlertIngestService;
+import com.hivearmor.service.connector.ConnectorIngestResult;
 import com.hivearmor.service.connector.HaConnectorInstanceService;
 import com.hivearmor.service.dto.connector.ConnectorInstanceDTO;
 import com.hivearmor.service.dto.connector.ConnectorInstanceWriteDTO;
@@ -28,8 +30,9 @@ import java.util.Map;
 /**
  * Typed Connector SDK REST surface ({@code /api/ha-connectors/*}).
  *
- * <p>Secrets are never returned. {@code fetch-alerts} is a dry-run that does not
- * write OpenSearch (ADR required before ingest bypass of event-processor).
+ * <p>Secrets are never returned. {@code fetch-alerts} remains a dry-run preview.
+ * {@code ingest-alerts} persists to the ADR-20260824 PostgreSQL staging queue
+ * ({@code ha_connector_alert_staging}) — never to OpenSearch alert indices.
  */
 @RestController
 @RequestMapping("/api")
@@ -43,9 +46,13 @@ public class HaConnectorResource {
         "hasAnyAuthority('ROLE_ADMIN', 'ROLE_SOC_MANAGER')";
 
     private final HaConnectorInstanceService service;
+    private final ConnectorAlertIngestService ingestService;
 
-    public HaConnectorResource(HaConnectorInstanceService service) {
+    public HaConnectorResource(
+            HaConnectorInstanceService service,
+            ConnectorAlertIngestService ingestService) {
         this.service = service;
+        this.ingestService = ingestService;
     }
 
     @GetMapping("/ha-connectors/catalog")
@@ -135,14 +142,66 @@ public class HaConnectorResource {
     @PreAuthorize(MUTATE)
     public ResponseEntity<?> fetchAlerts(
             @PathVariable Long id,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant since) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant since,
+            @RequestParam(required = false, defaultValue = "false") boolean persist) {
         try {
+            if (persist) {
+                ConnectorIngestResult result = ingestService.ingest(id, since);
+                return ResponseEntity.ok(result.toMap());
+            }
             List<Map<String, Object>> alerts = service.fetchAlerts(id, since);
             return ResponseEntity.ok(Map.of(
                 "alerts", alerts,
                 "count", alerts.size(),
                 "persisted", false,
-                "note", "Dry-run only — does not write OpenSearch (ADR required for ingest)"
+                "note", "Dry-run only — use POST .../ingest-alerts or persist=true for ADR-20260824 staging queue"
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("detail", e.getMessage()));
+        }
+    }
+
+    /**
+     * Pull vendor alerts and persist to {@code ha_connector_alert_staging}
+     * (ADR-20260824). Does not write OpenSearch alert indices.
+     */
+    @PostMapping("/ha-connectors/instances/{id}/ingest-alerts")
+    @PreAuthorize(MUTATE)
+    public ResponseEntity<?> ingestAlerts(
+            @PathVariable Long id,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant since) {
+        final String ctx = CLASSNAME + ".ingestAlerts";
+        try {
+            ConnectorIngestResult result = ingestService.ingest(id, since);
+            return ResponseEntity.ok(result.toMap());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("detail", e.getMessage()));
+        } catch (Exception e) {
+            log.error("{}: {}", ctx, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("detail", "Ingest failed"));
+        }
+    }
+
+    @GetMapping("/ha-connectors/instances/{id}/staged-alerts")
+    @PreAuthorize(READ)
+    public ResponseEntity<?> stagedAlerts(
+            @PathVariable Long id,
+            @RequestParam(required = false, defaultValue = "50") int limit) {
+        try {
+            // Ensure instance exists
+            service.getInstance(id);
+            List<Map<String, Object>> rows = ingestService.listStaged(id, limit);
+            return ResponseEntity.ok(Map.of(
+                "alerts", rows,
+                "count", rows.size(),
+                "destination", ConnectorIngestResult.DESTINATION,
+                "persisted", true,
+                "note", "ADR-20260824 staging queue — not customer OpenSearch alert index"
             ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
