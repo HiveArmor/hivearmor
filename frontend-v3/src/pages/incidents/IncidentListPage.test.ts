@@ -40,4 +40,15 @@ describe('columnDefs', () => {
     const module = await import('./columnDefs');
     expect(Array.isArray(module.INCIDENT_COLUMN_DEFS)).toBe(true);
   });
+
+  it('wires SlaIndicator through the SLA column renderer', async () => {
+    const { INCIDENT_COLUMN_DEFS } = await import('./columnDefs');
+    const slaCol = INCIDENT_COLUMN_DEFS.find((col) => col.field === 'slaDeadline');
+    expect(slaCol?.headerName).toBe('SLA');
+    expect(slaCol?.cellRenderer).toBeDefined();
+
+    const rendererSrc = await import('./renderers/SlaDeadlineRenderer?raw');
+    expect(rendererSrc.default).toContain("from '@/components/sla-indicator/SlaIndicator'");
+    expect(rendererSrc.default).toContain('<SlaIndicator');
+  });
 });

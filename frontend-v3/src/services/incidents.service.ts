@@ -125,3 +125,54 @@ export async function generateAiSummary(id: number | string): Promise<AiSummaryR
 export async function getUsersAssigned(): Promise<UserRef[]> {
   return apiClient.get<UserRef[]>('/ha-incidents/users-assigned');
 }
+
+/** Response from GET /api/ha-incidents/sla-stats */
+export interface IncidentSlaStats {
+  total: number;
+  breached: number;
+  compliant: number;
+}
+
+function toNonNegativeInt(value: unknown): number {
+  const n = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.floor(n);
+}
+
+/**
+ * Normalize sla-stats payload from the backend Map shape.
+ * Derives compliant when omitted so UI never divides by inconsistent fields.
+ */
+export function normalizeIncidentSlaStats(raw: unknown): IncidentSlaStats {
+  const record =
+    raw !== null && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const total = toNonNegativeInt(record.total);
+  const breached = toNonNegativeInt(record.breached);
+  const compliant =
+    record.compliant !== undefined && record.compliant !== null
+      ? toNonNegativeInt(record.compliant)
+      : Math.max(0, total - breached);
+  return { total, breached, compliant };
+}
+
+/** Compliance rate 0–100, or null when no incidents are tracked. */
+export function slaCompliancePercent(stats: IncidentSlaStats): number | null {
+  if (stats.total <= 0) return null;
+  return Math.round((stats.compliant / stats.total) * 100);
+}
+
+/** Compact subtitle for SLA summary tiles (tokens/fonts applied by caller). */
+export function formatSlaStatsDetail(stats: IncidentSlaStats): string {
+  const rate = slaCompliancePercent(stats);
+  if (rate === null) return 'no incidents tracked';
+  return `${stats.compliant.toLocaleString()} compliant · ${rate}% · ${stats.total.toLocaleString()} tracked`;
+}
+
+/**
+ * GET /api/ha-incidents/sla-stats — platform SLA compliance summary.
+ * Requires ROLE_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN (and SOC_ANALYST alias).
+ */
+export async function getIncidentSlaStats(signal?: AbortSignal): Promise<IncidentSlaStats> {
+  const raw = await apiClient.get<unknown>('/ha-incidents/sla-stats', { signal });
+  return normalizeIncidentSlaStats(raw);
+}
