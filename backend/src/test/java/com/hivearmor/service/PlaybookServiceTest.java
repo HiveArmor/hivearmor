@@ -44,6 +44,8 @@ class PlaybookServiceTest {
     private EdrService edrService;
     @Mock
     private com.hivearmor.service.soar.PlaybookWebhookExecutor webhookExecutor;
+    @Mock
+    private com.hivearmor.service.connector.PlaybookConnectorDispatcher connectorDispatcher;
 
     private PlaybookService service;
 
@@ -55,7 +57,8 @@ class PlaybookServiceTest {
             playbookRepository,
             executionRepository,
             edrService,
-            webhookExecutor
+            webhookExecutor,
+            connectorDispatcher
         );
     }
 

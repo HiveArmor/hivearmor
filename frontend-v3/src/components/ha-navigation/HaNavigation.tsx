@@ -101,6 +101,7 @@ const MSSP_ADMIN_AUTHORITY = "MSSP_ADMIN";
 const ADMINISTRATION_ITEMS: NavItemSpec[] = [
   { label: 'Identity & Tenancy', icon: 'UserCog', route: '/admin/users', roles: ['ROLE_ADMIN'] },
   { label: 'Integrations & Delivery', icon: 'Plug', route: '/admin/integrations', roles: ['ROLE_ADMIN'] },
+  { label: 'Connector SDK', icon: 'Plug', route: '/admin/connectors', roles: ['ROLE_ADMIN', 'ROLE_SOC_MANAGER'] },
   { label: 'API Keys', icon: 'KeyRound', route: '/settings/api-keys', roles: ['ROLE_ADMIN'] },
   { label: 'Data Sources', icon: 'Database', route: '/inputs/sources', roles: ['ROLE_ADMIN'] },
   { label: 'Audit Log', icon: 'ClipboardList', route: '/admin/audit', roles: ['ROLE_ADMIN'] },

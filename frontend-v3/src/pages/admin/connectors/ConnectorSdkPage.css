@@ -1,0 +1,182 @@
+.ha-connector-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem 2rem;
+  color: var(--ha-text-primary);
+  font-family: var(--ha-font-ui);
+  font-size: var(--ha-text-base);
+  background: var(--ha-background);
+  min-height: 100%;
+}
+
+.ha-connector-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.ha-connector-page__eyebrow {
+  display: block;
+  font-size: var(--ha-text-xs);
+  letter-spacing: 0.04em;
+  color: var(--ha-text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.ha-connector-page h1 {
+  margin: 0;
+  font-size: var(--ha-text-md);
+  font-weight: 600;
+}
+
+.ha-connector-page h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+  font-size: var(--ha-text-base);
+  font-weight: 600;
+}
+
+.ha-connector-page__muted {
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+  margin: 0.25rem 0 0;
+}
+
+.ha-connector-page__error {
+  color: var(--ha-critical);
+  font-size: var(--ha-text-sm);
+}
+
+.ha-connector-banner {
+  border: 1px solid var(--ha-border);
+  background: var(--ha-surface-raised);
+  border-radius: var(--ha-radius-base);
+  padding: 0.5rem 0.75rem;
+  font-size: var(--ha-text-sm);
+}
+
+.ha-connector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.ha-connector-panel {
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-md);
+  padding: 0.875rem;
+}
+
+.ha-connector-panel--wide {
+  grid-column: 1 / -1;
+}
+
+.ha-connector-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 28rem;
+  overflow: auto;
+}
+
+.ha-connector-card {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--ha-border);
+  background: var(--ha-surface-raised);
+  border-radius: var(--ha-radius-base);
+  padding: 0.65rem 0.75rem;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.ha-connector-card[data-selected='true'] {
+  border-color: var(--ha-primary);
+}
+
+.ha-connector-card strong {
+  font-size: var(--ha-text-sm);
+}
+
+.ha-connector-card span,
+.ha-connector-card small {
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+}
+
+.ha-connector-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.ha-connector-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: var(--ha-text-sm);
+}
+
+.ha-connector-form input {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  color: var(--ha-text-primary);
+  padding: 0.4rem 0.5rem;
+  font-size: var(--ha-text-sm);
+}
+
+.ha-connector-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--ha-border);
+  background: var(--ha-surface-raised);
+  color: var(--ha-text-primary);
+  border-radius: var(--ha-radius-base);
+  padding: 0.35rem 0.65rem;
+  font-size: var(--ha-text-sm);
+  cursor: pointer;
+}
+
+.ha-connector-btn--primary {
+  border-color: var(--ha-primary);
+  color: var(--ha-primary);
+  width: fit-content;
+}
+
+.ha-connector-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ha-text-sm);
+}
+
+.ha-connector-table th,
+.ha-connector-table td {
+  border-bottom: 1px solid var(--ha-border);
+  text-align: left;
+  padding: 0.5rem 0.4rem;
+  vertical-align: top;
+}
+
+.ha-connector-mono {
+  font-family: var(--ha-font-mono);
+  font-size: var(--ha-text-xs);
+}
+
+@media (max-width: 960px) {
+  .ha-connector-grid {
+    grid-template-columns: 1fr;
+  }
+}

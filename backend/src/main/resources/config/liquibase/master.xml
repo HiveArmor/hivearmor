@@ -760,4 +760,7 @@
     <include file="/config/liquibase/changelog/20260724033_playbook_steps.xml" relativeToChangelogFile="false"/>
     <include file="/config/liquibase/changelog/20260824001_playbook_execution_uuid.xml" relativeToChangelogFile="false"/>
 
+    <!-- P1 Connector SDK — typed vendor connector instances -->
+    <include file="/config/liquibase/changelog/20260824002_ha_connector_instance.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
