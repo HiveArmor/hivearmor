@@ -107,6 +107,35 @@ export interface PullRequestDTO {
   model: string;
 }
 
+// ── Usage ledger (read-only) ──────────────────────────────────────────────────
+
+/**
+ * Safe row from GET /api/ha-llm-usage — never includes prompt bodies or secrets.
+ */
+export interface HaLlmUsageDTO {
+  id: number;
+  promptId: string | null;
+  promptHash: string | null;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  totalTokens: number | null;
+  cascadeDecision: string;
+  cascadeReason: string | null;
+  userLogin: string | null;
+  createdAt: string;
+}
+
+/** Counts-only aggregate from GET /api/ha-llm-usage/summary. */
+export interface HaLlmUsageSummaryDTO {
+  cascadeDecision: string;
+  count: number;
+}
+
+export interface HaLlmUsagePage {
+  items: HaLlmUsageDTO[];
+  totalCount: number;
+}
+
 // ── Error ─────────────────────────────────────────────────────────────────────
 
 /**
