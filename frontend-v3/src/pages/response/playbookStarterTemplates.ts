@@ -4,8 +4,9 @@
  * EDR actions require config.agentId (and path/pid where applicable) at execute time —
  * never hardcode agentId in starters.
  *
- * Label: STAGING CANDIDATE — executable steps only (webhook / delay / condition / EDR).
- * Do not seed Okta disable_user / connector.disable_user here.
+ * Label: STAGING CANDIDATE — executable steps only (webhook / delay / condition / EDR /
+ * webhook-to-ticket). Do not seed Okta disable_user / connector.disable_user or SMTP-dependent
+ * send-email here (CI may lack SMTP).
  */
 
 export interface StarterPlaybookTemplate {
@@ -552,6 +553,35 @@ export const STARTER_PLAYBOOK_TEMPLATES: StarterPlaybookTemplate[] = [
           actionId: 'send-webhook',
           method: 'POST',
           body: '{"source":"hivearmor","event":"playbook-health","status":"ok"}',
+        },
+      },
+    ],
+  },
+  {
+    id: 'webhook-ticket-open',
+    name: 'Open Ticket via Webhook',
+    description:
+      'Creates a ticket by POSTing project/summary/priority/description to a ticketing webhook (SSRF-safe). Provide inputs.url or webhookUrl at execute time — no SMTP required.',
+    triggerType: 'alert-triggered',
+    active: true,
+    categoryHint: 'Ticketing',
+    steps: [
+      {
+        stepIndex: 0,
+        stepType: 'condition',
+        label: 'Severity warrants a ticket',
+        config: { field: 'alert.severity', op: 'in', value: ['high', 'critical'] },
+      },
+      {
+        stepIndex: 1,
+        stepType: 'action',
+        label: 'Create ticket via webhook',
+        config: {
+          actionId: 'create-jira-ticket',
+          project: 'SOC',
+          summary: 'HiveArmor alert triage ticket',
+          priority: 'High',
+          description: 'Opened by SOAR playbook — review alert context in HiveArmor.',
         },
       },
     ],

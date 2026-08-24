@@ -1,6 +1,8 @@
 package com.hivearmor.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hivearmor.config.Constants;
+import com.hivearmor.config.HaAirGapConfig;
 import com.hivearmor.domain.soar_playbook.UtmPlaybook;
 import com.hivearmor.domain.soar_playbook.UtmPlaybookExecution;
 import com.hivearmor.repository.soar_playbook.UtmPlaybookExecutionRepository;
@@ -9,12 +11,14 @@ import com.hivearmor.service.dto.PlaybookDTO;
 import com.hivearmor.service.dto.PlaybookExecuteRequestDTO;
 import com.hivearmor.service.dto.PlaybookStepDTO;
 import com.hivearmor.service.edr.EdrService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.javamail.JavaMailSender;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +28,12 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -46,11 +55,19 @@ class PlaybookServiceTest {
     private com.hivearmor.service.soar.PlaybookWebhookExecutor webhookExecutor;
     @Mock
     private com.hivearmor.service.connector.PlaybookConnectorDispatcher connectorDispatcher;
+    @Mock
+    private MailService mailService;
+    @Mock
+    private HaAirGapConfig haAirGapConfig;
+    @Mock
+    private JavaMailSender javaMailSender;
 
     private PlaybookService service;
+    private String previousMailHost;
 
     @BeforeEach
     void setUp() {
+        previousMailHost = Constants.CFG.get(Constants.PROP_MAIL_HOST);
         service = new PlaybookService(
             streamService,
             new ObjectMapper(),
@@ -58,8 +75,19 @@ class PlaybookServiceTest {
             executionRepository,
             edrService,
             webhookExecutor,
-            connectorDispatcher
+            connectorDispatcher,
+            mailService,
+            haAirGapConfig
         );
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (previousMailHost == null) {
+            Constants.CFG.remove(Constants.PROP_MAIL_HOST);
+        } else {
+            Constants.CFG.put(Constants.PROP_MAIL_HOST, previousMailHost);
+        }
     }
 
     @Test
@@ -207,5 +235,164 @@ class PlaybookServiceTest {
         assertThat(merged.get(0).getConfig().get("alertId")).isEqualTo("alert-9");
         // original unchanged
         assertThat(step.getConfig().containsKey("agentId")).isFalse();
+    }
+
+    @Test
+    void executeAsync_sendEmail_queuesViaMailService() throws Exception {
+        Constants.CFG.put(Constants.PROP_MAIL_HOST, "smtp.example.com");
+        when(haAirGapConfig.isAirGap()).thenReturn(false);
+        when(mailService.getJavaMailSender()).thenReturn(javaMailSender);
+
+        UtmPlaybook pb = new UtmPlaybook();
+        pb.setId(21L);
+        pb.setName("Email Notify");
+        pb.setStepsJson("["
+            + "{\"stepIndex\":0,\"stepType\":\"action\",\"label\":\"Notify\","
+            + "\"config\":{\"actionId\":\"send-email\",\"to\":\"soc@example.com\","
+            + "\"subject\":\"Alert\",\"body_template\":\"Investigate now\"}}"
+            + "]");
+
+        UtmPlaybookExecution exec = runningExec(210L, 21L, "exec-email-1", "Email Notify", 1);
+        when(playbookRepository.findById(21L)).thenReturn(Optional.of(pb));
+        when(executionRepository.findByExecutionUuid("exec-email-1")).thenReturn(Optional.of(exec));
+        when(executionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.executeAsync("exec-email-1", 21L);
+        TimeUnit.MILLISECONDS.sleep(50);
+
+        assertThat(exec.getStatus()).isEqualTo("success");
+        verify(mailService).getJavaMailSender();
+        verify(mailService).sendEmail(
+            eq(List.of("soc@example.com")),
+            eq("Alert"),
+            eq("Investigate now"),
+            eq(false),
+            eq(false));
+    }
+
+    @Test
+    void executeAsync_sendEmail_failsHonestlyWhenAirGap() throws Exception {
+        Constants.CFG.put(Constants.PROP_MAIL_HOST, "smtp.example.com");
+        when(haAirGapConfig.isAirGap()).thenReturn(true);
+
+        UtmPlaybook pb = new UtmPlaybook();
+        pb.setId(22L);
+        pb.setName("Email AirGap");
+        pb.setStepsJson("["
+            + "{\"stepIndex\":0,\"stepType\":\"action\",\"label\":\"Notify\","
+            + "\"config\":{\"actionId\":\"send_email\",\"to\":\"soc@example.com\",\"subject\":\"x\",\"body\":\"y\"}}"
+            + "]");
+
+        UtmPlaybookExecution exec = runningExec(220L, 22L, "exec-email-ag", "Email AirGap", 1);
+        when(playbookRepository.findById(22L)).thenReturn(Optional.of(pb));
+        when(executionRepository.findByExecutionUuid("exec-email-ag")).thenReturn(Optional.of(exec));
+        when(executionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.executeAsync("exec-email-ag", 22L);
+        TimeUnit.MILLISECONDS.sleep(50);
+
+        assertThat(exec.getStatus()).isEqualTo("failure");
+        assertThat(exec.getErrorMessage()).containsIgnoringCase("air-gap");
+        verify(mailService, never()).sendEmail(anyList(), anyString(), anyString(), anyBoolean(), anyBoolean());
+    }
+
+    @Test
+    void executeAsync_sendEmail_failsHonestlyWhenSmtpUnset() throws Exception {
+        Constants.CFG.remove(Constants.PROP_MAIL_HOST);
+        when(haAirGapConfig.isAirGap()).thenReturn(false);
+
+        UtmPlaybook pb = new UtmPlaybook();
+        pb.setId(23L);
+        pb.setName("Email NoSmtp");
+        pb.setStepsJson("["
+            + "{\"stepIndex\":0,\"stepType\":\"action\",\"label\":\"Notify\","
+            + "\"config\":{\"actionId\":\"send-email\",\"to\":\"soc@example.com\",\"subject\":\"x\",\"body\":\"y\"}}"
+            + "]");
+
+        UtmPlaybookExecution exec = runningExec(230L, 23L, "exec-email-ns", "Email NoSmtp", 1);
+        when(playbookRepository.findById(23L)).thenReturn(Optional.of(pb));
+        when(executionRepository.findByExecutionUuid("exec-email-ns")).thenReturn(Optional.of(exec));
+        when(executionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.executeAsync("exec-email-ns", 23L);
+        TimeUnit.MILLISECONDS.sleep(50);
+
+        assertThat(exec.getStatus()).isEqualTo("failure");
+        assertThat(exec.getErrorMessage()).containsIgnoringCase("SMTP");
+        verify(mailService, never()).sendEmail(anyList(), anyString(), anyString(), anyBoolean(), anyBoolean());
+    }
+
+    @Test
+    void executeAsync_createJiraTicket_postsViaWebhookExecutor() throws Exception {
+        when(webhookExecutor.send(anyString(), anyString(), anyString()))
+            .thenReturn(Map.of("action", "send-webhook", "statusCode", 201, "host", "hooks.example.com"));
+
+        UtmPlaybook pb = new UtmPlaybook();
+        pb.setId(31L);
+        pb.setName("Ticket Open");
+        pb.setStepsJson("["
+            + "{\"stepIndex\":0,\"stepType\":\"action\",\"label\":\"Open ticket\","
+            + "\"config\":{\"actionId\":\"create-jira-ticket\","
+            + "\"url\":\"https://hooks.example.com/jira\","
+            + "\"project\":\"SOC\",\"summary\":\"Phishing\",\"priority\":\"High\","
+            + "\"description\":\"User reported mail\"}}"
+            + "]");
+
+        UtmPlaybookExecution exec = runningExec(310L, 31L, "exec-ticket-1", "Ticket Open", 1);
+        when(playbookRepository.findById(31L)).thenReturn(Optional.of(pb));
+        when(executionRepository.findByExecutionUuid("exec-ticket-1")).thenReturn(Optional.of(exec));
+        when(executionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.executeAsync("exec-ticket-1", 31L);
+        TimeUnit.MILLISECONDS.sleep(50);
+
+        assertThat(exec.getStatus()).isEqualTo("success");
+        ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
+        verify(webhookExecutor).send(eq("https://hooks.example.com/jira"), eq("POST"), bodyCaptor.capture());
+        assertThat(bodyCaptor.getValue()).contains("\"project\":\"SOC\"");
+        assertThat(bodyCaptor.getValue()).contains("\"summary\":\"Phishing\"");
+        assertThat(bodyCaptor.getValue()).contains("\"priority\":\"High\"");
+        assertThat(bodyCaptor.getValue()).contains("User reported mail");
+        assertThat(exec.getStepsLog()).contains("create-jira-ticket");
+        assertThat(exec.getStepsLog()).contains("webhook-to-ticket");
+    }
+
+    @Test
+    void executeAsync_createJiraTicket_failsWithoutWebhookUrl() throws Exception {
+        UtmPlaybook pb = new UtmPlaybook();
+        pb.setId(32L);
+        pb.setName("Ticket NoUrl");
+        pb.setStepsJson("["
+            + "{\"stepIndex\":0,\"stepType\":\"action\",\"label\":\"Open ticket\","
+            + "\"config\":{\"actionId\":\"create_jira_ticket\",\"project\":\"SOC\",\"summary\":\"x\"}}"
+            + "]");
+
+        UtmPlaybookExecution exec = runningExec(320L, 32L, "exec-ticket-nu", "Ticket NoUrl", 1);
+        when(playbookRepository.findById(32L)).thenReturn(Optional.of(pb));
+        when(executionRepository.findByExecutionUuid("exec-ticket-nu")).thenReturn(Optional.of(exec));
+        when(executionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.executeAsync("exec-ticket-nu", 32L);
+        TimeUnit.MILLISECONDS.sleep(50);
+
+        assertThat(exec.getStatus()).isEqualTo("failure");
+        assertThat(exec.getErrorMessage()).containsIgnoringCase("webhookUrl");
+        verify(webhookExecutor, never()).send(anyString(), anyString(), anyString());
+    }
+
+    private static UtmPlaybookExecution runningExec(Long id, Long playbookId, String uuid,
+                                                    String name, int totalSteps) {
+        UtmPlaybookExecution exec = new UtmPlaybookExecution();
+        exec.setId(id);
+        exec.setPlaybookId(playbookId);
+        exec.setPlaybookName(name);
+        exec.setExecutionUuid(uuid);
+        exec.setStatus("running");
+        exec.setTriggerType("manual");
+        exec.setTriggeredBy("admin");
+        exec.setStartedAt(java.time.Instant.now());
+        exec.setTotalSteps(totalSteps);
+        exec.setCompletedSteps(0);
+        return exec;
     }
 }

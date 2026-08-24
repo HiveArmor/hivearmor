@@ -51,12 +51,14 @@ public class ResponseActionService {
                    )),
 
             action("create-jira-ticket", "Create Jira Ticket",      "Ticketing",
-                   "Create a Jira issue from alert context.",
+                   "POST ticket fields to a ticketing webhook (SSRF-safe). Requires url/webhookUrl.",
                    Arrays.asList(
+                       param("url",      "string", true,  null, null),
                        param("project",  "string", true,  null, null),
                        param("summary",  "string", true,  null, null),
                        paramSelect("priority", false, "Medium",
-                                   Arrays.asList("Highest", "High", "Medium", "Low"))
+                                   Arrays.asList("Highest", "High", "Medium", "Low")),
+                       param("description", "text", false, null, null)
                    )),
 
             action("send-webhook",       "Send Webhook",            "Integration",
