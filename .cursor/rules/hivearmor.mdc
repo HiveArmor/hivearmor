@@ -121,7 +121,7 @@ Do not mark a session complete if any gate fails.
 |---|---|---|
 | SEC-03 | CorrelatedFindings status endpoint vulnerable | Status control stays disabled until backend fix deployed |
 | SEC-05 | Agent-manager gRPC is INTERNAL_KEY-only (by design) | REST mutates are ROLE_ADMIN\|SOC_MANAGER; SensorGrid isolate/kill stay disabled until `REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED` flips after ProcessCommand→agent proof |
-| SEC-06 | runVisualization no @PreAuthorize | Gate constant `GAP_SEC_06_RESOLVED = false` — do not remove |
+| SEC-06 | CLOSED (STAGING CANDIDATE) — `POST /api/ha-visualizations/run` has `@PreAuthorize` | Keep `GAP_SEC_06_RESOLVED = true`; UI still gates via `canRunVisualization` (ROLE_ADMIN\|SOC_MANAGER\|ANALYST) |
 
 ## Role Labels — Use Human Names, Not ROLE_ Constants
 Never expose internal role constants as UI copy. Map through a label function:
@@ -224,7 +224,7 @@ GET    /api/ha-dashboards/{id}
 PUT    /api/ha-dashboards
 DELETE /api/ha-dashboards/{id}
 GET    /api/ha-visualizations
-POST   /api/ha-visualizations/run   (GAP_SEC_06_RESOLVED=false gates this)
+POST   /api/ha-visualizations/run   (SEC-06 CLOSED STAGING CANDIDATE — @PreAuthorize ADMIN|SOC_MANAGER|ANALYST; GAP_SEC_06_RESOLVED=true)
 
 # Search
 POST /api/ha-search/nl-query        (NOT /api/ha-search/execute)
