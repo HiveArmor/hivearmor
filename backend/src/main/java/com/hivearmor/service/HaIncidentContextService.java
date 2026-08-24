@@ -1,8 +1,10 @@
 package com.hivearmor.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hivearmor.service.llm.HaPiiRedactor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashMap;
@@ -20,6 +22,10 @@ import java.util.Set;
  * credentials, session tokens, and personally-identifiable information — is
  * silently dropped.  Adding a new field to LLM context requires an explicit
  * change to {@link #INCIDENT_WHITELIST}.
+ *
+ * <h3>Value redaction (P1 — STAGING CANDIDATE)</h3>
+ * <p>After whitelist filtering, the JSON string is passed through
+ * {@link HaPiiRedactor} so residual PII in allowed fields is pseudonymized.
  *
  * <h3>Error handling</h3>
  * <p>Returns {@code null} when the source map is {@code null} or empty, or when
@@ -45,10 +51,19 @@ public class HaIncidentContextService {
 
     private final IncidentQueryPort incidentQueryPort;
     private final ObjectMapper objectMapper;
+    private final HaPiiRedactor piiRedactor;
 
     public HaIncidentContextService(IncidentQueryPort incidentQueryPort, ObjectMapper objectMapper) {
+        this(incidentQueryPort, objectMapper, HaPiiRedactor.enabled());
+    }
+
+    @Autowired
+    public HaIncidentContextService(IncidentQueryPort incidentQueryPort,
+                                    ObjectMapper objectMapper,
+                                    HaPiiRedactor piiRedactor) {
         this.incidentQueryPort = incidentQueryPort;
         this.objectMapper = objectMapper;
+        this.piiRedactor = piiRedactor != null ? piiRedactor : HaPiiRedactor.enabled();
     }
 
     /**
@@ -80,7 +95,8 @@ public class HaIncidentContextService {
                 return null;
             }
 
-            return objectMapper.writeValueAsString(filtered);
+            String json = objectMapper.writeValueAsString(filtered);
+            return piiRedactor.redact(json);
         } catch (Exception e) {
             // Log only the id — never the raw source (NoPiiInContextInvariant, Req 4.7).
             log.warn("loadIncidentAsJson failed for incidentId={}", incidentId);

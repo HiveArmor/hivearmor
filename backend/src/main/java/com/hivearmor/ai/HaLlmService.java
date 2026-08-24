@@ -3,6 +3,7 @@ package com.hivearmor.ai;
 import com.hivearmor.repository.UtmConfigurationParameterRepository;
 import com.hivearmor.service.llm.ChatOptions;
 import com.hivearmor.service.llm.HaLlmProvider;
+import com.hivearmor.service.llm.HaPiiRedactor;
 import com.hivearmor.service.llm.LlmUsageCounter;
 import com.hivearmor.service.llm.ProviderRegistry;
 import com.hivearmor.service.llm.event.LlmConfigChangedEvent;
@@ -42,6 +43,11 @@ import java.util.concurrent.atomic.AtomicReference;
  *   <li>{@link #activeProviderName()} — alias for {@link #getActiveProviderName()}</li>
  * </ul>
  *
+ * <h3>PII redaction (P1 — STAGING CANDIDATE)</h3>
+ * <p>All outbound message bodies are passed through {@link HaPiiRedactor} before the
+ * active {@link HaLlmProvider} is invoked. Disable with
+ * {@code hivearmor.llm.pii-redaction-enabled=false}. Prompt bodies are never logged.
+ *
  * <p>Requirements: 1.6, 2.1, 2.2, 2.3, 2.5, 6.4
  */
 @Service
@@ -58,6 +64,7 @@ public class HaLlmService {
     private final ProviderRegistry providers;
     private final UtmConfigurationParameterRepository configRepo;
     private final LlmUsageCounter usageCounter;
+    private final HaPiiRedactor piiRedactor;
 
     /**
      * Thread-safe reference to the currently active provider.
@@ -68,16 +75,24 @@ public class HaLlmService {
     private final AtomicReference<HaLlmProvider> active = new AtomicReference<>();
 
     public HaLlmService(ProviderRegistry providers, UtmConfigurationParameterRepository configRepo) {
-        this(providers, configRepo, new LlmUsageCounter());
+        this(providers, configRepo, new LlmUsageCounter(), HaPiiRedactor.enabled());
+    }
+
+    public HaLlmService(ProviderRegistry providers,
+                        UtmConfigurationParameterRepository configRepo,
+                        LlmUsageCounter usageCounter) {
+        this(providers, configRepo, usageCounter, HaPiiRedactor.enabled());
     }
 
     @Autowired
     public HaLlmService(ProviderRegistry providers,
                         UtmConfigurationParameterRepository configRepo,
-                        LlmUsageCounter usageCounter) {
+                        LlmUsageCounter usageCounter,
+                        HaPiiRedactor piiRedactor) {
         this.providers     = providers;
         this.configRepo    = configRepo;
         this.usageCounter  = usageCounter != null ? usageCounter : new LlmUsageCounter();
+        this.piiRedactor   = piiRedactor != null ? piiRedactor : HaPiiRedactor.enabled();
     }
 
     // =========================================================================
@@ -158,7 +173,7 @@ public class HaLlmService {
      */
     public String chat(List<com.hivearmor.service.llm.ChatMessage> messages, ChatOptions options) {
         usageCounter.recordRequest();
-        return active.get().chat(messages, options);
+        return active.get().chat(piiRedactor.redactMessages(messages), options);
     }
 
     /**
@@ -172,7 +187,7 @@ public class HaLlmService {
      */
     public Flux<String> streamChat(List<com.hivearmor.service.llm.ChatMessage> messages, ChatOptions options) {
         usageCounter.recordRequest();
-        return active.get().streamChat(messages, options);
+        return active.get().streamChat(piiRedactor.redactMessages(messages), options);
     }
 
     /**
@@ -298,17 +313,25 @@ public class HaLlmService {
     private List<com.hivearmor.service.llm.ChatMessage> toLlmMessages(
             List<ChatMessage> messages, String systemPrompt) {
 
+        // Shared session so the same PII value in system + user messages maps to one token.
+        HaPiiRedactor.Session session = new HaPiiRedactor.Session();
+
         java.util.ArrayList<com.hivearmor.service.llm.ChatMessage> result =
             new java.util.ArrayList<>();
 
         if (systemPrompt != null && !systemPrompt.isBlank()) {
-            result.add(new com.hivearmor.service.llm.ChatMessage("system", systemPrompt));
+            result.add(new com.hivearmor.service.llm.ChatMessage(
+                "system", piiRedactor.redact(systemPrompt, session)));
         }
 
         if (messages != null) {
-            messages.stream()
-                .map(m -> new com.hivearmor.service.llm.ChatMessage(m.getRole(), m.getContent()))
-                .forEach(result::add);
+            for (ChatMessage m : messages) {
+                if (m == null) {
+                    continue;
+                }
+                result.add(new com.hivearmor.service.llm.ChatMessage(
+                    m.getRole(), piiRedactor.redact(m.getContent(), session)));
+            }
         }
 
         return java.util.Collections.unmodifiableList(result);
