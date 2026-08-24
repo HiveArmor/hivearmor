@@ -23,6 +23,10 @@ ALPHA_ENTITY_IDS=()
 BETA_ENTITY_IDS=()
 ALPHA_RULE_IDS=()
 BETA_RULE_IDS=()
+ALPHA_DASHBOARD_IDS=()
+BETA_DASHBOARD_IDS=()
+ALPHA_TENANT_NUM=""
+BETA_TENANT_NUM=""
 
 # ─── Color output helpers ─────────────────────────────────────────────────────
 RED='\033[0;31m'
@@ -324,6 +328,51 @@ print(d.get('id', d.get('ruleId', '')))" 2>/dev/null || echo "")
   echo "$rule_id"
 }
 
+# Resolve numeric ha_client.id for X-Tenant-ID (GAP-MT-05 dashboards use client id, not prefix string).
+resolve_tenant_numeric_id() {
+  local token="$1" want_prefix="$2"
+  curl -s --max-time 15 -H "Authorization: Bearer $token" \
+    "$BASE_URL/ha-tenants?page=0&size=200" 2>/dev/null | python3 -c "
+import json,sys
+want='$want_prefix'
+try:
+  d=json.load(sys.stdin)
+except Exception:
+  sys.exit(0)
+items=d if isinstance(d,list) else d.get('content', d.get('items', []))
+for t in items:
+  prefix=str(t.get('prefix') or t.get('clientPrefix') or '')
+  if prefix==want or want in prefix:
+    print(t.get('id',''))
+    break
+" 2>/dev/null || true
+}
+
+create_dashboard() {
+  local token="$1" tenant_num="$2" prefix="$3" index="$4"
+  local headers=(-H "Authorization: Bearer $token" -H "Content-Type: application/json")
+  if [ -n "$tenant_num" ]; then
+    headers+=(-H "X-Tenant-ID: $tenant_num")
+  fi
+  local name="iso-test-dash-${prefix}-${index}-$(date +%s)"
+  local resp
+  resp=$(curl -s --max-time 15 -o /tmp/iso_dash_create.json -w "%{http_code}" \
+    "${headers[@]}" \
+    -X POST "$BASE_URL/ha-dashboards" \
+    -d "{
+      \"name\": \"$name\",
+      \"description\": \"Cross-tenant isolation test dashboard for $prefix\",
+      \"refreshTime\": 60,
+      \"filters\": null,
+      \"sidebarPinned\": false
+    }")
+  local dash_id=""
+  if [ "$resp" = "201" ] || [ "$resp" = "200" ]; then
+    dash_id=$(python3 -c "import json; print(json.load(open('/tmp/iso_dash_create.json')).get('id',''))" 2>/dev/null || echo "")
+  fi
+  echo "$dash_id"
+}
+
 # ══════════════════════════════════════════════════════════════════════════════
 echo "══════════════════════════════════════════════════════════"
 echo " SPRINT 49: Cross-Tenant Isolation Tests (HAR-004)"
@@ -332,6 +381,7 @@ echo ""
 echo " Verifies complete tenant isolation across all modules:"
 echo "   • Alerts, Severity Board, Incidents, Findings"
 echo "   • Entities, Detection Rules, Constellation"
+echo "   • Dashboards (GAP-MT-05 / P1 Spike B)"
 echo "   • Global admin combined access"
 echo "   • SSE stream isolation"
 echo ""
@@ -387,6 +437,17 @@ for i in $(seq 1 2); do
 done
 echo "  Rules: ${#ALPHA_RULE_IDS[@]} created"
 
+ALPHA_TENANT_NUM=$(resolve_tenant_numeric_id "$ADMIN_TOKEN" "$TENANT_ALPHA")
+if [ -n "$ALPHA_TENANT_NUM" ]; then
+  for i in $(seq 1 2); do
+    DID=$(create_dashboard "$ADMIN_TOKEN" "$ALPHA_TENANT_NUM" "$TENANT_ALPHA" "$i")
+    if [ -n "$DID" ]; then ALPHA_DASHBOARD_IDS+=("$DID"); fi
+  done
+  echo "  Dashboards: ${#ALPHA_DASHBOARD_IDS[@]} created (tenantId=$ALPHA_TENANT_NUM)"
+else
+  echo -e "  ${YELLOW}⚠${NC} No numeric tenant id for $TENANT_ALPHA — skipping dashboard seed (GAP-MT-05)"
+fi
+
 # Refresh OpenSearch indices for immediate visibility
 curl -s -u "admin:LocalDev@2024!" -X POST "http://localhost:9200/v3-hive-*/_refresh" > /dev/null 2>&1 || true
 
@@ -427,6 +488,17 @@ for i in $(seq 1 2); do
   if [ -n "$RID" ]; then BETA_RULE_IDS+=("$RID"); fi
 done
 echo "  Rules: ${#BETA_RULE_IDS[@]} created"
+
+BETA_TENANT_NUM=$(resolve_tenant_numeric_id "$ADMIN_TOKEN" "$TENANT_BETA")
+if [ -n "$BETA_TENANT_NUM" ]; then
+  for i in $(seq 1 2); do
+    DID=$(create_dashboard "$ADMIN_TOKEN" "$BETA_TENANT_NUM" "$TENANT_BETA" "$i")
+    if [ -n "$DID" ]; then BETA_DASHBOARD_IDS+=("$DID"); fi
+  done
+  echo "  Dashboards: ${#BETA_DASHBOARD_IDS[@]} created (tenantId=$BETA_TENANT_NUM)"
+else
+  echo -e "  ${YELLOW}⚠${NC} No numeric tenant id for $TENANT_BETA — skipping dashboard seed (GAP-MT-05)"
+fi
 
 # Final refresh to make all indexed data searchable
 sleep 1
@@ -649,6 +721,49 @@ if [ ${#BETA_INCIDENT_IDS[@]} -gt 0 ]; then
     -H "$ADMIN_H" -H "X-Tenant-ID: $TENANT_ALPHA" \
     "$BASE_URL/ha-incidents/${BETA_INCIDENT_IDS[0]}")
   assert_status "Alpha GET beta incident by ID" "$S" "404"
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEST 4b: DASHBOARDS ISOLATION (GAP-MT-05 / P1 Spike B)
+# ═══════════════════════════════════════════════════════════════════════════════
+echo ""
+echo "━━━ Test 4b: Dashboards Isolation (GAP-MT-05) ━━━"
+
+if [ -n "$ALPHA_TENANT_NUM" ] && [ -n "$BETA_TENANT_NUM" ] && [ ${#ALPHA_DASHBOARD_IDS[@]} -gt 0 ] && [ ${#BETA_DASHBOARD_IDS[@]} -gt 0 ]; then
+  echo ""
+  echo "--- Alpha lists dashboards: no beta ids ---"
+  S=$(curl -s --max-time 15 -o /tmp/iso_alpha_dashboards.json -w "%{http_code}" \
+    -H "$ADMIN_H" -H "X-Tenant-ID: $ALPHA_TENANT_NUM" \
+    "$BASE_URL/ha-dashboards?page=0&size=100")
+  assert_status "Alpha GET /ha-dashboards" "$S" "200"
+  if [ "$S" = "200" ]; then
+    python3 -c "
+import json,sys
+d=json.load(open('/tmp/iso_alpha_dashboards.json'))
+items=d if isinstance(d,list) else d.get('content', d.get('items', []))
+beta_ids={$(printf '%s,' "${BETA_DASHBOARD_IDS[@]}" | sed 's/,$//')}
+seen=[i for i in items if i.get('id') in beta_ids]
+if seen:
+  print(f'FAIL:{len(seen)} beta dashboards visible')
+  sys.exit(1)
+print(f'OK:{len(items)}')
+" 2>/dev/null
+    RESULT=$?
+    if [ $RESULT -eq 0 ]; then
+      echo -e "  ${GREEN}✓${NC} Alpha sees only own dashboards"; PASS=$((PASS+1))
+    else
+      echo -e "  ${RED}✗${NC} Alpha can see beta dashboards"; FAIL=$((FAIL+1))
+    fi
+  fi
+
+  echo ""
+  echo "--- Alpha requests beta dashboard by ID → 404 ---"
+  S=$(curl -s --max-time 10 -o /dev/null -w "%{http_code}" \
+    -H "$ADMIN_H" -H "X-Tenant-ID: $ALPHA_TENANT_NUM" \
+    "$BASE_URL/ha-dashboards/${BETA_DASHBOARD_IDS[0]}")
+  assert_status "Alpha GET beta dashboard by ID" "$S" "404"
+else
+  echo -e "  ${YELLOW}⚠${NC} Skipping dashboard isolation — tenants or seeded dashboards unavailable"
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1170,6 +1285,24 @@ for IID in "${ALPHA_INCIDENT_IDS[@]}" "${BETA_INCIDENT_IDS[@]}"; do
 done
 echo "  ✓ Incidents deleted"
 
+# Delete test dashboards via API (GAP-MT-05)
+echo "  Deleting test dashboards..."
+for DID in "${ALPHA_DASHBOARD_IDS[@]}"; do
+  if [ -n "$DID" ] && [ -n "$ALPHA_TENANT_NUM" ]; then
+    curl -s --max-time 5 -o /dev/null \
+      -H "$ADMIN_H" -H "X-Tenant-ID: $ALPHA_TENANT_NUM" \
+      -X DELETE "$BASE_URL/ha-dashboards/$DID" 2>/dev/null || true
+  fi
+done
+for DID in "${BETA_DASHBOARD_IDS[@]}"; do
+  if [ -n "$DID" ] && [ -n "$BETA_TENANT_NUM" ]; then
+    curl -s --max-time 5 -o /dev/null \
+      -H "$ADMIN_H" -H "X-Tenant-ID: $BETA_TENANT_NUM" \
+      -X DELETE "$BASE_URL/ha-dashboards/$DID" 2>/dev/null || true
+  fi
+done
+echo "  ✓ Dashboards deleted"
+
 # Delete test detection rules via API
 echo "  Deleting test detection rules..."
 for RID in "${ALPHA_RULE_IDS[@]}" "${BETA_RULE_IDS[@]}"; do
@@ -1204,6 +1337,7 @@ echo "   • Alerts queue isolation"
 echo "   • Alert by ID cross-tenant (→ 404)"
 echo "   • Severity board isolation"
 echo "   • Incidents isolation"
+echo "   • Dashboards isolation (GAP-MT-05)"
 echo "   • Findings isolation"
 echo "   • Entities isolation"
 echo "   • Detection rules isolation"

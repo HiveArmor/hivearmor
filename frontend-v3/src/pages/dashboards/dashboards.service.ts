@@ -6,7 +6,8 @@
  *   ROLE_ADMIN | ROLE_SOC_MANAGER | ROLE_ANALYST (@PreAuthorize on backend).
  *   UI must not call run when the caller lacks those roles (see canRunVisualization).
  * - GAP-SEC-12: GET /api/ha-dashboards/{id} has no @PreAuthorize
- * - GAP-MT-05: No tenant_id on UtmDashboard — all users see all dashboards
+ * - GAP-MT-05: CLOSED (STAGING CANDIDATE) — backend stamps/scopes hive_dashboard.tenant_id
+ *   via TenantContext; null context = legacy global list/get. UI does not redesign tenant UX.
  */
 
 import type { ChartDataResponse, DashboardDTO, VisualizationRunRequest } from './dashboards.types';
@@ -148,7 +149,7 @@ export function isFavourited(dashboardId: number): boolean {
 /**
  * Fetch all dashboards with optional filters
  * GAP-SEC-12: No @PreAuthorize on this endpoint
- * GAP-MT-05: No tenant_id on UtmDashboard — all users see all dashboards
+ * GAP-MT-05: CLOSED (STAGING) — list is tenant-scoped when TenantContext is set
  */
 export async function getDashboards(params?: {
   isSystem?: boolean;

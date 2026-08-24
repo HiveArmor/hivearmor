@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      GAP-MT-05 / P1 Spike B — MSSP tenant scope for hive_dashboard.
+      STAGING CANDIDATE — null tenant_id preserves legacy global dashboards
+      (same null-context = unscoped behavior as investigation sessions).
+    -->
+    <changeSet id="20260824003-1" author="hivearmor" context="dev,prod">
+        <addColumn tableName="hive_dashboard">
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <createIndex tableName="hive_dashboard" indexName="idx_hive_dashboard_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="hive_dashboard" indexName="idx_hive_dashboard_tenant_modified">
+            <column name="tenant_id"/>
+            <column name="modified_date" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

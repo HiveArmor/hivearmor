@@ -3,6 +3,7 @@ package com.hivearmor.service.impl.chart_builder;
 import com.hivearmor.domain.chart_builder.UtmDashboard;
 import com.hivearmor.domain.chart_builder.UtmDashboardVisualization;
 import com.hivearmor.domain.chart_builder.UtmVisualization;
+import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.repository.chart_builder.UtmDashboardRepository;
 import com.hivearmor.repository.chart_builder.UtmDashboardVisualizationRepository;
 import com.hivearmor.repository.chart_builder.UtmVisualizationRepository;
@@ -13,9 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -23,6 +26,10 @@ import java.util.*;
 
 /**
  * Service Implementation for managing UtmDashboard.
+ *
+ * <p>GAP-MT-05 / P1 Spike B — when {@link TenantContext#getClientId()} is non-null,
+ * CRUD is scoped to that tenant. Null context keeps legacy global behavior
+ * (consistent with investigation sessions). STAGING CANDIDATE.
  */
 @Service
 @Transactional
@@ -55,11 +62,42 @@ public class UtmDashboardServiceImpl implements UtmDashboardService {
     @Override
     public UtmDashboard save(UtmDashboard utmDashboard) {
         log.debug("Request to save UtmDashboard : {}", utmDashboard);
+        Long tenantId = TenantContext.getClientId();
+        if (utmDashboard.getId() == null) {
+            utmDashboard.setTenantId(tenantId);
+            return dashboardRepository.save(utmDashboard);
+        }
+
+        Optional<UtmDashboard> scoped = findOne(utmDashboard.getId());
+        if (scoped.isPresent()) {
+            // Update: preserve stored tenant_id (ignore client-supplied).
+            utmDashboard.setTenantId(scoped.get().getTenantId());
+            return dashboardRepository.save(utmDashboard);
+        }
+
+        if (dashboardRepository.existsById(utmDashboard.getId())) {
+            // Row exists outside this tenant scope — do not leak or overwrite.
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                "Dashboard not found: " + utmDashboard.getId());
+        }
+
+        // Pre-assigned id create (dev system sequence / import paths).
+        utmDashboard.setTenantId(tenantId);
         return dashboardRepository.save(utmDashboard);
     }
 
     @Override
     public void saveAll(List<UtmDashboard> utmDashboard) {
+        Long tenantId = TenantContext.getClientId();
+        for (UtmDashboard dashboard : utmDashboard) {
+            if (dashboard.getId() == null) {
+                dashboard.setTenantId(tenantId);
+            } else if (tenantId != null) {
+                findOne(dashboard.getId()).orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Dashboard not found: " + dashboard.getId()));
+                dashboard.setTenantId(tenantId);
+            }
+        }
         dashboardRepository.saveAll(utmDashboard);
     }
 
@@ -73,6 +111,10 @@ public class UtmDashboardServiceImpl implements UtmDashboardService {
     @Transactional(readOnly = true)
     public Page<UtmDashboard> findAll(Pageable pageable) {
         log.debug("Request to get all UtmDashboards");
+        Long tenantId = TenantContext.getClientId();
+        if (tenantId != null) {
+            return dashboardRepository.findByTenantId(tenantId, pageable);
+        }
         return dashboardRepository.findAll(pageable);
     }
 
@@ -87,6 +129,10 @@ public class UtmDashboardServiceImpl implements UtmDashboardService {
     @Transactional(readOnly = true)
     public Optional<UtmDashboard> findOne(Long id) {
         log.debug("Request to get UtmDashboard : {}", id);
+        Long tenantId = TenantContext.getClientId();
+        if (tenantId != null) {
+            return dashboardRepository.findByIdAndTenantId(id, tenantId);
+        }
         return dashboardRepository.findById(id);
     }
 
@@ -98,6 +144,12 @@ public class UtmDashboardServiceImpl implements UtmDashboardService {
     @Override
     public void delete(Long id) {
         log.debug("Request to delete UtmDashboard : {}", id);
+        Long tenantId = TenantContext.getClientId();
+        if (tenantId != null) {
+            if (dashboardRepository.findByIdAndTenantId(id, tenantId).isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Dashboard not found: " + id);
+            }
+        }
         dashboardRepository.deleteById(id);
     }
 
@@ -121,6 +173,7 @@ public class UtmDashboardServiceImpl implements UtmDashboardService {
             UtmDashboard utmDashboard;
             UtmVisualization utmVisualization;
             boolean inDevelop = utmStackService.isInDevelop();
+            Long tenantId = TenantContext.getClientId();
 
             for (UtmDashboardVisualization dashboard : dashboards) {
                 dashboard.setId(null);
@@ -155,11 +208,14 @@ public class UtmDashboardServiceImpl implements UtmDashboardService {
                 // Inserting dashboards
                 if (!dashboardIds.containsKey(dashboard.getDashboard().getId())) {
                     utmDashboard = dashboard.getDashboard();
-                    Optional<UtmDashboard> dbDashboard = dashboardRepository.findByName(utmDashboard.getName());
+                    Optional<UtmDashboard> dbDashboard = tenantId != null
+                        ? dashboardRepository.findByNameAndTenantId(utmDashboard.getName(), tenantId)
+                        : dashboardRepository.findByName(utmDashboard.getName());
 
                     if (dbDashboard.isPresent()) {
                         if (override) {
                             utmDashboard.setId(dbDashboard.get().getId());
+                            utmDashboard.setTenantId(dbDashboard.get().getTenantId());
                             utmDashboard.setModifiedDate(LocalDateTime.now().toInstant(ZoneOffset.UTC));
                             utmDashboard = dashboardRepository.save(utmDashboard);
                         } else {
@@ -168,6 +224,7 @@ public class UtmDashboardServiceImpl implements UtmDashboardService {
                     } else {
                         utmDashboard.setId(inDevelop ? getSystemSequenceNextValue() : null);
                         utmDashboard.setSystemOwner(inDevelop);
+                        utmDashboard.setTenantId(tenantId);
                         utmDashboard.setCreatedDate(LocalDateTime.now().toInstant(ZoneOffset.UTC));
                         utmDashboard.setUserCreated(SecurityUtils.getCurrentUserLogin().orElse("system"));
                         utmDashboard = dashboardRepository.save(utmDashboard);
