@@ -4,6 +4,7 @@ import com.hivearmor.service.connector.impl.AwsSecurityHubConnector;
 import com.hivearmor.service.connector.impl.AzureDefenderConnector;
 import com.hivearmor.service.connector.impl.AzureEntraConnector;
 import com.hivearmor.service.connector.impl.CrowdStrikeConnector;
+import com.hivearmor.service.connector.impl.GoogleWorkspaceConnector;
 import com.hivearmor.service.connector.impl.OktaConnector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * In-process catalog of typed connectors (hard-capped to the P1 first five).
+ * In-process catalog of typed connectors (P1 six: five vendors + Google Workspace).
  *
  * <p>The production constructor must be {@code @Autowired}: additional public
  * test helpers leave Spring with no unambiguous candidate, and it falls back
@@ -43,9 +44,10 @@ public class HaConnectorRegistry {
         register(new OktaConnector(okta));
         register(new AzureEntraConnector(oauth));
         register(new AwsSecurityHubConnector());
+        register(new GoogleWorkspaceConnector());
     }
 
-    /** Test helper — same five connectors with isolate flag. Not used by Spring. */
+    /** Test helper — same catalog with isolate flag. Not used by Spring. */
     public HaConnectorRegistry(boolean vendorIsolateEnabled) {
         this(new MicrosoftOAuthClient(), new OktaIdentityClient(), vendorIsolateEnabled);
     }

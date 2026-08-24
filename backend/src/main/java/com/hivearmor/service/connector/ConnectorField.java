@@ -45,6 +45,10 @@ public final class ConnectorField {
         return new ConnectorField(name, "secret", label, true, true, null, null);
     }
 
+    public static ConnectorField secretOptional(String name, String label, String help) {
+        return new ConnectorField(name, "secret", label, false, true, null, help);
+    }
+
     public String getName() {
         return name;
     }
