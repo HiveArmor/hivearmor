@@ -1,7 +1,24 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/lib/apiClient', () => ({
+  apiClient: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+  },
+}));
 
 import { STARTER_PLAYBOOK_TEMPLATES } from './playbookStarterTemplates';
-import { adaptCanonicalPlaybookListItem } from './responsePlaybooks.service';
+import {
+  adaptCanonicalPlaybookListItem,
+  approveExecution,
+  approvePlaybookExecution,
+  rejectPlaybookExecution,
+} from './responsePlaybooks.service';
+
+import { apiClient } from '@/lib/apiClient';
 
 describe('adaptCanonicalPlaybookListItem', () => {
   it('maps compact backend DTO into library projection', () => {
@@ -31,6 +48,87 @@ describe('adaptCanonicalPlaybookListItem', () => {
     expect(item.status).toBe('INACTIVE');
     expect(item.triggerType).toBe('MANUAL');
     expect(item.category).toBe('Multi-step');
+  });
+});
+
+describe('approvePlaybookExecution / rejectPlaybookExecution', () => {
+  beforeEach(() => {
+    vi.mocked(apiClient.post).mockReset();
+  });
+
+  it('posts approve to execution-scoped endpoint', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({
+      executionId: 'exec-42',
+      status: 'running',
+      approved: true,
+      resumeFromStep: 2,
+    });
+
+    await approvePlaybookExecution('exec-42');
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/ha-playbooks/executions/exec-42/approve'
+    );
+    expect(apiClient.post).not.toHaveBeenCalledWith(
+      expect.stringContaining('/approvals/'),
+      expect.anything()
+    );
+  });
+
+  it('posts reject with optional reason body', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({
+      executionId: 'exec-99',
+      status: 'failure',
+      approved: false,
+    });
+
+    await rejectPlaybookExecution('exec-99', '  Out of policy  ');
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/ha-playbooks/executions/exec-99/reject',
+      { reason: 'Out of policy' }
+    );
+  });
+
+  it('omits reject body when reason is empty', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({
+      executionId: 'exec-99',
+      status: 'failure',
+      approved: false,
+    });
+
+    await rejectPlaybookExecution('exec-99', '   ');
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/ha-playbooks/executions/exec-99/reject',
+      undefined
+    );
+  });
+
+  it('legacy approveExecution adapter routes to the new endpoints', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({
+      executionId: 'exec-1',
+      status: 'running',
+      approved: true,
+    });
+
+    await approveExecution('exec-1', 'APPROVED');
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/ha-playbooks/executions/exec-1/approve'
+    );
+
+    vi.mocked(apiClient.post).mockClear();
+    vi.mocked(apiClient.post).mockResolvedValue({
+      executionId: 'exec-1',
+      status: 'failure',
+      approved: false,
+    });
+
+    await approveExecution('exec-1', 'REJECTED', 'denied');
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/ha-playbooks/executions/exec-1/reject',
+      { reason: 'denied' }
+    );
   });
 });
 
@@ -76,4 +174,3 @@ describe('STARTER_PLAYBOOK_TEMPLATES', () => {
     }
   });
 });
-

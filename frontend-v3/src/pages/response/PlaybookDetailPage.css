@@ -206,6 +206,25 @@
   margin-left: auto;
 }
 
+.detail-stream-approval {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--ha-border);
+  background: color-mix(in srgb, var(--ha-severity-high) 10%, var(--ha-surface-raised));
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-primary);
+}
+
+.detail-stream-approval__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
 .detail-stream-body {
   flex: 1;
   overflow-y: auto;
