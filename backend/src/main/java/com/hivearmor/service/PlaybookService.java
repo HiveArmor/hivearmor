@@ -19,6 +19,7 @@ import com.hivearmor.service.edr.EdrService;
 import com.hivearmor.service.connector.HybridIsolateRouter;
 import com.hivearmor.service.connector.HybridResponseMeshDispatcher;
 import com.hivearmor.service.connector.PlaybookConnectorDispatcher;
+import com.hivearmor.service.soar.PlaybookConditionEvaluator;
 import com.hivearmor.service.soar.PlaybookWebhookExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * {@link PlaybookConnectorDispatcher}; isolate via {@link HybridResponseMeshDispatcher}
  * (HA agent preferred; vendor ISOLATE_HOST dry-run when feature-flagged); unknown
  * actions fail honestly with {@code not_implemented}.
+ * Condition steps use {@link PlaybookConditionEvaluator}; approval steps pause
+ * execution as {@code awaiting_approval} until approve/reject.
  * Step configs MUST NOT be logged.
  */
 @Service
@@ -232,7 +235,7 @@ public class PlaybookService {
         execution.setStartedAt(Instant.now());
         execution.setTotalSteps(steps.size());
         execution.setCompletedSteps(0);
-        execution.setStepsLog(serializeExecutionMeta(executionUuid, List.of()));
+        execution.setStepsLog(serializeExecutionMeta(executionUuid, List.of(), null));
         executionRepository.save(execution);
 
         cancelledExecutions.remove(executionUuid);
@@ -322,17 +325,125 @@ public class PlaybookService {
         }
         cancelledExecutions.put(executionId, Boolean.TRUE);
         executionRepository.findByExecutionUuid(executionId).ifPresent(row -> {
-            if ("running".equalsIgnoreCase(row.getStatus())) {
+            String st = row.getStatus() != null ? row.getStatus().toLowerCase(Locale.ROOT) : "";
+            if ("running".equals(st) || "awaiting_approval".equals(st)) {
                 row.setStatus("cancelled");
                 row.setEndedAt(Instant.now());
                 row.setErrorMessage("Cancelled by operator");
                 executionRepository.save(row);
             }
         });
+        executionContexts.remove(executionId);
+    }
+
+    /**
+     * Approve a paused playbook and resume from the step after the approval gate.
+     * Admin-only (enforced at REST). STAGING CANDIDATE.
+     */
+    @Transactional
+    public Map<String, Object> approveExecution(String executionId) {
+        return resolveApprovalGate(executionId, true, null);
+    }
+
+    /**
+     * Reject a paused playbook — marks failure and does not resume actions.
+     */
+    @Transactional
+    public Map<String, Object> rejectExecution(String executionId, String reason) {
+        return resolveApprovalGate(executionId, false, reason);
+    }
+
+    private Map<String, Object> resolveApprovalGate(String executionId, boolean approved, String reason) {
+        if (executionId == null || executionId.isBlank()) {
+            throw new IllegalArgumentException("executionId required");
+        }
+        UtmPlaybookExecution execution = executionRepository.findByExecutionUuid(executionId)
+            .orElseThrow(() -> new IllegalArgumentException("Execution not found: " + executionId));
+        if (!"awaiting_approval".equalsIgnoreCase(execution.getStatus())) {
+            throw new IllegalStateException("Execution is not awaiting approval (status="
+                + execution.getStatus() + ")");
+        }
+        int pendingIndex = readPendingApprovalStepIndex(execution.getStepsLog());
+        if (pendingIndex < 0) {
+            throw new IllegalStateException("Missing pendingApprovalStepIndex in execution log");
+        }
+
+        List<Map<String, Object>> stepLog = readStepLog(execution.getStepsLog());
+        String actor = SecurityUtils.getCurrentUserLogin().orElse("operator");
+
+        if (!approved) {
+            String msg = (reason != null && !reason.isBlank())
+                ? reason.trim()
+                : "Rejected by " + actor;
+            Map<String, Object> rejectEntry = new LinkedHashMap<>();
+            rejectEntry.put("stepIndex", pendingIndex);
+            rejectEntry.put("stepType", "approval");
+            rejectEntry.put("status", "rejected");
+            rejectEntry.put("output", Map.of("approved", false, "actor", actor, "reason", msg));
+            stepLog.add(rejectEntry);
+            execution.setStepsLog(serializeExecutionMeta(executionId, stepLog, null));
+            execution.setStatus("failure");
+            execution.setErrorMessage(msg);
+            execution.setEndedAt(Instant.now());
+            executionRepository.save(execution);
+            executionContexts.remove(executionId);
+            PlaybookExecutionEvent failed = new PlaybookExecutionEvent();
+            failed.setType("playbook_failed");
+            failed.setErrorMessage(msg);
+            failed.setTimestamp(Instant.now().toString());
+            playbookExecutionStreamService.broadcastEvent(executionId, failed);
+            return Map.of(
+                "executionId", executionId,
+                "status", "failure",
+                "approved", false
+            );
+        }
+
+        Map<String, Object> approveEntry = new LinkedHashMap<>();
+        approveEntry.put("stepIndex", pendingIndex);
+        approveEntry.put("stepType", "approval");
+        approveEntry.put("status", "approved");
+        approveEntry.put("output", Map.of("approved", true, "actor", actor));
+        stepLog.add(approveEntry);
+        execution.setStatus("running");
+        execution.setErrorMessage(null);
+        execution.setEndedAt(null);
+        execution.setStepsLog(serializeExecutionMeta(executionId, stepLog, null));
+        execution.setCompletedSteps(Math.max(execution.getCompletedSteps(), pendingIndex + 1));
+        executionRepository.save(execution);
+
+        PlaybookExecutionEvent approvedEvt = new PlaybookExecutionEvent();
+        approvedEvt.setType("step_completed");
+        approvedEvt.setStepIndex(pendingIndex);
+        approvedEvt.setStepLabel("Approval");
+        approvedEvt.setStepType("approval");
+        approvedEvt.setOutput(Map.of("approved", true, "actor", actor));
+        approvedEvt.setTimestamp(Instant.now().toString());
+        playbookExecutionStreamService.broadcastEvent(executionId, approvedEvt);
+
+        Long playbookId = execution.getPlaybookId();
+        // Continue on this thread. (@Async self-invoke would skip the proxy; unit tests
+        // also need deterministic resume without racing a daemon thread.)
+        executeAsyncFrom(executionId, playbookId, pendingIndex + 1, new ArrayList<>(stepLog));
+
+        String finalStatus = executionRepository.findByExecutionUuid(executionId)
+            .map(UtmPlaybookExecution::getStatus)
+            .orElse("RUNNING");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("executionId", executionId);
+        body.put("status", finalStatus);
+        body.put("approved", true);
+        body.put("resumeFromStep", pendingIndex + 1);
+        return body;
     }
 
     @Async
     public void executeAsync(String executionId, Long playbookId) {
+        executeAsyncFrom(executionId, playbookId, 0, new ArrayList<>());
+    }
+
+    private void executeAsyncFrom(String executionId, Long playbookId, int fromStepIndex,
+                                  List<Map<String, Object>> priorLog) {
         Optional<UtmPlaybook> playbookOpt = playbookRepository.findById(playbookId);
         Optional<UtmPlaybookExecution> executionOpt =
             executionRepository.findByExecutionUuid(executionId);
@@ -347,13 +458,18 @@ public class PlaybookService {
         PlaybookExecuteRequestDTO context = executionContexts.get(executionId);
         List<PlaybookStepDTO> steps = mergeContextIntoSteps(
             deserializeSteps(playbook.getStepsJson()), context);
-        List<Map<String, Object>> stepLog = new ArrayList<>();
-        int completed = 0;
+        List<Map<String, Object>> stepLog = priorLog != null
+            ? new ArrayList<>(priorLog)
+            : new ArrayList<>();
+        int completed = Math.max(0, fromStepIndex);
         boolean failed = false;
+        boolean awaitingApproval = false;
+        boolean stopSuccess = false;
         String failureMessage = null;
+        Integer pendingApprovalStep = null;
 
         try {
-            for (int i = 0; i < steps.size(); i++) {
+            for (int i = Math.max(0, fromStepIndex); i < steps.size(); i++) {
                 if (Boolean.TRUE.equals(cancelledExecutions.get(executionId))) {
                     failed = true;
                     failureMessage = "Cancelled by operator";
@@ -372,20 +488,40 @@ public class PlaybookService {
                 started.setTimestamp(Instant.now().toString());
                 playbookExecutionStreamService.broadcastEvent(executionId, started);
 
-                StepResult result = runStep(step, playbook.getName());
+                StepResult result = runStep(step, playbook.getName(), context);
                 Map<String, Object> logEntry = new LinkedHashMap<>();
                 logEntry.put("stepIndex", i);
                 logEntry.put("label", label);
                 logEntry.put("stepType", stepType);
-                logEntry.put("status", result.ok ? "success" : "failure");
+                if (result.pause) {
+                    logEntry.put("status", "awaiting_approval");
+                } else if (result.ok) {
+                    logEntry.put("status", "success");
+                } else {
+                    logEntry.put("status", "failure");
+                }
                 logEntry.put("output", result.output);
                 if (result.errorMessage != null) {
                     logEntry.put("error", result.errorMessage);
                 }
                 stepLog.add(logEntry);
 
+                if (result.pause) {
+                    awaitingApproval = true;
+                    pendingApprovalStep = i;
+                    PlaybookExecutionEvent pausedEvt = new PlaybookExecutionEvent();
+                    pausedEvt.setType("approval_required");
+                    pausedEvt.setStepIndex(i);
+                    pausedEvt.setStepLabel(label);
+                    pausedEvt.setStepType(stepType);
+                    pausedEvt.setOutput(result.output);
+                    pausedEvt.setTimestamp(Instant.now().toString());
+                    playbookExecutionStreamService.broadcastEvent(executionId, pausedEvt);
+                    break;
+                }
+
                 if (result.ok) {
-                    completed++;
+                    completed = i + 1;
                     PlaybookExecutionEvent completedEvt = new PlaybookExecutionEvent();
                     completedEvt.setType("step_completed");
                     completedEvt.setStepIndex(i);
@@ -394,6 +530,10 @@ public class PlaybookService {
                     completedEvt.setOutput(result.output);
                     completedEvt.setTimestamp(Instant.now().toString());
                     playbookExecutionStreamService.broadcastEvent(executionId, completedEvt);
+                    if (result.stopSuccess) {
+                        stopSuccess = true;
+                        break;
+                    }
                 } else {
                     failed = true;
                     failureMessage = result.errorMessage != null
@@ -414,6 +554,19 @@ public class PlaybookService {
             if (Boolean.TRUE.equals(cancelledExecutions.get(executionId))) {
                 failed = true;
                 failureMessage = "Cancelled by operator";
+                awaitingApproval = false;
+            }
+
+            execution.setCompletedSteps(completed);
+            if (awaitingApproval) {
+                execution.setStatus("awaiting_approval");
+                execution.setEndedAt(null);
+                execution.setErrorMessage(null);
+                execution.setStepsLog(serializeExecutionMeta(
+                    executionId, stepLog, pendingApprovalStep));
+                executionRepository.save(execution);
+                // Keep executionContexts so resume has inputs/agentId.
+                return;
             }
 
             PlaybookExecutionEvent terminal = new PlaybookExecutionEvent();
@@ -422,8 +575,7 @@ public class PlaybookService {
             terminal.setTimestamp(Instant.now().toString());
             playbookExecutionStreamService.broadcastEvent(executionId, terminal);
 
-            execution.setCompletedSteps(completed);
-            execution.setStepsLog(serializeExecutionMeta(executionId, stepLog));
+            execution.setStepsLog(serializeExecutionMeta(executionId, stepLog, null));
             execution.setEndedAt(Instant.now());
             if (Boolean.TRUE.equals(cancelledExecutions.get(executionId))) {
                 execution.setStatus("cancelled");
@@ -433,6 +585,10 @@ public class PlaybookService {
                 execution.setErrorMessage(failureMessage);
             } else {
                 execution.setStatus("success");
+                if (stopSuccess) {
+                    // condition short-circuit — still success
+                    execution.setErrorMessage(null);
+                }
             }
             executionRepository.save(execution);
         } catch (InterruptedException e) {
@@ -442,7 +598,7 @@ public class PlaybookService {
             execution.setErrorMessage("Execution interrupted");
             execution.setEndedAt(Instant.now());
             execution.setCompletedSteps(completed);
-            execution.setStepsLog(serializeExecutionMeta(executionId, stepLog));
+            execution.setStepsLog(serializeExecutionMeta(executionId, stepLog, null));
             executionRepository.save(execution);
         } catch (Exception e) {
             log.warn("Playbook execution {} failed: {}", executionId, e.getClass().getSimpleName());
@@ -451,11 +607,16 @@ public class PlaybookService {
             execution.setErrorMessage("Execution engine error");
             execution.setEndedAt(Instant.now());
             execution.setCompletedSteps(completed);
-            execution.setStepsLog(serializeExecutionMeta(executionId, stepLog));
+            execution.setStepsLog(serializeExecutionMeta(executionId, stepLog, null));
             executionRepository.save(execution);
+            executionContexts.remove(executionId);
         } finally {
             cancelledExecutions.remove(executionId);
-            executionContexts.remove(executionId);
+            // Keep executionContexts when paused for approval so resume retains inputs.
+            UtmPlaybookExecution latest = executionRepository.findByExecutionUuid(executionId).orElse(null);
+            if (latest == null || !"awaiting_approval".equalsIgnoreCase(latest.getStatus())) {
+                executionContexts.remove(executionId);
+            }
         }
     }
 
@@ -511,7 +672,8 @@ public class PlaybookService {
     // Step runners
     // -------------------------------------------------------------------------
 
-    private StepResult runStep(PlaybookStepDTO step, String playbookName) throws InterruptedException {
+    private StepResult runStep(PlaybookStepDTO step, String playbookName,
+                               PlaybookExecuteRequestDTO context) throws InterruptedException {
         String type = step.getStepType() != null
             ? step.getStepType().trim().toLowerCase(Locale.ROOT)
             : "action";
@@ -519,16 +681,30 @@ public class PlaybookService {
 
         return switch (type) {
             case "delay" -> runDelay(config);
-            case "condition" -> StepResult.ok(Map.of(
-                "result", "passed",
-                "note", "Condition evaluated as pass (MVP — full CEL conditions deferred)"));
+            case "condition" -> runCondition(config, context);
             case "loop" -> StepResult.ok(Map.of(
                 "result", "skipped",
                 "note", "Loop steps are not executed in MVP; treat as no-op success"));
-            case "approval" -> StepResult.fail(
-                "Approval steps require an analyst gate (not wired in this execution path)");
+            case "approval" -> StepResult.pause(Map.of(
+                "result", "awaiting_approval",
+                "note", "Paused for analyst approval (STAGING CANDIDATE)"));
             case "action" -> runAction(config, playbookName);
             default -> StepResult.fail("Unknown stepType: " + type);
+        };
+    }
+
+    private StepResult runCondition(Map<String, Object> config, PlaybookExecuteRequestDTO context) {
+        PlaybookConditionEvaluator.Result evaluated =
+            PlaybookConditionEvaluator.evaluate(config, context);
+        Map<String, Object> out = new LinkedHashMap<>(evaluated.detail());
+        out.put("result", evaluated.passed() ? "passed" : "failed");
+        if (evaluated.passed()) {
+            return StepResult.ok(out);
+        }
+        return switch (evaluated.onFalse()) {
+            case FAIL -> StepResult.fail("Condition not met");
+            case CONTINUE -> StepResult.ok(out);
+            case STOP_SUCCESS -> StepResult.stopSuccess(out);
         };
     }
 
@@ -946,15 +1122,63 @@ public class PlaybookService {
         }
     }
 
-    private String serializeExecutionMeta(String executionUuid, List<Map<String, Object>> stepLog) {
+    private String serializeExecutionMeta(String executionUuid, List<Map<String, Object>> stepLog,
+                                          Integer pendingApprovalStepIndex) {
         Map<String, Object> meta = new LinkedHashMap<>();
         meta.put("executionUuid", executionUuid);
         meta.put("steps", stepLog);
+        if (pendingApprovalStepIndex != null) {
+            meta.put("pendingApprovalStepIndex", pendingApprovalStepIndex);
+        }
         try {
             return objectMapper.writeValueAsString(meta);
         } catch (Exception e) {
             return "{\"executionUuid\":\"" + executionUuid + "\",\"steps\":[]}";
         }
+    }
+
+    private int readPendingApprovalStepIndex(String stepsLogJson) {
+        if (stepsLogJson == null || stepsLogJson.isBlank()) {
+            return -1;
+        }
+        try {
+            Map<String, Object> meta = objectMapper.readValue(
+                stepsLogJson, new TypeReference<Map<String, Object>>() {});
+            Object raw = meta.get("pendingApprovalStepIndex");
+            if (raw instanceof Number n) {
+                return n.intValue();
+            }
+            if (raw != null) {
+                return Integer.parseInt(String.valueOf(raw));
+            }
+        } catch (Exception ignored) {
+            // fall through
+        }
+        return -1;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> readStepLog(String stepsLogJson) {
+        if (stepsLogJson == null || stepsLogJson.isBlank()) {
+            return new ArrayList<>();
+        }
+        try {
+            Map<String, Object> meta = objectMapper.readValue(
+                stepsLogJson, new TypeReference<Map<String, Object>>() {});
+            Object steps = meta.get("steps");
+            if (steps instanceof List<?> list) {
+                List<Map<String, Object>> out = new ArrayList<>();
+                for (Object item : list) {
+                    if (item instanceof Map<?, ?> m) {
+                        out.add(new LinkedHashMap<>((Map<String, Object>) m));
+                    }
+                }
+                return out;
+            }
+        } catch (Exception ignored) {
+            // fall through
+        }
+        return new ArrayList<>();
     }
 
     private void broadcastFailed(String executionId, String message) {
@@ -986,21 +1210,34 @@ public class PlaybookService {
 
     private static final class StepResult {
         final boolean ok;
+        final boolean pause;
+        final boolean stopSuccess;
         final Object output;
         final String errorMessage;
 
-        private StepResult(boolean ok, Object output, String errorMessage) {
+        private StepResult(boolean ok, boolean pause, boolean stopSuccess,
+                           Object output, String errorMessage) {
             this.ok = ok;
+            this.pause = pause;
+            this.stopSuccess = stopSuccess;
             this.output = output;
             this.errorMessage = errorMessage;
         }
 
         static StepResult ok(Object output) {
-            return new StepResult(true, output, null);
+            return new StepResult(true, false, false, output, null);
+        }
+
+        static StepResult stopSuccess(Object output) {
+            return new StepResult(true, false, true, output, null);
+        }
+
+        static StepResult pause(Object output) {
+            return new StepResult(true, true, false, output, null);
         }
 
         static StepResult fail(String errorMessage) {
-            return new StepResult(false, null, errorMessage);
+            return new StepResult(false, false, false, null, errorMessage);
         }
     }
 }

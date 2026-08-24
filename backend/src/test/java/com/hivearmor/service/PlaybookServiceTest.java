@@ -455,6 +455,106 @@ class PlaybookServiceTest {
         verify(hybridResponseMesh).vendorIsolateDryRun(nullable(String.class), eq("win-host"));
     }
 
+    @Test
+    void executeAsync_conditionStopSuccess_skipsLaterActions() throws Exception {
+        UtmPlaybook pb = new UtmPlaybook();
+        pb.setId(51L);
+        pb.setName("Cond Gate");
+        pb.setDefinitionJson("{\"triggerType\":\"manual\"}");
+        pb.setStepsJson("["
+            + "{\"stepIndex\":0,\"stepType\":\"condition\",\"label\":\"Sev\","
+            + "\"config\":{\"field\":\"severity\",\"op\":\"eq\",\"value\":\"critical\",\"onFalse\":\"stop_success\"}},"
+            + "{\"stepIndex\":1,\"stepType\":\"action\",\"label\":\"Isolate\","
+            + "\"config\":{\"actionId\":\"isolate_host\",\"agentId\":\"20\"}}"
+            + "]");
+        when(playbookRepository.findById(51L)).thenReturn(Optional.of(pb));
+        when(executionRepository.save(any())).thenAnswer(inv -> {
+            lastExec = inv.getArgument(0);
+            if (lastExec.getId() == null) {
+                lastExec.setId(510L);
+            }
+            return lastExec;
+        });
+
+        PlaybookExecuteRequestDTO req = new PlaybookExecuteRequestDTO();
+        req.setInputs(Map.of("severity", "low"));
+        String uuid = service.execute(51L, req);
+        when(executionRepository.findByExecutionUuid(uuid)).thenAnswer(inv -> Optional.of(lastExec));
+
+        service.executeAsync(uuid, 51L);
+        TimeUnit.MILLISECONDS.sleep(30);
+
+        assertThat(lastExec.getStatus()).isEqualTo("success");
+        assertThat(lastExec.getStepsLog()).contains("\"passed\":false");
+        verify(edrService, never()).isolateAgent(any(), anyString());
+        verify(hybridResponseMesh, never()).planIsolate(anyBoolean());
+    }
+
+    @Test
+    void executeAsync_approvalPauses_thenApproveResumes() throws Exception {
+        UtmPlaybook pb = new UtmPlaybook();
+        pb.setId(52L);
+        pb.setName("Approval Gate");
+        pb.setDefinitionJson("{\"triggerType\":\"manual\"}");
+        pb.setStepsJson("["
+            + "{\"stepIndex\":0,\"stepType\":\"approval\",\"label\":\"SOC Approve\",\"config\":{}},"
+            + "{\"stepIndex\":1,\"stepType\":\"delay\",\"label\":\"Wait\",\"config\":{\"delaySeconds\":0}}"
+            + "]");
+        when(playbookRepository.findById(52L)).thenReturn(Optional.of(pb));
+        when(executionRepository.save(any())).thenAnswer(inv -> {
+            lastExec = inv.getArgument(0);
+            if (lastExec.getId() == null) {
+                lastExec.setId(520L);
+            }
+            return lastExec;
+        });
+
+        String uuid = service.execute(52L, new PlaybookExecuteRequestDTO());
+        when(executionRepository.findByExecutionUuid(uuid)).thenAnswer(inv -> Optional.of(lastExec));
+
+        service.executeAsync(uuid, 52L);
+        TimeUnit.MILLISECONDS.sleep(30);
+
+        assertThat(lastExec.getStatus()).isEqualTo("awaiting_approval");
+        assertThat(lastExec.getStepsLog()).contains("pendingApprovalStepIndex");
+
+        Map<String, Object> approved = service.approveExecution(uuid);
+        assertThat(approved.get("approved")).isEqualTo(true);
+        assertThat(lastExec.getStatus()).isEqualTo("success");
+    }
+
+    @Test
+    void rejectExecution_failsPausedPlaybook() throws Exception {
+        UtmPlaybook pb = new UtmPlaybook();
+        pb.setId(53L);
+        pb.setName("Reject Gate");
+        pb.setDefinitionJson("{\"triggerType\":\"manual\"}");
+        pb.setStepsJson("[{\"stepIndex\":0,\"stepType\":\"approval\",\"label\":\"Approve\",\"config\":{}}]");
+        when(playbookRepository.findById(53L)).thenReturn(Optional.of(pb));
+        when(executionRepository.save(any())).thenAnswer(inv -> {
+            lastExec = inv.getArgument(0);
+            if (lastExec.getId() == null) {
+                lastExec.setId(530L);
+            }
+            return lastExec;
+        });
+
+        String uuid = service.execute(53L);
+        when(executionRepository.findByExecutionUuid(uuid)).thenAnswer(inv -> Optional.of(lastExec));
+
+        service.executeAsync(uuid, 53L);
+        TimeUnit.MILLISECONDS.sleep(30);
+        assertThat(lastExec.getStatus()).isEqualTo("awaiting_approval");
+
+        Map<String, Object> rejected = service.rejectExecution(uuid, "Not authorized");
+        assertThat(rejected.get("approved")).isEqualTo(false);
+        assertThat(lastExec.getStatus()).isEqualTo("failure");
+        assertThat(lastExec.getErrorMessage()).contains("Not authorized");
+    }
+
+    /** Shared mutable execution row for pause/resume tests. */
+    private UtmPlaybookExecution lastExec;
+
     private static UtmPlaybookExecution runningExec(Long id, Long playbookId, String uuid,
                                                     String name, int totalSteps) {
         UtmPlaybookExecution exec = new UtmPlaybookExecution();
