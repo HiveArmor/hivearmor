@@ -1,0 +1,22 @@
+id: 5232
+name: CEL-WIN-DISABLE-DEFENDER
+dataTypes:
+  - process
+  - powershell
+  - wineventlog
+  - windows
+  - windows-etw
+category: Defense Evasion
+technique: "T1562.001 - Impair Defenses: Disable or Modify Tools"
+adversary: origin
+description: Attempts to disable Microsoft Defender realtime protection.
+references:
+  - https://attack.mitre.org/techniques/T1562/001/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(DisableRealtimeMonitoring|Set-MpPreference[^\\n]*Disable|mpcmdrun(.exe)?[^\\n]*-RemoveDefinitions).*")'

@@ -1,0 +1,21 @@
+id: 5227
+name: CEL-WIN-PSEXEC
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Lateral Movement
+technique: "T1569.002 - System Services: Service Execution"
+adversary: origin
+description: PsExec-style remote service execution indicators.
+references:
+  - https://attack.mitre.org/techniques/T1569/002/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: 'raw.matches("(?i).*(psexec(.exe)?|PSEXESVC).*")'

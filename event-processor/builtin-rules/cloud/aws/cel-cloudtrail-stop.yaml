@@ -1,0 +1,21 @@
+id: 5211
+name: CEL-AWS-CLOUDTRAIL-STOP
+dataTypes:
+  - aws
+  - cloudtrail
+category: Defense Evasion
+technique: "T1562.008 - Impair Defenses: Disable or Modify Cloud Logs"
+adversary: origin
+description: CloudTrail logging stopped or trail deleted (StopLogging / DeleteTrail).
+references:
+  - https://attack.mitre.org/techniques/T1562/008/
+deduplicateBy:
+  - origin.user
+  - origin.ip
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+where: >
+  (has(log.eventName) && (string(log.eventName) == "StopLogging" || string(log.eventName) == "DeleteTrail"))
+  || raw.matches("(?i).*(eventName[\"'=: ]+(StopLogging|DeleteTrail)|(StopLogging|DeleteTrail)).*")

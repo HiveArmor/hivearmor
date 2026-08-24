@@ -100,6 +100,7 @@ func postResultToBackend(cfg *config.Config, alert *schema.AlertFields, resp sch
 		"reasoning":      strings.Split(alert.GPTReasoning, config.LOGS_SEPARATOR),
 		"nextSteps":      buildNextStepsPayload(alert.GPTNextSteps),
 		"modelVersion":   cfg.Model,
+		"confidence":     resp.Confidence,
 	}
 
 	payloadBytes, err := json.Marshal(payload)

@@ -1,0 +1,21 @@
+id: 5230
+name: CEL-WIN-RUNDLL32-JS
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Defense Evasion
+technique: "T1218.011 - System Binary Proxy Execution: Rundll32"
+adversary: origin
+description: rundll32 used with javascript or mshtml proxy execution.
+references:
+  - https://attack.mitre.org/techniques/T1218/011/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*rundll32(.exe)?[^\\n]*(javascript:|mshtml).*")'

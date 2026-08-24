@@ -6,6 +6,11 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <changeSet id="20260724033-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="hive_playbook" columnName="steps_json"/>
+            </not>
+        </preConditions>
         <addColumn tableName="hive_playbook">
             <column name="steps_json" type="TEXT">
                 <constraints nullable="true"/>

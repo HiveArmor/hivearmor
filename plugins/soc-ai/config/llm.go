@@ -51,6 +51,7 @@ Respond ONLY with valid JSON matching this exact schema:
 {
   "activity_id": "<alert_id_from_input>",
   "classification": "possible incident|possible false positive|standard alert",
+  "confidence": 0.0,
   "reasoning": ["<reason_1>", "<reason_2>", "<reason_3>"],
   "nextSteps": [
     {"step": 1, "action": "<action_title>", "details": "<detailed_instructions>"},
@@ -58,6 +59,8 @@ Respond ONLY with valid JSON matching this exact schema:
     {"step": 3, "action": "<action_title>", "details": "<detailed_instructions>"}
   ]
 }
+
+The confidence field is a float from 0.0 to 1.0 reflecting how certain you are in the classification.
 
 IMPORTANT: Your entire response must be valid JSON. Do not include any text outside the JSON object.`
 

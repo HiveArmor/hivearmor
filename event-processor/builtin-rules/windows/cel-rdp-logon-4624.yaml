@@ -1,0 +1,24 @@
+id: 5216
+name: CEL-WIN-RDP-LOGON
+dataTypes:
+  - wineventlog
+  - windows
+  - windows-etw
+category: Lateral Movement
+technique: "T1021.001 - Remote Services: Remote Desktop Protocol"
+adversary: origin
+description: Successful interactive RDP logon (Event ID 4624 Logon Type 10).
+references:
+  - https://attack.mitre.org/techniques/T1021/001/
+deduplicateBy:
+  - origin.host
+  - origin.user
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+where: >
+  ((has(log.eventCode) && (log.eventCode == 4624 || string(log.eventCode) == "4624"))
+  || (has(log.eventId) && (string(log.eventId) == "4624"))
+  || raw.matches("(?i)(event.?id|eventcode)[^0-9]{0,12}4624"))
+  && raw.matches("(?i).*(LogonType[^0-9]{0,12}10|logon.?type[^0-9]{0,12}10).*")

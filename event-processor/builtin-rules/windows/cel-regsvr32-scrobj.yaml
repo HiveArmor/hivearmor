@@ -1,0 +1,21 @@
+id: 5225
+name: CEL-WIN-REGSVR32-SCROBJ
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Defense Evasion
+technique: "T1218.010 - System Binary Proxy Execution: Regsvr32"
+adversary: origin
+description: regsvr32 loading scrobj.dll (Squiblydoo) or remote scriptlet.
+references:
+  - https://attack.mitre.org/techniques/T1218/010/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*regsvr32(.exe)?[^\\n]*(scrobj|/i:http).*")'

@@ -1,0 +1,20 @@
+id: 5239
+name: CEL-NET-DNS-TUNNEL
+dataTypes:
+  - dns
+  - netconn
+  - netflow
+category: Exfiltration
+technique: "T1048.003 - Exfiltration Over Alternative Protocol: DNS"
+adversary: origin
+description: Suspiciously long DNS query labels consistent with DNS tunneling.
+references:
+  - https://attack.mitre.org/techniques/T1048/003/
+deduplicateBy:
+  - origin.ip
+  - origin.host
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+where: 'raw.matches("(?i).*[A-Za-z0-9+/=_-]{40,}\\.(com|net|org|info|xyz|top|cc).*")'

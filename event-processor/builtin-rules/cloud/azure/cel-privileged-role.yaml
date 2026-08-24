@@ -1,0 +1,21 @@
+id: 5248
+name: CEL-AZURE-PRIV-ROLE
+dataTypes:
+  - azure
+  - azuread
+category: Privilege Escalation
+technique: "T1078.004 - Valid Accounts: Cloud Accounts"
+adversary: origin
+description: Assignment of highly privileged Azure roles (Owner, Contributor, User Access Administrator).
+references:
+  - https://attack.mitre.org/techniques/T1078/004/
+deduplicateBy:
+  - origin.user
+  - origin.host
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: >
+  raw.matches("(?i).*(roleAssignments/write|Add member to role|AddEligibleMember).*")
+  && raw.matches("(?i).*(Owner|Contributor|User Access Administrator|Global Administrator|Privileged Role Administrator|8e3af657-a8ff-443c-a75c-2fe8c4bcb635|b24988ac-6180-42a0-ab88-20f7382dd24c).*")

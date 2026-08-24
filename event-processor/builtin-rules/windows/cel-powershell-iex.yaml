@@ -1,0 +1,22 @@
+id: 5233
+name: CEL-WIN-POWERSHELL-IEX
+dataTypes:
+  - process
+  - powershell
+  - wineventlog
+  - windows
+  - windows-etw
+category: Execution
+technique: "T1059.001 - Command and Scripting Interpreter: PowerShell"
+adversary: origin
+description: PowerShell IEX/Invoke-Expression downloading remote content.
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: 'raw.matches("(?i).*(IEX|Invoke-Expression).*(DownloadString|DownloadFile|FromBase64String).*")'

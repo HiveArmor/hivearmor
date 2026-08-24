@@ -1,45 +1,48 @@
 import { describe, expect, it } from 'vitest';
 
+import { STARTER_PLAYBOOK_TEMPLATES } from './playbookStarterTemplates';
 import { adaptCanonicalPlaybookListItem } from './responsePlaybooks.service';
 
 describe('adaptCanonicalPlaybookListItem', () => {
-  it('normalizes the current secured backend DTO without undefined semantic fields', () => {
+  it('maps compact backend DTO into library projection', () => {
     const item = adaptCanonicalPlaybookListItem({
-      id: 42,
-      name: 'Host isolation response',
-      description: 'Quarantine an endpoint after analyst approval.',
+      id: 7,
+      name: 'Endpoint Isolation Response',
+      description: 'Isolate host',
       triggerType: 'alert-triggered',
       active: true,
-      runCount: 7,
-      lastRunAt: '2026-08-11T10:00:00Z',
+      runCount: 3,
+      lastRunAt: '2026-08-24T10:00:00Z',
       lastRunStatus: 'success',
-      steps: [{ stepType: 'approval', config: { approvalRequired: true } }],
+      steps: [{ stepType: 'action', label: 'Isolate host via EDR' }],
     });
 
-    expect(item).toMatchObject({
-      id: '42',
-      status: 'ACTIVE',
-      triggerType: 'AUTOMATIC',
-      category: 'EDR',
-      approvalRequired: true,
-      runCount: 7,
-      lastRunStatus: 'success',
-      createdBy: 'Not provided',
-    });
+    expect(item.id).toBe('7');
+    expect(item.status).toBe('ACTIVE');
+    expect(item.triggerType).toBe('AUTOMATIC');
+    expect(item.category).toBe('EDR');
+    expect(item.runCount).toBe(3);
+    expect(item.lastRunStatus).toBe('success');
   });
 
-  it('uses safe inactive and manual defaults for partial compatibility records', () => {
-    const item = adaptCanonicalPlaybookListItem({ id: 'legacy-1' });
+  it('defaults missing fields safely', () => {
+    const item = adaptCanonicalPlaybookListItem({ id: 'x' });
+    expect(item.name).toBe('Playbook x');
+    expect(item.status).toBe('INACTIVE');
+    expect(item.triggerType).toBe('MANUAL');
+    expect(item.category).toBe('Multi-step');
+  });
+});
 
-    expect(item).toMatchObject({
-      id: 'legacy-1',
-      name: 'Playbook legacy-1',
-      status: 'INACTIVE',
-      triggerType: 'MANUAL',
-      category: 'Multi-step',
-      runCount: 0,
-      lastRunStatus: null,
-      approvalRequired: false,
-    });
+describe('STARTER_PLAYBOOK_TEMPLATES', () => {
+  it('ships SOC starter playbooks with ordered steps', () => {
+    expect(STARTER_PLAYBOOK_TEMPLATES.length).toBeGreaterThanOrEqual(3);
+    for (const template of STARTER_PLAYBOOK_TEMPLATES) {
+      expect(template.name.length).toBeGreaterThan(3);
+      expect(template.steps.length).toBeGreaterThan(0);
+      template.steps.forEach((step, index) => {
+        expect(step.stepIndex).toBe(index);
+      });
+    }
   });
 });

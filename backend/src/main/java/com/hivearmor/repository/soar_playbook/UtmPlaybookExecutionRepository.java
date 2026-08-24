@@ -14,4 +14,6 @@ public interface UtmPlaybookExecutionRepository extends JpaRepository<UtmPlayboo
     Page<UtmPlaybookExecution> findAllByOrderByStartedAtDesc(Pageable pageable);
 
     List<UtmPlaybookExecution> findByPlaybookIdOrderByStartedAtDesc(Long playbookId);
+
+    java.util.Optional<UtmPlaybookExecution> findByExecutionUuid(String executionUuid);
 }

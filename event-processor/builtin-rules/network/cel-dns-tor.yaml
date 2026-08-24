@@ -1,0 +1,20 @@
+id: 5240
+name: CEL-NET-DNS-TOR
+dataTypes:
+  - dns
+  - netconn
+  - netflow
+category: Command and Control
+technique: "T1090.003 - Proxy: Multi-hop Proxy"
+adversary: origin
+description: DNS lookups related to Tor onion or known Tor resolver patterns.
+references:
+  - https://attack.mitre.org/techniques/T1090/003/
+deduplicateBy:
+  - origin.ip
+  - origin.host
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+where: 'raw.matches("(?i).*(\\.onion|torproject\\.org|tor-exit|check\\.torproject).*")'

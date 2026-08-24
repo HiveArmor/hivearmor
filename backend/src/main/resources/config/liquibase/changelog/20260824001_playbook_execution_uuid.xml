@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- P0 SOAR: map API execution UUID to hive_playbook_execution for history/cancel -->
+    <changeSet id="20260824001-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="hive_playbook_execution" columnName="execution_uuid"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="hive_playbook_execution">
+            <column name="execution_uuid" type="varchar(36)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="hive_playbook_execution" indexName="idx_hive_playbook_execution_uuid">
+            <column name="execution_uuid"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

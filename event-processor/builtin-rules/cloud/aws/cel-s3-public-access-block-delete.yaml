@@ -1,0 +1,21 @@
+id: 5243
+name: CEL-AWS-S3-PUBLIC-BLOCK
+dataTypes:
+  - aws
+  - cloudtrail
+category: Defense Evasion
+technique: "T1562.007 - Impair Defenses: Disable or Modify Cloud Firewall"
+adversary: origin
+description: S3 public access block removed or weakened (DeletePublicAccessBlock / permissive PutPublicAccessBlock).
+references:
+  - https://attack.mitre.org/techniques/T1562/007/
+deduplicateBy:
+  - origin.user
+  - origin.ip
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: >
+  (has(log.eventName) && (string(log.eventName) == "DeletePublicAccessBlock" || string(log.eventName) == "PutPublicAccessBlock"))
+  || raw.matches("(?i).*(DeletePublicAccessBlock|PutPublicAccessBlock).*")

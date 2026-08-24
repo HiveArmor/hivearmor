@@ -1,0 +1,19 @@
+id: 5209
+name: CEL-LIN-SSH-ROOT
+dataTypes:
+  - linux
+  - syslog
+category: Privilege Escalation
+technique: "T1078.003 - Valid Accounts: Local Accounts"
+adversary: origin
+description: Successful SSH login as root.
+references:
+  - https://attack.mitre.org/techniques/T1078/003/
+deduplicateBy:
+  - origin.host
+  - origin.ip
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*Accepted (password|publickey|keyboard-interactive) for root.*")'

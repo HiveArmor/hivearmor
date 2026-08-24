@@ -41,6 +41,7 @@ import {
   fetchPlaybookList,
   fetchPlaybookMetrics,
   setPlaybookActive,
+  seedStarterPlaybooks,
   fixtureMode,
 } from './responsePlaybooks.service';
 
@@ -398,6 +399,14 @@ export function ResponsePlaybooksPage(): JSX.Element {
     },
   });
 
+  const seedMutation = useMutation({
+    mutationFn: seedStarterPlaybooks,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['resp-playbooks'] });
+      void queryClient.invalidateQueries({ queryKey: ['resp-playbook-metrics'] });
+    },
+  });
+
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
   const handleRowClick = useCallback((e: RowClickedEvent<PlaybookListItem>) => {
@@ -743,13 +752,23 @@ export function ResponsePlaybooksPage(): JSX.Element {
             description={
               search || statusFilter !== 'ALL' || triggerFilter !== 'ALL'
                 ? 'Try clearing one or more filters to see more results.'
-                : 'Create a playbook to automate response actions when alerts fire.'
+                : 'Start from a blank canvas or seed three SOC starter playbooks (isolation, malware containment, manual triage).'
             }
             action={
               canManage && !search && statusFilter === 'ALL' ? (
-                <HaButton variant="primary" icon={<Plus size={14} />} onClick={() => navigate('/response/playbooks/new')}>
-                  New playbook
-                </HaButton>
+                <div className="resp-empty-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <HaButton variant="primary" icon={<Plus size={14} />} onClick={() => navigate('/response/playbooks/new')}>
+                    New playbook
+                  </HaButton>
+                  <HaButton
+                    variant="secondary"
+                    icon={<Layers size={14} />}
+                    onClick={() => seedMutation.mutate()}
+                    isDisabled={seedMutation.isPending}
+                  >
+                    {seedMutation.isPending ? 'Seeding…' : 'Seed starter playbooks'}
+                  </HaButton>
+                </div>
               ) : undefined
             }
           />

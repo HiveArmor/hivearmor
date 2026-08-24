@@ -1,0 +1,21 @@
+id: 5244
+name: CEL-AWS-ASSUME-ROLE
+dataTypes:
+  - aws
+  - cloudtrail
+category: Privilege Escalation
+technique: "T1078.004 - Valid Accounts: Cloud Accounts"
+adversary: origin
+description: STS AssumeRole or AssumeRoleWithSAML/WebIdentity used (monitor for unusual role assumption).
+references:
+  - https://attack.mitre.org/techniques/T1078/004/
+deduplicateBy:
+  - origin.user
+  - origin.ip
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: >
+  (has(log.eventName) && (string(log.eventName) == "AssumeRole" || string(log.eventName) == "AssumeRoleWithSAML" || string(log.eventName) == "AssumeRoleWithWebIdentity"))
+  || raw.matches("(?i).*(AssumeRoleWithSAML|AssumeRoleWithWebIdentity|AssumeRole).*")

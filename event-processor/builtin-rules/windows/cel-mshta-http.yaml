@@ -1,0 +1,21 @@
+id: 5226
+name: CEL-WIN-MSHTA-HTTP
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Defense Evasion
+technique: "T1218.005 - System Binary Proxy Execution: Mshta"
+adversary: origin
+description: mshta.exe executing a remote HTTP/HTTPS HTA or script.
+references:
+  - https://attack.mitre.org/techniques/T1218/005/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*mshta(.exe)?[^\\n]*https?://.*")'

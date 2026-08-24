@@ -1,0 +1,20 @@
+id: 5207
+name: CEL-LIN-CURL-BASH
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Execution
+technique: "T1059.004 - Command and Scripting Interpreter: Unix Shell"
+adversary: origin
+description: curl or wget piped into bash/sh (remote code execution pattern).
+references:
+  - https://attack.mitre.org/techniques/T1059/004/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: 'raw.matches("(?i).*(curl|wget)[^\\n]*\\|[^\\n]*(ba)?sh.*")'

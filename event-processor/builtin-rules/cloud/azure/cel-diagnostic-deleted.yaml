@@ -1,0 +1,19 @@
+id: 5249
+name: CEL-AZURE-DIAG-DELETED
+dataTypes:
+  - azure
+  - azuread
+category: Defense Evasion
+technique: "T1562.008 - Impair Defenses: Disable or Modify Cloud Logs"
+adversary: origin
+description: Azure diagnostic settings deleted.
+references:
+  - https://attack.mitre.org/techniques/T1562/008/
+deduplicateBy:
+  - origin.user
+  - origin.host
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(Microsoft.Insights/diagnosticSettings/delete|diagnosticSettings/delete).*")'

@@ -506,3 +506,18 @@ No production-readiness claim is made by this baseline entry.
 - Focused backend hunt test was run with supported Temurin Java 17: `HuntFieldRegistrySourceIncludesTest` — **1/1 passed**, Maven **BUILD SUCCESS** after compiling 1,781 main and 223 test sources. A first preflight under the workstation's default Java 21 was correctly rejected by Maven Enforcer; it was rerun under the repository-supported Java 17 and only the successful supported-runtime result is counted.
 - `bash -n deploy/staging/run-validate-hunt-ui.sh` and `node --check deploy/staging/validate-hunt-ui.cjs` — **passed**. PowerShell syntax validation was **skipped** because `pwsh` is not installed on this workstation.
 - This closeout establishes a validated local integration point. It does not upgrade any route from fixture/browser evidence to real-backend `LIVE VERIFIED` or `PRODUCTION READY`, and it does not claim that the remote `main` was updated.
+
+## 2026-08-24 — STAGING CANDIDATE: EDR ProcessCommand kill + P0 sync
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY). Host isolation was not exercised.
+- Staging VM `ubuntu@72.44.52.187`; Windows agent `Administrator@54.160.142.254` (`EC2AMAZ-8F0Q7DL`); agent-manager `connected_agents_count=1`; enrolled agent id **19** ONLINE.
+- Live proof: started disposable `notepad.exe` on Windows (PID 4544); JWT `POST /api/edr/actions/kill-process` with `agentId=19`, `pid=4544` returned **HTTP 200** (`Kill command dispatched…`); Windows check reported **PID_4544_GONE** within ~3s.
+- Frontend gate: flipped `REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED` to `true` after the above round-trip (SensorGrid isolate/kill enablement for ROLE_ADMIN|ROLE_SOC_MANAGER). Restart/Push Config/Collect Logs remain unavailable (no ProcessCommand handlers).
+- P0 sources rsynced to `/home/ubuntu/HiveArmor-v1` (SOAR PlaybookService/webhook/execute DTO + liquibase includes, SOC AI PreAuthorize/triage, frontend response playbooks + LIVE_VERIFIED, event-processor `builtin-rules` CEL pack). Staging tree remains non-git.
+- Follow-up in same session: `docker compose build backend frontend-v3 eventprocessor` then recreate those services; re-check `GET /api/ha-playbooks/metrics` (was HTTP 500 pre-deploy).
+
+- Staging deploy note: `backend/Dockerfile` packages prebuilt `backend/target/hivearmor.war` (rsync of `.java` alone does not update the image). Uploaded local Maven WAR (2026-08-24) and rebuilt backend image with `CACHE_BUST`.
+- After recreate: `GET /api/ha-playbooks/metrics` → **HTTP 200** (`total/active/executionsLast24h/successRate24h`); Liquibase `20260824001-1` applied (`execution_uuid` column present).
+- Edge was force-recreated after backend IP change (transient nginx 502 otherwise).
+- Frontend-v3 + eventprocessor images rebuilt earlier in session (CEL pack + `REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED=true`).
+

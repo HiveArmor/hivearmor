@@ -1,0 +1,22 @@
+id: 5245
+name: CEL-AWS-ATTACH-ADMIN
+dataTypes:
+  - aws
+  - cloudtrail
+category: Privilege Escalation
+technique: "T1098 - Account Manipulation"
+adversary: origin
+description: IAM policy attach/put granting AdministratorAccess or PowerUserAccess.
+references:
+  - https://attack.mitre.org/techniques/T1098/
+deduplicateBy:
+  - origin.user
+  - origin.ip
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: >
+  ((has(log.eventName) && (string(log.eventName) == "AttachUserPolicy" || string(log.eventName) == "AttachRolePolicy" || string(log.eventName) == "AttachGroupPolicy" || string(log.eventName) == "PutUserPolicy" || string(log.eventName) == "PutRolePolicy"))
+  || raw.matches("(?i).*(Attach(User|Role|Group)Policy|Put(User|Role)Policy).*"))
+  && raw.matches("(?i).*(AdministratorAccess|PowerUserAccess).*")
