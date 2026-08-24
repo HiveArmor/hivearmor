@@ -1,0 +1,16 @@
+{
+  "rule": "CEL-AZURE-MFA-DISABLED",
+  "expect": "match",
+  "description": "Azure AD MFA / strong authentication disabled",
+  "event": {
+    "id": "fx-cel-azure-mfa-1",
+    "dataType": "azuread",
+    "dataSource": "fixture-azure",
+    "tenantId": "1",
+    "raw": "Audit: Disable Strong Authentication for user jane@contoso.example",
+    "origin": {
+      "user": "admin@contoso.example",
+      "host": "azure-ad"
+    }
+  }
+}
