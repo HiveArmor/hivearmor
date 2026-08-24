@@ -1,0 +1,19 @@
+id: 5215
+name: CEL-AZURE-CA-DISABLED
+dataTypes:
+  - azure
+  - azuread
+category: Defense Evasion
+technique: "T1556 - Modify Authentication Process"
+adversary: origin
+description: Azure AD Conditional Access policy disabled or set to disabled state.
+references:
+  - https://attack.mitre.org/techniques/T1556/
+deduplicateBy:
+  - origin.user
+  - origin.host
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(conditional access|ConditionalAccess).*(disabled|Disable).*")'

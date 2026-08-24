@@ -1,0 +1,21 @@
+id: 5224
+name: CEL-WIN-WMIC-PROCESS
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Execution
+technique: "T1047 - Windows Management Instrumentation"
+adversary: origin
+description: wmic process call create used for remote or local process execution.
+references:
+  - https://attack.mitre.org/techniques/T1047/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+where: 'raw.matches("(?i).*wmic(.exe)?[^\\n]*process[^\\n]*call[^\\n]*create.*")'

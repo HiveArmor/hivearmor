@@ -1,0 +1,21 @@
+id: 5203
+name: CEL-WIN-SCHTASKS-CREATE
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Persistence
+technique: "T1053.005 - Scheduled Task/Job: Scheduled Task"
+adversary: origin
+description: schtasks.exe used to create a scheduled task (/create).
+references:
+  - https://attack.mitre.org/techniques/T1053/005/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*schtasks(.exe)?[^\\n]*/create.*")'

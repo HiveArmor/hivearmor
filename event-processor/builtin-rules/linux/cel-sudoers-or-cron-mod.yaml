@@ -1,0 +1,19 @@
+id: 5208
+name: CEL-LIN-SUDOERS-CRON
+dataTypes:
+  - linux
+  - syslog
+category: Persistence
+technique: "T1543 - Create or Modify System Process"
+adversary: origin
+description: Modification of sudoers or cron configuration paths.
+references:
+  - https://attack.mitre.org/techniques/T1543/
+deduplicateBy:
+  - origin.host
+  - origin.user
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(/etc/sudoers|/etc/cron\\.|/var/spool/cron|/etc/crontab).*")'

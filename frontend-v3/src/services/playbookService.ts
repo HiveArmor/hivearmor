@@ -87,11 +87,19 @@ export async function fetchPlaybookAudit(playbookId: number): Promise<PlaybookAu
 
 /**
  * Trigger an immediate execution of a playbook.
- * POST /api/ha-playbooks/:id/execute  (empty body)
- * Returns the new execution id so the caller can open the live viewer.
+ * POST /api/ha-playbooks/:id/execute
+ * Optional runtime context (agentId / alertId / inputs) is merged into step configs.
  */
-export function executePlaybook(id: number): Promise<{ executionId: string }> {
-  return apiClient.post<{ executionId: string }>(`/ha-playbooks/${id}/execute`);
+export function executePlaybook(
+  id: number,
+  context?: {
+    alertId?: string;
+    agentId?: string;
+    hostname?: string;
+    inputs?: Record<string, string | number | boolean>;
+  },
+): Promise<{ executionId: string }> {
+  return apiClient.post<{ executionId: string }>(`/ha-playbooks/${id}/execute`, context ?? {});
 }
 
 /**

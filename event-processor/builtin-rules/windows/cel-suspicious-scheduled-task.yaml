@@ -1,0 +1,23 @@
+id: 5202
+name: CEL-WIN-SCHED-TASK
+dataTypes:
+  - wineventlog
+  - windows
+  - windows-etw
+category: Persistence
+technique: "T1053.005 - Scheduled Task/Job: Scheduled Task"
+adversary: origin
+description: Windows scheduled task created (Event ID 4698).
+references:
+  - https://attack.mitre.org/techniques/T1053/005/
+deduplicateBy:
+  - origin.host
+  - origin.user
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+where: >
+  (has(log.eventCode) && (log.eventCode == 4698 || string(log.eventCode) == "4698"))
+  || (has(log.eventId) && (string(log.eventId) == "4698"))
+  || raw.matches("(?i)(event.?id|eventcode)[^0-9]{0,12}4698")

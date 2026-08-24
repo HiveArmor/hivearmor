@@ -1,0 +1,19 @@
+id: 5247
+name: CEL-AZURE-ROLE-ASSIGN
+dataTypes:
+  - azure
+  - azuread
+category: Privilege Escalation
+technique: "T1098 - Account Manipulation"
+adversary: origin
+description: Azure RBAC role assignment write operation.
+references:
+  - https://attack.mitre.org/techniques/T1098/
+deduplicateBy:
+  - origin.user
+  - origin.host
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: 'raw.matches("(?i).*(Microsoft.Authorization/roleAssignments/write|roleAssignments/write).*")'

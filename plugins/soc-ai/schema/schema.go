@@ -103,6 +103,7 @@ type GPTAlertResponse struct {
 	AlertName      string     `json:"alertName,omitempty"`
 	ActivityID     string     `json:"activityId,omitempty"`
 	Classification string     `json:"classification,omitempty"`
+	Confidence     float64    `json:"confidence,omitempty"`
 	Reasoning      []string   `json:"reasoning,omitempty"`
 	NextSteps      []NextStep `json:"nextSteps,omitempty"`
 }
@@ -132,6 +133,14 @@ func (r *GPTAlertResponse) Validate() error {
 			ClassificationStandardAlert)
 	}
 	r.Classification = normalized
+
+	// Optional confidence — clamp to [0,1] when provided
+	if r.Confidence < 0 {
+		r.Confidence = 0
+	}
+	if r.Confidence > 1 {
+		r.Confidence = 1
+	}
 
 	// Validate reasoning exists
 	if len(r.Reasoning) == 0 {

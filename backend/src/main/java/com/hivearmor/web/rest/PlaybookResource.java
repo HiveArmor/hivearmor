@@ -4,6 +4,7 @@ import com.hivearmor.service.PlaybookExecutionEvent;
 import com.hivearmor.service.PlaybookExecutionStreamService;
 import com.hivearmor.service.PlaybookService;
 import com.hivearmor.service.dto.PlaybookDTO;
+import com.hivearmor.service.dto.PlaybookExecuteRequestDTO;
 import com.hivearmor.service.dto.PlaybookExecutionDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,8 +41,8 @@ import java.util.Optional;
  * <p>Constructor injection is used exclusively — no field or setter injection,
  * no Lombok annotations.
  *
- * <p>Sprint 18 T01/T02/T04 implementation. The service returns in-memory data;
- * real repository persistence is wired in a later task.
+ * <p>Sprint 18 + P0 SOAR unstub: persists via {@link PlaybookService} to
+ * {@code hive_playbook} / {@code hive_playbook_execution}.
  */
 @RestController
 @RequestMapping("/api")
@@ -84,6 +85,23 @@ public class PlaybookResource {
     }
 
     /**
+     * GET /api/ha-playbooks/metrics
+     *
+     * <p>Workload strip summary for the Response playbooks library.
+     */
+    @GetMapping("/ha-playbooks/metrics")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
+    public ResponseEntity<Map<String, Object>> getPlaybookMetrics() {
+        final String ctx = CLASSNAME + ".getPlaybookMetrics";
+        try {
+            return ResponseEntity.ok(playbookService.metricsSummary());
+        } catch (Exception e) {
+            log.error("{}: {}", ctx, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
      * GET /api/ha-playbooks/{id}
      *
      * <p>Returns a single playbook including its {@code steps} array.
@@ -91,7 +109,8 @@ public class PlaybookResource {
      * @param id the playbook primary key
      * @return HTTP 200 with the {@link PlaybookDTO} (steps included), or HTTP 404
      */
-    @GetMapping("/ha-playbooks/{id}")
+    /** Numeric id only so literal paths like {@code metrics} never bind here. */
+    @GetMapping("/ha-playbooks/{id:\\d+}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
     public ResponseEntity<PlaybookDTO> getPlaybook(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".getPlaybook";
@@ -184,25 +203,58 @@ public class PlaybookResource {
     }
 
     /**
+     * POST /api/ha-playbooks/{id}/preview
+     *
+     * <p>Dry-run validation for the Response UI. Returns previewToken + step summaries.
+     */
+    @PostMapping("/ha-playbooks/{id}/preview")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Map<String, Object>> previewPlaybook(
+            @PathVariable Long id,
+            @RequestBody(required = false) PlaybookExecuteRequestDTO body) {
+        final String ctx = CLASSNAME + ".previewPlaybook";
+        try {
+            return ResponseEntity.ok(playbookService.preview(id, body));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("{}: {}", ctx, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
      * POST /api/ha-playbooks/{id}/execute
      *
      * <p>Triggers an execution of the specified playbook. Returns HTTP 202 Accepted
      * with a body containing the assigned {@code executionId}.
      *
+     * <p>Optional JSON body may include {@code agentId}, {@code alertId}, {@code hostname},
+     * and {@code inputs} merged into step configs at runtime.
+     *
      * <p>Execution outputs and step configurations MUST NOT be logged at any level.
      *
      * @param id the playbook primary key
-     * @return HTTP 202 with {@code { "executionId": "<uuid>" }}
+     * @return HTTP 202 with {@code { "executionId": "<uuid>" }} (plus Phase-7 compatible fields)
      */
     @PostMapping("/ha-playbooks/{id}/execute")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Map<String, String>> executePlaybook(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> executePlaybook(
+            @PathVariable Long id,
+            @RequestBody(required = false) PlaybookExecuteRequestDTO body) {
         final String ctx = CLASSNAME + ".executePlaybook";
         try {
-            String executionId = playbookService.execute(id);
+            String executionId = playbookService.execute(id, body);
             playbookService.executeAsync(executionId, id);
-            Map<String, String> body = Collections.singletonMap("executionId", executionId);
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body(body);
+            Map<String, Object> response = new java.util.LinkedHashMap<>();
+            response.put("executionId", executionId);
+            response.put("playbookId", String.valueOf(id));
+            response.put("status", "RUNNING");
+            response.put("approvalId", null);
+            response.put("streamUrl", "/api/ha-playbooks/" + executionId + "/stream");
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             log.error("{}: {}", ctx, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

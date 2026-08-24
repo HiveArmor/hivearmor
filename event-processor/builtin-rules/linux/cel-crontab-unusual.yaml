@@ -1,0 +1,20 @@
+id: 5237
+name: CEL-LIN-CRONTAB-UNUSUAL
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Persistence
+technique: "T1053.003 - Scheduled Task/Job: Cron"
+adversary: origin
+description: Unusual crontab modification or pipe-to-shell cron entries.
+references:
+  - https://attack.mitre.org/techniques/T1053/003/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(crontab -[er]|/etc/cron\\.|/var/spool/cron|/etc/crontab).*")'

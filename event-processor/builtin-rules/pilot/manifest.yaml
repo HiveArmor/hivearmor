@@ -1,5 +1,7 @@
 # HiveArmor pilot detection pack v1.0.0
 # Native CEL rules (name + where). Sigma files elsewhere are not loaded.
+# CEL pack rules (CEL-WIN-*, CEL-LIN-*, CEL-AWS-*, CEL-AZURE-*) live under
+# windows/, linux/, cloud/aws/, cloud/azure/ and are NOT required here.
 version: 1.0.0
 pack: hivearmor-pilot-detection
 requiredRules:

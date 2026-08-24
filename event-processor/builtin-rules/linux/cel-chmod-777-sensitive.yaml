@@ -1,0 +1,20 @@
+id: 5235
+name: CEL-LIN-CHMOD-777
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Defense Evasion
+technique: "T1222.002 - File and Directory Permissions Modification: Linux and Mac File and Directory Permissions Modification"
+adversary: origin
+description: chmod 777 applied to sensitive system paths.
+references:
+  - https://attack.mitre.org/techniques/T1222/002/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*chmod[^\\n]*777[^\\n]*(/etc|/root|/usr/bin|/usr/sbin|/var/log).*")'

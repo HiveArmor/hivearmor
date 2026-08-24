@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +26,16 @@ public class UtmSocAiResource {
     private final Logger log = LoggerFactory.getLogger(AccountResource.class);
     private static final String CLASSNAME = "UtmSocAiResource";
 
+    /** Analyst+ — matches /api/ha-soc-ai. */
+    private static final String AUTH =
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST')";
+
+    /**
+     * Plugin write-back path. InternalApiKeyFilter authenticates as an admin
+     * principal; JWT users without ROLE_ADMIN cannot forge triage results.
+     */
+    private static final String INTERNAL_OR_ADMIN = "hasAuthority('ROLE_ADMIN')";
+
     private final ApplicationEventService applicationEventService;
     private final SocAIService socAIService;
     private final UtmAiTriageService triageService;
@@ -33,6 +44,7 @@ public class UtmSocAiResource {
      * POST /api/soc-ai/analyze — submit alert for analysis and return cached/fresh result
      */
     @PostMapping("/analyze")
+    @PreAuthorize(AUTH)
     public ResponseEntity<Object> analyzeAlert(@RequestBody UtmAlert alert) {
         final String ctx = CLASSNAME + ".analyzeAlert";
         try {
@@ -64,6 +76,7 @@ public class UtmSocAiResource {
 
     /** GET /api/soc-ai/result/{alertId} — latest cached triage result */
     @GetMapping("/result/{alertId}")
+    @PreAuthorize(AUTH)
     public ResponseEntity<UtmAiTriage> getResult(@PathVariable String alertId) {
         return triageService.getLatest(alertId)
             .map(ResponseEntity::ok)
@@ -72,12 +85,14 @@ public class UtmSocAiResource {
 
     /** GET /api/soc-ai/history/{alertId} — full triage history for an alert */
     @GetMapping("/history/{alertId}")
+    @PreAuthorize(AUTH)
     public ResponseEntity<List<UtmAiTriage>> getHistory(@PathVariable String alertId) {
         return ResponseEntity.ok(triageService.getHistory(alertId));
     }
 
     /** POST /api/soc-ai/result/{alertId} — store a result sent back by the AI plugin */
     @PostMapping("/result/{alertId}")
+    @PreAuthorize(INTERNAL_OR_ADMIN)
     public ResponseEntity<UtmAiTriage> storeResult(
             @PathVariable String alertId,
             @RequestBody String rawJson) {

@@ -1,0 +1,21 @@
+id: 5242
+name: CEL-AWS-DISABLE-KEY
+dataTypes:
+  - aws
+  - cloudtrail
+category: Impact
+technique: "T1485 - Data Destruction"
+adversary: origin
+description: AWS KMS key disabled (DisableKey).
+references:
+  - https://attack.mitre.org/techniques/T1485/
+deduplicateBy:
+  - origin.user
+  - origin.ip
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 3
+where: >
+  (has(log.eventName) && string(log.eventName) == "DisableKey")
+  || raw.matches("(?i).*(eventName[\"':= ]+DisableKey|DisableKey).*")

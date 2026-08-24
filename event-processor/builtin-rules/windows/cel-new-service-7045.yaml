@@ -1,0 +1,23 @@
+id: 5206
+name: CEL-WIN-NEW-SERVICE
+dataTypes:
+  - wineventlog
+  - windows
+  - windows-etw
+category: Persistence
+technique: "T1543.003 - Create or Modify System Process: Windows Service"
+adversary: origin
+description: A new service was installed (Event ID 7045).
+references:
+  - https://attack.mitre.org/techniques/T1543/003/
+deduplicateBy:
+  - origin.host
+  - origin.process
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+where: >
+  (has(log.eventCode) && (log.eventCode == 7045 || string(log.eventCode) == "7045"))
+  || (has(log.eventId) && (string(log.eventId) == "7045"))
+  || raw.matches("(?i)(event.?id|eventcode)[^0-9]{0,12}7045")

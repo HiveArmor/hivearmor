@@ -76,16 +76,16 @@ describe('SensorGridPage remote actions (GAP-SEC-05)', () => {
     });
   });
 
-  it('keeps live-verify flag off by default', () => {
-    expect(REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED).toBe(false);
+  it('keeps live-verify flag on after staging ProcessCommand proof', () => {
+    expect(REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED).toBe(true);
   });
 
-  it('shows honest blocked banner and disables isolate/kill while unverified', () => {
+  it('enables isolate/kill for Admin when live-verified; restart stays unavailable', () => {
     render(<SensorGridPage />);
 
-    expect(screen.getByText(REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE)).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Isolate host (blocked)' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Kill process (blocked)' })).toBeDisabled();
+    expect(screen.queryByText(REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Isolate host' })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Kill process' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: 'Restart agent (unavailable)' })).toBeDisabled();
   });
 });

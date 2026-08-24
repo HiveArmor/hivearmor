@@ -1,0 +1,21 @@
+id: 5228
+name: CEL-WIN-VSSADMIN-DELETE
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Defense Evasion
+technique: "T1490 - Inhibit System Recovery"
+adversary: origin
+description: Volume shadow copies deleted via vssadmin or wmic.
+references:
+  - https://attack.mitre.org/techniques/T1490/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 3
+where: 'raw.matches("(?i).*(vssadmin(.exe)?[^\\n]*delete[^\\n]*shadows|wmic(.exe)?[^\\n]*shadowcopy[^\\n]*delete).*")'

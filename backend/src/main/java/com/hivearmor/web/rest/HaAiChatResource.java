@@ -23,8 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * REST controller exposing the AI Chat endpoints under {@code /api/ha-ai}.
  *
- * <p>Every method is guarded by {@link #AI_AUTH} — only users with the
- * {@code ANALYST} or {@code ADMIN} authority may call these endpoints.
+ * <p>Every method is guarded by {@link #AI_AUTH} — only users with
+ * {@code ROLE_ANALYST}, {@code ROLE_SOC_MANAGER}, or {@code ROLE_ADMIN} may call these endpoints.
  *
  * <p>The principal is always resolved from the Spring Security context via
  * {@link Principal#getName()} and is never taken from the request body.
@@ -46,10 +46,10 @@ public class HaAiChatResource {
 
     /**
      * Spring Security expression applied to every endpoint in this controller.
-     * Only {@code ANALYST} or {@code ADMIN} authority holders are permitted.
+     * ROLE_ADMIN | ROLE_SOC_MANAGER | ROLE_ANALYST (JWT authority strings).
      */
     private static final String AI_AUTH =
-        "hasAuthority('ANALYST') or hasAuthority('ADMIN')";
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST')";
 
     private final HaAiChatService service;
     private final ObjectMapper mapper;

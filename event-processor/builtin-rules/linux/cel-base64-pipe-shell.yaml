@@ -1,0 +1,20 @@
+id: 5238
+name: CEL-LIN-BASE64-SHELL
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Execution
+technique: "T1059.004 - Command and Scripting Interpreter: Unix Shell"
+adversary: origin
+description: base64 decode piped into a shell interpreter.
+references:
+  - https://attack.mitre.org/techniques/T1059/004/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: 'raw.matches("(?i).*base64[^\\n]*(-d|--decode)[^\\n]*\\|[^\\n]*(ba)?sh.*")'

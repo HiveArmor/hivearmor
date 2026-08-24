@@ -1,0 +1,22 @@
+id: 5213
+name: CEL-AWS-SG-OPEN-WORLD
+dataTypes:
+  - aws
+  - cloudtrail
+category: Persistence
+technique: "T1562.007 - Impair Defenses: Disable or Modify Cloud Firewall"
+adversary: origin
+description: Security group ingress opened to the world (0.0.0.0/0 or ::/0).
+references:
+  - https://attack.mitre.org/techniques/T1562/007/
+deduplicateBy:
+  - origin.user
+  - origin.ip
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: >
+  ((has(log.eventName) && string(log.eventName) == "AuthorizeSecurityGroupIngress")
+  || raw.matches("(?i).*AuthorizeSecurityGroupIngress.*"))
+  && raw.matches("(?i).*(0\\.0\\.0\\.0/0|::/0).*")

@@ -3,7 +3,6 @@ package com.hivearmor.domain.soar_playbook;
 import com.hivearmor.service.dto.UtmPlaybookDTO;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -24,8 +23,7 @@ public class UtmPlaybook implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GenericGenerator(name = "CustomIdentityGenerator", type = com.hivearmor.util.CustomIdentityGenerator.class)
-    @GeneratedValue(generator = "CustomIdentityGenerator")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "name", length = 200, nullable = false)

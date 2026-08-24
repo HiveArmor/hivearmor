@@ -1,0 +1,20 @@
+id: 5236
+name: CEL-LIN-SSH-AUTHKEYS
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Persistence
+technique: "T1098.004 - Account Manipulation: SSH Authorized Keys"
+adversary: origin
+description: Modification or write targeting SSH authorized_keys.
+references:
+  - https://attack.mitre.org/techniques/T1098/004/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(/ssh/authorized_keys|authorized_keys2).*")'

@@ -1,0 +1,21 @@
+id: 5246
+name: CEL-AWS-CREATE-LOGIN
+dataTypes:
+  - aws
+  - cloudtrail
+category: Persistence
+technique: "T1078.004 - Valid Accounts: Cloud Accounts"
+adversary: origin
+description: IAM console login profile created or password updated (CreateLoginProfile / UpdateLoginProfile).
+references:
+  - https://attack.mitre.org/techniques/T1078/004/
+deduplicateBy:
+  - origin.user
+  - origin.ip
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: >
+  (has(log.eventName) && (string(log.eventName) == "CreateLoginProfile" || string(log.eventName) == "UpdateLoginProfile"))
+  || raw.matches("(?i).*(CreateLoginProfile|UpdateLoginProfile).*")

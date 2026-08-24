@@ -1,0 +1,20 @@
+id: 5234
+name: CEL-LIN-DOCKER-PRIV
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Privilege Escalation
+technique: "T1611 - Escape to Host"
+adversary: origin
+description: Privileged Docker/container run (--privileged or docker.sock mount).
+references:
+  - https://attack.mitre.org/techniques/T1611/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: 'raw.matches("(?i).*(docker|podman|nerdctl)[^\\n]*(--privileged|docker.sock).*")'

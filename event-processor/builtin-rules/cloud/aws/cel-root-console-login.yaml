@@ -1,0 +1,22 @@
+id: 5210
+name: CEL-AWS-ROOT-CONSOLE
+dataTypes:
+  - aws
+  - cloudtrail
+category: Privilege Escalation
+technique: "T1078.004 - Valid Accounts: Cloud Accounts"
+adversary: origin
+description: AWS root account console login (ConsoleLogin).
+references:
+  - https://attack.mitre.org/techniques/T1078/004/
+deduplicateBy:
+  - origin.ip
+  - origin.user
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: >
+  (has(log.eventName) && string(log.eventName) == "ConsoleLogin")
+  || raw.matches("(?i).*(eventName[\"'=: ]+ConsoleLogin|ConsoleLogin).*Root.*")
+  || raw.matches("(?i).*\"type\"\\s*:\\s*\"Root\".*ConsoleLogin.*")

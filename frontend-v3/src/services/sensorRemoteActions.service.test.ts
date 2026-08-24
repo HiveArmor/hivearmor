@@ -29,9 +29,9 @@ import {
 import { apiClient } from '@/lib/apiClient';
 
 describe('sensorRemoteActions.capabilities', () => {
-  it('documents REST as gated and live verify as off by default', () => {
+  it('documents REST as gated and live verify as STAGING CANDIDATE after agent proof', () => {
     expect(REMOTE_SENSOR_ACTIONS_REST_GATED).toBe(true);
-    expect(REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED).toBe(false);
+    expect(REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED).toBe(true);
     expect(REMOTE_SENSOR_ACTION_ROLES).toEqual(['ROLE_ADMIN', 'ROLE_SOC_MANAGER']);
   });
 });

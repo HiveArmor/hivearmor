@@ -756,4 +756,8 @@
     <include file="config/liquibase/changelog/20260821001_cis_catalog_identity.xml" relativeToChangelogFile="false"/>
     <include file="config/liquibase/changelog/20260821002_hunt_promotion_approvals.xml" relativeToChangelogFile="false"/>
 
+    <!-- P0 SOAR — steps_json (orphan 20260724033) + execution UUID for SSE/history -->
+    <include file="/config/liquibase/changelog/20260724033_playbook_steps.xml" relativeToChangelogFile="false"/>
+    <include file="/config/liquibase/changelog/20260824001_playbook_execution_uuid.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>

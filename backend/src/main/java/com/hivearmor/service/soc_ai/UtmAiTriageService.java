@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
+import java.util.Locale;
 
 @Service
 @Transactional
@@ -66,12 +67,32 @@ public class UtmAiTriageService {
             if (nextSteps != null) {
                 triage.setNextSteps(objectMapper.writeValueAsString(nextSteps));
             }
+
+            // Agentic early-exit foundation: high-confidence false positive → AUTO_CLOSED_FP
+            // (does not mutate the OpenSearch alert document in this path — triage ledger only).
+            if (isHighConfidenceFalsePositive(triage.getClassification(), triage.getConfidenceScore())) {
+                triage.setStatus("AUTO_CLOSED_FP");
+                log.info("SOC-AI auto-closed FP triage for alert {} (confidence={})",
+                    alertId, triage.getConfidenceScore());
+            }
         } catch (Exception e) {
             log.warn("Could not parse SOC-AI response JSON for alert {}: {}", alertId, e.getMessage());
             triage.setClassification("UNKNOWN");
         }
 
         return triageRepository.save(triage);
+    }
+
+    /**
+     * FP early-exit threshold — mirrors AiSOC-style auto-close at ≥0.85 confidence.
+     */
+    static boolean isHighConfidenceFalsePositive(String classification, BigDecimal confidence) {
+        if (classification == null || confidence == null) {
+            return false;
+        }
+        String c = classification.trim().toLowerCase(Locale.ROOT);
+        boolean isFp = c.contains("false positive") || c.equals("fp") || c.equals("benign");
+        return isFp && confidence.compareTo(new BigDecimal("0.85")) >= 0;
     }
 
     public UtmAiTriage savePending(String alertId) {

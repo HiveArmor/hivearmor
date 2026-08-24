@@ -1,0 +1,21 @@
+id: 5231
+name: CEL-WIN-NET-USER-ADD
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Persistence
+technique: "T1136.001 - Create Account: Local Account"
+adversary: origin
+description: Local account created via net user /add.
+references:
+  - https://attack.mitre.org/techniques/T1136/001/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*net(.exe)?[^\\n]*user[^\\n]*/add.*")'

@@ -211,7 +211,20 @@ export async function fetchPlaybookMetrics(): Promise<PlaybookMetricsSummary> {
     const { foundationPlaybookMetrics } = await import('@/pages/response/response.fixtures');
     return foundationPlaybookMetrics;
   }
-  return apiClient.get<PlaybookMetricsSummary>('/ha-playbooks/metrics');
+  try {
+    return await apiClient.get<PlaybookMetricsSummary>('/ha-playbooks/metrics');
+  } catch {
+    // Metrics are non-critical — keep the library usable if the strip endpoint lags.
+    return {
+      total: 0,
+      active: 0,
+      executionsLast24h: 0,
+      successRate24h: 0,
+      pendingApprovals: 0,
+      activeQuarantines: 0,
+      snapshotAt: new Date().toISOString(),
+    };
+  }
 }
 
 // ─── RESP-002: Execution preview (dry-run) ────────────────────────────────
@@ -223,9 +236,13 @@ export async function previewPlaybookExecution(
     const { foundationPreviewPlaybookExecution } = await import('@/pages/response/response.fixtures');
     return foundationPreviewPlaybookExecution(request.playbookId);
   }
+  const body: Record<string, unknown> = {
+    alertId: request.triggerContext?.entityType === 'ALERT' ? request.triggerContext.entityId : undefined,
+    inputs: request.inputs ?? {},
+  };
   return apiClient.post<PlaybookPreviewResponse>(
     `/ha-playbooks/${request.playbookId}/preview`,
-    request
+    body
   );
 }
 
@@ -234,9 +251,19 @@ export async function previewPlaybookExecution(
 export async function executePlaybookConfirmed(
   request: PlaybookExecuteRequest
 ): Promise<PlaybookExecuteResponse> {
+  const body: Record<string, unknown> = {
+    previewToken: request.previewToken,
+    alertId:
+      request.triggerContext?.entityType === 'ALERT' ? request.triggerContext.entityId : undefined,
+    agentId:
+      typeof request.inputs?.agentId === 'string' ? request.inputs.agentId : undefined,
+    hostname:
+      typeof request.inputs?.hostname === 'string' ? request.inputs.hostname : undefined,
+    inputs: request.inputs ?? {},
+  };
   return apiClient.post<PlaybookExecuteResponse>(
     `/ha-playbooks/${request.playbookId}/execute`,
-    request
+    body
   );
 }
 
@@ -447,4 +474,33 @@ export async function setPlaybookActive(playbookId: string, active: boolean): Pr
   return apiClient.patch<void>(`/ha-playbooks/${id}/status`, undefined, {
     params: { active },
   });
+}
+
+/**
+ * Seeds the three starter playbooks into the live library (idempotent by name).
+ * Used from the empty-state CTA — skips templates whose names already exist.
+ */
+export async function seedStarterPlaybooks(): Promise<{ created: number; skipped: number }> {
+  const { STARTER_PLAYBOOK_TEMPLATES } = await import(
+    '@/pages/response/playbookStarterTemplates'
+  );
+  const existing = await fetchPlaybookList({ size: 100 });
+  const names = new Set(existing.items.map((p) => p.name.toLowerCase()));
+  let created = 0;
+  let skipped = 0;
+  for (const template of STARTER_PLAYBOOK_TEMPLATES) {
+    if (names.has(template.name.toLowerCase())) {
+      skipped += 1;
+      continue;
+    }
+    await apiClient.post('/ha-playbooks', {
+      name: template.name,
+      description: template.description,
+      triggerType: template.triggerType,
+      active: template.active,
+      steps: template.steps,
+    });
+    created += 1;
+  }
+  return { created, skipped };
 }

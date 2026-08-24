@@ -1,0 +1,19 @@
+id: 5214
+name: CEL-AZURE-MFA-DISABLED
+dataTypes:
+  - azure
+  - azuread
+category: Defense Evasion
+technique: "T1556.006 - Modify Authentication Process: Multi-Factor Authentication"
+adversary: origin
+description: Azure AD MFA / strong authentication disabled for a user.
+references:
+  - https://attack.mitre.org/techniques/T1556/006/
+deduplicateBy:
+  - origin.user
+  - origin.host
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(Disable Strong Authentication|Disable.?MFA|strongAuthentication.*disabled).*")'

@@ -19,9 +19,11 @@ export const REMOTE_SENSOR_ACTIONS_REST_GATED = true;
 
 /**
  * Live agent execution verified for ProcessCommand.
- * Keep false until isolate/kill is confirmed against a connected agent stream.
+ * STAGING CANDIDATE (2026-08-24): kill-process → agent 19 (EC2AMAZ-8F0Q7DL)
+ * notepad PID round-trip proven (HTTP 200 + PID gone). Host isolation not used.
+ * Not PRODUCTION READY — env-specific proof only.
  */
-export const REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED = false;
+export const REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED = true;
 
 /** Roles matching EdrResource MUTATE_AUTH. */
 export const REMOTE_SENSOR_ACTION_ROLES = ['ROLE_ADMIN', 'ROLE_SOC_MANAGER'] as const;

@@ -113,7 +113,7 @@ class HaAiExceptionHandlerPropertyTest {
             SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
                     "analyst", null,
-                    Collections.singletonList(new SimpleGrantedAuthority("ANALYST"))));
+                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_ANALYST"))));
             chain.doFilter(req, resp);
         }
     };

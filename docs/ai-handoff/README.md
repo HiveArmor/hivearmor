@@ -14,10 +14,11 @@ Every new implementation session must read these files before changing code:
 2. `/Users/encryptshell/GIT/HiveArmor-v1/docs/ai-handoff/README.md`
 3. `/Users/encryptshell/GIT/HiveArmor-v1/docs/ai-handoff/current-state.md`
 4. `/Users/encryptshell/GIT/HiveArmor-v1/docs/ai-handoff/next-production-slice.md`
-5. When the production-minimum backend program is active, `/Users/encryptshell/GIT/HiveArmor-v1/docs/ai-handoff/production-minimum-backend-plan.md` and `/Users/encryptshell/GIT/HiveArmor-v1/docs/ai-handoff/backend-implementation-ledger.md`
-6. The repository skills and design documents listed in `current-state.md`
-7. Only the domain research note linked from the active slice
-8. `/Users/encryptshell/GIT/HiveArmor-v1/docs/frontend-backend-contract-register.md` entries referenced by the active slice
+5. For any staging / agent / live-verify work: `/Users/encryptshell/GIT/HiveArmor-v1/docs/ai-handoff/STAGING_ACCESS.md` (hosts + secret *paths*; never paste passwords into chat)
+6. When the production-minimum backend program is active, `/Users/encryptshell/GIT/HiveArmor-v1/docs/ai-handoff/production-minimum-backend-plan.md` and `/Users/encryptshell/GIT/HiveArmor-v1/docs/ai-handoff/backend-implementation-ledger.md`
+7. The repository skills and design documents listed in `current-state.md`
+8. Only the domain research note linked from the active slice
+9. `/Users/encryptshell/GIT/HiveArmor-v1/docs/frontend-backend-contract-register.md` entries referenced by the active slice
 
 Do not load every research note or the full contract register unless the task genuinely spans those domains.
 

@@ -1,0 +1,21 @@
+id: 5222
+name: CEL-WIN-CERTUTIL-DL
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Command and Control
+technique: "T1105 - Ingress Tool Transfer"
+adversary: origin
+description: certutil used to download a remote file (-urlcache / -split).
+references:
+  - https://attack.mitre.org/techniques/T1105/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*certutil(.exe)?[^\\n]*(-urlcache|-split|/urlcache|/split).*")'

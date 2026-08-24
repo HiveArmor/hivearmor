@@ -2,7 +2,6 @@ package com.hivearmor.domain.soar_playbook;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
@@ -17,12 +16,15 @@ public class UtmPlaybookExecution implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GenericGenerator(name = "CustomIdentityGenerator", type = com.hivearmor.util.CustomIdentityGenerator.class)
-    @GeneratedValue(generator = "CustomIdentityGenerator")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "playbook_id", nullable = false)
     private Long playbookId;
+
+    /** Client-facing execution id used by SSE stream and cancel endpoints. */
+    @Column(name = "execution_uuid", length = 36)
+    private String executionUuid;
 
     @Column(name = "playbook_name", length = 200, nullable = false)
     private String playbookName;
