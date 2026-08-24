@@ -769,5 +769,8 @@
     <!-- P1 — investigation session case tasks + external ticket URL (STAGING CANDIDATE) -->
     <include file="/config/liquibase/changelog/20260824004_add_hive_session_task.xml" relativeToChangelogFile="false"/>
 
+    <!-- P1 MSSP dashboard depth — unique (tenant_id, name) partial indexes (STAGING CANDIDATE) -->
+    <include file="/config/liquibase/changelog/20260824005_dashboard_tenant_name_unique.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
