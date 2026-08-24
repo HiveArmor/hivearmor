@@ -36,7 +36,7 @@ describe('adaptCanonicalPlaybookListItem', () => {
 
 describe('STARTER_PLAYBOOK_TEMPLATES', () => {
   it('ships SOC starter playbooks with ordered steps', () => {
-    expect(STARTER_PLAYBOOK_TEMPLATES.length).toBeGreaterThanOrEqual(3);
+    expect(STARTER_PLAYBOOK_TEMPLATES.length).toBeGreaterThanOrEqual(15);
     for (const template of STARTER_PLAYBOOK_TEMPLATES) {
       expect(template.name.length).toBeGreaterThan(3);
       expect(template.steps.length).toBeGreaterThan(0);
@@ -45,4 +45,34 @@ describe('STARTER_PLAYBOOK_TEMPLATES', () => {
       });
     }
   });
+
+  it('uses only executable action ids and never hardcodes agentId', () => {
+    const allowedActionIds = new Set([
+      'send-webhook',
+      'isolate_host',
+      'kill_process',
+      'quarantine_file',
+    ]);
+    for (const template of STARTER_PLAYBOOK_TEMPLATES) {
+      for (const step of template.steps) {
+        if (step.stepType !== 'action') continue;
+        const actionId = step.config['actionId'];
+        expect(typeof actionId).toBe('string');
+        expect(allowedActionIds.has(actionId as string)).toBe(true);
+        expect(step.config['agentId']).toBeUndefined();
+        const params = step.config['params'];
+        if (params && typeof params === 'object' && !Array.isArray(params)) {
+          expect((params as Record<string, unknown>)['agentId']).toBeUndefined();
+        }
+        if (
+          actionId === 'isolate_host' ||
+          actionId === 'kill_process' ||
+          actionId === 'quarantine_file'
+        ) {
+          expect(template.active).toBe(false);
+        }
+      }
+    }
+  });
 });
+
