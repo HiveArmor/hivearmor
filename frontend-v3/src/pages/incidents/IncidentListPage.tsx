@@ -39,12 +39,17 @@ import { ErrorState } from '@/components/error-state/ErrorState';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+import { SlaIndicator } from '@/components/sla-indicator/SlaIndicator';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import type { IncidentStatus } from '@/constants/status.constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { getSeverityLabel } from '@/lib/severity';
 import type { SeverityLevel } from '@/lib/severity';
+import {
+  formatSlaStatsDetail,
+  getIncidentSlaStats,
+} from '@/services/incidents.service';
 import { useAuthStore } from '@/store/auth.store';
 import './IncidentListPage.css';
 
@@ -116,6 +121,11 @@ function IncidentPreview({ incident, onOpen }: { incident: IncidentListItem; onO
         <span className="incident-priority" data-priority={incident.incidentPriority.toLowerCase()}>{incident.incidentPriority}</span>
         <span className="incident-status" data-status={incident.incidentStatus}>{incident.incidentStatus.replace('_', ' ')}</span>
         {incident.slaBreached && <span className="incident-breached"><Clock3 size={12} /> SLA breached</span>}
+        {!incident.slaBreached && incident.slaDeadline && (
+          <span className="incident-preview__sla" aria-label="Incident SLA">
+            <SlaIndicator dueAt={incident.slaDeadline} size="sm" showLabel />
+          </span>
+        )}
       </div>
 
       <p className="incident-preview__description">
@@ -126,7 +136,19 @@ function IncidentPreview({ incident, onOpen }: { incident: IncidentListItem; onO
         <div><dt>Severity</dt><dd>{getSeverityLabel(incident.incidentSeverity)} · {incident.incidentSeverity}/10</dd></div>
         <div><dt>Owner</dt><dd>{incident.incidentAssignedTo || 'Unassigned'}</dd></div>
         <div><dt>Created</dt><dd>{formatAbsolute(incident.incidentCreatedDate)}</dd></div>
-        <div><dt>SLA deadline</dt><dd>{formatAbsolute(incident.slaDeadline)}</dd></div>
+        <div>
+          <dt>SLA</dt>
+          <dd>
+            {incident.slaDeadline ? (
+              <span className="incident-preview__sla-fact">
+                <SlaIndicator dueAt={incident.slaDeadline} size="sm" showLabel />
+                <small>{formatAbsolute(incident.slaDeadline)}</small>
+              </span>
+            ) : (
+              'Not set'
+            )}
+          </dd>
+        </div>
       </dl>
 
       <section className="incident-preview__next">
@@ -199,6 +221,13 @@ export function IncidentListPage(): JSX.Element {
     refetchInterval: 30_000,
   });
 
+  const slaStatsQuery = useQuery({
+    queryKey: ['incident-sla-stats'],
+    queryFn: ({ signal }) => getIncidentSlaStats(signal),
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  });
+
   const items = useMemo(() => listQuery.data?.items ?? [], [listQuery.data?.items]);
   const total = listQuery.data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -259,6 +288,13 @@ export function IncidentListPage(): JSX.Element {
   }
 
   const summary = summaryQuery.data;
+  const slaStats = slaStatsQuery.data;
+  const breachedCount = slaStats?.breached ?? summary?.breached;
+  const slaDetail = slaStats
+    ? formatSlaStatsDetail(slaStats)
+    : slaStatsQuery.isError
+      ? 'sla-stats unavailable · queue filter remains'
+      : 'outside response target';
   const metric = (value: number | null | undefined): string => value === null || value === undefined ? '—' : value.toLocaleString();
 
   return (
@@ -270,7 +306,7 @@ export function IncidentListPage(): JSX.Element {
         </div>
         <div className="incident-header__actions">
           <span className="incident-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> open</span>
-          <button type="button" className="incident-icon-button" onClick={() => { void listQuery.refetch(); void summaryQuery.refetch(); }} aria-label="Refresh incident queue" title="Refresh incident queue"><RefreshCw size={15} className={listQuery.isFetching ? 'incident-spin' : undefined} /></button>
+          <button type="button" className="incident-icon-button" onClick={() => { void listQuery.refetch(); void summaryQuery.refetch(); void slaStatsQuery.refetch(); }} aria-label="Refresh incident queue" title="Refresh incident queue"><RefreshCw size={15} className={listQuery.isFetching ? 'incident-spin' : undefined} /></button>
           <button type="button" className="incident-primary-button" disabled={!canCreate} onClick={() => navigate('/alerts')} title={canCreate ? 'Select alerts to create an incident' : 'Requires SOC Manager or Administrator'}>Create from alerts</button>
         </div>
       </header>
@@ -280,10 +316,10 @@ export function IncidentListPage(): JSX.Element {
       <div className="incident-summary" aria-label="Authorized incident summary">
         <div><span><List size={13} /> Active incidents</span><strong>{metric(summary?.active)}</strong><small>open and in review</small></div>
         <div data-tone="danger"><span><ShieldAlert size={13} /> P1 critical</span><strong>{metric(summary?.critical)}</strong><small>immediate command attention</small></div>
-        <div data-tone="warning"><span><Clock3 size={13} /> SLA breached</span><strong>{metric(summary?.breached)}</strong><small>outside response target</small></div>
+        <div data-tone="warning" aria-label="Incident SLA summary"><span><Clock3 size={13} /> SLA breached</span><strong>{metric(breachedCount)}</strong><small title={slaDetail}>{slaDetail}</small></div>
         <div><span><CircleAlert size={13} /> Unassigned</span><strong>{metric(summary?.unassigned)}</strong><small>ownership required</small></div>
         <div data-tone="positive"><span><UserRound size={13} /> Assigned to me</span><strong>{metric(summary?.assignedToMe)}</strong><small>{user?.login ?? 'current analyst'}</small></div>
-        <div><span><CheckCircle2 size={13} /> Queue snapshot</span><strong className="incident-summary__time">{formatSnapshot(summary?.snapshotAt)}</strong><small>{summary?.partial ? 'partial summary · list remains usable' : 'authorized live projection'}</small></div>
+        <div data-tone={slaStats && slaStats.breached === 0 ? 'positive' : undefined}><span><CheckCircle2 size={13} /> SLA compliant</span><strong>{metric(slaStats?.compliant)}</strong><small>{slaStats ? `${metric(slaStats.total)} tracked` : formatSnapshot(summary?.snapshotAt)}</small></div>
       </div>
 
       <nav className="incident-views" aria-label="Incident queue views">
@@ -291,7 +327,7 @@ export function IncidentListPage(): JSX.Element {
           ['active', 'Needs attention', summary?.active],
           ['mine', 'My incidents', summary?.assignedToMe],
           ['critical', 'P1 critical', summary?.critical],
-          ['breached', 'SLA breached', summary?.breached],
+          ['breached', 'SLA breached', breachedCount],
           ['unassigned', 'Unassigned', summary?.unassigned],
           ['all', 'All incidents', undefined],
         ] as Array<[QueueView, string, number | null | undefined]>).map(([id, label, count]) => (

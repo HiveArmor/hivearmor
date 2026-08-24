@@ -65,6 +65,11 @@ describe('incidents.service', () => {
     expect(typeof module.getUsersAssigned).toBe('function');
   });
 
+  it('exports getIncidentSlaStats function', async () => {
+    const module = await import('./incidents.service');
+    expect(typeof module.getIncidentSlaStats).toBe('function');
+  });
+
   it('unwraps OpenSearch evidence envelope { items, total }', async () => {
     const { getIncidentEvidence } = await import('./incidents.service');
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
@@ -75,5 +80,74 @@ describe('incidents.service', () => {
     const items = await getIncidentEvidence(12);
     expect(items).toHaveLength(1);
     expect(items[0]?.id).toBe('ev-1');
+  });
+});
+
+describe('normalizeIncidentSlaStats', () => {
+  it('normalizes backend sla-stats map fields', async () => {
+    const { normalizeIncidentSlaStats } = await import('./incidents.service');
+    expect(normalizeIncidentSlaStats({ total: 40, breached: 7, compliant: 33 })).toEqual({
+      total: 40,
+      breached: 7,
+      compliant: 33,
+    });
+  });
+
+  it('derives compliant when omitted', async () => {
+    const { normalizeIncidentSlaStats } = await import('./incidents.service');
+    expect(normalizeIncidentSlaStats({ total: 10, breached: 3 })).toEqual({
+      total: 10,
+      breached: 3,
+      compliant: 7,
+    });
+  });
+
+  it('coerces invalid and negative values to zero', async () => {
+    const { normalizeIncidentSlaStats } = await import('./incidents.service');
+    expect(normalizeIncidentSlaStats({ total: '12', breached: -2, compliant: 'bad' })).toEqual({
+      total: 12,
+      breached: 0,
+      compliant: 0,
+    });
+    expect(normalizeIncidentSlaStats(null)).toEqual({ total: 0, breached: 0, compliant: 0 });
+  });
+});
+
+describe('slaCompliancePercent / formatSlaStatsDetail', () => {
+  it('returns null rate when total is zero', async () => {
+    const { slaCompliancePercent, formatSlaStatsDetail } = await import('./incidents.service');
+    expect(slaCompliancePercent({ total: 0, breached: 0, compliant: 0 })).toBeNull();
+    expect(formatSlaStatsDetail({ total: 0, breached: 0, compliant: 0 })).toBe('no incidents tracked');
+  });
+
+  it('formats compliance subtitle for summary tiles', async () => {
+    const { slaCompliancePercent, formatSlaStatsDetail } = await import('./incidents.service');
+    const stats = { total: 40, breached: 7, compliant: 33 };
+    expect(slaCompliancePercent(stats)).toBe(83);
+    expect(formatSlaStatsDetail(stats)).toBe('33 compliant · 83% · 40 tracked');
+  });
+});
+
+describe('getIncidentSlaStats', () => {
+  it('fetches /api/ha-incidents/sla-stats and normalizes the payload', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ total: 25, breached: 5, compliant: 20 }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    localStorage.setItem('hivearmor_auth_token', 'test-token');
+
+    const { getIncidentSlaStats } = await import('./incidents.service');
+    const stats = await getIncidentSlaStats();
+
+    expect(stats).toEqual({ total: 25, breached: 5, compliant: 20 });
+    expect(fetchMock).toHaveBeenCalled();
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/api/ha-incidents/sla-stats');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer test-token');
+
+    localStorage.removeItem('hivearmor_auth_token');
   });
 });
