@@ -1,0 +1,17 @@
+{
+  "rule": "CEL-LIN-SSH-ROOT",
+  "expect": "nomatch",
+  "description": "Successful SSH as non-root must not fire root-login rule",
+  "event": {
+    "id": "fx-cel-lin-ssh-root-neg-1",
+    "dataType": "linux",
+    "dataSource": "fixture-agent",
+    "tenantId": "1",
+    "raw": "sshd[2048]: Accepted publickey for alice from 10.0.0.51 port 52223 ssh2",
+    "origin": {
+      "host": "fx-lin-01",
+      "ip": "10.0.0.51",
+      "user": "alice"
+    }
+  }
+}

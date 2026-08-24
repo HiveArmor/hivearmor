@@ -1,0 +1,17 @@
+{
+  "rule": "CEL-LIN-SSH-ROOT",
+  "expect": "match",
+  "description": "Successful SSH login as root",
+  "event": {
+    "id": "fx-cel-lin-ssh-root-1",
+    "dataType": "linux",
+    "dataSource": "fixture-agent",
+    "tenantId": "1",
+    "raw": "sshd[2048]: Accepted publickey for root from 10.0.0.50 port 52222 ssh2",
+    "origin": {
+      "host": "fx-lin-01",
+      "ip": "10.0.0.50",
+      "user": "root"
+    }
+  }
+}

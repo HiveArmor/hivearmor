@@ -1,10 +1,8 @@
 package rules
 
 import (
-	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 )
 
@@ -125,52 +123,7 @@ var celPackRuleNames = []string{
 
 func TestCelPack_loadsHundredRules(t *testing.T) {
 	snapshotRules(t)
-	root := builtinRulesDir(t)
-	dirs := []string{
-		filepath.Join(root, "windows"),
-		filepath.Join(root, "linux"),
-		filepath.Join(root, "network"),
-		filepath.Join(root, "cloud", "aws"),
-		filepath.Join(root, "cloud", "azure"),
-	}
-
-	tmp, err := os.MkdirTemp("", "cel-pack-*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { _ = os.RemoveAll(tmp) })
-
-	for _, dir := range dirs {
-		entries, err := os.ReadDir(dir)
-		if err != nil {
-			t.Fatalf("read %s: %v", dir, err)
-		}
-		for _, e := range entries {
-			if e.IsDir() {
-				continue
-			}
-			name := e.Name()
-			if !strings.HasPrefix(name, "cel-") {
-				continue
-			}
-			src := filepath.Join(dir, name)
-			data, err := os.ReadFile(src)
-			if err != nil {
-				t.Fatalf("read %s: %v", src, err)
-			}
-			if err := os.WriteFile(filepath.Join(tmp, name), data, 0o644); err != nil {
-				t.Fatalf("copy %s: %v", name, err)
-			}
-		}
-	}
-
-	report := LoadFromDir(tmp)
-	if report.Loaded < 100 {
-		t.Fatalf("expected at least 100 CEL rules, loaded=%d skipped=%d invalid=%v", report.Loaded, report.Skipped, report.Invalid)
-	}
-	if len(report.Invalid) > 0 {
-		t.Fatalf("CEL pack compile errors: %v", report.Invalid)
-	}
+	loadCelPackIntoEngine(t)
 
 	loaded := map[string]struct{}{}
 	for _, dt := range []string{

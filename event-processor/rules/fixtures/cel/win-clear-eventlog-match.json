@@ -1,0 +1,20 @@
+{
+  "rule": "CEL-WIN-CLEAR-EVENTLOG",
+  "expect": "match",
+  "description": "Security log cleared (Event ID 1102)",
+  "event": {
+    "id": "fx-cel-win-1102-1",
+    "dataType": "wineventlog",
+    "dataSource": "fixture-agent",
+    "tenantId": "1",
+    "raw": "{\"eventId\":1102,\"message\":\"The audit log was cleared\"}",
+    "log": {
+      "eventCode": 1102,
+      "eventId": "1102"
+    },
+    "origin": {
+      "host": "fx-win-03",
+      "user": "admin"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "rule": "CEL-WIN-SCHTASKS-CREATE",
+  "expect": "match",
+  "description": "schtasks /create persistence indicator",
+  "event": {
+    "id": "fx-cel-win-schtasks-1",
+    "dataType": "process",
+    "dataSource": "fixture-agent",
+    "tenantId": "1",
+    "raw": "schtasks.exe /create /tn Updater /tr C:\\\\Temp\\\\payload.exe /sc once /st 23:00",
+    "origin": {
+      "host": "fx-win-02",
+      "process": "schtasks.exe",
+      "command": "schtasks.exe /create /tn Updater /tr C:\\\\Temp\\\\payload.exe /sc once /st 23:00",
+      "user": "bob"
+    }
+  }
+}
