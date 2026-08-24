@@ -23,6 +23,23 @@ jobs:
     secrets:
       API_SECRET: ${{ secrets.API_SECRET }}
 
+  cel_pack:
+    name: CEL pack
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: event-processor
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: event-processor/go.mod
+          cache-dependency-path: event-processor/go.sum
+
+      - name: Run CelPack tests
+        run: go test ./rules/ -run CelPack -count=1
+
   ai_review:
     name: AI review
     uses: ./.github/workflows/_pr-reusable-ai-review.yml
@@ -34,6 +51,7 @@ jobs:
     name: Approver
     needs:
       - go_deps
+      - cel_pack
       - ai_review
     uses: ./.github/workflows/_pr-reusable-approver.yml
     with:
@@ -48,6 +66,7 @@ jobs:
     if: always()
     needs:
       - go_deps
+      - cel_pack
       - ai_review
       - approver
     runs-on: ubuntu-24.04
@@ -61,7 +80,7 @@ jobs:
 
           # approver is a soft gate — it posts comments and tries to auto-approve
           # if the GitHub App is configured, but its failure does not block merges.
-          # Only go_deps and ai_review are hard gates.
+          # go_deps, cel_pack, and ai_review are hard gates.
           failed=$(echo "$NEEDS_JSON" | jq -r '
             to_entries[]
             | select(.key != "approver")

@@ -1,0 +1,21 @@
+id: 5292
+name: CEL-AWS-UPDATE-ASSUME
+dataTypes:
+  - aws
+  - cloudtrail
+category: Privilege Escalation
+technique: "T1098 - Account Manipulation"
+adversary: origin
+description: IAM UpdateAssumeRolePolicy (trust policy backdoor).
+references:
+  - https://attack.mitre.org/techniques/T1098/
+deduplicateBy:
+  - origin.ip
+  - origin.user
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: >
+  (has(log.eventName) && string(log.eventName) == "UpdateAssumeRolePolicy")
+  || raw.matches("(?i).*eventName[\"\'=: ]+UpdateAssumeRolePolicy.*")

@@ -1,0 +1,21 @@
+id: 5290
+name: CEL-AWS-S3-ACL-PUBLIC
+dataTypes:
+  - aws
+  - cloudtrail
+category: Exfiltration
+technique: "T1530 - Data from Cloud Storage"
+adversary: origin
+description: S3 PutBucketAcl / PutBucketPolicy making bucket public.
+references:
+  - https://attack.mitre.org/techniques/T1530/
+deduplicateBy:
+  - origin.ip
+  - origin.user
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+where: >
+  (has(log.eventName) && (string(log.eventName) == "PutBucketAcl" || string(log.eventName) == "PutBucketPolicy"))
+  || raw.matches("(?i).*eventName[\"\'=: ]+(PutBucketAcl|PutBucketPolicy).*")

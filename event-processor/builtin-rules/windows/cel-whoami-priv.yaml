@@ -1,0 +1,21 @@
+id: 5268
+name: CEL-WIN-WHOAMI-PRIV
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Discovery
+technique: "T1033 - System Owner/User Discovery"
+adversary: origin
+description: whoami /priv or /all privilege discovery.
+references:
+  - https://attack.mitre.org/techniques/T1033/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 1
+  integrity: 1
+  availability: 1
+where: 'raw.matches("(?i).*whoami(.exe)?[^\\n]*(/priv|/all|/groups).*")'

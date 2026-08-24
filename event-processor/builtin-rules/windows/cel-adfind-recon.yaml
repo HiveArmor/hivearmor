@@ -1,0 +1,21 @@
+id: 5261
+name: CEL-WIN-ADFIND
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Discovery
+technique: "T1087.002 - Account Discovery: Domain Account"
+adversary: origin
+description: AdFind or BloodHound collector-style AD reconnaissance.
+references:
+  - https://attack.mitre.org/techniques/T1087/002/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+where: 'raw.matches("(?i).*(adfind(.exe)?|SharpHound|BloodHound|azurehound).*")'

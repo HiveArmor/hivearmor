@@ -1,0 +1,20 @@
+id: 5274
+name: CEL-LIN-LD-PRELOAD
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Persistence
+technique: "T1574.006 - Hijack Execution Flow: Dynamic Linker Hijacking"
+adversary: origin
+description: LD_PRELOAD injection or /etc/ld.so.preload modification.
+references:
+  - https://attack.mitre.org/techniques/T1574/006/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(LD_PRELOAD=|/etc/ld[.]so[.]preload).*")'

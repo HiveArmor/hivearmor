@@ -70,9 +70,60 @@ var celPackRuleNames = []string{
 	"CEL-AZURE-PRIV-ROLE",
 	"CEL-AZURE-DIAG-DELETED",
 	"CEL-AZURE-FED-IDENTITY",
+	// 5251–5300 (pack ≥100)
+	"CEL-WIN-FAILED-LOGON",
+	"CEL-WIN-ACCOUNT-LOCKOUT",
+	"CEL-WIN-PASSWORD-RESET",
+	"CEL-WIN-KERBEROS-TGS",
+	"CEL-WIN-DCSYNC",
+	"CEL-WIN-WEVTUTIL-CLEAR",
+	"CEL-WIN-CMSTP",
+	"CEL-WIN-INSTALLUTIL",
+	"CEL-WIN-MSIEXEC-REMOTE",
+	"CEL-WIN-NLTEST",
+	"CEL-WIN-ADFIND",
+	"CEL-WIN-IMPACKET",
+	"CEL-WIN-NGROK",
+	"CEL-WIN-FIREWALL-ADD",
+	"CEL-WIN-RUN-KEY",
+	"CEL-WIN-COMSVCS-DUMP",
+	"CEL-WIN-AT-JOB",
+	"CEL-WIN-WHOAMI-PRIV",
+	"CEL-WIN-WMIC-SHADOW",
+	"CEL-WIN-BCDEDIT",
+	"CEL-LIN-REVSHELL-BASH",
+	"CEL-LIN-REVSHELL-PY",
+	"CEL-LIN-NETCAT",
+	"CEL-LIN-LD-PRELOAD",
+	"CEL-LIN-SETUID",
+	"CEL-LIN-USERADD",
+	"CEL-LIN-IPTABLES-FLUSH",
+	"CEL-LIN-HISTORY-CLEAR",
+	"CEL-LIN-INSMOD",
+	"CEL-LIN-TMP-ELF",
+	"CEL-NET-C2-PORTS",
+	"CEL-NET-HTTP-TO-IP",
+	"CEL-NET-DNS-DGA",
+	"CEL-NET-LDAP-ENUM",
+	"CEL-NET-SMB-OUTBOUND",
+	"CEL-NET-IRC",
+	"CEL-NET-SUSPICIOUS-UA",
+	"CEL-NET-PORT-SCAN",
+	"CEL-AWS-DELETE-TRAIL",
+	"CEL-AWS-S3-ACL-PUBLIC",
+	"CEL-AWS-CREATE-USER",
+	"CEL-AWS-UPDATE-ASSUME",
+	"CEL-AWS-GET-SECRET",
+	"CEL-AWS-RUN-INSTANCES",
+	"CEL-AZURE-APP-ROLE",
+	"CEL-AZURE-SP-CRED",
+	"CEL-AZURE-GUEST-INVITE",
+	"CEL-AZURE-DIR-ROLE",
+	"CEL-AZURE-PURGE",
+	"CEL-AZURE-KEYVAULT",
 }
 
-func TestCelPack_loadsFiftyRules(t *testing.T) {
+func TestCelPack_loadsHundredRules(t *testing.T) {
 	snapshotRules(t)
 	root := builtinRulesDir(t)
 	dirs := []string{
@@ -114,8 +165,8 @@ func TestCelPack_loadsFiftyRules(t *testing.T) {
 	}
 
 	report := LoadFromDir(tmp)
-	if report.Loaded < 50 {
-		t.Fatalf("expected at least 50 CEL rules, loaded=%d skipped=%d invalid=%v", report.Loaded, report.Skipped, report.Invalid)
+	if report.Loaded < 100 {
+		t.Fatalf("expected at least 100 CEL rules, loaded=%d skipped=%d invalid=%v", report.Loaded, report.Skipped, report.Invalid)
 	}
 	if len(report.Invalid) > 0 {
 		t.Fatalf("CEL pack compile errors: %v", report.Invalid)
@@ -138,8 +189,8 @@ func TestCelPack_loadsFiftyRules(t *testing.T) {
 			t.Errorf("missing CEL rule %s", name)
 		}
 	}
-	if len(celPackRuleNames) < 50 {
-		t.Fatalf("celPackRuleNames must list at least 50 rules, got %d", len(celPackRuleNames))
+	if len(celPackRuleNames) < 100 {
+		t.Fatalf("celPackRuleNames must list at least 100 rules, got %d", len(celPackRuleNames))
 	}
 }
 

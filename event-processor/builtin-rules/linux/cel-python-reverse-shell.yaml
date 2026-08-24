@@ -1,0 +1,20 @@
+id: 5272
+name: CEL-LIN-REVSHELL-PY
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Execution
+technique: "T1059.006 - Command and Scripting Interpreter: Python"
+adversary: origin
+description: Python reverse shell via socket / pty.spawn.
+references:
+  - https://attack.mitre.org/techniques/T1059/006/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: 'raw.matches("(?i).*python[0-9.]*[^\\n]*(import socket|pty[.]spawn|subprocess[.]call).*") && raw.matches("(?i).*(connect[(]|/bin/(ba)?sh).*")'

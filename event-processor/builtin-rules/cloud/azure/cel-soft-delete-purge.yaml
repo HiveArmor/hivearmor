@@ -1,0 +1,19 @@
+id: 5299
+name: CEL-AZURE-PURGE
+dataTypes:
+  - azure
+  - azuread
+category: Defense Evasion
+technique: "T1070 - Indicator Removal"
+adversary: origin
+description: Hard purge of soft-deleted Azure AD objects.
+references:
+  - https://attack.mitre.org/techniques/T1070/
+deduplicateBy:
+  - origin.user
+  - origin.host
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*(Hard Delete|Permanently delete|purge.*deleted|deletedItems.*purge).*")'

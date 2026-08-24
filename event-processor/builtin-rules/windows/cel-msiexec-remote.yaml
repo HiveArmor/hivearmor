@@ -1,0 +1,21 @@
+id: 5259
+name: CEL-WIN-MSIEXEC-REMOTE
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Defense Evasion
+technique: "T1218.007 - System Binary Proxy Execution: Msiexec"
+adversary: origin
+description: Msiexec installing from remote HTTP(S) source.
+references:
+  - https://attack.mitre.org/techniques/T1218/007/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*msiexec(.exe)?[^\\n]*(/i|/package)[^\\n]*https?://.*")'

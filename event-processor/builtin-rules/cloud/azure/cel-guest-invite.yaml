@@ -1,0 +1,19 @@
+id: 5297
+name: CEL-AZURE-GUEST-INVITE
+dataTypes:
+  - azure
+  - azuread
+category: Persistence
+technique: "T1136.003 - Create Account: Cloud Account"
+adversary: origin
+description: Azure AD guest user invited.
+references:
+  - https://attack.mitre.org/techniques/T1136/003/
+deduplicateBy:
+  - origin.user
+  - origin.host
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 1
+where: 'raw.matches("(?i).*(Invite external user|GuestUser|invitedUserEmailAddress|B2B).*")'

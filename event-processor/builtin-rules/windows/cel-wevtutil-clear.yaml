@@ -1,0 +1,21 @@
+id: 5256
+name: CEL-WIN-WEVTUTIL-CLEAR
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Defense Evasion
+technique: "T1070.001 - Indicator Removal: Clear Windows Event Logs"
+adversary: origin
+description: wevtutil clear/cl of Windows event logs.
+references:
+  - https://attack.mitre.org/techniques/T1070/001/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+where: 'raw.matches("(?i).*wevtutil(.exe)?[^\\n]*(cl|clear-log|/c).*")'

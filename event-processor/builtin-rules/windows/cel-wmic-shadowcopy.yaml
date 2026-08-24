@@ -1,0 +1,21 @@
+id: 5269
+name: CEL-WIN-WMIC-SHADOW
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Impact
+technique: "T1490 - Inhibit System Recovery"
+adversary: origin
+description: WMIC shadowcopy delete (ransomware precursor).
+references:
+  - https://attack.mitre.org/techniques/T1490/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 3
+where: 'raw.matches("(?i).*wmic(.exe)?[^\\n]*shadowcopy[^\\n]*delete.*")'

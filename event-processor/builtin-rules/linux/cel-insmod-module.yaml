@@ -1,0 +1,20 @@
+id: 5279
+name: CEL-LIN-INSMOD
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Persistence
+technique: "T1547.006 - Boot or Logon Autostart Execution: Kernel Modules and Extensions"
+adversary: origin
+description: Kernel module load via insmod/modprobe from unusual path.
+references:
+  - https://attack.mitre.org/techniques/T1547/006/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+where: 'raw.matches("(?i).*(insmod|modprobe)[^\\n]+(/tmp/|/dev/shm/|/var/tmp/).*")'

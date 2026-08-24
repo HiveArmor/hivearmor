@@ -1,0 +1,21 @@
+id: 5264
+name: CEL-WIN-FIREWALL-ADD
+dataTypes:
+  - process
+  - wineventlog
+  - windows
+  - windows-etw
+category: Defense Evasion
+technique: "T1562.004 - Impair Defenses: Disable or Modify System Firewall"
+adversary: origin
+description: netsh advfirewall rule add or firewall disable.
+references:
+  - https://attack.mitre.org/techniques/T1562/004/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+where: 'raw.matches("(?i).*netsh(.exe)?[^\\n]*(advfirewall|firewall)[^\\n]*(add rule|set.*off|disable).*")'

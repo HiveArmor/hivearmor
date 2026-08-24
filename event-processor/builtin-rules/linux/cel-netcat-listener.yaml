@@ -1,0 +1,20 @@
+id: 5273
+name: CEL-LIN-NETCAT
+dataTypes:
+  - linux
+  - syslog
+  - process
+category: Command and Control
+technique: "T1095 - Non-Application Layer Protocol"
+adversary: origin
+description: netcat/ncat listener or reverse shell flags.
+references:
+  - https://attack.mitre.org/techniques/T1095/
+deduplicateBy:
+  - origin.host
+  - origin.command
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+where: 'raw.matches("(?i).*(nc|ncat|netcat)[^\\n]*(-l|-e|/bin/(ba)?sh).*")'
