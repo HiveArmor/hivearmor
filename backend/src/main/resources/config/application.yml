@@ -161,8 +161,12 @@ hivearmor:
     # P2 hybrid response mesh: when true and no HA agent enrolled, playbook isolate
     # plans vendor ISOLATE_HOST as STAGING CANDIDATE dry-run (no live vendor call).
     vendor-isolate-enabled: ${HIVEARMOR_CONNECTOR_VENDOR_ISOLATE:false}
+  ai:
+    triage:
+      # STAGING CANDIDATE — confidence floor for AUTO_CLOSED_FP + OpenSearch status/tag mutation
+      auto-close-confidence: ${HA_AI_TRIAGE_AUTO_CLOSE_CONFIDENCE:0.85}
   soc-ai:
-    # STAGING CANDIDATE — confidence floor for AUTO_CLOSED_FP + OpenSearch status mutation
+    # Deprecated alias — prefer hivearmor.ai.triage.auto-close-confidence
     auto-close-threshold: ${HA_SOC_AI_AUTO_CLOSE_THRESHOLD:0.85}
 
 application:

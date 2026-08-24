@@ -1,6 +1,9 @@
 package com.hivearmor.service.soc_ai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hivearmor.config.Constants;
+import com.hivearmor.domain.shared_types.alert.Side;
+import com.hivearmor.domain.shared_types.alert.UtmAlert;
 import com.hivearmor.domain.soc_ai.UtmAiTriage;
 import com.hivearmor.repository.soc_ai.UtmAiTriageRepository;
 import com.hivearmor.service.UtmAlertService;
@@ -15,9 +18,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -26,12 +32,14 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for SOC-AI high-confidence FP auto-close and agentic FSM stubs.
+ * Unit tests for SOC-AI high-confidence FP auto-close and agentic FSM depth.
  *
- * <p>STAGING CANDIDATE — verifies ledger + {@link UtmAlertService#updateStatus} wiring
- * and {@code AUTO_TRIAGE → (END | ENRICH → INVESTIGATE → END)}. Not PRODUCTION READY.
+ * <p>STAGING CANDIDATE — verifies ledger + OpenSearch status/tag wiring,
+ * configurable confidence threshold, and thin ENRICH metadata.
+ * Not PRODUCTION READY.
  */
 @ExtendWith(MockitoExtension.class)
 class UtmAiTriageServiceAutoCloseTest {
@@ -82,6 +90,8 @@ class UtmAiTriageServiceAutoCloseTest {
 
     @Test
     void saveResult_highConfidenceFp_mutatesAlertViaUtmAlertService() throws Exception {
+        when(utmAlertService.getAlertsByIds(anyList())).thenReturn(List.of());
+
         String rawJson = """
             {"classification":"false positive","confidence":0.90,"reasoning":["known scanner"]}
             """;
@@ -99,6 +109,34 @@ class UtmAiTriageServiceAutoCloseTest {
         assertThat(observationCaptor.getValue())
             .contains("system actor")
             .contains("0.9");
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<String>> tagsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(utmAlertService).updateTags(
+            eq(List.of("alert-fp-1")), tagsCaptor.capture(), eq(false));
+        assertThat(tagsCaptor.getValue()).contains(Constants.FALSE_POSITIVE_TAG);
+    }
+
+    @Test
+    void saveResult_highConfidenceFp_preservesExistingTagsWhenAppendingFp() throws Exception {
+        UtmAlert existing = new UtmAlert();
+        existing.setId("alert-fp-tags");
+        existing.setTags(List.of("noise", "scanner"));
+        when(utmAlertService.getAlertsByIds(eq(List.of("alert-fp-tags"))))
+            .thenReturn(List.of(existing));
+
+        String rawJson = """
+            {"classification":"fp","confidence":0.91,"reasoning":["noise"]}
+            """;
+
+        triageService.saveResult("alert-fp-tags", rawJson);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<String>> tagsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(utmAlertService).updateTags(
+            eq(List.of("alert-fp-tags")), tagsCaptor.capture(), eq(false));
+        assertThat(tagsCaptor.getValue())
+            .containsExactly("noise", "scanner", Constants.FALSE_POSITIVE_TAG);
     }
 
     @Test
@@ -115,6 +153,7 @@ class UtmAiTriageServiceAutoCloseTest {
         assertThat(result.getNextSteps())
             .doesNotContain("ENRICH")
             .doesNotContain("INVESTIGATE");
+        assertThat(UtmAiTriageService.extractEnrichment(result.getNextSteps())).isEmpty();
     }
 
     @Test
@@ -127,6 +166,7 @@ class UtmAiTriageServiceAutoCloseTest {
 
         assertThat(result.getStatus()).isEqualTo("COMPLETED");
         verify(utmAlertService, never()).updateStatus(anyList(), anyInt(), anyString());
+        verify(utmAlertService, never()).updateTags(anyList(), anyList(), anyBoolean());
     }
 
     @Test
@@ -138,11 +178,12 @@ class UtmAiTriageServiceAutoCloseTest {
         UtmAiTriage result = triageService.saveResult("alert-tp-1", rawJson);
 
         assertThat(result.getStatus()).isEqualTo("COMPLETED");
-        verifyNoInteractions(utmAlertService);
+        verify(utmAlertService, never()).updateStatus(anyList(), anyInt(), anyString());
+        verify(utmAlertService, never()).updateTags(anyList(), anyList(), anyBoolean());
     }
 
     @Test
-    void saveResult_nonFp_fsmVisitsEnrichThenInvestigateThenEnd() {
+    void saveResult_nonFp_fsmVisitsEnrichThenInvestigateThenEnd() throws Exception {
         String rawJson = """
             {"classification":"possible incident","confidence":0.99,"reasoning":["lateral movement"],
              "nextSteps":[{"action":"escalate","details":"page on-call"}]}
@@ -154,10 +195,59 @@ class UtmAiTriageServiceAutoCloseTest {
         assertThat(UtmAiTriageService.extractFsmPath(result.getNextSteps()))
             .containsExactly("AUTO_TRIAGE", "ENRICH", "INVESTIGATE", "END");
         assertThat(result.getNextSteps())
-            .contains("stub — Neo4j")
-            .contains("stub — attack-path")
-            .contains("escalate");
-        verifyNoInteractions(utmAlertService);
+            .contains("enrich stub")
+            .contains("attack-path")
+            .contains("escalate")
+            .doesNotContain("Neo4j / entity enrichment deferred");
+        verify(utmAlertService, never()).updateStatus(anyList(), anyInt(), anyString());
+    }
+
+    @Test
+    void saveResult_enrichRecordsStructuredMetadataFromAlertPayload() {
+        String rawJson = """
+            {"classification":"possible incident","confidence":0.88,
+             "alertPayload":{"source":{"ip":"10.0.0.1"},"host":{"name":"wkstn-01"},"sha256":"abc"},
+             "iocs":[{"field":"threat.indicator.ip"},"cve"]}
+            """;
+
+        UtmAiTriage result = triageService.saveResult("alert-enrich-1", rawJson);
+
+        Optional<Map<String, Object>> enrichment =
+            UtmAiTriageService.extractEnrichment(result.getNextSteps());
+        assertThat(enrichment).isPresent();
+        Map<String, Object> meta = enrichment.orElseThrow();
+        assertThat(meta.get("stub")).isEqualTo(true);
+        assertThat(meta.get("relatedEntityCount")).isEqualTo(0);
+        assertThat(meta.get("note").toString()).contains("no Neo4j");
+        @SuppressWarnings("unchecked")
+        List<String> iocKeys = (List<String>) meta.get("iocKeys");
+        assertThat(iocKeys)
+            .contains("source.ip", "host.name", "sha256", "threat.indicator.ip", "cve");
+    }
+
+    @Test
+    void saveResult_enrichUsesOpenSearchAlertSidesWhenAvailable() throws Exception {
+        UtmAlert alert = new UtmAlert();
+        alert.setId("alert-enrich-os");
+        Side adversary = new Side();
+        adversary.setIp("198.51.100.10");
+        adversary.setSha256("deadbeef");
+        alert.setAdversary(adversary);
+        when(utmAlertService.getAlertsByIds(eq(List.of("alert-enrich-os"))))
+            .thenReturn(List.of(alert));
+
+        String rawJson = """
+            {"classification":"possible incident","confidence":0.87,"reasoning":["beacon"]}
+            """;
+
+        UtmAiTriage result = triageService.saveResult("alert-enrich-os", rawJson);
+
+        Optional<Map<String, Object>> enrichment =
+            UtmAiTriageService.extractEnrichment(result.getNextSteps());
+        assertThat(enrichment).isPresent();
+        @SuppressWarnings("unchecked")
+        List<String> iocKeys = (List<String>) enrichment.orElseThrow().get("iocKeys");
+        assertThat(iocKeys).contains("adversary.ip", "adversary.sha256");
     }
 
     @Test
@@ -171,12 +261,15 @@ class UtmAiTriageServiceAutoCloseTest {
         assertThat(result.getStatus()).isEqualTo("COMPLETED");
         assertThat(UtmAiTriageService.extractFsmPath(result.getNextSteps()))
             .containsExactly("AUTO_TRIAGE", "ENRICH", "INVESTIGATE", "END");
+        assertThat(UtmAiTriageService.extractEnrichment(result.getNextSteps())).isPresent();
     }
 
     @Test
     void saveResult_alertMutationFailure_stillPersistsLedgerAutoClose() throws Exception {
         doThrow(new ElasticsearchIndexDocumentUpdateException("opensearch unavailable"))
             .when(utmAlertService).updateStatus(anyList(), anyInt(), anyString());
+        doThrow(new ElasticsearchIndexDocumentUpdateException("opensearch unavailable"))
+            .when(utmAlertService).updateTags(anyList(), anyList(), anyBoolean());
 
         String rawJson = """
             {"classification":"fp","confidence":0.92,"reasoning":["noise"]}
@@ -204,5 +297,19 @@ class UtmAiTriageServiceAutoCloseTest {
                 AgenticTriageState.ENRICH,
                 AgenticTriageState.INVESTIGATE,
                 AgenticTriageState.END);
+        assertThat(AgenticTriageFsm.detailFor(AgenticTriageState.ENRICH, false))
+            .contains("IOC key inventory")
+            .doesNotContain("attack-path product");
+        assertThat(AgenticTriageFsm.detailFor(AgenticTriageState.INVESTIGATE, false))
+            .contains("deferred");
+    }
+
+    @Test
+    void triageEnrichmentStub_buildIsHonestPlaceholder() {
+        Map<String, Object> enrichment = TriageEnrichmentStub.build(
+            Map.of("alertPayload", Map.of("ip", "1.2.3.4")), null);
+        assertThat(enrichment.get("stub")).isEqualTo(true);
+        assertThat(enrichment.get("relatedEntityCount")).isEqualTo(0);
+        assertThat(TriageEnrichmentStub.summarize(enrichment)).contains("placeholder");
     }
 }

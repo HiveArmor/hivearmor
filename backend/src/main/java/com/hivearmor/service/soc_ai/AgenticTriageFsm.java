@@ -7,8 +7,8 @@ import java.util.List;
 /**
  * Minimal agentic triage state machine — no LangGraph, no Neo4j / attack-path calls.
  *
- * <p>STAGING CANDIDATE — ENRICH and INVESTIGATE are honest stubs that only advance
- * the ledger so callers can observe the path.
+ * <p>STAGING CANDIDATE — ENRICH runs a thin IOC-key inventory stub; INVESTIGATE remains
+ * a path annotation only. Not PRODUCTION READY.
  */
 public final class AgenticTriageFsm {
 
@@ -30,9 +30,9 @@ public final class AgenticTriageFsm {
             return Collections.unmodifiableList(path);
         }
 
-        // Stub: no Neo4j / entity graph enrichment yet.
+        // Thin stub: IOC key inventory + placeholder entity count (see TriageEnrichmentStub).
         path.add(AgenticTriageState.ENRICH);
-        // Stub: no attack-path / investigation orchestration yet.
+        // Stub annotation only — no attack-path / investigation orchestration yet.
         path.add(AgenticTriageState.INVESTIGATE);
         path.add(AgenticTriageState.END);
         return Collections.unmodifiableList(path);
@@ -42,7 +42,7 @@ public final class AgenticTriageFsm {
     public static String detailFor(AgenticTriageState state, boolean highConfidenceFp) {
         return switch (state) {
             case AUTO_TRIAGE -> "classify confidence vs auto-close threshold";
-            case ENRICH -> "stub — Neo4j / entity enrichment deferred";
+            case ENRICH -> "thin stub — IOC key inventory + placeholder relatedEntityCount; no Neo4j";
             case INVESTIGATE -> "stub — attack-path investigation deferred";
             case END -> highConfidenceFp
                 ? "early exit — high-confidence false positive"
