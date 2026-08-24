@@ -537,3 +537,15 @@ No production-readiness claim is made by this baseline entry.
 - Unit: HaConnectorConformanceTest, MicrosoftOAuthClientTest, PlaybookConnectorDispatcherTest, PlaybookServiceTest — PASS.
 - Label: **STAGING CANDIDATE** — live vendor credentials not production-verified.
 
+
+## 2026-08-24 — P1 Spike D: EDR isolate live proof (agent 19)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY). No PR — isolate path worked without code change.
+- Staging: backend/frontend-v3/agentmanager healthy; `REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED` still **true** in deployed SensorGrid bundle (`canEnableRemoteSensorActions` → true).
+- Agent **19** (`EC2AMAZ-8F0Q7DL`, windows) was **ONLINE** before the test.
+- UI-equivalent path: JWT admin → `POST /api/edr/isolation` body `{agentId:"19", hostname:"EC2AMAZ-8F0Q7DL", isolationType:"FULL", reason:"P1 Spike D STAGING isolate proof"}` → **HTTP 201**, isolation id **1**, status **ACTIVE**; backend dispatched `ProcessCommand` `EDR_ISOLATE:FULL` to agent 19.
+- Host effect (observed ~seconds later via SSH): all profiles **BlockInbound,BlockOutbound** (pre-test was BlockInbound,AllowOutbound). HiveArmorAgent service still RUNNING.
+- Immediate lift: `POST /api/edr/isolation/1/lift` → **HTTP 200**, DB status **LIFTED**, `liftedAt` set; backend sent `EDR_LIFT_ISOLATION`. Active isolations for agent 19 after lift: **0**.
+- Host after API lift: firewall **still BlockOutbound** — agent did not restore AllowOutbound (likely management-channel cut by FULL isolate; lift ProcessCommand did not take host effect). Manual restore on Windows: `netsh advfirewall set allprofiles firewallpolicy blockinbound,allowoutbound` (+ delete `EDR_ALLOW_LOOPBACK`) → confirmed **BlockInbound,AllowOutbound** again.
+- Follow-up gap (not fixed in this spike): Windows `applyWindowsIsolation` has no allowlist for agent-manager / SIEM management IPs, so FULL isolate can strand lift delivery.
+
