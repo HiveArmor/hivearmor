@@ -183,6 +183,24 @@ public class HaLlmService {
         usageCounter.recordTokens(promptTokens, completionTokens);
     }
 
+    /**
+     * Records token usage with prompt identity for the durable {@code ha_llm_usage} ledger.
+     */
+    public void recordTokenUsage(long promptTokens,
+                                 long completionTokens,
+                                 String promptId,
+                                 String promptHash,
+                                 String userLogin) {
+        usageCounter.recordTokens(promptTokens, completionTokens, promptId, promptHash, userLogin);
+    }
+
+    /**
+     * Records a deterministic→LLM cascade skip (LLM not called).
+     */
+    public void recordCascadeSkip(String reason, String promptId, String promptHash, String userLogin) {
+        usageCounter.recordCascadeSkip(reason, promptId, promptHash, userLogin);
+    }
+
     /** Exposes the usage counter for tests and optional admin probes. */
     public LlmUsageCounter usageCounter() {
         return usageCounter;

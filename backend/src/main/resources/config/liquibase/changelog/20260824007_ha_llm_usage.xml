@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      P1 LLMOps — durable LLM usage ledger (STAGING CANDIDATE).
+      Stores prompt id/hash + token counts + cascade decisions. No prompt bodies / secrets.
+    -->
+    <changeSet id="20260824007-1" author="hivearmor" context="dev,prod">
+        <createTable tableName="ha_llm_usage">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="prompt_id" type="VARCHAR(128)"/>
+            <column name="prompt_hash" type="VARCHAR(64)"/>
+            <column name="prompt_tokens" type="BIGINT"/>
+            <column name="completion_tokens" type="BIGINT"/>
+            <column name="total_tokens" type="BIGINT"/>
+            <!-- CALL_LLM | SKIP_LLM -->
+            <column name="cascade_decision" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cascade_reason" type="VARCHAR(64)"/>
+            <column name="user_login" type="VARCHAR(50)"/>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="ha_llm_usage" indexName="idx_ha_llm_usage_created_at">
+            <column name="created_at"/>
+        </createIndex>
+
+        <createIndex tableName="ha_llm_usage" indexName="idx_ha_llm_usage_prompt_id">
+            <column name="prompt_id"/>
+        </createIndex>
+
+        <createIndex tableName="ha_llm_usage" indexName="idx_ha_llm_usage_user_login">
+            <column name="user_login"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

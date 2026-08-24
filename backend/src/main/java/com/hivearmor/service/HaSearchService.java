@@ -6,6 +6,8 @@ import com.hivearmor.ai.ChatMessage;
 import com.hivearmor.ai.HaLlmService;
 import com.hivearmor.ai.LlmNotConfiguredException;
 import com.hivearmor.multitenancy.MsspIndexResolver;
+import com.hivearmor.service.llm.LlmCascadeDecision;
+import com.hivearmor.service.llm.LlmCascadeGate;
 import com.hivearmor.service.llm.PromptRegistry;
 import com.hivearmor.service.llm.PromptTemplate;
 import com.hivearmor.web.rest.dto.NlToDslRequestDTO;
@@ -100,22 +102,25 @@ public class HaSearchService {
     private final ObjectMapper objectMapper;
     private final MsspIndexResolver msspIndexResolver;
     private final PromptRegistry promptRegistry;
+    private final LlmCascadeGate cascadeGate;
 
     public HaSearchService(HaLlmService haLlmService,
                            ObjectMapper objectMapper,
                            MsspIndexResolver msspIndexResolver) {
-        this(haLlmService, objectMapper, msspIndexResolver, new PromptRegistry());
+        this(haLlmService, objectMapper, msspIndexResolver, new PromptRegistry(), new LlmCascadeGate());
     }
 
     @Autowired
     public HaSearchService(HaLlmService haLlmService,
                            ObjectMapper objectMapper,
                            MsspIndexResolver msspIndexResolver,
-                           PromptRegistry promptRegistry) {
+                           PromptRegistry promptRegistry,
+                           LlmCascadeGate cascadeGate) {
         this.haLlmService      = haLlmService;
         this.objectMapper      = objectMapper;
         this.msspIndexResolver = msspIndexResolver;
         this.promptRegistry    = promptRegistry != null ? promptRegistry : new PromptRegistry();
+        this.cascadeGate       = cascadeGate != null ? cascadeGate : new LlmCascadeGate();
     }
 
     // =========================================================================
@@ -144,14 +149,18 @@ public class HaSearchService {
     public NlToDslResponseDTO translateNlToDsl(NlToDslRequestDTO request) {
         // Step 1: sanitize
         String sanitized = sanitizeNlQuery(request.query());
-        if (sanitized.isEmpty()) {
+        PromptTemplate searchPrompt = promptRegistry.require(PromptRegistry.ID_SEARCH_NL_TO_DSL);
+        LlmCascadeDecision cascade = cascadeGate.evaluateNlQuery(sanitized);
+        if (cascade.skipLlm()) {
+            haLlmService.recordCascadeSkip(
+                cascade.reason(), searchPrompt.id(), searchPrompt.sha256(), null);
+            log.debug("translateNlToDsl: cascade skip reason={}", cascade.reason());
             return safeFallback();
         }
 
         // Step 2: LLM call
         String rawLlmOutput;
         try {
-            PromptTemplate searchPrompt = promptRegistry.require(PromptRegistry.ID_SEARCH_NL_TO_DSL);
             log.debug("translateNlToDsl: promptId={} promptSha256={}",
                 searchPrompt.id(), searchPrompt.sha256());
             rawLlmOutput = haLlmService.chat(buildMessages(sanitized), searchPrompt.body());
