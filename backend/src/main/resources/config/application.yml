@@ -159,6 +159,9 @@ hivearmor:
   connectors:
     # Vendor kinetic isolate (CrowdStrike RTR etc.) — keep false; HA agent is primary
     vendor-isolate-enabled: ${HIVEARMOR_CONNECTOR_VENDOR_ISOLATE:false}
+  soc-ai:
+    # STAGING CANDIDATE — confidence floor for AUTO_CLOSED_FP + OpenSearch status mutation
+    auto-close-threshold: ${HA_SOC_AI_AUTO_CLOSE_THRESHOLD:0.85}
 
 application:
   branding:

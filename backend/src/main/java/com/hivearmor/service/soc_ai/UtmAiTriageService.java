@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivearmor.domain.soc_ai.UtmAiTriage;
 import com.hivearmor.repository.soc_ai.UtmAiTriageRepository;
-import lombok.RequiredArgsConstructor;
+import com.hivearmor.service.UtmAlertService;
+import com.hivearmor.util.enums.AlertStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,12 +19,28 @@ import java.util.Locale;
 
 @Service
 @Transactional
-@RequiredArgsConstructor
 @Slf4j
 public class UtmAiTriageService {
 
+    private static final BigDecimal DEFAULT_AUTO_CLOSE_THRESHOLD = new BigDecimal("0.85");
+
     private final UtmAiTriageRepository triageRepository;
     private final ObjectMapper objectMapper;
+    private final UtmAlertService utmAlertService;
+    private final BigDecimal autoCloseThreshold;
+
+    public UtmAiTriageService(
+            UtmAiTriageRepository triageRepository,
+            ObjectMapper objectMapper,
+            UtmAlertService utmAlertService,
+            @Value("${hivearmor.soc-ai.auto-close-threshold:0.85}") BigDecimal autoCloseThreshold) {
+        this.triageRepository = triageRepository;
+        this.objectMapper = objectMapper;
+        this.utmAlertService = utmAlertService;
+        this.autoCloseThreshold = autoCloseThreshold != null
+            ? autoCloseThreshold
+            : DEFAULT_AUTO_CLOSE_THRESHOLD;
+    }
 
     public Optional<UtmAiTriage> getLatest(String alertId) {
         return triageRepository.findTopByAlertIdOrderByAnalyzedAtDesc(alertId);
@@ -68,12 +86,16 @@ public class UtmAiTriageService {
                 triage.setNextSteps(objectMapper.writeValueAsString(nextSteps));
             }
 
-            // Agentic early-exit foundation: high-confidence false positive → AUTO_CLOSED_FP
-            // (does not mutate the OpenSearch alert document in this path — triage ledger only).
-            if (isHighConfidenceFalsePositive(triage.getClassification(), triage.getConfidenceScore())) {
+            // STAGING CANDIDATE — agentic FP early-exit (not PRODUCTION READY).
+            // High-confidence false positive → triage ledger AUTO_CLOSED_FP and OpenSearch
+            // alert status via UtmAlertService.updateStatus (same path as POST /api/ha-alerts/status).
+            // Enrich → investigate FSM and attack-path are deferred.
+            if (isHighConfidenceFalsePositive(
+                    triage.getClassification(), triage.getConfidenceScore(), autoCloseThreshold)) {
                 triage.setStatus("AUTO_CLOSED_FP");
-                log.info("SOC-AI auto-closed FP triage for alert {} (confidence={})",
-                    alertId, triage.getConfidenceScore());
+                closeAlertAsFalsePositive(alertId, triage.getConfidenceScore());
+                log.info("SOC-AI auto-closed FP for alert {} (confidence={}, threshold={})",
+                    alertId, triage.getConfidenceScore(), autoCloseThreshold);
             }
         } catch (Exception e) {
             log.warn("Could not parse SOC-AI response JSON for alert {}: {}", alertId, e.getMessage());
@@ -84,15 +106,36 @@ public class UtmAiTriageService {
     }
 
     /**
-     * FP early-exit threshold — mirrors AiSOC-style auto-close at ≥0.85 confidence.
+     * Mutate OpenSearch alert status through the existing alert service path (system actor).
+     * Failures are logged only — ledger AUTO_CLOSED_FP is still persisted (STAGING CANDIDATE).
      */
-    static boolean isHighConfidenceFalsePositive(String classification, BigDecimal confidence) {
-        if (classification == null || confidence == null) {
+    private void closeAlertAsFalsePositive(String alertId, BigDecimal confidence) {
+        String observation = String.format(
+            "SOC-AI system actor auto-closed as false positive (confidence=%s, threshold=%s)",
+            confidence, autoCloseThreshold);
+        try {
+            utmAlertService.updateStatus(
+                List.of(alertId),
+                AlertStatus.FALSE_POSITIVE.getCode(),
+                observation);
+        } catch (Exception e) {
+            log.warn("SOC-AI could not mutate OpenSearch alert status for {}: {}",
+                alertId, e.getMessage());
+        }
+    }
+
+    /**
+     * FP early-exit when classification is FP/benign and confidence ≥ configured threshold
+     * ({@code hivearmor.soc-ai.auto-close-threshold} / {@code HA_SOC_AI_AUTO_CLOSE_THRESHOLD}, default 0.85).
+     */
+    static boolean isHighConfidenceFalsePositive(
+            String classification, BigDecimal confidence, BigDecimal threshold) {
+        if (classification == null || confidence == null || threshold == null) {
             return false;
         }
         String c = classification.trim().toLowerCase(Locale.ROOT);
         boolean isFp = c.contains("false positive") || c.equals("fp") || c.equals("benign");
-        return isFp && confidence.compareTo(new BigDecimal("0.85")) >= 0;
+        return isFp && confidence.compareTo(threshold) >= 0;
     }
 
     public UtmAiTriage savePending(String alertId) {
