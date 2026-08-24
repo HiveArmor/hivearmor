@@ -104,7 +104,7 @@ DELETE /api/ha-saved-queries/{id}
 ### Known Security Gaps (Do Not Replicate):
 - SEC-03: CorrelatedFindings status endpoint vulnerable → keep disabled
 - SEC-05: AgentManager no role check → keep remote actions disabled  
-- SEC-06: runVisualization no @PreAuthorize → GAP_SEC_06_RESOLVED = false
+- SEC-06: CLOSED (STAGING CANDIDATE) — runVisualization `@PreAuthorize` ADMIN|SOC_MANAGER|ANALYST; keep `GAP_SEC_06_RESOLVED = true`
 
 ### Role Mapping (Never expose ROLE_ constants):
 ```
