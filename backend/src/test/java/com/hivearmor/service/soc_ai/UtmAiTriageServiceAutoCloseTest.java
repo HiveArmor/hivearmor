@@ -26,13 +26,12 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for SOC-AI high-confidence FP auto-close.
+ * Unit tests for SOC-AI high-confidence FP auto-close and agentic FSM stubs.
  *
- * <p>STAGING CANDIDATE — verifies ledger + {@link UtmAlertService#updateStatus} wiring.
- * Not PRODUCTION READY.
+ * <p>STAGING CANDIDATE — verifies ledger + {@link UtmAlertService#updateStatus} wiring
+ * and {@code AUTO_TRIAGE → (END | ENRICH → INVESTIGATE → END)}. Not PRODUCTION READY.
  */
 @ExtendWith(MockitoExtension.class)
 class UtmAiTriageServiceAutoCloseTest {
@@ -103,6 +102,22 @@ class UtmAiTriageServiceAutoCloseTest {
     }
 
     @Test
+    void saveResult_highConfidenceFp_fsmEarlyExitsToEnd() {
+        String rawJson = """
+            {"classification":"false positive","confidence":0.90,"reasoning":["known scanner"]}
+            """;
+
+        UtmAiTriage result = triageService.saveResult("alert-fp-fsm", rawJson);
+
+        assertThat(result.getStatus()).isEqualTo("AUTO_CLOSED_FP");
+        assertThat(UtmAiTriageService.extractFsmPath(result.getNextSteps()))
+            .containsExactly("AUTO_TRIAGE", "END");
+        assertThat(result.getNextSteps())
+            .doesNotContain("ENRICH")
+            .doesNotContain("INVESTIGATE");
+    }
+
+    @Test
     void saveResult_belowThreshold_doesNotMutateAlert() throws Exception {
         String rawJson = """
             {"classification":"false positive","confidence":0.84,"reasoning":["borderline"]}
@@ -127,6 +142,38 @@ class UtmAiTriageServiceAutoCloseTest {
     }
 
     @Test
+    void saveResult_nonFp_fsmVisitsEnrichThenInvestigateThenEnd() {
+        String rawJson = """
+            {"classification":"possible incident","confidence":0.99,"reasoning":["lateral movement"],
+             "nextSteps":[{"action":"escalate","details":"page on-call"}]}
+            """;
+
+        UtmAiTriage result = triageService.saveResult("alert-tp-fsm", rawJson);
+
+        assertThat(result.getStatus()).isEqualTo("COMPLETED");
+        assertThat(UtmAiTriageService.extractFsmPath(result.getNextSteps()))
+            .containsExactly("AUTO_TRIAGE", "ENRICH", "INVESTIGATE", "END");
+        assertThat(result.getNextSteps())
+            .contains("stub — Neo4j")
+            .contains("stub — attack-path")
+            .contains("escalate");
+        verifyNoInteractions(utmAlertService);
+    }
+
+    @Test
+    void saveResult_belowThresholdFp_stillRunsFullFsmPath() {
+        String rawJson = """
+            {"classification":"false positive","confidence":0.84,"reasoning":["borderline"]}
+            """;
+
+        UtmAiTriage result = triageService.saveResult("alert-fp-low-fsm", rawJson);
+
+        assertThat(result.getStatus()).isEqualTo("COMPLETED");
+        assertThat(UtmAiTriageService.extractFsmPath(result.getNextSteps()))
+            .containsExactly("AUTO_TRIAGE", "ENRICH", "INVESTIGATE", "END");
+    }
+
+    @Test
     void saveResult_alertMutationFailure_stillPersistsLedgerAutoClose() throws Exception {
         doThrow(new ElasticsearchIndexDocumentUpdateException("opensearch unavailable"))
             .when(utmAlertService).updateStatus(anyList(), anyInt(), anyString());
@@ -138,10 +185,24 @@ class UtmAiTriageServiceAutoCloseTest {
         UtmAiTriage result = triageService.saveResult("alert-fp-fail", rawJson);
 
         assertThat(result.getStatus()).isEqualTo("AUTO_CLOSED_FP");
+        assertThat(UtmAiTriageService.extractFsmPath(result.getNextSteps()))
+            .containsExactly("AUTO_TRIAGE", "END");
         verify(triageRepository).save(any(UtmAiTriage.class));
         verify(utmAlertService).updateStatus(
             eq(List.of("alert-fp-fail")),
             eq(AlertStatus.FALSE_POSITIVE.getCode()),
             anyString());
+    }
+
+    @Test
+    void agenticTriageFsm_pathsMatchContract() {
+        assertThat(AgenticTriageFsm.run(true))
+            .containsExactly(AgenticTriageState.AUTO_TRIAGE, AgenticTriageState.END);
+        assertThat(AgenticTriageFsm.run(false))
+            .containsExactly(
+                AgenticTriageState.AUTO_TRIAGE,
+                AgenticTriageState.ENRICH,
+                AgenticTriageState.INVESTIGATE,
+                AgenticTriageState.END);
     }
 }
