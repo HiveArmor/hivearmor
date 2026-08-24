@@ -1,0 +1,18 @@
+{
+  "rule": "CEL-WIN-ENCODED-PS",
+  "expect": "nomatch",
+  "description": "Plain PowerShell without encoded flags must not fire",
+  "event": {
+    "id": "fx-cel-win-encoded-ps-neg-1",
+    "dataType": "powershell",
+    "dataSource": "fixture-agent",
+    "tenantId": "1",
+    "raw": "powershell.exe -NoProfile Get-Process",
+    "origin": {
+      "host": "fx-win-01",
+      "process": "powershell.exe",
+      "command": "powershell.exe -NoProfile Get-Process",
+      "user": "alice"
+    }
+  }
+}

@@ -7,7 +7,7 @@
       P1 LLMOps — durable LLM usage ledger (STAGING CANDIDATE).
       Stores prompt id/hash + token counts + cascade decisions. No prompt bodies / secrets.
     -->
-    <changeSet id="20260824005-1" author="hivearmor" context="dev,prod">
+    <changeSet id="20260824007-1" author="hivearmor" context="dev,prod">
         <createTable tableName="ha_llm_usage">
             <column name="id" type="BIGSERIAL">
                 <constraints primaryKey="true" nullable="false"/>

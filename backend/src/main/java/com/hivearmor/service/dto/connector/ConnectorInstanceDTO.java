@@ -21,6 +21,9 @@ public class ConnectorInstanceDTO {
     private Instant lastTestedAt;
     private Boolean lastTestOk;
     private String lastTestMessage;
+    private Instant lastIngestAt;
+    private Integer lastIngestCount;
+    private String lastIngestBatchId;
 
     public Long getId() {
         return id;
@@ -140,5 +143,29 @@ public class ConnectorInstanceDTO {
 
     public void setLastTestMessage(String lastTestMessage) {
         this.lastTestMessage = lastTestMessage;
+    }
+
+    public Instant getLastIngestAt() {
+        return lastIngestAt;
+    }
+
+    public void setLastIngestAt(Instant lastIngestAt) {
+        this.lastIngestAt = lastIngestAt;
+    }
+
+    public Integer getLastIngestCount() {
+        return lastIngestCount;
+    }
+
+    public void setLastIngestCount(Integer lastIngestCount) {
+        this.lastIngestCount = lastIngestCount;
+    }
+
+    public String getLastIngestBatchId() {
+        return lastIngestBatchId;
+    }
+
+    public void setLastIngestBatchId(String lastIngestBatchId) {
+        this.lastIngestBatchId = lastIngestBatchId;
     }
 }

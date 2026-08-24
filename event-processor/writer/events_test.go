@@ -45,6 +45,7 @@ func TestEventToDocKeepsParsedFieldsUnderCanonicalLogObject(t *testing.T) {
 func TestAlertToDocPublishesCanonicalDetectionAndEventAliases(t *testing.T) {
 	alert := &plugins.Alert{
 		Id:         "alert-1",
+		Category:   "Execution",
 		Technique:  "T1059.001 - PowerShell",
 		DataSource: "FIN-WKS-044 (agent-e2e)",
 		Events: []*plugins.Event{
@@ -58,6 +59,15 @@ func TestAlertToDocPublishesCanonicalDetectionAndEventAliases(t *testing.T) {
 	}
 	if got := doc["mitreTechniqueName"]; got != "PowerShell" {
 		t.Fatalf("expected canonical ATT&CK technique name, got %#v", got)
+	}
+	if got := doc["mitre.technique.id"]; got != "T1059.001" {
+		t.Fatalf("expected flattened mitre.technique.id, got %#v", got)
+	}
+	if got := doc["mitre.technique.name"]; got != "PowerShell" {
+		t.Fatalf("expected flattened mitre.technique.name, got %#v", got)
+	}
+	if got := doc["mitre.tactic"]; got != "Execution" {
+		t.Fatalf("expected flattened mitre.tactic from category, got %#v", got)
 	}
 	if got := doc["dataSources"].([]string); len(got) != 1 || got[0] != alert.DataSource {
 		t.Fatalf("expected canonical dataSources, got %#v", got)

@@ -2,6 +2,7 @@ package com.hivearmor.service.connector;
 
 import com.hivearmor.domain.connector.HaConnectorInstance;
 import com.hivearmor.repository.connector.HaConnectorInstanceRepository;
+import com.hivearmor.service.connector.impl.CrowdStrikeConnector;
 import com.hivearmor.service.connector.impl.OktaConnector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -29,6 +31,8 @@ class PlaybookConnectorDispatcherTest {
     private HaConnectorInstanceRepository instanceRepository;
     @Mock
     private OktaIdentityClient oktaIdentityClient;
+    @Mock
+    private ConnectorAlertIngestService ingestService;
 
     private PlaybookConnectorDispatcher dispatcher;
 
@@ -37,7 +41,8 @@ class PlaybookConnectorDispatcherTest {
         dispatcher = new PlaybookConnectorDispatcher(
             instanceService,
             new HaConnectorRegistry(oktaIdentityClient, false),
-            instanceRepository
+            instanceRepository,
+            ingestService
         );
     }
 
@@ -47,6 +52,33 @@ class PlaybookConnectorDispatcherTest {
         assertThat(dispatcher.supports("pull_alerts")).isTrue();
         assertThat(dispatcher.supports("disable_user")).isTrue();
         assertThat(dispatcher.supports("isolate_host")).isFalse();
+    }
+
+    @Test
+    void pullAlertsPersistsToStagingQueue() {
+        HaConnectorInstance row = crowdstrikeRow(7L);
+        when(instanceRepository.findById(7L)).thenReturn(Optional.of(row));
+        ConnectorIngestResult ingest = new ConnectorIngestResult(
+            "batch-abc",
+            7L,
+            CrowdStrikeConnector.ID,
+            2,
+            2,
+            0,
+            List.of()
+        );
+        when(ingestService.ingest(eq(7L), any())).thenReturn(ingest);
+
+        Map<String, Object> out = dispatcher.dispatch(
+            "pull_alerts",
+            Map.of("connectorInstanceId", 7L)
+        );
+
+        assertThat(out.get("action")).isEqualTo("connector.pull_alerts");
+        assertThat(out.get("persisted")).isEqualTo(true);
+        assertThat(out.get("destination")).isEqualTo("ha_connector_alert_staging");
+        assertThat(out.get("inserted")).isEqualTo(2);
+        assertThat(out.get("batchId")).isEqualTo("batch-abc");
     }
 
     @Test
@@ -180,6 +212,14 @@ class PlaybookConnectorDispatcherTest {
         HaConnectorInstance row = new HaConnectorInstance();
         row.setId(id);
         row.setConnectorId(OktaConnector.ID);
+        row.setEnabled(true);
+        return row;
+    }
+
+    private static HaConnectorInstance crowdstrikeRow(long id) {
+        HaConnectorInstance row = new HaConnectorInstance();
+        row.setId(id);
+        row.setConnectorId(CrowdStrikeConnector.ID);
         row.setEnabled(true);
         return row;
     }

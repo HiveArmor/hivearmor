@@ -26,9 +26,14 @@ public class UtmDashboard implements Serializable {
     @GeneratedValue(generator = "CustomIdentityGenerator")
     private Long id;
 
+    /**
+     * Unique per tenant via partial indexes {@code uk_hive_dashboard_tenant_name}
+     * / {@code uk_hive_dashboard_global_name} (see Liquibase 20260824005). Not
+     * column-level unique — global unique would block MSSP same-name dashboards.
+     */
     @NotNull
     @Size(max = 100)
-    @Column(name = "name", length = 100, nullable = false, unique = true)
+    @Column(name = "name", length = 100, nullable = false)
     private String name;
 
     @NotNull
@@ -75,6 +80,8 @@ public class UtmDashboard implements Serializable {
      * MSSP tenant scope ({@code ha_client.id}). Null denotes legacy global data —
      * when {@link com.hivearmor.multitenancy.TenantContext#getClientId()} is null,
      * list/get/update/delete remain unscoped (same pattern as investigation sessions).
+     * Name uniqueness is {@code (tenant_id, name)} via partial indexes
+     * (Liquibase 20260824005) — not a single nullable UNIQUE composite.
      * GAP-MT-05 / P1 Spike B — STAGING CANDIDATE.
      */
     @Column(name = "tenant_id")

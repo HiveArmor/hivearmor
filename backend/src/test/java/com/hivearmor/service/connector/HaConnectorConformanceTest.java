@@ -4,6 +4,7 @@ import com.hivearmor.service.connector.impl.AwsSecurityHubConnector;
 import com.hivearmor.service.connector.impl.AzureDefenderConnector;
 import com.hivearmor.service.connector.impl.AzureEntraConnector;
 import com.hivearmor.service.connector.impl.CrowdStrikeConnector;
+import com.hivearmor.service.connector.impl.GoogleWorkspaceConnector;
 import com.hivearmor.service.connector.impl.OktaConnector;
 import org.junit.jupiter.api.Test;
 
@@ -26,16 +27,34 @@ class HaConnectorConformanceTest {
     private final HaConnectorRegistry registry = new HaConnectorRegistry(false);
 
     @Test
-    void registryContainsExactlyFirstFive() {
+    void registryContainsExactlyFirstSix() {
         Set<String> ids = registry.all().stream().map(HaConnector::connectorId).collect(Collectors.toSet());
         assertThat(ids).containsExactlyInAnyOrder(
             CrowdStrikeConnector.ID,
             AzureDefenderConnector.ID,
             OktaConnector.ID,
             AzureEntraConnector.ID,
-            AwsSecurityHubConnector.ID
+            AwsSecurityHubConnector.ID,
+            GoogleWorkspaceConnector.ID
         );
-        assertThat(registry.size()).isEqualTo(5);
+        assertThat(registry.size()).isEqualTo(6);
+    }
+
+    @Test
+    void googleWorkspacePullAuditAndFailsWithoutConfig() {
+        HaConnector gw = registry.require(GoogleWorkspaceConnector.ID);
+        assertThat(gw.capabilities()).containsExactly(ConnectorCapability.PULL_AUDIT);
+        ConnectionTestResult empty = gw.testConnection(Map.of());
+        assertThat(empty.isOk()).isFalse();
+        assertThat(empty.getMessage()).containsIgnoringCase("missing");
+        ConnectionTestResult placeholders = gw.testConnection(Map.of(
+            "domain", "example.com",
+            "client_email", "placeholder@example.com",
+            "private_key", "-----BEGIN PLACEHOLDER-----",
+            "admin_email", "admin@example.com"
+        ));
+        assertThat(placeholders.isOk()).isFalse();
+        assertThat(placeholders.getMessage()).containsIgnoringCase("placeholder");
     }
 
     @Test

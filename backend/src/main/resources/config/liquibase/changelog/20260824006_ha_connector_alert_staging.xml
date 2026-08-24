@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+      ADR-20260824: connector pull staging queue (PostgreSQL sidecar).
+      NOT an OpenSearch alert index — never write v3-hive-alert-* from connectors.
+    -->
+    <changeSet id="20260824006-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="ha_connector_alert_staging"/>
+            </not>
+        </preConditions>
+        <createTable tableName="ha_connector_alert_staging">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="connector_instance_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="connector_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="external_id" type="varchar(256)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(512)"/>
+            <column name="description" type="TEXT"/>
+            <column name="severity" type="varchar(64)"/>
+            <column name="hostname" type="varchar(256)"/>
+            <column name="src_ip" type="varchar(64)"/>
+            <column name="mitre_techniques" type="varchar(512)"/>
+            <column name="alert_created_at" type="timestamptz"/>
+            <column name="raw_json" type="TEXT"/>
+            <column name="ingest_batch_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ingested_at" type="timestamptz">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint
+            tableName="ha_connector_alert_staging"
+            columnNames="connector_instance_id, external_id"
+            constraintName="uk_ha_connector_alert_staging_instance_ext"/>
+        <createIndex tableName="ha_connector_alert_staging" indexName="idx_ha_conn_alert_stg_instance">
+            <column name="connector_instance_id"/>
+        </createIndex>
+        <createIndex tableName="ha_connector_alert_staging" indexName="idx_ha_conn_alert_stg_batch">
+            <column name="ingest_batch_id"/>
+        </createIndex>
+        <createIndex tableName="ha_connector_alert_staging" indexName="idx_ha_conn_alert_stg_ingested">
+            <column name="ingested_at"/>
+        </createIndex>
+        <addForeignKeyConstraint
+            baseTableName="ha_connector_alert_staging"
+            baseColumnNames="connector_instance_id"
+            referencedTableName="ha_connector_instance"
+            referencedColumnNames="id"
+            constraintName="fk_ha_conn_alert_stg_instance"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="20260824006-2" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="ha_connector_instance"/>
+            <not>
+                <columnExists tableName="ha_connector_instance" columnName="last_ingest_at"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="ha_connector_instance">
+            <column name="last_ingest_at" type="timestamptz"/>
+            <column name="last_ingest_count" type="integer"/>
+            <column name="last_ingest_batch_id" type="varchar(64)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

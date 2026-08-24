@@ -1,5 +1,6 @@
 package com.hivearmor.service.connector.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.hivearmor.service.connector.ConnectionTestResult;
 import com.hivearmor.service.connector.ConnectorCapability;
 import com.hivearmor.service.connector.ConnectorField;
@@ -7,8 +8,13 @@ import com.hivearmor.service.connector.ConnectorSchema;
 import com.hivearmor.service.connector.MicrosoftOAuthClient;
 import com.hivearmor.service.connector.NormalizedAlert;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -101,22 +107,84 @@ public final class AzureDefenderConnector extends AbstractHttpConnector {
     @Override
     public List<NormalizedAlert> fetchAlerts(Map<String, String> config, Instant since) {
         validateRequiredFields(config);
-        return List.of();
+        if (MicrosoftOAuthClient.looksLikePlaceholder(config)) {
+            return List.of();
+        }
+        try {
+            String base = optional(config, "base_url", "https://api.securitycenter.microsoft.com")
+                .replaceAll("/$", "");
+            safeBase(base);
+            String token = oauth.fetchAccessToken(
+                require(config, "tenant_id"),
+                require(config, "client_id"),
+                require(config, "client_secret"),
+                MicrosoftOAuthClient.defenderScope()
+            );
+            StringBuilder url = new StringBuilder(base).append("/api/alerts?$top=50");
+            if (since != null) {
+                String filter = "alertCreationTime ge " + since.toString();
+                url.append("&$filter=").append(URLEncoder.encode(filter, StandardCharsets.UTF_8));
+            }
+            JsonNode root = oauth.getJson(url.toString(), token);
+            JsonNode value = root.path("value");
+            List<NormalizedAlert> out = new ArrayList<>();
+            if (value.isArray()) {
+                for (JsonNode node : value) {
+                    out.add(normalize(jsonToMap(node)));
+                }
+            }
+            return out;
+        } catch (Exception e) {
+            return List.of();
+        }
     }
 
     @Override
     public NormalizedAlert normalize(Map<String, Object> raw) {
+        Instant created = Instant.now();
+        Object createdRaw = raw.get("alertCreationTime");
+        if (createdRaw == null) {
+            createdRaw = raw.get("createdAt");
+        }
+        if (createdRaw instanceof String s && !s.isBlank()) {
+            try {
+                created = Instant.parse(s);
+            } catch (Exception ignored) {
+                // keep now
+            }
+        }
         return new NormalizedAlert(
             ID,
             asString(raw.getOrDefault("id", raw.get("external_id"))),
             asString(raw.getOrDefault("title", "Defender alert")),
             asString(raw.get("description")),
             asString(raw.getOrDefault("severity", "medium")),
-            asString(raw.getOrDefault("hostname", raw.get("deviceDnsName"))),
-            asString(raw.get("src_ip")),
+            asString(raw.getOrDefault("hostname", raw.getOrDefault("computerDnsName", raw.get("deviceDnsName")))),
+            asString(raw.getOrDefault("src_ip", raw.get("lastIpAddress"))),
             List.of(),
-            Instant.now(),
+            created,
             raw
         );
+    }
+
+    private static Map<String, Object> jsonToMap(JsonNode node) {
+        Map<String, Object> raw = new LinkedHashMap<>();
+        if (node == null || !node.isObject()) {
+            return raw;
+        }
+        Iterator<String> names = node.fieldNames();
+        while (names.hasNext()) {
+            String name = names.next();
+            JsonNode child = node.get(name);
+            if (child == null || child.isNull()) {
+                continue;
+            }
+            if (child.isValueNode()) {
+                raw.put(name, child.asText());
+            } else {
+                raw.put(name, child.toString());
+            }
+        }
+        return raw;
     }
 }

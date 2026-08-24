@@ -129,17 +129,26 @@ public class HaConnectorInstanceService {
     }
 
     /**
-     * Dry-run fetch — returns normalized alerts only. Does <strong>not</strong> write OpenSearch.
+     * Dry-run fetch — returns normalized alerts only. Does <strong>not</strong> write OpenSearch
+     * or the staging queue.
      */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> fetchAlerts(Long id, Instant since) {
+        return fetchAlertsNormalized(id, since).stream()
+            .map(NormalizedAlert::toMap)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Vendor pull returning typed alerts for staging ingest. Does not persist.
+     */
+    @Transactional(readOnly = true)
+    public List<NormalizedAlert> fetchAlertsNormalized(Long id, Instant since) {
         HaConnectorInstance row = require(id);
         HaConnector connector = registry.require(row.getConnectorId());
         Map<String, String> merged = decryptMergedConfig(row, connector);
         Instant from = since != null ? since : Instant.now().minusSeconds(3600);
-        return connector.fetchAlerts(merged, from).stream()
-            .map(NormalizedAlert::toMap)
-            .collect(Collectors.toList());
+        return connector.fetchAlerts(merged, from);
     }
 
     /**
@@ -258,6 +267,9 @@ public class HaConnectorInstanceService {
         dto.setLastTestedAt(row.getLastTestedAt());
         dto.setLastTestOk(row.getLastTestOk());
         dto.setLastTestMessage(row.getLastTestMessage());
+        dto.setLastIngestAt(row.getLastIngestAt());
+        dto.setLastIngestCount(row.getLastIngestCount());
+        dto.setLastIngestBatchId(row.getLastIngestBatchId());
         return dto;
     }
 

@@ -9,9 +9,10 @@ import java.util.Map;
 /**
  * Vendor-neutral alert shape after {@link HaConnector#normalize(Map)}.
  *
- * <p>Does <strong>not</strong> write to OpenSearch — callers may inspect or
- * queue for a future ADR-approved ingest path (never bypass event-processor
- * correlation without an ADR).
+ * <p>Does <strong>not</strong> write to OpenSearch. Callers may preview via
+ * dry-run fetch or persist via {@link ConnectorAlertIngestService} into the
+ * ADR-20260824 PostgreSQL staging queue (never bypass event-processor without
+ * a follow-up ADR).
  */
 public final class NormalizedAlert {
 
