@@ -10,6 +10,7 @@ import (
 	"github.com/threatwinds/go-sdk/catcher"
 	"github.com/hivearmor/plugins/soc-ai/config"
 	"github.com/hivearmor/plugins/soc-ai/correlation"
+	"github.com/hivearmor/plugins/soc-ai/internal/prompt"
 	"github.com/hivearmor/plugins/soc-ai/schema"
 	"github.com/hivearmor/plugins/soc-ai/utils"
 )
@@ -24,7 +25,8 @@ func isAnthropicProvider(url string) bool {
 
 // SendRequest sends an alert to the configured LLM for analysis
 func SendRequest(alert *schema.AlertFields) error {
-	content := config.LLM_INSTRUCTION
+	tpl := prompt.Require(prompt.IDAlertAnalysis)
+	content := tpl.Body
 	if alert == nil {
 		return fmt.Errorf("SendRequest: alert is nil")
 	}
@@ -109,6 +111,7 @@ func SendRequest(alert *schema.AlertFields) error {
 	for attempt := 1; attempt <= config.LLM_MAX_RETRIES; attempt++ {
 		var responseContent string
 		var status int
+		var usage schema.GPTUsage
 
 		if isAnthropic {
 			// Parse Anthropic response format
@@ -118,6 +121,13 @@ func SendRequest(alert *schema.AlertFields) error {
 			if err == nil && len(response.Content) > 0 {
 				responseContent = response.Content[0].Text
 			}
+			if err == nil {
+				usage = schema.GPTUsage{
+					PromptTokens:     response.Usage.InputTokens,
+					CompletionTokens: response.Usage.OutputTokens,
+					TotalTokens:      response.Usage.InputTokens + response.Usage.OutputTokens,
+				}
+			}
 		} else {
 			// Parse OpenAI-compatible response format
 			response, s, reqErr := utils.DoParseReq[schema.GPTResponse](cfg.URL, requestJson, "POST", headers, config.HTTP_GPT_TIMEOUT)
@@ -126,9 +136,13 @@ func SendRequest(alert *schema.AlertFields) error {
 			if err == nil && len(response.Choices) > 0 {
 				responseContent = response.Choices[0].Message.Content
 			}
+			if err == nil {
+				usage = response.Usage
+			}
 		}
 
 		if err == nil && responseContent != "" {
+			emitGPTUsageMetric(tpl, usage, alert.Id)
 			err = processResponse(alert, responseContent)
 			if err != nil {
 				return fmt.Errorf("error processing LLM response: %v", err)
@@ -200,6 +214,23 @@ func processResponse(alert *schema.AlertFields, response string) error {
 	alert.GPTNextSteps = strings.Join(nextSteps, "\n")
 
 	return nil
+}
+
+// emitGPTUsageMetric logs token usage as a structured metric (no prompt body / PII).
+func emitGPTUsageMetric(tpl prompt.Template, usage schema.GPTUsage, alertID string) {
+	if usage.PromptTokens == 0 && usage.CompletionTokens == 0 && usage.TotalTokens == 0 {
+		return
+	}
+	catcher.Info("llm_usage", map[string]any{
+		"process":           "plugin_com.hivearmor.soc-ai",
+		"metric":            "gpt_usage",
+		"prompt_id":         tpl.ID,
+		"prompt_hash":       tpl.SHA256,
+		"prompt_tokens":     usage.PromptTokens,
+		"completion_tokens": usage.CompletionTokens,
+		"total_tokens":      usage.TotalTokens,
+		"alert_id":          alertID,
+	})
 }
 
 // buildHeaders constructs the HTTP headers for the LLM request

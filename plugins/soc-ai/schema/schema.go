@@ -86,6 +86,13 @@ type AnthropicResponse struct {
 	Role    string             `json:"role"`
 	Content []AnthropicContent `json:"content"`
 	Model   string             `json:"model"`
+	Usage   AnthropicUsage     `json:"usage"`
+}
+
+// AnthropicUsage holds token counts from Anthropic Messages API responses.
+type AnthropicUsage struct {
+	InputTokens  int `json:"input_tokens"`
+	OutputTokens int `json:"output_tokens"`
 }
 
 // AnthropicContent represents content in Anthropic response

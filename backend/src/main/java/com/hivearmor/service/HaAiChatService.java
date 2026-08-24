@@ -6,6 +6,8 @@ import com.hivearmor.ai.ChatMessage;
 import com.hivearmor.ai.HaLlmService;
 import com.hivearmor.domain.HaAiChatHistory;
 import com.hivearmor.repository.HaAiChatHistoryRepository;
+import com.hivearmor.service.llm.LlmCascadeDecision;
+import com.hivearmor.service.llm.LlmCascadeGate;
 import com.hivearmor.service.llm.PromptRegistry;
 import com.hivearmor.service.llm.PromptTemplate;
 import com.hivearmor.web.rest.dto.AiChatHistoryDTO;
@@ -86,6 +88,7 @@ public class HaAiChatService {
     private final HaIncidentContextService incidentContextService;
     private final ObjectMapper objectMapper;
     private final PromptRegistry promptRegistry;
+    private final LlmCascadeGate cascadeGate;
 
     public HaAiChatService(
             HaLlmService llmService,
@@ -94,7 +97,7 @@ public class HaAiChatService {
             HaIncidentContextService incidentContextService,
             ObjectMapper objectMapper) {
         this(llmService, historyRepository, alertContextService, incidentContextService,
-            objectMapper, new PromptRegistry());
+            objectMapper, new PromptRegistry(), new LlmCascadeGate());
     }
 
     @Autowired
@@ -104,13 +107,15 @@ public class HaAiChatService {
             HaAlertContextService alertContextService,
             HaIncidentContextService incidentContextService,
             ObjectMapper objectMapper,
-            PromptRegistry promptRegistry) {
+            PromptRegistry promptRegistry,
+            LlmCascadeGate cascadeGate) {
         this.llmService             = llmService;
         this.historyRepository      = historyRepository;
         this.alertContextService    = alertContextService;
         this.incidentContextService = incidentContextService;
         this.objectMapper           = objectMapper;
         this.promptRegistry         = promptRegistry != null ? promptRegistry : new PromptRegistry();
+        this.cascadeGate            = cascadeGate != null ? cascadeGate : new LlmCascadeGate();
     }
 
     // =========================================================================
@@ -131,6 +136,21 @@ public class HaAiChatService {
     public Flux<String> streamChat(AiChatRequestDTO request, String userLogin) {
         PromptTemplate base = promptRegistry.require(PromptRegistry.ID_CHAT_BASE);
         log.debug("streamChat: promptId={} promptSha256={}", base.id(), base.sha256());
+
+        List<String> userContents = request.messages() == null
+            ? List.of()
+            : request.messages().stream()
+                .filter(m -> m != null && "user".equalsIgnoreCase(m.role()))
+                .map(m -> m.content())
+                .collect(Collectors.toList());
+        LlmCascadeDecision cascade = cascadeGate.evaluateChat(userContents);
+        if (cascade.skipLlm()) {
+            llmService.recordCascadeSkip(
+                cascade.reason(), base.id(), base.sha256(), userLogin);
+            log.debug("streamChat: cascade skip reason={}", cascade.reason());
+            return Flux.just(cascade.deterministicReply());
+        }
+
         String systemPrompt = composeSystemPrompt(request, base);
         List<ChatMessage> messages = toChatMessages(request.messages());
         return llmService.streamChat(messages, systemPrompt);
@@ -169,9 +189,21 @@ public class HaAiChatService {
                 "Alert not found: " + alertId);
         }
 
-        // 3. Call LLM.
         PromptTemplate triagePrompt = promptRegistry.require(PromptRegistry.ID_CHAT_TRIAGE);
         log.debug("generateTriage: promptId={} promptSha256={}", triagePrompt.id(), triagePrompt.sha256());
+
+        // 2b. Deterministic→LLM cascade: skip when payload is empty / trivial.
+        LlmCascadeDecision cascade = cascadeGate.evaluateAlertContext(alertJson);
+        if (cascade.skipLlm()) {
+            llmService.recordCascadeSkip(
+                cascade.reason(), triagePrompt.id(), triagePrompt.sha256(), userLogin);
+            log.debug("generateTriage: cascade skip reason={}", cascade.reason());
+            String summary = cascade.deterministicReply();
+            persistCached(userLogin, TRIAGE_CTX, alertId, summaryAsChatMessageDTOs(summary));
+            return summary;
+        }
+
+        // 3. Call LLM.
         List<ChatMessage> messages = triageMessages(alertJson);
         String summary = llmService.chat(messages, triagePrompt.body());
 

@@ -769,5 +769,8 @@
     <!-- P1 — investigation session case tasks + external ticket URL (STAGING CANDIDATE) -->
     <include file="/config/liquibase/changelog/20260824004_add_hive_session_task.xml" relativeToChangelogFile="false"/>
 
+    <!-- P1 LLMOps — durable LLM usage ledger (STAGING CANDIDATE) -->
+    <include file="/config/liquibase/changelog/20260824005_ha_llm_usage.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 

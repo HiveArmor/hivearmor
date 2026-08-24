@@ -2,6 +2,8 @@ package com.hivearmor.service.llm;
 
 import com.hivearmor.ai.ChatMessage;
 import com.hivearmor.ai.HaLlmService;
+import com.hivearmor.domain.HaLlmUsage;
+import com.hivearmor.repository.HaLlmUsageRepository;
 import com.hivearmor.repository.UtmConfigurationParameterRepository;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import net.jqwik.api.ForAll;
@@ -9,6 +11,7 @@ import net.jqwik.api.Label;
 import net.jqwik.api.Property;
 import net.jqwik.api.constraints.IntRange;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -20,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -68,6 +72,52 @@ class LlmUsageCounterTest {
         assertThat(registry.find(LlmUsageCounter.METRIC_PROMPT_TOKENS).counter().count()).isEqualTo(4.0d);
         assertThat(registry.find(LlmUsageCounter.METRIC_COMPLETION_TOKENS).counter().count()).isEqualTo(6.0d);
         assertThat(registry.find(LlmUsageCounter.METRIC_TOTAL_TOKENS).counter().count()).isEqualTo(10.0d);
+    }
+
+    @Test
+    void recordCascadeSkipIncrementsCounter() {
+        LlmUsageCounter counter = new LlmUsageCounter();
+        counter.recordCascadeSkip(LlmCascadeDecision.REASON_EMPTY_USER_MESSAGE,
+            PromptRegistry.ID_CHAT_BASE, "abc", "analyst");
+        assertThat(counter.getCascadeSkipCount()).isEqualTo(1L);
+        assertThat(counter.getRequestCount()).isZero();
+    }
+
+    @Test
+    void recordTokensPersistsLedgerWhenRepositoryPresent() {
+        HaLlmUsageRepository repo = mock(HaLlmUsageRepository.class);
+        when(repo.save(any(HaLlmUsage.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        LlmUsageCounter counter = new LlmUsageCounter(null, repo);
+        counter.recordTokens(10, 5, PromptRegistry.ID_CHAT_TRIAGE, "deadbeef", "analyst");
+
+        ArgumentCaptor<HaLlmUsage> captor = ArgumentCaptor.forClass(HaLlmUsage.class);
+        verify(repo).save(captor.capture());
+        HaLlmUsage row = captor.getValue();
+        assertThat(row.getPromptId()).isEqualTo(PromptRegistry.ID_CHAT_TRIAGE);
+        assertThat(row.getPromptHash()).isEqualTo("deadbeef");
+        assertThat(row.getPromptTokens()).isEqualTo(10L);
+        assertThat(row.getCompletionTokens()).isEqualTo(5L);
+        assertThat(row.getTotalTokens()).isEqualTo(15L);
+        assertThat(row.getCascadeDecision()).isEqualTo(HaLlmUsage.DECISION_CALL_LLM);
+        assertThat(row.getUserLogin()).isEqualTo("analyst");
+    }
+
+    @Test
+    void recordCascadeSkipPersistsLedgerWhenRepositoryPresent() {
+        HaLlmUsageRepository repo = mock(HaLlmUsageRepository.class);
+        when(repo.save(any(HaLlmUsage.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        LlmUsageCounter counter = new LlmUsageCounter(null, repo);
+        counter.recordCascadeSkip(LlmCascadeDecision.REASON_MISSING_ALERT_CONTEXT,
+            PromptRegistry.ID_CHAT_TRIAGE, "hash", "analyst");
+
+        ArgumentCaptor<HaLlmUsage> captor = ArgumentCaptor.forClass(HaLlmUsage.class);
+        verify(repo).save(captor.capture());
+        HaLlmUsage row = captor.getValue();
+        assertThat(row.getCascadeDecision()).isEqualTo(HaLlmUsage.DECISION_SKIP_LLM);
+        assertThat(row.getCascadeReason()).isEqualTo(LlmCascadeDecision.REASON_MISSING_ALERT_CONTEXT);
+        assertThat(row.getPromptTokens()).isNull();
     }
 
     @Test
