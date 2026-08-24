@@ -6,10 +6,13 @@ import com.hivearmor.ai.ChatMessage;
 import com.hivearmor.ai.HaLlmService;
 import com.hivearmor.ai.LlmNotConfiguredException;
 import com.hivearmor.multitenancy.MsspIndexResolver;
+import com.hivearmor.service.llm.PromptRegistry;
+import com.hivearmor.service.llm.PromptTemplate;
 import com.hivearmor.web.rest.dto.NlToDslRequestDTO;
 import com.hivearmor.web.rest.dto.NlToDslResponseDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Iterator;
@@ -84,20 +87,6 @@ public class HaSearchService {
     };
 
     /**
-     * System prompt for NL-to-DSL translation.
-     * Instructs the LLM to respond with a valid OpenSearch query DSL JSON object.
-     */
-    private static final String SYSTEM_PROMPT =
-        "You are a cybersecurity analyst assistant for the HiveArmor SIEM/XDR platform. " +
-        "Translate the user's natural-language search request into a valid OpenSearch query DSL " +
-        "JSON object. Respond ONLY with a JSON object — no markdown fences, no explanations outside " +
-        "the JSON, no prose. " +
-        "The JSON object MUST include a top-level \"query\" field (an object) with a valid OpenSearch " +
-        "query clause. Optionally include a top-level \"confidence\" number in [0.0, 1.0] and a " +
-        "top-level \"explanation\" string (one sentence describing what the query does). " +
-        "Do NOT include a \"script\" clause at any nesting level.";
-
-    /**
      * Maximum recursion depth for the DslValidator's script-key walk.
      * Caps pathological trees to prevent stack overflow.
      */
@@ -110,13 +99,23 @@ public class HaSearchService {
     private final HaLlmService haLlmService;
     private final ObjectMapper objectMapper;
     private final MsspIndexResolver msspIndexResolver;
+    private final PromptRegistry promptRegistry;
 
     public HaSearchService(HaLlmService haLlmService,
                            ObjectMapper objectMapper,
                            MsspIndexResolver msspIndexResolver) {
+        this(haLlmService, objectMapper, msspIndexResolver, new PromptRegistry());
+    }
+
+    @Autowired
+    public HaSearchService(HaLlmService haLlmService,
+                           ObjectMapper objectMapper,
+                           MsspIndexResolver msspIndexResolver,
+                           PromptRegistry promptRegistry) {
         this.haLlmService      = haLlmService;
         this.objectMapper      = objectMapper;
         this.msspIndexResolver = msspIndexResolver;
+        this.promptRegistry    = promptRegistry != null ? promptRegistry : new PromptRegistry();
     }
 
     // =========================================================================
@@ -152,7 +151,10 @@ public class HaSearchService {
         // Step 2: LLM call
         String rawLlmOutput;
         try {
-            rawLlmOutput = haLlmService.chat(buildMessages(sanitized), SYSTEM_PROMPT);
+            PromptTemplate searchPrompt = promptRegistry.require(PromptRegistry.ID_SEARCH_NL_TO_DSL);
+            log.debug("translateNlToDsl: promptId={} promptSha256={}",
+                searchPrompt.id(), searchPrompt.sha256());
+            rawLlmOutput = haLlmService.chat(buildMessages(sanitized), searchPrompt.body());
         } catch (LlmNotConfiguredException ex) {
             // Propagate — mapped to HTTP 503 by HaAiExceptionHandler
             throw ex;

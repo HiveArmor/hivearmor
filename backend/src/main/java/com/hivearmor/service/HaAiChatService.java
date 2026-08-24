@@ -6,12 +6,15 @@ import com.hivearmor.ai.ChatMessage;
 import com.hivearmor.ai.HaLlmService;
 import com.hivearmor.domain.HaAiChatHistory;
 import com.hivearmor.repository.HaAiChatHistoryRepository;
+import com.hivearmor.service.llm.PromptRegistry;
+import com.hivearmor.service.llm.PromptTemplate;
 import com.hivearmor.web.rest.dto.AiChatHistoryDTO;
 import com.hivearmor.web.rest.dto.AiChatRequestDTO;
 import com.hivearmor.web.rest.dto.AiIncidentSummaryDTO;
 import com.hivearmor.web.rest.dto.ChatMessageDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -73,36 +76,6 @@ public class HaAiChatService {
     /** Default risk level used when the LLM emits an unrecognised value. */
     private static final String RISK_DEFAULT = "medium";
 
-    /**
-     * Base system prompt prepended to every chat request.
-     * Context JSON (alert or incident) is appended after this string.
-     */
-    private static final String BASE_SYSTEM_PROMPT =
-        "You are a cybersecurity analyst assistant for the HiveArmor SIEM/XDR platform. " +
-        "Answer questions concisely and accurately based on the provided context. " +
-        "Focus on security-relevant information and actionable insights. " +
-        "Do not include personally identifiable information in your responses.";
-
-    /**
-     * System prompt used when generating triage summaries.
-     * Instructs the LLM to produce a structured, concise triage analysis.
-     */
-    private static final String TRIAGE_SYSTEM_PROMPT =
-        "You are a SOC analyst. Given the following alert context, provide a concise triage summary " +
-        "that covers: (1) what the alert indicates, (2) likely severity reasoning, " +
-        "(3) suggested immediate investigation steps. Keep the response under 300 words.";
-
-    /**
-     * System prompt used when generating incident summaries.
-     * Instructs the LLM to produce a JSON-structured {@code AiIncidentSummaryDTO}.
-     */
-    private static final String SUMMARY_SYSTEM_PROMPT =
-        "You are a senior security analyst. Given the incident context, respond with a valid JSON object " +
-        "matching this exact schema: " +
-        "{\"narrative\": \"<string>\", \"threatActorType\": \"<string>\", " +
-        "\"recommendedSteps\": [\"<string>\", ...], \"riskLevel\": \"<low|medium|high|critical>\"}. " +
-        "Respond ONLY with the JSON object — no markdown, no code fences, no extra text.";
-
     // -------------------------------------------------------------------------
     // Dependencies
     // -------------------------------------------------------------------------
@@ -112,6 +85,7 @@ public class HaAiChatService {
     private final HaAlertContextService alertContextService;
     private final HaIncidentContextService incidentContextService;
     private final ObjectMapper objectMapper;
+    private final PromptRegistry promptRegistry;
 
     public HaAiChatService(
             HaLlmService llmService,
@@ -119,11 +93,24 @@ public class HaAiChatService {
             HaAlertContextService alertContextService,
             HaIncidentContextService incidentContextService,
             ObjectMapper objectMapper) {
+        this(llmService, historyRepository, alertContextService, incidentContextService,
+            objectMapper, new PromptRegistry());
+    }
+
+    @Autowired
+    public HaAiChatService(
+            HaLlmService llmService,
+            HaAiChatHistoryRepository historyRepository,
+            HaAlertContextService alertContextService,
+            HaIncidentContextService incidentContextService,
+            ObjectMapper objectMapper,
+            PromptRegistry promptRegistry) {
         this.llmService             = llmService;
         this.historyRepository      = historyRepository;
         this.alertContextService    = alertContextService;
         this.incidentContextService = incidentContextService;
         this.objectMapper           = objectMapper;
+        this.promptRegistry         = promptRegistry != null ? promptRegistry : new PromptRegistry();
     }
 
     // =========================================================================
@@ -142,7 +129,9 @@ public class HaAiChatService {
      * @return non-empty Flux of text deltas
      */
     public Flux<String> streamChat(AiChatRequestDTO request, String userLogin) {
-        String systemPrompt = composeSystemPrompt(request);
+        PromptTemplate base = promptRegistry.require(PromptRegistry.ID_CHAT_BASE);
+        log.debug("streamChat: promptId={} promptSha256={}", base.id(), base.sha256());
+        String systemPrompt = composeSystemPrompt(request, base);
         List<ChatMessage> messages = toChatMessages(request.messages());
         return llmService.streamChat(messages, systemPrompt);
     }
@@ -181,8 +170,10 @@ public class HaAiChatService {
         }
 
         // 3. Call LLM.
+        PromptTemplate triagePrompt = promptRegistry.require(PromptRegistry.ID_CHAT_TRIAGE);
+        log.debug("generateTriage: promptId={} promptSha256={}", triagePrompt.id(), triagePrompt.sha256());
         List<ChatMessage> messages = triageMessages(alertJson);
-        String summary = llmService.chat(messages, TRIAGE_SYSTEM_PROMPT);
+        String summary = llmService.chat(messages, triagePrompt.body());
 
         // 4. Persist to cache.
         persistCached(userLogin, TRIAGE_CTX, alertId, summaryAsChatMessageDTOs(summary));
@@ -224,8 +215,11 @@ public class HaAiChatService {
         }
 
         // 3. Call LLM.
+        PromptTemplate summaryPrompt = promptRegistry.require(PromptRegistry.ID_CHAT_INCIDENT_SUMMARY);
+        log.debug("generateIncidentSummary: promptId={} promptSha256={}",
+            summaryPrompt.id(), summaryPrompt.sha256());
         List<ChatMessage> messages = summaryMessages(incidentJson);
-        String raw = llmService.chat(messages, SUMMARY_SYSTEM_PROMPT);
+        String raw = llmService.chat(messages, summaryPrompt.body());
 
         // 4. Parse and normalise.
         AiIncidentSummaryDTO dto        = parseSummaryOrFallback(raw);
@@ -306,8 +300,8 @@ public class HaAiChatService {
      * used alone rather than surfacing the error to the caller
      * (Requirements 3.4, 3.5, 3.6).
      */
-    private String composeSystemPrompt(AiChatRequestDTO request) {
-        StringBuilder sb = new StringBuilder(BASE_SYSTEM_PROMPT);
+    private String composeSystemPrompt(AiChatRequestDTO request, PromptTemplate base) {
+        StringBuilder sb = new StringBuilder(base.body());
         try {
             String ctx = null;
             if ("alert".equals(request.contextType()) && isNonBlank(request.contextId())) {
