@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  * REST controller for the File Integrity Monitoring (FIM) dashboard endpoint.
  *
  * <p>All endpoints are mounted under {@code /api/ha-edr} and are protected by
- * {@code @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_ADMIN')")}.
+ * {@code @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN')")}.
  *
  * <p>Constraints upheld:
  * <ul>
@@ -60,7 +60,7 @@ public class HaEdrFimResource {
      * @return 200 OK with a {@link FimSummaryDTO} body
      */
     @GetMapping("/fim/summary")
-    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN')")
     public ResponseEntity<FimSummaryDTO> getFimSummary(
             @RequestParam("from") String from,
             @RequestParam("to") String to,

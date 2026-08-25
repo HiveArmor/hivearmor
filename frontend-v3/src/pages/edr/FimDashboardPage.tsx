@@ -30,12 +30,17 @@ import * as echarts from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import { Shield } from 'lucide-react';
 
+import { AccessDeniedState } from '@/components/access-denied-state/AccessDeniedState';
 import { useFimSummary } from '@/hooks/useFimSummary';
 import { resolveHaToken, useHaThemeTokens } from '@/hooks/useHaThemeTokens';
+import { useAuthStore } from '@/store/auth.store';
 import type { FimSummaryQuery, PathCountDTO, SuspiciousHashDTO, TimeSeriesPoint } from '@/types/edr';
 
 // Register only the ECharts modules we use to keep bundle size down
 echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
+
+/** Matches nav + HaEdrFimResource PreAuthorize. */
+const FIM_ACCESS_ROLES = ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] as const;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -686,6 +691,33 @@ function FilterBar({
 // ---------------------------------------------------------------------------
 
 export function FimDashboardPage(): JSX.Element {
+  const hasAccess = useAuthStore((state) => state.hasAnyRole([...FIM_ACCESS_ROLES]));
+
+  if (!hasAccess) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          background: 'var(--ha-background)',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        aria-label="FIM access denied"
+      >
+        <AccessDeniedState
+          title="Access Restricted"
+          message="Required permission: Analyst, SOC Manager, or Platform Administrator"
+        />
+      </div>
+    );
+  }
+
+  return <FimDashboardContent />;
+}
+
+function FimDashboardContent(): JSX.Element {
   // ── Filter state ──────────────────────────────────────────────────────────
   const [from, setFrom] = useState<string>(minus24hIso);
   const [to, setTo] = useState<string>(nowIso);

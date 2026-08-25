@@ -59,6 +59,29 @@ describe('HaNavigation', () => {
     expect(screen.getByRole('button', { name: 'UEBA Risk' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Response Activity' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Detection Coverage' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'File Integrity' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Quarantine & Containment' })).toBeVisible();
+  });
+
+  it('hides File Integrity from roles outside Analyst, SOC Manager, and Platform Administrator', () => {
+    useAuthStore.setState({
+      user: {
+        id: 9,
+        login: 'reader',
+        firstName: 'Read',
+        lastName: 'Only',
+        email: 'reader@example.test',
+        roles: ['ROLE_USER'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.queryByRole('button', { name: 'File Integrity' })).not.toBeInTheDocument();
   });
 
   it('keeps admin-only orphaned routes out of the analyst rail', () => {
