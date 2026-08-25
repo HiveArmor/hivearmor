@@ -11,21 +11,23 @@ import {
 } from './response.capabilities';
 
 describe('Wave A3 Defend/respond honesty', () => {
-  it('keeps missing inventory/governance/audit capabilities fail-closed; SOAR audit projection enabled', () => {
-    expect(RESP_018_EXECUTION_INVENTORY).toBe(false);
+  it('enables RESP-018 inventory; keeps governance/audit fail-closed', () => {
+    expect(RESP_018_EXECUTION_INVENTORY).toBe(true);
     expect(RESP_018_SOAR_AUDIT_PROJECTION).toBe(true);
     expect(RESP_020_GOVERNANCE).toBe(false);
     expect(RESP_PLAYBOOK_AUDIT).toBe(false);
   });
 
-  it('A3-ACT-01 / A3-AUTH-01: live services gate missing backends', () => {
+  it('A3-ACT-01 / A3-AUTH-01: live services prefer executions inventory', () => {
     const source = readFileSync(join(process.cwd(), 'src/pages/response/responsePlaybooks.service.ts'), 'utf8');
     expect(source).toContain('RESP_018_EXECUTION_INVENTORY');
-    expect(source).toContain('RESP_018_SOAR_AUDIT_PROJECTION');
+    expect(source).toContain('/ha-playbooks/executions');
     expect(source).toContain('/soar/audit');
     expect(source).toContain('RESP_020_GOVERNANCE');
     expect(source).not.toContain('/ha-playbooks/quarantine');
     expect(source).not.toContain('/ha-action-catalog');
+    const page = readFileSync(join(process.cwd(), 'src/pages/response/ResponseActivityPage.tsx'), 'utf8');
+    expect(page).toContain('RESP_018_INVENTORY_TITLE');
   });
 
   it('A3-PB-01: playbook mutate UI is Admin-only', () => {

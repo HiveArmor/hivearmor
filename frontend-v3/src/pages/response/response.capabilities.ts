@@ -5,13 +5,13 @@
 
 /**
  * RESP-018: GET /ha-playbooks/executions, /executions/summary, /executions/{id}/trace.
- * PlaybookResource today has approve/reject/cancel/stream only — no inventory list.
+ * Inventory projects hive_playbook_execution; trace is best-effort from steps_log.
  */
-export const RESP_018_EXECUTION_INVENTORY = false;
+export const RESP_018_EXECUTION_INVENTORY = true;
 
 /**
  * Compatibility ledger: GET /api/soar/audit (UtmSoarPlaybookResource).
- * Not full RESP-018 inventory/summary/trace — labeled as SOAR audit projection.
+ * Kept as fallback when RESP_018_EXECUTION_INVENTORY is false.
  */
 export const RESP_018_SOAR_AUDIT_PROJECTION = true;
 
@@ -32,6 +32,9 @@ export const RESP_018_DISABLED_TITLE =
 
 export const RESP_018_SOAR_AUDIT_TITLE =
   'Showing SOAR audit projection from GET /api/soar/audit — not the full RESP-018 execution inventory';
+
+export const RESP_018_INVENTORY_TITLE =
+  'Showing RESP-018 execution inventory from GET /api/ha-playbooks/executions (+ summary/trace)';
 
 export const RESP_020_DISABLED_TITLE =
   'Response governance APIs are not available from the backend yet';

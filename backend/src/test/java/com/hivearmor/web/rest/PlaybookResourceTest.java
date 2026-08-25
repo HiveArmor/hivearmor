@@ -1,5 +1,6 @@
 package com.hivearmor.web.rest;
 
+import com.hivearmor.service.PlaybookExecutionInventoryService;
 import com.hivearmor.service.PlaybookExecutionStreamService;
 import com.hivearmor.service.PlaybookService;
 import com.hivearmor.service.dto.PlaybookDTO;
@@ -91,7 +92,7 @@ class PlaybookResourceTest {
 
     @BeforeEach
     void setUp() {
-        controller = new PlaybookResource(playbookService, playbookExecutionStreamService);
+        controller = new PlaybookResource(playbookService, playbookExecutionStreamService, mock(PlaybookExecutionInventoryService.class));
 
         mockMvcAdmin = MockMvcBuilders
                 .standaloneSetup(controller)
@@ -322,9 +323,15 @@ class PlaybookResourceTest {
         }
 
         @Bean
+        PlaybookExecutionInventoryService playbookExecutionInventoryService() {
+            return mock(PlaybookExecutionInventoryService.class);
+        }
+
+        @Bean
         PlaybookResource playbookResource(PlaybookService playbookService,
-                                          PlaybookExecutionStreamService playbookExecutionStreamService) {
-            return new PlaybookResource(playbookService, playbookExecutionStreamService);
+                                          PlaybookExecutionStreamService playbookExecutionStreamService,
+                                          PlaybookExecutionInventoryService playbookExecutionInventoryService) {
+            return new PlaybookResource(playbookService, playbookExecutionStreamService, playbookExecutionInventoryService);
         }
     }
 }
