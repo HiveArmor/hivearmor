@@ -323,3 +323,30 @@ export interface AgentPolicyFormValues {
   processMonitor?: boolean;
   assignedAgentIds?: string[];
 }
+
+/**
+ * Agent-reported policy ack/state — mirrors backend `AgentPolicyStateDTO`.
+ * Presence does not prove production host enforcement (POL-001).
+ */
+export interface AgentPolicyStateDTO {
+  id?: number;
+  agentId?: string;
+  policyId?: number;
+  appliedVersion?: number | null;
+  desiredVersion?: number | null;
+  state?: string | null;
+  lastCheckedAt?: string | null;
+  lastAppliedAt?: string | null;
+  driftDetails?: string | null;
+}
+
+/** Honesty envelope from GET /api/ha-edr/policies/{id}/enforcement (STAGING CANDIDATE). */
+export type AgentPolicyEvidenceAvailability = 'unavailable' | 'partial';
+
+export interface AgentPolicyEnforcementEvidenceDTO {
+  policyId: number;
+  assignedAgentIds: string[];
+  evidenceAvailability: AgentPolicyEvidenceAvailability;
+  honestyNote: string;
+  agentStates: AgentPolicyStateDTO[];
+}

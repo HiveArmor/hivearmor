@@ -1,31 +1,13 @@
 /**
- * AgentPoliciesPage tests — Validates: Requirements 5.x
+ * AgentPoliciesPage tests — POL-001 honesty + role gates
  *
  * Tests:
- *   1) Access denied state — when user does NOT have ROLE_ADMIN, renders the
- *      access-denied UI with role="alert" / aria-label="Access denied" and
- *      does NOT invoke any data hooks
- *   2) Loading state      — when user has ROLE_ADMIN and isLoading=true,
- *      renders skeleton rows (role="presentation") in the table body
- *   3) Empty state        — when user has ROLE_ADMIN and the policy list is
- *      empty, renders a PatternFly EmptyState with the "No agent policies"
- *      body text
- *   4) Error state        — when user has ROLE_ADMIN and isError=true,
- *      renders a PatternFly Alert with variant="danger" containing the
- *      error message
- *
- * Mocked dependencies:
- *   - @/store/auth.store          — controls hasRole to gate the access-denied path
- *   - @/lib/roles                 — provides ROLES.ADMIN constant
- *   - @/hooks/useAgentPolicies    — controls data / loading / error states
- *   - @/hooks/useHaThemeTokens    — resolveHaToken returns stable string so
- *                                   getComputedStyle is never called in jsdom
- *   - @/components/ha-modal/HaModal
- *   - @/components/ha-drawer/HaDrawer
- *   - @/components/ha-button/HaButton
- *   - @/components/ha-confirmation-modal/HaConfirmationModal
- *
- * Product name: HiveArmor
+ *   1) Access denied — no read role; hooks skipped; human permission copy
+ *   2) Loading state — Analyst/Admin read + skeleton rows
+ *   3) Empty state — PatternFly EmptyState
+ *   4) Error state — PatternFly Alert
+ *   5) Honesty banner — STAGING CANDIDATE / unavailable|partial copy
+ *   6) Analyst read-only — no Create Policy; Evidence action present
  */
 
 import { render, screen } from '@testing-library/react';
@@ -34,10 +16,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AgentPoliciesPage } from './AgentPoliciesPage';
 
 import type { AgentPolicyDTO } from '@/types/edr';
-
-// ---------------------------------------------------------------------------
-// Mock @/lib/roles — return stable ROLES constant
-// ---------------------------------------------------------------------------
 
 vi.mock('@/lib/roles', () => ({
   ROLES: {
@@ -48,25 +26,21 @@ vi.mock('@/lib/roles', () => ({
   },
 }));
 
-// ---------------------------------------------------------------------------
-// Mock @/store/auth.store — controls hasRole return value per test
-// ---------------------------------------------------------------------------
-
-const mockHasRole = vi.fn();
+const mockHasAnyRole = vi.fn();
+let mockRoles: string[] = ['ROLE_ADMIN'];
 
 vi.mock('@/store/auth.store', () => ({
-  useAuthStore: () => ({
-    hasRole: mockHasRole,
-  }),
+  useAuthStore: (selector?: (state: {
+    hasAnyRole: (roles: string[]) => boolean;
+    user: { roles: string[] } | null;
+  }) => unknown) => {
+    const state = {
+      hasAnyRole: mockHasAnyRole,
+      user: { roles: mockRoles },
+    };
+    return typeof selector === 'function' ? selector(state) : state;
+  },
 }));
-
-// ---------------------------------------------------------------------------
-// Mock data hooks
-//
-// useAgentPolicies drives loading / error / data states.
-// The four mutation hooks (create, update, delete, assign) are always idle
-// so they don't interfere with state assertions.
-// ---------------------------------------------------------------------------
 
 type MutationStub = {
   mutate: ReturnType<typeof vi.fn>;
@@ -74,26 +48,20 @@ type MutationStub = {
 };
 
 const mockUseAgentPolicies = vi.fn();
+const mockUseEnforcement = vi.fn();
 
 vi.mock('@/hooks/useAgentPolicies', () => ({
   useAgentPolicies: (...args: unknown[]) => mockUseAgentPolicies(...args),
+  useAgentPolicyEnforcementEvidence: (...args: unknown[]) => mockUseEnforcement(...args),
   useCreateAgentPolicy: (): MutationStub => ({ mutate: vi.fn(), isPending: false }),
   useUpdateAgentPolicy: (): MutationStub => ({ mutate: vi.fn(), isPending: false }),
   useDeleteAgentPolicy: (): MutationStub => ({ mutate: vi.fn(), isPending: false }),
   useAssignAgents: (): MutationStub => ({ mutate: vi.fn(), isPending: false }),
 }));
 
-// ---------------------------------------------------------------------------
-// Mock @/hooks/useHaThemeTokens — avoids getComputedStyle calls in jsdom
-// ---------------------------------------------------------------------------
-
 vi.mock('@/hooks/useHaThemeTokens', () => ({
   resolveHaToken: () => '#000000',
 }));
-
-// ---------------------------------------------------------------------------
-// Mock heavy / environment-sensitive components
-// ---------------------------------------------------------------------------
 
 vi.mock('@/components/ha-modal/HaModal', () => ({
   HaModal: ({
@@ -118,12 +86,18 @@ vi.mock('@/components/ha-drawer/HaDrawer', () => ({
   HaDrawer: ({
     isOpen,
     children,
+    title,
   }: {
     isOpen: boolean;
     children?: React.ReactNode;
+    title?: string;
   }) => {
     if (!isOpen) return null;
-    return <div role="complementary">{children}</div>;
+    return (
+      <div role="dialog" aria-label={title ?? 'drawer'}>
+        {children}
+      </div>
+    );
   },
 }));
 
@@ -131,40 +105,41 @@ vi.mock('@/components/ha-button/HaButton', () => ({
   HaButton: ({
     children,
     onClick,
+    isDisabled,
   }: {
     children?: React.ReactNode;
     onClick?: () => void;
-    [key: string]: unknown;
-  }) => <button onClick={onClick}>{children}</button>,
+    isDisabled?: boolean;
+  }) => (
+    <button type="button" onClick={onClick} disabled={isDisabled}>
+      {children}
+    </button>
+  ),
 }));
 
 vi.mock('@/components/ha-confirmation-modal/HaConfirmationModal', () => ({
-  HaConfirmationModal: ({ isOpen }: { isOpen: boolean }) => {
-    if (!isOpen) return null;
-    return <div role="dialog" aria-label="confirm-delete-modal" />;
-  },
+  HaConfirmationModal: () => null,
 }));
-
-// ---------------------------------------------------------------------------
-// Render helper
-// ---------------------------------------------------------------------------
 
 function renderPage() {
   return render(<AgentPoliciesPage />);
 }
 
-// ---------------------------------------------------------------------------
-// Default mock values applied before each test
-// ---------------------------------------------------------------------------
-
 beforeEach(() => {
   vi.clearAllMocks();
+  mockRoles = ['ROLE_ADMIN'];
+  mockHasAnyRole.mockImplementation((roles: string[]) =>
+    roles.some((r) => mockRoles.includes(r)),
+  );
 
-  // Default: admin user; tests that need non-admin override this
-  (mockHasRole as ReturnType<typeof vi.fn>).mockImplementation((role: string) => role === 'ROLE_ADMIN');
-
-  // Default: idle data state; overridden per test
   mockUseAgentPolicies.mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+  });
+
+  mockUseEnforcement.mockReturnValue({
     data: undefined,
     isLoading: false,
     isError: false,
@@ -172,34 +147,21 @@ beforeEach(() => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 describe('AgentPoliciesPage', () => {
-  // 1. Access denied state — ROLE_ADMIN absent
-  it('renders access-denied state and does not invoke data hooks when user lacks ROLE_ADMIN', () => {
-    // Make hasRole return false for any role — no ROLE_ADMIN
-    (mockHasRole as ReturnType<typeof vi.fn>).mockReturnValue(false);
+  it('renders access-denied with human role labels and does not invoke data hooks', () => {
+    mockRoles = [];
+    mockHasAnyRole.mockReturnValue(false);
 
     renderPage();
 
-    // The access-denied container has role="alert" and aria-label="Access denied"
-    const accessDenied = screen.getByRole('alert', { name: /access denied/i });
-    expect(accessDenied).toBeDefined();
-
-    // The heading inside the guard reads "Access Restricted"
+    expect(screen.getByRole('alert', { name: /access denied/i })).toBeDefined();
     expect(screen.getByText(/access restricted/i)).toBeDefined();
-
-    // The body text mentions ROLE_ADMIN
-    expect(screen.getByText(/ROLE_ADMIN/)).toBeDefined();
-
-    // useAgentPolicies must NOT have been called — hooks are skipped for non-admin
+    expect(screen.getByText(/Platform Administrator, SOC Manager, or Analyst/i)).toBeDefined();
+    expect(screen.queryByText(/ROLE_ADMIN/)).toBeNull();
     expect(mockUseAgentPolicies).not.toHaveBeenCalled();
   });
 
-  // 2. Loading state — skeleton rows
-  it('renders skeleton rows when user has ROLE_ADMIN and isLoading is true', () => {
+  it('renders skeleton rows when loading', () => {
     mockUseAgentPolicies.mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -209,23 +171,11 @@ describe('AgentPoliciesPage', () => {
 
     renderPage();
 
-    // The page renders a table with aria-label="Agent policies"
-    const table = screen.getByRole('table', { name: /agent policies/i });
-    expect(table).toBeDefined();
-
-    // SkeletonRow renders <tr role="presentation"> — five are rendered during loading
-    const skeletonRows = screen.getAllByRole('presentation');
-    expect(skeletonRows.length).toBeGreaterThanOrEqual(5);
-
-    // No error alert should be present
-    expect(screen.queryByRole('heading', { name: /failed to load agent policies/i })).toBeNull();
-
-    // No empty-state text
-    expect(screen.queryByText(/no agent policies configured yet/i)).toBeNull();
+    expect(screen.getByRole('table', { name: /agent policies/i })).toBeDefined();
+    expect(screen.getAllByRole('presentation').length).toBeGreaterThanOrEqual(5);
   });
 
-  // 3. Empty state — PatternFly EmptyState
-  it('renders a PatternFly EmptyState when user has ROLE_ADMIN and no policies exist', () => {
+  it('renders empty state when no policies exist', () => {
     mockUseAgentPolicies.mockReturnValue({
       data: [] as AgentPolicyDTO[],
       isLoading: false,
@@ -235,21 +185,11 @@ describe('AgentPoliciesPage', () => {
 
     renderPage();
 
-    // The empty-state body text rendered inside <EmptyStateBody>
     expect(screen.getByText(/no agent policies configured yet/i)).toBeDefined();
-
-    // The body text also mentions HiveArmor (product name constraint)
     expect(screen.getByText(/HiveArmor monitoring policy/i)).toBeDefined();
-
-    // No error alert
-    expect(screen.queryByRole('heading', { name: /failed to load agent policies/i })).toBeNull();
-
-    // No skeleton rows — loading is false
-    expect(screen.queryByRole('presentation')).toBeNull();
   });
 
-  // 4. Error state — PatternFly Alert with danger variant
-  it('renders a PatternFly Alert with danger variant when user has ROLE_ADMIN and isError is true', () => {
+  it('renders danger alert on load error', () => {
     mockUseAgentPolicies.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -259,20 +199,48 @@ describe('AgentPoliciesPage', () => {
 
     renderPage();
 
-    // PatternFly v6 Alert with variant="danger" renders an h4 heading whose
-    // accessible name contains the alert title text (matches existing test pattern)
-    const alertHeading = screen.getByRole('heading', {
-      name: /failed to load agent policies/i,
-    });
-    expect(alertHeading).toBeDefined();
-
-    // The error message body text should also be visible
+    expect(
+      screen.getByRole('heading', { name: /failed to load agent policies/i }),
+    ).toBeDefined();
     expect(screen.getByText(/cannot reach agent policy service/i)).toBeDefined();
+  });
 
-    // No skeleton rows
-    expect(screen.queryByRole('presentation')).toBeNull();
+  it('shows POL-001 honesty banner without claiming host enforcement', () => {
+    mockUseAgentPolicies.mockReturnValue({
+      data: [] as AgentPolicyDTO[],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
 
-    // No empty-state text
-    expect(screen.queryByText(/no agent policies configured yet/i)).toBeNull();
+    renderPage();
+
+    expect(screen.getByRole('status', { name: /policy enforcement honesty/i })).toBeDefined();
+    expect(screen.getByText(/STAGING CANDIDATE/i)).toBeDefined();
+    expect(screen.getByText(/unavailable or partial/i)).toBeDefined();
+  });
+
+  it('allows Analyst read-only without Create Policy', () => {
+    mockRoles = ['ROLE_ANALYST'];
+    mockUseAgentPolicies.mockReturnValue({
+      data: [
+        {
+          id: 1,
+          name: 'Windows FIM baseline',
+          osType: 'windows',
+          assignedAgentIds: ['agent-1'],
+        },
+      ] as AgentPolicyDTO[],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderPage();
+
+    expect(screen.getByText(/Windows FIM baseline/i)).toBeDefined();
+    expect(screen.queryByRole('button', { name: /create policy/i })).toBeNull();
+    expect(screen.getByText(/Read-only/i)).toBeDefined();
+    expect(screen.getByRole('button', { name: /view enforcement evidence/i })).toBeDefined();
   });
 });

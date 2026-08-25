@@ -5,13 +5,17 @@
  *
  * Endpoints:
  *   GET    /api/ha-edr/policies
+ *   GET    /api/ha-edr/policies/{id}/enforcement  (POL-001 STAGING CANDIDATE)
  *   POST   /api/ha-edr/policies
  *   PUT    /api/ha-edr/policies/{id}
  *   DELETE /api/ha-edr/policies/{id}
  *   POST   /api/ha-edr/policies/{id}/assign
  */
 
-import type { AgentPolicyDTO } from '../types/edr';
+import type {
+  AgentPolicyDTO,
+  AgentPolicyEnforcementEvidenceDTO,
+} from '../types/edr';
 
 import { apiClient } from '@/lib/apiClient';
 
@@ -97,4 +101,22 @@ export async function assignAgents(
   agentIds: string[],
 ): Promise<AgentPolicyDTO> {
   return apiClient.post<AgentPolicyDTO>(`/ha-edr/policies/${id}/assign`, { agentIds });
+}
+
+// ---------------------------------------------------------------------------
+// Enforcement evidence (POL-001)
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetches assignment plus agent-reported state rows for a policy.
+ *
+ * Issues GET /api/ha-edr/policies/{id}/enforcement. Availability is only
+ * `unavailable` or `partial` — never treat as production host enforcement.
+ */
+export async function getAgentPolicyEnforcementEvidence(
+  id: number,
+): Promise<AgentPolicyEnforcementEvidenceDTO> {
+  return apiClient.get<AgentPolicyEnforcementEvidenceDTO>(
+    `/ha-edr/policies/${id}/enforcement`,
+  );
 }
