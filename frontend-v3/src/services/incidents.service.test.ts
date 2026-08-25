@@ -151,3 +151,34 @@ describe('getIncidentSlaStats', () => {
     localStorage.removeItem('hivearmor_auth_token');
   });
 });
+
+describe('getMissionControlIncidentKpis (A1-KPI-01)', () => {
+  it('derives population totals via size=1 counts, not a sample page', async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => {
+      let total = '0';
+      if (String(url).includes('incidentPriority.in=P1')) total = '7';
+      else if (String(url).includes('slaBreached.equals=true')) total = '3';
+      else if (String(url).includes('incidentAssignedTo.specified=false')) total = '11';
+      else if (String(url).includes('incidentStatus.in=')) total = '42';
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'X-Total-Count': total },
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    localStorage.setItem('hivearmor_auth_token', 'test-token');
+
+    const { getMissionControlIncidentKpis } = await import('./incidents.service');
+    const kpis = await getMissionControlIncidentKpis();
+    expect(kpis).toEqual({
+      openTotal: 42,
+      criticalP1: 7,
+      slaBreached: 3,
+      unassigned: 11,
+      partial: false,
+    });
+    expect(fetchMock.mock.calls.every(([url]) => String(url).includes('size=1'))).toBe(true);
+
+    localStorage.removeItem('hivearmor_auth_token');
+  });
+});

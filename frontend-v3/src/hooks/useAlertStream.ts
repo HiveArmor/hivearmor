@@ -32,7 +32,8 @@ export function useAlertStream(): void {
     const connect = async (): Promise<void> => {
       try {
         abortControllerRef.current = new AbortController();
-        const url = '/api/alerts/stream';
+        // A1-SSE-01: hardened, rate-limited, queue-tier @PreAuthorize stream
+        const url = '/api/ha-alerts/stream';
 
         const response = await fetch(url, {
           headers: {

@@ -21,12 +21,15 @@ import {
   type FoundationPriorityItem,
 } from '@/pages/command-center/commandCenter.fixtures';
 import type { IncidentListParams } from '@/services/incidents.service';
-import { getIncidents } from '@/services/incidents.service';
+import { getIncidents, getMissionControlIncidentKpis } from '@/services/incidents.service';
 import { useAuthStore } from '@/store/auth.store';
 
 import './CommandCenterPage.css';
 
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
+/** Priority work stream is a ranked sample — KPIs use population counts (A1-KPI-01). */
+const PRIORITY_WORK_SAMPLE_SIZE = 5;
 
 function metricFromState(
   label: string,
@@ -57,7 +60,12 @@ export function CommandCenterPage(): JSX.Element {
   const { eps, connected: epsConnected } = useEpsStream();
   const selectedTenantId = useAuthStore((state) => state.selectedTenantId);
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  const incidentParams: IncidentListParams = { page: 0, size: 5, status: 'open', sort: 'createdAt,desc' };
+  const incidentParams: IncidentListParams = {
+    page: 0,
+    size: PRIORITY_WORK_SAMPLE_SIZE,
+    status: 'open,in_progress',
+    sort: 'createdAt,desc',
+  };
   const scopeLabel = selectedTenantId === null ? 'All authorized tenants' : (TENANT_SCOPE_LABELS[selectedTenantId] ?? `Tenant ${String(selectedTenantId)}`);
 
   const summaryQuery = useQuery({
@@ -66,9 +74,15 @@ export function CommandCenterPage(): JSX.Element {
     refetchInterval: 30_000,
     enabled: !fixtureMode,
   });
+  const incidentKpisQuery = useQuery({
+    queryKey: ['incidents', 'mission-control-kpis', selectedTenantId],
+    queryFn: ({ signal }) => getMissionControlIncidentKpis(signal),
+    refetchInterval: 30_000,
+    enabled: !fixtureMode,
+  });
   const incidentsQuery = useQuery({
-    queryKey: ['incidents', incidentParams, selectedTenantId],
-    queryFn: () => getIncidents(incidentParams),
+    queryKey: ['incidents', 'priority-sample', incidentParams, selectedTenantId],
+    queryFn: ({ signal }) => getIncidents(incidentParams, signal),
     refetchInterval: 30_000,
     enabled: !fixtureMode,
   });
@@ -84,30 +98,49 @@ export function CommandCenterPage(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (summaryQuery.data || incidentsQuery.data || timelineQuery.data) setLastUpdated(new Date());
-  }, [incidentsQuery.data, summaryQuery.data, timelineQuery.data]);
+    if (summaryQuery.data || incidentKpisQuery.data || incidentsQuery.data || timelineQuery.data) {
+      setLastUpdated(new Date());
+    }
+  }, [incidentKpisQuery.data, incidentsQuery.data, summaryQuery.data, timelineQuery.data]);
 
   const productionMetrics = useMemo<FoundationMetric[]>(() => {
     const summary = summaryQuery.data;
-    const incidents = incidentsQuery.data;
-    const incidentItems = incidents?.items ?? [];
-    const unassigned = incidentItems.filter((incident) => !incident.assignee).length;
-    const criticalIncidents = incidentItems.filter((incident) => String(incident.severity).toLowerCase() === 'critical').length;
-    const slaAtRisk = incidentItems.filter((incident) => {
-      if (!incident.slaDueAt) return false;
-      const remaining = new Date(incident.slaDueAt).getTime() - Date.now();
-      return remaining > 0 && remaining < 30 * 60 * 1000;
-    }).length;
+    const kpis = incidentKpisQuery.data;
+    const criticalIncidents = kpis?.criticalP1 ?? 0;
+    const slaBreached = kpis?.slaBreached ?? 0;
+    const unassigned = kpis?.unassigned ?? 0;
+    const openTotal = kpis?.openTotal ?? 0;
+    const kpiPartial = kpis?.partial === true || incidentKpisQuery.isError;
 
     return [
-      metricFromState('Critical open incidents', String(criticalIncidents), `${incidents?.total ?? 0} total open incidents`, criticalIncidents ? 'critical' : 'healthy', '/incidents'),
+      metricFromState(
+        'Critical open incidents',
+        incidentKpisQuery.isError ? '—' : String(criticalIncidents),
+        kpiPartial
+          ? `Partial · ${openTotal} active open/in-review (population)`
+          : `${openTotal} active open/in-review (population)`,
+        criticalIncidents ? 'critical' : 'healthy',
+        '/incidents'
+      ),
       metricFromState('Critical alert volume', String(summary?.critical ?? 0), 'Current severity summary', (summary?.critical ?? 0) ? 'high' : 'healthy', '/alerts'),
-      metricFromState('SLA at risk', String(slaAtRisk), 'Due within 30 minutes', slaAtRisk ? 'high' : 'healthy', '/queue'),
-      metricFromState('Unassigned cases', String(unassigned), 'Requires analyst ownership', unassigned ? 'info' : 'healthy', '/queue'),
+      metricFromState(
+        'SLA breached',
+        incidentKpisQuery.isError ? '—' : String(slaBreached),
+        'Open/in-review with SLA breach (population)',
+        slaBreached ? 'high' : 'healthy',
+        '/queue'
+      ),
+      metricFromState(
+        'Unassigned cases',
+        incidentKpisQuery.isError ? '—' : String(unassigned),
+        'Requires analyst ownership (population)',
+        unassigned ? 'info' : 'healthy',
+        '/queue'
+      ),
       metricFromState('Detection visibility', summaryQuery.isError ? 'Unknown' : 'Available', 'Alert summary processing', summaryQuery.isError ? 'stale' : 'healthy', '/detection-rules'),
       metricFromState('Data ingestion', epsConnected ? 'Live' : 'Delayed', `${eps.toLocaleString()} events per second`, epsConnected ? 'healthy' : 'stale', '/posture/sensors'),
     ];
-  }, [eps, epsConnected, incidentsQuery.data, summaryQuery.data, summaryQuery.isError]);
+  }, [eps, epsConnected, incidentKpisQuery.data, incidentKpisQuery.isError, summaryQuery.data, summaryQuery.isError]);
 
   const priorityWork = useMemo<FoundationPriorityItem[]>(() => {
     if (fixtureMode) return foundationPriorityWork;
@@ -124,9 +157,16 @@ export function CommandCenterPage(): JSX.Element {
   }, [incidentsQuery.data]);
 
   const metrics = fixtureMode ? foundationMetrics : productionMetrics;
-  const loading = !fixtureMode && (summaryQuery.isLoading || incidentsQuery.isLoading);
-  const fullFailure = !fixtureMode && summaryQuery.isError && incidentsQuery.isError;
-  const partialFailure = !fixtureMode && !fullFailure && (summaryQuery.isError || incidentsQuery.isError || timelineQuery.isError);
+  const loading = !fixtureMode && (summaryQuery.isLoading || incidentKpisQuery.isLoading || incidentsQuery.isLoading);
+  const fullFailure = !fixtureMode && summaryQuery.isError && incidentKpisQuery.isError && incidentsQuery.isError;
+  const partialFailure =
+    !fixtureMode &&
+    !fullFailure &&
+    (summaryQuery.isError ||
+      incidentKpisQuery.isError ||
+      incidentKpisQuery.data?.partial === true ||
+      incidentsQuery.isError ||
+      timelineQuery.isError);
 
   const liveTrendOption = useMemo<EChartsOption>(() => {
     const buckets = timelineQuery.data ?? [];
@@ -167,6 +207,10 @@ export function CommandCenterPage(): JSX.Element {
     void queryClient.invalidateQueries({ queryKey: ['incidents'] });
     void queryClient.invalidateQueries({ queryKey: ['overview', 'alert-timeline'] });
   };
+
+  const prioritySampleLabel = fixtureMode
+    ? 'Demonstration sample'
+    : `Top ${PRIORITY_WORK_SAMPLE_SIZE} open sample · KPI tiles use population totals`;
 
   return (
     <section className="mission-control" aria-labelledby="mission-control-title">
@@ -226,7 +270,7 @@ export function CommandCenterPage(): JSX.Element {
           </article>
 
           <article className="mission-panel mission-panel--span">
-            <header className="mission-panel__header"><div><h2>Priority work stream</h2><p>Ranked by severity, SLA exposure, and current ownership.</p></div><Link to="/queue">Open analyst queue</Link></header>
+            <header className="mission-panel__header"><div><h2>Priority work stream</h2><p>Ranked by severity, SLA exposure, and current ownership. {prioritySampleLabel}.</p></div><Link to="/queue">Open analyst queue</Link></header>
             {incidentsQuery.isLoading && !fixtureMode ? <div className="mission-state">Loading priority work…</div> : priorityWork.length ? <ol className="priority-list">{priorityWork.map((item) => <li className="priority-item" key={item.id}><span className="severity-badge" data-state={item.severity}>{item.severity}</span><div className="priority-item__title"><strong>{item.title}</strong><span>{item.id} · {item.type}</span></div><div className="priority-item__meta"><strong>{item.tenant}</strong><span>{item.owner}</span></div><span className="priority-item__sla">SLA {item.sla}</span><Link to="/incidents">Open</Link></li>)}</ol> : <div className="mission-state">No open priority work is available for the current scope.</div>}
           </article>
 

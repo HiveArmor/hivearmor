@@ -24,12 +24,18 @@ export interface IncidentListParams {
   sort?: string;
   status?: string;
   severity?: string;
+  /** Numeric severity floor (1–10). Prefer over string severity when counting critical. */
+  severityMin?: number;
+  severityMax?: number;
+  /** Incident priority filter (e.g. P1). */
+  priority?: string;
   assigneeId?: number;
+  /** When false, only incidents with no assignee (`incidentAssignedTo.specified=false`). */
+  assignedSpecified?: boolean;
+  slaBreached?: boolean;
 }
 
-export async function getIncidents(params: IncidentListParams): Promise<PaginatedResponse<IncidentDTO>> {
-  // Use fetch directly to access X-Total-Count header
-  const token = localStorage.getItem('hivearmor_auth_token');
+function buildIncidentListQuery(params: IncidentListParams): URLSearchParams {
   const queryParams = new URLSearchParams();
   if (params.page !== undefined) queryParams.set('page', String(params.page));
   if (params.size !== undefined) queryParams.set('size', String(params.size));
@@ -58,14 +64,37 @@ export async function getIncidents(params: IncidentListParams): Promise<Paginate
     queryParams.set('incidentStatus.in', mapped);
   }
   if (params.severity) queryParams.set('incidentSeverity.equals', params.severity);
+  if (params.severityMin !== undefined) {
+    queryParams.set('incidentSeverity.greaterThanOrEqual', String(params.severityMin));
+  }
+  if (params.severityMax !== undefined) {
+    queryParams.set('incidentSeverity.lessThanOrEqual', String(params.severityMax));
+  }
+  if (params.priority) queryParams.set('incidentPriority.in', params.priority);
   if (params.assigneeId !== undefined) queryParams.set('assigneeId', String(params.assigneeId));
+  if (params.assignedSpecified !== undefined) {
+    queryParams.set('incidentAssignedTo.specified', String(params.assignedSpecified));
+  }
+  if (params.slaBreached !== undefined) {
+    queryParams.set('slaBreached.equals', String(params.slaBreached));
+  }
+  return queryParams;
+}
 
+export async function getIncidents(
+  params: IncidentListParams,
+  signal?: AbortSignal
+): Promise<PaginatedResponse<IncidentDTO>> {
+  // Use fetch directly to access X-Total-Count header
+  const token = localStorage.getItem('hivearmor_auth_token');
+  const queryParams = buildIncidentListQuery(params);
   const url = `/api/ha-incidents?${queryParams.toString()}`;
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: 'application/json',
     },
+    signal,
   });
 
   if (!response.ok) {
@@ -75,6 +104,45 @@ export async function getIncidents(params: IncidentListParams): Promise<Paginate
   const items = await response.json();
   const total = parseInt(response.headers.get('X-Total-Count') ?? '0', 10);
   return { items, total };
+}
+
+/** Population count via size=1 + X-Total-Count (A1-KPI-01). */
+export async function getIncidentCount(params: IncidentListParams, signal?: AbortSignal): Promise<number> {
+  const result = await getIncidents({ ...params, page: 0, size: 1 }, signal);
+  return result.total;
+}
+
+/**
+ * Mission Control population KPIs (A1-KPI-01).
+ * Uses bounded size=1 counts — never derive risk totals from a size=5 sample page.
+ */
+export interface MissionControlIncidentKpis {
+  openTotal: number;
+  criticalP1: number;
+  slaBreached: number;
+  unassigned: number;
+  partial: boolean;
+}
+
+export async function getMissionControlIncidentKpis(
+  signal?: AbortSignal
+): Promise<MissionControlIncidentKpis> {
+  const active = 'open,in_progress';
+  const results = await Promise.allSettled([
+    getIncidentCount({ status: active }, signal),
+    getIncidentCount({ status: active, priority: 'P1' }, signal),
+    getIncidentCount({ status: active, slaBreached: true }, signal),
+    getIncidentCount({ status: active, assignedSpecified: false }, signal),
+  ]);
+  const value = (index: number): number =>
+    results[index]?.status === 'fulfilled' ? results[index].value : 0;
+  return {
+    openTotal: value(0),
+    criticalP1: value(1),
+    slaBreached: value(2),
+    unassigned: value(3),
+    partial: results.some((result) => result.status === 'rejected'),
+  };
 }
 
 export async function getIncident(id: number | string): Promise<IncidentDetailDTO> {

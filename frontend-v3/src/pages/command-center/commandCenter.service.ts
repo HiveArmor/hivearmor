@@ -105,19 +105,26 @@ export async function getAlertTimeline(days = 1): Promise<AlertTimelineBucket[]>
 }
 
 export async function getDetectionHealthSummary(): Promise<DetectionHealthSummary> {
-  const [activeResp, allResp] = await Promise.all([
-    apiClient.get<unknown[]>('/correlation-rule/search-by-filters', {
-      params: { active: true, size: 1 },
-    }),
-    apiClient.get<unknown[]>('/correlation-rule/search-by-filters', {
-      params: { size: 1 },
-    }),
-  ]);
-  // The endpoint returns a PaginatedResponse with X-Total-Count but apiClient
-  // doesn't expose headers, so fall back to array length as a lower bound.
-  return {
-    activeRules: Array.isArray(activeResp) ? activeResp.length : 0,
-    totalRules: Array.isArray(allResp) ? allResp.length : 0,
+  // A1-DET-01: read X-Total-Count — do not trust page array length with size=1
+  const token = localStorage.getItem('hivearmor_auth_token');
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/json',
   };
+
+  const fetchTotal = async (active?: boolean): Promise<number> => {
+    const query = new URLSearchParams({ page: '0', size: '1' });
+    if (active !== undefined) query.set('active', String(active));
+    const response = await fetch(`/api/correlation-rule/search-by-filters?${query.toString()}`, {
+      headers,
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return parseInt(response.headers.get('X-Total-Count') ?? '0', 10);
+  };
+
+  const [activeRules, totalRules] = await Promise.all([fetchTotal(true), fetchTotal()]);
+  return { activeRules, totalRules };
 }
 

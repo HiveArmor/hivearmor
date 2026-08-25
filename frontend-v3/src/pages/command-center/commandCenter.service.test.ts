@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getAlertTimeline } from './commandCenter.service';
+import { getAlertTimeline, getDetectionHealthSummary } from './commandCenter.service';
 
 vi.mock('@/lib/apiClient', () => ({
   apiClient: {
@@ -24,5 +24,35 @@ describe('getAlertTimeline', () => {
   it('returns an empty list when the payload is not an array', async () => {
     vi.mocked(apiClient.get).mockResolvedValue({ hour: 'x' });
     await expect(getAlertTimeline(1)).resolves.toEqual([]);
+  });
+});
+
+describe('getDetectionHealthSummary (A1-DET-01)', () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        const active = String(url).includes('active=true');
+        return {
+          ok: true,
+          headers: {
+            get: (name: string) => (name === 'X-Total-Count' ? (active ? '12' : '40') : null),
+          },
+          json: async () => [{}],
+        };
+      })
+    );
+    localStorage.setItem('hivearmor_auth_token', 'test-token');
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    localStorage.removeItem('hivearmor_auth_token');
+  });
+
+  it('reads X-Total-Count instead of page array length', async () => {
+    const summary = await getDetectionHealthSummary();
+    expect(summary).toEqual({ activeRules: 12, totalRules: 40 });
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 });
