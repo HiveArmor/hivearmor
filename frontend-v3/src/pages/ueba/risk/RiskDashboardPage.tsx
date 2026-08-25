@@ -20,6 +20,7 @@
 import { useCallback, useRef, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 
 import { UserRiskTable } from './UserRiskTable';
 
@@ -111,14 +112,16 @@ export function RiskDashboardPage(): JSX.Element {
     }
   }, []);
 
-  // ── Create Incident (task 7.7: invoke existing incident-creation flow) ────
+  // A2-UEBA-02: no listener existed for the prior CustomEvent; POST /ha-incidents
+  // requires alertList. Guide analysts to Search & Hunt (?q=) for evidence collection.
+  const [incidentGuidanceUserId, setIncidentGuidanceUserId] = useState<string | null>(null);
+
   const handleCreateIncident = useCallback((userId: string) => {
-    // Dispatch a CustomEvent so the existing incident-creation flow can listen
-    // and pre-populate with the selected user identifier. This follows the
-    // decoupled pattern used by other SIEM features (entities, hunt, etc.).
-    window.dispatchEvent(
-      new CustomEvent('create-incident-for-entity', { detail: { userId } }),
-    );
+    setIncidentGuidanceUserId(userId);
+  }, []);
+
+  const dismissIncidentGuidance = useCallback(() => {
+    setIncidentGuidanceUserId(null);
   }, []);
 
   // ── Bar chart: top high-risk users ────────────────────────────────────────
@@ -276,6 +279,82 @@ export function RiskDashboardPage(): JSX.Element {
           >
             {drawerUserId && <EntityTimelinePage userId={drawerUserId} height={520} />}
           </HaDrawer>
+        </div>
+      )}
+
+      {incidentGuidanceUserId && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ueba-incident-guidance-title"
+          data-testid="ueba-create-incident-guidance"
+          data-user-id={incidentGuidanceUserId}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 'var(--ha-z-modal)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'color-mix(in srgb, var(--ha-background) 70%, transparent)',
+            padding: 24,
+          }}
+        >
+          <div
+            style={{
+              maxWidth: 480,
+              width: '100%',
+              background: 'var(--ha-surface-raised)',
+              border: '1px solid var(--ha-border)',
+              borderRadius: 'var(--ha-radius-md)',
+              padding: 20,
+              color: 'var(--ha-text-primary)',
+              fontSize: 'var(--ha-text-base)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}
+          >
+            <h2 id="ueba-incident-guidance-title" style={{ margin: 0, fontSize: 'var(--ha-text-md)' }}>
+              Incident creation needs evidence
+            </h2>
+            <p style={{ margin: 0, color: 'var(--ha-text-secondary)' }}>
+              UEBA risk scores are not alerts. Creating an incident requires linked alert evidence.
+              Collect events for <strong>{incidentGuidanceUserId}</strong> in Search &amp; Hunt, then
+              create an incident from selected rows.
+            </p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
+              <button
+                type="button"
+                onClick={dismissIncidentGuidance}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid var(--ha-border)',
+                  borderRadius: 'var(--ha-radius-base)',
+                  color: 'var(--ha-text-secondary)',
+                  padding: '6px 12px',
+                  cursor: 'pointer',
+                }}
+              >
+                Dismiss
+              </button>
+              <Link
+                to={`/search?q=${encodeURIComponent(incidentGuidanceUserId)}`}
+                onClick={dismissIncidentGuidance}
+                style={{
+                  background: 'color-mix(in srgb, var(--ha-primary) 20%, transparent)',
+                  border: '1px solid var(--ha-primary)',
+                  borderRadius: 'var(--ha-radius-base)',
+                  color: 'var(--ha-primary)',
+                  padding: '6px 12px',
+                  textDecoration: 'none',
+                  fontSize: 'var(--ha-text-sm)',
+                }}
+              >
+                Open Search &amp; Hunt
+              </Link>
+            </div>
+          </div>
         </div>
       )}
     </div>

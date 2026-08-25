@@ -1,6 +1,4 @@
 import type {
-  AiQueryRequest,
-  AiQueryResponse,
   HistoryEntry,
   HuntActionRequest,
   HuntActionResponse,
@@ -19,7 +17,6 @@ import type {
   SearchExecuteRequest,
   SearchExecuteResponse,
   SearchStatus,
-  ThreatIntelResponse,
   TimeRangeDTO,
   EventDTO,
 } from './searchHunt.types';
@@ -196,13 +193,9 @@ export async function deleteSavedQuery(id: string): Promise<void> {
   return apiClient.delete<void>(`/ha-saved-queries/${id}`);
 }
 
-export async function translateNlToQuery(request: AiQueryRequest): Promise<AiQueryResponse> {
-  return apiClient.post<AiQueryResponse>('/ha-soc-ai/query', request);
-}
-
-export async function getThreatIntel(iocValue: string): Promise<ThreatIntelResponse> {
-  return apiClient.get<ThreatIntelResponse>('/v1/threat-intel/ioc', { params: { value: iocValue } });
-}
+// A2-SRCH-02: removed unused translateNlToQuery (/ha-soc-ai/query) and getThreatIntel
+// (/v1/threat-intel/ioc). Hunt page never mounted them; TI lookups use
+// @/services/threatIntel.service lookupIoc → POST /ha-threat-intel/lookup.
 
 // --- Hunt completion service functions (Sprint 42) ---
 
