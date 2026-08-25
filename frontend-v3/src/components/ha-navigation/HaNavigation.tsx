@@ -51,12 +51,12 @@ const INVESTIGATE_ITEMS: NavItemSpec[] = [
 
 // Section: DEFEND
 const DEFEND_ITEMS: NavItemSpec[] = [
-  { label: 'Detection Rules', icon: 'Zap', route: '/detection-rules', roles: ['ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  { label: 'Detection Rules', icon: 'Zap', route: '/detection-rules', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Playbooks', icon: 'BookOpen', route: '/response/playbooks', roles: ['ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Response Activity', icon: 'History', route: '/response/activity', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Response Approvals', icon: 'Gavel', route: '/response/authority', roles: ['ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Quarantine & Containment', icon: 'ShieldOff', route: '/response/quarantine', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
-  { label: 'Response Library', icon: 'Library', route: '/response/library', roles: [] },
+  { label: 'Response Library', icon: 'Library', route: '/response/library', roles: ['ROLE_ANALYST', 'ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
 ];
 
 // Section: POSTURE

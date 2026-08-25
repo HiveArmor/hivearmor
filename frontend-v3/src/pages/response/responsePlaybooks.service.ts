@@ -11,15 +11,16 @@
  * RESP-004: Approve or reject a pending execution
  * RESP-005: Cancel a running execution (DELETE /api/ha-playbooks/{executionId})
  * RESP-006: Stream execution steps (SSE)
- * RESP-018: Bounded execution inventory, summary, and progressive trace
- * RESP-008: List quarantine records
- * RESP-011: List action catalog entries
+ * RESP-018: Bounded execution inventory, summary, and progressive trace (gated)
+ * Quarantine: use ha-edr quarantine APIs — not playbook quarantine helpers
+ * Action catalog: use GET /api/response/actions — not ha-action-catalog helpers
  */
 
+import {
+  RESP_018_EXECUTION_INVENTORY,
+  RESP_020_GOVERNANCE,
+} from './response.capabilities';
 import type {
-  ActionCatalogEntry,
-  ActionCatalogSummary,
-  ApprovalRecord,
   CursorPageResult,
   PlaybookExecuteRequest,
   PlaybookExecuteResponse,
@@ -27,7 +28,6 @@ import type {
   PlaybookMetricsSummary,
   PlaybookPreviewRequest,
   PlaybookPreviewResponse,
-  QuarantineRecord,
   ResponseActivityListParams,
   ResponseActivityPageResult,
   ResponseActivitySummary,
@@ -40,8 +40,8 @@ import type {
   ResponseAuthorityPolicy,
   ResponseAuthorityPolicySaveRequest,
   ResponseGovernanceResult,
+  PlaybookListParams,
 } from './response.types';
-import type { PlaybookListParams } from './response.types';
 
 import { apiClient } from '@/lib/apiClient';
 import { useAuthStore } from '@/store/auth.store';
@@ -50,6 +50,9 @@ const TOKEN_KEY = 'hivearmor_auth_token';
 /** True only during DEV fixture builds. Never leaks to production. */
 export const fixtureMode =
   import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
+const UNAVAILABLE_GOVERNANCE =
+  'Response governance APIs are not available from the backend yet';
 
 interface CanonicalPlaybookListDTO {
   id: number | string;
@@ -326,6 +329,28 @@ export async function fetchResponseGovernance(
     const { getFoundationResponseGovernance } = await import('@/pages/response/response.fixtures');
     return getFoundationResponseGovernance(params);
   }
+  if (!RESP_020_GOVERNANCE) {
+    const snapshotAt = new Date().toISOString();
+    return {
+      approvals: [],
+      policies: [],
+      delegates: [],
+      summary: {
+        pending: 0,
+        dueSoon: 0,
+        critical: 0,
+        restrictedWindow: 0,
+        approved24h: 0,
+        rejected24h: 0,
+        medianDecisionMs: 0,
+        connectorWarnings: 0,
+        snapshotAt,
+      },
+      snapshotAt,
+      stale: false,
+      partialFailures: [UNAVAILABLE_GOVERNANCE],
+    };
+  }
   const query = new URLSearchParams();
   if (params.state && params.state !== 'ALL') query.set('state', params.state);
   if (params.risk && params.risk !== 'ALL') query.set('risk', params.risk);
@@ -342,6 +367,9 @@ export async function decideResponseGovernanceApproval(
     const { decideFoundationResponseApproval } = await import('@/pages/response/response.fixtures');
     return decideFoundationResponseApproval(request);
   }
+  if (!RESP_020_GOVERNANCE) {
+    throw new Error(UNAVAILABLE_GOVERNANCE);
+  }
   return apiClient.post<ResponseApprovalRequest>(
     `/ha-response-governance/approvals/${request.approvalId}/decision`,
     request
@@ -354,6 +382,9 @@ export async function saveResponseAuthorityPolicy(
   if (fixtureMode) {
     const { saveFoundationResponseAuthorityPolicy } = await import('@/pages/response/response.fixtures');
     return saveFoundationResponseAuthorityPolicy(request);
+  }
+  if (!RESP_020_GOVERNANCE) {
+    throw new Error(UNAVAILABLE_GOVERNANCE);
   }
   const path = request.id
     ? `/ha-response-governance/policies/${request.id}`
@@ -369,6 +400,9 @@ export async function saveResponseAuthorityDelegate(
   if (fixtureMode) {
     const { saveFoundationResponseAuthorityDelegate } = await import('@/pages/response/response.fixtures');
     return saveFoundationResponseAuthorityDelegate(request);
+  }
+  if (!RESP_020_GOVERNANCE) {
+    throw new Error(UNAVAILABLE_GOVERNANCE);
   }
   const path = request.id
     ? `/ha-response-governance/delegations/${request.id}`
@@ -406,6 +440,34 @@ export async function fetchResponseActivity(
   if (fixtureMode) {
     const { filterFoundationResponseActivity } = await import('@/pages/response/response.fixtures');
     return filterFoundationResponseActivity(params);
+  }
+  if (!RESP_018_EXECUTION_INVENTORY) {
+    const snapshotAt = new Date().toISOString();
+    const summary: ResponseActivitySummary = {
+      total: 0,
+      running: 0,
+      awaitingApproval: 0,
+      failed: 0,
+      partial: 0,
+      successRate: 0,
+      medianDurationMs: 0,
+      degradedConnectors: 0,
+      snapshotAt,
+      totalIsExact: true,
+      partialFailures: [
+        'Playbook execution inventory is not available from the backend yet',
+      ],
+    };
+    return {
+      items: [],
+      nextCursor: null,
+      total: 0,
+      hasMore: false,
+      previousCursor: null,
+      snapshotAt,
+      stale: false,
+      summary,
+    };
   }
   const query = {
     search: params.search,
@@ -453,58 +515,29 @@ export async function fetchResponseExecutionTrace(
     const { getFoundationResponseExecutionTrace } = await import('@/pages/response/response.fixtures');
     return getFoundationResponseExecutionTrace(executionId);
   }
+  if (!RESP_018_EXECUTION_INVENTORY) {
+    return {
+      items: [],
+      nextCursor: null,
+      total: 0,
+      hasMore: false,
+      snapshotAt: new Date().toISOString(),
+      stale: false,
+      partialFailures: [
+        'Playbook execution trace is not available from the backend yet',
+      ],
+    };
+  }
   return apiClient.get<ResponseExecutionTraceResult>(`/ha-playbooks/executions/${encodeURIComponent(executionId)}/trace`, {
     params: { cursor, limit: 100 },
     signal,
   });
 }
 
-// ─── RESP-008: Quarantine records ──────────────────────────────────────────
-
-export async function fetchQuarantineRecords(): Promise<QuarantineRecord[]> {
-  if (fixtureMode) {
-    const { foundationQuarantineRecords } = await import('@/pages/response/response.fixtures');
-    return foundationQuarantineRecords;
-  }
-  return apiClient.get<QuarantineRecord[]>('/ha-playbooks/quarantine');
-}
-
-// ─── RESP-009: Release quarantine ──────────────────────────────────────────
-
-export async function releaseQuarantine(quarantineId: string, reason: string): Promise<void> {
-  return apiClient.post<void>(`/ha-playbooks/quarantine/${quarantineId}/release`, { reason });
-}
-
-// ─── RESP-010: Approval queue ──────────────────────────────────────────────
-
-export async function fetchPendingApprovals(): Promise<ApprovalRecord[]> {
-  if (fixtureMode) {
-    const { foundationApprovalQueue } = await import('@/pages/response/response.fixtures');
-    return foundationApprovalQueue.filter((a) => a.approvalStatus === 'PENDING');
-  }
-  return apiClient.get<ApprovalRecord[]>('/ha-playbooks/approvals/pending');
-}
-
-// ─── RESP-011: Action catalog ──────────────────────────────────────────────
-
-export async function fetchActionCatalog(): Promise<ActionCatalogEntry[]> {
-  if (fixtureMode) {
-    const { foundationActionCatalog } = await import('@/pages/response/response.fixtures');
-    return foundationActionCatalog;
-  }
-  return apiClient.get<ActionCatalogEntry[]>('/ha-action-catalog');
-}
-
-export async function fetchActionCatalogSummary(): Promise<ActionCatalogSummary> {
-  if (fixtureMode) {
-    const { foundationActionCatalogSummary } = await import('@/pages/response/response.fixtures');
-    return foundationActionCatalogSummary;
-  }
-  return apiClient.get<ActionCatalogSummary>('/ha-action-catalog/summary');
-}
+// Quarantine list/release and legacy action-catalog helpers removed (A3-QUAR-03 / A3-LIB-02).
+// File quarantine uses edr services; library uses GET /api/response/actions.
 
 // ─── Activation toggle ─────────────────────────────────────────────────────
-
 export async function setPlaybookActive(playbookId: string, active: boolean): Promise<void> {
   const id = Number(playbookId);
   if (!Number.isFinite(id)) throw new Error(`Invalid playbook id: ${playbookId}`);

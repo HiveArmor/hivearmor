@@ -10,6 +10,7 @@
 import type { Playbook, PlaybookAuditEntry, PlaybookAuditPage, PlaybookExecution } from '../types/playbook';
 
 import { apiClient } from '@/lib/apiClient';
+import { RESP_PLAYBOOK_AUDIT } from '@/pages/response/response.capabilities';
 
 const fixtureMode =
   import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
@@ -60,7 +61,7 @@ export async function fetchPlaybookExecutions(
 
 /**
  * Fetch the immutable audit trail for one playbook.
- * GET /api/ha-playbooks/:playbookId/audit
+ * GET /api/ha-playbooks/:playbookId/audit — gated until PlaybookResource maps it.
  */
 export async function fetchPlaybookAudit(playbookId: number): Promise<PlaybookAuditPage> {
   if (fixtureMode) {
@@ -70,6 +71,9 @@ export async function fetchPlaybookAudit(playbookId: number): Promise<PlaybookAu
       id: entry.id.replace('audit-pb-1-', `audit-pb-${playbookId}-`),
     }));
     return { items, nextCursor: null, total: items.length, hasMore: false };
+  }
+  if (!RESP_PLAYBOOK_AUDIT) {
+    return { items: [], nextCursor: null, total: 0, hasMore: false };
   }
   const response = await apiClient.get<PlaybookAuditPage | PlaybookAuditEntry[]>(
     `/ha-playbooks/${playbookId}/audit?limit=100`

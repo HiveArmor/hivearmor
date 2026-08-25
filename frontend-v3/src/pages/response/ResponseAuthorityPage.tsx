@@ -43,6 +43,10 @@ import {
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
+import {
+  RESP_020_DISABLED_TITLE,
+  RESP_020_GOVERNANCE,
+} from './response.capabilities';
 import type {
   ResponseApprovalDecisionRequest,
   ResponseApprovalListParams,
@@ -242,15 +246,36 @@ function ApprovalDrawer({ approval, onClose, onDecision, decisionPending, decisi
   );
 }
 
-function PolicyView({ policies, delegates }: { policies: ResponseAuthorityPolicy[]; delegates: NonNullable<Awaited<ReturnType<typeof fetchResponseGovernance>>['delegates']> }): JSX.Element {
+function PolicyView({
+  policies,
+  delegates,
+  canEditGovernance,
+}: {
+  policies: ResponseAuthorityPolicy[];
+  delegates: NonNullable<Awaited<ReturnType<typeof fetchResponseGovernance>>['delegates']>;
+  canEditGovernance: boolean;
+}): JSX.Element {
   return (
     <div className="gov-policy-workspace">
       <section className="gov-policy-main">
-        <header><div><strong>Enforced response policies</strong><span>Deterministic gates evaluated before disruptive actions</span></div><div className="gov-policy-head-actions"><span>{policies.filter((policy) => policy.status === 'ENFORCED').length} enforced</span><Link to="/response/authority/policies/new"><Plus size={12} />New policy</Link></div></header>
+        <header>
+          <div>
+            <strong>Enforced response policies</strong>
+            <span>Deterministic gates evaluated before disruptive actions</span>
+          </div>
+          <div className="gov-policy-head-actions">
+            <span>{policies.filter((policy) => policy.status === 'ENFORCED').length} enforced</span>
+            {canEditGovernance ? (
+              <Link to="/response/authority/policies/new"><Plus size={12} />New policy</Link>
+            ) : (
+              <span title={RESP_020_DISABLED_TITLE}>Policy authoring unavailable</span>
+            )}
+          </div>
+        </header>
         <div className="gov-policy-grid">
           {policies.map((policy) => (
             <article key={policy.id} className="gov-policy-card">
-              <div className="gov-policy-card__head"><span className="gov-policy-icon"><ShieldEllipsis size={16} /></span><div><strong>{policy.name}</strong><span>{policy.actionCategory} · {policy.riskFloor.toLowerCase()}+ · v{policy.version}</span></div><Link className="gov-edit-link" to={`/response/authority/policies/${policy.id}/edit`} aria-label={`Edit policy ${policy.name}`}><Pencil size={12} /></Link><em data-status={policy.status.toLowerCase()}>{policy.status}</em></div>
+              <div className="gov-policy-card__head"><span className="gov-policy-icon"><ShieldEllipsis size={16} /></span><div><strong>{policy.name}</strong><span>{policy.actionCategory} · {policy.riskFloor.toLowerCase()}+ · v{policy.version}</span></div>{canEditGovernance && <Link className="gov-edit-link" to={`/response/authority/policies/${policy.id}/edit`} aria-label={`Edit policy ${policy.name}`}><Pencil size={12} /></Link>}<em data-status={policy.status.toLowerCase()}>{policy.status}</em></div>
               <dl>
                 <div><dt>Approvals</dt><dd>{policy.requiredApprovals}</dd></div>
                 <div><dt>Self approval</dt><dd>{policy.selfApprovalAllowed ? 'Allowed' : 'Blocked'}</dd></div>
@@ -264,18 +289,28 @@ function PolicyView({ policies, delegates }: { policies: ResponseAuthorityPolicy
         </div>
       </section>
       <aside className="gov-delegates">
-        <header><div><strong>Delegated authority</strong><span>Time-bound principals</span></div><Link className="gov-add-delegate" to="/response/authority/delegations/new"><Plus size={12} />Delegate</Link></header>
+        <header>
+          <div>
+            <strong>Delegated authority</strong>
+            <span>Time-bound principals</span>
+          </div>
+          {canEditGovernance ? (
+            <Link className="gov-add-delegate" to="/response/authority/delegations/new"><Plus size={12} />Delegate</Link>
+          ) : (
+            <span title={RESP_020_DISABLED_TITLE}>Delegation unavailable</span>
+          )}
+        </header>
         <div className="gov-delegate-list">
           {delegates.map((delegate) => (
             <article key={delegate.id}>
-              <div><span className="gov-principal-icon"><UsersRound size={15} /></span><div><strong>{delegate.principal}</strong><span>Tier {delegate.authorityTier} · {delegate.principalType.toLowerCase()} · v{delegate.version}</span></div><Link className="gov-edit-link" to={`/response/authority/delegations/${delegate.id}/edit`} aria-label={`Edit delegation ${delegate.principal}`}><Pencil size={12} /></Link><em data-status={delegate.status.toLowerCase()}>{delegate.status}</em></div>
+              <div><span className="gov-principal-icon"><UsersRound size={15} /></span><div><strong>{delegate.principal}</strong><span>Tier {delegate.authorityTier} · {delegate.principalType.toLowerCase()} · v{delegate.version}</span></div>{canEditGovernance && <Link className="gov-edit-link" to={`/response/authority/delegations/${delegate.id}/edit`} aria-label={`Edit delegation ${delegate.principal}`}><Pencil size={12} /></Link>}<em data-status={delegate.status.toLowerCase()}>{delegate.status}</em></div>
               <p>{delegate.actionScopes.join(' · ')}</p>
               <small>{delegate.tenantScope}</small>
               <footer><span>{delegate.emergencyAccess ? 'Emergency authority' : 'Standard authority'}</span><span>until {formatTimestamp(delegate.validUntil)}</span></footer>
             </article>
           ))}
         </div>
-        <section className="gov-policy-boundary"><LockKeyhole size={15} /><div><strong>Authoritative publish gate</strong><span>Draft editing is available. Production publication remains blocked until the versioned governance contract validates the change.</span></div></section>
+        <section className="gov-policy-boundary"><LockKeyhole size={15} /><div><strong>Authoritative publish gate</strong><span>{canEditGovernance ? 'Draft editing is available. Production publication remains blocked until the versioned governance contract validates the change.' : RESP_020_DISABLED_TITLE}</span></div></section>
       </aside>
     </div>
   );
@@ -392,6 +427,12 @@ export function ResponseAuthorityPage(): JSX.Element {
       </header>
 
       {fixtureMode && <div className="gov-fixture"><strong>Design fixture:</strong> fictional approval and policy records are enabled for visual review.<span>Production never receives these records.</span></div>}
+      {!fixtureMode && !RESP_020_GOVERNANCE && (
+        <div className="gov-fixture" role="status">
+          <strong>Governance unavailable:</strong> {RESP_020_DISABLED_TITLE}
+          <span>Approvals and policies will appear when the secured governance contract is connected.</span>
+        </div>
+      )}
 
       <section className="gov-summary" aria-label="Response governance summary">
         <div data-tone="warning"><span><Clock3 size={13} />Pending</span><strong>{summary?.pending ?? '—'}</strong><small>{summary?.dueSoon ?? 0} due within 30 minutes</small></div>
@@ -422,12 +463,12 @@ export function ResponseAuthorityPage(): JSX.Element {
       {!!data?.partialFailures.length && <div className="gov-data-warning"><AlertTriangle size={13} />Partial governance data: {data.partialFailures.join(', ')}<button type="button" onClick={() => refetch()}>Retry</button></div>}
 
       {view === 'policies' ? (
-        <main className="gov-policy-shell">{isLoading ? <div className="gov-skeleton" role="status">Loading governance policies…</div> : <PolicyView policies={data?.policies ?? []} delegates={data?.delegates ?? []} />}</main>
+        <main className="gov-policy-shell">{isLoading ? <div className="gov-skeleton" role="status">Loading governance policies…</div> : <PolicyView policies={data?.policies ?? []} delegates={data?.delegates ?? []} canEditGovernance={fixtureMode || RESP_020_GOVERNANCE} />}</main>
       ) : (
         <>
           <div className="gov-results-toolbar"><div><strong>{view === 'history' ? 'Decision history' : 'Approval requests'}</strong><span>{queueItems.length} loaded · bounded authorized scope</span></div><div className="gov-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={17} /></button></div></div>
           <main className="gov-grid-wrap">
-            {isLoading ? <div className="gov-grid-skeleton" role="status" aria-live="polite">{Array.from({ length: 10 }, (_, index) => <div key={index} />)}</div> : !queueItems.length ? <EmptyState title={view === 'history' ? 'No decisions match these filters' : 'No response actions need approval'} description="Adjust the filters or wait for the next governed response request." /> : <SiemDataGrid ref={gridRef} className="response-grid gov-grid" columnDefs={columnDefs} rowData={queueItems} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} rowSelection="single" suppressRowClickSelection={false} onRowClicked={openRow} getRowId={(params) => (params.data as ResponseApprovalRequest).id} ariaLabel={view === 'history' ? 'Response decision history' : 'Response approval queue'} defaultColDef={{ filter: false }} />}
+            {isLoading ? <div className="gov-grid-skeleton" role="status" aria-live="polite">{Array.from({ length: 10 }, (_, index) => <div key={index} />)}</div> : !queueItems.length ? <EmptyState title={!fixtureMode && !RESP_020_GOVERNANCE ? 'Response governance unavailable' : view === 'history' ? 'No decisions match these filters' : 'No response actions need approval'} description={!fixtureMode && !RESP_020_GOVERNANCE ? RESP_020_DISABLED_TITLE : 'Adjust the filters or wait for the next governed response request.'} /> : <SiemDataGrid ref={gridRef} className="response-grid gov-grid" columnDefs={columnDefs} rowData={queueItems} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} rowSelection="single" suppressRowClickSelection={false} onRowClicked={openRow} getRowId={(params) => (params.data as ResponseApprovalRequest).id} ariaLabel={view === 'history' ? 'Response decision history' : 'Response approval queue'} defaultColDef={{ filter: false }} />}
           </main>
           <footer className="gov-footer"><span>{queueItems.length} records in the loaded projection</span><span>{view === 'history' ? 'Immutable decision ledger' : 'No request opens without explicit selection'}</span><span>{isFetching ? 'Updating…' : 'Current snapshot'}</span></footer>
         </>
