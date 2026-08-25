@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      TI-004 STAGING CANDIDATE — MISP feed last_sync_status parity with TAXII.
+      Persists OK/ERROR so Admin Status column is honest after list refresh.
+      Not a durable sync job ledger. No Kafka.
+    -->
+    <changeSet id="20260825001-1" author="hivearmor">
+        <addColumn tableName="hive_misp_feed">
+            <column name="last_sync_status" type="VARCHAR(20)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

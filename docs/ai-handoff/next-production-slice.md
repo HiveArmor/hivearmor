@@ -1,8 +1,31 @@
 # Next production slice
 
-Updated: **2026-08-25 10:00:00 IST (UTC+05:30)**
+Updated: **2026-08-25 11:45:00 IST (UTC+05:30)**
 
-## Active — Orphan Operational Workflows (TI-002–TI-004 depth)
+## Active — Orphan Operational Workflows (TI optional depth after #47)
+
+Routes: `/intelligence`, `/admin/threat-intel`; contracts `TI-001`–`TI-004`.
+Status: **STAGING CANDIDATE** — TI-002–TI-004 depth (#47) + optional MISP `lastSyncStatus` / bounded Last Sync honesty. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED`.
+Program: `docs/ai-handoff/remaining-page-program.md`.
+Research: `docs/ai-handoff/research/orphan-operational-workflows-inventory.md`.
+Branch: `feat/p1-ti-optional-depth` (worktree `.worktrees/p1-ti-optional-depth`).
+
+Completed in this optional depth slice:
+
+1. TI-004: MISP `hive_misp_feed.last_sync_status` (Liquibase) + entity/service/resource persist `OK`/`ERROR` with `lastSyncAt` (manual + scheduled), matching TAXII.
+2. Admin MISP Status column reads persisted `lastSyncStatus` (no fake OK from zero IOC count).
+3. Bounded Last Sync display (`formatBoundedRelativeTime`, `>30d` cap) shared for TAXII + MISP.
+4. Vitest: freshness helper + MISP Status column; Java unit test for MISP status field.
+5. **No** Deprecation/Sunset/Link on `/api/v1/threat-intel` (TI-003 cutover still open). No vendor live. No Kafka.
+
+Still open under TI:
+
+1. TI-001: IOC browse cursor/snapshot/freshness, hunt/alert pivots.
+2. TI-002: immutable mutation audit; drop ROLE_USER if product wants stricter least-privilege.
+3. TI-003: consumer cutover + Deprecation/Sunset/Link.
+4. TI-004: durable sync job ledger, credential write-only aliases, tenant/TLP governance, governed onboarding.
+
+## Prior active — Orphan Operational Workflows (TI-002–TI-004 depth)
 
 Routes: inventory across UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence; **first bounded family = threat-intel ops** (`/intelligence`, `/admin/threat-intel`).
 Status: **STAGING CANDIDATE** — inventory + TI-002–TI-004 depth + agent-policy enforcement evidence. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for this slice.
@@ -25,7 +48,7 @@ Required next actions (remaining orphans / depth):
 2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned.
 3. ~~Follow-on RESP-021 depth: secured host-isolation inventory.~~ **Closed** on `feat/p1-resp021-isolation-inventory` (STAGING CANDIDATE) — `GET /api/ha-edr/isolation` + Endpoint isolation tab. Remaining RESP-021 depth gaps stay open.
 4. ~~Follow-on policies: enforcement evidence honesty~~ — **done** on `feat/p1-agent-policies-enforcement-evidence` (STAGING CANDIDATE): `GET /ha-edr/policies/{id}/enforcement` + UI unavailable/partial; host apply/ack still open (`POL-001`–`POL-003`).
-5. Optional deeper threat-intel: IOC cursor/freshness, durable sync ledger, MISP persisted status, v1 deprecation headers after consumer cutover.
+5. ~~Optional deeper threat-intel: MISP persisted status + bounded lastSyncAt~~ — **done** on `feat/p1-ti-optional-depth` (STAGING CANDIDATE). Remaining: IOC cursor/freshness, durable sync ledger, v1 deprecation headers after consumer cutover.
 6. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
 
 ## Completed this slice — RESP-021 host isolation inventory (thin depth)
