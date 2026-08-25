@@ -53,6 +53,7 @@ import {
 import { HaButton } from '@/components/ha-button/HaButton';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+import { formatAuthorityLabel } from '@/lib/roles';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import { useEpsStream } from '@/hooks/useEpsStream';
@@ -392,7 +393,7 @@ function BlastRadiusPanel({ playbook }: { playbook: PlaybookListItem }): JSX.Ele
       </div>
       <div className="detail-blast-radius__row">
         <span className="detail-blast-radius__label">Required permission</span>
-        <span className="detail-blast-radius__value">ROLE_SOC_MANAGER</span>
+        <span className="detail-blast-radius__value">{formatAuthorityLabel('ROLE_SOC_MANAGER')}</span>
       </div>
       <div className="detail-blast-radius__row">
         <span className="detail-blast-radius__label">Rollback available</span>
@@ -1371,7 +1372,7 @@ export function PlaybookDetailPage(): JSX.Element {
       </div>
 
       <div className="detail-status-dock">
-        <StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode="live" lastUpdated={playbook.lastRunAt ? new Date(playbook.lastRunAt) : undefined} />
+        <StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={playbook.lastRunAt ? new Date(playbook.lastRunAt) : undefined} />
         <span>{stream ? `Execution ${stream.executionId} · ${stream.status}` : 'Versioned response playbook · audit trail enabled'}</span>
       </div>
 
@@ -1381,7 +1382,7 @@ export function PlaybookDetailPage(): JSX.Element {
         title={listResult?.approvalRequired ? 'Request approval to run' : 'Run playbook now'}
         message={
           executionPreview?.approvalRequired
-            ? `"${playbook.name}" affects ${executionPreview.blastRadius.affectedTargets.join(', ')} and requires ${executionPreview.blastRadius.requiredPermission} approval. Estimated duration: ${executionPreview.estimatedDurationSeconds}s across ${executionPreview.stepCount} steps. It executes only after approval.`
+            ? `"${playbook.name}" affects ${executionPreview.blastRadius.affectedTargets.join(', ')} and requires ${formatAuthorityLabel(executionPreview.blastRadius.requiredPermission)} approval. Estimated duration: ${executionPreview.estimatedDurationSeconds}s across ${executionPreview.stepCount} steps. It executes only after approval.`
             : `Run "${playbook.name}" now? The validated preview contains ${executionPreview?.stepCount ?? playbook.steps.length} steps with an estimated duration of ${executionPreview?.estimatedDurationSeconds ?? 0}s.`
         }
         confirmLabel={listResult?.approvalRequired ? 'Request approval' : 'Run now'}

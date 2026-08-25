@@ -383,7 +383,7 @@ export function IncidentListPage(): JSX.Element {
         <div><button type="button" disabled={page === 0 || listQuery.isFetching} onClick={() => setPage((current) => Math.max(0, current - 1))}><ChevronLeft size={13} /> Previous</button><button type="button" disabled={page + 1 >= pageCount || listQuery.isFetching} onClick={() => setPage((current) => current + 1)}>Next <ChevronRight size={13} /></button></div>
       </footer>
 
-      <div className="incident-status-dock"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode="live" lastUpdated={summary?.snapshotAt ? new Date(summary.snapshotAt) : undefined} /></div>
+      <div className="incident-status-dock"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={summary?.snapshotAt ? new Date(summary.snapshotAt) : undefined} /></div>
 
       {selectedIncident && (
         <HaDrawer isOpen onClose={() => setSelectedIncident(null)} title={selectedIncident.incidentName} subtitle={`Incident ${selectedIncident.id} · authorized scope`} width={480}>

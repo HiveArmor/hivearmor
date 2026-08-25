@@ -401,7 +401,7 @@ export function QueueDetailDrawer({ alertId, onClose }: QueueDetailDrawerProps):
                   <div>
                     <span style={{ fontSize: 'var(--ha-text-xs)', color: 'var(--ha-text-secondary)' }}>Detection Rule: </span>
                     {alert.ruleId ? (
-                      <a href={`/rules/${alert.ruleId}`} style={{ fontSize: 'var(--ha-text-sm)', color: 'var(--ha-primary)', textDecoration: 'none' }}>{alert.ruleName}</a>
+                      <a href={`/detection-rules/${alert.ruleId}`} style={{ fontSize: 'var(--ha-text-sm)', color: 'var(--ha-primary)', textDecoration: 'none' }}>{alert.ruleName}</a>
                     ) : (
                       <span style={{ fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-primary)' }}>{alert.ruleName}</span>
                     )}

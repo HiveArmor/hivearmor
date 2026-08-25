@@ -1,27 +1,32 @@
 # Next production slice
 
-Updated: **2026-08-25 17:15:00 IST (UTC+05:30)**
+Updated: **2026-08-25 17:45:00 IST (UTC+05:30)**
 
-## Active — Wave C3 MSSP audit + thin honesty (STAGING CANDIDATE)
+## Active — Wave D Cross-product closure audit + thin honesty (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Routes: `/mssp/*`.
+Routes: all visible frontend-v3 surfaces (WCAG / density / theme / deprecation / honesty).
 Status: **AUDIT + thin honesty IN PROGRESS (code)** — still **STAGING CANDIDATE**. Staging rebuild deferred.
-Research: `docs/ai-handoff/research/autonomous-soc-mssp.md`.
-Branch: `feat/c3-mssp-audit`.
+Research: `docs/ai-handoff/research/autonomous-soc-cross-product-closure.md`.
+Branch: `feat/d-cross-product-closure-audit`.
 
 | ID | Fix |
 |---|---|
-| C3-01 | Nest `/mssp/*` under AppLayout + AuthGuard |
-| C3-02 | Bearer JWT via `msspFetch` for all portal APIs |
-| C3-03 | Post-create navigate to `/mssp/tenants/{id}` only |
-| C3-05 | 404 vs 401/403 error honesty |
-| C3-04/07 | Masthead placeholder + Local/Deployed env label |
-| C3-06/08 | MSSP Administrator + Tenant role labels |
-| C3-09 | Deduplicate membership types |
-| C3-13 | Overview STAGING CANDIDATE banner |
+| D-01 | Legacy routes → Navigate redirects (no dual live mounts) |
+| D-02 | StatusDock historical for fixtures/snapshots |
+| D-03/04/11 | Human role labels; drop fictional INCIDENT_COMMANDER |
+| D-05 | correlatedFindings fixture-disabled twin |
+| D-07 | `/rules/:id/*` redirects preserve id → detection-rules |
+| D-08 | Remove backdrop-filter glass on incident/finding overlays |
+| D-09 | Theme first-visit respects prefers-color-scheme |
+| D-10 | Thin honesty on Production env labels |
+| D-12 | HelpButton console.log removed |
 
-Still open: authorized masthead tenant inventory; broader MSSP ops plane depth.
+Still open: full density wiring (D-06) across every grid; staging rebuild for LIVE VERIFIED.
+
+## Completed this slice — Wave C3 MSSP (#64)
+
+Status: **MERGED** tip `bd91734` — STAGING CANDIDATE. Staging rebuild deferred.
 
 ## Completed this slice — Wave C2 Platform admin (#63)
 
@@ -55,7 +60,7 @@ Status: **MERGED** tip `e72ba83` — STAGING CANDIDATE. Staging FE rebuild defer
 ## Active — Frontend Autonomous SOC audit program (next major arc)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Next after C3 merge + staging smoke: **Wave D** cross-product closure.
+Next after Wave D merge + staging smoke: program closure / staging rebuild evidence.
 Status: **PROGRAM IN PROGRESS** — not `PRODUCTION READY`.
 
 ## Completed this slice — Wave A2 Investigate & AI audit (#57)

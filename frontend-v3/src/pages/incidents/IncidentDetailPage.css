@@ -788,7 +788,7 @@
   padding: 0 12px;
   border-bottom: 1px solid var(--ha-border-subtle);
   background: color-mix(in srgb, var(--ha-surface-masthead) 96%, transparent);
-  backdrop-filter: blur(12px);
+  backdrop-filter: none;
 }
 
 .incident-phase-rail__label {

@@ -893,7 +893,7 @@ export function PlaybookBuilderPage(): JSX.Element {
       </main>
 
       <footer className="soar-builder-footer">
-        <StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode="live" />
+        <StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} />
         <span><Wifi size={12} /> Draft stored locally until saved</span>
         <span><Network size={12} /> {nodes.length} blocks · {edges.length} paths</span>
         <span id="publish-contract-note" className="soar-builder-footer__right"><ShieldCheck size={12} /> Publish requires authoritative backend gates</span>

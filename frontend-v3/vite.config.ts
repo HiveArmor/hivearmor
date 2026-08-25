@@ -264,6 +264,15 @@ export default defineConfig(({ command }) => ({
             : './src/pages/admin/governance-operations/governanceOperations.fixture-disabled.ts'
         ),
       },
+      {
+        find: '@/pages/correlated-findings/correlatedFindings.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/pages/correlated-findings/correlatedFindings.fixtures.ts'
+            : './src/pages/correlated-findings/correlatedFindings.fixture-disabled.ts'
+        ),
+      },
       { find: /^@\//, replacement: resolve(__dirname, './src') + '/' },
     ],
   },

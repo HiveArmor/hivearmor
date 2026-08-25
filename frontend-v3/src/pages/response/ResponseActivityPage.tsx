@@ -664,7 +664,7 @@ export function ResponseActivityPage(): JSX.Element {
         <div><button type="button" onClick={previousPage} disabled={!cursorHistory.length}><ChevronLeft size={14} /> Previous</button><button type="button" onClick={nextPage} disabled={!data?.nextCursor}>Next <ChevronRight size={14} /></button></div>
       </footer>
 
-      <div className="act-status-dock"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode="live" lastUpdated={dataUpdatedAt ? new Date(dataUpdatedAt) : undefined} /></div>
+      <div className="act-status-dock"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={dataUpdatedAt ? new Date(dataUpdatedAt) : undefined} /></div>
       {selectedEntry && <ActivityDetailDrawer key={selectedEntry.id} entry={selectedEntry} onClose={() => setSelectedEntry(null)} onCancelExecution={setCancelTarget} />}
       <HaConfirmationModal
         isOpen={!!cancelTarget}

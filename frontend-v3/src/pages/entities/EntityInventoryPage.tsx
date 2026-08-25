@@ -316,7 +316,7 @@ export function EntityInventoryPage(): JSX.Element {
         {selectedEntity && <EntityContextDrawer entity={selectedEntity} onClose={() => setSelectedEntity(null)} />}
       </div>
 
-      <div className="entities-page__status"><StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode="live" lastUpdated={inventoryQuery.dataUpdatedAt ? new Date(inventoryQuery.dataUpdatedAt) : undefined} /></div>
+      <div className="entities-page__status"><StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode="historical" lastUpdated={inventoryQuery.dataUpdatedAt ? new Date(inventoryQuery.dataUpdatedAt) : undefined} /></div>
     </section>
   );
 }

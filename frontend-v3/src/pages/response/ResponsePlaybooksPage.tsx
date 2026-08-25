@@ -808,7 +808,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
       )}
 
       <div className="resp-status-dock">
-        <StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode="live" />
+        <StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} />
         <span>{total.toLocaleString()} playbooks · cursor pagination · bounded 100-row projection</span>
       </div>
 

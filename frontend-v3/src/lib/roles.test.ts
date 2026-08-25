@@ -30,10 +30,10 @@ describe('roles', () => {
     });
 
     it('ROLE_LABELS provides display names', () => {
-      expect(ROLE_LABELS.ROLE_ADMIN).toBe('Administrator');
+      expect(ROLE_LABELS.ROLE_ADMIN).toBe('Platform Administrator');
       expect(ROLE_LABELS.ROLE_SOC_MANAGER).toBe('SOC Manager');
       expect(ROLE_LABELS.ROLE_ANALYST).toBe('Analyst');
-      expect(ROLE_LABELS.ROLE_USER).toBe('User');
+      expect(ROLE_LABELS.ROLE_USER).toBe('Standard User');
     });
   });
 
