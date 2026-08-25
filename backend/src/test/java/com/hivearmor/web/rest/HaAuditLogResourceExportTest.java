@@ -84,7 +84,7 @@ class HaAuditLogResourceExportTest {
             .hits(h -> h
                 .total(t -> t.value(1L).relation(TotalHitsRelation.Eq))
                 .hits(List.of(Hit.of(hit -> hit
-                    .index("v11-backend-logs")
+                    .index("v3-hive-backend-logs")
                     .id("evt-1")
                     .source((Map) raw))))));
 
@@ -117,20 +117,21 @@ class HaAuditLogResourceExportTest {
     }
 
     @Test
-    void toExportEntryOmitsPayload() {
+    void toAuditEntryUsesSourceAsActorWhenUserMissing() {
         Map<String, Object> raw = new LinkedHashMap<>();
-        raw.put("id", "evt-2");
-        raw.put("@timestamp", "2026-08-23T07:00:00Z");
-        raw.put("user", "soc");
-        raw.put("type", "USER_LOGIN");
-        raw.put("message", "login ok");
-        raw.put("payload", Map.of("refreshToken", "secret-refresh"));
+        raw.put("@timestamp", "2026-08-25T12:00:00Z");
+        raw.put("source", "PANEL");
+        raw.put("type", "INFO");
+        raw.put("message", "boot");
 
-        Map<String, Object> exported = resource.toExportEntry(raw);
+        Map<String, Object> entry = resource.toAuditEntry(raw);
 
-        assertThat(exported).containsKeys(
-            "id", "timestamp", "actor", "actionType", "resourceType", "resourceId", "details", "ipAddress");
-        assertThat(exported).doesNotContainKey("payload");
-        assertThat(exported.get("details")).isEqualTo("login ok");
+        assertThat(entry.get("actor")).isEqualTo("PANEL");
+        assertThat(entry.get("actionType")).isEqualTo("INFO");
+    }
+
+    @Test
+    void auditIndexMatchesApplicationEventWriter() {
+        assertThat(HaAuditLogResource.AUDIT_INDEX).isEqualTo("v3-hive-backend-logs");
     }
 }

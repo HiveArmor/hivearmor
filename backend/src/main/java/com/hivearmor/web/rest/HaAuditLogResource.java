@@ -42,7 +42,8 @@ import java.util.stream.Collectors;
  *
  * Export omits {@code payload} (may contain secrets) and caps row count.
  *
- * Source of truth: OpenSearch index v11-backend-logs (same index used by UtmAuditEventResource).
+ * Source of truth: OpenSearch index {@code v3-hive-backend-logs}
+ * (same index written by {@code ApplicationEventService}; also used by {@link UtmAuditEventResource}).
  */
 @RestController
 @RequestMapping("/api")
@@ -50,7 +51,8 @@ import java.util.stream.Collectors;
 public class HaAuditLogResource {
 
     private static final Logger log = LoggerFactory.getLogger(HaAuditLogResource.class);
-    private static final String AUDIT_INDEX = "v11-backend-logs";
+    /** Must match ApplicationEventService index name (not the obsolete v11-backend-logs alias). */
+    static final String AUDIT_INDEX = "v3-hive-backend-logs";
     /** Hard cap so export cannot dump unbounded OpenSearch results. */
     static final int EXPORT_MAX_ROWS = 10_000;
 
@@ -88,6 +90,12 @@ public class HaAuditLogResource {
 
             return ResponseEntity.ok().headers(headers).body(hits);
         } catch (Exception e) {
+            if (isMissingIndex(e)) {
+                log.warn("HaAuditLogResource.getAuditLog: audit index unavailable; returning empty page");
+                HttpHeaders headers = UtilPagination.generatePaginationHttpHeaders(
+                    0L, page, size, "/api/ha-audit-log");
+                return ResponseEntity.ok().headers(headers).body(List.of());
+            }
             log.error("HaAuditLogResource.getAuditLog: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
@@ -136,9 +144,33 @@ public class HaAuditLogResource {
         } catch (JsonProcessingException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "could not serialize audit export");
         } catch (Exception e) {
+            if (isMissingIndex(e)) {
+                log.warn("HaAuditLogResource.exportAuditLog: audit index unavailable; returning empty export");
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.parseMediaType("application/x-ndjson"));
+                headers.set(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"ha-audit-log-" + Instant.now().getEpochSecond() + ".ndjson\"");
+                headers.add("X-Total-Count", "0");
+                headers.add("X-Export-Row-Count", "0");
+                headers.add("X-Export-Truncated", "false");
+                headers.add("X-Audit-Export-Fields", "id,timestamp,actor,actionType,resourceType,resourceId,details,ipAddress");
+                return ResponseEntity.ok().headers(headers).body(new byte[0]);
+            }
             log.error("HaAuditLogResource.exportAuditLog: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    private static boolean isMissingIndex(Throwable error) {
+        Throwable cursor = error;
+        while (cursor != null) {
+            String message = cursor.getMessage();
+            if (message != null && message.contains("index_not_found_exception")) {
+                return true;
+            }
+            cursor = cursor.getCause();
+        }
+        return false;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -197,7 +229,14 @@ public class HaAuditLogResource {
         Object rawId = rawDoc.get("id");
         entry.put("id", rawId != null ? rawId : UUID.randomUUID().toString());
         entry.put("timestamp", rawDoc.getOrDefault("@timestamp", Instant.now().toString()));
-        entry.put("actor",        rawDoc.getOrDefault("user", rawDoc.getOrDefault("actor", "system")));
+        Object actor = rawDoc.get("user");
+        if (actor == null) {
+            actor = rawDoc.get("actor");
+        }
+        if (actor == null) {
+            actor = rawDoc.get("source");
+        }
+        entry.put("actor", actor != null ? actor : "system");
         entry.put("actionType",   rawDoc.getOrDefault("type", rawDoc.getOrDefault("actionType", "UNKNOWN")));
         entry.put("resourceType", rawDoc.get("resourceType"));
         entry.put("resourceId",   rawDoc.get("resourceId"));
