@@ -1,28 +1,31 @@
 # Next production slice
 
-Updated: **2026-08-25 17:45:00 IST (UTC+05:30)**
+Updated: **2026-08-25 18:00:00 IST (UTC+05:30)**
 
-## Active — Wave D Cross-product closure audit + thin honesty (STAGING CANDIDATE)
+## Active — Program closure (audit waves A1–D complete; staging deferred)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Routes: all visible frontend-v3 surfaces (WCAG / density / theme / deprecation / honesty).
-Status: **AUDIT + thin honesty IN PROGRESS (code)** — still **STAGING CANDIDATE**. Staging rebuild deferred.
-Research: `docs/ai-handoff/research/autonomous-soc-cross-product-closure.md`.
-Branch: `feat/d-cross-product-closure-audit`.
+Status: **AUDIT WAVES COMPLETE** on `main` — still **STAGING CANDIDATE**. Not `PRODUCTION READY`. Staging rebuild deferred.
+Research: `docs/ai-handoff/research/autonomous-soc-program-closure.md`.
+Tip: `0793c18` (merge #65 Wave D).
+
+Next operator-gated actions: staging rebuild + Detect→Govern smoke; optional D-06 density; vendor live proofs when credentials exist.
+
+## Completed this slice — Wave D Cross-product closure (#65)
+
+Status: **MERGED** tip `0793c18` / commit `8e405bd` — STAGING CANDIDATE. Staging rebuild deferred.
 
 | ID | Fix |
 |---|---|
-| D-01 | Legacy routes → Navigate redirects (no dual live mounts) |
+| D-01 | Legacy routes → Navigate redirects |
 | D-02 | StatusDock historical for fixtures/snapshots |
 | D-03/04/11 | Human role labels; drop fictional INCIDENT_COMMANDER |
 | D-05 | correlatedFindings fixture-disabled twin |
-| D-07 | `/rules/:id/*` redirects preserve id → detection-rules |
-| D-08 | Remove backdrop-filter glass on incident/finding overlays |
-| D-09 | Theme first-visit respects prefers-color-scheme |
+| D-07 | `/rules/:id/*` redirects preserve id |
+| D-08 | Remove backdrop-filter glass |
+| D-09 | Theme prefers-color-scheme |
 | D-10 | Thin honesty on Production env labels |
 | D-12 | HelpButton console.log removed |
-
-Still open: full density wiring (D-06) across every grid; staging rebuild for LIVE VERIFIED.
 
 ## Completed this slice — Wave C3 MSSP (#64)
 
@@ -60,8 +63,8 @@ Status: **MERGED** tip `e72ba83` — STAGING CANDIDATE. Staging FE rebuild defer
 ## Active — Frontend Autonomous SOC audit program (next major arc)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Next after Wave D merge + staging smoke: program closure / staging rebuild evidence.
-Status: **PROGRAM IN PROGRESS** — not `PRODUCTION READY`.
+Waves A1–D closed as STAGING CANDIDATE. Next: operator-gated staging rebuild evidence (not auto-claimed LIVE VERIFIED).
+Status: **AUDIT WAVES COMPLETE** — not `PRODUCTION READY`.
 
 ## Completed this slice — Wave A2 Investigate & AI audit (#57)
 

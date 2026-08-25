@@ -1,6 +1,6 @@
 # Frontend Autonomous SOC audit program
 
-Updated: **2026-08-25 17:45:00 IST (UTC+05:30)**
+Updated: **2026-08-25 18:00:00 IST (UTC+05:30)**
 
 Purpose: validate every visible frontend-v3 surface against real backend capability for an **Enterprise AI-driven Autonomous SIEM / Autonomous SOC**. Page-by-page: **audit → research → implement** (UI/UX, nav, structure, backend connects). Status vocabulary stays honest — never claim `PRODUCTION READY` without gates.
 
@@ -38,9 +38,23 @@ AI (SOC AI / agentic triage / Hive Intelligence) must appear as **assistive evid
 | **C1** | Dashboards & reports | `/dashboards`, `/dashboards/studio`, `/reports/*` | **COMPLETE** audit + thin honesty (#62) — STAGING CANDIDATE (staging rebuild deferred) |
 | **C2** | Platform admin | `/admin/*`, `/inputs/sources`, `/settings/api-keys`, connectors | **COMPLETE** audit + thin honesty (#63) — STAGING CANDIDATE (staging rebuild deferred) |
 | **C3** | MSSP | `/mssp/*` | **COMPLETE** audit + thin honesty (#64) — STAGING CANDIDATE (staging rebuild deferred) |
-| **D** | Cross-product closure | all visible routes | WCAG, density, dark/light, perf, deprecation — **AUDIT + thin honesty in progress** |
+| **D** | Cross-product closure | all visible routes | **COMPLETE** audit + thin honesty (#65) — STAGING CANDIDATE (staging rebuild deferred) |
 
 Hidden / deep-link-only surfaces (hub tabs, aliases) are audited with their parent hub, not as primary nav clutter.
+
+## Program status — audit waves closed (2026-08-25)
+
+Waves **A1–D** are complete as **STAGING CANDIDATE** thin honesty on `main` tip after [#65](https://github.com/HiveArmor/hivearmor/pull/65) (`0793c18`).
+
+**Not claimed:** `PRODUCTION READY` or `LIVE VERIFIED` — staging rebuild + evidence smoke still deferred by operator request.
+
+**Deferred follow-ons (do not invent status):**
+- Staging FE/BE rebuild from `main` + smoke across Detect→Govern journey
+- Wave D-06 full AG Grid density wiring everywhere
+- Authorized MSSP masthead tenant inventory depth
+- Vendor live connector proofs (credentials required)
+
+Research index: `docs/ai-handoff/research/autonomous-soc-program-closure.md`.
 
 ## Per-page audit checklist
 

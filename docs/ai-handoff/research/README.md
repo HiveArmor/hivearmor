@@ -4,6 +4,7 @@ These notes preserve paraphrased conclusions and source provenance for models wi
 
 | Domain | Note | Refresh trigger |
 |---|---|---|
+| Autonomous SOC program closure (A1–D) | `autonomous-soc-program-closure.md` | Staging smoke evidence lands, NIST CSF/CA guidance changes, or HiveArmor status vocabulary rules change. |
 | Autonomous SOC cross-product closure (Wave D) | `autonomous-soc-cross-product-closure.md` | WCAG 2.2, NIST AC-6, OWASP ASVS deprecation, or HiveArmor global shell/theme/status contracts change. |
 | Autonomous SOC MSSP portal (Wave C3) | `autonomous-soc-mssp.md` | Azure Lighthouse, Okta multi-tenancy, NIST AC/AU, or HiveArmor `/api/ha-mssp/*` contracts change. |
 | Autonomous SOC platform admin (Wave C2) | `autonomous-soc-platform-admin.md` | NIST SP 800-92, Entra RBAC, Elastic/Splunk monitoring, or HiveArmor IAM/INO/GOV/ING contracts change. |
