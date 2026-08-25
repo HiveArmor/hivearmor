@@ -186,6 +186,44 @@ public class MicrosoftOAuthClient {
         }
     }
 
+    /**
+     * Authenticated Graph/Defender POST. Callers must not log the bearer token.
+     *
+     * @return result map with {@code ok}, {@code httpStatus}, {@code message}
+     */
+    public Map<String, Object> postJson(String url, String bearerToken, String jsonBody) {
+        String token = requireBearer(bearerToken);
+        URI uri = urlGuard.requireHttps(url);
+        String body = jsonBody != null ? jsonBody : "{}";
+
+        try {
+            HttpRequest req = HttpRequest.newBuilder(uri)
+                .timeout(TIMEOUT)
+                .header("Authorization", "Bearer " + token)
+                .header("Accept", "application/json")
+                .header("Content-Type", "application/json")
+                .header("User-Agent", "HiveArmor-Connector/1.0")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+            HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
+            int code = resp.statusCode();
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("httpStatus", code);
+            if (code >= 200 && code < 300) {
+                out.put("ok", true);
+                out.put("message", "Defender POST OK (HTTP " + code + ")");
+                return out;
+            }
+            out.put("ok", false);
+            out.put("message", statusMessage(code));
+            return out;
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalStateException("Defender POST failed: " + safeError(e), e);
+        }
+    }
+
     public static String graphScope() {
         return "https://graph.microsoft.com/.default";
     }

@@ -20,20 +20,38 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Microsoft Defender for Endpoint — PULL_ALERTS (OAuth client credentials).
+ * Microsoft Defender for Endpoint — PULL_ALERTS; kinetic isolate only when feature-flagged.
+ *
+ * <p>STAGING CANDIDATE — {@link ConnectorCapability#ISOLATE_HOST} /
+ * {@link ConnectorCapability#UNISOLATE_HOST} are declared only when
+ * {@code hivearmor.connectors.vendor-isolate-enabled=true}. Live isolate/unisolate
+ * POSTs to the Defender machine API are unit-tested with mocked HTTP (no live tenant).
+ * Hybrid response mesh still prefers an enrolled HA agent over vendor kinetic.
  */
 public final class AzureDefenderConnector extends AbstractHttpConnector {
 
     public static final String ID = "azure_defender";
 
+    private static final String DEFAULT_BASE = "https://api.securitycenter.microsoft.com";
+
     private final MicrosoftOAuthClient oauth;
+    private final boolean vendorIsolateEnabled;
+
+    public AzureDefenderConnector(MicrosoftOAuthClient oauth, boolean vendorIsolateEnabled) {
+        this.oauth = oauth != null ? oauth : new MicrosoftOAuthClient();
+        this.vendorIsolateEnabled = vendorIsolateEnabled;
+    }
 
     public AzureDefenderConnector(MicrosoftOAuthClient oauth) {
-        this.oauth = oauth != null ? oauth : new MicrosoftOAuthClient();
+        this(oauth, false);
+    }
+
+    public AzureDefenderConnector(boolean vendorIsolateEnabled) {
+        this(new MicrosoftOAuthClient(), vendorIsolateEnabled);
     }
 
     public AzureDefenderConnector() {
-        this(new MicrosoftOAuthClient());
+        this(new MicrosoftOAuthClient(), false);
     }
 
     @Override
@@ -53,16 +71,26 @@ public final class AzureDefenderConnector extends AbstractHttpConnector {
 
     @Override
     public Set<ConnectorCapability> capabilities() {
-        return EnumSet.of(ConnectorCapability.PULL_ALERTS);
+        EnumSet<ConnectorCapability> caps = EnumSet.of(ConnectorCapability.PULL_ALERTS);
+        if (vendorIsolateEnabled) {
+            caps.add(ConnectorCapability.ISOLATE_HOST);
+            caps.add(ConnectorCapability.UNISOLATE_HOST);
+        }
+        return caps;
     }
 
     @Override
     public ConnectorSchema schema() {
+        String description = "Microsoft Defender for Endpoint alerts via Microsoft Graph / security API.";
+        if (vendorIsolateEnabled) {
+            description += " Feature-flagged ISOLATE_HOST/UNISOLATE_HOST via POST "
+                + "/api/machines/{id}/isolate|unisolate (STAGING CANDIDATE).";
+        }
         return new ConnectorSchema(
             ID,
             connectorName(),
             category(),
-            "Microsoft Defender for Endpoint alerts via Microsoft Graph / security API.",
+            description,
             List.of(
                 ConnectorField.secret("tenant_id", "Tenant ID"),
                 ConnectorField.secret("client_id", "Application (client) ID"),
@@ -70,7 +98,7 @@ public final class AzureDefenderConnector extends AbstractHttpConnector {
                 ConnectorField.stringOptional(
                     "base_url",
                     "API base URL",
-                    "https://api.securitycenter.microsoft.com",
+                    DEFAULT_BASE,
                     null
                 )
             ),
@@ -82,8 +110,7 @@ public final class AzureDefenderConnector extends AbstractHttpConnector {
     public ConnectionTestResult testConnection(Map<String, String> config) {
         try {
             validateRequiredFields(config);
-            String base = optional(config, "base_url", "https://api.securitycenter.microsoft.com")
-                .replaceAll("/$", "");
+            String base = optional(config, "base_url", DEFAULT_BASE).replaceAll("/$", "");
             safeBase(base);
             if (MicrosoftOAuthClient.looksLikePlaceholder(config)) {
                 return ConnectionTestResult.failure(
@@ -104,6 +131,94 @@ public final class AzureDefenderConnector extends AbstractHttpConnector {
         }
     }
 
+    /**
+     * Isolate a machine via Defender {@code POST /api/machines/{id}/isolate}.
+     *
+     * <p>Fail-closed without credentials / when feature flag is off. Never logs secrets.
+     *
+     * @param config    merged connector config
+     * @param machineId Defender machine id
+     * @param comment   optional operator comment (default applied when blank)
+     */
+    public Map<String, Object> isolateHost(Map<String, String> config, String machineId, String comment) {
+        return machineAction(config, machineId, comment, true);
+    }
+
+    /**
+     * Release isolation via Defender {@code POST /api/machines/{id}/unisolate}.
+     */
+    public Map<String, Object> unisolateHost(Map<String, String> config, String machineId, String comment) {
+        return machineAction(config, machineId, comment, false);
+    }
+
+    private Map<String, Object> machineAction(
+            Map<String, String> config,
+            String machineId,
+            String comment,
+            boolean isolate) {
+        if (!vendorIsolateEnabled) {
+            throw new IllegalStateException(
+                "Defender isolate disabled (hivearmor.connectors.vendor-isolate-enabled=false)"
+            );
+        }
+        validateRequiredFields(config);
+        if (MicrosoftOAuthClient.looksLikePlaceholder(config)) {
+            throw new IllegalArgumentException("Refusing Defender mutate with placeholder credentials");
+        }
+        if (machineId == null || machineId.isBlank()) {
+            throw new IllegalArgumentException("machineId is required");
+        }
+        String base = optional(config, "base_url", DEFAULT_BASE).replaceAll("/$", "");
+        safeBase(base);
+        String id = machineId.trim();
+        String pathId = URLEncoder.encode(id, StandardCharsets.UTF_8).replace("+", "%20");
+        String action = isolate ? "isolate" : "unisolate";
+        String note = (comment == null || comment.isBlank())
+            ? (isolate ? "HiveArmor isolate" : "HiveArmor unisolate")
+            : comment.trim();
+        String body = isolate
+            ? "{\"Comment\":\"" + jsonEscape(note) + "\",\"IsolationType\":\"Full\"}"
+            : "{\"Comment\":\"" + jsonEscape(note) + "\"}";
+
+        try {
+            String token = oauth.fetchAccessToken(
+                require(config, "tenant_id"),
+                require(config, "client_id"),
+                require(config, "client_secret"),
+                MicrosoftOAuthClient.defenderScope()
+            );
+            Map<String, Object> result = oauth.postJson(
+                base + "/api/machines/" + pathId + "/" + action,
+                token,
+                body
+            );
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("machineId", id);
+            out.put("action", isolate ? "isolate_host" : "unisolate_host");
+            out.put("connectorId", ID);
+            out.putAll(result);
+            if (Boolean.TRUE.equals(result.get("ok"))) {
+                out.put(
+                    "message",
+                    "Defender " + action + " accepted (HTTP " + result.get("httpStatus") + ")"
+                );
+            }
+            return out;
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalStateException("Defender " + action + " failed: " + e.getMessage(), e);
+        }
+    }
+
+    private static String jsonEscape(String value) {
+        return value
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r");
+    }
+
     @Override
     public List<NormalizedAlert> fetchAlerts(Map<String, String> config, Instant since) {
         validateRequiredFields(config);
@@ -111,8 +226,7 @@ public final class AzureDefenderConnector extends AbstractHttpConnector {
             return List.of();
         }
         try {
-            String base = optional(config, "base_url", "https://api.securitycenter.microsoft.com")
-                .replaceAll("/$", "");
+            String base = optional(config, "base_url", DEFAULT_BASE).replaceAll("/$", "");
             safeBase(base);
             String token = oauth.fetchAccessToken(
                 require(config, "tenant_id"),
