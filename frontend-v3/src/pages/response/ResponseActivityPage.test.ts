@@ -117,8 +117,8 @@ describe('ResponseActivityPage grid configuration', () => {
   });
 
   it('should expose compact, standard, and comfortable icon density controls', () => {
-    const rowHeights = { compact: 28, standard: 34, comfortable: 40 };
-    expect(rowHeights.standard).toBe(34);
+    const rowHeights = { compact: 32, standard: 40, comfortable: 48 };
+    expect(rowHeights.standard).toBe(40);
     expect(Object.keys(rowHeights)).toHaveLength(3);
   });
 });

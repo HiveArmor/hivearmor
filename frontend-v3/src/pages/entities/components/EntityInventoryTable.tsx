@@ -13,6 +13,7 @@ import type { EntitySummaryItem, EntRiskTrend } from '../types/entity.types';
 
 import { EntityTypeIcon } from '@/components/entity-type-icon';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+import { useRowDensity, ROW_HEIGHTS } from '@/hooks/useRowDensity';
 
 
 
@@ -63,6 +64,7 @@ function relativeTime(isoStr: string): string {
 }
 
 export function EntityInventoryTable({ entities, loading, onEntityClick, onEntityOpen }: EntityInventoryTableProps): JSX.Element {
+  const [density] = useRowDensity();
   const columnDefs = useMemo<ColDef<EntitySummaryItem>[]>(() => [
     {
       colId: 'type',
@@ -142,7 +144,7 @@ export function EntityInventoryTable({ entities, loading, onEntityClick, onEntit
       <SiemDataGrid
         columnDefs={columnDefs}
         rowData={entities}
-        rowHeight={30}
+        rowHeight={ROW_HEIGHTS[density]}
         height="100%"
         loading={loading}
         onRowClicked={(event) => {

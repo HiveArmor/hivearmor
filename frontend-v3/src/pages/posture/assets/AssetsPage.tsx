@@ -60,13 +60,13 @@ import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
+import { useRowDensity } from '@/hooks/useRowDensity';
 
 
 import './AssetsPage.css';
 import '../../response/response-grid-standard.css';
 
 const PAGE_SIZE = 50;
-type Density = keyof typeof RESPONSE_GRID_ROW_HEIGHTS;
 type AssetView = 'all' | AssetCategory;
 type RiskFilter = 'all' | AssetRiskLevel;
 type ExposureFilter = 'all' | AssetExposureLevel;
@@ -214,7 +214,7 @@ export function AssetsPage(): JSX.Element {
   const [sensor, setSensor] = useState<SensorFilter>('all');
   const [searchDraft, setSearchDraft] = useState('');
   const [search, setSearch] = useState('');
-  const [density, setDensity] = useState<Density>('standard');
+  const [density, setDensity] = useRowDensity();
   const [selectedAsset, setSelectedAsset] = useState<AssetDTO | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const epsStream = useEpsStream();

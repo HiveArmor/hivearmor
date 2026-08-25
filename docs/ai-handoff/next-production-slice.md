@@ -1,16 +1,19 @@
 # Next production slice
 
-Updated: **2026-08-25 20:30:00 IST (UTC+05:30)**
+Updated: **2026-08-25 21:00:00 IST (UTC+05:30)**
 
-## Active — Post-audit follow-ons (admin API 500s closed)
+## Active — Wave D-06 row density wiring (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Status: **AUDIT WAVES COMPLETE** + staging FE smoke + admin tenants/audit **200** on staging — still **STAGING CANDIDATE**. Not `PRODUCTION READY`.
-Research: `docs/ai-handoff/research/autonomous-soc-program-closure.md`.
-Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-25 admin 500 fixes).
+Status: **AUDIT + thin honesty ready for merge** — shared `ha_row_density` / `useRowDensity` (32/40/48) across high-volume AG Grid hubs. Still **STAGING CANDIDATE**. Not `PRODUCTION READY`.
+Branch: `feat/d06-row-density-wiring`.
+
+| ID | Fix |
+|---|---|
+| D-06 | Persist density via `ha_row_density`; align RESPONSE_GRID + hunt/incident/detection/entity/posture/response grids |
 
 Deferred (post full production MVP): vendor live connector credentials/proofs.
-Next optional: D-06 density wiring; other residual product depth without vendor logins.
+Next optional after merge: MSSP masthead tenant inventory depth; residual product depth without vendor logins.
 
 ## Completed this slice — Wave D Cross-product closure (#65)
 

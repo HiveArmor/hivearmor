@@ -1,6 +1,6 @@
 # Frontend Autonomous SOC audit program
 
-Updated: **2026-08-25 20:30:00 IST (UTC+05:30)**
+Updated: **2026-08-25 21:00:00 IST (UTC+05:30)**
 
 Purpose: validate every visible frontend-v3 surface against real backend capability for an **Enterprise AI-driven Autonomous SIEM / Autonomous SOC**. Page-by-page: **audit → research → implement** (UI/UX, nav, structure, backend connects). Status vocabulary stays honest — never claim `PRODUCTION READY` without gates.
 
@@ -50,7 +50,7 @@ Waves **A1–D** are complete as **STAGING CANDIDATE** thin honesty on `main` ti
 
 **Deferred follow-ons (do not invent status):**
 - Staging FE/BE rebuild from `main` + smoke across Detect→Govern journey
-- Wave D-06 full AG Grid density wiring everywhere
+- Wave D-06 AG Grid density wiring (PR in flight — `ha_row_density` / 32·40·48)
 - Authorized MSSP masthead tenant inventory depth
 - Vendor live connector proofs (credentials required)
 

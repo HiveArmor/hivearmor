@@ -43,6 +43,7 @@ import {
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
+import { useRowDensity } from '@/hooks/useRowDensity';
 import {
   RESP_020_DISABLED_TITLE,
   RESP_020_GOVERNANCE,
@@ -78,7 +79,6 @@ import './response-grid-standard.css';
 type GovernanceView = 'queue' | 'policies' | 'history';
 type StateFilter = ResponseApprovalState | 'ALL';
 type RiskFilter = ResponseApprovalRequest['riskLevel'] | 'ALL';
-type Density = keyof typeof RESPONSE_GRID_ROW_HEIGHTS;
 
 const STATE_OPTIONS: Array<{ value: StateFilter; label: string }> = [
   { value: 'PENDING', label: 'Pending decisions' },
@@ -331,7 +331,7 @@ export function ResponseAuthorityPage(): JSX.Element {
   const search = useDebounce(searchText.trim(), 250);
   const [stateFilter, setStateFilter] = useState<StateFilter>('PENDING');
   const [riskFilter, setRiskFilter] = useState<RiskFilter>('ALL');
-  const [density, setDensity] = useState<Density>('standard');
+  const [density, setDensity] = useRowDensity();
   const [selected, setSelected] = useState<ResponseApprovalRequest | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 

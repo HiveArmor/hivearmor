@@ -14,7 +14,8 @@ import type { ColDef } from 'ag-grid-community';
 import { Lock, PlayCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { RESPONSE_GRID_DEFAULT_ROW_HEIGHT } from './response-grid-standard';
+import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
+import { useRowDensity } from '@/hooks/useRowDensity';
 
 import { EmptyState as HaEmptyState } from '@/components/empty-state/EmptyState';
 import { HaButton } from '@/components/ha-button/HaButton';
@@ -214,6 +215,7 @@ export function PlaybooksPage(): JSX.Element {
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
   const { hasAnyRole } = useAuthStore();
+  const [density] = useRowDensity();
 
   // Access check — read requires ROLE_SOC_MANAGER or ROLE_ADMIN
   const hasAccess = hasAnyRole(['ROLE_SOC_MANAGER', 'ROLE_ADMIN']);
@@ -462,7 +464,7 @@ export function PlaybooksPage(): JSX.Element {
             className="response-grid"
             columnDefs={columnDefs}
             rowData={[]}
-            rowHeight={RESPONSE_GRID_DEFAULT_ROW_HEIGHT}
+            rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]}
             loading={true}
             height="calc(100vh - 200px)"
           />
@@ -517,7 +519,7 @@ export function PlaybooksPage(): JSX.Element {
           className="response-grid"
           columnDefs={columnDefs}
           rowData={rows}
-          rowHeight={RESPONSE_GRID_DEFAULT_ROW_HEIGHT}
+          rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]}
           height="calc(100vh - 160px)"
           defaultColDef={{ sortable: false, filter: false, resizable: true }}
         />

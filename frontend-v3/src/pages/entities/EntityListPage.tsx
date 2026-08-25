@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { EntityTypeIcon, entityTypeLabel } from '@/components/entity-type-icon';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+import { useRowDensity, ROW_HEIGHTS, type RowDensity } from '@/hooks/useRowDensity';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
@@ -27,7 +28,6 @@ import { ENTITY_TYPES } from '@/types/entity.types';
 
 import './EntityListPage.css';
 
-type RowDensity = 'compact' | 'standard' | 'comfortable';
 type SortMode = NonNullable<EntityListFilters['sort']>;
 type ActivityWindow = NonNullable<EntityListFilters['activityWindow']>;
 
@@ -136,7 +136,7 @@ export function EntityListPage(): JSX.Element {
   const [risk, setRisk] = useState<EntityRiskLevel | ''>('');
   const [activityWindow, setActivityWindow] = useState<ActivityWindow>('30d');
   const [sort, setSort] = useState<SortMode>('risk_desc');
-  const [density, setDensity] = useState<RowDensity>('compact');
+  const [density, setDensity] = useRowDensity();
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [cursorStack, setCursorStack] = useState<Array<string | null>>([null]);
@@ -341,7 +341,7 @@ export function EntityListPage(): JSX.Element {
           {entitiesQuery.isLoading && <div className="entity-grid-loading" aria-label="Loading entities">{Array.from({ length: 12 }, (_, index) => <span key={index} />)}</div>}
           {entitiesQuery.isError && <div className="entity-state"><ShieldAlert size={30} /><h2>{permissionDenied ? 'Entity inventory restricted' : 'Entity inventory unavailable'}</h2><p>{permissionDenied ? 'Your current scope cannot read entity analytics.' : entitiesQuery.error instanceof Error ? entitiesQuery.error.message : 'The entity service did not respond.'}</p>{!permissionDenied && <button className="entity-primary-button" type="button" onClick={() => void entitiesQuery.refetch()}>Try again</button>}</div>}
           {!entitiesQuery.isLoading && !entitiesQuery.isError && entities.length === 0 && <div className="entity-state"><Search size={30} /><h2>No matching entities</h2><p>No entity activity matches this scope and time window. Clear filters or widen the activity window.</p>{hasActiveFilters && <button className="entity-primary-button" type="button" onClick={resetFilters}>Clear filters</button>}</div>}
-          {!entitiesQuery.isLoading && !entitiesQuery.isError && entities.length > 0 && <SiemDataGrid ref={gridRef} className="entity-grid" columnDefs={columnDefs} rowData={entities} rowHeight={density === 'compact' ? 32 : density === 'standard' ? 38 : 46} rowSelection="multiple" suppressRowClickSelection onRowClicked={handleRowClick} onSelectionChanged={(rows) => setSelectedEntities(rows as EntityDTO[])} getRowId={({ data }) => (data as EntityDTO).id} ariaLabel="Entity risk inventory" />}
+          {!entitiesQuery.isLoading && !entitiesQuery.isError && entities.length > 0 && <SiemDataGrid ref={gridRef} className="entity-grid" columnDefs={columnDefs} rowData={entities} rowHeight={ROW_HEIGHTS[density]} rowSelection="multiple" suppressRowClickSelection onRowClicked={handleRowClick} onSelectionChanged={(rows) => setSelectedEntities(rows as EntityDTO[])} getRowId={({ data }) => (data as EntityDTO).id} ariaLabel="Entity risk inventory" />}
         </div>
 
         <footer className="entity-pagination">

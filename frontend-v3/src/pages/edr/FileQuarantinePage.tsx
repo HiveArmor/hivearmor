@@ -50,6 +50,7 @@ import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useIsolatedHosts, useQuarantineBulkAction, useQuarantineAction, useQuarantinedFiles } from '@/hooks/useQuarantine';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
+import { useRowDensity, type RowDensity } from '@/hooks/useRowDensity';
 import { fixtureMode } from '@/pages/response/responsePlaybooks.service';
 import { useAuthStore } from '@/store/auth.store';
 import type { IsolatedHostDTO, QuarantinedFileDTO } from '@/types/edr';
@@ -62,7 +63,6 @@ const QUARANTINE_ACCESS_ROLES = ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN
 
 const PAGE_SIZE = 25;
 type WorkspaceView = 'files' | 'endpoints';
-type Density = keyof typeof RESPONSE_GRID_ROW_HEIGHTS;
 type FileStatus = 'all' | 'quarantined' | 'restored' | 'deleted';
 type Verdict = 'all' | NonNullable<QuarantinedFileDTO['verdict']>;
 type IsolationStatus = 'all' | 'ACTIVE' | 'LIFTED' | 'FAILED';
@@ -238,7 +238,7 @@ function formatFreshnessLabel(snapshotAt?: string | null, asOf?: string | null, 
 }
 
 function EndpointContainmentPanel({ density, search, status, page, onPageChange }: {
-  density: Density;
+  density: RowDensity;
   search: string;
   status: IsolationStatus;
   page: number;
@@ -497,7 +497,7 @@ function FileQuarantineContent(): JSX.Element {
   const [containmentStatus, setContainmentStatus] = useState<IsolationStatus>('all');
   const [isolationPage, setIsolationPage] = useState(0);
   const [search, setSearch] = useState('');
-  const [density, setDensity] = useState<Density>('standard');
+  const [density, setDensity] = useRowDensity();
   const [selectedRows, setSelectedRows] = useState<QuarantinedFileDTO[]>([]);
   const [selectedFile, setSelectedFile] = useState<QuarantinedFileDTO | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);

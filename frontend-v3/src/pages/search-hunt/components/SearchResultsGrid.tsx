@@ -6,6 +6,7 @@ import type { AgGridReact } from 'ag-grid-react';
 import type { HuntEvent, HuntRowDensity } from '../searchHunt.types';
 
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+import { ROW_HEIGHTS } from '@/hooks/useRowDensity';
 
 export interface SearchResultsGridProps {
   events: HuntEvent[];
@@ -91,7 +92,7 @@ export function SearchResultsGrid({
       columnDefs={columnDefs}
       rowData={events}
       loading={loading}
-      rowHeight={density === 'compact' ? 30 : density === 'comfortable' ? 42 : 36}
+      rowHeight={ROW_HEIGHTS[density]}
       rowSelection="multiple"
       suppressRowClickSelection
       onSelectionChanged={handleSelection}

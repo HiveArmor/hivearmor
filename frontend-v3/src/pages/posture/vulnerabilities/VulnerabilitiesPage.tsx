@@ -39,6 +39,7 @@ import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
+import { useRowDensity } from '@/hooks/useRowDensity';
 import { fetchVulnFinding, fetchVulnFindings, fetchVulnRemediation, fetchVulnRemediationConnectors, fetchVulnSummary } from '@/services/vulnService';
 import type { VulnFindingDTO, VulnSeverity } from '@/types/vuln.types';
 
@@ -46,7 +47,6 @@ import './VulnerabilitiesPage.css';
 
 const PAGE_SIZE = 50;
 
-type Density = keyof typeof RESPONSE_GRID_ROW_HEIGHTS;
 type SeverityFilter = 'all' | VulnSeverity;
 type ExploitationFilter = 'all' | 'kev';
 type WindowFilter = 'all' | '7d' | '30d' | '90d';
@@ -222,7 +222,7 @@ export function VulnerabilitiesPage(): JSX.Element {
   const [severity, setSeverity] = useState<SeverityFilter>('all');
   const [exploitation, setExploitation] = useState<ExploitationFilter>('all');
   const [window, setWindow] = useState<WindowFilter>('all');
-  const [density, setDensity] = useState<Density>('standard');
+  const [density, setDensity] = useRowDensity();
   const [activeIndex, setActiveIndex] = useState(0);
   const [selected, setSelected] = useState<VulnFindingDTO | null>(null);
   const eps = useEpsStream();

@@ -37,6 +37,7 @@ import { StatusDock } from '@/components/status-dock';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
+import { useRowDensity } from '@/hooks/useRowDensity';
 import { activeDirectoryFixtureMode, fetchAdPosture } from '@/services/active-directory.service';
 import type {
   AdAssessmentCategory,
@@ -55,7 +56,6 @@ import './ActiveDirectoryPage.css';
 import '../../response/response-grid-standard.css';
 
 const PAGE_SIZE = 50;
-type Density = keyof typeof RESPONSE_GRID_ROW_HEIGHTS;
 
 const VIEWS: Array<{ value: AdView; label: string; icon: typeof ShieldAlert }> = [
   { value: 'assessments', label: 'Security assessments', icon: ShieldAlert },
@@ -141,7 +141,7 @@ export function ActiveDirectoryPage(): JSX.Element {
   const search = useDebounce(searchDraft.trim(), 300);
   const [page, setPage] = useState(0);
   const [cursors, setCursors] = useState<Array<string | null>>([null]);
-  const [density, setDensity] = useState<Density>('standard');
+  const [density, setDensity] = useRowDensity();
   const [selected, setSelected] = useState<AdRow | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const eps = useEpsStream();

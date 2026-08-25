@@ -27,7 +27,7 @@ import {
   cancelHunt, executeHunt, fetchHuntSchema, fetchQueryCapabilities, searchHuntFixtureMode,
 } from './searchHunt.service';
 import type {
-  HuntActionRequest, HuntEvent, HuntRowDensity, HuntSearchRequest, HuntSearchResponse,
+  HuntActionRequest, HuntEvent, HuntSearchRequest, HuntSearchResponse,
 } from './searchHunt.types';
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
@@ -36,6 +36,7 @@ import { TimeRangeSelector } from '@/components/time-range-selector/TimeRangeSel
 import { resolveTimeRange } from '@/components/time-range-selector/timeRangeUtils';
 import type { TimeRange } from '@/components/time-range-selector/timeRangeUtils';
 import { useEpsStream } from '@/hooks/useEpsStream';
+import { useRowDensity } from '@/hooks/useRowDensity';
 import { useSavedHunts } from '@/hooks/useSavedHunts';
 import { ApiError } from '@/lib/apiClient';
 import { useAuthStore } from '@/store/auth.store';
@@ -53,7 +54,7 @@ const COLUMN_OPTIONS = [
   ['sourceIp', 'Source IP'], ['destinationIp', 'Destination IP'], ['tenantName', 'Tenant'],
   ['message', 'Event summary'], ['alertCount', 'Alerts'],
 ] as const;
-const DENSITY_OPTIONS: Array<{ value: HuntRowDensity; label: string }> = [
+const DENSITY_OPTIONS: Array<{ value: 'compact' | 'standard' | 'comfortable'; label: string }> = [
   { value: 'compact', label: 'Compact rows' },
   { value: 'standard', label: 'Standard rows' },
   { value: 'comfortable', label: 'Comfortable rows' },
@@ -98,9 +99,7 @@ export function SearchHuntPage(): JSX.Element {
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
     try { const saved = localStorage.getItem('ha_hunt_columns'); return saved ? JSON.parse(saved) : DEFAULT_COLUMNS; } catch { return DEFAULT_COLUMNS; }
   });
-  const [density, setDensity] = useState<HuntRowDensity>(() => {
-    return (localStorage.getItem('ha_hunt_density') as HuntRowDensity) || 'compact';
-  });
+  const [density, setDensity] = useRowDensity();
   const [selectedIndex, setSelectedIndex] = useState<string>('all');
   const [fieldRailOpen, setFieldRailOpen] = useState(true);
   const [libraryOpen, setLibraryOpen] = useState<'saved' | 'history' | null>(null);
@@ -134,7 +133,6 @@ export function SearchHuntPage(): JSX.Element {
 
   // Persist columns and density to localStorage
   useEffect(() => { localStorage.setItem('ha_hunt_columns', JSON.stringify(visibleColumns)); }, [visibleColumns]);
-  useEffect(() => { localStorage.setItem('ha_hunt_density', density); }, [density]);
 
   const columnsPickerRef = useRef<HTMLDivElement | null>(null);
   // Close columns picker on outside click
