@@ -22,7 +22,6 @@ import { fetchTenantDetail, updateTenant } from "../api/msspTenantApi";
 import type { UpdateTenantRequest } from "../api/msspTypes";
 import { useMsspNavStore } from "../store/msspNavStore";
 
-import { ErrorState } from "@/components/error-state/ErrorState";
 import { HaChart } from "@/components/ha-chart/HaChart";
 import { LoadingState } from "@/components/loading-state/LoadingState";
 
@@ -340,13 +339,13 @@ export function TenantDetailPage(): ReactElement {
     );
   }
 
-  // ── Not-found branch ───────────────────────────────────────────────────────
+  // ── Not-found branch (HTTP 404 only) ───────────────────────────────────────
   const is404 =
     isError &&
     error instanceof Error &&
     error.message === "404";
 
-  if (is404 || (isError && !data)) {
+  if (is404) {
     return (
       <div
         data-testid="tenant-detail-notfound"
@@ -398,23 +397,59 @@ export function TenantDetailPage(): ReactElement {
     );
   }
 
-  // ── Generic error branch (non-404) ─────────────────────────────────────────
+  // ── Auth / generic error branch ────────────────────────────────────────────
   if (isError || !data) {
+    const status = error instanceof Error ? error.message : "";
+    const isAuth = status === "401" || status === "403";
     return (
       <div
-        data-testid="tenant-detail-notfound"
+        data-testid="tenant-detail-error"
         style={{
           display: "flex",
           flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
           height: "100%",
           padding: "var(--ha-space-6)",
         }}
       >
-        <ErrorState
-          title="Could not load tenant details"
-          message="An error occurred while fetching the tenant data."
-          onRetry={() => void refetch()}
-        />
+        <h2
+          style={{
+            fontSize: "var(--ha-text-xl)",
+            fontWeight: "var(--ha-weight-semibold)",
+            color: "var(--ha-text-primary)",
+            marginBottom: "var(--ha-space-2)",
+          }}
+        >
+          {isAuth ? "MSSP access restricted" : "Tenant details unavailable"}
+        </h2>
+        <p
+          style={{
+            fontSize: "var(--ha-text-sm)",
+            color: "var(--ha-text-secondary)",
+            textAlign: "center",
+          }}
+        >
+          {isAuth
+            ? "Required permission: MSSP Administrator. Sign in again or ask an administrator for access."
+            : "The tenant could not be loaded. Retry or return to the tenants list."}
+        </p>
+        <button
+          type="button"
+          onClick={() => void refetch()}
+          style={{
+            marginTop: "var(--ha-space-4)",
+            padding: "var(--ha-space-2) var(--ha-space-4)",
+            fontSize: "var(--ha-text-sm)",
+            borderRadius: "var(--ha-radius-base)",
+            border: "1px solid var(--ha-border)",
+            background: "var(--ha-surface-raised)",
+            color: "var(--ha-text-primary)",
+            cursor: "pointer",
+          }}
+        >
+          Retry
+        </button>
       </div>
     );
   }

@@ -87,9 +87,14 @@ describe("DownloadAggregateButton — fetch call", () => {
     const [calledUrl, calledOptions] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(calledUrl).toBe(ENDPOINT);
 
-    // Assert: Authorization header contains the token
-    const headers = calledOptions.headers as Record<string, string>;
-    expect(headers["Authorization"]).toBe(`Bearer ${MOCK_TOKEN}`);
+    // Assert: Authorization header contains the token (Headers or plain object)
+    const rawHeaders = calledOptions.headers;
+    const auth =
+      rawHeaders instanceof Headers
+        ? rawHeaders.get("Authorization")
+        : (rawHeaders as Record<string, string> | undefined)?.Authorization ??
+          (rawHeaders as Record<string, string> | undefined)?.authorization;
+    expect(auth).toBe(`Bearer ${MOCK_TOKEN}`);
   });
 
   // ── Req 19.11: JWT must not appear in the URL ──────────────────────────────

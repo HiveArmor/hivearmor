@@ -427,12 +427,8 @@ export function NewTenantWizard(): ReactElement {
 
   const mutation = useMutation({
     mutationFn: (req: NewTenantRequest) => createTenant(req),
-    onSuccess: (result) => {
-      if (result.locationHeader) {
-        navigate(result.locationHeader);
-      } else {
-        navigate(`/mssp/tenants/${result.response.id}`);
-      }
+    onSuccess: (created) => {
+      navigate(`/mssp/tenants/${created.id}`);
     },
     onError: (err: unknown) => {
       if (err instanceof MsspConflictError) {

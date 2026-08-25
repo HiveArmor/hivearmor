@@ -13,7 +13,7 @@ import { createBrowserRouter, Navigate, useParams } from 'react-router-dom';
 import { AppLayout } from './AppLayout';
 import { AuthGuard } from './AuthGuard';
 
-import { msspRoutes } from '@/features/mssp/routes/msspRoutes';
+import { msspRouteChildren, MsspPortalOutlet } from '@/features/mssp/routes/msspRoutes';
 import { ALERT_QUEUE_ROLES } from '@/services/findingStatus.capabilities';
 
 /** Legacy /offenses/:id → /correlated-findings/:id (preserve document id). */
@@ -295,7 +295,6 @@ export const router = createBrowserRouter([
     path: '/login',
     element: <LoginPage />,
   },
-  msspRoutes,
   {
     path: '/login/tfa',
     element: <TfaPage />,
@@ -315,6 +314,15 @@ export const router = createBrowserRouter([
     path: '/',
     element: <AppLayout />,
     children: [
+      {
+        path: 'mssp',
+        element: (
+          <AuthGuard>
+            <MsspPortalOutlet />
+          </AuthGuard>
+        ),
+        children: msspRouteChildren,
+      },
       {
         index: true,
         element: <Navigate to="/dashboard" replace />,
