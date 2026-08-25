@@ -1,22 +1,31 @@
 # Next production slice
 
-Updated: **2026-08-25 21:35:00 IST (UTC+05:30)**
+Updated: **2026-08-25 21:45:00 IST (UTC+05:30)**
 
-## Active — Residual product depth (STAGING CANDIDATE)
+## Active — Enrollment audit + investigation promote honesty (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Status: **IN PROGRESS** — residual non-vendor depth. Still **STAGING CANDIDATE**. Not `PRODUCTION READY`.
-Branch: `feat/residual-product-depth`.
+Status: **IN PROGRESS** — thin residual honesty. Still **STAGING CANDIDATE**. Not `PRODUCTION READY`.
+Branch: `feat/enrollment-audit-investigate-promote`.
 
 | ID | Fix |
 |---|---|
-| RESP-018-compat | `/response/activity` → `GET /api/soar/audit` SOAR audit projection (inventory flag stays false) |
-| A3-PB-03 | Playbook Audit tab → history projection (`GET /api/ha-playbooks/{id}/history`) |
-| TI admin nav | `/admin/threat-intel` in Administration nav (Platform Administrator) |
-| TI-001 | IOC browser pagination via `X-Total-Count` (page size 50) |
+| ENROLL-AUDIT | `/admin/enrollment-audit` → `GET /api/ha-agent-enrollments/audit` (+ NDJSON export); Admin \| SOC Manager |
+| INV-PROMOTE | Fail-closed promote UI/service — deprecated `convert-to-incident`; no silent enable |
 
 Deferred (post full production MVP): vendor live connector credentials/proofs.
-Next optional after merge: enrollment audit ledger, investigation promote honesty, staging rebuild.
+Next optional after merge: staging rebuild + Detect→Govern smoke.
+
+## Completed this slice — Residual product depth (#71)
+
+Status: **MERGED** tip `c2af10f` — STAGING CANDIDATE.
+
+| ID | Fix |
+|---|---|
+| RESP-018-compat | `/response/activity` → `GET /api/soar/audit` SOAR audit projection |
+| A3-PB-03 | Playbook Audit tab → history projection |
+| TI admin nav | `/admin/threat-intel` in Administration nav |
+| TI-001 | IOC browser pagination via `X-Total-Count` |
 
 ## Completed this slice — MSSP masthead authorized tenant inventory (#70)
 
