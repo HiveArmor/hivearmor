@@ -30,8 +30,8 @@ AI (SOC AI / agentic triage / Hive Intelligence) must appear as **assistive evid
 
 | Wave | Family | Routes (nav-primary) | Why first |
 |---|---|---|---|
-| **A1** | Command & triage | `/dashboard`, `/queue`, `/alerts`, `/correlated-findings`, `/incidents` | Autonomous SOC spine — **AUDIT COMPLETE** (research + thin auth/redirect honesty); remaining P0–P2 gaps in `next-production-slice.md` |
-| **A2** | Investigate & AI | `/search`, `/investigations`, `/entities`, `/intelligence`, `/ueba/risk`, `/constellation` | Human+AI investigation loop |
+| **A1** | Command & triage | `/dashboard`, `/queue`, `/alerts`, `/correlated-findings`, `/incidents` | **COMPLETE** audit (#55) + gaps (#56) — STAGING CANDIDATE on staging tip |
+| **A2** | Investigate & AI | `/search`, `/investigations`, `/entities`, `/intelligence`, `/ueba/risk`, `/constellation` | Human+AI investigation loop — **AUDIT + thin honesty in progress** |
 | **A3** | Defend / respond | `/detection-rules`, `/response/playbooks`, `/response/activity`, `/response/authority`, `/response/quarantine`, `/response/library` | Decision → action with approval |
 | **B1** | Endpoint defense | `/edr/endpoints`, `/edr/fim`, `/edr/policies`, sensors via posture | Containment honesty |
 | **B2** | Posture & compliance | `/posture/*`, `/compliance` | Exposure → assurance |

@@ -1,41 +1,39 @@
 # Next production slice
 
-Updated: **2026-08-25 13:30:00 IST (UTC+05:30)**
+Updated: **2026-08-25 14:00:00 IST (UTC+05:30)**
 
-## Active — Wave A1 Command & triage gap implement (STAGING CANDIDATE)
+## Active — Wave A2 Investigate & AI audit (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Routes: `/dashboard`, `/queue`, `/alerts`, `/correlated-findings`, `/incidents`.
-Status: **IMPLEMENT COMPLETE (code) for A1 gap matrix** — still **STAGING CANDIDATE**, not `PRODUCTION READY`. Browser staging smoke of the five routes remains.
-Research: `docs/ai-handoff/research/autonomous-soc-command-triage.md`.
-Branch: `feat/a1-command-triage-gaps`.
+Routes: `/search`, `/investigations`, `/entities`, `/intelligence`, `/ueba/risk`, `/constellation`.
+Status: **AUDIT COMPLETE (docs) + thin honesty wire** — not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for the full spine.
+Research: `docs/ai-handoff/research/autonomous-soc-investigate-ai.md`.
+Branch: `feat/a2-investigate-ai-audit`.
 
-### Closed in this implement slice
+### Thin honesty fix in this PR (STAGING CANDIDATE)
 
 | ID | Fix |
 |---|---|
-| A1-KPI-01 | Mission Control KPIs use population `size=1` + `X-Total-Count` (`getMissionControlIncidentKpis`); priority stream remains a labeled top-5 sample |
-| A1-SSE-01 | `useAlertStream` → `GET /api/ha-alerts/stream` (queue-tier `@PreAuthorize` + rate limit) |
-| A1-AI-01 | Alert investigation keeps confirmed `GET /api/response/actions`; fail-closed static catalogue on error |
-| A1-DET-01 | Detection health reads `X-Total-Count` from `correlation-rule/search-by-filters` |
-| A1-OVW-01 | `OverviewResource` methods gated with `ALERT_QUEUE_AUTH` |
+| A2-AUTH-01 | Search & Hunt nav + AuthGuard → `ALERT_QUEUE_ROLES` |
+| A2-AUTH-03 | Entities nav → `ALERT_QUEUE_ROLES` |
+| A2-AUTH-04 | Constellation nav + AuthGuard → `ALERT_QUEUE_ROLES` (incl. `ROLE_SOC_ANALYST`) |
+| A2-ENT-01 | `/entities/:id` → `/entities/:id/dossier` (stop legacy missing APIs) |
+| A2-SRCH-01 | Hunt create-incident assignees → `GET /ha-incidents/users-assigned` |
+| A2-UEBA-01 | UEBA Risk partial error banner + empty/error panel copy |
+| A2-INV-01 | Investigation Hive Intelligence controls: Unavailable + contract titles |
 
-### Prior audit thin honesty (merged #55)
-
-1. Align Command nav + AuthGuard with `ALERT_QUEUE_ROLES` (includes `ROLE_SOC_ANALYST`).
-2. Preserve legacy `/offenses/:id` → `/correlated-findings/:id`.
+Still open for next implement: A2-SRCH-02 (dead v1 TI helpers), A2-UEBA-02 (create-incident event), A2-TI freshness depth; browser staging smoke of A2 routes.
 
 ## Active — Frontend Autonomous SOC audit program (next major arc)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Cadence: **audit → research → implement** page-by-page (nav, structure, UX, backend connects) for Enterprise AI-driven Autonomous SIEM / Autonomous SOC.
-Next wave after staging smoke: **A2 Investigate / AI**.
-Pre-audit thin parallels (RESP-021 / TI / POL / investigate pin) largely closed as STAGING CANDIDATE.
+Cadence: **audit → research → implement** page-by-page.
+Next after A2 thin merge + staging smoke: **A2 remaining gaps** or **Wave A3 Defend / respond**.
 Status: **PROGRAM IN PROGRESS** — not `PRODUCTION READY`.
 
-## Completed this slice — Wave A1 Command & triage audit (#55)
+## Completed this slice — Wave A1 Command & triage gap implement (#56)
 
-Status: **AUDIT COMPLETE (docs) + thin honesty wire** — merged as STAGING CANDIDATE. Gap implement follows in `feat/a1-command-triage-gaps`.
+Status: **IMPLEMENT COMPLETE** for A1 gap matrix — merged + staging rebuilt to `a7d30a8` (STAGING CANDIDATE).
 
 ## Completed this slice — TI optional depth (MISP status + bounded Last Sync)
 

@@ -71,9 +71,24 @@ export function RiskDashboardPage(): JSX.Element {
   const tokens = useHaThemeTokens(DASHBOARD_TOKENS);
 
   // Data queries — all go through uebaService (task 7.8: no raw fetch/axios)
-  const { data: riskScores, isLoading: scoresLoading } = useHighRiskUsers();
-  const { data: riskTrend, isLoading: trendLoading } = useRiskTrend();
-  const { data: anomalyCounts, isLoading: countsLoading } = useAnomalyCounts();
+  const {
+    data: riskScores,
+    isLoading: scoresLoading,
+    isError: scoresError,
+    refetch: refetchScores,
+  } = useHighRiskUsers();
+  const {
+    data: riskTrend,
+    isLoading: trendLoading,
+    isError: trendError,
+    refetch: refetchTrend,
+  } = useRiskTrend();
+  const {
+    data: anomalyCounts,
+    isLoading: countsLoading,
+    isError: countsError,
+    refetch: refetchCounts,
+  } = useAnomalyCounts();
 
   // ── Drawer state (task 7.6: View Timeline opens View_Timeline_Drawer) ────
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -123,6 +138,48 @@ export function RiskDashboardPage(): JSX.Element {
 
   return (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {(scoresError || trendError || countsError) && (
+        <div
+          role="alert"
+          data-testid="ueba-risk-partial-error"
+          style={{
+            background: 'var(--ha-surface-raised)',
+            border: '1px solid var(--ha-border)',
+            borderRadius: 'var(--ha-radius-base)',
+            padding: '12px 16px',
+            color: 'var(--ha-text-primary)',
+            fontSize: 'var(--ha-text-base)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+          }}
+        >
+          <span>
+            <strong>Partial UEBA data unavailable.</strong> One or more risk panels failed to load.
+            Available panels remain below.
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              if (scoresError) void refetchScores();
+              if (trendError) void refetchTrend();
+              if (countsError) void refetchCounts();
+            }}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--ha-border)',
+              borderRadius: 'var(--ha-radius-base)',
+              color: 'var(--ha-primary)',
+              padding: '6px 12px',
+              cursor: 'pointer',
+              fontSize: 'var(--ha-text-sm)',
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
       {/* Top row: bar chart + trend line */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         {/* High-risk users bar chart */}
@@ -138,12 +195,22 @@ export function RiskDashboardPage(): JSX.Element {
           <h3 style={{ margin: '0 0 12px', color: 'var(--ha-text-primary)', fontSize: 'var(--ha-text-md)' }}>
             High-Risk Users
           </h3>
-          <HaChart
-            option={barChartOption}
-            height={260}
-            loading={scoresLoading}
-            ariaLabel="High-risk users horizontal bar chart"
-          />
+          {scoresError ? (
+            <p style={{ color: 'var(--ha-text-secondary)', fontSize: 'var(--ha-text-sm)', margin: 0 }}>
+              High-risk user scores could not be loaded.
+            </p>
+          ) : !scoresLoading && (riskScores?.length ?? 0) === 0 ? (
+            <p style={{ color: 'var(--ha-text-secondary)', fontSize: 'var(--ha-text-sm)', margin: 0 }}>
+              No high-risk users were returned for the current scope.
+            </p>
+          ) : (
+            <HaChart
+              option={barChartOption}
+              height={260}
+              loading={scoresLoading}
+              ariaLabel="High-risk users horizontal bar chart"
+            />
+          )}
         </div>
 
         {/* 30-day risk trend */}
@@ -159,12 +226,22 @@ export function RiskDashboardPage(): JSX.Element {
           <h3 style={{ margin: '0 0 12px', color: 'var(--ha-text-primary)', fontSize: 'var(--ha-text-md)' }}>
             30-Day Risk Trend
           </h3>
-          <HaChart
-            option={lineChartOption}
-            height={260}
-            loading={trendLoading}
-            ariaLabel="30-day risk trend line chart"
-          />
+          {trendError ? (
+            <p style={{ color: 'var(--ha-text-secondary)', fontSize: 'var(--ha-text-sm)', margin: 0 }}>
+              Risk trend could not be loaded.
+            </p>
+          ) : !trendLoading && (riskTrend?.length ?? 0) === 0 ? (
+            <p style={{ color: 'var(--ha-text-secondary)', fontSize: 'var(--ha-text-sm)', margin: 0 }}>
+              No risk-trend points were returned for the last 30 days.
+            </p>
+          ) : (
+            <HaChart
+              option={lineChartOption}
+              height={260}
+              loading={trendLoading}
+              ariaLabel="30-day risk trend line chart"
+            />
+          )}
         </div>
       </div>
 

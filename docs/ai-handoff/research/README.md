@@ -4,6 +4,7 @@ These notes preserve paraphrased conclusions and source provenance for models wi
 
 | Domain | Note | Refresh trigger |
 |---|---|---|
+| Autonomous SOC investigate & AI (Wave A2) | `autonomous-soc-investigate-ai.md` | Defender investigation graph/entity pages, Elastic AI Assistant/Cases, Splunk TIM/Mission Control observables, or HiveArmor hunt/entity/constellation contracts change. |
 | Autonomous SOC command & triage (Wave A1) | `autonomous-soc-command-triage.md` | Microsoft Defender/Sentinel queue, Splunk ES Mission Control, Elastic alert→case workflows, NIST SP 800-61, or HiveArmor A1 auth/KPI contracts change. |
 | Vulnerability management | `vulnerability-management.md` | CISA KEV/SSVC, FIRST EPSS, NIST patch guidance or the product data model changes. |
 | Security configuration assessment | `security-configuration-assessment.md` | CIS benchmark/profile guidance, NIST checklist/configuration-management guidance, benchmark licensing or the SCA producer/data model changes. |

@@ -22,6 +22,12 @@ function OffenseIdRedirect(): JSX.Element {
   return <Navigate to={id ? `/correlated-findings/${encodeURIComponent(id)}` : '/correlated-findings'} replace />;
 }
 
+/** Wave A2 A2-ENT-01: /entities/:id → canonical dossier (legacy detail called missing APIs). */
+function EntityIdToDossierRedirect(): JSX.Element {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={id ? `/entities/${encodeURIComponent(id)}/dossier` : '/entities'} replace />;
+}
+
 // ── Admin pages ──────────────────────────────────────────────────────────────
 const RuleGenerationPage = React.lazy(() =>
   import('@/pages/admin/rule-generation/RuleGenerationPage').then(m => ({ default: m.RuleGenerationPage }))
@@ -156,9 +162,6 @@ const RuleTestPage = React.lazy(() =>
 );
 
 // ── Entities ──────────────────────────────────────────────────────────────────
-const EntityDetailPage = React.lazy(() =>
-  import('@/pages/entities/EntityDetailPage').then(m => ({ default: m.EntityDetailPage }))
-);
 const EntityDossierPage = React.lazy(() =>
   import('@/pages/entities/EntityDossierPage').then(m => ({ default: m.EntityDossierPage }))
 );
@@ -417,11 +420,11 @@ export const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
-      // Canonical route: search
+      // Canonical route: search — Wave A2 A2-AUTH-01 (ALERT_QUEUE_AUTH)
       {
         path: 'search',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={[...ALERT_QUEUE_ROLES]}>
             <SearchHuntPage />
           </AuthGuard>
         ),
@@ -524,18 +527,19 @@ export const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
+      // Wave A2 A2-ENT-01: legacy detail called non-existent /ha-entities/{id}; dossier is canonical
       {
         path: 'entities/:id',
         element: (
-          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
-            <EntityDetailPage />
+          <AuthGuard allowedRoles={[...ALERT_QUEUE_ROLES]}>
+            <EntityIdToDossierRedirect />
           </AuthGuard>
         ),
       },
       {
         path: 'constellation',
         element: (
-          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+          <AuthGuard allowedRoles={[...ALERT_QUEUE_ROLES]}>
             <ThreatConstellationPage />
           </AuthGuard>
         ),

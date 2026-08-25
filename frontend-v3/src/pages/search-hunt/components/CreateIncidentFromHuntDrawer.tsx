@@ -71,13 +71,18 @@ export function CreateIncidentFromHuntDrawer({
     }
   }, [isOpen, currentQuery]);
 
-  // Fetch assignee options (ANALYST + ADMIN users).
+  // Fetch assignee options from confirmed incident users API (A2-SRCH-01).
   const { data: analysts } = useQuery<HuntUserDTO[]>({
-    queryKey: ['ha-users-analysts'],
-    queryFn: () =>
-      apiClient.get<HuntUserDTO[]>(
-        '/ha-users?authorities=ANALYST,ADMIN&size=100'
-      ),
+    queryKey: ['ha-incidents-users-assigned'],
+    queryFn: async () => {
+      const { getUsersAssigned } = await import('@/services/incidents.service');
+      const users = await getUsersAssigned();
+      return users.map((u) => ({
+        login: u.login,
+        firstName: u.firstName ?? null,
+        lastName: u.lastName ?? null,
+      }));
+    },
     staleTime: 60_000,
     enabled: isOpen,
   });
