@@ -22,8 +22,9 @@ import { useThemeStore } from '@/store/theme.store';
 
 import './HaNavigation.css';
 
-/** Wave A1 — match backend ALERT_QUEUE_AUTH / INCIDENT_AUTH (STAGING CANDIDATE). */
+/** Wave A1/A2 — match backend ALERT_QUEUE_AUTH / INCIDENT_AUTH (STAGING CANDIDATE). */
 const COMMAND_QUEUE_ROLES = [...ALERT_QUEUE_ROLES];
+const INVESTIGATE_QUEUE_ROLES = [...ALERT_QUEUE_ROLES];
 
 // Section: COMMAND
 const COMMAND_ITEMS: NavItemSpec[] = [
@@ -39,10 +40,10 @@ const COMMAND_ITEMS: NavItemSpec[] = [
 
 // Section: INVESTIGATE
 const INVESTIGATE_ITEMS: NavItemSpec[] = [
-  { label: 'Search & Hunt', icon: 'Search', route: '/search', roles: [] },
+  { label: 'Search & Hunt', icon: 'Search', route: '/search', roles: INVESTIGATE_QUEUE_ROLES },
   { label: 'Investigations', icon: 'Monitor', route: '/investigations', roles: [] },
-  { label: 'Entities', icon: 'Users', route: '/entities', roles: [] },
-  { label: 'Threat Constellation', icon: 'GitBranch', route: '/constellation', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  { label: 'Entities', icon: 'Users', route: '/entities', roles: INVESTIGATE_QUEUE_ROLES },
+  { label: 'Threat Constellation', icon: 'GitBranch', route: '/constellation', roles: INVESTIGATE_QUEUE_ROLES },
   // SEC-GAP-14 path prefix fixed to /api/ha-threat-intel/* — page is LIVE_API usable
   { label: 'Hive Intelligence', icon: 'Brain', route: '/intelligence', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'UEBA Risk', icon: 'UserSearch', route: '/ueba/risk', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },

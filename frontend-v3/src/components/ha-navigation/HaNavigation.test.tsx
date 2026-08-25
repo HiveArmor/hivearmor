@@ -133,6 +133,53 @@ describe('HaNavigation', () => {
     expect(screen.getByRole('button', { name: 'Incidents' })).toBeVisible();
   });
 
+  it('Wave A2: hides Search/Entities/Constellation from ROLE_USER', () => {
+    useAuthStore.setState({
+      user: {
+        id: 9,
+        login: 'reader',
+        firstName: 'Read',
+        lastName: 'Only',
+        email: 'reader@example.test',
+        roles: ['ROLE_USER'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.queryByRole('button', { name: 'Search & Hunt' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Entities' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Threat Constellation' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Investigations' })).toBeVisible();
+  });
+
+  it('Wave A2: exposes Investigate queue-tier routes for ROLE_SOC_ANALYST', () => {
+    useAuthStore.setState({
+      user: {
+        id: 11,
+        login: 'socanalyst',
+        firstName: 'Soc',
+        lastName: 'Analyst',
+        email: 'soc@example.test',
+        roles: ['ROLE_SOC_ANALYST'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.getByRole('button', { name: 'Search & Hunt' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Entities' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Threat Constellation' })).toBeVisible();
+  });
+
   it('exposes UEBA Risk for SOC Manager', () => {
     useAuthStore.setState({
       user: {
