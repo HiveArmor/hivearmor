@@ -187,6 +187,42 @@ export interface QuarantinePage {
 }
 
 // ---------------------------------------------------------------------------
+// Host isolation inventory (RESP-021 STAGING CANDIDATE)
+// ---------------------------------------------------------------------------
+
+/**
+ * A single host isolation record from GET /api/ha-edr/isolation.
+ * Mirrors backend `IsolatedHostDTO`. Status values match persistence:
+ * ACTIVE | LIFTED | FAILED.
+ */
+export interface IsolatedHostDTO {
+  id: number;
+  agentId: string;
+  hostname?: string;
+  isolationType: string;
+  status: string;
+  reason?: string;
+  allowedIps?: string;
+  isolatedAt: string;
+  liftedAt?: string | null;
+  actionedBy: string;
+  edrEventId?: number | null;
+}
+
+export interface IsolationListQuery {
+  status?: string;
+  page: number;
+  size: number;
+}
+
+export interface IsolationPage {
+  content: IsolatedHostDTO[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+}
+
+// ---------------------------------------------------------------------------
 // File Integrity Monitoring — FIM (T04)
 // ---------------------------------------------------------------------------
 

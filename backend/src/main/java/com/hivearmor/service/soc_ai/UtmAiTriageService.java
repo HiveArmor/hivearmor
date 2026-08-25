@@ -7,8 +7,11 @@ import com.hivearmor.domain.shared_types.alert.UtmAlert;
 import com.hivearmor.domain.soc_ai.UtmAiTriage;
 import com.hivearmor.repository.soc_ai.UtmAiTriageRepository;
 import com.hivearmor.service.UtmAlertService;
+import com.hivearmor.service.dto.InvestigationSessionDTO;
+import com.hivearmor.service.session.InvestigationSessionService;
 import com.hivearmor.util.enums.AlertStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -28,17 +31,20 @@ public class UtmAiTriageService {
     private final UtmAiTriageRepository triageRepository;
     private final ObjectMapper objectMapper;
     private final UtmAlertService utmAlertService;
+    private final ObjectProvider<InvestigationSessionService> investigationSessionService;
     private final BigDecimal autoCloseThreshold;
 
     public UtmAiTriageService(
             UtmAiTriageRepository triageRepository,
             ObjectMapper objectMapper,
             UtmAlertService utmAlertService,
+            ObjectProvider<InvestigationSessionService> investigationSessionService,
             @Value("${hivearmor.ai.triage.auto-close-confidence:${hivearmor.soc-ai.auto-close-threshold:0.85}}")
                 BigDecimal autoCloseThreshold) {
         this.triageRepository = triageRepository;
         this.objectMapper = objectMapper;
         this.utmAlertService = utmAlertService;
+        this.investigationSessionService = investigationSessionService;
         this.autoCloseThreshold = autoCloseThreshold != null
             ? autoCloseThreshold
             : DEFAULT_AUTO_CLOSE_THRESHOLD;
@@ -58,9 +64,9 @@ public class UtmAiTriageService {
      *
      * <p>STAGING CANDIDATE — runs a minimal agentic FSM after parse:
      * {@code AUTO_TRIAGE → END} on high-confidence FP (also mutates OpenSearch status/tag),
-     * otherwise {@code AUTO_TRIAGE → ENRICH (thin stub) → INVESTIGATE (thin stub) → END}.
-     * FSM steps are prepended onto {@code nextSteps} for ledger observability.
-     * Not PRODUCTION READY.
+     * otherwise {@code AUTO_TRIAGE → ENRICH (thin stub) → INVESTIGATE (thin stub + optional
+     * soft investigation-session link) → END}. FSM steps are prepended onto {@code nextSteps}
+     * for ledger observability. Not PRODUCTION READY. Never claims Neo4j / attack-path.
      */
     public UtmAiTriage saveResult(String alertId, String rawJson) {
         UtmAiTriage triage = new UtmAiTriage();
@@ -108,8 +114,15 @@ public class UtmAiTriageService {
                     enrichment = TriageEnrichmentStub.build(parsed, alertDoc);
                 }
                 if (fsmPath.contains(AgenticTriageState.INVESTIGATE)) {
-                    // Soft OS resolvability: 1 when alert doc found, else 0. No related-alert query.
-                    investigate = TriageInvestigateStub.build(alertDoc);
+                    // Soft OS resolvability + optional soft session link (STAGING CANDIDATE).
+                    // No related-alert query, Neo4j, attack-path, or incident conversion.
+                    InvestigationSessionService sessions = investigationSessionService != null
+                        ? investigationSessionService.getIfAvailable()
+                        : null;
+                    investigate = TriageInvestigateStub.build(
+                        alertDoc,
+                        alertId,
+                        sessions != null ? this::softLinkInvestigationSession : null);
                 }
             }
             persistFsmLedger(triage, fsmPath, highConfidenceFp, enrichment, investigate);
@@ -296,6 +309,44 @@ public class UtmAiTriageService {
                 alertId, e.getMessage());
         }
         return null;
+    }
+
+    /**
+     * Soft-create an investigation session for INVESTIGATE metadata (STAGING CANDIDATE).
+     * Returns null when the session service bean is unavailable so the stub stays honest.
+     * Does not convert to incident. Exceptions propagate to {@link TriageInvestigateStub}
+     * which records {@code sessionLinked=false} without PII.
+     */
+    private TriageInvestigateStub.LinkedSession softLinkInvestigationSession(
+            String sessionName, String description) {
+        InvestigationSessionService sessions = investigationSessionService != null
+            ? investigationSessionService.getIfAvailable()
+            : null;
+        if (sessions == null) {
+            return null;
+        }
+        InvestigationSessionDTO request = new InvestigationSessionDTO(
+            null,
+            null,
+            null,
+            sessionName,
+            description,
+            "ACTIVE",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
+        InvestigationSessionDTO created = sessions.createSession(request, currentUser());
+        if (created == null || created.id() == null) {
+            return null;
+        }
+        log.info("SOC-AI INVESTIGATE soft-linked sessionId={} status={} (stub; no Neo4j)",
+            created.id(), created.status());
+        return new TriageInvestigateStub.LinkedSession(
+            created.id(),
+            created.status() != null ? created.status() : "ACTIVE");
     }
 
     /**

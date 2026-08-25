@@ -15,6 +15,8 @@ import type {
   QuarantinedFileDTO,
   QuarantineListQuery,
   QuarantinePage,
+  IsolationListQuery,
+  IsolationPage,
   FimSummaryDTO,
   FimSummaryQuery,
 } from '../types/edr';
@@ -173,6 +175,30 @@ export async function bulkUpdateQuarantine(
       .map((item) => ({ ...item, status: action === 'restore' ? 'restored' : 'deleted', actionState: 'complete' }));
   }
   return apiClient.post<QuarantinedFileDTO[]>('/ha-edr/quarantine/bulk', { ids, action });
+}
+
+// ---------------------------------------------------------------------------
+// Host isolation inventory (RESP-021 STAGING CANDIDATE)
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetches a paginated host-isolation inventory from the secured canonical
+ * endpoint. Issues GET /api/ha-edr/isolation — never legacy /api/edr/isolation.
+ */
+export async function fetchIsolatedHosts(
+  query: IsolationListQuery,
+  signal?: AbortSignal,
+): Promise<IsolationPage> {
+  if (fixtureMode) {
+    const { getFoundationIsolationPage } = await import('@/pages/edr/fileQuarantine.fixtures');
+    return getFoundationIsolationPage(query);
+  }
+  const params: Record<string, string | number | boolean | undefined> = {
+    page: query.page,
+    size: query.size,
+  };
+  if (query.status !== undefined) params.status = query.status;
+  return apiClient.get<IsolationPage>('/ha-edr/isolation', { params, signal });
 }
 
 // ---------------------------------------------------------------------------

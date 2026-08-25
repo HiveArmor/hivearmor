@@ -1,8 +1,8 @@
 # Next production slice
 
-Updated: **2026-08-25 09:02:14 IST (UTC+05:30)**
+Updated: **2026-08-25 09:50:00 IST (UTC+05:30)**
 
-## Active — Orphan Operational Workflows
+## Active — Orphan Operational Workflows (TI-002–TI-004 depth)
 
 Routes: inventory across UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence; **first bounded family = threat-intel ops** (`/intelligence`, `/admin/threat-intel`).
 Status: **STAGING CANDIDATE** — inventory + hub honesty + TI-002–TI-004 depth (explicit feed-read roles, legacy v1 harden, thin sync receipt). Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for this slice.
@@ -21,9 +21,40 @@ Completed in this depth slice:
 
 Required next actions (remaining orphans / depth):
 
-1. Optional deeper threat-intel: IOC cursor/freshness, durable sync ledger, MISP persisted status, v1 deprecation headers after consumer cutover.
-2. Remaining UEBA/endpoint orphan depth beyond auth honesty already shipped on follow-on branches.
-3. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
+1. ~~Follow-on UEBA: fix `HaUebaResource` `@PreAuthorize` authority strings~~ — **done** on `feat/p1-ueba-auth-fix` (STAGING CANDIDATE): `ROLE_ANALYST`/`ROLE_SOC_MANAGER`/`ROLE_ADMIN` + `/ueba/entity-timeline` route.
+2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned.
+3. ~~Follow-on RESP-021 depth: secured host-isolation inventory.~~ **Closed** on `feat/p1-resp021-isolation-inventory` (STAGING CANDIDATE) — `GET /api/ha-edr/isolation` + Endpoint isolation tab. Remaining RESP-021 depth gaps stay open.
+4. Optional deeper threat-intel: IOC cursor/freshness, durable sync ledger, MISP persisted status, v1 deprecation headers after consumer cutover.
+5. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
+
+## Completed this slice — RESP-021 host isolation inventory (thin depth)
+
+Routes: `/response/quarantine` Endpoint isolation tab; `GET /api/ha-edr/isolation`.
+Status: **STAGING CANDIDATE** — secured host-isolation read wired with honest empty/partial states. Not `PRODUCTION READY`. Not `LIVE VERIFIED`.
+Merged: `feat/p1-resp021-isolation-inventory` (#46).
+
+Shipped:
+
+1. Canonical `GET /api/ha-edr/isolation` (Analyst \| SOC Manager \| Admin) over `hive_edr_isolation`; size clamped to 200; optional status filter.
+2. Quarantine & Containment Endpoint isolation tab consumes `/api/ha-edr/isolation` (not legacy `/api/edr/*`, not `/ha-playbooks/quarantine`).
+3. Honest empty inventory and load-failure retry copy; release remains review-only (governed preview still open).
+
+Still open under `RESP-021`: enriched evidence/summaries, cursor/snapshot/freshness semantics, action history, governed preview/approval/idempotency for restore/delete/release, resumable delivery state.
+
+## Completed this slice — Agentic INVESTIGATE soft session link (STAGING CANDIDATE)
+
+Scope: `TriageInvestigateStub` → optional soft link to `/api/ha-investigation-sessions` (id + status only).
+Status: **STAGING CANDIDATE** — not `PRODUCTION READY`. Not Neo4j / attack-path. Not auto-convert to incident.
+Merged: `feat/p1-agentic-investigate-session-link` (#45).
+
+Shipped:
+
+1. When INVESTIGATE runs and the alert doc is resolvable, optionally `createSession` titled from alert name/id via `InvestigationSessionService` (soft-fail if bean/create unavailable).
+2. Ledger investigate metadata keeps `stub=true`; on success adds `sessionId` + `sessionStatus` + `sessionLinked=true`; on failure records sanitized `sessionLinkError` (class name only, no PII).
+3. Focused unit tests for stub link success/failure/skip and triage service wiring.
+
+Remaining: Neo4j / attack-path; `openHypotheses`; auto-pin evidence; convert-to-incident; staging LIVE verify of createSession from SOC-AI triage.
+Contracts: `INV-LV01` / investigation sessions in `docs/frontend-backend-contract-register.md`.
 
 ## Completed this slice — Governance and Platform Settings
 

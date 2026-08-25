@@ -159,11 +159,13 @@ const mockMutateSingle = vi.fn();
 const mockMutateBulk = vi.fn();
 
 const mockUseQuarantinedFiles = vi.fn();
+const mockUseIsolatedHosts = vi.fn();
 const mockUseQuarantineAction = vi.fn();
 const mockUseQuarantineBulkAction = vi.fn();
 
 vi.mock('@/hooks/useQuarantine', () => ({
   useQuarantinedFiles: (...args: unknown[]) => mockUseQuarantinedFiles(...args),
+  useIsolatedHosts: (...args: unknown[]) => mockUseIsolatedHosts(...args),
   useQuarantineAction: () => mockUseQuarantineAction(),
   useQuarantineBulkAction: () => mockUseQuarantineBulkAction(),
 }));
@@ -237,6 +239,15 @@ beforeEach(() => {
   (mockUseQuarantineBulkAction as ReturnType<typeof vi.fn>).mockReturnValue({
     mutate: mockMutateBulk,
     isPending: false,
+  });
+
+  mockUseIsolatedHosts.mockReturnValue({
+    data: { content: [], totalElements: 0, totalPages: 0, number: 0 },
+    isLoading: false,
+    isError: false,
+    error: null,
+    refetch: vi.fn(),
+    dataUpdatedAt: Date.now(),
   });
 });
 
@@ -491,5 +502,30 @@ describe('FileQuarantinePage', () => {
     expect(screen.queryByText(/Required permission/i)).toBeNull();
     expect(screen.getByText(/no quarantined files found/i)).toBeDefined();
     expect(mockUseQuarantinedFiles).toHaveBeenCalled();
+  });
+
+  it('shows honest empty host isolation inventory from secured ha-edr path', () => {
+    mockUseQuarantinedFiles.mockReturnValue({
+      data: makeQuarantinePage({ content: [], totalElements: 0, totalPages: 0 }),
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+    mockUseIsolatedHosts.mockReturnValue({
+      data: { content: [], totalElements: 0, totalPages: 0, number: 0 },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+      dataUpdatedAt: Date.now(),
+    });
+
+    renderPage();
+    fireEvent.click(screen.getByRole('tab', { name: /endpoint isolation/i }));
+
+    expect(screen.getByText(/no isolated hosts/i)).toBeDefined();
+    expect(screen.getByText(/legacy \/api\/edr\/isolation is not used/i)).toBeDefined();
+    expect(mockUseIsolatedHosts).toHaveBeenCalled();
   });
 });

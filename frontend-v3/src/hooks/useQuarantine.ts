@@ -17,10 +17,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import {
   bulkUpdateQuarantine,
+  fetchIsolatedHosts,
   fetchQuarantinedFiles,
   updateQuarantineStatus,
 } from '@/services/edrService';
-import type { QuarantineListQuery, QuarantinePage, QuarantinedFileDTO } from '@/types/edr';
+import type {
+  IsolationListQuery,
+  IsolationPage,
+  QuarantineListQuery,
+  QuarantinePage,
+  QuarantinedFileDTO,
+} from '@/types/edr';
 
 // ---------------------------------------------------------------------------
 // Query hook
@@ -41,6 +48,21 @@ export function useQuarantinedFiles(query: QuarantineListQuery | null) {
   return useQuery<QuarantinePage>({
     queryKey: ['quarantine', query],
     queryFn: ({ signal }) => fetchQuarantinedFiles(query as QuarantineListQuery, signal),
+    enabled: query !== null,
+    staleTime: 20_000,
+    placeholderData: (previous) => previous,
+    refetchInterval: 30_000,
+  });
+}
+
+/**
+ * Fetches a paginated host-isolation inventory from GET /api/ha-edr/isolation.
+ * queryKey shape: ['isolation', query]
+ */
+export function useIsolatedHosts(query: IsolationListQuery | null) {
+  return useQuery<IsolationPage>({
+    queryKey: ['isolation', query],
+    queryFn: ({ signal }) => fetchIsolatedHosts(query as IsolationListQuery, signal),
     enabled: query !== null,
     staleTime: 20_000,
     placeholderData: (previous) => previous,

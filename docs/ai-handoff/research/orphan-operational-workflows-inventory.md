@@ -62,10 +62,10 @@ Gap severity: **H** = broken or unsafe operator expectation; **M** = partial/hon
 | `/edr/timeline/:agentId` | Via Endpoints list | `UI IMPLEMENTED` | `GET /api/ha-edr/timeline`, `/process-tree` (Admin\|Analyst\|SOC Manager) | No top-level nav; agent-scoped only | **M** (auth aligned) |
 | `/edr/endpoints` | Endpoints | `UI IMPLEMENTED` agent list → timeline | `GET /api/agent-manager/agents` | Entry point only; not a full EDR fleet ops surface | **M** |
 | `/edr/quarantine` | Alias of quarantine page | Same as `/response/quarantine` | `GET/PATCH/POST /api/ha-edr/quarantine*` (Analyst\|SOC Manager\|Admin) | Duplicate path; nav prefers `/response/quarantine` | **L** |
-| `/response/quarantine` | Quarantine & Containment (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` file inventory + containment tab; page gate matches BE; restore/delete mutations live | File quarantine secured with SOC Manager on list/mutate; host isolation inventory gaps per `RESP-021` | **SOC Manager PreAuthorize gap closed** (STAGING CANDIDATE follow-on); remaining RESP-021 depth gaps open | **H→M** |
+| `/response/quarantine` | Quarantine & Containment (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` file inventory + host isolation tab; page gate matches BE; restore/delete mutations live | File quarantine secured; host isolation inventory via `GET /api/ha-edr/isolation` (STAGING CANDIDATE) | **SOC Manager auth + isolation inventory read closed**; remaining RESP-021 depth gaps open | **H→M** |
 | `/edr/fim` | File Integrity (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` summary dashboard; page gate matches BE | `GET /api/ha-edr/fim/summary` (Analyst\|SOC Manager\|Admin) | Nav no longer open to all authenticated | **M→L** (auth aligned) |
 | `/edr/policies` | Agent Policies (Admin) | `UI IMPLEMENTED` CRUD + assign | `GET/POST/PUT/DELETE /api/ha-edr/policies*`, assign (Admin) | Agent delivery/enforcement evidence incomplete | **M** |
-| Legacy `/api/edr/*` | None (SensorGrid uses subset) | Not adopted for quarantine UI | Separate `EdrResource` (rules/events/quarantine/isolation/kill) | Contract register: do not adopt unsecured/legacy duplicate for quarantine inventory | **H** (avoid) |
+| Legacy `/api/edr/*` | None (SensorGrid uses subset) | Not adopted for quarantine/isolation inventory UI | Separate `EdrResource` (rules/events/quarantine/isolation/kill) | Contract register: do not adopt legacy duplicate for quarantine/isolation inventory | **H** (avoid) |
 
 ### Frontend ownership map
 
@@ -82,10 +82,10 @@ Gap severity: **H** = broken or unsafe operator expectation; **M** = partial/hon
 | Threat intel (canonical) | `HaThreatIntelResource`, `HaThreatIntelStatsResource`, `HaTaxiiFeedResource`, `HaMispFeedResource` |
 | Threat intel (legacy) | `threat_intel/ThreatIntelResource` (`/api/v1/threat-intel`) |
 | UEBA | `ueba/HaUebaResource` |
-| Endpoint quarantine / timeline | `HaEdrResource` (`/api/ha-edr`) |
+| Endpoint quarantine / timeline / isolation | `HaEdrResource` (`/api/ha-edr`) |
 | FIM | `HaEdrFimResource` |
 | Agent policies | `HaAgentPolicyResource` |
-| Legacy EDR | `edr/EdrResource` (`/api/edr`) — isolation/kill used elsewhere; quarantine inventory not adopted |
+| Legacy EDR | `edr/EdrResource` (`/api/edr`) — isolation/kill used elsewhere; quarantine/isolation inventory not adopted for Quarantine UI |
 
 ## Contract notes recorded this slice
 
@@ -104,9 +104,14 @@ Related prior: **`RESP-021`** for quarantine (not reopened as missing).
 
 - No redesign of all orphan routes in one PR.
 - UEBA PreAuthorize `ROLE_` fix + `/ueba/entity-timeline` router entry: **addressed** in follow-on `feat/p1-ueba-auth-fix` (STAGING CANDIDATE) — see matrix rows above.
-- Quarantine SOC Manager authorization was deferred here and closed in the endpoint-auth follow-on (`feat/p1-endpoint-quarantine-auth`) — see matrix **H→M** above. Remaining `RESP-021` depth gaps stay open.
+- Quarantine SOC Manager authorization was deferred here and closed in the endpoint-auth follow-on (`feat/p1-endpoint-quarantine-auth`) — see matrix **H→M** above.
+- Host isolation inventory read closed in `feat/p1-resp021-isolation-inventory` (STAGING CANDIDATE) via `GET /api/ha-edr/isolation`. Remaining `RESP-021` depth gaps stay open.
 - No `PRODUCTION READY`, `LIVE VERIFIED`, or full family consolidation claim.
 
 ### Follow-on note (2026-08-25) — endpoint quarantine / FIM / timeline auth
 
 STAGING CANDIDATE: `HaEdrResource` quarantine list/mutate now includes `ROLE_SOC_MANAGER`; timeline/process-tree accept Analyst + SOC Manager (keep Admin); FIM summary includes SOC Manager. Frontend quarantine/FIM page gates and FIM nav roles match. Legacy unsecured `/api/edr/*` was not adopted for quarantine inventory.
+
+### Follow-on note (2026-08-25) — RESP-021 host isolation inventory
+
+STAGING CANDIDATE: secured `GET /api/ha-edr/isolation` lists `hive_edr_isolation` with Analyst \| SOC Manager \| Admin PreAuthorize. Quarantine & Containment Endpoint isolation tab consumes that inventory with honest empty/error states. Legacy `/api/edr/isolation` not adopted. Governed release/preview, cursor/freshness, action history, and resumable delivery remain open.
