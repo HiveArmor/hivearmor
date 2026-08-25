@@ -1,11 +1,17 @@
 /**
- * Agent policy capability gates (POL-001 / STAGING CANDIDATE).
+ * Agent policy capability gates (POL-001 / POL-003 / STAGING CANDIDATE).
  *
  * Host enforcement is never claimed complete. UI surfaces assignment + any
  * agent-reported AgentPolicyStateDTO fields with explicit unavailable/partial.
+ * Apply/ack requires appliedVersion or lastAppliedAt — never green “enforced on host”.
  */
 
-/** Flip remains false until a live-verified agent apply/ack path exists. */
+import type {
+  AgentPolicyEnforcementEvidenceDTO,
+  AgentPolicyStateDTO,
+} from '@/types/edr';
+
+/** Flip remains false until a live-verified agent apply/ack (gRPC) path exists. */
 export const AGENT_POLICY_HOST_ENFORCEMENT_VERIFIED = false;
 
 /** Roles that may read policy assignment and enforcement evidence. */
@@ -38,6 +44,26 @@ export const AGENT_POLICY_MUTATE_DENIED_TITLE =
   'Required permission: Platform Administrator or SOC Manager';
 
 export const AGENT_POLICY_HONESTY_BANNER =
-  'Assignment is configuration only. Host policy enforcement is STAGING CANDIDATE — ' +
-  'unavailable or partial until agent-reported applied version and state exist. ' +
-  'Do not treat assigned agents as enforced on the host.';
+  'Assignment is configuration only. Apply/ack path unavailable until agent-reported ' +
+  'appliedVersion or lastAppliedAt exists — STAGING CANDIDATE (unavailable or partial). ' +
+  'Never treat assigned agents as enforced on host.';
+
+/** True only when a state row carries appliedVersion or lastAppliedAt (POL-003). */
+export function hasAgentPolicyApplyAckEvidence(state: AgentPolicyStateDTO | null | undefined): boolean {
+  if (!state) return false;
+  return state.appliedVersion != null || state.lastAppliedAt != null;
+}
+
+/**
+ * Prefer backend `applyAckPathAvailable`; fall back to scanning state rows.
+ * Never implies LIVE VERIFIED host enforcement.
+ */
+export function isAgentPolicyApplyAckPathAvailable(
+  evidence: AgentPolicyEnforcementEvidenceDTO | null | undefined,
+): boolean {
+  if (!evidence) return false;
+  if (typeof evidence.applyAckPathAvailable === 'boolean') {
+    return evidence.applyAckPathAvailable;
+  }
+  return (evidence.agentStates ?? []).some(hasAgentPolicyApplyAckEvidence);
+}

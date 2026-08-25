@@ -124,8 +124,10 @@ public class HaAgentPolicyService {
     /**
      * Returns assignment plus any agent-reported policy state rows for this policy id.
      *
-     * <p>STAGING CANDIDATE: never claims complete host enforcement. Empty state rows
-     * yield {@code unavailable}; any reported rows yield {@code partial}.
+     * <p>STAGING CANDIDATE (POL-001 / POL-003): never claims complete host enforcement.
+     * Empty rows or rows lacking {@code appliedVersion}/{@code lastAppliedAt} yield
+     * {@code unavailable} with an apply/ack-unavailable honesty note. Rows that carry
+     * those fields still yield {@code partial} only — never green “enforced on host”.
      */
     public AgentPolicyEnforcementEvidenceDTO getEnforcementEvidence(Long id) {
         HaAgentPolicy entity = policyRepository.findById(id)
@@ -145,6 +147,18 @@ public class HaAgentPolicyService {
     }
 
     /**
+     * Apply/ack evidence is present only when a state row carries {@code appliedVersion}
+     * or {@code lastAppliedAt}. A bare {@code state} string without those fields is not
+     * treated as host apply acknowledgment (POL-003 honesty).
+     */
+    static boolean hasApplyAckEvidence(AgentPolicyStateDTO state) {
+        if (state == null) {
+            return false;
+        }
+        return state.getAppliedVersion() != null || state.getLastAppliedAt() != null;
+    }
+
+    /**
      * Package-visible for focused unit tests — derives availability without inventing host proof.
      */
     static void applyHonesty(
@@ -154,44 +168,62 @@ public class HaAgentPolicyService {
         List<String> safeAssigned = assigned != null ? assigned : List.of();
         List<AgentPolicyStateDTO> safeStates = states != null ? states : List.of();
 
-        if (safeStates.isEmpty()) {
+        List<AgentPolicyStateDTO> applyAckStates = safeStates.stream()
+            .filter(HaAgentPolicyService::hasApplyAckEvidence)
+            .collect(Collectors.toList());
+
+        evidence.setApplyAckPathAvailable(!applyAckStates.isEmpty());
+
+        if (safeStates.isEmpty() || applyAckStates.isEmpty()) {
             evidence.setEvidenceAvailability(AVAILABILITY_UNAVAILABLE);
-            if (safeAssigned.isEmpty()) {
+            if (safeStates.isEmpty() && safeAssigned.isEmpty()) {
                 evidence.setHonestyNote(
-                    "No agents assigned and no agent-reported appliedVersion/state rows for this policy. "
-                        + "Assignment is configuration only — host enforcement is not verified."
+                    "No agents assigned and no agent-reported appliedVersion/ack rows for this policy. "
+                        + "Apply/ack path unavailable — assignment is configuration only; "
+                        + "never treat as enforced on host."
+                );
+            } else if (safeStates.isEmpty()) {
+                evidence.setHonestyNote(
+                    "Agents are assigned in configuration, but no agent-reported appliedVersion/ack "
+                        + "rows exist for this policy id. Apply/ack path unavailable — "
+                        + "host enforcement is not verified; never treat as enforced on host."
                 );
             } else {
                 evidence.setHonestyNote(
-                    "Agents are assigned in configuration, but no agent-reported appliedVersion/state "
-                        + "rows exist for this policy id. Host enforcement is not verified."
+                    "AgentPolicyState rows exist but lack appliedVersion/lastAppliedAt ack fields. "
+                        + "Apply/ack path unavailable — never treat as enforced on host. "
+                        + "No live agent gRPC apply path is claimed."
                 );
             }
             return;
         }
 
-        Set<String> reportedAgents = new HashSet<>();
-        for (AgentPolicyStateDTO state : safeStates) {
+        Set<String> ackAgents = new HashSet<>();
+        for (AgentPolicyStateDTO state : applyAckStates) {
             if (state.getAgentId() != null && !state.getAgentId().isBlank()) {
-                reportedAgents.add(state.getAgentId());
+                ackAgents.add(state.getAgentId());
             }
         }
 
+        // Even with appliedVersion/lastAppliedAt present, evidence stays partial — never complete.
         evidence.setEvidenceAvailability(AVAILABILITY_PARTIAL);
         if (safeAssigned.isEmpty()) {
             evidence.setHonestyNote(
-                "Agent-reported state rows exist, but this policy has no assigned agents in "
-                    + "configuration. Treat as partial evidence only — not host enforcement proof."
+                "Some appliedVersion/lastAppliedAt fields are present without assigned agents in "
+                    + "configuration. Treat as partial evidence only — apply/ack path is not "
+                    + "LIVE VERIFIED; never treat as enforced on host."
             );
-        } else if (!reportedAgents.containsAll(safeAssigned)) {
+        } else if (!ackAgents.containsAll(safeAssigned)) {
             evidence.setHonestyNote(
-                "Partial agent ack/state rows for this policy id; not every assigned agent has "
-                    + "reported appliedVersion/state. Do not treat as full host enforcement."
+                "Partial appliedVersion/ack coverage for this policy id; not every assigned agent "
+                    + "has apply/ack fields. Remaining agents: apply/ack path unavailable. "
+                    + "Never treat as enforced on host."
             );
         } else {
             evidence.setHonestyNote(
-                "Agent-reported appliedVersion/state rows exist for assigned agents. "
-                    + "Host enforcement remains STAGING CANDIDATE — not production-verified."
+                "appliedVersion/lastAppliedAt fields exist for assigned agents, but the production "
+                    + "agent apply/ack path is not LIVE VERIFIED (Admin JWT report-state only). "
+                    + "STAGING CANDIDATE — never treat as enforced on host."
             );
         }
     }

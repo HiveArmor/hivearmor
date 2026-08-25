@@ -6,12 +6,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Honesty projection for agent policy enforcement evidence (POL-001 / STAGING CANDIDATE).
+ * Honesty projection for agent policy enforcement evidence (POL-001 / POL-003 / STAGING CANDIDATE).
  *
  * <p>Surfaces real assignment from {@code ha_agent_policy} plus any agent-reported
  * rows from {@code hive_agent_policy_state} ({@link AgentPolicyStateDTO} fields).
  * Never invents host enforcement; {@code evidenceAvailability} is only
  * {@code unavailable} or {@code partial} until a production-verified agent path exists.
+ *
+ * <p>{@code applyAckPathAvailable} is true only when at least one state row carries
+ * {@code appliedVersion} or {@code lastAppliedAt}. It does <em>not</em> mean LIVE VERIFIED
+ * host enforcement or a production agent gRPC apply path.
  */
 public class AgentPolicyEnforcementEvidenceDTO {
 
@@ -20,6 +24,11 @@ public class AgentPolicyEnforcementEvidenceDTO {
     /** {@code unavailable} | {@code partial} — never claim complete host enforcement here. */
     private String evidenceAvailability;
     private String honestyNote;
+    /**
+     * True only when {@code appliedVersion} or {@code lastAppliedAt} is present on a state row.
+     * False ⇒ UI/API must say apply/ack path unavailable — never “enforced on host”.
+     */
+    private boolean applyAckPathAvailable;
     private List<AgentPolicyStateDTO> agentStates = new ArrayList<>();
 
     public Long getPolicyId() {
@@ -52,6 +61,14 @@ public class AgentPolicyEnforcementEvidenceDTO {
 
     public void setHonestyNote(String honestyNote) {
         this.honestyNote = honestyNote;
+    }
+
+    public boolean isApplyAckPathAvailable() {
+        return applyAckPathAvailable;
+    }
+
+    public void setApplyAckPathAvailable(boolean applyAckPathAvailable) {
+        this.applyAckPathAvailable = applyAckPathAvailable;
     }
 
     public List<AgentPolicyStateDTO> getAgentStates() {
