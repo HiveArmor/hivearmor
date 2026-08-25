@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
+import { msspFetch } from '../api/msspFetch';
+
 import { HaButton } from '@/components/ha-button/HaButton';
 import { HaInlineBanner } from '@/components/ha-inline-banner/HaInlineBanner';
 
-const JWT_KEY = 'hivearmor_auth_token';
 const ENDPOINT = '/api/ha-mssp/reports/aggregate';
 
 interface ErrorState {
@@ -19,12 +20,7 @@ export function DownloadAggregateButton(): JSX.Element {
     setError(null);
     setBusy(true);
     try {
-      const token = window.localStorage.getItem(JWT_KEY) ?? '';
-      // JWT is in the Authorization header only — never in the URL (NoJwtInUrlInvariant)
-      const response = await fetch(ENDPOINT, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await msspFetch(ENDPOINT);
 
       if (response.status !== 200) {
         setError({ status: response.status, message: `Download failed (${response.status})` });

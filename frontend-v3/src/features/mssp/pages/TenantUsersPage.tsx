@@ -43,9 +43,9 @@ const REMOVE_CONFIRM_TEXT =
   "Remove this user's tenant membership? This does not delete the user.";
 
 const TENANT_ROLE_OPTIONS: Array<{ value: TenantRole; label: string }> = [
-  { value: "TENANT_ADMIN", label: "Admin" },
-  { value: "TENANT_ANALYST", label: "Analyst" },
-  { value: "TENANT_VIEWER", label: "Viewer" },
+  { value: "TENANT_ADMIN", label: "Tenant Admin" },
+  { value: "TENANT_ANALYST", label: "Tenant Analyst" },
+  { value: "TENANT_VIEWER", label: "Tenant Viewer" },
 ];
 
 // ---------------------------------------------------------------------------

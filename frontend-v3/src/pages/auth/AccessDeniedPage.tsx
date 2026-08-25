@@ -11,7 +11,12 @@ import { useAuthStore } from '@/store/auth.store';
 
 import './AccessDeniedPage.css';
 
-export function AccessDeniedPage(): JSX.Element {
+interface AccessDeniedPageProps {
+  /** Human-facing permission label — never a ROLE_* / authority constant. */
+  requiredPermission?: string;
+}
+
+export function AccessDeniedPage({ requiredPermission }: AccessDeniedPageProps = {}): JSX.Element {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
 
@@ -41,6 +46,12 @@ export function AccessDeniedPage(): JSX.Element {
             </>
           )}
         </p>
+
+        {requiredPermission && (
+          <p className="access-denied-submessage">
+            Required permission: {requiredPermission}
+          </p>
+        )}
 
         <p className="access-denied-submessage">
           If you believe you should have access, please contact your administrator.

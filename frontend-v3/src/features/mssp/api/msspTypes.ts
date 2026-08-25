@@ -53,38 +53,6 @@ export interface UpdateTenantRequest {
   readonly contactEmail: string;
 }
 
-export interface TenantMemberDTO {
-  readonly tenantUserId: number;
-  readonly userId: number;
-  readonly login: string;
-  readonly email: string;
-  readonly tenantRole: "TENANT_ADMIN" | "TENANT_ANALYST" | "TENANT_VIEWER";
-  readonly userActivated: boolean;
-}
-
-export interface AddTenantMemberRequest {
-  readonly userId: number;
-  readonly tenantRole: "TENANT_ADMIN" | "TENANT_ANALYST" | "TENANT_VIEWER";
-}
-
-export interface PatchTenantMemberRequest {
-  readonly tenantRole: "TENANT_ADMIN" | "TENANT_ANALYST" | "TENANT_VIEWER";
-}
-
-export class MsspConflictError extends Error {
-  readonly field: string;
-
-  constructor(field: string, message: string) {
-    super(message);
-    this.name = "MsspConflictError";
-    this.field = field;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Tenant membership types
-// ---------------------------------------------------------------------------
-
 export type TenantRole = "TENANT_ADMIN" | "TENANT_ANALYST" | "TENANT_VIEWER";
 
 export interface TenantMemberDTO {
@@ -103,4 +71,14 @@ export interface AddTenantMemberRequest {
 
 export interface PatchTenantMemberRequest {
   readonly tenantRole: TenantRole;
+}
+
+export class MsspConflictError extends Error {
+  readonly field: string;
+
+  constructor(field: string, message: string) {
+    super(message);
+    this.name = "MsspConflictError";
+    this.field = field;
+  }
 }

@@ -1,5 +1,6 @@
 import type { NewTenantRequest, NewTenantResponse, TenantDetailDTO, TenantHealthDTO, UpdateTenantRequest } from "./msspTypes";
 import { MsspConflictError } from "./msspTypes";
+import { msspFetch, msspHttpError } from "./msspFetch";
 
 interface ProblemDetail {
   readonly field?: string;
@@ -28,10 +29,10 @@ export async function fetchTenants(params: {
     ? `/api/ha-mssp/tenants?${qs}`
     : "/api/ha-mssp/tenants";
 
-  const response = await fetch(url, { credentials: "include" });
+  const response = await msspFetch(url);
 
   if (!response.ok) {
-    throw new Error(String(response.status));
+    throw msspHttpError(response.status);
   }
 
   const totalCountHeader = response.headers.get("X-Total-Count");
@@ -41,13 +42,9 @@ export async function fetchTenants(params: {
   return { items, totalCount };
 }
 
-export async function createTenant(
-  body: NewTenantRequest
-): Promise<{ response: NewTenantResponse; locationHeader: string }> {
-  const response = await fetch("/api/ha-mssp/tenants", {
+export async function createTenant(body: NewTenantRequest): Promise<NewTenantResponse> {
+  const response = await msspFetch("/api/ha-mssp/tenants", {
     method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 
@@ -65,28 +62,23 @@ export async function createTenant(
   }
 
   if (!response.ok) {
-    throw new Error(String(response.status));
+    throw msspHttpError(response.status);
   }
 
-  const locationHeader = response.headers.get("Location") ?? "";
-  const data = (await response.json()) as NewTenantResponse;
-
-  return { response: data, locationHeader };
+  return (await response.json()) as NewTenantResponse;
 }
 
 export async function fetchTenantDetail(id: string): Promise<TenantDetailDTO> {
-  const res = await fetch(`/api/ha-mssp/tenants/${id}`, { credentials: "include" });
-  if (!res.ok) throw new Error(String(res.status));
+  const res = await msspFetch(`/api/ha-mssp/tenants/${id}`);
+  if (!res.ok) throw msspHttpError(res.status);
   return res.json() as Promise<TenantDetailDTO>;
 }
 
 export async function updateTenant(id: string, body: UpdateTenantRequest): Promise<TenantDetailDTO> {
-  const res = await fetch(`/api/ha-mssp/tenants/${id}`, {
+  const res = await msspFetch(`/api/ha-mssp/tenants/${id}`, {
     method: "PUT",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(String(res.status));
+  if (!res.ok) throw msspHttpError(res.status);
   return res.json() as Promise<TenantDetailDTO>;
 }

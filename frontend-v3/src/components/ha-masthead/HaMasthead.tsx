@@ -19,14 +19,19 @@ export interface HaMastheadProps {
   // No required props — all data comes from stores and hooks
 }
 
-/** Known tenants — in production this would come from a backend endpoint. */
+/** Local-dev placeholder tenants — not an authorized live inventory (C3-04). */
 const KNOWN_TENANTS = [
   { id: null, prefix: '', label: 'All authorized tenants', description: 'View events across all tenants you have access to' },
-  { id: 1, prefix: 'acme', label: 'Acme', description: 'Local-dev tenant 1 · syslog + endpoint detection' },
-  { id: 3812, prefix: 'workmates1', label: 'Workmates1', description: 'Primary workspace · EDR + Log collection' },
-  { id: 3813, prefix: 'cwm', label: 'CWM', description: 'Cloud Workload Management · Cloud + Network' },
-  { id: 3814, prefix: 'workmates2', label: 'Workmates2', description: 'Secondary workspace · Endpoint monitoring' },
+  { id: 1, prefix: 'acme', label: 'Acme (local-dev placeholder)', description: 'Local-dev placeholder · not live inventory' },
+  { id: 3812, prefix: 'workmates1', label: 'Workmates1 (local-dev placeholder)', description: 'Local-dev placeholder · not live inventory' },
+  { id: 3813, prefix: 'cwm', label: 'CWM (local-dev placeholder)', description: 'Local-dev placeholder · not live inventory' },
+  { id: 3814, prefix: 'workmates2', label: 'Workmates2 (local-dev placeholder)', description: 'Local-dev placeholder · not live inventory' },
 ] as const;
+
+function environmentLabel(): string {
+  if (import.meta.env.DEV) return 'Local';
+  return 'Deployed';
+}
 
 export function HaMasthead(_props: HaMastheadProps): JSX.Element {
   const [tenantOpen, setTenantOpen] = useState(false);
@@ -130,7 +135,7 @@ export function HaMasthead(_props: HaMastheadProps): JSX.Element {
           <span>Search alerts, incidents, entities…</span>
           <kbd aria-hidden="true">⌘ K</kbd>
         </button>
-        <span className="ha-masthead__environment">Production</span>
+        <span className="ha-masthead__environment">{environmentLabel()}</span>
       </div>
 
       <div className="ha-masthead__actions">

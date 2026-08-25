@@ -262,6 +262,24 @@ export function MsspOverviewPage(): ReactElement {
 
   const isEmpty = data.tenants.length === 0;
 
+  const stagingBanner = (
+    <div
+      style={{
+        marginBottom: "var(--ha-space-4)",
+        padding: "var(--ha-space-2) var(--ha-space-3)",
+        border: "1px solid var(--ha-border)",
+        borderRadius: "var(--ha-radius-base)",
+        background: "var(--ha-surface-raised)",
+        fontSize: "var(--ha-text-sm)",
+        color: "var(--ha-text-secondary)",
+      }}
+    >
+      <strong style={{ color: "var(--ha-text-primary)" }}>STAGING CANDIDATE</strong>
+      {" — "}
+      MSSP portal is an authorized ops plane for MSSP Administrators. Not PRODUCTION READY.
+    </div>
+  );
+
   // ── Empty branch ───────────────────────────────────────────────────────────
   // 4 KPI cards + "No managed tenants yet". NO chart. NO grid.
   if (isEmpty) {
@@ -275,6 +293,7 @@ export function MsspOverviewPage(): ReactElement {
           padding: "var(--ha-space-6)",
         }}
       >
+        {stagingBanner}
         <div
           style={{
             display: "flex",
@@ -324,6 +343,7 @@ export function MsspOverviewPage(): ReactElement {
         padding: "var(--ha-space-6)",
       }}
     >
+      {stagingBanner}
       <div
         style={{
           display: "flex",
