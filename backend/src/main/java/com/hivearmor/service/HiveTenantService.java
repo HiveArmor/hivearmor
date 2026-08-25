@@ -1,20 +1,25 @@
 package com.hivearmor.service;
 
-import com.hivearmor.domain.UtmClient;
-import com.hivearmor.repository.UtmClientRepository;
+import com.hivearmor.domain.HaClient;
+import com.hivearmor.repository.HaClientRepository;
 import com.hivearmor.service.dto.HiveTenantDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
 /**
- * Tenant management service.
- * Backs /api/ha-tenants — wraps the existing hive_client table (UtmClient entity).
+ * Tenant management service for {@code GET/POST/PUT/DELETE /api/ha-tenants}.
+ *
+ * <p>Backed by {@code ha_client} ({@link HaClient}) — the live tenant table used by
+ * MSSP and platform admin. The legacy {@code hive_client}/{@code UtmClient} mapping
+ * is obsolete after the ha_client schema landed.
  */
 @Service
 @Transactional
@@ -22,9 +27,9 @@ public class HiveTenantService {
 
     private static final Logger log = LoggerFactory.getLogger(HiveTenantService.class);
 
-    private final UtmClientRepository clientRepository;
+    private final HaClientRepository clientRepository;
 
-    public HiveTenantService(UtmClientRepository clientRepository) {
+    public HiveTenantService(HaClientRepository clientRepository) {
         this.clientRepository = clientRepository;
     }
 
@@ -39,19 +44,27 @@ public class HiveTenantService {
     }
 
     public HiveTenantDTO create(HiveTenantDTO dto) {
-        UtmClient entity = toEntity(dto);
-        entity.setId(null);
-        return toDTO(clientRepository.save(entity));
+        String prefix = blankToNull(dto.getPrefix());
+        if (prefix != null && clientRepository.existsByClientPrefix(prefix)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "tenant prefix already exists");
+        }
+        HaClient entity = new HaClient();
+        entity.setName(dto.getName());
+        entity.setClientPrefix(prefix);
+        entity.setContactEmail(blankToNull(dto.getDomain()));
+        entity.setMsspManaged(false);
+        entity.setMaxUsers(50);
+        entity.setLicenceType("standard");
+        HaClient saved = clientRepository.save(entity);
+        log.info("Created ha_client id={} prefixSet={}", saved.getId(), saved.getClientPrefix() != null);
+        return toDTO(saved);
     }
 
     public Optional<HiveTenantDTO> update(Long id, HiveTenantDTO dto) {
         return clientRepository.findById(id).map(existing -> {
-            existing.setClientName(dto.getName());
-            existing.setClientDomain(dto.getDomain());
-            // prefix is immutable after creation — do not update
-            if (dto.getLicenceExpire() != null) {
-                existing.setClientLicenceExpire(dto.getLicenceExpire());
-            }
+            existing.setName(dto.getName());
+            // prefix is immutable after creation
+            existing.setContactEmail(blankToNull(dto.getDomain()));
             return toDTO(clientRepository.save(existing));
         });
     }
@@ -60,36 +73,29 @@ public class HiveTenantService {
         clientRepository.deleteById(id);
     }
 
-    // ---- mapping helpers ----
-
-    private HiveTenantDTO toDTO(UtmClient entity) {
+    HiveTenantDTO toDTO(HaClient entity) {
         HiveTenantDTO dto = new HiveTenantDTO();
         dto.setId(entity.getId());
-        dto.setName(entity.getClientName());
-        dto.setDomain(entity.getClientDomain());
+        dto.setName(entity.getName());
+        dto.setDomain(entity.getContactEmail());
         dto.setPrefix(entity.getClientPrefix());
-        // Map licence verified to status: true→ACTIVE, null/false→PROVISIONING
-        if (Boolean.TRUE.equals(entity.isClientLicenceVerified())) {
-            dto.setStatus("ACTIVE");
-        } else if (entity.getClientLicenceExpire() != null &&
-                   entity.getClientLicenceExpire().isBefore(java.time.Instant.now())) {
-            dto.setStatus("DEPROVISIONED");
-        } else {
-            dto.setStatus("PROVISIONING");
-        }
-        dto.setLicenceExpire(entity.getClientLicenceExpire());
-        dto.setCreatedAt(entity.getClientLicenceCreation());
+        dto.setStatus(resolveStatus(entity));
+        dto.setLicenceExpire(null);
+        dto.setCreatedAt(null);
         return dto;
     }
 
-    private UtmClient toEntity(HiveTenantDTO dto) {
-        UtmClient entity = new UtmClient();
-        entity.setClientName(dto.getName());
-        entity.setClientDomain(dto.getDomain());
-        entity.setClientPrefix(dto.getPrefix());
-        entity.setClientLicenceExpire(dto.getLicenceExpire());
-        entity.setClientLicenceVerified(false);
-        entity.setClientLicenceCreation(java.time.Instant.now());
-        return entity;
+    private static String resolveStatus(HaClient entity) {
+        if (entity.getClientPrefix() != null && !entity.getClientPrefix().isBlank()) {
+            return "ACTIVE";
+        }
+        return "PROVISIONING";
+    }
+
+    private static String blankToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }

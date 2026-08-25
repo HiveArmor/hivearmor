@@ -9,7 +9,7 @@ import java.time.Instant;
 
 /**
  * DTO matching the frontend TenantDTO TypeScript type.
- * Backed by the existing hive_client table (UtmClient entity).
+ * Backed by {@code ha_client} ({@code HaClient}). {@code domain} maps to contact email.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class HiveTenantDTO {

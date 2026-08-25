@@ -1,6 +1,6 @@
 /**
  * TenantsPage.tsx — Tenant administration probe.
- * GET /api/ha-tenants currently returns 500 on local-dev; keep an honest error.
+ * GET /api/ha-tenants is backed by ha_client; keep an honest error if the probe fails.
  */
 
 import { useQuery } from '@tanstack/react-query';

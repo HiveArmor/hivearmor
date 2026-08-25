@@ -1,15 +1,16 @@
 # Next production slice
 
-Updated: **2026-08-25 18:45:00 IST (UTC+05:30)**
+Updated: **2026-08-25 20:30:00 IST (UTC+05:30)**
 
-## Active — Post-audit follow-ons (staging FE smoke done)
+## Active — Post-audit follow-ons (admin API 500s closed)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Status: **AUDIT WAVES COMPLETE** + **staging FE rebuilt** to `27e55c3` — still **STAGING CANDIDATE**. Not `PRODUCTION READY`.
+Status: **AUDIT WAVES COMPLETE** + staging FE smoke + admin tenants/audit **200** on staging — still **STAGING CANDIDATE**. Not `PRODUCTION READY`.
 Research: `docs/ai-handoff/research/autonomous-soc-program-closure.md`.
-Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-25 Detect→Govern smoke).
+Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-25 admin 500 fixes).
 
-Next: residual admin API 500s (`/api/ha-tenants`, `/api/ha-audit-log`); optional D-06 density; vendor live proofs when credentials exist; full BE rebuild only if backend tip drifts.
+Deferred (post full production MVP): vendor live connector credentials/proofs.
+Next optional: D-06 density wiring; other residual product depth without vendor logins.
 
 ## Completed this slice — Wave D Cross-product closure (#65)
 

@@ -24,14 +24,14 @@ import java.util.stream.Collectors;
 
 /**
  * Read-only admin endpoint for browsing application audit events indexed in OpenSearch.
- * Events are written by ApplicationEventService to the v11-backend-logs index.
+ * Events are written by ApplicationEventService to the v3-hive-backend-logs index.
  */
 @RestController
 @RequestMapping("/api")
 public class UtmAuditEventResource {
 
     private static final Logger log = LoggerFactory.getLogger(UtmAuditEventResource.class);
-    private static final String AUDIT_INDEX = "v11-backend-logs";
+    private static final String AUDIT_INDEX = "v3-hive-backend-logs";
 
     private final OpensearchClientBuilder osClient;
 

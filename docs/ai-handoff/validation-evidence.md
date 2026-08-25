@@ -623,3 +623,13 @@ No production-readiness claim is made by this baseline entry.
   - `GET /api/ha-tenants` → **500** (generic Internal Server Error)
   - `GET /api/ha-audit-log` → **500** (empty body)
   - `GET /api/ha-mssp/tenants` → **403** for Platform Administrator without MSSP role (expected fail-closed)
+
+## 2026-08-25 — Fix admin `/api/ha-tenants` + `/api/ha-audit-log` 500s
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY). Vendor connector credentials still deferred.
+- Root causes:
+  - `GET /api/ha-tenants` queried obsolete `hive_client` (`UtmClient`); staging only has `ha_client`.
+  - `GET /api/ha-audit-log` searched missing `v11-backend-logs`; writer uses `v3-hive-backend-logs`.
+- Fix: `HiveTenantService` → `HaClientRepository`; audit resources → `v3-hive-backend-logs` (+ empty page on missing index).
+- Staging proof (admin JWT): `GET /api/ha-tenants` **200** (`X-Total-Count=4`); `GET /api/ha-audit-log` **200** (`X-Total-Count=416`).
+- Unit: `HiveTenantServiceTest` + `HaAuditLogResourceExportTest` — 7/7 passed.
