@@ -214,7 +214,8 @@ export const dashboardOperationsService = {
     return {
       items: items.map(normalizeDashboard),
       total: items.length,
-      bounded: true,
+      // Legacy list returns an array without X-Total-Count — do not claim a bounded page.
+      bounded: false,
       tenantScoped: false,
       serverSorted: true,
     };

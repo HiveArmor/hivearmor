@@ -1,27 +1,30 @@
 # Next production slice
 
-Updated: **2026-08-25 15:45:00 IST (UTC+05:30)**
+Updated: **2026-08-25 16:15:00 IST (UTC+05:30)**
 
-## Active — Wave B2 Posture & compliance audit + thin honesty (STAGING CANDIDATE)
+## Active — Wave C1 Dashboards & reports audit + thin honesty (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Routes: `/posture/*`, `/compliance`.
+Routes: `/dashboards`, `/dashboards/studio`, `/reports/*`.
 Status: **AUDIT + thin honesty IN PROGRESS (code)** — still **STAGING CANDIDATE**. Staging rebuild deferred.
-Research: `docs/ai-handoff/research/autonomous-soc-posture-compliance.md`.
-Branch: `feat/b2-posture-compliance-audit`.
+Research: `docs/ai-handoff/research/autonomous-soc-dashboards-reports.md`.
+Branch: `feat/c1-dashboards-reports-audit`.
 
 | ID | Fix |
 |---|---|
-| B2-COV-01 | `MitreCoverageResource` `@PreAuthorize` Analyst\|SOC Manager\|Admin |
-| B2-AST-01 / B2-ID-01 | Assets/Identities nav + AuthGuard analyst-tier |
-| B2-EXP-01/02 | Exposure Analyst+; disable KPI/filter chrome when contract missing |
-| B2-CMP-01 | Compliance Analyst+ |
-| B2-ID-02 / B2-AD-01 | Remove dead identity risk + AD compat empties |
-| B2-ID-03 / B2-CMP-02 / B2-AST-03 | Fixture-disabled aliases / throw stubs |
-| B2-VULN-02 / B2-CIS-01 | Capability flags stay `false` |
-| B2-COV-02 | Empty coverage copy honesty |
+| C1-AUTH-01/02 | Studio/edit + report AuthGuards match nav |
+| C1-API-01 | `dashboards.service` → relative `apiClient` |
+| C1-FIX-01 | Fixture-disabled aliases for DSH/REP fixtures |
+| C1-REP-01/02/03 | Stamp-only run honesty; KPI + field copy |
+| C1-DSH-01/02 | Unbounded legacy list; no fictional tenants |
+| C1-LIVE-01 | StatusDock historical outside fixtures |
+| C1-AUTH-04 | Metrics builder Analyst+; save gated |
 
-Still open: EXP/ADP backends; CMP-002/003 evidence; identity posture depth.
+Still open: DSH-002 versioned save; REP-003/004 generation pipeline; GAP-SEC-12 method PreAuthorize.
+
+## Completed this slice — Wave B2 Posture & compliance (#61)
+
+Status: **MERGED** tip `298c550` — STAGING CANDIDATE. Staging rebuild deferred.
 
 ## Completed this slice — Wave B1 Endpoint defense (#60)
 
@@ -43,7 +46,7 @@ Status: **MERGED** tip `e72ba83` — STAGING CANDIDATE. Staging FE rebuild defer
 ## Active — Frontend Autonomous SOC audit program (next major arc)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Next after A3 merge + staging smoke: **Wave B1 Endpoint defense** (or A3 backend contracts).
+Next after C1 merge + staging smoke: **Wave C2 Platform admin**.
 Status: **PROGRAM IN PROGRESS** — not `PRODUCTION READY`.
 
 ## Completed this slice — Wave A2 Investigate & AI audit (#57)

@@ -210,6 +210,24 @@ export default defineConfig(({ command }) => ({
             : './src/pages/compliance/compliance.fixture-disabled.ts'
         ),
       },
+      {
+        find: '@/pages/dashboards/dashboardOperations.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/pages/dashboards/dashboardOperations.fixtures.ts'
+            : './src/pages/dashboards/dashboardOperations.fixture-disabled.ts'
+        ),
+      },
+      {
+        find: '@/pages/reports/reportingOperations.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/pages/reports/reportingOperations.fixtures.ts'
+            : './src/pages/reports/reportingOperations.fixture-disabled.ts'
+        ),
+      },
       { find: /^@\//, replacement: resolve(__dirname, './src') + '/' },
     ],
   },

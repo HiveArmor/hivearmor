@@ -86,7 +86,7 @@ const DASHBOARDS_ITEMS: NavItemSpec[] = [
 ];
 
 // Section: REPORT — scheduled + templates are the governed entry points.
-// Intentionally hidden (stub / STATIC_UI, no honest LIVE_API surface yet):
+// Intentionally hidden (deep-link facets of Reporting Operations, not separate stubs):
 // - /reports/sitrep, /reports/incidents, /reports/after-action
 const REPORT_ITEMS: NavItemSpec[] = [
   { label: 'Reporting Operations', icon: 'FileText', route: '/reports/scheduled', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
