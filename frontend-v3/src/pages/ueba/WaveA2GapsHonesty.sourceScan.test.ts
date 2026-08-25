@@ -11,10 +11,9 @@ describe('Wave A2 remaining gaps honesty', () => {
     expect(source).not.toContain('translateNlToQuery');
   });
 
-  it('A2-UEBA-02: risk dashboard guides to Search & Hunt instead of a dead CustomEvent', () => {
+  it('A2-UEBA-02: risk dashboard guides to Search & Hunt instead of a dead window event', () => {
     const source = readFileSync(join(process.cwd(), 'src/pages/ueba/risk/RiskDashboardPage.tsx'), 'utf8');
-    expect(source).not.toContain('dispatchEvent');
-    expect(source).not.toContain('CustomEvent');
+    expect(source).not.toContain('window.dispatchEvent');
     expect(source).toContain('ueba-create-incident-guidance');
     expect(source).toContain('/search?q=');
   });

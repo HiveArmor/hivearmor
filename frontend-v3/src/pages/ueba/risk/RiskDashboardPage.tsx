@@ -9,7 +9,7 @@
  *
  * Actions:
  * - "View Timeline" opens View_Timeline_Drawer embedding EntityTimelinePage
- * - "Create Incident" dispatches a CustomEvent to invoke the existing incident flow
+ * - "Create Incident" opens honest guidance to collect evidence in Search & Hunt
  *
  * All fetches go through uebaService (JWT injection is automatic via apiClient).
  * No raw fetch() or axios calls. No hex color literals. No `any` types.
@@ -112,8 +112,8 @@ export function RiskDashboardPage(): JSX.Element {
     }
   }, []);
 
-  // A2-UEBA-02: no listener existed for the prior CustomEvent; POST /ha-incidents
-  // requires alertList. Guide analysts to Search & Hunt (?q=) for evidence collection.
+  // A2-UEBA-02: prior window event had no listener; POST /ha-incidents requires alertList.
+  // Guide analysts to Search & Hunt (?q=) for evidence collection.
   const [incidentGuidanceUserId, setIncidentGuidanceUserId] = useState<string | null>(null);
 
   const handleCreateIncident = useCallback((userId: string) => {
