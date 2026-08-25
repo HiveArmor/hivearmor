@@ -16,6 +16,21 @@ Shipped in this slice:
 
 Still open under `RESP-021`: enriched evidence/summaries, cursor/snapshot/freshness semantics, action history, governed preview/approval/idempotency for restore/delete/release, resumable delivery state.
 
+## Completed this slice — Agentic INVESTIGATE soft session link (STAGING CANDIDATE)
+
+Scope: `TriageInvestigateStub` → optional soft link to `/api/ha-investigation-sessions` (id + status only).
+Status: **STAGING CANDIDATE** — not `PRODUCTION READY`. Not Neo4j / attack-path. Not auto-convert to incident.
+Merged: `feat/p1-agentic-investigate-session-link` (#45).
+
+Shipped:
+
+1. When INVESTIGATE runs and the alert doc is resolvable, optionally `createSession` titled from alert name/id via `InvestigationSessionService` (soft-fail if bean/create unavailable).
+2. Ledger investigate metadata keeps `stub=true`; on success adds `sessionId` + `sessionStatus` + `sessionLinked=true`; on failure records sanitized `sessionLinkError` (class name only, no PII).
+3. Focused unit tests for stub link success/failure/skip and triage service wiring.
+
+Remaining: Neo4j / attack-path; `openHypotheses`; auto-pin evidence; convert-to-incident; staging LIVE verify of createSession from SOC-AI triage.
+Contracts: `INV-LV01` / investigation sessions in `docs/frontend-backend-contract-register.md`.
+
 ## Active — Orphan Operational Workflows
 
 Routes: inventory across UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence; **first bounded family = threat-intel ops** (`/intelligence`, `/admin/threat-intel`).
