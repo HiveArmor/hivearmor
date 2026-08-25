@@ -972,8 +972,8 @@ export function PlaybookDetailPage(): JSX.Element {
 
   const numericId = id ? Number(id) : NaN;
   const hasAdminRole = user?.roles?.includes('ROLE_ADMIN') ?? false;
-  const hasSocManagerRole = user?.roles?.includes('ROLE_SOC_MANAGER') ?? false;
-  const canManage = hasAdminRole || hasSocManagerRole;
+  /** Backend preview/execute/status are ROLE_ADMIN-only. */
+  const canMutate = hasAdminRole;
   /** Backend approve/reject endpoints are ROLE_ADMIN-only. */
   const canApproveExecution = hasAdminRole;
 
@@ -1317,7 +1317,7 @@ export function PlaybookDetailPage(): JSX.Element {
               {listResult.status.charAt(0) + listResult.status.slice(1).toLowerCase()}
             </span>
           )}
-          {canManage && (
+          {canMutate && (
             <HaButton
               variant="plain"
               icon={<Edit3 size={14} />}
@@ -1327,7 +1327,7 @@ export function PlaybookDetailPage(): JSX.Element {
               Edit
             </HaButton>
           )}
-          {canManage && (
+          {canMutate && (
             <HaButton
               variant="primary"
               icon={<Play size={14} />}

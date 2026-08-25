@@ -214,11 +214,13 @@ function PlaybookPreviewDrawer({
   onClose,
   onEdit,
   onRunNow,
+  canMutate,
 }: {
   playbook: PlaybookListItem;
   onClose: () => void;
   onEdit: (id: string) => void;
   onRunNow: (id: string) => void;
+  canMutate: boolean;
 }): JSX.Element {
   return (
     <HaDrawer
@@ -229,16 +231,18 @@ function PlaybookPreviewDrawer({
       width={520}
       footer={
         <div className="resp-drawer-footer">
-          <HaButton
-            variant="primary"
-            onClick={() => onRunNow(playbook.id)}
-            isDisabled={playbook.status !== 'ACTIVE'}
-            aria-label={playbook.status !== 'ACTIVE' ? 'Run now (playbook must be active to run)' : 'Run now'}
-          >
-            Run now
-          </HaButton>
+          {canMutate && (
+            <HaButton
+              variant="primary"
+              onClick={() => onRunNow(playbook.id)}
+              isDisabled={playbook.status !== 'ACTIVE'}
+              aria-label={playbook.status !== 'ACTIVE' ? 'Run now (playbook must be active to run)' : 'Run now'}
+            >
+              Run now
+            </HaButton>
+          )}
           <HaButton variant="secondary" onClick={() => onEdit(playbook.id)}>
-            Open editor
+            Open workbench
           </HaButton>
           <HaButton variant="plain" onClick={onClose}>
             Close
@@ -335,7 +339,9 @@ export function ResponsePlaybooksPage(): JSX.Element {
 
   const hasAdminRole = user?.roles?.includes('ROLE_ADMIN') ?? false;
   const hasSocManagerRole = user?.roles?.includes('ROLE_SOC_MANAGER') ?? false;
-  const canManage = hasAdminRole || hasSocManagerRole;
+  /** List/detail: SOC Manager or Admin. Mutate/execute: Admin only (PlaybookResource). */
+  const canView = hasAdminRole || hasSocManagerRole;
+  const canMutate = hasAdminRole;
 
   // ─── Queries ──────────────────────────────────────────────────────────────
 
@@ -363,7 +369,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
     queryFn: () => fetchPlaybookList(queryParams),
     staleTime: 30_000,
     placeholderData: (prev) => prev,
-    enabled: canManage,
+    enabled: canView,
   });
 
   const {
@@ -372,7 +378,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
     queryKey: ['resp-playbook-metrics'],
     queryFn: fetchPlaybookMetrics,
     staleTime: 60_000,
-    enabled: canManage,
+    enabled: canView,
   });
 
   // ─── Mutations ────────────────────────────────────────────────────────────
@@ -540,7 +546,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
             active={optimisticOverrides[data.id] ?? data.status === 'ACTIVE'}
             status={data.status}
             onToggle={handleToggleRequest}
-            disabled={!canManage || toggleMutation.isPending}
+            disabled={!canMutate || toggleMutation.isPending}
           />
         ),
       },
@@ -562,12 +568,12 @@ export function ResponsePlaybooksPage(): JSX.Element {
         ),
       },
     ],
-    [canManage, handleEdit, handleToggleRequest, optimisticOverrides, toggleMutation.isPending]
+    [canMutate, handleEdit, handleToggleRequest, optimisticOverrides, toggleMutation.isPending]
   );
 
   // ─── Access denied ─────────────────────────────────────────────────────────
 
-  if (!canManage) {
+  if (!canView) {
     return (
       <div className="resp-access-denied">
         <AccessDeniedState
@@ -622,7 +628,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
             isDisabled={isFetching}
             style={{ minWidth: 'unset', padding: '6px 8px' }}
           />
-          {canManage && (
+          {canMutate && (
             <HaButton
               variant="primary"
               icon={<Plus size={14} />}
@@ -755,7 +761,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
                 : 'Start from a blank canvas or seed three SOC starter playbooks (isolation, malware containment, manual triage).'
             }
             action={
-              canManage && !search && statusFilter === 'ALL' ? (
+              canMutate && !search && statusFilter === 'ALL' ? (
                 <div className="resp-empty-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <HaButton variant="primary" icon={<Plus size={14} />} onClick={() => navigate('/response/playbooks/new')}>
                     New playbook
@@ -813,6 +819,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
           onClose={() => setSelectedPlaybook(null)}
           onEdit={handleEdit}
           onRunNow={handleRunNow}
+          canMutate={canMutate}
         />
       )}
 

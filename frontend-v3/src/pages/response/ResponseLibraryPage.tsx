@@ -202,7 +202,7 @@ function ActionDrawer({ action, onClose }: { action: ResponseAction | null; onCl
 
 export function ResponseLibraryPage(): JSX.Element {
   const { hasAnyRole } = useAuthStore();
-  const hasAccess = hasAnyRole(['ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']);
+  const hasAccess = hasAnyRole(['ROLE_ANALYST', 'ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']);
   const navigate = useNavigate();
   const epsStream = useEpsStream();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -263,7 +263,7 @@ export function ResponseLibraryPage(): JSX.Element {
     rollback: actions.filter((action) => action.rollbackSupported === true).length,
   }), [actions]);
 
-  if (!hasAccess) return <section className="response-library-page"><AccessDeniedState title="Response library restricted" message="A SOC analyst, SOC manager, or administrator role is required to browse response primitives." /></section>;
+  if (!hasAccess) return <section className="response-library-page"><AccessDeniedState title="Response library restricted" message="Required permission: Analyst, SOC Manager, or Platform Administrator." /></section>;
 
   return <section className="response-library-page" aria-label="Response action and connector library">
     <header className="ral-header">

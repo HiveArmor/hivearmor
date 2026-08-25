@@ -552,11 +552,11 @@ export const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
-      // Canonical route: detection-rules
+      // Canonical route: detection-rules — list readable by Analyst (A3-DET-01)
       {
         path: 'detection-rules',
         element: (
-          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <DetectionRulesPage />
           </AuthGuard>
         ),
@@ -613,7 +613,7 @@ export const router = createBrowserRouter([
       {
         path: 'response/library',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <ResponseLibraryPage />
           </AuthGuard>
         ),
@@ -639,7 +639,7 @@ export const router = createBrowserRouter([
       {
         path: 'response/playbooks/new',
         element: (
-          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
             <PlaybookBuilderPage />
           </AuthGuard>
         ),
@@ -647,7 +647,7 @@ export const router = createBrowserRouter([
       {
         path: 'response/playbooks/:id/edit',
         element: (
-          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
             <PlaybookBuilderPage />
           </AuthGuard>
         ),

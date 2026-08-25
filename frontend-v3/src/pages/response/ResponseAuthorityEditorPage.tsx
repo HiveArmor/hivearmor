@@ -16,6 +16,10 @@ import {
 } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import {
+  RESP_020_DISABLED_TITLE,
+  RESP_020_GOVERNANCE,
+} from './response.capabilities';
 import type {
   ResponseAuthorityDelegateSaveRequest,
   ResponseAuthorityPolicySaveRequest,
@@ -134,6 +138,13 @@ export function ResponseAuthorityEditorPage(): JSX.Element {
   });
 
   if (!canManage) return <section className="gov-edit-page gov-edit-page--center"><AccessDeniedState message="Response governance editing requires SOC Manager or Platform Administrator authority." /></section>;
+  if (!fixtureMode && !RESP_020_GOVERNANCE) {
+    return (
+      <section className="gov-edit-page gov-edit-page--center">
+        <ErrorState title="Governance editor unavailable" message={RESP_020_DISABLED_TITLE} onRetry={() => navigate('/response/authority')} />
+      </section>
+    );
+  }
   if (governanceQuery.isError) return <section className="gov-edit-page gov-edit-page--center"><ErrorState title="Could not load governance configuration" message={governanceQuery.error instanceof Error ? governanceQuery.error.message : 'Unexpected error'} onRetry={() => governanceQuery.refetch()} /></section>;
 
   const title = kind === 'policy' ? `${isNew ? 'Create' : 'Edit'} authority policy` : `${isNew ? 'Create' : 'Edit'} delegation`;

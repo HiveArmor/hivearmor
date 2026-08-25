@@ -1,26 +1,39 @@
 # Next production slice
 
-Updated: **2026-08-25 14:30:00 IST (UTC+05:30)**
+Updated: **2026-08-25 14:45:00 IST (UTC+05:30)**
 
-## Active — Wave A2 Investigate & AI remaining gaps (STAGING CANDIDATE)
+## Active — Wave A3 Defend / respond audit + thin honesty (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Routes: `/search`, `/ueba/risk` (remainder of A2 matrix).
-Status: **IMPLEMENT COMPLETE (code) for remaining A2 gaps** — still **STAGING CANDIDATE**.
-Research: `docs/ai-handoff/research/autonomous-soc-investigate-ai.md`.
-Branch: `feat/a2-investigate-ai-gaps`.
+Routes: `/detection-rules`, `/response/playbooks`, `/response/activity`, `/response/authority`, `/response/quarantine`, `/response/library`.
+Status: **AUDIT + thin honesty IN PROGRESS (code)** — still **STAGING CANDIDATE**. Staging rebuild deferred (parallel implement).
+Research: `docs/ai-handoff/research/autonomous-soc-defend-respond.md`.
+Branch: `feat/a3-defend-respond-audit`.
 
 | ID | Fix |
 |---|---|
-| A2-SRCH-02 | Removed unused hunt helpers calling `/v1/threat-intel/ioc` and unmounted `/ha-soc-ai/query` |
-| A2-UEBA-02 | Replaced dead `create-incident-for-entity` CustomEvent with honest guidance → `/search?q=` |
+| A3-ACT-01 | `RESP_018_EXECUTION_INVENTORY=false` — empty ledger + unavailable copy (no fake 404 storm) |
+| A3-AUTH-01 | `RESP_020_GOVERNANCE=false` — empty queue + hide policy/delegate authoring |
+| A3-PB-01/02 | Playbook mutate/Run/Edit/builder routes **Admin-only** (matches BE) |
+| A3-PB-03 | `RESP_PLAYBOOK_AUDIT=false` — empty audit tab |
+| A3-LIB-01 | Library nav/router/page include Analyst |
+| A3-DET-01 | Detection list nav/router include Analyst (editors stay Manager\|Admin) |
 
-Still open (backlog): A2-TI freshness depth; browser staging smoke of A2 create-incident guidance.
+Still open (backlog): real RESP-018/020 backends; BE playbook read ROLE widen; RESP-021 depth; TI freshness.
+
+## Completed this slice — Wave A2 Investigate remaining gaps (#58)
+
+Status: **MERGED** tip `e72ba83` — STAGING CANDIDATE. Staging FE rebuild deferred per operator request.
+
+| ID | Fix |
+|---|---|
+| A2-SRCH-02 | Removed unused hunt helpers calling legacy TI / unmounted SOC AI |
+| A2-UEBA-02 | Create Incident → guidance dialog → `/search?q=` |
 
 ## Active — Frontend Autonomous SOC audit program (next major arc)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Next after this gaps merge + staging smoke: **Wave A3 Defend / respond**.
+Next after A3 merge + staging smoke: **Wave B1 Endpoint defense** (or A3 backend contracts).
 Status: **PROGRAM IN PROGRESS** — not `PRODUCTION READY`.
 
 ## Completed this slice — Wave A2 Investigate & AI audit (#57)
