@@ -9,7 +9,6 @@ import type { OidcProviderAdminDTO } from '@/types/sso';
 interface HiveTenantDTO { id:number;name:string;domain?:string|null;prefix?:string|null;status?:string|null;licenceExpire?:string|null;createdAt?:string|null }
 
 const fixtureMode=import.meta.env.DEV&&import.meta.env.VITE_USE_FOUNDATION_FIXTURES==='true';
-const fixtureModulePath='./identityAdministration.fixtures.ts';
 
 const userState=(user:UserDTO):IdentityPrincipal['state']=>user.activated?'active':'inactive';
 const mapUser=(user:UserDTO):IdentityPrincipal=>({
@@ -39,7 +38,7 @@ async function listLive(signal?:AbortSignal):Promise<IdentityAdministrationInven
 export const identityAdministrationService={
   fixtureMode,
   async list(signal?:AbortSignal):Promise<IdentityAdministrationInventory>{
-    if(fixtureMode){const {identityAdministrationFixture}=await import(/* @vite-ignore */ fixtureModulePath) as typeof import('./identityAdministration.fixtures');return structuredClone(identityAdministrationFixture);}
+    if(fixtureMode){const {identityAdministrationFixture}=await import('./identityAdministration.fixtures');return structuredClone(identityAdministrationFixture);}
     return listLive(signal);
   },
 };

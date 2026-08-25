@@ -107,7 +107,7 @@ const ADMINISTRATION_ITEMS: NavItemSpec[] = [
   { label: 'Integrations & Delivery', icon: 'Plug', route: '/admin/integrations', roles: ['ROLE_ADMIN'] },
   { label: 'Connector SDK', icon: 'Plug', route: '/admin/connectors', roles: ['ROLE_ADMIN', 'ROLE_SOC_MANAGER'] },
   { label: 'API Keys', icon: 'KeyRound', route: '/settings/api-keys', roles: ['ROLE_ADMIN'] },
-  { label: 'Data Sources', icon: 'Database', route: '/inputs/sources', roles: ['ROLE_ADMIN'] },
+  { label: 'Data Sources', icon: 'Database', route: '/inputs/sources', roles: ['ROLE_ADMIN', 'ROLE_ANALYST'] },
   { label: 'Audit Log', icon: 'ClipboardList', route: '/admin/audit', roles: ['ROLE_ADMIN'] },
   { label: 'Pipeline & Ingestion', icon: 'Activity', route: '/admin/pipeline-signals', roles: ['ROLE_ADMIN'] },
   { label: 'Settings', icon: 'Settings', route: '/admin/settings', roles: ['ROLE_ADMIN'] },

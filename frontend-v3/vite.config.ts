@@ -228,6 +228,42 @@ export default defineConfig(({ command }) => ({
             : './src/pages/reports/reportingOperations.fixture-disabled.ts'
         ),
       },
+      {
+        find: '@/pages/admin/identity-administration/identityAdministration.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/pages/admin/identity-administration/identityAdministration.fixtures.ts'
+            : './src/pages/admin/identity-administration/identityAdministration.fixture-disabled.ts'
+        ),
+      },
+      {
+        find: '@/pages/admin/integration-operations/integrationOperations.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/pages/admin/integration-operations/integrationOperations.fixtures.ts'
+            : './src/pages/admin/integration-operations/integrationOperations.fixture-disabled.ts'
+        ),
+      },
+      {
+        find: '@/pages/admin/pipeline-operations/pipelineOperations.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/pages/admin/pipeline-operations/pipelineOperations.fixtures.ts'
+            : './src/pages/admin/pipeline-operations/pipelineOperations.fixture-disabled.ts'
+        ),
+      },
+      {
+        find: '@/pages/admin/governance-operations/governanceOperations.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/pages/admin/governance-operations/governanceOperations.fixtures.ts'
+            : './src/pages/admin/governance-operations/governanceOperations.fixture-disabled.ts'
+        ),
+      },
       { find: /^@\//, replacement: resolve(__dirname, './src') + '/' },
     ],
   },

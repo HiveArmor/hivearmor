@@ -93,6 +93,7 @@ public class UtmIntegrationResource {
      * @return the ResponseEntity with status 200 (OK) and the list of utmIntegrations in body
      */
     @GetMapping("/ha-integrations")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<List<UtmIntegration>> getAllUtmIntegrations(UtmIntegrationCriteria criteria, Pageable pageable) {
         log.debug("REST request to get UtmIntegrations by criteria: {}", criteria);
         Page<UtmIntegration> page = utmIntegrationQueryService.findByCriteria(criteria, pageable);
@@ -107,6 +108,7 @@ public class UtmIntegrationResource {
     * @return the ResponseEntity with status 200 (OK) and the count in body
     */
     @GetMapping("/ha-integrations/count")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Long> countUtmIntegrations(UtmIntegrationCriteria criteria) {
         log.debug("REST request to count UtmIntegrations by criteria: {}", criteria);
         return ResponseEntity.ok().body(utmIntegrationQueryService.countByCriteria(criteria));
@@ -119,6 +121,7 @@ public class UtmIntegrationResource {
      * @return the ResponseEntity with status 200 (OK) and with body the utmIntegration, or with status 404 (Not Found)
      */
     @GetMapping("/ha-integrations/{id}")
+    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<UtmIntegration> getUtmIntegration(@PathVariable Long id) {
         log.debug("REST request to get UtmIntegration : {}", id);
         Optional<UtmIntegration> utmIntegration = utmIntegrationService.findOne(id);

@@ -1,26 +1,31 @@
 # Next production slice
 
-Updated: **2026-08-25 16:15:00 IST (UTC+05:30)**
+Updated: **2026-08-25 16:50:00 IST (UTC+05:30)**
 
-## Active — Wave C1 Dashboards & reports audit + thin honesty (STAGING CANDIDATE)
+## Active — Wave C2 Platform admin audit + thin honesty (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Routes: `/dashboards`, `/dashboards/studio`, `/reports/*`.
+Routes: `/admin/*`, `/inputs/sources`, `/settings/api-keys`, connectors.
 Status: **AUDIT + thin honesty IN PROGRESS (code)** — still **STAGING CANDIDATE**. Staging rebuild deferred.
-Research: `docs/ai-handoff/research/autonomous-soc-dashboards-reports.md`.
-Branch: `feat/c1-dashboards-reports-audit`.
+Research: `docs/ai-handoff/research/autonomous-soc-platform-admin.md`.
+Branch: `feat/c2-platform-admin-audit`.
 
 | ID | Fix |
 |---|---|
-| C1-AUTH-01/02 | Studio/edit + report AuthGuards match nav |
-| C1-API-01 | `dashboards.service` → relative `apiClient` |
-| C1-FIX-01 | Fixture-disabled aliases for DSH/REP fixtures |
-| C1-REP-01/02/03 | Stamp-only run honesty; KPI + field copy |
-| C1-DSH-01/02 | Unbounded legacy list; no fictional tenants |
-| C1-LIVE-01 | StatusDock historical outside fixtures |
-| C1-AUTH-04 | Metrics builder Analyst+; save gated |
+| C2-02/03 | Remove `ROLE_OPERATOR`; sources AuthGuard ADMIN\|ANALYST |
+| C2-01 | Admin hub fixture-disabled aliases |
+| C2-10 | Audit payload omitted from UI |
+| C2-04 | `/admin/connection-keys` → `/settings/api-keys` |
+| C2-11 | Integrations GET/count/id ADMIN `@PreAuthorize` |
+| C2-12 | `aiStatus` ROLE_ANALYST\|ROLE_ADMIN |
+| C2-09 | Admin StatusDock historical |
+| C2-07 | audit-old / settings-old → Governance |
 
-Still open: DSH-002 versioned save; REP-003/004 generation pipeline; GAP-SEC-12 method PreAuthorize.
+Still open: IAM invite/suspend workflow; governance propose contracts; ING replay.
+
+## Completed this slice — Wave C1 Dashboards & reports (#62)
+
+Status: **MERGED** tip `9b2248d` — STAGING CANDIDATE. Staging rebuild deferred.
 
 ## Completed this slice — Wave B2 Posture & compliance (#61)
 
@@ -46,7 +51,7 @@ Status: **MERGED** tip `e72ba83` — STAGING CANDIDATE. Staging FE rebuild defer
 ## Active — Frontend Autonomous SOC audit program (next major arc)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Next after C1 merge + staging smoke: **Wave C2 Platform admin**.
+Next after C2 merge + staging smoke: **Wave C3 MSSP** (if enabled) or **Wave D** cross-product closure.
 Status: **PROGRAM IN PROGRESS** — not `PRODUCTION READY`.
 
 ## Completed this slice — Wave A2 Investigate & AI audit (#57)
