@@ -5,6 +5,8 @@
 import { apiClient } from '@/lib/apiClient';
 import type { RuleRefDTO, TechniqueCoverageDTO } from '@/types/mitre.types';
 
+const TOKEN_KEY = 'hivearmor_auth_token';
+
 export const mitreService = {
   getCoverage: () => apiClient.get<TechniqueCoverageDTO[]>('/mitre/coverage'),
 
@@ -12,13 +14,15 @@ export const mitreService = {
     apiClient.get<RuleRefDTO[]>('/mitre/rules', { params: { techniqueId } }),
 
   exportCoverage: async (): Promise<Blob> => {
+    const token = localStorage.getItem(TOKEN_KEY) ?? '';
     const response = await fetch('/api/mitre/coverage/export', {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('hivearmor_auth_token')}`,
+        Accept: 'text/csv',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
     if (!response.ok) {
-      throw new Error(`Export failed: ${response.statusText}`);
+      throw new Error(`MITRE coverage export unavailable (HTTP ${response.status})`);
     }
     return response.blob();
   },

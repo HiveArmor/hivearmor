@@ -4,6 +4,7 @@ These notes preserve paraphrased conclusions and source provenance for models wi
 
 | Domain | Note | Refresh trigger |
 |---|---|---|
+| Autonomous SOC posture & compliance (Wave B2) | `autonomous-soc-posture-compliance.md` | Microsoft Exposure Management attack paths, NIST CSF 2.0, CIS Benchmarks, or HiveArmor EXP/ADP/CMP/MITRE contracts change. |
 | Autonomous SOC endpoint defense (Wave B1) | `autonomous-soc-endpoint-defense.md` | Defender endpoint isolate/quarantine, CrowdStrike host containment, NIST SP 800-61 containment, or HiveArmor agent DTO / EDR ProcessCommand contracts change. |
 | Autonomous SOC defend & respond (Wave A3) | `autonomous-soc-defend-respond.md` | Defender Action center, Elastic Workflows/response actions, NIST SP 800-61 containment, or HiveArmor playbook/governance contracts change. |
 | Autonomous SOC investigate & AI (Wave A2) | `autonomous-soc-investigate-ai.md` | Defender investigation graph/entity pages, Elastic AI Assistant/Cases, Splunk TIM/Mission Control observables, or HiveArmor hunt/entity/constellation contracts change. |
