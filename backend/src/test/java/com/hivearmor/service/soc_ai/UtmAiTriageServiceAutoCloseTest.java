@@ -7,6 +7,8 @@ import com.hivearmor.domain.shared_types.alert.UtmAlert;
 import com.hivearmor.domain.soc_ai.UtmAiTriage;
 import com.hivearmor.repository.soc_ai.UtmAiTriageRepository;
 import com.hivearmor.service.UtmAlertService;
+import com.hivearmor.service.dto.InvestigationSessionDTO;
+import com.hivearmor.service.session.InvestigationSessionService;
 import com.hivearmor.util.enums.AlertStatus;
 import com.hivearmor.util.exceptions.ElasticsearchIndexDocumentUpdateException;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -38,8 +41,8 @@ import static org.mockito.Mockito.when;
  * Unit tests for SOC-AI high-confidence FP auto-close and agentic FSM depth.
  *
  * <p>STAGING CANDIDATE — verifies ledger + OpenSearch status/tag wiring,
- * configurable confidence threshold, thin ENRICH metadata, and thin INVESTIGATE metadata.
- * Not PRODUCTION READY.
+ * configurable confidence threshold, thin ENRICH metadata, thin INVESTIGATE metadata,
+ * and optional soft investigation-session linking. Not PRODUCTION READY.
  */
 @ExtendWith(MockitoExtension.class)
 class UtmAiTriageServiceAutoCloseTest {
@@ -52,14 +55,27 @@ class UtmAiTriageServiceAutoCloseTest {
     @Mock
     private UtmAlertService utmAlertService;
 
+    @Mock
+    private ObjectProvider<InvestigationSessionService> investigationSessionProvider;
+
+    @Mock
+    private InvestigationSessionService investigationSessionService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private UtmAiTriageService triageService;
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient()
+            .when(investigationSessionProvider.getIfAvailable())
+            .thenReturn(null);
         triageService = new UtmAiTriageService(
-            triageRepository, objectMapper, utmAlertService, DEFAULT_THRESHOLD);
+            triageRepository,
+            objectMapper,
+            utmAlertService,
+            investigationSessionProvider,
+            DEFAULT_THRESHOLD);
         // Lenient: static threshold tests never call save.
         org.mockito.Mockito.lenient().when(triageRepository.save(any(UtmAiTriage.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
@@ -198,11 +214,12 @@ class UtmAiTriageServiceAutoCloseTest {
         assertThat(result.getNextSteps())
             .contains("enrich stub")
             .contains("investigate stub")
-            .contains("session linking deferred")
+            .contains("session link skipped")
             .contains("escalate")
             .doesNotContain("Neo4j / entity enrichment deferred");
         assertThat(UtmAiTriageService.extractInvestigate(result.getNextSteps())).isPresent();
         verify(utmAlertService, never()).updateStatus(anyList(), anyInt(), anyString());
+        verifyNoInteractions(investigationSessionService);
     }
 
     @Test
@@ -285,8 +302,9 @@ class UtmAiTriageServiceAutoCloseTest {
         assertThat(meta.get("relatedAlertCount")).isEqualTo(0);
         assertThat(meta.get("openHypotheses")).isEqualTo(List.of());
         assertThat(meta.get("note").toString())
-            .contains("investigation session linking deferred")
+            .contains("session link skipped")
             .contains("no Neo4j");
+        assertThat(meta.get("sessionLinked")).isEqualTo(false);
         assertThat(result.getNextSteps()).contains("investigate stub");
     }
 
@@ -363,7 +381,7 @@ class UtmAiTriageServiceAutoCloseTest {
             .doesNotContain("attack-path product");
         assertThat(AgenticTriageFsm.detailFor(AgenticTriageState.INVESTIGATE, false))
             .contains("openHypotheses")
-            .contains("deferred")
+            .contains("optional soft investigation session link")
             .contains("no Neo4j");
     }
 
@@ -382,8 +400,9 @@ class UtmAiTriageServiceAutoCloseTest {
         assertThat(investigate.get("stub")).isEqualTo(true);
         assertThat(investigate.get("relatedAlertCount")).isEqualTo(0);
         assertThat(investigate.get("openHypotheses")).isEqualTo(List.of());
+        assertThat(investigate.get("sessionLinked")).isEqualTo(false);
         assertThat(TriageInvestigateStub.summarize(investigate))
-            .contains("session linking deferred")
+            .contains("session link skipped")
             .contains("no Neo4j");
 
         UtmAlert present = new UtmAlert();
@@ -391,5 +410,103 @@ class UtmAiTriageServiceAutoCloseTest {
         assertThat(TriageInvestigateStub.build(present).get("relatedAlertCount")).isEqualTo(1);
         assertThat(TriageInvestigateStub.build((UtmAlert) null).get("relatedAlertCount"))
             .isEqualTo(0);
+    }
+
+    @Test
+    void saveResult_investigate_softLinksSessionWhenAlertResolvable() {
+        UtmAlert alert = new UtmAlert();
+        alert.setId("alert-link-ok");
+        alert.setName("Lateral movement");
+        when(utmAlertService.getAlertsByIds(eq(List.of("alert-link-ok"))))
+            .thenReturn(List.of(alert));
+        when(investigationSessionProvider.getIfAvailable())
+            .thenReturn(investigationSessionService);
+        when(investigationSessionService.createSession(any(InvestigationSessionDTO.class), anyString()))
+            .thenReturn(new InvestigationSessionDTO(
+                55L, 0L, 1L, "SOC-AI triage: Lateral movement", "desc", "ACTIVE",
+                "system", null, null, null, null, 0));
+
+        String rawJson = """
+            {"classification":"possible incident","confidence":0.91,"reasoning":["beacon"]}
+            """;
+
+        UtmAiTriage result = triageService.saveResult("alert-link-ok", rawJson);
+
+        Optional<Map<String, Object>> investigate =
+            UtmAiTriageService.extractInvestigate(result.getNextSteps());
+        assertThat(investigate).isPresent();
+        Map<String, Object> meta = investigate.orElseThrow();
+        assertThat(meta.get("stub")).isEqualTo(true);
+        assertThat(meta.get("sessionLinked")).isEqualTo(true);
+        assertThat(((Number) meta.get("sessionId")).longValue()).isEqualTo(55L);
+        assertThat(meta.get("sessionStatus")).isEqualTo("ACTIVE");
+        assertThat(meta.get("note").toString()).contains("no Neo4j");
+        assertThat(result.getNextSteps())
+            .contains("sessionId=55")
+            .doesNotContain("attack-path product");
+
+        ArgumentCaptor<InvestigationSessionDTO> dtoCaptor =
+            ArgumentCaptor.forClass(InvestigationSessionDTO.class);
+        verify(investigationSessionService).createSession(dtoCaptor.capture(), anyString());
+        assertThat(dtoCaptor.getValue().sessionName()).isEqualTo("SOC-AI triage: Lateral movement");
+        assertThat(dtoCaptor.getValue().status()).isEqualTo("ACTIVE");
+        // Soft link only — never convert to incident in this path.
+        verify(investigationSessionService, never()).convertToIncident(any(), anyString(), anyBoolean());
+    }
+
+    @Test
+    void saveResult_investigate_linkFailureKeepsStubWithoutSessionId() {
+        UtmAlert alert = new UtmAlert();
+        alert.setId("alert-link-fail");
+        alert.setName("Should not leak");
+        when(utmAlertService.getAlertsByIds(eq(List.of("alert-link-fail"))))
+            .thenReturn(List.of(alert));
+        when(investigationSessionProvider.getIfAvailable())
+            .thenReturn(investigationSessionService);
+        when(investigationSessionService.createSession(any(InvestigationSessionDTO.class), anyString()))
+            .thenThrow(new RuntimeException("postgres unavailable for tenant-secret"));
+
+        String rawJson = """
+            {"classification":"possible incident","confidence":0.91,"reasoning":["beacon"]}
+            """;
+
+        UtmAiTriage result = triageService.saveResult("alert-link-fail", rawJson);
+
+        Optional<Map<String, Object>> investigate =
+            UtmAiTriageService.extractInvestigate(result.getNextSteps());
+        assertThat(investigate).isPresent();
+        Map<String, Object> meta = investigate.orElseThrow();
+        assertThat(meta.get("stub")).isEqualTo(true);
+        assertThat(meta.get("sessionLinked")).isEqualTo(false);
+        assertThat(meta).doesNotContainKey("sessionId");
+        assertThat(meta.get("sessionLinkError")).isEqualTo("link_failed:RuntimeException");
+        assertThat(result.getNextSteps())
+            .contains("sessionLinked=false")
+            .doesNotContain("tenant-secret")
+            .doesNotContain("Should not leak");
+        verify(investigationSessionService, never()).convertToIncident(any(), anyString(), anyBoolean());
+    }
+
+    @Test
+    void saveResult_investigate_skipsLinkWhenAlertUnresolved() {
+        when(utmAlertService.getAlertsByIds(anyList())).thenReturn(List.of());
+        when(investigationSessionProvider.getIfAvailable())
+            .thenReturn(investigationSessionService);
+
+        String rawJson = """
+            {"classification":"possible incident","confidence":0.91,"reasoning":["unknown"]}
+            """;
+
+        UtmAiTriage result = triageService.saveResult("alert-missing-os", rawJson);
+
+        Optional<Map<String, Object>> investigate =
+            UtmAiTriageService.extractInvestigate(result.getNextSteps());
+        assertThat(investigate).isPresent();
+        Map<String, Object> meta = investigate.orElseThrow();
+        assertThat(meta.get("stub")).isEqualTo(true);
+        assertThat(meta.get("relatedAlertCount")).isEqualTo(0);
+        assertThat(meta.get("sessionLinked")).isEqualTo(false);
+        assertThat(meta).doesNotContainKey("sessionId");
+        verifyNoInteractions(investigationSessionService);
     }
 }

@@ -1,6 +1,27 @@
 # Next production slice
 
-Updated: **2026-08-25 08:29:20 IST (UTC+05:30)**
+Updated: **2026-08-25 09:02:07 IST (UTC+05:30)**
+
+## Active — Agentic INVESTIGATE soft session link (STAGING CANDIDATE)
+
+Scope: `TriageInvestigateStub` → optional soft link to `/api/ha-investigation-sessions` (id + status only).
+Status: **STAGING CANDIDATE** — not `PRODUCTION READY`. Not Neo4j / attack-path. Not auto-convert to incident.
+Branch: `feat/p1-agentic-investigate-session-link` (worktree `.worktrees/p1-agentic-investigate-session-link`).
+
+Shipped in this slice:
+
+1. When INVESTIGATE runs and the alert doc is resolvable, optionally `createSession` titled from alert name/id via `InvestigationSessionService` (soft-fail if bean/create unavailable).
+2. Ledger investigate metadata keeps `stub=true`; on success adds `sessionId` + `sessionStatus` + `sessionLinked=true`; on failure records sanitized `sessionLinkError` (class name only, no PII).
+3. Focused unit tests for stub link success/failure/skip and triage service wiring.
+
+Remaining (explicitly out of scope):
+
+1. Neo4j / attack-path / related-alert search product.
+2. Hypothesis ledger population (`openHypotheses` stays empty).
+3. Auto pin of alert evidence, governed promotion / convert-to-incident.
+4. Live staging verification of createSession from SOC-AI triage path.
+
+Contracts: note under `INV-LV01` / investigation sessions in `docs/frontend-backend-contract-register.md`.
 
 ## Active — Orphan Operational Workflows
 
