@@ -634,6 +634,16 @@ No production-readiness claim is made by this baseline entry.
 - Staging proof (admin JWT): `GET /api/ha-tenants` **200** (`X-Total-Count=4`); `GET /api/ha-audit-log` **200** (`X-Total-Count=416`).
 - Unit: `HiveTenantServiceTest` + `HaAuditLogResourceExportTest` — 7/7 passed.
 
+## 2026-08-25 23:06:00 IST (UTC+05:30) — Parallel follow-ons (INV-012 UI + Detect→Govern walk + RESP-020)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY). Not a 24h soak. Not whole-product LIVE VERIFIED.
+- Tip: `d1f07e4` (merge #78 RESP-020 approval projection) after prior INV-012/RESP-018 tips.
+- Executed in parallel:
+  1. **INV-012 interactive promote UI walk** — promote button enabled + preview modal + reason; confirm completed via governed API after shared-browser contention. sessionId **4** → incidentId **139**. Report: `/tmp/hivearmor-staging-inv012-ui-walk.json`.
+  2. **Detect→Govern focused UI walk** — 14 routes: **11 ok / 3 honesty / 0 error**. Honesty: `/response/authority` (pre-rebuild), `/admin/enrollment-audit` (audit API 400 without tenant), `/mssp/overview` (needs MSSP Administrator). Report: `/tmp/hivearmor-staging-detect-govern-ui-walk.json`. HTTP shell fallback 14/14 SPA 200: `/tmp/hivearmor-staging-detect-govern-http-walk.json`.
+  3. **RESP-020 approval projection** — merged #78; staging FE+BE rebuild; `GET /api/ha-response-governance/approvals` **200** (approvals_count=0, policies empty, partialFailures present). Report: `/tmp/hivearmor-staging-resp020-smoke.json`.
+- Still deferred (cannot invent): vendor live connector credentials/proofs; full 24h soak; full RESP-020 policy/delegation CRUD (`RESP_020_GOVERNANCE` remains false).
+
 ## 2026-08-25 22:43:00 IST (UTC+05:30) — Staging RESP-018 inventory smoke (tip 07f7dd9)
 
 - Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED for vendor connectors).
