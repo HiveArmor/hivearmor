@@ -290,9 +290,65 @@ export async function fetchAlertRelationships(alertId: string): Promise<EntityGr
   );
 }
 
-/** ALT-010: Fetch available response actions catalog */
+/** ALT-010: Fetch available response actions catalog.
+ * Confirmed path: GET /api/response/actions (HaResponseActionResource).
+ * A1-AI-01: fail closed to a static display catalogue when the live catalogue is unavailable —
+ * never invent alternate SOAR catalogue URLs. Preview/execute remain on the same confirmed resource.
+ */
+export const STATIC_SOAR_ACTION_CATALOGUE: ResponseAction[] = [
+  {
+    id: 'isolate_host',
+    name: 'Isolate Host',
+    description: 'Isolate a host from the network while preserving management connectivity.',
+    category: 'containment',
+    targetType: 'host',
+    parameters: [],
+    integrationStatus: 'unavailable',
+    riskLevel: 'critical',
+    requiredRole: 'ROLE_SOC_MANAGER',
+  },
+  {
+    id: 'kill_process',
+    name: 'Kill Process',
+    description: 'Terminate a selected process on the target host.',
+    category: 'containment',
+    targetType: 'process',
+    parameters: [],
+    integrationStatus: 'unavailable',
+    riskLevel: 'high',
+    requiredRole: 'ROLE_SOC_ANALYST',
+  },
+  {
+    id: 'block_ip',
+    name: 'Block IP Address',
+    description: 'Add an IP to an authorized network enforcement block list.',
+    category: 'containment',
+    targetType: 'ip',
+    parameters: [],
+    integrationStatus: 'unavailable',
+    riskLevel: 'medium',
+    requiredRole: 'ROLE_SOC_ANALYST',
+  },
+  {
+    id: 'collect_forensics',
+    name: 'Collect Forensic Artifacts',
+    description: 'Collect bounded forensic artifacts from the target host.',
+    category: 'investigation',
+    targetType: 'host',
+    parameters: [],
+    integrationStatus: 'unavailable',
+    riskLevel: 'low',
+    requiredRole: 'ROLE_SOC_ANALYST',
+  },
+];
+
 export async function fetchResponseActions(): Promise<ResponseAction[]> {
-  return apiClient.get<ResponseAction[]>('/response/actions');
+  try {
+    return await apiClient.get<ResponseAction[]>('/response/actions');
+  } catch {
+    // Fail closed: static catalogue for display; integrations marked unavailable.
+    return STATIC_SOAR_ACTION_CATALOGUE.map((action) => ({ ...action }));
+  }
 }
 
 /** ALT-010: Preview the impact of a response action without executing it */

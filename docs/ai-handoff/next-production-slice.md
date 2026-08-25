@@ -1,39 +1,41 @@
 # Next production slice
 
-Updated: **2026-08-25 12:50:00 IST (UTC+05:30)**
+Updated: **2026-08-25 13:30:00 IST (UTC+05:30)**
 
-## Active — Wave A1 Command & triage audit (STAGING CANDIDATE)
+## Active — Wave A1 Command & triage gap implement (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
 Routes: `/dashboard`, `/queue`, `/alerts`, `/correlated-findings`, `/incidents`.
-Status: **AUDIT COMPLETE (docs) + thin honesty wire** — not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for the full spine.
+Status: **IMPLEMENT COMPLETE (code) for A1 gap matrix** — still **STAGING CANDIDATE**, not `PRODUCTION READY`. Browser staging smoke of the five routes remains.
 Research: `docs/ai-handoff/research/autonomous-soc-command-triage.md`.
-Branch: `feat/a1-command-triage-audit`.
+Branch: `feat/a1-command-triage-gaps`.
 
-### Audit findings (gap matrix)
+### Closed in this implement slice
 
-| Priority | ID | Finding | Next implement slice |
-|---|---|---|---|
-| P0 | A1-KPI-01 | Mission Control critical/SLA/unassigned KPIs computed from open-incidents `page size=5` — understates shift risk vs OEM queue totals | Wire `sla-stats` / full open counts; label sample vs population |
-| P1 | A1-SSE-01 | Live dock uses `/api/alerts/stream` without method `@PreAuthorize`; hardened `/api/ha-alerts/stream` exists | Migrate FE to ha-alerts stream + rate-limit honesty |
-| P1 | A1-AI-01 | Alert investigation calls `/response/actions` (not confirmed SOAR catalogue path) | Fail closed to static catalogue / incident response-actions only |
-| P2 | A1-DET-01 | Detection health uses `correlation-rule` `size:1` + array length instead of `X-Total-Count` | Read total header or drop metric until contract exists |
-| P2 | A1-OVW-01 | `/api/overview/*` authenticated-only (no queue-tier `@PreAuthorize`) while Command KPIs mix incident/queue APIs | Align overview auth or gate Mission Control widgets by role |
+| ID | Fix |
+|---|---|
+| A1-KPI-01 | Mission Control KPIs use population `size=1` + `X-Total-Count` (`getMissionControlIncidentKpis`); priority stream remains a labeled top-5 sample |
+| A1-SSE-01 | `useAlertStream` → `GET /api/ha-alerts/stream` (queue-tier `@PreAuthorize` + rate limit) |
+| A1-AI-01 | Alert investigation keeps confirmed `GET /api/response/actions`; fail-closed static catalogue on error |
+| A1-DET-01 | Detection health reads `X-Total-Count` from `correlation-rule/search-by-filters` |
+| A1-OVW-01 | `OverviewResource` methods gated with `ALERT_QUEUE_AUTH` |
 
-### Thin honesty fix in this PR (STAGING CANDIDATE)
+### Prior audit thin honesty (merged #55)
 
-1. Align Command nav + AuthGuard for Queue / Alerts / Correlated Findings / Incidents (+ board/detail) with backend `ALERT_QUEUE_AUTH` via shared `ALERT_QUEUE_ROLES` (includes `ROLE_SOC_ANALYST`; hides Alerts/CF from `ROLE_USER`).
-2. Preserve legacy `/offenses/:id` → `/correlated-findings/:id` (was list-only drop).
-
-Still open for next implement: A1-KPI-01, A1-SSE-01, A1-AI-01, A1-DET-01, A1-OVW-01; browser staging smoke of the five routes.
+1. Align Command nav + AuthGuard with `ALERT_QUEUE_ROLES` (includes `ROLE_SOC_ANALYST`).
+2. Preserve legacy `/offenses/:id` → `/correlated-findings/:id`.
 
 ## Active — Frontend Autonomous SOC audit program (next major arc)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
 Cadence: **audit → research → implement** page-by-page (nav, structure, UX, backend connects) for Enterprise AI-driven Autonomous SIEM / Autonomous SOC.
-First wave: **A1 Command & triage** — audit recorded above; remaining waves A2+.
+Next wave after staging smoke: **A2 Investigate / AI**.
 Pre-audit thin parallels (RESP-021 / TI / POL / investigate pin) largely closed as STAGING CANDIDATE.
 Status: **PROGRAM IN PROGRESS** — not `PRODUCTION READY`.
+
+## Completed this slice — Wave A1 Command & triage audit (#55)
+
+Status: **AUDIT COMPLETE (docs) + thin honesty wire** — merged as STAGING CANDIDATE. Gap implement follows in `feat/a1-command-triage-gaps`.
 
 ## Completed this slice — TI optional depth (MISP status + bounded Last Sync)
 

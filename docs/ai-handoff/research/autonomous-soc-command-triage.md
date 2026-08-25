@@ -52,15 +52,15 @@ from this note alone.
 
 ## Gap matrix seeds (audit)
 
-| Gap ID | Theme | Severity | Note |
-|---|---|---|---|
-| A1-AUTH-01 | Nav/AuthGuard vs `ALERT_QUEUE_AUTH` | High | Alerts/CF were any-auth; Queue/Incidents omitted `ROLE_SOC_ANALYST` — thin fix in this slice |
-| A1-KPI-01 | Mission Control sample KPIs | High | Critical/SLA/unassigned derived from `size:5` incident page — understates risk |
-| A1-SSE-01 | Dual alert SSE | Medium | FE uses `/api/alerts/stream` (no `@PreAuthorize`); hardened `/api/ha-alerts/stream` exists |
-| A1-LEGACY-01 | `/offenses/:id` redirect | Medium | Dropped id (thin fix: preserve → `/correlated-findings/:id`) |
-| A1-AI-01 | Alert response catalogue path | Medium | Investigation calls `/response/actions` — not a confirmed SOAR path |
-| A1-DET-01 | Detection health counts | Low | `correlation-rule` `size:1` + array length vs `X-Total-Count` |
-| A1-OVW-01 | Overview auth | Low | `/api/overview/*` lacks method-level `@PreAuthorize` (authenticated default only) |
+| Gap ID | Theme | Severity | Note | Status |
+|---|---|---|---|---|
+| A1-AUTH-01 | Nav/AuthGuard vs `ALERT_QUEUE_AUTH` | High | Alerts/CF were any-auth; Queue/Incidents omitted `ROLE_SOC_ANALYST` — thin fix in #55 | Closed (#55) |
+| A1-KPI-01 | Mission Control sample KPIs | High | Critical/SLA/unassigned derived from `size:5` incident page — understates risk | Closed (gaps PR — population counts) |
+| A1-SSE-01 | Dual alert SSE | Medium | FE used `/api/alerts/stream`; hardened `/api/ha-alerts/stream` exists | Closed (gaps PR) |
+| A1-LEGACY-01 | `/offenses/:id` redirect | Medium | Dropped id (thin fix: preserve → `/correlated-findings/:id`) | Closed (#55) |
+| A1-AI-01 | Alert response catalogue path | Medium | Keep confirmed `HaResponseActionResource` `/response/actions`; fail-closed static on error | Closed (gaps PR) |
+| A1-DET-01 | Detection health counts | Low | `correlation-rule` `size:1` + array length vs `X-Total-Count` | Closed (gaps PR) |
+| A1-OVW-01 | Overview auth | Low | `/api/overview/*` lacked method-level `@PreAuthorize` | Closed (gaps PR — `ALERT_QUEUE_AUTH`) |
 
 ## Limitations and refresh trigger
 

@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -32,6 +33,11 @@ import java.util.List;
 public class OverviewResource {
     private final Logger log = LoggerFactory.getLogger(OverviewResource.class);
     private static final String CLASS_NAME = "OverviewResource";
+
+    /** A1-OVW-01: align Mission Control / queue overview with alert-queue authorities. */
+    private static final String ALERT_QUEUE_AUTH =
+        "hasAuthority('ROLE_SOC_ANALYST') or hasAuthority('ROLE_SOC_MANAGER') "
+            + "or hasAuthority('ROLE_ANALYST') or hasAuthority('ROLE_ADMIN')";
 
     private final OverviewService overviewService;
     private final UtmAlertService alertService;
@@ -48,6 +54,7 @@ public class OverviewResource {
     //=================================================================================================
     //= ALERTS RESOURCES
     //=================================================================================================
+    @PreAuthorize(ALERT_QUEUE_AUTH)
     @GetMapping("/count-alerts-today-and-last-week")
     public ResponseEntity<List<CardType>> countAlertsTodayAndLastWeek() {
         final String ctx = CLASS_NAME + ".countAlertsTodayAndLastWeek";
@@ -62,6 +69,7 @@ public class OverviewResource {
         }
     }
 
+    @PreAuthorize(ALERT_QUEUE_AUTH)
     @GetMapping("/count-alerts-by-status")
     public ResponseEntity<List<CardType>> countAlertsByStatus(@RequestParam String from, @RequestParam String to) {
         final String ctx = CLASS_NAME + ".countAlertsByStatus";
@@ -82,6 +90,7 @@ public class OverviewResource {
         }
     }
 
+    @PreAuthorize(ALERT_QUEUE_AUTH)
     @GetMapping("/top-alerts")
     public ResponseEntity<TableType> topAlerts(@RequestParam String from, @RequestParam String to,
                                                @RequestParam Integer top) {
@@ -97,6 +106,7 @@ public class OverviewResource {
         }
     }
 
+    @PreAuthorize(ALERT_QUEUE_AUTH)
     @GetMapping("/count-alerts-by-severity")
     public ResponseEntity<PieType> countAlertsBySeverity(@RequestParam String from, @RequestParam String to,
                                                          @RequestParam Integer top) {
@@ -112,6 +122,7 @@ public class OverviewResource {
         }
     }
 
+    @PreAuthorize(ALERT_QUEUE_AUTH)
     @GetMapping("/top-alerts-by-category")
     public ResponseEntity<BarType> topAlertsByCategory(@RequestParam String from, @RequestParam String to,
                                                        @RequestParam Integer top) {
@@ -130,6 +141,7 @@ public class OverviewResource {
     //=================================================================================================
     //= EVENT RESOURCES
     //=================================================================================================
+    @PreAuthorize(ALERT_QUEUE_AUTH)
     @GetMapping("/count-events-by-type")
     public ResponseEntity<PieType> countEventsByType(@RequestParam String from, @RequestParam String to,
                                                      @RequestParam Integer top) {
@@ -145,6 +157,7 @@ public class OverviewResource {
         }
     }
 
+    @PreAuthorize(ALERT_QUEUE_AUTH)
     @GetMapping("/events-in-time")
     public ResponseEntity<EventsByObjectsInTimeType> eventsInTime(@RequestParam String from, @RequestParam String to,
                                                                   @RequestParam CalendarInterval interval) {
@@ -160,6 +173,7 @@ public class OverviewResource {
         }
     }
 
+    @PreAuthorize(ALERT_QUEUE_AUTH)
     @GetMapping("/top-windows-events")
     public ResponseEntity<TableType> topWindowsEvents(@RequestParam String from, @RequestParam String to,
                                                       @RequestParam Integer top) {
@@ -175,6 +189,7 @@ public class OverviewResource {
         }
     }
 
+    @PreAuthorize(ALERT_QUEUE_AUTH)
     @GetMapping("/alert-timeline")
     public ResponseEntity<List<OverviewService.AlertTimelineBucketDTO>> getAlertTimeline(
             @RequestParam(defaultValue = "7") int days) {
@@ -189,6 +204,7 @@ public class OverviewResource {
         }
     }
 
+    @PreAuthorize(ALERT_QUEUE_AUTH)
     @GetMapping("/geo-threats")
     public ResponseEntity<List<OverviewService.GeoThreatPointDTO>> getGeoThreats(
             @RequestParam(defaultValue = "24") int hours) {
