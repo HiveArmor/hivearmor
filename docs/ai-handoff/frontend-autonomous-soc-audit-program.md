@@ -50,8 +50,8 @@ Waves **A1–D** are complete as **STAGING CANDIDATE** thin honesty on `main` ti
 
 **Deferred follow-ons (do not invent status):**
 - Staging FE/BE rebuild from `main` + smoke across Detect→Govern journey
-- Wave D-06 AG Grid density wiring (#69 — `ha_row_density` / 32·40·48)
-- Authorized MSSP masthead tenant inventory (PR in flight)
+- Residual product depth (RESP-018 SOAR audit projection, playbook history audit, TI admin nav, IOC pagination) — in flight
+- Enrollment audit ledger; investigation promote honesty
 - Vendor live connector proofs (credentials required)
 
 Research index: `docs/ai-handoff/research/autonomous-soc-program-closure.md`.

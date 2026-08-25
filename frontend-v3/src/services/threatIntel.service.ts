@@ -56,6 +56,29 @@ export const threatIntelService = {
   searchIocs: (params: IocSearchParams) =>
     apiClient.get<IocBrowserEntryDTO[]>('/ha-threat-intel/iocs', { params }),
 
+  /**
+   * Paged IOC browser with X-Total-Count (TI-001 freshness/pagination depth).
+   */
+  searchIocsPage: async (
+    params: IocSearchParams,
+    signal?: AbortSignal
+  ): Promise<{ items: IocBrowserEntryDTO[]; total: number }> => {
+    const token = localStorage.getItem('hivearmor_auth_token');
+    const qs = new URLSearchParams();
+    if (params.search) qs.set('search', params.search);
+    if (params.type) qs.set('type', params.type);
+    if (params.feedId) qs.set('feedId', params.feedId);
+    qs.set('page', String(params.page ?? 0));
+    qs.set('size', String(params.size ?? 50));
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch(`/api/ha-threat-intel/iocs?${qs.toString()}`, { headers, signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const items = (await res.json()) as IocBrowserEntryDTO[];
+    const total = parseInt(res.headers.get('X-Total-Count') ?? String(items.length), 10);
+    return { items, total: Number.isFinite(total) ? total : items.length };
+  },
+
   lookupIoc: (request: IocLookupRequest) =>
     apiClient.post<IocLookupResponse>('/ha-threat-intel/lookup', request),
 

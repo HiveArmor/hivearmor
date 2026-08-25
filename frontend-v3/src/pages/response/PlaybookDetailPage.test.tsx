@@ -768,7 +768,7 @@ describe('PlaybookDetailPage', () => {
     expect(document.activeElement).toBe(screen.getByRole('tab', { name: /audit/i }));
   });
 
-  it('renders the canonical playbook audit projection without using the generic admin audit endpoint', () => {
+  it('renders the playbook history audit projection with honesty labeling', () => {
     const auditEntries: PlaybookAuditEntry[] = [{
       id: 'audit-pb-1-001',
       occurredAt: '2026-08-03T14:22:08Z',
@@ -799,7 +799,11 @@ describe('PlaybookDetailPage', () => {
 
     expect(screen.getByText('Execution completed successfully.')).toBeDefined();
     expect(screen.getByText('Maya Chen')).toBeDefined();
-    expect(screen.getByText('v4')).toBeDefined();
+    expect(screen.getByText('History projection')).toBeDefined();
+    expect(
+      screen.getByText(/Dedicated playbook audit endpoint is not available/i)
+    ).toBeDefined();
+    expect(screen.queryByText('v4')).toBeNull();
   });
 });
 

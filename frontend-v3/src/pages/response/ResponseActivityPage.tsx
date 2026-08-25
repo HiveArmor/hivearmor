@@ -40,10 +40,11 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 
 import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
-import { useRowDensity } from '@/hooks/useRowDensity';
 import {
   RESP_018_DISABLED_TITLE,
   RESP_018_EXECUTION_INVENTORY,
+  RESP_018_SOAR_AUDIT_PROJECTION,
+  RESP_018_SOAR_AUDIT_TITLE,
 } from './response.capabilities';
 import type {
   ActivityStepDTO,
@@ -67,6 +68,7 @@ import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
+import { useRowDensity } from '@/hooks/useRowDensity';
 import { useAuthStore } from '@/store/auth.store';
 import './ResponseActivityPage.css';
 import './response-grid-standard.css';
@@ -607,7 +609,13 @@ export function ResponseActivityPage(): JSX.Element {
       </header>
 
       {fixtureMode && <div className="act-fixture-banner"><strong>Design fixture:</strong> fictional response executions are enabled for visual review.<span>Production never receives these records.</span></div>}
-      {!fixtureMode && !RESP_018_EXECUTION_INVENTORY && (
+      {!fixtureMode && !RESP_018_EXECUTION_INVENTORY && RESP_018_SOAR_AUDIT_PROJECTION && (
+        <div className="act-fixture-banner" role="status">
+          <strong>SOAR audit projection:</strong> {RESP_018_SOAR_AUDIT_TITLE}
+          <span>Progressive step trace and cancel remain unavailable until RESP-018 inventory ships.</span>
+        </div>
+      )}
+      {!fixtureMode && !RESP_018_EXECUTION_INVENTORY && !RESP_018_SOAR_AUDIT_PROJECTION && (
         <div className="act-fixture-banner" role="status">
           <strong>Execution inventory unavailable:</strong> {RESP_018_DISABLED_TITLE}
           <span>Runs appear here when the secured executions contract is connected.</span>
@@ -652,7 +660,22 @@ export function ResponseActivityPage(): JSX.Element {
         {isLoading ? (
           <div className="act-skeleton" role="status" aria-live="polite">{Array.from({ length: 12 }, (_, index) => <div key={index} className="act-skeleton-row" />)}</div>
         ) : !items.length ? (
-          <EmptyState title={!fixtureMode && !RESP_018_EXECUTION_INVENTORY ? 'Execution inventory unavailable' : 'No executions in this window'} description={!fixtureMode && !RESP_018_EXECUTION_INVENTORY ? RESP_018_DISABLED_TITLE : statusFilter !== 'ALL' || triggerFilter !== 'ALL' || search ? 'Clear filters or widen the time window.' : 'Playbook executions appear here as they are queued.'} />
+          <EmptyState
+            title={
+              !fixtureMode && !RESP_018_EXECUTION_INVENTORY && !RESP_018_SOAR_AUDIT_PROJECTION
+                ? 'Execution inventory unavailable'
+                : 'No executions in this window'
+            }
+            description={
+              !fixtureMode && !RESP_018_EXECUTION_INVENTORY && !RESP_018_SOAR_AUDIT_PROJECTION
+                ? RESP_018_DISABLED_TITLE
+                : statusFilter !== 'ALL' || triggerFilter !== 'ALL' || search
+                  ? 'Clear filters or widen the time window.'
+                  : RESP_018_SOAR_AUDIT_PROJECTION && !fixtureMode
+                    ? 'SOAR audit has no executions in this page window yet.'
+                    : 'Playbook executions appear here as they are queued.'
+            }
+          />
         ) : (
           <SiemDataGrid ref={gridRef} className="response-grid act-grid" columnDefs={columnDefs} rowData={items} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} onRowClicked={handleRowClick} rowSelection="single" suppressRowClickSelection={false} getRowId={(params) => (params.data as ResponseActivityDTO).id} ariaLabel="Response execution ledger" defaultColDef={{ filter: false }} />
         )}
