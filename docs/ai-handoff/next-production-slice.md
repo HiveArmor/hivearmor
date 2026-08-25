@@ -2,28 +2,23 @@
 
 Updated: **2026-08-25 11:45:00 IST (UTC+05:30)**
 
-## Active — Orphan Operational Workflows (TI optional depth after #47)
+## Active — Frontend Autonomous SOC audit program (next major arc)
+
+Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
+Cadence: **audit → research → implement** page-by-page (nav, structure, UX, backend connects) for Enterprise AI-driven Autonomous SIEM / Autonomous SOC.
+First wave after staging soak: **A1 Command & triage** (`/dashboard`, `/queue`, `/alerts`, `/correlated-findings`, `/incidents`).
+Pre-audit: thin parallel honesty leftovers (RESP-021 / TI / POL / investigate pin) → staging rebuild → Wave A1.
+Status: **PROGRAM STARTED** — not `PRODUCTION READY`.
+
+## Completed this slice — TI optional depth (MISP status + bounded Last Sync)
 
 Routes: `/intelligence`, `/admin/threat-intel`; contracts `TI-001`–`TI-004`.
 Status: **STAGING CANDIDATE** — TI-002–TI-004 depth (#47) + optional MISP `lastSyncStatus` / bounded Last Sync honesty. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED`.
-Program: `docs/ai-handoff/remaining-page-program.md`.
-Research: `docs/ai-handoff/research/orphan-operational-workflows-inventory.md`.
-Branch: `feat/p1-ti-optional-depth` (worktree `.worktrees/p1-ti-optional-depth`).
+Branch: `feat/p1-ti-optional-depth`.
 
-Completed in this optional depth slice:
+Shipped: MISP `last_sync_status` persist OK/ERROR; Admin Status column; bounded Last Sync (`>30d`); no v1 Deprecation/Sunset.
 
-1. TI-004: MISP `hive_misp_feed.last_sync_status` (Liquibase) + entity/service/resource persist `OK`/`ERROR` with `lastSyncAt` (manual + scheduled), matching TAXII.
-2. Admin MISP Status column reads persisted `lastSyncStatus` (no fake OK from zero IOC count).
-3. Bounded Last Sync display (`formatBoundedRelativeTime`, `>30d` cap) shared for TAXII + MISP.
-4. Vitest: freshness helper + MISP Status column; Java unit test for MISP status field.
-5. **No** Deprecation/Sunset/Link on `/api/v1/threat-intel` (TI-003 cutover still open). No vendor live. No Kafka.
-
-Still open under TI:
-
-1. TI-001: IOC browse cursor/snapshot/freshness, hunt/alert pivots.
-2. TI-002: immutable mutation audit; drop ROLE_USER if product wants stricter least-privilege.
-3. TI-003: consumer cutover + Deprecation/Sunset/Link.
-4. TI-004: durable sync job ledger, credential write-only aliases, tenant/TLP governance, governed onboarding.
+Still open under TI: IOC cursor/freshness; immutable mutation audit; v1 cutover headers; durable sync ledger / TLP governance.
 
 ## Prior active — Orphan Operational Workflows (TI-002–TI-004 depth)
 
@@ -59,13 +54,27 @@ Merged: `feat/p1-resp021-isolation-inventory` (#46).
 
 Still open under `RESP-021`: enriched evidence/summaries, cursor/snapshot/freshness semantics, action history, governed preview/approval/idempotency for restore/delete/release, resumable delivery state.
 
+## Completed this slice — Agentic INVESTIGATE soft session item pin (STAGING CANDIDATE)
+
+Scope: after #45 soft session create, soft-pin the resolvable alert as an `ALERT` session item
+(`itemRef` = alert id) via `InvestigationSessionService.pinItem` when available.
+Status: **STAGING CANDIDATE** — not `PRODUCTION READY`. Not Neo4j / attack-path. Not auto-convert to incident.
+Branch: `feat/p1-agentic-investigate-session-pin`.
+
+Ledger keeps `stub=true`; records `sessionItemPinned` + `sessionItemId`/`sessionItemType` on success,
+or sanitized `sessionItemPinError` (exception class only) on pin soft-fail without undoing `sessionLinked`.
+
+Still open: Neo4j / attack-path; `openHypotheses`; convert-to-incident; staging LIVE verify of
+createSession + pinItem from SOC-AI triage.
+
 ## Completed this slice — Agentic INVESTIGATE soft session link (STAGING CANDIDATE)
 
 Scope: `TriageInvestigateStub` → optional soft link to `/api/ha-investigation-sessions` (id + status only).
 Status: **STAGING CANDIDATE** — not `PRODUCTION READY`. Not Neo4j / attack-path. Not auto-convert to incident.
 Merged: `feat/p1-agentic-investigate-session-link` (#45).
 
-Remaining: Neo4j / attack-path; `openHypotheses`; auto-pin evidence; convert-to-incident; staging LIVE verify of createSession from SOC-AI triage.
+Follow-on soft ALERT item pin: see slice above. Remaining: Neo4j / attack-path; `openHypotheses`;
+convert-to-incident; staging LIVE verify.
 
 ## Completed this slice — Governance and Platform Settings
 

@@ -1,7 +1,8 @@
 # Remaining enterprise page program
 
-Updated: **2026-08-23 10:44:00 IST (UTC+05:30)**
+Updated: **2026-08-25 11:35:00 IST (UTC+05:30)**
 Execution model: one vertical slice at a time; inspect frontend/backend first, compare multiple official OEM workflows, implement honest UI, record contracts, validate, browser-review, then advance.
+**Next major arc:** `docs/ai-handoff/frontend-autonomous-soc-audit-program.md` — page-by-page FE audit against backend for Autonomous SOC (Wave A1 Command & triage after staging soak).
 
 ## Mandatory per-page research gate
 
