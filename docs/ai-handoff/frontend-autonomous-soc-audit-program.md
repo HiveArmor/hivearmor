@@ -50,7 +50,7 @@ Waves **A1–D** are complete as **STAGING CANDIDATE** thin honesty on `main` ti
 
 **Deferred follow-ons (do not invent status):**
 - Vendor live connector proofs (credentials required)
-- Full RESP-018 execution inventory when backend mappings exist
+- Staging smoke of RESP-018 inventory after merge (FE+BE rebuild)
 - Full interactive browser walk / 24h soak
 - Interactive UI walk of INV-012 promote modal (API path smoke already recorded)
 

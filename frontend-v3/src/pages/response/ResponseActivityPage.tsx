@@ -43,6 +43,7 @@ import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
 import {
   RESP_018_DISABLED_TITLE,
   RESP_018_EXECUTION_INVENTORY,
+  RESP_018_INVENTORY_TITLE,
   RESP_018_SOAR_AUDIT_PROJECTION,
   RESP_018_SOAR_AUDIT_TITLE,
 } from './response.capabilities';
@@ -609,6 +610,12 @@ export function ResponseActivityPage(): JSX.Element {
       </header>
 
       {fixtureMode && <div className="act-fixture-banner"><strong>Design fixture:</strong> fictional response executions are enabled for visual review.<span>Production never receives these records.</span></div>}
+      {!fixtureMode && RESP_018_EXECUTION_INVENTORY && (
+        <div className="act-fixture-banner" role="status">
+          <strong>RESP-018 inventory:</strong> {RESP_018_INVENTORY_TITLE}
+          <span>Step trace is best-effort from stored steps_log; missing structured steps stay empty with honesty.</span>
+        </div>
+      )}
       {!fixtureMode && !RESP_018_EXECUTION_INVENTORY && RESP_018_SOAR_AUDIT_PROJECTION && (
         <div className="act-fixture-banner" role="status">
           <strong>SOAR audit projection:</strong> {RESP_018_SOAR_AUDIT_TITLE}

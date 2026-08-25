@@ -1,6 +1,18 @@
 # Next production slice
 
-Updated: **2026-08-25 22:19:00 IST (UTC+05:30)**
+Updated: **2026-08-25 22:30:00 IST (UTC+05:30)**
+
+## Completed this slice — RESP-018 execution inventory
+
+Status: **STAGING CANDIDATE** (branch `feat/resp018-execution-inventory`). Not `PRODUCTION READY`.
+
+| ID | Change |
+|---|---|
+| RESP-018 BE | `GET /api/ha-playbooks/executions`, `/executions/summary`, `/executions/{id}/trace` over `hive_playbook_execution` |
+| RESP-018 FE | `RESP_018_EXECUTION_INVENTORY=true`; Response Activity prefers inventory (+ honesty banner) |
+
+Next after merge: staging FE+BE rebuild and smoke inventory/summary on `/response/activity`.
+Deferred (post full production MVP): vendor live connector credentials/proofs; full interactive browser walk / 24h soak.
 
 ## Completed this slice — Staging INV-012 promote smoke
 
@@ -12,9 +24,6 @@ Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-25 22:19 IST). Repor
 | BE+FE rebuild + edge | healthy |
 | SPA shells | 5/5 HTTP 200 |
 | promotion-preview → promote | sessionId 3 → incidentId 137 |
-
-Next optional: full RESP-018 inventory when backend exists, or interactive browser walk of investigation promote UI.
-Deferred (post full production MVP): vendor live connector credentials/proofs.
 
 ## Completed this slice — INV-012 governed investigation promotion
 

@@ -1,6 +1,7 @@
 package com.hivearmor.web.rest;
 
 import com.hivearmor.service.PlaybookExecutionEvent;
+import com.hivearmor.service.PlaybookExecutionInventoryService;
 import com.hivearmor.service.PlaybookExecutionStreamService;
 import com.hivearmor.service.PlaybookService;
 import com.hivearmor.service.dto.PlaybookDTO;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.time.Instant;
@@ -53,11 +55,14 @@ public class PlaybookResource {
 
     private final PlaybookService playbookService;
     private final PlaybookExecutionStreamService playbookExecutionStreamService;
+    private final PlaybookExecutionInventoryService executionInventoryService;
 
     public PlaybookResource(PlaybookService playbookService,
-                            PlaybookExecutionStreamService playbookExecutionStreamService) {
+                            PlaybookExecutionStreamService playbookExecutionStreamService,
+                            PlaybookExecutionInventoryService executionInventoryService) {
         this.playbookService = playbookService;
         this.playbookExecutionStreamService = playbookExecutionStreamService;
+        this.executionInventoryService = executionInventoryService;
     }
 
     // -------------------------------------------------------------------------
@@ -279,6 +284,74 @@ public class PlaybookResource {
         try {
             playbookService.setActive(id, active);
             return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            log.error("{}: {}", ctx, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * GET /api/ha-playbooks/executions — RESP-018 global execution inventory.
+     */
+    @GetMapping("/ha-playbooks/executions")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST','ROLE_USER')")
+    public ResponseEntity<Map<String, Object>> listExecutions(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String trigger,
+            @RequestParam(required = false) Long playbookId,
+            @RequestParam(required = false) String triggeredBy,
+            @RequestParam(required = false) Instant from,
+            @RequestParam(required = false) Instant to,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) Integer limit) {
+        final String ctx = CLASSNAME + ".listExecutions";
+        try {
+            return ResponseEntity.ok(executionInventoryService.inventory(
+                search, status, trigger, playbookId, triggeredBy, from, to, cursor, limit));
+        } catch (Exception e) {
+            log.error("{}: {}", ctx, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * GET /api/ha-playbooks/executions/summary — RESP-018 inventory summary strip.
+     */
+    @GetMapping("/ha-playbooks/executions/summary")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST','ROLE_USER')")
+    public ResponseEntity<Map<String, Object>> executionsSummary(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String trigger,
+            @RequestParam(required = false) Long playbookId,
+            @RequestParam(required = false) String triggeredBy,
+            @RequestParam(required = false) Instant from,
+            @RequestParam(required = false) Instant to) {
+        final String ctx = CLASSNAME + ".executionsSummary";
+        try {
+            return ResponseEntity.ok(executionInventoryService.summary(
+                search, status, trigger, playbookId, triggeredBy, from, to));
+        } catch (Exception e) {
+            log.error("{}: {}", ctx, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * GET /api/ha-playbooks/executions/{executionId}/trace — RESP-018 progressive step trace.
+     */
+    @GetMapping("/ha-playbooks/executions/{executionId}/trace")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST','ROLE_USER')")
+    public ResponseEntity<Map<String, Object>> executionTrace(
+            @PathVariable String executionId,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) Integer limit) {
+        final String ctx = CLASSNAME + ".executionTrace";
+        try {
+            return ResponseEntity.ok(executionInventoryService.trace(executionId, cursor, limit));
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).build();
         } catch (Exception e) {
             log.error("{}: {}", ctx, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

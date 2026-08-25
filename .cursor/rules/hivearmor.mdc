@@ -216,7 +216,10 @@ GET    /api/soar/playbooks/{id}
 PUT    /api/soar/playbooks/{id}
 DELETE /api/soar/playbooks/{id}
 POST   /api/soar/playbooks/{id}/execute
-GET    /api/soar/audit                             (replaces non-existent /api/ha-response-activity)
+GET    /api/soar/audit                             (compat projection; prefer RESP-018 executions)
+GET    /api/ha-playbooks/executions                (RESP-018 inventory)
+GET    /api/ha-playbooks/executions/summary        (RESP-018 summary)
+GET    /api/ha-playbooks/executions/{id}/trace     (RESP-018 thin steps_log trace)
 # NOTE: GET /api/soar/actions does NOT exist — use static SOAR_ACTION_CATALOGUE in ActionPalette
 
 # Dashboards & Visualizations
