@@ -12,16 +12,31 @@ import java.util.function.BiFunction;
  *
  * <p>Records structured investigate metadata on the triage ledger: a soft related-alert
  * count (0 or 1 when the alert document is resolvable in OpenSearch), an empty
- * open-hypotheses list, and an optional soft link to a real investigation session
- * ({@code sessionId} + {@code sessionStatus}) when a session linker is supplied and
- * the alert is resolvable. Always keeps {@code stub=true}. Does <strong>not</strong>
- * query Neo4j, build attack paths, auto-convert to incident, or claim investigation-product
- * completeness.
+ * open-hypotheses list, an optional soft link to a real investigation session
+ * ({@code sessionId} + {@code sessionStatus}), and an optional soft-pinned ALERT session
+ * item ({@code sessionItemId} + {@code sessionItemType}) when the linker reports a pin.
+ * Always keeps {@code stub=true}. Does <strong>not</strong> query Neo4j, build attack paths,
+ * auto-convert to incident, or claim investigation-product completeness.
  */
 public final class TriageInvestigateStub {
 
-    /** Soft-created session identity returned by an optional linker (no PII). */
-    public record LinkedSession(long sessionId, String status) {}
+    /**
+     * Soft-created session identity (and optional soft pin) returned by an optional linker.
+     * No PII in these fields — item refs stay in the session-item store, not the ledger error text.
+     */
+    public record LinkedSession(
+            long sessionId,
+            String status,
+            boolean sessionItemPinned,
+            Long sessionItemId,
+            String sessionItemType,
+            String sessionItemPinError) {
+
+        /** Session link without a pin attempt (tests / callers that only create sessions). */
+        public LinkedSession(long sessionId, String status) {
+            this(sessionId, status, false, null, null, null);
+        }
+    }
 
     private TriageInvestigateStub() {}
 
@@ -41,7 +56,7 @@ public final class TriageInvestigateStub {
      * (tests / soft OpenSearch callers). No session linking.
      */
     public static Map<String, Object> build(int relatedAlertCount) {
-        return base(relatedAlertCount, false, null, null, null);
+        return base(relatedAlertCount, false, null, null, null, null);
     }
 
     /**
@@ -49,7 +64,9 @@ public final class TriageInvestigateStub {
      *
      * <p>Linking runs only when {@code alert} is non-null and {@code linker} is non-null.
      * Linker failures keep {@code stub=true} and record {@code sessionLinked=false}
-     * without throwing. Never converts the session to an incident.
+     * without throwing. Pin failures reported on {@link LinkedSession} keep the session
+     * link and record a sanitized {@code sessionItemPinError}. Never converts the session
+     * to an incident.
      *
      * @param alert   optional OpenSearch alert document
      * @param alertId fallback title fragment when the alert name is blank (may be null)
@@ -61,7 +78,7 @@ public final class TriageInvestigateStub {
             BiFunction<String, String, LinkedSession> linker) {
         int related = alert != null ? 1 : 0;
         if (alert == null || linker == null) {
-            return base(related, false, null, null, null);
+            return base(related, false, null, null, null, null);
         }
 
         String sessionName = sessionTitle(alert, alertId);
@@ -71,15 +88,15 @@ public final class TriageInvestigateStub {
         try {
             LinkedSession linked = linker.apply(sessionName, description);
             if (linked == null || linked.sessionId() <= 0) {
-                return base(related, false, null, null, "linker returned no session");
+                return base(related, false, null, null, "linker returned no session", null);
             }
             String status = linked.status() != null && !linked.status().isBlank()
                 ? linked.status()
                 : "ACTIVE";
-            return base(related, true, linked.sessionId(), status, null);
+            return base(related, true, linked.sessionId(), status, null, linked);
         } catch (Exception e) {
             // Soft-fail: keep stub honesty; never log alert/session name (may hold PII).
-            return base(related, false, null, null, sanitizeLinkError(e));
+            return base(related, false, null, null, sanitizeError(e, "link_failed"), null);
         }
     }
 
@@ -94,13 +111,27 @@ public final class TriageInvestigateStub {
         boolean linked = Boolean.TRUE.equals(investigate.get("sessionLinked"));
         Object sessionId = investigate.get("sessionId");
         if (linked && sessionId != null) {
+            boolean pinned = Boolean.TRUE.equals(investigate.get("sessionItemPinned"));
+            Object pinError = investigate.get("sessionItemPinError");
+            String pinPart;
+            if (pinned) {
+                pinPart = String.format(
+                    " sessionItemId=%s sessionItemType=%s",
+                    investigate.get("sessionItemId"),
+                    investigate.get("sessionItemType"));
+            } else if (pinError != null) {
+                pinPart = " sessionItemPinned=false (" + pinError + ")";
+            } else {
+                pinPart = " sessionItemPinned=false";
+            }
             return String.format(
                 "investigate stub — relatedAlertCount=%s openHypotheses=%d "
-                    + "sessionId=%s sessionStatus=%s (soft link; no Neo4j / attack-path)",
+                    + "sessionId=%s sessionStatus=%s%s (soft link; no Neo4j / attack-path)",
                 count != null ? count : 0,
                 hypCount,
                 sessionId,
-                investigate.get("sessionStatus"));
+                investigate.get("sessionStatus"),
+                pinPart);
         }
         Object linkError = investigate.get("sessionLinkError");
         if (linkError != null) {
@@ -140,9 +171,10 @@ public final class TriageInvestigateStub {
             boolean sessionLinked,
             Long sessionId,
             String sessionStatus,
-            String sessionLinkError) {
+            String sessionLinkError,
+            LinkedSession pinSource) {
         int count = Math.max(0, relatedAlertCount);
-        Map<String, Object> investigate = new LinkedHashMap<>(8);
+        Map<String, Object> investigate = new LinkedHashMap<>(12);
         investigate.put("stub", true);
         investigate.put("relatedAlertCount", count);
         investigate.put("openHypotheses", List.of());
@@ -150,10 +182,11 @@ public final class TriageInvestigateStub {
         if (sessionLinked && sessionId != null) {
             investigate.put("sessionId", sessionId);
             investigate.put("sessionStatus", sessionStatus);
+            putPinFields(investigate, pinSource);
             investigate.put(
                 "note",
-                "thin stub — soft investigation session link (id+status only); "
-                    + "empty openHypotheses; no Neo4j / attack-path; not auto-converted");
+                "thin stub — soft investigation session link + optional ALERT item pin "
+                    + "(id+type); empty openHypotheses; no Neo4j / attack-path; not auto-converted");
         } else {
             if (sessionLinkError != null && !sessionLinkError.isBlank()) {
                 investigate.put("sessionLinkError", sessionLinkError);
@@ -166,12 +199,34 @@ public final class TriageInvestigateStub {
         return investigate;
     }
 
-    /** Class-name only — never include exception messages (may contain PII). */
-    private static String sanitizeLinkError(Exception e) {
-        String type = e.getClass().getSimpleName();
-        if (type == null || type.isBlank()) {
-            return "link_failed";
+    private static void putPinFields(Map<String, Object> investigate, LinkedSession pinSource) {
+        if (pinSource == null) {
+            investigate.put("sessionItemPinned", false);
+            return;
         }
-        return "link_failed:" + type;
+        boolean pinned = pinSource.sessionItemPinned();
+        investigate.put("sessionItemPinned", pinned);
+        if (pinned) {
+            if (pinSource.sessionItemId() != null) {
+                investigate.put("sessionItemId", pinSource.sessionItemId());
+            }
+            String type = pinSource.sessionItemType();
+            investigate.put(
+                "sessionItemType",
+                type != null && !type.isBlank() ? type : "ALERT");
+        } else if (pinSource.sessionItemPinError() != null
+                && !pinSource.sessionItemPinError().isBlank()) {
+            investigate.put("sessionItemPinError", pinSource.sessionItemPinError());
+        }
+    }
+
+    /** Class-name only — never include exception messages (may contain PII). */
+    static String sanitizeError(Exception e, String prefix) {
+        String type = e.getClass().getSimpleName();
+        String safePrefix = prefix != null && !prefix.isBlank() ? prefix : "failed";
+        if (type == null || type.isBlank()) {
+            return safePrefix;
+        }
+        return safePrefix + ":" + type;
     }
 }

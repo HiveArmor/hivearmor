@@ -1,6 +1,6 @@
 # Next production slice
 
-Updated: **2026-08-25 11:35:00 IST (UTC+05:30)**
+Updated: **2026-08-25 11:45:00 IST (UTC+05:30)**
 
 ## Active — Frontend Autonomous SOC audit program (next major arc)
 
@@ -44,13 +44,27 @@ Merged: `feat/p1-resp021-isolation-inventory` (#46).
 
 Still open under `RESP-021`: enriched evidence/summaries, cursor/snapshot/freshness semantics, action history, governed preview/approval/idempotency for restore/delete/release, resumable delivery state.
 
+## Completed this slice — Agentic INVESTIGATE soft session item pin (STAGING CANDIDATE)
+
+Scope: after #45 soft session create, soft-pin the resolvable alert as an `ALERT` session item
+(`itemRef` = alert id) via `InvestigationSessionService.pinItem` when available.
+Status: **STAGING CANDIDATE** — not `PRODUCTION READY`. Not Neo4j / attack-path. Not auto-convert to incident.
+Branch: `feat/p1-agentic-investigate-session-pin`.
+
+Ledger keeps `stub=true`; records `sessionItemPinned` + `sessionItemId`/`sessionItemType` on success,
+or sanitized `sessionItemPinError` (exception class only) on pin soft-fail without undoing `sessionLinked`.
+
+Still open: Neo4j / attack-path; `openHypotheses`; convert-to-incident; staging LIVE verify of
+createSession + pinItem from SOC-AI triage.
+
 ## Completed this slice — Agentic INVESTIGATE soft session link (STAGING CANDIDATE)
 
 Scope: `TriageInvestigateStub` → optional soft link to `/api/ha-investigation-sessions` (id + status only).
 Status: **STAGING CANDIDATE** — not `PRODUCTION READY`. Not Neo4j / attack-path. Not auto-convert to incident.
 Merged: `feat/p1-agentic-investigate-session-link` (#45).
 
-Remaining: Neo4j / attack-path; `openHypotheses`; auto-pin evidence; convert-to-incident; staging LIVE verify of createSession from SOC-AI triage.
+Follow-on soft ALERT item pin: see slice above. Remaining: Neo4j / attack-path; `openHypotheses`;
+convert-to-incident; staging LIVE verify.
 
 ## Completed this slice — Governance and Platform Settings
 

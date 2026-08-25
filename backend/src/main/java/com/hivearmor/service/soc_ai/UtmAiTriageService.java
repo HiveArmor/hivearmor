@@ -8,6 +8,7 @@ import com.hivearmor.domain.soc_ai.UtmAiTriage;
 import com.hivearmor.repository.soc_ai.UtmAiTriageRepository;
 import com.hivearmor.service.UtmAlertService;
 import com.hivearmor.service.dto.InvestigationSessionDTO;
+import com.hivearmor.service.dto.SessionItemDTO;
 import com.hivearmor.service.session.InvestigationSessionService;
 import com.hivearmor.util.enums.AlertStatus;
 import lombok.extern.slf4j.Slf4j;
@@ -119,10 +120,13 @@ public class UtmAiTriageService {
                     InvestigationSessionService sessions = investigationSessionService != null
                         ? investigationSessionService.getIfAvailable()
                         : null;
+                    final String pinAlertId = resolvePinAlertId(alertDoc, alertId);
                     investigate = TriageInvestigateStub.build(
                         alertDoc,
                         alertId,
-                        sessions != null ? this::softLinkInvestigationSession : null);
+                        sessions != null
+                            ? (name, desc) -> softLinkInvestigationSession(name, desc, pinAlertId)
+                            : null);
                 }
             }
             persistFsmLedger(triage, fsmPath, highConfidenceFp, enrichment, investigate);
@@ -311,20 +315,31 @@ public class UtmAiTriageService {
         return null;
     }
 
+    /** Prefer OpenSearch alert id; fall back to triage alertId. Null-safe. */
+    private static String resolvePinAlertId(UtmAlert alertDoc, String alertId) {
+        if (alertDoc != null && alertDoc.getId() != null && !alertDoc.getId().isBlank()) {
+            return alertDoc.getId();
+        }
+        return alertId;
+    }
+
     /**
-     * Soft-create an investigation session for INVESTIGATE metadata (STAGING CANDIDATE).
-     * Returns null when the session service bean is unavailable so the stub stays honest.
-     * Does not convert to incident. Exceptions propagate to {@link TriageInvestigateStub}
-     * which records {@code sessionLinked=false} without PII.
+     * Soft-create an investigation session and soft-pin the alert as an ALERT item
+     * (STAGING CANDIDATE). Returns null when the session service bean is unavailable so the
+     * stub stays honest. Pin failures soft-fail with a sanitized error on the returned
+     * {@link TriageInvestigateStub.LinkedSession} without undoing the session link.
+     * Does not convert to incident. Create-session exceptions propagate to
+     * {@link TriageInvestigateStub} which records {@code sessionLinked=false} without PII.
      */
     private TriageInvestigateStub.LinkedSession softLinkInvestigationSession(
-            String sessionName, String description) {
+            String sessionName, String description, String alertId) {
         InvestigationSessionService sessions = investigationSessionService != null
             ? investigationSessionService.getIfAvailable()
             : null;
         if (sessions == null) {
             return null;
         }
+        String user = currentUser();
         InvestigationSessionDTO request = new InvestigationSessionDTO(
             null,
             null,
@@ -338,15 +353,64 @@ public class UtmAiTriageService {
             null,
             null,
             null);
-        InvestigationSessionDTO created = sessions.createSession(request, currentUser());
+        InvestigationSessionDTO created = sessions.createSession(request, user);
         if (created == null || created.id() == null) {
             return null;
         }
+        String status = created.status() != null ? created.status() : "ACTIVE";
         log.info("SOC-AI INVESTIGATE soft-linked sessionId={} status={} (stub; no Neo4j)",
-            created.id(), created.status());
-        return new TriageInvestigateStub.LinkedSession(
-            created.id(),
-            created.status() != null ? created.status() : "ACTIVE");
+            created.id(), status);
+
+        return softPinAlertItem(sessions, created.id(), status, alertId, user);
+    }
+
+    /**
+     * Soft-pin the resolvable alert as a session item (type ALERT + itemRef = alert id).
+     * Pin failure keeps the session link and returns a sanitized pin error (class name only).
+     */
+    private TriageInvestigateStub.LinkedSession softPinAlertItem(
+            InvestigationSessionService sessions,
+            long sessionId,
+            String status,
+            String alertId,
+            String user) {
+        if (alertId == null || alertId.isBlank()) {
+            return new TriageInvestigateStub.LinkedSession(
+                sessionId, status, false, null, null, "pin_skipped:missing_alert_id");
+        }
+        try {
+            SessionItemDTO pinRequest = new SessionItemDTO(
+                null,
+                null,
+                "ALERT",
+                alertId.trim(),
+                null,
+                "Soft-pinned from agentic INVESTIGATE stub (STAGING CANDIDATE). "
+                    + "No Neo4j / attack-path. Not auto-converted to incident.",
+                null,
+                null);
+            // Owner of the just-created session — admin override not required.
+            SessionItemDTO pinned = sessions.pinItem(sessionId, pinRequest, user, false);
+            if (pinned == null || pinned.id() == null) {
+                return new TriageInvestigateStub.LinkedSession(
+                    sessionId, status, false, null, null, "pin_failed:no_item");
+            }
+            log.info(
+                "SOC-AI INVESTIGATE soft-pinned sessionItemId={} type=ALERT sessionId={} (stub)",
+                pinned.id(),
+                sessionId);
+            return new TriageInvestigateStub.LinkedSession(
+                sessionId, status, true, pinned.id(), "ALERT", null);
+        } catch (Exception e) {
+            // Soft-fail pin only — session link remains; never include exception message (PII).
+            return new TriageInvestigateStub.LinkedSession(
+                sessionId,
+                status,
+                false,
+                null,
+                null,
+                TriageInvestigateStub.sanitizeError(e, "pin_failed"));
+        }
     }
 
     /**

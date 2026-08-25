@@ -8,6 +8,7 @@ import com.hivearmor.domain.soc_ai.UtmAiTriage;
 import com.hivearmor.repository.soc_ai.UtmAiTriageRepository;
 import com.hivearmor.service.UtmAlertService;
 import com.hivearmor.service.dto.InvestigationSessionDTO;
+import com.hivearmor.service.dto.SessionItemDTO;
 import com.hivearmor.service.session.InvestigationSessionService;
 import com.hivearmor.util.enums.AlertStatus;
 import com.hivearmor.util.exceptions.ElasticsearchIndexDocumentUpdateException;
@@ -42,7 +43,7 @@ import static org.mockito.Mockito.when;
  *
  * <p>STAGING CANDIDATE — verifies ledger + OpenSearch status/tag wiring,
  * configurable confidence threshold, thin ENRICH metadata, thin INVESTIGATE metadata,
- * and optional soft investigation-session linking. Not PRODUCTION READY.
+ * and optional soft investigation-session linking + ALERT item pin. Not PRODUCTION READY.
  */
 @ExtendWith(MockitoExtension.class)
 class UtmAiTriageServiceAutoCloseTest {
@@ -425,6 +426,9 @@ class UtmAiTriageServiceAutoCloseTest {
             .thenReturn(new InvestigationSessionDTO(
                 55L, 0L, 1L, "SOC-AI triage: Lateral movement", "desc", "ACTIVE",
                 "system", null, null, null, null, 0));
+        when(investigationSessionService.pinItem(eq(55L), any(SessionItemDTO.class), anyString(), eq(false)))
+            .thenReturn(new SessionItemDTO(
+                901L, 55L, "ALERT", "alert-link-ok", null, "note", "system", null));
 
         String rawJson = """
             {"classification":"possible incident","confidence":0.91,"reasoning":["beacon"]}
@@ -440,9 +444,13 @@ class UtmAiTriageServiceAutoCloseTest {
         assertThat(meta.get("sessionLinked")).isEqualTo(true);
         assertThat(((Number) meta.get("sessionId")).longValue()).isEqualTo(55L);
         assertThat(meta.get("sessionStatus")).isEqualTo("ACTIVE");
+        assertThat(meta.get("sessionItemPinned")).isEqualTo(true);
+        assertThat(((Number) meta.get("sessionItemId")).longValue()).isEqualTo(901L);
+        assertThat(meta.get("sessionItemType")).isEqualTo("ALERT");
         assertThat(meta.get("note").toString()).contains("no Neo4j");
         assertThat(result.getNextSteps())
             .contains("sessionId=55")
+            .contains("sessionItemId=901")
             .doesNotContain("attack-path product");
 
         ArgumentCaptor<InvestigationSessionDTO> dtoCaptor =
@@ -450,7 +458,51 @@ class UtmAiTriageServiceAutoCloseTest {
         verify(investigationSessionService).createSession(dtoCaptor.capture(), anyString());
         assertThat(dtoCaptor.getValue().sessionName()).isEqualTo("SOC-AI triage: Lateral movement");
         assertThat(dtoCaptor.getValue().status()).isEqualTo("ACTIVE");
-        // Soft link only — never convert to incident in this path.
+
+        ArgumentCaptor<SessionItemDTO> pinCaptor = ArgumentCaptor.forClass(SessionItemDTO.class);
+        verify(investigationSessionService).pinItem(eq(55L), pinCaptor.capture(), anyString(), eq(false));
+        assertThat(pinCaptor.getValue().itemType()).isEqualTo("ALERT");
+        assertThat(pinCaptor.getValue().itemRef()).isEqualTo("alert-link-ok");
+        // Soft link + pin only — never convert to incident in this path.
+        verify(investigationSessionService, never()).convertToIncident(any(), anyString(), anyBoolean());
+    }
+
+    @Test
+    void saveResult_investigate_pinFailureKeepsSessionLinkWithSanitizedError() {
+        UtmAlert alert = new UtmAlert();
+        alert.setId("alert-pin-fail");
+        alert.setName("Should not leak in pin error");
+        when(utmAlertService.getAlertsByIds(eq(List.of("alert-pin-fail"))))
+            .thenReturn(List.of(alert));
+        when(investigationSessionProvider.getIfAvailable())
+            .thenReturn(investigationSessionService);
+        when(investigationSessionService.createSession(any(InvestigationSessionDTO.class), anyString()))
+            .thenReturn(new InvestigationSessionDTO(
+                66L, 0L, 1L, "SOC-AI triage: Should not leak in pin error", "desc", "ACTIVE",
+                "system", null, null, null, null, 0));
+        when(investigationSessionService.pinItem(eq(66L), any(SessionItemDTO.class), anyString(), eq(false)))
+            .thenThrow(new RuntimeException("pin denied for should-not-leak@example.com"));
+
+        String rawJson = """
+            {"classification":"possible incident","confidence":0.91,"reasoning":["beacon"]}
+            """;
+
+        UtmAiTriage result = triageService.saveResult("alert-pin-fail", rawJson);
+
+        Optional<Map<String, Object>> investigate =
+            UtmAiTriageService.extractInvestigate(result.getNextSteps());
+        assertThat(investigate).isPresent();
+        Map<String, Object> meta = investigate.orElseThrow();
+        assertThat(meta.get("stub")).isEqualTo(true);
+        assertThat(meta.get("sessionLinked")).isEqualTo(true);
+        assertThat(((Number) meta.get("sessionId")).longValue()).isEqualTo(66L);
+        assertThat(meta.get("sessionItemPinned")).isEqualTo(false);
+        assertThat(meta.get("sessionItemPinError")).isEqualTo("pin_failed:RuntimeException");
+        assertThat(result.getNextSteps())
+            .contains("sessionId=66")
+            .contains("pin_failed:RuntimeException")
+            .doesNotContain("should-not-leak@example.com")
+            .doesNotContain("Should not leak");
         verify(investigationSessionService, never()).convertToIncident(any(), anyString(), anyBoolean());
     }
 
@@ -484,6 +536,7 @@ class UtmAiTriageServiceAutoCloseTest {
             .contains("sessionLinked=false")
             .doesNotContain("tenant-secret")
             .doesNotContain("Should not leak");
+        verify(investigationSessionService, never()).pinItem(any(), any(), anyString(), anyBoolean());
         verify(investigationSessionService, never()).convertToIncident(any(), anyString(), anyBoolean());
     }
 
