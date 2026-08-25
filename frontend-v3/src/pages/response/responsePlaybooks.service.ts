@@ -20,8 +20,10 @@ import {
   RESP_018_EXECUTION_INVENTORY,
   RESP_018_SOAR_AUDIT_PROJECTION,
   RESP_018_SOAR_AUDIT_TITLE,
+  RESP_020_APPROVAL_PROJECTION,
   RESP_020_GOVERNANCE,
 } from './response.capabilities';
+
 import type {
   CursorPageResult,
   PlaybookExecuteRequest,
@@ -326,6 +328,8 @@ export async function approveExecution(
 }
 
 // ─── RESP-020: Response governance and human approval queue ───────────────
+// Full governance (policies/delegations) stays fail-closed via RESP_020_GOVERNANCE.
+// Approval queue may use RESP_020_APPROVAL_PROJECTION over playbook executions.
 
 export async function fetchResponseGovernance(
   params: ResponseApprovalListParams
@@ -334,7 +338,7 @@ export async function fetchResponseGovernance(
     const { getFoundationResponseGovernance } = await import('@/pages/response/response.fixtures');
     return getFoundationResponseGovernance(params);
   }
-  if (!RESP_020_GOVERNANCE) {
+  if (!RESP_020_GOVERNANCE && !RESP_020_APPROVAL_PROJECTION) {
     const snapshotAt = new Date().toISOString();
     return {
       approvals: [],
@@ -372,11 +376,13 @@ export async function decideResponseGovernanceApproval(
     const { decideFoundationResponseApproval } = await import('@/pages/response/response.fixtures');
     return decideFoundationResponseApproval(request);
   }
-  if (!RESP_020_GOVERNANCE) {
+  if (!RESP_020_GOVERNANCE && !RESP_020_APPROVAL_PROJECTION) {
     throw new Error(UNAVAILABLE_GOVERNANCE);
   }
+  // Projection / full governance decision path — BE bridges to playbook approve|reject.
+  // Preserve ADMIN-only auth on the backend; do not invent a softer FE bypass.
   return apiClient.post<ResponseApprovalRequest>(
-    `/ha-response-governance/approvals/${request.approvalId}/decision`,
+    `/ha-response-governance/approvals/${encodeURIComponent(request.approvalId)}/decision`,
     request
   );
 }
@@ -388,6 +394,7 @@ export async function saveResponseAuthorityPolicy(
     const { saveFoundationResponseAuthorityPolicy } = await import('@/pages/response/response.fixtures');
     return saveFoundationResponseAuthorityPolicy(request);
   }
+  // Fail-closed: policy CRUD requires full RESP_020_GOVERNANCE — projection does not unlock it.
   if (!RESP_020_GOVERNANCE) {
     throw new Error(UNAVAILABLE_GOVERNANCE);
   }
@@ -406,6 +413,7 @@ export async function saveResponseAuthorityDelegate(
     const { saveFoundationResponseAuthorityDelegate } = await import('@/pages/response/response.fixtures');
     return saveFoundationResponseAuthorityDelegate(request);
   }
+  // Fail-closed: delegation CRUD requires full RESP_020_GOVERNANCE.
   if (!RESP_020_GOVERNANCE) {
     throw new Error(UNAVAILABLE_GOVERNANCE);
   }

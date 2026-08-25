@@ -220,6 +220,8 @@ GET    /api/soar/audit                             (compat projection; prefer RE
 GET    /api/ha-playbooks/executions                (RESP-018 inventory)
 GET    /api/ha-playbooks/executions/summary        (RESP-018 summary)
 GET    /api/ha-playbooks/executions/{id}/trace     (RESP-018 thin steps_log trace)
+GET    /api/ha-response-governance/approvals       (RESP-020 STAGING CANDIDATE — playbook approval projection; empty policies/delegates)
+POST   /api/ha-response-governance/approvals/{id}/decision  (bridges playbook approve/reject; ADMIN-only)
 # NOTE: GET /api/soar/actions does NOT exist — use static SOAR_ACTION_CATALOGUE in ActionPalette
 
 # Dashboards & Visualizations
