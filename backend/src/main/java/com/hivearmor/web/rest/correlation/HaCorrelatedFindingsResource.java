@@ -355,6 +355,8 @@ public class HaCorrelatedFindingsResource {
                 id, assignee, idempotencyKey, userId, tenantId, indexPattern);
 
             return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return badRequest("INVALID_ASSIGNEE", e.getMessage());
         } catch (FindingNotFoundException e) {
             return notFound(e.getMessage());
         } catch (Exception e) {

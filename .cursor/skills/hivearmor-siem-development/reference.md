@@ -102,7 +102,7 @@ DELETE /api/ha-saved-queries/{id}
 - [ ] Audit logging for sensitive operations
 
 ### Known Security Gaps (Do Not Replicate):
-- SEC-03: CorrelatedFindings status endpoint vulnerable → keep disabled
+- SEC-03: CLOSED (STAGING CANDIDATE) — offenses/correlated-findings status `@PreAuthorize` + allowlisted scripts; keep `GAP_SEC_03_RESOLVED = true`; UI gates via `canMutateFindingStatus`
 - SEC-05: AgentManager no role check → keep remote actions disabled  
 - SEC-06: CLOSED (STAGING CANDIDATE) — runVisualization `@PreAuthorize` ADMIN|SOC_MANAGER|ANALYST; keep `GAP_SEC_06_RESOLVED = true`
 

@@ -4,12 +4,24 @@
  * Backend path: /api/offenses
  *
  * Note: The word "Offense" must not appear in any UI label per PD-10.
+ *
+ * SEC-03 (STAGING CANDIDATE): PUT /api/offenses/{id}/status is @PreAuthorize'd with
+ * allowlisted Painless. Callers must gate with canUpdateOffenseStatus / GAP_SEC_03_RESOLVED
+ * before invoking {@link updateOffenseStatus}.
  */
 
 import type { SeverityLevel } from '@/constants/severity.constants';
 import type { AlertStatus } from '@/constants/status.constants';
 import { apiClient, type PaginatedResponse } from '@/lib/apiClient';
 import type { MitreTechniqueRef, TenantRef } from '@/types/api.types';
+
+export {
+  GAP_SEC_03_RESOLVED,
+  canMutateFindingStatus,
+  canUpdateOffenseStatus,
+  findingStatusBlockedTitle,
+  FINDING_STATUS_MUTATE_ROLES,
+} from './findingStatus.capabilities';
 
 export interface OffenseDTO {
   id: string;
@@ -81,6 +93,10 @@ export async function getOffense(id: string): Promise<OffenseDetailDTO> {
   return apiClient.get<OffenseDetailDTO>(`/offenses/${id}`);
 }
 
+/**
+ * Update offense status. Callers must gate with {@link canUpdateOffenseStatus}.
+ * Unauthorized JWTs receive HTTP 403 from the backend.
+ */
 export async function updateOffenseStatus(id: string, req: UpdateOffenseStatusRequest): Promise<void> {
   return apiClient.put<void>(`/offenses/${id}/status`, req);
 }
