@@ -1,19 +1,23 @@
 # Next production slice
 
-Updated: **2026-08-25 21:00:00 IST (UTC+05:30)**
+Updated: **2026-08-25 21:20:00 IST (UTC+05:30)**
 
-## Active — Wave D-06 row density wiring (STAGING CANDIDATE)
+## Active — MSSP masthead authorized tenant inventory (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Status: **AUDIT + thin honesty ready for merge** — shared `ha_row_density` / `useRowDensity` (32/40/48) across high-volume AG Grid hubs. Still **STAGING CANDIDATE**. Not `PRODUCTION READY`.
-Branch: `feat/d06-row-density-wiring`.
+Status: **AUDIT + thin honesty ready for merge** — masthead loads authorized tenants from `/api/ha-tenants` or `/api/ha-mssp/tenants`; no hardcoded placeholders. Still **STAGING CANDIDATE**. Not `PRODUCTION READY`.
+Branch: `feat/mssp-masthead-tenant-inventory`.
 
 | ID | Fix |
 |---|---|
-| D-06 | Persist density via `ha_row_density`; align RESPONSE_GRID + hunt/incident/detection/entity/posture/response grids |
+| C3-04 follow-on | Masthead tenant switcher uses live authorized inventory + fail-closed honesty |
+
+## Completed this slice — Wave D-06 row density (#69)
+
+Status: **MERGED** tip `79a4d9d` — STAGING CANDIDATE.
 
 Deferred (post full production MVP): vendor live connector credentials/proofs.
-Next optional after merge: MSSP masthead tenant inventory depth; residual product depth without vendor logins.
+Next optional after merge: residual product depth without vendor logins.
 
 ## Completed this slice — Wave D Cross-product closure (#65)
 

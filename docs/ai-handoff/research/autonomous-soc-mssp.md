@@ -45,7 +45,7 @@ remains **STAGING CANDIDATE**; never claim `PRODUCTION READY` from this note alo
 | C3-02 | Missing Bearer on live MSSP fetches | High | Closed — `msspFetch` |
 | C3-03 | Post-create navigate to API Location | High | Closed — UI path only |
 | C3-05 | 401/403 shown as not-found | Med | Closed |
-| C3-04/07 | Hardcoded tenants / “Production” env | Med | Thin honesty labels |
+| C3-04/07 | Hardcoded tenants / “Production” env | Med | Closed — live inventory + Local/Deployed |
 | C3-06/08 | Role/permission human labels | Med | Closed |
 | C3-09 | Duplicate membership types | Low | Closed |
 | C3-13 | STAGING banner | Low | Closed on overview |

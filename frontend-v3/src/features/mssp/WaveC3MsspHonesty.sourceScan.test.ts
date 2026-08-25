@@ -45,6 +45,8 @@ describe('Wave C3 MSSP honesty', () => {
     const masthead = readFileSync(join(process.cwd(), 'src/components/ha-masthead/HaMasthead.tsx'), 'utf8');
     expect(masthead).not.toContain('>Production<');
     expect(masthead).toContain('environmentLabel');
-    expect(masthead).toContain('local-dev placeholder');
+    expect(masthead).toContain('useMastheadTenants');
+    expect(masthead).not.toContain('local-dev placeholder');
+    expect(masthead).not.toContain('KNOWN_TENANTS');
   });
 });
