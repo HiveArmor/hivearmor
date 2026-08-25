@@ -1,13 +1,18 @@
 /**
  * Investigation promote / convert capability gates (STAGING CANDIDATE honesty).
  *
- * POST /api/ha-investigation-sessions/{id}/convert-to-incident is @Deprecated
- * (Deprecation + Sunset headers; Link successor promotion-preview is not mapped yet).
- * Keep fail-closed in live UI until the governed promotion contract ships.
+ * INV-012 governed path: POST .../promotion-preview + POST .../promote (previewToken).
+ * Deprecated POST .../convert-to-incident stays disabled in the UI.
  */
 
-/** Live promote via deprecated convert endpoint — do not enable silently. */
+/** Deprecated direct convert — never enable silently. */
 export const INV_CONVERT_TO_INCIDENT = false;
 
+/** Governed preview + promote (INV-012) — flip only when backend endpoints are secured and live. */
+export const INV_GOVERNED_PROMOTION = true;
+
 export const INV_CONVERT_DISABLED_TITLE =
-  'Incident promotion via convert-to-incident is deprecated; governed promotion-preview is not available yet';
+  'Incident promotion via convert-to-incident is deprecated; use governed promotion-preview';
+
+export const INV_PROMOTION_DISABLED_TITLE =
+  'Governed investigation promotion is not available from the backend yet';

@@ -50,9 +50,9 @@ Waves **A1–D** are complete as **STAGING CANDIDATE** thin honesty on `main` ti
 
 **Deferred follow-ons (do not invent status):**
 - Vendor live connector proofs (credentials required)
-- Governed investigation `promotion-preview` (backend + UI) to un-gate promote
 - Full RESP-018 execution inventory when backend mappings exist
 - Full interactive browser walk / 24h soak
+- Staging LIVE verify of INV-012 promote on disposable ACTIVE session (after merge + FE/BE rebuild)
 
 Research index: `docs/ai-handoff/research/autonomous-soc-program-closure.md`.
 

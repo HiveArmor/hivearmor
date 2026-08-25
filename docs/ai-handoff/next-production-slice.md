@@ -1,10 +1,22 @@
 # Next production slice
 
-Updated: **2026-08-25 21:55:00 IST (UTC+05:30)**
+Updated: **2026-08-25 22:15:00 IST (UTC+05:30)**
+
+## Completed this slice — INV-012 governed investigation promotion
+
+Status: **STAGING CANDIDATE** (PR from `feat/inv012-investigation-promotion`). Not `PRODUCTION READY` / not `LIVE VERIFIED`.
+
+| ID | Change |
+|---|---|
+| INV-012 BE | `POST /api/ha-investigation-sessions/{id}/promotion-preview` + `POST .../promote` (previewToken, expectedVersion, reason) |
+| INV-012 FE | Detail promote uses preview→commit; `INV_GOVERNED_PROMOTION=true`; deprecated `convert-to-incident` stays `INV_CONVERT_TO_INCIDENT=false` |
+
+Next after merge: staging FE+BE rebuild and smoke promote on a disposable ACTIVE session.
+Deferred (post full production MVP): vendor live connector credentials/proofs; full RESP-018 inventory when backend exists.
 
 ## Completed this slice — Staging FE rebuild + Detect→Govern smoke
 
-Status: **RECORDED** tip `597e80f` — **STAGING CANDIDATE**. Not `PRODUCTION READY`.
+Status: **RECORDED** tip `597e80f` / docs merge `3fe3b8a` — **STAGING CANDIDATE**. Not `PRODUCTION READY`.
 Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-25 21:55 IST). Report `/tmp/hivearmor-staging-detect-govern-smoke.json`.
 
 | Check | Result |
@@ -12,9 +24,6 @@ Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-25 21:55 IST). Repor
 | FE rebuild + edge | healthy / running |
 | SPA Detect→Govern shells | 15/15 HTTP 200 |
 | Core APIs + soar/audit + enrollment audit + tenants + audit-log | 10/10 HTTP 200 |
-
-Deferred (post full production MVP): vendor live connector credentials/proofs.
-Next optional: governed investigation promotion-preview (backend+UI), or full RESP-018 inventory when backend exists.
 
 ## Completed this slice — Enrollment audit + investigation promote honesty (#72)
 

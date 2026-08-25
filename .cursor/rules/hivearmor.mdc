@@ -189,7 +189,9 @@ DELETE /api/ha-investigation-sessions/{id}
 POST   /api/ha-investigation-sessions/{id}/items
 GET    /api/ha-investigation-sessions/{id}/items
 DELETE /api/ha-investigation-sessions/{id}/items/{itemId}
-POST   /api/ha-investigation-sessions/{id}/convert-to-incident
+POST   /api/ha-investigation-sessions/{id}/convert-to-incident (deprecated — prefer promotion-preview + promote)
+POST   /api/ha-investigation-sessions/{id}/promotion-preview (INV-012)
+POST   /api/ha-investigation-sessions/{id}/promote (INV-012; previewToken + expectedVersion + reason)
 
 # Offenses / Correlated Findings
 GET /api/offenses               (page, size → X-Total-Count)

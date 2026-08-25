@@ -142,3 +142,46 @@ export interface UpdateInvestigationTaskInput {
   assignee?: string | null;
   externalTicketUrl?: string | null;
 }
+
+/** INV-012 promotion preview projection. */
+export interface InvestigationPromotionPreview {
+  sessionId: number;
+  sessionVersion: number;
+  incidentSummary: {
+    title: string;
+    descriptionExcerpt: string;
+    recommendedSeverity: number;
+    recommendedPriority: string;
+    severityReasons: string[];
+    assignee: string | null;
+    targetTenantId: number | null;
+  };
+  eligibleEvidence: {
+    totalArtifacts: number;
+    alertCount: number;
+    entityCount: number;
+    eventCount: number;
+    otherCount: number;
+  };
+  duplicateOrSimilarIncidents: unknown[];
+  policyGates: string[];
+  missingPrerequisites: string[];
+  warnings: string[];
+  blastRadius: {
+    createsIncident: boolean;
+    marksSessionConverted: boolean;
+    linksSessionIncidentId: boolean;
+    doesNotAutoLinkOpenSearchAlertsYet: boolean;
+  };
+  previewToken: string;
+  expiresInSeconds: number;
+}
+
+export interface InvestigationPromotionResult {
+  incidentId: number;
+  sessionId: number;
+  status: string;
+  reason?: string;
+  idempotencyKey?: string | null;
+  auditReference?: string;
+}

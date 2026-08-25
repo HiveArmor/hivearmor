@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import {
   INV_CONVERT_DISABLED_TITLE,
   INV_CONVERT_TO_INCIDENT,
+  INV_GOVERNED_PROMOTION,
 } from './investigation.capabilities';
 
 describe('Investigation promote honesty', () => {
@@ -14,13 +15,19 @@ describe('Investigation promote honesty', () => {
     expect(INV_CONVERT_DISABLED_TITLE).toMatch(/deprecated/i);
   });
 
-  it('gates convert service and detail promote UI', () => {
+  it('enables governed preview+promote and wires detail UI', () => {
+    expect(INV_GOVERNED_PROMOTION).toBe(true);
     const service = readFileSync(join(process.cwd(), 'src/pages/investigations/investigation.service.ts'), 'utf8');
     const detail = readFileSync(join(process.cwd(), 'src/pages/investigations/InvestigationDetailPage.tsx'), 'utf8');
     expect(service).toContain('INV_CONVERT_TO_INCIDENT');
-    expect(service).toContain('INV_CONVERT_DISABLED_TITLE');
-    expect(detail).toContain('INV_CONVERT_TO_INCIDENT');
-    expect(detail).toContain('Promotion unavailable');
+    expect(service).toContain('/promotion-preview');
+    expect(service).toContain('/promote');
+    expect(service).not.toMatch(/convert-to-incident[\s\S]{0,80}INV_GOVERNED_PROMOTION/);
+    expect(detail).toContain('INV_GOVERNED_PROMOTION');
+    expect(detail).toContain('previewInvestigationPromotion');
+    expect(detail).toContain('promoteInvestigationToIncident');
+    expect(detail).toContain('Governed promotion');
+    expect(detail).not.toContain('convertInvestigationToIncident');
   });
 });
 
