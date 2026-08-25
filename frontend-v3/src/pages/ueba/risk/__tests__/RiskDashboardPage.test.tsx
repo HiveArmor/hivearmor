@@ -14,6 +14,7 @@ import React from 'react';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import type { AnomalyCountsDTO, RiskTrendPointDTO, UserRiskDTO } from '@/types/ueba.types';
@@ -177,7 +178,9 @@ function renderPage() {
   const queryClient = createQueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <RiskDashboardPage />
+      <MemoryRouter>
+        <RiskDashboardPage />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -349,54 +352,43 @@ describe('RiskDashboardPage', () => {
   });
 
   // -------------------------------------------------------------------------
-  // 3. Create Incident action invokes the incident-creation flow
+  // 3. Create Incident action — honest guidance (A2-UEBA-02)
   // -------------------------------------------------------------------------
   describe('Create Incident action', () => {
-    it('dispatches create-incident-for-entity event with correct userId for user-alpha', async () => {
-      const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
-
+    it('opens evidence-collection guidance for user-alpha instead of a dead CustomEvent', async () => {
       renderPage();
 
       await waitFor(() => {
         expect(screen.getByTestId('grid-row-user-alpha')).toBeInTheDocument();
       });
 
-      // Click "Create Incident" for user-alpha
       const createButtons = screen.getAllByRole('button', { name: /create incident/i });
       fireEvent.click(createButtons[0]);
 
-      // Verify the event was dispatched with the correct userId
-      expect(dispatchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'create-incident-for-entity',
-          detail: { userId: 'user-alpha' },
-        }),
+      const dialog = await screen.findByTestId('ueba-create-incident-guidance');
+      expect(dialog).toHaveAttribute('data-user-id', 'user-alpha');
+      expect(screen.getByRole('link', { name: /open search & hunt/i })).toHaveAttribute(
+        'href',
+        '/search?q=user-alpha'
       );
-
-      dispatchSpy.mockRestore();
     });
 
-    it('dispatches create-incident event with correct userId for user-beta', async () => {
-      const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
-
+    it('opens evidence-collection guidance for user-beta', async () => {
       renderPage();
 
       await waitFor(() => {
         expect(screen.getByTestId('grid-row-user-beta')).toBeInTheDocument();
       });
 
-      // Click "Create Incident" for user-beta
       const createButtons = screen.getAllByRole('button', { name: /create incident/i });
       fireEvent.click(createButtons[1]);
 
-      expect(dispatchSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'create-incident-for-entity',
-          detail: { userId: 'user-beta' },
-        }),
+      const dialog = await screen.findByTestId('ueba-create-incident-guidance');
+      expect(dialog).toHaveAttribute('data-user-id', 'user-beta');
+      expect(screen.getByRole('link', { name: /open search & hunt/i })).toHaveAttribute(
+        'href',
+        '/search?q=user-beta'
       );
-
-      dispatchSpy.mockRestore();
     });
   });
 

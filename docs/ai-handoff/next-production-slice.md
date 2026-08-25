@@ -1,39 +1,31 @@
 # Next production slice
 
-Updated: **2026-08-25 14:00:00 IST (UTC+05:30)**
+Updated: **2026-08-25 14:30:00 IST (UTC+05:30)**
 
-## Active — Wave A2 Investigate & AI audit (STAGING CANDIDATE)
+## Active — Wave A2 Investigate & AI remaining gaps (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Routes: `/search`, `/investigations`, `/entities`, `/intelligence`, `/ueba/risk`, `/constellation`.
-Status: **AUDIT COMPLETE (docs) + thin honesty wire** — not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for the full spine.
+Routes: `/search`, `/ueba/risk` (remainder of A2 matrix).
+Status: **IMPLEMENT COMPLETE (code) for remaining A2 gaps** — still **STAGING CANDIDATE**.
 Research: `docs/ai-handoff/research/autonomous-soc-investigate-ai.md`.
-Branch: `feat/a2-investigate-ai-audit`.
-
-### Thin honesty fix in this PR (STAGING CANDIDATE)
+Branch: `feat/a2-investigate-ai-gaps`.
 
 | ID | Fix |
 |---|---|
-| A2-AUTH-01 | Search & Hunt nav + AuthGuard → `ALERT_QUEUE_ROLES` |
-| A2-AUTH-03 | Entities nav → `ALERT_QUEUE_ROLES` |
-| A2-AUTH-04 | Constellation nav + AuthGuard → `ALERT_QUEUE_ROLES` (incl. `ROLE_SOC_ANALYST`) |
-| A2-ENT-01 | `/entities/:id` → `/entities/:id/dossier` (stop legacy missing APIs) |
-| A2-SRCH-01 | Hunt create-incident assignees → `GET /ha-incidents/users-assigned` |
-| A2-UEBA-01 | UEBA Risk partial error banner + empty/error panel copy |
-| A2-INV-01 | Investigation Hive Intelligence controls: Unavailable + contract titles |
+| A2-SRCH-02 | Removed unused hunt helpers calling `/v1/threat-intel/ioc` and unmounted `/ha-soc-ai/query` |
+| A2-UEBA-02 | Replaced dead `create-incident-for-entity` CustomEvent with honest guidance → `/search?q=` |
 
-Still open for next implement: A2-SRCH-02 (dead v1 TI helpers), A2-UEBA-02 (create-incident event), A2-TI freshness depth; browser staging smoke of A2 routes.
+Still open (backlog): A2-TI freshness depth; browser staging smoke of A2 create-incident guidance.
 
 ## Active — Frontend Autonomous SOC audit program (next major arc)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Cadence: **audit → research → implement** page-by-page.
-Next after A2 thin merge + staging smoke: **A2 remaining gaps** or **Wave A3 Defend / respond**.
+Next after this gaps merge + staging smoke: **Wave A3 Defend / respond**.
 Status: **PROGRAM IN PROGRESS** — not `PRODUCTION READY`.
 
-## Completed this slice — Wave A1 Command & triage gap implement (#56)
+## Completed this slice — Wave A2 Investigate & AI audit (#57)
 
-Status: **IMPLEMENT COMPLETE** for A1 gap matrix — merged + staging rebuilt to `a7d30a8` (STAGING CANDIDATE).
+Status: **AUDIT COMPLETE + thin honesty** — merged + staging FE rebuilt to `ddeffc9` (STAGING CANDIDATE).
 
 ## Completed this slice — TI optional depth (MISP status + bounded Last Sync)
 
