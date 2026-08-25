@@ -1,6 +1,9 @@
 /**
  * Sprint 44 — Finding Actions Bar.
  * Status change buttons (contextual), assign dropdown, note input.
+ *
+ * SEC-03: status / assign / note mutations stay behind GAP_SEC_03_RESOLVED +
+ * ALERT_QUEUE_AUTH role gate (Platform Administrator / SOC Manager / Analyst).
  */
 
 import { useState } from 'react';
@@ -10,6 +13,12 @@ import { CheckCircle2, MessageSquare, ShieldAlert, UserRound, XCircle } from 'lu
 
 import { addNote, assignFinding, changeStatus } from '../services/correlation.service';
 import type { CorrelatedFinding, FindingStatus } from '../types/correlation.types';
+
+import {
+  canMutateFindingStatus,
+  findingStatusBlockedTitle,
+} from '@/services/findingStatus.capabilities';
+import { useAuthStore } from '@/store/auth.store';
 
 function getStatusActions(status: FindingStatus): Array<{ targetStatus: FindingStatus; label: string; icon: typeof CheckCircle2 }> {
   switch (status) {
@@ -46,6 +55,9 @@ export function FindingActionsBar({ finding, onStatusChange, onPromote }: Findin
   const [assigneeInput, setAssigneeInput] = useState(finding.assignee ?? '');
   const [noteContent, setNoteContent] = useState('');
   const [showNoteInput, setShowNoteInput] = useState(false);
+  const userRoles = useAuthStore((state) => state.user?.roles ?? []);
+  const canMutate = canMutateFindingStatus(userRoles);
+  const blockedTitle = findingStatusBlockedTitle(userRoles);
 
   const statusMutation = useMutation({
     mutationFn: (targetStatus: FindingStatus) => changeStatus(finding.id, targetStatus),
@@ -81,8 +93,12 @@ export function FindingActionsBar({ finding, onStatusChange, onPromote }: Findin
               key={action.targetStatus}
               type="button"
               className="finding-actions-bar__action-btn"
-              onClick={() => statusMutation.mutate(action.targetStatus)}
-              disabled={statusMutation.isPending}
+              onClick={() => {
+                if (!canMutate) return;
+                statusMutation.mutate(action.targetStatus);
+              }}
+              disabled={!canMutate || statusMutation.isPending}
+              title={canMutate ? action.label : blockedTitle}
             >
               <Icon size={14} aria-hidden="true" />
               {action.label}
@@ -94,6 +110,8 @@ export function FindingActionsBar({ finding, onStatusChange, onPromote }: Findin
             type="button"
             className="finding-actions-bar__promote-btn"
             onClick={onPromote}
+            disabled={!canMutate}
+            title={canMutate ? 'Promote to Incident' : blockedTitle}
           >
             <ShieldAlert size={14} aria-hidden="true" />
             Promote to Incident
@@ -110,12 +128,18 @@ export function FindingActionsBar({ finding, onStatusChange, onPromote }: Findin
           placeholder="Assign to…"
           aria-label="Assignee"
           className="finding-actions-bar__assign-input"
+          disabled={!canMutate}
+          title={canMutate ? undefined : blockedTitle}
         />
         <button
           type="button"
-          onClick={() => assignMutation.mutate(assigneeInput || null)}
-          disabled={assignMutation.isPending}
+          onClick={() => {
+            if (!canMutate) return;
+            assignMutation.mutate(assigneeInput || null);
+          }}
+          disabled={!canMutate || assignMutation.isPending}
           className="finding-actions-bar__assign-btn"
+          title={canMutate ? 'Assign' : blockedTitle}
         >
           {assignMutation.isPending ? 'Saving…' : 'Assign'}
         </button>
@@ -126,7 +150,12 @@ export function FindingActionsBar({ finding, onStatusChange, onPromote }: Findin
           <button
             type="button"
             className="finding-actions-bar__note-toggle"
-            onClick={() => setShowNoteInput(true)}
+            onClick={() => {
+              if (!canMutate) return;
+              setShowNoteInput(true);
+            }}
+            disabled={!canMutate}
+            title={canMutate ? 'Add Note' : blockedTitle}
           >
             <MessageSquare size={14} aria-hidden="true" />
             Add Note

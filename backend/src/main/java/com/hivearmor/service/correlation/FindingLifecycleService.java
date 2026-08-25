@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Service for correlated finding lifecycle mutations with idempotency (COR-004).
@@ -36,6 +37,10 @@ import java.util.*;
  *   <li>All others → 422</li>
  * </ul>
  *
+ * <p>SEC-03: OpenSearch update scripts are allowlisted constants (status) or charset-validated
+ * assignee tokens. Request strings are never free-form-concatenated into Painless source.
+ * Transition {@code reason} stays in the API response / audit path only.
+ *
  * <p>Sprint 44 — Correlated Findings.
  */
 @Service
@@ -51,6 +56,10 @@ public class FindingLifecycleService {
         "confirmed", Set.of("reviewing"),
         "dismissed", Set.of("reviewing")
     );
+
+    /** Safe assignee tokens only — never free-form text in Painless. */
+    private static final Pattern SAFE_ASSIGNEE =
+        Pattern.compile("^[a-zA-Z0-9._@+\\-]{1,128}$");
 
     private final OpensearchClientBuilder osClient;
     private final ObjectMapper objectMapper;
@@ -121,11 +130,10 @@ public class FindingLifecycleService {
             throw new InvalidTransitionException(currentStatus, targetStatus, allowed);
         }
 
-        // Update document in OpenSearch
-        String updateScript = "ctx._source.status = '" + targetStatus + "'; " +
-            "ctx._source.updatedAt = '" + Instant.now().toString() + "';";
-        if (reason != null && !reason.isBlank()) {
-            updateScript += " ctx._source.statusReason = '" + reason.replace("'", "\\'") + "';";
+        Instant now = Instant.now();
+        String updateScript = statusUpdateScript(targetStatus, now);
+        if (updateScript == null) {
+            throw new InvalidTransitionException(currentStatus, targetStatus, allowed);
         }
 
         Query updateQuery = Query.of(q -> q.term(t ->
@@ -137,8 +145,7 @@ public class FindingLifecycleService {
             return null;
         });
 
-        // Build response
-        Instant now = Instant.now();
+        // Build response (reason is returned for audit; never written via Painless)
         Map<String, Object> response = new LinkedHashMap<>();
 
         Map<String, Object> findingResult = new LinkedHashMap<>();
@@ -202,10 +209,12 @@ public class FindingLifecycleService {
         Map<String, Object> finding = findingOpt.get();
         String previousAssignee = finding.get("assignee") != null ? finding.get("assignee").toString() : null;
 
-        // Update document in OpenSearch
-        String assigneeValue = assignee != null ? "'" + assignee.replace("'", "\\'") + "'" : "null";
-        String updateScript = "ctx._source.assignee = " + assigneeValue + "; " +
-            "ctx._source.updatedAt = '" + Instant.now().toString() + "';";
+        Instant now = Instant.now();
+        String updateScript = assigneeUpdateScript(assignee, now);
+        if (updateScript == null) {
+            throw new IllegalArgumentException(
+                "Assignee must be null (unassign) or match [a-zA-Z0-9._@+-]{1,128}");
+        }
 
         Query updateQuery = Query.of(q -> q.term(t ->
             t.field("id").value(v -> v.stringValue(findingId))));
@@ -217,7 +226,6 @@ public class FindingLifecycleService {
         });
 
         // Build response
-        Instant now = Instant.now();
         Map<String, Object> response = new LinkedHashMap<>();
 
         Map<String, Object> findingResult = new LinkedHashMap<>();
@@ -311,6 +319,36 @@ public class FindingLifecycleService {
         return VALID_TRANSITIONS.getOrDefault(
             currentStatus != null ? currentStatus.toLowerCase(Locale.ROOT) : "new",
             Set.of());
+    }
+
+    /**
+     * Fixed Painless status assignment for an allowlisted target. Never interpolates
+     * request strings into script source. Returns {@code null} when status is unknown.
+     */
+    static String statusUpdateScript(String status, Instant updatedAt) {
+        String ts = updatedAt.toString();
+        return switch (status) {
+            case "new" -> "ctx._source.status = 'new'; ctx._source.updatedAt = '" + ts + "';";
+            case "reviewing" -> "ctx._source.status = 'reviewing'; ctx._source.updatedAt = '" + ts + "';";
+            case "confirmed" -> "ctx._source.status = 'confirmed'; ctx._source.updatedAt = '" + ts + "';";
+            case "dismissed" -> "ctx._source.status = 'dismissed'; ctx._source.updatedAt = '" + ts + "';";
+            default -> null;
+        };
+    }
+
+    /**
+     * Fixed Painless assignee update. Unassign uses a constant script; assign embeds only
+     * charset-validated tokens (no quotes/semicolons/backslash).
+     */
+    static String assigneeUpdateScript(String assignee, Instant updatedAt) {
+        String ts = updatedAt.toString();
+        if (assignee == null || assignee.isBlank()) {
+            return "ctx._source.assignee = null; ctx._source.updatedAt = '" + ts + "';";
+        }
+        if (!SAFE_ASSIGNEE.matcher(assignee).matches()) {
+            return null;
+        }
+        return "ctx._source.assignee = '" + assignee + "'; ctx._source.updatedAt = '" + ts + "';";
     }
 
     private List<String> parseMentions(String mentions) {

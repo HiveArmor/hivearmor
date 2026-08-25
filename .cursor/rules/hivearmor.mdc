@@ -119,7 +119,7 @@ Do not mark a session complete if any gate fails.
 ## Security — Known Open Issues (do not replicate)
 | ID | Gap | What to avoid in new code |
 |---|---|---|
-| SEC-03 | CorrelatedFindings status endpoint vulnerable | Status control stays disabled until backend fix deployed |
+| SEC-03 | CLOSED (STAGING CANDIDATE) — `PUT /api/offenses/{id}/status` + `POST /api/ha-correlated-findings/{id}/status` have `@PreAuthorize(ALERT_QUEUE_AUTH)` and allowlisted scripts | Keep `GAP_SEC_03_RESOLVED = true`; UI gates via `canMutateFindingStatus` (ROLE_ADMIN\|SOC_MANAGER\|ANALYST\|SOC_ANALYST) |
 | SEC-05 | Agent-manager gRPC is INTERNAL_KEY-only (by design) | REST mutates are ROLE_ADMIN\|SOC_MANAGER; SensorGrid isolate/kill stay disabled until `REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED` flips after ProcessCommand→agent proof |
 | SEC-06 | CLOSED (STAGING CANDIDATE) — `POST /api/ha-visualizations/run` has `@PreAuthorize` | Keep `GAP_SEC_06_RESOLVED = true`; UI still gates via `canRunVisualization` (ROLE_ADMIN\|SOC_MANAGER\|ANALYST) |
 
@@ -194,7 +194,7 @@ POST   /api/ha-investigation-sessions/{id}/convert-to-incident
 # Offenses / Correlated Findings
 GET /api/offenses               (page, size → X-Total-Count)
 GET /api/offenses/{id}
-PUT /api/offenses/{id}/status   (SEC-03 — keep disabled in UI)
+PUT /api/offenses/{id}/status   (SEC-03 CLOSED STAGING CANDIDATE — @PreAuthorize ALERT_QUEUE_AUTH + allowlisted scripts; GAP_SEC_03_RESOLVED=true; UI gates via canMutateFindingStatus)
 GET /api/offenses/{id}/alerts
 
 # Detection / Correlation Rules (prefix is correlation-rule, singular, no ha-)
