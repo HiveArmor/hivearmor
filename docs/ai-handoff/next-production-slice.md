@@ -1,22 +1,30 @@
 # Next production slice
 
-Updated: **2026-08-23 11:26:10 IST (UTC+05:30)**
+Updated: **2026-08-25 08:29:20 IST (UTC+05:30)**
 
 ## Active — Orphan Operational Workflows
 
-Routes: to be selected after route/navigation/backend ownership inventory across UEBA and risk timelines, endpoint timeline/quarantine/FIM/policies, and threat-intelligence operations.
-Status: **PLANNED**; no production-readiness claim.
+Routes: inventory across UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence; **first bounded family = threat-intel ops** (`/intelligence`, `/admin/threat-intel`).
+Status: **STAGING CANDIDATE** — inventory recorded + thin honesty fix on threat-intel hub. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for this slice.
 Program: `docs/ai-handoff/remaining-page-program.md`.
+Research: `docs/ai-handoff/research/orphan-operational-workflows-inventory.md`.
+Contracts: `TI-001`–`TI-004`.
 
-Branch state: the completed frontend/backend checkpoint has been integrated into local `main` by merge commit `0d9152d`. Begin the next bounded slice from `main`; do not repeat checkpoint reconciliation. The remote was not pushed during this closeout.
+Branch: `feat/p1-orphan-route-inventory` (worktree `.worktrees/p1-orphan-inventory`).
 
-Required next actions:
+Completed in this inventory slice:
 
-1. Inventory every visible and hidden route, navigation entry, frontend service and backend controller for UEBA, risk/timeline, endpoint operations, quarantine, FIM, agent policy and threat intelligence. Select one coherent route family; do not redesign all orphan routes at once.
-2. Reconcile existing production-capable backend work and legacy overlaps before registering gaps or deprecations. Preserve the user's requirement that deprecation is recorded only after a successor and cutover evidence exist.
-3. Research at least three official primary sources for the selected family, including two OEM workflows where available, and preserve the offline note before implementation.
-4. Implement bounded, cancellable, keyboard-operable enterprise workflows with honest permissions, freshness, partial failure, progressive context and investigation/response pivots. Keep unsupported mutations disabled.
-5. Timestamp the contract and handoff closeout, scan production artifacts for fixture records, run focused/full gates and complete authenticated dark/light browser review.
+1. Route/nav/service/controller inventory for the three orphan families with gap severity.
+2. Chose threat-intel ops (existing secured backend). Deferred UEBA `ROLE_` PreAuthorize bug and quarantine SOC Manager auth mismatch to follow-ons.
+3. `/intelligence`: include SOC Manager in page gate; wire `GET /api/ha-threat-intel/stats`; keep feed enable/sync Admin-only with explicit read-only copy; human access-denied labels on Admin TI page.
+4. Did not adopt unsecured `/api/v1/threat-intel`. No full orphan redesign.
+
+Required next actions (remaining orphans / depth):
+
+1. Follow-on UEBA: fix `HaUebaResource` `@PreAuthorize` authority strings (`ROLE_ANALYST`/`ROLE_ADMIN`) before claiming risk dashboard live.
+2. Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).
+3. Optional deeper threat-intel: cursor/freshness, sync receipts, v1 deprecation after successor cutover.
+4. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
 
 ## Completed this slice — Governance and Platform Settings
 

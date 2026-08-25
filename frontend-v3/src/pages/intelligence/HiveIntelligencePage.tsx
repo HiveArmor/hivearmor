@@ -1,6 +1,11 @@
 /**
  * HiveIntelligencePage — INV-07
  * Threat intelligence hub — IOC feeds, indicator browser, enrichment lookup
+ *
+ * Honesty boundary (STAGING CANDIDATE):
+ * - Reads: feeds, IOCs, lookup, and aggregate stats from secured /api/ha-threat-intel/*
+ * - Feed enable/sync mutations remain Platform Administrator only (backend ADMIN)
+ * - Legacy unsecured /api/v1/threat-intel is not called
  */
 
 import { useState } from 'react';
@@ -10,13 +15,27 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, Loader2, RefreshCw, Search } from 'lucide-react';
 
 import { TlpBadge } from '@/components/tlp-badge/TlpBadge';
+import { ROLE_LABELS } from '@/lib/roles';
 import { threatIntelService } from '@/services/threatIntel.service';
 import { useAuthStore } from '@/store/auth.store';
 import type { ThreatFeedDTO } from '@/types/threatIntel.types';
 
+/** Matches AuthGuard on /intelligence and backend lookup/IOC authorities. */
+const INTELLIGENCE_READ_ROLES = [
+  'ROLE_ADMIN',
+  'ROLE_SOC_MANAGER',
+  'ROLE_ANALYST',
+  'ROLE_USER',
+] as const;
+
+function formatStatCount(value: number | undefined): string {
+  if (value === undefined) return '—';
+  return new Intl.NumberFormat().format(value);
+}
+
 export function HiveIntelligencePage(): JSX.Element {
   const hasRequiredRole = useAuthStore((state) =>
-    state.hasAnyRole(['ROLE_ADMIN', 'ROLE_ANALYST', 'ROLE_USER'])
+    state.hasAnyRole([...INTELLIGENCE_READ_ROLES])
   );
   const hasAdminRole = useAuthStore((state) => state.hasRole('ROLE_ADMIN'));
 
@@ -39,6 +58,17 @@ export function HiveIntelligencePage(): JSX.Element {
   });
 
   const {
+    data: iocStats,
+    isLoading: isStatsLoading,
+    isError: isStatsError,
+  } = useQuery({
+    queryKey: ['ioc-stats'],
+    queryFn: () => threatIntelService.getIocStats(),
+    enabled: hasRequiredRole,
+    refetchInterval: 60_000,
+  });
+
+  const {
     data: iocs,
     isLoading: isIocsLoading,
     isError: isIocsError,
@@ -58,6 +88,7 @@ export function HiveIntelligencePage(): JSX.Element {
       threatIntelService.toggleFeed(id, enabled),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['threatFeeds'] });
+      queryClient.invalidateQueries({ queryKey: ['ioc-stats'] });
     },
   });
 
@@ -66,6 +97,7 @@ export function HiveIntelligencePage(): JSX.Element {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['threatFeeds'] });
       queryClient.invalidateQueries({ queryKey: ['iocs'] });
+      queryClient.invalidateQueries({ queryKey: ['ioc-stats'] });
     },
   });
 
@@ -106,7 +138,8 @@ export function HiveIntelligencePage(): JSX.Element {
             Access Denied
           </h1>
           <p style={{ fontSize: 'var(--ha-text-base)', color: 'var(--ha-text-secondary)' }}>
-            You do not have permission to access threat intelligence.
+            Required permission: {ROLE_LABELS.ROLE_ANALYST}, {ROLE_LABELS.ROLE_SOC_MANAGER}, or{' '}
+            Platform Administrator.
           </p>
         </div>
       </div>
@@ -161,33 +194,108 @@ export function HiveIntelligencePage(): JSX.Element {
     );
   }
 
+  const statsStrip = (
+    <div
+      role="region"
+      aria-label="IOC inventory summary"
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '16px',
+        padding: '10px 16px',
+        borderBottom: '1px solid var(--ha-border)',
+        background: 'var(--ha-surface-raised)',
+        fontSize: 'var(--ha-text-xs)',
+        color: 'var(--ha-text-secondary)',
+      }}
+    >
+      {isStatsLoading && <span>Loading IOC stats…</span>}
+      {isStatsError && (
+        <span style={{ color: 'var(--ha-high)' }}>
+          IOC stats unavailable — feed and lookup reads may still work.
+        </span>
+      )}
+      {!isStatsLoading && !isStatsError && (
+        <>
+          <span>
+            Active IOCs:{' '}
+            <strong style={{ color: 'var(--ha-text-primary)' }}>
+              {formatStatCount(iocStats?.totalActive)}
+            </strong>
+          </span>
+          <span>
+            IPs:{' '}
+            <strong style={{ color: 'var(--ha-text-primary)' }}>
+              {formatStatCount(iocStats?.byType?.ip)}
+            </strong>
+          </span>
+          <span>
+            Domains:{' '}
+            <strong style={{ color: 'var(--ha-text-primary)' }}>
+              {formatStatCount(iocStats?.byType?.domain)}
+            </strong>
+          </span>
+          <span>
+            Hashes:{' '}
+            <strong style={{ color: 'var(--ha-text-primary)' }}>
+              {formatStatCount(iocStats?.byType?.hash)}
+            </strong>
+          </span>
+          <span>
+            Expired today:{' '}
+            <strong style={{ color: 'var(--ha-text-primary)' }}>
+              {formatStatCount(iocStats?.expiredToday)}
+            </strong>
+          </span>
+        </>
+      )}
+      {!hasAdminRole && (
+        <span style={{ marginLeft: 'auto' }}>
+          Feed enable/sync requires Platform Administrator — browse and lookup remain available.
+        </span>
+      )}
+    </div>
+  );
+
   if (!feeds || feeds.length === 0) {
     return (
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          flexDirection: 'column',
           height: '100%',
           background: 'var(--ha-background)',
         }}
       >
+        {statsStrip}
         <div
           style={{
-            background: 'var(--ha-surface-primary)',
-            border: '1px solid var(--ha-border)',
-            borderRadius: 'var(--ha-radius-base)',
-            padding: '48px',
-            textAlign: 'center',
-            maxWidth: '600px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flex: 1,
           }}
         >
-          <h1 style={{ fontSize: 'var(--ha-text-xl)', color: 'var(--ha-text-primary)' }}>
-            No Threat Feeds
-          </h1>
-          <p style={{ fontSize: 'var(--ha-text-base)', color: 'var(--ha-text-secondary)' }}>
-            No threat intelligence feeds are configured.
-          </p>
+          <div
+            style={{
+              background: 'var(--ha-surface-primary)',
+              border: '1px solid var(--ha-border)',
+              borderRadius: 'var(--ha-radius-base)',
+              padding: '48px',
+              textAlign: 'center',
+              maxWidth: '600px',
+            }}
+          >
+            <h1 style={{ fontSize: 'var(--ha-text-xl)', color: 'var(--ha-text-primary)' }}>
+              No Threat Feeds
+            </h1>
+            <p style={{ fontSize: 'var(--ha-text-base)', color: 'var(--ha-text-secondary)' }}>
+              No threat intelligence feeds are configured.
+              {hasAdminRole
+                ? ' Configure TAXII or MISP sources under Admin → Threat Intelligence.'
+                : ' Ask a Platform Administrator to configure feed sources.'}
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -197,11 +305,14 @@ export function HiveIntelligencePage(): JSX.Element {
     <div
       style={{
         display: 'flex',
+        flexDirection: 'column',
         height: '100%',
         background: 'var(--ha-background)',
         overflow: 'hidden',
       }}
     >
+      {statsStrip}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
       {/* Left Panel - Feed List */}
       <div
         style={{
@@ -275,16 +386,26 @@ export function HiveIntelligencePage(): JSX.Element {
                 >
                   {feed.name}
                 </span>
-                {hasAdminRole && (
+                {hasAdminRole ? (
                   <input
                     type="checkbox"
                     checked={feed.enabled}
+                    aria-label={`${feed.name} enabled`}
                     onChange={(e) => {
                       e.stopPropagation();
                       toggleFeedMutation.mutate({ id: feed.id, enabled: e.target.checked });
                     }}
                     style={{ cursor: 'pointer' }}
                   />
+                ) : (
+                  <span
+                    style={{
+                      fontSize: 'var(--ha-text-xs)',
+                      color: feed.enabled ? 'var(--ha-positive)' : 'var(--ha-text-secondary)',
+                    }}
+                  >
+                    {feed.enabled ? 'Enabled' : 'Disabled'}
+                  </span>
                 )}
               </div>
               <div
@@ -765,6 +886,7 @@ export function HiveIntelligencePage(): JSX.Element {
             Select a feed to view details
           </div>
         )}
+      </div>
       </div>
     </div>
   );

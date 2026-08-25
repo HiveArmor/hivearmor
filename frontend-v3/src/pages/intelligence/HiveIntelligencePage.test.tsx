@@ -24,7 +24,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { HiveIntelligencePage } from './HiveIntelligencePage';
 
-import type { IocBrowserEntryDTO, ThreatFeedDTO, TlpLevel } from '@/types/threatIntel.types';
+import type { IocBrowserEntryDTO, IocStatsDTO, ThreatFeedDTO, TlpLevel } from '@/types/threatIntel.types';
 
 // ---------------------------------------------------------------------------
 // Mock @/store/auth.store
@@ -61,6 +61,7 @@ vi.mock('@/services/threatIntel.service', () => ({
     toggleFeed:   vi.fn(),
     syncFeed:     vi.fn(),
     lookupIoc:    vi.fn(),
+    getIocStats:  vi.fn(),
   },
 }));
 
@@ -78,9 +79,10 @@ vi.mock('lucide-react', () => ({
 // ---------------------------------------------------------------------------
 // Mock @tanstack/react-query
 //
-// useQuery is called twice:
-//   call 1 — queryKey ['threatFeeds']  → controlled via mockFeedsQuery
-//   call 2 — queryKey ['iocs', feedId] → controlled via mockIocsQuery
+// useQuery is called for:
+//   ['threatFeeds'] → mockFeedsQuery
+//   ['ioc-stats']   → mockStatsQuery
+//   ['iocs', id]    → mockIocsQuery
 //
 // useMutation and useQueryClient are no-ops for rendering tests.
 // ---------------------------------------------------------------------------
@@ -94,12 +96,14 @@ type QueryReturn<T> = {
 
 const mockFeedsQuery = vi.fn();
 const mockIocsQuery  = vi.fn();
+const mockStatsQuery = vi.fn();
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: (opts: { queryKey: unknown[] }) => {
     const key = opts.queryKey[0];
     if (key === 'threatFeeds') return mockFeedsQuery();
     if (key === 'iocs')        return mockIocsQuery();
+    if (key === 'ioc-stats')   return mockStatsQuery();
     return { data: undefined, isLoading: false, isError: false, error: null };
   },
   useMutation: () => ({
@@ -170,6 +174,17 @@ beforeEach(() => {
     isError:   false,
     error:     null,
   } satisfies QueryReturn<IocBrowserEntryDTO[]>);
+
+  mockStatsQuery.mockReturnValue({
+    data: {
+      totalActive: 12,
+      byType: { ip: 4, domain: 3, hash: 5, url: 0, email: 0 },
+      expiredToday: 1,
+    } satisfies IocStatsDTO,
+    isLoading: false,
+    isError: false,
+    error: null,
+  } satisfies QueryReturn<IocStatsDTO>);
 });
 
 // ---------------------------------------------------------------------------
@@ -186,6 +201,17 @@ function renderPage() {
 // ---------------------------------------------------------------------------
 
 describe('HiveIntelligencePage — TLP-aware IOC display (T04)', () => {
+  it('renders IOC stats strip and admin-only mutation honesty for non-admins', () => {
+    renderPage();
+
+    expect(screen.getByRole('region', { name: 'IOC inventory summary' })).toBeVisible();
+    expect(screen.getByText('12')).toBeVisible();
+    expect(
+      screen.getByText(/Feed enable\/sync requires Platform Administrator/)
+    ).toBeVisible();
+    expect(screen.getByText('Enabled')).toBeVisible();
+  });
+
   // -------------------------------------------------------------------------
   // 1. TLP badge renders for a normal IOC row
   //

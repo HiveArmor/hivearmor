@@ -1000,7 +1000,7 @@ export function ThreatIntelAdminPage(): JSX.Element {
         <EmptyState
           icon={<LockIcon color="var(--ha-text-secondary)" />}
           title="Administrator access required"
-          description="You need the ROLE_ADMIN authority to manage threat intelligence sources. Contact your platform administrator to request access."
+          description="Required permission: Platform Administrator. Contact your platform administrator to request access to threat intelligence source management."
         />
       </div>
     );
