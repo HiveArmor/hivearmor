@@ -193,9 +193,8 @@ export async function deleteSavedQuery(id: string): Promise<void> {
   return apiClient.delete<void>(`/ha-saved-queries/${id}`);
 }
 
-// A2-SRCH-02: removed unused translateNlToQuery (/ha-soc-ai/query) and getThreatIntel
-// (/v1/threat-intel/ioc). Hunt page never mounted them; TI lookups use
-// @/services/threatIntel.service lookupIoc → POST /ha-threat-intel/lookup.
+// A2-SRCH-02: removed unused NL-query and legacy IOC helpers that were never mounted
+// on SearchHuntPage. TI lookups use @/services/threatIntel.service → POST /ha-threat-intel/lookup.
 
 // --- Hunt completion service functions (Sprint 42) ---
 
