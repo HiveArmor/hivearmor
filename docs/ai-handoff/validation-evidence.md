@@ -634,6 +634,21 @@ No production-readiness claim is made by this baseline entry.
 - Staging proof (admin JWT): `GET /api/ha-tenants` **200** (`X-Total-Count=4`); `GET /api/ha-audit-log` **200** (`X-Total-Count=416`).
 - Unit: `HiveTenantServiceTest` + `HaAuditLogResourceExportTest` — 7/7 passed.
 
+## 2026-08-25 22:43:00 IST (UTC+05:30) — Staging RESP-018 inventory smoke (tip 07f7dd9)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED for vendor connectors).
+- Tip deployed: `07f7dd9` (merge #76 RESP-018 execution inventory).
+- Scope: backend WAR + frontend-v3 rsync; rebuilt `hivearmor/backend:local` + `hivearmor/frontend-v3:local`; recreated backend, frontend-v3, edge.
+- Host: `https://72.44.52.187` — backend + FE healthy; admin JWT issued (`token_len=219`).
+- SPA shells **200** (3/3): `/`, `/response/activity`, `/response/playbooks`.
+- RESP-018 API smoke (admin):
+  - `GET /api/ha-playbooks/executions?limit=10` **200** (item_count=0 — empty ledger, contract live)
+  - `GET /api/ha-playbooks/executions/summary` **200** (total=0)
+  - Trace skipped (no execution rows)
+- `PlaybookExecutionInventoryService` present in running WAR.
+- Failures: **0**. Report: `/tmp/hivearmor-staging-resp018-smoke.json`.
+- Still deferred: vendor live connector proofs; INV-012 interactive promote UI walk; full interactive browser walk / 24h soak.
+
 ## 2026-08-25 22:19:00 IST (UTC+05:30) — Staging INV-012 promote smoke (tip 4012705)
 
 - Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED for vendor connectors).

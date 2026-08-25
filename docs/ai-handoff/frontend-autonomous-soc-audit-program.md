@@ -46,13 +46,13 @@ Hidden / deep-link-only surfaces (hub tabs, aliases) are audited with their pare
 
 Waves **A1–D** are complete as **STAGING CANDIDATE** thin honesty on `main` tip after [#65](https://github.com/HiveArmor/hivearmor/pull/65) (`0793c18`).
 
-**Not claimed:** `PRODUCTION READY` or `LIVE VERIFIED`. Staging FE rebuild + Detect→Govern smoke recorded for tip `597e80f`; INV-012 promote smoke recorded for tip `4012705` (see `validation-evidence.md`). Vendor live connector proofs deferred until after full production MVP.
+**Not claimed:** `PRODUCTION READY` or `LIVE VERIFIED`. Staging FE rebuild + Detect→Govern smoke recorded for tip `597e80f`; INV-012 promote smoke for tip `4012705`; RESP-018 inventory smoke for tip `07f7dd9` (see `validation-evidence.md`). Vendor live connector proofs deferred until after full production MVP.
 
 **Deferred follow-ons (do not invent status):**
 - Vendor live connector proofs (credentials required)
-- Staging smoke of RESP-018 inventory after merge (FE+BE rebuild)
 - Full interactive browser walk / 24h soak
 - Interactive UI walk of INV-012 promote modal (API path smoke already recorded)
+- RESP-020 response governance when backend mappings exist
 
 Research index: `docs/ai-handoff/research/autonomous-soc-program-closure.md`.
 

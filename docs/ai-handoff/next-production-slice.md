@@ -1,18 +1,29 @@
 # Next production slice
 
-Updated: **2026-08-25 22:30:00 IST (UTC+05:30)**
+Updated: **2026-08-25 22:43:00 IST (UTC+05:30)**
+
+## Completed this slice — Staging RESP-018 inventory smoke
+
+Status: **RECORDED** tip `07f7dd9` — **STAGING CANDIDATE**. Not `PRODUCTION READY`.
+Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-25 22:43 IST). Report `/tmp/hivearmor-staging-resp018-smoke.json`.
+
+| Check | Result |
+|---|---|
+| BE+FE rebuild + edge | healthy |
+| SPA shells | 3/3 HTTP 200 |
+| executions + summary | 200 (empty ledger; contract live) |
+
+Next optional: INV-012 interactive promote UI walk, or RESP-020 governance when backend exists.
+Deferred (post full production MVP): vendor live connector credentials/proofs.
 
 ## Completed this slice — RESP-018 execution inventory
 
-Status: **STAGING CANDIDATE** (branch `feat/resp018-execution-inventory`). Not `PRODUCTION READY`.
+Status: **MERGED** tip `07f7dd9` (#76) — STAGING CANDIDATE. Staging smoke recorded above.
 
 | ID | Change |
 |---|---|
 | RESP-018 BE | `GET /api/ha-playbooks/executions`, `/executions/summary`, `/executions/{id}/trace` over `hive_playbook_execution` |
 | RESP-018 FE | `RESP_018_EXECUTION_INVENTORY=true`; Response Activity prefers inventory (+ honesty banner) |
-
-Next after merge: staging FE+BE rebuild and smoke inventory/summary on `/response/activity`.
-Deferred (post full production MVP): vendor live connector credentials/proofs; full interactive browser walk / 24h soak.
 
 ## Completed this slice — Staging INV-012 promote smoke
 
