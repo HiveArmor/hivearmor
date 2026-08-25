@@ -609,3 +609,17 @@ No production-readiness claim is made by this baseline entry.
 - Thin frontend-v3 read-only table on System Settings → AI/LLM (`LlmUsageSection`).
 - Focused backend tests (Temurin 17): `HaLlmUsageServiceTest`, `HaLlmUsageResourceTest` — **6/6 passed**.
 - Frontend: eslint on touched files + `tsc --noEmit` — **passed** (via linked main `node_modules`).
+
+## 2026-08-25 — Staging FE rebuild + Detect→Govern smoke (post Waves A1–D)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED for residual admin APIs).
+- Tip deployed: `27e55c3` (merge #66 program closure; includes Wave D #65).
+- Scope: frontend-v3 rsync + `docker compose build/recreate frontend-v3` + edge recreate. Backend/EP images unchanged this pass (audit waves were FE honesty).
+- Host: `https://72.44.52.187` — FE healthy; `/api/healthcheck` 200; admin JWT issued (`token_len=219`).
+- UI SPA shells: 200 across Detect→Govern route families + legacy aliases (`/response/playbooks-legacy`, `/admin/tenants-old`, `/rules`) — client redirects apply after load.
+- API smoke (admin): 200 on alerts, offenses, incidents, investigations, entities, TI feeds, correlation-rule search, soar playbooks/audit, agents, posture score/frameworks, dashboards, reports, users, settings, account.
+- Honesty bundle checks: `ROLE_INCIDENT_COMMANDER` **0** hits; `Platform Administrator` present (43 chunks); `prefers-color-scheme` present.
+- Residual (pre-existing / out of FE-honesty scope — do not claim LIVE VERIFIED):
+  - `GET /api/ha-tenants` → **500** (generic Internal Server Error)
+  - `GET /api/ha-audit-log` → **500** (empty body)
+  - `GET /api/ha-mssp/tenants` → **403** for Platform Administrator without MSSP role (expected fail-closed)
