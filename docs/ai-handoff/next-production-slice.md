@@ -1,12 +1,26 @@
 # Next production slice
 
-Updated: **2026-08-25 21:20:00 IST (UTC+05:30)**
+Updated: **2026-08-25 21:35:00 IST (UTC+05:30)**
 
-## Active — MSSP masthead authorized tenant inventory (STAGING CANDIDATE)
+## Active — Residual product depth (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Status: **AUDIT + thin honesty ready for merge** — masthead loads authorized tenants from `/api/ha-tenants` or `/api/ha-mssp/tenants`; no hardcoded placeholders. Still **STAGING CANDIDATE**. Not `PRODUCTION READY`.
-Branch: `feat/mssp-masthead-tenant-inventory`.
+Status: **IN PROGRESS** — residual non-vendor depth. Still **STAGING CANDIDATE**. Not `PRODUCTION READY`.
+Branch: `feat/residual-product-depth`.
+
+| ID | Fix |
+|---|---|
+| RESP-018-compat | `/response/activity` → `GET /api/soar/audit` SOAR audit projection (inventory flag stays false) |
+| A3-PB-03 | Playbook Audit tab → history projection (`GET /api/ha-playbooks/{id}/history`) |
+| TI admin nav | `/admin/threat-intel` in Administration nav (Platform Administrator) |
+| TI-001 | IOC browser pagination via `X-Total-Count` (page size 50) |
+
+Deferred (post full production MVP): vendor live connector credentials/proofs.
+Next optional after merge: enrollment audit ledger, investigation promote honesty, staging rebuild.
+
+## Completed this slice — MSSP masthead authorized tenant inventory (#70)
+
+Status: **MERGED** tip `a360e04` — STAGING CANDIDATE.
 
 | ID | Fix |
 |---|---|
@@ -15,9 +29,6 @@ Branch: `feat/mssp-masthead-tenant-inventory`.
 ## Completed this slice — Wave D-06 row density (#69)
 
 Status: **MERGED** tip `79a4d9d` — STAGING CANDIDATE.
-
-Deferred (post full production MVP): vendor live connector credentials/proofs.
-Next optional after merge: residual product depth without vendor logins.
 
 ## Completed this slice — Wave D Cross-product closure (#65)
 

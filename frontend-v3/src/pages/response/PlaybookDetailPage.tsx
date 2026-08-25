@@ -33,7 +33,10 @@ import {
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
-import { useRowDensity } from '@/hooks/useRowDensity';
+import {
+  RESP_PLAYBOOK_AUDIT,
+  RESP_PLAYBOOK_AUDIT_DISABLED_TITLE,
+} from './response.capabilities';
 import type {
   PlaybookListItem,
   PlaybookStreamEvent,
@@ -54,10 +57,11 @@ import {
 import { HaButton } from '@/components/ha-button/HaButton';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
-import { formatAuthorityLabel } from '@/lib/roles';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import { useEpsStream } from '@/hooks/useEpsStream';
+import { useRowDensity } from '@/hooks/useRowDensity';
+import { formatAuthorityLabel } from '@/lib/roles';
 import {
   fetchPlaybook,
   fetchPlaybookAudit,
@@ -793,12 +797,36 @@ function AuditTab({ playbookId }: { playbookId: number }): JSX.Element {
       </div>
     );
   }
-  if (!data?.items.length) return <div className="detail-tab-body"><div className="detail-empty-inline">No audit events recorded.</div></div>;
+  if (!data?.items.length) {
+    return (
+      <div className="detail-tab-body">
+        {!RESP_PLAYBOOK_AUDIT && (
+          <div className="detail-inline-state" role="status">
+            <ScrollText size={18} />
+            <div>
+              <strong>History projection</strong>
+              <span>{RESP_PLAYBOOK_AUDIT_DISABLED_TITLE}</span>
+            </div>
+          </div>
+        )}
+        <div className="detail-empty-inline">No audit events recorded.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="detail-tab-body">
+      {!RESP_PLAYBOOK_AUDIT && (
+        <div className="detail-inline-state" role="status">
+          <ScrollText size={18} />
+          <div>
+            <strong>History projection</strong>
+            <span>{RESP_PLAYBOOK_AUDIT_DISABLED_TITLE}</span>
+          </div>
+        </div>
+      )}
       <div className="detail-audit-summary">
-        <span>Immutable audit trail</span>
+        <span>{RESP_PLAYBOOK_AUDIT ? 'Immutable audit trail' : 'Execution history projection'}</span>
         <span className="detail-mono">{data.total} event{data.total === 1 ? '' : 's'} · newest first</span>
       </div>
       <ol className="detail-audit-list">
@@ -809,7 +837,9 @@ function AuditTab({ playbookId }: { playbookId: number }): JSX.Element {
             <span className="detail-audit-action">{entry.action.toLowerCase().replace('_', ' ')}</span>
             <span className="detail-audit-by">{entry.actor}<small>{entry.actorRole}</small></span>
             <span className="detail-audit-detail">{entry.summary}</span>
-            <span className="detail-audit-version detail-mono">v{entry.version}</span>
+            {RESP_PLAYBOOK_AUDIT && (
+              <span className="detail-audit-version detail-mono">v{entry.version}</span>
+            )}
           </li>
         ))}
       </ol>

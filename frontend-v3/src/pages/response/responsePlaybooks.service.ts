@@ -18,6 +18,8 @@
 
 import {
   RESP_018_EXECUTION_INVENTORY,
+  RESP_018_SOAR_AUDIT_PROJECTION,
+  RESP_018_SOAR_AUDIT_TITLE,
   RESP_020_GOVERNANCE,
 } from './response.capabilities';
 import type {
@@ -28,8 +30,10 @@ import type {
   PlaybookMetricsSummary,
   PlaybookPreviewRequest,
   PlaybookPreviewResponse,
+  ResponseActivityDTO,
   ResponseActivityListParams,
   ResponseActivityPageResult,
+  ResponseActivityStatus,
   ResponseActivitySummary,
   ResponseExecutionTraceResult,
   ResponseApprovalDecisionRequest,
@@ -41,6 +45,7 @@ import type {
   ResponseAuthorityPolicySaveRequest,
   ResponseGovernanceResult,
   PlaybookListParams,
+  TriggerType,
 } from './response.types';
 
 import { apiClient } from '@/lib/apiClient';
@@ -433,6 +438,216 @@ export function openExecutionStream(executionId: string): EventSource {
 
 // ─── RESP-018: Response activity and progressive execution trace ─────────
 
+/** Backend SOAR audit row (UtmPlaybookExecutionDTO). */
+interface SoarAuditExecutionDTO {
+  id: number;
+  playbookId: number;
+  playbookName: string;
+  status: string;
+  triggerType: string;
+  triggeredBy: string;
+  alertId?: string | null;
+  startedAt?: string | null;
+  endedAt?: string | null;
+  totalSteps?: number | null;
+  completedSteps?: number | null;
+  errorMessage?: string | null;
+  stepsLog?: string | null;
+}
+
+function mapSoarStatus(raw: string | undefined): ResponseActivityStatus {
+  const normalized = (raw ?? '').trim().toUpperCase();
+  if (normalized === 'SUCCESS' || normalized === 'COMPLETED') return 'SUCCESS';
+  if (normalized === 'FAILED' || normalized === 'FAILURE' || normalized === 'ERROR') return 'FAILED';
+  if (normalized === 'PARTIAL' || normalized === 'PARTIAL_SUCCESS') return 'PARTIAL';
+  if (normalized === 'CANCELLED' || normalized === 'CANCELED') return 'CANCELLED';
+  if (normalized === 'BLOCKED') return 'BLOCKED';
+  if (normalized === 'AWAITING_APPROVAL' || normalized === 'PENDING_APPROVAL') return 'AWAITING_APPROVAL';
+  if (normalized === 'QUEUED') return 'QUEUED';
+  if (normalized === 'RUNNING' || normalized === 'IN_PROGRESS') return 'RUNNING';
+  return 'RUNNING';
+}
+
+function mapSoarTrigger(raw: string | undefined): TriggerType {
+  const normalized = (raw ?? '').trim().toUpperCase();
+  if (normalized.includes('SCHEDUL')) return 'SCHEDULED';
+  if (normalized.includes('MANUAL') || normalized === 'USER') return 'MANUAL';
+  return 'AUTOMATIC';
+}
+
+function mapSoarAuditRow(row: SoarAuditExecutionDTO): ResponseActivityDTO {
+  const startedAt = row.startedAt ?? undefined;
+  const completedAt = row.endedAt ?? undefined;
+  let durationMs: number | undefined;
+  if (startedAt && completedAt) {
+    const ms = Date.parse(completedAt) - Date.parse(startedAt);
+    if (Number.isFinite(ms) && ms >= 0) durationMs = ms;
+  }
+  const stepCount =
+    typeof row.totalSteps === 'number' && Number.isFinite(row.totalSteps)
+      ? Math.max(0, row.totalSteps)
+      : undefined;
+  return {
+    id: String(row.id),
+    timestamp: startedAt ?? new Date(0).toISOString(),
+    playbookName: row.playbookName?.trim() || `Playbook ${row.playbookId}`,
+    playbookId: String(row.playbookId),
+    trigger: mapSoarTrigger(row.triggerType),
+    linkedEntityId: row.alertId?.trim() || undefined,
+    linkedEntityType: row.alertId?.trim() ? 'ALERT' : undefined,
+    executedBy: row.triggeredBy?.trim() || 'system',
+    status: mapSoarStatus(row.status),
+    durationMs,
+    startedAt,
+    completedAt,
+    stepCount,
+    rawLog: row.errorMessage?.trim() || row.stepsLog?.trim() || undefined,
+    capabilities: {
+      canCancel: false,
+      canRetry: false,
+      canViewInputs: false,
+      canViewOutputs: false,
+    },
+    steps: [],
+  };
+}
+
+function summarizeActivityItems(
+  items: ResponseActivityDTO[],
+  total: number,
+  snapshotAt: string,
+  partialFailures: string[]
+): ResponseActivitySummary {
+  const running = items.filter((item) => item.status === 'RUNNING' || item.status === 'QUEUED').length;
+  const awaitingApproval = items.filter((item) => item.status === 'AWAITING_APPROVAL').length;
+  const failed = items.filter((item) => item.status === 'FAILED').length;
+  const partial = items.filter((item) => item.status === 'PARTIAL').length;
+  const success = items.filter((item) => item.status === 'SUCCESS').length;
+  const completed = success + failed + partial;
+  const durations = items
+    .map((item) => item.durationMs)
+    .filter((ms): ms is number => typeof ms === 'number' && Number.isFinite(ms))
+    .sort((a, b) => a - b);
+  const medianDurationMs =
+    durations.length === 0
+      ? 0
+      : durations.length % 2 === 1
+        ? durations[(durations.length - 1) / 2]
+        : Math.round((durations[durations.length / 2 - 1] + durations[durations.length / 2]) / 2);
+  return {
+    total,
+    running,
+    awaitingApproval,
+    failed,
+    partial,
+    successRate: completed === 0 ? 0 : Math.round((success / completed) * 100),
+    medianDurationMs,
+    degradedConnectors: 0,
+    snapshotAt,
+    totalIsExact: true,
+    partialFailures,
+  };
+}
+
+/**
+ * Offset-page cursor for SOAR audit (Spring Pageable). Encoded as `soar:{page}`.
+ */
+function parseSoarAuditPage(cursor: string | undefined): number {
+  if (!cursor?.startsWith('soar:')) return 0;
+  const page = Number.parseInt(cursor.slice(5), 10);
+  return Number.isFinite(page) && page >= 0 ? page : 0;
+}
+
+async function fetchSoarAuditActivity(
+  params: ResponseActivityListParams & { search?: string },
+  signal?: AbortSignal
+): Promise<ResponseActivityPageResult> {
+  const snapshotAt = new Date().toISOString();
+  const size = Math.min(Math.max(params.size ?? 100, 1), 100);
+  const page = parseSoarAuditPage(params.cursor);
+  const token = localStorage.getItem(TOKEN_KEY);
+  const selectedTenantId = useAuthStore.getState().selectedTenantId;
+  const qs = new URLSearchParams();
+  qs.set('page', String(page));
+  qs.set('size', String(size));
+  qs.set('sort', 'startedAt,desc');
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (selectedTenantId !== null) headers['X-Tenant-ID'] = String(selectedTenantId);
+
+  const res = await fetch(`/api/soar/audit?${qs.toString()}`, { headers, signal });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const rawItems = (await res.json()) as SoarAuditExecutionDTO[];
+  const totalHeader = parseInt(res.headers.get('X-Total-Count') ?? String(rawItems.length), 10);
+  const total = Number.isFinite(totalHeader) ? totalHeader : rawItems.length;
+
+  let items = rawItems.map(mapSoarAuditRow);
+  const searchTerm = params.search?.trim().toLowerCase();
+  const clientFilters: string[] = [];
+  if (params.status && params.status !== 'ALL') {
+    items = items.filter((item) => item.status === params.status);
+    clientFilters.push('status');
+  }
+  if (params.trigger && params.trigger !== 'ALL') {
+    items = items.filter((item) => item.trigger === params.trigger);
+    clientFilters.push('trigger');
+  }
+  if (params.triggeredBy) {
+    const by = params.triggeredBy.trim().toLowerCase();
+    items = items.filter((item) => item.executedBy.toLowerCase().includes(by));
+    clientFilters.push('triggeredBy');
+  }
+  if (searchTerm) {
+    items = items.filter((item) =>
+      `${item.playbookName} ${item.id} ${item.linkedEntityId ?? ''} ${item.executedBy}`
+        .toLowerCase()
+        .includes(searchTerm)
+    );
+    clientFilters.push('search');
+  }
+  if (params.timeFrom) {
+    const fromMs = Date.parse(params.timeFrom);
+    if (Number.isFinite(fromMs)) {
+      items = items.filter((item) => Date.parse(item.timestamp) >= fromMs);
+      clientFilters.push('timeFrom');
+    }
+  }
+  if (params.timeTo) {
+    const toMs = Date.parse(params.timeTo);
+    if (Number.isFinite(toMs)) {
+      items = items.filter((item) => Date.parse(item.timestamp) <= toMs);
+      clientFilters.push('timeTo');
+    }
+  }
+
+  const partialFailures = [RESP_018_SOAR_AUDIT_TITLE];
+  if (clientFilters.length > 0) {
+    partialFailures.push(
+      `Client-side filters (${clientFilters.join(', ')}) apply to the current SOAR audit page only`
+    );
+  }
+
+  const hasMore = (page + 1) * size < total;
+  const nextCursor = hasMore ? `soar:${page + 1}` : null;
+  const previousCursor = page > 0 ? `soar:${page - 1}` : null;
+
+  return {
+    items,
+    nextCursor,
+    total: clientFilters.length > 0 ? items.length : total,
+    hasMore,
+    previousCursor,
+    snapshotAt,
+    stale: false,
+    summary: summarizeActivityItems(
+      items,
+      clientFilters.length > 0 ? items.length : total,
+      snapshotAt,
+      partialFailures
+    ),
+  };
+}
+
 export async function fetchResponseActivity(
   params: ResponseActivityListParams & { search?: string },
   signal?: AbortSignal
@@ -441,67 +656,72 @@ export async function fetchResponseActivity(
     const { filterFoundationResponseActivity } = await import('@/pages/response/response.fixtures');
     return filterFoundationResponseActivity(params);
   }
-  if (!RESP_018_EXECUTION_INVENTORY) {
-    const snapshotAt = new Date().toISOString();
-    const summary: ResponseActivitySummary = {
-      total: 0,
-      running: 0,
-      awaitingApproval: 0,
-      failed: 0,
-      partial: 0,
-      successRate: 0,
-      medianDurationMs: 0,
-      degradedConnectors: 0,
-      snapshotAt,
-      totalIsExact: true,
-      partialFailures: [
-        'Playbook execution inventory is not available from the backend yet',
-      ],
+  if (RESP_018_EXECUTION_INVENTORY) {
+    const query = {
+      search: params.search,
+      status: params.status && params.status !== 'ALL' ? params.status : undefined,
+      trigger: params.trigger && params.trigger !== 'ALL' ? params.trigger : undefined,
+      playbookId: params.playbookId,
+      triggeredBy: params.triggeredBy,
+      actionType: params.actionType,
+      tenantScope: params.tenantScope ?? 'authorized',
+      from: params.timeFrom,
+      to: params.timeTo,
+      cursor: params.cursor,
+      limit: params.size ?? 100,
     };
+    const summaryQuery = {
+      search: query.search,
+      status: query.status,
+      trigger: query.trigger,
+      playbookId: query.playbookId,
+      triggeredBy: query.triggeredBy,
+      actionType: query.actionType,
+      tenantScope: query.tenantScope,
+      from: query.from,
+      to: query.to,
+    };
+    const [page, summary] = await Promise.all([
+      apiClient.get<Omit<ResponseActivityPageResult, 'summary'>>('/ha-playbooks/executions', {
+        params: query,
+        signal,
+      }),
+      apiClient.get<ResponseActivitySummary>('/ha-playbooks/executions/summary', {
+        params: summaryQuery,
+        signal,
+      }),
+    ]);
     return {
-      items: [],
-      nextCursor: null,
-      total: 0,
-      hasMore: false,
-      previousCursor: null,
-      snapshotAt,
-      stale: false,
+      ...page,
+      items: page.items.map((item) => ({ ...item, steps: item.steps ?? [] })),
       summary,
     };
   }
-  const query = {
-    search: params.search,
-    status: params.status && params.status !== 'ALL' ? params.status : undefined,
-    trigger: params.trigger && params.trigger !== 'ALL' ? params.trigger : undefined,
-    playbookId: params.playbookId,
-    triggeredBy: params.triggeredBy,
-    actionType: params.actionType,
-    tenantScope: params.tenantScope ?? 'authorized',
-    from: params.timeFrom,
-    to: params.timeTo,
-    cursor: params.cursor,
-    limit: params.size ?? 100,
+  if (RESP_018_SOAR_AUDIT_PROJECTION) {
+    return fetchSoarAuditActivity(params, signal);
+  }
+  const snapshotAt = new Date().toISOString();
+  const summary: ResponseActivitySummary = {
+    total: 0,
+    running: 0,
+    awaitingApproval: 0,
+    failed: 0,
+    partial: 0,
+    successRate: 0,
+    medianDurationMs: 0,
+    degradedConnectors: 0,
+    snapshotAt,
+    totalIsExact: true,
+    partialFailures: ['Playbook execution inventory is not available from the backend yet'],
   };
-  const summaryQuery = {
-    search: query.search,
-    status: query.status,
-    trigger: query.trigger,
-    playbookId: query.playbookId,
-    triggeredBy: query.triggeredBy,
-    actionType: query.actionType,
-    tenantScope: query.tenantScope,
-    from: query.from,
-    to: query.to,
-  };
-  const [page, summary] = await Promise.all([
-    apiClient.get<Omit<ResponseActivityPageResult, 'summary'>>('/ha-playbooks/executions', { params: query, signal }),
-    apiClient.get<ResponseActivitySummary>('/ha-playbooks/executions/summary', { params: summaryQuery, signal }),
-  ]);
   return {
-    ...page,
-    // Canonical list rows are intentionally bounded. Retain an empty compatibility
-    // collection until the analyst requests the progressive trace resource.
-    items: page.items.map((item) => ({ ...item, steps: item.steps ?? [] })),
+    items: [],
+    nextCursor: null,
+    total: 0,
+    hasMore: false,
+    previousCursor: null,
+    snapshotAt,
+    stale: false,
     summary,
   };
 }
@@ -524,7 +744,9 @@ export async function fetchResponseExecutionTrace(
       snapshotAt: new Date().toISOString(),
       stale: false,
       partialFailures: [
-        'Playbook execution trace is not available from the backend yet',
+        RESP_018_SOAR_AUDIT_PROJECTION
+          ? 'Progressive execution trace requires RESP-018 inventory; SOAR audit projection has no step trace'
+          : 'Playbook execution trace is not available from the backend yet',
       ],
     };
   }

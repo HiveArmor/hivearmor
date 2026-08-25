@@ -45,6 +45,8 @@ export function HiveIntelligencePage(): JSX.Element {
   const [feedSearchQuery, setFeedSearchQuery] = useState('');
   const [enrichValue, setEnrichValue] = useState('');
   const [enrichType, setEnrichType] = useState('ip');
+  const [iocPage, setIocPage] = useState(0);
+  const IOC_PAGE_SIZE = 50;
 
   const queryClient = useQueryClient();
 
@@ -71,19 +73,26 @@ export function HiveIntelligencePage(): JSX.Element {
   });
 
   const {
-    data: iocs,
+    data: iocPageResult,
     isLoading: isIocsLoading,
     isError: isIocsError,
   } = useQuery({
-    queryKey: ['iocs', selectedFeed?.id],
-    queryFn: () =>
-      threatIntelService.searchIocs({
-        feedId: selectedFeed?.id,
-        page: 0,
-        size: 100,
-      }),
+    queryKey: ['iocs', selectedFeed?.id, iocPage],
+    queryFn: ({ signal }) =>
+      threatIntelService.searchIocsPage(
+        {
+          feedId: selectedFeed?.id,
+          page: iocPage,
+          size: IOC_PAGE_SIZE,
+        },
+        signal
+      ),
     enabled: !!selectedFeed,
   });
+
+  const iocs = iocPageResult?.items;
+  const iocTotal = iocPageResult?.total ?? 0;
+  const iocHasMore = (iocPage + 1) * IOC_PAGE_SIZE < iocTotal;
 
   const toggleFeedMutation = useMutation({
     mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
@@ -357,7 +366,10 @@ export function HiveIntelligencePage(): JSX.Element {
           {filteredFeeds?.map((feed) => (
             <div
               key={feed.id}
-              onClick={() => setSelectedFeed(feed)}
+              onClick={() => {
+                setSelectedFeed(feed);
+                setIocPage(0);
+              }}
               style={{
                 padding: '12px',
                 marginBottom: '4px',
@@ -725,6 +737,61 @@ export function HiveIntelligencePage(): JSX.Element {
                       ))}
                     </tbody>
                   </table>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 12px',
+                      borderTop: '1px solid var(--ha-border)',
+                      background: 'var(--ha-surface-raised)',
+                      fontSize: 'var(--ha-text-sm)',
+                      color: 'var(--ha-text-secondary)',
+                    }}
+                    role="navigation"
+                    aria-label="IOC pagination"
+                  >
+                    <span>
+                      {iocTotal.toLocaleString()} indicator{iocTotal === 1 ? '' : 's'} · page{' '}
+                      {iocPage + 1}
+                    </span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        type="button"
+                        disabled={iocPage === 0 || isIocsLoading}
+                        onClick={() => setIocPage((page) => Math.max(0, page - 1))}
+                        style={{
+                          padding: '4px 10px',
+                          border: '1px solid var(--ha-border)',
+                          borderRadius: 'var(--ha-radius-sm)',
+                          background: 'var(--ha-surface-primary)',
+                          color: 'var(--ha-text-primary)',
+                          fontSize: 'var(--ha-text-sm)',
+                          cursor: iocPage === 0 ? 'not-allowed' : 'pointer',
+                          opacity: iocPage === 0 ? 0.5 : 1,
+                        }}
+                      >
+                        Previous
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!iocHasMore || isIocsLoading}
+                        onClick={() => setIocPage((page) => page + 1)}
+                        style={{
+                          padding: '4px 10px',
+                          border: '1px solid var(--ha-border)',
+                          borderRadius: 'var(--ha-radius-sm)',
+                          background: 'var(--ha-surface-primary)',
+                          color: 'var(--ha-text-primary)',
+                          fontSize: 'var(--ha-text-sm)',
+                          cursor: !iocHasMore ? 'not-allowed' : 'pointer',
+                          opacity: !iocHasMore ? 0.5 : 1,
+                        }}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

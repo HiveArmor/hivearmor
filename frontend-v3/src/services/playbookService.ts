@@ -62,6 +62,7 @@ export async function fetchPlaybookExecutions(
 /**
  * Fetch the immutable audit trail for one playbook.
  * GET /api/ha-playbooks/:playbookId/audit — gated until PlaybookResource maps it.
+ * When RESP_PLAYBOOK_AUDIT is false, project from GET /history (honest labeling in UI).
  */
 export async function fetchPlaybookAudit(playbookId: number): Promise<PlaybookAuditPage> {
   if (fixtureMode) {
@@ -73,7 +74,20 @@ export async function fetchPlaybookAudit(playbookId: number): Promise<PlaybookAu
     return { items, nextCursor: null, total: items.length, hasMore: false };
   }
   if (!RESP_PLAYBOOK_AUDIT) {
-    return { items: [], nextCursor: null, total: 0, hasMore: false };
+    const history = await fetchPlaybookExecutions(playbookId);
+    const items: PlaybookAuditEntry[] = history.map((execution) => ({
+      id: `history-${execution.executionId}`,
+      occurredAt: execution.startedAt,
+      action: 'EXECUTED' as const,
+      actor: execution.triggeredBy?.trim() || 'system',
+      actorRole: 'Operator',
+      summary: `${execution.playbookName} · ${execution.status}${
+        execution.durationSeconds != null ? ` · ${execution.durationSeconds}s` : ''
+      }`,
+      version: 0,
+      correlationId: execution.executionId,
+    }));
+    return { items, nextCursor: null, total: items.length, hasMore: false };
   }
   const response = await apiClient.get<PlaybookAuditPage | PlaybookAuditEntry[]>(
     `/ha-playbooks/${playbookId}/audit?limit=100`

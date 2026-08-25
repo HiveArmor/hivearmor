@@ -173,7 +173,7 @@ beforeEach(() => {
     isLoading: false,
     isError:   false,
     error:     null,
-  } satisfies QueryReturn<IocBrowserEntryDTO[]>);
+  } satisfies QueryReturn<{ items: IocBrowserEntryDTO[]; total: number }>);
 
   mockStatsQuery.mockReturnValue({
     data: {
@@ -222,11 +222,11 @@ describe('HiveIntelligencePage — TLP-aware IOC display (T04)', () => {
     const ioc = makeIoc({ value: '1.2.3.4', tlp: 'GREEN', restricted: false });
 
     mockIocsQuery.mockReturnValue({
-      data:      [ioc],
+      data:      { items: [ioc], total: 1 },
       isLoading: false,
       isError:   false,
       error:     null,
-    } satisfies QueryReturn<IocBrowserEntryDTO[]>);
+    } satisfies QueryReturn<{ items: IocBrowserEntryDTO[]; total: number }>);
 
     renderPage();
 
@@ -257,11 +257,11 @@ describe('HiveIntelligencePage — TLP-aware IOC display (T04)', () => {
     });
 
     mockIocsQuery.mockReturnValue({
-      data:      [ioc],
+      data:      { items: [ioc], total: 1 },
       isLoading: false,
       isError:   false,
       error:     null,
-    } satisfies QueryReturn<IocBrowserEntryDTO[]>);
+    } satisfies QueryReturn<{ items: IocBrowserEntryDTO[]; total: number }>);
 
     renderPage();
 
@@ -293,11 +293,11 @@ describe('HiveIntelligencePage — TLP-aware IOC display (T04)', () => {
     });
 
     mockIocsQuery.mockReturnValue({
-      data:      [ioc],
+      data:      { items: [ioc], total: 1 },
       isLoading: false,
       isError:   false,
       error:     null,
-    } satisfies QueryReturn<IocBrowserEntryDTO[]>);
+    } satisfies QueryReturn<{ items: IocBrowserEntryDTO[]; total: number }>);
 
     renderPage();
 
