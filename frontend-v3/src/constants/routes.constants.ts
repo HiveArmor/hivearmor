@@ -61,6 +61,7 @@ export const ROUTES = {
   ADMIN_NOTIFICATIONS: '/admin/notifications',
   ADMIN_CONNECTION_KEYS: '/admin/connection-keys',
   ADMIN_AUDIT: '/admin/audit',
+  ADMIN_ENROLLMENT_AUDIT: '/admin/enrollment-audit',
   ADMIN_SETTINGS: '/admin/settings',
   ADMIN_THREAT_INTEL: '/admin/threat-intel',
   ADMIN_PIPELINE_SIGNALS: '/admin/pipeline-signals',

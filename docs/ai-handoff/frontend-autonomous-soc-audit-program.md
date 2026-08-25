@@ -50,8 +50,7 @@ Waves **A1–D** are complete as **STAGING CANDIDATE** thin honesty on `main` ti
 
 **Deferred follow-ons (do not invent status):**
 - Staging FE/BE rebuild from `main` + smoke across Detect→Govern journey
-- Residual product depth (RESP-018 SOAR audit projection, playbook history audit, TI admin nav, IOC pagination) — in flight
-- Enrollment audit ledger; investigation promote honesty
+- Enrollment audit ledger + investigation promote honesty — in flight
 - Vendor live connector proofs (credentials required)
 
 Research index: `docs/ai-handoff/research/autonomous-soc-program-closure.md`.

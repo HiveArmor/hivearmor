@@ -110,6 +110,7 @@ const ADMINISTRATION_ITEMS: NavItemSpec[] = [
   { label: 'API Keys', icon: 'KeyRound', route: '/settings/api-keys', roles: ['ROLE_ADMIN'] },
   { label: 'Data Sources', icon: 'Database', route: '/inputs/sources', roles: ['ROLE_ADMIN', 'ROLE_ANALYST'] },
   { label: 'Audit Log', icon: 'ClipboardList', route: '/admin/audit', roles: ['ROLE_ADMIN'] },
+  { label: 'Enrollment Audit', icon: 'Shield', route: '/admin/enrollment-audit', roles: ['ROLE_ADMIN', 'ROLE_SOC_MANAGER'] },
   { label: 'Pipeline & Ingestion', icon: 'Activity', route: '/admin/pipeline-signals', roles: ['ROLE_ADMIN'] },
   { label: 'Settings', icon: 'Settings', route: '/admin/settings', roles: ['ROLE_ADMIN'] },
 ];
@@ -122,7 +123,7 @@ export function HaNavigation(_props: HaNavigationProps): JSX.Element {
   const { collapsed, toggle } = useSidebarStore();
   const { theme, toggleTheme } = useThemeStore();
   const [hoverExpanded, setHoverExpanded] = useState(false);
-  const { hasAnyRole, hasRole } = useAuthStore();
+  const { hasAnyRole } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -150,7 +151,7 @@ export function HaNavigation(_props: HaNavigationProps): JSX.Element {
   const reportItems = filterItemsByRole(REPORT_ITEMS);
   const administrationItems = filterItemsByRole(ADMINISTRATION_ITEMS);
 
-  const showAdministration = hasRole('ROLE_ADMIN');
+  const showAdministration = administrationItems.length > 0;
   const expanded = !collapsed || hoverExpanded;
 
   // MSSP Portal items — only computed when isMsspAdmin is true

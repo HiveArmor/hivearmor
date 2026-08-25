@@ -1,3 +1,7 @@
+import {
+  INV_CONVERT_DISABLED_TITLE,
+  INV_CONVERT_TO_INCIDENT,
+} from './investigation.capabilities';
 import type {
   CreateInvestigationInput,
   CreateInvestigationTaskInput,
@@ -175,6 +179,9 @@ export async function convertInvestigationToIncident(id: number): Promise<{ inci
   if (fixtureMode) {
     const fixture = await import('@/pages/investigations/investigation.fixtures');
     return fixture.convertFixtureInvestigation(id);
+  }
+  if (!INV_CONVERT_TO_INCIDENT) {
+    throw new InvestigationApiError(410, INV_CONVERT_DISABLED_TITLE);
   }
   const response = await fetch(`/api/ha-investigation-sessions/${id}/convert-to-incident`, { method: 'POST', headers: headers() });
   return ensureResponse<{ incidentId: number }>(response);

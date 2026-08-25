@@ -31,6 +31,10 @@ import {
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import {
+  INV_CONVERT_DISABLED_TITLE,
+  INV_CONVERT_TO_INCIDENT,
+} from './investigation.capabilities';
+import {
   convertInvestigationToIncident,
   createInvestigationTask,
   fetchInvestigation,
@@ -187,7 +191,16 @@ export function InvestigationDetailPage(): JSX.Element {
   if (detailQuery.isError || !investigation) return <ErrorState title="Investigation unavailable" message="The session may not exist or is outside your authorized scope." onRetry={() => void detailQuery.refetch()} />;
 
   const currentPhaseIndex = phaseIndex(investigation.phase);
-  const canConvert = investigation.status === 'ACTIVE' && !investigation.incidentId && investigation.permissions?.convert === true;
+  const convertAllowed =
+    (fixtureMode || INV_CONVERT_TO_INCIDENT) &&
+    investigation.status === 'ACTIVE' &&
+    !investigation.incidentId &&
+    investigation.permissions?.convert === true;
+  const convertBlockedTitle = convertAllowed
+    ? 'Review incident promotion'
+    : !fixtureMode && !INV_CONVERT_TO_INCIDENT
+      ? INV_CONVERT_DISABLED_TITLE
+      : 'Governed promotion capability is not available for this session';
   const tabItems: Array<{ id: DetailTab; label: string; icon: JSX.Element; count?: number }> = [
     { id: 'workspace', label: 'Workspace', icon: <Workflow size={14} /> },
     { id: 'hypotheses', label: 'Hypotheses', icon: <BrainCircuit size={14} />, count: investigation.hypotheses.length },
@@ -204,12 +217,17 @@ export function InvestigationDetailPage(): JSX.Element {
         <div className="investigation-detail-header__identity"><small>INVESTIGATION SESSION</small><h1>{investigation.sessionName}</h1><span>INV-{investigation.id}</span></div>
         <div className="investigation-detail-header__actions">
           <Link to={`/search?investigationId=${investigation.id}`}><Search size={14} /> Hunt telemetry</Link>
-          {investigation.incidentId ? <Link className="investigation-detail-primary" to={`/incidents/${investigation.incidentId}`}><ShieldAlert size={14} /> Open INC-{investigation.incidentId}</Link> : <button type="button" className="investigation-detail-primary" disabled={!canConvert} title={canConvert ? 'Review incident promotion' : 'Governed promotion capability is not available for this session'} onClick={() => setConvertOpen(true)}><ShieldAlert size={14} /> Promote to incident</button>}
+          {investigation.incidentId ? <Link className="investigation-detail-primary" to={`/incidents/${investigation.incidentId}`}><ShieldAlert size={14} /> Open INC-{investigation.incidentId}</Link> : <button type="button" className="investigation-detail-primary" disabled={!convertAllowed} title={convertBlockedTitle} onClick={() => setConvertOpen(true)}><ShieldAlert size={14} /> Promote to incident</button>}
         </div>
       </header>
 
       {fixtureMode && <div className="investigation-detail-fixture"><strong>Design fixture:</strong> fictional hypotheses, artifacts, and investigation activity are enabled.<span>Production never receives these records.</span></div>}
-
+      {!fixtureMode && !INV_CONVERT_TO_INCIDENT && !investigation.incidentId && (
+        <div className="investigation-detail-fixture" role="status">
+          <strong>Promotion unavailable:</strong> {INV_CONVERT_DISABLED_TITLE}
+          <span>Create an incident from Alerts or Incidents until the governed promotion contract ships.</span>
+        </div>
+      )}
       <nav className="investigation-phase-rail" aria-label="Investigation lifecycle">
         <span>INVESTIGATION PATH</span>
         {PHASES.map((phase, index) => <button type="button" key={phase.id} data-state={index < currentPhaseIndex ? 'complete' : index === currentPhaseIndex ? 'active' : 'pending'} disabled={!fixtureMode} title={fixtureMode ? `Move to ${phase.label}` : 'Phase transitions require the authoritative investigation workflow contract'}><i>{index < currentPhaseIndex ? <CheckCircle2 size={13} /> : index + 1}</i><strong>{phase.label}</strong><small>{phase.description}</small></button>)}
@@ -314,7 +332,7 @@ export function InvestigationDetailPage(): JSX.Element {
           <section><header><h2><CircleDot size={14} /> Session control</h2></header><dl><div><dt>Status</dt><dd><select aria-label="Investigation status" value={investigation.status} onChange={(event) => statusMutation.mutate(event.target.value as InvestigationStatus)} disabled={investigation.status === 'CONVERTED'}><option value="ACTIVE">Active</option><option value="CLOSED">Closed</option><option value="ARCHIVED">Archived</option><option value="CONVERTED" disabled>Converted</option></select></dd></div><div><dt>Owner</dt><dd><UserRound size={12} /> {investigation.assignedTo || 'Unassigned'}</dd></div><div><dt>Updated</dt><dd><Clock3 size={12} /> {formatDate(investigation.updatedAt)}</dd></div><div><dt>Artifacts</dt><dd><FileCheck2 size={12} /> {items.length}</dd></div></dl></section>
           <section className="investigation-ai-card"><header><h2><Sparkles size={14} /> Hive Intelligence</h2><span>Unavailable</span></header><p>Propose alternative hypotheses, summarize cited evidence, and identify missing telemetry without making autonomous decisions. Production investigation sessions do not expose an AI hypothesis contract yet.</p><button type="button" disabled={!fixtureMode} title={fixtureMode ? 'Generate alternative hypotheses' : 'Hive Intelligence hypothesis generation requires a secured investigation AI contract'}><BrainCircuit size={14} /> Generate alternatives</button><button type="button" disabled={!fixtureMode} title={fixtureMode ? 'Summarize cited evidence' : 'Evidence summarization requires a secured investigation AI contract'}><FileSearch size={14} /> Summarize evidence</button></section>
           <section><header><h2><Radio size={14} /> Operational pivots</h2></header><div className="investigation-control-actions"><Link to={`/search?investigationId=${investigation.id}`}><Search size={14} /><span>Hunt scoped telemetry<small>Bound to this session</small></span></Link><button type="button" onClick={() => setSearchParams({ tab: 'activity' })}><Plus size={14} /><span>Add analyst note<small>Append-only record</small></span></button><button type="button" onClick={() => setSearchParams({ tab: 'knowledge' })}><Lightbulb size={14} /><span>Record outcome<small>Detection or coverage gap</small></span></button></div></section>
-          <section className="investigation-readiness"><header><h2><ShieldAlert size={14} /> Promotion readiness</h2></header><ul><li data-ready={Boolean(investigation.hypothesis)}><CheckCircle2 size={12} /> Bounded hypothesis</li><li data-ready={items.length > 0}><CheckCircle2 size={12} /> Preserved artifacts</li><li data-ready={(investigation.openHypothesisCount ?? 1) === 0}><CheckCircle2 size={12} /> Hypothesis decision</li><li data-ready={Boolean(investigation.assignedTo)}><CheckCircle2 size={12} /> Assigned owner</li></ul><button type="button" className="investigation-promote" disabled={!canConvert} onClick={() => setConvertOpen(true)}><ShieldAlert size={14} /> Promote to incident</button></section>
+          <section className="investigation-readiness"><header><h2><ShieldAlert size={14} /> Promotion readiness</h2></header><ul><li data-ready={Boolean(investigation.hypothesis)}><CheckCircle2 size={12} /> Bounded hypothesis</li><li data-ready={items.length > 0}><CheckCircle2 size={12} /> Preserved artifacts</li><li data-ready={(investigation.openHypothesisCount ?? 1) === 0}><CheckCircle2 size={12} /> Hypothesis decision</li><li data-ready={Boolean(investigation.assignedTo)}><CheckCircle2 size={12} /> Assigned owner</li></ul><button type="button" className="investigation-promote" disabled={!convertAllowed} title={convertBlockedTitle} onClick={() => setConvertOpen(true)}><ShieldAlert size={14} /> Promote to incident</button></section>
         </aside>
       </div>
 
