@@ -1,15 +1,15 @@
 # Next production slice
 
-Updated: **2026-08-25 18:00:00 IST (UTC+05:30)**
+Updated: **2026-08-25 18:45:00 IST (UTC+05:30)**
 
-## Active — Program closure (audit waves A1–D complete; staging deferred)
+## Active — Post-audit follow-ons (staging FE smoke done)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Status: **AUDIT WAVES COMPLETE** on `main` — still **STAGING CANDIDATE**. Not `PRODUCTION READY`. Staging rebuild deferred.
+Status: **AUDIT WAVES COMPLETE** + **staging FE rebuilt** to `27e55c3` — still **STAGING CANDIDATE**. Not `PRODUCTION READY`.
 Research: `docs/ai-handoff/research/autonomous-soc-program-closure.md`.
-Tip: `0793c18` (merge #65 Wave D).
+Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-25 Detect→Govern smoke).
 
-Next operator-gated actions: staging rebuild + Detect→Govern smoke; optional D-06 density; vendor live proofs when credentials exist.
+Next: residual admin API 500s (`/api/ha-tenants`, `/api/ha-audit-log`); optional D-06 density; vendor live proofs when credentials exist; full BE rebuild only if backend tip drifts.
 
 ## Completed this slice — Wave D Cross-product closure (#65)
 
@@ -63,8 +63,8 @@ Status: **MERGED** tip `e72ba83` — STAGING CANDIDATE. Staging FE rebuild defer
 ## Active — Frontend Autonomous SOC audit program (next major arc)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Waves A1–D closed as STAGING CANDIDATE. Next: operator-gated staging rebuild evidence (not auto-claimed LIVE VERIFIED).
-Status: **AUDIT WAVES COMPLETE** — not `PRODUCTION READY`.
+Waves A1–D closed; staging FE smoke recorded for tip `27e55c3`. Residual admin API 500s remain open.
+Status: **AUDIT WAVES COMPLETE + FE STAGING SMOKE** — not `PRODUCTION READY`.
 
 ## Completed this slice — Wave A2 Investigate & AI audit (#57)
 

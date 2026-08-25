@@ -1,6 +1,6 @@
 # Frontend Autonomous SOC audit program
 
-Updated: **2026-08-25 18:00:00 IST (UTC+05:30)**
+Updated: **2026-08-25 18:45:00 IST (UTC+05:30)**
 
 Purpose: validate every visible frontend-v3 surface against real backend capability for an **Enterprise AI-driven Autonomous SIEM / Autonomous SOC**. Page-by-page: **audit → research → implement** (UI/UX, nav, structure, backend connects). Status vocabulary stays honest — never claim `PRODUCTION READY` without gates.
 
@@ -46,7 +46,7 @@ Hidden / deep-link-only surfaces (hub tabs, aliases) are audited with their pare
 
 Waves **A1–D** are complete as **STAGING CANDIDATE** thin honesty on `main` tip after [#65](https://github.com/HiveArmor/hivearmor/pull/65) (`0793c18`).
 
-**Not claimed:** `PRODUCTION READY` or `LIVE VERIFIED` — staging rebuild + evidence smoke still deferred by operator request.
+**Not claimed:** `PRODUCTION READY` or `LIVE VERIFIED`. Staging **FE** rebuilt + Detect→Govern API smoke recorded for tip `27e55c3` (see `validation-evidence.md`). Residual: `/api/ha-tenants` and `/api/ha-audit-log` 500s; MSSP 403 without MSSP role.
 
 **Deferred follow-ons (do not invent status):**
 - Staging FE/BE rebuild from `main` + smoke across Detect→Govern journey
