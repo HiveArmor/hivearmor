@@ -791,7 +791,7 @@ export const router = createBrowserRouter([
       {
         path: 'dashboards/studio',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <DashboardStudioPage />
           </AuthGuard>
         ),
@@ -807,7 +807,7 @@ export const router = createBrowserRouter([
       {
         path: 'dashboards/:id/edit',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <DashboardStudioPage />
           </AuthGuard>
         ),
@@ -815,7 +815,7 @@ export const router = createBrowserRouter([
       {
         path: 'dashboards/metrics/builder',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <MetricsBuilderPage />
           </AuthGuard>
         ),
@@ -823,7 +823,7 @@ export const router = createBrowserRouter([
       {
         path: 'reports/sitrep',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <SitrepReportPage />
           </AuthGuard>
         ),
@@ -831,7 +831,7 @@ export const router = createBrowserRouter([
       {
         path: 'reports/incidents',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <IncidentReportsPage />
           </AuthGuard>
         ),
@@ -839,7 +839,7 @@ export const router = createBrowserRouter([
       {
         path: 'reports/after-action',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <AfterActionReportsPage />
           </AuthGuard>
         ),
@@ -847,7 +847,7 @@ export const router = createBrowserRouter([
       {
         path: 'reports/scheduled',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <ScheduledReportsPage />
           </AuthGuard>
         ),
@@ -855,7 +855,7 @@ export const router = createBrowserRouter([
       {
         path: 'reports/templates',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <ReportTemplatesPage />
           </AuthGuard>
         ),

@@ -58,6 +58,10 @@ export async function deleteScheduledReport(id: number): Promise<void> {
   return apiClient.delete<void>(`/ha-reports/scheduled/${id}`);
 }
 
+/**
+ * REP-004 honesty: backend `POST …/run` only stamps `lastExecutionTime`.
+ * It does not generate or distribute a report artifact. Do not toast success as "generated".
+ */
 export async function runScheduledReport(id: number): Promise<void> {
   return apiClient.post<void>(`/ha-reports/scheduled/${id}/run`);
 }

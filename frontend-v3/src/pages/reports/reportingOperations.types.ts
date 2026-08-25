@@ -8,17 +8,17 @@ export interface OperationalReport {
   title: string;
   type: OperationalReportType;
   status: ReportLifecycleStatus;
-  classification: 'Internal' | 'Restricted' | 'Executive';
+  classification: 'Internal' | 'Restricted' | 'Executive' | 'Not reported';
   scope: string;
   period: string;
   generatedAt?: string;
   generatedBy: string;
   version: number;
-  format: 'PDF' | 'CSV' | 'JSON';
+  format: 'PDF' | 'CSV' | 'JSON' | 'Not reported';
   evidenceCount: number;
   incidentCount: number;
   redactionProfile: string;
-  approval: 'approved' | 'pending' | 'not_required';
+  approval: 'approved' | 'pending' | 'not_required' | 'Not reported';
   freshness: 'current' | 'stale' | 'unknown';
 }
 

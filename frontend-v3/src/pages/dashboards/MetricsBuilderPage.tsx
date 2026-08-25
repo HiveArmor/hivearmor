@@ -1,5 +1,5 @@
 /**
- * MetricsBuilderPage — ADMIN-only visualization builder
+ * MetricsBuilderPage — Analyst+ visualization builder (matches SEC-06 run roles)
  * Session S33 — Dashboard Studio Metric Builder (DSH-04)
  */
 
@@ -62,9 +62,9 @@ export function MetricsBuilderPage(): React.JSX.Element {
 
       return response.json();
     },
-    onSuccess: (saved: { id: number }) => {
+    onSuccess: () => {
       setHasUnsavedChanges(false);
-      navigate(`/dashboards/metrics/${saved.id}`);
+      navigate('/dashboards');
     },
   });
 
@@ -99,8 +99,7 @@ export function MetricsBuilderPage(): React.JSX.Element {
 
       const data = await response.json();
       setPreviewData(data);
-    } catch (error) {
-      console.error('Preview error:', error);
+    } catch {
       setPreviewData(null);
     } finally {
       setIsRunning(false);
@@ -219,7 +218,7 @@ export function MetricsBuilderPage(): React.JSX.Element {
 
         <button
           onClick={handleSave}
-          disabled={!vizName.trim() || saveMutation.isPending}
+          disabled={!vizName.trim() || saveMutation.isPending || !canRun}
           style={{
             fontSize: 'var(--ha-text-base)',
             color: 'var(--ha-foreground-on-action)',
@@ -227,8 +226,8 @@ export function MetricsBuilderPage(): React.JSX.Element {
             border: 'none',
             borderRadius: '4px',
             padding: '6px 16px',
-            cursor: !vizName.trim() || saveMutation.isPending ? 'not-allowed' : 'pointer',
-            opacity: !vizName.trim() || saveMutation.isPending ? 0.6 : 1,
+            cursor: !vizName.trim() || saveMutation.isPending || !canRun ? 'not-allowed' : 'pointer',
+            opacity: !vizName.trim() || saveMutation.isPending || !canRun ? 0.6 : 1,
           }}
         >
           {saveMutation.isPending ? 'Saving…' : 'Save'}

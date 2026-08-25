@@ -4,6 +4,7 @@ These notes preserve paraphrased conclusions and source provenance for models wi
 
 | Domain | Note | Refresh trigger |
 |---|---|---|
+| Autonomous SOC dashboards & reports (Wave C1) | `autonomous-soc-dashboards-reports.md` | Splunk Dashboard Studio, Azure Workbooks, NIST SP 800-61, or HiveArmor DSH/REP contracts change. |
 | Autonomous SOC posture & compliance (Wave B2) | `autonomous-soc-posture-compliance.md` | Microsoft Exposure Management attack paths, NIST CSF 2.0, CIS Benchmarks, or HiveArmor EXP/ADP/CMP/MITRE contracts change. |
 | Autonomous SOC endpoint defense (Wave B1) | `autonomous-soc-endpoint-defense.md` | Defender endpoint isolate/quarantine, CrowdStrike host containment, NIST SP 800-61 containment, or HiveArmor agent DTO / EDR ProcessCommand contracts change. |
 | Autonomous SOC defend & respond (Wave A3) | `autonomous-soc-defend-respond.md` | Defender Action center, Elastic Workflows/response actions, NIST SP 800-61 containment, or HiveArmor playbook/governance contracts change. |
