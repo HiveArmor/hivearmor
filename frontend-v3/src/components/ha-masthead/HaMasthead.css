@@ -120,6 +120,15 @@
   text-transform: uppercase;
 }
 
+.ha-context-popover__notice {
+  margin: 0;
+  padding: 6px 12px 8px;
+  color: var(--ha-foreground-tertiary);
+  font-size: var(--ha-text-xs);
+  line-height: 1.35;
+  border-bottom: 1px solid var(--ha-border-default);
+}
+
 .ha-context-popover__list {
   max-height: 240px;
   overflow-y: auto;

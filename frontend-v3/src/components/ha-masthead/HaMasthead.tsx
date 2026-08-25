@@ -11,6 +11,8 @@ import { HiveArmorLogo } from './HiveArmorLogo';
 import { LiveEpsBadge } from './LiveEpsBadge';
 import { NotificationsBell } from './NotificationsBell';
 
+import { useMastheadTenants } from '@/hooks/useMastheadTenants';
+import { ALL_TENANTS_OPTION } from '@/services/mastheadTenants.service';
 import { useAuthStore } from '@/store/auth.store';
 
 import './HaMasthead.css';
@@ -18,15 +20,6 @@ import './HaMasthead.css';
 export interface HaMastheadProps {
   // No required props — all data comes from stores and hooks
 }
-
-/** Local-dev placeholder tenants — not an authorized live inventory (C3-04). */
-const KNOWN_TENANTS = [
-  { id: null, prefix: '', label: 'All authorized tenants', description: 'View events across all tenants you have access to' },
-  { id: 1, prefix: 'acme', label: 'Acme (local-dev placeholder)', description: 'Local-dev placeholder · not live inventory' },
-  { id: 3812, prefix: 'workmates1', label: 'Workmates1 (local-dev placeholder)', description: 'Local-dev placeholder · not live inventory' },
-  { id: 3813, prefix: 'cwm', label: 'CWM (local-dev placeholder)', description: 'Local-dev placeholder · not live inventory' },
-  { id: 3814, prefix: 'workmates2', label: 'Workmates2 (local-dev placeholder)', description: 'Local-dev placeholder · not live inventory' },
-] as const;
 
 function environmentLabel(): string {
   if (import.meta.env.DEV) return 'Local';
@@ -40,8 +33,9 @@ export function HaMasthead(_props: HaMastheadProps): JSX.Element {
   const setSelectedTenant = useAuthStore((state) => state.setSelectedTenant);
   const navigate = useNavigate();
   const tenantMenuRef = useRef<HTMLDivElement>(null);
+  const { tenants, isLoading, notice } = useMastheadTenants();
 
-  const selectedTenant = KNOWN_TENANTS.find((t) => t.id === selectedTenantId) ?? KNOWN_TENANTS[0];
+  const selectedTenant = tenants.find((t) => t.id === selectedTenantId) ?? ALL_TENANTS_OPTION;
   const tenantLabel = selectedTenant.label;
 
   // Close tenant dropdown on outside click
@@ -58,12 +52,12 @@ export function HaMasthead(_props: HaMastheadProps): JSX.Element {
   }, [tenantOpen]);
 
   const filteredTenants = useMemo(() => {
-    if (!tenantSearch.trim()) return KNOWN_TENANTS;
+    if (!tenantSearch.trim()) return tenants;
     const needle = tenantSearch.toLowerCase();
-    return KNOWN_TENANTS.filter(
+    return tenants.filter(
       (t) => t.label.toLowerCase().includes(needle) || t.prefix.toLowerCase().includes(needle)
     );
-  }, [tenantSearch]);
+  }, [tenantSearch, tenants]);
 
   const handleSelectTenant = (tenantId: number | null) => {
     setSelectedTenant(tenantId);
@@ -106,6 +100,12 @@ export function HaMasthead(_props: HaMastheadProps): JSX.Element {
                 />
               </div>
               <span className="ha-context-popover__label">Select tenant scope</span>
+              {notice && (
+                <p className="ha-context-popover__notice" role="status">{notice}</p>
+              )}
+              {isLoading && (
+                <p className="ha-context-popover__notice" role="status">Loading authorized tenants…</p>
+              )}
               <div className="ha-context-popover__list">
                 {filteredTenants.length === 0 && (
                   <div className="ha-context-popover__empty">No tenants match &ldquo;{tenantSearch}&rdquo;</div>
