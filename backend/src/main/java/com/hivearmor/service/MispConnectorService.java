@@ -6,6 +6,7 @@ import com.hivearmor.domain.HiveMispFeed;
 import com.hivearmor.domain.HiveThreatIoc;
 import com.hivearmor.repository.HiveMispFeedRepository;
 import com.hivearmor.repository.HiveThreatIocRepository;
+import com.hivearmor.service.dto.threat_intel.ThreatFeedSyncReceipt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -148,6 +149,7 @@ public class MispConnectorService {
 
         if (responseBody == null) {
             feed.setLastSyncAt(Instant.now());
+            feed.setLastSyncStatus(ThreatFeedSyncReceipt.STATUS_OK);
             feed.setLastSyncCount(0);
             feedRepository.save(feed);
             return 0;
@@ -179,6 +181,7 @@ public class MispConnectorService {
         }
 
         feed.setLastSyncAt(Instant.now());
+        feed.setLastSyncStatus(ThreatFeedSyncReceipt.STATUS_OK);
         feed.setLastSyncCount(count);
         feedRepository.save(feed);
 
@@ -216,7 +219,8 @@ public class MispConnectorService {
 
     /**
      * Scheduled synchronization of all enabled MISP feeds.
-     * Runs every 4 hours. Errors per feed are caught individually.
+     * Runs every 4 hours. Errors per feed are caught individually and persist
+     * {@code lastSyncStatus=ERROR} + {@code lastSyncAt} (TI-004 STAGING CANDIDATE).
      * Never logs API keys, MISP URLs, or raw IOC values.
      */
     @Scheduled(cron = "0 0 */4 * * *")
@@ -235,6 +239,10 @@ public class MispConnectorService {
                 log.info("HiveArmor MISP sync complete for feed id={} count={}", feed.getId(), synced);
             } catch (Exception ex) {
                 log.error("HiveArmor MISP sync failed for feed id={}", feed.getId(), ex);
+                feed.setLastSyncAt(Instant.now());
+                feed.setLastSyncStatus(ThreatFeedSyncReceipt.STATUS_ERROR);
+                feed.setLastSyncCount(0);
+                feedRepository.save(feed);
             }
         }
 

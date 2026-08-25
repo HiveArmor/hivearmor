@@ -140,6 +140,7 @@ const MISP_FEEDS_DEFAULT: MispFeedDTO[] = [
     enabled: true,
     filterTags: 'tlp:green',
     lastSyncAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4h ago
+    lastSyncStatus: 'OK',
     lastSyncCount: 312,
   },
 ];
@@ -152,6 +153,7 @@ const MISP_FEEDS_MULTIPLE: MispFeedDTO[] = [
     enabled: true,
     filterTags: 'tlp:green',
     lastSyncAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    lastSyncStatus: 'OK',
     lastSyncCount: 312,
   },
   {
@@ -161,6 +163,7 @@ const MISP_FEEDS_MULTIPLE: MispFeedDTO[] = [
     enabled: true,
     filterTags: null,
     lastSyncAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12h ago
+    lastSyncStatus: 'OK',
     lastSyncCount: 5412,
   },
   {
@@ -170,6 +173,7 @@ const MISP_FEEDS_MULTIPLE: MispFeedDTO[] = [
     enabled: false,
     filterTags: 'apt',
     lastSyncAt: null,
+    lastSyncStatus: null,
     lastSyncCount: 0,
   },
 ];

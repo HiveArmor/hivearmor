@@ -100,6 +100,11 @@ export interface MispFeedDTO {
   enabled: boolean;
   filterTags: string | null;
   lastSyncAt: string | null; // ISO 8601
+  /**
+   * Persisted sync outcome: OK | ERROR | null (never synced).
+   * TI-004 STAGING CANDIDATE — parity with TaxiiFeedDTO.lastSyncStatus.
+   */
+  lastSyncStatus: string | null;
   lastSyncCount: number;
 }
 

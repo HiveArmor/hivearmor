@@ -1,7 +1,7 @@
 # Orphan operational workflows — route inventory
 
 Retrieved / authored: **2026-08-25**  
-Status: **STAGING CANDIDATE** inventory + threat-intel honesty strip + TI-002–TI-004 depth slice (explicit feed-read roles, legacy v1 harden, thin sync receipt). Not `PRODUCTION READY`.  
+Status: **STAGING CANDIDATE** inventory + threat-intel honesty strip + TI-002–TI-004 depth slice (explicit feed-read roles, legacy v1 harden, thin sync receipt) + optional MISP `lastSyncStatus` / bounded Last Sync. Not `PRODUCTION READY`.  
 Program: `docs/ai-handoff/remaining-page-program.md` item 8; active slice in `next-production-slice.md`.
 
 This note inventories visible and hidden routes, navigation, frontend services and backend controllers for UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence. It selects **one** coherent family for a thin honesty improvement; it does not redesign all orphan routes.
@@ -96,7 +96,11 @@ See `docs/frontend-backend-contract-register.md` entries **`TI-001`–`TI-004`**
 | TI-001 | `PARTIAL` | Analyst hub role alignment + stats read; feed mutations remain Admin-only |
 | TI-002 | `PARTIAL` | Feed list/get + stats authorize Admin\|User\|Analyst\|SOC Manager explicitly; mutations Admin-only |
 | TI-003 | `PARTIAL` | Legacy `/api/v1/threat-intel` hardened with `@PreAuthorize`; Deprecation/Sunset/Link deferred until cutover |
-| TI-004 | `PARTIAL` | Thin `ThreatFeedSyncReceipt` on TAXII/MISP sync; durable ledger / TLP governance still open |
+| TI-004 | `PARTIAL` | Thin `ThreatFeedSyncReceipt` on TAXII/MISP sync; MISP + TAXII persist `lastSyncStatus`; Admin Status + bounded Last Sync |
+
+### Follow-on note (2026-08-25) — TI-004 MISP status / bounded lastSyncAt
+
+STAGING CANDIDATE: `hive_misp_feed.last_sync_status` added; manual and scheduled MISP sync persist `OK`/`ERROR` with `lastSyncAt` (ROLE_ADMIN). Admin MISP table Status column reads the field; Last Sync uses `formatBoundedRelativeTime` (`>30d` cap). No Deprecation/Sunset on `/api/v1/threat-intel`. Durable ledger / IOC cursor / vendor live remain open.
 
 Related prior: **`RESP-021`** for quarantine (not reopened as missing).
 

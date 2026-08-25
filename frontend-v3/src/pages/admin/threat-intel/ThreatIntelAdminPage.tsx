@@ -7,12 +7,14 @@
  *   1. IOC Stats panel — 5 KPI tiles from GET /api/ha-threat-intel/stats
  *   2. Two-tab layout: "TAXII Feeds" and "MISP Feeds"
  *      - Each tab: table with Name, URL, Enabled toggle, Last Sync, IOC Count,
- *        Last Status, and Actions (Sync Now / Delete)
+ *        Status (persisted lastSyncStatus), and Actions (Sync Now / Delete)
  *      - "Add Feed" button opens a side drawer form
  *
  * Requirements: 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 5.10, 5.11, 5.12, 5.13
  * TI-004 STAGING CANDIDATE: Sync Now surfaces ThreatFeedSyncReceipt (receiptId /
  * lastSyncAt / status / failedReason) instead of pretending zero-IOC success.
+ * MISP Status column reads persisted lastSyncStatus (parity with TAXII).
+ * Last Sync uses bounded relative formatting (>30d cap).
  *
  * Constraints:
  *   - No hard-coded hex values — all colours via var(--ha-*) tokens
@@ -46,6 +48,7 @@ import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { HaModal } from '@/components/ha-modal/HaModal';
 import { SiemPageHeader } from '@/components/ha-page-header/SiemPageHeader';
 import { useToastStore } from '@/components/toast-stack/toastStore';
+import { formatBoundedRelativeTime } from '@/lib/threatIntelFreshness';
 import { threatIntelService } from '@/services/threatIntel.service';
 import { useAuthStore } from '@/store/auth.store';
 import type {
@@ -80,19 +83,6 @@ const TD_STYLE: React.CSSProperties = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Format an ISO 8601 timestamp as a relative "X ago" label, or "Never". */
-function formatRelativeTime(isoString: string | null): string {
-  if (!isoString) return 'Never';
-  const delta = Date.now() - new Date(isoString).getTime();
-  const seconds = Math.floor(delta / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
 
 /** Truncate a string to maxLen characters, appending '…' if cut. */
 function truncate(value: string, maxLen: number): string {
@@ -706,7 +696,7 @@ function TaxiiFeedsTab(): JSX.Element {
                           <Spinner size="sm" aria-label="Syncing" />
                           syncing…
                         </span>
-                      ) : formatRelativeTime(feed.lastSyncAt)}
+                      ) : formatBoundedRelativeTime(feed.lastSyncAt)}
                     </td>
                     <td style={{ ...TD_STYLE, fontVariantNumeric: 'tabular-nums' }}>
                       {feed.lastSyncCount}
@@ -892,6 +882,7 @@ function MispFeedsTab(): JSX.Element {
                 <th style={TH_STYLE}>Enabled</th>
                 <th style={TH_STYLE}>Last Sync</th>
                 <th style={{ ...TH_STYLE, fontVariantNumeric: 'tabular-nums' }}>IOC Count</th>
+                <th style={TH_STYLE}>Status</th>
                 <th style={TH_STYLE}>Actions</th>
               </tr>
             </thead>
@@ -900,7 +891,7 @@ function MispFeedsTab(): JSX.Element {
                 <>
                   {[1, 2, 3].map((i) => (
                     <tr key={i}>
-                      {[1, 2, 3, 4, 5, 6, 7].map((j) => (
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((j) => (
                         <td key={j} style={TD_STYLE}><Skeleton width="80px" /></td>
                       ))}
                     </tr>
@@ -910,7 +901,7 @@ function MispFeedsTab(): JSX.Element {
 
               {!isLoading && (!feeds || feeds.length === 0) && (
                 <tr>
-                  <td colSpan={7} style={{ ...TD_STYLE, textAlign: 'center', padding: '40px 24px', borderBottom: 'none' }}>
+                  <td colSpan={8} style={{ ...TD_STYLE, textAlign: 'center', padding: '40px 24px', borderBottom: 'none' }}>
                     <span style={{ color: 'var(--ha-text-secondary)', fontSize: 'var(--ha-text-sm)' }}>
                       No MISP feeds configured. Click &ldquo;Add MISP Feed&rdquo; to get started.
                     </span>
@@ -947,10 +938,13 @@ function MispFeedsTab(): JSX.Element {
                           <Spinner size="sm" aria-label="Syncing" />
                           syncing…
                         </span>
-                      ) : formatRelativeTime(feed.lastSyncAt)}
+                      ) : formatBoundedRelativeTime(feed.lastSyncAt)}
                     </td>
                     <td style={{ ...TD_STYLE, fontVariantNumeric: 'tabular-nums' }}>
                       {feed.lastSyncCount}
+                    </td>
+                    <td style={TD_STYLE}>
+                      <SyncStatusLabel status={feed.lastSyncStatus} />
                     </td>
                     <td style={TD_STYLE}>
                       <div style={{ display: 'flex', gap: 8 }}>

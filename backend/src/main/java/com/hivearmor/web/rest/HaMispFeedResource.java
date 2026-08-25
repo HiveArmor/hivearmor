@@ -82,8 +82,9 @@ public class HaMispFeedResource {
 
     /**
      * POST /api/ha-threat-intel/misp/{feedId}/sync
-     * Thin sync receipt (TI-004). MISP entity has no lastSyncStatus column yet —
-     * failure freshness is conveyed on the receipt and via lastSyncAt when persisted.
+     * Thin sync receipt (TI-004). Failures persist {@code lastSyncStatus=ERROR} +
+     * {@code lastSyncAt} so the Admin Status column stays honest after list refresh.
+     * Not a durable job ledger. ROLE_ADMIN only.
      */
     @PostMapping("/ha-threat-intel/misp/{feedId}/sync")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
@@ -103,6 +104,7 @@ public class HaMispFeedResource {
             log.warn("MISP sync failed for feed {}: {}", feedId, e.getMessage());
             Instant failedAt = Instant.now();
             feed.setLastSyncAt(failedAt);
+            feed.setLastSyncStatus(ThreatFeedSyncReceipt.STATUS_ERROR);
             feed.setLastSyncCount(0);
             feedRepository.save(feed);
             return ResponseEntity.ok(

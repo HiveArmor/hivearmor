@@ -1,8 +1,26 @@
 # Next production slice
 
-Updated: **2026-08-25 11:45:00 IST (UTC+05:30)**
+Updated: **2026-08-25 12:10:00 IST (UTC+05:30)**
 
-## Active — Orphan Operational Workflows (TI-002–TI-004 depth)
+## Active — Frontend Autonomous SOC audit program (next major arc)
+
+Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
+Cadence: **audit → research → implement** page-by-page (nav, structure, UX, backend connects) for Enterprise AI-driven Autonomous SIEM / Autonomous SOC.
+First wave after staging soak: **A1 Command & triage** (`/dashboard`, `/queue`, `/alerts`, `/correlated-findings`, `/incidents`).
+Pre-audit: thin parallel honesty leftovers (RESP-021 / TI / POL / investigate pin) → staging rebuild → Wave A1.
+Status: **PROGRAM STARTED** — not `PRODUCTION READY`.
+
+## Completed this slice — TI optional depth (MISP status + bounded Last Sync)
+
+Routes: `/intelligence`, `/admin/threat-intel`; contracts `TI-001`–`TI-004`.
+Status: **STAGING CANDIDATE** — TI-002–TI-004 depth (#47) + optional MISP `lastSyncStatus` / bounded Last Sync honesty. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED`.
+Branch: `feat/p1-ti-optional-depth`.
+
+Shipped: MISP `last_sync_status` persist OK/ERROR; Admin Status column; bounded Last Sync (`>30d`); no v1 Deprecation/Sunset.
+
+Still open under TI: IOC cursor/freshness; immutable mutation audit; v1 cutover headers; durable sync ledger / TLP governance.
+
+## Prior active — Orphan Operational Workflows (TI-002–TI-004 depth)
 
 Routes: inventory across UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence; **first bounded family = threat-intel ops** (`/intelligence`, `/admin/threat-intel`).
 Status: **STAGING CANDIDATE** — inventory + TI-002–TI-004 depth + agent-policy enforcement evidence + POL-003 apply/ack honesty. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for this slice.
@@ -24,6 +42,10 @@ Required next actions (remaining orphans / depth):
 1. ~~Follow-on UEBA: fix `HaUebaResource` `@PreAuthorize` authority strings~~ — **done** on `feat/p1-ueba-auth-fix` (STAGING CANDIDATE): `ROLE_ANALYST`/`ROLE_SOC_MANAGER`/`ROLE_ADMIN` + `/ueba/entity-timeline` route.
 2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned.
 3. ~~Follow-on RESP-021 depth: secured host-isolation inventory.~~ **Closed** on `feat/p1-resp021-isolation-inventory` (STAGING CANDIDATE) — `GET /api/ha-edr/isolation` + Endpoint isolation tab. Remaining RESP-021 depth gaps stay open.
+4. ~~Follow-on policies: enforcement evidence honesty~~ — **done** on `feat/p1-agent-policies-enforcement-evidence` (STAGING CANDIDATE): `GET /ha-edr/policies/{id}/enforcement` + UI unavailable/partial; host apply/ack still open (`POL-001`–`POL-003`).
+5. ~~Optional deeper threat-intel: MISP persisted status + bounded lastSyncAt~~ — **done** on `feat/p1-ti-optional-depth` (STAGING CANDIDATE). Remaining: IOC cursor/freshness, durable sync ledger, v1 deprecation headers after consumer cutover.
+6. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
+
 4. ~~Follow-on policies: enforcement evidence honesty~~ — **done** on `feat/p1-agent-policies-enforcement-evidence` (#48, STAGING CANDIDATE): `GET /ha-edr/policies/{id}/enforcement` + UI unavailable/partial.
 5. ~~POL-003 apply/ack honesty~~ — **done** on `feat/p1-pol003-apply-ack-honesty` (STAGING CANDIDATE): missing `appliedVersion`/`lastAppliedAt` ⇒ apply/ack path unavailable; never green “enforced on host”. Live agent gRPC apply/ack remains open.
 6. Optional deeper threat-intel: IOC cursor/freshness, durable sync ledger, MISP persisted status, v1 deprecation headers after consumer cutover.
@@ -37,13 +59,27 @@ Merged: `feat/p1-resp021-isolation-inventory` (#46).
 
 Still open under `RESP-021`: enriched evidence/summaries, cursor/snapshot/freshness semantics, action history, governed preview/approval/idempotency for restore/delete/release, resumable delivery state.
 
+## Completed this slice — Agentic INVESTIGATE soft session item pin (STAGING CANDIDATE)
+
+Scope: after #45 soft session create, soft-pin the resolvable alert as an `ALERT` session item
+(`itemRef` = alert id) via `InvestigationSessionService.pinItem` when available.
+Status: **STAGING CANDIDATE** — not `PRODUCTION READY`. Not Neo4j / attack-path. Not auto-convert to incident.
+Branch: `feat/p1-agentic-investigate-session-pin`.
+
+Ledger keeps `stub=true`; records `sessionItemPinned` + `sessionItemId`/`sessionItemType` on success,
+or sanitized `sessionItemPinError` (exception class only) on pin soft-fail without undoing `sessionLinked`.
+
+Still open: Neo4j / attack-path; `openHypotheses`; convert-to-incident; staging LIVE verify of
+createSession + pinItem from SOC-AI triage.
+
 ## Completed this slice — Agentic INVESTIGATE soft session link (STAGING CANDIDATE)
 
 Scope: `TriageInvestigateStub` → optional soft link to `/api/ha-investigation-sessions` (id + status only).
 Status: **STAGING CANDIDATE** — not `PRODUCTION READY`. Not Neo4j / attack-path. Not auto-convert to incident.
 Merged: `feat/p1-agentic-investigate-session-link` (#45).
 
-Remaining: Neo4j / attack-path; `openHypotheses`; auto-pin evidence; convert-to-incident; staging LIVE verify of createSession from SOC-AI triage.
+Follow-on soft ALERT item pin: see slice above. Remaining: Neo4j / attack-path; `openHypotheses`;
+convert-to-incident; staging LIVE verify.
 
 ## Completed this slice — Governance and Platform Settings
 
