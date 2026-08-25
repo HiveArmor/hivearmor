@@ -1,8 +1,10 @@
 package com.hivearmor.web.rest;
 
+import com.hivearmor.service.HaEdrIsolationService;
 import com.hivearmor.service.HaEdrQuarantineService;
 import com.hivearmor.service.HaEdrService;
 import com.hivearmor.service.dto.EdrEventDTO;
+import com.hivearmor.service.dto.IsolatedHostDTO;
 import com.hivearmor.service.dto.ProcessNodeDTO;
 import com.hivearmor.service.dto.QuarantineActionRequest;
 import com.hivearmor.service.dto.QuarantineBulkRequest;
@@ -39,6 +41,8 @@ import java.util.List;
  * single quarantined file.
  * <p>POST /api/ha-edr/quarantine/bulk — applies a restore or delete action to
  * multiple quarantined files in one request.
+ * <p>GET /api/ha-edr/isolation — secured host-isolation inventory (STAGING
+ * CANDIDATE). Does not adopt legacy {@code /api/edr/isolation}.
  */
 @RestController
 @RequestMapping("/api/ha-edr")
@@ -49,11 +53,14 @@ public class HaEdrResource {
 
     private final HaEdrService haEdrService;
     private final HaEdrQuarantineService haEdrQuarantineService;
+    private final HaEdrIsolationService haEdrIsolationService;
 
     public HaEdrResource(HaEdrService haEdrService,
-                         HaEdrQuarantineService haEdrQuarantineService) {
+                         HaEdrQuarantineService haEdrQuarantineService,
+                         HaEdrIsolationService haEdrIsolationService) {
         this.haEdrService = haEdrService;
         this.haEdrQuarantineService = haEdrQuarantineService;
+        this.haEdrIsolationService = haEdrIsolationService;
     }
 
     /**
@@ -190,6 +197,38 @@ public class HaEdrResource {
         log.debug("{}: ids={}, action={}", ctx, request.getIds(), request.getAction());
 
         List<QuarantinedFileDTO> result = haEdrQuarantineService.applyBulkAction(request);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * GET /api/ha-edr/isolation
+     *
+     * <p>Returns a paginated host-isolation inventory from
+     * {@code hive_edr_isolation}, optionally filtered by status. Sorted by
+     * {@code isolatedAt} descending. {@code size} is clamped to 200.
+     *
+     * <p>STAGING CANDIDATE — read only. Governed lift/release, cursor/freshness
+     * semantics, and action history remain RESP-021 open gaps. Legacy
+     * {@code /api/edr/isolation} is not adopted.
+     *
+     * @param status filter by status, e.g. {@code ACTIVE}, {@code LIFTED},
+     *               {@code FAILED} (optional)
+     * @param page   zero-based page index (default 0)
+     * @param size   page size, clamped to max 200 (default 50)
+     * @return 200 OK with a page of {@link IsolatedHostDTO}
+     */
+    @GetMapping("/isolation")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN')")
+    public ResponseEntity<Page<IsolatedHostDTO>> listIsolatedHosts(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "50") int size) {
+
+        final String ctx = CLASSNAME + ".listIsolatedHosts";
+        int clampedSize = Math.min(Math.max(size, 1), 200);
+        log.debug("{}: status={}, page={}, size={}", ctx, status, page, clampedSize);
+
+        Page<IsolatedHostDTO> result = haEdrIsolationService.listIsolatedHosts(status, page, clampedSize);
         return ResponseEntity.ok(result);
     }
 }
