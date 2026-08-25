@@ -51,8 +51,8 @@ export function ReadinessMatrixPage(): JSX.Element {
       a.download = 'mitre-coverage.csv';
       a.click();
       URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Export failed', err);
+    } catch {
+      // Fail closed — no console noise with customer/export context.
     } finally {
       setIsExporting(false);
     }
@@ -164,10 +164,11 @@ export function ReadinessMatrixPage(): JSX.Element {
             }}
           >
             <h2 style={{ fontSize: 'var(--ha-text-xl)', color: 'var(--ha-text-primary)' }}>
-              No Coverage Data
+              No technique coverage projected
             </h2>
             <p style={{ fontSize: 'var(--ha-text-base)', color: 'var(--ha-text-secondary)' }}>
-              No MITRE ATT&CK techniques are currently covered by correlation rules.
+              No correlation rules currently report a MITRE technique id. This is an empty
+              technique projection — not proof of full ATT&amp;CK coverage or ingest failure.
             </p>
           </div>
         </div>

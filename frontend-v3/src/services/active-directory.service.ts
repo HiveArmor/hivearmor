@@ -1,11 +1,4 @@
-import type {
-  AdDomainSummaryDTO,
-  AdPostureFilters,
-  AdPosturePage,
-  AdReportSummaryDTO,
-  AdTrackerEventDTO,
-  AdTrackerParams,
-} from '@/types/active-directory.types';
+import type { AdPostureFilters, AdPosturePage } from '@/types/active-directory.types';
 
 export const activeDirectoryFixtureMode = import.meta.env.DEV
   && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
@@ -46,20 +39,4 @@ export async function fetchAdPosture(
       message: 'The authoritative Active Directory posture, change, trust, infrastructure, and remediation contracts are not implemented yet.',
     }],
   };
-}
-
-// Compatibility exports for old callers. They remain empty in production and
-// must not be interpreted as an authoritative statement that no risk exists.
-export async function getAdDomainSummary(domain?: string): Promise<AdDomainSummaryDTO[]> {
-  const page = await fetchAdPosture({ view: 'domains', domain, risk: 'all', category: 'all', timeRange: '24h', limit: 50 });
-  return page.items as AdDomainSummaryDTO[];
-}
-
-export async function getAdTrackerEvents(params: AdTrackerParams): Promise<{ data: AdTrackerEventDTO[]; total: number }> {
-  const page = await fetchAdPosture({ view: 'changes', domain: params.domain, risk: 'all', category: 'all', timeRange: '24h', limit: params.size ?? 50 });
-  return { data: page.items as AdTrackerEventDTO[], total: page.total };
-}
-
-export async function getAdReportSummary(_domain: string): Promise<AdReportSummaryDTO[]> {
-  return [];
 }

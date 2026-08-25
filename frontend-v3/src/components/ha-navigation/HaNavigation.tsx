@@ -61,15 +61,15 @@ const DEFEND_ITEMS: NavItemSpec[] = [
 
 // Section: POSTURE
 const POSTURE_ITEMS: NavItemSpec[] = [
-  { label: 'Assets', icon: 'Server', route: '/posture/assets', roles: [] },
-  { label: 'Identities', icon: 'Users', route: '/posture/identities', roles: [] },
+  { label: 'Assets', icon: 'Server', route: '/posture/assets', roles: ['ROLE_ANALYST', 'ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  { label: 'Identities', icon: 'Users', route: '/posture/identities', roles: ['ROLE_ANALYST', 'ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Active Directory', icon: 'Network', route: '/posture/active-directory', roles: ['ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
-  { label: 'Exposure', icon: 'ShieldOff', route: '/posture/exposure', roles: [] },
+  { label: 'Exposure', icon: 'ShieldOff', route: '/posture/exposure', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Vulnerabilities', icon: 'Bug', route: '/posture/vulnerabilities', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'CIS Benchmark', icon: 'ClipboardCheck', route: '/posture/cis-benchmark', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Detection Coverage', icon: 'Grid3x3', route: '/posture/readiness', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Sensors', icon: 'Activity', route: '/posture/sensors', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
-  { label: 'Compliance', icon: 'CheckSquare', route: '/compliance', roles: [] },
+  { label: 'Compliance', icon: 'CheckSquare', route: '/compliance', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
 ];
 // Section: ENDPOINT DEFENSE
 const ENDPOINT_ITEMS: NavItemSpec[] = [

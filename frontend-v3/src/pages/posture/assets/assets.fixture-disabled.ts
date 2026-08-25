@@ -1,5 +1,13 @@
 import type { AssetFilters, AssetListResponse } from '../posture.types';
 
-export function getFoundationAssetPage(_filters: AssetFilters, page: number, _size: number, _sort?: string): AssetListResponse {
-  return { content: [], totalElements: 0, totalPages: 0, number: page };
+/**
+ * Production build alias target. Fictional asset inventory must never ship in prod bundles.
+ */
+export function getFoundationAssetPage(
+  _filters: AssetFilters,
+  _page: number,
+  _size: number,
+  _sort?: string
+): AssetListResponse {
+  throw new Error('Asset foundation fixtures are excluded from production builds.');
 }

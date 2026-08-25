@@ -192,6 +192,24 @@ export default defineConfig(({ command }) => ({
             : './src/pages/posture/exposure/exposure.fixture-disabled.ts'
         ),
       },
+      {
+        find: '@/pages/posture/identities/identities.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/pages/posture/identities/identities.fixtures.ts'
+            : './src/pages/posture/identities/identities.fixture-disabled.ts'
+        ),
+      },
+      {
+        find: '@/pages/compliance/compliance.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/pages/compliance/compliance.fixtures.ts'
+            : './src/pages/compliance/compliance.fixture-disabled.ts'
+        ),
+      },
       { find: /^@\//, replacement: resolve(__dirname, './src') + '/' },
     ],
   },

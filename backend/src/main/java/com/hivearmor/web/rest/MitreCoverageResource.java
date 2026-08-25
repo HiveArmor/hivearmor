@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,12 +22,17 @@ public class MitreCoverageResource {
 
     private static final Logger log = LoggerFactory.getLogger(MitreCoverageResource.class);
 
+    /** Aligns with Detection Coverage UI (Analyst / SOC Manager / Admin). */
+    private static final String MITRE_READ_AUTH =
+        "hasAnyAuthority('ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN')";
+
     @PersistenceContext
     private EntityManager entityManager;
 
     public record TechniqueCoverage(String technique, long ruleCount, long activeCount) {}
 
     @GetMapping("/coverage")
+    @PreAuthorize(MITRE_READ_AUTH)
     public ResponseEntity<List<TechniqueCoverage>> getCoverage() {
         log.debug("GET /api/mitre/coverage");
 
@@ -54,6 +60,7 @@ public class MitreCoverageResource {
     public record RuleRef(long id, String name, boolean active) {}
 
     @GetMapping("/rules")
+    @PreAuthorize(MITRE_READ_AUTH)
     public ResponseEntity<List<RuleRef>> getRulesByTechnique(@RequestParam String techniqueId) {
         log.debug("GET /api/mitre/rules?techniqueId={}", techniqueId);
 
@@ -79,6 +86,7 @@ public class MitreCoverageResource {
     }
 
     @GetMapping("/coverage/export")
+    @PreAuthorize(MITRE_READ_AUTH)
     public ResponseEntity<byte[]> exportCoverage() {
         log.debug("GET /api/mitre/coverage/export");
 

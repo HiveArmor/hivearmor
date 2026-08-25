@@ -3,7 +3,7 @@
  * Security-critical: production assets come only from the canonical credential-free /ha-assets projection.
  */
 
-import type { AssetDTO, AssetDetailResponse, AssetFilters, AssetListResponse, IdentityDTO, IdentityFilters, IdentityRiskDetailDTO } from './posture.types';
+import type { AssetDTO, AssetDetailResponse, AssetFilters, AssetListResponse } from './posture.types';
 
 import { apiClient } from '@/lib/apiClient';
 
@@ -167,35 +167,5 @@ export async function fetchAssetDetail(id: number): Promise<AssetDTO> {
   };
 }
 
-// ===== IDENTITIES =====
-
-export interface IdentityListResponse {
-  content: IdentityDTO[];
-  totalElements: number;
-}
-
-export async function fetchIdentities(
-  filters: IdentityFilters,
-  page: number,
-  size: number,
-  sort?: string
-): Promise<IdentityListResponse> {
-  const params: Record<string, string | number | string[] | undefined> = {
-    type: 'user',
-    page,
-    size,
-    sort,
-    ...filters,
-  };
-
-  const response = await apiClient.get<{ content: IdentityDTO[] }>('/ha-entities', { params });
-
-  return {
-    content: response.content,
-    totalElements: response.content.length,
-  };
-}
-
-export async function fetchIdentityRiskDetail(id: string): Promise<IdentityRiskDetailDTO> {
-  return apiClient.get<IdentityRiskDetailDTO>(`/ha-entities/${id}/risk`);
-}
+// Identity posture uses `@/pages/posture/identities/identity.service.ts`.
+// Dead helpers that called non-canonical /ha-entities/{id}/risk were removed (B2-ID-02).

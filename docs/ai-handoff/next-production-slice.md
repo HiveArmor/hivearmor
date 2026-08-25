@@ -1,24 +1,31 @@
 # Next production slice
 
-Updated: **2026-08-25 15:05:00 IST (UTC+05:30)**
+Updated: **2026-08-25 15:45:00 IST (UTC+05:30)**
 
-## Active — Wave B1 Endpoint defense audit + thin honesty (STAGING CANDIDATE)
+## Active — Wave B2 Posture & compliance audit + thin honesty (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Routes: `/edr/endpoints`, `/edr/fim`, `/edr/policies`, `/posture/sensors`.
+Routes: `/posture/*`, `/compliance`.
 Status: **AUDIT + thin honesty IN PROGRESS (code)** — still **STAGING CANDIDATE**. Staging rebuild deferred.
-Research: `docs/ai-handoff/research/autonomous-soc-endpoint-defense.md`.
-Branch: `feat/b1-endpoint-defense-audit`.
+Research: `docs/ai-handoff/research/autonomous-soc-posture-compliance.md`.
+Branch: `feat/b2-posture-compliance-audit`.
 
 | ID | Fix |
 |---|---|
-| B1-SENS-01 / B1-EP-02 | `adaptAgentWireToSensor` maps AgentDTO `id`/`status`/`version` |
-| B1-SENS-02 | Split kill vs isolate live-verify; isolate stays `false` |
-| B1-EP-01 / B1-FIM-01 | Endpoints/FIM/timeline/quarantine-alias Analyst+ AuthGuard |
-| B1-EP-03 | Timeline nav requires `agentId` (no hostname fallback) |
-| B1-FIM-03 | Agent filter uses shared adapter + partial-failure warning |
+| B2-COV-01 | `MitreCoverageResource` `@PreAuthorize` Analyst\|SOC Manager\|Admin |
+| B2-AST-01 / B2-ID-01 | Assets/Identities nav + AuthGuard analyst-tier |
+| B2-EXP-01/02 | Exposure Analyst+; disable KPI/filter chrome when contract missing |
+| B2-CMP-01 | Compliance Analyst+ |
+| B2-ID-02 / B2-AD-01 | Remove dead identity risk + AD compat empties |
+| B2-ID-03 / B2-CMP-02 / B2-AST-03 | Fixture-disabled aliases / throw stubs |
+| B2-VULN-02 / B2-CIS-01 | Capability flags stay `false` |
+| B2-COV-02 | Empty coverage copy honesty |
 
-Still open: isolate live proof; RESP-021 release; POL host apply/ack; `/api/agent-policies` push UX (do not invent).
+Still open: EXP/ADP backends; CMP-002/003 evidence; identity posture depth.
+
+## Completed this slice — Wave B1 Endpoint defense (#60)
+
+Status: **MERGED** tip `70f1130` — STAGING CANDIDATE. Staging rebuild deferred.
 
 ## Completed this slice — Wave A3 Defend/respond (#59)
 

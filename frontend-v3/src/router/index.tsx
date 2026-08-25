@@ -719,7 +719,7 @@ export const router = createBrowserRouter([
       {
         path: 'posture/identities',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <IdentitiesPage />
           </AuthGuard>
         ),
@@ -735,7 +735,7 @@ export const router = createBrowserRouter([
       {
         path: 'posture/exposure',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <ExposurePage />
           </AuthGuard>
         ),
@@ -775,7 +775,7 @@ export const router = createBrowserRouter([
       {
         path: 'compliance',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <CompliancePage />
           </AuthGuard>
         ),
