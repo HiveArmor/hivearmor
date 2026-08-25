@@ -27,7 +27,7 @@ import java.util.List;
  *
  * <p>Exposes six tenant-scoped GET endpoints under {@code /api/ha-ueba/} for the
  * risk dashboard and entity timeline chart in the frontend. All endpoints require
- * {@code ANALYST} or {@code ADMIN} authority.
+ * {@code ROLE_ANALYST}, {@code ROLE_SOC_MANAGER}, or {@code ROLE_ADMIN} authority.
  *
  * <p>Tenant resolution is handled by {@link com.hivearmor.multitenancy.TenantContextFilter}
  * which sets {@link TenantContext} from the authenticated user's JWT. The tenant prefix
@@ -66,7 +66,7 @@ public class HaUebaResource {
      * @return list of deviation DTOs ordered by run timestamp descending
      */
     @GetMapping("/deviations")
-    @PreAuthorize("hasAnyAuthority('ANALYST','ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     public List<DeviationDTO> deviations(@RequestParam(required = false) Instant since) {
         String tenantId = TenantContext.get();
         log.debug("GET /deviations tenantId={} since={}", tenantId, since);
@@ -84,7 +84,7 @@ public class HaUebaResource {
      * @return list of per-user risk score DTOs
      */
     @GetMapping("/risk-scores")
-    @PreAuthorize("hasAnyAuthority('ANALYST','ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     public List<UserRiskDTO> riskScores() {
         String tenantId = TenantContext.get();
         log.debug("GET /risk-scores tenantId={}", tenantId);
@@ -99,7 +99,7 @@ public class HaUebaResource {
      * @return timeline DTO containing deviation points and baseline bands
      */
     @GetMapping("/entity-timeline")
-    @PreAuthorize("hasAnyAuthority('ANALYST','ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     public EntityTimelineDTO entityTimeline(@RequestParam("userId") @NotBlank String userId) {
         String tenantId = TenantContext.get();
         log.debug("GET /entity-timeline tenantId={} userId={}", tenantId, userId);
@@ -118,7 +118,7 @@ public class HaUebaResource {
      * @return list of peer-group DTOs
      */
     @GetMapping("/peer-groups")
-    @PreAuthorize("hasAnyAuthority('ANALYST','ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     public List<PeerGroupDTO> peerGroups() {
         String tenantId = TenantContext.get();
         log.debug("GET /peer-groups tenantId={}", tenantId);
@@ -135,7 +135,7 @@ public class HaUebaResource {
      * @return list of daily risk trend points ordered by date ascending
      */
     @GetMapping("/risk-trend")
-    @PreAuthorize("hasAnyAuthority('ANALYST','ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     public List<RiskTrendPointDTO> riskTrend() {
         String tenantId = TenantContext.get();
         log.debug("GET /risk-trend tenantId={}", tenantId);
@@ -150,7 +150,7 @@ public class HaUebaResource {
      * @return anomaly counts DTO with tier10, tier25, tier50 fields
      */
     @GetMapping("/anomaly-counts")
-    @PreAuthorize("hasAnyAuthority('ANALYST','ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     public AnomalyCountsDTO anomalyCounts() {
         String tenantId = TenantContext.get();
         log.debug("GET /anomaly-counts tenantId={}", tenantId);

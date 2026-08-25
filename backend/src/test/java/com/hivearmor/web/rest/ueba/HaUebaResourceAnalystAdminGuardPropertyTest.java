@@ -14,20 +14,21 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Property-based test for the ANALYST-or-ADMIN authority guard on HaUebaResource.
+ * Property-based test for the Analyst / SOC Manager / Admin authority guard on HaUebaResource.
  *
- * <p><strong>Property 8: Every {@code /api/ha-ueba/*} endpoint requires ANALYST or ADMIN</strong><br>
- * For every endpoint defined on {@code HaUebaResource}, a caller carrying neither the
- * {@code ANALYST} nor the {@code ADMIN} authority receives HTTP 403 and no service
- * method is invoked.
+ * <p><strong>Property 8: Every {@code /api/ha-ueba/*} endpoint requires ROLE_ANALYST,
+ * ROLE_SOC_MANAGER, or ROLE_ADMIN</strong><br>
+ * For every endpoint defined on {@code HaUebaResource}, a caller carrying none of those
+ * authorities receives HTTP 403 and no service method is invoked.
  *
  * <p>This test uses reflection to verify that all public methods with request mapping
- * annotations carry {@code @PreAuthorize("hasAnyAuthority('ANALYST','ADMIN')")}. This
- * is deterministic and does not require a Spring context.
+ * annotations carry
+ * {@code @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")}.
+ * This is deterministic and does not require a Spring context.
  *
  * <p><strong>Validates: Requirements 4.8, 7.2</strong>
  */
-@Label("Feature: sprint-29-ueba-baseline, Property 8: Every /api/ha-ueba/* endpoint requires ANALYST or ADMIN")
+@Label("Feature: sprint-29-ueba-baseline, Property 8: Every /api/ha-ueba/* endpoint requires ROLE_ANALYST, ROLE_SOC_MANAGER, or ROLE_ADMIN")
 class HaUebaResourceAnalystAdminGuardPropertyTest {
 
     /**
@@ -44,9 +45,10 @@ class HaUebaResourceAnalystAdminGuardPropertyTest {
 
     /**
      * The expected PreAuthorize expression value on every endpoint.
+     * JWT authorities use the ROLE_ prefix; SOC Manager is included for nav/API honesty.
      */
     private static final String EXPECTED_PRE_AUTHORIZE_EXPRESSION =
-        "hasAnyAuthority('ANALYST','ADMIN')";
+        "hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')";
 
     /**
      * Discovers all public methods on {@code HaUebaResource} that have
@@ -80,21 +82,22 @@ class HaUebaResourceAnalystAdminGuardPropertyTest {
     }
 
     /**
-     * <strong>Property 8-B: Every endpoint method carries @PreAuthorize with ANALYST and ADMIN.</strong>
+     * <strong>Property 8-B: Every endpoint method carries @PreAuthorize with ROLE_ authorities.</strong>
      *
      * <p>For each method with a request mapping annotation, asserts:
      * <ol>
      *   <li>The method is annotated with {@code @PreAuthorize}</li>
      *   <li>The annotation's value contains "hasAnyAuthority"</li>
-     *   <li>The annotation's value contains "ANALYST"</li>
-     *   <li>The annotation's value contains "ADMIN"</li>
+     *   <li>The annotation's value contains "ROLE_ANALYST"</li>
+     *   <li>The annotation's value contains "ROLE_SOC_MANAGER"</li>
+     *   <li>The annotation's value contains "ROLE_ADMIN"</li>
      * </ol>
      *
      * <p><strong>Validates: Requirements 4.8, 7.2</strong>
      */
     @Property(tries = 1)
-    @Label("Property 8-B: Every endpoint method has @PreAuthorize containing ANALYST and ADMIN")
-    void everyEndpointRequiresAnalystOrAdminAuthority() {
+    @Label("Property 8-B: Every endpoint method has @PreAuthorize containing ROLE_ANALYST, ROLE_SOC_MANAGER, and ROLE_ADMIN")
+    void everyEndpointRequiresAnalystSocManagerOrAdminAuthority() {
         List<Method> endpoints = discoverEndpointMethods();
 
         assertThat(endpoints).isNotEmpty();
@@ -113,12 +116,16 @@ class HaUebaResourceAnalystAdminGuardPropertyTest {
                 .contains("hasAnyAuthority");
 
             assertThat(expression)
-                .as("@PreAuthorize on %s must reference ANALYST authority", method.getName())
-                .contains("ANALYST");
+                .as("@PreAuthorize on %s must reference ROLE_ANALYST authority", method.getName())
+                .contains("ROLE_ANALYST");
 
             assertThat(expression)
-                .as("@PreAuthorize on %s must reference ADMIN authority", method.getName())
-                .contains("ADMIN");
+                .as("@PreAuthorize on %s must reference ROLE_SOC_MANAGER authority", method.getName())
+                .contains("ROLE_SOC_MANAGER");
+
+            assertThat(expression)
+                .as("@PreAuthorize on %s must reference ROLE_ADMIN authority", method.getName())
+                .contains("ROLE_ADMIN");
         }
     }
 
@@ -173,13 +180,13 @@ class HaUebaResourceAnalystAdminGuardPropertyTest {
      * <strong>Property 8-E: The @PreAuthorize expression exactly matches the expected guard.</strong>
      *
      * <p>Verifies that every endpoint uses the exact expression
-     * {@code hasAnyAuthority('ANALYST','ADMIN')} rather than a superset or subset
-     * of authorities that might inadvertently widen or narrow access.
+     * {@code hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')} rather than a
+     * superset or subset of authorities that might inadvertently widen or narrow access.
      *
      * <p><strong>Validates: Requirements 4.8, 7.2</strong>
      */
     @Property(tries = 1)
-    @Label("Property 8-E: @PreAuthorize expression is exactly hasAnyAuthority('ANALYST','ADMIN')")
+    @Label("Property 8-E: @PreAuthorize expression is exactly hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     void preAuthorizeExpressionIsExact() {
         List<Method> endpoints = discoverEndpointMethods();
 

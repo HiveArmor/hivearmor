@@ -42,7 +42,7 @@ const INVESTIGATE_ITEMS: NavItemSpec[] = [
   { label: 'Threat Constellation', icon: 'GitBranch', route: '/constellation', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   // SEC-GAP-14 path prefix fixed to /api/ha-threat-intel/* — page is LIVE_API usable
   { label: 'Hive Intelligence', icon: 'Brain', route: '/intelligence', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
-  { label: 'UEBA Risk', icon: 'UserSearch', route: '/ueba/risk', roles: ['ROLE_ANALYST', 'ROLE_ADMIN'] },
+  { label: 'UEBA Risk', icon: 'UserSearch', route: '/ueba/risk', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
 ];
 
 // Section: DEFEND
