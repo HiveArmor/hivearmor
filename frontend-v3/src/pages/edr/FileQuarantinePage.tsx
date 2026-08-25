@@ -44,6 +44,7 @@ import {
   Workflow,
 } from 'lucide-react';
 
+import { AccessDeniedState } from '@/components/access-denied-state/AccessDeniedState';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
@@ -54,10 +55,14 @@ import { useQuarantineBulkAction, useQuarantineAction, useQuarantinedFiles } fro
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
 import type { QuarantineRecord, QuarantineStatus, QuarantineTargetType } from '@/pages/response/response.types';
 import { fetchQuarantineRecords, fixtureMode } from '@/pages/response/responsePlaybooks.service';
+import { useAuthStore } from '@/store/auth.store';
 import type { QuarantinedFileDTO } from '@/types/edr';
 
 import './FileQuarantinePage.css';
 import '../response/response-grid-standard.css';
+
+/** Matches nav + HaEdrResource quarantine PreAuthorize (not legacy /api/edr/*). */
+const QUARANTINE_ACCESS_ROLES = ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] as const;
 
 const PAGE_SIZE = 25;
 type WorkspaceView = 'files' | 'endpoints';
@@ -309,6 +314,27 @@ function EndpointContainmentPanel({ density, search, status, targetType }: {
 }
 
 export function FileQuarantinePage(): JSX.Element {
+  const hasAccess = useAuthStore((state) => state.hasAnyRole([...QUARANTINE_ACCESS_ROLES]));
+
+  if (!hasAccess) {
+    return (
+      <section
+        className="qrn-page"
+        style={{ alignItems: 'center', justifyContent: 'center' }}
+        aria-label="Quarantine access denied"
+      >
+        <AccessDeniedState
+          title="Access Restricted"
+          message="Required permission: Analyst, SOC Manager, or Platform Administrator"
+        />
+      </section>
+    );
+  }
+
+  return <FileQuarantineContent />;
+}
+
+function FileQuarantineContent(): JSX.Element {
   const gridRef = useRef<AgGridReact>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const [view, setView] = useState<WorkspaceView>('files');
