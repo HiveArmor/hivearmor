@@ -84,6 +84,55 @@ describe('HaNavigation', () => {
     expect(screen.queryByRole('button', { name: 'File Integrity' })).not.toBeInTheDocument();
   });
 
+  it('Wave A1: hides queue-tier Command routes from ROLE_USER (ALERT_QUEUE_AUTH)', () => {
+    useAuthStore.setState({
+      user: {
+        id: 9,
+        login: 'reader',
+        firstName: 'Read',
+        lastName: 'Only',
+        email: 'reader@example.test',
+        roles: ['ROLE_USER'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.getByRole('button', { name: 'Mission Control' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Analyst Queue' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Alerts' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Correlated Findings' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Incidents' })).not.toBeInTheDocument();
+  });
+
+  it('Wave A1: exposes Command triage routes for ROLE_SOC_ANALYST', () => {
+    useAuthStore.setState({
+      user: {
+        id: 11,
+        login: 'socanalyst',
+        firstName: 'Soc',
+        lastName: 'Analyst',
+        email: 'soc@example.test',
+        roles: ['ROLE_SOC_ANALYST'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.getByRole('button', { name: 'Analyst Queue' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Alerts' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Correlated Findings' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Incidents' })).toBeVisible();
+  });
+
   it('exposes UEBA Risk for SOC Manager', () => {
     useAuthStore.setState({
       user: {

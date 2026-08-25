@@ -1,14 +1,39 @@
 # Next production slice
 
-Updated: **2026-08-25 12:20:00 IST (UTC+05:30)**
+Updated: **2026-08-25 12:50:00 IST (UTC+05:30)**
+
+## Active — Wave A1 Command & triage audit (STAGING CANDIDATE)
+
+Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
+Routes: `/dashboard`, `/queue`, `/alerts`, `/correlated-findings`, `/incidents`.
+Status: **AUDIT COMPLETE (docs) + thin honesty wire** — not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for the full spine.
+Research: `docs/ai-handoff/research/autonomous-soc-command-triage.md`.
+Branch: `feat/a1-command-triage-audit`.
+
+### Audit findings (gap matrix)
+
+| Priority | ID | Finding | Next implement slice |
+|---|---|---|---|
+| P0 | A1-KPI-01 | Mission Control critical/SLA/unassigned KPIs computed from open-incidents `page size=5` — understates shift risk vs OEM queue totals | Wire `sla-stats` / full open counts; label sample vs population |
+| P1 | A1-SSE-01 | Live dock uses `/api/alerts/stream` without method `@PreAuthorize`; hardened `/api/ha-alerts/stream` exists | Migrate FE to ha-alerts stream + rate-limit honesty |
+| P1 | A1-AI-01 | Alert investigation calls `/response/actions` (not confirmed SOAR catalogue path) | Fail closed to static catalogue / incident response-actions only |
+| P2 | A1-DET-01 | Detection health uses `correlation-rule` `size:1` + array length instead of `X-Total-Count` | Read total header or drop metric until contract exists |
+| P2 | A1-OVW-01 | `/api/overview/*` authenticated-only (no queue-tier `@PreAuthorize`) while Command KPIs mix incident/queue APIs | Align overview auth or gate Mission Control widgets by role |
+
+### Thin honesty fix in this PR (STAGING CANDIDATE)
+
+1. Align Command nav + AuthGuard for Queue / Alerts / Correlated Findings / Incidents (+ board/detail) with backend `ALERT_QUEUE_AUTH` via shared `ALERT_QUEUE_ROLES` (includes `ROLE_SOC_ANALYST`; hides Alerts/CF from `ROLE_USER`).
+2. Preserve legacy `/offenses/:id` → `/correlated-findings/:id` (was list-only drop).
+
+Still open for next implement: A1-KPI-01, A1-SSE-01, A1-AI-01, A1-DET-01, A1-OVW-01; browser staging smoke of the five routes.
 
 ## Active — Frontend Autonomous SOC audit program (next major arc)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
 Cadence: **audit → research → implement** page-by-page (nav, structure, UX, backend connects) for Enterprise AI-driven Autonomous SIEM / Autonomous SOC.
-First wave after staging soak: **A1 Command & triage** (`/dashboard`, `/queue`, `/alerts`, `/correlated-findings`, `/incidents`).
-Pre-audit: thin parallel honesty leftovers (RESP-021 / TI / POL / investigate pin) → staging rebuild → Wave A1.
-Status: **PROGRAM STARTED** — not `PRODUCTION READY`.
+First wave: **A1 Command & triage** — audit recorded above; remaining waves A2+.
+Pre-audit thin parallels (RESP-021 / TI / POL / investigate pin) largely closed as STAGING CANDIDATE.
+Status: **PROGRAM IN PROGRESS** — not `PRODUCTION READY`.
 
 ## Completed this slice — TI optional depth (MISP status + bounded Last Sync)
 

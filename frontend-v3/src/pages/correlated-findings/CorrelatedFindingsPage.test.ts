@@ -85,6 +85,8 @@ describe('Correlated Findings performance boundaries', () => {
     expect(detailSource.default).not.toContain('reactflow');
     expect(serviceSource.default).toContain("'/ha-correlated-findings'");
     expect(serviceSource.default).toContain('const RESULT_LIMIT = 25');
+    expect(routerSource.default).toContain('OffenseIdRedirect');
+    expect(routerSource.default).toContain('ALERT_QUEUE_ROLES');
   });
 
   it('keeps correlated cards in document flow and contains compact-workbench overflow', () => {

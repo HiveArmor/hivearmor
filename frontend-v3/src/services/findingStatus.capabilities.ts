@@ -16,15 +16,19 @@
 export const GAP_SEC_03_RESOLVED = true;
 
 /**
- * Roles matching OffenseResource / HaCorrelatedFindingsResource ALERT_QUEUE_AUTH.
+ * Roles matching backend ALERT_QUEUE_AUTH / INCIDENT_AUTH
+ * (HaAlertQueueResource, HaCorrelatedFindingsResource, UtmIncidentResource, …).
  * ROLE_SOC_ANALYST is accepted by the backend; UI copy maps it to Analyst.
  */
-export const FINDING_STATUS_MUTATE_ROLES = [
+export const ALERT_QUEUE_ROLES = [
   'ROLE_ADMIN',
   'ROLE_SOC_MANAGER',
   'ROLE_ANALYST',
   'ROLE_SOC_ANALYST',
 ] as const;
+
+/** Alias — status mutate uses the same queue-tier authority matrix. */
+export const FINDING_STATUS_MUTATE_ROLES = ALERT_QUEUE_ROLES;
 
 export function canMutateFindingStatus(roles: readonly string[] | undefined | null): boolean {
   if (!GAP_SEC_03_RESOLVED) {

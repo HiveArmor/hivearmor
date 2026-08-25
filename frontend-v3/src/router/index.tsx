@@ -8,12 +8,19 @@
 
 import React from 'react';
 
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, useParams } from 'react-router-dom';
 
 import { AppLayout } from './AppLayout';
 import { AuthGuard } from './AuthGuard';
 
 import { msspRoutes } from '@/features/mssp/routes/msspRoutes';
+import { ALERT_QUEUE_ROLES } from '@/services/findingStatus.capabilities';
+
+/** Legacy /offenses/:id → /correlated-findings/:id (preserve document id). */
+function OffenseIdRedirect(): JSX.Element {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={id ? `/correlated-findings/${encodeURIComponent(id)}` : '/correlated-findings'} replace />;
+}
 
 // ── Admin pages ──────────────────────────────────────────────────────────────
 const RuleGenerationPage = React.lazy(() =>
@@ -333,7 +340,7 @@ export const router = createBrowserRouter([
       {
         path: 'queue',
         element: (
-          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+          <AuthGuard allowedRoles={[...ALERT_QUEUE_ROLES]}>
             <AnalystQueuePage />
           </AuthGuard>
         ),
@@ -341,7 +348,7 @@ export const router = createBrowserRouter([
       {
         path: 'alerts',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={[...ALERT_QUEUE_ROLES]}>
             <AlertsListPage />
           </AuthGuard>
         ),
@@ -349,7 +356,7 @@ export const router = createBrowserRouter([
       {
         path: 'alerts/:id',
         element: (
-          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+          <AuthGuard allowedRoles={[...ALERT_QUEUE_ROLES]}>
             <AlertInvestigationPage />
           </AuthGuard>
         ),
@@ -358,7 +365,7 @@ export const router = createBrowserRouter([
       {
         path: 'alerts/board',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={[...ALERT_QUEUE_ROLES]}>
             <AlertSeverityBoardPage />
           </AuthGuard>
         ),
@@ -372,7 +379,7 @@ export const router = createBrowserRouter([
       {
         path: 'correlated-findings',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={[...ALERT_QUEUE_ROLES]}>
             <CorrelatedFindingsPage />
           </AuthGuard>
         ),
@@ -380,24 +387,24 @@ export const router = createBrowserRouter([
       {
         path: 'correlated-findings/:id',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={[...ALERT_QUEUE_ROLES]}>
             <CorrelatedFindingDetailPage />
           </AuthGuard>
         ),
       },
-      // Legacy redirects: offenses → /correlated-findings
+      // Legacy redirects: offenses → /correlated-findings (preserve detail id)
       {
         path: 'offenses',
         element: <Navigate to="/correlated-findings" replace />,
       },
       {
         path: 'offenses/:id',
-        element: <Navigate to="/correlated-findings" replace />,
+        element: <OffenseIdRedirect />,
       },
       {
         path: 'incidents',
         element: (
-          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+          <AuthGuard allowedRoles={[...ALERT_QUEUE_ROLES]}>
             <IncidentListPage />
           </AuthGuard>
         ),
@@ -405,7 +412,7 @@ export const router = createBrowserRouter([
       {
         path: 'incidents/:id',
         element: (
-          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+          <AuthGuard allowedRoles={[...ALERT_QUEUE_ROLES]}>
             <IncidentDetailPage />
           </AuthGuard>
         ),
