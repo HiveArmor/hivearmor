@@ -56,8 +56,8 @@ Gap severity: **H** = broken or unsafe operator expectation; **M** = partial/hon
 | `/intelligence` | Hive Intelligence (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` hub: feeds, IOC browser, lookup; Admin-gated toggle/sync | Secured `GET/PUT/POST /api/ha-threat-intel/feeds*`, `GET /iocs`, `POST /lookup`, `GET /stats` | Page previously omitted SOC Manager from in-page gate; stats unread on hub; feed list PreAuthorize is Admin\|User (relies on ROLE_USER co-assignment) | **H→M** (honesty fix this slice) |
 | `/admin/threat-intel` | Hidden specialized Admin (comment in nav) | `UI IMPLEMENTED` TAXII/MISP CRUD + stats | Secured Admin TAXII/MISP CRUD + sync; stats Admin\|Analyst\|User | Access copy leaked `ROLE_ADMIN`; no nav entry (discoverability) | **M** |
 | `/api/v1/threat-intel/*` | None | Not used by frontend-v3 service | Legacy controller **without** `@PreAuthorize` on inspected methods | Must not be wired; migration/deprecation not complete | **H** (keep fail-closed / unused) |
-| `/ueba/risk` | UEBA Risk (Analyst, Admin) | `UI IMPLEMENTED` risk table + drawer embeds entity timeline | `GET /api/ha-ueba/*` exists | `@PreAuthorize` uses `'ANALYST','ADMIN'` **without** `ROLE_` prefix — likely always deny under Spring | **H** |
-| `/ueba/entity-timeline` | Constant only; **no router entry** | Page component exists; used inside risk drawer | `GET /api/ha-ueba/entity-timeline` | Orphan deep-link constant; no standalone route | **L** |
+| `/ueba/risk` | UEBA Risk (Analyst, SOC Manager, Platform Administrator) | `UI IMPLEMENTED` risk table + drawer embeds entity timeline | `GET /api/ha-ueba/*` secured with `ROLE_ANALYST\|ROLE_SOC_MANAGER\|ROLE_ADMIN` | **Addressed (STAGING CANDIDATE):** PreAuthorize now uses JWT `ROLE_` authorities + SOC Manager; nav/AuthGuard aligned | **H→closed** (auth honesty) |
+| `/ueba/entity-timeline` | Deep-link (`?userId=`); missing userId → `/ueba/risk` | `UI IMPLEMENTED` standalone route wraps `EntityTimelinePage` | `GET /api/ha-ueba/entity-timeline` (same ROLE_ guard) | **Addressed:** router entry registered; constant no longer orphan | **L→closed** |
 | `/edr/timeline/:agentId` | Via Endpoints list | `UI IMPLEMENTED` | `GET /api/ha-edr/timeline`, `/process-tree` (Admin\|Analyst\|SOC Manager) | No top-level nav; agent-scoped only | **M** (auth aligned) |
 | `/edr/endpoints` | Endpoints | `UI IMPLEMENTED` agent list → timeline | `GET /api/agent-manager/agents` | Entry point only; not a full EDR fleet ops surface | **M** |
 | `/edr/quarantine` | Alias of quarantine page | Same as `/response/quarantine` | `GET/PATCH/POST /api/ha-edr/quarantine*` (Analyst\|SOC Manager\|Admin) | Duplicate path; nav prefers `/response/quarantine` | **L** |
@@ -102,7 +102,7 @@ Related prior: **`RESP-021`** for quarantine (not reopened as missing).
 ## Explicit non-goals
 
 - No redesign of all orphan routes in one PR.
-- No UEBA PreAuthorize backend fix in this thin FE honesty slice (recorded as inventory **H** for a follow-on).
+- UEBA PreAuthorize `ROLE_` fix + `/ueba/entity-timeline` router entry: **addressed** in follow-on `feat/p1-ueba-auth-fix` (STAGING CANDIDATE) — see matrix rows above.
 - Quarantine SOC Manager authorization was deferred here and closed in the endpoint-auth follow-on (`feat/p1-endpoint-quarantine-auth`) — see matrix **H→M** above. Remaining `RESP-021` depth gaps stay open.
 - No `PRODUCTION READY`, `LIVE VERIFIED`, or full family consolidation claim.
 

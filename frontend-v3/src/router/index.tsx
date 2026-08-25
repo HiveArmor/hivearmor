@@ -278,6 +278,11 @@ const EndpointsListPage = React.lazy(() =>
 const RiskDashboardPage = React.lazy(() =>
   import('@/pages/ueba/risk/RiskDashboardPage').then(m => ({ default: m.RiskDashboardPage }))
 );
+const EntityTimelineRoutePage = React.lazy(() =>
+  import('@/pages/ueba/entity-timeline/EntityTimelineRoutePage').then(m => ({
+    default: m.EntityTimelineRoutePage,
+  }))
+);
 
 // ── Posture / New ─────────────────────────────────────────────────────────────
 const CisBenchmarkPage = React.lazy(() =>
@@ -1041,12 +1046,21 @@ export const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
-      // ── UEBA — Risk Dashboard (Sprint 29, task 7.1) ───────────────────────
+      // ── UEBA — Risk Dashboard + Entity Timeline deep-link (Sprint 29) ────
+      // Roles: Analyst | SOC Manager | Platform Administrator (JWT ROLE_*).
       {
         path: 'ueba/risk',
         element: (
-          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_ADMIN']}>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <RiskDashboardPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'ueba/entity-timeline',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <EntityTimelineRoutePage />
           </AuthGuard>
         ),
       },

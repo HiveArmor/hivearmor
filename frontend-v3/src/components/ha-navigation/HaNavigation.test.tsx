@@ -84,6 +84,27 @@ describe('HaNavigation', () => {
     expect(screen.queryByRole('button', { name: 'File Integrity' })).not.toBeInTheDocument();
   });
 
+  it('exposes UEBA Risk for SOC Manager', () => {
+    useAuthStore.setState({
+      user: {
+        id: 3,
+        login: 'socmgr',
+        firstName: 'Sam',
+        lastName: 'Manager',
+        email: 'sam@example.test',
+        roles: ['ROLE_SOC_MANAGER'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.getByRole('button', { name: 'UEBA Risk' })).toBeVisible();
+  });
+
   it('keeps admin-only orphaned routes out of the analyst rail', () => {
     renderNavigation();
     fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
