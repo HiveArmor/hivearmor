@@ -1,18 +1,29 @@
 # Next production slice
 
-Updated: **2026-08-25 22:15:00 IST (UTC+05:30)**
+Updated: **2026-08-25 22:19:00 IST (UTC+05:30)**
+
+## Completed this slice — Staging INV-012 promote smoke
+
+Status: **RECORDED** tip `4012705` — **STAGING CANDIDATE**. Not `PRODUCTION READY`.
+Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-25 22:19 IST). Report `/tmp/hivearmor-staging-inv012-smoke.json`.
+
+| Check | Result |
+|---|---|
+| BE+FE rebuild + edge | healthy |
+| SPA shells | 5/5 HTTP 200 |
+| promotion-preview → promote | sessionId 3 → incidentId 137 |
+
+Next optional: full RESP-018 inventory when backend exists, or interactive browser walk of investigation promote UI.
+Deferred (post full production MVP): vendor live connector credentials/proofs.
 
 ## Completed this slice — INV-012 governed investigation promotion
 
-Status: **STAGING CANDIDATE** (PR from `feat/inv012-investigation-promotion`). Not `PRODUCTION READY` / not `LIVE VERIFIED`.
+Status: **MERGED** tip `4012705` (#74) — STAGING CANDIDATE. Staging smoke recorded above.
 
 | ID | Change |
 |---|---|
 | INV-012 BE | `POST /api/ha-investigation-sessions/{id}/promotion-preview` + `POST .../promote` (previewToken, expectedVersion, reason) |
 | INV-012 FE | Detail promote uses preview→commit; `INV_GOVERNED_PROMOTION=true`; deprecated `convert-to-incident` stays `INV_CONVERT_TO_INCIDENT=false` |
-
-Next after merge: staging FE+BE rebuild and smoke promote on a disposable ACTIVE session.
-Deferred (post full production MVP): vendor live connector credentials/proofs; full RESP-018 inventory when backend exists.
 
 ## Completed this slice — Staging FE rebuild + Detect→Govern smoke
 

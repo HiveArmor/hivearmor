@@ -634,6 +634,20 @@ No production-readiness claim is made by this baseline entry.
 - Staging proof (admin JWT): `GET /api/ha-tenants` **200** (`X-Total-Count=4`); `GET /api/ha-audit-log` **200** (`X-Total-Count=416`).
 - Unit: `HiveTenantServiceTest` + `HaAuditLogResourceExportTest` — 7/7 passed.
 
+## 2026-08-25 22:19:00 IST (UTC+05:30) — Staging INV-012 promote smoke (tip 4012705)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED for vendor connectors).
+- Tip deployed: `4012705` (merge #74 INV-012 governed promotion-preview + promote).
+- Scope: backend WAR + frontend-v3 rsync; rebuilt `hivearmor/backend:local` + `hivearmor/frontend-v3:local`; recreated backend, frontend-v3, edge.
+- Host: `https://72.44.52.187` — backend + FE healthy; admin JWT issued (`token_len=219`).
+- SPA shells **200** (5/5): `/`, `/investigations`, `/incidents`, `/response/activity`, `/admin/enrollment-audit`.
+- INV-012 API smoke (admin):
+  - Created disposable session `STAGING-INV012-SMOKE-*` → sessionId **3**
+  - `POST .../promotion-preview` **200** (`previewToken_len=274`, `sessionVersion=0`)
+  - `POST .../promote` **200** → **incidentId=137**, sessionId=3
+- Failures: **0**. Report: `/tmp/hivearmor-staging-inv012-smoke.json`.
+- Still deferred: vendor live connector proofs; full RESP-018 inventory; full interactive browser walk / 24h soak.
+
 ## 2026-08-25 21:55:00 IST (UTC+05:30) — Staging FE rebuild + Detect→Govern smoke (tip 597e80f)
 
 - Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED for vendor connectors).
