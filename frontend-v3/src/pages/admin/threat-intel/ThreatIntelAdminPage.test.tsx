@@ -136,7 +136,8 @@ const SAMPLE_MISP_FEEDS: MispFeedDTO[] = [
     enabled: true,
     filterTags: 'tlp:green',
     lastSyncAt: '2026-07-24T08:00:00Z',
-    lastSyncCount: 89,
+    lastSyncStatus: 'ERROR',
+    lastSyncCount: 0,
   },
 ];
 
@@ -322,5 +323,19 @@ describe('ThreatIntelAdminPage', () => {
         screen.getByRole('button', { name: /Add MISP Feed/i }),
       ).toBeInTheDocument();
     });
+  });
+
+  it('shows persisted MISP Status from lastSyncStatus after switching tabs', async () => {
+    setupQueryMocks();
+    renderPage();
+
+    fireEvent.click(screen.getByText('MISP Feeds'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('table', { name: 'MISP Feeds' })).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('ERROR')).toBeInTheDocument();
+    expect(screen.getByText('Internal MISP')).toBeInTheDocument();
   });
 });

@@ -1,7 +1,7 @@
 # Orphan operational workflows — route inventory
 
 Retrieved / authored: **2026-08-25**  
-Status: **STAGING CANDIDATE** inventory + threat-intel honesty strip + TI-002–TI-004 depth slice (explicit feed-read roles, legacy v1 harden, thin sync receipt). Not `PRODUCTION READY`.  
+Status: **STAGING CANDIDATE** inventory + threat-intel honesty strip + TI-002–TI-004 depth slice (explicit feed-read roles, legacy v1 harden, thin sync receipt) + optional MISP `lastSyncStatus` / bounded Last Sync. Not `PRODUCTION READY`.  
 Program: `docs/ai-handoff/remaining-page-program.md` item 8; active slice in `next-production-slice.md`.
 
 This note inventories visible and hidden routes, navigation, frontend services and backend controllers for UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence. It selects **one** coherent family for a thin honesty improvement; it does not redesign all orphan routes.
@@ -96,7 +96,11 @@ See `docs/frontend-backend-contract-register.md` entries **`TI-001`–`TI-004`**
 | TI-001 | `PARTIAL` | Analyst hub role alignment + stats read; feed mutations remain Admin-only |
 | TI-002 | `PARTIAL` | Feed list/get + stats authorize Admin\|User\|Analyst\|SOC Manager explicitly; mutations Admin-only |
 | TI-003 | `PARTIAL` | Legacy `/api/v1/threat-intel` hardened with `@PreAuthorize`; Deprecation/Sunset/Link deferred until cutover |
-| TI-004 | `PARTIAL` | Thin `ThreatFeedSyncReceipt` on TAXII/MISP sync; durable ledger / TLP governance still open |
+| TI-004 | `PARTIAL` | Thin `ThreatFeedSyncReceipt` on TAXII/MISP sync; MISP + TAXII persist `lastSyncStatus`; Admin Status + bounded Last Sync |
+
+### Follow-on note (2026-08-25) — TI-004 MISP status / bounded lastSyncAt
+
+STAGING CANDIDATE: `hive_misp_feed.last_sync_status` added; manual and scheduled MISP sync persist `OK`/`ERROR` with `lastSyncAt` (ROLE_ADMIN). Admin MISP table Status column reads the field; Last Sync uses `formatBoundedRelativeTime` (`>30d` cap). No Deprecation/Sunset on `/api/v1/threat-intel`. Durable ledger / IOC cursor / vendor live remain open.
 
 Related prior: **`RESP-021`** for quarantine (not reopened as missing).
 
@@ -116,6 +120,9 @@ STAGING CANDIDATE: `HaEdrResource` quarantine list/mutate now includes `ROLE_SOC
 
 STAGING CANDIDATE: `GET /api/ha-edr/policies/{id}/enforcement` returns assignment plus existing `AgentPolicyStateDTO` fields with `evidenceAvailability` limited to `unavailable`|`partial`. Reads allow Analyst|SOC Manager|Admin; mutations Admin|SOC Manager. UI honesty banner and evidence drawer — no fictional host-enforcement green checks. Live agent apply/ack path and production verification remain open (`POL-001`–`POL-003`).
 
+### Follow-on note (2026-08-25) — POL-003 apply/ack honesty
+
+STAGING CANDIDATE after #48: when `AgentPolicyStateDTO` lacks `appliedVersion`/`lastAppliedAt`, API sets `evidenceAvailability=unavailable`, `applyAckPathAvailable=false`, and honesty notes say **apply/ack path unavailable** — never green “enforced on host”. UI surfaces lastCheckedAt/driftDetails and per-row apply/ack. Production agent INTERNAL_KEY / gRPC apply+ack and LIVE VERIFIED host enforcement remain open.
 ### Follow-on note (2026-08-25) — RESP-021 host isolation inventory
 
 STAGING CANDIDATE: secured `GET /api/ha-edr/isolation` lists `hive_edr_isolation` with Analyst \| SOC Manager \| Admin PreAuthorize. Quarantine & Containment Endpoint isolation tab consumes that inventory with honest empty/error states. Legacy `/api/edr/isolation` not adopted. Governed release/preview, action history, and resumable delivery remain open.

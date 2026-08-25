@@ -781,5 +781,8 @@
     <!-- P1 Connector staging bridge — promote status (ADR-20260824-connector-staging-bridge) -->
     <include file="/config/liquibase/changelog/20260824008_ha_connector_alert_staging_promote.xml" relativeToChangelogFile="false"/>
 
+    <!-- TI-004 STAGING CANDIDATE — MISP last_sync_status parity with TAXII -->
+    <include file="/config/liquibase/changelog/20260825001_misp_feed_last_sync_status.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 

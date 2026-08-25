@@ -339,7 +339,9 @@ export interface AgentPolicyFormValues {
 
 /**
  * Agent-reported policy ack/state — mirrors backend `AgentPolicyStateDTO`.
- * Presence does not prove production host enforcement (POL-001).
+ * Presence does not prove production host enforcement (POL-001 / POL-003).
+ * Apply/ack evidence requires `appliedVersion` or `lastAppliedAt` — never treat bare
+ * `state` alone as enforced on host.
  */
 export interface AgentPolicyStateDTO {
   id?: number;
@@ -361,5 +363,11 @@ export interface AgentPolicyEnforcementEvidenceDTO {
   assignedAgentIds: string[];
   evidenceAvailability: AgentPolicyEvidenceAvailability;
   honestyNote: string;
+  /**
+   * True only when a state row carries appliedVersion or lastAppliedAt.
+   * False ⇒ apply/ack path unavailable — never “enforced on host”.
+   * True still does not mean LIVE VERIFIED host enforcement.
+   */
+  applyAckPathAvailable: boolean;
   agentStates: AgentPolicyStateDTO[];
 }

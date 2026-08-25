@@ -3,11 +3,12 @@
  *
  * Agent Policy Management UI at /edr/policies.
  *
- * Honesty boundary (STAGING CANDIDATE / POL-001):
+ * Honesty boundary (STAGING CANDIDATE / POL-001 / POL-003):
  *   - Assignment is configuration only.
  *   - Enforcement evidence from GET /ha-edr/policies/{id}/enforcement surfaces
  *     AgentPolicyStateDTO fields with unavailable/partial — never fictional green checks.
- *   - Host enforcement is not production-verified.
+ *   - Missing appliedVersion/lastAppliedAt ⇒ apply/ack path unavailable (never “enforced on host”).
+ *   - Host enforcement is not production-verified; no invented live agent gRPC apply path.
  *
  * Auth: Analyst|SOC Manager|Admin read; Admin|SOC Manager mutate.
  */
@@ -36,6 +37,8 @@ import {
   AGENT_POLICY_READ_DENIED_MESSAGE,
   AGENT_POLICY_READ_ROLES,
   canMutateAgentPolicies,
+  hasAgentPolicyApplyAckEvidence,
+  isAgentPolicyApplyAckPathAvailable,
 } from '@/services/agentPolicy.capabilities';
 import { useAuthStore } from '@/store/auth.store';
 import type {
@@ -628,7 +631,7 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
         )}
       </div>
 
-      {/* Honesty strip — POL-001 STAGING CANDIDATE */}
+      {/* Honesty strip — POL-001 / POL-003 STAGING CANDIDATE */}
       <div
         role="status"
         aria-label="Policy enforcement honesty"
@@ -905,7 +908,7 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
 }
 
 // ---------------------------------------------------------------------------
-// Enforcement evidence panel (POL-001)
+// Enforcement evidence panel (POL-001 / POL-003)
 // ---------------------------------------------------------------------------
 
 interface EnforcementEvidencePanelProps {
@@ -950,6 +953,8 @@ function EnforcementEvidencePanel({
     );
   }
 
+  const applyAckAvailable = isAgentPolicyApplyAckPathAvailable(evidence);
+  // Amber for partial; secondary for unavailable — never positive/green “enforced”.
   const tone =
     evidence.evidenceAvailability === 'partial' ? 'var(--ha-high)' : 'var(--ha-text-secondary)';
 
@@ -979,6 +984,22 @@ function EnforcementEvidencePanel({
       >
         Evidence: {evidence.evidenceAvailability}
       </div>
+      <div
+        role="status"
+        aria-label="Apply ack path status"
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
+          color: applyAckAvailable ? 'var(--ha-high)' : 'var(--ha-text-secondary)',
+          marginBottom: 8,
+        }}
+      >
+        {applyAckAvailable
+          ? 'Apply/ack fields present (not LIVE VERIFIED)'
+          : 'Apply/ack path unavailable'}
+      </div>
       <p
         style={{
           fontSize: 12,
@@ -994,7 +1015,8 @@ function EnforcementEvidencePanel({
       </div>
       {(evidence.agentStates ?? []).length === 0 ? (
         <p style={{ fontSize: 12, color: 'var(--ha-text-secondary)', margin: 0 }}>
-          No agent-reported appliedVersion / state rows for this policy id.
+          No agent-reported appliedVersion / ack rows for this policy id. Apply/ack path
+          unavailable — never treat as enforced on host.
         </p>
       ) : (
         <table
@@ -1008,7 +1030,16 @@ function EnforcementEvidencePanel({
         >
           <thead>
             <tr>
-              {['Agent', 'Applied', 'Desired', 'State', 'Last applied'].map((col) => (
+              {[
+                'Agent',
+                'Applied',
+                'Desired',
+                'State',
+                'Last applied',
+                'Last checked',
+                'Drift',
+                'Apply/ack',
+              ].map((col) => (
                 <th
                   key={col}
                   style={{
@@ -1025,25 +1056,53 @@ function EnforcementEvidencePanel({
             </tr>
           </thead>
           <tbody>
-            {evidence.agentStates.map((row, idx) => (
-              <tr key={row.id ?? `${row.agentId ?? 'agent'}-${idx}`}>
-                <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
-                  {row.agentId ?? '—'}
-                </td>
-                <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
-                  {row.appliedVersion ?? '—'}
-                </td>
-                <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
-                  {row.desiredVersion ?? '—'}
-                </td>
-                <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
-                  {row.state ?? '—'}
-                </td>
-                <td style={{ padding: '4px 6px', color: 'var(--ha-text-secondary)' }}>
-                  {row.lastAppliedAt ? formatTimestamp(row.lastAppliedAt) : '—'}
-                </td>
-              </tr>
-            ))}
+            {evidence.agentStates.map((row, idx) => {
+              const rowHasAck = hasAgentPolicyApplyAckEvidence(row);
+              return (
+                <tr key={row.id ?? `${row.agentId ?? 'agent'}-${idx}`}>
+                  <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
+                    {row.agentId ?? '—'}
+                  </td>
+                  <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
+                    {row.appliedVersion ?? '—'}
+                  </td>
+                  <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
+                    {row.desiredVersion ?? '—'}
+                  </td>
+                  <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
+                    {row.state ?? '—'}
+                  </td>
+                  <td style={{ padding: '4px 6px', color: 'var(--ha-text-secondary)' }}>
+                    {row.lastAppliedAt ? formatTimestamp(row.lastAppliedAt) : '—'}
+                  </td>
+                  <td style={{ padding: '4px 6px', color: 'var(--ha-text-secondary)' }}>
+                    {row.lastCheckedAt ? formatTimestamp(row.lastCheckedAt) : '—'}
+                  </td>
+                  <td
+                    style={{
+                      padding: '4px 6px',
+                      color: 'var(--ha-text-secondary)',
+                      maxWidth: 120,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                    title={row.driftDetails ?? undefined}
+                  >
+                    {row.driftDetails?.trim() ? row.driftDetails : '—'}
+                  </td>
+                  <td
+                    style={{
+                      padding: '4px 6px',
+                      color: rowHasAck ? 'var(--ha-high)' : 'var(--ha-text-secondary)',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {rowHasAck ? 'fields present' : 'unavailable'}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
