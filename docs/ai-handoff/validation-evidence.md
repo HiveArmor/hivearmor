@@ -633,3 +633,15 @@ No production-readiness claim is made by this baseline entry.
 - Fix: `HiveTenantService` → `HaClientRepository`; audit resources → `v3-hive-backend-logs` (+ empty page on missing index).
 - Staging proof (admin JWT): `GET /api/ha-tenants` **200** (`X-Total-Count=4`); `GET /api/ha-audit-log` **200** (`X-Total-Count=416`).
 - Unit: `HiveTenantServiceTest` + `HaAuditLogResourceExportTest` — 7/7 passed.
+
+## 2026-08-25 21:55:00 IST (UTC+05:30) — Staging FE rebuild + Detect→Govern smoke (tip 597e80f)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED for vendor connectors).
+- Tip deployed: `597e80f` (merge #72 enrollment audit + promote honesty; includes #69–#71 residual depth).
+- Scope: frontend-v3 rsync + `docker compose build/recreate frontend-v3` + edge recreate. Backend unchanged this pass (prior #68 tenants/audit fixes already live).
+- Host: `https://72.44.52.187` — FE healthy; edge running; `/api/healthcheck` **200**; admin JWT issued (`token_len=219`).
+- SPA shells **200**: `/`, `/dashboard`, `/queue`, `/alerts`, `/incidents`, `/search`, `/investigations`, `/intelligence`, `/response/activity`, `/response/playbooks`, `/posture/sensors`, `/admin/enrollment-audit`, `/admin/threat-intel`, `/admin/audit`, `/mssp/overview`.
+- API smoke (admin): **200** on account, ha-alerts, ha-incidents, ha-investigation-sessions, ha-threat-intel/feeds, soar/audit, ha-agent-enrollments/audit (tenant `X-Tenant-ID=1`), ha-tenants (`tenant_count=4`), ha-audit-log, agent-manager/agents.
+- FE asset grep: SOAR-related chunk hits **17**; enrollment-audit chunk hits **7**.
+- Failures: **0**. Report: `/tmp/hivearmor-staging-detect-govern-smoke.json` (remote + local).
+- Still deferred: vendor live connector proofs; full browser walk of every interactive control; 24h soak.

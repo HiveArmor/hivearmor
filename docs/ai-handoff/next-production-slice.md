@@ -1,20 +1,29 @@
 # Next production slice
 
-Updated: **2026-08-25 21:45:00 IST (UTC+05:30)**
+Updated: **2026-08-25 21:55:00 IST (UTC+05:30)**
 
-## Active — Enrollment audit + investigation promote honesty (STAGING CANDIDATE)
+## Completed this slice — Staging FE rebuild + Detect→Govern smoke
 
-Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Status: **IN PROGRESS** — thin residual honesty. Still **STAGING CANDIDATE**. Not `PRODUCTION READY`.
-Branch: `feat/enrollment-audit-investigate-promote`.
+Status: **RECORDED** tip `597e80f` — **STAGING CANDIDATE**. Not `PRODUCTION READY`.
+Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-25 21:55 IST). Report `/tmp/hivearmor-staging-detect-govern-smoke.json`.
+
+| Check | Result |
+|---|---|
+| FE rebuild + edge | healthy / running |
+| SPA Detect→Govern shells | 15/15 HTTP 200 |
+| Core APIs + soar/audit + enrollment audit + tenants + audit-log | 10/10 HTTP 200 |
+
+Deferred (post full production MVP): vendor live connector credentials/proofs.
+Next optional: governed investigation promotion-preview (backend+UI), or full RESP-018 inventory when backend exists.
+
+## Completed this slice — Enrollment audit + investigation promote honesty (#72)
+
+Status: **MERGED** tip `597e80f` — STAGING CANDIDATE.
 
 | ID | Fix |
 |---|---|
-| ENROLL-AUDIT | `/admin/enrollment-audit` → `GET /api/ha-agent-enrollments/audit` (+ NDJSON export); Admin \| SOC Manager |
-| INV-PROMOTE | Fail-closed promote UI/service — deprecated `convert-to-incident`; no silent enable |
-
-Deferred (post full production MVP): vendor live connector credentials/proofs.
-Next optional after merge: staging rebuild + Detect→Govern smoke.
+| ENROLL-AUDIT | `/admin/enrollment-audit` → `GET /api/ha-agent-enrollments/audit` (+ NDJSON export) |
+| INV-PROMOTE | Fail-closed promote — deprecated `convert-to-incident` |
 
 ## Completed this slice — Residual product depth (#71)
 
