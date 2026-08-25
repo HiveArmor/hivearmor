@@ -82,6 +82,7 @@ export function getFoundationQuarantinePage(query: QuarantineListQuery): Quarant
     totalPages: Math.ceil(filtered.length / query.size),
     number: query.page,
     snapshotAt: '2026-08-09T15:22:00+05:30',
+    asOf: filtered[0]?.quarantineTime ?? null,
     partialFailures: [],
   };
 }
@@ -93,10 +94,13 @@ export function getFoundationIsolationPage(query: IsolationListQuery): Isolation
     return true;
   });
   const start = Math.max(0, query.page) * query.size;
+  const content = filtered.slice(start, start + query.size);
   return {
-    content: filtered.slice(start, start + query.size),
+    content,
     totalElements: filtered.length,
     totalPages: Math.max(1, Math.ceil(filtered.length / query.size)),
     number: query.page,
+    snapshotAt: '2026-08-09T16:40:00+05:30',
+    asOf: content[0]?.isolatedAt ?? null,
   };
 }

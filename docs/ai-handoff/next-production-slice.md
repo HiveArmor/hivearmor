@@ -23,10 +23,18 @@ Required next actions (remaining orphans / depth):
 
 1. ~~Follow-on UEBA: fix `HaUebaResource` `@PreAuthorize` authority strings~~ — **done** on `feat/p1-ueba-auth-fix` (STAGING CANDIDATE): `ROLE_ANALYST`/`ROLE_SOC_MANAGER`/`ROLE_ADMIN` + `/ueba/entity-timeline` route.
 2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned.
-3. ~~Follow-on RESP-021 depth: secured host-isolation inventory.~~ **Closed** on `feat/p1-resp021-isolation-inventory` (STAGING CANDIDATE) — `GET /api/ha-edr/isolation` + Endpoint isolation tab. Remaining RESP-021 depth gaps stay open.
-4. ~~Follow-on policies: enforcement evidence honesty~~ — **done** on `feat/p1-agent-policies-enforcement-evidence` (STAGING CANDIDATE): `GET /ha-edr/policies/{id}/enforcement` + UI unavailable/partial; host apply/ack still open (`POL-001`–`POL-003`).
-5. Optional deeper threat-intel: IOC cursor/freshness, durable sync ledger, MISP persisted status, v1 deprecation headers after consumer cutover.
-6. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
+3. ~~Follow-on RESP-021 depth: secured host-isolation inventory.~~ **Closed** on `feat/p1-resp021-isolation-inventory` (STAGING CANDIDATE) — `GET /api/ha-edr/isolation` + Endpoint isolation tab.
+4. ~~Follow-on RESP-021 depth: quarantine/isolation list freshness honesty.~~ **Closed** on `feat/p1-resp021-list-freshness` (STAGING CANDIDATE) — `snapshotAt`/`asOf` + `X-Snapshot-At`/`X-As-Of`. Remaining RESP-021 depth gaps stay open.
+5. ~~Follow-on policies: enforcement evidence honesty~~ — **done** on `feat/p1-agent-policies-enforcement-evidence` (STAGING CANDIDATE): `GET /ha-edr/policies/{id}/enforcement` + UI unavailable/partial; host apply/ack still open (`POL-001`–`POL-003`).
+6. Optional deeper threat-intel: IOC cursor/freshness, durable sync ledger, MISP persisted status, v1 deprecation headers after consumer cutover.
+7. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
+
+## Completed this slice — RESP-021 list freshness honesty (thin depth)
+
+Routes: `/response/quarantine`; `GET /api/ha-edr/quarantine`, `GET /api/ha-edr/isolation`.
+Status: **STAGING CANDIDATE** — server `snapshotAt`/`asOf` (+ `X-Snapshot-At`/`X-As-Of`) on quarantine and isolation lists; Endpoint isolation freshness banner. Not cursor/PIT-bound. Not `PRODUCTION READY`. Not `LIVE VERIFIED`.
+
+Still open under `RESP-021`: enriched evidence/summaries, full cursor/PIT freshness, action history, governed preview/approval/idempotency for restore/delete/release, resumable delivery state.
 
 ## Completed this slice — RESP-021 host isolation inventory (thin depth)
 

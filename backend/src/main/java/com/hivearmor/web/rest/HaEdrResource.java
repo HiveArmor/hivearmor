@@ -4,11 +4,13 @@ import com.hivearmor.service.HaEdrIsolationService;
 import com.hivearmor.service.HaEdrQuarantineService;
 import com.hivearmor.service.HaEdrService;
 import com.hivearmor.service.dto.EdrEventDTO;
+import com.hivearmor.service.dto.HaEdrInventoryPageDTO;
 import com.hivearmor.service.dto.IsolatedHostDTO;
 import com.hivearmor.service.dto.ProcessNodeDTO;
 import com.hivearmor.service.dto.QuarantineActionRequest;
 import com.hivearmor.service.dto.QuarantineBulkRequest;
 import com.hivearmor.service.dto.QuarantinedFileDTO;
+import com.hivearmor.web.rest.util.HaEdrListFreshness;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -36,13 +38,16 @@ import java.util.List;
  * given agent and time window. The frontend assembles the tree via
  * {@code buildProcessTree} in {@code edrService.ts}.
  *
- * <p>GET /api/ha-edr/quarantine — lists quarantined files with optional filters.
+ * <p>GET /api/ha-edr/quarantine — lists quarantined files with optional filters
+ * and thin list-freshness ({@code snapshotAt}/{@code asOf}, {@code X-Snapshot-At}/
+ * {@code X-As-Of}).
  * <p>PATCH /api/ha-edr/quarantine/{id} — applies a restore or delete action to a
  * single quarantined file.
  * <p>POST /api/ha-edr/quarantine/bulk — applies a restore or delete action to
  * multiple quarantined files in one request.
  * <p>GET /api/ha-edr/isolation — secured host-isolation inventory (STAGING
- * CANDIDATE). Does not adopt legacy {@code /api/edr/isolation}.
+ * CANDIDATE) with the same thin freshness honesty. Does not adopt legacy
+ * {@code /api/edr/isolation}.
  */
 @RestController
 @RequestMapping("/api/ha-edr")
@@ -130,18 +135,21 @@ public class HaEdrResource {
      *
      * <p>Returns a paginated list of quarantined files, optionally filtered by
      * {@code agentId} and/or {@code status}. Results are sorted by
-     * {@code quarantineTime} descending.
+     * {@code quarantineTime} descending. Response body includes
+     * {@code snapshotAt} (server read time) and {@code asOf} (newest
+     * {@code quarantineTime} on this page); headers mirror
+     * {@code X-Snapshot-At} / {@code X-As-Of}.
      *
      * @param agentId filter by agent identifier (optional)
      * @param status  filter by quarantine status, e.g. {@code "quarantined"},
      *                {@code "restored"}, {@code "deleted"} (optional)
      * @param page    zero-based page index (default 0)
      * @param size    page size (default 50)
-     * @return 200 OK with a page of {@link QuarantinedFileDTO}
+     * @return 200 OK with a freshness-annotated page of {@link QuarantinedFileDTO}
      */
     @GetMapping("/quarantine")
     @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN')")
-    public ResponseEntity<Page<QuarantinedFileDTO>> listQuarantinedFiles(
+    public ResponseEntity<HaEdrInventoryPageDTO<QuarantinedFileDTO>> listQuarantinedFiles(
             @RequestParam(value = "agentId", required = false) String agentId,
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -151,7 +159,7 @@ public class HaEdrResource {
         log.debug("{}: agentId={}, status={}, page={}, size={}", ctx, agentId, status, page, size);
 
         Page<QuarantinedFileDTO> result = haEdrQuarantineService.listQuarantinedFiles(agentId, status, page, size);
-        return ResponseEntity.ok(result);
+        return HaEdrListFreshness.ok(result, row -> HaEdrListFreshness.parseInstantOrNull(row.getQuarantineTime()));
     }
 
     /**
@@ -207,19 +215,21 @@ public class HaEdrResource {
      * {@code hive_edr_isolation}, optionally filtered by status. Sorted by
      * {@code isolatedAt} descending. {@code size} is clamped to 200.
      *
-     * <p>STAGING CANDIDATE — read only. Governed lift/release, cursor/freshness
-     * semantics, and action history remain RESP-021 open gaps. Legacy
+     * <p>STAGING CANDIDATE — read only. Thin list freshness
+     * ({@code snapshotAt}/{@code asOf}, {@code X-Snapshot-At}/{@code X-As-Of})
+     * is included. Governed lift/release, cursor/PIT binding, action history,
+     * and resumable delivery remain RESP-021 open gaps. Legacy
      * {@code /api/edr/isolation} is not adopted.
      *
      * @param status filter by status, e.g. {@code ACTIVE}, {@code LIFTED},
      *               {@code FAILED} (optional)
      * @param page   zero-based page index (default 0)
      * @param size   page size, clamped to max 200 (default 50)
-     * @return 200 OK with a page of {@link IsolatedHostDTO}
+     * @return 200 OK with a freshness-annotated page of {@link IsolatedHostDTO}
      */
     @GetMapping("/isolation")
     @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN')")
-    public ResponseEntity<Page<IsolatedHostDTO>> listIsolatedHosts(
+    public ResponseEntity<HaEdrInventoryPageDTO<IsolatedHostDTO>> listIsolatedHosts(
             @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "50") int size) {
@@ -229,6 +239,6 @@ public class HaEdrResource {
         log.debug("{}: status={}, page={}, size={}", ctx, status, page, clampedSize);
 
         Page<IsolatedHostDTO> result = haEdrIsolationService.listIsolatedHosts(status, page, clampedSize);
-        return ResponseEntity.ok(result);
+        return HaEdrListFreshness.ok(result, IsolatedHostDTO::getIsolatedAt);
     }
 }
