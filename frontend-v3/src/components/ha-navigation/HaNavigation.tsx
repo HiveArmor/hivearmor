@@ -15,20 +15,23 @@ import type { NavItemSpec } from './types';
 import { UserAvatarMenu } from '@/components/ha-masthead/UserAvatarMenu';
 import { useMsspNavStore } from '@/features/mssp/store/msspNavStore';
 import { hasAuthority } from '@/lib/auth/hasAuthority';
+import { ALERT_QUEUE_ROLES } from '@/services/findingStatus.capabilities';
 import { useAuthStore } from '@/store/auth.store';
 import { useSidebarStore } from '@/store/sidebar.store';
 import { useThemeStore } from '@/store/theme.store';
 
 import './HaNavigation.css';
 
+/** Wave A1 — match backend ALERT_QUEUE_AUTH / INCIDENT_AUTH (STAGING CANDIDATE). */
+const COMMAND_QUEUE_ROLES = [...ALERT_QUEUE_ROLES];
 
 // Section: COMMAND
 const COMMAND_ITEMS: NavItemSpec[] = [
   { label: 'Mission Control', icon: 'LayoutDashboard', route: '/dashboard', roles: [] },
-  { label: 'Analyst Queue', icon: 'ShieldAlert', route: '/queue', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
-  { label: 'Alerts', icon: 'Bell', route: '/alerts', roles: [] },
-  { label: 'Correlated Findings', icon: 'Layers', route: '/correlated-findings', roles: [] },
-  { label: 'Incidents', icon: 'Target', route: '/incidents', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  { label: 'Analyst Queue', icon: 'ShieldAlert', route: '/queue', roles: COMMAND_QUEUE_ROLES },
+  { label: 'Alerts', icon: 'Bell', route: '/alerts', roles: COMMAND_QUEUE_ROLES },
+  { label: 'Correlated Findings', icon: 'Layers', route: '/correlated-findings', roles: COMMAND_QUEUE_ROLES },
+  { label: 'Incidents', icon: 'Target', route: '/incidents', roles: COMMAND_QUEUE_ROLES },
 ];
 
 // Section: COMMAND — intentionally not listed:
