@@ -1,5 +1,8 @@
 /**
  * threatIntel.service.ts — Threat Intelligence API
+ *
+ * Canonical surface: /api/ha-threat-intel/*. Never call /api/v1/threat-intel (TI-003).
+ * TI-004: TAXII/MISP sync returns ThreatFeedSyncReceipt JSON (STAGING CANDIDATE).
  */
 
 import { apiClient } from '@/lib/apiClient';
@@ -12,7 +15,18 @@ import type {
   TaxiiFeedDTO,
   TaxiiFeedRequest,
   ThreatFeedDTO,
+  ThreatFeedSyncReceipt,
 } from '@/types/threatIntel.types';
+
+export {
+  TI_002_EXPLICIT_FEED_READ_ROLES,
+  TI_003_LEGACY_V1_HARDENED,
+  TI_004_SYNC_RECEIPT,
+  THREAT_INTEL_MUTATE_ROLES,
+  THREAT_INTEL_READ_ROLES,
+  canMutateThreatIntelFeeds,
+  canReadThreatIntel,
+} from './threatIntel.capabilities';
 
 export interface IocSearchParams extends Record<string, string | number | undefined> {
   search?: string;
@@ -63,7 +77,7 @@ export const threatIntelService = {
     apiClient.delete<void>(`/ha-threat-intel/taxii-feeds/${id}`),
 
   syncTaxiiFeed: (id: number) =>
-    apiClient.post<string>(`/ha-threat-intel/taxii/${id}/sync`),
+    apiClient.post<ThreatFeedSyncReceipt>(`/ha-threat-intel/taxii/${id}/sync`),
 
   // ─── T05 MISP Feed CRUD ───────────────────────────────────────────────────
 
@@ -83,11 +97,10 @@ export const threatIntelService = {
     apiClient.delete<void>(`/ha-threat-intel/misp-feeds/${id}`),
 
   syncMispFeed: (id: number) =>
-    apiClient.post<string>(`/ha-threat-intel/misp/${id}/sync`),
+    apiClient.post<ThreatFeedSyncReceipt>(`/ha-threat-intel/misp/${id}/sync`),
 
   // ─── T05 Stats ───────────────────────────────────────────────────────────
 
   getIocStats: () =>
     apiClient.get<IocStatsDTO>('/ha-threat-intel/stats'),
 };
-

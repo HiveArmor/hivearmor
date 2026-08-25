@@ -11,6 +11,8 @@
  *      - "Add Feed" button opens a side drawer form
  *
  * Requirements: 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 5.10, 5.11, 5.12, 5.13
+ * TI-004 STAGING CANDIDATE: Sync Now surfaces ThreatFeedSyncReceipt (receiptId /
+ * lastSyncAt / status / failedReason) instead of pretending zero-IOC success.
  *
  * Constraints:
  *   - No hard-coded hex values — all colours via var(--ha-*) tokens
@@ -545,8 +547,24 @@ function TaxiiFeedsTab(): JSX.Element {
 
   const syncMutation = useMutation({
     mutationFn: (id: number) => threatIntelService.syncTaxiiFeed(id),
-    onSuccess: (_data, id) => {
-      addToast({ variant: 'success', title: 'Sync triggered successfully.' });
+    onSuccess: (receipt, id) => {
+      void queryClient.invalidateQueries({ queryKey: ['taxii-feeds'] });
+      void queryClient.invalidateQueries({ queryKey: ['ioc-stats'] });
+      if (receipt.status === 'ERROR') {
+        addToast({
+          variant: 'danger',
+          title: 'TAXII sync failed',
+          description: receipt.failedReason
+            ? `${receipt.failedReason} (receipt ${receipt.receiptId})`
+            : `Receipt ${receipt.receiptId}`,
+        });
+      } else {
+        addToast({
+          variant: 'success',
+          title: `Synced ${receipt.iocCount} IOCs`,
+          description: `Receipt ${receipt.receiptId}`,
+        });
+      }
       setSyncingState({ feedId: id, startedAt: Date.now() });
     },
     onError: () => {
@@ -772,8 +790,24 @@ function MispFeedsTab(): JSX.Element {
 
   const syncMutation = useMutation({
     mutationFn: (id: number) => threatIntelService.syncMispFeed(id),
-    onSuccess: (_data, id) => {
-      addToast({ variant: 'success', title: 'Sync triggered successfully.' });
+    onSuccess: (receipt, id) => {
+      void queryClient.invalidateQueries({ queryKey: ['misp-feeds'] });
+      void queryClient.invalidateQueries({ queryKey: ['ioc-stats'] });
+      if (receipt.status === 'ERROR') {
+        addToast({
+          variant: 'danger',
+          title: 'MISP sync failed',
+          description: receipt.failedReason
+            ? `${receipt.failedReason} (receipt ${receipt.receiptId})`
+            : `Receipt ${receipt.receiptId}`,
+        });
+      } else {
+        addToast({
+          variant: 'success',
+          title: `Synced ${receipt.iocCount} IOCs`,
+          description: `Receipt ${receipt.receiptId}`,
+        });
+      }
       setSyncingState({ feedId: id, startedAt: Date.now() });
     },
     onError: () => {

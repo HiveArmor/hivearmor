@@ -125,3 +125,18 @@ export interface IocStatsDTO {
   expiredToday: number;
 }
 
+/**
+ * Thin STAGING CANDIDATE sync receipt from TAXII/MISP sync (TI-004).
+ * Not a durable job ledger — receiptId is per-request only.
+ */
+export interface ThreatFeedSyncReceipt {
+  receiptId: string;
+  feedId: number;
+  sourceType: 'TAXII' | 'MISP';
+  lastSyncAt: string | null; // ISO 8601
+  status: 'OK' | 'ERROR';
+  iocCount: number;
+  /** Sanitized failure text; null on OK. Never contains secrets/URLs. */
+  failedReason: string | null;
+}
+

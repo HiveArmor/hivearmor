@@ -1,30 +1,29 @@
 # Next production slice
 
-Updated: **2026-08-25 08:29:20 IST (UTC+05:30)**
+Updated: **2026-08-25 09:02:14 IST (UTC+05:30)**
 
 ## Active — Orphan Operational Workflows
 
 Routes: inventory across UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence; **first bounded family = threat-intel ops** (`/intelligence`, `/admin/threat-intel`).
-Status: **STAGING CANDIDATE** — inventory recorded + thin honesty fix on threat-intel hub. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for this slice.
+Status: **STAGING CANDIDATE** — inventory + hub honesty + TI-002–TI-004 depth (explicit feed-read roles, legacy v1 harden, thin sync receipt). Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for this slice.
 Program: `docs/ai-handoff/remaining-page-program.md`.
 Research: `docs/ai-handoff/research/orphan-operational-workflows-inventory.md`.
 Contracts: `TI-001`–`TI-004`.
 
-Branch: `feat/p1-orphan-route-inventory` (worktree `.worktrees/p1-orphan-inventory`).
+Branch: `feat/p1-threat-intel-depth` (worktree `.worktrees/p1-threat-intel-depth`).
 
-Completed in this inventory slice:
+Completed in this depth slice:
 
-1. Route/nav/service/controller inventory for the three orphan families with gap severity.
-2. Chose threat-intel ops (existing secured backend). Deferred UEBA `ROLE_` PreAuthorize bug and quarantine SOC Manager auth mismatch to follow-ons.
-3. `/intelligence`: include SOC Manager in page gate; wire `GET /api/ha-threat-intel/stats`; keep feed enable/sync Admin-only with explicit read-only copy; human access-denied labels on Admin TI page.
-4. Did not adopt unsecured `/api/v1/threat-intel`. No full orphan redesign.
+1. TI-002: `HaThreatIntelResource` feed list/get + `HaThreatIntelStatsResource` authorize Admin\|User\|Analyst\|SOC Manager explicitly; mutations stay Admin-only.
+2. TI-003: Legacy `/api/v1/threat-intel` `@PreAuthorize` harden in place (same ROLE_ matrix). No Deprecation/Sunset/Link until cutover evidence. Frontend-v3 still does not call v1.
+3. TI-004: TAXII/MISP sync returns `ThreatFeedSyncReceipt` (`receiptId`, `lastSyncAt`, `status`, `iocCount`, `failedReason`); TAXII failures persist ERROR + lastSyncAt (no fake “Synced 0 IOCs”); Admin UI toasts receipt honesty.
+4. Frontend capability flags + Vitest coverage; contract timestamps updated.
 
 Required next actions (remaining orphans / depth):
 
-1. ~~Follow-on UEBA: fix `HaUebaResource` `@PreAuthorize` authority strings~~ — **done** on `feat/p1-ueba-auth-fix` (STAGING CANDIDATE): `ROLE_ANALYST`/`ROLE_SOC_MANAGER`/`ROLE_ADMIN` + `/ueba/entity-timeline` route.
-2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned. Remaining RESP-021 depth gaps stay open.
-3. Optional deeper threat-intel: cursor/freshness, sync receipts, v1 deprecation after successor cutover.
-4. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
+1. Optional deeper threat-intel: IOC cursor/freshness, durable sync ledger, MISP persisted status, v1 deprecation headers after consumer cutover.
+2. Remaining UEBA/endpoint orphan depth beyond auth honesty already shipped on follow-on branches.
+3. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
 
 ## Completed this slice — Governance and Platform Settings
 

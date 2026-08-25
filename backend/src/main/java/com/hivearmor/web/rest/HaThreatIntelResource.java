@@ -25,7 +25,8 @@ import java.util.Map;
  * REST controller — Threat Intelligence hub (P3 endpoints).
  *
  * Replaces the old /api/v1/threat-intel prefix with /api/ha-* per project conventions.
- * All endpoints require at least ROLE_USER; feed management requires ROLE_ADMIN.
+ * Feed list/get authorize Admin|User|Analyst|SOC Manager explicitly (TI-002 STAGING CANDIDATE).
+ * Feed mutate/sync remain ROLE_ADMIN only. Lookup/IOC browse keep Admin|User|Analyst|SOC Manager.
  *
  * GET  /api/ha-threat-intel/feeds               — list all threat feeds
  * GET  /api/ha-threat-intel/feeds/{id}           — single feed detail
@@ -60,7 +61,8 @@ public class HaThreatIntelResource {
      * GET /api/ha-threat-intel/feeds
      */
     @GetMapping("/feeds")
-    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER + "')")
+    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
+                  "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
     public ResponseEntity<List<ThreatFeedDTO>> listFeeds() {
         log.debug("GET /api/ha-threat-intel/feeds");
         return ResponseEntity.ok(threatIntelService.listFeeds());
@@ -70,7 +72,8 @@ public class HaThreatIntelResource {
      * GET /api/ha-threat-intel/feeds/{id}
      */
     @GetMapping("/feeds/{id}")
-    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER + "')")
+    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
+                  "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
     public ResponseEntity<ThreatFeedDTO> getFeed(@PathVariable("id") String id) {
         log.debug("GET /api/ha-threat-intel/feeds/{}", id);
         return feedRepo.findById(id)
