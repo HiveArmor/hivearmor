@@ -31,16 +31,18 @@ import {
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import {
-  INV_CONVERT_DISABLED_TITLE,
   INV_CONVERT_TO_INCIDENT,
+  INV_GOVERNED_PROMOTION,
+  INV_PROMOTION_DISABLED_TITLE,
 } from './investigation.capabilities';
 import {
-  convertInvestigationToIncident,
   createInvestigationTask,
   fetchInvestigation,
   fetchInvestigationItems,
   fetchInvestigationTasks,
   pinInvestigationItem,
+  previewInvestigationPromotion,
+  promoteInvestigationToIncident,
   updateInvestigation,
   updateInvestigationTask,
 } from './investigation.service';
@@ -48,6 +50,7 @@ import type {
   InvestigationDetail,
   InvestigationItemType,
   InvestigationPhase,
+  InvestigationPromotionPreview,
   InvestigationSessionItem,
   InvestigationSessionTask,
   InvestigationStatus,
@@ -56,7 +59,6 @@ import type {
 
 import { EmptyState } from '@/components/empty-state/EmptyState';
 import { ErrorState } from '@/components/error-state/ErrorState';
-import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useEpsStream } from '@/hooks/useEpsStream';
 
@@ -123,6 +125,9 @@ export function InvestigationDetailPage(): JSX.Element {
   const [taskTitle, setTaskTitle] = useState('');
   const [taskTicketUrl, setTaskTicketUrl] = useState('');
   const [convertOpen, setConvertOpen] = useState(false);
+  const [promoteReason, setPromoteReason] = useState('');
+  const [promotionPreview, setPromotionPreview] = useState<InvestigationPromotionPreview | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   const detailQuery = useQuery({
     queryKey: ['investigation-session', investigationId],
@@ -175,9 +180,35 @@ export function InvestigationDetailPage(): JSX.Element {
     },
   });
   const convertMutation = useMutation({
-    mutationFn: () => convertInvestigationToIncident(investigationId),
-    onSuccess: ({ incidentId }) => navigate(`/incidents/${incidentId}`),
+    mutationFn: async () => {
+      if (!promotionPreview) throw new Error('Request a promotion preview before committing');
+      if (!promoteReason.trim()) throw new Error('A promotion reason is required');
+      return promoteInvestigationToIncident(investigationId, {
+        previewToken: promotionPreview.previewToken,
+        expectedVersion: promotionPreview.sessionVersion,
+        reason: promoteReason.trim(),
+      });
+    },
+    onSuccess: ({ incidentId }) => {
+      setConvertOpen(false);
+      setPromotionPreview(null);
+      setPromoteReason('');
+      navigate(`/incidents/${incidentId}`);
+    },
   });
+
+  const openPromotion = async () => {
+    setConvertOpen(true);
+    setPreviewError(null);
+    setPromotionPreview(null);
+    setPromoteReason('');
+    try {
+      const preview = await previewInvestigationPromotion(investigationId);
+      setPromotionPreview(preview);
+    } catch (error) {
+      setPreviewError(error instanceof Error ? error.message : 'Promotion preview failed');
+    }
+  };
 
   const investigation = detailQuery.data;
   const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
@@ -191,15 +222,16 @@ export function InvestigationDetailPage(): JSX.Element {
   if (detailQuery.isError || !investigation) return <ErrorState title="Investigation unavailable" message="The session may not exist or is outside your authorized scope." onRetry={() => void detailQuery.refetch()} />;
 
   const currentPhaseIndex = phaseIndex(investigation.phase);
-  const convertAllowed =
-    (fixtureMode || INV_CONVERT_TO_INCIDENT) &&
+  const promoteAllowed =
     investigation.status === 'ACTIVE' &&
     !investigation.incidentId &&
-    investigation.permissions?.convert === true;
-  const convertBlockedTitle = convertAllowed
-    ? 'Review incident promotion'
-    : !fixtureMode && !INV_CONVERT_TO_INCIDENT
-      ? INV_CONVERT_DISABLED_TITLE
+    (fixtureMode
+      ? investigation.permissions?.convert === true
+      : INV_GOVERNED_PROMOTION);
+  const promoteBlockedTitle = promoteAllowed
+    ? 'Review governed incident promotion'
+    : !fixtureMode && !INV_GOVERNED_PROMOTION
+      ? INV_PROMOTION_DISABLED_TITLE
       : 'Governed promotion capability is not available for this session';
   const tabItems: Array<{ id: DetailTab; label: string; icon: JSX.Element; count?: number }> = [
     { id: 'workspace', label: 'Workspace', icon: <Workflow size={14} /> },
@@ -217,18 +249,23 @@ export function InvestigationDetailPage(): JSX.Element {
         <div className="investigation-detail-header__identity"><small>INVESTIGATION SESSION</small><h1>{investigation.sessionName}</h1><span>INV-{investigation.id}</span></div>
         <div className="investigation-detail-header__actions">
           <Link to={`/search?investigationId=${investigation.id}`}><Search size={14} /> Hunt telemetry</Link>
-          {investigation.incidentId ? <Link className="investigation-detail-primary" to={`/incidents/${investigation.incidentId}`}><ShieldAlert size={14} /> Open INC-{investigation.incidentId}</Link> : <button type="button" className="investigation-detail-primary" disabled={!convertAllowed} title={convertBlockedTitle} onClick={() => setConvertOpen(true)}><ShieldAlert size={14} /> Promote to incident</button>}
+          {investigation.incidentId ? <Link className="investigation-detail-primary" to={`/incidents/${investigation.incidentId}`}><ShieldAlert size={14} /> Open INC-{investigation.incidentId}</Link> : <button type="button" className="investigation-detail-primary" disabled={!promoteAllowed} title={promoteBlockedTitle} onClick={() => void openPromotion()}><ShieldAlert size={14} /> Promote to incident</button>}
         </div>
       </header>
 
       {fixtureMode && <div className="investigation-detail-fixture"><strong>Design fixture:</strong> fictional hypotheses, artifacts, and investigation activity are enabled.<span>Production never receives these records.</span></div>}
-      {!fixtureMode && !INV_CONVERT_TO_INCIDENT && !investigation.incidentId && (
+      {!fixtureMode && INV_GOVERNED_PROMOTION && !investigation.incidentId && (
         <div className="investigation-detail-fixture" role="status">
-          <strong>Promotion unavailable:</strong> {INV_CONVERT_DISABLED_TITLE}
-          <span>Create an incident from Alerts or Incidents until the governed promotion contract ships.</span>
+          <strong>Governed promotion:</strong> Promote uses preview + commit (`promotion-preview` / `promote`). Deprecated `convert-to-incident` stays disabled.
+          <span>Direct hard-coded conversion remains unavailable ({String(INV_CONVERT_TO_INCIDENT)}).</span>
         </div>
       )}
-      <nav className="investigation-phase-rail" aria-label="Investigation lifecycle">
+      {!fixtureMode && !INV_GOVERNED_PROMOTION && !investigation.incidentId && (
+        <div className="investigation-detail-fixture" role="status">
+          <strong>Promotion unavailable:</strong> {INV_PROMOTION_DISABLED_TITLE}
+          <span>Create an incident from Alerts or Incidents until the governed promotion contract ships.</span>
+        </div>
+      )}      <nav className="investigation-phase-rail" aria-label="Investigation lifecycle">
         <span>INVESTIGATION PATH</span>
         {PHASES.map((phase, index) => <button type="button" key={phase.id} data-state={index < currentPhaseIndex ? 'complete' : index === currentPhaseIndex ? 'active' : 'pending'} disabled={!fixtureMode} title={fixtureMode ? `Move to ${phase.label}` : 'Phase transitions require the authoritative investigation workflow contract'}><i>{index < currentPhaseIndex ? <CheckCircle2 size={13} /> : index + 1}</i><strong>{phase.label}</strong><small>{phase.description}</small></button>)}
       </nav>
@@ -332,14 +369,62 @@ export function InvestigationDetailPage(): JSX.Element {
           <section><header><h2><CircleDot size={14} /> Session control</h2></header><dl><div><dt>Status</dt><dd><select aria-label="Investigation status" value={investigation.status} onChange={(event) => statusMutation.mutate(event.target.value as InvestigationStatus)} disabled={investigation.status === 'CONVERTED'}><option value="ACTIVE">Active</option><option value="CLOSED">Closed</option><option value="ARCHIVED">Archived</option><option value="CONVERTED" disabled>Converted</option></select></dd></div><div><dt>Owner</dt><dd><UserRound size={12} /> {investigation.assignedTo || 'Unassigned'}</dd></div><div><dt>Updated</dt><dd><Clock3 size={12} /> {formatDate(investigation.updatedAt)}</dd></div><div><dt>Artifacts</dt><dd><FileCheck2 size={12} /> {items.length}</dd></div></dl></section>
           <section className="investigation-ai-card"><header><h2><Sparkles size={14} /> Hive Intelligence</h2><span>Unavailable</span></header><p>Propose alternative hypotheses, summarize cited evidence, and identify missing telemetry without making autonomous decisions. Production investigation sessions do not expose an AI hypothesis contract yet.</p><button type="button" disabled={!fixtureMode} title={fixtureMode ? 'Generate alternative hypotheses' : 'Hive Intelligence hypothesis generation requires a secured investigation AI contract'}><BrainCircuit size={14} /> Generate alternatives</button><button type="button" disabled={!fixtureMode} title={fixtureMode ? 'Summarize cited evidence' : 'Evidence summarization requires a secured investigation AI contract'}><FileSearch size={14} /> Summarize evidence</button></section>
           <section><header><h2><Radio size={14} /> Operational pivots</h2></header><div className="investigation-control-actions"><Link to={`/search?investigationId=${investigation.id}`}><Search size={14} /><span>Hunt scoped telemetry<small>Bound to this session</small></span></Link><button type="button" onClick={() => setSearchParams({ tab: 'activity' })}><Plus size={14} /><span>Add analyst note<small>Append-only record</small></span></button><button type="button" onClick={() => setSearchParams({ tab: 'knowledge' })}><Lightbulb size={14} /><span>Record outcome<small>Detection or coverage gap</small></span></button></div></section>
-          <section className="investigation-readiness"><header><h2><ShieldAlert size={14} /> Promotion readiness</h2></header><ul><li data-ready={Boolean(investigation.hypothesis)}><CheckCircle2 size={12} /> Bounded hypothesis</li><li data-ready={items.length > 0}><CheckCircle2 size={12} /> Preserved artifacts</li><li data-ready={(investigation.openHypothesisCount ?? 1) === 0}><CheckCircle2 size={12} /> Hypothesis decision</li><li data-ready={Boolean(investigation.assignedTo)}><CheckCircle2 size={12} /> Assigned owner</li></ul><button type="button" className="investigation-promote" disabled={!convertAllowed} title={convertBlockedTitle} onClick={() => setConvertOpen(true)}><ShieldAlert size={14} /> Promote to incident</button></section>
+          <section className="investigation-readiness"><header><h2><ShieldAlert size={14} /> Promotion readiness</h2></header><ul><li data-ready={Boolean(investigation.hypothesis)}><CheckCircle2 size={12} /> Bounded hypothesis</li><li data-ready={items.length > 0}><CheckCircle2 size={12} /> Preserved artifacts</li><li data-ready={(investigation.openHypothesisCount ?? 1) === 0}><CheckCircle2 size={12} /> Hypothesis decision</li><li data-ready={Boolean(investigation.assignedTo)}><CheckCircle2 size={12} /> Assigned owner</li></ul><button type="button" className="investigation-promote" disabled={!promoteAllowed} title={promoteBlockedTitle} onClick={() => void openPromotion()}><ShieldAlert size={14} /> Promote to incident</button></section>
         </aside>
       </div>
 
       <footer className="investigation-detail-dock" aria-label="Investigation status"><span><i /> Session loaded</span><span>{fixtureMode ? 'Stable design fixture' : 'Current backend snapshot'}</span><span>{items.length} pinned artifacts · INV-{investigation.id}</span></footer>
       <StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={new Date(investigation.updatedAt)} />
 
-      <HaConfirmationModal isOpen={convertOpen} title="Promote investigation to incident" message="Create a formal incident from this investigation. The current backend creates a P3 incident and links this session; review the resulting incident before response actions." confirmLabel={convertMutation.isPending ? 'Promoting…' : 'Create incident'} cancelLabel="Keep investigating" onConfirm={() => convertMutation.mutate()} onCancel={() => setConvertOpen(false)} />
+      {convertOpen && (
+        <div className="investigation-promote-modal" role="dialog" aria-modal="true" aria-label="Promote investigation to incident">
+          <div className="investigation-promote-modal__panel">
+            <header>
+              <h2>Promote investigation to incident</h2>
+              <button type="button" onClick={() => { if (!convertMutation.isPending) { setConvertOpen(false); setPromotionPreview(null); } }} aria-label="Close promotion dialog">Close</button>
+            </header>
+            {previewError && <p role="alert">{previewError}</p>}
+            {!previewError && !promotionPreview && <p>Loading promotion preview…</p>}
+            {promotionPreview && (
+              <>
+                <dl>
+                  <div><dt>Title</dt><dd>{promotionPreview.incidentSummary.title}</dd></div>
+                  <div><dt>Priority</dt><dd>{promotionPreview.incidentSummary.recommendedPriority} · severity {promotionPreview.incidentSummary.recommendedSeverity}</dd></div>
+                  <div><dt>Evidence</dt><dd>{promotionPreview.eligibleEvidence.totalArtifacts} artifacts ({promotionPreview.eligibleEvidence.alertCount} alerts)</dd></div>
+                  <div><dt>Reasons</dt><dd>{promotionPreview.incidentSummary.severityReasons.join('; ')}</dd></div>
+                </dl>
+                {promotionPreview.warnings.length > 0 && (
+                  <ul>{promotionPreview.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
+                )}
+                <label>
+                  Promotion reason
+                  <textarea
+                    value={promoteReason}
+                    onChange={(event) => setPromoteReason(event.target.value)}
+                    rows={3}
+                    placeholder="Why is this investigation becoming an incident?"
+                    disabled={convertMutation.isPending}
+                  />
+                </label>
+                {convertMutation.isError && (
+                  <p role="alert">{convertMutation.error instanceof Error ? convertMutation.error.message : 'Promotion failed'}</p>
+                )}
+                <footer>
+                  <button type="button" disabled={convertMutation.isPending} onClick={() => { setConvertOpen(false); setPromotionPreview(null); }}>Keep investigating</button>
+                  <button
+                    type="button"
+                    className="investigation-promote"
+                    disabled={convertMutation.isPending || !promoteReason.trim()}
+                    onClick={() => convertMutation.mutate()}
+                  >
+                    {convertMutation.isPending ? 'Promoting…' : 'Confirm promotion'}
+                  </button>
+                </footer>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

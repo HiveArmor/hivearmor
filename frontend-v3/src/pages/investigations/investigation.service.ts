@@ -1,6 +1,8 @@
 import {
   INV_CONVERT_DISABLED_TITLE,
   INV_CONVERT_TO_INCIDENT,
+  INV_GOVERNED_PROMOTION,
+  INV_PROMOTION_DISABLED_TITLE,
 } from './investigation.capabilities';
 import type {
   CreateInvestigationInput,
@@ -8,6 +10,8 @@ import type {
   InvestigationDetail,
   InvestigationListParams,
   InvestigationPageResult,
+  InvestigationPromotionPreview,
+  InvestigationPromotionResult,
   InvestigationSession,
   InvestigationSessionItem,
   InvestigationSessionTask,
@@ -185,6 +189,74 @@ export async function convertInvestigationToIncident(id: number): Promise<{ inci
   }
   const response = await fetch(`/api/ha-investigation-sessions/${id}/convert-to-incident`, { method: 'POST', headers: headers() });
   return ensureResponse<{ incidentId: number }>(response);
+}
+
+export async function previewInvestigationPromotion(
+  id: number,
+  signal?: AbortSignal
+): Promise<InvestigationPromotionPreview> {
+  if (fixtureMode) {
+    return {
+      sessionId: id,
+      sessionVersion: 1,
+      incidentSummary: {
+        title: 'Fixture promotion',
+        descriptionExcerpt: 'Design fixture preview',
+        recommendedSeverity: 2,
+        recommendedPriority: 'P3',
+        severityReasons: ['Fixture default'],
+        assignee: 'fixture',
+        targetTenantId: null,
+      },
+      eligibleEvidence: { totalArtifacts: 0, alertCount: 0, entityCount: 0, eventCount: 0, otherCount: 0 },
+      duplicateOrSimilarIncidents: [],
+      policyGates: ['Fixture mode'],
+      missingPrerequisites: [],
+      warnings: ['Design fixture — not a live promotion'],
+      blastRadius: {
+        createsIncident: true,
+        marksSessionConverted: true,
+        linksSessionIncidentId: true,
+        doesNotAutoLinkOpenSearchAlertsYet: true,
+      },
+      previewToken: 'fixture-preview-token',
+      expiresInSeconds: 300,
+    };
+  }
+  if (!INV_GOVERNED_PROMOTION) {
+    throw new InvestigationApiError(410, INV_PROMOTION_DISABLED_TITLE);
+  }
+  const response = await fetch(`/api/ha-investigation-sessions/${id}/promotion-preview`, {
+    method: 'POST',
+    headers: headers(),
+    signal,
+  });
+  return ensureResponse<InvestigationPromotionPreview>(response);
+}
+
+export async function promoteInvestigationToIncident(
+  id: number,
+  input: { previewToken: string; expectedVersion: number; reason: string; idempotencyKey?: string }
+): Promise<InvestigationPromotionResult> {
+  if (fixtureMode) {
+    const fixture = await import('@/pages/investigations/investigation.fixtures');
+    const converted = await fixture.convertFixtureInvestigation(id);
+    return { incidentId: converted.incidentId, sessionId: id, status: 'created', reason: input.reason };
+  }
+  if (!INV_GOVERNED_PROMOTION) {
+    throw new InvestigationApiError(410, INV_PROMOTION_DISABLED_TITLE);
+  }
+  const response = await fetch(`/api/ha-investigation-sessions/${id}/promote`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({
+      previewToken: input.previewToken,
+      expectedVersion: input.expectedVersion,
+      reason: input.reason,
+      idempotencyKey: input.idempotencyKey ?? crypto.randomUUID(),
+    }),
+  });
+  return ensureResponse<InvestigationPromotionResult>(response);
 }
 
 export async function fetchInvestigationTasks(id: number, signal?: AbortSignal): Promise<InvestigationSessionTask[]> {

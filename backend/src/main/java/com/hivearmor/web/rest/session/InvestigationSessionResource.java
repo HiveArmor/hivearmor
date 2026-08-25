@@ -4,6 +4,7 @@ import com.hivearmor.security.SecurityUtils;
 import com.hivearmor.service.dto.InvestigationSessionDTO;
 import com.hivearmor.service.dto.SessionItemDTO;
 import com.hivearmor.service.dto.SessionTaskDTO;
+import com.hivearmor.service.session.InvestigationPromotionService;
 import com.hivearmor.service.session.InvestigationSessionService;
 import com.hivearmor.web.rest.errors.BadRequestAlertException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,7 +44,9 @@ import java.util.Map;
  * POST   /api/ha-investigation-sessions/{id}/tasks   → 201
  * PUT    /api/ha-investigation-sessions/{id}/tasks/{taskId} → 200
  * DELETE /api/ha-investigation-sessions/{id}/tasks/{taskId} → 204
- * POST   /api/ha-investigation-sessions/{id}/convert-to-incident → 200 {incidentId}
+ * POST   /api/ha-investigation-sessions/{id}/convert-to-incident → 200 {incidentId} (deprecated)
+ * POST   /api/ha-investigation-sessions/{id}/promotion-preview → 200 INV-012 preview
+ * POST   /api/ha-investigation-sessions/{id}/promote → 200 INV-012 commit
  * S-5C
  */
 @RestController
@@ -56,6 +59,7 @@ public class InvestigationSessionResource {
     private static final String ENTITY_NAME = "investigationSession";
 
     private final InvestigationSessionService sessionService;
+    private final InvestigationPromotionService promotionService;
 
     // ── Sessions ──────────────────────────────────────────────────────────────
 
@@ -440,6 +444,72 @@ public class InvestigationSessionResource {
             .header("Sunset", "Sat, 13 Feb 2027 00:00:00 GMT")
             .header("Link", "</api/ha-investigation-sessions/" + id + "/promotion-preview>; rel=\"successor-version\"")
             .body(Map.of("incidentId", incidentId));
+    }
+
+    /**
+     * POST /api/ha-investigation-sessions/{id}/promotion-preview — INV-012 governed preview.
+     */
+    @PostMapping("/ha-investigation-sessions/{id}/promotion-preview")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST')")
+    @Operation(
+        summary = "Preview investigation promotion to incident",
+        description = "Returns an explainable promotion preview and a short-lived previewToken required by /promote. (INV-012)"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Promotion preview with previewToken"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient privileges"),
+        @ApiResponse(responseCode = "404", description = "Session not found"),
+        @ApiResponse(responseCode = "409", description = "Session not eligible for promotion")
+    })
+    public ResponseEntity<Map<String, Object>> promotionPreview(@PathVariable Long id, Authentication authentication) {
+        String currentUser = getCurrentUser();
+        boolean isAdminOrManager = hasAnyRole(authentication, "ROLE_ADMIN", "ROLE_SOC_MANAGER");
+        Map<String, Object> preview = promotionService.previewPromotion(id, currentUser, isAdminOrManager);
+        return ResponseEntity.ok(preview);
+    }
+
+    /**
+     * POST /api/ha-investigation-sessions/{id}/promote — INV-012 governed commit.
+     */
+    @PostMapping("/ha-investigation-sessions/{id}/promote")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST')")
+    @Operation(
+        summary = "Promote investigation to incident",
+        description = "Commits promotion using an unexpired previewToken, expectedVersion, and analyst reason. (INV-012)"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Incident created or already converted"),
+        @ApiResponse(responseCode = "400", description = "Missing/invalid token or reason"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient privileges"),
+        @ApiResponse(responseCode = "404", description = "Session not found"),
+        @ApiResponse(responseCode = "409", description = "Version conflict")
+    })
+    public ResponseEntity<Map<String, Object>> promote(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body,
+            Authentication authentication
+    ) {
+        String currentUser = getCurrentUser();
+        boolean isAdminOrManager = hasAnyRole(authentication, "ROLE_ADMIN", "ROLE_SOC_MANAGER");
+        String previewToken = body.get("previewToken") != null ? body.get("previewToken").toString() : null;
+        String reason = body.get("reason") != null ? body.get("reason").toString() : null;
+        String idempotencyKey = body.get("idempotencyKey") != null ? body.get("idempotencyKey").toString() : null;
+        Long expectedVersion = null;
+        Object versionObj = body.get("expectedVersion");
+        if (versionObj instanceof Number number) {
+            expectedVersion = number.longValue();
+        } else if (versionObj != null && !versionObj.toString().isBlank()) {
+            try {
+                expectedVersion = Long.parseLong(versionObj.toString());
+            } catch (NumberFormatException ignored) {
+                expectedVersion = null;
+            }
+        }
+        Map<String, Object> result = promotionService.promote(
+            id, previewToken, expectedVersion, reason, idempotencyKey, currentUser, isAdminOrManager);
+        return ResponseEntity.ok(result);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
