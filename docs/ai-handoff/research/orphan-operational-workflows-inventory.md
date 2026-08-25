@@ -58,11 +58,11 @@ Gap severity: **H** = broken or unsafe operator expectation; **M** = partial/hon
 | `/api/v1/threat-intel/*` | None | Not used by frontend-v3 service | Legacy controller **without** `@PreAuthorize` on inspected methods | Must not be wired; migration/deprecation not complete | **H** (keep fail-closed / unused) |
 | `/ueba/risk` | UEBA Risk (Analyst, Admin) | `UI IMPLEMENTED` risk table + drawer embeds entity timeline | `GET /api/ha-ueba/*` exists | `@PreAuthorize` uses `'ANALYST','ADMIN'` **without** `ROLE_` prefix — likely always deny under Spring | **H** |
 | `/ueba/entity-timeline` | Constant only; **no router entry** | Page component exists; used inside risk drawer | `GET /api/ha-ueba/entity-timeline` | Orphan deep-link constant; no standalone route | **L** |
-| `/edr/timeline/:agentId` | Via Endpoints list | `UI IMPLEMENTED` | `GET /api/ha-edr/timeline`, `/process-tree` (Admin\|User) | No top-level nav; agent-scoped only | **M** |
+| `/edr/timeline/:agentId` | Via Endpoints list | `UI IMPLEMENTED` | `GET /api/ha-edr/timeline`, `/process-tree` (Admin\|Analyst\|SOC Manager) | No top-level nav; agent-scoped only | **M** (auth aligned) |
 | `/edr/endpoints` | Endpoints | `UI IMPLEMENTED` agent list → timeline | `GET /api/agent-manager/agents` | Entry point only; not a full EDR fleet ops surface | **M** |
-| `/edr/quarantine` | Alias of quarantine page | Same as `/response/quarantine` | `GET/PATCH/POST /api/ha-edr/quarantine*` (Analyst\|Admin) | Duplicate path; nav prefers `/response/quarantine` | **L** |
-| `/response/quarantine` | Quarantine & Containment (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` file inventory + containment tab; restore/delete mutations live | File quarantine secured; host isolation inventory gaps per `RESP-021`; **SOC Manager not on BE PreAuthorize** | Nav allows SOC Manager; BE list/mutate Analyst\|Admin only → likely 403 | **H** |
-| `/edr/fim` | File Integrity (open roles `[]`) | `UI IMPLEMENTED` summary dashboard | `GET /api/ha-edr/fim/summary` (Analyst\|Admin) | Nav open to all authenticated; BE Analyst\|Admin | **M** |
+| `/edr/quarantine` | Alias of quarantine page | Same as `/response/quarantine` | `GET/PATCH/POST /api/ha-edr/quarantine*` (Analyst\|SOC Manager\|Admin) | Duplicate path; nav prefers `/response/quarantine` | **L** |
+| `/response/quarantine` | Quarantine & Containment (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` file inventory + containment tab; page gate matches BE; restore/delete mutations live | File quarantine secured with SOC Manager on list/mutate; host isolation inventory gaps per `RESP-021` | **SOC Manager PreAuthorize gap closed** (STAGING CANDIDATE follow-on); remaining RESP-021 depth gaps open | **H→M** |
+| `/edr/fim` | File Integrity (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` summary dashboard; page gate matches BE | `GET /api/ha-edr/fim/summary` (Analyst\|SOC Manager\|Admin) | Nav no longer open to all authenticated | **M→L** (auth aligned) |
 | `/edr/policies` | Agent Policies (Admin) | `UI IMPLEMENTED` CRUD + assign | `GET/POST/PUT/DELETE /api/ha-edr/policies*`, assign (Admin) | Agent delivery/enforcement evidence incomplete | **M** |
 | Legacy `/api/edr/*` | None (SensorGrid uses subset) | Not adopted for quarantine UI | Separate `EdrResource` (rules/events/quarantine/isolation/kill) | Contract register: do not adopt unsecured/legacy duplicate for quarantine inventory | **H** (avoid) |
 
@@ -103,5 +103,9 @@ Related prior: **`RESP-021`** for quarantine (not reopened as missing).
 
 - No redesign of all orphan routes in one PR.
 - No UEBA PreAuthorize backend fix in this thin FE honesty slice (recorded as inventory **H** for a follow-on).
-- No quarantine SOC Manager authorization redesign (prefer dedicated RESP follow-on).
+- Quarantine SOC Manager authorization was deferred here and closed in the endpoint-auth follow-on (`feat/p1-endpoint-quarantine-auth`) — see matrix **H→M** above. Remaining `RESP-021` depth gaps stay open.
 - No `PRODUCTION READY`, `LIVE VERIFIED`, or full family consolidation claim.
+
+### Follow-on note (2026-08-25) — endpoint quarantine / FIM / timeline auth
+
+STAGING CANDIDATE: `HaEdrResource` quarantine list/mutate now includes `ROLE_SOC_MANAGER`; timeline/process-tree accept Analyst + SOC Manager (keep Admin); FIM summary includes SOC Manager. Frontend quarantine/FIM page gates and FIM nav roles match. Legacy unsecured `/api/edr/*` was not adopted for quarantine inventory.

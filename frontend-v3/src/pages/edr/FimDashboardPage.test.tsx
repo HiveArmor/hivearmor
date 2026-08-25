@@ -25,6 +25,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { FimDashboardPage } from './FimDashboardPage';
 
+import { useAuthStore } from '@/store/auth.store';
 import type { FimSummaryDTO, TimeSeriesPoint, PathCountDTO, SuspiciousHashDTO } from '@/types/edr';
 
 // ---------------------------------------------------------------------------
@@ -171,6 +172,21 @@ function renderPage() {
 describe('FimDashboardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useAuthStore.setState({
+      user: {
+        id: 1,
+        login: 'analyst',
+        firstName: 'Ari',
+        lastName: 'Patel',
+        email: 'ari@example.test',
+        roles: ['ROLE_ANALYST'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
   });
 
   // 1. Loading state — three PanelSkeleton placeholders should be visible
@@ -281,5 +297,60 @@ describe('FimDashboardPage', () => {
 
     // Threat Intel HIT badge for the suspicious hash
     expect(screen.getByText('HIT')).toBeDefined();
+  });
+
+  it('shows honest access denied when the user lacks Analyst, SOC Manager, or Platform Administrator', () => {
+    useAuthStore.setState({
+      user: {
+        id: 9,
+        login: 'reader',
+        firstName: 'Read',
+        lastName: 'Only',
+        email: 'reader@example.test',
+        roles: ['ROLE_USER'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+
+    renderPage();
+
+    expect(screen.getByRole('alert')).toBeDefined();
+    expect(screen.getByText(/Required permission: Analyst, SOC Manager, or Platform Administrator/i)).toBeDefined();
+    expect(screen.queryByText(/ROLE_/)).toBeNull();
+    expect(mockUseFimSummary).not.toHaveBeenCalled();
+  });
+
+  it('allows SOC Manager through the FIM page gate', () => {
+    useAuthStore.setState({
+      user: {
+        id: 2,
+        login: 'soc.manager',
+        firstName: 'Sam',
+        lastName: 'Manager',
+        email: 'soc@example.test',
+        roles: ['ROLE_SOC_MANAGER'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+
+    mockUseFimSummary.mockReturnValue({
+      data: makeFimSummary(),
+      isLoading: false,
+      isError: false,
+      error: null,
+    } satisfies UseFimSummaryReturn);
+
+    renderPage();
+
+    expect(screen.queryByText(/Required permission/i)).toBeNull();
+    expect(mockUseFimSummary).toHaveBeenCalled();
   });
 });

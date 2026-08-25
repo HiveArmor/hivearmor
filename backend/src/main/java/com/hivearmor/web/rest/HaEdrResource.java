@@ -69,7 +69,7 @@ public class HaEdrResource {
      * @return 200 OK with the process node list, or 200 with an empty list on error
      */
     @GetMapping("/process-tree")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_ANALYST', 'ROLE_SOC_MANAGER')")
     public ResponseEntity<List<ProcessNodeDTO>> getProcessTree(
             @RequestParam("agentId") String agentId,
             @RequestParam("timestamp") String timestamp,
@@ -100,7 +100,7 @@ public class HaEdrResource {
      * @return 200 OK with a page of EDR events
      */
     @GetMapping("/timeline")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_ANALYST', 'ROLE_SOC_MANAGER')")
     public ResponseEntity<Page<EdrEventDTO>> getTimeline(
             @RequestParam("agentId") String agentId,
             @RequestParam("from") String from,
@@ -133,7 +133,7 @@ public class HaEdrResource {
      * @return 200 OK with a page of {@link QuarantinedFileDTO}
      */
     @GetMapping("/quarantine")
-    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN')")
     public ResponseEntity<Page<QuarantinedFileDTO>> listQuarantinedFiles(
             @RequestParam(value = "agentId", required = false) String agentId,
             @RequestParam(value = "status", required = false) String status,
@@ -159,7 +159,7 @@ public class HaEdrResource {
      * @return 200 OK with the updated {@link QuarantinedFileDTO}
      */
     @PatchMapping("/quarantine/{id}")
-    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN')")
     public ResponseEntity<QuarantinedFileDTO> applyQuarantineAction(
             @PathVariable("id") Long id,
             @RequestBody QuarantineActionRequest request) {
@@ -182,7 +182,7 @@ public class HaEdrResource {
      * @return 200 OK with the list of updated {@link QuarantinedFileDTO}
      */
     @PostMapping("/quarantine/bulk")
-    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN')")
     public ResponseEntity<List<QuarantinedFileDTO>> applyBulkQuarantineAction(
             @RequestBody QuarantineBulkRequest request) {
 

@@ -22,7 +22,7 @@ Completed in this inventory slice:
 Required next actions (remaining orphans / depth):
 
 1. Follow-on UEBA: fix `HaUebaResource` `@PreAuthorize` authority strings (`ROLE_ANALYST`/`ROLE_ADMIN`) before claiming risk dashboard live.
-2. Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).
+2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned. Remaining RESP-021 depth gaps stay open.
 3. Optional deeper threat-intel: cursor/freshness, sync receipts, v1 deprecation after successor cutover.
 4. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
 

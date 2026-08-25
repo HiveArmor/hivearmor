@@ -30,6 +30,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { FileQuarantinePage } from './FileQuarantinePage';
 
+import { useAuthStore } from '@/store/auth.store';
 import type { QuarantinePage, QuarantinedFileDTO } from '@/types/edr';
 
 // ---------------------------------------------------------------------------
@@ -211,6 +212,22 @@ function renderPage() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+
+  useAuthStore.setState({
+    user: {
+      id: 1,
+      login: 'analyst',
+      firstName: 'Ari',
+      lastName: 'Patel',
+      email: 'ari@example.test',
+      roles: ['ROLE_ANALYST'],
+      langKey: 'en',
+    },
+    token: 'test-token',
+    isAuthenticated: true,
+    isLoading: false,
+    selectedTenantId: null,
+  });
 
   (mockUseQuarantineAction as ReturnType<typeof vi.fn>).mockReturnValue({
     mutate: mockMutateSingle,
@@ -417,5 +434,62 @@ describe('FileQuarantinePage', () => {
     expect(screen.getByText('ransomware.dll')).toBeDefined();
     expect(screen.getByRole('button', { name: /request restore/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /delete permanently/i })).toBeDefined();
+  });
+
+  it('shows honest access denied for roles outside Analyst, SOC Manager, and Platform Administrator', () => {
+    useAuthStore.setState({
+      user: {
+        id: 9,
+        login: 'reader',
+        firstName: 'Read',
+        lastName: 'Only',
+        email: 'reader@example.test',
+        roles: ['ROLE_USER'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+
+    renderPage();
+
+    expect(screen.getByRole('alert')).toBeDefined();
+    expect(screen.getByText(/Required permission: Analyst, SOC Manager, or Platform Administrator/i)).toBeDefined();
+    expect(screen.queryByText(/ROLE_/)).toBeNull();
+    expect(mockUseQuarantinedFiles).not.toHaveBeenCalled();
+  });
+
+  it('allows SOC Manager through the page gate without calling legacy /api/edr quarantine', () => {
+    useAuthStore.setState({
+      user: {
+        id: 2,
+        login: 'soc.manager',
+        firstName: 'Sam',
+        lastName: 'Manager',
+        email: 'soc@example.test',
+        roles: ['ROLE_SOC_MANAGER'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+
+    mockUseQuarantinedFiles.mockReturnValue({
+      data: makeQuarantinePage({ content: [], totalElements: 0, totalPages: 0 }),
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+    });
+
+    renderPage();
+
+    expect(screen.queryByText(/Required permission/i)).toBeNull();
+    expect(screen.getByText(/no quarantined files found/i)).toBeDefined();
+    expect(mockUseQuarantinedFiles).toHaveBeenCalled();
   });
 });
