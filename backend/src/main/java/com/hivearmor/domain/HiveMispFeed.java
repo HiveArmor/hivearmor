@@ -40,6 +40,13 @@ public class HiveMispFeed implements Serializable {
     @Column(name = "last_sync_at")
     private Instant lastSyncAt;
 
+    /**
+     * Last sync outcome: {@code OK}, {@code ERROR}, or null when never synced.
+     * Parity with {@link HiveTaxiiFeed#getLastSyncStatus()} (TI-004 STAGING CANDIDATE).
+     */
+    @Column(name = "last_sync_status")
+    private String lastSyncStatus;
+
     @Column(name = "last_sync_count")
     private Integer lastSyncCount = 0;
 
@@ -104,6 +111,14 @@ public class HiveMispFeed implements Serializable {
 
     public void setLastSyncAt(Instant lastSyncAt) {
         this.lastSyncAt = lastSyncAt;
+    }
+
+    public String getLastSyncStatus() {
+        return lastSyncStatus;
+    }
+
+    public void setLastSyncStatus(String lastSyncStatus) {
+        this.lastSyncStatus = lastSyncStatus;
     }
 
     public Integer getLastSyncCount() {

@@ -10,6 +10,16 @@ First wave after staging soak: **A1 Command & triage** (`/dashboard`, `/queue`, 
 Pre-audit: thin parallel honesty leftovers (RESP-021 / TI / POL / investigate pin) → staging rebuild → Wave A1.
 Status: **PROGRAM STARTED** — not `PRODUCTION READY`.
 
+## Completed this slice — TI optional depth (MISP status + bounded Last Sync)
+
+Routes: `/intelligence`, `/admin/threat-intel`; contracts `TI-001`–`TI-004`.
+Status: **STAGING CANDIDATE** — TI-002–TI-004 depth (#47) + optional MISP `lastSyncStatus` / bounded Last Sync honesty. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED`.
+Branch: `feat/p1-ti-optional-depth`.
+
+Shipped: MISP `last_sync_status` persist OK/ERROR; Admin Status column; bounded Last Sync (`>30d`); no v1 Deprecation/Sunset.
+
+Still open under TI: IOC cursor/freshness; immutable mutation audit; v1 cutover headers; durable sync ledger / TLP governance.
+
 ## Prior active — Orphan Operational Workflows (TI-002–TI-004 depth)
 
 Routes: inventory across UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence; **first bounded family = threat-intel ops** (`/intelligence`, `/admin/threat-intel`).
@@ -33,7 +43,7 @@ Required next actions (remaining orphans / depth):
 2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned.
 3. ~~Follow-on RESP-021 depth: secured host-isolation inventory.~~ **Closed** on `feat/p1-resp021-isolation-inventory` (STAGING CANDIDATE) — `GET /api/ha-edr/isolation` + Endpoint isolation tab. Remaining RESP-021 depth gaps stay open.
 4. ~~Follow-on policies: enforcement evidence honesty~~ — **done** on `feat/p1-agent-policies-enforcement-evidence` (STAGING CANDIDATE): `GET /ha-edr/policies/{id}/enforcement` + UI unavailable/partial; host apply/ack still open (`POL-001`–`POL-003`).
-5. Optional deeper threat-intel: IOC cursor/freshness, durable sync ledger, MISP persisted status, v1 deprecation headers after consumer cutover.
+5. ~~Optional deeper threat-intel: MISP persisted status + bounded lastSyncAt~~ — **done** on `feat/p1-ti-optional-depth` (STAGING CANDIDATE). Remaining: IOC cursor/freshness, durable sync ledger, v1 deprecation headers after consumer cutover.
 6. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
 
 ## Completed this slice — RESP-021 host isolation inventory (thin depth)
