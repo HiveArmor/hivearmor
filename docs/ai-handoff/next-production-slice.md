@@ -1,25 +1,28 @@
 # Next production slice
 
-Updated: **2026-08-25 14:45:00 IST (UTC+05:30)**
+Updated: **2026-08-25 15:05:00 IST (UTC+05:30)**
 
-## Active — Wave A3 Defend / respond audit + thin honesty (STAGING CANDIDATE)
+## Active — Wave B1 Endpoint defense audit + thin honesty (STAGING CANDIDATE)
 
 Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
-Routes: `/detection-rules`, `/response/playbooks`, `/response/activity`, `/response/authority`, `/response/quarantine`, `/response/library`.
-Status: **AUDIT + thin honesty IN PROGRESS (code)** — still **STAGING CANDIDATE**. Staging rebuild deferred (parallel implement).
-Research: `docs/ai-handoff/research/autonomous-soc-defend-respond.md`.
-Branch: `feat/a3-defend-respond-audit`.
+Routes: `/edr/endpoints`, `/edr/fim`, `/edr/policies`, `/posture/sensors`.
+Status: **AUDIT + thin honesty IN PROGRESS (code)** — still **STAGING CANDIDATE**. Staging rebuild deferred.
+Research: `docs/ai-handoff/research/autonomous-soc-endpoint-defense.md`.
+Branch: `feat/b1-endpoint-defense-audit`.
 
 | ID | Fix |
 |---|---|
-| A3-ACT-01 | `RESP_018_EXECUTION_INVENTORY=false` — empty ledger + unavailable copy (no fake 404 storm) |
-| A3-AUTH-01 | `RESP_020_GOVERNANCE=false` — empty queue + hide policy/delegate authoring |
-| A3-PB-01/02 | Playbook mutate/Run/Edit/builder routes **Admin-only** (matches BE) |
-| A3-PB-03 | `RESP_PLAYBOOK_AUDIT=false` — empty audit tab |
-| A3-LIB-01 | Library nav/router/page include Analyst |
-| A3-DET-01 | Detection list nav/router include Analyst (editors stay Manager\|Admin) |
+| B1-SENS-01 / B1-EP-02 | `adaptAgentWireToSensor` maps AgentDTO `id`/`status`/`version` |
+| B1-SENS-02 | Split kill vs isolate live-verify; isolate stays `false` |
+| B1-EP-01 / B1-FIM-01 | Endpoints/FIM/timeline/quarantine-alias Analyst+ AuthGuard |
+| B1-EP-03 | Timeline nav requires `agentId` (no hostname fallback) |
+| B1-FIM-03 | Agent filter uses shared adapter + partial-failure warning |
 
-Still open (backlog): real RESP-018/020 backends; BE playbook read ROLE widen; RESP-021 depth; TI freshness.
+Still open: isolate live proof; RESP-021 release; POL host apply/ack; `/api/agent-policies` push UX (do not invent).
+
+## Completed this slice — Wave A3 Defend/respond (#59)
+
+Status: **MERGED** tip `cc7797b` — STAGING CANDIDATE. Staging rebuild deferred.
 
 ## Completed this slice — Wave A2 Investigate remaining gaps (#58)
 

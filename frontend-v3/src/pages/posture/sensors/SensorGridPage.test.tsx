@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SensorGridPage } from './SensorGridPage';
 
 import {
-  REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE,
-  REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED,
+  REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE,
+  REMOTE_SENSOR_KILL_LIVE_VERIFIED,
 } from '@/services/sensorRemoteActions.capabilities';
 
 vi.mock('@/hooks/useEpsStream', () => ({
@@ -52,7 +52,7 @@ vi.mock('@/components/siem-data-grid', () => ({
   },
 }));
 
-describe('SensorGridPage remote actions (GAP-SEC-05)', () => {
+describe('SensorGridPage remote actions (GAP-SEC-05 / B1)', () => {
   beforeEach(() => {
     useQuery.mockReturnValue({
       data: [
@@ -62,12 +62,14 @@ describe('SensorGridPage remote actions (GAP-SEC-05)', () => {
           platform: 'windows',
           osVersion: '11',
           agentVersion: '1.0.0',
-          connectionStatus: 'ACTIVE',
+          connectionStatus: 'ONLINE',
           lastSeen: '2026-08-23T00:00:00Z',
-          cpuUsage: 10,
-          memUsage: 20,
+          cpuUsage: null,
+          memUsage: null,
           diskUsage: null,
           collectorType: 'agent',
+          mode: null,
+          bundleVersion: null,
         },
       ],
       isLoading: false,
@@ -76,15 +78,15 @@ describe('SensorGridPage remote actions (GAP-SEC-05)', () => {
     });
   });
 
-  it('keeps live-verify flag on after staging ProcessCommand proof', () => {
-    expect(REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED).toBe(true);
+  it('keeps kill live-verify on after staging ProcessCommand proof', () => {
+    expect(REMOTE_SENSOR_KILL_LIVE_VERIFIED).toBe(true);
   });
 
-  it('enables isolate/kill for Admin when live-verified; restart stays unavailable', () => {
+  it('enables kill for Admin; isolate stays blocked until separately verified', () => {
     render(<SensorGridPage />);
 
-    expect(screen.queryByText(REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE)).toBeNull();
-    expect(screen.getByRole('button', { name: 'Isolate host' })).not.toBeDisabled();
+    expect(screen.getByText(REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Isolate host (blocked)' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Kill process' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: 'Restart agent (unavailable)' })).toBeDisabled();
   });
