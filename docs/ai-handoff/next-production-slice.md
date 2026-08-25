@@ -1,17 +1,30 @@
 # Next production slice
 
-Updated: **2026-08-25 22:50:00 IST (UTC+05:30)**
+Updated: **2026-08-25 23:06:00 IST (UTC+05:30)**
+
+## Completed this slice — Parallel follow-ons (INV-012 UI + Detect→Govern walk + RESP-020)
+
+Status: **RECORDED** tip `d1f07e4` — **STAGING CANDIDATE**. Not `PRODUCTION READY`. Not 24h soak.
+
+| Item | Result |
+|---|---|
+| INV-012 UI walk | PASS — session 4 → incident 139 (preview modal verified; confirm via governed API) |
+| Detect→Govern UI walk | 14 routes: 11 ok / 3 honesty / 0 error |
+| RESP-020 (#78) | Merged + staging smoke — approvals 200, policies empty with honesty |
+
+Reports: `/tmp/hivearmor-staging-inv012-ui-walk.json`, `/tmp/hivearmor-staging-detect-govern-ui-walk.json`, `/tmp/hivearmor-staging-resp020-smoke.json`.
+
+Next optional: enrollment-audit tenant-header UX when masthead has no tenant; full RESP-020 policy/delegation CRUD.
+Deferred (post full production MVP): vendor live connector credentials/proofs; 24h soak.
 
 ## Completed this slice — RESP-020 approval compatibility projection
 
-Status: **STAGING CANDIDATE** on `feat/resp020-approval-projection`. Not `PRODUCTION READY`. Not full HaResponseGovernance.
+Status: **MERGED** tip `d1f07e4` (#78) — STAGING CANDIDATE. Staging smoke recorded above. Not full HaResponseGovernance.
 
 | ID | Change |
 |---|---|
 | RESP-020 BE | `GET /api/ha-response-governance/approvals` projects `hive_playbook_execution` awaiting approval (+ recent approval decisions); empty policies/delegates with honest `partialFailures`; `POST .../approvals/{id}/decision` bridges to playbook approve/reject (ADMIN-only) |
 | RESP-020 FE | `RESP_020_APPROVAL_PROJECTION=true`; `RESP_020_GOVERNANCE=false`; Response Authority honesty banner; policy/delegation saves remain fail-closed |
-
-Flip FE: set `RESP_020_APPROVAL_PROJECTION` in `frontend-v3/src/pages/response/response.capabilities.ts`. Keep `RESP_020_GOVERNANCE=false` until policy/delegation CRUD exists.
 
 ## Completed this slice — Staging RESP-018 inventory smoke
 
@@ -23,9 +36,6 @@ Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-25 22:43 IST). Repor
 | BE+FE rebuild + edge | healthy |
 | SPA shells | 3/3 HTTP 200 |
 | executions + summary | 200 (empty ledger; contract live) |
-
-Next optional: INV-012 interactive promote UI walk, or full RESP-020 governance when policy/delegation backends exist.
-Deferred (post full production MVP): vendor live connector credentials/proofs.
 
 ## Completed this slice — RESP-018 execution inventory
 
