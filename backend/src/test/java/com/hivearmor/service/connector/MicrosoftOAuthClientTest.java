@@ -133,4 +133,42 @@ class MicrosoftOAuthClientTest {
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("https");
     }
+
+    @Test
+    void postJson_sendsPostWithBearer() throws Exception {
+        when(httpResponse.statusCode()).thenReturn(201);
+        when(httpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+            .thenReturn(httpResponse);
+
+        Map<String, Object> out = client.postJson(
+            "https://api.securitycenter.microsoft.com/api/machines/m1/isolate",
+            "real-access-token",
+            "{\"Comment\":\"iso\",\"IsolationType\":\"Full\"}"
+        );
+
+        assertThat(out.get("ok")).isEqualTo(true);
+        assertThat(out.get("httpStatus")).isEqualTo(201);
+
+        ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
+        verify(httpClient).send(captor.capture(), any());
+        HttpRequest req = captor.getValue();
+        assertThat(req.method()).isEqualTo("POST");
+        assertThat(req.uri().toString())
+            .isEqualTo("https://api.securitycenter.microsoft.com/api/machines/m1/isolate");
+        assertThat(req.headers().firstValue("Authorization")).contains("Bearer real-access-token");
+    }
+
+    @Test
+    void postJson_refusesPlaceholderBearer() {
+        assertThatThrownBy(() ->
+            client.postJson(
+                "https://api.securitycenter.microsoft.com/api/machines/m1/isolate",
+                "placeholder-token",
+                "{}"
+            )
+        )
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("placeholder");
+    }
+
 }

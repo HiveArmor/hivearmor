@@ -136,7 +136,23 @@ class HaConnectorConformanceTest {
         );
     }
 
+    
     @Test
+    void azureDefenderIsolateCapabilityHonorsFeatureFlag() {
+        HaConnector gated = new AzureDefenderConnector(false);
+        assertThat(gated.capabilities()).contains(ConnectorCapability.PULL_ALERTS);
+        assertThat(gated.capabilities()).doesNotContain(ConnectorCapability.ISOLATE_HOST);
+
+        HaConnector open = new AzureDefenderConnector(true);
+        assertThat(open.capabilities()).contains(
+            ConnectorCapability.PULL_ALERTS,
+            ConnectorCapability.ISOLATE_HOST,
+            ConnectorCapability.UNISOLATE_HOST
+        );
+        assertThat(open.capabilities()).doesNotContain(ConnectorCapability.KILL_PROCESS);
+    }
+
+@Test
     void fetchAlertsWithoutLiveCredsReturnsEmptyNotException() {
         for (HaConnector c : registry.all()) {
             Map<String, String> cfg = minimalConfig(c);

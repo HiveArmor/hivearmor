@@ -44,7 +44,7 @@ public class HaConnectorRegistry {
             ? awsNetworkBlockClient
             : new AwsNetworkBlockClient();
         register(new CrowdStrikeConnector(vendorIsolateEnabled));
-        register(new AzureDefenderConnector(oauth));
+        register(new AzureDefenderConnector(oauth, vendorIsolateEnabled));
         register(new OktaConnector(okta));
         register(new AzureEntraConnector(oauth));
         register(new AwsSecurityHubConnector(aws));

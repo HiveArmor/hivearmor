@@ -588,6 +588,16 @@ No production-readiness claim is made by this baseline entry.
 - ADR: `docs/architecture/ADR-20260824-hybrid-response-mesh.md`.
 - Unit: `HybridIsolateRouterTest`, `HybridResponseMeshDispatcherTest`, playbook isolate HA/vendor path tests.
 
+
+## Azure Defender isolate (STAGING CANDIDATE)
+
+- Feature flag: `hivearmor.connectors.vendor-isolate-enabled` / `HIVEARMOR_CONNECTOR_VENDOR_ISOLATE` (default `false`).
+- `AzureDefenderConnector` declares `ISOLATE_HOST` + `UNISOLATE_HOST` only when the flag is enabled (mirrors CrowdStrike kinetic gating).
+- Live path: Defender `POST /api/machines/{id}/isolate|unisolate` via `MicrosoftOAuthClient.postJson` — fail-closed without credentials / placeholders; unit-tested with mocked HTTP (no live tenant).
+- `HybridIsolateRouter` / `HybridResponseMeshDispatcher` / playbook mesh still prefer enrolled HA agent; vendor path remains dry-run at the mesh layer.
+- Label: **STAGING CANDIDATE** — not PRODUCTION READY.
+
+
 ## 2026-08-24 — P1 LLM usage read API (STAGING CANDIDATE)
 
 - Label: **STAGING CANDIDATE** (not PRODUCTION READY). No live staging traffic proof in this slice.

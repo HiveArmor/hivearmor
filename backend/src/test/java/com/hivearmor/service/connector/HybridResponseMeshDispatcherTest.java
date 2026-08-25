@@ -1,5 +1,7 @@
 package com.hivearmor.service.connector;
 
+import com.hivearmor.service.connector.ConnectorCapability;
+import com.hivearmor.service.connector.impl.AzureDefenderConnector;
 import com.hivearmor.service.connector.impl.CrowdStrikeConnector;
 import com.hivearmor.service.connector.impl.OktaConnector;
 import org.junit.jupiter.api.DisplayName;
@@ -83,4 +85,31 @@ class HybridResponseMeshDispatcherTest {
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("ISOLATE_HOST");
     }
+
+    @Test
+    void vendorIsolateDryRunAcceptsAzureDefenderWhenFlagged() {
+        HybridResponseMeshDispatcher mesh = new HybridResponseMeshDispatcher(
+            new HaConnectorRegistry(true),
+            true
+        );
+        Map<String, Object> out = mesh.vendorIsolateDryRun(AzureDefenderConnector.ID, "win-defender-host");
+        assertThat(out.get("executed")).isEqualTo(false);
+        assertThat(out.get("connectorId")).isEqualTo(AzureDefenderConnector.ID);
+        assertThat(out.get("hostname")).isEqualTo("win-defender-host");
+        assertThat(String.valueOf(out.get("note"))).containsIgnoringCase("STAGING");
+    }
+
+    @Test
+    void planIsolateStillPrefersHaAgentWhenDefenderDeclaresIsolate() {
+        HybridResponseMeshDispatcher mesh = new HybridResponseMeshDispatcher(
+            new HaConnectorRegistry(true),
+            true
+        );
+        assertThat(mesh.anyVendorDeclaresIsolate()).isTrue();
+        assertThat(new HaConnectorRegistry(true).require(AzureDefenderConnector.ID).capabilities())
+            .contains(ConnectorCapability.ISOLATE_HOST);
+        HybridIsolateRouter.Decision d = mesh.planIsolate(true);
+        assertThat(d.path()).isEqualTo(HybridIsolateRouter.Path.HA_AGENT);
+    }
+
 }
