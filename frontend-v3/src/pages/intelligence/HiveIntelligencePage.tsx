@@ -4,8 +4,10 @@
  *
  * Honesty boundary (STAGING CANDIDATE):
  * - Reads: feeds, IOCs, lookup, and aggregate stats from secured /api/ha-threat-intel/*
+ * - TI-002: feed list/get + stats authorize Analyst/SOC Manager explicitly (backend)
  * - Feed enable/sync mutations remain Platform Administrator only (backend ADMIN)
- * - Legacy unsecured /api/v1/threat-intel is not called
+ * - TI-003: Legacy /api/v1/threat-intel is hardened with @PreAuthorize but is not called
+ * - TI-004 sync receipts are Admin TAXII/MISP only (/admin/threat-intel)
  */
 
 import { useState } from 'react';

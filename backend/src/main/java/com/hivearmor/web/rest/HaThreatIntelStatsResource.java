@@ -1,6 +1,7 @@
 package com.hivearmor.web.rest;
 
 import com.hivearmor.repository.HiveThreatIocRepository;
+import com.hivearmor.security.AuthoritiesConstants;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +16,7 @@ import java.util.Map;
 /**
  * HiveArmor REST controller for IOC aggregate statistics.
  *
- * GET /api/ha-threat-intel/stats — accessible to ROLE_ADMIN, ROLE_ANALYST, ROLE_USER.
+ * GET /api/ha-threat-intel/stats — Admin|User|Analyst|SOC Manager (TI-002 STAGING CANDIDATE).
  * No Lombok — constructor injection only.
  */
 @RestController
@@ -34,7 +35,8 @@ public class HaThreatIntelStatsResource {
      *   totalActive, byType (ip/domain/hash/url/email), expiredToday
      */
     @GetMapping("/ha-threat-intel/stats")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_ANALYST', 'ROLE_USER')")
+    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
+                  "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
     public ResponseEntity<Map<String, Object>> getStats() {
         long totalActive = iocRepository.countByActiveTrue();
 

@@ -1,6 +1,7 @@
 package com.hivearmor.web.rest.threat_intel;
 
 import com.hivearmor.domain.application_events.enums.ApplicationEventType;
+import com.hivearmor.security.AuthoritiesConstants;
 import com.hivearmor.service.application_events.ApplicationEventService;
 import com.hivearmor.service.dto.threat_intel.IocResultDTO;
 import com.hivearmor.service.dto.threat_intel.ThreatFeedDTO;
@@ -10,12 +11,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Legacy threat-intel surface under {@code /api/v1/threat-intel}.
+ *
+ * TI-003 STAGING CANDIDATE: hardened in place with the same ROLE_ authorities as
+ * {@code HaThreatIntelResource}. Frontend-v3 must not call this path. Full
+ * {@code Deprecation}/{@code Sunset}/successor {@code Link} headers are deferred until
+ * consumer cutover evidence exists — securing reads/mutations is the thin slice.
+ */
 @RestController
 @RequestMapping("/api/v1/threat-intel")
 public class ThreatIntelResource {
@@ -35,6 +45,8 @@ public class ThreatIntelResource {
      * Look up an IOC value against stored threat feeds.
      */
     @GetMapping("/ioc")
+    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
+                  "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
     public ResponseEntity<IocResultDTO> lookupIoc(@RequestParam("value") String value) {
         final String ctx = CLASSNAME + ".lookupIoc";
         try {
@@ -55,6 +67,8 @@ public class ThreatIntelResource {
      * List all configured threat feeds.
      */
     @GetMapping("/feeds")
+    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
+                  "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
     public ResponseEntity<List<ThreatFeedDTO>> listFeeds() {
         final String ctx = CLASSNAME + ".listFeeds";
         try {
@@ -73,6 +87,7 @@ public class ThreatIntelResource {
      * Body: { "enabled": true|false }
      */
     @PutMapping("/feeds/{id}")
+    @PreAuthorize("hasAuthority('" + AuthoritiesConstants.ADMIN + "')")
     public ResponseEntity<ThreatFeedDTO> updateFeed(
             @PathVariable String id,
             @RequestBody Map<String, Object> body) {
@@ -96,6 +111,7 @@ public class ThreatIntelResource {
      * Trigger a sync for a specific threat feed.
      */
     @PostMapping("/feeds/{id}/sync")
+    @PreAuthorize("hasAuthority('" + AuthoritiesConstants.ADMIN + "')")
     public ResponseEntity<ThreatFeedDTO> syncFeed(@PathVariable String id) {
         final String ctx = CLASSNAME + ".syncFeed";
         try {
