@@ -3,22 +3,13 @@
  *
  * Agent Policy Management UI at /edr/policies.
  *
- * Layout:
- *   • Access-denied guard (ROLE_ADMIN required; hooks NOT invoked otherwise)
- *   • Page header with "Create Policy" toolbar button
- *   • HTML table with columns: Policy Name (sortable), OS Type (badge),
- *     Assigned Agents (numeric badge), Last Updated (ISO), Actions
- *   • PolicyForm modal (create + edit)
- *   • Assign Agents drawer (text input for agent IDs)
- *   • Delete confirmation modal
+ * Honesty boundary (STAGING CANDIDATE / POL-001):
+ *   - Assignment is configuration only.
+ *   - Enforcement evidence from GET /ha-edr/policies/{id}/enforcement surfaces
+ *     AgentPolicyStateDTO fields with unavailable/partial — never fictional green checks.
+ *   - Host enforcement is not production-verified.
  *
- * Key constraints:
- *   - No `any` type annotations
- *   - No raw hex colour literals
- *   - OS Type badge colours resolved via resolveHaToken at render time
- *   - PatternFly Modal required before delete mutation fires
- *   - No absolute backend URLs
- *   - Product name: HiveArmor
+ * Auth: Analyst|SOC Manager|Admin read; Admin|SOC Manager mutate.
  */
 
 import { useCallback, useMemo, useState } from 'react';
@@ -32,15 +23,26 @@ import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { HaModal } from '@/components/ha-modal/HaModal';
 import {
   useAgentPolicies,
+  useAgentPolicyEnforcementEvidence,
   useAssignAgents,
   useCreateAgentPolicy,
   useDeleteAgentPolicy,
   useUpdateAgentPolicy,
 } from '@/hooks/useAgentPolicies';
 import { resolveHaToken } from '@/hooks/useHaThemeTokens';
-import { ROLES } from '@/lib/roles';
+import {
+  AGENT_POLICY_HONESTY_BANNER,
+  AGENT_POLICY_MUTATE_DENIED_TITLE,
+  AGENT_POLICY_READ_DENIED_MESSAGE,
+  AGENT_POLICY_READ_ROLES,
+  canMutateAgentPolicies,
+} from '@/services/agentPolicy.capabilities';
 import { useAuthStore } from '@/store/auth.store';
-import type { AgentPolicyDTO, AgentPolicyFormValues } from '@/types/edr';
+import type {
+  AgentPolicyDTO,
+  AgentPolicyEnforcementEvidenceDTO,
+  AgentPolicyFormValues,
+} from '@/types/edr';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -378,12 +380,13 @@ type SortDir = 'asc' | 'desc';
 // ---------------------------------------------------------------------------
 
 export function AgentPoliciesPage(): JSX.Element {
-  // ── Auth guard — MUST be first hook ───────────────────────────────────────
-  const { hasRole } = useAuthStore();
-  const isAdmin = hasRole(ROLES.ADMIN);
+  const hasReadAccess = useAuthStore((state) =>
+    state.hasAnyRole([...AGENT_POLICY_READ_ROLES]),
+  );
+  const roles = useAuthStore((state) => state.user?.roles ?? []);
+  const canMutate = canMutateAgentPolicies(roles);
 
-  // Access-denied state — render before any data hooks are invoked
-  if (!isAdmin) {
+  if (!hasReadAccess) {
     return (
       <div
         style={{
@@ -416,21 +419,21 @@ export function AgentPoliciesPage(): JSX.Element {
             textAlign: 'center',
           }}
         >
-          You need the ROLE_ADMIN role to manage agent policies.
+          {AGENT_POLICY_READ_DENIED_MESSAGE}
         </div>
       </div>
     );
   }
 
-  return <AgentPoliciesContent />;
+  return <AgentPoliciesContent canMutate={canMutate} />;
 }
 
 // ---------------------------------------------------------------------------
-// Inner component — only rendered when ROLE_ADMIN is confirmed.
-// All data hooks are invoked here so they are never called for non-admin users.
+// Inner component — only rendered when read role is confirmed.
+// All data hooks are invoked here so they are never called for denied users.
 // ---------------------------------------------------------------------------
 
-function AgentPoliciesContent(): JSX.Element {
+function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Element {
   // ── Data hooks ─────────────────────────────────────────────────────────────
   const { data, isLoading, isError, error } = useAgentPolicies();
   const createMutation = useCreateAgentPolicy();
@@ -504,7 +507,14 @@ function AgentPoliciesContent(): JSX.Element {
     setDrawerState({ kind: 'closed' });
   }, []);
 
+  const enforcementPolicyId =
+    drawerState.kind === 'assign' && drawerState.policy.id !== undefined
+      ? drawerState.policy.id
+      : null;
+  const enforcementQuery = useAgentPolicyEnforcementEvidence(enforcementPolicyId);
+
   const handleAssignSave = useCallback(() => {
+    if (!canMutate) return;
     if (drawerState.kind !== 'assign' || drawerState.policy.id === undefined) return;
     const agentIds = assignInput
       .split('\n')
@@ -514,7 +524,7 @@ function AgentPoliciesContent(): JSX.Element {
       { id: drawerState.policy.id, agentIds },
       { onSuccess: () => closeDrawer() },
     );
-  }, [drawerState, assignInput, assignMutation, closeDrawer]);
+  }, [canMutate, drawerState, assignInput, assignMutation, closeDrawer]);
 
   // ── Delete confirmation state ─────────────────────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState<AgentPolicyDTO | null>(null);
@@ -599,9 +609,40 @@ function AgentPoliciesContent(): JSX.Element {
         </div>
 
         {/* Toolbar */}
-        <HaButton variant="primary" onClick={openCreateModal}>
-          Create Policy
-        </HaButton>
+        {canMutate ? (
+          <HaButton variant="primary" onClick={openCreateModal}>
+            Create Policy
+          </HaButton>
+        ) : (
+          <span
+            style={{
+              fontSize: 'var(--ha-text-xs)',
+              color: 'var(--ha-text-secondary)',
+              maxWidth: 280,
+              textAlign: 'right',
+            }}
+            title={AGENT_POLICY_MUTATE_DENIED_TITLE}
+          >
+            Read-only — {AGENT_POLICY_MUTATE_DENIED_TITLE}
+          </span>
+        )}
+      </div>
+
+      {/* Honesty strip — POL-001 STAGING CANDIDATE */}
+      <div
+        role="status"
+        aria-label="Policy enforcement honesty"
+        style={{
+          padding: '8px 24px',
+          borderBottom: '1px solid var(--ha-border)',
+          background: 'var(--ha-surface-raised)',
+          fontSize: 'var(--ha-text-xs)',
+          color: 'var(--ha-text-secondary)',
+          lineHeight: 1.45,
+          flexShrink: 0,
+        }}
+      >
+        {AGENT_POLICY_HONESTY_BANNER}
       </div>
 
       {/* Error state */}
@@ -620,8 +661,16 @@ function AgentPoliciesContent(): JSX.Element {
           <EmptyState>
             <ClipboardList size={40} style={{ opacity: 0.3, marginBottom: 12 }} />
             <EmptyStateBody>
-              No agent policies configured yet. Click <strong>Create Policy</strong> to define the
-              first HiveArmor monitoring policy.
+              No agent policies configured yet.
+              {canMutate ? (
+                <>
+                  {' '}
+                  Click <strong>Create Policy</strong> to define the first HiveArmor monitoring
+                  policy.
+                </>
+              ) : (
+                <> Assignment and enforcement evidence will appear here when policies exist.</>
+              )}
             </EmptyStateBody>
           </EmptyState>
         )}
@@ -689,6 +738,7 @@ function AgentPoliciesContent(): JSX.Element {
                     <PolicyRow
                       key={policy.id ?? policy.name}
                       policy={policy}
+                      canMutate={canMutate}
                       onEdit={openEditModal}
                       onAssign={openAssignDrawer}
                       onDelete={handleDeleteRequest}
@@ -735,72 +785,95 @@ function AgentPoliciesContent(): JSX.Element {
         </div>
       </HaModal>
 
-      {/* Assign Agents drawer */}
+      {/* Assign Agents / enforcement evidence drawer */}
       <HaDrawer
         isOpen={drawerState.kind === 'assign'}
         onClose={closeDrawer}
-        title="Assign Agents"
+        title={canMutate ? 'Assign Agents' : 'Enforcement evidence'}
         subtitle={drawerState.kind === 'assign' ? drawerState.policy.name : undefined}
-        width={400}
+        width={440}
         footer={
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', width: '100%' }}>
             <HaButton variant="secondary" onClick={closeDrawer} isDisabled={isAssignBusy}>
-              Cancel
+              {canMutate ? 'Cancel' : 'Close'}
             </HaButton>
-            <HaButton variant="primary" onClick={handleAssignSave} isDisabled={isAssignBusy}>
-              {isAssignBusy ? 'Saving…' : 'Save'}
-            </HaButton>
+            {canMutate && (
+              <HaButton variant="primary" onClick={handleAssignSave} isDisabled={isAssignBusy}>
+                {isAssignBusy ? 'Saving…' : 'Save'}
+              </HaButton>
+            )}
           </div>
         }
       >
         <div>
-          <p
-            style={{
-              fontSize: 12,
-              color: 'var(--ha-text-secondary)',
-              marginTop: 0,
-              marginBottom: 12,
-              lineHeight: 1.5,
-            }}
-          >
-            Enter one agent ID (UUID) per line. These agents will be enrolled in the selected
-            HiveArmor monitoring policy.
-          </p>
-          <label
-            htmlFor="assign-agent-ids"
-            style={{
-              display: 'block',
-              fontSize: 11,
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              color: 'var(--ha-text-secondary)',
-              marginBottom: 6,
-            }}
-          >
-            Agent IDs
-          </label>
-          <textarea
-            id="assign-agent-ids"
-            value={assignInput}
-            onChange={(e) => setAssignInput(e.target.value)}
-            rows={10}
-            placeholder="550e8400-e29b-41d4-a716-446655440000&#10;6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              background: 'var(--ha-surface-primary)',
-              border: '1px solid var(--ha-border)',
-              borderRadius: 'var(--ha-radius-base)',
-              color: 'var(--ha-text-primary)',
-              fontSize: 12,
-              fontFamily: 'var(--ha-font-mono)',
-              padding: '8px 10px',
-              resize: 'vertical',
-              outline: 'none',
-            }}
-            aria-label="Agent IDs to assign (one per line)"
+          <EnforcementEvidencePanel
+            evidence={enforcementQuery.data}
+            isLoading={enforcementQuery.isLoading}
+            isError={enforcementQuery.isError}
+            error={enforcementQuery.error}
           />
+          {canMutate ? (
+            <>
+              <p
+                style={{
+                  fontSize: 12,
+                  color: 'var(--ha-text-secondary)',
+                  marginTop: 16,
+                  marginBottom: 12,
+                  lineHeight: 1.5,
+                }}
+              >
+                Enter one agent ID (UUID) per line. Assignment updates configuration only — it does
+                not prove host enforcement.
+              </p>
+              <label
+                htmlFor="assign-agent-ids"
+                style={{
+                  display: 'block',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  color: 'var(--ha-text-secondary)',
+                  marginBottom: 6,
+                }}
+              >
+                Agent IDs
+              </label>
+              <textarea
+                id="assign-agent-ids"
+                value={assignInput}
+                onChange={(e) => setAssignInput(e.target.value)}
+                rows={10}
+                placeholder="550e8400-e29b-41d4-a716-446655440000&#10;6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  background: 'var(--ha-surface-primary)',
+                  border: '1px solid var(--ha-border)',
+                  borderRadius: 'var(--ha-radius-base)',
+                  color: 'var(--ha-text-primary)',
+                  fontSize: 12,
+                  fontFamily: 'var(--ha-font-mono)',
+                  padding: '8px 10px',
+                  resize: 'vertical',
+                  outline: 'none',
+                }}
+                aria-label="Agent IDs to assign (one per line)"
+              />
+            </>
+          ) : (
+            <p
+              style={{
+                fontSize: 12,
+                color: 'var(--ha-text-secondary)',
+                marginTop: 16,
+                lineHeight: 1.5,
+              }}
+            >
+              {AGENT_POLICY_MUTATE_DENIED_TITLE}. You can review enforcement evidence only.
+            </p>
+          )}
         </div>
       </HaDrawer>
 
@@ -832,17 +905,171 @@ function AgentPoliciesContent(): JSX.Element {
 }
 
 // ---------------------------------------------------------------------------
+// Enforcement evidence panel (POL-001)
+// ---------------------------------------------------------------------------
+
+interface EnforcementEvidencePanelProps {
+  evidence: AgentPolicyEnforcementEvidenceDTO | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+}
+
+function EnforcementEvidencePanel({
+  evidence,
+  isLoading,
+  isError,
+  error,
+}: EnforcementEvidencePanelProps): JSX.Element {
+  if (isLoading) {
+    return (
+      <div role="status" aria-label="Loading enforcement evidence" style={{ marginBottom: 8 }}>
+        <Spinner size="sm" />{' '}
+        <span style={{ fontSize: 12, color: 'var(--ha-text-secondary)' }}>
+          Loading enforcement evidence…
+        </span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    const message =
+      error instanceof Error ? error.message : 'Enforcement evidence request failed.';
+    return (
+      <Alert variant="warning" isInline title="Enforcement evidence unavailable">
+        {message}
+      </Alert>
+    );
+  }
+
+  if (!evidence) {
+    return (
+      <p style={{ fontSize: 12, color: 'var(--ha-text-secondary)', marginTop: 0 }}>
+        Enforcement evidence not loaded.
+      </p>
+    );
+  }
+
+  const tone =
+    evidence.evidenceAvailability === 'partial' ? 'var(--ha-high)' : 'var(--ha-text-secondary)';
+
+  return (
+    <section
+      aria-label="Policy enforcement evidence"
+      style={{
+        marginBottom: 8,
+        padding: 12,
+        border: '1px solid var(--ha-border)',
+        borderRadius: 'var(--ha-radius-base)',
+        background: 'var(--ha-surface-primary)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          marginBottom: 8,
+          fontSize: 11,
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          color: tone,
+        }}
+      >
+        Evidence: {evidence.evidenceAvailability}
+      </div>
+      <p
+        style={{
+          fontSize: 12,
+          color: 'var(--ha-text-secondary)',
+          margin: '0 0 10px',
+          lineHeight: 1.45,
+        }}
+      >
+        {evidence.honestyNote}
+      </p>
+      <div style={{ fontSize: 12, color: 'var(--ha-text-secondary)', marginBottom: 8 }}>
+        Assigned agents (config): {(evidence.assignedAgentIds ?? []).length}
+      </div>
+      {(evidence.agentStates ?? []).length === 0 ? (
+        <p style={{ fontSize: 12, color: 'var(--ha-text-secondary)', margin: 0 }}>
+          No agent-reported appliedVersion / state rows for this policy id.
+        </p>
+      ) : (
+        <table
+          aria-label="Agent policy state rows"
+          style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontSize: 11,
+            fontFamily: 'var(--ha-font-mono)',
+          }}
+        >
+          <thead>
+            <tr>
+              {['Agent', 'Applied', 'Desired', 'State', 'Last applied'].map((col) => (
+                <th
+                  key={col}
+                  style={{
+                    textAlign: 'left',
+                    padding: '4px 6px',
+                    borderBottom: '1px solid var(--ha-border)',
+                    color: 'var(--ha-text-secondary)',
+                    fontWeight: 600,
+                  }}
+                >
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {evidence.agentStates.map((row, idx) => (
+              <tr key={row.id ?? `${row.agentId ?? 'agent'}-${idx}`}>
+                <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
+                  {row.agentId ?? '—'}
+                </td>
+                <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
+                  {row.appliedVersion ?? '—'}
+                </td>
+                <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
+                  {row.desiredVersion ?? '—'}
+                </td>
+                <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
+                  {row.state ?? '—'}
+                </td>
+                <td style={{ padding: '4px 6px', color: 'var(--ha-text-secondary)' }}>
+                  {row.lastAppliedAt ? formatTimestamp(row.lastAppliedAt) : '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // PolicyRow sub-component
 // ---------------------------------------------------------------------------
 
 interface PolicyRowProps {
   policy: AgentPolicyDTO;
+  canMutate: boolean;
   onEdit: (policy: AgentPolicyDTO) => void;
   onAssign: (policy: AgentPolicyDTO) => void;
   onDelete: (policy: AgentPolicyDTO) => void;
 }
 
-function PolicyRow({ policy, onEdit, onAssign, onDelete }: PolicyRowProps): JSX.Element {
+function PolicyRow({
+  policy,
+  canMutate,
+  onEdit,
+  onAssign,
+  onDelete,
+}: PolicyRowProps): JSX.Element {
   const assignedCount = (policy.assignedAgentIds ?? []).length;
   const lastUpdated = policy.updatedAt ?? policy.createdAt;
 
@@ -856,7 +1083,6 @@ function PolicyRow({ policy, onEdit, onAssign, onDelete }: PolicyRowProps): JSX.
         (e.currentTarget as HTMLTableRowElement).style.background = 'transparent';
       }}
     >
-      {/* Policy Name */}
       <td
         style={{
           padding: '8px 12px',
@@ -873,21 +1099,20 @@ function PolicyRow({ policy, onEdit, onAssign, onDelete }: PolicyRowProps): JSX.
         {policy.name}
       </td>
 
-      {/* OS Type */}
       <td style={{ padding: '8px 12px' }}>
         {policy.osType ? (
           <OsBadge osType={policy.osType} />
         ) : (
-          <span style={{ color: 'var(--ha-text-secondary)', fontSize: 12, fontStyle: 'italic' }}>—</span>
+          <span style={{ color: 'var(--ha-text-secondary)', fontSize: 12, fontStyle: 'italic' }}>
+            —
+          </span>
         )}
       </td>
 
-      {/* Assigned Agents */}
       <td style={{ padding: '8px 12px' }}>
         <CountBadge count={assignedCount} />
       </td>
 
-      {/* Last Updated */}
       <td
         style={{
           padding: '8px 12px',
@@ -901,26 +1126,27 @@ function PolicyRow({ policy, onEdit, onAssign, onDelete }: PolicyRowProps): JSX.
         {lastUpdated ? formatTimestamp(lastUpdated) : '—'}
       </td>
 
-      {/* Actions */}
       <td style={{ padding: '8px 12px' }}>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <button
-            onClick={() => onEdit(policy)}
-            style={{
-              background: 'var(--ha-surface-raised)',
-              color: 'var(--ha-text-primary)',
-              border: '1px solid var(--ha-border)',
-              borderRadius: 'var(--ha-radius-sm)',
-              padding: '3px 10px',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-            aria-label={`Edit policy ${policy.name}`}
-          >
-            Edit
-          </button>
+          {canMutate && (
+            <button
+              onClick={() => onEdit(policy)}
+              style={{
+                background: 'var(--ha-surface-raised)',
+                color: 'var(--ha-text-primary)',
+                border: '1px solid var(--ha-border)',
+                borderRadius: 'var(--ha-radius-sm)',
+                padding: '3px 10px',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+              aria-label={`Edit policy ${policy.name}`}
+            >
+              Edit
+            </button>
+          )}
           <button
             onClick={() => onAssign(policy)}
             style={{
@@ -934,27 +1160,33 @@ function PolicyRow({ policy, onEdit, onAssign, onDelete }: PolicyRowProps): JSX.
               cursor: 'pointer',
               whiteSpace: 'nowrap',
             }}
-            aria-label={`Assign agents to policy ${policy.name}`}
+            aria-label={
+              canMutate
+                ? `Assign agents to policy ${policy.name}`
+                : `View enforcement evidence for policy ${policy.name}`
+            }
           >
-            Assign Agents
+            {canMutate ? 'Assign / Evidence' : 'Evidence'}
           </button>
-          <button
-            onClick={() => onDelete(policy)}
-            style={{
-              background: 'var(--ha-surface-raised)',
-              color: 'var(--ha-critical)',
-              border: '1px solid var(--ha-border)',
-              borderRadius: 'var(--ha-radius-sm)',
-              padding: '3px 10px',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-            aria-label={`Delete policy ${policy.name}`}
-          >
-            Delete
-          </button>
+          {canMutate && (
+            <button
+              onClick={() => onDelete(policy)}
+              style={{
+                background: 'var(--ha-surface-raised)',
+                color: 'var(--ha-critical)',
+                border: '1px solid var(--ha-border)',
+                borderRadius: 'var(--ha-radius-sm)',
+                padding: '3px 10px',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+              aria-label={`Delete policy ${policy.name}`}
+            >
+              Delete
+            </button>
+          )}
         </div>
       </td>
     </tr>

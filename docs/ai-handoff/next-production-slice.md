@@ -1,16 +1,16 @@
 # Next production slice
 
-Updated: **2026-08-25 08:29:20 IST (UTC+05:30)**
+Updated: **2026-08-25 09:15:00 IST (UTC+05:30)**
 
 ## Active — Orphan Operational Workflows
 
 Routes: inventory across UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence; **first bounded family = threat-intel ops** (`/intelligence`, `/admin/threat-intel`).
-Status: **STAGING CANDIDATE** — inventory recorded + thin honesty fix on threat-intel hub. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for this slice.
+Status: **STAGING CANDIDATE** — inventory recorded + thin honesty fixes (threat-intel hub, UEBA auth, quarantine/FIM auth, agent-policy enforcement evidence). Not `PRODUCTION READY`.
 Program: `docs/ai-handoff/remaining-page-program.md`.
 Research: `docs/ai-handoff/research/orphan-operational-workflows-inventory.md`.
-Contracts: `TI-001`–`TI-004`.
+Contracts: `TI-001`–`TI-004`; follow-ons include `POL-001`–`POL-003`.
 
-Branch: `feat/p1-orphan-route-inventory` (worktree `.worktrees/p1-orphan-inventory`).
+Branch (policies honesty): `feat/p1-agent-policies-enforcement-evidence` (worktree `.worktrees/p1-agent-policies-evidence`).
 
 Completed in this inventory slice:
 
@@ -23,8 +23,9 @@ Required next actions (remaining orphans / depth):
 
 1. ~~Follow-on UEBA: fix `HaUebaResource` `@PreAuthorize` authority strings~~ — **done** on `feat/p1-ueba-auth-fix` (STAGING CANDIDATE): `ROLE_ANALYST`/`ROLE_SOC_MANAGER`/`ROLE_ADMIN` + `/ueba/entity-timeline` route.
 2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned. Remaining RESP-021 depth gaps stay open.
-3. Optional deeper threat-intel: cursor/freshness, sync receipts, v1 deprecation after successor cutover.
-4. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
+3. ~~Follow-on policies: enforcement evidence honesty~~ — **done** on `feat/p1-agent-policies-enforcement-evidence` (STAGING CANDIDATE): `GET /ha-edr/policies/{id}/enforcement` + UI unavailable/partial; host enforce path still open (`POL-003`).
+4. Optional deeper threat-intel: cursor/freshness, sync receipts, v1 deprecation after successor cutover.
+5. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
 
 ## Completed this slice — Governance and Platform Settings
 

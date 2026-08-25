@@ -63,7 +63,7 @@ Gap severity: **H** = broken or unsafe operator expectation; **M** = partial/hon
 | `/edr/quarantine` | Alias of quarantine page | Same as `/response/quarantine` | `GET/PATCH/POST /api/ha-edr/quarantine*` (Analyst\|SOC Manager\|Admin) | Duplicate path; nav prefers `/response/quarantine` | **L** |
 | `/response/quarantine` | Quarantine & Containment (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` file inventory + containment tab; page gate matches BE; restore/delete mutations live | File quarantine secured with SOC Manager on list/mutate; host isolation inventory gaps per `RESP-021` | **SOC Manager PreAuthorize gap closed** (STAGING CANDIDATE follow-on); remaining RESP-021 depth gaps open | **H→M** |
 | `/edr/fim` | File Integrity (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` summary dashboard; page gate matches BE | `GET /api/ha-edr/fim/summary` (Analyst\|SOC Manager\|Admin) | Nav no longer open to all authenticated | **M→L** (auth aligned) |
-| `/edr/policies` | Agent Policies (Admin) | `UI IMPLEMENTED` CRUD + assign | `GET/POST/PUT/DELETE /api/ha-edr/policies*`, assign (Admin) | Agent delivery/enforcement evidence incomplete | **M** |
+| `/edr/policies` | Agent Policies (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` CRUD + assign; enforcement evidence drawer | `GET/POST/PUT/DELETE /api/ha-edr/policies*`, assign (Admin\|SOC Manager mutate; Analyst read); `GET .../enforcement` | **Addressed (STAGING CANDIDATE):** surfaces assignment + AgentPolicyStateDTO with unavailable/partial; host enforcement not verified | **M→partial honesty** |
 | Legacy `/api/edr/*` | None (SensorGrid uses subset) | Not adopted for quarantine UI | Separate `EdrResource` (rules/events/quarantine/isolation/kill) | Contract register: do not adopt unsecured/legacy duplicate for quarantine inventory | **H** (avoid) |
 
 ### Frontend ownership map
@@ -109,3 +109,7 @@ Related prior: **`RESP-021`** for quarantine (not reopened as missing).
 ### Follow-on note (2026-08-25) — endpoint quarantine / FIM / timeline auth
 
 STAGING CANDIDATE: `HaEdrResource` quarantine list/mutate now includes `ROLE_SOC_MANAGER`; timeline/process-tree accept Analyst + SOC Manager (keep Admin); FIM summary includes SOC Manager. Frontend quarantine/FIM page gates and FIM nav roles match. Legacy unsecured `/api/edr/*` was not adopted for quarantine inventory.
+
+### Follow-on note (2026-08-25) — agent policies enforcement evidence
+
+STAGING CANDIDATE: `GET /api/ha-edr/policies/{id}/enforcement` returns assignment plus existing `AgentPolicyStateDTO` fields with `evidenceAvailability` limited to `unavailable`|`partial`. Reads allow Analyst|SOC Manager|Admin; mutations Admin|SOC Manager. UI honesty banner and evidence drawer — no fictional host-enforcement green checks. Live agent apply/ack path and production verification remain open (`POL-001`–`POL-003`).

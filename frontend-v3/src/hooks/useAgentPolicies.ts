@@ -20,10 +20,11 @@ import {
   assignAgents,
   createAgentPolicy,
   deleteAgentPolicy,
+  getAgentPolicyEnforcementEvidence,
   listAgentPolicies,
   updateAgentPolicy,
 } from '@/services/agentPolicyService';
-import type { AgentPolicyDTO } from '@/types/edr';
+import type { AgentPolicyDTO, AgentPolicyEnforcementEvidenceDTO } from '@/types/edr';
 
 // ---------------------------------------------------------------------------
 // Shared query key
@@ -149,8 +150,32 @@ export function useAssignAgents() {
 
   return useMutation<AgentPolicyDTO, Error, { id: number; agentIds: string[] }>({
     mutationFn: ({ id, agentIds }) => assignAgents(id, agentIds),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: AGENT_POLICIES_KEY });
+      void queryClient.invalidateQueries({
+        queryKey: [...AGENT_POLICIES_KEY, 'enforcement', variables.id],
+      });
     },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Enforcement evidence query (POL-001 STAGING CANDIDATE)
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetches assignment + agent-reported state for a policy when `policyId` is set.
+ * Does not invent host enforcement — surfaces unavailable/partial from the backend.
+ */
+export function useAgentPolicyEnforcementEvidence(policyId: number | null) {
+  return useQuery<AgentPolicyEnforcementEvidenceDTO>({
+    queryKey: [...AGENT_POLICIES_KEY, 'enforcement', policyId],
+    queryFn: () => {
+      if (policyId == null) {
+        throw new Error('policyId required');
+      }
+      return getAgentPolicyEnforcementEvidence(policyId);
+    },
+    enabled: policyId != null,
   });
 }

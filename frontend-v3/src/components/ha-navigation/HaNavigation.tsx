@@ -71,7 +71,7 @@ const POSTURE_ITEMS: NavItemSpec[] = [
 const ENDPOINT_ITEMS: NavItemSpec[] = [
   { label: 'Endpoints', icon: 'Monitor', route: '/edr/endpoints', roles: [] },
   { label: 'File Integrity', icon: 'FileSearch', route: '/edr/fim', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
-  { label: 'Agent Policies', icon: 'Settings', route: '/edr/policies', roles: ['ROLE_ADMIN'] },
+  { label: 'Agent Policies', icon: 'Settings', route: '/edr/policies', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
 ];
 
 // Section: DASHBOARDS — gallery is the safe entry point; Studio is role-gated.

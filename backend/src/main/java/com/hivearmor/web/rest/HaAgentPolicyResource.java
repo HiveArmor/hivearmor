@@ -3,6 +3,8 @@ package com.hivearmor.web.rest;
 import com.hivearmor.service.HaAgentPolicyService;
 import com.hivearmor.service.dto.AgentPolicyAssignRequest;
 import com.hivearmor.service.dto.AgentPolicyDTO;
+import com.hivearmor.service.dto.AgentPolicyEnforcementEvidenceDTO;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,17 +25,10 @@ import java.util.List;
 /**
  * REST controller for HiveArmor EDR agent monitoring policy management (T05).
  *
- * <p>All endpoints are mounted under {@code /api/ha-edr} and are restricted to
- * {@code ROLE_ADMIN} via {@code @PreAuthorize}.
+ * <p>All endpoints are mounted under {@code /api/ha-edr}.
+ * Reads: Admin | SOC Manager | Analyst. Mutations: Admin | SOC Manager.
  *
- * <p>Constraints upheld:
- * <ul>
- *   <li>Constructor injection only — no {@code @Autowired} on fields or setters.
- *   <li>No Lombok annotations.
- *   <li>No {@code java.util.List#getFirst()} calls.
- *   <li>POST /policies returns HTTP 201 with a {@code Location} header.
- *   <li>DELETE /policies/{id} returns HTTP 204 with no body.
- * </ul>
+ * <p>STAGING CANDIDATE — enforcement evidence never claims production host enforcement.
  */
 @RestController
 @RequestMapping("/api/ha-edr")
@@ -41,6 +36,11 @@ public class HaAgentPolicyResource {
 
     private static final Logger log = LoggerFactory.getLogger(HaAgentPolicyResource.class);
     private static final String CLASSNAME = "HaAgentPolicyResource";
+
+    private static final String READ_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST')";
+    private static final String MUTATE_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER')";
 
     private final HaAgentPolicyService policyService;
 
@@ -52,13 +52,8 @@ public class HaAgentPolicyResource {
     // GET /api/ha-edr/policies
     // -------------------------------------------------------------------------
 
-    /**
-     * Returns all agent monitoring policies.
-     *
-     * @return 200 OK with the list of {@link AgentPolicyDTO} bodies
-     */
     @GetMapping("/policies")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<AgentPolicyDTO>> listPolicies() {
         final String ctx = CLASSNAME + ".listPolicies";
         log.debug("{}: listing all agent policies", ctx);
@@ -68,17 +63,31 @@ public class HaAgentPolicyResource {
     }
 
     // -------------------------------------------------------------------------
-    // POST /api/ha-edr/policies
+    // GET /api/ha-edr/policies/{id}/enforcement
     // -------------------------------------------------------------------------
 
     /**
-     * Creates a new agent monitoring policy.
-     *
-     * @param dto the policy to create
-     * @return 201 Created with a {@code Location} header and the created {@link AgentPolicyDTO} body
+     * Returns assignment plus agent-reported {@code AgentPolicyStateDTO} rows when present.
+     * Availability is {@code unavailable} or {@code partial} only (POL-001).
      */
+    @GetMapping("/policies/{id}/enforcement")
+    @PreAuthorize(READ_AUTH)
+    public ResponseEntity<AgentPolicyEnforcementEvidenceDTO> getEnforcementEvidence(@PathVariable Long id) {
+        final String ctx = CLASSNAME + ".getEnforcementEvidence";
+        log.debug("{}: enforcement evidence for policy id={}", ctx, id);
+        try {
+            return ResponseEntity.ok(policyService.getEnforcementEvidence(id));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /api/ha-edr/policies
+    // -------------------------------------------------------------------------
+
     @PostMapping("/policies")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<AgentPolicyDTO> createPolicy(@Valid @RequestBody AgentPolicyDTO dto) {
         final String ctx = CLASSNAME + ".createPolicy";
         log.debug("{}: creating agent policy name={}", ctx, dto.getName());
@@ -93,15 +102,8 @@ public class HaAgentPolicyResource {
     // PUT /api/ha-edr/policies/{id}
     // -------------------------------------------------------------------------
 
-    /**
-     * Updates an existing agent monitoring policy.
-     *
-     * @param id  the ID of the policy to update
-     * @param dto the updated policy data
-     * @return 200 OK with the updated {@link AgentPolicyDTO} body
-     */
     @PutMapping("/policies/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<AgentPolicyDTO> updatePolicy(
             @PathVariable Long id,
             @Valid @RequestBody AgentPolicyDTO dto) {
@@ -117,14 +119,8 @@ public class HaAgentPolicyResource {
     // DELETE /api/ha-edr/policies/{id}
     // -------------------------------------------------------------------------
 
-    /**
-     * Deletes an agent monitoring policy by ID.
-     *
-     * @param id the ID of the policy to delete
-     * @return 204 No Content with no body
-     */
     @DeleteMapping("/policies/{id}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> deletePolicy(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".deletePolicy";
         log.debug("{}: deleting agent policy id={}", ctx, id);
@@ -137,16 +133,8 @@ public class HaAgentPolicyResource {
     // POST /api/ha-edr/policies/{id}/assign
     // -------------------------------------------------------------------------
 
-    /**
-     * Assigns agents to an existing monitoring policy, replacing the current
-     * list of assigned agent IDs.
-     *
-     * @param id      the ID of the policy to assign agents to
-     * @param request the assign request containing the list of agent IDs
-     * @return 200 OK with the updated {@link AgentPolicyDTO} body
-     */
     @PostMapping("/policies/{id}/assign")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<AgentPolicyDTO> assignAgents(
             @PathVariable Long id,
             @Valid @RequestBody AgentPolicyAssignRequest request) {

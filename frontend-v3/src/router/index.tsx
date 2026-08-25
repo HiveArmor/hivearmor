@@ -459,11 +459,11 @@ export const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
-      // EDR — Agent Policy Management
+      // EDR — Agent Policy Management (read: Analyst|SOC Manager|Admin; mutate gated in page)
       {
         path: 'edr/policies',
         element: (
-          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
+          <AuthGuard allowedRoles={['ROLE_ADMIN', 'ROLE_SOC_MANAGER', 'ROLE_ANALYST']}>
             <AgentPoliciesPage />
           </AuthGuard>
         ),

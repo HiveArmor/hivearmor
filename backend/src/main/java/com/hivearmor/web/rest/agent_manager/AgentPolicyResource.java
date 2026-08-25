@@ -9,18 +9,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Agent-manager policy CRUD, push, and state reads.
+ *
+ * <p>Reads: Admin | SOC Manager | Analyst. Mutations: Admin | SOC Manager.
+ * {@code report-state} remains Admin-only (not an agent INTERNAL_KEY path).
+ * STAGING CANDIDATE — not PRODUCTION READY.
+ */
 @RestController
 @RequestMapping("/api/agent-policies")
-@org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
 public class AgentPolicyResource {
 
     private static final String CLASSNAME = "AgentPolicyResource";
+    private static final String READ_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST')";
+    private static final String MUTATE_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER')";
+
     private final Logger log = LoggerFactory.getLogger(AgentPolicyResource.class);
     private final UtmAgentPolicyService policyService;
     private final ApplicationEventService eventService;
@@ -31,6 +43,7 @@ public class AgentPolicyResource {
     }
 
     @GetMapping
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<AgentPolicyDTO>> listPolicies() {
         final String ctx = CLASSNAME + ".listPolicies";
         try {
@@ -44,6 +57,7 @@ public class AgentPolicyResource {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<AgentPolicyDTO> getPolicy(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".getPolicy";
         try {
@@ -59,6 +73,7 @@ public class AgentPolicyResource {
     }
 
     @PostMapping
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<AgentPolicyDTO> createPolicy(@RequestBody AgentPolicyDTO dto) {
         final String ctx = CLASSNAME + ".createPolicy";
         try {
@@ -73,6 +88,7 @@ public class AgentPolicyResource {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<AgentPolicyDTO> updatePolicy(@PathVariable Long id, @RequestBody AgentPolicyDTO dto) {
         final String ctx = CLASSNAME + ".updatePolicy";
         try {
@@ -86,6 +102,7 @@ public class AgentPolicyResource {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> deletePolicy(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".deletePolicy";
         try {
@@ -100,6 +117,7 @@ public class AgentPolicyResource {
     }
 
     @PostMapping("/{id}/assign-group/{groupId}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> assignGroup(@PathVariable Long id, @PathVariable Long groupId) {
         final String ctx = CLASSNAME + ".assignGroup";
         try {
@@ -114,6 +132,7 @@ public class AgentPolicyResource {
     }
 
     @DeleteMapping("/{id}/unassign-group/{groupId}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> unassignGroup(@PathVariable Long id, @PathVariable Long groupId) {
         final String ctx = CLASSNAME + ".unassignGroup";
         try {
@@ -128,6 +147,7 @@ public class AgentPolicyResource {
     }
 
     @PostMapping("/{id}/push/{groupId}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> pushToGroup(@PathVariable Long id, @PathVariable Long groupId) {
         final String ctx = CLASSNAME + ".pushToGroup";
         try {
@@ -142,6 +162,7 @@ public class AgentPolicyResource {
     }
 
     @GetMapping("/{id}/push-log")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<PolicyPushLogDTO>> getPushLog(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".getPushLog";
         try {
@@ -155,6 +176,7 @@ public class AgentPolicyResource {
     }
 
     @GetMapping("/{id}/states")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<AgentPolicyStateDTO>> getPolicyStates(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".getPolicyStates";
         try {
@@ -168,12 +190,15 @@ public class AgentPolicyResource {
     }
 
     @PostMapping("/report-state")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<Void> reportState(@RequestBody Map<String, Object> body) {
         final String ctx = CLASSNAME + ".reportState";
         try {
             String agentId = (String) body.get("agentId");
             Long policyId = Long.valueOf(body.get("policyId").toString());
-            Integer appliedVersion = body.containsKey("appliedVersion") ? Integer.valueOf(body.get("appliedVersion").toString()) : null;
+            Integer appliedVersion = body.containsKey("appliedVersion")
+                ? Integer.valueOf(body.get("appliedVersion").toString())
+                : null;
             String state = (String) body.get("state");
             String driftDetails = (String) body.get("driftDetails");
             policyService.updatePolicyState(agentId, policyId, appliedVersion, state, driftDetails);
