@@ -1,16 +1,16 @@
 # Next production slice
 
-Updated: **2026-08-25 10:00:00 IST (UTC+05:30)**
+Updated: **2026-08-25 11:45:00 IST (UTC+05:30)**
 
 ## Active — Orphan Operational Workflows (TI-002–TI-004 depth)
 
 Routes: inventory across UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence; **first bounded family = threat-intel ops** (`/intelligence`, `/admin/threat-intel`).
-Status: **STAGING CANDIDATE** — inventory + TI-002–TI-004 depth + agent-policy enforcement evidence. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for this slice.
+Status: **STAGING CANDIDATE** — inventory + TI-002–TI-004 depth + agent-policy enforcement evidence + POL-003 apply/ack honesty. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for this slice.
 Program: `docs/ai-handoff/remaining-page-program.md`.
 Research: `docs/ai-handoff/research/orphan-operational-workflows-inventory.md`.
 Contracts: `TI-001`–`TI-004`; follow-ons include `POL-001`–`POL-003`.
 
-Branch (policies honesty): `feat/p1-agent-policies-enforcement-evidence` (worktree `.worktrees/p1-agent-policies-evidence`); TI depth merged via `feat/p1-threat-intel-depth` (#47).
+Branch (POL-003 apply/ack honesty): `feat/p1-pol003-apply-ack-honesty` (worktree `.worktrees/p1-pol003-apply-ack-honesty`); prior policies evidence merged via #48 (`feat/p1-agent-policies-enforcement-evidence`).
 
 Completed in this depth slice:
 
@@ -24,9 +24,10 @@ Required next actions (remaining orphans / depth):
 1. ~~Follow-on UEBA: fix `HaUebaResource` `@PreAuthorize` authority strings~~ — **done** on `feat/p1-ueba-auth-fix` (STAGING CANDIDATE): `ROLE_ANALYST`/`ROLE_SOC_MANAGER`/`ROLE_ADMIN` + `/ueba/entity-timeline` route.
 2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned.
 3. ~~Follow-on RESP-021 depth: secured host-isolation inventory.~~ **Closed** on `feat/p1-resp021-isolation-inventory` (STAGING CANDIDATE) — `GET /api/ha-edr/isolation` + Endpoint isolation tab. Remaining RESP-021 depth gaps stay open.
-4. ~~Follow-on policies: enforcement evidence honesty~~ — **done** on `feat/p1-agent-policies-enforcement-evidence` (STAGING CANDIDATE): `GET /ha-edr/policies/{id}/enforcement` + UI unavailable/partial; host apply/ack still open (`POL-001`–`POL-003`).
-5. Optional deeper threat-intel: IOC cursor/freshness, durable sync ledger, MISP persisted status, v1 deprecation headers after consumer cutover.
-6. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
+4. ~~Follow-on policies: enforcement evidence honesty~~ — **done** on `feat/p1-agent-policies-enforcement-evidence` (#48, STAGING CANDIDATE): `GET /ha-edr/policies/{id}/enforcement` + UI unavailable/partial.
+5. ~~POL-003 apply/ack honesty~~ — **done** on `feat/p1-pol003-apply-ack-honesty` (STAGING CANDIDATE): missing `appliedVersion`/`lastAppliedAt` ⇒ apply/ack path unavailable; never green “enforced on host”. Live agent gRPC apply/ack remains open.
+6. Optional deeper threat-intel: IOC cursor/freshness, durable sync ledger, MISP persisted status, v1 deprecation headers after consumer cutover.
+7. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
 
 ## Completed this slice — RESP-021 host isolation inventory (thin depth)
 

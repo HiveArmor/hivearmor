@@ -1,13 +1,14 @@
 /**
- * AgentPoliciesPage tests — POL-001 honesty + role gates
+ * AgentPoliciesPage tests — POL-001 / POL-003 honesty + role gates
  *
  * Tests:
  *   1) Access denied — no read role; hooks skipped; human permission copy
  *   2) Loading state — Analyst/Admin read + skeleton rows
  *   3) Empty state — PatternFly EmptyState
  *   4) Error state — PatternFly Alert
- *   5) Honesty banner — STAGING CANDIDATE / unavailable|partial copy
+ *   5) Honesty banner — STAGING CANDIDATE / apply/ack unavailable / never enforced on host
  *   6) Analyst read-only — no Create Policy; Evidence action present
+ *   7) Enforcement drawer — apply/ack unavailable when state lacks appliedVersion
  */
 
 import { render, screen } from '@testing-library/react';
@@ -205,7 +206,7 @@ describe('AgentPoliciesPage', () => {
     expect(screen.getByText(/cannot reach agent policy service/i)).toBeDefined();
   });
 
-  it('shows POL-001 honesty banner without claiming host enforcement', () => {
+  it('shows POL-003 honesty banner without claiming host enforcement', () => {
     mockUseAgentPolicies.mockReturnValue({
       data: [] as AgentPolicyDTO[],
       isLoading: false,
@@ -217,7 +218,8 @@ describe('AgentPoliciesPage', () => {
 
     expect(screen.getByRole('status', { name: /policy enforcement honesty/i })).toBeDefined();
     expect(screen.getByText(/STAGING CANDIDATE/i)).toBeDefined();
-    expect(screen.getByText(/unavailable or partial/i)).toBeDefined();
+    expect(screen.getByText(/apply\/ack path unavailable/i)).toBeDefined();
+    expect(screen.getByText(/never treat .* enforced on host/i)).toBeDefined();
   });
 
   it('allows Analyst read-only without Create Policy', () => {
@@ -242,5 +244,55 @@ describe('AgentPoliciesPage', () => {
     expect(screen.queryByRole('button', { name: /create policy/i })).toBeNull();
     expect(screen.getByText(/Read-only/i)).toBeDefined();
     expect(screen.getByRole('button', { name: /view enforcement evidence/i })).toBeDefined();
+  });
+
+  it('surfaces apply/ack path unavailable when state lacks appliedVersion', async () => {
+    const { userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+
+    mockRoles = ['ROLE_ANALYST'];
+    mockUseAgentPolicies.mockReturnValue({
+      data: [
+        {
+          id: 9,
+          name: 'Linux process monitor',
+          osType: 'linux',
+          assignedAgentIds: ['agent-9'],
+        },
+      ] as AgentPolicyDTO[],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseEnforcement.mockReturnValue({
+      data: {
+        policyId: 9,
+        assignedAgentIds: ['agent-9'],
+        evidenceAvailability: 'unavailable',
+        honestyNote:
+          'AgentPolicyState rows exist but lack appliedVersion/lastAppliedAt ack fields. Apply/ack path unavailable — never treat as enforced on host.',
+        applyAckPathAvailable: false,
+        agentStates: [
+          {
+            agentId: 'agent-9',
+            desiredVersion: 2,
+            state: 'PENDING',
+            lastCheckedAt: '2026-08-25T05:00:00Z',
+            driftDetails: 'awaiting apply',
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderPage();
+    await user.click(screen.getByRole('button', { name: /view enforcement evidence/i }));
+
+    expect(screen.getByRole('status', { name: /apply ack path status/i })).toBeDefined();
+    expect(screen.getByText(/^Apply\/ack path unavailable$/i)).toBeDefined();
+    expect(screen.getByText(/never treat as enforced on host/i)).toBeDefined();
+    expect(screen.getByText(/awaiting apply/i)).toBeDefined();
   });
 });

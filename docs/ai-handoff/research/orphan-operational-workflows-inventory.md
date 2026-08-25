@@ -116,6 +116,9 @@ STAGING CANDIDATE: `HaEdrResource` quarantine list/mutate now includes `ROLE_SOC
 
 STAGING CANDIDATE: `GET /api/ha-edr/policies/{id}/enforcement` returns assignment plus existing `AgentPolicyStateDTO` fields with `evidenceAvailability` limited to `unavailable`|`partial`. Reads allow Analyst|SOC Manager|Admin; mutations Admin|SOC Manager. UI honesty banner and evidence drawer — no fictional host-enforcement green checks. Live agent apply/ack path and production verification remain open (`POL-001`–`POL-003`).
 
+### Follow-on note (2026-08-25) — POL-003 apply/ack honesty
+
+STAGING CANDIDATE after #48: when `AgentPolicyStateDTO` lacks `appliedVersion`/`lastAppliedAt`, API sets `evidenceAvailability=unavailable`, `applyAckPathAvailable=false`, and honesty notes say **apply/ack path unavailable** — never green “enforced on host”. UI surfaces lastCheckedAt/driftDetails and per-row apply/ack. Production agent INTERNAL_KEY / gRPC apply+ack and LIVE VERIFIED host enforcement remain open.
 ### Follow-on note (2026-08-25) — RESP-021 host isolation inventory
 
 STAGING CANDIDATE: secured `GET /api/ha-edr/isolation` lists `hive_edr_isolation` with Analyst \| SOC Manager \| Admin PreAuthorize. Quarantine & Containment Endpoint isolation tab consumes that inventory with honest empty/error states. Legacy `/api/edr/isolation` not adopted. Governed release/preview, cursor/freshness, action history, and resumable delivery remain open.
