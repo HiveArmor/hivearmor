@@ -43,6 +43,19 @@ class HaEdrResourcePreAuthorizeTest {
     }
 
     @Test
+    void isolationInventoryAllowsAnalystSocManagerAdmin() {
+        Method m = methodNamed(HaEdrResource.class, "listIsolatedHosts");
+        PreAuthorize pre = m.getAnnotation(PreAuthorize.class);
+        assertThat(pre).isNotNull();
+        assertThat(pre.value()).contains("ROLE_ANALYST");
+        assertThat(pre.value()).contains("ROLE_SOC_MANAGER");
+        assertThat(pre.value()).contains("ROLE_ADMIN");
+        assertThat(pre.value()).doesNotContain("ROLE_USER");
+        assertThat(m.getAnnotation(GetMapping.class)).isNotNull();
+        assertThat(m.getAnnotation(GetMapping.class).value()).contains("/isolation");
+    }
+
+    @Test
     void timelineAndProcessTreeAllowAnalystAndSocManager() {
         for (String name : List.of("getTimeline", "getProcessTree")) {
             Method m = methodNamed(HaEdrResource.class, name);

@@ -1,16 +1,15 @@
 /**
  * Quarantine & Containment — Phase 7 response operations.
  *
- * The file tab is backed by the implemented /ha-edr/quarantine page contract.
- * Host/account containment is progressively loaded from the newer response
- * domain and remains isolated from the file inventory when that source fails.
+ * The file tab is backed by /api/ha-edr/quarantine.
+ * The Endpoint isolation tab is backed by secured GET /api/ha-edr/isolation
+ * (STAGING CANDIDATE). Legacy /api/edr/* is not adopted for this inventory.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 
 import { Alert } from '@patternfly/react-core';
-import { useQuery } from '@tanstack/react-query';
 import type { ColDef, ICellRendererParams, RowClickedEvent } from 'ag-grid-community';
 import type { AgGridReact } from 'ag-grid-react';
 import {
@@ -21,7 +20,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  CircleSlash2,
   Clock3,
   Copy,
   ExternalLink,
@@ -40,7 +38,6 @@ import {
   ShieldCheck,
   ShieldOff,
   Trash2,
-  UserRoundX,
   Workflow,
 } from 'lucide-react';
 
@@ -51,12 +48,11 @@ import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useEpsStream } from '@/hooks/useEpsStream';
-import { useQuarantineBulkAction, useQuarantineAction, useQuarantinedFiles } from '@/hooks/useQuarantine';
+import { useIsolatedHosts, useQuarantineBulkAction, useQuarantineAction, useQuarantinedFiles } from '@/hooks/useQuarantine';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
-import type { QuarantineRecord, QuarantineStatus, QuarantineTargetType } from '@/pages/response/response.types';
-import { fetchQuarantineRecords, fixtureMode } from '@/pages/response/responsePlaybooks.service';
+import { fixtureMode } from '@/pages/response/responsePlaybooks.service';
 import { useAuthStore } from '@/store/auth.store';
-import type { QuarantinedFileDTO } from '@/types/edr';
+import type { IsolatedHostDTO, QuarantinedFileDTO } from '@/types/edr';
 
 import './FileQuarantinePage.css';
 import '../response/response-grid-standard.css';
@@ -69,8 +65,7 @@ type WorkspaceView = 'files' | 'endpoints';
 type Density = keyof typeof RESPONSE_GRID_ROW_HEIGHTS;
 type FileStatus = 'all' | 'quarantined' | 'restored' | 'deleted';
 type Verdict = 'all' | NonNullable<QuarantinedFileDTO['verdict']>;
-type ContainmentStatus = 'all' | QuarantineStatus;
-type ContainmentTarget = 'all' | QuarantineTargetType;
+type IsolationStatus = 'all' | 'ACTIVE' | 'LIFTED' | 'FAILED';
 type FileDetailView = 'overview' | 'evidence' | 'history';
 type QuarantineActionTarget =
   | { kind: 'single'; action: 'restore' | 'delete'; row: QuarantinedFileDTO }
@@ -91,20 +86,11 @@ const VERDICT_OPTIONS: Array<{ value: Verdict; label: string }> = [
   { value: 'false_positive', label: 'False positive' },
 ];
 
-const CONTAINMENT_STATUS_OPTIONS: Array<{ value: ContainmentStatus; label: string }> = [
+const ISOLATION_STATUS_OPTIONS: Array<{ value: IsolationStatus; label: string }> = [
   { value: 'all', label: 'All states' },
   { value: 'ACTIVE', label: 'Active' },
-  { value: 'RELEASED', label: 'Released' },
-  { value: 'EXPIRED', label: 'Expired' },
+  { value: 'LIFTED', label: 'Lifted' },
   { value: 'FAILED', label: 'Failed' },
-];
-
-const CONTAINMENT_TARGET_OPTIONS: Array<{ value: ContainmentTarget; label: string }> = [
-  { value: 'all', label: 'All targets' },
-  { value: 'HOST', label: 'Hosts' },
-  { value: 'ACCOUNT', label: 'Accounts' },
-  { value: 'PROCESS', label: 'Processes' },
-  { value: 'NETWORK_SEGMENT', label: 'Network segments' },
 ];
 
 function formatTimestamp(value?: string | null): string {
@@ -242,75 +228,228 @@ function FileDrawer({ row, onClose, onRestore, onDelete }: {
   );
 }
 
-function EndpointIcon({ type }: { type: QuarantineRecord['targetType'] }): JSX.Element {
-  if (type === 'ACCOUNT') return <UserRoundX size={14} />;
-  if (type === 'NETWORK_SEGMENT') return <Network size={14} />;
-  if (type === 'PROCESS') return <CircleSlash2 size={14} />;
-  return <Laptop size={14} />;
-}
-
-function EndpointContainmentPanel({ density, search, status, targetType }: {
+function EndpointContainmentPanel({ density, search, status, page, onPageChange }: {
   density: Density;
   search: string;
-  status: ContainmentStatus;
-  targetType: ContainmentTarget;
+  status: IsolationStatus;
+  page: number;
+  onPageChange: (page: number) => void;
 }): JSX.Element {
-  const [selected, setSelected] = useState<QuarantineRecord | null>(null);
-  const [releaseReview, setReleaseReview] = useState<QuarantineRecord | null>(null);
-  const { data = [], isLoading, isError, error, refetch, dataUpdatedAt } = useQuery({
-    queryKey: ['response-quarantine-records'],
-    queryFn: fetchQuarantineRecords,
-    staleTime: 20_000,
-  });
+  const [selected, setSelected] = useState<IsolatedHostDTO | null>(null);
+  const [releaseReview, setReleaseReview] = useState<IsolatedHostDTO | null>(null);
+  const query = useMemo(
+    () => ({ page, size: PAGE_SIZE, status: status === 'all' ? undefined : status }),
+    [page, status],
+  );
+  const { data, isLoading, isError, error, refetch, dataUpdatedAt } = useIsolatedHosts(query);
   const filteredRecords = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    return data.filter((record) => {
-      if (status !== 'all' && record.status !== status) return false;
-      if (targetType !== 'all' && record.targetType !== targetType) return false;
+    return (data?.content ?? []).filter((record) => {
       if (!needle) return true;
-      return [record.targetDisplayName, record.quarantineId, record.initiatedBy, record.linkedAlertId, record.linkedExecutionId]
+      return [record.hostname, record.agentId, record.actionedBy, record.reason, record.isolationType]
         .some((value) => value?.toLowerCase().includes(needle));
     });
-  }, [data, search, status, targetType]);
+  }, [data?.content, search]);
   const columns = useMemo<ColDef[]>(() => [
-    { field: 'targetDisplayName', headerName: 'Target', flex: 1, minWidth: 190, cellRenderer: ({ data: row }: { data: QuarantineRecord }) => <span className="qrn-target-cell"><span><EndpointIcon type={row.targetType} /></span><strong>{row.targetDisplayName}</strong><small>{row.targetType.toLowerCase()} · {row.quarantineId}</small></span> },
-    { field: 'status', headerName: 'Containment', width: 126, cellRenderer: ({ data: row }: { data: QuarantineRecord }) => <span className="qrn-containment-state" data-state={row.status.toLowerCase()}><ShieldOff size={12} />{row.status.toLowerCase()}</span> },
-    { field: 'initiatedBy', headerName: 'Initiator', width: 130 },
-    { field: 'initiatedAt', headerName: 'Initiated', width: 132, valueFormatter: ({ value }: { value: string }) => formatTimestamp(value) },
-    { field: 'expiresAt', headerName: 'Release window', width: 132, valueFormatter: ({ value }: { value: string | null }) => value ? formatTimestamp(value) : 'Manual release' },
-    { field: 'linkedAlertId', headerName: 'Alert', width: 94, valueFormatter: ({ value }: { value: string | null }) => value ?? '—' },
-    { headerName: 'Blast radius', width: 108, valueGetter: ({ data: row }: { data: QuarantineRecord }) => `${row.blastRadius.affectedTargets.length} targets` },
+    {
+      field: 'hostname',
+      headerName: 'Host',
+      flex: 1,
+      minWidth: 190,
+      cellRenderer: ({ data: row }: { data: IsolatedHostDTO }) => (
+        <span className="qrn-target-cell">
+          <span><Laptop size={14} /></span>
+          <strong>{row.hostname ?? row.agentId}</strong>
+          <small>host · {row.agentId}</small>
+        </span>
+      ),
+    },
+    {
+      field: 'status',
+      headerName: 'Isolation',
+      width: 126,
+      cellRenderer: ({ data: row }: { data: IsolatedHostDTO }) => (
+        <span className="qrn-containment-state" data-state={row.status.toLowerCase()}>
+          <ShieldOff size={12} />{row.status.toLowerCase()}
+        </span>
+      ),
+    },
+    { field: 'isolationType', headerName: 'Type', width: 110 },
+    { field: 'actionedBy', headerName: 'Initiator', width: 130 },
+    {
+      field: 'isolatedAt',
+      headerName: 'Isolated',
+      width: 132,
+      valueFormatter: ({ value }: { value: string }) => formatTimestamp(value),
+    },
+    {
+      field: 'liftedAt',
+      headerName: 'Lifted',
+      width: 132,
+      valueFormatter: ({ value }: { value: string | null | undefined }) => (value ? formatTimestamp(value) : '—'),
+    },
+    {
+      field: 'reason',
+      headerName: 'Reason',
+      flex: 1,
+      minWidth: 160,
+      valueFormatter: ({ value }: { value: string | undefined }) => value ?? '—',
+    },
     { headerName: '', width: 34, sortable: false, cellRenderer: () => <ChevronRight size={14} className="qrn-chevron" /> },
   ], []);
-  if (isError) return <div className="qrn-inline-state"><AlertTriangle size={24} /><strong>Endpoint containment inventory unavailable</strong><span>{error instanceof Error ? error.message : 'The response-domain inventory could not be loaded.'}</span><button type="button" onClick={() => refetch()}>Retry source</button></div>;
-  if (!isLoading && filteredRecords.length === 0) return <div className="qrn-inline-state"><ShieldCheck size={24} /><strong>No matching containment records</strong><span>Clear the active filters or wait for a new host, identity, process, or network action.</span></div>;
-  return <>
-    <main className="qrn-grid-wrap">
-      <SiemDataGrid className="response-grid qrn-grid" columnDefs={columns} rowData={filteredRecords} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} loading={isLoading} rowSelection="single" suppressRowClickSelection={false} onRowClicked={(event: RowClickedEvent) => setSelected(event.data as QuarantineRecord)} getRowId={(params) => (params.data as QuarantineRecord).quarantineId} ariaLabel="Endpoint containment inventory" defaultColDef={{ filter: false }} />
-    </main>
-    <footer className="qrn-pagination"><span>{filteredRecords.length} of {data.length} containment records</span><span>Bounded authorized projection</span><span>Snapshot {dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</span></footer>
-    {selected && <HaDrawer isOpen onClose={() => setSelected(null)} title={selected.targetDisplayName} subtitle={`${selected.targetType.toLowerCase()} · ${selected.status.toLowerCase()}`} width={500}
-      footer={<><a className="qrn-drawer-button" href={`/response/activity?execution=${encodeURIComponent(selected.linkedExecutionId)}`}><Activity size={13} />Open execution</a><button className="qrn-drawer-button" type="button" disabled={selected.status !== 'ACTIVE'} onClick={() => setReleaseReview(selected)}><ArchiveRestore size={13} />Review release</button></>}>
-      <div className="qrn-drawer">
-        <div className="qrn-drawer__status"><span className="qrn-containment-state" data-state={selected.status.toLowerCase()}><ShieldOff size={12} />{selected.status.toLowerCase()}</span><span className="qrn-risk" data-risk={selected.blastRadius.riskLevel.toLowerCase()}>{selected.blastRadius.riskLevel} risk</span></div>
-        <section className="qrn-drawer-card"><header><Network size={14} /><div><strong>Containment boundary</strong><span>Management connectivity is preserved</span></div></header><ul className="qrn-impact-list">{selected.blastRadius.affectedTargets.map((target) => <li key={target}>{target}</li>)}</ul></section>
-        <section className="qrn-drawer-card"><header><Clock3 size={14} /><div><strong>Lifecycle</strong><span>Action and rollback context</span></div></header><dl className="qrn-detail-grid"><div><dt>Initiated</dt><dd>{formatTimestamp(selected.initiatedAt)}</dd></div><div><dt>Initiator</dt><dd>{selected.initiatedBy}</dd></div><div><dt>Expires</dt><dd>{formatTimestamp(selected.expiresAt)}</dd></div><div><dt>Permission</dt><dd>{selected.blastRadius.requiredPermission}</dd></div></dl><p>{selected.notes ?? selected.blastRadius.rollbackGuidance ?? 'No operator notes.'}</p></section>
-        <section className="qrn-drawer-card qrn-drawer-card--warning"><header><LockKeyhole size={14} /><div><strong>Governed release required</strong><span>Verify remediation and endpoint health first</span></div></header><p>Release must be previewed against current policy and the latest connector state. A stale or offline endpoint remains pending until delivery is confirmed.</p></section>
+
+  if (isError) {
+    return (
+      <div className="qrn-inline-state">
+        <AlertTriangle size={24} />
+        <strong>Host isolation inventory unavailable</strong>
+        <span>{error instanceof Error ? error.message : 'The secured /api/ha-edr/isolation inventory could not be loaded.'}</span>
+        <button type="button" onClick={() => refetch()}>Retry source</button>
       </div>
-    </HaDrawer>}
-    <HaConfirmationModal
-      isOpen={releaseReview !== null}
-      title="Review endpoint release"
-      message={releaseReview ? `Release restores network communication for ${releaseReview.targetDisplayName}. Verify remediation, endpoint health, management connectivity, and the ${releaseReview.blastRadius.affectedTargets.length} affected service target${releaseReview.blastRadius.affectedTargets.length === 1 ? '' : 's'} before requesting approval. The canonical release-preview endpoint is still required before execution.` : ''}
-      confirmLabel="Review authority"
-      cancelLabel="Keep contained"
-      onConfirm={() => {
-        if (!releaseReview) return;
-        window.location.assign(`/response/authority?search=${encodeURIComponent(releaseReview.targetDisplayName)}`);
-      }}
-      onCancel={() => setReleaseReview(null)}
-    />
-  </>;
+    );
+  }
+
+  if (!isLoading && filteredRecords.length === 0) {
+    return (
+      <div className="qrn-inline-state" role="status" aria-label="No isolated hosts">
+        <ShieldCheck size={24} />
+        <strong>No isolated hosts</strong>
+        <span>
+          {data?.totalElements === 0
+            ? 'No host isolation records are present in the secured inventory. Legacy /api/edr/isolation is not used.'
+            : 'No hosts on this page match the active search. Clear search or change page.'}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <main className="qrn-grid-wrap">
+        <SiemDataGrid
+          className="response-grid qrn-grid"
+          columnDefs={columns}
+          rowData={filteredRecords}
+          rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]}
+          loading={isLoading}
+          rowSelection="single"
+          suppressRowClickSelection={false}
+          onRowClicked={(event: RowClickedEvent) => setSelected(event.data as IsolatedHostDTO)}
+          getRowId={(params) => String((params.data as IsolatedHostDTO).id)}
+          ariaLabel="Host isolation inventory"
+          defaultColDef={{ filter: false }}
+        />
+      </main>
+      <footer className="qrn-pagination" aria-label="Isolation pagination">
+        <span>{data?.totalElements.toLocaleString() ?? 0} isolation records</span>
+        <span>Page {page + 1} of {Math.max(1, data?.totalPages ?? 1)} · up to {PAGE_SIZE} rows</span>
+        <div>
+          <button type="button" disabled={page === 0} onClick={() => onPageChange(Math.max(0, page - 1))}>
+            <ChevronLeft size={13} />Previous
+          </button>
+          <button
+            type="button"
+            disabled={!data || page + 1 >= data.totalPages}
+            onClick={() => onPageChange(page + 1)}
+          >
+            Next<ChevronRight size={13} />
+          </button>
+        </div>
+        <span>Snapshot {dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+      </footer>
+      {selected && (
+        <HaDrawer
+          isOpen
+          onClose={() => setSelected(null)}
+          title={selected.hostname ?? selected.agentId}
+          subtitle={`host · ${selected.status.toLowerCase()}`}
+          width={500}
+          footer={(
+            <>
+              <a className="qrn-drawer-button" href={`/entities/${encodeURIComponent(selected.agentId)}`}>
+                <Laptop size={13} />Open endpoint dossier
+              </a>
+              <button
+                className="qrn-drawer-button"
+                type="button"
+                disabled={selected.status !== 'ACTIVE'}
+                onClick={() => setReleaseReview(selected)}
+              >
+                <ArchiveRestore size={13} />Review release
+              </button>
+            </>
+          )}
+        >
+          <div className="qrn-drawer">
+            <div className="qrn-drawer__status">
+              <span className="qrn-containment-state" data-state={selected.status.toLowerCase()}>
+                <ShieldOff size={12} />{selected.status.toLowerCase()}
+              </span>
+              <span>{selected.isolationType} isolation</span>
+            </div>
+            <section className="qrn-drawer-card">
+              <header>
+                <Network size={14} />
+                <div>
+                  <strong>Isolation boundary</strong>
+                  <span>Management connectivity carve-outs when reported</span>
+                </div>
+              </header>
+              <dl className="qrn-detail-grid">
+                <div><dt>Agent</dt><dd>{selected.agentId}</dd></div>
+                <div><dt>Allowed IPs</dt><dd>{selected.allowedIps ?? 'Not reported'}</dd></div>
+                <div><dt>EDR event</dt><dd>{selected.edrEventId ?? '—'}</dd></div>
+                <div><dt>Type</dt><dd>{selected.isolationType}</dd></div>
+              </dl>
+            </section>
+            <section className="qrn-drawer-card">
+              <header>
+                <Clock3 size={14} />
+                <div>
+                  <strong>Lifecycle</strong>
+                  <span>Persisted isolation state only — action history incomplete</span>
+                </div>
+              </header>
+              <dl className="qrn-detail-grid">
+                <div><dt>Isolated</dt><dd>{formatTimestamp(selected.isolatedAt)}</dd></div>
+                <div><dt>Initiator</dt><dd>{selected.actionedBy}</dd></div>
+                <div><dt>Lifted</dt><dd>{formatTimestamp(selected.liftedAt)}</dd></div>
+                <div><dt>Status</dt><dd>{selected.status}</dd></div>
+              </dl>
+              <p>{selected.reason ?? 'No operator reason recorded.'}</p>
+            </section>
+            <section className="qrn-drawer-card qrn-drawer-card--warning">
+              <header>
+                <LockKeyhole size={14} />
+                <div>
+                  <strong>Governed release not available here</strong>
+                  <span>RESP-021 preview / approval / idempotency remain open</span>
+                </div>
+              </header>
+              <p>
+                This inventory is a STAGING CANDIDATE read from /api/ha-edr/isolation.
+                Lift and release still require a governed preview path; this panel will not execute release.
+              </p>
+            </section>
+          </div>
+        </HaDrawer>
+      )}
+      <HaConfirmationModal
+        isOpen={releaseReview !== null}
+        title="Review host release"
+        message={releaseReview
+          ? `Release restores network communication for ${releaseReview.hostname ?? releaseReview.agentId}. Verify remediation and endpoint health first. The canonical release-preview and approval contract is still required before execution (RESP-021).`
+          : ''}
+        confirmLabel="Review authority"
+        cancelLabel="Keep isolated"
+        onConfirm={() => {
+          if (!releaseReview) return;
+          window.location.assign(`/response/authority?search=${encodeURIComponent(releaseReview.hostname ?? releaseReview.agentId)}`);
+        }}
+        onCancel={() => setReleaseReview(null)}
+      />
+    </>
+  );
 }
 
 export function FileQuarantinePage(): JSX.Element {
@@ -341,8 +480,8 @@ function FileQuarantineContent(): JSX.Element {
   const [page, setPage] = useState(0);
   const [status, setStatus] = useState<FileStatus>('all');
   const [verdict, setVerdict] = useState<Verdict>('all');
-  const [containmentStatus, setContainmentStatus] = useState<ContainmentStatus>('all');
-  const [containmentTarget, setContainmentTarget] = useState<ContainmentTarget>('all');
+  const [containmentStatus, setContainmentStatus] = useState<IsolationStatus>('all');
+  const [isolationPage, setIsolationPage] = useState(0);
   const [search, setSearch] = useState('');
   const [density, setDensity] = useState<Density>('standard');
   const [selectedRows, setSelectedRows] = useState<QuarantinedFileDTO[]>([]);
@@ -442,14 +581,14 @@ function FileQuarantineContent(): JSX.Element {
       <section className="qrn-operations">
         <nav className="qrn-tabs" aria-label="Quarantine workspace views" role="tablist"><button id="qrn-workspace-tab-files" type="button" role="tab" aria-selected={view === 'files'} aria-controls="qrn-workspace-panel-files" tabIndex={view === 'files' ? 0 : -1} data-active={view === 'files'} onClick={() => setView('files')} onKeyDown={(event) => { if (event.key === 'ArrowRight' || event.key === 'End') { event.preventDefault(); setView('endpoints'); document.getElementById('qrn-workspace-tab-endpoints')?.focus(); } }}><FileArchive size={13} />Quarantined files <span>{data?.totalElements ?? '—'}</span></button><button id="qrn-workspace-tab-endpoints" type="button" role="tab" aria-selected={view === 'endpoints'} aria-controls="qrn-workspace-panel-endpoints" tabIndex={view === 'endpoints' ? 0 : -1} data-active={view === 'endpoints'} onClick={() => setView('endpoints')} onKeyDown={(event) => { if (event.key === 'ArrowLeft' || event.key === 'Home') { event.preventDefault(); setView('files'); document.getElementById('qrn-workspace-tab-files')?.focus(); } }}><Laptop size={13} />Endpoint isolation</button></nav>
         <div className="qrn-toolbar" role="toolbar" aria-label="Quarantine filters">
-          <label className="qrn-search"><Search size={14} /><input ref={searchRef} type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={view === 'files' ? 'Search file, hash, endpoint, threat…' : 'Search target, action, initiator, alert…'} aria-label={view === 'files' ? 'Search quarantined files' : 'Search endpoint containment'} /><kbd>/</kbd></label>
+          <label className="qrn-search"><Search size={14} /><input ref={searchRef} type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={view === 'files' ? 'Search file, hash, endpoint, threat…' : 'Search host, agent, initiator, reason…'} aria-label={view === 'files' ? 'Search quarantined files' : 'Search host isolation'} /><kbd>/</kbd></label>
           <Filter size={13} className="qrn-filter-icon" />
           {view === 'files' ? <>
             <HaCompactSelect<FileStatus> ariaLabel="Quarantine status" label="State" value={status} options={STATUS_OPTIONS} onChange={(value) => { setStatus(value); setPage(0); }} />
             <HaCompactSelect<Verdict> ariaLabel="Threat verdict" label="Verdict" value={verdict} options={VERDICT_OPTIONS} onChange={setVerdict} />
           </> : <>
-            <HaCompactSelect<ContainmentStatus> ariaLabel="Containment status" label="State" value={containmentStatus} options={CONTAINMENT_STATUS_OPTIONS} onChange={setContainmentStatus} />
-            <HaCompactSelect<ContainmentTarget> ariaLabel="Containment target type" label="Target" value={containmentTarget} options={CONTAINMENT_TARGET_OPTIONS} onChange={setContainmentTarget} />
+            <HaCompactSelect<IsolationStatus> ariaLabel="Isolation status" label="State" value={containmentStatus} options={ISOLATION_STATUS_OPTIONS} onChange={(value) => { setContainmentStatus(value); setIsolationPage(0); }} />
+            <span className="qrn-scope"><Laptop size={12} />Host isolation only</span>
           </>}
           <span className="qrn-scope"><LockKeyhole size={12} />All authorized tenants</span>
           <span className="qrn-snapshot">{data?.stale ? 'Stale snapshot' : `Snapshot ${data?.snapshotAt ? formatTimestamp(data.snapshotAt) : dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : '—'}`}</span>
@@ -458,7 +597,7 @@ function FileQuarantineContent(): JSX.Element {
 
       {Boolean(isError || data?.stale || data?.partialFailures?.length) && <div className="qrn-warning" role="status"><AlertTriangle size={14} /><span>{isError ? 'Refresh failed. The file source is unavailable.' : 'Some endpoint sources are delayed; the last usable projection remains visible.'}</span><button type="button" onClick={() => refetch()}>Retry</button></div>}
 
-      <div className="qrn-results-toolbar"><div><strong>{view === 'files' ? 'Quarantined files' : 'Endpoint containment'}</strong><span>{view === 'files' ? `${rows.length} loaded · ${data?.totalElements ?? 0} total` : 'host, identity, process, and network boundaries'}</span></div><div className="qrn-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button></div></div>
+      <div className="qrn-results-toolbar"><div><strong>{view === 'files' ? 'Quarantined files' : 'Host isolation'}</strong><span>{view === 'files' ? `${rows.length} loaded · ${data?.totalElements ?? 0} total` : 'secured /api/ha-edr/isolation inventory'}</span></div><div className="qrn-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button></div></div>
 
       {selectedRows.length > 0 && view === 'files' && <div className="qrn-selection" role="toolbar" aria-label="Selected quarantine actions"><strong>{selectedRows.length} selected</strong><span>{eligibleSelectedRows.length} eligible · actions exclude restored, deleted, pending, and offline records.</span><button type="button" disabled={!eligibleSelectedRows.length} onClick={() => setPendingAction({ kind: 'bulk', action: 'restore', ids: eligibleSelectedRows.map((row) => row.id), count: eligibleSelectedRows.length, excluded: selectedRows.length - eligibleSelectedRows.length })}><ArchiveRestore size={13} />Restore eligible</button><button type="button" disabled={!eligibleSelectedRows.length} onClick={() => setPendingAction({ kind: 'bulk', action: 'delete', ids: eligibleSelectedRows.map((row) => row.id), count: eligibleSelectedRows.length, excluded: selectedRows.length - eligibleSelectedRows.length })}><Trash2 size={13} />Delete eligible</button></div>}
 
@@ -468,7 +607,7 @@ function FileQuarantineContent(): JSX.Element {
           {!isLoading && !isError && rows.length === 0 ? <div className="qrn-inline-state" role="status" aria-label="No quarantined files"><ShieldCheck size={26} /><strong>No quarantined files found</strong><span>Files quarantined by HiveArmor agents will appear here. Clear filters or move to another page.</span></div> : <SiemDataGrid ref={gridRef} className="response-grid qrn-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} height="100%" rowSelection="multiple" suppressRowClickSelection onSelectionChanged={(selected) => setSelectedRows(selected as QuarantinedFileDTO[])} onRowClicked={(event: RowClickedEvent) => setSelectedFile(event.data as QuarantinedFileDTO)} getRowId={(params) => String((params.data as QuarantinedFileDTO).id)} loading={isLoading} defaultColDef={{ filter: false }} ariaLabel="Quarantined file inventory" />}
         </main>
         <footer className="qrn-pagination" aria-label="Quarantine pagination"><span>{data?.totalElements.toLocaleString() ?? 0} matching records</span><span>Page {page + 1} of {Math.max(1, data?.totalPages ?? 1)} · up to {PAGE_SIZE} rows</span><div><button type="button" disabled={page === 0} onClick={() => { setPage((value) => Math.max(0, value - 1)); setActiveIndex(0); }}><ChevronLeft size={13} />Previous</button><button type="button" disabled={!data || page + 1 >= data.totalPages} onClick={() => { setPage((value) => value + 1); setActiveIndex(0); }}>Next<ChevronRight size={13} /></button></div></footer>
-      </div> : <div id="qrn-workspace-panel-endpoints" className="qrn-workspace-panel" role="tabpanel" aria-labelledby="qrn-workspace-tab-endpoints"><EndpointContainmentPanel density={density} search={search} status={containmentStatus} targetType={containmentTarget} /></div>}
+      </div> : <div id="qrn-workspace-panel-endpoints" className="qrn-workspace-panel" role="tabpanel" aria-labelledby="qrn-workspace-tab-endpoints"><EndpointContainmentPanel density={density} search={search} status={containmentStatus} page={isolationPage} onPageChange={setIsolationPage} /></div>}
 
       <div className="qrn-status"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode="live" lastUpdated={dataUpdatedAt ? new Date(dataUpdatedAt) : undefined} /></div>
       {selectedFile && <FileDrawer row={selectedFile} onClose={() => setSelectedFile(null)} onRestore={requestRestore} onDelete={requestDelete} />}

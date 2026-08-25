@@ -3,6 +3,7 @@ package com.hivearmor.web.rest;
 import com.hivearmor.domain.HiveTaxiiFeed;
 import com.hivearmor.repository.HiveTaxiiFeedRepository;
 import com.hivearmor.service.TaxiiClientService;
+import com.hivearmor.service.dto.threat_intel.ThreatFeedSyncReceipt;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +21,7 @@ import java.util.Optional;
  *
  * All endpoints require ROLE_ADMIN authority.
  * API keys MUST NOT be accepted via URL query parameters (SEC-05).
+ * Sync returns a thin {@link ThreatFeedSyncReceipt} (TI-004 STAGING CANDIDATE).
  * No Lombok — constructor injection only.
  */
 @RestController
@@ -101,22 +104,39 @@ public class HaTaxiiFeedResource {
     /**
      * POST /api/ha-threat-intel/taxii/{feedId}/sync
      * Triggers a manual sync of a single TAXII feed.
-     * Returns "Synced N IOCs" on success, or 404 if the feed is not found.
-     * Returns "Synced 0 IOCs" when the remote TAXII server is unreachable.
+     * Returns a thin sync receipt (receiptId, lastSyncAt, status, iocCount, failedReason).
+     * Does not invent a durable job ledger. Failures are honest ERROR receipts — never
+     * reported as a successful zero-IOC sync.
      */
     @PostMapping("/ha-threat-intel/taxii/{feedId}/sync")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<String> syncTaxiiFeed(@PathVariable Long feedId) {
+    public ResponseEntity<ThreatFeedSyncReceipt> syncTaxiiFeed(@PathVariable Long feedId) {
         Optional<HiveTaxiiFeed> feedOpt = feedRepository.findById(feedId);
         if (feedOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+        HiveTaxiiFeed feed = feedOpt.get();
         try {
-            int count = taxiiClientService.pollCollection(feedOpt.get());
-            return ResponseEntity.ok("Synced " + count + " IOCs");
+            int count = taxiiClientService.pollCollection(feed);
+            Instant at = feed.getLastSyncAt() != null ? feed.getLastSyncAt() : Instant.now();
+            return ResponseEntity.ok(
+                ThreatFeedSyncReceipt.ok(feedId, ThreatFeedSyncReceipt.SOURCE_TAXII, at, count)
+            );
         } catch (Exception e) {
             log.warn("TAXII sync failed for feed {}: {}", feedId, e.getMessage());
-            return ResponseEntity.ok("Synced 0 IOCs");
+            Instant failedAt = Instant.now();
+            feed.setLastSyncAt(failedAt);
+            feed.setLastSyncStatus(ThreatFeedSyncReceipt.STATUS_ERROR);
+            feed.setLastSyncCount(0);
+            feedRepository.save(feed);
+            return ResponseEntity.ok(
+                ThreatFeedSyncReceipt.error(
+                    feedId,
+                    ThreatFeedSyncReceipt.SOURCE_TAXII,
+                    failedAt,
+                    e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()
+                )
+            );
         }
     }
 }

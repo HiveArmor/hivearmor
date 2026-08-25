@@ -151,7 +151,14 @@ export function NodeConfigPanel({
           <section className="soar-config-section" aria-labelledby="config-condition">
             <header id="config-condition">Decision rule</header>
             <label className="soar-field"><span>Field or prior output</span><select value={asString(config['field'], 'severity')} onChange={(event) => updateConfig({ field: event.target.value, configured: true })} aria-label="Condition field"><option value="severity">severity</option><option value="alert.severity">alert.severity</option><option value="alert.category">alert.category</option><option value="entity.riskScore">entity.riskScore</option><option value="steps.previous.verdict">steps.previous.verdict</option><option value="incident.status">incident.status</option></select></label>
-            <label className="soar-field"><span>Operator</span><select value={asString(config['op'] ?? config['operator'], 'eq')} onChange={(event) => {
+            <label className="soar-field"><span>Operator</span><select value={asString(
+              typeof config['op'] === 'string'
+                ? config['op']
+                : typeof config['operator'] === 'string'
+                  ? config['operator']
+                  : undefined,
+              'eq',
+            )} onChange={(event) => {
               const next: Record<string, unknown> = { ...config, op: event.target.value };
               delete next['operator'];
               onUpdate(node.id, { config: next });

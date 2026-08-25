@@ -1,7 +1,7 @@
 # Orphan operational workflows — route inventory
 
 Retrieved / authored: **2026-08-25**  
-Status: **STAGING CANDIDATE** inventory + one bounded threat-intel honesty slice. Not `PRODUCTION READY`.  
+Status: **STAGING CANDIDATE** inventory + threat-intel honesty strip + TI-002–TI-004 depth slice (explicit feed-read roles, legacy v1 harden, thin sync receipt). Not `PRODUCTION READY`.  
 Program: `docs/ai-handoff/remaining-page-program.md` item 8; active slice in `next-production-slice.md`.
 
 This note inventories visible and hidden routes, navigation, frontend services and backend controllers for UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence. It selects **one** coherent family for a thin honesty improvement; it does not redesign all orphan routes.
@@ -39,13 +39,14 @@ Refresh when MISP/OpenCTI operator workflows change materially, STIX/TAXII guida
 
 Rationale: secured backend reads and Admin mutations already exist; the analyst hub had a role mismatch with navigation/AuthGuard and did not surface the existing stats read. Endpoint quarantine was a close second (`RESP-021` already recorded) but SOC Manager nav vs `ROLE_ANALYST|ROLE_ADMIN` backend auth remains a larger authorization design question — deferred.
 
-Bounded improvement shipped in this PR:
+Bounded improvement shipped (inventory honesty + depth follow-on):
 
 1. Align `/intelligence` page authority with AuthGuard + backend lookup/IOC roles (include SOC Manager).
 2. Wire `GET /api/ha-threat-intel/stats` as a compact read on `/intelligence`.
 3. Keep feed enable/sync Admin-only; show an explicit read-only note for non-admins.
 4. Replace Admin access-denied copy that exposed `ROLE_ADMIN` with a human permission label.
-5. Record `TI-001`–`TI-004` contract gaps. Do not adopt unsecured `/api/v1/threat-intel`.
+5. Record `TI-001`–`TI-004` contract gaps. Do not adopt `/api/v1/threat-intel` from frontend-v3.
+6. **Depth (2026-08-25):** TI-002 explicit Analyst/SOC Manager on feed list/get/stats; TI-003 `@PreAuthorize` on legacy v1 (no Deprecation headers); TI-004 `ThreatFeedSyncReceipt` on TAXII/MISP sync.
 
 ## Inventory matrix
 
@@ -53,18 +54,18 @@ Gap severity: **H** = broken or unsafe operator expectation; **M** = partial/hon
 
 | URL / path | Nav | FE status | BE status | Gap | Severity |
 |---|---|---|---|---|---|
-| `/intelligence` | Hive Intelligence (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` hub: feeds, IOC browser, lookup; Admin-gated toggle/sync | Secured `GET/PUT/POST /api/ha-threat-intel/feeds*`, `GET /iocs`, `POST /lookup`, `GET /stats` | Page previously omitted SOC Manager from in-page gate; stats unread on hub; feed list PreAuthorize is Admin\|User (relies on ROLE_USER co-assignment) | **H→M** (honesty fix this slice) |
-| `/admin/threat-intel` | Hidden specialized Admin (comment in nav) | `UI IMPLEMENTED` TAXII/MISP CRUD + stats | Secured Admin TAXII/MISP CRUD + sync; stats Admin\|Analyst\|User | Access copy leaked `ROLE_ADMIN`; no nav entry (discoverability) | **M** |
-| `/api/v1/threat-intel/*` | None | Not used by frontend-v3 service | Legacy controller **without** `@PreAuthorize` on inspected methods | Must not be wired; migration/deprecation not complete | **H** (keep fail-closed / unused) |
+| `/intelligence` | Hive Intelligence (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` hub: feeds, IOC browser, lookup; Admin-gated toggle/sync | Secured `GET/PUT/POST /api/ha-threat-intel/feeds*`, `GET /iocs`, `POST /lookup`, `GET /stats` — feed list/get/stats include Analyst\|SOC Manager | Prior hub honesty + TI-002 explicit read authorities | **M** (depth remaining: IOC cursor/freshness) |
+| `/admin/threat-intel` | Hidden specialized Admin (comment in nav) | `UI IMPLEMENTED` TAXII/MISP CRUD + stats; sync toasts show receipt id / failed reason | Secured Admin TAXII/MISP CRUD + sync receipt JSON; stats Admin\|User\|Analyst\|SOC Manager | No nav entry (discoverability); no durable sync ledger | **M** |
+| `/api/v1/threat-intel/*` | None | Not used by frontend-v3 service | Legacy controller **hardened** with `@PreAuthorize` (same ROLE_ matrix as ha-threat-intel); no Deprecation headers yet | Cutover/deprecation headers incomplete | **M** (was H; auth closed, lifecycle open) |
 | `/ueba/risk` | UEBA Risk (Analyst, SOC Manager, Platform Administrator) | `UI IMPLEMENTED` risk table + drawer embeds entity timeline | `GET /api/ha-ueba/*` secured with `ROLE_ANALYST\|ROLE_SOC_MANAGER\|ROLE_ADMIN` | **Addressed (STAGING CANDIDATE):** PreAuthorize now uses JWT `ROLE_` authorities + SOC Manager; nav/AuthGuard aligned | **H→closed** (auth honesty) |
 | `/ueba/entity-timeline` | Deep-link (`?userId=`); missing userId → `/ueba/risk` | `UI IMPLEMENTED` standalone route wraps `EntityTimelinePage` | `GET /api/ha-ueba/entity-timeline` (same ROLE_ guard) | **Addressed:** router entry registered; constant no longer orphan | **L→closed** |
 | `/edr/timeline/:agentId` | Via Endpoints list | `UI IMPLEMENTED` | `GET /api/ha-edr/timeline`, `/process-tree` (Admin\|Analyst\|SOC Manager) | No top-level nav; agent-scoped only | **M** (auth aligned) |
 | `/edr/endpoints` | Endpoints | `UI IMPLEMENTED` agent list → timeline | `GET /api/agent-manager/agents` | Entry point only; not a full EDR fleet ops surface | **M** |
 | `/edr/quarantine` | Alias of quarantine page | Same as `/response/quarantine` | `GET/PATCH/POST /api/ha-edr/quarantine*` (Analyst\|SOC Manager\|Admin) | Duplicate path; nav prefers `/response/quarantine` | **L** |
-| `/response/quarantine` | Quarantine & Containment (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` file inventory + containment tab; page gate matches BE; restore/delete mutations live | File quarantine secured with SOC Manager on list/mutate; host isolation inventory gaps per `RESP-021` | **SOC Manager PreAuthorize gap closed** (STAGING CANDIDATE follow-on); remaining RESP-021 depth gaps open | **H→M** |
+| `/response/quarantine` | Quarantine & Containment (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` file inventory + host isolation tab; page gate matches BE; restore/delete mutations live | File quarantine secured; host isolation inventory via `GET /api/ha-edr/isolation` (STAGING CANDIDATE) | **SOC Manager auth + isolation inventory read closed**; remaining RESP-021 depth gaps open | **H→M** |
 | `/edr/fim` | File Integrity (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` summary dashboard; page gate matches BE | `GET /api/ha-edr/fim/summary` (Analyst\|SOC Manager\|Admin) | Nav no longer open to all authenticated | **M→L** (auth aligned) |
 | `/edr/policies` | Agent Policies (Analyst, SOC Manager, Admin) | `UI IMPLEMENTED` CRUD + assign; enforcement evidence drawer | `GET/POST/PUT/DELETE /api/ha-edr/policies*`, assign (Admin\|SOC Manager mutate; Analyst read); `GET .../enforcement` | **Addressed (STAGING CANDIDATE):** surfaces assignment + AgentPolicyStateDTO with unavailable/partial; host enforcement not verified | **M→partial honesty** |
-| Legacy `/api/edr/*` | None (SensorGrid uses subset) | Not adopted for quarantine UI | Separate `EdrResource` (rules/events/quarantine/isolation/kill) | Contract register: do not adopt unsecured/legacy duplicate for quarantine inventory | **H** (avoid) |
+| Legacy `/api/edr/*` | None (SensorGrid uses subset) | Not adopted for quarantine/isolation inventory UI | Separate `EdrResource` (rules/events/quarantine/isolation/kill) | Contract register: do not adopt legacy duplicate for quarantine/isolation inventory | **H** (avoid) |
 
 ### Frontend ownership map
 
@@ -81,10 +82,10 @@ Gap severity: **H** = broken or unsafe operator expectation; **M** = partial/hon
 | Threat intel (canonical) | `HaThreatIntelResource`, `HaThreatIntelStatsResource`, `HaTaxiiFeedResource`, `HaMispFeedResource` |
 | Threat intel (legacy) | `threat_intel/ThreatIntelResource` (`/api/v1/threat-intel`) |
 | UEBA | `ueba/HaUebaResource` |
-| Endpoint quarantine / timeline | `HaEdrResource` (`/api/ha-edr`) |
+| Endpoint quarantine / timeline / isolation | `HaEdrResource` (`/api/ha-edr`) |
 | FIM | `HaEdrFimResource` |
 | Agent policies | `HaAgentPolicyResource` |
-| Legacy EDR | `edr/EdrResource` (`/api/edr`) — isolation/kill used elsewhere; quarantine inventory not adopted |
+| Legacy EDR | `edr/EdrResource` (`/api/edr`) — isolation/kill used elsewhere; quarantine/isolation inventory not adopted for Quarantine UI |
 
 ## Contract notes recorded this slice
 
@@ -93,9 +94,9 @@ See `docs/frontend-backend-contract-register.md` entries **`TI-001`–`TI-004`**
 | ID | Status | Intent |
 |---|---|---|
 | TI-001 | `PARTIAL` | Analyst hub role alignment + stats read; feed mutations remain Admin-only |
-| TI-002 | `PARTIAL` | Feed list auth is Admin\|User; Analyst/SOC Manager depend on ROLE_USER co-assignment |
-| TI-003 | `MISSING` | Unsecured `/api/v1/threat-intel` successor/cutover/deprecation headers |
-| TI-004 | `PARTIAL` | TAXII/MISP admin exists; cursor/freshness/sync receipt/governance incomplete |
+| TI-002 | `PARTIAL` | Feed list/get + stats authorize Admin\|User\|Analyst\|SOC Manager explicitly; mutations Admin-only |
+| TI-003 | `PARTIAL` | Legacy `/api/v1/threat-intel` hardened with `@PreAuthorize`; Deprecation/Sunset/Link deferred until cutover |
+| TI-004 | `PARTIAL` | Thin `ThreatFeedSyncReceipt` on TAXII/MISP sync; durable ledger / TLP governance still open |
 
 Related prior: **`RESP-021`** for quarantine (not reopened as missing).
 
@@ -103,7 +104,8 @@ Related prior: **`RESP-021`** for quarantine (not reopened as missing).
 
 - No redesign of all orphan routes in one PR.
 - UEBA PreAuthorize `ROLE_` fix + `/ueba/entity-timeline` router entry: **addressed** in follow-on `feat/p1-ueba-auth-fix` (STAGING CANDIDATE) — see matrix rows above.
-- Quarantine SOC Manager authorization was deferred here and closed in the endpoint-auth follow-on (`feat/p1-endpoint-quarantine-auth`) — see matrix **H→M** above. Remaining `RESP-021` depth gaps stay open.
+- Quarantine SOC Manager authorization was deferred here and closed in the endpoint-auth follow-on (`feat/p1-endpoint-quarantine-auth`) — see matrix **H→M** above.
+- Host isolation inventory read closed in `feat/p1-resp021-isolation-inventory` (STAGING CANDIDATE) via `GET /api/ha-edr/isolation`. Remaining `RESP-021` depth gaps stay open.
 - No `PRODUCTION READY`, `LIVE VERIFIED`, or full family consolidation claim.
 
 ### Follow-on note (2026-08-25) — endpoint quarantine / FIM / timeline auth
@@ -113,3 +115,7 @@ STAGING CANDIDATE: `HaEdrResource` quarantine list/mutate now includes `ROLE_SOC
 ### Follow-on note (2026-08-25) — agent policies enforcement evidence
 
 STAGING CANDIDATE: `GET /api/ha-edr/policies/{id}/enforcement` returns assignment plus existing `AgentPolicyStateDTO` fields with `evidenceAvailability` limited to `unavailable`|`partial`. Reads allow Analyst|SOC Manager|Admin; mutations Admin|SOC Manager. UI honesty banner and evidence drawer — no fictional host-enforcement green checks. Live agent apply/ack path and production verification remain open (`POL-001`–`POL-003`).
+
+### Follow-on note (2026-08-25) — RESP-021 host isolation inventory
+
+STAGING CANDIDATE: secured `GET /api/ha-edr/isolation` lists `hive_edr_isolation` with Analyst \| SOC Manager \| Admin PreAuthorize. Quarantine & Containment Endpoint isolation tab consumes that inventory with honest empty/error states. Legacy `/api/edr/isolation` not adopted. Governed release/preview, cursor/freshness, action history, and resumable delivery remain open.

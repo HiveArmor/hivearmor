@@ -1,31 +1,48 @@
 # Next production slice
 
-Updated: **2026-08-25 09:15:00 IST (UTC+05:30)**
+Updated: **2026-08-25 10:00:00 IST (UTC+05:30)**
 
-## Active — Orphan Operational Workflows
+## Active — Orphan Operational Workflows (TI-002–TI-004 depth)
 
 Routes: inventory across UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence; **first bounded family = threat-intel ops** (`/intelligence`, `/admin/threat-intel`).
-Status: **STAGING CANDIDATE** — inventory recorded + thin honesty fixes (threat-intel hub, UEBA auth, quarantine/FIM auth, agent-policy enforcement evidence). Not `PRODUCTION READY`.
+Status: **STAGING CANDIDATE** — inventory + TI-002–TI-004 depth + agent-policy enforcement evidence. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for this slice.
 Program: `docs/ai-handoff/remaining-page-program.md`.
 Research: `docs/ai-handoff/research/orphan-operational-workflows-inventory.md`.
 Contracts: `TI-001`–`TI-004`; follow-ons include `POL-001`–`POL-003`.
 
-Branch (policies honesty): `feat/p1-agent-policies-enforcement-evidence` (worktree `.worktrees/p1-agent-policies-evidence`).
+Branch (policies honesty): `feat/p1-agent-policies-enforcement-evidence` (worktree `.worktrees/p1-agent-policies-evidence`); TI depth merged via `feat/p1-threat-intel-depth` (#47).
 
-Completed in this inventory slice:
+Completed in this depth slice:
 
-1. Route/nav/service/controller inventory for the three orphan families with gap severity.
-2. Chose threat-intel ops (existing secured backend). Deferred UEBA `ROLE_` PreAuthorize bug and quarantine SOC Manager auth mismatch to follow-ons.
-3. `/intelligence`: include SOC Manager in page gate; wire `GET /api/ha-threat-intel/stats`; keep feed enable/sync Admin-only with explicit read-only copy; human access-denied labels on Admin TI page.
-4. Did not adopt unsecured `/api/v1/threat-intel`. No full orphan redesign.
+1. TI-002: `HaThreatIntelResource` feed list/get + `HaThreatIntelStatsResource` authorize Admin\|User\|Analyst\|SOC Manager explicitly; mutations stay Admin-only.
+2. TI-003: Legacy `/api/v1/threat-intel` `@PreAuthorize` harden in place (same ROLE_ matrix). No Deprecation/Sunset/Link until cutover evidence. Frontend-v3 still does not call v1.
+3. TI-004: TAXII/MISP sync returns `ThreatFeedSyncReceipt` (`receiptId`, `lastSyncAt`, `status`, `iocCount`, `failedReason`); TAXII failures persist ERROR + lastSyncAt (no fake “Synced 0 IOCs”); Admin UI toasts receipt honesty.
+4. Frontend capability flags + Vitest coverage; contract timestamps updated.
 
 Required next actions (remaining orphans / depth):
 
 1. ~~Follow-on UEBA: fix `HaUebaResource` `@PreAuthorize` authority strings~~ — **done** on `feat/p1-ueba-auth-fix` (STAGING CANDIDATE): `ROLE_ANALYST`/`ROLE_SOC_MANAGER`/`ROLE_ADMIN` + `/ueba/entity-timeline` route.
-2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned. Remaining RESP-021 depth gaps stay open.
-3. ~~Follow-on policies: enforcement evidence honesty~~ — **done** on `feat/p1-agent-policies-enforcement-evidence` (STAGING CANDIDATE): `GET /ha-edr/policies/{id}/enforcement` + UI unavailable/partial; host enforce path still open (`POL-003`).
-4. Optional deeper threat-intel: cursor/freshness, sync receipts, v1 deprecation after successor cutover.
-5. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
+2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned.
+3. ~~Follow-on RESP-021 depth: secured host-isolation inventory.~~ **Closed** on `feat/p1-resp021-isolation-inventory` (STAGING CANDIDATE) — `GET /api/ha-edr/isolation` + Endpoint isolation tab. Remaining RESP-021 depth gaps stay open.
+4. ~~Follow-on policies: enforcement evidence honesty~~ — **done** on `feat/p1-agent-policies-enforcement-evidence` (STAGING CANDIDATE): `GET /ha-edr/policies/{id}/enforcement` + UI unavailable/partial; host apply/ack still open (`POL-001`–`POL-003`).
+5. Optional deeper threat-intel: IOC cursor/freshness, durable sync ledger, MISP persisted status, v1 deprecation headers after consumer cutover.
+6. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
+
+## Completed this slice — RESP-021 host isolation inventory (thin depth)
+
+Routes: `/response/quarantine` Endpoint isolation tab; `GET /api/ha-edr/isolation`.
+Status: **STAGING CANDIDATE** — secured host-isolation read wired with honest empty/partial states. Not `PRODUCTION READY`. Not `LIVE VERIFIED`.
+Merged: `feat/p1-resp021-isolation-inventory` (#46).
+
+Still open under `RESP-021`: enriched evidence/summaries, cursor/snapshot/freshness semantics, action history, governed preview/approval/idempotency for restore/delete/release, resumable delivery state.
+
+## Completed this slice — Agentic INVESTIGATE soft session link (STAGING CANDIDATE)
+
+Scope: `TriageInvestigateStub` → optional soft link to `/api/ha-investigation-sessions` (id + status only).
+Status: **STAGING CANDIDATE** — not `PRODUCTION READY`. Not Neo4j / attack-path. Not auto-convert to incident.
+Merged: `feat/p1-agentic-investigate-session-link` (#45).
+
+Remaining: Neo4j / attack-path; `openHypotheses`; auto-pin evidence; convert-to-incident; staging LIVE verify of createSession from SOC-AI triage.
 
 ## Completed this slice — Governance and Platform Settings
 

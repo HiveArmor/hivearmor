@@ -297,7 +297,9 @@ public class TaxiiClientService {
                 log.info("HiveArmor TAXII sync complete for feed id={} count={}", feed.getId(), synced);
             } catch (Exception ex) {
                 log.error("HiveArmor TAXII sync failed for feed id={}", feed.getId(), ex);
+                feed.setLastSyncAt(Instant.now());
                 feed.setLastSyncStatus("ERROR");
+                feed.setLastSyncCount(0);
                 feedRepository.save(feed);
             }
         }
