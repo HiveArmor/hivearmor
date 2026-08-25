@@ -32,7 +32,8 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { RESPONSE_GRID_DEFAULT_ROW_HEIGHT } from './response-grid-standard';
+import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
+import { useRowDensity } from '@/hooks/useRowDensity';
 import type {
   PlaybookListItem,
   PlaybookStreamEvent,
@@ -595,6 +596,7 @@ function OperationalRail({
 // ─── Execution history tab ────────────────────────────────────────────────────
 
 function HistoryTab({ playbookId }: { playbookId: number }): JSX.Element {
+  const [density] = useRowDensity();
   const { data: executions, isLoading, isError, refetch } = useQuery({
     queryKey: ['playbook-executions', playbookId],
     queryFn: () => fetchPlaybookExecutions(playbookId),
@@ -658,7 +660,7 @@ function HistoryTab({ playbookId }: { playbookId: number }): JSX.Element {
         className="response-grid detail-grid"
         columnDefs={colDefs}
         rowData={executions}
-        rowHeight={RESPONSE_GRID_DEFAULT_ROW_HEIGHT}
+        rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]}
         height="100%"
         getRowId={(p) => String((p.data as PlaybookExecution).executionId)}
       />
@@ -707,6 +709,7 @@ function SettingsTab({
   onSaved: () => void;
 }): JSX.Element {
   const { addToast } = useToastStore();
+
   const [name, setName] = useState(playbook.name);
   const [description, setDescription] = useState(playbook.description ?? '');
 

@@ -18,6 +18,7 @@ import type { DetectionRule, DetectionRuleSummary, RuleListParams } from './dete
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+import { useRowDensity, ROW_HEIGHTS, type RowDensity } from '@/hooks/useRowDensity';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
@@ -26,7 +27,6 @@ import { useAuthStore } from '@/store/auth.store';
 
 import './DetectionRulesPage.css';
 
-type RowDensity = 'compact' | 'standard' | 'comfortable';
 type RuleView = 'rules' | 'monitoring' | 'coverage' | 'test';
 const DetectionCoverageView = lazy(() => import('./DetectionCoverageView'));
 const DetectionImportPanel = lazy(() => import('./DetectionImportPanel'));
@@ -92,7 +92,7 @@ export function DetectionRulesPage(): JSX.Element {
   const [originFilter, setOriginFilter] = useState<'all' | 'managed' | 'custom'>('all');
   const [severityFilter, setSeverityFilter] = useState<'all' | NonNullable<DetectionRule['severity']>>('all');
   const [pageIndex, setPageIndex] = useState(0);
-  const [density, setDensity] = useState<RowDensity>('compact');
+  const [density, setDensity] = useRowDensity();
   const [importOpen, setImportOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS);
@@ -331,7 +331,7 @@ export function DetectionRulesPage(): JSX.Element {
           {rulesQuery.isLoading ? <div className="detection-grid-loading" aria-label="Loading detection rules">{Array.from({ length: 10 }, (_, index) => <span key={index} />)}</div>
             : rulesQuery.isError ? <div className="detection-state"><AlertTriangle size={30} /><h2>Detection rules could not be loaded</h2><p>{rulesQuery.error instanceof Error ? rulesQuery.error.message : 'The inventory service is unavailable.'}</p><button type="button" onClick={() => void rulesQuery.refetch()}>Try again</button></div>
               : rules.length === 0 ? <div className="detection-state"><CircleSlash2 size={30} /><h2>{hasFilters ? 'No rules match these filters' : 'No detection rules installed'}</h2><p>{hasFilters ? 'Clear one or more filters to broaden the inventory.' : 'Import managed content or create a custom rule to begin monitoring.'}</p>{hasFilters && <button type="button" onClick={resetFilters}>Clear filters</button>}</div>
-                : <SiemDataGrid ref={gridRef} className="detection-grid" ariaLabel="Detection rules inventory" columnDefs={columns} rowData={rules} rowModelType="clientSide" rowHeight={density === 'compact' ? 36 : density === 'standard' ? 43 : 50} rowSelection="multiple" suppressRowClickSelection getRowId={({ data }) => String((data as DetectionRule).id)} onSelectionChanged={(rows) => setSelectedRules(rows as DetectionRule[])} onRowClicked={(event: RowClickedEvent) => setActiveRule(event.data as DetectionRule)} defaultColDef={{ sortable: true, resizable: true, filter: false }} />}
+                : <SiemDataGrid ref={gridRef} className="detection-grid" ariaLabel="Detection rules inventory" columnDefs={columns} rowData={rules} rowModelType="clientSide" rowHeight={ROW_HEIGHTS[density]} rowSelection="multiple" suppressRowClickSelection getRowId={({ data }) => String((data as DetectionRule).id)} onSelectionChanged={(rows) => setSelectedRules(rows as DetectionRule[])} onRowClicked={(event: RowClickedEvent) => setActiveRule(event.data as DetectionRule)} defaultColDef={{ sortable: true, resizable: true, filter: false }} />}
         </div>
 
         <footer className="detection-pagination">

@@ -40,6 +40,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 
 import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
+import { useRowDensity } from '@/hooks/useRowDensity';
 import {
   RESP_018_DISABLED_TITLE,
   RESP_018_EXECUTION_INVENTORY,
@@ -72,7 +73,6 @@ import './response-grid-standard.css';
 
 type StatusFilter = ResponseActivityStatus | 'ALL';
 type TriggerFilter = TriggerType | 'ALL';
-type RowDensity = keyof typeof RESPONSE_GRID_ROW_HEIGHTS;
 type DrawerView = 'overview' | 'trace' | 'audit';
 
 const STATUS_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
@@ -419,7 +419,7 @@ export function ResponseActivityPage(): JSX.Element {
   const [selectedEntry, setSelectedEntry] = useState<ResponseActivityDTO | null>(null);
   const [cancelTarget, setCancelTarget] = useState<ResponseActivityDTO | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [density, setDensity] = useState<RowDensity>('standard');
+  const [density, setDensity] = useRowDensity();
 
   const canView = user?.roles?.some((role) => ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'].includes(role)) ?? false;
 

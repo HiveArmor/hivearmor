@@ -35,7 +35,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { RESPONSE_GRID_DEFAULT_ROW_HEIGHT } from './response-grid-standard';
+import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
+import { useRowDensity } from '@/hooks/useRowDensity';
 import type { PlaybookListItem, PlaybookListParams, PlaybookCategory } from './response.types';
 import {
   fetchPlaybookList,
@@ -325,6 +326,8 @@ export function ResponsePlaybooksPage(): JSX.Element {
   const epsStream = useEpsStream();
 
   // Filter state
+  const [density] = useRowDensity();
+
   const [searchText, setSearchText] = useState('');
   const search = useDebounce(searchText.trim(), 250);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
@@ -785,7 +788,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
             columnDefs={columnDefs}
             rowData={items}
             loading={isLoading}
-            rowHeight={RESPONSE_GRID_DEFAULT_ROW_HEIGHT}
+            rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]}
             onRowClicked={handleRowClick}
             rowSelection="single"
             suppressRowClickSelection={false}

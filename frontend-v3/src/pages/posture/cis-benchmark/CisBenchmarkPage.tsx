@@ -37,6 +37,7 @@ import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
+import { useRowDensity } from '@/hooks/useRowDensity';
 import { fetchCisCatalog, fetchScaResult, fetchScaResults, fetchScaSummary } from '@/services/vulnService';
 import type { CisLevel, CisPackCatalogDTO, ScaResultDTO, ScaStatus, ScaSummaryDTO } from '@/types/vuln.types';
 
@@ -44,7 +45,6 @@ import './CisBenchmarkPage.css';
 
 const PAGE_SIZE = 50;
 
-type Density = keyof typeof RESPONSE_GRID_ROW_HEIGHTS;
 type StatusFilter = 'all' | ScaStatus;
 type LevelFilter = 'all' | CisLevel;
 type AgentFilter = 'all' | string;
@@ -156,7 +156,7 @@ export function CisBenchmarkPage(): JSX.Element {
   const [status, setStatus] = useState<StatusFilter>('FAIL');
   const [level, setLevel] = useState<LevelFilter>('all');
   const [agent, setAgent] = useState<AgentFilter>('all');
-  const [density, setDensity] = useState<Density>('standard');
+  const [density, setDensity] = useRowDensity();
   const [activeIndex, setActiveIndex] = useState(0);
   const [selected, setSelected] = useState<ScaResultDTO | null>(null);
   const eps = useEpsStream();

@@ -13,12 +13,12 @@ import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
+import { useRowDensity } from '@/hooks/useRowDensity';
 import { postureService } from '@/services/posture.service';
 import type { HiveFrameworkScoreDTO } from '@/types/posture.types';
 
 import './CompliancePage.css';
 
-type Density = keyof typeof RESPONSE_GRID_ROW_HEIGHTS;
 type AssessmentFilter = 'all' | 'assessed' | 'not_assessed';
 type SortOrder = 'attention' | 'score_desc' | 'name';
 
@@ -80,7 +80,7 @@ export function CompliancePage(): JSX.Element {
   const [search, setSearch] = useState('');
   const [assessmentFilter, setAssessmentFilter] = useState<AssessmentFilter>('all');
   const [sortOrder, setSortOrder] = useState<SortOrder>('attention');
-  const [density, setDensity] = useState<Density>('standard');
+  const [density, setDensity] = useRowDensity();
   const [activeIndex, setActiveIndex] = useState(0);
   const [selected, setSelected] = useState<HiveFrameworkScoreDTO | null>(null);
   const eps = useEpsStream();

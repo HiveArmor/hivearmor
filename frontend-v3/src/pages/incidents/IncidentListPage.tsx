@@ -39,6 +39,7 @@ import { ErrorState } from '@/components/error-state/ErrorState';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+import { useRowDensity, ROW_HEIGHTS, type RowDensity } from '@/hooks/useRowDensity';
 import { SlaIndicator } from '@/components/sla-indicator/SlaIndicator';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import type { IncidentStatus } from '@/constants/status.constants';
@@ -54,10 +55,7 @@ import { useAuthStore } from '@/store/auth.store';
 import './IncidentListPage.css';
 
 type QueueView = 'active' | 'mine' | 'critical' | 'breached' | 'unassigned' | 'all' | 'custom';
-type RowDensity = 'compact' | 'standard' | 'comfortable';
-
 const PAGE_SIZE = 50;
-const ROW_HEIGHTS: Record<RowDensity, number> = { compact: 32, standard: 38, comfortable: 44 };
 const ACTIVE_STATUSES: IncidentStatus[] = ['open', 'in_progress'];
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
 
@@ -177,7 +175,7 @@ export function IncidentListPage(): JSX.Element {
   const [severity, setSeverity] = useState('all');
   const [timeRange, setTimeRange] = useState('30d');
   const [page, setPage] = useState(0);
-  const [density, setDensity] = useState<RowDensity>('standard');
+  const [density, setDensity] = useRowDensity();
   const [selectedIncident, setSelectedIncident] = useState<IncidentListItem | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 

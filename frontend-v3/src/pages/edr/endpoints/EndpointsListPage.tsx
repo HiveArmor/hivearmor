@@ -18,6 +18,7 @@ import { ErrorState } from '@/components/error-state';
 import { SiemPageHeader } from '@/components/ha-page-header/SiemPageHeader';
 import { LoadingState } from '@/components/loading-state';
 import { SiemDataGrid } from '@/components/siem-data-grid';
+import { useRowDensity, ROW_HEIGHTS } from '@/hooks/useRowDensity';
 import type { SensorDTO } from '@/services/sensorsService';
 import { fetchSensors } from '@/services/sensorsService';
 
@@ -71,6 +72,8 @@ const COL_DEFS: ColDef<SensorDTO>[] = [
 
 export function EndpointsListPage(): React.ReactElement {
   const navigate = useNavigate();
+  const [density] = useRowDensity();
+
   const [sensors, setSensors]   = useState<SensorDTO[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
@@ -117,7 +120,7 @@ export function EndpointsListPage(): React.ReactElement {
           <SiemDataGrid
             columnDefs={COL_DEFS as ColDef[]}
             rowData={sensors}
-            rowHeight={32}
+            rowHeight={ROW_HEIGHTS[density]}
             height="100%"
             getRowId={(params) => {
               const row = params.data as SensorDTO | undefined;

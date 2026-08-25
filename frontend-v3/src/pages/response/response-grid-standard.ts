@@ -1,15 +1,11 @@
 /**
  * Shared Response Automation grid density contract.
- *
- * Two-line operational cells need a 42px standard row to preserve both the
- * primary value and its provenance line without touching the row border.
+ * Alias of platform {@link ROW_HEIGHTS} / {@code ha_row_density} (compact 32 / standard 40 / comfortable 48).
  */
-export type ResponseGridDensity = 'compact' | 'standard' | 'comfortable';
+import { ROW_HEIGHTS, type RowDensity } from '@/hooks/useRowDensity';
 
-export const RESPONSE_GRID_ROW_HEIGHTS: Record<ResponseGridDensity, number> = {
-  compact: 36,
-  standard: 42,
-  comfortable: 48,
-};
+export type ResponseGridDensity = RowDensity;
 
-export const RESPONSE_GRID_DEFAULT_ROW_HEIGHT = RESPONSE_GRID_ROW_HEIGHTS.standard;
+export const RESPONSE_GRID_ROW_HEIGHTS: Record<ResponseGridDensity, number> = ROW_HEIGHTS;
+
+export const RESPONSE_GRID_DEFAULT_ROW_HEIGHT = ROW_HEIGHTS.standard;
