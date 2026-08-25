@@ -1,6 +1,7 @@
 /**
  * Wave A3 Defend/respond capability gates (STAGING CANDIDATE honesty).
- * Flip only after PlaybookResource / HaResponseGovernance expose secured mappings.
+ * Flip full governance only after HaResponseGovernance policy/delegation CRUD exists.
+ * RESP_020_APPROVAL_PROJECTION may be true while RESP_020_GOVERNANCE stays false.
  */
 
 /**
@@ -16,10 +17,18 @@ export const RESP_018_EXECUTION_INVENTORY = true;
 export const RESP_018_SOAR_AUDIT_PROJECTION = true;
 
 /**
- * RESP-020: /ha-response-governance/** approvals, policies, delegations.
- * No HaResponseGovernance resource exists in backend.
+ * RESP-020 full governance (policies + delegations + authoritative ledger).
+ * Keep false until HaResponseGovernance policy/delegation CRUD exists.
  */
 export const RESP_020_GOVERNANCE = false;
+
+/**
+ * RESP-020 STAGING CANDIDATE — approval queue compatibility projection.
+ * GET /ha-response-governance/approvals projects hive_playbook_execution
+ * awaiting_approval (+ recent approval decisions). Policies/delegations stay empty.
+ * Decision bridges to playbook approve/reject (ADMIN-only).
+ */
+export const RESP_020_APPROVAL_PROJECTION = true;
 
 /**
  * GET /ha-playbooks/{id}/audit — not mapped; history is GET /{id}/history only.
@@ -38,6 +47,9 @@ export const RESP_018_INVENTORY_TITLE =
 
 export const RESP_020_DISABLED_TITLE =
   'Response governance APIs are not available from the backend yet';
+
+export const RESP_020_APPROVAL_PROJECTION_TITLE =
+  'Showing playbook approval projection from GET /api/ha-response-governance/approvals — policies and delegations are not implemented';
 
 export const RESP_PLAYBOOK_AUDIT_DISABLED_TITLE =
   'Dedicated playbook audit endpoint is not available; showing execution history projection';

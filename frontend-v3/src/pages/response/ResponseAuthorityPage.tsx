@@ -45,6 +45,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
 import { useRowDensity } from '@/hooks/useRowDensity';
 import {
+  RESP_020_APPROVAL_PROJECTION,
+  RESP_020_APPROVAL_PROJECTION_TITLE,
   RESP_020_DISABLED_TITLE,
   RESP_020_GOVERNANCE,
 } from './response.capabilities';
@@ -428,7 +430,13 @@ export function ResponseAuthorityPage(): JSX.Element {
       </header>
 
       {fixtureMode && <div className="gov-fixture"><strong>Design fixture:</strong> fictional approval and policy records are enabled for visual review.<span>Production never receives these records.</span></div>}
-      {!fixtureMode && !RESP_020_GOVERNANCE && (
+      {!fixtureMode && RESP_020_APPROVAL_PROJECTION && !RESP_020_GOVERNANCE && (
+        <div className="gov-fixture" role="status">
+          <strong>Approval projection (STAGING CANDIDATE):</strong> {RESP_020_APPROVAL_PROJECTION_TITLE}
+          <span>Approve/reject bridges to playbook execution gates (Platform Administrator). Policy and delegation authoring remain unavailable.</span>
+        </div>
+      )}
+      {!fixtureMode && !RESP_020_GOVERNANCE && !RESP_020_APPROVAL_PROJECTION && (
         <div className="gov-fixture" role="status">
           <strong>Governance unavailable:</strong> {RESP_020_DISABLED_TITLE}
           <span>Approvals and policies will appear when the secured governance contract is connected.</span>
@@ -469,7 +477,7 @@ export function ResponseAuthorityPage(): JSX.Element {
         <>
           <div className="gov-results-toolbar"><div><strong>{view === 'history' ? 'Decision history' : 'Approval requests'}</strong><span>{queueItems.length} loaded · bounded authorized scope</span></div><div className="gov-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={17} /></button></div></div>
           <main className="gov-grid-wrap">
-            {isLoading ? <div className="gov-grid-skeleton" role="status" aria-live="polite">{Array.from({ length: 10 }, (_, index) => <div key={index} />)}</div> : !queueItems.length ? <EmptyState title={!fixtureMode && !RESP_020_GOVERNANCE ? 'Response governance unavailable' : view === 'history' ? 'No decisions match these filters' : 'No response actions need approval'} description={!fixtureMode && !RESP_020_GOVERNANCE ? RESP_020_DISABLED_TITLE : 'Adjust the filters or wait for the next governed response request.'} /> : <SiemDataGrid ref={gridRef} className="response-grid gov-grid" columnDefs={columnDefs} rowData={queueItems} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} rowSelection="single" suppressRowClickSelection={false} onRowClicked={openRow} getRowId={(params) => (params.data as ResponseApprovalRequest).id} ariaLabel={view === 'history' ? 'Response decision history' : 'Response approval queue'} defaultColDef={{ filter: false }} />}
+            {isLoading ? <div className="gov-grid-skeleton" role="status" aria-live="polite">{Array.from({ length: 10 }, (_, index) => <div key={index} />)}</div> : !queueItems.length ? <EmptyState title={!fixtureMode && !RESP_020_GOVERNANCE && !RESP_020_APPROVAL_PROJECTION ? 'Response governance unavailable' : view === 'history' ? 'No decisions match these filters' : 'No response actions need approval'} description={!fixtureMode && !RESP_020_GOVERNANCE && !RESP_020_APPROVAL_PROJECTION ? RESP_020_DISABLED_TITLE : 'Adjust the filters or wait for the next governed response request.'} /> : <SiemDataGrid ref={gridRef} className="response-grid gov-grid" columnDefs={columnDefs} rowData={queueItems} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} rowSelection="single" suppressRowClickSelection={false} onRowClicked={openRow} getRowId={(params) => (params.data as ResponseApprovalRequest).id} ariaLabel={view === 'history' ? 'Response decision history' : 'Response approval queue'} defaultColDef={{ filter: false }} />}
           </main>
           <footer className="gov-footer"><span>{queueItems.length} records in the loaded projection</span><span>{view === 'history' ? 'Immutable decision ledger' : 'No request opens without explicit selection'}</span><span>{isFetching ? 'Updating…' : 'Current snapshot'}</span></footer>
         </>

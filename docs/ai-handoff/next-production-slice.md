@@ -1,6 +1,17 @@
 # Next production slice
 
-Updated: **2026-08-25 22:43:00 IST (UTC+05:30)**
+Updated: **2026-08-25 22:50:00 IST (UTC+05:30)**
+
+## Completed this slice — RESP-020 approval compatibility projection
+
+Status: **STAGING CANDIDATE** on `feat/resp020-approval-projection`. Not `PRODUCTION READY`. Not full HaResponseGovernance.
+
+| ID | Change |
+|---|---|
+| RESP-020 BE | `GET /api/ha-response-governance/approvals` projects `hive_playbook_execution` awaiting approval (+ recent approval decisions); empty policies/delegates with honest `partialFailures`; `POST .../approvals/{id}/decision` bridges to playbook approve/reject (ADMIN-only) |
+| RESP-020 FE | `RESP_020_APPROVAL_PROJECTION=true`; `RESP_020_GOVERNANCE=false`; Response Authority honesty banner; policy/delegation saves remain fail-closed |
+
+Flip FE: set `RESP_020_APPROVAL_PROJECTION` in `frontend-v3/src/pages/response/response.capabilities.ts`. Keep `RESP_020_GOVERNANCE=false` until policy/delegation CRUD exists.
 
 ## Completed this slice — Staging RESP-018 inventory smoke
 
@@ -13,7 +24,7 @@ Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-25 22:43 IST). Repor
 | SPA shells | 3/3 HTTP 200 |
 | executions + summary | 200 (empty ledger; contract live) |
 
-Next optional: INV-012 interactive promote UI walk, or RESP-020 governance when backend exists.
+Next optional: INV-012 interactive promote UI walk, or full RESP-020 governance when policy/delegation backends exist.
 Deferred (post full production MVP): vendor live connector credentials/proofs.
 
 ## Completed this slice — RESP-018 execution inventory
