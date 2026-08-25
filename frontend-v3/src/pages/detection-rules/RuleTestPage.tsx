@@ -29,7 +29,7 @@ export function RuleTestPage(): JSX.Element {
       </header>
       {detectionRulesFixtureMode && <div className="detection-page__fixture"><span><strong>Design fixture:</strong> fictional test events are enabled for this sandbox.</span><span>Production never receives these records.</span></div>}
       {ruleQuery.isLoading ? <div className="detection-section-loading"><RefreshCw size={20} className="detection-spin" /><span>Loading rule definition…</span></div> : ruleQuery.isError || !ruleQuery.data ? <div className="detection-state"><h2>Rule definition unavailable</h2><p>{ruleQuery.error instanceof Error ? ruleQuery.error.message : 'The requested rule could not be loaded.'}</p><button type="button" onClick={() => navigate('/detection-rules')}>Back to rules</button></div> : <DetectionTestConsole rules={[ruleQuery.data]} initialRuleId={ruleQuery.data.id} />}
-      <div className="detection-status"><StatusDock sseConnected={detectionRulesFixtureMode || epsStream.connected} eps={detectionRulesFixtureMode ? 12840 : epsStream.eps} mode="live" /><span><Clock3 size={12} /> Test sandbox · no alert side effects</span></div>
+      <div className="detection-status"><StatusDock sseConnected={detectionRulesFixtureMode || epsStream.connected} eps={detectionRulesFixtureMode ? 12840 : epsStream.eps} mode={detectionRulesFixtureMode ? 'historical' : 'live'} /><span><Clock3 size={12} /> Test sandbox · no alert side effects</span></div>
     </section>
   );
 }

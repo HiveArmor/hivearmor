@@ -212,7 +212,7 @@ export function ResponseAuthorityEditorPage(): JSX.Element {
       </main>
 
       <footer className="gov-edit-footer"><span><span />Connected</span><span>{fixtureMode ? 'Draft stored in fixture session' : 'Versioned governance configuration'}</span><span>{fixtureMode ? 12840 : epsStream.eps} eps</span></footer>
-      <div className="gov-edit-status"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode="live" /></div>
+      <div className="gov-edit-status"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} /></div>
     </section>
   );
 }

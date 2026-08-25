@@ -213,7 +213,7 @@ export function InvestigationsPage(): JSX.Element {
         <div><button type="button" disabled={page === 0} onClick={() => setPage((value) => Math.max(0, value - 1))}><ChevronLeft size={14} /> Previous</button><button type="button" disabled={page + 1 >= pageCount} onClick={() => setPage((value) => value + 1)}>Next <ChevronRight size={14} /></button></div>
       </footer>
 
-      <StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode="live" lastUpdated={listQuery.data ? new Date(listQuery.data.snapshotAt) : undefined} />
+      <StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={listQuery.data ? new Date(listQuery.data.snapshotAt) : undefined} />
 
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} variant="small" width="min(520px, calc(100vw - 32px))" className="investigation-create-modal" aria-labelledby="investigation-create-title">
         <ModalHeader labelId="investigation-create-title" title="Start investigation" description="Define a specific, testable and bounded objective before collecting artifacts." titleIconVariant="info" />

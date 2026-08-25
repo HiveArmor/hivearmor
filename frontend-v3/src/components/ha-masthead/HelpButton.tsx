@@ -14,11 +14,9 @@ export function HelpButton(): JSX.Element {
     setIsOpen(!isOpen);
   };
 
-  const handleItemClick = (action: string): void => {
+  const handleItemClick = (_action: string): void => {
     setIsOpen(false);
-    // TODO: Implement navigation/actions
-    // eslint-disable-next-line no-console
-    console.log(`Help action: ${action}`);
+    // Help destinations are not yet wired to secured docs routes.
   };
 
   return (

@@ -42,6 +42,7 @@ import { EmptyState } from '@/components/empty-state/EmptyState';
 import { ErrorState } from '@/components/error-state/ErrorState';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
+import { formatAuthorityLabel } from '@/lib/roles';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { fetchResponseActionLibrary } from '@/services/responseActionService';
@@ -188,7 +189,7 @@ function ActionDrawer({ action, onClose }: { action: ResponseAction | null; onCl
         {tab === 'governance' && <div className="ral-drawer-section" role="tabpanel">
           <header><div><strong>Execution governance</strong><span>Controls are evaluated again for every target and tenant.</span></div><Gavel size={16} /></header>
           <div className="ral-governance-list">
-            <div><LockKeyhole size={15} /><span>Required role</span><strong>{action.requiredRole || 'Not reported'}</strong></div>
+            <div><LockKeyhole size={15} /><span>Required role</span><strong>{formatAuthorityLabel(action.requiredRole)}</strong></div>
             <div><Gavel size={15} /><span>Approval</span><strong>{action.requiresApproval === null || action.requiresApproval === undefined ? 'Determined in preview' : action.requiresApproval ? 'Required' : 'Not required'}</strong></div>
             <div><RotateCcw size={15} /><span>Rollback</span><strong>{action.rollbackSupported === null || action.rollbackSupported === undefined ? 'Determined in preview' : action.rollbackSupported ? 'Supported' : 'Not supported'}</strong></div>
             <div><ShieldAlert size={15} /><span>Blast radius</span><strong>Target-specific preview</strong></div>
@@ -312,7 +313,7 @@ export function ResponseLibraryPage(): JSX.Element {
                 <span className="ral-target" role="gridcell">{titleCase(action.targetType)}</span>
                 <span role="gridcell"><StatusBadge status={action.integrationStatus} /></span>
                 <span role="gridcell"><RiskBadge risk={action.riskLevel} /></span>
-                <span className="ral-role" role="gridcell">{action.requiredRole?.replace('ROLE_', '').replace(/_/g, ' ') || 'Not reported'}</span>
+                <span className="ral-role" role="gridcell">{formatAuthorityLabel(action.requiredRole)}</span>
                 <span className="ral-open" role="gridcell"><ArrowRight size={15} /></span>
               </button>; })}
           </div>
@@ -322,7 +323,7 @@ export function ResponseLibraryPage(): JSX.Element {
     </main>
 
     {catalogQuery.isError && actions.length > 0 && <div className="ral-stale" role="status"><AlertTriangle size={14} />Refresh failed. Showing the last successful catalog snapshot.</div>}
-    <div className="ral-status-dock"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode="live" lastUpdated={catalogQuery.dataUpdatedAt ? new Date(catalogQuery.dataUpdatedAt) : undefined} /><span><ShieldCheck size={12} />Catalog browsing is side-effect free</span></div>
+    <div className="ral-status-dock"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={catalogQuery.dataUpdatedAt ? new Date(catalogQuery.dataUpdatedAt) : undefined} /><span><ShieldCheck size={12} />Catalog browsing is side-effect free</span></div>
     <ActionDrawer action={selectedAction} onClose={() => setSelectedAction(null)} />
   </section>;
 }

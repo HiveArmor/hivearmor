@@ -319,7 +319,7 @@ export function InvestigationDetailPage(): JSX.Element {
       </div>
 
       <footer className="investigation-detail-dock" aria-label="Investigation status"><span><i /> Session loaded</span><span>{fixtureMode ? 'Stable design fixture' : 'Current backend snapshot'}</span><span>{items.length} pinned artifacts · INV-{investigation.id}</span></footer>
-      <StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode="live" lastUpdated={new Date(investigation.updatedAt)} />
+      <StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={new Date(investigation.updatedAt)} />
 
       <HaConfirmationModal isOpen={convertOpen} title="Promote investigation to incident" message="Create a formal incident from this investigation. The current backend creates a P3 incident and links this session; review the resulting incident before response actions." confirmLabel={convertMutation.isPending ? 'Promoting…' : 'Create incident'} cancelLabel="Keep investigating" onConfirm={() => convertMutation.mutate()} onCancel={() => setConvertOpen(false)} />
     </section>

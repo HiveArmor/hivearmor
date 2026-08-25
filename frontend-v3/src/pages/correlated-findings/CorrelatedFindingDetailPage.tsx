@@ -54,7 +54,7 @@ export function CorrelatedFindingDetailPage(): JSX.Element {
         {finding && <FindingWorkbench finding={finding} onPromote={() => setPromotionFinding(finding)} />}
       </main>
 
-      <StatusDock sseConnected={effectiveConnected && (correlatedFindingsFixtureMode || epsStream.connected)} eps={correlatedFindingsFixtureMode ? 12840 : epsStream.eps} mode="live" />
+      <StatusDock sseConnected={effectiveConnected && (correlatedFindingsFixtureMode || epsStream.connected)} eps={correlatedFindingsFixtureMode ? 12840 : epsStream.eps} mode={correlatedFindingsFixtureMode ? 'historical' : 'live'} />
       <FindingPromotionDialog finding={promotionFinding} onClose={() => setPromotionFinding(null)} />
     </div>
   );

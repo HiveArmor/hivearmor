@@ -201,7 +201,7 @@ export function EntityDossierPage(): JSX.Element {
         </div>
       </div>
 
-      <div className="ha-dossier-page__status"><StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode="live" lastUpdated={dossierQuery.dataUpdatedAt ? new Date(dossierQuery.dataUpdatedAt) : undefined} /></div>
+      <div className="ha-dossier-page__status"><StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode="historical" lastUpdated={dossierQuery.dataUpdatedAt ? new Date(dossierQuery.dataUpdatedAt) : undefined} /></div>
 
       {linkModalOpen && (
         <Suspense fallback={null}>

@@ -26,11 +26,32 @@ export const ROLE_HIERARCHY: Record<Role, number> = {
  * Role display labels
  */
 export const ROLE_LABELS: Record<Role, string> = {
-  [ROLES.ADMIN]: 'Administrator',
+  [ROLES.ADMIN]: 'Platform Administrator',
   [ROLES.SOC_MANAGER]: 'SOC Manager',
   [ROLES.ANALYST]: 'Analyst',
-  [ROLES.USER]: 'User',
+  [ROLES.USER]: 'Standard User',
 };
+
+/** Map ROLE_* / authority strings to human labels for operator-facing UI. */
+export function formatAuthorityLabel(authority: string | null | undefined): string {
+  if (!authority) return 'Not reported';
+  if (authority in ROLE_LABELS) {
+    return ROLE_LABELS[authority as Role];
+  }
+  if (authority === 'ROLE_READ_ONLY') return 'Read Only';
+  if (authority === 'ROLE_THREAT_HUNTER') return 'Threat Hunter';
+  if (authority === 'ROLE_SOC_ANALYST') return 'Analyst';
+  if (authority === 'MSSP_ADMIN') return 'MSSP Administrator';
+  if (authority.startsWith('ROLE_')) {
+    return authority
+      .replace(/^ROLE_/, '')
+      .toLowerCase()
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  }
+  return authority;
+}
 
 /**
  * Check if a role has at least the required permission level

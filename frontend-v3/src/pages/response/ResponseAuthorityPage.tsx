@@ -67,6 +67,7 @@ import { HaButton } from '@/components/ha-button/HaButton';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+import { formatAuthorityLabel } from '@/lib/roles';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
@@ -203,7 +204,7 @@ function ApprovalDrawer({ approval, onClose, onDecision, decisionPending, decisi
             <div><dt>Requested by</dt><dd>{approval.requestedBy} · {approval.requesterRole}</dd></div>
             <div><dt>Requested</dt><dd>{formatTimestamp(approval.requestedAt)}</dd></div>
             <div><dt>Policy</dt><dd>{approval.approvalPolicy}</dd></div>
-            <div><dt>Required authority</dt><dd>{approval.requiredPermission}</dd></div>
+            <div><dt>Required authority</dt><dd>{formatAuthorityLabel(approval.requiredPermission)}</dd></div>
           </dl>
         </section>
 
@@ -474,7 +475,7 @@ export function ResponseAuthorityPage(): JSX.Element {
         </>
       )}
 
-      <div className="gov-status-dock"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode="live" lastUpdated={dataUpdatedAt ? new Date(dataUpdatedAt) : undefined} /></div>
+      <div className="gov-status-dock"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={dataUpdatedAt ? new Date(dataUpdatedAt) : undefined} /></div>
       {selected && <ApprovalDrawer key={`${selected.id}-${selected.state}`} approval={selected} onClose={() => { setSelected(null); decisionMutation.reset(); }} onDecision={(request) => decisionMutation.mutate(request)} decisionPending={decisionMutation.isPending} decisionError={decisionError} />}
     </section>
   );

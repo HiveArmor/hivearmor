@@ -484,7 +484,7 @@ export function RuleEditorPage(): JSX.Element {
       </main>
 
       <div className="rule-editor-operation-bar"><span><ShieldCheck size={13} /> {effectiveValidation.authoritative ? 'Authoritative validation' : 'Client preflight'}: <strong>{effectiveValidation.valid ? 'ready' : `${errorCount} blocking`}</strong></span><span><Database size={13} /> {dataTypes.length || 0} data sources</span><span><Clock3 size={13} /> {schedule} · {lookback} lookback</span><span className="rule-editor-operation-bar__right">{previewResult?.available ? `Preview ${previewResult.matchCount} matches · ${previewResult.durationMs} ms` : 'Preview not run'}</span></div>
-      <div className="detection-status rule-editor-status"><StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode="live" /><span>Rule authoring · {isDirty ? 'unsaved draft' : `saved v${originalData.current?.version ?? 1}`}</span></div>
+      <div className="detection-status rule-editor-status"><StatusDock sseConnected={epsStream.connected} eps={epsStream.eps} mode="historical" /><span>Rule authoring · {isDirty ? 'unsaved draft' : `saved v${originalData.current?.version ?? 1}`}</span></div>
 
       <HaModal isOpen={showDiscardModal} onClose={() => setShowDiscardModal(false)} title="Leave without saving?" width={460} className="rule-editor-confirm-modal">
         <div className="rule-editor-modal"><p>Your unsaved rule changes will be lost.</p><footer><button type="button" onClick={() => setShowDiscardModal(false)}>Keep editing</button><button type="button" data-tone="danger" onClick={() => navigate('/detection-rules')}>Discard changes</button></footer></div>

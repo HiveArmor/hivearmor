@@ -28,6 +28,18 @@ function EntityIdToDossierRedirect(): JSX.Element {
   return <Navigate to={id ? `/entities/${encodeURIComponent(id)}/dossier` : '/entities'} replace />;
 }
 
+function RulesEditRedirect(): JSX.Element {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={id ? `/detection-rules/${encodeURIComponent(id)}/edit` : '/detection-rules'} replace />;
+}
+
+function RulesTestRedirect(): JSX.Element {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={id ? `/detection-rules/${encodeURIComponent(id)}/test` : '/detection-rules'} replace />;
+}
+
+
+
 // ── Admin pages ──────────────────────────────────────────────────────────────
 const RuleGenerationPage = React.lazy(() =>
   import('@/pages/admin/rule-generation/RuleGenerationPage').then(m => ({ default: m.RuleGenerationPage }))
@@ -53,9 +65,6 @@ const ScimConfigPage = React.lazy(() => import('@/pages/admin/ScimConfigPage'));
 const SsoProvidersPage = React.lazy(() => import('@/pages/admin/SsoProvidersPage'));
 const PipelineSignalsPage = React.lazy(() =>
   import('@/pages/admin/pipeline-signals/PipelineSignalsPage').then(m => ({ default: m.PipelineSignalsPage }))
-);
-const AdminTenantsPage = React.lazy(() =>
-  import('@/pages/admin/tenants/AdminTenantsPage').then(m => ({ default: m.AdminTenantsPage }))
 );
 const AdminUsersPage = React.lazy(() =>
   import('@/pages/admin/users/AdminUsersPage').then(m => ({ default: m.AdminUsersPage }))
@@ -236,9 +245,6 @@ const ResponseLibraryPage = React.lazy(() =>
 );
 const PlaybookDetailPage = React.lazy(() =>
   import('@/pages/response/PlaybookDetailPage').then(m => ({ default: m.PlaybookDetailPage }))
-);
-const PlaybooksPage = React.lazy(() =>
-  import('@/pages/response/PlaybooksPage').then(m => ({ default: m.PlaybooksPage }))
 );
 const ResponseActivityPage = React.lazy(() =>
   import('@/pages/response/ResponseActivityPage').then(m => ({ default: m.ResponseActivityPage }))
@@ -603,11 +609,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'rules/:id/edit',
-        element: <Navigate to="/detection-rules" replace />,
+        element: <RulesEditRedirect />,
       },
       {
         path: 'rules/:id/test',
-        element: <Navigate to="/detection-rules" replace />,
+        element: <RulesTestRedirect />,
       },
       {
         path: 'response/library',
@@ -625,14 +631,10 @@ export const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
-      // Legacy — retained temporarily for regression comparison during Phase 7 migration.
+      // Legacy alias — redirect to canonical playbooks surface.
       {
         path: 'response/playbooks-legacy',
-        element: (
-          <AuthGuard allowedRoles={['ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
-            <PlaybooksPage />
-          </AuthGuard>
-        ),
+        element: <Navigate to="/response/playbooks" replace />,
       },
       // NOTE: /new MUST be registered before /:id/edit to prevent "new" matching as an id
       {
@@ -877,11 +879,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'admin/tenants-old',
-        element: (
-          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <AdminTenantsPage />
-          </AuthGuard>
-        ),
+        element: <Navigate to="/admin/tenants" replace />,
       },
       {
         path: 'admin/retention',
@@ -939,14 +937,7 @@ export const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
-      {
-        path: 'admin/audit-old',
-        element: (
-          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <GovernanceOperationsPage initialView="audit" />
-          </AuthGuard>
-        ),
-      },
+      { path: 'admin/audit-old', element: <Navigate to="/admin/audit" replace /> },
       {
         path: 'admin/settings',
         element: (
@@ -963,14 +954,7 @@ export const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
-      {
-        path: 'admin/settings-old',
-        element: (
-          <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <GovernanceOperationsPage initialView="configuration" />
-          </AuthGuard>
-        ),
-      },
+      { path: 'admin/settings-old', element: <Navigate to="/admin/settings" replace /> },
       {
         path: 'admin/rule-generation',
         element: (

@@ -368,7 +368,7 @@ export function VulnerabilitiesPage(): JSX.Element {
       )}
 
       <footer className="vuln-pagination" aria-label="Vulnerability pagination"><span>{total.toLocaleString()} matching findings</span><strong>Page {totalPages ? page + 1 : 0} <small>{pageStart}–{pageEnd}</small></strong><div><button type="button" disabled={page === 0 || findingsQuery.isFetching} onClick={() => { setPage((value) => Math.max(0, value - 1)); setActiveIndex(0); }}><ChevronLeft size={13} />Previous</button><button type="button" disabled={pageEnd >= total || findingsQuery.isFetching} onClick={() => { setPage((value) => value + 1); setActiveIndex(0); }}>Next<ChevronRight size={13} /></button></div></footer>
-      <StatusDock className="vuln-status" sseConnected={eps.connected} eps={eps.eps} mode="live" lastUpdated={findingsQuery.dataUpdatedAt ? new Date(findingsQuery.dataUpdatedAt) : undefined} />
+      <StatusDock className="vuln-status" sseConnected={eps.connected} eps={eps.eps} mode="historical" lastUpdated={findingsQuery.dataUpdatedAt ? new Date(findingsQuery.dataUpdatedAt) : undefined} />
       {selected && <FindingDrawer finding={selected} onClose={() => setSelected(null)} />}
     </section>
   );

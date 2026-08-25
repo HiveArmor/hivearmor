@@ -451,7 +451,7 @@ export function SearchHuntPage(): JSX.Element {
         </main>
       </div>
 
-      <StatusDock sseConnected={searchHuntFixtureMode || epsStream.connected} eps={searchHuntFixtureMode ? 12840 : epsStream.eps} mode="live" />
+      <StatusDock sseConnected={searchHuntFixtureMode || epsStream.connected} eps={searchHuntFixtureMode ? 12840 : epsStream.eps} mode={searchHuntFixtureMode ? 'historical' : 'live'} />
 
       {selectedIds.length > 0 && <PromotionActionBar selectedCount={selectedIds.length} onAction={(action) => { setPromotionOpen(true); setPromotionAction(action); }} />}
 
