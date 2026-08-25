@@ -228,6 +228,15 @@ function FileDrawer({ row, onClose, onRestore, onDelete }: {
   );
 }
 
+function formatFreshnessLabel(snapshotAt?: string | null, asOf?: string | null, fallbackMs?: number): string {
+  if (snapshotAt) {
+    const snap = formatTimestamp(snapshotAt);
+    return asOf ? `Snapshot ${snap} · as of ${formatTimestamp(asOf)}` : `Snapshot ${snap}`;
+  }
+  if (fallbackMs) return `Client refresh ${new Date(fallbackMs).toLocaleTimeString()}`;
+  return 'Snapshot —';
+}
+
 function EndpointContainmentPanel({ density, search, status, page, onPageChange }: {
   density: Density;
   search: string;
@@ -325,6 +334,11 @@ function EndpointContainmentPanel({ density, search, status, page, onPageChange 
 
   return (
     <>
+      <div className="qrn-freshness" role="status" aria-label="Host isolation inventory freshness">
+        <Clock3 size={12} aria-hidden="true" />
+        <span>{formatFreshnessLabel(data?.snapshotAt, data?.asOf, dataUpdatedAt)}</span>
+        <small>STAGING CANDIDATE · page read time, not cursor/PIT-bound</small>
+      </div>
       <main className="qrn-grid-wrap">
         <SiemDataGrid
           className="response-grid qrn-grid"
@@ -355,7 +369,7 @@ function EndpointContainmentPanel({ density, search, status, page, onPageChange 
             Next<ChevronRight size={13} />
           </button>
         </div>
-        <span>Snapshot {dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+        <span>{formatFreshnessLabel(data?.snapshotAt, data?.asOf, dataUpdatedAt)}</span>
       </footer>
       {selected && (
         <HaDrawer
@@ -576,7 +590,7 @@ function FileQuarantineContent(): JSX.Element {
         <div data-tone="warning"><span><ShieldOff size={13} />Active quarantine</span><strong>{visibleActive}</strong><small>on loaded page</small></div>
         <div data-tone="warning"><span><FileClock size={13} />Needs attention</span><strong>{visiblePending}</strong><small>pending or failed on page</small></div>
         <div data-tone="positive"><span><ShieldCheck size={13} />Connector health</span><strong>{rows.filter((row) => row.connectorState === 'healthy').length}</strong><small>{rows.filter((row) => row.connectorState !== 'healthy').length} degraded on page</small></div>
-        <div><span><Clock3 size={13} />Freshness</span><strong>{dataUpdatedAt ? 'Live' : '—'}</strong><small>{dataUpdatedAt ? `updated ${new Date(dataUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'awaiting snapshot'}</small></div>
+        <div><span><Clock3 size={13} />Freshness</span><strong>{data?.snapshotAt ? 'Server' : dataUpdatedAt ? 'Client' : '—'}</strong><small>{data?.snapshotAt ? formatFreshnessLabel(data.snapshotAt, data.asOf) : dataUpdatedAt ? `updated ${new Date(dataUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'awaiting snapshot'}</small></div>
       </section>
       <section className="qrn-operations">
         <nav className="qrn-tabs" aria-label="Quarantine workspace views" role="tablist"><button id="qrn-workspace-tab-files" type="button" role="tab" aria-selected={view === 'files'} aria-controls="qrn-workspace-panel-files" tabIndex={view === 'files' ? 0 : -1} data-active={view === 'files'} onClick={() => setView('files')} onKeyDown={(event) => { if (event.key === 'ArrowRight' || event.key === 'End') { event.preventDefault(); setView('endpoints'); document.getElementById('qrn-workspace-tab-endpoints')?.focus(); } }}><FileArchive size={13} />Quarantined files <span>{data?.totalElements ?? '—'}</span></button><button id="qrn-workspace-tab-endpoints" type="button" role="tab" aria-selected={view === 'endpoints'} aria-controls="qrn-workspace-panel-endpoints" tabIndex={view === 'endpoints' ? 0 : -1} data-active={view === 'endpoints'} onClick={() => setView('endpoints')} onKeyDown={(event) => { if (event.key === 'ArrowLeft' || event.key === 'Home') { event.preventDefault(); setView('files'); document.getElementById('qrn-workspace-tab-files')?.focus(); } }}><Laptop size={13} />Endpoint isolation</button></nav>
@@ -591,7 +605,9 @@ function FileQuarantineContent(): JSX.Element {
             <span className="qrn-scope"><Laptop size={12} />Host isolation only</span>
           </>}
           <span className="qrn-scope"><LockKeyhole size={12} />All authorized tenants</span>
-          <span className="qrn-snapshot">{data?.stale ? 'Stale snapshot' : `Snapshot ${data?.snapshotAt ? formatTimestamp(data.snapshotAt) : dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString() : '—'}`}</span>
+          {view === 'files' && (
+            <span className="qrn-snapshot">{data?.stale ? 'Stale snapshot' : formatFreshnessLabel(data?.snapshotAt, data?.asOf, dataUpdatedAt)}</span>
+          )}
         </div>
       </section>
 
@@ -609,7 +625,7 @@ function FileQuarantineContent(): JSX.Element {
         <footer className="qrn-pagination" aria-label="Quarantine pagination"><span>{data?.totalElements.toLocaleString() ?? 0} matching records</span><span>Page {page + 1} of {Math.max(1, data?.totalPages ?? 1)} · up to {PAGE_SIZE} rows</span><div><button type="button" disabled={page === 0} onClick={() => { setPage((value) => Math.max(0, value - 1)); setActiveIndex(0); }}><ChevronLeft size={13} />Previous</button><button type="button" disabled={!data || page + 1 >= data.totalPages} onClick={() => { setPage((value) => value + 1); setActiveIndex(0); }}>Next<ChevronRight size={13} /></button></div></footer>
       </div> : <div id="qrn-workspace-panel-endpoints" className="qrn-workspace-panel" role="tabpanel" aria-labelledby="qrn-workspace-tab-endpoints"><EndpointContainmentPanel density={density} search={search} status={containmentStatus} page={isolationPage} onPageChange={setIsolationPage} /></div>}
 
-      <div className="qrn-status"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode="live" lastUpdated={dataUpdatedAt ? new Date(dataUpdatedAt) : undefined} /></div>
+      <div className="qrn-status"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode="live" lastUpdated={data?.snapshotAt ? new Date(data.snapshotAt) : dataUpdatedAt ? new Date(dataUpdatedAt) : undefined} /></div>
       {selectedFile && <FileDrawer row={selectedFile} onClose={() => setSelectedFile(null)} onRestore={requestRestore} onDelete={requestDelete} />}
       <HaConfirmationModal isOpen={pendingAction !== null} title={actionTitle} message={actionMessage} confirmLabel={pendingAction?.action === 'restore' ? 'Request restore' : 'Delete permanently'} cancelLabel="Cancel" variant={pendingAction?.action === 'delete' ? 'danger' : 'primary'} onConfirm={confirmAction} onCancel={() => setPendingAction(null)} />
     </section>

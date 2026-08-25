@@ -513,7 +513,14 @@ describe('FileQuarantinePage', () => {
       error: null,
     });
     mockUseIsolatedHosts.mockReturnValue({
-      data: { content: [], totalElements: 0, totalPages: 0, number: 0 },
+      data: {
+        content: [],
+        totalElements: 0,
+        totalPages: 0,
+        number: 0,
+        snapshotAt: '2026-08-25T06:10:00Z',
+        asOf: null,
+      },
       isLoading: false,
       isError: false,
       error: null,
@@ -527,5 +534,47 @@ describe('FileQuarantinePage', () => {
     expect(screen.getByText(/no isolated hosts/i)).toBeDefined();
     expect(screen.getByText(/legacy \/api\/edr\/isolation is not used/i)).toBeDefined();
     expect(mockUseIsolatedHosts).toHaveBeenCalled();
+  });
+
+  it('shows server isolation snapshot freshness banner', () => {
+    mockUseQuarantinedFiles.mockReturnValue({
+      data: makeQuarantinePage({ content: [], totalElements: 0, totalPages: 0 }),
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+      dataUpdatedAt: Date.now(),
+    });
+    mockUseIsolatedHosts.mockReturnValue({
+      data: {
+        content: [{
+          id: 91,
+          agentId: 'agent-fin-wks-044',
+          hostname: 'FIN-WKS-044',
+          isolationType: 'FULL',
+          status: 'ACTIVE',
+          isolatedAt: '2026-08-25T05:00:00Z',
+          actionedBy: 'Maya Chen',
+        }],
+        totalElements: 1,
+        totalPages: 1,
+        number: 0,
+        snapshotAt: '2026-08-25T06:15:00.000Z',
+        asOf: '2026-08-25T05:00:00.000Z',
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+      dataUpdatedAt: Date.now(),
+    });
+
+    renderPage();
+    fireEvent.click(screen.getByRole('tab', { name: /endpoint isolation/i }));
+
+    expect(screen.getByLabelText(/host isolation inventory freshness/i)).toBeDefined();
+    expect(screen.getByText(/STAGING CANDIDATE · page read time, not cursor\/PIT-bound/i)).toBeDefined();
+    expect(screen.getAllByText(/Snapshot/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/as of/i).length).toBeGreaterThan(0);
   });
 });

@@ -174,14 +174,20 @@ export interface QuarantineListQuery {
 
 /**
  * Paginated response from GET /api/ha-edr/quarantine.
- * Mirrors Spring's `Page<QuarantinedFileDTO>` shape.
+ * Mirrors {@code HaEdrInventoryPageDTO} (Spring page fields + list freshness).
  */
 export interface QuarantinePage {
   content: QuarantinedFileDTO[];
   totalElements: number;
   totalPages: number;
   number: number;  // zero-based current page index
+  /** Server read time for this page (ISO-8601). */
   snapshotAt?: string;
+  /**
+   * Newest quarantineTime on this page (ISO-8601), or absent when empty.
+   * Not a cursor/PIT bound — STAGING CANDIDATE honesty only.
+   */
+  asOf?: string | null;
   stale?: boolean;
   partialFailures?: Array<{ source: string; message: string }>;
 }
@@ -220,6 +226,13 @@ export interface IsolationPage {
   totalElements: number;
   totalPages: number;
   number: number;
+  /** Server read time for this page (ISO-8601). */
+  snapshotAt?: string;
+  /**
+   * Newest isolatedAt on this page (ISO-8601), or absent when empty.
+   * Not cursor/PIT-bound — STAGING CANDIDATE honesty only.
+   */
+  asOf?: string | null;
 }
 
 // ---------------------------------------------------------------------------
