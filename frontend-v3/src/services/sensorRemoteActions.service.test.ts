@@ -10,15 +10,20 @@ vi.mock('./sensorRemoteActions.capabilities', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./sensorRemoteActions.capabilities')>();
   return {
     ...actual,
+    canEnableKillProcess: vi.fn(() => false),
+    canEnableIsolateHost: vi.fn(() => false),
     canEnableRemoteSensorActions: vi.fn(() => false),
   };
 });
 
 import {
-  canEnableRemoteSensorActions,
+  canEnableIsolateHost,
+  canEnableKillProcess,
   REMOTE_SENSOR_ACTION_ROLES,
   REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED,
   REMOTE_SENSOR_ACTIONS_REST_GATED,
+  REMOTE_SENSOR_ISOLATE_LIVE_VERIFIED,
+  REMOTE_SENSOR_KILL_LIVE_VERIFIED,
 } from './sensorRemoteActions.capabilities';
 import {
   hasRemoteSensorActionRole,
@@ -29,9 +34,11 @@ import {
 import { apiClient } from '@/lib/apiClient';
 
 describe('sensorRemoteActions.capabilities', () => {
-  it('documents REST as gated and live verify as STAGING CANDIDATE after agent proof', () => {
+  it('documents kill verified and isolate fail-closed (B1-SENS-02)', () => {
     expect(REMOTE_SENSOR_ACTIONS_REST_GATED).toBe(true);
-    expect(REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED).toBe(true);
+    expect(REMOTE_SENSOR_KILL_LIVE_VERIFIED).toBe(true);
+    expect(REMOTE_SENSOR_ISOLATE_LIVE_VERIFIED).toBe(false);
+    expect(REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED).toBe(false);
     expect(REMOTE_SENSOR_ACTION_ROLES).toEqual(['ROLE_ADMIN', 'ROLE_SOC_MANAGER']);
   });
 });
@@ -47,26 +54,27 @@ describe('hasRemoteSensorActionRole', () => {
 
 describe('sensorRemoteActions.service', () => {
   beforeEach(() => {
-    vi.mocked(canEnableRemoteSensorActions).mockReturnValue(false);
+    vi.mocked(canEnableKillProcess).mockReturnValue(false);
+    vi.mocked(canEnableIsolateHost).mockReturnValue(false);
     vi.mocked(apiClient.post).mockReset();
   });
 
-  it('refuses isolate when live-verify flag is off', async () => {
+  it('refuses isolate when isolate live-verify flag is off', async () => {
     await expect(
       isolateSensor({ agentId: '1', hostname: 'host-a' })
-    ).rejects.toThrow(/live-verified/i);
+    ).rejects.toThrow(/isolation stays blocked/i);
     expect(apiClient.post).not.toHaveBeenCalled();
   });
 
-  it('refuses kill when live-verify flag is off', async () => {
+  it('refuses kill when kill live-verify flag is off', async () => {
     await expect(
       killSensorProcess({ agentId: '1', pid: 4242 })
     ).rejects.toThrow(/live-verified/i);
     expect(apiClient.post).not.toHaveBeenCalled();
   });
 
-  it('posts isolate to role-gated EDR path when enabled', async () => {
-    vi.mocked(canEnableRemoteSensorActions).mockReturnValue(true);
+  it('posts isolate to role-gated EDR path when isolate enabled', async () => {
+    vi.mocked(canEnableIsolateHost).mockReturnValue(true);
     vi.mocked(apiClient.post).mockResolvedValue({ status: 'ACTIVE' });
 
     await isolateSensor({
@@ -83,8 +91,8 @@ describe('sensorRemoteActions.service', () => {
     });
   });
 
-  it('posts kill-process to role-gated EDR path when enabled', async () => {
-    vi.mocked(canEnableRemoteSensorActions).mockReturnValue(true);
+  it('posts kill-process to role-gated EDR path when kill enabled', async () => {
+    vi.mocked(canEnableKillProcess).mockReturnValue(true);
     vi.mocked(apiClient.post).mockResolvedValue({ result: 'ok' });
 
     await killSensorProcess({ agentId: '7', pid: 99, processName: 'evil.exe' });

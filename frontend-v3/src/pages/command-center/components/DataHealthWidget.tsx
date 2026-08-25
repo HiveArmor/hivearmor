@@ -9,8 +9,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-import { apiClient } from '@/lib/apiClient';
-import type { SensorDTO } from '@/types/sensor.types';
+import { fetchSensors } from '@/services/sensorsService';
 
 export interface DataHealthWidgetProps {
   eps: number;
@@ -20,13 +19,16 @@ export interface DataHealthWidgetProps {
 export function DataHealthWidget({ eps, epsConnected }: DataHealthWidgetProps): JSX.Element {
   const { data: sensors, isLoading } = useQuery({
     queryKey: ['sensors', 'all'],
-    queryFn: () => apiClient.get<SensorDTO[]>('/agent-manager/agents'),
+    queryFn: async () => {
+      const { sensors: rows } = await fetchSensors({ size: 1000 });
+      return rows;
+    },
     refetchInterval: 60_000,
     staleTime: 50_000,
   });
 
-  const activeSources = sensors?.filter((s) => s.connectionStatus === 'ACTIVE').length ?? 0;
-  const degradedSources = sensors?.filter((s) => s.connectionStatus === 'INACTIVE' || s.connectionStatus === 'UNREACHABLE').length ?? 0;
+  const activeSources = sensors?.filter((s) => s.connectionStatus === 'ONLINE').length ?? 0;
+  const degradedSources = sensors?.filter((s) => s.connectionStatus === 'OFFLINE' || s.connectionStatus === 'UNKNOWN').length ?? 0;
   const totalSources = sensors?.length ?? 0;
 
   // Find the most recently seen sensor as a proxy for "last event received"

@@ -9,13 +9,15 @@ import type { EChartsOption } from 'echarts';
 import { Link } from 'react-router-dom';
 
 import { HaChart } from '@/components/ha-chart/HaChart';
-import { apiClient } from '@/lib/apiClient';
-import type { SensorDTO } from '@/types/sensor.types';
+import { fetchSensors } from '@/services/sensorsService';
 
 export function SensorCoverageWidget(): JSX.Element {
   const { data: sensors, isLoading, error, refetch } = useQuery({
     queryKey: ['sensors'],
-    queryFn: () => apiClient.get<SensorDTO[]>('/agent-manager/agents'),
+    queryFn: async () => {
+      const { sensors: rows } = await fetchSensors({ size: 1000 });
+      return rows;
+    },
     refetchInterval: 60_000,
     staleTime: 50_000,
   });
@@ -24,9 +26,9 @@ export function SensorCoverageWidget(): JSX.Element {
     ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
     : false;
 
-  const active = sensors?.filter((s) => s.connectionStatus === 'ACTIVE').length ?? 0;
-  const inactive = sensors?.filter((s) => s.connectionStatus === 'INACTIVE').length ?? 0;
-  const unreachable = sensors?.filter((s) => s.connectionStatus === 'UNREACHABLE' || s.connectionStatus === 'UNKNOWN').length ?? 0;
+  const active = sensors?.filter((s) => s.connectionStatus === 'ONLINE').length ?? 0;
+  const inactive = sensors?.filter((s) => s.connectionStatus === 'OFFLINE').length ?? 0;
+  const unreachable = sensors?.filter((s) => s.connectionStatus === 'UNKNOWN').length ?? 0;
   const total = (sensors?.length) ?? 0;
   const coveragePct = total > 0 ? Math.round((active / total) * 100) : 0;
 

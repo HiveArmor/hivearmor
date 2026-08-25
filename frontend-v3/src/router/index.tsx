@@ -438,7 +438,7 @@ export const router = createBrowserRouter([
       {
         path: 'edr/timeline/:agentId',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <EndpointTimelinePage />
           </AuthGuard>
         ),
@@ -447,7 +447,7 @@ export const router = createBrowserRouter([
       {
         path: 'edr/quarantine',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <FileQuarantinePage />
           </AuthGuard>
         ),
@@ -464,7 +464,7 @@ export const router = createBrowserRouter([
       {
         path: 'edr/fim',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <FimDashboardPage />
           </AuthGuard>
         ),
@@ -482,7 +482,7 @@ export const router = createBrowserRouter([
       {
         path: 'edr/endpoints',
         element: (
-          <AuthGuard>
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <EndpointsListPage />
           </AuthGuard>
         ),

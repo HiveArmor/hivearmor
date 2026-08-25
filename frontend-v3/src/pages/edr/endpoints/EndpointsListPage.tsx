@@ -34,7 +34,10 @@ function statusCell(params: { value: 'ONLINE' | 'OFFLINE' | 'UNKNOWN' }): React.
 }
 
 function modeCell(params: { value: string | null }): React.ReactElement {
-  const mode = params.value ?? 'log';
+  if (!params.value) {
+    return <span style={{ color: 'var(--ha-text-secondary)', fontSize: 'var(--ha-text-xs)' }}>Not reported</span>;
+  }
+  const mode = params.value;
   const isEdr = mode === 'edr';
   return (
     <span style={{
@@ -81,7 +84,7 @@ export function EndpointsListPage(): React.ReactElement {
   }, []);
 
   const handleRowClicked = (event: RowClickedEvent<SensorDTO>): void => {
-    const agentId = event.data?.agentId ?? event.data?.hostname;
+    const agentId = event.data?.agentId;
     if (agentId) {
       navigate(`/edr/timeline/${encodeURIComponent(agentId)}`);
     }
@@ -118,7 +121,7 @@ export function EndpointsListPage(): React.ReactElement {
             height="100%"
             getRowId={(params) => {
               const row = params.data as SensorDTO | undefined;
-              return row?.agentId ?? row?.hostname ?? '';
+              return row?.agentId ?? '';
             }}
             onRowClicked={(event) => handleRowClicked(event as RowClickedEvent<SensorDTO>)}
             defaultColDef={{ sortable: true, filter: false, resizable: true }}

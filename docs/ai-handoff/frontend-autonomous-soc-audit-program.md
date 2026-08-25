@@ -1,6 +1,6 @@
 # Frontend Autonomous SOC audit program
 
-Updated: **2026-08-25 14:45:00 IST (UTC+05:30)**
+Updated: **2026-08-25 15:05:00 IST (UTC+05:30)**
 
 Purpose: validate every visible frontend-v3 surface against real backend capability for an **Enterprise AI-driven Autonomous SIEM / Autonomous SOC**. Page-by-page: **audit → research → implement** (UI/UX, nav, structure, backend connects). Status vocabulary stays honest — never claim `PRODUCTION READY` without gates.
 
@@ -32,8 +32,8 @@ AI (SOC AI / agentic triage / Hive Intelligence) must appear as **assistive evid
 |---|---|---|---|
 | **A1** | Command & triage | `/dashboard`, `/queue`, `/alerts`, `/correlated-findings`, `/incidents` | **COMPLETE** audit (#55) + gaps (#56) — STAGING CANDIDATE on staging tip |
 | **A2** | Investigate & AI | `/search`, `/investigations`, `/entities`, `/intelligence`, `/ueba/risk`, `/constellation` | **COMPLETE** audit (#57) + gaps (#58) — STAGING CANDIDATE (staging rebuild deferred) |
-| **A3** | Defend / respond | `/detection-rules`, `/response/playbooks`, `/response/activity`, `/response/authority`, `/response/quarantine`, `/response/library` | Decision → action with approval — **AUDIT + thin honesty in progress** |
-| **B1** | Endpoint defense | `/edr/endpoints`, `/edr/fim`, `/edr/policies`, sensors via posture | Containment honesty |
+| **A3** | Defend / respond | `/detection-rules`, `/response/playbooks`, `/response/activity`, `/response/authority`, `/response/quarantine`, `/response/library` | **COMPLETE** audit + thin honesty (#59) — STAGING CANDIDATE (staging rebuild deferred) |
+| **B1** | Endpoint defense | `/edr/endpoints`, `/edr/fim`, `/edr/policies`, sensors via posture | Containment honesty — **AUDIT + thin honesty in progress** |
 | **B2** | Posture & compliance | `/posture/*`, `/compliance` | Exposure → assurance |
 | **C1** | Dashboards & reports | `/dashboards`, `/dashboards/studio`, `/reports/*` | Narrative & ops visibility |
 | **C2** | Platform admin | `/admin/*`, `/inputs/sources`, `/settings/api-keys`, connectors | Trust, ingest, identity |

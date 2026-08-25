@@ -1,20 +1,9 @@
 /**
- * Sensor (Agent/Collector) Types
+ * Sensor (Agent/Collector) Types — re-export adapted projection.
+ * Prefer importing SensorDTO from `@/services/sensorsService`.
  */
 
-export interface SensorDTO {
-  agentId: string;
-  hostname: string;
-  platform: 'windows' | 'linux' | 'macos' | 'unknown';
-  osVersion: string | null;
-  agentVersion: string | null;
-  connectionStatus: 'ACTIVE' | 'INACTIVE' | 'UNREACHABLE' | 'UNKNOWN';
-  lastSeen: string | null;
-  cpuUsage: number | null;
-  memUsage: number | null;
-  diskUsage: number | null;
-  collectorType: 'agent' | 'collector' | 'unknown';
-}
+export type { SensorDTO } from '@/services/sensorsService';
 
 export interface SensorHealthDetailDTO {
   agentId: string;
@@ -22,7 +11,7 @@ export interface SensorHealthDetailDTO {
   platform: string;
   osVersion: string | null;
   agentVersion: string | null;
-  connectionStatus: 'ACTIVE' | 'INACTIVE' | 'UNREACHABLE' | 'UNKNOWN';
+  connectionStatus: 'ONLINE' | 'OFFLINE' | 'UNKNOWN';
   lastSeen: string | null;
   uptime: number | null;
   cpuUsage: number | null;

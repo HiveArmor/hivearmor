@@ -17,29 +17,21 @@ import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity, ROW_HEIGHTS } from '@/hooks/useRowDensity';
-import { apiClient } from '@/lib/apiClient';
 import { hasAuthority } from '@/lib/auth/hasAuthority';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import {
-  canEnableRemoteSensorActions,
+  canEnableIsolateHost,
+  canEnableKillProcess,
   REMOTE_SENSOR_ACTIONS_BLOCKED_DESCRIPTION,
   REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE,
+  REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE,
 } from '@/services/sensorRemoteActions.capabilities';
 import {
   isolateSensor,
   killSensorProcess,
 } from '@/services/sensorRemoteActions.service';
-import type { SensorDTO } from '@/types/sensor.types';
-
-/** Agent list JSON may expose numeric `id` from AgentDTO while SensorDTO uses agentId. */
-type SensorRow = SensorDTO & { id?: number | string };
-
-function resolveAgentId(sensor: SensorRow | undefined): string | null {
-  if (!sensor) return null;
-  if (sensor.agentId) return String(sensor.agentId);
-  if (sensor.id !== undefined && sensor.id !== null) return String(sensor.id);
-  return null;
-}
+import { fetchSensors } from '@/services/sensorsService';
+import type { SensorDTO } from '@/services/sensorsService';
 
 function ActionButton(props: {
   label: string;
@@ -107,20 +99,31 @@ async function dispatchKill(agentId: string, hostname: string): Promise<void> {
  * has Platform Administrator or SOC Manager. Calls JWT → /api/edr/* → ProcessCommand.
  * No React hooks here — AG Grid may remount cell renderers freely.
  */
-function ActionsCellRenderer(params: ICellRendererParams<SensorRow>): JSX.Element {
+function ActionsCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Element {
   const sensor = params.data;
-  const agentId = resolveAgentId(sensor);
+  const agentId = sensor?.agentId ?? null;
   const hostname = sensor?.hostname ?? '';
   const roleOk = hasAuthority('ROLE_ADMIN') || hasAuthority('ROLE_SOC_MANAGER');
-  const pathReady = canEnableRemoteSensorActions();
-  const canMutate = pathReady && roleOk && Boolean(agentId);
+  const killReady = canEnableKillProcess();
+  const isolateReady = canEnableIsolateHost();
+  const canKill = killReady && roleOk && Boolean(agentId);
+  const canIsolate = isolateReady && roleOk && Boolean(agentId);
 
-  const blockedTitle = !pathReady
+  const roleBlocked = 'Required permission: Platform Administrator or SOC Manager';
+  const idBlocked = 'Sensor is missing an agent id';
+  const killBlockedTitle = !killReady
     ? REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE
     : !roleOk
-      ? 'Required permission: Platform Administrator or SOC Manager'
+      ? roleBlocked
       : !agentId
-        ? 'Sensor is missing an agent id'
+        ? idBlocked
+        : '';
+  const isolateBlockedTitle = !isolateReady
+    ? REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE
+    : !roleOk
+      ? roleBlocked
+      : !agentId
+        ? idBlocked
         : '';
 
   const noHandlerTitle = 'No agent ProcessCommand handler for this action';
@@ -128,13 +131,12 @@ function ActionsCellRenderer(params: ICellRendererParams<SensorRow>): JSX.Elemen
   return (
     <div
       style={{ display: 'flex', gap: 4, alignItems: 'center', height: '100%' }}
-      title={!canMutate ? blockedTitle : undefined}
     >
       <ActionButton
         label="Isolate"
-        ariaLabel={canMutate ? 'Isolate host' : 'Isolate host (blocked)'}
-        disabled={!canMutate}
-        title={canMutate ? 'Isolate host via ProcessCommand (EDR_ISOLATE)' : blockedTitle}
+        ariaLabel={canIsolate ? 'Isolate host' : 'Isolate host (blocked)'}
+        disabled={!canIsolate}
+        title={canIsolate ? 'Isolate host via ProcessCommand (EDR_ISOLATE)' : isolateBlockedTitle}
         danger
         onClick={() => {
           if (agentId) void dispatchIsolate(agentId, hostname);
@@ -142,9 +144,9 @@ function ActionsCellRenderer(params: ICellRendererParams<SensorRow>): JSX.Elemen
       />
       <ActionButton
         label="Kill"
-        ariaLabel={canMutate ? 'Kill process' : 'Kill process (blocked)'}
-        disabled={!canMutate}
-        title={canMutate ? 'Kill process via ProcessCommand (EDR_KILL)' : blockedTitle}
+        ariaLabel={canKill ? 'Kill process' : 'Kill process (blocked)'}
+        disabled={!canKill}
+        title={canKill ? 'Kill process via ProcessCommand (EDR_KILL)' : killBlockedTitle}
         danger
         onClick={() => {
           if (agentId) void dispatchKill(agentId, hostname);
@@ -163,16 +165,18 @@ function ActionsCellRenderer(params: ICellRendererParams<SensorRow>): JSX.Elemen
 /**
  * SensorGridPage — Sensor health monitoring (POS-05)
  *
- * Remote isolate/kill: JWT → @PreAuthorize EDR REST → ProcessCommand.
- * UI stays disabled until REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED (one-flag flip).
- * Restart has no agent handler — remains unavailable regardless of the flag.
+ * Kill: JWT → @PreAuthorize EDR REST → ProcessCommand (STAGING CANDIDATE when verified).
+ * Isolate: same path but fail-closed until isolate live-verify flips (B1-SENS-02).
+ * Restart has no agent handler — remains unavailable.
  */
 export function SensorGridPage(): JSX.Element {
   const [density] = useRowDensity();
   const { eps, connected: epsConnected } = useEpsStream();
   const [addAgentOpen, setAddAgentOpen] = useState(false);
   const canProvisionAgent = hasAuthority('ROLE_ADMIN');
-  const remoteActionsReady = canEnableRemoteSensorActions();
+  const killReady = canEnableKillProcess();
+  const isolateReady = canEnableIsolateHost();
+  const showRemoteHonesty = !killReady || !isolateReady;
 
   const {
     data: sensors = [],
@@ -181,11 +185,14 @@ export function SensorGridPage(): JSX.Element {
     refetch,
   } = useQuery({
     queryKey: ['sensors'],
-    queryFn: () => apiClient.get<SensorDTO[]>('/agent-manager/agents'),
+    queryFn: async () => {
+      const { sensors: rows } = await fetchSensors({ size: 1000 });
+      return rows;
+    },
   });
 
   const activeSensors = useMemo(
-    () => sensors.filter((s) => s.connectionStatus === 'ACTIVE').length,
+    () => sensors.filter((s) => s.connectionStatus === 'ONLINE').length,
     [sensors]
   );
   const totalSensors = sensors.length;
@@ -233,18 +240,13 @@ export function SensorGridPage(): JSX.Element {
           string,
           { label: string; bg: string; color: string }
         > = {
-          ACTIVE: {
-            label: 'Connected',
+          ONLINE: {
+            label: 'Online',
             bg: 'var(--ha-fill-low-muted)',
             color: 'var(--ha-positive)',
           },
-          INACTIVE: {
-            label: 'Disconnected',
-            bg: 'var(--ha-fill-critical-muted)',
-            color: 'var(--ha-critical)',
-          },
-          UNREACHABLE: {
-            label: 'Unreachable',
+          OFFLINE: {
+            label: 'Offline',
             bg: 'var(--ha-fill-critical-muted)',
             color: 'var(--ha-critical)',
           },
@@ -319,10 +321,14 @@ export function SensorGridPage(): JSX.Element {
         backgroundColor: 'var(--ha-background)',
       }}
     >
-      {!remoteActionsReady && (
+      {showRemoteHonesty && (
         <HaInlineBanner
           variant="warning"
-          title={REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE}
+          title={
+            !killReady
+              ? REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE
+              : REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE
+          }
           description={REMOTE_SENSOR_ACTIONS_BLOCKED_DESCRIPTION}
           isDismissible={false}
         />

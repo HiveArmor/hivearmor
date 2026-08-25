@@ -33,6 +33,7 @@ import { Shield } from 'lucide-react';
 import { AccessDeniedState } from '@/components/access-denied-state/AccessDeniedState';
 import { useFimSummary } from '@/hooks/useFimSummary';
 import { resolveHaToken, useHaThemeTokens } from '@/hooks/useHaThemeTokens';
+import { fetchSensors } from '@/services/sensorsService';
 import { useAuthStore } from '@/store/auth.store';
 import type { FimSummaryQuery, PathCountDTO, SuspiciousHashDTO, TimeSeriesPoint } from '@/types/edr';
 
@@ -726,18 +727,24 @@ function FimDashboardContent(): JSX.Element {
 
   // ── Agent list for dropdown ───────────────────────────────────────────────
   const [agentList, setAgentList] = useState<Array<{ agentId: string; hostname: string }>>([]);
+  const [agentListError, setAgentListError] = useState<string | null>(null);
   useEffect(() => {
-    fetch('/api/agent-manager/agents?pageSize=1000', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('hivearmor_auth_token') ?? ''}` },
-    })
-      .then(r => r.ok ? r.json() : [])
-      .then((agents: Array<Record<string, unknown>>) =>
-        setAgentList(agents.map(a => ({
-          agentId: String(a['agentId'] ?? a['id'] ?? ''),
-          hostname: String(a['hostname'] ?? a['agentId'] ?? ''),
-        })))
-      )
-      .catch(() => setAgentList([]));
+    let cancelled = false;
+    fetchSensors({ size: 1000 })
+      .then(({ sensors }) => {
+        if (cancelled) return;
+        setAgentListError(null);
+        setAgentList(sensors.map((a) => ({
+          agentId: a.agentId,
+          hostname: a.hostname,
+        })));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setAgentList([]);
+        setAgentListError('Agent filter list is unavailable. FIM summary still loads for all agents.');
+      });
+    return () => { cancelled = true; };
   }, []);
 
   // ── Build query ───────────────────────────────────────────────────────────
@@ -822,6 +829,14 @@ function FimDashboardContent(): JSX.Element {
         onChangeTypesChange={setSelectedChangeTypes}
         onAgentsChange={setSelectedAgents}
       />
+
+      {agentListError && (
+        <div style={{ padding: '8px 24px', flexShrink: 0 }}>
+          <Alert variant="warning" isInline title="Agent filter partial">
+            {agentListError}
+          </Alert>
+        </div>
+      )}
 
       {/* Error state */}
       {isError && (

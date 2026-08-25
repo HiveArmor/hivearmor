@@ -1,11 +1,14 @@
 /**
  * Sensor remote containment — JWT → role-gated EDR REST → ProcessCommand.
- * Callers must gate with canEnableRemoteSensorActions() + ROLE_ADMIN|ROLE_SOC_MANAGER.
+ * Callers must gate with canEnableKillProcess / canEnableIsolateHost + ROLE_ADMIN|ROLE_SOC_MANAGER.
  */
 
 import {
-  canEnableRemoteSensorActions,
+  canEnableIsolateHost,
+  canEnableKillProcess,
   REMOTE_SENSOR_ACTION_ROLES,
+  REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE,
+  REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE,
 } from './sensorRemoteActions.capabilities';
 
 import { apiClient } from '@/lib/apiClient';
@@ -46,7 +49,9 @@ export function hasRemoteSensorActionRole(authorities: readonly string[]): boole
 export async function isolateSensor(
   request: IsolateSensorRequest
 ): Promise<IsolateSensorResponse> {
-  assertRemoteActionsCallable();
+  if (!canEnableIsolateHost()) {
+    throw new Error(REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE);
+  }
   return apiClient.post<IsolateSensorResponse>('/edr/isolation', {
     agentId: request.agentId,
     hostname: request.hostname,
@@ -62,18 +67,12 @@ export async function isolateSensor(
 export async function killSensorProcess(
   request: KillProcessRequest
 ): Promise<KillProcessResponse> {
-  assertRemoteActionsCallable();
+  if (!canEnableKillProcess()) {
+    throw new Error(REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE);
+  }
   return apiClient.post<KillProcessResponse>('/edr/actions/kill-process', {
     agentId: request.agentId,
     pid: request.pid,
     processName: request.processName ?? '',
   });
-}
-
-function assertRemoteActionsCallable(): void {
-  if (!canEnableRemoteSensorActions()) {
-    throw new Error(
-      'Remote sensor actions are not live-verified; refusing to call mutate APIs'
-    );
-  }
 }
