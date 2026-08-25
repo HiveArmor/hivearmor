@@ -32,14 +32,8 @@ function EntityIdToDossierRedirect(): JSX.Element {
 const RuleGenerationPage = React.lazy(() =>
   import('@/pages/admin/rule-generation/RuleGenerationPage').then(m => ({ default: m.RuleGenerationPage }))
 );
-const AdminAuditPage = React.lazy(() =>
-  import('@/pages/admin/audit/AdminAuditPage').then(m => ({ default: m.AdminAuditPage }))
-);
 const GovernanceOperationsPage = React.lazy(() =>
   import('@/pages/admin/governance-operations/GovernanceOperationsPage').then(m => ({ default: m.GovernanceOperationsPage }))
-);
-const AdminConnectionKeysPage = React.lazy(() =>
-  import('@/pages/admin/connection-keys/AdminConnectionKeysPage').then(m => ({ default: m.AdminConnectionKeysPage }))
 );
 const DataParsingPage = React.lazy(() =>
   import('@/pages/admin/data-parsing/DataParsingPage').then(m => ({ default: m.DataParsingPage }))
@@ -57,9 +51,6 @@ const RuleImportPage = React.lazy(() => import('@/pages/admin/RuleImportPage'));
 const RuleTestingPage = React.lazy(() => import('@/pages/admin/RuleTestingPage'));
 const ScimConfigPage = React.lazy(() => import('@/pages/admin/ScimConfigPage'));
 const SsoProvidersPage = React.lazy(() => import('@/pages/admin/SsoProvidersPage'));
-const AdminSettingsPage = React.lazy(() =>
-  import('@/pages/admin/settings/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage }))
-);
 const PipelineSignalsPage = React.lazy(() =>
   import('@/pages/admin/pipeline-signals/PipelineSignalsPage').then(m => ({ default: m.PipelineSignalsPage }))
 );
@@ -928,7 +919,7 @@ export const router = createBrowserRouter([
         path: 'admin/connection-keys',
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <AdminConnectionKeysPage />
+            <Navigate to="/settings/api-keys" replace />
           </AuthGuard>
         ),
       },
@@ -944,7 +935,7 @@ export const router = createBrowserRouter([
         path: 'admin/audit-old',
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <AdminAuditPage />
+            <GovernanceOperationsPage initialView="audit" />
           </AuthGuard>
         ),
       },
@@ -968,7 +959,7 @@ export const router = createBrowserRouter([
         path: 'admin/settings-old',
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <AdminSettingsPage />
+            <GovernanceOperationsPage initialView="configuration" />
           </AuthGuard>
         ),
       },
@@ -1045,14 +1036,11 @@ export const router = createBrowserRouter([
         ),
       },
       // ── Inputs (S20-T03) ──────────────────────────────────────────────────
-      // ROLE_ADMIN and ROLE_OPERATOR may access the data sources page.
-      // AuthGuard blocks all other roles before useDataSources fires, so
-      // /api/ha-inputs/sources is never requested by unauthorised users
-      // (Req 10.1, 13.4).
+      // Matches HaDataSourceController: ROLE_ADMIN | ROLE_ANALYST.
       {
         path: 'inputs/sources',
         element: (
-          <AuthGuard allowedRoles={['ROLE_ADMIN', 'ROLE_OPERATOR']}>
+          <AuthGuard allowedRoles={['ROLE_ADMIN', 'ROLE_ANALYST']}>
             <DataSourceStatusPage />
           </AuthGuard>
         ),

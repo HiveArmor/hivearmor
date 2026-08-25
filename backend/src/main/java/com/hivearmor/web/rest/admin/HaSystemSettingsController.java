@@ -218,13 +218,13 @@ public class HaSystemSettingsController {
      * both persisted. {@code provider} is the configured provider name, or {@code "disabled"}
      * when no provider has been set (Req 6.4, 6.5).
      *
-     * <p>Accessible to both {@code ANALYST} and {@code ADMIN} roles so the frontend
+     * <p>Accessible to both {@code ROLE_ANALYST} and {@code ROLE_ADMIN} so the frontend
      * can conditionally show AI surfaces without requiring admin rights.
      *
      * @return HTTP 200 with the AI status map
      */
     @GetMapping("/ai/status")
-    @PreAuthorize("hasAuthority('ANALYST') or hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ANALYST + "', '" + AuthoritiesConstants.ADMIN + "')")
     public ResponseEntity<Map<String, Object>> aiStatus() {
         log.debug("HaSystemSettingsController: AI status requested");
         String providerName = llmService.getActiveProviderName();

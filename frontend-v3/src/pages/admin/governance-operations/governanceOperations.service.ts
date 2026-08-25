@@ -19,7 +19,6 @@ interface AuditLogWire {
 interface RetentionPolicyWire extends RetentionPolicyDTO { sourceImmutable?:boolean|null }
 
 const fixtureMode=import.meta.env.DEV&&import.meta.env.VITE_USE_FOUNDATION_FIXTURES==='true';
-const fixtureModulePath='./governanceOperations.fixtures.ts';
 
 const actionState=(action:string):GovernanceState=>{
   const value=action.toUpperCase();
@@ -31,7 +30,7 @@ const actionState=(action:string):GovernanceState=>{
 };
 
 const mapAudit=(item:AuditLogWire):GovernanceAuditEvent=>({
-  id:String(item.id),occurredAt:item.timestamp,actor:item.actor||'system',action:item.actionType||'UNKNOWN',resourceType:item.resourceType??null,resourceId:item.resourceId??null,details:item.details||'No detail supplied',ipAddress:item.ipAddress??null,result:actionState(item.actionType||''),correlationId:null,scope:'Platform scope not reported',payload:item.payload??null,
+  id:String(item.id),occurredAt:item.timestamp,actor:item.actor||'system',action:item.actionType||'UNKNOWN',resourceType:item.resourceType??null,resourceId:item.resourceId??null,details:item.details||'No detail supplied',ipAddress:item.ipAddress??null,result:actionState(item.actionType||''),correlationId:null,scope:'Platform scope not reported',payload:null,
 });
 
 const mapRetention=(item:RetentionPolicyWire):GovernanceRetentionPolicy=>({
@@ -62,7 +61,7 @@ async function listLive(signal?:AbortSignal):Promise<GovernanceInventory>{
 export const governanceOperationsService={
   fixtureMode,
   async list(signal?:AbortSignal):Promise<GovernanceInventory>{
-    if(fixtureMode){const {governanceOperationsFixture}=await import(/* @vite-ignore */ fixtureModulePath) as typeof import('./governanceOperations.fixtures');return structuredClone(governanceOperationsFixture);}
+    if(fixtureMode){const {governanceOperationsFixture}=await import('./governanceOperations.fixtures');return structuredClone(governanceOperationsFixture);}
     return listLive(signal);
   },
 };

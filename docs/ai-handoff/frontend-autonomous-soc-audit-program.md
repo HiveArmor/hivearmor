@@ -1,6 +1,6 @@
 # Frontend Autonomous SOC audit program
 
-Updated: **2026-08-25 16:15:00 IST (UTC+05:30)**
+Updated: **2026-08-25 16:50:00 IST (UTC+05:30)**
 
 Purpose: validate every visible frontend-v3 surface against real backend capability for an **Enterprise AI-driven Autonomous SIEM / Autonomous SOC**. Page-by-page: **audit → research → implement** (UI/UX, nav, structure, backend connects). Status vocabulary stays honest — never claim `PRODUCTION READY` without gates.
 
@@ -35,8 +35,8 @@ AI (SOC AI / agentic triage / Hive Intelligence) must appear as **assistive evid
 | **A3** | Defend / respond | `/detection-rules`, `/response/playbooks`, `/response/activity`, `/response/authority`, `/response/quarantine`, `/response/library` | **COMPLETE** audit + thin honesty (#59) — STAGING CANDIDATE (staging rebuild deferred) |
 | **B1** | Endpoint defense | `/edr/endpoints`, `/edr/fim`, `/edr/policies`, sensors via posture | **COMPLETE** audit + thin honesty (#60) — STAGING CANDIDATE (staging rebuild deferred) |
 | **B2** | Posture & compliance | `/posture/*`, `/compliance` | **COMPLETE** audit + thin honesty (#61) — STAGING CANDIDATE (staging rebuild deferred) |
-| **C1** | Dashboards & reports | `/dashboards`, `/dashboards/studio`, `/reports/*` | Narrative & ops visibility — **AUDIT + thin honesty in progress** |
-| **C2** | Platform admin | `/admin/*`, `/inputs/sources`, `/settings/api-keys`, connectors | Trust, ingest, identity |
+| **C1** | Dashboards & reports | `/dashboards`, `/dashboards/studio`, `/reports/*` | **COMPLETE** audit + thin honesty (#62) — STAGING CANDIDATE (staging rebuild deferred) |
+| **C2** | Platform admin | `/admin/*`, `/inputs/sources`, `/settings/api-keys`, connectors | Trust, ingest, identity — **AUDIT + thin honesty in progress** |
 | **C3** | MSSP | `/mssp/*` | Multi-tenant ops (if enabled) |
 | **D** | Cross-product closure | all visible routes | WCAG, density, dark/light, perf, deprecation — program item 9 |
 
