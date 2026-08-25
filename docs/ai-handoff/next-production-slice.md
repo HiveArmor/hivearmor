@@ -1,27 +1,35 @@
 # Next production slice
 
-Updated: **2026-08-25 09:02:07 IST (UTC+05:30)**
+Updated: **2026-08-25 09:15:00 IST (UTC+05:30)**
 
-## Active — Agentic INVESTIGATE soft session link (STAGING CANDIDATE)
+## Active — RESP-021 host isolation inventory (thin depth)
+
+Routes: `/response/quarantine` Endpoint isolation tab; `GET /api/ha-edr/isolation`.
+Status: **STAGING CANDIDATE** — secured host-isolation read wired with honest empty/partial states. Not `PRODUCTION READY`. Not `LIVE VERIFIED`.
+Branch: `feat/p1-resp021-isolation-inventory` (worktree `.worktrees/p1-resp021-isolation`).
+
+Shipped in this slice:
+
+1. Canonical `GET /api/ha-edr/isolation` (Analyst \| SOC Manager \| Admin) over `hive_edr_isolation`; size clamped to 200; optional status filter.
+2. Quarantine & Containment Endpoint isolation tab consumes `/api/ha-edr/isolation` (not legacy `/api/edr/*`, not `/ha-playbooks/quarantine`).
+3. Honest empty inventory and load-failure retry copy; release remains review-only (governed preview still open).
+
+Still open under `RESP-021`: enriched evidence/summaries, cursor/snapshot/freshness semantics, action history, governed preview/approval/idempotency for restore/delete/release, resumable delivery state.
+
+## Completed this slice — Agentic INVESTIGATE soft session link (STAGING CANDIDATE)
 
 Scope: `TriageInvestigateStub` → optional soft link to `/api/ha-investigation-sessions` (id + status only).
 Status: **STAGING CANDIDATE** — not `PRODUCTION READY`. Not Neo4j / attack-path. Not auto-convert to incident.
-Branch: `feat/p1-agentic-investigate-session-link` (worktree `.worktrees/p1-agentic-investigate-session-link`).
+Merged: `feat/p1-agentic-investigate-session-link` (#45).
 
-Shipped in this slice:
+Shipped:
 
 1. When INVESTIGATE runs and the alert doc is resolvable, optionally `createSession` titled from alert name/id via `InvestigationSessionService` (soft-fail if bean/create unavailable).
 2. Ledger investigate metadata keeps `stub=true`; on success adds `sessionId` + `sessionStatus` + `sessionLinked=true`; on failure records sanitized `sessionLinkError` (class name only, no PII).
 3. Focused unit tests for stub link success/failure/skip and triage service wiring.
 
-Remaining (explicitly out of scope):
-
-1. Neo4j / attack-path / related-alert search product.
-2. Hypothesis ledger population (`openHypotheses` stays empty).
-3. Auto pin of alert evidence, governed promotion / convert-to-incident.
-4. Live staging verification of createSession from SOC-AI triage path.
-
-Contracts: note under `INV-LV01` / investigation sessions in `docs/frontend-backend-contract-register.md`.
+Remaining: Neo4j / attack-path; `openHypotheses`; auto-pin evidence; convert-to-incident; staging LIVE verify of createSession from SOC-AI triage.
+Contracts: `INV-LV01` / investigation sessions in `docs/frontend-backend-contract-register.md`.
 
 ## Active — Orphan Operational Workflows
 
@@ -43,9 +51,10 @@ Completed in this inventory slice:
 Required next actions (remaining orphans / depth):
 
 1. ~~Follow-on UEBA: fix `HaUebaResource` `@PreAuthorize` authority strings~~ — **done** on `feat/p1-ueba-auth-fix` (STAGING CANDIDATE): `ROLE_ANALYST`/`ROLE_SOC_MANAGER`/`ROLE_ADMIN` + `/ueba/entity-timeline` route.
-2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned. Remaining RESP-021 depth gaps stay open.
-3. Optional deeper threat-intel: cursor/freshness, sync receipts, v1 deprecation after successor cutover.
-4. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
+2. ~~Follow-on quarantine: reconcile SOC Manager nav vs Analyst|Admin backend (`RESP-021`).~~ **Closed** on `feat/p1-endpoint-quarantine-auth` (STAGING CANDIDATE) — SOC Manager on `/api/ha-edr/quarantine*`; FIM/timeline auth + nav/page gates aligned.
+3. ~~Follow-on RESP-021 depth: secured host-isolation inventory.~~ **Closed** on `feat/p1-resp021-isolation-inventory` (STAGING CANDIDATE) — `GET /api/ha-edr/isolation` + Endpoint isolation tab. Remaining RESP-021 depth gaps stay open.
+4. Optional deeper threat-intel: cursor/freshness, sync receipts, v1 deprecation after successor cutover.
+5. Timestamp any additional contracts; run focused/full gates and authenticated browser review before claiming broader UI IMPLEMENTED beyond this honesty strip.
 
 ## Completed this slice — Governance and Platform Settings
 

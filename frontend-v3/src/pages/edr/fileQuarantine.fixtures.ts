@@ -1,4 +1,11 @@
-import type { QuarantineListQuery, QuarantinePage, QuarantinedFileDTO } from '@/types/edr';
+import type {
+  IsolationListQuery,
+  IsolationPage,
+  IsolatedHostDTO,
+  QuarantineListQuery,
+  QuarantinePage,
+  QuarantinedFileDTO,
+} from '@/types/edr';
 
 const hosts = ['FIN-WKS-044', 'OPS-JMP-03', 'IDM-DC-02', 'PAY-APP-07', 'ENG-LT-118', 'MKT-LPT-009'];
 const files = ['invoice-viewer.exe', 'update-loader.ps1', 'credential-dump.dll', 'remote-admin.zip', 'browser-helper.exe', 'finance-report.scr'];
@@ -6,6 +13,7 @@ const threats = ['Trojan:PowerShell/EncodedCommand', 'Behavior:CredentialAccess'
 const users = ['HiveArmor prevention', 'Maya Chen', 'Omar Haddad', 'Endpoint policy'];
 const statuses = ['quarantined', 'quarantined', 'quarantined', 'restored', 'quarantined', 'deleted'] as const;
 const verdicts = ['malicious', 'suspicious', 'malicious', 'false_positive', 'unknown', 'malicious'] as const;
+const isolationStatuses = ['ACTIVE', 'ACTIVE', 'LIFTED', 'FAILED', 'ACTIVE', 'LIFTED'] as const;
 
 export const foundationQuarantinedFiles: QuarantinedFileDTO[] = Array.from({ length: 64 }, (_, index) => {
   const host = hosts[index % hosts.length];
@@ -39,6 +47,27 @@ export const foundationQuarantinedFiles: QuarantinedFileDTO[] = Array.from({ len
   };
 });
 
+export const foundationIsolatedHosts: IsolatedHostDTO[] = Array.from({ length: 18 }, (_, index) => {
+  const host = hosts[index % hosts.length];
+  const isolatedAt = new Date(Date.UTC(2026, 7, 9, 16, 10) - index * 41 * 60_000).toISOString();
+  const status = isolationStatuses[index % isolationStatuses.length];
+  return {
+    id: 8100 + index,
+    agentId: `agent-${host.toLowerCase()}`,
+    hostname: host,
+    isolationType: index % 3 === 0 ? 'SELECTIVE' : 'FULL',
+    status,
+    reason: index % 2 === 0
+      ? 'Isolated as part of ransomware containment effort INC-2026-0084.'
+      : 'Manual containment after suspicious lateral movement.',
+    allowedIps: index % 2 === 0 ? '10.0.0.5' : undefined,
+    isolatedAt,
+    liftedAt: status === 'LIFTED' ? new Date(new Date(isolatedAt).getTime() + 3 * 60 * 60_000).toISOString() : null,
+    actionedBy: users[index % users.length],
+    edrEventId: index % 4 === 0 ? 9000 + index : null,
+  };
+});
+
 export function getFoundationQuarantinePage(query: QuarantineListQuery): QuarantinePage {
   const status = query.status?.toLowerCase();
   const filtered = foundationQuarantinedFiles.filter((record) => {
@@ -54,5 +83,20 @@ export function getFoundationQuarantinePage(query: QuarantineListQuery): Quarant
     number: query.page,
     snapshotAt: '2026-08-09T15:22:00+05:30',
     partialFailures: [],
+  };
+}
+
+export function getFoundationIsolationPage(query: IsolationListQuery): IsolationPage {
+  const status = query.status?.toUpperCase();
+  const filtered = foundationIsolatedHosts.filter((record) => {
+    if (status && status !== 'ALL' && record.status !== status) return false;
+    return true;
+  });
+  const start = Math.max(0, query.page) * query.size;
+  return {
+    content: filtered.slice(start, start + query.size),
+    totalElements: filtered.length,
+    totalPages: Math.max(1, Math.ceil(filtered.length / query.size)),
+    number: query.page,
   };
 }
