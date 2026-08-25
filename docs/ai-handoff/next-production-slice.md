@@ -1,8 +1,16 @@
 # Next production slice
 
-Updated: **2026-08-25 10:00:00 IST (UTC+05:30)**
+Updated: **2026-08-25 11:35:00 IST (UTC+05:30)**
 
-## Active — Orphan Operational Workflows (TI-002–TI-004 depth)
+## Active — Frontend Autonomous SOC audit program (next major arc)
+
+Program: `docs/ai-handoff/frontend-autonomous-soc-audit-program.md`.
+Cadence: **audit → research → implement** page-by-page (nav, structure, UX, backend connects) for Enterprise AI-driven Autonomous SIEM / Autonomous SOC.
+First wave after staging soak: **A1 Command & triage** (`/dashboard`, `/queue`, `/alerts`, `/correlated-findings`, `/incidents`).
+Pre-audit: thin parallel honesty leftovers (RESP-021 / TI / POL / investigate pin) → staging rebuild → Wave A1.
+Status: **PROGRAM STARTED** — not `PRODUCTION READY`.
+
+## Prior active — Orphan Operational Workflows (TI-002–TI-004 depth)
 
 Routes: inventory across UEBA/risk/timeline, endpoint timeline/quarantine/FIM/policies, and threat intelligence; **first bounded family = threat-intel ops** (`/intelligence`, `/admin/threat-intel`).
 Status: **STAGING CANDIDATE** — inventory + TI-002–TI-004 depth + agent-policy enforcement evidence. Not `PRODUCTION READY`. Not real-backend `LIVE VERIFIED` for this slice.
