@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
@@ -25,7 +25,9 @@ import {
   canEnableKillProcess,
   REMOTE_SENSOR_ACTIONS_BLOCKED_DESCRIPTION,
   REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE,
+  REMOTE_SENSOR_ISOLATE_BANNER_DISMISS_KEY,
   REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE,
+  REMOTE_SENSOR_ISOLATE_ONLY_DESCRIPTION,
 } from '@/services/sensorRemoteActions.capabilities';
 import {
   isolateSensor,
@@ -175,13 +177,37 @@ export function SensorGridPage(): JSX.Element {
   const [density] = useRowDensity();
   const { eps, connected: epsConnected } = useEpsStream();
   const [addAgentOpen, setAddAgentOpen] = useState(false);
+  const [isolateBannerDismissed, setIsolateBannerDismissed] = useState(false);
   const canProvisionAgent = hasAuthority('ROLE_ADMIN');
   const canViewEnrollmentAudit = useAuthStore((state) =>
     state.hasAnyRole(['ROLE_ADMIN', 'ROLE_SOC_MANAGER'])
   );
   const killReady = canEnableKillProcess();
   const isolateReady = canEnableIsolateHost();
-  const showRemoteHonesty = !killReady || !isolateReady;
+  // Full-block banner only when kill is also unavailable. Isolate-only uses a
+  // compact dismissible note so Add Agent / enrollment stays the primary focus.
+  const showFullRemoteBlockBanner = !killReady;
+  const showIsolateOnlyBanner =
+    killReady && !isolateReady && !isolateBannerDismissed;
+
+  useEffect(() => {
+    try {
+      setIsolateBannerDismissed(
+        localStorage.getItem(REMOTE_SENSOR_ISOLATE_BANNER_DISMISS_KEY) === '1'
+      );
+    } catch {
+      setIsolateBannerDismissed(false);
+    }
+  }, []);
+
+  const dismissIsolateBanner = (): void => {
+    setIsolateBannerDismissed(true);
+    try {
+      localStorage.setItem(REMOTE_SENSOR_ISOLATE_BANNER_DISMISS_KEY, '1');
+    } catch {
+      // ignore quota / private mode
+    }
+  };
 
   const {
     data: sensors = [],
@@ -326,17 +352,25 @@ export function SensorGridPage(): JSX.Element {
         backgroundColor: 'var(--ha-background)',
       }}
     >
-      {showRemoteHonesty && (
+      {showFullRemoteBlockBanner && (
         <HaInlineBanner
           variant="warning"
-          title={
-            !killReady
-              ? REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE
-              : REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE
-          }
+          title={REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE}
           description={REMOTE_SENSOR_ACTIONS_BLOCKED_DESCRIPTION}
           isDismissible={false}
         />
+      )}
+
+      {showIsolateOnlyBanner && (
+        <div style={{ margin: '12px 16px 0' }}>
+          <HaInlineBanner
+            variant="info"
+            title={REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE}
+            description={REMOTE_SENSOR_ISOLATE_ONLY_DESCRIPTION}
+            isDismissible
+            onDismiss={dismissIsolateBanner}
+          />
+        </div>
       )}
 
       <div
@@ -404,9 +438,9 @@ export function SensorGridPage(): JSX.Element {
           aria-label="How to enroll an agent"
           style={{
             display: 'grid',
-            gap: 6,
-            margin: '0 16px 12px',
-            padding: '12px 16px',
+            gap: 4,
+            margin: '12px 16px 0',
+            padding: '10px 14px',
             listStyle: 'decimal inside',
             border: '1px solid var(--ha-border)',
             borderRadius: 'var(--ha-radius-md)',
@@ -416,23 +450,19 @@ export function SensorGridPage(): JSX.Element {
           }}
         >
           <li>
-            Click <strong style={{ color: 'var(--ha-text-primary)' }}>Add Agent</strong> and generate
-            a one-click install script (Platform Administrator only).
+            Click <strong style={{ color: 'var(--ha-text-primary)' }}>Add Agent</strong> to generate
+            a one-click install script.
           </li>
           <li>
-            On the endpoint, run the Linux/macOS or Windows script as administrator — it downloads the
-            matching package and registers with the connection key.
+            Run the script on the endpoint as administrator — it downloads the matching package and
+            registers the host.
           </li>
           <li>
-            Refresh this grid until the host appears Online. Review token lifecycle events under{' '}
+            Refresh until Online. Check{' '}
             <Link to="/admin/enrollment-audit" style={{ color: 'var(--ha-primary)' }}>
               Enrollment audit
             </Link>{' '}
-            (select a masthead tenant first).
-          </li>
-          <li>
-            Use optional package downloads below only for air-gapped hosts or when the script cannot
-            reach <code>/agent-packages/</code>.
+            after selecting a masthead tenant.
           </li>
         </ol>
       )}

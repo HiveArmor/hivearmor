@@ -103,6 +103,8 @@ describe('SensorGridPage remote actions (GAP-SEC-05 / B1)', () => {
     );
 
     expect(screen.getByText(REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE)).toBeTruthy();
+    expect(screen.getByText(/Kill process remains available/i)).toBeTruthy();
+    expect(screen.queryByText(/INTERNAL_KEY|ProcessCommand|\/api\/edr/i)).toBeNull();
     expect(screen.getByRole('button', { name: 'Isolate host (blocked)' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Kill process' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: 'Restart agent (unavailable)' })).toBeDisabled();
