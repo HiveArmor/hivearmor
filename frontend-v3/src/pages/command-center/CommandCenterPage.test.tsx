@@ -8,17 +8,25 @@ import { CommandCenterPage } from './CommandCenterPage';
 const serviceMocks = vi.hoisted(() => ({
   getAlertSummary: vi.fn(),
   getAlertTimeline: vi.fn(),
+  getDetectionHealthSummary: vi.fn(),
+  getPostureScore: vi.fn(),
   getIncidents: vi.fn(),
   getMissionControlIncidentKpis: vi.fn(),
+  fetchSensors: vi.fn(),
 }));
 
 vi.mock('./commandCenter.service', () => ({
   getAlertSummary: serviceMocks.getAlertSummary,
   getAlertTimeline: serviceMocks.getAlertTimeline,
+  getDetectionHealthSummary: serviceMocks.getDetectionHealthSummary,
+  getPostureScore: serviceMocks.getPostureScore,
 }));
 vi.mock('@/services/incidents.service', () => ({
   getIncidents: serviceMocks.getIncidents,
   getMissionControlIncidentKpis: serviceMocks.getMissionControlIncidentKpis,
+}));
+vi.mock('@/services/sensorsService', () => ({
+  fetchSensors: serviceMocks.fetchSensors,
 }));
 vi.mock('@/hooks/useAlertStream', () => ({ useAlertStream: vi.fn() }));
 vi.mock('@/hooks/useEpsStream', () => ({ useEpsStream: () => ({ eps: 1840, connected: false }) }));
@@ -52,6 +60,24 @@ describe('CommandCenterPage', () => {
       unassigned: 11,
       partial: false,
     });
+    serviceMocks.fetchSensors.mockResolvedValue({
+      total: 3,
+      sensors: [
+        { id: '20', hostname: 'EC2AMAZ-8F0Q7DL', connectionStatus: 'ONLINE' },
+        { id: '19', hostname: 'EC2AMAZ-8F0Q7DL', connectionStatus: 'OFFLINE' },
+        { id: '18', hostname: 'other', connectionStatus: 'UNKNOWN' },
+      ],
+    });
+    serviceMocks.getDetectionHealthSummary.mockResolvedValue({ activeRules: 12, totalRules: 40 });
+    serviceMocks.getPostureScore.mockResolvedValue({
+      overallScore: 72,
+      totalFrameworks: 3,
+      controlsPassed: 10,
+      controlsFailed: 4,
+      controlsTotal: 14,
+      lastAssessed: null,
+      trend: 'stable',
+    });
   });
 
   it('renders loading metrics before queries settle', () => {
@@ -65,26 +91,45 @@ describe('CommandCenterPage', () => {
         </MemoryRouter>
       </QueryClientProvider>
     );
-    expect(container.querySelectorAll('.mission-skeleton')).toHaveLength(12);
+    expect(container.querySelectorAll('.mission-skeleton')).toHaveLength(8);
+  });
+
+  it('renders SOC home job sentence and primary CTA strip', async () => {
+    renderDashboard();
+    expect(
+      await screen.findByText(/Command center for detect → triage → investigate/)
+    ).toBeVisible();
+    const cta = screen.getByRole('navigation', { name: 'Primary triage destinations' });
+    expect(cta).toBeVisible();
+    expect(cta.querySelector('a[href="/queue"]')).not.toBeNull();
+    expect(cta.querySelector('a[href="/alerts"]')).not.toBeNull();
+    expect(cta.querySelector('a[href="/incidents"]')).not.toBeNull();
+    expect(cta.querySelector('a[href="/posture/sensors"]')).not.toBeNull();
   });
 
   it('renders population KPI totals instead of size=5 sample counts', async () => {
     renderDashboard();
     expect(await screen.findByText('Critical open incidents')).toBeVisible();
     expect(screen.getByText('7')).toBeVisible();
-    expect(screen.getByText(/42 active open\/in-review \(population\)/)).toBeVisible();
+    expect(screen.getByText(/42 active open\/in-review/)).toBeVisible();
     expect(screen.getByText('SLA breached')).toBeVisible();
     expect(screen.getByText('3')).toBeVisible();
     expect(screen.getByText('11')).toBeVisible();
     expect(serviceMocks.getMissionControlIncidentKpis).toHaveBeenCalled();
   });
 
-  it('renders loaded operational metrics and the disconnected state', async () => {
+  it('renders loaded operational metrics, sensor signal, and AI honesty', async () => {
     renderDashboard();
-    expect(await screen.findByText('Critical alert volume')).toBeVisible();
+    expect(await screen.findByText('Critical alerts (7d)')).toBeVisible();
     expect(screen.getByText('Live feed delayed.')).toBeVisible();
     expect(screen.getByRole('img', { name: 'Alert volume by severity for the last 24 hours' })).toBeVisible();
     expect(screen.getByText('No open priority work is available for the current scope.')).toBeVisible();
+    expect(await screen.findByText('Online')).toBeVisible();
+    expect(screen.getByText(/3 registered/)).toBeVisible();
+    expect(screen.getByText(/Assistive evidence only/)).toBeVisible();
+    expect(screen.getByText('STAGING CANDIDATE')).toBeVisible();
+    expect(screen.getByText('Stub')).toBeVisible();
+    expect(screen.getByText(/No per-analyst capacity API/)).toBeVisible();
   });
 
   it('renders priority work from the real incident response and labels sample honesty', async () => {
@@ -114,6 +159,7 @@ describe('CommandCenterPage', () => {
     expect(await screen.findByText('Suspicious privileged-account login')).toBeVisible();
     expect(screen.getByText('Unassigned')).toBeVisible();
     expect(screen.getByText(/Top 5 open sample · KPI tiles use population totals/)).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Open' })).toHaveAttribute('href', '/incidents/12');
   });
 
   it('renders a full failure with a retry action', async () => {
