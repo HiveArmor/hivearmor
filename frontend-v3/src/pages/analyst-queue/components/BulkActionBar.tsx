@@ -1,113 +1,66 @@
 /**
- * BulkActionBar — S16 per CMD-02 spec §5.2
- * Bulk action controls shown when rows are selected
- * Note: This is embedded in QueueToolbar; kept separate for clarity
+ * BulkActionBar — kept for composition; QueueToolbar embeds the live bulk strip.
+ * Labels match ALERT_MUTATION_AUTH / ASSIGNMENT_AUTH human copy.
  */
+
+import { QUEUE_ASSIGN_DENIED, QUEUE_TRIAGE_DENIED } from '../analystQueue.capabilities';
 
 export interface BulkActionBarProps {
   selectedCount: number;
-  onAction: (action: 'REVIEWED' | 'FALSE_POSITIVE' | 'ESCALATE') => void;
+  onAction: (action: 'REVIEWED' | 'FALSE_POSITIVE' | 'ESCALATE' | 'ASSIGN') => void;
   onDeselectAll: () => void;
-  isReadOnly: boolean;
+  canTriage: boolean;
+  canAssign: boolean;
 }
 
 export function BulkActionBar({
   selectedCount,
   onAction,
   onDeselectAll,
-  isReadOnly,
+  canTriage,
+  canAssign,
 }: BulkActionBarProps): JSX.Element {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-      }}
-    >
-      <span
-        style={{
-          color: 'var(--ha-primary)',
-          fontSize: 'var(--ha-text-sm)',
-          fontWeight: 500,
-          fontFamily: 'var(--ha-font-mono)',
-          fontVariantNumeric: 'tabular-nums',
-        }}
-      >
-        {selectedCount} selected
-      </span>
-
+    <div className="aq-toolbar__bulk" aria-live="polite">
+      <span className="aq-toolbar__selected">{selectedCount} selected</span>
       <button
+        type="button"
+        className="aq-bulk-btn"
         onClick={() => onAction('REVIEWED')}
-        disabled={isReadOnly}
-        title={isReadOnly ? 'Requires Analyst role or higher' : undefined}
-        style={{
-          padding: '6px 12px',
-          background: 'var(--ha-surface-primary)',
-          border: '1px solid var(--ha-border)',
-          borderRadius: 'var(--ha-radius-base)',
-          color: isReadOnly ? 'var(--ha-text-secondary)' : 'var(--ha-text-primary)',
-          fontSize: 'var(--ha-text-sm)',
-          cursor: isReadOnly ? 'not-allowed' : 'pointer',
-          opacity: isReadOnly ? 0.6 : 1,
-        }}
-        type="button"
+        disabled={!canTriage}
+        title={canTriage ? undefined : QUEUE_TRIAGE_DENIED}
       >
-        Mark as Reviewed
+        Mark reviewed
       </button>
-
       <button
+        type="button"
+        className="aq-bulk-btn"
         onClick={() => onAction('FALSE_POSITIVE')}
-        disabled={isReadOnly}
-        title={isReadOnly ? 'Requires Analyst role or higher' : undefined}
-        style={{
-          padding: '6px 12px',
-          background: 'var(--ha-surface-primary)',
-          border: '1px solid var(--ha-border)',
-          borderRadius: 'var(--ha-radius-base)',
-          color: isReadOnly ? 'var(--ha-text-secondary)' : 'var(--ha-text-primary)',
-          fontSize: 'var(--ha-text-sm)',
-          cursor: isReadOnly ? 'not-allowed' : 'pointer',
-          opacity: isReadOnly ? 0.6 : 1,
-        }}
-        type="button"
+        disabled={!canTriage}
+        title={canTriage ? undefined : QUEUE_TRIAGE_DENIED}
       >
-        Mark as False Positive
+        False positive
       </button>
-
       <button
+        type="button"
+        className="aq-bulk-btn aq-bulk-btn--primary"
         onClick={() => onAction('ESCALATE')}
-        disabled={isReadOnly}
-        title={isReadOnly ? 'Requires Analyst role or higher' : undefined}
-        style={{
-          padding: '6px 12px',
-          background: 'var(--ha-primary)',
-          border: 'none',
-          borderRadius: 'var(--ha-radius-base)',
-          color: 'var(--ha-foreground-on-action)',
-          fontSize: 'var(--ha-text-sm)',
-          fontWeight: 500,
-          cursor: isReadOnly ? 'not-allowed' : 'pointer',
-          opacity: isReadOnly ? 0.6 : 1,
-        }}
-        type="button"
+        disabled={!canTriage}
+        title={canTriage ? undefined : QUEUE_TRIAGE_DENIED}
       >
-        Escalate to Incident
+        Escalate to incident
       </button>
-
       <button
-        onClick={onDeselectAll}
-        style={{
-          padding: '4px 8px',
-          background: 'transparent',
-          border: 'none',
-          color: 'var(--ha-text-secondary)',
-          fontSize: 'var(--ha-text-sm)',
-          cursor: 'pointer',
-        }}
         type="button"
+        className="aq-bulk-btn"
+        onClick={() => onAction('ASSIGN')}
+        disabled={!canAssign}
+        title={canAssign ? undefined : QUEUE_ASSIGN_DENIED}
       >
-        Deselect all
+        Assign
+      </button>
+      <button type="button" className="aq-toolbar__deselect" onClick={onDeselectAll}>
+        Deselect
       </button>
     </div>
   );

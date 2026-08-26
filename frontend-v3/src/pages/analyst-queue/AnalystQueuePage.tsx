@@ -1,7 +1,11 @@
 /**
- * AnalystQueuePage — per spec 03-ANALYST-QUEUE.md
- * Unified analyst work-queue: AG Grid (server-side), bulk actions,
- * detail drawer, SSE new-alert badge, saved views, time-range selector.
+ * AnalystQueuePage — SOC triage queue (`/queue`)
+ *
+ * Job: Triage open alerts for this shift.
+ * Contracts: GET /api/ha-alerts, GET /api/ha-alerts/count-open-alerts,
+ * POST /api/ha-alerts/status (bulk alertIds), POST /api/ha-alerts/convert-to-incident,
+ * assignment via /api/ha-alerts/bulk/assignment* (SOC Manager+).
+ * STAGING CANDIDATE — no fake live when SSE disconnected; human role labels on deny.
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -9,21 +13,28 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { IServerSideDatasource } from 'ag-grid-community';
 import { RefreshCw, ShieldAlert } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
+import {
+  canAssignQueueAlerts,
+  canTriageQueueAlerts,
+  QUEUE_JOB_SENTENCE,
+  QUEUE_TRIAGE_DENIED,
+} from './analystQueue.capabilities';
 import { fetchOpenAlertCount } from './analystQueue.service';
 import type { QueueFilters } from './analystQueue.types';
+import type { QueueRowAction } from './cells/RowActionsCell';
 import { CreateIncidentModal } from './components/CreateIncidentModal';
 import { QueueDetailDrawer } from './components/QueueDetailDrawer';
 import { QueueToolbar } from './components/QueueToolbar';
 import type { SavedView } from './components/SavedViewsPanel';
 import { SavedViewsPanel } from './components/SavedViewsPanel';
 import { SseBanner } from './components/SseBanner';
-import { QUEUE_COLUMN_DEFS } from './queueColumns';
+import { createQueueColumnDefs } from './queueColumns';
 
 import { DensitySelector } from '@/components/density-selector';
 import { EmptyState } from '@/components/empty-state';
 import { SiemPageHeader } from '@/components/ha-page-header/SiemPageHeader';
-import { SiemToolbar } from '@/components/ha-toolbar/SiemToolbar';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { StatusDock } from '@/components/status-dock';
 import { TimeRangeSelector } from '@/components/time-range-selector';
@@ -32,73 +43,27 @@ import type { TimeRange } from '@/components/time-range-selector/timeRangeUtils'
 import { useAlertStream } from '@/hooks/useAlertStream';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity, ROW_HEIGHTS } from '@/hooks/useRowDensity';
-import { convertToIncident, getAlerts } from '@/services/alerts.service';
+import { AssignmentDialog } from '@/pages/alerts/components/AssignmentDialog';
+import { convertToIncident, getAlerts, updateAlertStatus } from '@/services/alerts.service';
 import { useAlertStreamStore } from '@/store/alertStream.store';
 import { useAuthStore } from '@/store/auth.store';
 import type { QueueItem } from '@/types/alert.types';
 
-// ── Bulk action API ────────────────────────────────────────────────────────────
+import './AnalystQueuePage.css';
 
-async function bulkUpdateStatus(
-  alertIds: string[],
-  action: 'REVIEWED' | 'FALSE_POSITIVE'
-): Promise<void> {
-  const token = localStorage.getItem('hivearmor_auth_token');
-  const status = action === 'REVIEWED' ? 5 : 7;
-  const response = await fetch('/api/ha-alerts/status', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token ?? ''}`,
-    },
-    body: JSON.stringify({
-      alertIds,
-      status,
-      statusObservation: '',
-      addFalsePositiveTag: action === 'FALSE_POSITIVE',
-    }),
-  });
-  if (!response.ok) throw new Error(`Bulk update failed: ${response.status}`);
-}
+const JOB_SENTENCE = QUEUE_JOB_SENTENCE;
 
-async function createIncidentFromAlerts(data: {
-  name: string;
-  severity: string;
-  description: string;
-  alertIds: string[];
-}): Promise<void> {
-  await convertToIncident({
-    alertIds: data.alertIds,
-    incidentName: data.name,
-    incidentId: 0,
-    incidentSource: 'alert',
-  });
-}
-
-// ── OpenCountBadge ─────────────────────────────────────────────────────────────
+/** Defender/Sentinel default: New + In progress (open work, not resolved). */
+const DEFAULT_FILTERS: QueueFilters = { status: ['open', 'in_progress'] };
 
 function OpenCountBadge({ count }: { count: number | undefined }): JSX.Element | null {
   if (count === undefined) return null;
   return (
-    <span
-      aria-label={`${count} open alerts`}
-      style={{
-        padding: '2px 8px',
-        borderRadius: 'var(--ha-radius-sm)',
-        background: 'var(--ha-fill-critical-muted)',
-        color: 'var(--ha-critical)',
-        fontSize: 'var(--ha-text-sm)',
-        fontWeight: 600,
-        fontFamily: 'var(--ha-font-mono)',
-        fontVariantNumeric: 'tabular-nums',
-      }}
-    >
+    <span className="aq-open-count" aria-label={`${count} open alerts`}>
       {count}
     </span>
   );
 }
-
-// ── New-alert banner ───────────────────────────────────────────────────────────
 
 function NewAlertBanner({
   count,
@@ -109,95 +74,92 @@ function NewAlertBanner({
 }): JSX.Element | null {
   if (count === 0) return null;
   return (
-    <button
-      onClick={onRefresh}
-      aria-live="polite"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        width: '100%',
-        padding: '8px 24px',
-        background: 'var(--ha-fill-primary-subtle)',
-        borderBottom: '1px solid color-mix(in srgb, var(--ha-action-primary) 30%, transparent)',
-        border: 'none',
-        cursor: 'pointer',
-        textAlign: 'left',
-        color: 'var(--ha-primary)',
-        fontSize: 'var(--ha-text-sm)',
-        fontFamily: 'var(--ha-font-ui)',
-      }}
-    >
+    <button type="button" className="aq-new-banner" onClick={onRefresh} aria-live="polite">
       <RefreshCw size={14} />
       {count} new {count === 1 ? 'alert' : 'alerts'} — click to refresh
     </button>
   );
 }
 
-// ── Page component ─────────────────────────────────────────────────────────────
-
 export function AnalystQueuePage(): JSX.Element {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
-  const isReadOnly = user?.roles?.includes('ROLE_READ_ONLY') ?? false;
+  const roles = user?.roles;
+  const canTriage = canTriageQueueAlerts(roles);
+  const canAssign = canAssignQueueAlerts(roles);
 
-  // SSE
   useAlertStream();
   const { connected: sseConnected, newAlertCount, clearNewAlertCount } = useAlertStreamStore();
   const { eps, connected: epsConnected } = useEpsStream();
   const [density] = useRowDensity();
+  const dockLive = sseConnected && epsConnected;
 
-  // UI state
-  const [filters, setFilters] = useState<QueueFilters>({});
+  const [filters, setFilters] = useState<QueueFilters>(DEFAULT_FILTERS);
   const [timeRange, setTimeRange] = useState<TimeRange>({ type: 'preset', preset: '24h' });
   const [selectedRows, setSelectedRows] = useState<QueueItem[]>([]);
   const [selectedAlertId, setSelectedAlertId] = useState<string | null>(null);
   const [savedViews, setSavedViews] = useState<SavedView[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | undefined>();
   const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
+  const [incidentAlertIds, setIncidentAlertIds] = useState<string[]>([]);
+  const [assignmentDialogIds, setAssignmentDialogIds] = useState<string[] | null>(null);
   const [hasGridError, setHasGridError] = useState(false);
 
-  // Load saved views
   useEffect(() => {
     const stored = localStorage.getItem('ha_queue_views');
-    if (stored) {
-      try {
-        setSavedViews(JSON.parse(stored) as SavedView[]);
-      } catch {
-        // ignore parse errors
-      }
+    if (!stored) return;
+    try {
+      setSavedViews(JSON.parse(stored) as SavedView[]);
+    } catch {
+      // ignore corrupt preference
     }
   }, []);
 
-  // Open alert count badge
   const { data: openCount, refetch: refetchCount } = useQuery({
     queryKey: ['alerts', 'open-count'],
     queryFn: fetchOpenAlertCount,
     refetchInterval: 30_000,
   });
 
-  // Bulk mutations
   const bulkMutation = useMutation({
     mutationFn: ({ ids, action }: { ids: string[]; action: 'REVIEWED' | 'FALSE_POSITIVE' }) =>
-      bulkUpdateStatus(ids, action),
+      updateAlertStatus({
+        alertIds: ids,
+        status: action === 'REVIEWED' ? 5 : 7,
+        statusObservation: '',
+        addFalsePositiveTag: action === 'FALSE_POSITIVE',
+      }),
     onSuccess: () => {
       setSelectedRows([]);
-      queryClient.invalidateQueries({ queryKey: ['alerts'] });
-      refetchCount();
+      void queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      void refetchCount();
     },
   });
 
   const createIncidentMutation = useMutation({
-    mutationFn: createIncidentFromAlerts,
+    mutationFn: async (data: {
+      name: string;
+      severity: string;
+      description: string;
+      alertIds: string[];
+    }) => {
+      await convertToIncident({
+        alertIds: data.alertIds,
+        incidentName: data.name,
+        incidentId: 0,
+        incidentSource: 'alert',
+      });
+    },
     onSuccess: () => {
       setSelectedRows([]);
       setIsIncidentModalOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['alerts'] });
-      refetchCount();
+      setIncidentAlertIds([]);
+      void queryClient.invalidateQueries({ queryKey: ['alerts'] });
+      void refetchCount();
     },
   });
 
-  // Handlers
   const handleRowClicked = useCallback((data: unknown) => {
     const item = data as QueueItem;
     setSelectedAlertId(item.id);
@@ -207,26 +169,61 @@ export function AnalystQueuePage(): JSX.Element {
     setSelectedRows(rows as QueueItem[]);
   }, []);
 
+  const openEscalate = useCallback((ids: string[]) => {
+    if (ids.length === 0) return;
+    setIncidentAlertIds(ids);
+    setIsIncidentModalOpen(true);
+  }, []);
+
   const handleBulkAction = useCallback(
-    (action: 'REVIEWED' | 'FALSE_POSITIVE' | 'ESCALATE') => {
+    (action: 'REVIEWED' | 'FALSE_POSITIVE' | 'ESCALATE' | 'ASSIGN') => {
       const ids = selectedRows.map((r) => r.id);
       if (ids.length === 0) return;
       if (action === 'ESCALATE') {
-        setIsIncidentModalOpen(true);
-      } else {
-        bulkMutation.mutate({ ids, action });
+        if (!canTriage) return;
+        openEscalate(ids);
+        return;
+      }
+      if (action === 'ASSIGN') {
+        if (!canAssign) return;
+        setAssignmentDialogIds(ids);
+        return;
+      }
+      if (!canTriage) return;
+      bulkMutation.mutate({ ids, action });
+    },
+    [selectedRows, bulkMutation, canTriage, canAssign, openEscalate]
+  );
+
+  const handleRowAction = useCallback(
+    (action: QueueRowAction, item: QueueItem) => {
+      if (action === 'open' || action === 'status') {
+        setSelectedAlertId(item.id);
+        return;
+      }
+      if (action === 'full_page') {
+        void navigate(`/alerts/${item.id}`);
+        return;
+      }
+      if (action === 'assign') {
+        if (!canAssign) return;
+        setAssignmentDialogIds([item.id]);
+        return;
+      }
+      if (action === 'escalate') {
+        if (!canTriage) return;
+        openEscalate([item.id]);
       }
     },
-    [selectedRows, bulkMutation]
+    [navigate, canAssign, canTriage, openEscalate]
   );
 
   const handleRefresh = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['alerts'] });
+    void queryClient.invalidateQueries({ queryKey: ['alerts'] });
     clearNewAlertCount();
     setHasGridError(false);
   }, [queryClient, clearNewAlertCount]);
 
-  // Saved views
   const handleSaveView = useCallback(
     (name: string) => {
       const newView: SavedView = { id: crypto.randomUUID(), name, filters };
@@ -253,55 +250,16 @@ export function AnalystQueuePage(): JSX.Element {
     [savedViews, activeViewId]
   );
 
-  // Active filter chips for SiemToolbar
-  const activeFilterChips = useMemo(() => {
-    const chips: { label: string; onRemove: () => void }[] = [];
-    if (filters.severity?.length) {
-      filters.severity.forEach((sev) => {
-        chips.push({
-          label: `Severity: ${sev.charAt(0).toUpperCase()}${sev.slice(1)}`,
-          onRemove: () =>
-            setFilters((prev) => ({
-              ...prev,
-              severity: prev.severity?.filter((s) => s !== sev),
-            })),
-        });
-      });
-    }
-    if (filters.status?.length) {
-      filters.status.forEach((st) => {
-        chips.push({
-          label: `Status: ${st.replace(/_/g, ' ')}`,
-          onRemove: () =>
-            setFilters((prev) => ({
-              ...prev,
-              status: prev.status?.filter((s) => s !== st),
-            })),
-        });
-      });
-    }
-    if (filters.category?.length) {
-      filters.category.forEach((cat) => {
-        chips.push({
-          label: `Category: ${cat}`,
-          onRemove: () =>
-            setFilters((prev) => ({
-              ...prev,
-              category: prev.category?.filter((c) => c !== cat),
-            })),
-        });
-      });
-    }
-    if (filters.q) {
-      chips.push({
-        label: `Search: ${filters.q}`,
-        onRemove: () => setFilters((prev) => ({ ...prev, q: undefined })),
-      });
-    }
-    return chips;
-  }, [filters]);
+  const columnDefs = useMemo(
+    () =>
+      createQueueColumnDefs({
+        canTriage,
+        canAssign,
+        onRowAction: handleRowAction,
+      }),
+    [canTriage, canAssign, handleRowAction]
+  );
 
-  // AG Grid datasource
   const datasource: IServerSideDatasource = useMemo(
     () => ({
       getRows: (params) => {
@@ -312,8 +270,6 @@ export function AnalystQueuePage(): JSX.Element {
         getAlerts({
           page,
           size,
-          // Live processor alerts store severity as a string; sorting that field
-          // in OpenSearch returns zero hits. Newest-first matches the triage queue.
           sort: '@timestamp,desc',
           severity: filters.severity,
           status: filters.status,
@@ -336,127 +292,93 @@ export function AnalystQueuePage(): JSX.Element {
     [filters, timeRange]
   );
 
-  // Empty state overlay component
   const EmptyOverlay = useCallback(
     (): JSX.Element => (
       <EmptyState
         icon={<ShieldAlert size={48} />}
-        title="No work items found"
-        description="Try adjusting your filters or time range. New alerts will appear here as they are detected."
+        title="No open work items"
+        description="No alerts match this triage filter. Adjust severity/status chips or widen the time range."
       />
     ),
     []
   );
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        minHeight: 0,
-        background: 'var(--ha-background)',
-      }}
-    >
-      {/* Page header */}
-      <SiemPageHeader
-        title="Analyst Queue"
-        badge={<OpenCountBadge count={openCount} />}
-        actions={
-          <>
-            <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
-            <button
-              onClick={handleRefresh}
-              aria-label="Refresh queue"
-              title="Refresh queue"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 32,
-                height: 32,
-                background: 'var(--ha-surface-raised)',
-                border: '1px solid var(--ha-border)',
-                borderRadius: 'var(--ha-radius-base)',
-                color: 'var(--ha-text-secondary)',
-                cursor: 'pointer',
-              }}
-            >
-              <RefreshCw size={14} />
-            </button>
-            <DensitySelector />
-            <SavedViewsPanel
-              views={savedViews}
-              activeViewId={activeViewId}
-              onSelect={handleSelectView}
-              onSave={handleSaveView}
-              onDelete={handleDeleteView}
-              isReadOnly={isReadOnly}
-            />
-          </>
-        }
-      />
+    <div className="aq-page">
+      <header className="aq-page__header">
+        <SiemPageHeader
+          title="Analyst Queue"
+          description={JOB_SENTENCE}
+          badge={<OpenCountBadge count={openCount} />}
+          actions={
+            <>
+              <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
+              <button
+                type="button"
+                className="aq-icon-btn"
+                onClick={handleRefresh}
+                aria-label="Refresh queue"
+                title="Refresh queue"
+              >
+                <RefreshCw size={14} />
+              </button>
+              <DensitySelector />
+              <SavedViewsPanel
+                views={savedViews}
+                activeViewId={activeViewId}
+                onSelect={handleSelectView}
+                onSave={handleSaveView}
+                onDelete={handleDeleteView}
+                isReadOnly={!canTriage}
+              />
+            </>
+          }
+        />
+        <p className="aq-page__meta">
+          <Link to="/dashboard">Mission Control</Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/alerts">Alerts list</Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/incidents">Incidents</Link>
+          {!canTriage && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span className="aq-page__meta-warn" title={QUEUE_TRIAGE_DENIED}>
+                Read-only — {QUEUE_TRIAGE_DENIED}
+              </span>
+            </>
+          )}
+        </p>
+      </header>
 
-      {/* SSE disconnected banner */}
+      {/* Conditional only — OEM queues keep chrome thin so the grid stays primary */}
       <SseBanner isConnected={sseConnected} onReconnect={handleRefresh} />
-
-      {/* New alerts banner */}
       <NewAlertBanner count={newAlertCount} onRefresh={handleRefresh} />
 
-      {/* Grid error banner */}
       {hasGridError && (
-        <div
-          role="alert"
-          style={{
-            padding: '10px 24px',
-            background: 'var(--ha-fill-critical-subtle)',
-            borderBottom: '1px solid color-mix(in srgb, var(--ha-severity-critical) 25%, transparent)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: 'var(--ha-text-sm)',
-            color: 'var(--ha-critical)',
-          }}
-        >
+        <div className="aq-page__error" role="alert">
           <span>Failed to load queue — could not reach the backend.</span>
-          <button
-            onClick={handleRefresh}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--ha-critical)',
-              borderRadius: 'var(--ha-radius-sm)',
-              color: 'var(--ha-critical)',
-              fontSize: 'var(--ha-text-xs)',
-              padding: '3px 10px',
-              cursor: 'pointer',
-              fontFamily: 'var(--ha-font-ui)',
-            }}
-          >
+          <button type="button" onClick={handleRefresh}>
             Retry
           </button>
         </div>
       )}
 
-      {/* Toolbar + filter chips */}
-      <SiemToolbar
-        left={
-          <QueueToolbar
-            filters={filters}
-            onFiltersChange={setFilters}
-            selectedCount={selectedRows.length}
-            onBulkAction={handleBulkAction}
-            onDeselectAll={() => setSelectedRows([])}
-            isReadOnly={isReadOnly}
-          />
-        }
-        activeFilters={activeFilterChips}
-        onClearAllFilters={() => setFilters({})}
-      />
+      <div className="aq-page__toolbar">
+        <QueueToolbar
+          filters={filters}
+          onFiltersChange={setFilters}
+          selectedCount={selectedRows.length}
+          onBulkAction={handleBulkAction}
+          onDeselectAll={() => setSelectedRows([])}
+          canTriage={canTriage}
+          canAssign={canAssign}
+        />
+      </div>
 
-      {/* AG Grid */}
-      <div style={{ flex: 1, minHeight: 0, padding: '12px 24px 0' }}>
+      <div className="aq-page__grid">
         <SiemDataGrid
-          columnDefs={QUEUE_COLUMN_DEFS}
+          columnDefs={columnDefs}
           datasource={datasource}
           rowModelType="serverSide"
           rowSelection="multiple"
@@ -474,28 +396,44 @@ export function AnalystQueuePage(): JSX.Element {
             resizable: true,
           }}
           noRowsOverlayComponent={EmptyOverlay}
+          ariaLabel="Analyst triage queue"
         />
       </div>
 
-      {/* Detail drawer */}
       <QueueDetailDrawer
         alertId={selectedAlertId}
         onClose={() => setSelectedAlertId(null)}
+        onOpenAlert={(id) => setSelectedAlertId(id)}
+        canTriage={canTriage}
+        onEscalate={(id) => openEscalate([id])}
       />
 
-      {/* Create incident modal */}
       <CreateIncidentModal
         isOpen={isIncidentModalOpen}
-        alertIds={selectedRows.map((r) => r.id)}
-        onClose={() => setIsIncidentModalOpen(false)}
+        alertIds={incidentAlertIds}
+        onClose={() => {
+          setIsIncidentModalOpen(false);
+          setIncidentAlertIds([]);
+        }}
         onSubmit={(data) => createIncidentMutation.mutateAsync(data)}
       />
 
-      {/* Status dock */}
+      {assignmentDialogIds && (
+        <AssignmentDialog
+          alertIds={assignmentDialogIds}
+          onCancel={() => setAssignmentDialogIds(null)}
+          onSuccess={() => {
+            setAssignmentDialogIds(null);
+            setSelectedRows([]);
+            void queryClient.invalidateQueries({ queryKey: ['alerts'] });
+          }}
+        />
+      )}
+
       <StatusDock
-        sseConnected={sseConnected && epsConnected}
+        sseConnected={dockLive}
         eps={eps}
-        mode="live"
+        mode={dockLive ? 'live' : 'historical'}
       />
     </div>
   );

@@ -1,0 +1,283 @@
+/**
+ * Analyst Queue — triage work surface
+ * Primary job: dense alert grid (≥50% viewport). Secondary chrome stays compact.
+ */
+
+.aq-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--ha-background);
+}
+
+.aq-page__header {
+  flex-shrink: 0;
+}
+
+.aq-page__header :is(h1) {
+  font-size: var(--ha-text-md);
+  font-weight: 600;
+}
+
+/* Tighten SiemPageHeader padding on this page only */
+.aq-page__header > div {
+  min-height: 0;
+  padding: 10px 16px 4px;
+}
+
+.aq-page__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0;
+  padding: 0 16px 8px;
+  background: var(--ha-surface-primary);
+  border-bottom: 1px solid var(--ha-border);
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+}
+
+.aq-page__meta a {
+  color: var(--ha-primary);
+  text-decoration: none;
+}
+
+.aq-page__meta a:hover {
+  text-decoration: underline;
+}
+
+.aq-page__meta-warn {
+  color: var(--ha-text-secondary);
+}
+
+.aq-page__error {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  background: var(--ha-fill-critical-subtle);
+  border-bottom: 1px solid color-mix(in srgb, var(--ha-critical) 25%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-critical);
+}
+
+.aq-page__error button {
+  background: transparent;
+  border: 1px solid var(--ha-critical);
+  border-radius: var(--ha-radius-sm);
+  color: var(--ha-critical);
+  font-size: var(--ha-text-xs);
+  padding: 3px 10px;
+  cursor: pointer;
+  font-family: var(--ha-font-ui);
+}
+
+.aq-page__toolbar {
+  flex-shrink: 0;
+}
+
+.aq-page__grid {
+  flex: 1 1 auto;
+  min-height: 50vh;
+  padding: 4px 12px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.aq-page__grid > * {
+  flex: 1;
+  min-height: 0;
+}
+
+.aq-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  color: var(--ha-text-secondary);
+  cursor: pointer;
+}
+
+.aq-open-count {
+  padding: 2px 8px;
+  border-radius: var(--ha-radius-sm);
+  background: color-mix(in srgb, var(--ha-critical) 15%, transparent);
+  color: var(--ha-critical);
+  font-size: var(--ha-text-sm);
+  font-weight: 600;
+  font-family: var(--ha-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.aq-new-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 16px;
+  background: color-mix(in srgb, var(--ha-primary) 12%, transparent);
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--ha-primary) 30%, transparent);
+  cursor: pointer;
+  text-align: left;
+  color: var(--ha-primary);
+  font-size: var(--ha-text-sm);
+  font-family: var(--ha-font-ui);
+}
+
+/* Compact filter + bulk strip — sits directly above the grid */
+.aq-toolbar {
+  padding: 6px 12px;
+  background: var(--ha-surface-raised);
+  border-bottom: 1px solid var(--ha-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 36px;
+}
+
+.aq-toolbar__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.aq-chip-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aq-chip-group__label {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.aq-chip-strip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.aq-chip {
+  padding: 3px 8px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  background: var(--ha-surface-primary);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+  font-family: var(--ha-font-ui);
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.aq-chip[data-active='true'] {
+  color: var(--ha-text-primary);
+  border-color: var(--ha-primary);
+  background: color-mix(in srgb, var(--ha-primary) 14%, transparent);
+}
+
+.aq-chip[data-severity='critical'][data-active='true'] {
+  border-color: var(--ha-critical);
+  color: var(--ha-critical);
+  background: color-mix(in srgb, var(--ha-critical) 14%, transparent);
+}
+
+.aq-chip[data-severity='high'][data-active='true'] {
+  border-color: var(--ha-high);
+  color: var(--ha-high);
+  background: color-mix(in srgb, var(--ha-high) 14%, transparent);
+}
+
+.aq-chip[data-severity='medium'][data-active='true'] {
+  border-color: var(--ha-medium);
+  color: var(--ha-medium);
+  background: color-mix(in srgb, var(--ha-medium) 14%, transparent);
+}
+
+.aq-toolbar__search {
+  padding: 4px 10px;
+  min-width: 160px;
+  max-width: 240px;
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  color: var(--ha-text-primary);
+  font-size: var(--ha-text-sm);
+  font-family: var(--ha-font-ui);
+}
+
+.aq-toolbar__clear,
+.aq-toolbar__deselect {
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  color: var(--ha-primary);
+  font-size: var(--ha-text-xs);
+  cursor: pointer;
+  font-family: var(--ha-font-ui);
+}
+
+.aq-toolbar__bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.aq-toolbar__selected {
+  color: var(--ha-primary);
+  font-size: var(--ha-text-sm);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.aq-toolbar__honesty {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+  max-width: 280px;
+}
+
+.aq-bulk-btn {
+  padding: 4px 10px;
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  color: var(--ha-text-primary);
+  font-size: var(--ha-text-xs);
+  cursor: pointer;
+  font-family: var(--ha-font-ui);
+}
+
+.aq-bulk-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  color: var(--ha-text-secondary);
+}
+
+.aq-bulk-btn--primary {
+  background: var(--ha-primary);
+  border: none;
+  color: var(--ha-background);
+  font-weight: 500;
+}
+
+.aq-bulk-btn--primary:disabled {
+  color: var(--ha-text-secondary);
+}
