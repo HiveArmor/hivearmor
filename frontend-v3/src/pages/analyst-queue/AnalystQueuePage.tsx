@@ -53,7 +53,8 @@ import './AnalystQueuePage.css';
 
 const JOB_SENTENCE = QUEUE_JOB_SENTENCE;
 
-const DEFAULT_FILTERS: QueueFilters = { status: ['open'] };
+/** Defender/Sentinel default: New + In progress (open work, not resolved). */
+const DEFAULT_FILTERS: QueueFilters = { status: ['open', 'in_progress'] };
 
 function OpenCountBadge({ count }: { count: number | undefined }): JSX.Element | null {
   if (count === undefined) return null;
@@ -304,7 +305,7 @@ export function AnalystQueuePage(): JSX.Element {
 
   return (
     <div className="aq-page">
-      <div className="aq-page__header">
+      <header className="aq-page__header">
         <SiemPageHeader
           title="Analyst Queue"
           description={JOB_SENTENCE}
@@ -333,37 +334,24 @@ export function AnalystQueuePage(): JSX.Element {
             </>
           }
         />
-      </div>
+        <p className="aq-page__meta">
+          <Link to="/dashboard">Mission Control</Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/alerts">Alerts list</Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/incidents">Incidents</Link>
+          {!canTriage && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span className="aq-page__meta-warn" title={QUEUE_TRIAGE_DENIED}>
+                Read-only — {QUEUE_TRIAGE_DENIED}
+              </span>
+            </>
+          )}
+        </p>
+      </header>
 
-      <nav className="aq-page__links" aria-label="Related work surfaces">
-        <Link to="/dashboard">Mission Control</Link>
-        <span className="aq-page__links-sep" aria-hidden="true">
-          ·
-        </span>
-        <Link to="/alerts">Alerts list</Link>
-        <span className="aq-page__links-sep" aria-hidden="true">
-          ·
-        </span>
-        <Link to="/incidents">Incidents</Link>
-        {!dockLive && (
-          <>
-            <span className="aq-page__links-sep" aria-hidden="true">
-              ·
-            </span>
-            <span title="Status dock is disconnected — queue is historical until SSE reconnects">
-              Historical mode (live feed disconnected)
-            </span>
-          </>
-        )}
-      </nav>
-
-      {!canTriage && (
-        <div className="aq-page__rbac-banner" role="status">
-          Queue is read-only for your role. {QUEUE_TRIAGE_DENIED} to change status, escalate, or
-          convert alerts.
-        </div>
-      )}
-
+      {/* Conditional only — OEM queues keep chrome thin so the grid stays primary */}
       <SseBanner isConnected={sseConnected} onReconnect={handleRefresh} />
       <NewAlertBanner count={newAlertCount} onRefresh={handleRefresh} />
 

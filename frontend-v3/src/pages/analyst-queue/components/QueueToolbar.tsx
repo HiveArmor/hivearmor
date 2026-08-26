@@ -74,52 +74,59 @@ export function QueueToolbar({
   return (
     <div className="aq-toolbar" role="toolbar" aria-label="Queue filters and bulk actions">
       <div className="aq-toolbar__filters">
-        <div className="aq-chip-strip" role="group" aria-label="Severity filters">
-          {SEVERITY_OPTIONS.map((opt) => {
-            const active = filters.severity?.includes(opt.value) ?? false;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                className="aq-chip"
-                data-active={active}
-                data-severity={opt.value}
-                aria-pressed={active}
-                onClick={() =>
-                  onFiltersChange({
-                    ...filters,
-                    severity: toggleValue(filters.severity, opt.value),
-                  })
-                }
-              >
-                {opt.label}
-              </button>
-            );
-          })}
+        {/* Status first — Elastic/Defender queue convention; default open + in_progress */}
+        <div className="aq-chip-group">
+          <span className="aq-chip-group__label">Status</span>
+          <div className="aq-chip-strip" role="group" aria-label="Status filters">
+            {STATUS_OPTIONS.map((opt) => {
+              const active = filters.status?.includes(opt.value) ?? false;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className="aq-chip"
+                  data-active={active}
+                  data-status={opt.value}
+                  aria-pressed={active}
+                  onClick={() =>
+                    onFiltersChange({
+                      ...filters,
+                      status: toggleValue(filters.status, opt.value),
+                    })
+                  }
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="aq-chip-strip" role="group" aria-label="Status filters">
-          {STATUS_OPTIONS.map((opt) => {
-            const active = filters.status?.includes(opt.value) ?? false;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                className="aq-chip"
-                data-active={active}
-                data-status={opt.value}
-                aria-pressed={active}
-                onClick={() =>
-                  onFiltersChange({
-                    ...filters,
-                    status: toggleValue(filters.status, opt.value),
-                  })
-                }
-              >
-                {opt.label}
-              </button>
-            );
-          })}
+        <div className="aq-chip-group">
+          <span className="aq-chip-group__label">Severity</span>
+          <div className="aq-chip-strip" role="group" aria-label="Severity filters">
+            {SEVERITY_OPTIONS.map((opt) => {
+              const active = filters.severity?.includes(opt.value) ?? false;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className="aq-chip"
+                  data-active={active}
+                  data-severity={opt.value}
+                  aria-pressed={active}
+                  onClick={() =>
+                    onFiltersChange({
+                      ...filters,
+                      severity: toggleValue(filters.severity, opt.value),
+                    })
+                  }
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <input

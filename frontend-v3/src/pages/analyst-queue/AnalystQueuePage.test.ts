@@ -54,6 +54,11 @@ describe('AnalystQueuePage UX contracts', () => {
     expect(QUEUE_JOB_SENTENCE).toBe('Triage open alerts for this shift');
   });
 
+  it('defaults to open + in_progress (Defender New + In progress)', () => {
+    const source = readFileSync(join(dir, 'AnalystQueuePage.tsx'), 'utf8');
+    expect(source).toContain("status: ['open', 'in_progress']");
+  });
+
   it('keeps job sentence and cross-links in page source', () => {
     const source = readFileSync(join(dir, 'AnalystQueuePage.tsx'), 'utf8');
     expect(source).toContain('QUEUE_JOB_SENTENCE');
@@ -63,6 +68,7 @@ describe('AnalystQueuePage UX contracts', () => {
     expect(source).toContain("mode={dockLive ? 'live' : 'historical'}");
     expect(source).toContain('updateAlertStatus');
     expect(source).toContain('AssignmentDialog');
+    expect(source).toContain('aq-page__meta');
   });
 
   it('toolbar uses chip filters and bulk honesty flag', () => {

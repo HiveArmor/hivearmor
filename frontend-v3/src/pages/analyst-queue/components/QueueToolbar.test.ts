@@ -12,6 +12,14 @@ const dir = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(dir, 'QueueToolbar.tsx'), 'utf8');
 
 describe('QueueToolbar', () => {
+  it('places Status filters before Severity (OEM queue convention)', () => {
+    const statusIdx = source.indexOf('Status filters');
+    const severityIdx = source.indexOf('Severity filters');
+    expect(statusIdx).toBeGreaterThan(-1);
+    expect(severityIdx).toBeGreaterThan(-1);
+    expect(statusIdx).toBeLessThan(severityIdx);
+  });
+
   it('exposes scannable severity and status chip strips', () => {
     expect(source).toContain('Severity filters');
     expect(source).toContain('Status filters');

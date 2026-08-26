@@ -20,50 +20,41 @@
   font-weight: 600;
 }
 
-.aq-page__job {
-  margin: 0;
-  font-size: var(--ha-text-sm);
-  color: var(--ha-text-secondary);
-  line-height: 1.35;
+/* Tighten SiemPageHeader padding on this page only */
+.aq-page__header > div {
+  min-height: 0;
+  padding: 10px 16px 4px;
 }
 
-.aq-page__links {
+.aq-page__meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 14px;
-  padding: 6px 24px 8px;
+  gap: 6px 10px;
+  margin: 0;
+  padding: 0 16px 8px;
   background: var(--ha-surface-primary);
   border-bottom: 1px solid var(--ha-border);
   font-size: var(--ha-text-xs);
   color: var(--ha-text-secondary);
 }
 
-.aq-page__links a {
+.aq-page__meta a {
   color: var(--ha-primary);
   text-decoration: none;
 }
 
-.aq-page__links a:hover {
+.aq-page__meta a:hover {
   text-decoration: underline;
 }
 
-.aq-page__links-sep {
-  color: var(--ha-border);
-}
-
-.aq-page__rbac-banner {
-  flex-shrink: 0;
-  padding: 8px 24px;
-  background: color-mix(in srgb, var(--ha-medium) 12%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--ha-medium) 30%, transparent);
-  font-size: var(--ha-text-sm);
+.aq-page__meta-warn {
   color: var(--ha-text-secondary);
 }
 
 .aq-page__error {
   flex-shrink: 0;
-  padding: 8px 24px;
+  padding: 6px 16px;
   background: var(--ha-fill-critical-subtle);
   border-bottom: 1px solid color-mix(in srgb, var(--ha-critical) 25%, transparent);
   display: flex;
@@ -92,7 +83,7 @@
 .aq-page__grid {
   flex: 1 1 auto;
   min-height: 50vh;
-  padding: 8px 16px 0;
+  padding: 4px 12px 0;
   display: flex;
   flex-direction: column;
 }
@@ -131,7 +122,7 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 6px 24px;
+  padding: 6px 16px;
   background: color-mix(in srgb, var(--ha-primary) 12%, transparent);
   border: none;
   border-bottom: 1px solid color-mix(in srgb, var(--ha-primary) 30%, transparent);
@@ -142,25 +133,39 @@
   font-family: var(--ha-font-ui);
 }
 
-/* Compact filter + bulk strip */
+/* Compact filter + bulk strip — sits directly above the grid */
 .aq-toolbar {
-  padding: 6px 16px;
+  padding: 6px 12px;
   background: var(--ha-surface-raised);
   border-bottom: 1px solid var(--ha-border);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
-  min-height: 40px;
+  min-height: 36px;
 }
 
 .aq-toolbar__filters {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex: 1;
   min-width: 0;
+}
+
+.aq-chip-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aq-chip-group__label {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
 }
 
 .aq-chip-strip {
