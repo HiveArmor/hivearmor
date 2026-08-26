@@ -12,16 +12,25 @@
 
 import { lazy, Suspense, useCallback, useRef, useState } from 'react';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, Copy, Monitor, Server, Shield, ShieldAlert, Terminal } from 'lucide-react';
 
 import { HaButton } from '@/components/ha-button/HaButton';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { HaInlineBanner } from '@/components/ha-inline-banner';
+import { ApiError, apiClient } from '@/lib/apiClient';
 import { defineHiveArmorMonacoTheme } from '@/lib/monacoTheme';
 import { createAgentKey } from '@/services/agentProvisioningService';
+import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore } from '@/store/theme.store';
 import type { AgentKeyCreatedDTO, AgentMode } from '@/types/agentProvisioning.types';
+
+interface AgentPackageStatus {
+  filename: string;
+  href: string;
+  available: boolean;
+  sizeBytes: number | null;
+}
 
 // Lazy-load the Monaco editor — same pattern used in EndpointTimelinePage
 const MonacoEditor = lazy(() => import('@monaco-editor/react'));
@@ -50,6 +59,8 @@ interface AddAgentDrawerProps {
 export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.Element {
   const queryClient = useQueryClient();
   const theme = useThemeStore((state) => state.theme);
+  const selectedTenantId = useAuthStore((state) => state.selectedTenantId);
+  const tenantSelected = selectedTenantId !== null && selectedTenantId > 0;
 
   // Step 1 — form state
   const [alias, setAlias]         = useState('');
@@ -63,6 +74,18 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
   const [copied, setCopied]     = useState(false);
   const copyTimeoutRef          = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const packageCatalogQuery = useQuery({
+    queryKey: ['ha-agent-packages'],
+    queryFn: () => apiClient.get<AgentPackageStatus[]>('/ha-agent-packages'),
+    enabled: isOpen,
+    retry: false,
+    staleTime: 30_000,
+  });
+  const packagesPublished =
+    packageCatalogQuery.data?.some((item) => item.available === true) ?? false;
+  const packagesMissing =
+    packageCatalogQuery.isSuccess && !packagesPublished;
+
   // ── Mutation ───────────────────────────────────────────────────────────────
 
   const mutation = useMutation({
@@ -71,6 +94,19 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
       setCreated(data);
       // Invalidate sensors list so the new agent appears once it registers.
       void queryClient.invalidateQueries({ queryKey: ['sensors'] });
+    },
+    onError: (err: unknown) => {
+      if (err instanceof ApiError && err.status === 409) {
+        setAliasError(
+          err.body.message
+            ?? err.message
+            ?? 'An agent with this name already exists. Choose a different alias or revoke the existing key first.'
+        );
+        return;
+      }
+      if (err instanceof ApiError && err.status === 400 && err.body.message) {
+        setAliasError(err.body.message);
+      }
     },
   });
 
@@ -99,6 +135,7 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
       setAliasError(err);
       return;
     }
+    setAliasError(null);
     mutation.mutate({ alias: alias.trim(), mode, expiresIn });
   };
 
@@ -160,6 +197,24 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
         // ── Step 1: Form ──────────────────────────────────────────────────────
         <div style={{ padding: '24px 24px 0', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
+          {!tenantSelected && (
+            <HaInlineBanner
+              variant="warning"
+              title="Select a tenant in the masthead"
+              description='Agent keys can still be generated under “All authorized tenants”, but Enrollment audit and tenant-scoped follow-up need a concrete masthead tenant (not All tenants).'
+              isDismissible={false}
+            />
+          )}
+
+          {packagesMissing && (
+            <HaInlineBanner
+              variant="warning"
+              title="Agent packages not published on this server"
+              description="Install scripts download binaries from /agent-packages/. None are available yet, so enrollment will fail until packages are published on the host. You can still generate a script for later use."
+              isDismissible={false}
+            />
+          )}
+
           {/* Agent name field */}
           <div>
             <label style={labelStyle}>
@@ -182,17 +237,20 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
               }}
             />
             {aliasError && (
-              <p style={{ fontSize: 'var(--ha-text-xs)', color: 'var(--ha-critical)', marginTop: 4 }}>
+              <p style={{ fontSize: 'var(--ha-text-xs)', color: 'var(--ha-critical)', marginTop: 4 }} role="alert">
                 {aliasError}
               </p>
             )}
-            {mutation.error && (
-              <p style={{ fontSize: 'var(--ha-text-xs)', color: 'var(--ha-critical)', marginTop: 4 }}>
-                {mutation.error instanceof Error
-                  ? mutation.error.message
-                  : 'An error occurred. Please try again.'}
-              </p>
-            )}
+            {(() => {
+              const err = mutation.error;
+              if (!(err instanceof Error)) return null;
+              if (err instanceof ApiError && err.status === 409) return null;
+              return (
+                <p style={{ fontSize: 'var(--ha-text-xs)', color: 'var(--ha-critical)', marginTop: 4 }} role="alert">
+                  {err.message}
+                </p>
+              );
+            })()}
           </div>
 
           {/* Mode selection */}
@@ -278,6 +336,17 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
             />
           </div>
 
+          {packagesMissing && (
+            <div style={{ padding: '12px 24px 0' }}>
+              <HaInlineBanner
+                variant="warning"
+                title="Package download will fail until binaries are published"
+                description="This script still points at /agent-packages/, but no binaries are published on this server yet. Do not run it on an endpoint until packages are available (see Optional package downloads on Sensors)."
+                isDismissible={false}
+              />
+            </div>
+          )}
+
           <div
             style={{
               margin: '12px 24px 0',
@@ -292,8 +361,10 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
           >
             <strong style={{ color: 'var(--ha-text-primary)' }}>Next on the endpoint:</strong> copy
             the script for your OS, run it with admin/root privileges, then return here and refresh
-            Sensors until the host shows Online. The script downloads{' '}
-            <code>/agent-packages/</code> automatically — manual package download is optional.
+            Sensors until the host shows Online.
+            {packagesMissing
+              ? ' After packages are published, the script downloads /agent-packages/ automatically.'
+              : ' The script downloads /agent-packages/ automatically — manual package download is optional.'}
           </div>
 
           {/* OS tabs */}

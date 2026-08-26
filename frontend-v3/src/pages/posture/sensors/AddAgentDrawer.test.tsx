@@ -1,0 +1,107 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { AddAgentDrawer } from './AddAgentDrawer';
+
+import { ApiError } from '@/lib/apiClient';
+
+const mockCreate = vi.fn();
+const mockGet = vi.fn();
+let mockSelectedTenantId: number | null = null;
+
+vi.mock('@/services/agentProvisioningService', () => ({
+  createAgentKey: (...args: unknown[]) => mockCreate(...args),
+}));
+
+vi.mock('@/lib/apiClient', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/apiClient')>('@/lib/apiClient');
+  return {
+    ...actual,
+    apiClient: {
+      get: (...args: unknown[]) => mockGet(...args),
+    },
+  };
+});
+
+vi.mock('@/store/auth.store', () => ({
+  useAuthStore: (
+    selector: (state: { selectedTenantId: number | null }) => unknown
+  ) => selector({ selectedTenantId: mockSelectedTenantId }),
+}));
+
+vi.mock('@/store/theme.store', () => ({
+  useThemeStore: (selector: (state: { theme: string }) => unknown) =>
+    selector({ theme: 'dark' }),
+}));
+
+vi.mock('@monaco-editor/react', () => ({
+  default: () => <div data-testid="monaco" />,
+}));
+
+function renderDrawer(): void {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  render(
+    <QueryClientProvider client={client}>
+      <AddAgentDrawer isOpen onClose={vi.fn()} />
+    </QueryClientProvider>
+  );
+}
+
+describe('AddAgentDrawer honesty + 409 UX', () => {
+  beforeEach(() => {
+    mockCreate.mockReset();
+    mockGet.mockReset();
+    mockSelectedTenantId = null;
+    mockGet.mockResolvedValue([
+      {
+        filename: 'hivearmor_agent_service_linux_amd64',
+        href: '/agent-packages/hivearmor_agent_service_linux_amd64',
+        available: false,
+        sizeBytes: null,
+      },
+    ]);
+  });
+
+  it('warns when masthead is All tenants and packages are unpublished', async () => {
+    renderDrawer();
+
+    expect(
+      await screen.findByText(/Select a tenant in the masthead/i)
+    ).toBeVisible();
+    expect(
+      await screen.findByText(/Agent packages not published on this server/i)
+    ).toBeVisible();
+  });
+
+  it('maps duplicate alias 409 onto the agent name field', async () => {
+    mockSelectedTenantId = 2;
+    mockGet.mockResolvedValue([
+      {
+        filename: 'hivearmor_agent_service_linux_amd64',
+        href: '/agent-packages/hivearmor_agent_service_linux_amd64',
+        available: true,
+        sizeBytes: 10,
+      },
+    ]);
+    mockCreate.mockRejectedValue(
+      new ApiError(409, {
+        status: 409,
+        message: 'An agent with the name "ux-audit-host-01" already exists. Choose a different alias or revoke the existing key first.',
+      })
+    );
+
+    const user = userEvent.setup();
+    renderDrawer();
+
+    await user.type(screen.getByPlaceholderText(/web-server-01/i), 'ux-audit-host-01');
+    await user.click(screen.getByRole('button', { name: /Generate install script/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/already exists/i);
+    });
+  });
+});
