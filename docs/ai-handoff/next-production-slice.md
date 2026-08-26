@@ -1,17 +1,28 @@
 # Next production slice
 
-Updated: **2026-08-26 07:15:00 IST (UTC+05:30)**
+Updated: **2026-08-26 07:30:00 IST (UTC+05:30)**
+
+## Completed this slice — Staging enrollment-audit tenant gate smoke
+
+Status: **RECORDED** tip `504ace0` — **STAGING CANDIDATE**. Not `PRODUCTION READY`.
+Evidence: `docs/ai-handoff/validation-evidence.md` (2026-08-26 07:30 IST). Report `/tmp/hivearmor-staging-enrollment-audit-tenant-gate.json`.
+
+| Check | Result |
+|---|---|
+| FE rebuild + edge | healthy |
+| SPA `/admin/enrollment-audit` | 200 |
+| audit no tenant / tenant 1 | 400 / 200 (75 events) |
+
+Next optional: full RESP-020 policy/delegation CRUD when backend exists.
+Deferred: vendor connectors; 24h soak.
 
 ## Completed this slice — Enrollment audit masthead tenant gate
 
-Status: **STAGING CANDIDATE** (branch `feat/enrollment-audit-tenant-gate`). Not `PRODUCTION READY`.
+Status: **MERGED** tip `504ace0` (#80) — STAGING CANDIDATE. Staging smoke recorded above.
 
 | ID | Fix |
 |---|---|
 | ENROLL-AUDIT-TENANT | Skip audit/export fetch when masthead is “All tenants”; EmptyState + disabled export; service throws `EnrollmentAuditTenantRequiredError` before HTTP 400 |
-
-Next after merge: staging FE rebuild + open `/admin/enrollment-audit` with all-tenants vs tenant 1.
-Deferred: vendor connectors; 24h soak; full RESP-020 policy/delegation CRUD.
 
 ## Completed this slice — Parallel follow-ons (INV-012 UI + Detect→Govern walk + RESP-020)
 

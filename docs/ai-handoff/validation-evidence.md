@@ -634,6 +634,15 @@ No production-readiness claim is made by this baseline entry.
 - Staging proof (admin JWT): `GET /api/ha-tenants` **200** (`X-Total-Count=4`); `GET /api/ha-audit-log` **200** (`X-Total-Count=416`).
 - Unit: `HiveTenantServiceTest` + `HaAuditLogResourceExportTest` — 7/7 passed.
 
+## 2026-08-26 07:30:00 IST (UTC+05:30) — Staging enrollment-audit tenant gate (tip 504ace0)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY).
+- Tip deployed: `504ace0` (merge #80). FE-only rebuild (`frontend-v3` + edge).
+- Host: `https://72.44.52.187` — FE healthy; admin JWT `token_len=219`.
+- SPA `/admin/enrollment-audit` **200**; bundle contains “Select a tenant to load enrollment audit”.
+- API: audit without `X-Tenant-ID` → **400**; with `X-Tenant-ID: 1` → **200** (`X-Total-Count=75`).
+- Report: `/tmp/hivearmor-staging-enrollment-audit-tenant-gate.json`.
+
 ## 2026-08-25 23:06:00 IST (UTC+05:30) — Parallel follow-ons (INV-012 UI + Detect→Govern walk + RESP-020)
 
 - Label: **STAGING CANDIDATE** (not PRODUCTION READY). Not a 24h soak. Not whole-product LIVE VERIFIED.
