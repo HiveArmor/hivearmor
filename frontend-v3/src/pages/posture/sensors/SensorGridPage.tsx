@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 
 import { AddAgentDrawer } from './AddAgentDrawer';
 import { AgentPackageCatalog } from './AgentPackageCatalog';
+import { SensorFleetSummary } from './SensorFleetSummary';
 
 import { DensitySelector } from '@/components/density-selector';
 import { EmptyState } from '@/components/empty-state';
@@ -20,6 +21,10 @@ import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity, ROW_HEIGHTS } from '@/hooks/useRowDensity';
 import { hasAuthority } from '@/lib/auth/hasAuthority';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import {
+  fetchAgentPackageSummary,
+  isAgentVersionBehind,
+} from '@/services/agentPackage.service';
 import {
   canEnableIsolateHost,
   canEnableKillProcess,
@@ -222,13 +227,21 @@ export function SensorGridPage(): JSX.Element {
     },
   });
 
+  const packageSummaryQuery = useQuery({
+    queryKey: ['ha-agent-packages-summary'],
+    queryFn: fetchAgentPackageSummary,
+    retry: false,
+    staleTime: 30_000,
+  });
+  const latestPublished = packageSummaryQuery.data?.latestVersion ?? null;
+
   const activeSensors = useMemo(
     () => sensors.filter((s) => s.connectionStatus === 'ONLINE').length,
     [sensors]
   );
   const totalSensors = sensors.length;
 
-  const columnDefs: ColDef<SensorDTO>[] = [
+  const columnDefs: ColDef<SensorDTO>[] = useMemo((): ColDef<SensorDTO>[] => [
     {
       field: 'hostname',
       headerName: 'Hostname',
@@ -257,9 +270,46 @@ export function SensorGridPage(): JSX.Element {
     {
       field: 'agentVersion',
       headerName: 'Agent Version',
-      width: 120,
-      cellStyle: { fontFamily: 'var(--ha-font-mono)' },
-      valueFormatter: (params) => params.value ?? '—',
+      width: 180,
+      cellRenderer: (params: ICellRendererParams<SensorDTO>) => {
+        const current = params.value as string | null | undefined;
+        const behind = isAgentVersionBehind(current, latestPublished);
+        return (
+          <span
+            style={{
+              display: 'inline-flex',
+              flexDirection: 'column',
+              gap: 2,
+              fontFamily: 'var(--ha-font-mono)',
+              fontSize: 'var(--ha-text-sm)',
+            }}
+          >
+            <span>{current?.trim() ? current : '—'}</span>
+            {behind && (
+              <span
+                style={{
+                  fontFamily: 'var(--ha-font-ui)',
+                  fontSize: 'var(--ha-text-xs)',
+                  color: 'var(--ha-high)',
+                }}
+              >
+                Behind {latestPublished}
+              </span>
+            )}
+            {!behind && latestPublished && current?.trim() === latestPublished && (
+              <span
+                style={{
+                  fontFamily: 'var(--ha-font-ui)',
+                  fontSize: 'var(--ha-text-xs)',
+                  color: 'var(--ha-positive)',
+                }}
+              >
+                Current
+              </span>
+            )}
+          </span>
+        );
+      },
     },
     {
       field: 'connectionStatus',
@@ -341,7 +391,9 @@ export function SensorGridPage(): JSX.Element {
       sortable: false,
       filter: false,
     },
-  ];
+    ],
+    [latestPublished]
+  );
 
   return (
     <div
@@ -431,6 +483,8 @@ export function SensorGridPage(): JSX.Element {
           )}
         </div>
       </div>
+
+      {!isLoading && !isError && <SensorFleetSummary sensors={sensors} />}
 
       {canProvisionAgent && (
         <ol

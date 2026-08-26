@@ -24,6 +24,9 @@ vi.mock('./AddAgentDrawer', () => ({
 vi.mock('./AgentPackageCatalog', () => ({
   AgentPackageCatalog: () => null,
 }));
+vi.mock('./SensorFleetSummary', () => ({
+  SensorFleetSummary: () => <div data-testid="sensor-fleet-summary" />,
+}));
 vi.mock('@/lib/auth/hasAuthority', () => ({
   hasAuthority: (role: string) => role === 'ROLE_ADMIN',
 }));
@@ -67,27 +70,44 @@ vi.mock('@/components/siem-data-grid', () => ({
 
 describe('SensorGridPage remote actions (GAP-SEC-05 / B1)', () => {
   beforeEach(() => {
-    useQuery.mockReturnValue({
-      data: [
-        {
-          agentId: '42',
-          hostname: 'wks-01',
-          platform: 'windows',
-          osVersion: '11',
-          agentVersion: '1.0.0',
-          connectionStatus: 'ONLINE',
-          lastSeen: '2026-08-23T00:00:00Z',
-          cpuUsage: null,
-          memUsage: null,
-          diskUsage: null,
-          collectorType: 'agent',
-          mode: null,
-          bundleVersion: null,
-        },
-      ],
-      isLoading: false,
-      isError: false,
-      refetch: vi.fn(),
+    useQuery.mockImplementation((opts: { queryKey?: unknown[] }) => {
+      const key = Array.isArray(opts.queryKey) ? String(opts.queryKey[0]) : '';
+      if (key === 'ha-agent-packages-summary') {
+        return {
+          data: {
+            latestVersion: '1.0.0',
+            updaterVersion: '1.0.0',
+            publishedCount: 1,
+            totalCount: 6,
+            packages: [],
+          },
+          isLoading: false,
+          isError: false,
+          refetch: vi.fn(),
+        };
+      }
+      return {
+        data: [
+          {
+            agentId: '42',
+            hostname: 'wks-01',
+            platform: 'windows',
+            osVersion: '11',
+            agentVersion: '1.0.0',
+            connectionStatus: 'ONLINE',
+            lastSeen: '2026-08-23T00:00:00Z',
+            cpuUsage: null,
+            memUsage: null,
+            diskUsage: null,
+            collectorType: 'agent',
+            mode: null,
+            bundleVersion: null,
+          },
+        ],
+        isLoading: false,
+        isError: false,
+        refetch: vi.fn(),
+      };
     });
   });
 

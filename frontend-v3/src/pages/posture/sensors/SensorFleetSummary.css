@@ -1,0 +1,60 @@
+.sensor-fleet-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 16px 0;
+  padding: 12px 14px;
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-md);
+}
+
+.sensor-fleet-summary__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 20px;
+  align-items: flex-end;
+}
+
+.sensor-fleet-summary__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 72px;
+}
+
+.sensor-fleet-summary__label {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.sensor-fleet-summary__value {
+  font-size: var(--ha-text-md);
+  font-weight: 600;
+  color: var(--ha-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sensor-fleet-summary__value--mono {
+  font-family: var(--ha-font-mono);
+  font-size: var(--ha-text-sm);
+}
+
+.sensor-fleet-summary__value--positive {
+  color: var(--ha-positive);
+}
+
+.sensor-fleet-summary__value--warn {
+  color: var(--ha-high);
+}
+
+.sensor-fleet-summary__hint {
+  margin: 0;
+  max-width: 52ch;
+  font-size: var(--ha-text-xs);
+  color: var(--ha-high);
+}

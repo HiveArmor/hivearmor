@@ -12,6 +12,10 @@ vi.mock('@/lib/apiClient', () => ({
   },
 }));
 
+vi.mock('@/services/agentPackage.service', () => ({
+  fetchAgentPackageSummary: () => mockGet(),
+}));
+
 function renderCatalog(): void {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -29,20 +33,26 @@ describe('AgentPackageCatalog', () => {
   });
 
   it('disables unpublished packages instead of offering a download link', async () => {
-    mockGet.mockResolvedValue([
-      {
-        filename: 'hivearmor_agent_service_linux_amd64',
-        href: '/agent-packages/hivearmor_agent_service_linux_amd64',
-        available: true,
-        sizeBytes: 1024,
-      },
-      {
-        filename: 'hivearmor_agent_service_linux_arm64',
-        href: '/agent-packages/hivearmor_agent_service_linux_arm64',
-        available: false,
-        sizeBytes: null,
-      },
-    ]);
+    mockGet.mockResolvedValue({
+      latestVersion: '11.0.0-staging',
+      updaterVersion: '11.0.0-staging',
+      publishedCount: 1,
+      totalCount: 6,
+      packages: [
+        {
+          filename: 'hivearmor_agent_service_linux_amd64',
+          href: '/agent-packages/hivearmor_agent_service_linux_amd64',
+          available: true,
+          sizeBytes: 1024,
+        },
+        {
+          filename: 'hivearmor_agent_service_linux_arm64',
+          href: '/agent-packages/hivearmor_agent_service_linux_arm64',
+          available: false,
+          sizeBytes: null,
+        },
+      ],
+    });
 
     renderCatalog();
 
@@ -51,17 +61,24 @@ describe('AgentPackageCatalog', () => {
     expect(screen.queryAllByRole('link')).toHaveLength(1);
     expect(screen.getByText(/Prefer/i)).toBeVisible();
     expect(screen.getByText(/Add Agent/i)).toBeVisible();
+    expect(screen.getByText(/11\.0\.0-staging/)).toBeVisible();
   });
 
   it('alerts when no binaries are published on the server', async () => {
-    mockGet.mockResolvedValue([
-      {
-        filename: 'hivearmor_agent_service_linux_amd64',
-        href: '/agent-packages/hivearmor_agent_service_linux_amd64',
-        available: false,
-        sizeBytes: null,
-      },
-    ]);
+    mockGet.mockResolvedValue({
+      latestVersion: null,
+      updaterVersion: null,
+      publishedCount: 0,
+      totalCount: 6,
+      packages: [
+        {
+          filename: 'hivearmor_agent_service_linux_amd64',
+          href: '/agent-packages/hivearmor_agent_service_linux_amd64',
+          available: false,
+          sizeBytes: null,
+        },
+      ],
+    });
 
     renderCatalog();
 
