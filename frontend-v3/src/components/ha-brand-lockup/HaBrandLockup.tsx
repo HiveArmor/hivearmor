@@ -1,9 +1,9 @@
 /**
  * HaBrandLockup — HiveArmor mark and wordmark lockup for auth / identity surfaces.
+ *
+ * Served from `/brand/*` in `public/` so logos are not broken by missing hashed
+ * Vite assets after partial deploys. Source of truth also lives under src/assets/brand.
  */
-
-import lockupUrl from '@/assets/brand/hivearmor-lockup.png';
-import markUrl from '@/assets/brand/hivearmor-mark.png';
 
 import './HaBrandLockup.css';
 
@@ -17,6 +17,9 @@ export interface HaBrandLockupProps {
   /** Decorative only when paired with visible “HiveArmor” text nearby. */
   decorative?: boolean;
 }
+
+const MARK_SRC = '/brand/hivearmor-mark.png';
+const LOCKUP_SRC = '/brand/hivearmor-lockup.png';
 
 export function HaBrandLockup({
   variant = 'mark',
@@ -32,7 +35,7 @@ export function HaBrandLockup({
     return (
       <img
         className={classes}
-        src={lockupUrl}
+        src={LOCKUP_SRC}
         alt={decorative ? '' : 'HiveArmor'}
         aria-hidden={decorative || undefined}
         style={{ height: size, width: 'auto' }}
@@ -44,7 +47,7 @@ export function HaBrandLockup({
   return (
     <img
       className={classes}
-      src={markUrl}
+      src={MARK_SRC}
       alt={decorative ? '' : 'HiveArmor'}
       aria-hidden={decorative || undefined}
       style={{ width: size, height: size, objectFit: 'contain' }}
