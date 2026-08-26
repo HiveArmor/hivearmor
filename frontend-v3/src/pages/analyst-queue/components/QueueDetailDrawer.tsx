@@ -7,16 +7,21 @@ import { useEffect, useState } from 'react';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ChevronRight, Copy, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+import { QUEUE_TRIAGE_DENIED } from '../analystQueue.capabilities';
 
 import type { AlertDetailDTO, AlertSideDTO, RelatedAlertDTO } from '@/components/alert-context-drawer/alertContextDrawer.types';
 import { ALERT_STATUS } from '@/constants/status.constants';
 import type { AlertStatus } from '@/constants/status.constants';
 import { apiClient } from '@/lib/apiClient';
-import { useAuthStore } from '@/store/auth.store';
 
 export interface QueueDetailDrawerProps {
   alertId: string | null;
   onClose: () => void;
+  onOpenAlert?: (alertId: string) => void;
+  canTriage?: boolean;
+  onEscalate?: (alertId: string) => void;
 }
 
 // Fetch alert detail
@@ -24,9 +29,8 @@ async function fetchAlertDetail(alertId: string): Promise<AlertDetailDTO> {
   return apiClient.get<AlertDetailDTO>(`/ha-alerts/${alertId}`);
 }
 
-// Fetch related alerts
+// Fetch related alerts — GET /api/ha-alerts/{alertId}/related (HaAlertInvestigationResource)
 async function fetchRelatedAlerts(alertId: string): Promise<RelatedAlertDTO[]> {
-  // TODO: ENDPOINT_VERIFICATION_REQUIRED — confirm /api/ha-alerts/{id}/related exists
   return apiClient.get<RelatedAlertDTO[]>(`/ha-alerts/${alertId}/related`);
 }
 
@@ -237,12 +241,15 @@ function RelatedAlertsSection({ alertId, onSelectAlert }: { alertId: string; onS
   );
 }
 
-export function QueueDetailDrawer({ alertId, onClose }: QueueDetailDrawerProps): JSX.Element | null {
+export function QueueDetailDrawer({
+  alertId,
+  onClose,
+  onOpenAlert,
+  canTriage = false,
+  onEscalate,
+}: QueueDetailDrawerProps): JSX.Element | null {
   const queryClient = useQueryClient();
-  const { hasAnyRole } = useAuthStore();
-
-  const canUpdateStatus = hasAnyRole(['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']);
-  const canPromoteToIncident = hasAnyRole(['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']);
+  const canUpdateStatus = canTriage;
 
   const { data: alert, isLoading, isError, error } = useQuery({
     queryKey: ['alert', alertId],
@@ -268,10 +275,7 @@ export function QueueDetailDrawer({ alertId, onClose }: QueueDetailDrawerProps):
   };
 
   const handleSelectRelatedAlert = (id: string): void => {
-    // Close current drawer and open new one with related alert ID
-    // This would be handled by parent component passing new alertId
-    // For now, just log (parent should manage the alertId state)
-    void id; // TODO: Wire to parent state management
+    onOpenAlert?.(id);
   };
 
   // Close drawer on Escape key
@@ -446,9 +450,28 @@ export function QueueDetailDrawer({ alertId, onClose }: QueueDetailDrawerProps):
                   <option value={ALERT_STATUS.FALSE_POSITIVE}>False Positive</option>
                 </select>
               ) : (
-                <div title="Status updates require Analyst access." style={{ padding: '8px 12px', background: 'var(--ha-surface-raised)', borderRadius: 'var(--ha-radius-base)', fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-secondary)' }}>
-                  <span style={{ padding: '2px 8px', background: 'var(--ha-background)', borderRadius: 'var(--ha-radius-sm)' }}>{alert.status}</span>
-                  <span style={{ marginLeft: 8, fontSize: 'var(--ha-text-xs)' }}>(read-only)</span>
+                <div
+                  title={QUEUE_TRIAGE_DENIED}
+                  style={{
+                    padding: '8px 12px',
+                    background: 'var(--ha-surface-raised)',
+                    borderRadius: 'var(--ha-radius-base)',
+                    fontSize: 'var(--ha-text-sm)',
+                    color: 'var(--ha-text-secondary)',
+                  }}
+                >
+                  <span
+                    style={{
+                      padding: '2px 8px',
+                      background: 'var(--ha-background)',
+                      borderRadius: 'var(--ha-radius-sm)',
+                    }}
+                  >
+                    {alert.status}
+                  </span>
+                  <span style={{ marginLeft: 8, fontSize: 'var(--ha-text-xs)' }}>
+                    (read-only — {QUEUE_TRIAGE_DENIED})
+                  </span>
                 </div>
               )}
             </div>
@@ -459,34 +482,49 @@ export function QueueDetailDrawer({ alertId, onClose }: QueueDetailDrawerProps):
         )}
       </div>
 
-      {/* Footer — Fixed */}
       {alert && (
-        <div style={{ height: 56, padding: '0 16px', borderTop: '1px solid var(--ha-border)', background: 'var(--ha-surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <a
-            href="#"
+        <div
+          style={{
+            height: 56,
+            padding: '0 16px',
+            borderTop: '1px solid var(--ha-border)',
+            background: 'var(--ha-surface-raised)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexShrink: 0,
+            gap: 12,
+          }}
+        >
+          <Link
+            to={`/alerts/${alert.id}`}
             style={{ color: 'var(--ha-primary)', fontSize: 'var(--ha-text-sm)', textDecoration: 'none' }}
-            onClick={(e) => e.preventDefault()} // TODO: wire to alert detail route
           >
-            View Full Detail
-          </a>
-          {canPromoteToIncident && (
-            <button
-              style={{
-                background: 'var(--ha-primary)',
-                color: 'var(--ha-background)',
-                border: 'none',
-                padding: '8px 16px',
-                borderRadius: 'var(--ha-radius-base)',
-                fontSize: 'var(--ha-text-sm)',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-              aria-label="Promote this alert to a new or existing incident"
-              onClick={() => void 0} // TODO: Open CMD-10 modal
-            >
-              Promote to Incident
-            </button>
-          )}
+            View full detail
+          </Link>
+          <button
+            type="button"
+            style={{
+              background: canTriage ? 'var(--ha-primary)' : 'var(--ha-surface-primary)',
+              color: canTriage ? 'var(--ha-background)' : 'var(--ha-text-secondary)',
+              border: canTriage ? 'none' : '1px solid var(--ha-border)',
+              padding: '8px 16px',
+              borderRadius: 'var(--ha-radius-base)',
+              fontSize: 'var(--ha-text-sm)',
+              fontWeight: 600,
+              cursor: canTriage ? 'pointer' : 'not-allowed',
+              opacity: canTriage ? 1 : 0.65,
+            }}
+            aria-label="Escalate this alert to an incident"
+            disabled={!canTriage}
+            title={canTriage ? undefined : QUEUE_TRIAGE_DENIED}
+            onClick={() => {
+              if (!canTriage || !alertId) return;
+              onEscalate?.(alertId);
+            }}
+          >
+            Escalate to incident
+          </button>
         </div>
       )}
     </div>

@@ -1,22 +1,50 @@
 /**
- * QueueToolbar — S16 per CMD-02 spec §5
- * Filter controls + bulk action bar + columns toggle
+ * QueueToolbar — compact severity/status chip strip + bulk triage actions.
+ * Bulk status uses confirmed POST /api/ha-alerts/status (alertIds[]).
  */
 
 import { useMemo } from 'react';
 
+import {
+  QUEUE_ASSIGN_DENIED,
+  QUEUE_BULK_STATUS_SUPPORTED,
+  QUEUE_TRIAGE_DENIED,
+} from '../analystQueue.capabilities';
 import type { QueueFilters } from '../analystQueue.types';
 
 import type { AlertStatus } from '@/constants/status.constants';
 import type { SeverityLevel } from '@/lib/severity';
 
+const SEVERITY_OPTIONS: { value: SeverityLevel; label: string }[] = [
+  { value: 'critical', label: 'Critical' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' },
+];
+
+const STATUS_OPTIONS: { value: AlertStatus; label: string }[] = [
+  { value: 'open', label: 'Open' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'false_positive', label: 'False Positive' },
+];
+
 export interface QueueToolbarProps {
   filters: QueueFilters;
   onFiltersChange: (filters: QueueFilters) => void;
   selectedCount: number;
-  onBulkAction: (action: 'REVIEWED' | 'FALSE_POSITIVE' | 'ESCALATE') => void;
+  onBulkAction: (action: 'REVIEWED' | 'FALSE_POSITIVE' | 'ESCALATE' | 'ASSIGN') => void;
   onDeselectAll: () => void;
-  isReadOnly: boolean;
+  canTriage: boolean;
+  canAssign: boolean;
+}
+
+function toggleValue<T extends string>(current: T[] | undefined, value: T): T[] | undefined {
+  const set = new Set(current ?? []);
+  if (set.has(value)) set.delete(value);
+  else set.add(value);
+  const next = Array.from(set);
+  return next.length > 0 ? next : undefined;
 }
 
 export function QueueToolbar({
@@ -25,7 +53,8 @@ export function QueueToolbar({
   selectedCount,
   onBulkAction,
   onDeselectAll,
-  isReadOnly,
+  canTriage,
+  canAssign,
 }: QueueToolbarProps): JSX.Element {
   const hasActiveFilters = useMemo(
     () =>
@@ -39,209 +68,133 @@ export function QueueToolbar({
     [filters]
   );
 
-  const handleClearFilters = (): void => {
-    onFiltersChange({});
-  };
-
-  const handleSeverityChange = (severity: SeverityLevel[]): void => {
-    onFiltersChange({ ...filters, severity });
-  };
-
-  const handleStatusChange = (status: AlertStatus[]): void => {
-    onFiltersChange({ ...filters, status });
-  };
-
-  const handleSearchChange = (q: string): void => {
-    onFiltersChange({ ...filters, q: q || undefined });
-  };
+  const triageTitle = canTriage ? undefined : QUEUE_TRIAGE_DENIED;
+  const assignTitle = canAssign ? undefined : QUEUE_ASSIGN_DENIED;
 
   return (
-    <div
-      style={{
-        padding: '8px 24px',
-        background: 'var(--ha-surface-raised)',
-        borderBottom: '1px solid var(--ha-border)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        minHeight: '44px',
-      }}
-    >
-      {/* Left side: Filter controls */}
-      <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
-        <select
-          value=""
-          onChange={(e) => {
-            const val = e.target.value as SeverityLevel;
-            if (val) {
-              handleSeverityChange([...(filters.severity ?? []), val]);
-            }
-          }}
-          style={{
-            padding: '4px 8px',
-            background: 'var(--ha-surface-primary)',
-            border: '1px solid var(--ha-border)',
-            borderRadius: 'var(--ha-radius-base)',
-            color: 'var(--ha-text-primary)',
-            fontSize: 'var(--ha-text-sm)',
-          }}
-        >
-          <option value="">Severity</option>
-          <option value="critical">Critical</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
-        </select>
+    <div className="aq-toolbar" role="toolbar" aria-label="Queue filters and bulk actions">
+      <div className="aq-toolbar__filters">
+        <div className="aq-chip-strip" role="group" aria-label="Severity filters">
+          {SEVERITY_OPTIONS.map((opt) => {
+            const active = filters.severity?.includes(opt.value) ?? false;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                className="aq-chip"
+                data-active={active}
+                data-severity={opt.value}
+                aria-pressed={active}
+                onClick={() =>
+                  onFiltersChange({
+                    ...filters,
+                    severity: toggleValue(filters.severity, opt.value),
+                  })
+                }
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
 
-        <select
-          value=""
-          onChange={(e) => {
-            const val = e.target.value as AlertStatus;
-            if (val) {
-              handleStatusChange([...(filters.status ?? []), val]);
-            }
-          }}
-          style={{
-            padding: '4px 8px',
-            background: 'var(--ha-surface-primary)',
-            border: '1px solid var(--ha-border)',
-            borderRadius: 'var(--ha-radius-base)',
-            color: 'var(--ha-text-primary)',
-            fontSize: 'var(--ha-text-sm)',
-          }}
-        >
-          <option value="">Status</option>
-          <option value="open">Open</option>
-          <option value="in_progress">In Progress</option>
-          <option value="resolved">Resolved</option>
-          <option value="false_positive">False Positive</option>
-        </select>
+        <div className="aq-chip-strip" role="group" aria-label="Status filters">
+          {STATUS_OPTIONS.map((opt) => {
+            const active = filters.status?.includes(opt.value) ?? false;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                className="aq-chip"
+                data-active={active}
+                data-status={opt.value}
+                aria-pressed={active}
+                onClick={() =>
+                  onFiltersChange({
+                    ...filters,
+                    status: toggleValue(filters.status, opt.value),
+                  })
+                }
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
 
         <input
-          type="text"
-          placeholder="Search alerts..."
+          type="search"
+          className="aq-toolbar__search"
+          placeholder="Search alerts…"
           value={filters.q ?? ''}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          style={{
-            padding: '4px 12px',
-            background: 'var(--ha-surface-primary)',
-            border: '1px solid var(--ha-border)',
-            borderRadius: 'var(--ha-radius-base)',
-            color: 'var(--ha-text-primary)',
-            fontSize: 'var(--ha-text-sm)',
-            minWidth: '200px',
-          }}
+          onChange={(e) =>
+            onFiltersChange({ ...filters, q: e.target.value || undefined })
+          }
+          aria-label="Search queue"
         />
 
         {hasActiveFilters && (
           <button
-            onClick={handleClearFilters}
-            style={{
-              padding: '4px 12px',
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--ha-primary)',
-              fontSize: 'var(--ha-text-sm)',
-              cursor: 'pointer',
-            }}
             type="button"
+            className="aq-toolbar__clear"
+            onClick={() => onFiltersChange({})}
           >
             Clear filters
           </button>
         )}
       </div>
 
-      {/* Right side: Bulk action bar (conditional) */}
       {selectedCount > 0 && (
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            marginLeft: 'auto',
-          }}
-        >
-          <span
-            style={{
-              color: 'var(--ha-primary)',
-              fontSize: 'var(--ha-text-sm)',
-              fontWeight: 500,
-            }}
-          >
-            {selectedCount} selected
-          </span>
+        <div className="aq-toolbar__bulk" aria-live="polite">
+          <span className="aq-toolbar__selected">{selectedCount} selected</span>
 
-          <button
-            onClick={() => onBulkAction('REVIEWED')}
-            disabled={isReadOnly}
-            title={isReadOnly ? 'Requires Analyst role or higher' : undefined}
-            style={{
-              padding: '6px 12px',
-              background: 'var(--ha-surface-primary)',
-              border: '1px solid var(--ha-border)',
-              borderRadius: 'var(--ha-radius-base)',
-              color: isReadOnly ? 'var(--ha-text-secondary)' : 'var(--ha-text-primary)',
-              fontSize: 'var(--ha-text-sm)',
-              cursor: isReadOnly ? 'not-allowed' : 'pointer',
-              opacity: isReadOnly ? 0.6 : 1,
-            }}
-            type="button"
-          >
-            Mark as Reviewed
-          </button>
+          {QUEUE_BULK_STATUS_SUPPORTED ? (
+            <>
+              <button
+                type="button"
+                className="aq-bulk-btn"
+                onClick={() => onBulkAction('REVIEWED')}
+                disabled={!canTriage}
+                title={triageTitle}
+              >
+                Mark reviewed
+              </button>
+              <button
+                type="button"
+                className="aq-bulk-btn"
+                onClick={() => onBulkAction('FALSE_POSITIVE')}
+                disabled={!canTriage}
+                title={triageTitle}
+              >
+                False positive
+              </button>
+              <button
+                type="button"
+                className="aq-bulk-btn aq-bulk-btn--primary"
+                onClick={() => onBulkAction('ESCALATE')}
+                disabled={!canTriage}
+                title={triageTitle}
+              >
+                Escalate to incident
+              </button>
+              <button
+                type="button"
+                className="aq-bulk-btn"
+                onClick={() => onBulkAction('ASSIGN')}
+                disabled={!canAssign}
+                title={assignTitle}
+              >
+                Assign
+              </button>
+            </>
+          ) : (
+            <span className="aq-toolbar__honesty">
+              Bulk triage unavailable — backend does not expose a multi-alert mutate contract.
+            </span>
+          )}
 
-          <button
-            onClick={() => onBulkAction('FALSE_POSITIVE')}
-            disabled={isReadOnly}
-            title={isReadOnly ? 'Requires Analyst role or higher' : undefined}
-            style={{
-              padding: '6px 12px',
-              background: 'var(--ha-surface-primary)',
-              border: '1px solid var(--ha-border)',
-              borderRadius: 'var(--ha-radius-base)',
-              color: isReadOnly ? 'var(--ha-text-secondary)' : 'var(--ha-text-primary)',
-              fontSize: 'var(--ha-text-sm)',
-              cursor: isReadOnly ? 'not-allowed' : 'pointer',
-              opacity: isReadOnly ? 0.6 : 1,
-            }}
-            type="button"
-          >
-            Mark as False Positive
-          </button>
-
-          <button
-            onClick={() => onBulkAction('ESCALATE')}
-            disabled={isReadOnly}
-            title={isReadOnly ? 'Requires Analyst role or higher' : undefined}
-            style={{
-              padding: '6px 12px',
-              background: 'var(--ha-primary)',
-              border: 'none',
-              borderRadius: 'var(--ha-radius-base)',
-              color: 'var(--ha-foreground-on-action)',
-              fontSize: 'var(--ha-text-sm)',
-              fontWeight: 500,
-              cursor: isReadOnly ? 'not-allowed' : 'pointer',
-              opacity: isReadOnly ? 0.6 : 1,
-            }}
-            type="button"
-          >
-            Escalate to Incident
-          </button>
-
-          <button
-            onClick={onDeselectAll}
-            style={{
-              padding: '4px 8px',
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--ha-text-secondary)',
-              fontSize: 'var(--ha-text-sm)',
-              cursor: 'pointer',
-            }}
-            type="button"
-          >
-            Deselect all
+          <button type="button" className="aq-toolbar__deselect" onClick={onDeselectAll}>
+            Deselect
           </button>
         </div>
       )}

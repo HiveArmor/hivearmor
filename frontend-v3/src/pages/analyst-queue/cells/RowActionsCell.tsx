@@ -1,42 +1,83 @@
 /**
- * RowActionsCell — AG Grid cell renderer
- * Per spec 03-ANALYST-QUEUE.md §6.9
- * Kebab "…" menu; visible on row hover.
+ * RowActionsCell — primary triage actions for a queue row.
+ * Wired via cellRendererParams from createQueueColumnDefs — no fake no-ops.
  */
 
 import { useRef, useState } from 'react';
 
 import { MoreHorizontal } from 'lucide-react';
 
+import {
+  QUEUE_ASSIGN_DENIED,
+  QUEUE_TRIAGE_DENIED,
+} from '../analystQueue.capabilities';
+
 import type { QueueItem } from '@/types/alert.types';
+
+export type QueueRowAction =
+  | 'open'
+  | 'status'
+  | 'assign'
+  | 'escalate'
+  | 'full_page';
+
+export interface QueueRowActionsHandlers {
+  onAction: (action: QueueRowAction, item: QueueItem) => void;
+  canTriage: boolean;
+  canAssign: boolean;
+}
 
 export interface RowActionsCellProps {
   data?: QueueItem;
+  canTriage?: boolean;
+  canAssign?: boolean;
+  onAction?: (action: QueueRowAction, item: QueueItem) => void;
 }
 
 interface MenuItem {
   label: string;
-  danger?: boolean;
-  divider?: boolean;
-  onClick: () => void;
+  action: QueueRowAction;
+  disabled?: boolean;
+  title?: string;
+  dividerBefore?: boolean;
 }
 
-export function RowActionsCell({ data }: RowActionsCellProps): JSX.Element {
+export function RowActionsCell({
+  data,
+  canTriage = false,
+  canAssign = false,
+  onAction,
+}: RowActionsCellProps): JSX.Element {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   if (!data) return <span />;
 
   const items: MenuItem[] = [
-    { label: 'Assign to me', onClick: () => { setOpen(false); } },
-    { label: 'Change status', onClick: () => { setOpen(false); } },
-    { label: 'Open in full page', onClick: () => { setOpen(false); } },
-    // divider before destructive actions
-    { label: '──────────', divider: true, onClick: () => {} },
-    ...(data.type === 'alert' || data.type === 'correlated_group'
-      ? [{ label: 'Convert to incident', onClick: () => { setOpen(false); } }]
-      : []),
-    { label: 'Add note', onClick: () => { setOpen(false); } },
+    { label: 'Open detail', action: 'open' },
+    {
+      label: 'Change status',
+      action: 'status',
+      disabled: !canTriage,
+      title: canTriage ? undefined : QUEUE_TRIAGE_DENIED,
+    },
+    {
+      label: 'Assign',
+      action: 'assign',
+      disabled: !canAssign,
+      title: canAssign ? undefined : QUEUE_ASSIGN_DENIED,
+    },
+    {
+      label: 'Open full page',
+      action: 'full_page',
+    },
+    {
+      label: 'Escalate to incident',
+      action: 'escalate',
+      disabled: !canTriage,
+      title: canTriage ? undefined : QUEUE_TRIAGE_DENIED,
+      dividerBefore: true,
+    },
   ];
 
   return (
@@ -66,10 +107,12 @@ export function RowActionsCell({ data }: RowActionsCellProps): JSX.Element {
 
       {open && (
         <>
-          {/* Click-away backdrop */}
           <span
             style={{ position: 'fixed', inset: 0, zIndex: 199 }}
-            onClick={(e) => { e.stopPropagation(); setOpen(false); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(false);
+            }}
             role="presentation"
           />
           <div
@@ -87,17 +130,28 @@ export function RowActionsCell({ data }: RowActionsCellProps): JSX.Element {
               overflow: 'hidden',
             }}
           >
-            {items.map((item, i) =>
-              item.divider ? (
-                <hr
-                  key={i}
-                  style={{ margin: '4px 0', border: 'none', borderTop: '1px solid var(--ha-border)' }}
-                />
-              ) : (
+            {items.map((item) => (
+              <div key={item.action}>
+                {item.dividerBefore && (
+                  <hr
+                    style={{
+                      margin: '4px 0',
+                      border: 'none',
+                      borderTop: '1px solid var(--ha-border)',
+                    }}
+                  />
+                )}
                 <button
-                  key={i}
                   role="menuitem"
-                  onClick={(e) => { e.stopPropagation(); item.onClick(); }}
+                  type="button"
+                  disabled={item.disabled}
+                  title={item.title}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (item.disabled) return;
+                    setOpen(false);
+                    onAction?.(item.action, data);
+                  }}
                   style={{
                     display: 'block',
                     width: '100%',
@@ -106,20 +160,17 @@ export function RowActionsCell({ data }: RowActionsCellProps): JSX.Element {
                     border: 'none',
                     textAlign: 'left',
                     fontSize: 'var(--ha-text-sm)',
-                    color: item.danger ? 'var(--ha-critical)' : 'var(--ha-text-primary)',
-                    cursor: 'pointer',
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = 'var(--ha-surface-primary)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+                    color: item.disabled
+                      ? 'var(--ha-text-secondary)'
+                      : 'var(--ha-text-primary)',
+                    cursor: item.disabled ? 'not-allowed' : 'pointer',
+                    opacity: item.disabled ? 0.65 : 1,
                   }}
                 >
                   {item.label}
                 </button>
-              )
-            )}
+              </div>
+            ))}
           </div>
         </>
       )}
