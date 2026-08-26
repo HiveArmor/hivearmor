@@ -1,0 +1,209 @@
+/**
+ * Endpoints — EDR host workbench.
+ * Primary surface is the searchable host grid (≥50% viewport).
+ * Fleet enrollment stays on Sensors (/posture/sensors).
+ */
+
+.endpoints-hub-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--ha-masthead-height));
+  overflow: hidden;
+  background: var(--ha-background);
+}
+
+.endpoints-hub-page__banner {
+  flex-shrink: 0;
+  margin: 8px 16px 0;
+}
+
+.endpoints-hub-page__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 52px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-primary);
+}
+
+.endpoints-hub-page__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.endpoints-hub-page__title-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.endpoints-hub-page__title {
+  margin: 0;
+  font-size: var(--ha-text-xl);
+  font-weight: 600;
+  color: var(--ha-text-primary);
+}
+
+.endpoints-hub-page__count {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.endpoints-hub-page__job {
+  margin: 0;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  max-width: 52rem;
+}
+
+.endpoints-hub-page__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.endpoints-hub-page__link {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-primary);
+  text-decoration: none;
+}
+
+.endpoints-hub-page__link:hover {
+  text-decoration: underline;
+}
+
+.endpoints-hub-page__search {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 200px;
+  max-width: 280px;
+  padding: 4px 8px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  background: var(--ha-surface-raised);
+}
+
+.endpoints-hub-page__search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ha-text-primary);
+  font-size: var(--ha-text-sm);
+  font-family: var(--ha-font-ui);
+}
+
+.endpoints-hub-page__search input::placeholder {
+  color: var(--ha-text-secondary);
+}
+
+.endpoints-hub-page__search-icon {
+  flex-shrink: 0;
+  color: var(--ha-text-secondary);
+}
+
+.endpoints-hub-page__inventory {
+  flex: 1;
+  min-height: 280px;
+  padding: 8px 16px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.endpoints-hub-page__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+}
+
+.endpoints-hub-page__action-link {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  color: var(--ha-primary);
+  padding: 4px 8px;
+  font-size: var(--ha-text-xs);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.endpoints-hub-page__action-link:hover {
+  text-decoration: underline;
+}
+
+.endpoints-hub-page__action-link--secondary {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ha-text-secondary);
+  padding: 4px 2px;
+}
+
+.endpoints-hub-page__action-link--secondary:hover {
+  color: var(--ha-primary);
+}
+
+.endpoints-hub-page__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+}
+
+.endpoints-hub-page__status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.endpoints-hub-page__status--online {
+  color: var(--ha-positive);
+}
+
+.endpoints-hub-page__status--online .endpoints-hub-page__status-dot {
+  background: var(--ha-positive);
+}
+
+.endpoints-hub-page__status--offline {
+  color: var(--ha-critical);
+}
+
+.endpoints-hub-page__status--offline .endpoints-hub-page__status-dot {
+  background: var(--ha-critical);
+}
+
+.endpoints-hub-page__status--unknown {
+  color: var(--ha-text-secondary);
+}
+
+.endpoints-hub-page__status--unknown .endpoints-hub-page__status-dot {
+  background: var(--ha-text-secondary);
+}
+
+.endpoints-hub-page__hostname {
+  font-family: var(--ha-font-mono);
+  font-weight: 600;
+  color: var(--ha-primary);
+  text-decoration: none;
+}
+
+.endpoints-hub-page__hostname:hover {
+  text-decoration: underline;
+}
+
+.endpoints-hub-page__hostname--plain {
+  color: var(--ha-text-primary);
+}
