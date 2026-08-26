@@ -255,6 +255,9 @@ GET /api/ha-entities/{id}/risk
 
 # Sensors / Agents
 GET  /api/agent-manager/agents
+GET  /api/ha-agent-packages
+GET  /api/ha-agent-packages/summary         (latestVersion + published package counts)
+GET  /agent-packages/{filename}             (public allowlisted installer download)
 # SensorGrid remote containment (JWT + ROLE_ADMIN|ROLE_SOC_MANAGER → ProcessCommand)
 POST /api/edr/isolation                    (isolate host; UI gated by REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED)
 POST /api/edr/actions/kill-process         (kill PID; UI gated by REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED)
