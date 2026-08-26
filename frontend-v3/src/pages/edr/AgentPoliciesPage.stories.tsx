@@ -24,6 +24,7 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { http, HttpResponse, delay } from 'msw';
+import { MemoryRouter } from 'react-router-dom';
 
 import { AgentPoliciesPage } from './AgentPoliciesPage';
 
@@ -146,9 +147,11 @@ function makeDecorator(user: HaUser): (Story: React.ComponentType) => React.Reac
     });
 
     return (
-      <QueryClientProvider client={queryClient}>
-        <Story />
-      </QueryClientProvider>
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <Story />
+        </QueryClientProvider>
+      </MemoryRouter>
     );
   }
   return StoryDecorator;

@@ -43,10 +43,17 @@ export const AGENT_POLICY_READ_DENIED_MESSAGE =
 export const AGENT_POLICY_MUTATE_DENIED_TITLE =
   'Required permission: Platform Administrator or SOC Manager';
 
+/** Page banner — assignment ≠ host enforcement proof (POL-001 / POL-003). */
 export const AGENT_POLICY_HONESTY_BANNER =
   'Assignment is configuration only. Apply/ack path unavailable until agent-reported ' +
   'appliedVersion or lastAppliedAt exists — STAGING CANDIDATE (unavailable or partial). ' +
   'Never treat assigned agents as enforced on host.';
+
+/** Header job sentence — configuration / assignment workbench. */
+export const AGENT_POLICY_JOB_SENTENCE =
+  'Define and assign agent monitoring policies (config only). Enforcement evidence is ' +
+  'partial or unavailable when apply/ack fields are missing — not live host proof. ' +
+  'Use Sensors for fleet enrollment; Endpoints for host timelines.';
 
 /** True only when a state row carries appliedVersion or lastAppliedAt (POL-003). */
 export function hasAgentPolicyApplyAckEvidence(state: AgentPolicyStateDTO | null | undefined): boolean {
