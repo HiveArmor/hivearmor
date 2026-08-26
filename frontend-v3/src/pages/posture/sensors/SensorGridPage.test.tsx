@@ -27,17 +27,22 @@ vi.mock('./AgentPackageCatalog', () => ({
 vi.mock('./SensorFleetSummary', () => ({
   SensorFleetSummary: () => <div data-testid="sensor-fleet-summary" />,
 }));
+
+const hasAuthority = vi.fn((role: string) => role === 'ROLE_ADMIN');
 vi.mock('@/lib/auth/hasAuthority', () => ({
-  hasAuthority: (role: string) => role === 'ROLE_ADMIN',
+  hasAuthority: (role: string) => hasAuthority(role),
 }));
+
+const authRoles = vi.fn(() => ['ROLE_ADMIN'] as string[]);
 vi.mock('@/store/auth.store', () => ({
   useAuthStore: (selector?: (state: {
     hasAnyRole: (roles: string[]) => boolean;
     hasRole: (role: string) => boolean;
   }) => unknown) => {
+    const roles = authRoles();
     const state = {
-      hasAnyRole: (roles: string[]) => roles.includes('ROLE_ADMIN'),
-      hasRole: (role: string) => role === 'ROLE_ADMIN',
+      hasAnyRole: (wanted: string[]) => wanted.some((r) => roles.includes(r)),
+      hasRole: (role: string) => roles.includes(role),
     };
     return typeof selector === 'function' ? selector(state) : state;
   },
@@ -54,12 +59,20 @@ vi.mock('@/components/siem-data-grid', () => ({
     columnDefs,
   }: {
     rowData: Array<{ hostname: string; agentId: string }>;
-    columnDefs: Array<{ headerName?: string; cellRenderer?: (p: unknown) => JSX.Element }>;
+    columnDefs: Array<{
+      field?: string;
+      headerName?: string;
+      cellRenderer?: (p: unknown) => JSX.Element;
+    }>;
   }) => {
     const actionsCol = columnDefs.find((c) => c.headerName === 'Actions');
+    const hostnameCol = columnDefs.find((c) => c.field === 'hostname');
     const row = rowData[0];
     return (
-      <div role="grid" aria-label="Sensors">
+      <div role="grid" aria-label="Registered agents">
+        {row && hostnameCol?.cellRenderer
+          ? hostnameCol.cellRenderer({ data: row, value: row.hostname })
+          : null}
         {row && actionsCol?.cellRenderer
           ? actionsCol.cellRenderer({ data: row })
           : null}
@@ -70,6 +83,8 @@ vi.mock('@/components/siem-data-grid', () => ({
 
 describe('SensorGridPage remote actions (GAP-SEC-05 / B1)', () => {
   beforeEach(() => {
+    hasAuthority.mockImplementation((role: string) => role === 'ROLE_ADMIN');
+    authRoles.mockReturnValue(['ROLE_ADMIN']);
     useQuery.mockImplementation((opts: { queryKey?: unknown[] }) => {
       const key = Array.isArray(opts.queryKey) ? String(opts.queryKey[0]) : '';
       if (key === 'ha-agent-packages-summary') {
@@ -131,6 +146,46 @@ describe('SensorGridPage remote actions (GAP-SEC-05 / B1)', () => {
     expect(screen.getAllByRole('link', { name: 'Enrollment audit' }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Add Agent/i })).toBeVisible();
     expect(screen.getByText(/Install agents/i)).toBeVisible();
-    expect(screen.getByLabelText('Registered agents')).toBeVisible();
+    expect(screen.getByRole('grid', { name: 'Registered agents' })).toBeVisible();
+  });
+
+  it('exposes fleet page job, endpoint telemetry hub, and row timeline links', () => {
+    render(
+      <MemoryRouter>
+        <SensorGridPage />
+      </MemoryRouter>
+    );
+
+    expect(
+      screen.getByText(/Agent fleet inventory — monitor health, open endpoint timelines/i)
+    ).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Endpoint telemetry' })).toHaveAttribute(
+      'href',
+      '/edr/endpoints'
+    );
+    const timelineLinks = screen.getAllByRole('link', {
+      name: /Open EDR timeline for wks-01/i,
+    });
+    expect(timelineLinks).toHaveLength(2);
+    expect(timelineLinks[0]).toHaveAttribute('href', '/edr/timeline/42');
+    expect(timelineLinks[1]).toHaveAttribute('href', '/edr/timeline/42');
+  });
+
+  it('fail-closes Add Agent for Analyst while keeping inventory readable', () => {
+    hasAuthority.mockReturnValue(false);
+    authRoles.mockReturnValue(['ROLE_ANALYST']);
+
+    render(
+      <MemoryRouter>
+        <SensorGridPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByRole('button', { name: /Add Agent/i })).toBeNull();
+    expect(
+      screen.getByText(/Required permission: Platform Administrator to enroll agents/i)
+    ).toBeVisible();
+    expect(screen.getByRole('grid', { name: 'Registered agents' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Endpoint telemetry' })).toBeVisible();
   });
 });

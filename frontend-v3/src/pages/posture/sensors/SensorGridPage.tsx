@@ -103,10 +103,9 @@ async function dispatchKill(agentId: string, hostname: string): Promise<void> {
 }
 
 /**
- * ActionsCellRenderer — role-aware remote actions.
- * Enable only when REMOTE_SENSOR_ACTIONS_LIVE_VERIFIED flips true AND caller
- * has Platform Administrator or SOC Manager. Calls JWT → /api/edr/* → ProcessCommand.
- * No React hooks here — AG Grid may remount cell renderers freely.
+ * ActionsCellRenderer — timeline cross-link + role-aware remote actions.
+ * Enable isolate/kill only when live-verified AND caller has Platform
+ * Administrator or SOC Manager. No React hooks — AG Grid remounts freely.
  */
 function ActionsCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Element {
   const sensor = params.data;
@@ -135,17 +134,46 @@ function ActionsCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Elemen
         ? idBlocked
         : '';
 
-  const noHandlerTitle = 'No agent ProcessCommand handler for this action';
+  const noHandlerTitle = 'Restart is not available from this grid yet';
+  const timelineHref = agentId
+    ? `/edr/timeline/${encodeURIComponent(agentId)}`
+    : null;
 
   return (
     <div
       style={{ display: 'flex', gap: 4, alignItems: 'center', height: '100%' }}
     >
+      {timelineHref ? (
+        <Link
+          to={timelineHref}
+          aria-label={`Open EDR timeline for ${hostname || agentId}`}
+          title="Open EDR event timeline"
+          style={{
+            background: 'var(--ha-surface-raised)',
+            border: '1px solid var(--ha-border)',
+            borderRadius: 'var(--ha-radius-sm)',
+            color: 'var(--ha-primary)',
+            padding: '4px 8px',
+            fontSize: 'var(--ha-text-xs)',
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Timeline
+        </Link>
+      ) : (
+        <ActionButton
+          label="Timeline"
+          ariaLabel="Open EDR timeline (unavailable)"
+          disabled
+          title={idBlocked}
+        />
+      )}
       <ActionButton
         label="Isolate"
         ariaLabel={canIsolate ? 'Isolate host' : 'Isolate host (blocked)'}
         disabled={!canIsolate}
-        title={canIsolate ? 'Isolate host via ProcessCommand (EDR_ISOLATE)' : isolateBlockedTitle}
+        title={canIsolate ? 'Isolate host' : isolateBlockedTitle}
         danger
         onClick={() => {
           if (agentId) void dispatchIsolate(agentId, hostname);
@@ -155,7 +183,7 @@ function ActionsCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Elemen
         label="Kill"
         ariaLabel={canKill ? 'Kill process' : 'Kill process (blocked)'}
         disabled={!canKill}
-        title={canKill ? 'Kill process via ProcessCommand (EDR_KILL)' : killBlockedTitle}
+        title={canKill ? 'Kill process on this sensor' : killBlockedTitle}
         danger
         onClick={() => {
           if (agentId) void dispatchKill(agentId, hostname);
@@ -168,6 +196,36 @@ function ActionsCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Elemen
         title={noHandlerTitle}
       />
     </div>
+  );
+}
+
+function HostnameCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Element {
+  const sensor = params.data;
+  const agentId = sensor?.agentId;
+  const hostname = (params.value as string | undefined)?.trim() || agentId || '—';
+
+  if (!agentId) {
+    return (
+      <span style={{ fontFamily: 'var(--ha-font-mono)', fontWeight: 600 }}>
+        {hostname}
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      to={`/edr/timeline/${encodeURIComponent(agentId)}`}
+      aria-label={`Open EDR timeline for ${hostname}`}
+      title="Open EDR event timeline"
+      style={{
+        fontFamily: 'var(--ha-font-mono)',
+        fontWeight: 600,
+        color: 'var(--ha-primary)',
+        textDecoration: 'none',
+      }}
+    >
+      {hostname}
+    </Link>
   );
 }
 
@@ -246,10 +304,7 @@ export function SensorGridPage(): JSX.Element {
       field: 'hostname',
       headerName: 'Hostname',
       width: 220,
-      cellStyle: {
-        fontFamily: 'var(--ha-font-mono)',
-        fontWeight: 600,
-      },
+      cellRenderer: HostnameCellRenderer,
     },
     {
       field: 'platform',
@@ -386,7 +441,7 @@ export function SensorGridPage(): JSX.Element {
     },
     {
       headerName: 'Actions',
-      width: 220,
+      width: 280,
       cellRenderer: ActionsCellRenderer,
       sortable: false,
       filter: false,
@@ -429,40 +484,62 @@ export function SensorGridPage(): JSX.Element {
 
       <div
         style={{
-          height: '48px',
           flexShrink: 0,
-          padding: '0 24px',
+          minHeight: 56,
+          padding: '10px 24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          gap: 16,
           borderBottom: '1px solid var(--ha-border)',
           backgroundColor: 'var(--ha-surface-primary)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <h1
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <h1
+              style={{
+                fontSize: 'var(--ha-text-xl)',
+                fontWeight: 600,
+                color: 'var(--ha-text-primary)',
+                margin: 0,
+              }}
+            >
+              Sensors
+            </h1>
+            <span
+              style={{
+                fontSize: 'var(--ha-text-sm)',
+                color: 'var(--ha-text-secondary)',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {activeSensors} / {totalSensors} online
+            </span>
+          </div>
+          <p
             style={{
-              fontSize: 'var(--ha-text-xl)',
-              fontWeight: 600,
-              color: 'var(--ha-text-primary)',
               margin: 0,
-            }}
-          >
-            Sensors
-          </h1>
-          <span
-            style={{
               fontSize: 'var(--ha-text-sm)',
               color: 'var(--ha-text-secondary)',
-              fontVariantNumeric: 'tabular-nums',
             }}
           >
-            {activeSensors} / {totalSensors} active
-          </span>
+            Agent fleet inventory — monitor health, open endpoint timelines, enroll new hosts.
+          </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <DensitySelector />
+          <Link
+            to="/edr/endpoints"
+            style={{
+              fontSize: 'var(--ha-text-sm)',
+              color: 'var(--ha-primary)',
+              textDecoration: 'none',
+            }}
+          >
+            Endpoint telemetry
+          </Link>
           {canViewEnrollmentAudit && (
             <Link
               to="/admin/enrollment-audit"
@@ -475,7 +552,7 @@ export function SensorGridPage(): JSX.Element {
               Enrollment audit
             </Link>
           )}
-          {canProvisionAgent && (
+          {canProvisionAgent ? (
             <HaButton
               variant="primary"
               icon={<Plus size={16} />}
@@ -483,6 +560,17 @@ export function SensorGridPage(): JSX.Element {
             >
               Add Agent
             </HaButton>
+          ) : (
+            <span
+              role="status"
+              style={{
+                fontSize: 'var(--ha-text-xs)',
+                color: 'var(--ha-text-secondary)',
+                maxWidth: 220,
+              }}
+            >
+              Required permission: Platform Administrator to enroll agents
+            </span>
           )}
         </div>
       </div>
@@ -502,7 +590,7 @@ export function SensorGridPage(): JSX.Element {
           display: 'flex',
           flexDirection: 'column',
         }}
-        aria-label="Registered agents"
+        aria-label="Agent inventory"
       >
         {isLoading && <LoadingState message="Loading sensors..." />}
 
