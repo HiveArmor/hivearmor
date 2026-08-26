@@ -18,6 +18,8 @@ export interface FoundationPriorityItem {
   age: string;
   sla: string;
   severity: 'critical' | 'high' | 'medium';
+  /** Optional deep link (live incidents use /incidents/{id}). */
+  route?: string;
 }
 
 export const foundationMetrics: FoundationMetric[] = [
