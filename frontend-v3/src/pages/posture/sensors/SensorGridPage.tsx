@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { Activity, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { AddAgentDrawer } from './AddAgentDrawer';
 import { AgentPackageCatalog } from './AgentPackageCatalog';
@@ -32,6 +33,7 @@ import {
 } from '@/services/sensorRemoteActions.service';
 import { fetchSensors } from '@/services/sensorsService';
 import type { SensorDTO } from '@/services/sensorsService';
+import { useAuthStore } from '@/store/auth.store';
 
 function ActionButton(props: {
   label: string;
@@ -174,6 +176,9 @@ export function SensorGridPage(): JSX.Element {
   const { eps, connected: epsConnected } = useEpsStream();
   const [addAgentOpen, setAddAgentOpen] = useState(false);
   const canProvisionAgent = hasAuthority('ROLE_ADMIN');
+  const canViewEnrollmentAudit = useAuthStore((state) =>
+    state.hasAnyRole(['ROLE_ADMIN', 'ROLE_SOC_MANAGER'])
+  );
   const killReady = canEnableKillProcess();
   const isolateReady = canEnableIsolateHost();
   const showRemoteHonesty = !killReady || !isolateReady;
@@ -369,6 +374,18 @@ export function SensorGridPage(): JSX.Element {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <DensitySelector />
+          {canViewEnrollmentAudit && (
+            <Link
+              to="/admin/enrollment-audit"
+              style={{
+                fontSize: 'var(--ha-text-sm)',
+                color: 'var(--ha-primary)',
+                textDecoration: 'none',
+              }}
+            >
+              Enrollment audit
+            </Link>
+          )}
           {canProvisionAgent && (
             <HaButton
               variant="primary"
@@ -380,6 +397,63 @@ export function SensorGridPage(): JSX.Element {
           )}
         </div>
       </div>
+
+      {canProvisionAgent && (
+        <ol
+          className="sensor-enroll-steps"
+          aria-label="How to enroll an agent"
+          style={{
+            display: 'grid',
+            gap: 6,
+            margin: '0 16px 12px',
+            padding: '12px 16px',
+            listStyle: 'decimal inside',
+            border: '1px solid var(--ha-border)',
+            borderRadius: 'var(--ha-radius-md)',
+            background: 'var(--ha-surface-primary)',
+            color: 'var(--ha-text-secondary)',
+            fontSize: 'var(--ha-text-sm)',
+          }}
+        >
+          <li>
+            Click <strong style={{ color: 'var(--ha-text-primary)' }}>Add Agent</strong> and generate
+            a one-click install script (Platform Administrator only).
+          </li>
+          <li>
+            On the endpoint, run the Linux/macOS or Windows script as administrator — it downloads the
+            matching package and registers with the connection key.
+          </li>
+          <li>
+            Refresh this grid until the host appears Online. Review token lifecycle events under{' '}
+            <Link to="/admin/enrollment-audit" style={{ color: 'var(--ha-primary)' }}>
+              Enrollment audit
+            </Link>{' '}
+            (select a masthead tenant first).
+          </li>
+          <li>
+            Use optional package downloads below only for air-gapped hosts or when the script cannot
+            reach <code>/agent-packages/</code>.
+          </li>
+        </ol>
+      )}
+
+      {!canProvisionAgent && (
+        <div
+          role="status"
+          style={{
+            margin: '0 16px 12px',
+            padding: '10px 12px',
+            border: '1px solid var(--ha-border)',
+            borderRadius: 'var(--ha-radius-base)',
+            background: 'var(--ha-surface-primary)',
+            color: 'var(--ha-text-secondary)',
+            fontSize: 'var(--ha-text-sm)',
+          }}
+        >
+          Agent install scripts require Platform Administrator. Analysts can monitor registered sensors
+          here; ask an administrator to run Add Agent.
+        </div>
+      )}
 
       <AgentPackageCatalog />
 
@@ -397,7 +471,7 @@ export function SensorGridPage(): JSX.Element {
           <EmptyState
             icon={<Activity size={48} />}
             title="No agents registered yet"
-            description="Download an agent package above, or use Add Agent to generate a keyed one-click install script. Process-log tests do not register a sensor row."
+            description="Use Add Agent to generate a keyed install script. The script downloads the agent package and registers this host. Optional package cards above are for air-gapped installs only."
             action={
               canProvisionAgent ? (
                 <HaButton

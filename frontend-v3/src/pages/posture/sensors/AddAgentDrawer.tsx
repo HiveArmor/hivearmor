@@ -278,6 +278,24 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
             />
           </div>
 
+          <div
+            style={{
+              margin: '12px 24px 0',
+              padding: '10px 12px',
+              border: '1px solid var(--ha-border)',
+              borderRadius: 'var(--ha-radius-base)',
+              background: 'var(--ha-surface-primary)',
+              color: 'var(--ha-text-secondary)',
+              fontSize: 'var(--ha-text-sm)',
+            }}
+            role="status"
+          >
+            <strong style={{ color: 'var(--ha-text-primary)' }}>Next on the endpoint:</strong> copy
+            the script for your OS, run it with admin/root privileges, then return here and refresh
+            Sensors until the host shows Online. The script downloads{' '}
+            <code>/agent-packages/</code> automatically — manual package download is optional.
+          </div>
+
           {/* OS tabs */}
           <div style={{ padding: '16px 24px 0' }}>
             <div style={{ display: 'flex', borderBottom: '1px solid var(--ha-border)' }}>

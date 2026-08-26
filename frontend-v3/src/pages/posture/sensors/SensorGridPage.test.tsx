@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SensorGridPage } from './SensorGridPage';
@@ -25,6 +26,18 @@ vi.mock('./AgentPackageCatalog', () => ({
 }));
 vi.mock('@/lib/auth/hasAuthority', () => ({
   hasAuthority: (role: string) => role === 'ROLE_ADMIN',
+}));
+vi.mock('@/store/auth.store', () => ({
+  useAuthStore: (selector?: (state: {
+    hasAnyRole: (roles: string[]) => boolean;
+    hasRole: (role: string) => boolean;
+  }) => unknown) => {
+    const state = {
+      hasAnyRole: (roles: string[]) => roles.includes('ROLE_ADMIN'),
+      hasRole: (role: string) => role === 'ROLE_ADMIN',
+    };
+    return typeof selector === 'function' ? selector(state) : state;
+  },
 }));
 
 const useQuery = vi.fn();
@@ -83,11 +96,18 @@ describe('SensorGridPage remote actions (GAP-SEC-05 / B1)', () => {
   });
 
   it('enables kill for Admin; isolate stays blocked until separately verified', () => {
-    render(<SensorGridPage />);
+    render(
+      <MemoryRouter>
+        <SensorGridPage />
+      </MemoryRouter>
+    );
 
     expect(screen.getByText(REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Isolate host (blocked)' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Kill process' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: 'Restart agent (unavailable)' })).toBeDisabled();
+    expect(screen.getAllByRole('link', { name: 'Enrollment audit' }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /Add Agent/i })).toBeVisible();
+    expect(screen.getByLabelText('How to enroll an agent')).toBeVisible();
   });
 });
