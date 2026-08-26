@@ -400,7 +400,8 @@ export function SensorGridPage(): JSX.Element {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        /* ha-app-main uses min-height only — percentage height does not resolve. */
+        height: 'calc(100vh - var(--ha-masthead-height))',
         overflow: 'hidden',
         backgroundColor: 'var(--ha-background)',
       }}
@@ -496,7 +497,7 @@ export function SensorGridPage(): JSX.Element {
       <div
         style={{
           flex: 1,
-          minHeight: 0,
+          minHeight: 240,
           padding: '12px 16px',
           display: 'flex',
           flexDirection: 'column',
