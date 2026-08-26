@@ -4,13 +4,13 @@
  * All paths use the Vite proxy (/api/*) with Bearer JWT via msspFetch.
  */
 
+import { msspFetch, msspHttpError } from "./msspFetch";
 import { MsspConflictError } from "./msspTypes";
 import type {
   AddTenantMemberRequest,
   PatchTenantMemberRequest,
   TenantMemberDTO,
 } from "./msspTypes";
-import { msspFetch, msspHttpError } from "./msspFetch";
 
 export async function fetchTenantUsers(
   tenantId: string,

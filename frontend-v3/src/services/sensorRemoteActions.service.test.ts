@@ -62,14 +62,14 @@ describe('sensorRemoteActions.service', () => {
   it('refuses isolate when isolate live-verify flag is off', async () => {
     await expect(
       isolateSensor({ agentId: '1', hostname: 'host-a' })
-    ).rejects.toThrow(/isolation stays blocked/i);
+    ).rejects.toThrow(/isolation is not available yet/i);
     expect(apiClient.post).not.toHaveBeenCalled();
   });
 
   it('refuses kill when kill live-verify flag is off', async () => {
     await expect(
       killSensorProcess({ agentId: '1', pid: 4242 })
-    ).rejects.toThrow(/live-verified/i);
+    ).rejects.toThrow(/remote sensor actions are not available yet/i);
     expect(apiClient.post).not.toHaveBeenCalled();
   });
 

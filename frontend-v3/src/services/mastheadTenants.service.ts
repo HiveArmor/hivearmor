@@ -5,8 +5,8 @@
  */
 
 import { fetchTenants } from '@/features/mssp/api/msspTenantApi';
-import { hasAuthority } from '@/lib/auth/hasAuthority';
 import { apiClient } from '@/lib/apiClient';
+import { hasAuthority } from '@/lib/auth/hasAuthority';
 
 export interface MastheadTenantOption {
   id: number | null;

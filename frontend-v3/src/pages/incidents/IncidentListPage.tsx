@@ -39,12 +39,12 @@ import { ErrorState } from '@/components/error-state/ErrorState';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
-import { useRowDensity, ROW_HEIGHTS, type RowDensity } from '@/hooks/useRowDensity';
 import { SlaIndicator } from '@/components/sla-indicator/SlaIndicator';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import type { IncidentStatus } from '@/constants/status.constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
+import { useRowDensity, ROW_HEIGHTS, type RowDensity } from '@/hooks/useRowDensity';
 import { getSeverityLabel } from '@/lib/severity';
 import type { SeverityLevel } from '@/lib/severity';
 import {

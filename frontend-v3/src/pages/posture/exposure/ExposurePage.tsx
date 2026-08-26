@@ -40,8 +40,8 @@ import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
-import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
 import { useRowDensity } from '@/hooks/useRowDensity';
+import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
 import { exposureFixtureMode, fetchExposure } from '@/services/exposure.service';
 import type {
   AttackPathDTO,

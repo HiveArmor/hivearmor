@@ -31,6 +31,7 @@ vi.mock('@tanstack/react-query', () => ({
 vi.mock('@/services/enrollmentAudit.service', () => ({
   listEnrollmentAudit: (...args: unknown[]) => mockList(...args),
   downloadEnrollmentAuditExport: (...args: unknown[]) => mockExport(...args),
+  EnrollmentAuditTenantRequiredError: class EnrollmentAuditTenantRequiredError extends Error {},
 }));
 
 vi.mock('@/store/auth.store', () => ({

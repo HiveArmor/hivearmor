@@ -18,10 +18,10 @@ import type { DetectionRule, DetectionRuleSummary, RuleListParams } from './dete
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
-import { useRowDensity, ROW_HEIGHTS, type RowDensity } from '@/hooks/useRowDensity';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
+import { useRowDensity, ROW_HEIGHTS, type RowDensity } from '@/hooks/useRowDensity';
 import { foundationDetectionRuleSummary } from '@/pages/detection-rules/detectionRules.fixtures';
 import { useAuthStore } from '@/store/auth.store';
 

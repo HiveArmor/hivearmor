@@ -18,6 +18,8 @@ export function MsspPortalOutlet(): ReactElement {
   );
 }
 
+// Route config is a constant; suppress React Refresh "only-export-components" here.
+// eslint-disable-next-line react-refresh/only-export-components
 export const msspRouteChildren = [
   { path: "overview", element: <MsspOverviewPage /> },
   { path: "tenants", element: <TenantsListPage /> },

@@ -43,7 +43,6 @@ import {
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
-import { useRowDensity } from '@/hooks/useRowDensity';
 import {
   RESP_020_APPROVAL_PROJECTION,
   RESP_020_APPROVAL_PROJECTION_TITLE,
@@ -70,10 +69,11 @@ import { HaButton } from '@/components/ha-button/HaButton';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
-import { formatAuthorityLabel } from '@/lib/roles';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
+import { useRowDensity } from '@/hooks/useRowDensity';
+import { formatAuthorityLabel } from '@/lib/roles';
 import { useAuthStore } from '@/store/auth.store';
 import './ResponseAuthorityPage.css';
 import './response-grid-standard.css';

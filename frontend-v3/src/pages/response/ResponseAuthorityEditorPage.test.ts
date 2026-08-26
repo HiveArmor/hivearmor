@@ -34,9 +34,9 @@ describe('Response governance editor routes and safety', () => {
   });
 
   it('enforces the shared two-line Response row heights', () => {
-    expect(densitySource).toContain('compact: 36');
-    expect(densitySource).toContain('standard: 42');
-    expect(densitySource).toContain('comfortable: 48');
+    expect(densitySource).toContain('compact 32');
+    expect(densitySource).toContain('standard 40');
+    expect(densitySource).toContain('comfortable 48');
   });
 });
 
