@@ -47,10 +47,27 @@ function authHeaders(accept = 'application/json'): HeadersInit {
   };
 }
 
+/** Thrown when masthead scope is "all tenants" — backend requireTenant() needs a concrete tenant. */
+export class EnrollmentAuditTenantRequiredError extends Error {
+  constructor() {
+    super('Select an authorized tenant in the masthead before loading enrollment audit');
+    this.name = 'EnrollmentAuditTenantRequiredError';
+  }
+}
+
+function requireSelectedTenant(): number {
+  const tenantId = useAuthStore.getState().selectedTenantId;
+  if (tenantId === null || tenantId <= 0) {
+    throw new EnrollmentAuditTenantRequiredError();
+  }
+  return tenantId;
+}
+
 export async function listEnrollmentAudit(
   params: EnrollmentAuditListParams = {},
   signal?: AbortSignal
 ): Promise<EnrollmentAuditPageResult> {
+  requireSelectedTenant();
   const qs = new URLSearchParams();
   qs.set('page', String(params.page ?? 0));
   qs.set('size', String(params.size ?? 25));
@@ -63,6 +80,9 @@ export async function listEnrollmentAudit(
     signal,
   });
   if (!response.ok) {
+    if (response.status === 400) {
+      throw new EnrollmentAuditTenantRequiredError();
+    }
     throw new Error(`Enrollment audit failed (HTTP ${String(response.status)})`);
   }
   const items = (await response.json()) as EnrollmentAuditEventDTO[];
@@ -73,6 +93,7 @@ export async function listEnrollmentAudit(
 export async function downloadEnrollmentAuditExport(
   params: Omit<EnrollmentAuditListParams, 'page' | 'size'> = {}
 ): Promise<void> {
+  requireSelectedTenant();
   const qs = new URLSearchParams();
   if (params.tokenId?.trim()) qs.set('tokenId', params.tokenId.trim());
   if (params.agentUuid?.trim()) qs.set('agentUuid', params.agentUuid.trim());
@@ -84,6 +105,9 @@ export async function downloadEnrollmentAuditExport(
     headers: authHeaders('application/x-ndjson'),
   });
   if (!response.ok) {
+    if (response.status === 400) {
+      throw new EnrollmentAuditTenantRequiredError();
+    }
     throw new Error(`Enrollment audit export failed (HTTP ${String(response.status)})`);
   }
 

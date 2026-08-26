@@ -1,6 +1,17 @@
 # Next production slice
 
-Updated: **2026-08-25 23:06:00 IST (UTC+05:30)**
+Updated: **2026-08-26 07:15:00 IST (UTC+05:30)**
+
+## Completed this slice — Enrollment audit masthead tenant gate
+
+Status: **STAGING CANDIDATE** (branch `feat/enrollment-audit-tenant-gate`). Not `PRODUCTION READY`.
+
+| ID | Fix |
+|---|---|
+| ENROLL-AUDIT-TENANT | Skip audit/export fetch when masthead is “All tenants”; EmptyState + disabled export; service throws `EnrollmentAuditTenantRequiredError` before HTTP 400 |
+
+Next after merge: staging FE rebuild + open `/admin/enrollment-audit` with all-tenants vs tenant 1.
+Deferred: vendor connectors; 24h soak; full RESP-020 policy/delegation CRUD.
 
 ## Completed this slice — Parallel follow-ons (INV-012 UI + Detect→Govern walk + RESP-020)
 

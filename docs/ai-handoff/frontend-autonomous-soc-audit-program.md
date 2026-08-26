@@ -52,7 +52,6 @@ Waves **A1–D** are complete as **STAGING CANDIDATE** thin honesty on `main` ti
 - Vendor live connector proofs (credentials required)
 - Full 24h soak
 - Full RESP-020 policy/delegation CRUD (`RESP_020_GOVERNANCE` stays false; approval projection is live)
-- Enrollment-audit UX when no masthead tenant selected (API requires tenant → 400 honesty)
 
 Research index: `docs/ai-handoff/research/autonomous-soc-program-closure.md`.
 

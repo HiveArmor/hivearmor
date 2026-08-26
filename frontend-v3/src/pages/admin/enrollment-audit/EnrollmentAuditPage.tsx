@@ -39,7 +39,9 @@ function formatOccurredAt(value: string | null): string {
 
 export function EnrollmentAuditPage(): JSX.Element {
   const hasAnyRole = useAuthStore((state) => state.hasAnyRole);
+  const selectedTenantId = useAuthStore((state) => state.selectedTenantId);
   const canView = hasAnyRole([...ENROLLMENT_AUDIT_ROLES]);
+  const tenantSelected = selectedTenantId !== null && selectedTenantId > 0;
 
   const [page, setPage] = useState(0);
   const [eventType, setEventType] = useState('');
@@ -61,9 +63,9 @@ export function EnrollmentAuditPage(): JSX.Element {
   );
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
-    queryKey: ['enrollment-audit', filters],
+    queryKey: ['enrollment-audit', selectedTenantId, filters],
     queryFn: ({ signal }) => listEnrollmentAudit(filters, signal),
-    enabled: canView,
+    enabled: canView && tenantSelected,
     retry: false,
   });
 
@@ -166,8 +168,12 @@ export function EnrollmentAuditPage(): JSX.Element {
             variant="secondary"
             icon={<Download size={14} />}
             onClick={() => void onExport()}
-            isDisabled={exporting || isLoading}
-            title="Download NDJSON via GET /api/ha-agent-enrollments/audit/export"
+            isDisabled={exporting || isLoading || !tenantSelected}
+            title={
+              tenantSelected
+                ? 'Download NDJSON via GET /api/ha-agent-enrollments/audit/export'
+                : 'Select an authorized tenant in the masthead before exporting'
+            }
           >
             {exporting ? 'Exporting…' : 'Export NDJSON'}
           </HaButton>
@@ -186,8 +192,12 @@ export function EnrollmentAuditPage(): JSX.Element {
           fontSize: 'var(--ha-text-sm)',
         }}
       >
-        Source policy is append-only (<code>X-Audit-Source-Policy</code> on export). Select an
-        authorized tenant in the masthead before querying.
+        <strong style={{ color: 'var(--ha-text-primary)' }}>
+          {tenantSelected ? `Tenant ${selectedTenantId}` : 'Tenant required'}
+        </strong>
+        {' — '}
+        Source policy is append-only (<code>X-Audit-Source-Policy</code> on export). Enrollment audit
+        is tenant-scoped; “All authorized tenants” in the masthead cannot call this API.
       </div>
 
       {exportError && (
@@ -226,6 +236,7 @@ export function EnrollmentAuditPage(): JSX.Element {
               setPage(0);
             }}
             placeholder="e.g. TOKEN_CREATED"
+            disabled={!tenantSelected}
             style={{
               minWidth: 160,
               padding: '6px 8px',
@@ -246,6 +257,7 @@ export function EnrollmentAuditPage(): JSX.Element {
               setPage(0);
             }}
             placeholder="Filter token"
+            disabled={!tenantSelected}
             style={{
               minWidth: 160,
               padding: '6px 8px',
@@ -267,6 +279,7 @@ export function EnrollmentAuditPage(): JSX.Element {
               setPage(0);
             }}
             placeholder="Filter agent"
+            disabled={!tenantSelected}
             style={{
               minWidth: 180,
               padding: '6px 8px',
@@ -279,13 +292,18 @@ export function EnrollmentAuditPage(): JSX.Element {
             }}
           />
         </label>
-        <HaButton variant="plain" onClick={() => void refetch()} isDisabled={isFetching}>
+        <HaButton variant="plain" onClick={() => void refetch()} isDisabled={isFetching || !tenantSelected}>
           Refresh
         </HaButton>
       </div>
 
       <div style={{ flex: 1, minHeight: 0, padding: '0 24px 16px' }}>
-        {isLoading ? (
+        {!tenantSelected ? (
+          <EmptyState
+            title="Select a tenant to load enrollment audit"
+            description="Choose an authorized tenant in the masthead scope switcher. “All authorized tenants” cannot query GET /api/ha-agent-enrollments/audit (backend requires X-Tenant-ID)."
+          />
+        ) : isLoading ? (
           <LoadingState message="Loading enrollment audit…" />
         ) : isError ? (
           <ErrorState
