@@ -14,13 +14,15 @@ vi.mock('@/lib/auth/hasAuthority', () => ({
   hasAuthority: vi.fn(),
 }));
 
-import { apiClient } from '@/lib/apiClient';
-import { fetchTenants } from '@/features/mssp/api/msspTenantApi';
-import { hasAuthority } from '@/lib/auth/hasAuthority';
 import {
   ALL_TENANTS_OPTION,
   fetchMastheadTenantInventory,
 } from './mastheadTenants.service';
+
+import { fetchTenants } from '@/features/mssp/api/msspTenantApi';
+import { apiClient } from '@/lib/apiClient';
+import { hasAuthority } from '@/lib/auth/hasAuthority';
+
 
 describe('fetchMastheadTenantInventory', () => {
   beforeEach(() => {

@@ -23,7 +23,6 @@ import {
   RESP_020_APPROVAL_PROJECTION,
   RESP_020_GOVERNANCE,
 } from './response.capabilities';
-
 import type {
   CursorPageResult,
   PlaybookExecuteRequest,

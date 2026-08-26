@@ -59,8 +59,8 @@ import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
 import { useEpsStream } from '@/hooks/useEpsStream';
-import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
 import { useRowDensity } from '@/hooks/useRowDensity';
+import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
 
 
 import './AssetsPage.css';

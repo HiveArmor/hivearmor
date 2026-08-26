@@ -36,7 +36,6 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
-import { useRowDensity } from '@/hooks/useRowDensity';
 import type { PlaybookListItem, PlaybookListParams, PlaybookCategory } from './response.types';
 import {
   fetchPlaybookList,
@@ -57,6 +56,7 @@ import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
+import { useRowDensity } from '@/hooks/useRowDensity';
 import { useAuthStore } from '@/store/auth.store';
 import './ResponsePlaybooksPage.css';
 import './response-grid-standard.css';

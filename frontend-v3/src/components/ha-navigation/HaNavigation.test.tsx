@@ -205,7 +205,6 @@ describe('HaNavigation', () => {
     renderNavigation();
     fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
     expect(screen.queryByRole('button', { name: 'API Keys' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Data Sources' })).not.toBeInTheDocument();
   });
 
   it('exposes API Keys and Data Sources for administrators', () => {

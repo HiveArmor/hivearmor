@@ -8,7 +8,7 @@
 import { useMemo, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
-import type { ColDef } from 'ag-grid-community';
+import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { Download } from 'lucide-react';
 
 import { EmptyState } from '@/components/empty-state/EmptyState';
@@ -22,6 +22,7 @@ import { ROLE_LABELS, ROLES } from '@/lib/roles';
 import {
   downloadEnrollmentAuditExport,
   listEnrollmentAudit,
+  EnrollmentAuditTenantRequiredError,
   type EnrollmentAuditEventDTO,
 } from '@/services/enrollmentAudit.service';
 import { useAuthStore } from '@/store/auth.store';
@@ -29,6 +30,132 @@ import { useAuthStore } from '@/store/auth.store';
 const PAGE_SIZE = 25;
 
 const ENROLLMENT_AUDIT_ROLES = [ROLES.ADMIN, ROLES.SOC_MANAGER] as const;
+
+type LifecycleEventTone = 'neutral' | 'warning' | 'critical';
+type LifecycleEventCategory = 'Enrollment token' | 'Device credential' | 'Audit event';
+
+const ENROLLMENT_AUDIT_EVENT_FILTERS = [
+  { value: 'enrollment.token.created', label: 'Token created', category: 'Enrollment token', tone: 'neutral' },
+  { value: 'enrollment.token.consumed', label: 'Token consumed', category: 'Enrollment token', tone: 'neutral' },
+  { value: 'enrollment.token.revoked', label: 'Token revoked', category: 'Enrollment token', tone: 'critical' },
+  { value: 'agent.credential.rotated', label: 'Credential rotated', category: 'Device credential', tone: 'warning' },
+  { value: 'agent.credential.revoked', label: 'Credential revoked', category: 'Device credential', tone: 'critical' },
+] as const;
+
+function truncateWithEllipsis(raw: string, maxLen: number): string {
+  const trimmed = raw.trim();
+  if (trimmed.length <= maxLen) return trimmed;
+  return `${trimmed.slice(0, Math.max(1, maxLen - 1))}…`;
+}
+
+function getLifecycleEventPresentation(eventType: string | null | undefined): {
+  category: LifecycleEventCategory;
+  label: string;
+  tone: LifecycleEventTone;
+} {
+  const normalized = (eventType ?? '').trim();
+  const match = ENROLLMENT_AUDIT_EVENT_FILTERS.find((e) => e.value === normalized);
+  if (match) {
+    return { category: match.category, label: match.label, tone: match.tone };
+  }
+  // Backend allowlist is strict; this is a safe fallback for unexpected data.
+  return { category: 'Audit event', label: normalized || '—', tone: 'neutral' };
+}
+
+function LifecycleEventCellRenderer(
+  params: ICellRendererParams<EnrollmentAuditEventDTO>
+): JSX.Element {
+  const { category, label, tone } = getLifecycleEventPresentation(params.data?.eventType);
+
+  const badgeBg =
+    tone === 'critical'
+      ? 'color-mix(in srgb, var(--ha-critical) 18%, transparent)'
+      : tone === 'warning'
+        ? 'color-mix(in srgb, var(--ha-high) 16%, transparent)'
+        : 'color-mix(in srgb, var(--ha-medium) 14%, transparent)';
+
+  const badgeColor =
+    tone === 'critical'
+      ? 'var(--ha-critical)'
+      : tone === 'warning'
+        ? 'var(--ha-high)'
+        : 'var(--ha-primary)';
+
+  return (
+    <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+      <span
+        title={category}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          padding: '2px 6px',
+          borderRadius: 'var(--ha-radius-sm)',
+          border: '1px solid var(--ha-border)',
+          background: badgeBg,
+          color: badgeColor,
+          fontFamily: 'var(--ha-font-ui)',
+          fontSize: 'var(--ha-text-xs)',
+          lineHeight: '1',
+          letterSpacing: '0.2px',
+          width: 'fit-content',
+          maxWidth: '100%',
+        }}
+      >
+        {category}
+      </span>
+      <span
+        title={label}
+        style={{
+          fontFamily: 'var(--ha-font-ui)',
+          fontSize: 'var(--ha-text-sm)',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {label}
+      </span>
+    </span>
+  );
+}
+
+function TruncatedTextCellRenderer(props: {
+  value: unknown;
+  maxLen: number;
+  titleIfTrimmedEmpty?: string;
+}): JSX.Element {
+  const raw = typeof props.value === 'string' ? props.value : '';
+  const trimmed = raw.trim();
+  const shown = trimmed ? truncateWithEllipsis(trimmed, props.maxLen) : props.titleIfTrimmedEmpty ?? '—';
+  return (
+    <span
+      title={trimmed || undefined}
+      style={{ fontFamily: 'var(--ha-font-ui)', fontSize: 'var(--ha-text-sm)', whiteSpace: 'nowrap' }}
+    >
+      {shown}
+    </span>
+  );
+}
+
+function ReasonCellRenderer(props: { value: unknown; maxLen: number }): JSX.Element {
+  const raw = typeof props.value === 'string' ? props.value : '';
+  const trimmed = raw.trim();
+  const shown = trimmed ? truncateWithEllipsis(trimmed, props.maxLen) : '—';
+  return (
+    <span
+      title={trimmed || undefined}
+      style={{
+        fontFamily: 'var(--ha-font-ui)',
+        fontSize: 'var(--ha-text-sm)',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+      }}
+    >
+      {shown}
+    </span>
+  );
+}
 
 function formatOccurredAt(value: string | null): string {
   if (!value) return '—';
@@ -81,19 +208,38 @@ export function EnrollmentAuditPage(): JSX.Element {
         width: 168,
         valueFormatter: ({ value }) => formatOccurredAt(value as string | null),
       },
-      { field: 'eventType', headerName: 'Event', flex: 1, minWidth: 140 },
-      { field: 'actor', headerName: 'Actor', width: 140 },
+      {
+        field: 'eventType',
+        headerName: 'Lifecycle event',
+        flex: 1,
+        minWidth: 220,
+        cellRenderer: LifecycleEventCellRenderer,
+      },
+      {
+        field: 'actor',
+        headerName: 'Actor',
+        width: 170,
+        cellRenderer: (params: ICellRendererParams<EnrollmentAuditEventDTO>) => (
+          <TruncatedTextCellRenderer
+            value={params.value}
+            maxLen={18}
+            titleIfTrimmedEmpty="—"
+          />
+        ),
+      },
       {
         field: 'reason',
         headerName: 'Reason',
-        flex: 1.2,
-        minWidth: 160,
-        valueFormatter: ({ value }) => (value as string)?.trim() || '—',
+        flex: 1.6,
+        minWidth: 200,
+        cellRenderer: (params: ICellRendererParams<EnrollmentAuditEventDTO>) => (
+          <ReasonCellRenderer value={params.value} maxLen={110} />
+        ),
       },
       {
         field: 'tokenId',
-        headerName: 'Token',
-        width: 120,
+        headerName: 'Token id',
+        width: 130,
         cellStyle: { fontFamily: 'var(--ha-font-mono)', fontSize: 'var(--ha-text-xs)' },
         valueFormatter: ({ value }) => {
           const raw = (value as string)?.trim();
@@ -103,8 +249,8 @@ export function EnrollmentAuditPage(): JSX.Element {
       },
       {
         field: 'agentUuid',
-        headerName: 'Agent',
-        width: 140,
+        headerName: 'Agent UUID',
+        width: 160,
         cellStyle: { fontFamily: 'var(--ha-font-mono)', fontSize: 'var(--ha-text-xs)' },
         valueFormatter: ({ value }) => {
           const raw = (value as string)?.trim();
@@ -114,9 +260,27 @@ export function EnrollmentAuditPage(): JSX.Element {
       },
       { field: 'platform', headerName: 'Platform', width: 100 },
       {
+        field: 'policyId',
+        headerName: 'Policy',
+        width: 130,
+        cellStyle: { fontFamily: 'var(--ha-font-mono)', fontSize: 'var(--ha-text-xs)' },
+        valueFormatter: ({ value }) => {
+          const raw = (value as string)?.trim();
+          if (!raw) return '—';
+          return raw.length > 16 ? `${raw.slice(0, 12)}…` : raw;
+        },
+      },
+      {
         field: 'credentialVersion',
-        headerName: 'Cred ver',
+        headerName: 'Credential ver',
         width: 88,
+        valueFormatter: ({ value }) =>
+          typeof value === 'number' && value > 0 ? String(value) : '—',
+      },
+      {
+        field: 'enrollmentVersion',
+        headerName: 'Enroll ver',
+        width: 98,
         valueFormatter: ({ value }) =>
           typeof value === 'number' && value > 0 ? String(value) : '—',
       },
@@ -162,7 +326,7 @@ export function EnrollmentAuditPage(): JSX.Element {
     >
       <SiemPageHeader
         title="Enrollment Audit"
-        description="Append-only ledger from GET /api/ha-agent-enrollments/audit — safe fields only; secrets never returned."
+        description="Review tenant-scoped enrollment token lifecycle and agent credential rotate/revoke events using safe identifiers only (GET /api/ha-agent-enrollments/audit; secret values never returned)."
         actions={
           <HaButton
             variant="secondary"
@@ -229,16 +393,15 @@ export function EnrollmentAuditPage(): JSX.Element {
       >
         <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 'var(--ha-text-xs)', color: 'var(--ha-text-secondary)' }}>
           Event type
-          <input
+          <select
             value={eventType}
             onChange={(event) => {
               setEventType(event.target.value);
               setPage(0);
             }}
-            placeholder="e.g. TOKEN_CREATED"
             disabled={!tenantSelected}
             style={{
-              minWidth: 160,
+              minWidth: 220,
               padding: '6px 8px',
               border: '1px solid var(--ha-border)',
               borderRadius: 'var(--ha-radius-sm)',
@@ -246,7 +409,14 @@ export function EnrollmentAuditPage(): JSX.Element {
               color: 'var(--ha-text-primary)',
               fontSize: 'var(--ha-text-sm)',
             }}
-          />
+          >
+            <option value="">All event types</option>
+            {ENROLLMENT_AUDIT_EVENT_FILTERS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </label>
         <label style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 'var(--ha-text-xs)', color: 'var(--ha-text-secondary)' }}>
           Token id
@@ -306,15 +476,23 @@ export function EnrollmentAuditPage(): JSX.Element {
         ) : isLoading ? (
           <LoadingState message="Loading enrollment audit…" />
         ) : isError ? (
-          <ErrorState
-            title="Could not load enrollment audit"
-            message={error instanceof Error ? error.message : 'Unexpected error'}
-            onRetry={() => void refetch()}
-          />
+          error instanceof EnrollmentAuditTenantRequiredError ? (
+            <EmptyState
+              title="Select a tenant to load enrollment audit"
+              description="Choose an authorized tenant in the masthead scope switcher. Enrollment audit is tenant-scoped; export and list both require an X-Tenant-ID."
+              action={undefined}
+            />
+          ) : (
+            <ErrorState
+              title="Enrollment audit ledger unavailable"
+              message="The audit trail could not be loaded right now. Try refreshing, or verify backend connectivity for this tenant."
+              onRetry={() => void refetch()}
+            />
+          )
         ) : items.length === 0 ? (
           <EmptyState
             title="No enrollment audit events"
-            description="Events appear when enrollment tokens are created, agents enroll, or credentials rotate/revoke for the selected tenant."
+            description="This tenant currently has no enrollment token lifecycle or credential rotate/revoke events in the append-only ledger. Token/credential secret values are intentionally withheld by the backend; the UI shows safe identifiers and lifecycle state changes only."
           />
         ) : (
           <SiemDataGrid

@@ -58,8 +58,8 @@ import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
-import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
 import { useRowDensity } from '@/hooks/useRowDensity';
+import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
 
 import './IdentitiesPage.css';
 import '../../response/response-grid-standard.css';

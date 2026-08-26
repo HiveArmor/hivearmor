@@ -15,7 +15,7 @@ import { Lock, PlayCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
-import { useRowDensity } from '@/hooks/useRowDensity';
+
 
 import { EmptyState as HaEmptyState } from '@/components/empty-state/EmptyState';
 import { HaButton } from '@/components/ha-button/HaButton';
@@ -24,6 +24,7 @@ import { HaSwitch } from '@/components/ha-switch/HaSwitch';
 import { PlaybookExecutionViewer } from '@/components/playbook/PlaybookExecutionViewer';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { useToastStore } from '@/components/toast-stack/toastStore';
+import { useRowDensity } from '@/hooks/useRowDensity';
 import { fetchPlaybooks, setPlaybookActive, executePlaybook } from '@/services/playbookService';
 import { useAuthStore } from '@/store/auth.store';
 import type { Playbook, PlaybookStep, PlaybookTriggerType, PlaybookStatus } from '@/types/playbook';

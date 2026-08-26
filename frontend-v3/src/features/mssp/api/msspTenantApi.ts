@@ -1,6 +1,6 @@
+import { msspFetch, msspHttpError } from "./msspFetch";
 import type { NewTenantRequest, NewTenantResponse, TenantDetailDTO, TenantHealthDTO, UpdateTenantRequest } from "./msspTypes";
 import { MsspConflictError } from "./msspTypes";
-import { msspFetch, msspHttpError } from "./msspFetch";
 
 interface ProblemDetail {
   readonly field?: string;
