@@ -401,6 +401,7 @@ export function SensorGridPage(): JSX.Element {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
+        overflow: 'hidden',
         backgroundColor: 'var(--ha-background)',
       }}
     >
@@ -414,7 +415,7 @@ export function SensorGridPage(): JSX.Element {
       )}
 
       {showIsolateOnlyBanner && (
-        <div style={{ margin: '12px 16px 0' }}>
+        <div style={{ margin: '12px 16px 0', flexShrink: 0 }}>
           <HaInlineBanner
             variant="info"
             title={REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE}
@@ -428,6 +429,7 @@ export function SensorGridPage(): JSX.Element {
       <div
         style={{
           height: '48px',
+          flexShrink: 0,
           padding: '0 24px',
           display: 'flex',
           alignItems: 'center',
@@ -484,64 +486,23 @@ export function SensorGridPage(): JSX.Element {
         </div>
       </div>
 
-      {!isLoading && !isError && <SensorFleetSummary sensors={sensors} />}
-
-      {canProvisionAgent && (
-        <ol
-          className="sensor-enroll-steps"
-          aria-label="How to enroll an agent"
-          style={{
-            display: 'grid',
-            gap: 4,
-            margin: '12px 16px 0',
-            padding: '10px 14px',
-            listStyle: 'decimal inside',
-            border: '1px solid var(--ha-border)',
-            borderRadius: 'var(--ha-radius-md)',
-            background: 'var(--ha-surface-primary)',
-            color: 'var(--ha-text-secondary)',
-            fontSize: 'var(--ha-text-sm)',
-          }}
-        >
-          <li>
-            Click <strong style={{ color: 'var(--ha-text-primary)' }}>Add Agent</strong> to generate
-            a one-click install script.
-          </li>
-          <li>
-            Run the script on the endpoint as administrator — it downloads the matching package and
-            registers the host.
-          </li>
-          <li>
-            Refresh until Online. Check{' '}
-            <Link to="/admin/enrollment-audit" style={{ color: 'var(--ha-primary)' }}>
-              Enrollment audit
-            </Link>{' '}
-            after selecting a masthead tenant.
-          </li>
-        </ol>
-      )}
-
-      {!canProvisionAgent && (
-        <div
-          role="status"
-          style={{
-            margin: '0 16px 12px',
-            padding: '10px 12px',
-            border: '1px solid var(--ha-border)',
-            borderRadius: 'var(--ha-radius-base)',
-            background: 'var(--ha-surface-primary)',
-            color: 'var(--ha-text-secondary)',
-            fontSize: 'var(--ha-text-sm)',
-          }}
-        >
-          Agent install scripts require Platform Administrator. Analysts can monitor registered sensors
-          here; ask an administrator to run Add Agent.
+      {!isLoading && !isError && (
+        <div style={{ flexShrink: 0 }}>
+          <SensorFleetSummary sensors={sensors} />
         </div>
       )}
 
-      <AgentPackageCatalog />
-
-      <div style={{ flex: 1, padding: '16px' }}>
+      {/* Agent inventory is the primary SIEM surface — must remain visible above the fold. */}
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          padding: '12px 16px',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+        aria-label="Registered agents"
+      >
         {isLoading && <LoadingState message="Loading sensors..." />}
 
         {isError && (
@@ -555,7 +516,7 @@ export function SensorGridPage(): JSX.Element {
           <EmptyState
             icon={<Activity size={48} />}
             title="No agents registered yet"
-            description="Use Add Agent to generate a keyed install script. The script downloads the agent package and registers this host. Optional package cards above are for air-gapped installs only."
+            description="Use Add Agent to generate a keyed install script. The script downloads the agent package and registers this host."
             action={
               canProvisionAgent ? (
                 <HaButton
@@ -577,9 +538,85 @@ export function SensorGridPage(): JSX.Element {
             rowModelType="clientSide"
             height="100%"
             rowHeight={ROW_HEIGHTS[density]}
+            ariaLabel="Registered agents"
           />
         )}
       </div>
+
+      <details
+        className="sensor-install-panel"
+        open={sensors.length === 0}
+        style={{
+          flexShrink: 0,
+          margin: '0 16px 8px',
+          border: '1px solid var(--ha-border)',
+          borderRadius: 'var(--ha-radius-md)',
+          background: 'var(--ha-surface-primary)',
+          maxHeight: '40vh',
+          overflow: 'auto',
+        }}
+      >
+        <summary
+          style={{
+            cursor: 'pointer',
+            padding: '10px 14px',
+            fontSize: 'var(--ha-text-sm)',
+            fontWeight: 600,
+            color: 'var(--ha-text-primary)',
+            listStylePosition: 'outside',
+          }}
+        >
+          Install agents &amp; package downloads
+          {!canProvisionAgent ? ' (Platform Administrator required to generate scripts)' : ''}
+        </summary>
+
+        {canProvisionAgent && (
+          <ol
+            className="sensor-enroll-steps"
+            aria-label="How to enroll an agent"
+            style={{
+              display: 'grid',
+              gap: 4,
+              margin: '0 14px 12px',
+              padding: '0 0 0 18px',
+              color: 'var(--ha-text-secondary)',
+              fontSize: 'var(--ha-text-sm)',
+            }}
+          >
+            <li>
+              Click <strong style={{ color: 'var(--ha-text-primary)' }}>Add Agent</strong> to generate
+              a one-click install script.
+            </li>
+            <li>
+              Run the script on the endpoint as administrator — it downloads the matching package and
+              registers the host.
+            </li>
+            <li>
+              Refresh until Online. Check{' '}
+              <Link to="/admin/enrollment-audit" style={{ color: 'var(--ha-primary)' }}>
+                Enrollment audit
+              </Link>{' '}
+              after selecting a masthead tenant.
+            </li>
+          </ol>
+        )}
+
+        {!canProvisionAgent && (
+          <p
+            role="status"
+            style={{
+              margin: '0 14px 12px',
+              color: 'var(--ha-text-secondary)',
+              fontSize: 'var(--ha-text-sm)',
+            }}
+          >
+            Agent install scripts require Platform Administrator. Analysts can monitor registered
+            sensors in the grid above.
+          </p>
+        )}
+
+        <AgentPackageCatalog />
+      </details>
 
       <StatusDock sseConnected={epsConnected} eps={eps} />
 
