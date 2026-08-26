@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AGENT_POLICY_HOST_ENFORCEMENT_VERIFIED,
   AGENT_POLICY_HONESTY_BANNER,
+  AGENT_POLICY_JOB_SENTENCE,
   AGENT_POLICY_MUTATE_DENIED_TITLE,
   AGENT_POLICY_READ_DENIED_MESSAGE,
   canMutateAgentPolicies,
@@ -23,6 +24,10 @@ describe('agentPolicy.capabilities', () => {
     expect(AGENT_POLICY_HONESTY_BANNER).toMatch(/unavailable or partial/i);
     expect(AGENT_POLICY_HONESTY_BANNER).toMatch(/apply\/ack path unavailable/i);
     expect(AGENT_POLICY_HONESTY_BANNER).toMatch(/never treat .* enforced on host/i);
+    expect(AGENT_POLICY_JOB_SENTENCE).toMatch(/config only/i);
+    expect(AGENT_POLICY_JOB_SENTENCE).toMatch(/Sensors/i);
+    expect(AGENT_POLICY_JOB_SENTENCE).toMatch(/Endpoints/i);
+    expect(AGENT_POLICY_JOB_SENTENCE).not.toMatch(/LIVE VERIFIED/i);
   });
 
   it('allows Analyst read and withholds Analyst mutate', () => {

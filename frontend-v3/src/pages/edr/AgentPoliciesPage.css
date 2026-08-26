@@ -1,0 +1,392 @@
+/**
+ * Agent Policies — configuration / assignment inventory.
+ * Primary surface is the policy table (≥50% viewport).
+ * Host timelines → /edr/endpoints; fleet enroll → /posture/sensors.
+ * Honesty: assignment ≠ verified host enforcement (POL-001 / POL-003).
+ */
+
+.agent-policies-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--ha-masthead-height));
+  overflow: hidden;
+  background: var(--ha-background);
+}
+
+.agent-policies-page__banner {
+  flex-shrink: 0;
+  margin: 8px 16px 0;
+}
+
+.agent-policies-page__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 52px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-primary);
+}
+
+.agent-policies-page__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.agent-policies-page__title-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.agent-policies-page__title {
+  margin: 0;
+  font-size: var(--ha-text-xl);
+  font-weight: 600;
+  color: var(--ha-text-primary);
+}
+
+.agent-policies-page__count {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.agent-policies-page__job {
+  margin: 0;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  max-width: 52rem;
+}
+
+.agent-policies-page__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.agent-policies-page__links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.agent-policies-page__link {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-primary);
+  text-decoration: none;
+}
+
+.agent-policies-page__link:hover {
+  text-decoration: underline;
+}
+
+.agent-policies-page__link--muted {
+  color: var(--ha-text-secondary);
+}
+
+.agent-policies-page__readonly {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+  max-width: 240px;
+  text-align: right;
+  line-height: 1.35;
+}
+
+.agent-policies-page__error {
+  flex-shrink: 0;
+  padding: 8px 20px 0;
+}
+
+.agent-policies-page__inventory {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 20px 20px;
+}
+
+.agent-policies-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ha-text-base);
+  color: var(--ha-text-primary);
+  font-family: var(--ha-font-ui);
+}
+
+.agent-policies-page__table th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ha-text-secondary);
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-raised);
+  white-space: nowrap;
+}
+
+.agent-policies-page__th--sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.agent-policies-page__table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ha-border);
+  vertical-align: middle;
+}
+
+.agent-policies-page__row:hover {
+  background: var(--ha-surface-primary);
+}
+
+.agent-policies-page__name {
+  font-weight: 600;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-policies-page__mono {
+  font-family: var(--ha-font-mono);
+  font-size: var(--ha-text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-text-secondary);
+  white-space: nowrap;
+}
+
+.agent-policies-page__assigned {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-policies-page__assigned-count {
+  display: inline-block;
+  min-width: 28px;
+  padding: 1px 8px;
+  border-radius: 12px;
+  font-size: var(--ha-text-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+  text-align: center;
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  color: var(--ha-text-primary);
+}
+
+.agent-policies-page__actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.agent-policies-page__action {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  padding: 3px 10px;
+  font-size: var(--ha-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--ha-text-primary);
+  font-family: var(--ha-font-ui);
+}
+
+.agent-policies-page__action--primary {
+  color: var(--ha-primary);
+}
+
+.agent-policies-page__action--danger {
+  color: var(--ha-critical);
+}
+
+.agent-policies-page__os-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: var(--ha-radius-base);
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ha-background);
+  line-height: 20px;
+}
+
+.agent-policies-page__os-badge--windows {
+  background: var(--ha-medium);
+}
+
+.agent-policies-page__os-badge--linux {
+  background: var(--ha-positive);
+}
+
+.agent-policies-page__os-badge--macos {
+  background: var(--ha-primary);
+}
+
+.agent-policies-page__os-badge--other {
+  background: var(--ha-text-secondary);
+}
+
+.agent-policies-page__skeleton {
+  height: 14px;
+  max-width: 100%;
+  background: var(--ha-surface-raised);
+  border-radius: 3px;
+  animation: ha-policies-pulse 1.4s ease-in-out infinite;
+}
+
+.agent-policies-page__form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ha-border);
+}
+
+.agent-policies-page__assign-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.agent-policies-page__assign-count {
+  font-size: var(--ha-text-sm);
+  font-weight: 600;
+  color: var(--ha-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.agent-policies-page__assign-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+  max-height: 96px;
+  overflow-y: auto;
+}
+
+.agent-policies-page__assign-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--ha-radius-sm);
+  border: 1px solid var(--ha-border);
+  background: var(--ha-surface-raised);
+  font-family: var(--ha-font-mono);
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-primary);
+  line-height: 18px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-policies-page__assign-hint {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  margin: 0 0 12px;
+  line-height: 1.45;
+}
+
+.agent-policies-page__evidence {
+  margin-bottom: 8px;
+  padding: 12px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  background: var(--ha-surface-primary);
+}
+
+.agent-policies-page__evidence-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.agent-policies-page__evidence-label--partial {
+  color: var(--ha-high);
+}
+
+.agent-policies-page__evidence-label--unavailable {
+  color: var(--ha-text-secondary);
+}
+
+.agent-policies-page__apply-ack {
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.agent-policies-page__apply-ack--present {
+  color: var(--ha-high);
+}
+
+.agent-policies-page__apply-ack--missing {
+  color: var(--ha-text-secondary);
+}
+
+.agent-policies-page__evidence-note {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+
+.agent-policies-page__evidence-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ha-text-xs);
+  font-family: var(--ha-font-mono);
+}
+
+.agent-policies-page__evidence-table th {
+  text-align: left;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--ha-border);
+  color: var(--ha-text-secondary);
+  font-weight: 600;
+  background: transparent;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.agent-policies-page__evidence-table td {
+  padding: 4px 6px;
+  color: var(--ha-text-primary);
+  border-bottom: none;
+}
+
+@keyframes ha-policies-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}

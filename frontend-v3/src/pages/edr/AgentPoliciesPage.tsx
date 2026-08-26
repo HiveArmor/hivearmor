@@ -1,5 +1,5 @@
 /**
- * AgentPoliciesPage — T05
+ * AgentPoliciesPage — T05 / Prompt 03 UX honesty
  *
  * Agent Policy Management UI at /edr/policies.
  *
@@ -11,16 +11,19 @@
  *   - Host enforcement is not production-verified; no invented live agent gRPC apply path.
  *
  * Auth: Analyst|SOC Manager|Admin read; Admin|SOC Manager mutate.
+ * Cross-links: Sensors (/posture/sensors) fleet; Endpoints (/edr/endpoints) timelines.
  */
 
 import { useCallback, useMemo, useState } from 'react';
 
 import { Alert, EmptyState, EmptyStateBody, Spinner } from '@patternfly/react-core';
 import { ClipboardList } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { HaButton } from '@/components/ha-button/HaButton';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
+import { HaInlineBanner } from '@/components/ha-inline-banner';
 import { HaModal } from '@/components/ha-modal/HaModal';
 import {
   useAgentPolicies,
@@ -30,9 +33,9 @@ import {
   useDeleteAgentPolicy,
   useUpdateAgentPolicy,
 } from '@/hooks/useAgentPolicies';
-import { resolveHaToken } from '@/hooks/useHaThemeTokens';
 import {
   AGENT_POLICY_HONESTY_BANNER,
+  AGENT_POLICY_JOB_SENTENCE,
   AGENT_POLICY_MUTATE_DENIED_TITLE,
   AGENT_POLICY_READ_DENIED_MESSAGE,
   AGENT_POLICY_READ_ROLES,
@@ -46,6 +49,8 @@ import type {
   AgentPolicyEnforcementEvidenceDTO,
   AgentPolicyFormValues,
 } from '@/types/edr';
+
+import './AgentPoliciesPage.css';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -68,11 +73,18 @@ function formatTimestamp(iso: string): string {
   });
 }
 
-function resolveOsBadgeColour(osType: string): string {
-  if (osType === 'windows') return resolveHaToken('--ha-medium');
-  if (osType === 'linux') return resolveHaToken('--ha-positive');
-  if (osType === 'macos') return resolveHaToken('--ha-primary');
-  return resolveHaToken('--ha-text-secondary');
+function osBadgeClass(osType: string): string {
+  if (osType === 'windows') return 'agent-policies-page__os-badge agent-policies-page__os-badge--windows';
+  if (osType === 'linux') return 'agent-policies-page__os-badge agent-policies-page__os-badge--linux';
+  if (osType === 'macos') return 'agent-policies-page__os-badge agent-policies-page__os-badge--macos';
+  return 'agent-policies-page__os-badge agent-policies-page__os-badge--other';
+}
+
+function parseAgentIdLines(raw: string): string[] {
+  return raw
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 // ---------------------------------------------------------------------------
@@ -84,56 +96,7 @@ interface OsBadgeProps {
 }
 
 function OsBadge({ osType }: OsBadgeProps): JSX.Element {
-  const bg = resolveOsBadgeColour(osType);
-  return (
-    <span
-      style={{
-        display: 'inline-block',
-        padding: '1px 8px',
-        borderRadius: 4,
-        fontSize: 11,
-        fontWeight: 600,
-        textTransform: 'uppercase',
-        letterSpacing: '0.06em',
-        background: bg,
-        color: 'var(--ha-background)',
-        lineHeight: '20px',
-      }}
-    >
-      {osType}
-    </span>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Numeric badge (Assigned Agents count)
-// ---------------------------------------------------------------------------
-
-interface CountBadgeProps {
-  count: number;
-}
-
-function CountBadge({ count }: CountBadgeProps): JSX.Element {
-  return (
-    <span
-      style={{
-        display: 'inline-block',
-        padding: '1px 8px',
-        borderRadius: 12,
-        fontSize: 12,
-        fontWeight: 600,
-        background: 'var(--ha-surface-raised)',
-        border: '1px solid var(--ha-border)',
-        color: 'var(--ha-text-primary)',
-        fontVariantNumeric: 'tabular-nums',
-        lineHeight: '20px',
-        minWidth: 28,
-        textAlign: 'center',
-      }}
-    >
-      {count}
-    </span>
-  );
+  return <span className={osBadgeClass(osType)}>{osType}</span>;
 }
 
 // ---------------------------------------------------------------------------
@@ -144,18 +107,8 @@ function SkeletonRow(): JSX.Element {
   return (
     <tr role="presentation">
       {[220, 100, 80, 160, 120].map((w, i) => (
-        <td key={i} style={{ padding: '8px 12px' }}>
-          <div
-            role="presentation"
-            style={{
-              height: 14,
-              width: w,
-              maxWidth: '100%',
-              background: 'var(--ha-surface-raised)',
-              borderRadius: 3,
-              animation: 'ha-policies-pulse 1.4s ease-in-out infinite',
-            }}
-          />
+        <td key={i}>
+          <div role="presentation" className="agent-policies-page__skeleton" style={{ width: w }} />
         </td>
       ))}
     </tr>
@@ -163,7 +116,7 @@ function SkeletonRow(): JSX.Element {
 }
 
 // ---------------------------------------------------------------------------
-// PolicyForm (create / edit)
+// PolicyForm (create / edit) — progressive disclosure inside modal only
 // ---------------------------------------------------------------------------
 
 interface PolicyFormProps {
@@ -185,14 +138,26 @@ function PolicyForm({ initial, onChange }: PolicyFormProps): JSX.Element {
 
   const handleFilePathsChange = useCallback(
     (raw: string) => {
-      update('filePaths', raw.split('\n').map((s) => s.trim()).filter(Boolean));
+      update(
+        'filePaths',
+        raw
+          .split('\n')
+          .map((s) => s.trim())
+          .filter(Boolean),
+      );
     },
     [update],
   );
 
   const handleRegistryPathsChange = useCallback(
     (raw: string) => {
-      update('registryPaths', raw.split('\n').map((s) => s.trim()).filter(Boolean));
+      update(
+        'registryPaths',
+        raw
+          .split('\n')
+          .map((s) => s.trim())
+          .filter(Boolean),
+      );
     },
     [update],
   );
@@ -225,7 +190,6 @@ function PolicyForm({ initial, onChange }: PolicyFormProps): JSX.Element {
 
   return (
     <div>
-      {/* Policy Name */}
       <div style={fieldStyle}>
         <label htmlFor="policy-name" style={labelStyle}>
           Policy Name <span style={{ color: 'var(--ha-critical)' }}>*</span>
@@ -242,7 +206,6 @@ function PolicyForm({ initial, onChange }: PolicyFormProps): JSX.Element {
         />
       </div>
 
-      {/* OS Type */}
       <div style={fieldStyle}>
         <label htmlFor="policy-os-type" style={labelStyle}>
           OS Type
@@ -262,7 +225,6 @@ function PolicyForm({ initial, onChange }: PolicyFormProps): JSX.Element {
         </select>
       </div>
 
-      {/* File Paths */}
       <div style={fieldStyle}>
         <label htmlFor="policy-file-paths" style={labelStyle}>
           File Paths (one per line)
@@ -273,11 +235,15 @@ function PolicyForm({ initial, onChange }: PolicyFormProps): JSX.Element {
           onChange={(e) => handleFilePathsChange(e.target.value)}
           rows={3}
           placeholder="/etc/passwd&#10;/etc/shadow"
-          style={{ ...inputStyle, resize: 'vertical', fontFamily: 'var(--ha-font-mono)', fontSize: 12 }}
+          style={{
+            ...inputStyle,
+            resize: 'vertical',
+            fontFamily: 'var(--ha-font-mono)',
+            fontSize: 12,
+          }}
         />
       </div>
 
-      {/* Registry Paths (Windows only) */}
       {values.osType === 'windows' && (
         <div style={fieldStyle}>
           <label htmlFor="policy-registry-paths" style={labelStyle}>
@@ -289,16 +255,25 @@ function PolicyForm({ initial, onChange }: PolicyFormProps): JSX.Element {
             onChange={(e) => handleRegistryPathsChange(e.target.value)}
             rows={3}
             placeholder="HKLM\Software&#10;HKLM\SYSTEM\CurrentControlSet"
-            style={{ ...inputStyle, resize: 'vertical', fontFamily: 'var(--ha-font-mono)', fontSize: 12 }}
+            style={{
+              ...inputStyle,
+              resize: 'vertical',
+              fontFamily: 'var(--ha-font-mono)',
+              fontSize: 12,
+            }}
           />
         </div>
       )}
 
-      {/* Network Monitor toggle */}
       <div style={{ ...fieldStyle, display: 'flex', alignItems: 'center', gap: 12 }}>
         <label
           htmlFor="policy-network-monitor"
-          style={{ fontSize: 13, color: 'var(--ha-text-primary)', cursor: 'pointer', userSelect: 'none' }}
+          style={{
+            fontSize: 13,
+            color: 'var(--ha-text-primary)',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
         >
           Network Monitor
         </label>
@@ -312,11 +287,15 @@ function PolicyForm({ initial, onChange }: PolicyFormProps): JSX.Element {
         />
       </div>
 
-      {/* Process Monitor toggle */}
       <div style={{ ...fieldStyle, display: 'flex', alignItems: 'center', gap: 12 }}>
         <label
           htmlFor="policy-process-monitor"
-          style={{ fontSize: 13, color: 'var(--ha-text-primary)', cursor: 'pointer', userSelect: 'none' }}
+          style={{
+            fontSize: 13,
+            color: 'var(--ha-text-primary)',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
         >
           Process Monitor
         </label>
@@ -372,10 +351,6 @@ function policyToFormValues(p: AgentPolicyDTO): AgentPolicyFormValues {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Sort direction
-// ---------------------------------------------------------------------------
-
 type SortDir = 'asc' | 'desc';
 
 // ---------------------------------------------------------------------------
@@ -392,15 +367,12 @@ export function AgentPoliciesPage(): JSX.Element {
   if (!hasReadAccess) {
     return (
       <div
+        className="agent-policies-page"
         style={{
-          display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          height: 'calc(100vh - 56px)',
-          flexDirection: 'column',
           gap: 16,
           padding: 24,
-          background: 'var(--ha-background)',
         }}
         role="alert"
         aria-label="Access denied"
@@ -433,11 +405,9 @@ export function AgentPoliciesPage(): JSX.Element {
 
 // ---------------------------------------------------------------------------
 // Inner component — only rendered when read role is confirmed.
-// All data hooks are invoked here so they are never called for denied users.
 // ---------------------------------------------------------------------------
 
 function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Element {
-  // ── Data hooks ─────────────────────────────────────────────────────────────
   const { data, isLoading, isError, error } = useAgentPolicies();
   const createMutation = useCreateAgentPolicy();
   const updateMutation = useUpdateAgentPolicy();
@@ -446,7 +416,6 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
 
   const policies: AgentPolicyDTO[] = useMemo(() => data ?? [], [data]);
 
-  // ── Sort state ─────────────────────────────────────────────────────────────
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   const sortedPolicies = useMemo(() => {
@@ -460,7 +429,6 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
     setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
   }, []);
 
-  // ── Policy form modal state ────────────────────────────────────────────────
   const [modalState, setModalState] = useState<PolicyModalState>({ kind: 'closed' });
   const [formValues, setFormValues] = useState<AgentPolicyFormValues>(DEFAULT_FORM);
 
@@ -497,7 +465,6 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
     }
   }, [formValues, modalState, createMutation, updateMutation, closeModal]);
 
-  // ── Assign agents drawer state ────────────────────────────────────────────
   const [drawerState, setDrawerState] = useState<DrawerState>({ kind: 'closed' });
   const [assignInput, setAssignInput] = useState<string>('');
 
@@ -516,20 +483,17 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
       : null;
   const enforcementQuery = useAgentPolicyEnforcementEvidence(enforcementPolicyId);
 
+  const assignedPreviewIds = useMemo(() => parseAgentIdLines(assignInput), [assignInput]);
+
   const handleAssignSave = useCallback(() => {
     if (!canMutate) return;
     if (drawerState.kind !== 'assign' || drawerState.policy.id === undefined) return;
-    const agentIds = assignInput
-      .split('\n')
-      .map((s) => s.trim())
-      .filter(Boolean);
     assignMutation.mutate(
-      { id: drawerState.policy.id, agentIds },
+      { id: drawerState.policy.id, agentIds: parseAgentIdLines(assignInput) },
       { onSuccess: () => closeDrawer() },
     );
   }, [canMutate, drawerState, assignInput, assignMutation, closeDrawer]);
 
-  // ── Delete confirmation state ─────────────────────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState<AgentPolicyDTO | null>(null);
 
   const handleDeleteRequest = useCallback((policy: AgentPolicyDTO) => {
@@ -547,119 +511,74 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
     setDeleteTarget(null);
   }, []);
 
-  // ── Error message ─────────────────────────────────────────────────────────
   const errorMessage =
     error instanceof Error
       ? error.message
       : 'An error occurred while loading agent policies.';
 
-  // ── Modal busy state ──────────────────────────────────────────────────────
   const isModalBusy = createMutation.isPending || updateMutation.isPending;
   const isAssignBusy = assignMutation.isPending;
-
   const modalTitle = modalState.kind === 'edit' ? 'Edit Policy' : 'Create Policy';
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        background: 'var(--ha-background)',
-      }}
-    >
-      {/* Page header */}
-      <div
-        style={{
-          height: 48,
-          borderBottom: '1px solid var(--ha-border)',
-          background: 'var(--ha-surface-raised)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-          padding: '0 24px',
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <ClipboardList size={20} color="var(--ha-primary)" />
-          <h1
-            style={{
-              fontSize: 'var(--ha-text-xl)',
-              color: 'var(--ha-text-primary)',
-              margin: 0,
-              fontWeight: 600,
-            }}
-          >
-            Agent Policies
-          </h1>
-          {!isLoading && (
-            <span
-              style={{
-                fontSize: 'var(--ha-text-sm)',
-                color: 'var(--ha-text-secondary)',
-                padding: '2px 8px',
-                background: 'var(--ha-surface-primary)',
-                border: '1px solid var(--ha-border)',
-                borderRadius: 'var(--ha-radius-sm)',
-              }}
-            >
-              {policies.length.toLocaleString()} {policies.length === 1 ? 'policy' : 'policies'}
-            </span>
-          )}
-          {isLoading && <Spinner size="sm" aria-label="Loading policies" />}
+    <div className="agent-policies-page">
+      <div className="agent-policies-page__banner">
+        <HaInlineBanner
+          variant="info"
+          title="Policies assign configuration — not verified host enforcement"
+          description={AGENT_POLICY_HONESTY_BANNER}
+          isDismissible={false}
+        />
+      </div>
+
+      <header className="agent-policies-page__header">
+        <div className="agent-policies-page__title-block">
+          <div className="agent-policies-page__title-row">
+            <h1 className="agent-policies-page__title">Agent Policies</h1>
+            {!isLoading && (
+              <span className="agent-policies-page__count">
+                {policies.length.toLocaleString()}{' '}
+                {policies.length === 1 ? 'policy' : 'policies'}
+              </span>
+            )}
+            {isLoading && <Spinner size="sm" aria-label="Loading policies" />}
+          </div>
+          <p className="agent-policies-page__job">{AGENT_POLICY_JOB_SENTENCE}</p>
         </div>
 
-        {/* Toolbar */}
-        {canMutate ? (
-          <HaButton variant="primary" onClick={openCreateModal}>
-            Create Policy
-          </HaButton>
-        ) : (
-          <span
-            style={{
-              fontSize: 'var(--ha-text-xs)',
-              color: 'var(--ha-text-secondary)',
-              maxWidth: 280,
-              textAlign: 'right',
-            }}
-            title={AGENT_POLICY_MUTATE_DENIED_TITLE}
-          >
-            Read-only — {AGENT_POLICY_MUTATE_DENIED_TITLE}
-          </span>
-        )}
-      </div>
+        <div className="agent-policies-page__toolbar">
+          <nav className="agent-policies-page__links" aria-label="Related endpoint views">
+            <Link to="/posture/sensors" className="agent-policies-page__link">
+              Sensors — fleet / enroll
+            </Link>
+            <Link to="/edr/endpoints" className="agent-policies-page__link">
+              Endpoints — timelines
+            </Link>
+          </nav>
+          {canMutate ? (
+            <HaButton variant="primary" onClick={openCreateModal}>
+              Create Policy
+            </HaButton>
+          ) : (
+            <span
+              className="agent-policies-page__readonly"
+              title={AGENT_POLICY_MUTATE_DENIED_TITLE}
+            >
+              Read-only — {AGENT_POLICY_MUTATE_DENIED_TITLE}
+            </span>
+          )}
+        </div>
+      </header>
 
-      {/* Honesty strip — POL-001 / POL-003 STAGING CANDIDATE */}
-      <div
-        role="status"
-        aria-label="Policy enforcement honesty"
-        style={{
-          padding: '8px 24px',
-          borderBottom: '1px solid var(--ha-border)',
-          background: 'var(--ha-surface-raised)',
-          fontSize: 'var(--ha-text-xs)',
-          color: 'var(--ha-text-secondary)',
-          lineHeight: 1.45,
-          flexShrink: 0,
-        }}
-      >
-        {AGENT_POLICY_HONESTY_BANNER}
-      </div>
-
-      {/* Error state */}
       {isError && (
-        <div style={{ padding: '12px 24px', flexShrink: 0 }}>
+        <div className="agent-policies-page__error">
           <Alert variant="danger" isInline title="Failed to load agent policies">
             {errorMessage}
           </Alert>
         </div>
       )}
 
-      {/* Table area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px 24px' }}>
-        {/* Empty state */}
+      <div className="agent-policies-page__inventory" aria-label="Agent policy inventory">
         {!isLoading && !isError && policies.length === 0 && (
           <EmptyState>
             <ClipboardList size={40} style={{ opacity: 0.3, marginBottom: 12 }} />
@@ -673,40 +592,26 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
                 </>
               ) : (
                 <> Assignment and enforcement evidence will appear here when policies exist.</>
-              )}
+              )}{' '}
+              Fleet enrollment is on{' '}
+              <Link to="/posture/sensors" className="agent-policies-page__link">
+                Sensors
+              </Link>
+              ; host context is on{' '}
+              <Link to="/edr/endpoints" className="agent-policies-page__link">
+                Endpoints
+              </Link>
+              .
             </EmptyStateBody>
           </EmptyState>
         )}
 
-        {/* Table */}
         {(isLoading || policies.length > 0) && (
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              fontSize: 13,
-              color: 'var(--ha-text-primary)',
-              fontFamily: 'Inter, sans-serif',
-            }}
-            aria-label="Agent policies"
-          >
+          <table className="agent-policies-page__table" aria-label="Agent policies">
             <thead>
-              <tr style={{ background: 'var(--ha-surface-raised)' }}>
-                {/* Policy Name (sortable) */}
+              <tr>
                 <th
-                  style={{
-                    padding: '8px 12px',
-                    textAlign: 'left',
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                    color: 'var(--ha-text-secondary)',
-                    borderBottom: '1px solid var(--ha-border)',
-                    whiteSpace: 'nowrap',
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                  }}
+                  className="agent-policies-page__th--sortable"
                   onClick={toggleSort}
                   aria-sort={sortDir === 'asc' ? 'ascending' : 'descending'}
                   role="columnheader"
@@ -715,22 +620,7 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
                   <span style={{ fontSize: 10 }}>{sortDir === 'asc' ? '▲' : '▼'}</span>
                 </th>
                 {['OS Type', 'Assigned Agents', 'Last Updated', 'Actions'].map((col) => (
-                  <th
-                    key={col}
-                    style={{
-                      padding: '8px 12px',
-                      textAlign: 'left',
-                      fontSize: 11,
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.06em',
-                      color: 'var(--ha-text-secondary)',
-                      borderBottom: '1px solid var(--ha-border)',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {col}
-                  </th>
+                  <th key={col}>{col}</th>
                 ))}
               </tr>
             </thead>
@@ -752,7 +642,6 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
         )}
       </div>
 
-      {/* Create / Edit modal */}
       <HaModal
         isOpen={modalState.kind !== 'closed'}
         onClose={closeModal}
@@ -760,20 +649,8 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
         width={520}
       >
         <div style={{ padding: '16px 0 0' }}>
-          <PolicyForm
-            initial={formValues}
-            onChange={handleFormChange}
-          />
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: 8,
-              marginTop: 20,
-              paddingTop: 16,
-              borderTop: '1px solid var(--ha-border)',
-            }}
-          >
+          <PolicyForm initial={formValues} onChange={handleFormChange} />
+          <div className="agent-policies-page__form-footer">
             <HaButton variant="secondary" onClick={closeModal} isDisabled={isModalBusy}>
               Cancel
             </HaButton>
@@ -788,7 +665,6 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
         </div>
       </HaModal>
 
-      {/* Assign Agents / enforcement evidence drawer */}
       <HaDrawer
         isOpen={drawerState.kind === 'assign'}
         onClose={closeDrawer}
@@ -815,19 +691,34 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
             isError={enforcementQuery.isError}
             error={enforcementQuery.error}
           />
+
+          <div className="agent-policies-page__assign-summary">
+            <span className="agent-policies-page__assign-count">
+              {assignedPreviewIds.length} assigned (config)
+            </span>
+            <Link to="/edr/endpoints" className="agent-policies-page__link">
+              Open Endpoints for host context
+            </Link>
+          </div>
+
+          {assignedPreviewIds.length > 0 && (
+            <div
+              className="agent-policies-page__assign-chips"
+              aria-label="Assigned agent ids"
+            >
+              {assignedPreviewIds.map((id) => (
+                <span key={id} className="agent-policies-page__assign-chip" title={id}>
+                  {id}
+                </span>
+              ))}
+            </div>
+          )}
+
           {canMutate ? (
             <>
-              <p
-                style={{
-                  fontSize: 12,
-                  color: 'var(--ha-text-secondary)',
-                  marginTop: 16,
-                  marginBottom: 12,
-                  lineHeight: 1.5,
-                }}
-              >
-                Enter one agent ID (UUID) per line. Assignment updates configuration only — it does
-                not prove host enforcement.
+              <p className="agent-policies-page__assign-hint">
+                Enter one agent ID per line. Assignment updates configuration only — it does not
+                prove host enforcement. Confirm host context on Endpoints.
               </p>
               <label
                 htmlFor="assign-agent-ids"
@@ -847,8 +738,8 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
                 id="assign-agent-ids"
                 value={assignInput}
                 onChange={(e) => setAssignInput(e.target.value)}
-                rows={10}
-                placeholder="550e8400-e29b-41d4-a716-446655440000&#10;6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+                rows={8}
+                placeholder={'20\n19'}
                 style={{
                   width: '100%',
                   boxSizing: 'border-box',
@@ -866,21 +757,13 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
               />
             </>
           ) : (
-            <p
-              style={{
-                fontSize: 12,
-                color: 'var(--ha-text-secondary)',
-                marginTop: 16,
-                lineHeight: 1.5,
-              }}
-            >
+            <p className="agent-policies-page__assign-hint">
               {AGENT_POLICY_MUTATE_DENIED_TITLE}. You can review enforcement evidence only.
             </p>
           )}
         </div>
       </HaDrawer>
 
-      {/* Delete confirmation modal */}
       <HaConfirmationModal
         isOpen={deleteTarget !== null}
         title="Delete Policy"
@@ -895,14 +778,6 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />
-
-      {/* CSS keyframes */}
-      <style>{`
-        @keyframes ha-policies-pulse {
-          0%, 100% { opacity: 0.6; }
-          50%       { opacity: 0.3; }
-        }
-      `}</style>
     </div>
   );
 }
@@ -954,62 +829,28 @@ function EnforcementEvidencePanel({
   }
 
   const applyAckAvailable = isAgentPolicyApplyAckPathAvailable(evidence);
-  // Amber for partial; secondary for unavailable — never positive/green “enforced”.
-  const tone =
-    evidence.evidenceAvailability === 'partial' ? 'var(--ha-high)' : 'var(--ha-text-secondary)';
+  const availabilityClass =
+    evidence.evidenceAvailability === 'partial'
+      ? 'agent-policies-page__evidence-label agent-policies-page__evidence-label--partial'
+      : 'agent-policies-page__evidence-label agent-policies-page__evidence-label--unavailable';
 
   return (
-    <section
-      aria-label="Policy enforcement evidence"
-      style={{
-        marginBottom: 8,
-        padding: 12,
-        border: '1px solid var(--ha-border)',
-        borderRadius: 'var(--ha-radius-base)',
-        background: 'var(--ha-surface-primary)',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          marginBottom: 8,
-          fontSize: 11,
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
-          color: tone,
-        }}
-      >
-        Evidence: {evidence.evidenceAvailability}
-      </div>
+    <section className="agent-policies-page__evidence" aria-label="Policy enforcement evidence">
+      <div className={availabilityClass}>Evidence: {evidence.evidenceAvailability}</div>
       <div
         role="status"
         aria-label="Apply ack path status"
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: '0.04em',
-          textTransform: 'uppercase',
-          color: applyAckAvailable ? 'var(--ha-high)' : 'var(--ha-text-secondary)',
-          marginBottom: 8,
-        }}
+        className={
+          applyAckAvailable
+            ? 'agent-policies-page__apply-ack agent-policies-page__apply-ack--present'
+            : 'agent-policies-page__apply-ack agent-policies-page__apply-ack--missing'
+        }
       >
         {applyAckAvailable
           ? 'Apply/ack fields present (not LIVE VERIFIED)'
           : 'Apply/ack path unavailable'}
       </div>
-      <p
-        style={{
-          fontSize: 12,
-          color: 'var(--ha-text-secondary)',
-          margin: '0 0 10px',
-          lineHeight: 1.45,
-        }}
-      >
-        {evidence.honestyNote}
-      </p>
+      <p className="agent-policies-page__evidence-note">{evidence.honestyNote}</p>
       <div style={{ fontSize: 12, color: 'var(--ha-text-secondary)', marginBottom: 8 }}>
         Assigned agents (config): {(evidence.assignedAgentIds ?? []).length}
       </div>
@@ -1020,13 +861,8 @@ function EnforcementEvidencePanel({
         </p>
       ) : (
         <table
+          className="agent-policies-page__evidence-table"
           aria-label="Agent policy state rows"
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            fontSize: 11,
-            fontFamily: 'var(--ha-font-mono)',
-          }}
         >
           <thead>
             <tr>
@@ -1040,18 +876,7 @@ function EnforcementEvidencePanel({
                 'Drift',
                 'Apply/ack',
               ].map((col) => (
-                <th
-                  key={col}
-                  style={{
-                    textAlign: 'left',
-                    padding: '4px 6px',
-                    borderBottom: '1px solid var(--ha-border)',
-                    color: 'var(--ha-text-secondary)',
-                    fontWeight: 600,
-                  }}
-                >
-                  {col}
-                </th>
+                <th key={col}>{col}</th>
               ))}
             </tr>
           </thead>
@@ -1060,27 +885,18 @@ function EnforcementEvidencePanel({
               const rowHasAck = hasAgentPolicyApplyAckEvidence(row);
               return (
                 <tr key={row.id ?? `${row.agentId ?? 'agent'}-${idx}`}>
-                  <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
-                    {row.agentId ?? '—'}
-                  </td>
-                  <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
-                    {row.appliedVersion ?? '—'}
-                  </td>
-                  <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
-                    {row.desiredVersion ?? '—'}
-                  </td>
-                  <td style={{ padding: '4px 6px', color: 'var(--ha-text-primary)' }}>
-                    {row.state ?? '—'}
-                  </td>
-                  <td style={{ padding: '4px 6px', color: 'var(--ha-text-secondary)' }}>
+                  <td>{row.agentId ?? '—'}</td>
+                  <td>{row.appliedVersion ?? '—'}</td>
+                  <td>{row.desiredVersion ?? '—'}</td>
+                  <td>{row.state ?? '—'}</td>
+                  <td style={{ color: 'var(--ha-text-secondary)' }}>
                     {row.lastAppliedAt ? formatTimestamp(row.lastAppliedAt) : '—'}
                   </td>
-                  <td style={{ padding: '4px 6px', color: 'var(--ha-text-secondary)' }}>
+                  <td style={{ color: 'var(--ha-text-secondary)' }}>
                     {row.lastCheckedAt ? formatTimestamp(row.lastCheckedAt) : '—'}
                   </td>
                   <td
                     style={{
-                      padding: '4px 6px',
                       color: 'var(--ha-text-secondary)',
                       maxWidth: 120,
                       overflow: 'hidden',
@@ -1093,7 +909,6 @@ function EnforcementEvidencePanel({
                   </td>
                   <td
                     style={{
-                      padding: '4px 6px',
                       color: rowHasAck ? 'var(--ha-high)' : 'var(--ha-text-secondary)',
                       fontWeight: 600,
                     }}
@@ -1111,7 +926,7 @@ function EnforcementEvidencePanel({
 }
 
 // ---------------------------------------------------------------------------
-// PolicyRow sub-component
+// PolicyRow
 // ---------------------------------------------------------------------------
 
 interface PolicyRowProps {
@@ -1133,32 +948,12 @@ function PolicyRow({
   const lastUpdated = policy.updatedAt ?? policy.createdAt;
 
   return (
-    <tr
-      style={{ borderBottom: '1px solid var(--ha-border)' }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLTableRowElement).style.background = 'var(--ha-surface-primary)';
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLTableRowElement).style.background = 'transparent';
-      }}
-    >
-      <td
-        style={{
-          padding: '8px 12px',
-          fontWeight: 600,
-          color: 'var(--ha-text-primary)',
-          fontSize: 13,
-          maxWidth: 260,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-        title={policy.name}
-      >
+    <tr className="agent-policies-page__row">
+      <td className="agent-policies-page__name" title={policy.name}>
         {policy.name}
       </td>
 
-      <td style={{ padding: '8px 12px' }}>
+      <td>
         {policy.osType ? (
           <OsBadge osType={policy.osType} />
         ) : (
@@ -1168,57 +963,43 @@ function PolicyRow({
         )}
       </td>
 
-      <td style={{ padding: '8px 12px' }}>
-        <CountBadge count={assignedCount} />
+      <td>
+        <div className="agent-policies-page__assigned">
+          <span className="agent-policies-page__assigned-count">{assignedCount}</span>
+          {assignedCount > 0 && (
+            <Link
+              to="/edr/endpoints"
+              className="agent-policies-page__link agent-policies-page__link--muted"
+              aria-label={`View ${assignedCount} assigned hosts on Endpoints`}
+              title="Assigned count is configuration only — open Endpoints for host context"
+              onClick={(event) => event.stopPropagation()}
+            >
+              Hosts
+            </Link>
+          )}
+        </div>
       </td>
 
-      <td
-        style={{
-          padding: '8px 12px',
-          fontFamily: 'var(--ha-font-mono)',
-          fontSize: 12,
-          fontVariantNumeric: 'tabular-nums',
-          color: 'var(--ha-text-secondary)',
-          whiteSpace: 'nowrap',
-        }}
-      >
+      <td className="agent-policies-page__mono">
         {lastUpdated ? formatTimestamp(lastUpdated) : '—'}
       </td>
 
-      <td style={{ padding: '8px 12px' }}>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+      <td>
+        <div className="agent-policies-page__actions">
           {canMutate && (
             <button
+              type="button"
+              className="agent-policies-page__action"
               onClick={() => onEdit(policy)}
-              style={{
-                background: 'var(--ha-surface-raised)',
-                color: 'var(--ha-text-primary)',
-                border: '1px solid var(--ha-border)',
-                borderRadius: 'var(--ha-radius-sm)',
-                padding: '3px 10px',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}
               aria-label={`Edit policy ${policy.name}`}
             >
               Edit
             </button>
           )}
           <button
+            type="button"
+            className="agent-policies-page__action agent-policies-page__action--primary"
             onClick={() => onAssign(policy)}
-            style={{
-              background: 'var(--ha-surface-raised)',
-              color: 'var(--ha-primary)',
-              border: '1px solid var(--ha-border)',
-              borderRadius: 'var(--ha-radius-sm)',
-              padding: '3px 10px',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
             aria-label={
               canMutate
                 ? `Assign agents to policy ${policy.name}`
@@ -1229,18 +1010,9 @@ function PolicyRow({
           </button>
           {canMutate && (
             <button
+              type="button"
+              className="agent-policies-page__action agent-policies-page__action--danger"
               onClick={() => onDelete(policy)}
-              style={{
-                background: 'var(--ha-surface-raised)',
-                color: 'var(--ha-critical)',
-                border: '1px solid var(--ha-border)',
-                borderRadius: 'var(--ha-radius-sm)',
-                padding: '3px 10px',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}
               aria-label={`Delete policy ${policy.name}`}
             >
               Delete

@@ -1,18 +1,20 @@
 /**
- * AgentPoliciesPage tests — POL-001 / POL-003 honesty + role gates
+ * AgentPoliciesPage tests — POL-001 / POL-003 honesty + role gates + UX density
  *
  * Tests:
  *   1) Access denied — no read role; hooks skipped; human permission copy
  *   2) Loading state — Analyst/Admin read + skeleton rows
- *   3) Empty state — PatternFly EmptyState
+ *   3) Empty state — PatternFly EmptyState + Sensors/Endpoints links
  *   4) Error state — PatternFly Alert
- *   5) Honesty banner — STAGING CANDIDATE / apply/ack unavailable / never enforced on host
- *   6) Analyst read-only — no Create Policy; Evidence action present
- *   7) Enforcement drawer — apply/ack unavailable when state lacks appliedVersion
+ *   5) Honesty banner + job sentence — STAGING CANDIDATE / never enforced on host
+ *   6) Cross-links to Sensors and Endpoints
+ *   7) Analyst read-only — no Create Policy; Evidence action present
+ *   8) Enforcement drawer — apply/ack unavailable when state lacks appliedVersion
  */
 
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AgentPoliciesPage } from './AgentPoliciesPage';
 
@@ -58,10 +60,6 @@ vi.mock('@/hooks/useAgentPolicies', () => ({
   useUpdateAgentPolicy: (): MutationStub => ({ mutate: vi.fn(), isPending: false }),
   useDeleteAgentPolicy: (): MutationStub => ({ mutate: vi.fn(), isPending: false }),
   useAssignAgents: (): MutationStub => ({ mutate: vi.fn(), isPending: false }),
-}));
-
-vi.mock('@/hooks/useHaThemeTokens', () => ({
-  resolveHaToken: () => '#000000',
 }));
 
 vi.mock('@/components/ha-modal/HaModal', () => ({
@@ -123,7 +121,11 @@ vi.mock('@/components/ha-confirmation-modal/HaConfirmationModal', () => ({
 }));
 
 function renderPage() {
-  return render(<AgentPoliciesPage />);
+  return render(
+    <MemoryRouter>
+      <AgentPoliciesPage />
+    </MemoryRouter>,
+  );
 }
 
 beforeEach(() => {
@@ -176,7 +178,7 @@ describe('AgentPoliciesPage', () => {
     expect(screen.getAllByRole('presentation').length).toBeGreaterThanOrEqual(5);
   });
 
-  it('renders empty state when no policies exist', () => {
+  it('renders empty state with Sensors and Endpoints links', () => {
     mockUseAgentPolicies.mockReturnValue({
       data: [] as AgentPolicyDTO[],
       isLoading: false,
@@ -188,6 +190,14 @@ describe('AgentPoliciesPage', () => {
 
     expect(screen.getByText(/no agent policies configured yet/i)).toBeDefined();
     expect(screen.getByText(/HiveArmor monitoring policy/i)).toBeDefined();
+    expect(screen.getByRole('link', { name: /^Sensors$/i })).toHaveAttribute(
+      'href',
+      '/posture/sensors',
+    );
+    expect(screen.getByRole('link', { name: /^Endpoints$/i })).toHaveAttribute(
+      'href',
+      '/edr/endpoints',
+    );
   });
 
   it('renders danger alert on load error', () => {
@@ -206,7 +216,7 @@ describe('AgentPoliciesPage', () => {
     expect(screen.getByText(/cannot reach agent policy service/i)).toBeDefined();
   });
 
-  it('shows POL-003 honesty banner without claiming host enforcement', () => {
+  it('shows job sentence, honesty banner, and never claims host enforcement', () => {
     mockUseAgentPolicies.mockReturnValue({
       data: [] as AgentPolicyDTO[],
       isLoading: false,
@@ -216,10 +226,34 @@ describe('AgentPoliciesPage', () => {
 
     renderPage();
 
-    expect(screen.getByRole('status', { name: /policy enforcement honesty/i })).toBeDefined();
+    expect(
+      screen.getByText(/policies assign configuration — not verified host enforcement/i),
+    ).toBeDefined();
     expect(screen.getByText(/STAGING CANDIDATE/i)).toBeDefined();
     expect(screen.getByText(/apply\/ack path unavailable/i)).toBeDefined();
     expect(screen.getByText(/never treat .* enforced on host/i)).toBeDefined();
+    expect(
+      screen.getByText(/Define and assign agent monitoring policies \(config only\)/i),
+    ).toBeDefined();
+    expect(screen.queryByText(/enforced on host$/i)).toBeNull();
+  });
+
+  it('cross-links to Sensors fleet and Endpoints timelines', () => {
+    mockUseAgentPolicies.mockReturnValue({
+      data: [] as AgentPolicyDTO[],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderPage();
+
+    expect(
+      screen.getByRole('link', { name: /Sensors — fleet \/ enroll/i }),
+    ).toHaveAttribute('href', '/posture/sensors');
+    expect(
+      screen.getByRole('link', { name: /Endpoints — timelines/i }),
+    ).toHaveAttribute('href', '/edr/endpoints');
   });
 
   it('allows Analyst read-only without Create Policy', () => {
@@ -243,7 +277,11 @@ describe('AgentPoliciesPage', () => {
     expect(screen.getByText(/Windows FIM baseline/i)).toBeDefined();
     expect(screen.queryByRole('button', { name: /create policy/i })).toBeNull();
     expect(screen.getByText(/Read-only/i)).toBeDefined();
+    expect(screen.getByText(/Platform Administrator or SOC Manager/i)).toBeDefined();
     expect(screen.getByRole('button', { name: /view enforcement evidence/i })).toBeDefined();
+    expect(
+      screen.getByRole('link', { name: /View 1 assigned hosts on Endpoints/i }),
+    ).toHaveAttribute('href', '/edr/endpoints');
   });
 
   it('surfaces apply/ack path unavailable when state lacks appliedVersion', async () => {
@@ -294,5 +332,8 @@ describe('AgentPoliciesPage', () => {
     expect(screen.getByText(/^Apply\/ack path unavailable$/i)).toBeDefined();
     expect(screen.getByText(/never treat as enforced on host/i)).toBeDefined();
     expect(screen.getByText(/awaiting apply/i)).toBeDefined();
+    expect(
+      screen.getByRole('link', { name: /Open Endpoints for host context/i }),
+    ).toHaveAttribute('href', '/edr/endpoints');
   });
 });
