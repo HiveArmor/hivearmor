@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom';
 
 import { AddAgentDrawer } from './AddAgentDrawer';
 import { AgentPackageCatalog } from './AgentPackageCatalog';
-import { SensorFleetSummary } from './SensorFleetSummary';
 
 import { DensitySelector } from '@/components/density-selector';
 import { EmptyState } from '@/components/empty-state';
@@ -42,6 +41,10 @@ import { fetchSensors } from '@/services/sensorsService';
 import type { SensorDTO } from '@/services/sensorsService';
 import { useAuthStore } from '@/store/auth.store';
 
+import './SensorGridPage.css';
+
+type StatusFilter = 'ALL' | 'ONLINE' | 'OFFLINE';
+
 function ActionButton(props: {
   label: string;
   ariaLabel: string;
@@ -54,21 +57,15 @@ function ActionButton(props: {
   return (
     <button
       type="button"
+      className={
+        danger
+          ? 'sensor-fleet-page__action-btn sensor-fleet-page__action-btn--danger'
+          : 'sensor-fleet-page__action-btn'
+      }
       disabled={disabled}
       title={title}
       aria-label={ariaLabel}
       onClick={disabled ? undefined : onClick}
-      style={{
-        background: 'var(--ha-surface-raised)',
-        border: '1px solid var(--ha-border)',
-        borderRadius: 'var(--ha-radius-sm)',
-        color: danger ? 'var(--ha-critical)' : 'var(--ha-text-secondary)',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.45 : 1,
-        padding: '4px 8px',
-        fontSize: 'var(--ha-text-xs)',
-        pointerEvents: disabled ? 'none' : 'auto',
-      }}
     >
       {label}
     </button>
@@ -103,9 +100,8 @@ async function dispatchKill(agentId: string, hostname: string): Promise<void> {
 }
 
 /**
- * ActionsCellRenderer — timeline cross-link + role-aware remote actions.
- * Enable isolate/kill only when live-verified AND caller has Platform
- * Administrator or SOC Manager. No React hooks — AG Grid remounts freely.
+ * Row actions — open timeline + containment only.
+ * Restart has no agent handler; omit dead affordances from the grid (SIEM pattern).
  */
 function ActionsCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Element {
   const sensor = params.data;
@@ -134,30 +130,18 @@ function ActionsCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Elemen
         ? idBlocked
         : '';
 
-  const noHandlerTitle = 'Restart is not available from this grid yet';
   const timelineHref = agentId
     ? `/edr/timeline/${encodeURIComponent(agentId)}`
     : null;
 
   return (
-    <div
-      style={{ display: 'flex', gap: 4, alignItems: 'center', height: '100%' }}
-    >
+    <div className="sensor-fleet-page__actions">
       {timelineHref ? (
         <Link
           to={timelineHref}
+          className="sensor-fleet-page__action-link"
           aria-label={`Open EDR timeline for ${hostname || agentId}`}
           title="Open EDR event timeline"
-          style={{
-            background: 'var(--ha-surface-raised)',
-            border: '1px solid var(--ha-border)',
-            borderRadius: 'var(--ha-radius-sm)',
-            color: 'var(--ha-primary)',
-            padding: '4px 8px',
-            fontSize: 'var(--ha-text-xs)',
-            textDecoration: 'none',
-            whiteSpace: 'nowrap',
-          }}
         >
           Timeline
         </Link>
@@ -189,12 +173,6 @@ function ActionsCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Elemen
           if (agentId) void dispatchKill(agentId, hostname);
         }}
       />
-      <ActionButton
-        label="Restart"
-        ariaLabel="Restart agent (unavailable)"
-        disabled
-        title={noHandlerTitle}
-      />
     </div>
   );
 }
@@ -206,7 +184,7 @@ function HostnameCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Eleme
 
   if (!agentId) {
     return (
-      <span style={{ fontFamily: 'var(--ha-font-mono)', fontWeight: 600 }}>
+      <span className="sensor-fleet-page__hostname sensor-fleet-page__hostname--plain">
         {hostname}
       </span>
     );
@@ -215,31 +193,38 @@ function HostnameCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Eleme
   return (
     <Link
       to={`/edr/timeline/${encodeURIComponent(agentId)}`}
+      className="sensor-fleet-page__hostname"
       aria-label={`Open EDR timeline for ${hostname}`}
       title="Open EDR event timeline"
-      style={{
-        fontFamily: 'var(--ha-font-mono)',
-        fontWeight: 600,
-        color: 'var(--ha-primary)',
-        textDecoration: 'none',
-      }}
     >
       {hostname}
     </Link>
   );
 }
 
+function statusClass(status: string): string {
+  if (status === 'ONLINE') return 'sensor-fleet-page__status sensor-fleet-page__status--online';
+  if (status === 'OFFLINE') return 'sensor-fleet-page__status sensor-fleet-page__status--offline';
+  return 'sensor-fleet-page__status sensor-fleet-page__status--unknown';
+}
+
+function statusLabel(status: string): string {
+  if (status === 'ONLINE') return 'Online';
+  if (status === 'OFFLINE') return 'Offline';
+  return 'Unknown';
+}
+
 /**
- * SensorGridPage — Sensor health monitoring (POS-05)
+ * SensorGridPage — agent fleet inventory (POS-05).
  *
- * Kill: JWT → @PreAuthorize EDR REST → ProcessCommand (STAGING CANDIDATE when verified).
- * Isolate: same path but fail-closed until isolate live-verify flips (B1-SENS-02).
- * Restart has no agent handler — remains unavailable.
+ * Layout follows SIEM fleet UIs (Elastic Fleet / Defender inventory): inventory
+ * first, enrollment secondary, containment gated and sparse on the row.
  */
 export function SensorGridPage(): JSX.Element {
   const [density] = useRowDensity();
   const { eps, connected: epsConnected } = useEpsStream();
   const [addAgentOpen, setAddAgentOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [isolateBannerDismissed, setIsolateBannerDismissed] = useState(false);
   const canProvisionAgent = hasAuthority('ROLE_ADMIN');
   const canViewEnrollmentAudit = useAuthStore((state) =>
@@ -247,8 +232,6 @@ export function SensorGridPage(): JSX.Element {
   );
   const killReady = canEnableKillProcess();
   const isolateReady = canEnableIsolateHost();
-  // Full-block banner only when kill is also unavailable. Isolate-only uses a
-  // compact dismissible note so Add Agent / enrollment stays the primary focus.
   const showFullRemoteBlockBanner = !killReady;
   const showIsolateOnlyBanner =
     killReady && !isolateReady && !isolateBannerDismissed;
@@ -292,186 +275,153 @@ export function SensorGridPage(): JSX.Element {
     staleTime: 30_000,
   });
   const latestPublished = packageSummaryQuery.data?.latestVersion ?? null;
+  const publishedCount = packageSummaryQuery.data?.publishedCount ?? 0;
+  const totalPackages = packageSummaryQuery.data?.totalCount ?? 0;
 
-  const activeSensors = useMemo(
+  const onlineCount = useMemo(
     () => sensors.filter((s) => s.connectionStatus === 'ONLINE').length,
     [sensors]
   );
-  const totalSensors = sensors.length;
+  const offlineCount = useMemo(
+    () => sensors.filter((s) => s.connectionStatus === 'OFFLINE').length,
+    [sensors]
+  );
+  const behindCount = useMemo(() => {
+    if (!latestPublished) return 0;
+    return sensors.filter((s) => isAgentVersionBehind(s.agentVersion, latestPublished)).length;
+  }, [sensors, latestPublished]);
 
-  const columnDefs: ColDef<SensorDTO>[] = useMemo((): ColDef<SensorDTO>[] => [
-    {
-      field: 'hostname',
-      headerName: 'Hostname',
-      width: 220,
-      cellRenderer: HostnameCellRenderer,
-    },
-    {
-      field: 'platform',
-      headerName: 'Platform',
-      width: 100,
-      valueFormatter: (params) => {
-        const platform = params.value as string;
-        return platform.charAt(0).toUpperCase() + platform.slice(1);
-      },
-    },
-    {
-      field: 'osVersion',
-      headerName: 'OS Version',
-      width: 140,
-      cellStyle: { color: 'var(--ha-text-secondary)' },
-      valueFormatter: (params) => params.value ?? '—',
-    },
-    {
-      field: 'agentVersion',
-      headerName: 'Agent Version',
-      width: 180,
-      cellRenderer: (params: ICellRendererParams<SensorDTO>) => {
-        const current = params.value as string | null | undefined;
-        const behind = isAgentVersionBehind(current, latestPublished);
-        return (
-          <span
-            style={{
-              display: 'inline-flex',
-              flexDirection: 'column',
-              gap: 2,
-              fontFamily: 'var(--ha-font-mono)',
-              fontSize: 'var(--ha-text-sm)',
-            }}
-          >
-            <span>{current?.trim() ? current : '—'}</span>
-            {behind && (
-              <span
-                style={{
-                  fontFamily: 'var(--ha-font-ui)',
-                  fontSize: 'var(--ha-text-xs)',
-                  color: 'var(--ha-high)',
-                }}
-              >
-                Behind {latestPublished}
-              </span>
-            )}
-            {!behind && latestPublished && current?.trim() === latestPublished && (
-              <span
-                style={{
-                  fontFamily: 'var(--ha-font-ui)',
-                  fontSize: 'var(--ha-text-xs)',
-                  color: 'var(--ha-positive)',
-                }}
-              >
-                Current
-              </span>
-            )}
-          </span>
-        );
-      },
-    },
-    {
-      field: 'connectionStatus',
-      headerName: 'Connection Status',
-      width: 150,
-      cellRenderer: (params: { value: string }) => {
-        const status = params.value;
-        const statusMap: Record<
-          string,
-          { label: string; bg: string; color: string }
-        > = {
-          ONLINE: {
-            label: 'Online',
-            bg: 'var(--ha-fill-low-muted)',
-            color: 'var(--ha-positive)',
-          },
-          OFFLINE: {
-            label: 'Offline',
-            bg: 'var(--ha-fill-critical-muted)',
-            color: 'var(--ha-critical)',
-          },
-          UNKNOWN: {
-            label: 'Unknown',
-            bg: 'transparent',
-            color: 'var(--ha-text-secondary)',
-          },
-        };
+  const filteredSensors = useMemo(() => {
+    const rows =
+      statusFilter === 'ALL'
+        ? sensors
+        : sensors.filter((s) => s.connectionStatus === statusFilter);
+    // Online first (Elastic Fleet-style), then lastSeen descending.
+    return [...rows].sort((a, b) => {
+      const rank = (s: SensorDTO): number =>
+        s.connectionStatus === 'ONLINE' ? 0 : s.connectionStatus === 'OFFLINE' ? 1 : 2;
+      const byStatus = rank(a) - rank(b);
+      if (byStatus !== 0) return byStatus;
+      const aTs = a.lastSeen ? Date.parse(a.lastSeen) : 0;
+      const bTs = b.lastSeen ? Date.parse(b.lastSeen) : 0;
+      return bTs - aTs;
+    });
+  }, [sensors, statusFilter]);
 
-        const style = statusMap[status] ?? statusMap.UNKNOWN;
-
-        return (
-          <span
-            style={{
-              display: 'inline-block',
-              padding: '2px 8px',
-              borderRadius: '2px',
-              fontSize: 'var(--ha-text-xs)',
-              backgroundColor: style.bg,
-              color: style.color,
-            }}
-          >
-            {style.label}
-          </span>
-        );
+  const columnDefs: ColDef<SensorDTO>[] = useMemo(
+    (): ColDef<SensorDTO>[] => [
+      {
+        field: 'hostname',
+        headerName: 'Hostname',
+        flex: 1.4,
+        minWidth: 180,
+        cellRenderer: HostnameCellRenderer,
       },
-    },
-    {
-      field: 'cpuUsage',
-      headerName: 'CPU %',
-      width: 80,
-      cellStyle: { fontVariantNumeric: 'tabular-nums' },
-      valueFormatter: (params) => (params.value != null ? `${params.value}%` : '—'),
-    },
-    {
-      field: 'memUsage',
-      headerName: 'Memory %',
-      width: 80,
-      cellStyle: { fontVariantNumeric: 'tabular-nums' },
-      valueFormatter: (params) => (params.value != null ? `${params.value}%` : '—'),
-    },
-    {
-      field: 'lastSeen',
-      headerName: 'Last Seen',
-      width: 160,
-      cellStyle: {
-        fontFamily: 'var(--ha-font-mono)',
-        fontVariantNumeric: 'tabular-nums',
+      {
+        field: 'connectionStatus',
+        headerName: 'Status',
+        width: 110,
+        cellRenderer: (params: { value: string }) => (
+          <span className={statusClass(params.value)}>{statusLabel(params.value)}</span>
+        ),
       },
-      valueFormatter: (params) => {
-        if (!params.value) return '—';
-        const date = new Date(params.value as string);
-        return date.toLocaleString();
+      {
+        field: 'platform',
+        headerName: 'Platform',
+        width: 100,
+        valueFormatter: (params) => {
+          const platform = String(params.value ?? '');
+          if (!platform) return '—';
+          return platform.charAt(0).toUpperCase() + platform.slice(1);
+        },
       },
-    },
-    {
-      headerName: 'Actions',
-      width: 280,
-      cellRenderer: ActionsCellRenderer,
-      sortable: false,
-      filter: false,
-    },
+      {
+        field: 'agentVersion',
+        headerName: 'Agent',
+        width: 160,
+        cellRenderer: (params: ICellRendererParams<SensorDTO>) => {
+          const current = params.value as string | null | undefined;
+          const behind = isAgentVersionBehind(current, latestPublished);
+          return (
+            <span
+              style={{
+                display: 'inline-flex',
+                flexDirection: 'column',
+                gap: 2,
+                fontFamily: 'var(--ha-font-mono)',
+                fontSize: 'var(--ha-text-sm)',
+              }}
+            >
+              <span>{current?.trim() ? current : '—'}</span>
+              {behind && (
+                <span
+                  style={{
+                    fontFamily: 'var(--ha-font-ui)',
+                    fontSize: 'var(--ha-text-xs)',
+                    color: 'var(--ha-high)',
+                  }}
+                >
+                  Behind {latestPublished}
+                </span>
+              )}
+              {!behind && latestPublished && current?.trim() === latestPublished && (
+                <span
+                  style={{
+                    fontFamily: 'var(--ha-font-ui)',
+                    fontSize: 'var(--ha-text-xs)',
+                    color: 'var(--ha-positive)',
+                  }}
+                >
+                  Current
+                </span>
+              )}
+            </span>
+          );
+        },
+      },
+      {
+        field: 'lastSeen',
+        headerName: 'Last Seen',
+        width: 168,
+        cellStyle: {
+          fontFamily: 'var(--ha-font-mono)',
+          fontVariantNumeric: 'tabular-nums',
+        },
+        valueFormatter: (params) => {
+          if (!params.value) return '—';
+          return new Date(params.value as string).toLocaleString();
+        },
+      },
+      {
+        headerName: 'Actions',
+        width: 210,
+        pinned: 'right',
+        cellRenderer: ActionsCellRenderer,
+        sortable: false,
+        filter: false,
+        resizable: false,
+      },
     ],
     [latestPublished]
   );
 
+  const installOpen = !isLoading && !isError && sensors.length === 0;
+
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        /* ha-app-main uses min-height only — percentage height does not resolve. */
-        height: 'calc(100vh - var(--ha-masthead-height))',
-        overflow: 'hidden',
-        backgroundColor: 'var(--ha-background)',
-      }}
-    >
+    <div className="sensor-fleet-page">
       {showFullRemoteBlockBanner && (
-        <HaInlineBanner
-          variant="warning"
-          title={REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE}
-          description={REMOTE_SENSOR_ACTIONS_BLOCKED_DESCRIPTION}
-          isDismissible={false}
-        />
+        <div className="sensor-fleet-page__banner">
+          <HaInlineBanner
+            variant="warning"
+            title={REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE}
+            description={REMOTE_SENSOR_ACTIONS_BLOCKED_DESCRIPTION}
+            isDismissible={false}
+          />
+        </div>
       )}
 
       {showIsolateOnlyBanner && (
-        <div style={{ margin: '12px 16px 0', flexShrink: 0 }}>
+        <div className="sensor-fleet-page__banner">
           <HaInlineBanner
             variant="info"
             title={REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE}
@@ -482,73 +432,26 @@ export function SensorGridPage(): JSX.Element {
         </div>
       )}
 
-      <div
-        style={{
-          flexShrink: 0,
-          minHeight: 56,
-          padding: '10px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 16,
-          borderBottom: '1px solid var(--ha-border)',
-          backgroundColor: 'var(--ha-surface-primary)',
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <h1
-              style={{
-                fontSize: 'var(--ha-text-xl)',
-                fontWeight: 600,
-                color: 'var(--ha-text-primary)',
-                margin: 0,
-              }}
-            >
-              Sensors
-            </h1>
-            <span
-              style={{
-                fontSize: 'var(--ha-text-sm)',
-                color: 'var(--ha-text-secondary)',
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {activeSensors} / {totalSensors} online
+      <header className="sensor-fleet-page__header">
+        <div className="sensor-fleet-page__title-block">
+          <div className="sensor-fleet-page__title-row">
+            <h1 className="sensor-fleet-page__title">Sensors</h1>
+            <span className="sensor-fleet-page__count">
+              {onlineCount} / {sensors.length} online
             </span>
           </div>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 'var(--ha-text-sm)',
-              color: 'var(--ha-text-secondary)',
-            }}
-          >
-            Agent fleet inventory — monitor health, open endpoint timelines, enroll new hosts.
+          <p className="sensor-fleet-page__job">
+            Agent fleet inventory — health, timelines, and enrollment.
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        <div className="sensor-fleet-page__toolbar">
           <DensitySelector />
-          <Link
-            to="/edr/endpoints"
-            style={{
-              fontSize: 'var(--ha-text-sm)',
-              color: 'var(--ha-primary)',
-              textDecoration: 'none',
-            }}
-          >
+          <Link to="/edr/endpoints" className="sensor-fleet-page__link">
             Endpoint telemetry
           </Link>
           {canViewEnrollmentAudit && (
-            <Link
-              to="/admin/enrollment-audit"
-              style={{
-                fontSize: 'var(--ha-text-sm)',
-                color: 'var(--ha-primary)',
-                textDecoration: 'none',
-              }}
-            >
+            <Link to="/admin/enrollment-audit" className="sensor-fleet-page__link">
               Enrollment audit
             </Link>
           )}
@@ -561,44 +464,90 @@ export function SensorGridPage(): JSX.Element {
               Add Agent
             </HaButton>
           ) : (
-            <span
-              role="status"
-              style={{
-                fontSize: 'var(--ha-text-xs)',
-                color: 'var(--ha-text-secondary)',
-                maxWidth: 220,
-              }}
-            >
+            <span className="sensor-fleet-page__role-note" role="status">
               Required permission: Platform Administrator to enroll agents
             </span>
           )}
         </div>
-      </div>
+      </header>
 
       {!isLoading && !isError && (
-        <div style={{ flexShrink: 0 }}>
-          <SensorFleetSummary sensors={sensors} />
+        <div className="sensor-fleet-page__strip" aria-label="Fleet filters and summary">
+          <div className="sensor-fleet-page__filters" role="group" aria-label="Filter by status">
+            <button
+              type="button"
+              className={
+                statusFilter === 'ALL'
+                  ? 'sensor-fleet-page__filter sensor-fleet-page__filter--active'
+                  : 'sensor-fleet-page__filter'
+              }
+              aria-pressed={statusFilter === 'ALL'}
+              onClick={() => setStatusFilter('ALL')}
+            >
+              All ({sensors.length})
+            </button>
+            <button
+              type="button"
+              className={
+                statusFilter === 'ONLINE'
+                  ? 'sensor-fleet-page__filter sensor-fleet-page__filter--active'
+                  : 'sensor-fleet-page__filter'
+              }
+              aria-pressed={statusFilter === 'ONLINE'}
+              onClick={() => setStatusFilter('ONLINE')}
+            >
+              Online ({onlineCount})
+            </button>
+            <button
+              type="button"
+              className={
+                statusFilter === 'OFFLINE'
+                  ? 'sensor-fleet-page__filter sensor-fleet-page__filter--active'
+                  : 'sensor-fleet-page__filter'
+              }
+              aria-pressed={statusFilter === 'OFFLINE'}
+              onClick={() => setStatusFilter('OFFLINE')}
+            >
+              Offline ({offlineCount})
+            </button>
+          </div>
+
+          <div className="sensor-fleet-page__meta">
+            <span>
+              Published{' '}
+              <strong>
+                {packageSummaryQuery.isLoading
+                  ? '…'
+                  : latestPublished ?? 'none'}
+              </strong>
+            </span>
+            <span>
+              Packages{' '}
+              <strong>
+                {packageSummaryQuery.isLoading
+                  ? '…'
+                  : `${publishedCount}/${totalPackages}`}
+              </strong>
+            </span>
+            {behindCount > 0 && (
+              <span className="sensor-fleet-page__meta-warn">
+                Behind latest <strong>{behindCount}</strong>
+              </span>
+            )}
+            {!packageSummaryQuery.isLoading && publishedCount === 0 && (
+              <span className="sensor-fleet-page__meta-warn" role="status">
+                No installer binaries published yet
+              </span>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Agent inventory is the primary SIEM surface — must remain visible above the fold. */}
-      <div
-        style={{
-          flex: 1,
-          minHeight: 240,
-          padding: '12px 16px',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-        aria-label="Agent inventory"
-      >
+      <div className="sensor-fleet-page__inventory" aria-label="Agent inventory">
         {isLoading && <LoadingState message="Loading sensors..." />}
 
         {isError && (
-          <ErrorState
-            message="Could not load sensors."
-            onRetry={refetch}
-          />
+          <ErrorState message="Could not load sensors." onRetry={refetch} />
         )}
 
         {!isLoading && !isError && sensors.length === 0 && (
@@ -620,69 +569,53 @@ export function SensorGridPage(): JSX.Element {
           />
         )}
 
-        {!isLoading && !isError && sensors.length > 0 && (
+        {!isLoading && !isError && sensors.length > 0 && filteredSensors.length === 0 && (
+          <EmptyState
+            title={`No ${statusFilter.toLowerCase()} agents`}
+            description="Clear the status filter to see the full fleet inventory."
+            action={
+              <HaButton variant="secondary" onClick={() => setStatusFilter('ALL')}>
+                Show all agents
+              </HaButton>
+            }
+          />
+        )}
+
+        {!isLoading && !isError && filteredSensors.length > 0 && (
           <SiemDataGrid
             columnDefs={columnDefs}
-            rowData={sensors}
+            rowData={filteredSensors}
             rowModelType="clientSide"
             height="100%"
             rowHeight={ROW_HEIGHTS[density]}
+            getRowId={(params) => String((params.data as SensorDTO).agentId)}
             ariaLabel="Registered agents"
           />
         )}
       </div>
 
-      <details
-        className="sensor-install-panel"
-        open={sensors.length === 0}
-        style={{
-          flexShrink: 0,
-          margin: '0 16px 8px',
-          border: '1px solid var(--ha-border)',
-          borderRadius: 'var(--ha-radius-md)',
-          background: 'var(--ha-surface-primary)',
-          maxHeight: '40vh',
-          overflow: 'auto',
-        }}
-      >
-        <summary
-          style={{
-            cursor: 'pointer',
-            padding: '10px 14px',
-            fontSize: 'var(--ha-text-sm)',
-            fontWeight: 600,
-            color: 'var(--ha-text-primary)',
-            listStylePosition: 'outside',
-          }}
-        >
+      <details className="sensor-fleet-page__install" open={installOpen}>
+        <summary>
           Install agents &amp; package downloads
-          {!canProvisionAgent ? ' (Platform Administrator required to generate scripts)' : ''}
+          {!canProvisionAgent
+            ? ' (Platform Administrator required to generate scripts)'
+            : ''}
         </summary>
 
         {canProvisionAgent && (
-          <ol
-            className="sensor-enroll-steps"
-            aria-label="How to enroll an agent"
-            style={{
-              display: 'grid',
-              gap: 4,
-              margin: '0 14px 12px',
-              padding: '0 0 0 18px',
-              color: 'var(--ha-text-secondary)',
-              fontSize: 'var(--ha-text-sm)',
-            }}
-          >
+          <ol className="sensor-fleet-page__install-steps" aria-label="How to enroll an agent">
             <li>
-              Click <strong style={{ color: 'var(--ha-text-primary)' }}>Add Agent</strong> to generate
-              a one-click install script.
+              Click{' '}
+              <strong style={{ color: 'var(--ha-text-primary)' }}>Add Agent</strong> to
+              generate a one-click install script.
             </li>
             <li>
-              Run the script on the endpoint as administrator — it downloads the matching package and
-              registers the host.
+              Run the script on the endpoint as administrator — it downloads the matching
+              package and registers the host.
             </li>
             <li>
               Refresh until Online. Check{' '}
-              <Link to="/admin/enrollment-audit" style={{ color: 'var(--ha-primary)' }}>
+              <Link to="/admin/enrollment-audit" className="sensor-fleet-page__link">
                 Enrollment audit
               </Link>{' '}
               after selecting a masthead tenant.
@@ -691,16 +624,9 @@ export function SensorGridPage(): JSX.Element {
         )}
 
         {!canProvisionAgent && (
-          <p
-            role="status"
-            style={{
-              margin: '0 14px 12px',
-              color: 'var(--ha-text-secondary)',
-              fontSize: 'var(--ha-text-sm)',
-            }}
-          >
-            Agent install scripts require Platform Administrator. Analysts can monitor registered
-            sensors in the grid above.
+          <p className="sensor-fleet-page__install-note" role="status">
+            Agent install scripts require Platform Administrator. Analysts can monitor
+            registered sensors in the grid above.
           </p>
         )}
 
@@ -709,10 +635,7 @@ export function SensorGridPage(): JSX.Element {
 
       <StatusDock sseConnected={epsConnected} eps={eps} />
 
-      <AddAgentDrawer
-        isOpen={addAgentOpen}
-        onClose={() => setAddAgentOpen(false)}
-      />
+      <AddAgentDrawer isOpen={addAgentOpen} onClose={() => setAddAgentOpen(false)} />
     </div>
   );
 }

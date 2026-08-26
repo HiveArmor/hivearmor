@@ -1,0 +1,270 @@
+/**
+ * Sensors — agent fleet inventory layout.
+ * Inventory grid is the primary surface; install/packages stay progressive disclosure.
+ */
+
+.sensor-fleet-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--ha-masthead-height));
+  overflow: hidden;
+  background: var(--ha-background);
+}
+
+.sensor-fleet-page__banner {
+  flex-shrink: 0;
+  margin: 8px 16px 0;
+}
+
+.sensor-fleet-page__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 52px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-primary);
+}
+
+.sensor-fleet-page__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sensor-fleet-page__title-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sensor-fleet-page__title {
+  margin: 0;
+  font-size: var(--ha-text-xl);
+  font-weight: 600;
+  color: var(--ha-text-primary);
+}
+
+.sensor-fleet-page__count {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sensor-fleet-page__job {
+  margin: 0;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+}
+
+.sensor-fleet-page__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.sensor-fleet-page__link {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-primary);
+  text-decoration: none;
+}
+
+.sensor-fleet-page__link:hover {
+  text-decoration: underline;
+}
+
+.sensor-fleet-page__role-note {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+  max-width: 220px;
+}
+
+.sensor-fleet-page__strip {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 8px 16px 0;
+  padding: 6px 10px;
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-md);
+}
+
+.sensor-fleet-page__filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sensor-fleet-page__filter {
+  appearance: none;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  background: transparent;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+  font-family: var(--ha-font-ui);
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.sensor-fleet-page__filter:hover {
+  color: var(--ha-text-primary);
+  border-color: var(--ha-text-secondary);
+}
+
+.sensor-fleet-page__filter--active {
+  color: var(--ha-text-primary);
+  border-color: var(--ha-primary);
+  background: color-mix(in srgb, var(--ha-primary) 12%, transparent);
+}
+
+.sensor-fleet-page__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-left: auto;
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sensor-fleet-page__meta strong {
+  color: var(--ha-text-primary);
+  font-weight: 600;
+}
+
+.sensor-fleet-page__meta-warn {
+  color: var(--ha-high);
+}
+
+.sensor-fleet-page__inventory {
+  flex: 1;
+  min-height: 280px;
+  padding: 8px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sensor-fleet-page__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}
+
+.sensor-fleet-page__action-link {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  color: var(--ha-primary);
+  padding: 4px 8px;
+  font-size: var(--ha-text-xs);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sensor-fleet-page__action-link:hover {
+  text-decoration: underline;
+}
+
+.sensor-fleet-page__action-btn {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  color: var(--ha-text-secondary);
+  cursor: pointer;
+  opacity: 1;
+  padding: 4px 8px;
+  font-size: var(--ha-text-xs);
+  font-family: var(--ha-font-ui);
+}
+
+.sensor-fleet-page__action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.sensor-fleet-page__action-btn--danger {
+  color: var(--ha-critical);
+}
+
+.sensor-fleet-page__status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--ha-radius-sm);
+  font-size: var(--ha-text-xs);
+}
+
+.sensor-fleet-page__status--online {
+  background: var(--ha-fill-low-muted);
+  color: var(--ha-positive);
+}
+
+.sensor-fleet-page__status--offline {
+  background: var(--ha-fill-critical-muted);
+  color: var(--ha-critical);
+}
+
+.sensor-fleet-page__status--unknown {
+  background: transparent;
+  color: var(--ha-text-secondary);
+}
+
+.sensor-fleet-page__hostname {
+  font-family: var(--ha-font-mono);
+  font-weight: 600;
+  color: var(--ha-primary);
+  text-decoration: none;
+}
+
+.sensor-fleet-page__hostname:hover {
+  text-decoration: underline;
+}
+
+.sensor-fleet-page__hostname--plain {
+  color: var(--ha-text-primary);
+}
+
+.sensor-fleet-page__install {
+  flex-shrink: 0;
+  margin: 0 16px 8px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-md);
+  background: var(--ha-surface-primary);
+  max-height: 36vh;
+  overflow: auto;
+}
+
+.sensor-fleet-page__install > summary {
+  cursor: pointer;
+  padding: 8px 14px;
+  font-size: var(--ha-text-sm);
+  font-weight: 600;
+  color: var(--ha-text-primary);
+  list-style-position: outside;
+}
+
+.sensor-fleet-page__install-steps {
+  display: grid;
+  gap: 4px;
+  margin: 0 14px 12px;
+  padding: 0 0 0 18px;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+}
+
+.sensor-fleet-page__install-note {
+  margin: 0 14px 12px;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+}

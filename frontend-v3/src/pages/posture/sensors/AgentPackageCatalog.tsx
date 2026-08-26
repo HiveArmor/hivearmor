@@ -54,15 +54,14 @@ export function AgentPackageCatalog(): JSX.Element {
           </p>
           {catalogError && (
             <p className="agent-package-catalog__notice" role="status">
-              Package availability could not be loaded. Download links may fail until{' '}
-              <code>GET /api/ha-agent-packages/summary</code> succeeds.
+              Package availability could not be loaded. Download links may fail until the package
+              catalog is reachable again.
             </p>
           )}
           {nonePublished && (
             <p className="agent-package-catalog__notice agent-package-catalog__notice--warn" role="alert">
-              No agent binaries are published on this server yet (
-              <code>/agent-packages/</code>). Install scripts will fail to download until packages
-              are synced with <code>publish-agent-packages.sh</code>.
+              No agent binaries are published on this server yet. Install scripts will fail to
+              download until packages are synced with the staging publish script.
             </p>
           )}
         </div>
