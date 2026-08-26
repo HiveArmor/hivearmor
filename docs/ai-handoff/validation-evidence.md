@@ -693,3 +693,14 @@ No production-readiness claim is made by this baseline entry.
 - FE asset grep: SOAR-related chunk hits **17**; enrollment-audit chunk hits **7**.
 - Failures: **0**. Report: `/tmp/hivearmor-staging-detect-govern-smoke.json` (remote + local).
 - Still deferred: vendor live connector proofs; full browser walk of every interactive control; 24h soak.
+
+## 2026-08-26 08:35:00 IST (UTC+05:30) — Sensors Add Agent UX + package publish staging rebuild (tip 0b92def)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED).
+- Tip deployed: `0b92def` (merge #82 `feat/sensors-add-agent-ux`).
+- Scope: rsync tip WAR + frontend-v3 + `deploy/staging`; `docker compose build/recreate backend frontend-v3 edge`. New bind mount `./agent-packages` → `/opt/hivearmor/agent-packages:ro`.
+- Host: `https://72.44.52.187` — backend + FE healthy; edge running; `/api/healthcheck` **200**; admin JWT `token_len=219`.
+- `GET /api/ha-agent-packages/summary` **200** — `publishedCount=0` (installer binaries still unpublished); `latestVersion=11.0.0-staging` from existing volume `version.json`.
+- SPA `/posture/sensors` **200**.
+- Report: `/tmp/hivearmor-staging-sensors-add-agent-rebuild.json`.
+- Next: run `publish-agent-packages.sh` with signed CI binaries for Downloadable packages.
