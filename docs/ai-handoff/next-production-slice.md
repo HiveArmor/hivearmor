@@ -1,6 +1,21 @@
 # Next production slice
 
-Updated: **2026-08-26 07:30:00 IST (UTC+05:30)**
+Updated: **2026-08-26 08:35:00 IST (UTC+05:30)**
+
+## Completed this slice — Sensors Add Agent UX + package publish (#82)
+
+Status: **MERGED** tip `0b92def` (#82) — **STAGING CANDIDATE**. Not `PRODUCTION READY`.
+Staging rebuild: [Staging rebuild after PR82](94ae40fd-3471-478c-a30d-9afd91178e50). Report `/tmp/hivearmor-staging-sensors-add-agent-rebuild.json`.
+
+| Check | Result |
+|---|---|
+| backend / frontend-v3 / edge | healthy |
+| `GET /api/healthcheck` | 200 |
+| `GET /api/ha-agent-packages/summary` | 200 — `publishedCount=0` (expected until publish script) |
+| SPA `/posture/sensors` | 200 |
+
+Next optional: run `publish-agent-packages.sh` with signed CI binaries so Sensors cards become Downloadable.
+Deferred: vendor connectors; 24h soak; full RESP-020 policy CRUD.
 
 ## Completed this slice — Staging enrollment-audit tenant gate smoke
 
