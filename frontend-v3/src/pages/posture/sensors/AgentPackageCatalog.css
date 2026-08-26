@@ -1,5 +1,5 @@
 .agent-package-catalog {
-  margin: 0 16px 16px;
+  margin: 12px 16px 16px;
   padding: 12px 16px;
   background: var(--ha-surface-primary);
   border: 1px solid var(--ha-border);
@@ -18,6 +18,17 @@
   font-size: var(--ha-text-sm);
   color: var(--ha-text-secondary);
   max-width: 72ch;
+}
+
+.agent-package-catalog__notice {
+  margin: 0 0 12px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-high);
+  max-width: 72ch;
+}
+
+.agent-package-catalog__notice--warn {
+  color: var(--ha-critical);
 }
 
 .agent-package-catalog__grid {
@@ -78,4 +89,14 @@
 
 .agent-package-card--unpublished {
   opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.agent-package-card--unpublished .agent-package-card__action,
+.agent-package-card--pending .agent-package-card__action {
+  color: var(--ha-text-secondary);
+}
+
+.agent-package-card--pending {
+  opacity: 0.85;
 }

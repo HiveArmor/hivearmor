@@ -1,14 +1,11 @@
 /**
  * SensorGrid remote-action capability gates (GAP-SEC-05 / F03 follow-up).
  *
- * Trust boundary (honest model):
+ * Trust boundary (engineering notes — do not surface INTERNAL_KEY / API paths in UI):
  * - Browser → JWT → Spring @PreAuthorize(ROLE_ADMIN | ROLE_SOC_MANAGER) on
  *   POST /api/edr/isolation and POST /api/edr/actions/kill-process
  * - Backend → INTERNAL_KEY → agent-manager PanelService.ProcessCommand
  * - Agent stream executes EDR_ISOLATE / EDR_KILL (see agent/agent/edr_handler.go)
- *
- * INTERNAL_KEY must never reach the browser. ROLE_* belongs on the REST hop;
- * gRPC uses service identity only. That is intentional — not a remaining role gap.
  *
  * Kill and isolate are gated independently — do not enable isolate until a live
  * ProcessCommand isolation round-trip is proven (B1-SENS-02).
@@ -55,11 +52,18 @@ export function canEnableRemoteSensorActions(): boolean {
   return canEnableKillProcess() || canEnableIsolateHost();
 }
 
+/** Operator-facing copy — no API paths, INTERNAL_KEY, or ProcessCommand jargon. */
 export const REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE =
-  'Remote sensor actions stay blocked until ProcessCommand → agent is live-verified (GAP-SEC-05)';
+  'Remote sensor actions are not available yet';
 
 export const REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE =
-  'Host isolation stays blocked until a ProcessCommand isolate round-trip is live-verified';
+  'Host isolation is not available yet';
 
 export const REMOTE_SENSOR_ACTIONS_BLOCKED_DESCRIPTION =
-  'JWT-authenticated REST mutates (/api/edr/isolation, /api/edr/actions/kill-process) are role-gated (Platform Administrator or SOC Manager) and dispatch PanelService.ProcessCommand server-side via INTERNAL_KEY. Kill is STAGING CANDIDATE after agent proof; Isolate stays disabled until separately verified. Restart / Push Config / Collect Logs have no agent ProcessCommand handlers.';
+  'Kill process and host isolation require Platform Administrator or SOC Manager. Kill process is available on verified agents; host isolation stays disabled until it is verified end-to-end. Restart, push config, and collect logs are not available from this grid yet.';
+
+/** Compact note when only isolate is still blocked (kill already works). */
+export const REMOTE_SENSOR_ISOLATE_ONLY_DESCRIPTION =
+  'Isolate stays disabled until it is verified end-to-end. Kill process remains available for Platform Administrator and SOC Manager. Restart is not available from this grid.';
+
+export const REMOTE_SENSOR_ISOLATE_BANNER_DISMISS_KEY = 'ha_sensors_isolate_banner_dismissed';

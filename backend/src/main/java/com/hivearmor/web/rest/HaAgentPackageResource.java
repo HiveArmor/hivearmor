@@ -3,6 +3,7 @@ package com.hivearmor.web.rest;
 import com.hivearmor.security.AuthoritiesConstants;
 import com.hivearmor.service.AgentPackageService;
 import com.hivearmor.service.dto.AgentPackageDTO;
+import com.hivearmor.service.dto.AgentPackageSummaryDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
@@ -48,6 +49,16 @@ public class HaAgentPackageResource {
     @PreAuthorize(CATALOG_AUTH)
     public ResponseEntity<List<AgentPackageDTO>> listPackages() {
         return ResponseEntity.ok(agentPackageService.catalog());
+    }
+
+    /**
+     * Fleet summary: published binary counts + {@code version.json} latest version.
+     * Used by Sensors to compare running agent versions against the published package set.
+     */
+    @GetMapping("/api/ha-agent-packages/summary")
+    @PreAuthorize(CATALOG_AUTH)
+    public ResponseEntity<AgentPackageSummaryDTO> packageSummary() {
+        return ResponseEntity.ok(agentPackageService.summary());
     }
 
     @GetMapping("/agent-packages/{filename:.+}")

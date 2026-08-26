@@ -42,4 +42,17 @@ Restart `eventprocessor` and `eventprocessor-worker`. Kafka offsets must not adv
 
 ## Label
 
+## Agent installer packages (Sensors / Add Agent)
+
+Install scripts download from `GET /agent-packages/{filename}` (backend). Publish
+binaries into `deploy/staging/agent-packages/` (bind-mounted read-only) or sync with:
+
+```bash
+SOURCE_DIR=/path/to/ci-artifacts VERSION=11.0.0-staging \
+  bash deploy/staging/publish-agent-packages.sh
+```
+
+Include `version.json` (`version` + `updater_version`) so Sensors can show **latest published**
+vs each agent’s running version (`GET /api/ha-agent-packages/summary`).
+
 Passing this guide is **`STAGING CANDIDATE`**, not `PRODUCTION READY`. Packaged Windows SCM (ACC-02), signed agents, 24-hour soak and a restore onto a **new** VM remain open. ACC-12 on this host is a throwaway-database / renamed-index drill, not an off-box copy.

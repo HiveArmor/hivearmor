@@ -1,0 +1,14 @@
+# Published HiveArmor agent installer binaries for Sensors / Add Agent download.
+#
+# Drop allowlisted filenames here (and version.json), then run:
+#   bash deploy/staging/publish-agent-packages.sh
+#
+# Or copy files into this directory on the staging host and recreate backend:
+#   docker compose --env-file .env up -d backend
+#
+# Never commit real binaries or REPLACE_KEY-bearing builds.
+
+*
+!.gitignore
+!README.md
+!version.json.example

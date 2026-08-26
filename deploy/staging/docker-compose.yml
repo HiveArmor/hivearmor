@@ -160,10 +160,13 @@ services:
       - ELASTICSEARCH_CA_CERT=/cert/ca.crt
       - JHIPSTER_CORS_ALLOWED_ORIGINS=${JHIPSTER_CORS_ALLOWED_ORIGINS:-https://localhost}
       - LLM_PROVIDER=disabled
+      # Prefer host-published packages (deploy/staging/agent-packages) then volume defaults.
+      - HIVEARMOR_AGENT_PACKAGE_DIRS=/opt/hivearmor/agent-packages,/dependencies/agent,/updates/agent
     volumes:
       - datasources_data:/etc/hivearmor
       - updates_data:/updates
       - updates_data:/dependencies
+      - ./agent-packages:/opt/hivearmor/agent-packages:ro
       - ../../local-dev/certs:/cert:ro
       - /home/ubuntu/hivearmor-slo-soak:/var/hivearmor-slo-soak:ro
     networks: [data]

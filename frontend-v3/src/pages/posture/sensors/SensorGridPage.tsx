@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { Activity, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { AddAgentDrawer } from './AddAgentDrawer';
 import { AgentPackageCatalog } from './AgentPackageCatalog';
+import { SensorFleetSummary } from './SensorFleetSummary';
 
 import { DensitySelector } from '@/components/density-selector';
 import { EmptyState } from '@/components/empty-state';
@@ -20,11 +22,17 @@ import { useRowDensity, ROW_HEIGHTS } from '@/hooks/useRowDensity';
 import { hasAuthority } from '@/lib/auth/hasAuthority';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import {
+  fetchAgentPackageSummary,
+  isAgentVersionBehind,
+} from '@/services/agentPackage.service';
+import {
   canEnableIsolateHost,
   canEnableKillProcess,
   REMOTE_SENSOR_ACTIONS_BLOCKED_DESCRIPTION,
   REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE,
+  REMOTE_SENSOR_ISOLATE_BANNER_DISMISS_KEY,
   REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE,
+  REMOTE_SENSOR_ISOLATE_ONLY_DESCRIPTION,
 } from '@/services/sensorRemoteActions.capabilities';
 import {
   isolateSensor,
@@ -32,6 +40,7 @@ import {
 } from '@/services/sensorRemoteActions.service';
 import { fetchSensors } from '@/services/sensorsService';
 import type { SensorDTO } from '@/services/sensorsService';
+import { useAuthStore } from '@/store/auth.store';
 
 function ActionButton(props: {
   label: string;
@@ -173,10 +182,37 @@ export function SensorGridPage(): JSX.Element {
   const [density] = useRowDensity();
   const { eps, connected: epsConnected } = useEpsStream();
   const [addAgentOpen, setAddAgentOpen] = useState(false);
+  const [isolateBannerDismissed, setIsolateBannerDismissed] = useState(false);
   const canProvisionAgent = hasAuthority('ROLE_ADMIN');
+  const canViewEnrollmentAudit = useAuthStore((state) =>
+    state.hasAnyRole(['ROLE_ADMIN', 'ROLE_SOC_MANAGER'])
+  );
   const killReady = canEnableKillProcess();
   const isolateReady = canEnableIsolateHost();
-  const showRemoteHonesty = !killReady || !isolateReady;
+  // Full-block banner only when kill is also unavailable. Isolate-only uses a
+  // compact dismissible note so Add Agent / enrollment stays the primary focus.
+  const showFullRemoteBlockBanner = !killReady;
+  const showIsolateOnlyBanner =
+    killReady && !isolateReady && !isolateBannerDismissed;
+
+  useEffect(() => {
+    try {
+      setIsolateBannerDismissed(
+        localStorage.getItem(REMOTE_SENSOR_ISOLATE_BANNER_DISMISS_KEY) === '1'
+      );
+    } catch {
+      setIsolateBannerDismissed(false);
+    }
+  }, []);
+
+  const dismissIsolateBanner = (): void => {
+    setIsolateBannerDismissed(true);
+    try {
+      localStorage.setItem(REMOTE_SENSOR_ISOLATE_BANNER_DISMISS_KEY, '1');
+    } catch {
+      // ignore quota / private mode
+    }
+  };
 
   const {
     data: sensors = [],
@@ -191,13 +227,21 @@ export function SensorGridPage(): JSX.Element {
     },
   });
 
+  const packageSummaryQuery = useQuery({
+    queryKey: ['ha-agent-packages-summary'],
+    queryFn: fetchAgentPackageSummary,
+    retry: false,
+    staleTime: 30_000,
+  });
+  const latestPublished = packageSummaryQuery.data?.latestVersion ?? null;
+
   const activeSensors = useMemo(
     () => sensors.filter((s) => s.connectionStatus === 'ONLINE').length,
     [sensors]
   );
   const totalSensors = sensors.length;
 
-  const columnDefs: ColDef<SensorDTO>[] = [
+  const columnDefs: ColDef<SensorDTO>[] = useMemo((): ColDef<SensorDTO>[] => [
     {
       field: 'hostname',
       headerName: 'Hostname',
@@ -226,9 +270,46 @@ export function SensorGridPage(): JSX.Element {
     {
       field: 'agentVersion',
       headerName: 'Agent Version',
-      width: 120,
-      cellStyle: { fontFamily: 'var(--ha-font-mono)' },
-      valueFormatter: (params) => params.value ?? '—',
+      width: 180,
+      cellRenderer: (params: ICellRendererParams<SensorDTO>) => {
+        const current = params.value as string | null | undefined;
+        const behind = isAgentVersionBehind(current, latestPublished);
+        return (
+          <span
+            style={{
+              display: 'inline-flex',
+              flexDirection: 'column',
+              gap: 2,
+              fontFamily: 'var(--ha-font-mono)',
+              fontSize: 'var(--ha-text-sm)',
+            }}
+          >
+            <span>{current?.trim() ? current : '—'}</span>
+            {behind && (
+              <span
+                style={{
+                  fontFamily: 'var(--ha-font-ui)',
+                  fontSize: 'var(--ha-text-xs)',
+                  color: 'var(--ha-high)',
+                }}
+              >
+                Behind {latestPublished}
+              </span>
+            )}
+            {!behind && latestPublished && current?.trim() === latestPublished && (
+              <span
+                style={{
+                  fontFamily: 'var(--ha-font-ui)',
+                  fontSize: 'var(--ha-text-xs)',
+                  color: 'var(--ha-positive)',
+                }}
+              >
+                Current
+              </span>
+            )}
+          </span>
+        );
+      },
     },
     {
       field: 'connectionStatus',
@@ -310,7 +391,9 @@ export function SensorGridPage(): JSX.Element {
       sortable: false,
       filter: false,
     },
-  ];
+    ],
+    [latestPublished]
+  );
 
   return (
     <div
@@ -321,17 +404,25 @@ export function SensorGridPage(): JSX.Element {
         backgroundColor: 'var(--ha-background)',
       }}
     >
-      {showRemoteHonesty && (
+      {showFullRemoteBlockBanner && (
         <HaInlineBanner
           variant="warning"
-          title={
-            !killReady
-              ? REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE
-              : REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE
-          }
+          title={REMOTE_SENSOR_ACTIONS_BLOCKED_TITLE}
           description={REMOTE_SENSOR_ACTIONS_BLOCKED_DESCRIPTION}
           isDismissible={false}
         />
+      )}
+
+      {showIsolateOnlyBanner && (
+        <div style={{ margin: '12px 16px 0' }}>
+          <HaInlineBanner
+            variant="info"
+            title={REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE}
+            description={REMOTE_SENSOR_ISOLATE_ONLY_DESCRIPTION}
+            isDismissible
+            onDismiss={dismissIsolateBanner}
+          />
+        </div>
       )}
 
       <div
@@ -369,6 +460,18 @@ export function SensorGridPage(): JSX.Element {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <DensitySelector />
+          {canViewEnrollmentAudit && (
+            <Link
+              to="/admin/enrollment-audit"
+              style={{
+                fontSize: 'var(--ha-text-sm)',
+                color: 'var(--ha-primary)',
+                textDecoration: 'none',
+              }}
+            >
+              Enrollment audit
+            </Link>
+          )}
           {canProvisionAgent && (
             <HaButton
               variant="primary"
@@ -380,6 +483,61 @@ export function SensorGridPage(): JSX.Element {
           )}
         </div>
       </div>
+
+      {!isLoading && !isError && <SensorFleetSummary sensors={sensors} />}
+
+      {canProvisionAgent && (
+        <ol
+          className="sensor-enroll-steps"
+          aria-label="How to enroll an agent"
+          style={{
+            display: 'grid',
+            gap: 4,
+            margin: '12px 16px 0',
+            padding: '10px 14px',
+            listStyle: 'decimal inside',
+            border: '1px solid var(--ha-border)',
+            borderRadius: 'var(--ha-radius-md)',
+            background: 'var(--ha-surface-primary)',
+            color: 'var(--ha-text-secondary)',
+            fontSize: 'var(--ha-text-sm)',
+          }}
+        >
+          <li>
+            Click <strong style={{ color: 'var(--ha-text-primary)' }}>Add Agent</strong> to generate
+            a one-click install script.
+          </li>
+          <li>
+            Run the script on the endpoint as administrator — it downloads the matching package and
+            registers the host.
+          </li>
+          <li>
+            Refresh until Online. Check{' '}
+            <Link to="/admin/enrollment-audit" style={{ color: 'var(--ha-primary)' }}>
+              Enrollment audit
+            </Link>{' '}
+            after selecting a masthead tenant.
+          </li>
+        </ol>
+      )}
+
+      {!canProvisionAgent && (
+        <div
+          role="status"
+          style={{
+            margin: '0 16px 12px',
+            padding: '10px 12px',
+            border: '1px solid var(--ha-border)',
+            borderRadius: 'var(--ha-radius-base)',
+            background: 'var(--ha-surface-primary)',
+            color: 'var(--ha-text-secondary)',
+            fontSize: 'var(--ha-text-sm)',
+          }}
+        >
+          Agent install scripts require Platform Administrator. Analysts can monitor registered sensors
+          here; ask an administrator to run Add Agent.
+        </div>
+      )}
 
       <AgentPackageCatalog />
 
@@ -397,7 +555,7 @@ export function SensorGridPage(): JSX.Element {
           <EmptyState
             icon={<Activity size={48} />}
             title="No agents registered yet"
-            description="Download an agent package above, or use Add Agent to generate a keyed one-click install script. Process-log tests do not register a sensor row."
+            description="Use Add Agent to generate a keyed install script. The script downloads the agent package and registers this host. Optional package cards above are for air-gapped installs only."
             action={
               canProvisionAgent ? (
                 <HaButton

@@ -1,6 +1,8 @@
 package com.hivearmor.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivearmor.service.dto.AgentPackageDTO;
+import com.hivearmor.service.dto.AgentPackageSummaryDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -16,11 +18,13 @@ class AgentPackageServiceTest {
     @TempDir
     Path tempDir;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Test
     void catalogMarksPublishedBinariesAvailable() throws Exception {
         Path published = tempDir.resolve("hivearmor_agent_service_linux_amd64");
         Files.writeString(published, "agent-bytes");
-        AgentPackageService service = new AgentPackageService(tempDir.toString());
+        AgentPackageService service = new AgentPackageService(tempDir.toString(), objectMapper);
 
         List<AgentPackageDTO> catalog = service.catalog();
         AgentPackageDTO linux = catalog.stream()
@@ -41,8 +45,25 @@ class AgentPackageServiceTest {
     }
 
     @Test
+    void summaryReadsVersionManifestBesideBinaries() throws Exception {
+        Files.writeString(tempDir.resolve("hivearmor_agent_service_linux_amd64"), "agent-bytes");
+        Files.writeString(
+            tempDir.resolve("version.json"),
+            "{\"version\":\"11.0.0-staging\",\"updater_version\":\"11.0.0-staging\"}"
+        );
+        AgentPackageService service = new AgentPackageService(tempDir.toString(), objectMapper);
+
+        AgentPackageSummaryDTO summary = service.summary();
+        assertThat(summary.getLatestVersion()).isEqualTo("11.0.0-staging");
+        assertThat(summary.getUpdaterVersion()).isEqualTo("11.0.0-staging");
+        assertThat(summary.getPublishedCount()).isEqualTo(1);
+        assertThat(summary.getTotalCount()).isEqualTo(AgentPackageService.ALLOWED_FILENAMES.size());
+        assertThat(summary.getPackages()).hasSize(AgentPackageService.ALLOWED_FILENAMES.size());
+    }
+
+    @Test
     void rejectsNamesOutsideTheAllowList() {
-        AgentPackageService service = new AgentPackageService(tempDir.toString());
+        AgentPackageService service = new AgentPackageService(tempDir.toString(), objectMapper);
         assertThat(service.isAllowedFilename("../hivearmor_agent_service_linux_amd64")).isFalse();
         assertThat(service.isAllowedFilename("hivearmor_agent_service_linux_amd64/../../passwd")).isFalse();
         assertThat(service.resolveExistingFile("not-an-agent")).isEqualTo(Optional.empty());

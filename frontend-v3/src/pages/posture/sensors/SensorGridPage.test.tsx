@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SensorGridPage } from './SensorGridPage';
@@ -23,8 +24,23 @@ vi.mock('./AddAgentDrawer', () => ({
 vi.mock('./AgentPackageCatalog', () => ({
   AgentPackageCatalog: () => null,
 }));
+vi.mock('./SensorFleetSummary', () => ({
+  SensorFleetSummary: () => <div data-testid="sensor-fleet-summary" />,
+}));
 vi.mock('@/lib/auth/hasAuthority', () => ({
   hasAuthority: (role: string) => role === 'ROLE_ADMIN',
+}));
+vi.mock('@/store/auth.store', () => ({
+  useAuthStore: (selector?: (state: {
+    hasAnyRole: (roles: string[]) => boolean;
+    hasRole: (role: string) => boolean;
+  }) => unknown) => {
+    const state = {
+      hasAnyRole: (roles: string[]) => roles.includes('ROLE_ADMIN'),
+      hasRole: (role: string) => role === 'ROLE_ADMIN',
+    };
+    return typeof selector === 'function' ? selector(state) : state;
+  },
 }));
 
 const useQuery = vi.fn();
@@ -54,27 +70,44 @@ vi.mock('@/components/siem-data-grid', () => ({
 
 describe('SensorGridPage remote actions (GAP-SEC-05 / B1)', () => {
   beforeEach(() => {
-    useQuery.mockReturnValue({
-      data: [
-        {
-          agentId: '42',
-          hostname: 'wks-01',
-          platform: 'windows',
-          osVersion: '11',
-          agentVersion: '1.0.0',
-          connectionStatus: 'ONLINE',
-          lastSeen: '2026-08-23T00:00:00Z',
-          cpuUsage: null,
-          memUsage: null,
-          diskUsage: null,
-          collectorType: 'agent',
-          mode: null,
-          bundleVersion: null,
-        },
-      ],
-      isLoading: false,
-      isError: false,
-      refetch: vi.fn(),
+    useQuery.mockImplementation((opts: { queryKey?: unknown[] }) => {
+      const key = Array.isArray(opts.queryKey) ? String(opts.queryKey[0]) : '';
+      if (key === 'ha-agent-packages-summary') {
+        return {
+          data: {
+            latestVersion: '1.0.0',
+            updaterVersion: '1.0.0',
+            publishedCount: 1,
+            totalCount: 6,
+            packages: [],
+          },
+          isLoading: false,
+          isError: false,
+          refetch: vi.fn(),
+        };
+      }
+      return {
+        data: [
+          {
+            agentId: '42',
+            hostname: 'wks-01',
+            platform: 'windows',
+            osVersion: '11',
+            agentVersion: '1.0.0',
+            connectionStatus: 'ONLINE',
+            lastSeen: '2026-08-23T00:00:00Z',
+            cpuUsage: null,
+            memUsage: null,
+            diskUsage: null,
+            collectorType: 'agent',
+            mode: null,
+            bundleVersion: null,
+          },
+        ],
+        isLoading: false,
+        isError: false,
+        refetch: vi.fn(),
+      };
     });
   });
 
@@ -83,11 +116,20 @@ describe('SensorGridPage remote actions (GAP-SEC-05 / B1)', () => {
   });
 
   it('enables kill for Admin; isolate stays blocked until separately verified', () => {
-    render(<SensorGridPage />);
+    render(
+      <MemoryRouter>
+        <SensorGridPage />
+      </MemoryRouter>
+    );
 
     expect(screen.getByText(REMOTE_SENSOR_ISOLATE_BLOCKED_TITLE)).toBeTruthy();
+    expect(screen.getByText(/Kill process remains available/i)).toBeTruthy();
+    expect(screen.queryByText(/INTERNAL_KEY|ProcessCommand|\/api\/edr/i)).toBeNull();
     expect(screen.getByRole('button', { name: 'Isolate host (blocked)' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Kill process' })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: 'Restart agent (unavailable)' })).toBeDisabled();
+    expect(screen.getAllByRole('link', { name: 'Enrollment audit' }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /Add Agent/i })).toBeVisible();
+    expect(screen.getByLabelText('How to enroll an agent')).toBeVisible();
   });
 });
