@@ -130,6 +130,7 @@ describe('SensorGridPage remote actions (GAP-SEC-05 / B1)', () => {
     expect(screen.getByRole('button', { name: 'Restart agent (unavailable)' })).toBeDisabled();
     expect(screen.getAllByRole('link', { name: 'Enrollment audit' }).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Add Agent/i })).toBeVisible();
-    expect(screen.getByLabelText('How to enroll an agent')).toBeVisible();
+    expect(screen.getByText(/Install agents/i)).toBeVisible();
+    expect(screen.getByLabelText('Registered agents')).toBeVisible();
   });
 });

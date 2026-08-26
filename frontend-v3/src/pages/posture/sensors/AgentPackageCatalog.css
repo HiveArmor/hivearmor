@@ -1,9 +1,9 @@
 .agent-package-catalog {
-  margin: 12px 16px 16px;
+  margin: 0 0 12px;
   padding: 12px 16px;
-  background: var(--ha-surface-primary);
-  border: 1px solid var(--ha-border);
-  border-radius: var(--ha-radius-md);
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 
 .agent-package-catalog__header h2 {
