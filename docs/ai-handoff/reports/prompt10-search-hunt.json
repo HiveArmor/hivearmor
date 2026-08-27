@@ -3,7 +3,7 @@
   "status": "STAGING CANDIDATE",
   "base_tip": "355c3ba",
   "based_on_main_includes_pr95": true,
-  "tip_sha": "3c841091408b334f4ed531da4ab8b140929e4ab9",
+  "tip_sha": "f52f54774462e9e1b6796f30fb480e4829d62f0f",
   "feature_sha": "0e36e6f4fd840cd8f5aecdd0e9b263fe8f322433",
   "pr": "https://github.com/HiveArmor/hivearmor/pull/96",
   "decision": "RESTRUCTURE",
@@ -104,15 +104,26 @@
       { "item": "statusdock_no_fake_eps", "result": "pass", "note": "Historical / 0 EPS when SSE disconnected — not fixture 12840" }
     ]
   },
+  "post_smoke_polish": {
+    "note": "Committed onto PR #96 after HAND BACK — IndexScopePicker, compact pagination, absolute calendar",
+    "items": [
+      "IndexScopePicker — Splunk/Discover-style index scope menu (replaces HaCompactSelect dump)",
+      "Compact hunt-pagination (28px meta + Prev/Next)",
+      "Absolute time calendar month grid + HH:MM (AbsoluteCalendarFields)"
+    ],
+    "status": "committed_on_pr96"
+  },
   "gates": {
     "lint_changed": "pass",
     "type_check": "pass",
     "vitest_search_hunt": "pass (183 tests when run under frontend-v3)",
-    "build": "pass"
+    "build": "pass",
+    "type_check_post_polish": "pass"
   },
   "windows_agent": {
     "hostname": "EC2AMAZ-8F0Q7DL",
     "preferred_id": 20,
     "observed_in_results": true
-  }
+  },
+  "handoff_at": "2026-08-27T10:08:00Z"
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Calendar, ChevronDown, Clock } from 'lucide-react';
 
+import { AbsoluteCalendarFields, parseLocalDatetime, toLocalDatetime } from './AbsoluteCalendarFields';
 import { ALL_PRESETS, PRESET_LABELS, getTimeRangeLabel } from './timeRangeUtils';
 import type { TimeRange, TimeRangePreset } from './timeRangeUtils';
 
@@ -25,14 +26,13 @@ const RELATIVE_UNITS = [
 
 function formatLocalDatetime(iso: string): string {
   if (!iso) return '';
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return toLocalDatetime(new Date(iso));
 }
 
 function localDatetimeToIso(local: string): string {
-  if (!local) return '';
-  return new Date(local).toISOString();
+  const parsed = parseLocalDatetime(local);
+  if (!parsed) return '';
+  return parsed.toISOString();
 }
 
 export function TimeRangeSelector({
@@ -45,11 +45,12 @@ export function TimeRangeSelector({
   const [view, setView] = useState<PanelView>('presets');
   const [absFrom, setAbsFrom] = useState('');
   const [absTo, setAbsTo] = useState('');
+  const [absError, setAbsError] = useState<string | null>(null);
   const [relValue, setRelValue] = useState('4');
   const [relUnit, setRelUnit] = useState<string>('h');
   const panelRef = useRef<HTMLDivElement | null>(null);
 
-  // Close on outside click
+  // Close on outside click (deferred so opening click cannot dismiss)
   useEffect(() => {
     if (!isOpen) return undefined;
     const handleClick = (e: MouseEvent) => {
@@ -57,22 +58,27 @@ export function TimeRangeSelector({
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    const attachId = window.setTimeout(() => {
+      document.addEventListener('mousedown', handleClick);
+    }, 0);
+    return () => {
+      window.clearTimeout(attachId);
+      document.removeEventListener('mousedown', handleClick);
+    };
   }, [isOpen]);
 
-  // Initialize absolute inputs when opening custom view
+  // Initialize absolute inputs when opening Absolute tab
   useEffect(() => {
-    if (view === 'absolute') {
-      if (value.type === 'custom') {
-        setAbsFrom(formatLocalDatetime(value.from));
-        setAbsTo(formatLocalDatetime(value.to));
-      } else {
-        const now = new Date();
-        const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
-        setAbsFrom(formatLocalDatetime(fourHoursAgo.toISOString()));
-        setAbsTo(formatLocalDatetime(now.toISOString()));
-      }
+    if (view !== 'absolute') return;
+    setAbsError(null);
+    if (value.type === 'custom') {
+      setAbsFrom(formatLocalDatetime(value.from));
+      setAbsTo(formatLocalDatetime(value.to));
+    } else {
+      const now = new Date();
+      const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+      setAbsFrom(toLocalDatetime(fourHoursAgo));
+      setAbsTo(toLocalDatetime(now));
     }
   }, [view, value]);
 
@@ -82,10 +88,19 @@ export function TimeRangeSelector({
   };
 
   const applyAbsolute = useCallback(() => {
-    if (absFrom && absTo) {
-      onChange({ type: 'custom', from: localDatetimeToIso(absFrom), to: localDatetimeToIso(absTo) });
-      setIsOpen(false);
+    const fromParsed = parseLocalDatetime(absFrom);
+    const toParsed = parseLocalDatetime(absTo);
+    if (!fromParsed || !toParsed) {
+      setAbsError('Select a valid From and To date/time.');
+      return;
     }
+    if (fromParsed.getTime() >= toParsed.getTime()) {
+      setAbsError('From must be earlier than To.');
+      return;
+    }
+    setAbsError(null);
+    onChange({ type: 'custom', from: localDatetimeToIso(absFrom), to: localDatetimeToIso(absTo) });
+    setIsOpen(false);
   }, [absFrom, absTo, onChange]);
 
   const applyRelative = useCallback(() => {
@@ -115,7 +130,12 @@ export function TimeRangeSelector({
       </button>
 
       {isOpen && !disabled && (
-        <div className="ha-time-range__panel" role="dialog" aria-label="Select time range">
+        <div
+          className="ha-time-range__panel"
+          role="dialog"
+          aria-label="Select time range"
+          data-view={view}
+        >
           <nav className="ha-time-range__tabs" aria-label="Time range type">
             <button type="button" data-active={view === 'presets' || undefined} onClick={() => setView('presets')}>
               <Clock size={13} /> Quick
@@ -174,27 +194,19 @@ export function TimeRangeSelector({
 
           {view === 'absolute' && (
             <div className="ha-time-range__absolute">
-              <label>
-                <span>From</span>
-                <input
-                  type="text"
-                  value={absFrom}
-                  onChange={(e) => setAbsFrom(e.target.value)}
-                  placeholder="2026-08-04T10:00"
-                  aria-label="Start date and time (YYYY-MM-DDTHH:MM)"
-                />
-              </label>
-              <label>
-                <span>To</span>
-                <input
-                  type="text"
-                  value={absTo}
-                  onChange={(e) => setAbsTo(e.target.value)}
-                  placeholder="2026-08-04T14:00"
-                  aria-label="End date and time (YYYY-MM-DDTHH:MM)"
-                />
-              </label>
-              <small className="ha-time-range__hint">Format: YYYY-MM-DDTHH:MM (local time)</small>
+              <AbsoluteCalendarFields
+                from={absFrom}
+                to={absTo}
+                onFromChange={(next) => {
+                  setAbsFrom(next);
+                  setAbsError(null);
+                }}
+                onToChange={(next) => {
+                  setAbsTo(next);
+                  setAbsError(null);
+                }}
+              />
+              {absError && <p className="ha-time-range__error" role="alert">{absError}</p>}
               <button
                 type="button"
                 className="ha-time-range__apply"

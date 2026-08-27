@@ -39,6 +39,11 @@
   overflow: visible;
 }
 
+.ha-time-range__panel[data-view='absolute'] {
+  min-width: 308px;
+  width: 308px;
+}
+
 .ha-time-range__tabs {
   display: flex;
   border-bottom: 1px solid var(--ha-border-subtle, var(--ha-border));
@@ -191,6 +196,169 @@
 .ha-time-range__absolute input[type="datetime-local"]:focus {
   outline: none;
   border-color: var(--ha-border-focus, var(--ha-primary));
+}
+
+.ha-time-range__calendar {
+  display: grid;
+  gap: 8px;
+}
+
+.ha-time-range__field-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.ha-time-range__field-tabs > button {
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--ha-border-default, var(--ha-border));
+  border-radius: var(--ha-radius-base, 4px);
+  background: var(--ha-surface-input, var(--ha-surface-primary));
+  color: var(--ha-foreground-primary, var(--ha-text-primary));
+  cursor: pointer;
+  text-align: left;
+}
+
+.ha-time-range__field-tabs > button > span {
+  color: var(--ha-foreground-tertiary);
+  font: 9px/1 var(--ha-font-ui);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ha-time-range__field-tabs > button > strong {
+  overflow: hidden;
+  font: 11px/1.25 var(--ha-font-ui);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ha-time-range__field-tabs > button[data-active] {
+  border-color: var(--ha-action-primary, var(--ha-primary));
+  background: color-mix(in srgb, var(--ha-action-primary, var(--ha-primary)) 12%, transparent);
+}
+
+.ha-time-range__month-nav {
+  display: grid;
+  grid-template-columns: 28px 1fr 28px;
+  align-items: center;
+  gap: 4px;
+}
+
+.ha-time-range__month-nav > strong {
+  color: var(--ha-foreground-primary, var(--ha-text-primary));
+  font: 12px/1.2 var(--ha-font-ui);
+  font-weight: 650;
+  text-align: center;
+}
+
+.ha-time-range__month-nav > button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--ha-border-default, var(--ha-border));
+  border-radius: var(--ha-radius-base, 4px);
+  background: var(--ha-surface-input, var(--ha-surface-primary));
+  color: var(--ha-foreground-secondary, var(--ha-text-secondary));
+  cursor: pointer;
+}
+
+.ha-time-range__month-nav > button:hover {
+  color: var(--ha-foreground-primary, var(--ha-text-primary));
+  background: var(--ha-surface-hover);
+}
+
+.ha-time-range__weekday-row,
+.ha-time-range__day-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.ha-time-range__weekday-row > span {
+  padding: 2px 0;
+  color: var(--ha-foreground-tertiary);
+  font: 9px/1 var(--ha-font-ui);
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ha-time-range__day {
+  display: grid;
+  min-height: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: var(--ha-radius-sm, 2px);
+  background: transparent;
+  color: var(--ha-foreground-primary, var(--ha-text-primary));
+  font: 11px/1 var(--ha-font-ui);
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.ha-time-range__day--empty {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.ha-time-range__day:hover:not(.ha-time-range__day--empty) {
+  background: var(--ha-surface-hover);
+}
+
+.ha-time-range__day[data-range] {
+  background: color-mix(in srgb, var(--ha-action-primary, var(--ha-primary)) 14%, transparent);
+}
+
+.ha-time-range__day[data-from],
+.ha-time-range__day[data-to],
+.ha-time-range__day[data-active] {
+  background: var(--ha-action-primary, var(--ha-primary));
+  color: var(--ha-foreground-on-action, #0b0919);
+  font-weight: 700;
+}
+
+.ha-time-range__time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.ha-time-range__time-row > span {
+  color: var(--ha-foreground-secondary, var(--ha-text-secondary));
+  font: var(--ha-type-metadata, 11px/1.4 var(--ha-font-ui));
+}
+
+.ha-time-range__time-row > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ha-time-range__time-row input {
+  width: 44px;
+  min-width: 44px;
+  padding: 4px 6px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.ha-time-range__time-row > div > span {
+  color: var(--ha-foreground-tertiary);
+}
+
+.ha-time-range__error {
+  margin: 0;
+  color: var(--ha-critical, var(--ha-severity-critical));
+  font: var(--ha-type-metadata, 11px/1.4 var(--ha-font-ui));
 }
 
 .ha-time-range__apply {
