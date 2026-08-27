@@ -10,6 +10,8 @@ import type {
   EntityEventDTO,
   EntityListFilters,
   EntityListResponse,
+  EntityRiskLevel,
+  EntityRiskTrend,
 } from '@/types/entity.types';
 
 export const entityFixtureMode = import.meta.env.DEV
@@ -101,6 +103,40 @@ export async function fetchEntityEvents(id: string, signal?: AbortSignal): Promi
     return getFoundationEntityEvents(id);
   }
   return apiClient.get<EntityEventDTO[]>(`/ha-entities/${id}/events`, { signal, params: { size: 100 } });
+}
+
+/** Confirmed risk projection for entity dossier (Prompt 12). */
+export interface EntityRiskDTO {
+  id?: string;
+  riskScore?: number;
+  riskLevel?: EntityRiskLevel;
+  riskTrend?: EntityRiskTrend;
+  riskDrivers?: Array<{ id?: string; label?: string; contribution?: number; description?: string }>;
+  topAlertCategories?: string[];
+  lastCalculated?: string | null;
+}
+
+/**
+ * Fetch risk detail for an entity — GET /api/ha-entities/{id}/risk
+ */
+export async function fetchEntityRisk(id: string, signal?: AbortSignal): Promise<EntityRiskDTO> {
+  if (entityFixtureMode) {
+    const detail = await fetchEntityDetail(id, signal);
+    return {
+      id: detail.id,
+      riskScore: detail.riskScore,
+      riskLevel: detail.riskLevel,
+      riskTrend: detail.riskTrend,
+      riskDrivers: detail.riskDrivers?.map((driver) => ({
+        id: driver.id,
+        label: driver.label,
+        contribution: driver.contribution,
+        description: driver.description,
+      })),
+      lastCalculated: detail.riskCalculatedAt ?? null,
+    };
+  }
+  return apiClient.get<EntityRiskDTO>(`/ha-entities/${id}/risk`, { signal });
 }
 
 /**

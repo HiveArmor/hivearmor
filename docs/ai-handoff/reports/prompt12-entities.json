@@ -1,0 +1,148 @@
+{
+  "prompt": "12-entities-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "87cc44b",
+  "based_on_main_includes_pr97": true,
+  "tip_sha": "PENDING_COMMIT",
+  "pr": "PENDING",
+  "decision": "RESTRUCTURE",
+  "routes": [
+    "/entities",
+    "/entities/inventory",
+    "/entities/:id/dossier",
+    "/entities/:id → dossier redirect"
+  ],
+  "job_sentence": "Entity inventory — find hosts, users, and IPs by risk, open a dossier to understand exposure, then pivot into hunt or response.",
+  "distinction": {
+    "search": "/search = ad-hoc hunt / event search",
+    "investigations": "/investigations = working evidence sessions (pre-incident)",
+    "incidents": "/incidents = owned response cases",
+    "entities": "/entities = entity inventory + risk dossier pivots"
+  },
+  "ia": {
+    "inventory": {
+      "removed": [
+        "Entity Intelligence investigation branding",
+        "Permanent 5-badge summary strip (non-confirmed /summary chrome)",
+        "Criticality / Rising / Active-alerts permanent toggles",
+        "Context drawer as primary row action"
+      ],
+      "added": [
+        "ENTITIES_JOB_SENTENCE inventory/risk-pivot copy",
+        "Mission Control · Search · Alerts · Investigations · Incidents · Sensors · UEBA risk meta links",
+        "Compact Type + Risk + Search + Sort filters",
+        "Primary grid min-height 50vh",
+        "Row click → /entities/:id/dossier"
+      ],
+      "kept": [
+        "Confirmed GET /api/ha-entities via listEntities",
+        "AG Grid EntityInventoryTable",
+        "Fixture-disabled production path",
+        "/entities/inventory alias"
+      ]
+    },
+    "dossier": {
+      "removed": [
+        "getDossier (/dossier) as sole identity source",
+        "BaselineMetricsPanel fake-baseline claims",
+        "AttackTechniquesPanel without confirmed projection",
+        "RelationshipGraphPanel / constellation rewrite",
+        "ActivityTimeline via unconfirmed /activity"
+      ],
+      "added": [
+        "ENTITY_DOSSIER_JOB_SENTENCE",
+        "Confirmed fetchEntityDetail + fetchEntityRisk + fetchEntityAlerts + fetchEntityEvents",
+        "Identity header + risk panel with empty/5xx honesty",
+        "Related alerts/events tabs with honesty",
+        "Pivots: Hunt · Alerts · Investigations · Incidents · Sensors (hosts)",
+        "Human role labels on access denial"
+      ],
+      "kept": [
+        "Canonical /entities/:id/dossier route",
+        "EntityIdToDossierRedirect (A2-ENT-01)",
+        "EntityDetailPage not remounted in router"
+      ]
+    }
+  },
+  "backend": {
+    "list": {
+      "path": "GET /api/ha-entities",
+      "staging": {
+        "status": 200,
+        "bytes": 53,
+        "item_count": 0,
+        "total": 0,
+        "note": "hive_uba_entity_risk count=0 on staging"
+      }
+    },
+    "summary": {
+      "path": "GET /api/ha-entities/summary",
+      "staging": {
+        "status": 200,
+        "bytes": 251,
+        "note": "Exists but UI no longer depends on permanent KPI strip"
+      }
+    },
+    "detail": {
+      "path": "GET /api/ha-entities/{id}",
+      "staging": {
+        "status": 500,
+        "probe_ids": ["EC2AMAZ-8F0Q7DL", "20"],
+        "note": "No inventory rows; bare {id} returns 500 — UI honesty, no synthetic dossier"
+      }
+    },
+    "risk": {
+      "path": "GET /api/ha-entities/{id}/risk",
+      "staging": {
+        "status": 500,
+        "note": "Same probe ids; UI honesty"
+      }
+    },
+    "alerts": {
+      "path": "GET /api/ha-entities/{id}/alerts",
+      "staging": {
+        "status": 404,
+        "note": "Probe host id; honesty empty/unavailable"
+      }
+    },
+    "events": {
+      "path": "GET /api/ha-entities/{id}/events",
+      "staging": {
+        "status": 500,
+        "note": "Probe host id; honesty"
+      }
+    },
+    "legacy": {
+      "path": "GET /api/ha-entities-legacy",
+      "staging": {
+        "status": 200,
+        "bytes": 3,
+        "note": "Empty array; legacy detail/risk 404 for hostname"
+      }
+    }
+  },
+  "ux_smoke": {
+    "deploy": "PENDING",
+    "ui_shell": {
+      "path": "/entities",
+      "https_status": "PENDING"
+    },
+    "headed_browser": false,
+    "checks": []
+  },
+  "windows_agent": {
+    "hostname": "EC2AMAZ-8F0Q7DL",
+    "preferred_id": 20,
+    "agents_n": 18,
+    "host_match_rows": 8,
+    "id20_present": true,
+    "note": "Agent present ONLINE path useful, but entity inventory table empty — no host entity row to open"
+  },
+  "gates": {
+    "lint_changed": "pass",
+    "type_check": "pass",
+    "vitest_entities": "pass (21)",
+    "build": "pass"
+  },
+  "handoff_at": "PENDING"
+}
