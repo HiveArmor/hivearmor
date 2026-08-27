@@ -185,11 +185,14 @@ export async function listSavedQueries(): Promise<SavedQueryDTO[]> {
   return apiClient.get<SavedQueryDTO[]>('/ha-saved-queries');
 }
 
-export async function saveQuery(query: SavedQueryDTO): Promise<SavedQueryDTO> {
+export async function saveQuery(
+  query: Pick<SavedQueryDTO, 'queryName' | 'queryText'> &
+    Partial<Pick<SavedQueryDTO, 'indexPattern' | 'timeRange' | 'filters' | 'isShared'>>,
+): Promise<SavedQueryDTO> {
   return apiClient.post<SavedQueryDTO>('/ha-saved-queries', query);
 }
 
-export async function deleteSavedQuery(id: string): Promise<void> {
+export async function deleteSavedQuery(id: number | string): Promise<void> {
   return apiClient.delete<void>(`/ha-saved-queries/${id}`);
 }
 

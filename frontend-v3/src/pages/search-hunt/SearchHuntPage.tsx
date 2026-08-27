@@ -1,18 +1,24 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { EChartsOption } from 'echarts';
 import {
   BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleStop, Clock3, Code2, Columns3, Database, FileClock,
-  FolderClock, History, Keyboard, ListFilter, Play, Save, Search, ShieldAlert, X,
+  FolderClock, History, Keyboard, ListFilter, Play, Save, Search, ShieldAlert, Sparkles, X,
 } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { EventContextDrawer } from './components/EventContextDrawer';
 import { EventDetailFlyout } from './components/EventDetailFlyout';
 import { FieldBrowser } from './components/FieldBrowser';
 import { HuntActionDrawer } from './components/HuntActionDrawer';
+import {
+  huntIndexScopeLabel,
+  IndexScopePicker,
+  toHuntIndexPattern,
+  type HuntIndexScope,
+} from './components/IndexScopePicker';
 import { PromotionActionBar, PromotionModal } from './components/PromotionModal';
 import { QueryCapabilitiesPanel } from './components/QueryCapabilitiesPanel';
 import { SaveSearchModal } from './components/SaveSearchModal';
@@ -29,20 +35,28 @@ import {
 import type {
   HuntActionRequest, HuntEvent, HuntSearchRequest, HuntSearchResponse,
 } from './searchHunt.types';
+import { useConfirmedSavedQueries } from './useConfirmedSavedQueries';
 
-import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { TimeRangeSelector } from '@/components/time-range-selector/TimeRangeSelector';
 import { resolveTimeRange } from '@/components/time-range-selector/timeRangeUtils';
 import type { TimeRange } from '@/components/time-range-selector/timeRangeUtils';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
-import { useSavedHunts } from '@/hooks/useSavedHunts';
 import { ApiError } from '@/lib/apiClient';
+import { ROLE_LABELS, ROLES } from '@/lib/roles';
+import { runNlQuery, type HaNlQueryResult } from '@/services/search.service';
 import { useAuthStore } from '@/store/auth.store';
 import type { HuntHistoryEntry } from '@/types/search';
 
 import './SearchHuntPage.css';
+
+/** Distinct from Queue (triage), Alerts (inventory), Findings, Incidents (cases). */
+export const SEARCH_HUNT_JOB_SENTENCE =
+  'Ad-hoc hunt and event search — write a query, inspect hits, then pivot into an investigation or incident when ownership is required.';
+
+const PROMOTE_DENIED = `Required permission: ${ROLE_LABELS[ROLES.ANALYST]}, ${ROLE_LABELS[ROLES.SOC_MANAGER]}, or ${ROLE_LABELS[ROLES.ADMIN]}`;
+const SAVE_DENIED = `Required permission: ${ROLE_LABELS[ROLES.USER]}, ${ROLE_LABELS[ROLES.ANALYST]}, ${ROLE_LABELS[ROLES.SOC_MANAGER]}, or ${ROLE_LABELS[ROLES.ADMIN]}`;
 
 const QueryEditor = lazy(() => import('./components/QueryBar').then((module) => ({ default: module.QueryBar })));
 const LazyHaChart = lazy(() => import('@/components/ha-chart/HaChart').then((module) => ({ default: module.HaChart })));
@@ -85,7 +99,13 @@ export function SearchHuntPage(): JSX.Element {
   const [routeSearchParams] = useSearchParams();
   const routedQuery = routeSearchParams.get('q')?.trim() ?? '';
   const selectedTenantId = useAuthStore((state) => state.selectedTenantId);
+  const hasAnyRole = useAuthStore((state) => state.hasAnyRole);
+  const canPromote = hasAnyRole([ROLES.ANALYST, ROLES.SOC_MANAGER, ROLES.ADMIN, 'ROLE_SOC_ANALYST']);
+  const canSaveQuery = hasAnyRole([ROLES.USER, ROLES.ANALYST, ROLES.SOC_MANAGER, ROLES.ADMIN]);
   const [query, setQuery] = useState(() => routedQuery || DEFAULT_HUNT_QUERY);
+  const [nlQuestion, setNlQuestion] = useState('');
+  const [nlProvenance, setNlProvenance] = useState<HaNlQueryResult | null>(null);
+  const [nlError, setNlError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>({ type: 'preset', preset: '24h' });
   const [committed, setCommitted] = useState<HuntSearchRequest>(() =>
     makeRequest(
@@ -100,8 +120,8 @@ export function SearchHuntPage(): JSX.Element {
     try { const saved = localStorage.getItem('ha_hunt_columns'); return saved ? JSON.parse(saved) : DEFAULT_COLUMNS; } catch { return DEFAULT_COLUMNS; }
   });
   const [density, setDensity] = useRowDensity();
-  const [selectedIndex, setSelectedIndex] = useState<string>('all');
-  const [fieldRailOpen, setFieldRailOpen] = useState(true);
+  const [selectedIndex, setSelectedIndex] = useState<HuntIndexScope>('all');
+  const [fieldRailOpen, setFieldRailOpen] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState<'saved' | 'history' | null>(null);
   const [managerPanelOpen, setManagerPanelOpen] = useState(false);
   const [flyoutEventId, setFlyoutEventId] = useState<string | null>(null);
@@ -167,15 +187,51 @@ export function SearchHuntPage(): JSX.Element {
     retry: false,
   });
 
-  const { data: savedHunts = [], isError: savedHuntsError } = useSavedHunts();
+  const { data: savedHunts = [], isError: savedHuntsError, isFetching: savedHuntsLoading } = useConfirmedSavedQueries();
   const events = useMemo(() => searchQuery.data?.items ?? [], [searchQuery.data?.items]);
   const summary = searchQuery.data ?? firstPageSummary;
   const histogram = useMemo(() => pageIndex === 0
     ? searchQuery.data?.histogram ?? firstPageSummary?.histogram ?? []
     : firstPageSummary?.histogram ?? [], [firstPageSummary?.histogram, pageIndex, searchQuery.data?.histogram]);
+  const hasLiveHistogram = histogram.length > 0;
   const permissionDenied = searchQuery.error instanceof ApiError && searchQuery.error.status === 403;
   const schemaPermissionDenied = schemaQuery.error instanceof ApiError && schemaQuery.error.status === 403;
   const staleVisible = searchQuery.isFetching && events.length > 0;
+
+  const nlMutation = useMutation({
+    mutationFn: (question: string) =>
+      runNlQuery({
+        question,
+        indexPattern: toHuntIndexPattern(selectedIndex),
+      }),
+    onSuccess: (result) => {
+      setNlError(null);
+      setNlProvenance(result);
+      const filters = result.suggestedFilters ?? [];
+      if (filters.length > 0) {
+        const fragments = filters
+          .filter((item) => item.field && item.value)
+          .map((item) => {
+            const value = String(item.value);
+            const escaped = /[\s:()]/.test(value) ? `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"` : value;
+            return `${item.field}:${escaped}`;
+          });
+        if (fragments.length > 0) {
+          setQuery((current) => `${current.trim()}${current.trim() ? ' AND ' : ''}${fragments.join(' AND ')}`);
+        }
+      }
+    },
+    onError: (error: unknown) => {
+      setNlProvenance(null);
+      if (error instanceof ApiError && error.status === 503) {
+        setNlError('Natural-language search is unavailable (AI service not configured). KQL hunt still works.');
+      } else if (error instanceof ApiError && error.status === 403) {
+        setNlError(`NL translate denied — ${SAVE_DENIED}`);
+      } else {
+        setNlError('NL translate failed. Rephrase the question or continue with KQL.');
+      }
+    },
+  });
 
   // SSE search progress stream — connects when search is running
   const searchStreamStatus: 'running' | 'completed' | 'cancelled' | 'idle' = searchQuery.isFetching ? 'running' : 'idle';
@@ -225,7 +281,13 @@ export function SearchHuntPage(): JSX.Element {
     setPageCursors([null]);
     setPageIndex(0);
     setFirstPageSummary(null);
-    setCommitted(makeRequest(nextQuery, nextTime, selectedTenantId === null ? 'authorized' : String(selectedTenantId), visibleColumns, selectedIndex === 'all' ? undefined : selectedIndex));
+    setCommitted(makeRequest(
+      nextQuery,
+      nextTime,
+      selectedTenantId === null ? 'authorized' : String(selectedTenantId),
+      visibleColumns,
+      toHuntIndexPattern(selectedIndex),
+    ));
   }, [query, selectedIndex, selectedTenantId, timeRange, visibleColumns]);
 
   const stopSearch = useCallback((): void => {
@@ -351,11 +413,34 @@ export function SearchHuntPage(): JSX.Element {
   return (
     <section className="hunt-page" aria-labelledby="hunt-page-title" style={{ '--hunt-sticky-query-height': `${queryWorkspaceHeight}px` } as CSSProperties}>
       <header className="hunt-page__identity">
-        <div className="hunt-page__title"><span className="hunt-page__icon"><Search size={17} /></span><div><small>INVESTIGATION</small><h1 id="hunt-page-title">Search &amp; Hunt</h1></div></div>
+        <div className="hunt-page__title">
+          <span className="hunt-page__icon"><Search size={17} /></span>
+          <div>
+            <small>HUNT CONSOLE</small>
+            <h1 id="hunt-page-title">Search &amp; Hunt</h1>
+            <p className="hunt-page__job">{SEARCH_HUNT_JOB_SENTENCE}</p>
+          </div>
+        </div>
         <div className="hunt-page__identity-actions">
           <span className="hunt-page__shortcut"><Keyboard size={13} />⌘/Ctrl + Enter to run · J/K event navigation</span>
         </div>
       </header>
+
+      <p className="hunt-page__meta">
+        <Link to="/dashboard">Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/alerts">Alerts</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/investigations">Investigations</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/incidents">Incidents</Link>
+        {!canPromote && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span className="hunt-page__meta-warn" title={PROMOTE_DENIED}>Promote denied — {PROMOTE_DENIED}</span>
+          </>
+        )}
+      </p>
 
       {searchHuntFixtureMode && <div className="hunt-page__fixture" role="status"><span><strong>Design fixture:</strong> fictional normalized events are enabled for visual review.</span><span>Production never receives these records.</span></div>}
 
@@ -365,6 +450,48 @@ export function SearchHuntPage(): JSX.Element {
             <QueryEditor value={query} onChange={setQuery} onExecute={() => runSearch()} fields={schemaQuery.data ?? []} disabled={searchQuery.isFetching && events.length === 0} />
           </Suspense>
         </div>
+        <div className="hunt-nl-strip" aria-label="Natural language assist">
+          <Sparkles size={13} aria-hidden="true" />
+          <input
+            type="text"
+            value={nlQuestion}
+            onChange={(event) => setNlQuestion(event.target.value)}
+            placeholder="Ask in natural language (optional) — translates via /api/ha-search/nl-query"
+            aria-label="Natural language hunt question"
+            disabled={nlMutation.isPending}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && nlQuestion.trim()) {
+                event.preventDefault();
+                nlMutation.mutate(nlQuestion.trim());
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="hunt-control-button"
+            disabled={!nlQuestion.trim() || nlMutation.isPending}
+            onClick={() => nlMutation.mutate(nlQuestion.trim())}
+          >
+            {nlMutation.isPending ? 'Translating…' : 'Translate NL'}
+          </button>
+        </div>
+        {(nlError || nlProvenance) && (
+          <div className="hunt-nl-provenance" role="status">
+            {nlError && <p className="hunt-nl-provenance__error">{nlError}</p>}
+            {nlProvenance?.explanation && (
+              <p><strong>NL explanation:</strong> {nlProvenance.explanation}</p>
+            )}
+            {nlProvenance?.query != null && (
+              <details>
+                <summary>Generated DSL provenance (not auto-executed — run KQL hunt separately)</summary>
+                <pre>{typeof nlProvenance.query === 'string' ? nlProvenance.query : JSON.stringify(nlProvenance.query, null, 2)}</pre>
+              </details>
+            )}
+            {nlProvenance && !nlProvenance.explanation && nlProvenance.query == null && !nlError && (
+              <p>NL endpoint returned an empty translation. Continue with KQL.</p>
+            )}
+          </div>
+        )}
         <div className="hunt-query-workspace__controls" aria-label="Search controls">
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setFieldRailOpen((open) => !open)} aria-pressed={fieldRailOpen} aria-label="Toggle filters and field values" title="Filters and field values"><ListFilter size={14} /></button>
           <div className="hunt-language-picker">
@@ -377,20 +504,29 @@ export function SearchHuntPage(): JSX.Element {
             </div>}
           </div>
           <TimeRangeSelector value={timeRange} onChange={setTimeRange} disabled={searchQuery.isFetching && events.length === 0} />
-          <HaCompactSelect ariaLabel="Data source index" label="Index" value={selectedIndex} onChange={setSelectedIndex} options={[{ value: 'all', label: 'All sources (logs + alerts)' }, { value: 'log', label: 'Raw logs' }, { value: 'event', label: 'Endpoint events' }, { value: 'alert', label: 'Alerts' }]} />
+          <IndexScopePicker
+            value={selectedIndex}
+            onChange={(next) => {
+              setSelectedIndex(next);
+              setLanguageOpen(false);
+              setLibraryOpen(null);
+            }}
+            disabled={searchQuery.isFetching && events.length === 0}
+          />
           <button type="button" className="hunt-control-button" onClick={() => setLibraryOpen(libraryOpen === 'history' ? null : 'history')} aria-expanded={libraryOpen === 'history'}><History size={13} />History</button>
-          <button type="button" className="hunt-control-button" onClick={() => setLibraryOpen(libraryOpen === 'saved' ? null : 'saved')} aria-expanded={libraryOpen === 'saved'}><FolderClock size={13} />Saved hunts</button>
+          <button type="button" className="hunt-control-button" onClick={() => setLibraryOpen(libraryOpen === 'saved' ? null : 'saved')} aria-expanded={libraryOpen === 'saved'}><FolderClock size={13} />Saved</button>
           <button type="button" className="hunt-control-button" onClick={() => setManagerPanelOpen((open) => !open)} aria-expanded={managerPanelOpen} title="Search manager panel"><Database size={13} />Manager</button>
-          <button type="button" className="hunt-control-button" onClick={() => setSaveOpen(true)} disabled={!query.trim()} title={!query.trim() ? 'Enter a reusable query before saving' : 'Save hunt'}><Save size={13} />Save</button>
+          <button type="button" className="hunt-control-button" onClick={() => setSaveOpen(true)} disabled={!query.trim() || !canSaveQuery} title={!canSaveQuery ? SAVE_DENIED : !query.trim() ? 'Enter a reusable query before saving' : 'Save query'}><Save size={13} />Save</button>
           <button type="button" className="hunt-control-button" onClick={() => setCapabilitiesOpen((open) => !open)} aria-expanded={capabilitiesOpen} title="Query language reference"><BookOpen size={13} />Help</button>
           <span className="hunt-query-workspace__spacer" />
           {searchQuery.isFetching ? <button type="button" className="hunt-button hunt-button--stop" onClick={stopSearch}><CircleStop size={14} />Cancel</button> : <button type="button" className="hunt-button hunt-button--primary" onClick={() => runSearch()} title={!query.trim() ? 'Load the newest 100 events in the selected scope' : 'Run KQL hunt'}><Play size={14} />Run search</button>}
         </div>
-        {libraryOpen && <aside className="hunt-library" aria-label={libraryOpen === 'saved' ? 'Saved hunts' : 'Query history'}>
-          <header><div>{libraryOpen === 'saved' ? <FolderClock size={15} /> : <History size={15} />}<strong>{libraryOpen === 'saved' ? 'Saved hunts' : 'Query history'}</strong></div><button type="button" onClick={() => setLibraryOpen(null)} aria-label="Close query library"><X size={14} /></button></header>
+        {libraryOpen && <aside className="hunt-library" aria-label={libraryOpen === 'saved' ? 'Saved queries' : 'Query history'}>
+          <header><div>{libraryOpen === 'saved' ? <FolderClock size={15} /> : <History size={15} />}<strong>{libraryOpen === 'saved' ? 'Saved queries' : 'Query history'}</strong></div><button type="button" onClick={() => setLibraryOpen(null)} aria-label="Close query library"><X size={14} /></button></header>
           <div className="hunt-library__list">
-            {libraryOpen === 'saved' && savedHuntsError && <p role="alert">Saved hunts are unavailable. Your active query is unchanged.</p>}
-            {libraryOpen === 'saved' && !savedHuntsError && savedHunts.length === 0 && <p>No saved hunts are available.</p>}
+            {libraryOpen === 'saved' && savedHuntsError && <p role="alert">Saved queries are unavailable (/api/ha-saved-queries). Your active query is unchanged.</p>}
+            {libraryOpen === 'saved' && !savedHuntsError && savedHuntsLoading && <p>Loading saved queries…</p>}
+            {libraryOpen === 'saved' && !savedHuntsError && !savedHuntsLoading && savedHunts.length === 0 && <p>No saved queries yet. Use Save to persist to /api/ha-saved-queries.</p>}
             {libraryOpen === 'saved' && savedHunts.map((hunt) => <button type="button" key={hunt.id} onClick={() => { setQuery(hunt.queryDsl ?? hunt.nlQuery ?? ''); setLibraryOpen(null); }}><span><strong>{hunt.huntName}</strong><small>{hunt.isShared ? 'Shared' : 'Private'} · {hunt.createdBy}</small></span><code>{hunt.queryDsl ?? hunt.nlQuery ?? 'No query text'}</code></button>)}
             {libraryOpen === 'history' && history.length === 0 && <p>No searches have been run in this browser.</p>}
             {libraryOpen === 'history' && history.map((item, index) => <button type="button" key={`${item.timestamp}-${index}`} onClick={() => { setQuery(item.query); setLibraryOpen(null); }}><span><strong>{new Date(item.timestamp).toLocaleString()}</strong><small>{item.resultCount.toLocaleString()} results</small></span><code>{item.query}</code></button>)}
@@ -398,6 +534,7 @@ export function SearchHuntPage(): JSX.Element {
         </aside>}
         <div className="hunt-execution-strip" role="status" aria-live="polite">
           <span data-state={searchQuery.isFetching ? 'running' : summary ? 'complete' : 'idle'}><i aria-hidden="true" />{searchQuery.isFetching ? 'Query running' : summary ? 'Query complete' : 'Ready'}</span>
+          <span title="Active index scope for the next Run search"><Database size={12} />Index · {huntIndexScopeLabel(selectedIndex)}</span>
           <span><Database size={12} />{summary ? `${summary.totalIsExact ? '' : 'About '}${summary.totalApproximate.toLocaleString()} events` : 'No result snapshot'}</span>
           <span><Clock3 size={12} />{summary ? `${summary.tookMs.toLocaleString()} ms` : 'Duration —'}</span>
           <span><FileClock size={12} />{summary ? `Snapshot ${new Date(summary.snapshotAt).toLocaleTimeString()}` : 'Freshness —'}</span>
@@ -419,8 +556,28 @@ export function SearchHuntPage(): JSX.Element {
 
           {!permissionDenied && !(searchQuery.isError && events.length === 0) && <>
             <section className="hunt-histogram" aria-label="Event distribution over time">
-              <header><div><strong>Event distribution</strong><span>Click a bucket to narrow the active time range</span></div><span>{histogram.length} buckets</span></header>
-              <div className="hunt-histogram__chart">{histogram.length ? <Suspense fallback={<div className="hunt-chart-skeleton" />}><LazyHaChart option={histogramOption} height="100%" onChartClick={handleHistogramClick} ariaLabel="Event histogram" ariaDescription="Event counts over the current query time range. Activate a bucket to narrow the search." /></Suspense> : <div className="hunt-chart-skeleton" />}</div>
+              <header>
+                <div>
+                  <strong>Event distribution</strong>
+                  <span>
+                    {hasLiveHistogram
+                      ? 'Click a bucket to narrow the active time range'
+                      : 'Histogram unavailable until the search response includes time buckets — counts are not invented'}
+                  </span>
+                </div>
+                <span>{hasLiveHistogram ? `${histogram.length} buckets` : 'No buckets'}</span>
+              </header>
+              <div className="hunt-histogram__chart">
+                {hasLiveHistogram ? (
+                  <Suspense fallback={<div className="hunt-chart-skeleton" />}>
+                    <LazyHaChart option={histogramOption} height="100%" onChartClick={handleHistogramClick} ariaLabel="Event histogram" ariaDescription="Event counts over the current query time range. Activate a bucket to narrow the search." />
+                  </Suspense>
+                ) : (
+                  <div className="hunt-histogram__empty" role="status">
+                    No live histogram for this snapshot. Results below reflect the query response only.
+                  </div>
+                )}
+              </div>
             </section>
             <div className="hunt-results-toolbar">
               <div><strong>Events</strong><span>{events.length > 0 ? `${firstVisibleRow.toLocaleString()}–${lastVisibleRow.toLocaleString()} loaded` : 'No rows loaded'}{searchQuery.data?.hasMore ? ' · more available' : ''}</span></div>
@@ -438,26 +595,47 @@ export function SearchHuntPage(): JSX.Element {
               {events.length > 0 ? <SearchResultsGrid key={`${summary?.searchId ?? 'pending'}-${pageIndex}`} events={events} loading={searchQuery.isFetching && events.length === 0} visibleColumns={visibleColumns} density={density} onSelectionChanged={setSelectedIds} onActivateEvent={setActiveEvent} /> : searchQuery.isFetching ? <div className="hunt-grid-loading" aria-label="Loading search results"><span /><span /><span /><span /><span /></div> : <div className="hunt-grid-empty"><ListFilter size={26} /><strong>No matching events</strong><span>The query completed. Choose Index: Alerts for detections, widen the 24h window, or enroll an agent from Posture → Sensors so endpoint logs are indexed.</span></div>}
             </div>
             <nav className="hunt-pagination" aria-label="Hunt result pages">
-              <span>{summary ? `${summary.totalIsExact ? '' : 'About '}${summary.totalApproximate.toLocaleString()} matching events` : 'Result count unavailable'}</span>
-              <strong>Page {pageIndex + 1}<small>{firstVisibleRow.toLocaleString()}–{lastVisibleRow.toLocaleString()}</small></strong>
-              <div>
-                <button type="button" className="hunt-button" onClick={goToPreviousPage} disabled={pageIndex === 0 || searchQuery.isFetching}><ChevronLeft size={14} />Previous</button>
-                <button type="button" className="hunt-button" onClick={goToNextPage} disabled={!searchQuery.data?.nextCursor || searchQuery.isFetching}>Next<ChevronRight size={14} /></button>
+              <div className="hunt-pagination__meta">
+                <span>{summary ? `${summary.totalIsExact ? '' : '~'}${summary.totalApproximate.toLocaleString()} events` : 'Count —'}</span>
+                <span aria-hidden="true">·</span>
+                <strong>Page {pageIndex + 1}</strong>
+                <span>{firstVisibleRow.toLocaleString()}–{lastVisibleRow.toLocaleString()}</span>
+              </div>
+              <div className="hunt-pagination__actions">
+                <button type="button" className="hunt-button hunt-pagination__nav" onClick={goToPreviousPage} disabled={pageIndex === 0 || searchQuery.isFetching} aria-label="Previous page"><ChevronLeft size={13} /><span>Prev</span></button>
+                <button type="button" className="hunt-button hunt-pagination__nav" onClick={goToNextPage} disabled={!searchQuery.data?.nextCursor || searchQuery.isFetching} aria-label="Next page"><span>Next</span><ChevronRight size={13} /></button>
               </div>
             </nav>
           </>}
         </main>
       </div>
 
-      <StatusDock sseConnected={searchHuntFixtureMode || epsStream.connected} eps={searchHuntFixtureMode ? 12840 : epsStream.eps} mode={searchHuntFixtureMode ? 'historical' : 'live'} />
+      <StatusDock
+        sseConnected={epsStream.connected}
+        eps={epsStream.eps}
+        mode={epsStream.connected ? 'live' : 'historical'}
+      />
 
-      {selectedIds.length > 0 && <PromotionActionBar selectedCount={selectedIds.length} onAction={(action) => { setPromotionOpen(true); setPromotionAction(action); }} />}
+      {selectedIds.length > 0 && (
+        <PromotionActionBar
+          selectedCount={selectedIds.length}
+          canPromote={canPromote}
+          onAction={(action) => { setPromotionOpen(true); setPromotionAction(action); }}
+        />
+      )}
 
       {promotionOpen && promotionAction && <PromotionModal selectedEventIds={selectedIds} searchId={summary?.searchId ?? ''} initialAction={promotionAction} onSuccess={() => { setSelectedIds([]); setPromotionOpen(false); setPromotionAction(null); }} onClose={() => { setPromotionOpen(false); setPromotionAction(null); }} />}
 
       <EventContextDrawer event={activeEvent} searchId={summary?.searchId ?? ''} onClose={() => setActiveEvent(null)} onPivot={handlePivot} onAction={openAction} />
       <HuntActionDrawer mode={actionMode} eventIds={actionEventIds} searchId={summary?.searchId ?? ''} onClose={() => setActionMode(null)} />
-      <SaveSearchModal isOpen={saveOpen} onClose={() => setSaveOpen(false)} currentQuery={query} onSave={() => setSaveOpen(false)} />
+      <SaveSearchModal
+        isOpen={saveOpen}
+        onClose={() => setSaveOpen(false)}
+        currentQuery={query}
+        indexPattern={toHuntIndexPattern(selectedIndex)}
+        canSave={canSaveQuery}
+        onSave={() => setSaveOpen(false)}
+      />
       <SearchManagerPanel isOpen={managerPanelOpen} onClose={() => setManagerPanelOpen(false)} onLoadQuery={handleManagerLoadQuery} onExecuteQuery={handleManagerExecuteQuery} currentQuery={query} />
       <EventDetailFlyout eventId={flyoutEventId} searchId={summary?.searchId ?? ''} onClose={handleFlyoutClose} onPivot={handlePivot} />
     </section>

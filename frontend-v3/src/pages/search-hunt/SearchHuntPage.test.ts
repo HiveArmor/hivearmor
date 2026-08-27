@@ -1,11 +1,38 @@
 /**
- * SearchHuntPage — Unit Tests
- * INV-01 Screen
+ * SearchHuntPage — identity + contract scan (Prompt 10)
  */
+
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 import { describe, it, expect } from 'vitest';
 
 import type { SearchExecuteRequest, SearchExecuteResponse } from './searchHunt.types';
+
+describe('SearchHunt identity', () => {
+  const pageSource = readFileSync(join(process.cwd(), 'src/pages/search-hunt/SearchHuntPage.tsx'), 'utf8');
+  const serviceSource = readFileSync(join(process.cwd(), 'src/services/search.service.ts'), 'utf8');
+
+  it('states ad-hoc hunt job and sibling cross-links', () => {
+    expect(pageSource).toContain('SEARCH_HUNT_JOB_SENTENCE');
+    expect(pageSource.toLowerCase()).toMatch(/ad-hoc hunt|event search/);
+    expect(pageSource).toContain('to="/dashboard"');
+    expect(pageSource).toContain('to="/alerts"');
+    expect(pageSource).toContain('to="/investigations"');
+    expect(pageSource).toContain('to="/incidents"');
+    expect(pageSource).toContain('runNlQuery');
+    expect(pageSource).toContain('useConfirmedSavedQueries');
+    expect(pageSource).not.toContain('eps={searchHuntFixtureMode ? 12840');
+    expect(pageSource).toContain('Histogram unavailable until the search response includes time buckets');
+  });
+
+  it('wires confirmed saved-query service paths', () => {
+    expect(serviceSource).toContain('/ha-search/nl-query');
+    expect(serviceSource).toContain('/ha-saved-queries');
+    expect(serviceSource).toContain('question:');
+    expect(serviceSource).not.toContain('/ha-search/execute');
+  });
+});
 
 describe('SearchHunt Types', () => {
   it('should validate SearchExecuteRequest shape', () => {

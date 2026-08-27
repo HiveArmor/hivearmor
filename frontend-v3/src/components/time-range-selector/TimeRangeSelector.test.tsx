@@ -22,7 +22,9 @@ describe('TimeRangeSelector', () => {
     expect(src.match(/#[0-9a-fA-F]{6}\b/)).toBeFalsy();
   });
 
-  it('has index.ts', () => {
-    expect(existsSync(join(__dirname, 'index.ts'))).toBe(true);
+  it('uses AbsoluteCalendarFields for Absolute tab', () => {
+    const src = readFileSync(join(__dirname, 'TimeRangeSelector.tsx'), 'utf-8');
+    expect(src.includes('AbsoluteCalendarFields')).toBe(true);
+    expect(src.includes('type="text"')).toBeFalsy();
   });
 });

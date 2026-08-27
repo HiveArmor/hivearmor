@@ -30,6 +30,11 @@ import {
 } from '../searchHunt.service';
 import type { HuntPromotionApproval, PromotionPreview, PromotionResult } from '../searchHunt.types';
 
+import { ROLE_LABELS, ROLES } from '@/lib/roles';
+
+const PROMOTE_DENIED = `Required permission: ${ROLE_LABELS[ROLES.ANALYST]}, ${ROLE_LABELS[ROLES.SOC_MANAGER]}, or ${ROLE_LABELS[ROLES.ADMIN]}`;
+const MANAGER_APPROVAL_LABEL = ROLE_LABELS[ROLES.SOC_MANAGER];
+
 export type PromotionAction = 'create_evidence' | 'create_investigation' | 'escalate_incident';
 
 export interface PromotionModalProps {
@@ -61,9 +66,11 @@ const ACTION_LABELS: Record<PromotionAction, { title: string; icon: typeof FileT
 export function PromotionActionBar({
   selectedCount,
   onAction,
+  canPromote = true,
 }: {
   selectedCount: number;
   onAction: (action: PromotionAction) => void;
+  canPromote?: boolean;
 }): JSX.Element | null {
   if (selectedCount === 0) return null;
 
@@ -72,10 +79,16 @@ export function PromotionActionBar({
       <span className="hunt-promotion-bar__count">
         <strong>{selectedCount}</strong> event{selectedCount !== 1 ? 's' : ''} selected
       </span>
+      {!canPromote && (
+        <span className="hunt-promotion-bar__deny" title={PROMOTE_DENIED}>
+          {PROMOTE_DENIED}
+        </span>
+      )}
       <div className="hunt-promotion-bar__actions">
         <button
           type="button"
           className="hunt-button"
+          disabled={!canPromote}
           onClick={() => onAction('create_evidence')}
         >
           <FileText size={13} />
@@ -84,6 +97,7 @@ export function PromotionActionBar({
         <button
           type="button"
           className="hunt-button"
+          disabled={!canPromote}
           onClick={() => onAction('create_investigation')}
         >
           <Search size={13} />
@@ -92,6 +106,7 @@ export function PromotionActionBar({
         <button
           type="button"
           className="hunt-button hunt-button--primary"
+          disabled={!canPromote}
           onClick={() => onAction('escalate_incident')}
         >
           <Shield size={13} />
@@ -147,8 +162,10 @@ export function PromotionModal({
     onError: (error: unknown) => {
       if (isHuntApprovalRequiredError(error)) {
         setErrorMessage(
-          'Manager approval is required. Request approval first — this action was not executed.',
+          `${MANAGER_APPROVAL_LABEL} approval is required. Request approval first — this action was not executed.`,
         );
+      } else if (error instanceof Error && /403|forbidden/i.test(error.message)) {
+        setErrorMessage(PROMOTE_DENIED);
       } else {
         setErrorMessage('Promotion failed. Check the event selection and try again.');
       }
@@ -167,8 +184,12 @@ export function PromotionModal({
       setTerminal({ kind: 'approval_pending', approval: data });
       setErrorMessage(null);
     },
-    onError: () => {
-      setErrorMessage('Approval request failed. No promotion was executed.');
+    onError: (error: unknown) => {
+      if (error instanceof Error && /403|forbidden/i.test(error.message)) {
+        setErrorMessage(PROMOTE_DENIED);
+      } else {
+        setErrorMessage('Approval request failed. No promotion was executed.');
+      }
     },
   });
 
@@ -294,7 +315,11 @@ export function PromotionModal({
           {previewMutation.isError && (
             <div className="hunt-promotion-modal__error" role="alert">
               <AlertTriangle size={16} />
-              <span>Failed to generate preview. Please try again.</span>
+              <span>
+                {/403|forbidden/i.test(String(previewMutation.error))
+                  ? PROMOTE_DENIED
+                  : 'Failed to generate preview. Please try again.'}
+              </span>
               <button type="button" className="hunt-button" onClick={() => handleStartAction(action)}>
                 Retry
               </button>
@@ -317,10 +342,11 @@ export function PromotionModal({
                 <div className="hunt-promotion-modal__approval" role="status">
                   <Clock3 size={14} />
                   <div>
-                    <strong>Manager approval required</strong>
+                    <strong>{MANAGER_APPROVAL_LABEL} approval required</strong>
                     <p>
-                      Escalate and investigation promotions (and large evidence batches) cannot execute until a
-                      SOC Manager approves. Confirming will request approval — it will not create the resource yet.
+                      Escalate and investigation promotions (and large evidence batches) cannot execute until a{' '}
+                      {MANAGER_APPROVAL_LABEL} approves. Confirming will request approval — it will not create the
+                      resource yet.
                     </p>
                   </div>
                 </div>
