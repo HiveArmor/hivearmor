@@ -1,0 +1,94 @@
+{
+  "prompt": "13-hive-intelligence-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "620fe8c",
+  "based_on_main_includes_pr99": true,
+  "tip_sha": "fd48b4858759a7aa3ad2bd40e037fa9e26492157",
+  "feature_sha": "fd48b4858759a7aa3ad2bd40e037fa9e26492157",
+  "pr": null,
+  "decision": "RESTRUCTURE",
+  "route": "/intelligence",
+  "job_sentence": "Threat intelligence — look up indicators, inspect feed health, and ask assistive SOC AI. AI never acts silently.",
+  "distinction": {
+    "search": "/search = ad-hoc hunt / event search",
+    "entities": "/entities = entity inventory + risk dossier pivots",
+    "intelligence": "/intelligence = threat intel IOC/feeds + assistive SOC AI",
+    "ueba": "/ueba/risk = UEBA risk dashboard (cross-link only)",
+    "constellation": "/constellation = graph (cross-link only)"
+  },
+  "ia": {
+    "removed": [
+      "Feeds-first left rail as the only hero",
+      "IOC lookup buried in footer after feed selection"
+    ],
+    "added": [
+      "INTELLIGENCE_JOB_SENTENCE + STAGING CANDIDATE badge",
+      "IOC lookup as first-viewport primary action",
+      "Feeds panel with API honesty (no fake healthy greens)",
+      "Assistive SOC AI panel via POST /ha-soc-ai/query with provenance / unconfigured honesty",
+      "Cross-links: Mission Control · Search · Entities · Alerts · Incidents · UEBA risk · Constellation",
+      "socAi.service.ts (confirmed path only; never /ha-ai/query)"
+    ],
+    "kept": [
+      "Confirmed ha-threat-intel feeds/lookup/iocs/stats",
+      "Admin-gated feed enable/sync with human role labels",
+      "TLP-aware IOC browser",
+      "TI-003 never call legacy /api/v1/threat-intel",
+      "/admin/threat-intel TAXII/MISP CRUD out of scope"
+    ],
+    "fix": "Tolerate missing feed.indicatorCount (staging DTOs omit it) — crash fix fd48b48"
+  },
+  "backend": {
+    "feeds": {
+      "path": "GET /api/ha-threat-intel/feeds",
+      "staging": { "status": 200, "count": 8, "enabled": 6, "bytes": 2573 }
+    },
+    "iocs": {
+      "path": "GET /api/ha-threat-intel/iocs",
+      "staging": { "status": 200, "count": 1, "x_total_count": "1", "bytes": 252 }
+    },
+    "stats": {
+      "path": "GET /api/ha-threat-intel/stats",
+      "staging": { "status": 200, "bytes": 144 }
+    },
+    "lookup": {
+      "path": "POST /api/ha-threat-intel/lookup",
+      "staging": { "status": 200, "verdict": "unknown", "has_detail": false, "bytes": 198 }
+    },
+    "soc_ai_query": {
+      "path": "POST /api/ha-soc-ai/query",
+      "staging": {
+        "status": 200,
+        "confidence": 0.0,
+        "sources_len": 0,
+        "unavailable_hint": true,
+        "answer_len": 75,
+        "bytes": 155
+      }
+    },
+    "ha_ai_chat": {
+      "path": "POST /api/ha-ai/chat",
+      "staging": { "status": 500, "bytes": 311, "used_by_page": false }
+    }
+  },
+  "staging_ux": {
+    "deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 + edge — healthy (tip fd48b48)",
+    "admin_smoke": {
+      "page_loads_job_sentence": true,
+      "staging_badge": true,
+      "ioc_lookup_unknown_honesty": true,
+      "feeds_list": true,
+      "feeds_enabled_count": "6 of 8",
+      "assistive_ai_honesty": true,
+      "cross_links": true,
+      "no_application_error": true
+    }
+  },
+  "gates": {
+    "eslint_changed": "pass",
+    "type_check": "pass",
+    "vitest_intelligence_threat_intel_soc_ai": "pass",
+    "build": "pass"
+  },
+  "claim": "STAGING CANDIDATE — assistive AI not PRODUCTION READY (SOC_AI unconfigured honesty)"
+}
