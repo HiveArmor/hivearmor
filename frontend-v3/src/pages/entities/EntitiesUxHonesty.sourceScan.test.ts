@@ -21,11 +21,11 @@ describe('Prompt 12 Entities UX honesty', () => {
 
   it('exports dossier job sentence and confirmed API wiring', () => {
     expect(ENTITY_DOSSIER_JOB_SENTENCE).toMatch(/Risk dossier|dossier/i);
-    expect(dossier).toContain('fetchEntityDetail');
-    expect(dossier).toContain('fetchEntityRisk');
-    expect(dossier).toContain('fetchEntityAlerts');
-    expect(dossier).toContain('fetchEntityEvents');
-    expect(dossier).not.toContain('getDossier(');
+    expect(dossier).toContain('getDossier');
+    expect(dossier).toContain('getRelatedAlerts');
+    expect(dossier).toContain('getActivity');
+    expect(dossier).toContain('shellIdentity');
+    expect(dossier).not.toContain('fetchEntityDetail');
     expect(dossier).not.toContain('BaselineMetricsPanel');
     expect(dossier).not.toContain('RelationshipGraphPanel');
   });
@@ -48,8 +48,9 @@ describe('Prompt 12 Entities UX honesty', () => {
   });
 
   it('wires confirmed risk path in entities service', () => {
-    expect(entitiesService).toContain('/ha-entities/${id}/risk');
+    expect(entitiesService).toContain('/dossier');
     expect(entitiesService).toContain('fetchEntityRisk');
+    expect(entitiesService).toContain('/activity');
   });
 
   it('keeps /entities/:id redirect to dossier without EntityDetailPage', () => {

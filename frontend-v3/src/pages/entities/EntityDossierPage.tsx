@@ -1,6 +1,7 @@
 /**
  * Entity dossier — canonical detail for an inventory pivot.
- * Confirmed APIs only: detail, risk, alerts, events. Honesty when empty/5xx.
+ * Uses live /dossier + /alerts + /activity; never blocks the page on bare /{id}
+ * (unmapped → 500) or missing OpenSearch entity docs (404 → shell + honesty).
  */
 
 import { useCallback, useMemo, useState } from 'react';
@@ -23,22 +24,16 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
+import { getActivity, getDossier, getRelatedAlerts } from './services/dossier.service';
+import type { EntityIdentity, RiskProfile } from './types/dossier.types';
+import type { EntEntityType } from './types/entity.types';
+
 import { EntityTypeIcon, entityTypeLabel } from '@/components/entity-type-icon';
-import { SeverityLabel } from '@/components/severity-label/SeverityLabel';
 import { StatusDock } from '@/components/status-dock';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { ApiError } from '@/lib/apiClient';
 import { ROLE_LABELS, ROLES } from '@/lib/roles';
-import { numericToSeverityLevel } from '@/lib/severity';
-import {
-  entityFixtureMode,
-  fetchEntityAlerts,
-  fetchEntityDetail,
-  fetchEntityEvents,
-  fetchEntityRisk,
-} from '@/services/entities.service';
 import { useAuthStore } from '@/store/auth.store';
-import type { EntityDetailDTO, EntityType } from '@/types/entity.types';
 
 import './EntityDossierPage.css';
 
@@ -49,12 +44,35 @@ type DossierTab = 'alerts' | 'events';
 
 const MUTATE_DENIED = `Required permission: ${ROLE_LABELS[ROLES.ANALYST]} or higher`;
 
-function entityHuntQuery(entity: Pick<EntityDetailDTO, 'entityType' | 'name'>): string {
-  const field = entity.entityType === 'host' ? 'host.name'
-    : entity.entityType === 'user' ? 'user.name'
-      : entity.entityType === 'ip' ? 'source.ip'
-        : `${entity.entityType}.name`;
-  return `${field}:"${entity.name.replace(/"/g, '\\"')}"`;
+function inferEntityType(id: string): EntEntityType {
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(id)) return 'ip';
+  if (id.includes('@')) return 'user';
+  if (id.includes('.') && !id.includes(' ')) return 'host';
+  if (/^[A-Za-z0-9-]{8,}$/.test(id)) return 'host';
+  return 'host';
+}
+
+function shellIdentity(id: string): EntityIdentity {
+  const type = inferEntityType(id);
+  const now = new Date().toISOString();
+  return {
+    id,
+    type,
+    value: id,
+    displayName: id,
+    firstSeen: now,
+    lastSeen: now,
+    tags: [],
+    criticality: 'unclassified',
+  };
+}
+
+function entityHuntQuery(type: EntEntityType, name: string): string {
+  const field = type === 'host' ? 'host.name'
+    : type === 'user' ? 'user.name'
+      : type === 'ip' ? 'source.ip'
+        : `${type}.name`;
+  return `${field}:"${name.replace(/"/g, '\\"')}"`;
 }
 
 function formatDateTime(value?: string | null): string {
@@ -64,13 +82,8 @@ function formatDateTime(value?: string | null): string {
   return parsed.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 }
 
-function riskLevelFromScore(score: number | undefined): string {
-  if (score === undefined || score === null) return 'unknown';
-  if (score >= 80) return 'critical';
-  if (score >= 60) return 'high';
-  if (score >= 40) return 'medium';
-  if (score > 0) return 'low';
-  return 'none';
+function isNotFound(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
 }
 
 function InlineState({
@@ -107,48 +120,47 @@ export function EntityDossierPage(): JSX.Element {
   const [eventsVisible, setEventsVisible] = useState(25);
   const [alertsVisible, setAlertsVisible] = useState(25);
 
-  const detailQuery = useQuery({
-    queryKey: ['entity-dossier-detail', id],
+  const dossierQuery = useQuery({
+    queryKey: ['entity-dossier-core', id],
     queryFn: ({ signal }) => {
       if (!id) throw new Error('Entity ID is required');
-      return fetchEntityDetail(id, signal);
+      return getDossier(id, '30d', signal);
     },
     enabled: hasAccess && Boolean(id),
     staleTime: 30_000,
-    retry: 1,
-  });
-
-  const riskQuery = useQuery({
-    queryKey: ['entity-dossier-risk', id],
-    queryFn: ({ signal }) => {
-      if (!id) throw new Error('Entity ID is required');
-      return fetchEntityRisk(id, signal);
-    },
-    enabled: hasAccess && Boolean(id),
-    staleTime: 30_000,
-    retry: 1,
+    retry: false,
   });
 
   const alertsQuery = useQuery({
     queryKey: ['entity-dossier-alerts', id],
-    queryFn: ({ signal }) => {
+    queryFn: async ({ signal }) => {
       if (!id) throw new Error('Entity ID is required');
-      return fetchEntityAlerts(id, signal);
+      try {
+        return await getRelatedAlerts(id, { limit: 50 }, signal);
+      } catch (error) {
+        if (isNotFound(error)) return { items: [], cursor: null, total: 0 };
+        throw error;
+      }
     },
     enabled: hasAccess && Boolean(id) && activeTab === 'alerts',
     staleTime: 20_000,
-    retry: 1,
+    retry: false,
   });
 
   const eventsQuery = useQuery({
     queryKey: ['entity-dossier-events', id],
-    queryFn: ({ signal }) => {
+    queryFn: async ({ signal }) => {
       if (!id) throw new Error('Entity ID is required');
-      return fetchEntityEvents(id, signal);
+      try {
+        return await getActivity(id, { limit: 50 }, signal);
+      } catch (error) {
+        if (isNotFound(error)) return { items: [], cursor: null, total: 0, window: { from: '', to: '' } };
+        throw error;
+      }
     },
     enabled: hasAccess && Boolean(id) && activeTab === 'events',
     staleTime: 20_000,
-    retry: 1,
+    retry: false,
   });
 
   const handleBack = useCallback(() => {
@@ -163,19 +175,21 @@ export function EntityDossierPage(): JSX.Element {
     }, { replace: true });
   }, [setSearchParams]);
 
-  const entity = detailQuery.data;
-  const huntQuery = useMemo(
-    () => (entity ? entityHuntQuery(entity) : ''),
-    [entity],
+  const entityMissing = Boolean(dossierQuery.isError && isNotFound(dossierQuery.error));
+  const dossierHardFail = Boolean(
+    dossierQuery.isError && !isNotFound(dossierQuery.error),
   );
 
-  const score = riskQuery.data?.riskScore ?? entity?.riskScore;
-  const level = riskQuery.data?.riskLevel ?? entity?.riskLevel ?? riskLevelFromScore(score);
-  const trend = riskQuery.data?.riskTrend ?? entity?.riskTrend;
-  const drivers = riskQuery.data?.riskDrivers?.length
-    ? riskQuery.data.riskDrivers
-    : entity?.riskDrivers;
-  const isHost = entity?.entityType === 'host' || (entity?.entityType as EntityType | undefined) === 'host';
+  const identity: EntityIdentity | null = useMemo(() => {
+    if (!id) return null;
+    if (dossierQuery.data?.dossier?.identity) return dossierQuery.data.dossier.identity;
+    if (entityMissing || dossierHardFail) return shellIdentity(id);
+    return null;
+  }, [dossierQuery.data, dossierHardFail, entityMissing, id]);
+
+  const riskProfile: RiskProfile | null = dossierQuery.data?.dossier?.riskProfile ?? null;
+  const huntQuery = identity ? entityHuntQuery(identity.type, identity.displayName || identity.value) : '';
+  const isHost = identity?.type === 'host';
 
   if (!id) {
     return (
@@ -203,7 +217,7 @@ export function EntityDossierPage(): JSX.Element {
     );
   }
 
-  if (detailQuery.isLoading) {
+  if (dossierQuery.isLoading && !identity) {
     return (
       <section className="ha-dossier-page" aria-busy="true">
         <div className="ha-dossier-page__skeleton ha-dossier-page__skeleton--header" role="status" aria-label="Loading entity dossier" />
@@ -215,59 +229,30 @@ export function EntityDossierPage(): JSX.Element {
     );
   }
 
-  if (detailQuery.isError || !entity) {
-    const is404 = detailQuery.error instanceof ApiError && detailQuery.error.status === 404;
-    const is403 = detailQuery.error instanceof ApiError && detailQuery.error.status === 403;
+  if (!identity) {
     return (
       <section className="ha-dossier-page">
-        <header className="ha-dossier-page__topbar">
-          <button type="button" className="ha-dossier-page__back" onClick={handleBack} aria-label="Back to entity inventory">
-            <ArrowLeft size={16} />
-          </button>
-          <div className="ha-dossier-page__topbar-title">
-            <span>Entity dossier</span>
-            <strong>{id}</strong>
-            <p className="ha-dossier-page__job">{ENTITY_DOSSIER_JOB_SENTENCE}</p>
-          </div>
-        </header>
-        <p className="ha-dossier-page__meta">
-          <Link to="/dashboard">Mission Control</Link>
-          <span aria-hidden="true">·</span>
-          <Link to="/entities">Inventory</Link>
-          <span aria-hidden="true">·</span>
-          <Link to="/search">Search &amp; Hunt</Link>
-          <span aria-hidden="true">·</span>
-          <Link to="/alerts">Alerts</Link>
-          <span aria-hidden="true">·</span>
-          <Link to="/investigations">Investigations</Link>
-          <span aria-hidden="true">·</span>
-          <Link to="/incidents">Incidents</Link>
-          <span aria-hidden="true">·</span>
-          <Link to="/posture/sensors">Sensors</Link>
-        </p>
         <div className="ha-dossier-page__error">
           <AlertTriangle size={24} />
-          <h2>{is404 ? 'Entity not found' : is403 ? 'Access denied' : 'Failed to load dossier'}</h2>
+          <h2>Failed to load dossier</h2>
           <p>
-            {is404
-              ? 'This entity does not exist in the authorized inventory, or GET /api/ha-entities/{id} is unavailable.'
-              : is403
-                ? MUTATE_DENIED
-                : detailQuery.error instanceof Error
-                  ? detailQuery.error.message
-                  : 'An error occurred while loading the entity dossier.'}
+            {dossierQuery.error instanceof Error
+              ? dossierQuery.error.message
+              : 'An error occurred while loading the entity dossier.'}
           </p>
           <button type="button" onClick={handleBack}>Back to entities</button>
-          {!is404 && !is403 && (
-            <button type="button" onClick={() => void detailQuery.refetch()}>Retry</button>
-          )}
+          <button type="button" onClick={() => void dossierQuery.refetch()}>Retry</button>
         </div>
       </section>
     );
   }
 
-  const alerts = (alertsQuery.data ?? []).slice(0, alertsVisible);
-  const events = (eventsQuery.data ?? []).slice(0, eventsVisible);
+  const alerts = (alertsQuery.data?.items ?? []).slice(0, alertsVisible);
+  const events = (eventsQuery.data?.items ?? []).slice(0, eventsVisible);
+  const score = riskProfile?.score;
+  const level = riskProfile?.level ?? 'unknown';
+  const trend = riskProfile?.trend;
+  const drivers = riskProfile?.drivers ?? [];
 
   return (
     <section className="ha-dossier-page" aria-label="Entity risk dossier">
@@ -282,7 +267,7 @@ export function EntityDossierPage(): JSX.Element {
         </button>
         <div className="ha-dossier-page__topbar-title">
           <span>Entity dossier</span>
-          <strong>{entity.name}</strong>
+          <strong>{identity.displayName || identity.value}</strong>
           <p className="ha-dossier-page__job">{ENTITY_DOSSIER_JOB_SENTENCE}</p>
         </div>
         <div className="ha-dossier-page__topbar-spacer" />
@@ -290,8 +275,7 @@ export function EntityDossierPage(): JSX.Element {
           type="button"
           className="ha-dossier-page__refresh"
           onClick={() => {
-            void detailQuery.refetch();
-            void riskQuery.refetch();
+            void dossierQuery.refetch();
             void alertsQuery.refetch();
             void eventsQuery.refetch();
           }}
@@ -323,33 +307,49 @@ export function EntityDossierPage(): JSX.Element {
         <Link to="/ueba/risk">UEBA risk</Link>
       </p>
 
-      {entityFixtureMode && (
-        <div className="ha-dossier-page__fixture" role="status">
-          <strong>Design fixture:</strong> fictional risk and activity records are enabled.
-          <span>Production never receives these records.</span>
+      {(entityMissing || dossierHardFail) && (
+        <div className="ha-dossier-page__honesty" role="status">
+          <AlertTriangle size={14} />
+          <div>
+            <strong>
+              {entityMissing
+                ? 'Entity not in risk inventory'
+                : 'Entity risk projection unavailable'}
+            </strong>
+            <p>
+              {entityMissing
+                ? 'No indexed entity document matched this id. Showing a pivot shell from the URL — risk score and related panels stay honest until inventory is populated.'
+                : dossierQuery.error instanceof Error
+                  ? dossierQuery.error.message
+                  : 'The dossier service did not return a projection.'}
+            </p>
+          </div>
         </div>
       )}
 
       <div className="ha-dossier-page__scroll">
         <header className="ha-dossier-identity">
           <span className="ha-dossier-identity__icon">
-            <EntityTypeIcon type={entity.entityType} size={26} />
+            <EntityTypeIcon type={identity.type} size={26} />
           </span>
           <div className="ha-dossier-identity__info">
             <div className="ha-dossier-identity__title">
-              <h1>{entity.name}</h1>
-              <span>{entityTypeLabel(entity.entityType)}</span>
-              {entity.criticality && <span data-level={entity.criticality}>{entity.criticality.replace(/_/g, ' ')}</span>}
+              <h1>{identity.displayName || identity.value}</h1>
+              <span>{entityTypeLabel(identity.type)}</span>
+              {identity.criticality && (
+                <span data-level={identity.criticality}>{identity.criticality.replace(/_/g, ' ')}</span>
+              )}
             </div>
-            <code>{entity.id}</code>
+            <code>{identity.id}</code>
             <div className="ha-dossier-identity__meta">
-              <span>First seen {formatDateTime(entity.firstSeen)}</span>
-              <span>Last seen {formatDateTime(entity.lastSeen)}</span>
-              {entity.watchlisted !== undefined && <span>{entity.watchlisted ? 'Watchlisted' : 'Not watchlisted'}</span>}
+              <span>First seen {formatDateTime(entityMissing ? undefined : identity.firstSeen)}</span>
+              <span>Last seen {formatDateTime(entityMissing ? undefined : identity.lastSeen)}</span>
+              {identity.os && <span>{identity.os}</span>}
+              {identity.location && <span>{identity.location}</span>}
             </div>
-            {entity.tags && entity.tags.length > 0 && (
+            {identity.tags.length > 0 && (
               <div className="ha-dossier-identity__tags">
-                {entity.tags.map((tag) => <span key={tag}>{tag}</span>)}
+                {identity.tags.map((tag) => <span key={tag}>{tag}</span>)}
               </div>
             )}
           </div>
@@ -379,19 +379,12 @@ export function EntityDossierPage(): JSX.Element {
             <header>
               <ShieldAlert size={14} />
               <h2>Risk</h2>
-              <span>GET /api/ha-entities/{'{id}'}/risk</span>
+              <span>GET /api/ha-entities/{'{id}'}/dossier</span>
             </header>
-            {riskQuery.isLoading && !riskQuery.data && !entity.riskScore && score === undefined ? (
-              <InlineState title="Loading risk" message="Fetching confirmed risk projection…" />
-            ) : riskQuery.isError && score === undefined ? (
+            {entityMissing || !riskProfile ? (
               <InlineState
                 title="Risk unavailable"
-                message={
-                  riskQuery.error instanceof ApiError
-                    ? `Risk endpoint returned ${riskQuery.error.status}. No synthetic score is shown.`
-                    : 'Risk projection failed. No synthetic score is shown.'
-                }
-                retry={() => void riskQuery.refetch()}
+                message="No calculated risk score for this entity yet. Open Search & Hunt or Sensors to continue investigation."
               />
             ) : (
               <>
@@ -400,15 +393,12 @@ export function EntityDossierPage(): JSX.Element {
                   <span>{String(level)}</span>
                   {trend && <em>{trend}</em>}
                 </div>
-                <p className="ha-dossier-risk__calc">
-                  Last calculated {formatDateTime(riskQuery.data?.lastCalculated ?? entity.riskCalculatedAt)}
-                </p>
-                {drivers && drivers.length > 0 ? (
+                {drivers.length > 0 ? (
                   <ul className="ha-dossier-risk__drivers">
-                    {drivers.map((driver, index) => (
-                      <li key={driver.id ?? driver.label ?? String(index)}>
-                        <strong>{driver.label ?? 'Driver'}</strong>
-                        {driver.contribution !== undefined && <span>+{driver.contribution}</span>}
+                    {drivers.map((driver) => (
+                      <li key={driver.id}>
+                        <strong>{driver.category || driver.description}</strong>
+                        <span>+{driver.contribution}</span>
                         {driver.description && <p>{driver.description}</p>}
                       </li>
                     ))}
@@ -416,11 +406,6 @@ export function EntityDossierPage(): JSX.Element {
                 ) : (
                   <p className="ha-dossier-risk__honesty">
                     Score available without explainable drivers. No baseline graph is invented when history is absent.
-                  </p>
-                )}
-                {riskQuery.isError && score !== undefined && (
-                  <p className="ha-dossier-risk__partial" role="status">
-                    Dedicated /risk endpoint failed; showing score from entity detail when present.
                   </p>
                 )}
               </>
@@ -433,10 +418,22 @@ export function EntityDossierPage(): JSX.Element {
               <h2>Summary</h2>
             </header>
             <dl>
-              <div><dt>Active alerts</dt><dd>{entity.alertCount}</dd></div>
-              <div><dt>Linked incidents</dt><dd>{entity.incidentCount ?? '—'}</dd></div>
-              <div><dt>Tenant</dt><dd>{entity.tenantName ?? 'Authorized scope'}</dd></div>
-              <div><dt>Status</dt><dd>{entity.status ?? 'Unknown'}</dd></div>
+              <div>
+                <dt>Type</dt>
+                <dd>{entityTypeLabel(identity.type)}</dd>
+              </div>
+              <div>
+                <dt>Inventory</dt>
+                <dd>{entityMissing ? 'Not indexed' : 'Indexed'}</dd>
+              </div>
+              <div>
+                <dt>Alerts (loaded)</dt>
+                <dd>{alertsQuery.data?.total ?? '—'}</dd>
+              </div>
+              <div>
+                <dt>Criticality</dt>
+                <dd>{identity.criticality?.replace(/_/g, ' ') ?? '—'}</dd>
+              </div>
             </dl>
             <div className="ha-dossier-summary__hunt">
               <Crosshair size={13} />
@@ -477,14 +474,21 @@ export function EntityDossierPage(): JSX.Element {
                 />
               )}
               {!alertsQuery.isLoading && !alertsQuery.isError && alerts.length === 0 && (
-                <InlineState title="No related alerts" message="No authorized alerts were returned for this entity." />
+                <InlineState
+                  title="No related alerts"
+                  message={
+                    entityMissing
+                      ? 'Entity is not indexed, so alert linkage is empty. Hunt this host from Search if needed.'
+                      : 'No authorized alerts were returned for this entity.'
+                  }
+                />
               )}
               {alerts.length > 0 && (
                 <ul className="ha-dossier-related__list">
                   {alerts.map((alert) => (
                     <li key={alert.id}>
                       <button type="button" onClick={() => navigate(`/alerts/${encodeURIComponent(alert.id)}`)}>
-                        <SeverityLabel severity={numericToSeverityLevel(alert.severity)} size="sm" />
+                        <span className="ha-dossier-related__sev" data-sev={alert.severity}>{alert.severity}</span>
                         <span>
                           <strong>{alert.title}</strong>
                           <small>{formatDateTime(alert.timestamp)} · {alert.status.replace(/_/g, ' ')}</small>
@@ -494,7 +498,7 @@ export function EntityDossierPage(): JSX.Element {
                   ))}
                 </ul>
               )}
-              {(alertsQuery.data?.length ?? 0) > alertsVisible && (
+              {(alertsQuery.data?.items.length ?? 0) > alertsVisible && (
                 <button type="button" className="ha-dossier-related__more" onClick={() => setAlertsVisible((n) => n + 25)}>
                   Show more
                 </button>
@@ -506,7 +510,7 @@ export function EntityDossierPage(): JSX.Element {
             <section className="ha-dossier-related">
               <header>
                 <strong>Related events</strong>
-                <span>GET /api/ha-entities/{'{id}'}/events</span>
+                <span>GET /api/ha-entities/{'{id}'}/activity</span>
               </header>
               {eventsQuery.isLoading && <InlineState title="Loading events" message="Fetching related events…" />}
               {eventsQuery.isError && (
@@ -514,29 +518,36 @@ export function EntityDossierPage(): JSX.Element {
                   title="Related events unavailable"
                   message={
                     eventsQuery.error instanceof ApiError
-                      ? `Events endpoint returned ${eventsQuery.error.status}.`
+                      ? `Activity endpoint returned ${eventsQuery.error.status}.`
                       : 'Related events could not be loaded.'
                   }
                   retry={() => void eventsQuery.refetch()}
                 />
               )}
               {!eventsQuery.isLoading && !eventsQuery.isError && events.length === 0 && (
-                <InlineState title="No related events" message="No authorized events were returned for this entity." />
+                <InlineState
+                  title="No related events"
+                  message={
+                    entityMissing
+                      ? 'Entity is not indexed, so activity is empty. Prefill Search with the host pivot above.'
+                      : 'No authorized events were returned for this entity.'
+                  }
+                />
               )}
               {events.length > 0 && (
                 <ul className="ha-dossier-related__list">
-                  {events.map((event, index) => (
-                    <li key={event.id ?? `${event.timestamp}-${index}`}>
+                  {events.map((event) => (
+                    <li key={event.id}>
                       <div className="ha-dossier-related__event">
-                        <strong>{event.action ?? event.source}</strong>
-                        <small>{formatDateTime(event.timestamp)} · {event.source}</small>
-                        <p>{event.message}</p>
+                        <strong>{event.description || event.type}</strong>
+                        <small>{formatDateTime(event.timestamp)} · {event.type} · {event.source}</small>
+                        {event.description && <p>{event.description}</p>}
                       </div>
                     </li>
                   ))}
                 </ul>
               )}
-              {(eventsQuery.data?.length ?? 0) > eventsVisible && (
+              {(eventsQuery.data?.items.length ?? 0) > eventsVisible && (
                 <button type="button" className="ha-dossier-related__more" onClick={() => setEventsVisible((n) => n + 25)}>
                   Show more
                 </button>
@@ -551,7 +562,7 @@ export function EntityDossierPage(): JSX.Element {
           sseConnected={epsStream.connected}
           eps={epsStream.eps}
           mode="historical"
-          lastUpdated={detailQuery.dataUpdatedAt ? new Date(detailQuery.dataUpdatedAt) : undefined}
+          lastUpdated={dossierQuery.dataUpdatedAt ? new Date(dossierQuery.dataUpdatedAt) : undefined}
         />
       </div>
     </section>

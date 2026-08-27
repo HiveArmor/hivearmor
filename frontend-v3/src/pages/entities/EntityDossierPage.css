@@ -95,6 +95,41 @@
 
 .ha-dossier-page__meta a:hover { text-decoration: underline; }
 
+.ha-dossier-page__honesty {
+  display: flex;
+  flex: none;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ha-high) 40%, var(--ha-border-default));
+  background: color-mix(in srgb, var(--ha-high) 10%, var(--ha-surface-panel));
+  color: var(--ha-foreground-secondary);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.ha-dossier-page__honesty strong {
+  display: block;
+  color: var(--ha-foreground-primary);
+  font-size: 11px;
+}
+
+.ha-dossier-page__honesty p {
+  margin: 2px 0 0;
+}
+
+.ha-dossier-related__sev {
+  flex: none;
+  min-width: 52px;
+  padding: 2px 6px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-sm);
+  font-size: 9px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
 .ha-dossier-page__fixture {
   display: flex;
   min-height: 28px;

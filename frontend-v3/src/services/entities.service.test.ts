@@ -22,7 +22,8 @@ describe('entities.service', () => {
 
   it('wires confirmed risk path', async () => {
     const source = await import('./entities.service?raw');
-    expect(source.default).toContain('/ha-entities/${id}/risk');
+    expect(source.default).toContain('/dossier');
+    expect(source.default).toContain('/activity');
   });
 
   it('uses apiClient from lib', async () => {
