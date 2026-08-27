@@ -82,6 +82,7 @@ describe('investigation design and fixture boundary', () => {
     expect(detail).toContain('Governed INV-012');
     expect(detail).not.toContain('Hive Intelligence');
     expect(detail).not.toContain('investigation-phase-rail');
+    expect(detail).not.toContain('investigation-detail-dock');
     expect(queueStyles).not.toMatch(/#[0-9a-f]{3,8}/i);
     expect(detailStyles).not.toMatch(/#[0-9a-f]{3,8}/i);
     expect(queueStyles).toContain('min-height: 50vh');

@@ -482,10 +482,12 @@ export function InvestigationDetailPage(): JSX.Element {
               {pinMutation.isError && (
                 <p className="investigation-inline-error" role="alert">
                   {pinMutation.error instanceof InvestigationApiError && pinMutation.error.status === 403
-                    ? `Required permission: Analyst or higher to pin (or session owner).`
-                    : pinMutation.error instanceof Error
-                      ? pinMutation.error.message
-                      : 'Pin failed'}
+                    ? 'Required permission: Analyst or higher to pin (or session owner).'
+                    : pinMutation.error instanceof InvestigationApiError && pinMutation.error.status === 500
+                      ? 'Pin failed on the server (item snapshot storage). Session list and promote remain usable.'
+                      : pinMutation.error instanceof Error
+                        ? pinMutation.error.message
+                        : 'Pin failed'}
                 </p>
               )}
 
@@ -955,15 +957,6 @@ export function InvestigationDetailPage(): JSX.Element {
         </aside>
       </div>
 
-      <footer className="investigation-detail-dock" aria-label="Investigation status">
-        <span>
-          <i /> Session loaded
-        </span>
-        <span>{fixtureMode ? 'Stable design fixture' : 'Current backend snapshot'}</span>
-        <span>
-          {items.length} pinned artifacts · INV-{investigation.id}
-        </span>
-      </footer>
       <StatusDock
         sseConnected={epsStream.connected}
         eps={epsStream.eps}

@@ -161,13 +161,11 @@
 .investigation-promote-modal__panel footer .investigation-promote { width: auto; margin: 0; }
 .investigation-promote-modal__panel [role='alert'] { margin: 0; color: var(--ha-critical); font: var(--ha-type-compact); }
 .investigation-promote-modal__hint { margin: 0; color: var(--ha-text-secondary); font: var(--ha-type-metadata); line-height: 1.4; }
-.investigation-detail-dock { position: fixed; z-index: 105; right: 0; bottom: var(--ha-status-dock-height, 30px); left: var(--ha-sidebar-collapsed); display: flex; align-items: center; justify-content: space-between; min-height: 28px; padding: 4px 12px; border-top: 1px solid var(--ha-border-default); background: var(--ha-surface-masthead); color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }.investigation-detail-dock span { display: inline-flex; align-items: center; gap: 5px; }.investigation-detail-dock i { width: 7px; height: 7px; border-radius: 50%; background: var(--ha-state-healthy); }
 .investigation-detail-loading { display: grid; gap: 2px; min-height: 420px; padding: 12px; background: var(--ha-surface-app); }.investigation-detail-loading i { height: 52px; background: linear-gradient(90deg, var(--ha-surface-panel), var(--ha-surface-hover), var(--ha-surface-panel)); background-size: 200% 100%; animation: investigation-detail-shimmer 1.2s linear infinite; }@keyframes investigation-detail-shimmer { to { background-position: -200% 0; } }
 @media (max-width: 960px) {
   .investigation-detail-layout { grid-template-columns: 1fr; }
   .investigation-control-rail { position: static; grid-template-columns: repeat(2, 1fr); }
   .investigation-detail-header__identity h1 { max-width: 46vw; }
-  .investigation-detail-dock { left: var(--ha-sidebar-collapsed); }
 }
 @media (max-width: 680px) {
   .investigation-detail-header__icon,
@@ -185,5 +183,4 @@
   .investigation-hypothesis-hero > div:last-child { border-top: 1px solid var(--ha-border-subtle); border-left: 0; }
   .investigation-evidence-sides { grid-template-columns: 1fr; }
   .investigation-artifact-list dl { grid-template-columns: 1fr 1fr; }
-  .investigation-detail-dock span:nth-child(2) { display: none; }
 }
