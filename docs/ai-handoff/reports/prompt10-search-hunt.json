@@ -1,0 +1,117 @@
+{
+  "prompt": "10-search-hunt-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "355c3ba",
+  "based_on_main_includes_pr95": true,
+  "tip_sha": "0e36e6f4fd840cd8f5aecdd0e9b263fe8f322433",
+  "pr": "https://github.com/HiveArmor/hivearmor/pull/96",
+  "decision": "RESTRUCTURE",
+  "routes": ["/search", "/hunt"],
+  "job_sentence": "Ad-hoc hunt and event search — write a query, inspect hits, then pivot into an investigation or incident when ownership is required.",
+  "distinction": {
+    "queue": "/queue = shift triage",
+    "alerts": "/alerts = alert inventory",
+    "correlated_findings": "/correlated-findings = offense-class findings",
+    "incidents": "/incidents = owned response cases",
+    "search": "/search = ad-hoc hunt / event search"
+  },
+  "ia": {
+    "kept": [
+      "Monaco KQL query workspace + AG Grid results",
+      "Event detail flyout / context drawer",
+      "Verified POST /api/ha-hunts/search execute path",
+      "Promotion preview/actions under /api/ha-hunts/*",
+      "Fixture-disabled production path"
+    ],
+    "restructured": [
+      "HUNT CONSOLE job sentence + sibling meta links",
+      "Saved library → confirmed /api/ha-saved-queries*",
+      "NL assist via POST /api/ha-search/nl-query with honesty",
+      "Histogram only when buckets present",
+      "StatusDock live EPS only (no fake fixture EPS)",
+      "Field rail progressive disclosure (default closed)",
+      "Human role labels on save/promote deny"
+    ],
+    "deferred": [
+      "Full SIEM QL IDE",
+      "Hunt schedule/report without APIs",
+      "Claiming /api/ha-search/execute"
+    ]
+  },
+  "backend": {
+    "nl_query": {
+      "path": "POST /api/ha-search/nl-query",
+      "staging": { "status": 503, "bytes": 76, "note": "AI service not configured — UI shows honest provenance" }
+    },
+    "saved_queries_list": {
+      "path": "GET /api/ha-saved-queries",
+      "staging": { "status": 200, "bytes": 3, "body": "[]" }
+    },
+    "saved_queries_create": {
+      "path": "POST /api/ha-saved-queries",
+      "staging": { "status": 500, "note": "UI honesty on save failure; GET list works empty" }
+    },
+    "saved_queries_put_missing": {
+      "path": "PUT /api/ha-saved-queries/{id}",
+      "staging": { "status": 404 }
+    },
+    "saved_queries_delete_missing": {
+      "path": "DELETE /api/ha-saved-queries/{id}",
+      "staging": { "status": 404 }
+    },
+    "hunt_search": {
+      "path": "POST /api/ha-hunts/search",
+      "staging": {
+        "status": 200,
+        "bytes": 24298,
+        "note": "Real events including EC2AMAZ-8F0Q7DL agent-20; histogram buckets present"
+      }
+    },
+    "hunt_event_detail": {
+      "path": "GET /api/ha-hunts/events/{id}",
+      "staging": { "status": 200, "bytes": 7058 }
+    },
+    "extra_verified": {
+      "nl_to_dsl": { "path": "POST /api/ha-search/nl-to-dsl", "staging": { "status": 200 }, "wired_on_page": false },
+      "suggestions": { "path": "GET /api/ha-search/suggestions", "staging": { "status": 200 }, "wired_on_page": false },
+      "timeline": { "path": "GET /api/ha-search/timeline", "staging": { "status": 200, "bytes": 3 }, "wired_on_page": false }
+    }
+  },
+  "ux_smoke": {
+    "deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 + edge — healthy",
+    "bundle_marker": "SearchHuntPage-*.js contains Ad-hoc hunt / Translate NL / ha-saved-queries markers",
+    "headed_browser": true,
+    "url": "https://72.44.52.187/search",
+    "checks": [
+      { "item": "job_sentence", "result": "pass" },
+      { "item": "meta_links_mission_alerts_investigations_incidents", "result": "pass" },
+      { "item": "kql_language_menu_kql_only_others_unavailable", "result": "pass" },
+      { "item": "time_range_selector", "result": "pass" },
+      { "item": "index_select_all_log_event_alert", "result": "pass" },
+      { "item": "field_rail_toggle", "result": "pass" },
+      { "item": "history_panel", "result": "pass" },
+      { "item": "saved_panel_ha_saved_queries_empty_honesty", "result": "pass", "note": "No saved queries yet. Use Save to persist to /api/ha-saved-queries." },
+      { "item": "columns_picker", "result": "pass" },
+      { "item": "row_density", "result": "pass" },
+      { "item": "nl_translate_503_honesty", "result": "pass", "note": "Natural-language search is unavailable (AI service not configured). KQL hunt still works." },
+      { "item": "run_search_results_agent20", "result": "pass", "note": "EC2AMAZ-8F0Q7DL (agent-20) events; ~10k approx" },
+      { "item": "live_histogram_buckets", "result": "pass", "note": "49 buckets" },
+      { "item": "pagination_next_page2", "result": "pass", "note": "Page 2 101–200" },
+      { "item": "save_modal", "result": "pass" },
+      { "item": "manager_panel_ha_hunts_saved", "result": "pass", "note": "Secondary manager lists /ha-hunts/saved entries; primary Saved uses ha-saved-queries" },
+      { "item": "event_detail_flyout_failed_logon", "result": "pass", "note": "EVENT CONTEXT / EVENT DETAIL for failed logon on EC2AMAZ-8F0Q7DL" },
+      { "item": "statusdock_no_fake_eps", "result": "pass", "note": "Historical / 0 EPS when SSE disconnected — not fixture 12840" }
+    ]
+  },
+  "gates": {
+    "lint_changed": "pass",
+    "type_check": "pass",
+    "vitest_search_hunt": "pass (183 tests when run under frontend-v3)",
+    "build": "pass"
+  },
+  "windows_agent": {
+    "hostname": "EC2AMAZ-8F0Q7DL",
+    "preferred_id": 20,
+    "observed_in_results": true
+  }
+}

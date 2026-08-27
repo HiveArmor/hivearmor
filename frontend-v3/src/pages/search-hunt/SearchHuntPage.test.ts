@@ -10,26 +10,27 @@ import { describe, it, expect } from 'vitest';
 import type { SearchExecuteRequest, SearchExecuteResponse } from './searchHunt.types';
 
 describe('SearchHunt identity', () => {
+  const pageSource = readFileSync(join(process.cwd(), 'src/pages/search-hunt/SearchHuntPage.tsx'), 'utf8');
+  const serviceSource = readFileSync(join(process.cwd(), 'src/services/search.service.ts'), 'utf8');
+
   it('states ad-hoc hunt job and sibling cross-links', () => {
-    const source = readFileSync(join(process.cwd(), 'src/pages/search-hunt/SearchHuntPage.tsx'), 'utf8');
-    expect(source).toContain('SEARCH_HUNT_JOB_SENTENCE');
-    expect(source.toLowerCase()).toMatch(/ad-hoc hunt|event search/);
-    expect(source).toContain('to="/dashboard"');
-    expect(source).toContain('to="/alerts"');
-    expect(source).toContain('to="/investigations"');
-    expect(source).toContain('to="/incidents"');
-    expect(source).toContain('runNlQuery');
-    expect(source).toContain('useConfirmedSavedQueries');
-    expect(source).not.toContain('eps={searchHuntFixtureMode ? 12840');
-    expect(source).toContain('Histogram unavailable until the search response includes time buckets');
+    expect(pageSource).toContain('SEARCH_HUNT_JOB_SENTENCE');
+    expect(pageSource.toLowerCase()).toMatch(/ad-hoc hunt|event search/);
+    expect(pageSource).toContain('to="/dashboard"');
+    expect(pageSource).toContain('to="/alerts"');
+    expect(pageSource).toContain('to="/investigations"');
+    expect(pageSource).toContain('to="/incidents"');
+    expect(pageSource).toContain('runNlQuery');
+    expect(pageSource).toContain('useConfirmedSavedQueries');
+    expect(pageSource).not.toContain('eps={searchHuntFixtureMode ? 12840');
+    expect(pageSource).toContain('Histogram unavailable until the search response includes time buckets');
   });
 
   it('wires confirmed saved-query service paths', () => {
-    const service = readFileSync(join(process.cwd(), 'src/services/search.service.ts'), 'utf8');
-    expect(service).toContain('/ha-search/nl-query');
-    expect(service).toContain('/ha-saved-queries');
-    expect(service).toContain('question:');
-    expect(service).not.toContain('/ha-search/execute');
+    expect(serviceSource).toContain('/ha-search/nl-query');
+    expect(serviceSource).toContain('/ha-saved-queries');
+    expect(serviceSource).toContain('question:');
+    expect(serviceSource).not.toContain('/ha-search/execute');
   });
 });
 
