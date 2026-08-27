@@ -3,7 +3,7 @@
   "status": "STAGING CANDIDATE",
   "base_tip": "87cc44b",
   "based_on_main_includes_pr97": true,
-  "tip_sha": "28ea040c",
+  "tip_sha": "42c6a018873021030da4f33b09aad6f6de59cf01",
   "feature_sha": "854a0eab127405ffed3ec29687adb398e523f4f6",
   "pr": "https://github.com/HiveArmor/hivearmor/pull/99",
   "decision": "RESTRUCTURE",
@@ -11,9 +11,9 @@
     "/entities",
     "/entities/inventory",
     "/entities/:id/dossier",
-    "/entities/:id → dossier redirect"
+    "/entities/:id \u2192 dossier redirect"
   ],
-  "job_sentence": "Entity inventory — find hosts, users, and IPs by risk, open a dossier to understand exposure, then pivot into hunt or response.",
+  "job_sentence": "Entity inventory \u2014 find hosts, users, and IPs by risk, open a dossier to understand exposure, then pivot into hunt or response.",
   "distinction": {
     "search": "/search = ad-hoc hunt / event search",
     "investigations": "/investigations = working evidence sessions (pre-incident)",
@@ -30,10 +30,10 @@
       ],
       "added": [
         "ENTITIES_JOB_SENTENCE inventory/risk-pivot copy",
-        "Mission Control · Search · Alerts · Investigations · Incidents · Sensors · UEBA risk meta links",
+        "Mission Control \u00b7 Search \u00b7 Alerts \u00b7 Investigations \u00b7 Incidents \u00b7 Sensors \u00b7 UEBA risk meta links",
         "Compact Type + Risk + Search + Sort filters",
         "Primary grid min-height 50vh",
-        "Row click → /entities/:id/dossier"
+        "Row click \u2192 /entities/:id/dossier"
       ],
       "kept": [
         "Confirmed GET /api/ha-entities via listEntities",
@@ -54,7 +54,7 @@
         "ENTITY_DOSSIER_JOB_SENTENCE",
         "Confirmed fetchEntityDetail + fetchEntityRisk + fetchEntityAlerts + fetchEntityEvents",
         "Identity + risk + related alerts/events with empty/5xx honesty",
-        "Pivots: Hunt · Alerts · Investigations · Incidents · Sensors (hosts)",
+        "Pivots: Hunt \u00b7 Alerts \u00b7 Investigations \u00b7 Incidents \u00b7 Sensors (hosts)",
         "Meta links retained on detail load failure",
         "Human role labels on access denial"
       ],
@@ -88,8 +88,11 @@
       "path": "GET /api/ha-entities/{id}",
       "staging": {
         "status": 500,
-        "probe_ids": ["EC2AMAZ-8F0Q7DL", "20"],
-        "note": "No inventory rows; bare {id} returns 500 — UI honesty, no synthetic dossier"
+        "probe_ids": [
+          "EC2AMAZ-8F0Q7DL",
+          "20"
+        ],
+        "note": "No inventory rows; bare {id} returns 500 \u2014 UI honesty, no synthetic dossier"
       }
     },
     "risk": {
@@ -123,7 +126,7 @@
     }
   },
   "ux_smoke": {
-    "deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 + edge — healthy (tip 6fa1903)",
+    "deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 + edge \u2014 healthy (feature tip 6fa1903; docs tip 42c6a01)",
     "bundle_marker": "EntityInventoryPage-*.js contains Entity inventory; EntityDossierPage-*.js present",
     "ui_shell": {
       "path": "/entities",
@@ -132,13 +135,37 @@
     "headed_browser": true,
     "headed_note": "Admin session: /entities shows job sentence, meta links, empty inventory honesty (0 matching). Dossier probe EC2AMAZ-8F0Q7DL shows Failed to load dossier honesty (detail 500) with Retry/Back.",
     "checks": [
-      {"item": "job_sentence_visible", "result": "pass"},
-      {"item": "meta_links_mission_search_alerts_investigations_incidents_sensors", "result": "pass"},
-      {"item": "list_primary_50vh_empty_honesty", "result": "pass"},
-      {"item": "row_opens_dossier_wired", "result": "pass", "note": "no rows on staging to click"},
-      {"item": "dossier_probe_honesty_500", "result": "pass", "note": "host EC2AMAZ-8F0Q7DL / agent-20 preferred; UBA table empty"},
-      {"item": "dossier_cross_links_on_error", "result": "pass", "note": "meta links retained after 6fa1903"},
-      {"item": "fixture_disabled", "result": "pass"}
+      {
+        "item": "job_sentence_visible",
+        "result": "pass"
+      },
+      {
+        "item": "meta_links_mission_search_alerts_investigations_incidents_sensors",
+        "result": "pass"
+      },
+      {
+        "item": "list_primary_50vh_empty_honesty",
+        "result": "pass"
+      },
+      {
+        "item": "row_opens_dossier_wired",
+        "result": "pass",
+        "note": "no rows on staging to click"
+      },
+      {
+        "item": "dossier_probe_honesty_500",
+        "result": "pass",
+        "note": "host EC2AMAZ-8F0Q7DL / agent-20 preferred; UBA table empty"
+      },
+      {
+        "item": "dossier_cross_links_on_error",
+        "result": "pass",
+        "note": "meta links retained after 6fa1903"
+      },
+      {
+        "item": "fixture_disabled",
+        "result": "pass"
+      }
     ]
   },
   "windows_agent": {
@@ -147,7 +174,7 @@
     "agents_n": 18,
     "host_match_rows": 8,
     "id20_present": true,
-    "note": "Agent present; entity inventory empty — no host entity row to open"
+    "note": "Agent present; entity inventory empty \u2014 no host entity row to open"
   },
   "gates": {
     "lint_changed": "pass",
@@ -158,7 +185,7 @@
   "known_backend_gap": {
     "id": "ENT-UBA-EMPTY",
     "summary": "Staging hive_uba_entity_risk has 0 rows; GET /ha-entities/{id} and /risk return 500 for probe ids; alerts 404",
-    "remediation": "Backend/populate entity risk projection — out of Prompt 12 FE scope"
+    "remediation": "Backend/populate entity risk projection \u2014 out of Prompt 12 FE scope"
   },
   "handoff_at": "2026-08-27T16:10:00Z"
 }
