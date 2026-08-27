@@ -1,4 +1,7 @@
-/** Incident Command — bounded, keyboard-first SOC incident queue. */
+/**
+ * Incidents — owned response cases (SLA, assignment, priority, evidence).
+ * Distinct from /queue (shift triage), /alerts (inventory), /correlated-findings (offense grouping).
+ */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -7,14 +10,12 @@ import type { RowClickedEvent, RowDoubleClickedEvent } from 'ag-grid-community';
 import type { AgGridReact } from 'ag-grid-react';
 import {
   AlignJustify,
-  BellRing,
-  CheckCircle2,
+  Briefcase,
   ChevronLeft,
   ChevronRight,
   CircleAlert,
   Clock3,
   ExternalLink,
-  Filter,
   List,
   PanelTop,
   RefreshCw,
@@ -22,7 +23,7 @@ import {
   ShieldAlert,
   UserRound,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { INCIDENT_COLUMN_DEFS } from './columnDefs';
 import {
@@ -45,6 +46,7 @@ import type { IncidentStatus } from '@/constants/status.constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity, ROW_HEIGHTS, type RowDensity } from '@/hooks/useRowDensity';
+import { ROLE_LABELS, ROLES } from '@/lib/roles';
 import { getSeverityLabel } from '@/lib/severity';
 import type { SeverityLevel } from '@/lib/severity';
 import {
@@ -54,18 +56,24 @@ import {
 import { useAuthStore } from '@/store/auth.store';
 import './IncidentListPage.css';
 
-type QueueView = 'active' | 'mine' | 'critical' | 'breached' | 'unassigned' | 'all' | 'custom';
+/** Bundle-visible job sentence — owned response cases, not triage/inventory/offense grids. */
+export const INCIDENTS_JOB_SENTENCE =
+  'Manage owned response cases — SLA, assignment, priority, evidence, and timeline. Promote from alerts or correlated findings when case ownership is required.';
+
+type CaseScope = 'active' | 'mine' | 'critical' | 'breached' | 'unassigned' | 'all' | 'custom';
 const PAGE_SIZE = 50;
 const ACTIVE_STATUSES: IncidentStatus[] = ['open', 'in_progress'];
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
 
+const CREATE_DENIED = `Required permission: ${ROLE_LABELS[ROLES.SOC_MANAGER]} or ${ROLE_LABELS[ROLES.ADMIN]}`;
+
 const STATUS_OPTIONS = [
-  { value: 'active', label: 'Active states' },
+  { value: 'active', label: 'Active (open + in progress)' },
   { value: 'open', label: 'Open' },
-  { value: 'in_progress', label: 'In review' },
-  { value: 'resolved', label: 'Completed' },
-  { value: 'closed', label: 'Merged' },
-  { value: 'all', label: 'All states' },
+  { value: 'in_progress', label: 'In progress' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'closed', label: 'Closed' },
+  { value: 'all', label: 'All statuses' },
 ];
 
 const PRIORITY_OPTIONS = [
@@ -91,6 +99,15 @@ const TIME_OPTIONS = [
   { value: 'all', label: 'All retained' },
 ];
 
+const SCOPE_VIEWS: Array<{ id: CaseScope; label: string }> = [
+  { id: 'active', label: 'Active' },
+  { id: 'mine', label: 'Assigned to me' },
+  { id: 'critical', label: 'P1' },
+  { id: 'breached', label: 'SLA breached' },
+  { id: 'unassigned', label: 'Unassigned' },
+  { id: 'all', label: 'All cases' },
+];
+
 function createdFrom(range: string): string | undefined {
   const offsets: Record<string, number> = {
     '24h': 24 * 60 * 60_000,
@@ -98,11 +115,6 @@ function createdFrom(range: string): string | undefined {
     '30d': 30 * 24 * 60 * 60_000,
   };
   return range === 'all' ? undefined : new Date(Date.now() - offsets[range]).toISOString();
-}
-
-function formatSnapshot(timestamp: string | undefined): string {
-  if (!timestamp) return 'Pending';
-  return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 function formatAbsolute(timestamp: string | null | undefined): string {
@@ -127,7 +139,7 @@ function IncidentPreview({ incident, onOpen }: { incident: IncidentListItem; onO
       </div>
 
       <p className="incident-preview__description">
-        {incident.incidentDescription || 'No incident summary has been recorded. Open the workbench to review linked alerts and preserve analyst findings.'}
+        {incident.incidentDescription || 'No case summary recorded. Open the workbench to review linked alerts, evidence, and timeline.'}
       </p>
 
       <dl className="incident-preview__facts">
@@ -150,12 +162,12 @@ function IncidentPreview({ incident, onOpen }: { incident: IncidentListItem; onO
       </dl>
 
       <section className="incident-preview__next">
-        <strong><ShieldAlert size={14} /> Investigation control</strong>
-        <p>Review linked alerts and evidence before containment. Disruptive response remains subject to target preview and authority policy.</p>
+        <strong><ShieldAlert size={14} /> Owned response case</strong>
+        <p>Status, priority, assignee, and SLA live on the case. Disruptive response remains subject to target preview and authority policy.</p>
       </section>
 
       <button type="button" className="incident-preview__open" onClick={onOpen}>
-        Open investigation workbench <ExternalLink size={13} />
+        Open case workbench <ExternalLink size={13} />
       </button>
     </div>
   );
@@ -167,7 +179,7 @@ export function IncidentListPage(): JSX.Element {
   const user = useAuthStore((state) => state.user);
   const epsStream = useEpsStream();
 
-  const [view, setView] = useState<QueueView>('active');
+  const [view, setView] = useState<CaseScope>('active');
   const [searchText, setSearchText] = useState('');
   const search = useDebounce(searchText.trim(), 250);
   const [status, setStatus] = useState('active');
@@ -179,7 +191,7 @@ export function IncidentListPage(): JSX.Element {
   const [selectedIncident, setSelectedIncident] = useState<IncidentListItem | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const canCreate = user?.roles?.some((role) => ['ROLE_SOC_MANAGER', 'ROLE_ADMIN'].includes(role)) ?? false;
+  const canCreate = user?.roles?.some((role) => role === ROLES.SOC_MANAGER || role === ROLES.ADMIN) ?? false;
 
   const filters = useMemo<IncidentFilters>(() => {
     const next: IncidentFilters = {
@@ -205,7 +217,7 @@ export function IncidentListPage(): JSX.Element {
   }), [filters, page]);
 
   const listQuery = useQuery({
-    queryKey: ['incident-command', listParams],
+    queryKey: ['incidents-cases', listParams],
     queryFn: ({ signal }) => fetchIncidents(listParams, signal),
     staleTime: 15_000,
     placeholderData: (previous) => previous,
@@ -213,7 +225,7 @@ export function IncidentListPage(): JSX.Element {
   });
 
   const summaryQuery = useQuery({
-    queryKey: ['incident-command-summary', user?.login],
+    queryKey: ['incidents-cases-summary', user?.login],
     queryFn: ({ signal }) => fetchIncidentQueueSummary(user?.login, signal),
     staleTime: 30_000,
     refetchInterval: 30_000,
@@ -270,7 +282,7 @@ export function IncidentListPage(): JSX.Element {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeIndex, items, openIncident, selectedIncident]);
 
-  const applyView = (nextView: QueueView): void => {
+  const applyView = (nextView: CaseScope): void => {
     setView(nextView);
     setPage(0);
   };
@@ -282,7 +294,11 @@ export function IncidentListPage(): JSX.Element {
   };
 
   if (listQuery.error instanceof IncidentApiError && listQuery.error.status === 403) {
-    return <div className="incident-page incident-page--center"><AccessDeniedState message="Incident command requires an authorized SOC role in the selected tenant scope." /></div>;
+    return (
+      <div className="incident-page incident-page--center">
+        <AccessDeniedState message="Incidents require an authorized SOC role in the selected tenant scope." />
+      </div>
+    );
   }
 
   const summary = summaryQuery.data;
@@ -291,71 +307,190 @@ export function IncidentListPage(): JSX.Element {
   const slaDetail = slaStats
     ? formatSlaStatsDetail(slaStats)
     : slaStatsQuery.isError
-      ? 'sla-stats unavailable · queue filter remains'
+      ? 'sla-stats unavailable · list filters remain'
       : 'outside response target';
-  const metric = (value: number | null | undefined): string => value === null || value === undefined ? '—' : value.toLocaleString();
+  const metric = (value: number | null | undefined): string =>
+    value === null || value === undefined ? '—' : value.toLocaleString();
+
+  const scopeCount = (id: CaseScope): number | null | undefined => {
+    if (id === 'active') return summary?.active;
+    if (id === 'mine') return summary?.assignedToMe;
+    if (id === 'critical') return summary?.critical;
+    if (id === 'breached') return breachedCount;
+    if (id === 'unassigned') return summary?.unassigned;
+    return undefined;
+  };
 
   return (
-    <section className="incident-page" aria-label="Incident command queue">
+    <section className="incident-page" aria-label="Owned response cases">
+      {fixtureMode && (
+        <div className="incident-fixture" role="status">
+          <strong>Design fixture:</strong> fictional incident records are enabled for visual review.
+          <span>Production never receives these records.</span>
+        </div>
+      )}
+
       <header className="incident-header">
         <div className="incident-header__identity">
-          <span className="incident-header__mark"><BellRing size={18} /></span>
-          <div><span>COMMAND</span><h1>Incident Command</h1></div>
+          <span className="incident-header__mark" aria-hidden="true"><Briefcase size={18} /></span>
+          <div>
+            <span>Response operations</span>
+            <h1>Incidents</h1>
+            <p>{INCIDENTS_JOB_SENTENCE}</p>
+          </div>
         </div>
         <div className="incident-header__actions">
           <span className="incident-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> open</span>
-          <button type="button" className="incident-icon-button" onClick={() => { void listQuery.refetch(); void summaryQuery.refetch(); void slaStatsQuery.refetch(); }} aria-label="Refresh incident queue" title="Refresh incident queue"><RefreshCw size={15} className={listQuery.isFetching ? 'incident-spin' : undefined} /></button>
-          <button type="button" className="incident-primary-button" disabled={!canCreate} onClick={() => navigate('/alerts')} title={canCreate ? 'Select alerts to create an incident' : 'Requires SOC Manager or Administrator'}>Create from alerts</button>
+          <button
+            type="button"
+            className="incident-icon-button"
+            onClick={() => { void listQuery.refetch(); void summaryQuery.refetch(); void slaStatsQuery.refetch(); }}
+            aria-label="Refresh incidents"
+            title="Refresh incidents"
+          >
+            <RefreshCw size={15} className={listQuery.isFetching ? 'incident-spin' : undefined} />
+          </button>
+          <button
+            type="button"
+            className="incident-primary-button"
+            disabled={!canCreate}
+            onClick={() => navigate('/alerts')}
+            title={canCreate ? 'Select alerts to create an incident' : CREATE_DENIED}
+          >
+            Create from alerts
+          </button>
         </div>
       </header>
 
-      {fixtureMode && <div className="incident-fixture"><strong>Design fixture:</strong> fictional incident records are enabled for visual review.<span>Production never receives these records.</span></div>}
+      <p className="incident-meta">
+        <Link to="/dashboard">Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/queue">Analyst Queue</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/alerts">Alerts inventory</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/correlated-findings">Correlated Findings</Link>
+        {!canCreate && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span className="incident-meta__warn" title={CREATE_DENIED}>Create gated — {CREATE_DENIED}</span>
+          </>
+        )}
+      </p>
 
-      <div className="incident-summary" aria-label="Authorized incident summary">
-        <div><span><List size={13} /> Active incidents</span><strong>{metric(summary?.active)}</strong><small>open and in review</small></div>
-        <div data-tone="danger"><span><ShieldAlert size={13} /> P1 critical</span><strong>{metric(summary?.critical)}</strong><small>immediate command attention</small></div>
-        <div data-tone="warning" aria-label="Incident SLA summary"><span><Clock3 size={13} /> SLA breached</span><strong>{metric(breachedCount)}</strong><small title={slaDetail}>{slaDetail}</small></div>
-        <div><span><CircleAlert size={13} /> Unassigned</span><strong>{metric(summary?.unassigned)}</strong><small>ownership required</small></div>
-        <div data-tone="positive"><span><UserRound size={13} /> Assigned to me</span><strong>{metric(summary?.assignedToMe)}</strong><small>{user?.login ?? 'current analyst'}</small></div>
-        <div data-tone={slaStats && slaStats.breached === 0 ? 'positive' : undefined}><span><CheckCircle2 size={13} /> SLA compliant</span><strong>{metric(slaStats?.compliant)}</strong><small>{slaStats ? `${metric(slaStats.total)} tracked` : formatSnapshot(summary?.snapshotAt)}</small></div>
+      <div className="incident-sticky" aria-label="Incident filters">
+        <nav className="incident-views" aria-label="Case scopes">
+          <strong>Scope</strong>
+          {SCOPE_VIEWS.map(({ id, label }) => {
+            const count = scopeCount(id);
+            return (
+              <button
+                key={id}
+                type="button"
+                data-active={view === id || undefined}
+                aria-pressed={view === id}
+                onClick={() => applyView(id)}
+              >
+                {label}
+                {count !== undefined && count !== null && <em>{count}</em>}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="incident-toolbar" aria-label="Incident filter controls">
+          <label className="incident-search">
+            <Search size={14} aria-hidden="true" />
+            <input
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+              placeholder="Search case name…"
+              aria-label="Search case name"
+            />
+          </label>
+          <HaCompactSelect
+            ariaLabel="Incident status"
+            label="Status"
+            value={status}
+            options={STATUS_OPTIONS}
+            onChange={(value) => setCustomFilter(setStatus, value)}
+          />
+          <HaCompactSelect
+            ariaLabel="Incident priority"
+            label="Priority"
+            value={priority}
+            options={PRIORITY_OPTIONS}
+            onChange={(value) => setCustomFilter(setPriority, value)}
+          />
+          <HaCompactSelect
+            ariaLabel="Incident severity"
+            label="Severity"
+            value={severity}
+            options={SEVERITY_OPTIONS}
+            onChange={(value) => setCustomFilter(setSeverity, value)}
+          />
+          <HaCompactSelect
+            ariaLabel="Incident creation window"
+            label="Created"
+            value={timeRange}
+            options={TIME_OPTIONS}
+            onChange={(value) => { setTimeRange(value); setPage(0); }}
+          />
+          <span className="incident-toolbar__spacer" />
+          <span className="incident-sla-chip" title={slaDetail} data-tone={breachedCount && breachedCount > 0 ? 'warning' : 'neutral'}>
+            <Clock3 size={12} aria-hidden="true" />
+            SLA breached <strong>{metric(breachedCount)}</strong>
+            {slaStats && <small>· {metric(slaStats.compliant)} compliant</small>}
+          </span>
+          <span className="incident-sla-chip" title="Unassigned open cases">
+            <UserRound size={12} aria-hidden="true" />
+            Unassigned <strong>{metric(summary?.unassigned)}</strong>
+          </span>
+        </div>
       </div>
 
-      <nav className="incident-views" aria-label="Incident queue views">
-        {([
-          ['active', 'Needs attention', summary?.active],
-          ['mine', 'My incidents', summary?.assignedToMe],
-          ['critical', 'P1 critical', summary?.critical],
-          ['breached', 'SLA breached', breachedCount],
-          ['unassigned', 'Unassigned', summary?.unassigned],
-          ['all', 'All incidents', undefined],
-        ] as Array<[QueueView, string, number | null | undefined]>).map(([id, label, count]) => (
-          <button key={id} type="button" data-active={view === id || undefined} onClick={() => applyView(id)}>{label}{count !== undefined && count !== null && <span>{count}</span>}</button>
-        ))}
-      </nav>
-
-      <div className="incident-toolbar" aria-label="Incident filters">
-        <label className="incident-search"><Search size={14} /><input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Search incident name…" aria-label="Search incident name" /><kbd>/</kbd></label>
-        <Filter size={14} className="incident-filter-icon" />
-        <HaCompactSelect ariaLabel="Incident status" value={status} options={STATUS_OPTIONS} onChange={(value) => setCustomFilter(setStatus, value)} />
-        <HaCompactSelect ariaLabel="Incident priority" value={priority} options={PRIORITY_OPTIONS} onChange={(value) => setCustomFilter(setPriority, value)} />
-        <HaCompactSelect ariaLabel="Incident severity" value={severity} options={SEVERITY_OPTIONS} onChange={(value) => setCustomFilter(setSeverity, value)} />
-        <HaCompactSelect ariaLabel="Incident creation window" value={timeRange} options={TIME_OPTIONS} onChange={(value) => { setTimeRange(value); setPage(0); }} />
-        <span className="incident-toolbar__spacer" />
-        <span className="incident-snapshot">Snapshot {formatSnapshot(summary?.snapshotAt)}</span>
-      </div>
-
-      {summary?.partial && <div className="incident-partial" role="status"><CircleAlert size={13} /> Some summary counters require the updated incident criteria backend. The queue data and supported filters remain available.</div>}
+      {summary?.partial && (
+        <div className="incident-partial" role="status">
+          <CircleAlert size={13} /> Some summary counters require updated incident criteria. Case list and supported filters remain available.
+        </div>
+      )}
 
       <div className="incident-results-header">
-        <div><strong>Incidents</strong><span>{firstRecord.toLocaleString()}–{lastRecord.toLocaleString()} of {total.toLocaleString()} matching</span></div>
-        <div className="incident-density" aria-label="Row density"><span>Rows</span>{(['compact', 'standard', 'comfortable'] as RowDensity[]).map((value) => <button key={value} type="button" aria-label={`${value} rows`} title={`${value} rows`} aria-pressed={density === value} onClick={() => setDensity(value)}>{value === 'compact' ? <PanelTop size={14} /> : value === 'standard' ? <AlignJustify size={14} /> : <List size={14} />}</button>)}</div>
+        <div>
+          <strong>Cases</strong>
+          <span>{firstRecord.toLocaleString()}–{lastRecord.toLocaleString()} of {total.toLocaleString()} matching</span>
+        </div>
+        <div className="incident-density" aria-label="Row density">
+          <span>Rows</span>
+          {(['compact', 'standard', 'comfortable'] as RowDensity[]).map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-label={`${value} rows`}
+              title={`${value} rows`}
+              aria-pressed={density === value}
+              onClick={() => setDensity(value)}
+            >
+              {value === 'compact' ? <PanelTop size={14} /> : value === 'standard' ? <AlignJustify size={14} /> : <List size={14} />}
+            </button>
+          ))}
+        </div>
       </div>
 
       <main className="incident-grid-wrap">
         {listQuery.isError && !listQuery.data ? (
-          <ErrorState title="Incident queue unavailable" message="The authorized incident projection could not be loaded." error={listQuery.error as Error} onRetry={() => { void listQuery.refetch(); }} />
+          <ErrorState
+            title="Incidents unavailable"
+            message="The authorized incident projection could not be loaded."
+            error={listQuery.error as Error}
+            onRetry={() => { void listQuery.refetch(); }}
+          />
         ) : items.length === 0 && !listQuery.isLoading ? (
-          <EmptyState icon={<List size={42} />} title="No incidents match this view" description="Adjust the saved view, filters, or creation window. No production records are synthesized." />
+          <EmptyState
+            icon={<Briefcase size={42} />}
+            title="No incidents match this view"
+            description="Adjust scope or filters. No production case records are synthesized."
+          />
         ) : (
           <SiemDataGrid
             ref={gridRef}
@@ -369,22 +504,42 @@ export function IncidentListPage(): JSX.Element {
             rowSelection="single"
             suppressRowClickSelection={false}
             getRowId={(params) => String((params.data as IncidentListItem).id)}
-            ariaLabel="Incident command results"
+            ariaLabel="Owned response cases"
             defaultColDef={{ filter: false }}
           />
         )}
       </main>
 
       <footer className="incident-pagination">
-        <span>{total.toLocaleString()} matching incidents</span>
+        <span>{total.toLocaleString()} matching cases</span>
         <span>Page {page + 1} / {pageCount} · {firstRecord}–{lastRecord}</span>
-        <div><button type="button" disabled={page === 0 || listQuery.isFetching} onClick={() => setPage((current) => Math.max(0, current - 1))}><ChevronLeft size={13} /> Previous</button><button type="button" disabled={page + 1 >= pageCount || listQuery.isFetching} onClick={() => setPage((current) => current + 1)}>Next <ChevronRight size={13} /></button></div>
+        <div>
+          <button type="button" disabled={page === 0 || listQuery.isFetching} onClick={() => setPage((current) => Math.max(0, current - 1))}>
+            <ChevronLeft size={13} /> Previous
+          </button>
+          <button type="button" disabled={page + 1 >= pageCount || listQuery.isFetching} onClick={() => setPage((current) => current + 1)}>
+            Next <ChevronRight size={13} />
+          </button>
+        </div>
       </footer>
 
-      <div className="incident-status-dock"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={summary?.snapshotAt ? new Date(summary.snapshotAt) : undefined} /></div>
+      <div className="incident-status-dock">
+        <StatusDock
+          sseConnected={fixtureMode || epsStream.connected}
+          eps={fixtureMode ? 12840 : epsStream.eps}
+          mode={fixtureMode ? 'historical' : 'live'}
+          lastUpdated={summary?.snapshotAt ? new Date(summary.snapshotAt) : undefined}
+        />
+      </div>
 
       {selectedIncident && (
-        <HaDrawer isOpen onClose={() => setSelectedIncident(null)} title={selectedIncident.incidentName} subtitle={`Incident ${selectedIncident.id} · authorized scope`} width={480}>
+        <HaDrawer
+          isOpen
+          onClose={() => setSelectedIncident(null)}
+          title={selectedIncident.incidentName}
+          subtitle={`INC-${selectedIncident.id} · owned response case`}
+          width={480}
+        >
           <IncidentPreview incident={selectedIncident} onOpen={() => openIncident(selectedIncident)} />
         </HaDrawer>
       )}

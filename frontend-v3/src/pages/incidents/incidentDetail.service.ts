@@ -178,10 +178,27 @@ export async function closeIncident(id: number): Promise<void> {
 }
 
 export async function changeIncidentStatus(id: number, status: IncidentStatus): Promise<void> {
+  // PUT /ha-incidents/change-status expects a full UtmIncident body (@Valid) plus Idempotency-Key.
+  const current = await fetchIncidentDetail(id);
+  const body = {
+    id: current.id,
+    incidentName: current.incidentName,
+    incidentDescription: current.incidentDescription ?? '',
+    incidentSeverity: current.incidentSeverity,
+    incidentCreatedDate: current.incidentCreatedDate,
+    incidentStatus: STATUS_TO_API[status],
+    incidentPriority: current.incidentPriority,
+    incidentAssignedTo: current.incidentAssignedTo,
+    incidentSolution: current.incidentSolution,
+    slaDeadline: current.slaDeadline,
+  };
   const response = await fetch('/api/ha-incidents/change-status', {
     method: 'PUT',
-    headers: authHeaders(true),
-    body: JSON.stringify({ id, incidentStatus: STATUS_TO_API[status] }),
+    headers: {
+      ...authHeaders(true),
+      'Idempotency-Key': crypto.randomUUID(),
+    },
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {

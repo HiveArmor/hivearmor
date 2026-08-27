@@ -32,6 +32,21 @@
   font: var(--ha-type-metadata);
 }
 
+.incident-command-bar__related {
+  margin-left: 4px;
+}
+
+.incident-command-bar__breadcrumb a {
+  color: var(--ha-foreground-link, var(--ha-action-primary, var(--ha-primary)));
+  text-decoration: none;
+  font-weight: 650;
+}
+
+.incident-command-bar__breadcrumb a:hover {
+  color: var(--ha-foreground-primary);
+  text-decoration: underline;
+}
+
 .incident-command-bar__back {
   display: inline-flex;
   align-items: center;

@@ -1,0 +1,163 @@
+{
+  "prompt": "09-incidents-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "412aaf5",
+  "based_on_main_includes_pr94": true,
+  "tip_sha": "75a0c2909a527eb21c40834e75d0d256916a1fcb",
+  "feature_sha": "4f55664a3d3b1d7d72313c75fc2f70a5413fa05e",
+  "pr": "https://github.com/HiveArmor/hivearmor/pull/95",
+  "decision": "RESTRUCTURE",
+  "routes": [
+    "/incidents",
+    "/incidents/:id"
+  ],
+  "job_sentence": "Manage owned response cases \u2014 SLA, assignment, priority, evidence, and timeline. Promote from alerts or correlated findings when case ownership is required.",
+  "distinction": {
+    "queue": "/queue = shift triage workbench",
+    "alerts": "/alerts = full alert inventory / notables search",
+    "correlated_findings": "/correlated-findings = offense-class grouping of related alerts",
+    "incidents": "/incidents = owned response cases (SLA, assignment, evidence, timeline)"
+  },
+  "ia": {
+    "list": {
+      "removed": [
+        "Incident Command branding / COMMAND mark",
+        "Permanent 6-tile KPI summary strip",
+        "User-facing Completed/Merged/In review status filter labels"
+      ],
+      "added": [
+        "INCIDENTS_JOB_SENTENCE owned-case copy",
+        "Mission Control \u00b7 Analyst Queue \u00b7 Alerts inventory \u00b7 Correlated Findings meta links",
+        "Compact Scope strip + Status/Priority/Severity/Created filters",
+        "Inline SLA breached / unassigned chips from sla-stats + summary",
+        "AG Grid primary (\u226550% viewport via flex:1 min-height 50%)"
+      ],
+      "kept": [
+        "AG Grid incident columns + SLA renderer",
+        "J/K keyboard navigation + preview drawer",
+        "Fixture-disabled production path",
+        "Create from alerts gated to SOC Manager / Platform Administrator"
+      ]
+    },
+    "detail": {
+      "removed": [
+        "Decorative response-path phase rail",
+        "Hardcoded Investigation focus advice cards"
+      ],
+      "added": [
+        "Owned case header breadcrumb + Queue/Alerts/Findings cross-links",
+        "AI assistive provenance banner (no silent mutate)",
+        "Read-only human deny strip when Analyst+",
+        "change-status: Idempotency-Key + required UtmIncident fields",
+        "SLA chip in case control rail; honest empty timeline"
+      ],
+      "kept": [
+        "Tabbed workbench (overview/timeline/evidence/alerts/events/tasks/response/activity/notes)",
+        "Confirmed timeline/entities/evidence/ai-summary/priority wiring",
+        "Honesty on empty or failed extended panels"
+      ]
+    }
+  },
+  "backend": {
+    "list": {
+      "path": "GET /api/ha-incidents",
+      "staging": {
+        "status": 200,
+        "bytes": 2363,
+        "sample_id": 140
+      }
+    },
+    "detail": {
+      "path": "GET /api/ha-incidents/{id}",
+      "staging": {
+        "status": 200
+      }
+    },
+    "timeline": {
+      "path": "GET /api/ha-incidents/{id}/timeline",
+      "staging": {
+        "status": 200
+      }
+    },
+    "entities": {
+      "path": "GET /api/ha-incidents/{id}/entities",
+      "staging": {
+        "status": 500
+      },
+      "honesty": "UI shows entity scope temporarily unavailable"
+    },
+    "evidence": {
+      "path": "GET /api/ha-incidents/{id}/evidence-items",
+      "staging": {
+        "status": 200,
+        "note": "empty array OK"
+      }
+    },
+    "sla_stats": {
+      "path": "GET /api/ha-incidents/sla-stats",
+      "staging": {
+        "status": 200
+      }
+    },
+    "ai_summary": {
+      "path": "POST /api/ha-incidents/{id}/ai-summary",
+      "staging": {
+        "status": 200
+      },
+      "honesty": "Assistive only \u2014 provenance banner in overview"
+    },
+    "users_assigned": {
+      "path": "GET /api/ha-incidents/users-assigned",
+      "staging": {
+        "status": 500
+      },
+      "honesty": "Assignee filter uses summary/login scopes; do not claim assignee picker PRODUCTION READY"
+    },
+    "change_status": {
+      "path": "PUT /api/ha-incidents/change-status",
+      "staging": {
+        "without_idempotency_or_required_fields": 400,
+        "full_body_plus_Idempotency-Key": 200,
+        "restore_OPEN": 200
+      },
+      "ui_fix": "incidentDetail.service changeIncidentStatus fetches detail + sends Idempotency-Key"
+    },
+    "priority": {
+      "path": "PUT /api/ha-incidents/{id}/priority",
+      "staging": {
+        "status": 200
+      }
+    }
+  },
+  "role_gates": {
+    "create_from_alerts": "ROLE_SOC_MANAGER | ROLE_ADMIN \u2014 deny copy uses SOC Manager / Platform Administrator",
+    "mutate_case": "ROLE_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN \u2014 deny copy uses human labels"
+  },
+  "staging_ux": {
+    "deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 + edge \u2014 healthy",
+    "ui_root": 200,
+    "ui_incidents_spa": 200,
+    "browser_automation": "blocked (Playwright browser binary missing; MCP ERR_CERT_AUTHORITY_INVALID)",
+    "bundle_markers": {
+      "IncidentListPage": [
+        "INCIDENTS_JOB_SENTENCE",
+        "owned response cases",
+        "Mission Control",
+        "Correlated Findings"
+      ],
+      "IncidentDetailPage": [
+        "Owned response case",
+        "AI summary is assistive only"
+      ]
+    },
+    "admin_smoke": "API auth token_len 219; list/detail/timeline/evidence/sla-stats/ai-summary/priority verified; entities/users-assigned 500 honesty"
+  },
+  "gates": {
+    "lint_changed": "pass",
+    "type_check": "pass",
+    "vitest_incidents": "46 passed (9 files)",
+    "build": "pass"
+  },
+  "claim": "STAGING CANDIDATE \u2014 never PRODUCTION READY / LIVE VERIFIED on this slice",
+  "evidence_sha": "75a0c2909a527eb21c40834e75d0d256916a1fcb"
+}

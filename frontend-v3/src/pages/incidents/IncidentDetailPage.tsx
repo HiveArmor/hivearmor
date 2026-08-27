@@ -1,6 +1,6 @@
 /**
- * Incident Workbench — persistent case context with progressive investigation detail.
- * Heavy panels are code-split and supporting API calls do not block the case header.
+ * Incident Workbench — owned response case with progressive investigation detail.
+ * Heavy panels are code-split; supporting API calls do not block the case header.
  */
 
 import { lazy, Suspense, useMemo, useState } from 'react';
@@ -15,11 +15,9 @@ import {
   Clock3,
   FileCheck2,
   FileSearch,
-  Fingerprint,
   Hexagon,
   History,
   MessageSquare,
-  Network,
   Play,
   Radio,
   RefreshCw,
@@ -27,7 +25,6 @@ import {
   ShieldCheck,
   ShieldX,
   Sparkles,
-  UserRound,
   Users,
   Workflow,
 } from 'lucide-react';
@@ -62,8 +59,9 @@ import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfir
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { HaSelect } from '@/components/ha-select/HaSelect';
 import { LoadingState } from '@/components/loading-state/LoadingState';
+import { SlaIndicator } from '@/components/sla-indicator/SlaIndicator';
 import type { IncidentStatus } from '@/constants/status.constants';
-import { ROLES } from '@/lib/roles';
+import { ROLE_LABELS, ROLES } from '@/lib/roles';
 import { ALERT_COLUMNS_DEFAULT } from '@/pages/alerts/alertColumns';
 import {
   foundationAlerts,
@@ -114,6 +112,8 @@ const IncidentNotesPanel = lazy(() =>
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
 const validTabs: InvestigationTab[] = ['overview', 'timeline', 'evidence', 'alerts', 'events', 'tasks', 'response', 'activity', 'notes'];
 
+const EDIT_DENIED = `Required permission: ${ROLE_LABELS[ROLES.ANALYST]}, ${ROLE_LABELS[ROLES.SOC_MANAGER]}, or ${ROLE_LABELS[ROLES.ADMIN]}`;
+
 const priorityOptions = [
   { value: 'P1', label: 'P1 — Critical' },
   { value: 'P2', label: 'P2 — High' },
@@ -138,7 +138,8 @@ const statusLabels: Record<string, string> = {
   RESOLVED: 'Resolved',
   closed: 'Closed',
   CLOSED: 'Closed',
-  COMPLETED: 'Completed',
+  COMPLETED: 'Resolved',
+  MERGED: 'Closed',
 };
 
 interface EvidenceFormState {
@@ -342,7 +343,7 @@ export function IncidentDetailPage(): JSX.Element {
   if (!validIncidentId) {
     return (
       <div className="incident-workbench__error">
-        <ErrorState title="Invalid incident ID" message="Open an incident from the incident queue and try again." />
+        <ErrorState title="Invalid incident ID" message="Open a case from the incidents list and try again." />
       </div>
     );
   }
@@ -375,7 +376,7 @@ export function IncidentDetailPage(): JSX.Element {
 
   const tabItems: Array<{ key: InvestigationTab; label: string; icon: JSX.Element; count?: number }> = [
     { key: 'overview', label: 'Overview', icon: <Hexagon size={14} aria-hidden="true" /> },
-    { key: 'timeline', label: 'Attack story', icon: <History size={14} aria-hidden="true" />, count: timelineQuery.data?.length },
+    { key: 'timeline', label: 'Timeline', icon: <History size={14} aria-hidden="true" />, count: timelineQuery.data?.length },
     { key: 'evidence', label: 'Evidence', icon: <FileCheck2 size={14} aria-hidden="true" />, count: evidenceQuery.data?.length },
     { key: 'alerts', label: 'Linked alerts', icon: <Bell size={14} aria-hidden="true" />, count: alertsQuery.data?.total },
     { key: 'events', label: 'Event hunt', icon: <Search size={14} aria-hidden="true" /> },
@@ -417,29 +418,16 @@ export function IncidentDetailPage(): JSX.Element {
         </div>
       )}
 
-      <nav className="incident-phase-rail" aria-label="Incident response lifecycle">
-        <span className="incident-phase-rail__label">Response path</span>
-        <button type="button" data-state={incident.incidentStatus === 'open' ? 'active' : 'complete'} onClick={() => setActiveTab('overview')}>
-          <span>1</span><strong>Triage</strong><small>{incident.incidentStatus === 'open' ? 'Current' : 'Started'}</small>
-        </button>
-        <button type="button" data-state={entities.length > 0 ? 'active' : 'pending'} onClick={() => setActiveTab('overview')}>
-          <span>2</span><strong>Scope</strong><small>{entities.length > 0 ? `${String(entities.length)} entities` : 'Pending'}</small>
-        </button>
-        <button type="button" data-state="pending" onClick={() => setActiveTab('evidence')}>
-          <span>3</span><strong>Preserve</strong><small>Evidence</small>
-        </button>
-        <button type="button" data-state="pending" onClick={() => setActiveTab('response')}>
-          <span>4</span><strong>Contain</strong><small>Preview first</small>
-        </button>
-        <button type="button" data-state={statusActive ? 'pending' : 'complete'} onClick={() => setIsCloseOpen(statusActive)}>
-          <span>5</span><strong>Resolve</strong><small>{statusActive ? 'Gated' : 'Complete'}</small>
-        </button>
-      </nav>
+      {!canEdit && (
+        <div className="incident-workbench__readonly" role="status">
+          Read-only case mutations — {EDIT_DENIED}
+        </div>
+      )}
 
       <div className="incident-workbench__layout">
         <section className="incident-workbench__main" aria-label="Primary investigation content">
-          <section className="incident-panel" aria-label="Investigation workspace">
-            <div className="incident-tabs" role="tablist" aria-label="Incident investigation views">
+          <section className="incident-panel" aria-label="Case workbench">
+            <div className="incident-tabs" role="tablist" aria-label="Incident case views">
               {tabItems.map((tab, index) => (
                 <button
                   className="incident-tabs__button"
@@ -469,7 +457,7 @@ export function IncidentDetailPage(): JSX.Element {
                 <div className="incident-overview">
                   <div className="incident-overview__summary">
                     <section className="incident-overview__narrative">
-                      <span className="incident-panel__eyebrow">Case narrative</span>
+                      <span className="incident-panel__eyebrow">Owned response case</span>
                       <h2>{incident.incidentName}</h2>
                       <p>{incident.incidentDescription || 'No incident description is available.'}</p>
                     </section>
@@ -539,30 +527,11 @@ export function IncidentDetailPage(): JSX.Element {
                     )}
                   </section>
 
-                  <section aria-labelledby="investigation-focus-title">
-                    <div className="incident-section-heading">
-                      <h2 id="investigation-focus-title"><Network size={15} aria-hidden="true" /> Investigation focus</h2>
-                    </div>
-                    <div className="incident-investigation-focus">
-                      <div className="incident-focus-card">
-                        <span className="incident-focus-card__icon"><UserRound size={14} aria-hidden="true" /></span>
-                        <strong>Validate identity</strong>
-                        <span>Confirm the observed activity with the identity owner through an approved channel.</span>
-                      </div>
-                      <div className="incident-focus-card">
-                        <span className="incident-focus-card__icon"><Fingerprint size={14} aria-hidden="true" /></span>
-                        <strong>Verify context</strong>
-                        <span>Compare linked hosts, addresses, and processes with the established baseline.</span>
-                      </div>
-                      <div className="incident-focus-card">
-                        <span className="incident-focus-card__icon"><ShieldCheck size={14} aria-hidden="true" /></span>
-                        <strong>Contain safely</strong>
-                        <span>Preserve evidence and validate business impact before disruptive response actions.</span>
-                      </div>
-                    </div>
-                  </section>
-
                   <div className="incident-ai-slot">
+                    <p className="incident-ai-provenance" role="note">
+                      <Sparkles size={13} aria-hidden="true" />
+                      AI summary is assistive only — it does not change status, priority, or assignee.
+                    </p>
                     <Suspense fallback={<InlineLoading rows={2} />}>
                       <AiIncidentSummaryCard incidentId={String(incidentId)} />
                     </Suspense>
@@ -570,14 +539,14 @@ export function IncidentDetailPage(): JSX.Element {
 
                   <section aria-labelledby="recent-activity-title">
                     <div className="incident-section-heading">
-                      <h2 id="recent-activity-title"><History size={15} aria-hidden="true" /> Recent investigation activity</h2>
+                      <h2 id="recent-activity-title"><History size={15} aria-hidden="true" /> Recent timeline</h2>
                       <button className="incident-text-action" type="button" onClick={() => setActiveTab('timeline')}>
                         View full timeline
                       </button>
                     </div>
                     {timelineQuery.isLoading && <InlineLoading rows={4} />}
                     {timelineQuery.isError && (
-                      <div className="incident-inline-error">Activity could not be loaded. The case record remains available.</div>
+                      <div className="incident-inline-error">Timeline could not be loaded. The case record remains available.</div>
                     )}
                     {!timelineQuery.isLoading && !timelineQuery.isError && (
                       <IncidentTimelinePanel
@@ -665,7 +634,7 @@ export function IncidentDetailPage(): JSX.Element {
                     <Search size={15} aria-hidden="true" />
                     <div>
                       <strong>Incident-bounded event hunt</strong>
-                      <span>Search is constrained to linked entities and a bounded projection. Pivot to Search &amp; Hunt for broader analysis.</span>
+                      <span>Search is constrained to linked entities when available. Empty or unavailable results are honest — no synthetic events.</span>
                     </div>
                     <a href={`/search?incidentId=${encodeURIComponent(String(incidentId))}`}>Open full hunt</a>
                   </div>
@@ -754,6 +723,7 @@ export function IncidentDetailPage(): JSX.Element {
                     data-variant="primary"
                     type="button"
                     disabled={!canEdit || statusMutation.isPending}
+                    title={canEdit ? undefined : EDIT_DENIED}
                     onClick={() => statusMutation.mutate('in_progress')}
                   >
                     <Play size={14} aria-hidden="true" /> Start investigation
@@ -762,7 +732,7 @@ export function IncidentDetailPage(): JSX.Element {
                 {incident.incidentStatus === 'in_progress' && (
                   <button className="incident-action" data-variant="primary" type="button" onClick={() => setActiveTab('timeline')}>
                     <Radio size={14} aria-hidden="true" /> Continue investigation
-                    <span className="incident-action__hint">Attack story</span>
+                    <span className="incident-action__hint">Timeline</span>
                   </button>
                 )}
                 <button className="incident-action" type="button" onClick={() => setActiveTab('tasks')}>
@@ -775,6 +745,7 @@ export function IncidentDetailPage(): JSX.Element {
                   className="incident-action"
                   type="button"
                   disabled={!canEdit}
+                  title={canEdit ? undefined : EDIT_DENIED}
                   onClick={() => setIsAddEvidenceOpen(true)}
                 >
                   <FileCheck2 size={14} aria-hidden="true" /> Preserve evidence
@@ -804,6 +775,7 @@ export function IncidentDetailPage(): JSX.Element {
                   <select
                     value={incident.incidentPriority}
                     disabled={!canEdit || priorityMutation.isPending}
+                    title={canEdit ? undefined : EDIT_DENIED}
                     onChange={(event) => priorityMutation.mutate(event.target.value as IncidentDetail['incidentPriority'])}
                     aria-label="Incident priority"
                   >
@@ -814,6 +786,12 @@ export function IncidentDetailPage(): JSX.Element {
                   <span>Owner</span>
                   <strong>{incident.incidentAssignedTo ?? 'Unassigned'}</strong>
                 </div>
+                {incident.slaDeadline && (
+                  <div className="incident-control-row">
+                    <span>SLA</span>
+                    <SlaIndicator dueAt={incident.slaDeadline} size="sm" showLabel />
+                  </div>
+                )}
                 <div className="incident-control-row">
                   <span>Opened</span>
                   <time dateTime={incident.incidentCreatedDate}>{formatShortDate(incident.incidentCreatedDate)}</time>
@@ -829,6 +807,7 @@ export function IncidentDetailPage(): JSX.Element {
                     data-variant="danger"
                     type="button"
                     disabled={!canEdit || statusMutation.isPending}
+                    title={canEdit ? undefined : EDIT_DENIED}
                     onClick={() => setIsCloseOpen(true)}
                   >
                     <CheckCircle2 size={14} aria-hidden="true" /> Resolve and close
@@ -838,6 +817,7 @@ export function IncidentDetailPage(): JSX.Element {
                     className="incident-action"
                     type="button"
                     disabled={!canEdit || statusMutation.isPending}
+                    title={canEdit ? undefined : EDIT_DENIED}
                     onClick={() => statusMutation.mutate('open')}
                   >
                     <RefreshCw size={14} aria-hidden="true" /> Reopen case
@@ -855,6 +835,9 @@ export function IncidentDetailPage(): JSX.Element {
             <div className="incident-panel__body">
               {timelineQuery.isLoading && <InlineLoading rows={3} />}
               {timelineQuery.isError && <div className="incident-empty-inline">Activity is temporarily unavailable.</div>}
+              {!timelineQuery.isLoading && !timelineQuery.isError && sortedTimeline.length === 0 && (
+                <div className="incident-empty-inline">No timeline events yet for this case.</div>
+              )}
               {sortedTimeline.length > 0 && (
                 <div className="incident-activity-mini">
                   {sortedTimeline.slice(0, 4).map((event: TimelineEvent, index) => (
