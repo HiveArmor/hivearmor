@@ -163,7 +163,7 @@ export function EntityInventoryTable({ entities, loading, onEntityClick, onEntit
           }
         }}
         getRowId={({ data }) => (data as EntitySummaryItem).id}
-        ariaLabel="Entity intelligence inventory"
+        ariaLabel="Entity inventory"
         defaultColDef={{ sortable: false, filter: false, resizable: true }}
       />
     </div>

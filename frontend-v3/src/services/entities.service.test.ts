@@ -16,7 +16,14 @@ describe('entities.service', () => {
     expect(entitiesService.fetchEntityDetail).toBeDefined();
     expect(entitiesService.fetchEntityAlerts).toBeDefined();
     expect(entitiesService.fetchEntityEvents).toBeDefined();
+    expect(entitiesService.fetchEntityRisk).toBeDefined();
     expect(entitiesService.attachEntityToIncident).toBeDefined();
+  });
+
+  it('wires confirmed risk path', async () => {
+    const source = await import('./entities.service?raw');
+    expect(source.default).toContain('/dossier');
+    expect(source.default).toContain('/activity');
   });
 
   it('uses apiClient from lib', async () => {
