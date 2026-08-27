@@ -1,16 +1,19 @@
-/** Persistent investigation context and high-frequency actions. */
+/** Persistent owned-case context and high-frequency actions. */
 
 import { useState } from 'react';
 
 import { ArrowLeft, Clock3, Copy, Plus, ShieldAlert, Sparkles, UserRound } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import type { IncidentDetail } from '../incidentDetail.types';
 
 import { SlaIndicator } from '@/components/sla-indicator/SlaIndicator';
+import { ROLE_LABELS, ROLES } from '@/lib/roles';
 import { numericToSeverityLevel } from '@/lib/severity';
 
 import './IncidentHeader.css';
+
+const EDIT_DENIED = `Required permission: ${ROLE_LABELS[ROLES.ANALYST]} or higher`;
 
 export interface IncidentHeaderProps {
   incident: IncidentDetail;
@@ -58,7 +61,11 @@ export function IncidentHeader({
               Incidents
             </button>
             <span aria-hidden="true">/</span>
-            <span>Investigation</span>
+            <span>Owned case</span>
+            <span className="incident-command-bar__related" aria-hidden="true">·</span>
+            <Link to="/queue">Queue</Link>
+            <Link to="/alerts">Alerts</Link>
+            <Link to="/correlated-findings">Findings</Link>
           </div>
           <div className="incident-command-bar__title-row">
             <h1>{incident.incidentName}</h1>
@@ -91,7 +98,7 @@ export function IncidentHeader({
             type="button"
             onClick={onAddEvidence}
             disabled={!canEdit}
-            title={canEdit ? undefined : 'Requires Analyst role or higher'}
+            title={canEdit ? undefined : EDIT_DENIED}
           >
             <Plus size={15} aria-hidden="true" />
             Add evidence

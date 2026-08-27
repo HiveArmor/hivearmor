@@ -110,15 +110,17 @@ describe('Incident Workbench performance invariants', () => {
     expect(source.default).not.toContain('Tasks Coming Soon');
   });
 
-  it('keeps lifecycle, event hunt, task, response and activity workspaces in one routed case', async () => {
+  it('keeps event hunt, task, response and activity workspaces in one routed case', async () => {
     const source = await import('./IncidentDetailPage?raw');
-    expect(source.default).toContain('Incident response lifecycle');
+    expect(source.default).toContain('Owned response case');
+    expect(source.default).toContain('AI summary is assistive only');
     expect(source.default).toContain("key: 'events'");
     expect(source.default).toContain("key: 'tasks'");
     expect(source.default).toContain("key: 'response'");
     expect(source.default).toContain("key: 'activity'");
     expect(source.default).toContain('ResponseActionsPanel');
     expect(source.default).toContain('SimilarIncidentsPanel');
+    expect(source.default).not.toContain('Incident response lifecycle');
   });
 
   it('uses semantic colour tokens throughout the workbench stylesheet', async () => {

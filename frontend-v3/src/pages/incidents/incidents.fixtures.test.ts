@@ -51,11 +51,12 @@ describe('incident command fixtures', () => {
   });
 });
 
-describe('incident command design contract', () => {
-  it('provides sticky operations, keyboard navigation, bounded paging and semantic colours', () => {
+describe('owned response cases design contract', () => {
+  it('provides sticky filters, keyboard navigation, bounded paging and semantic colours', () => {
     const page = readFileSync(join(process.cwd(), 'src/pages/incidents/IncidentListPage.tsx'), 'utf8');
     const styles = readFileSync(join(process.cwd(), 'src/pages/incidents/IncidentListPage.css'), 'utf8');
-    expect(page).toContain('Incident Command');
+    expect(page).toContain('INCIDENTS_JOB_SENTENCE');
+    expect(page).toContain('owned response cases');
     expect(page).toContain("event.key === 'j'");
     expect(page).toContain('PAGE_SIZE = 50');
     expect(page).toContain('incident-pagination');

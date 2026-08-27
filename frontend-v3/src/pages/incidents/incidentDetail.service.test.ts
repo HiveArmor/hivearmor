@@ -28,28 +28,62 @@ describe('mapIncidentStatusToApi', () => {
 });
 
 describe('changeIncidentStatus', () => {
-  it('PUTs /api/ha-incidents/change-status with incidentStatus enum name', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+  const detailPayload = {
+    id: 42,
+    incidentName: 'Case A',
+    incidentDescription: 'desc',
+    incidentPriority: 'P3',
+    incidentSeverity: 5,
+    incidentStatus: 'OPEN',
+    incidentAssignedTo: null,
+    incidentSolution: null,
+    incidentCreatedDate: '2026-01-01T00:00:00Z',
+    incidentLastUpdated: '2026-01-01T00:00:00Z',
+    slaDeadline: null,
+  };
+
+  it('loads the case then PUTs change-status with Idempotency-Key and required fields', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(detailPayload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+      .mockResolvedValueOnce(new Response(null, { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
     localStorage.setItem('hivearmor_auth_token', 'test-token');
 
     await changeIncidentStatus(42, 'resolved');
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/ha-incidents/change-status', expect.objectContaining({
-      method: 'PUT',
-      body: JSON.stringify({ id: 42, incidentStatus: 'COMPLETED' }),
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/api/ha-incidents/42', expect.objectContaining({
+      headers: expect.any(Object),
     }));
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/api/ha-incidents/change-status', expect.objectContaining({
+      method: 'PUT',
+    }));
+    const init = fetchMock.mock.calls[1][1] as RequestInit;
+    const headers = init.headers as Record<string, string>;
+    expect(headers['Idempotency-Key']).toBeTruthy();
+    const body = JSON.parse(String(init.body)) as Record<string, unknown>;
+    expect(body.id).toBe(42);
+    expect(body.incidentStatus).toBe('COMPLETED');
+    expect(body.incidentName).toBe('Case A');
+    expect(body.incidentSeverity).toBe(5);
+    expect(body.incidentCreatedDate).toBe('2026-01-01T00:00:00Z');
   });
 
   it('sends MERGED when closing an incident', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ...detailPayload, id: 7 }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+      .mockResolvedValueOnce(new Response(null, { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
 
     await changeIncidentStatus(7, 'closed');
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/ha-incidents/change-status', expect.objectContaining({
-      body: JSON.stringify({ id: 7, incidentStatus: 'MERGED' }),
-    }));
+    const body = JSON.parse(String((fetchMock.mock.calls[1][1] as RequestInit).body)) as Record<string, unknown>;
+    expect(body).toEqual(expect.objectContaining({ id: 7, incidentStatus: 'MERGED' }));
   });
 });
 
@@ -67,14 +101,36 @@ describe('updateIncidentDetail', () => {
   });
 
   it('wires status and priority in one call', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
+    const detailPayload = {
+      id: 3,
+      incidentName: 'Case B',
+      incidentDescription: 'd',
+      incidentPriority: 'P3',
+      incidentSeverity: 4,
+      incidentStatus: 'OPEN',
+      incidentAssignedTo: null,
+      incidentSolution: null,
+      incidentCreatedDate: '2026-01-01T00:00:00Z',
+      incidentLastUpdated: '2026-01-01T00:00:00Z',
+      slaDeadline: null,
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(detailPayload), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+      .mockResolvedValue(new Response(null, { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
 
     await updateIncidentDetail(3, { incidentStatus: 'in_progress', incidentPriority: 'P2' });
 
     expect(fetchMock).toHaveBeenCalledWith('/api/ha-incidents/change-status', expect.objectContaining({
-      body: JSON.stringify({ id: 3, incidentStatus: 'IN_REVIEW' }),
+      method: 'PUT',
     }));
+    const statusBody = JSON.parse(String(
+      fetchMock.mock.calls.find((call) => call[0] === '/api/ha-incidents/change-status')?.[1]?.body
+    )) as Record<string, unknown>;
+    expect(statusBody.incidentStatus).toBe('IN_REVIEW');
     expect(fetchMock).toHaveBeenCalledWith('/api/ha-incidents/3/priority', expect.objectContaining({
       body: JSON.stringify({ priority: 'P2' }),
     }));

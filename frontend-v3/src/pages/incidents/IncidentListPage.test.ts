@@ -1,5 +1,5 @@
 /**
- * IncidentListPage Tests
+ * IncidentListPage Tests — Prompt 09 owned response cases
  */
 
 import { describe, it, expect } from 'vitest';
@@ -8,6 +8,22 @@ describe('IncidentListPage', () => {
   it('exports IncidentListPage function', async () => {
     const module = await import('./IncidentListPage');
     expect(typeof module.IncidentListPage).toBe('function');
+  });
+
+  it('exports owned-case job sentence distinct from queue/alerts/findings', async () => {
+    const { INCIDENTS_JOB_SENTENCE } = await import('./IncidentListPage');
+    expect(INCIDENTS_JOB_SENTENCE).toContain('owned response cases');
+    expect(INCIDENTS_JOB_SENTENCE.toLowerCase()).toContain('sla');
+    expect(INCIDENTS_JOB_SENTENCE.toLowerCase()).toContain('assignment');
+
+    const source = await import('./IncidentListPage?raw');
+    expect(source.default).toContain('INCIDENTS_JOB_SENTENCE');
+    expect(source.default).toContain('Mission Control');
+    expect(source.default).toContain('/correlated-findings');
+    expect(source.default).toContain('/queue');
+    expect(source.default).toContain('/alerts');
+    expect(source.default).not.toContain('Incident Command');
+    expect(source.default).toContain('Required permission:');
   });
 });
 
