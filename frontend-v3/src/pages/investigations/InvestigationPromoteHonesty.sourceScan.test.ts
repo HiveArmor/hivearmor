@@ -7,7 +7,9 @@ import {
   INV_CONVERT_DISABLED_TITLE,
   INV_CONVERT_TO_INCIDENT,
   INV_GOVERNED_PROMOTION,
+  INV_PROMOTE_DENIED,
 } from './investigation.capabilities';
+import { INVESTIGATIONS_JOB_SENTENCE } from './InvestigationsPage';
 
 describe('Investigation promote honesty', () => {
   it('keeps deprecated convert-to-incident fail-closed in live mode', () => {
@@ -27,7 +29,27 @@ describe('Investigation promote honesty', () => {
     expect(detail).toContain('previewInvestigationPromotion');
     expect(detail).toContain('promoteInvestigationToIncident');
     expect(detail).toContain('Governed promotion');
+    expect(detail).toContain('unpinInvestigationItem');
     expect(detail).not.toContain('convertInvestigationToIncident');
+    expect(detail).not.toContain('investigation-phase-rail');
+    expect(detail).toContain('INV_PROMOTE_DENIED');
+    expect(INV_PROMOTE_DENIED).toMatch(/Platform Administrator|Analyst|SOC Manager/);
+    expect(INV_PROMOTE_DENIED).not.toMatch(/ROLE_/);
+  });
+});
+
+describe('Investigations list IA', () => {
+  it('exports evidence-session job sentence and sibling meta links', () => {
+    expect(INVESTIGATIONS_JOB_SENTENCE).toMatch(/Working investigations/i);
+    expect(INVESTIGATIONS_JOB_SENTENCE).toMatch(/promote/i);
+    const list = readFileSync(join(process.cwd(), 'src/pages/investigations/InvestigationsPage.tsx'), 'utf8');
+    expect(list).toContain('INVESTIGATIONS_JOB_SENTENCE');
+    expect(list).toContain('to="/dashboard"');
+    expect(list).toContain('to="/search"');
+    expect(list).toContain('to="/alerts"');
+    expect(list).toContain('to="/incidents"');
+    expect(list).not.toContain('Needs decision');
+    expect(list).not.toContain('investigations-metrics');
   });
 });
 

@@ -67,21 +67,24 @@ describe('investigation fixture workflow', () => {
 });
 
 describe('investigation design and fixture boundary', () => {
-  it('provides the queue, PEAK workflow, knowledge output, and accessible operational controls', () => {
+  it('provides evidence-session list, pin/unpin, promote honesty, and accessible controls', () => {
     const queue = readFileSync(join(process.cwd(), 'src/pages/investigations/InvestigationsPage.tsx'), 'utf8');
     const detail = readFileSync(join(process.cwd(), 'src/pages/investigations/InvestigationDetailPage.tsx'), 'utf8');
     const queueStyles = readFileSync(join(process.cwd(), 'src/pages/investigations/InvestigationsPage.css'), 'utf8');
     const detailStyles = readFileSync(join(process.cwd(), 'src/pages/investigations/InvestigationDetailPage.css'), 'utf8');
 
-    expect(queue).toContain('Investigation Sessions');
+    expect(queue).toContain('INVESTIGATIONS_JOB_SENTENCE');
     expect(queue).toContain('aria-label="Investigation pagination"');
-    expect(detail).toContain('Investigation lifecycle');
-    expect(detail).toContain('Hypothesis ledger');
-    expect(detail).toContain('Investigation activity');
-    expect(detail).toContain('Knowledge outcomes');
-    expect(detail).toContain('Hive Intelligence');
+    expect(queue).toContain('Working sessions');
+    expect(detail).toContain('PINNED EVIDENCE');
+    expect(detail).toContain('unpinInvestigationItem');
+    expect(detail).toContain('Promote investigation to incident');
+    expect(detail).toContain('Governed INV-012');
+    expect(detail).not.toContain('Hive Intelligence');
+    expect(detail).not.toContain('investigation-phase-rail');
     expect(queueStyles).not.toMatch(/#[0-9a-f]{3,8}/i);
     expect(detailStyles).not.toMatch(/#[0-9a-f]{3,8}/i);
+    expect(queueStyles).toContain('min-height: 50vh');
   });
 
   it('keeps fictional records out of production bundles', () => {
