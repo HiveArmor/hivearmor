@@ -370,7 +370,7 @@ export function HiveIntelligencePage(): JSX.Element {
                 <div>
                   <h2>{selectedFeed.name}</h2>
                   <p className="hi-panel__hint">
-                    {selectedFeed.indicatorCount.toLocaleString()} indicators
+                    {(selectedFeed.indicatorCount ?? 0).toLocaleString()} indicators
                     {selectedFeed.lastUpdated
                       ? ` · updated ${new Date(selectedFeed.lastUpdated).toLocaleString()}`
                       : ' · last update unknown'}
@@ -587,7 +587,7 @@ export function HiveIntelligencePage(): JSX.Element {
                         >
                           {feed.sourceType}
                         </span>
-                        <span>{feed.indicatorCount.toLocaleString()} IOCs</span>
+                        <span>{(feed.indicatorCount ?? 0).toLocaleString()} IOCs</span>
                         {feed.lastUpdated ? (
                           <span>Updated {new Date(feed.lastUpdated).toLocaleDateString()}</span>
                         ) : (
