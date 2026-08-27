@@ -116,11 +116,12 @@ export interface AlertQueueSummary {
   dataCompleteness: 'complete' | 'unavailable';
 }
 
+/** Inventory scopes for `/alerts` — distinct from Analyst Queue triage defaults. */
 export interface AlertQueueView {
-  id: 'all' | 'needs-triage' | 'my-priority' | 'critical' | 'sla-risk' | 'unassigned' | 'intel-match';
+  id: 'all' | 'open' | 'in_review' | 'closed' | 'critical';
   label: string;
   description: string;
-  countKey?: keyof Pick<AlertQueueSummary, 'criticalOpen' | 'slaAtRisk' | 'unassigned' | 'threatIntelMatched'>;
+  countKey?: keyof Pick<AlertQueueSummary, 'criticalOpen'>;
   filters: AlertQueueFilters;
 }
 

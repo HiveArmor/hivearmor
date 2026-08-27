@@ -1,16 +1,23 @@
+/**
+ * AlertsListPage — full alert inventory / notables search (`/alerts`)
+ *
+ * Job: Search and review the full alert inventory (broader status, history, filters).
+ * Shift triage lives on Analyst Queue (`/queue`).
+ * Contracts: GET /api/ha-alerts (+ X-Total-Count), optional summary,
+ * POST /api/ha-alerts/status|notes|tags|convert-to-incident.
+ * STAGING CANDIDATE — no fake live when SSE disconnected; human role labels on deny.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ColDef } from 'ag-grid-community';
 import type { AgGridReact } from 'ag-grid-react';
 import {
-  AlertOctagon,
   AlertTriangle,
   BellRing,
   CheckCircle2,
-  ChevronRight,
   CircleDot,
-  Clock3,
   Columns3,
   Filter,
   Hexagon,
@@ -21,7 +28,6 @@ import {
   RefreshCw,
   Search,
   ShieldAlert,
-  Sparkles,
   Tag,
   UserRound,
   X,
@@ -68,6 +74,7 @@ import { useAlertStream } from '@/hooks/useAlertStream';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
 import { getAlertQuerySuggestions, parseAlertQueryExpression } from '@/lib/alertFilterFields';
+import { ROLE_LABELS } from '@/lib/roles';
 import { SEVERITY_LEVELS, type SeverityLevel } from '@/lib/severity';
 import { useAlertStreamStore } from '@/store/alertStream.store';
 import { useAuthStore } from '@/store/auth.store';
@@ -78,14 +85,38 @@ const STORAGE_KEY_COLUMNS = 'ha_alerts_columns';
 const STORAGE_KEY_MODE = 'ha_alerts_mode';
 const STORAGE_KEY_DRAWER_WIDTH = 'ha_alerts_drawer_width';
 
+/** Distinct from Analyst Queue job sentence (shift triage). */
+export const ALERTS_INVENTORY_JOB_SENTENCE =
+  'Search and review the full alert inventory — broader status, history, and filters. Shift triage lives on Analyst Queue.';
+
+const TRIAGE_DENIED = `Required permission: ${ROLE_LABELS.ROLE_ANALYST}, ${ROLE_LABELS.ROLE_SOC_MANAGER}, or ${ROLE_LABELS.ROLE_ADMIN}`;
+const ASSIGN_DENIED = `Required permission: ${ROLE_LABELS.ROLE_SOC_MANAGER}`;
+
 const builtInViews: AlertQueueView[] = [
-  { id: 'needs-triage', label: 'Needs triage', description: 'Open and in-review alerts ordered by urgency.', filters: { status: 'active' } },
-  { id: 'my-priority', label: 'My priority', description: 'Active alerts owned by the current analyst.', filters: { status: 'active', assignee: 'me' } },
-  { id: 'critical', label: 'Critical', description: 'Active critical alerts.', countKey: 'criticalOpen', filters: { status: 'active', severity: 'critical' } },
-  { id: 'sla-risk', label: 'SLA risk', description: 'Alerts approaching or past their response target.', countKey: 'slaAtRisk', filters: { status: 'active', sla: 'at_risk' } },
-  { id: 'unassigned', label: 'Unassigned', description: 'Active work without an owner.', countKey: 'unassigned', filters: { status: 'active', assignee: 'unassigned' } },
-  { id: 'intel-match', label: 'Intel matches', description: 'Active alerts with threat-intelligence matches.', countKey: 'threatIntelMatched', filters: { status: 'active', threatIntel: 'matched' } },
   { id: 'all', label: 'All alerts', description: 'Every alert in the selected time scope.', filters: {} },
+  { id: 'open', label: 'Open', description: 'Open alerts across severities.', filters: { status: 'open' } },
+  { id: 'in_review', label: 'In review', description: 'Alerts currently in review.', filters: { status: 'in_review' } },
+  { id: 'closed', label: 'Closed', description: 'Completed, true positive, and false positive dispositions.', filters: { status: 'completed,true_positive,false_positive' } },
+  { id: 'critical', label: 'Critical', description: 'Critical severity alerts in this scope.', countKey: 'criticalOpen', filters: { severity: 'critical' } },
+];
+
+const SEVERITY_FILTER_OPTIONS: HaCompactSelectOption[] = [
+  { value: '', label: 'Any severity' },
+  { value: 'critical', label: 'Critical' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' },
+];
+
+const STATUS_FILTER_OPTIONS: HaCompactSelectOption[] = [
+  { value: '', label: 'Any status' },
+  { value: 'open', label: 'Open' },
+  { value: 'in_review', label: 'In review' },
+  { value: 'active', label: 'Open + in review' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'true_positive', label: 'True positive' },
+  { value: 'false_positive', label: 'False positive' },
+  { value: 'completed,true_positive,false_positive', label: 'Closed (all)' },
 ];
 
 const filterLabels: Record<keyof AlertQueueFilters, string> = {
@@ -257,16 +288,6 @@ function BulkActionDialog({ action, selectedCount, isPending, onCancel, onConfir
   );
 }
 
-function MetricButton({ icon: Icon, label, value, detail, tone, onClick }: { icon: typeof AlertTriangle; label: string; value: number | null | undefined; detail: string; tone: string; onClick: () => void }): JSX.Element {
-  return (
-    <button type="button" className="alert-queue-metric" data-tone={tone} onClick={onClick} aria-label={`${label}: ${countLabel(value)}. ${detail}`}>
-      <span className="alert-queue-metric__icon"><Icon size={16} aria-hidden="true" /></span>
-      <span><small>{label}</small><strong>{countLabel(value)}</strong><em>{detail}</em></span>
-      <ChevronRight size={14} aria-hidden="true" />
-    </button>
-  );
-}
-
 export function AlertsListPage(): JSX.Element {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -308,8 +329,8 @@ export function AlertsListPage(): JSX.Element {
   const [timeRange, setTimeRange] = useState<TimeRange>(() => linkedHistoricalWindow
     ? { type: 'custom', ...linkedHistoricalWindow }
     : { type: 'preset', preset: '24h' });
-  const [activeViewId, setActiveViewId] = useState<AlertQueueView['id']>(hasLinkedBoardScope ? 'all' : 'needs-triage');
-  const [filters, setFilters] = useState<AlertQueueFilters>(() => hasLinkedBoardScope ? linkedBoardFilters : builtInViews[0].filters);
+  const [activeViewId, setActiveViewId] = useState<AlertQueueView['id']>('all');
+  const [filters, setFilters] = useState<AlertQueueFilters>(() => hasLinkedBoardScope ? linkedBoardFilters : {});
   const [queryInput, setQueryInput] = useState('');
   const [queryError, setQueryError] = useState<string | null>(null);
   const [queryFocused, setQueryFocused] = useState(false);
@@ -423,6 +444,16 @@ export function AlertsListPage(): JSX.Element {
     setQueryError(null);
     setSelectedRows([]);
     gridRef.current?.api?.deselectAll();
+  };
+
+  const patchInventoryFilter = (key: 'severity' | 'status', value: string): void => {
+    setActiveViewId('all');
+    setFilters((current) => {
+      const next = { ...current };
+      if (!value) delete next[key];
+      else next[key] = value;
+      return next;
+    });
   };
 
   const handleModeChange = (nextMode: 'live' | 'historical'): void => {
@@ -630,33 +661,50 @@ export function AlertsListPage(): JSX.Element {
       <header className="alert-triage-header">
         <div className="alert-triage-header__identity">
           <span className="alert-triage-header__hex" aria-hidden="true"><BellRing size={20} /></span>
-          <div><span>Detection operations</span><h1>Alerts</h1><p>Prioritize, understand, and route security signals without losing queue context.</p></div>
+          <div>
+            <span>Detection operations</span>
+            <h1>Alerts</h1>
+            <p>{ALERTS_INVENTORY_JOB_SENTENCE}</p>
+          </div>
         </div>
         <div className="alert-triage-header__actions">
           <div className="alert-stream-state" data-state={effectiveStreamConnected ? 'live' : 'delayed'}><span aria-hidden="true" /><div><strong>{effectiveStreamConnected ? 'Live intake' : 'Intake delayed'}</strong><small>{loadState.state === 'ready' ? `Rows updated ${new Date(loadState.loadedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Automatic retry active'}</small></div></div>
-          <Link className="alert-route-switch" to="/alerts/board"><Layers3 size={15} aria-hidden="true" />Severity board</Link>
           <LiveModeToggle mode={mode} onChange={handleModeChange} sseConnected={effectiveStreamConnected} />
         </div>
       </header>
 
-      <div className="alert-queue-sticky" data-drawer-open={Boolean(drawerAlertId)} aria-label="Alert queue controls and priority summary">
-        <section className="alert-queue-metrics" aria-label="Alert priority snapshot">
-          <MetricButton icon={ListFilter} label="Current scope" value={summary?.totalApproximate ?? totalCount} detail="matching alerts" tone="violet" onClick={() => applyView(builtInViews[0])} />
-          <MetricButton icon={AlertOctagon} label="Critical open" value={summary?.criticalOpen} detail="needs immediate review" tone="critical" onClick={() => applyView(builtInViews[2])} />
-          <MetricButton icon={Clock3} label="SLA pressure" value={summary?.slaAtRisk} detail="at risk or breached" tone="warning" onClick={() => applyView(builtInViews[3])} />
-          <MetricButton icon={UserRound} label="Unassigned" value={summary?.unassigned} detail="without an owner" tone="info" onClick={() => applyView(builtInViews[4])} />
-          <MetricButton icon={Sparkles} label="Intel matches" value={summary?.threatIntelMatched} detail="enriched indicators" tone="intel" onClick={() => applyView(builtInViews[5])} />
-        </section>
+      <p className="alert-inventory-meta">
+        <Link to="/dashboard">Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/queue">Analyst Queue</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/incidents">Incidents</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/alerts/board"><Layers3 size={13} aria-hidden="true" />Severity board</Link>
+        {!canTriage && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span className="alert-inventory-meta__warn" title={TRIAGE_DENIED}>Read-only — {TRIAGE_DENIED}</span>
+          </>
+        )}
+      </p>
 
+      <div className="alert-queue-sticky" data-drawer-open={Boolean(drawerAlertId)} aria-label="Alert inventory filters">
         {!effectiveStreamConnected && (
           <div className="alert-queue-banner" data-tone="warning" role="status"><AlertTriangle size={15} /><span><strong>Live updates delayed.</strong> Existing rows remain available while the stream reconnects.</span><button type="button" onClick={refreshQueue}>Refresh rows</button></div>
         )}
         {newAlertCount > 0 && (
           <div className="alert-queue-banner" data-tone="live" role="status" aria-live="polite"><CircleDot size={15} /><span><strong>{newAlertCount} new alert{newAlertCount === 1 ? '' : 's'} buffered.</strong> Your current row position has not moved.</span><button type="button" onClick={loadNewAlerts}>{mode === 'historical' ? 'Switch to live and load' : 'Load new alerts'}</button></div>
         )}
+        {summaryQuery.isError && !alertTriageFixtureMode && (
+          <div className="alert-queue-banner" data-tone="warning" role="status">
+            <AlertTriangle size={15} />
+            <span><strong>Scope counts unavailable.</strong> The inventory grid still loads from GET /api/ha-alerts; critical-scope badges may show —.</span>
+          </div>
+        )}
 
-        <nav className="alert-view-strip" aria-label="Alert queue views">
-              <div className="alert-view-strip__label"><ListFilter size={14} aria-hidden="true" /><strong>Views</strong></div>
+        <nav className="alert-view-strip" aria-label="Alert inventory scopes">
+              <div className="alert-view-strip__label"><ListFilter size={14} aria-hidden="true" /><strong>Scope</strong></div>
               <div className="alert-view-strip__items">
                 {builtInViews.map((view) => (
                   <button key={view.id} type="button" data-active={activeViewId === view.id} onClick={() => applyView(view)} title={view.description}>
@@ -664,12 +712,26 @@ export function AlertsListPage(): JSX.Element {
                   </button>
                 ))}
               </div>
-              <div className="alert-view-strip__shortcuts" title="J/K navigate · Space select · A assign · C classify" aria-label="Keyboard triage shortcuts: J and K navigate, Space selects, A assigns, C classifies">
+              <div className="alert-view-strip__shortcuts" title="J/K navigate · Space select · A assign · C classify" aria-label="Keyboard shortcuts: J and K navigate, Space selects, A assigns, C classifies">
                 <Keyboard size={13} aria-hidden="true" /><span>J/K</span>
               </div>
         </nav>
 
         <div className="alert-query-toolbar">
+              <div className="alert-query-toolbar__filters" aria-label="Severity and status filters">
+                <HaCompactSelect
+                  ariaLabel="Severity filter"
+                  value={filters.severity ?? ''}
+                  options={SEVERITY_FILTER_OPTIONS}
+                  onChange={(value) => patchInventoryFilter('severity', value)}
+                />
+                <HaCompactSelect
+                  ariaLabel="Status filter"
+                  value={filters.status ?? ''}
+                  options={STATUS_FILTER_OPTIONS}
+                  onChange={(value) => patchInventoryFilter('status', value)}
+                />
+              </div>
               <div className="alert-query-toolbar__search" data-error={Boolean(queryError)}>
                 <Search size={15} aria-hidden="true" />
                 <input
@@ -704,8 +766,8 @@ export function AlertsListPage(): JSX.Element {
                       setQueryError(null);
                     }
                   }}
-                  placeholder='Filter alerts · severity:critical AND status:open'
-                  aria-label="Alert query"
+                  placeholder='Search inventory · severity:critical AND status:open'
+                  aria-label="Alert inventory query"
                   aria-describedby={queryError ? 'alert-query-error' : 'alert-query-help'}
                   role="combobox"
                   aria-autocomplete="list"
@@ -748,7 +810,7 @@ export function AlertsListPage(): JSX.Element {
                 <div className="alert-density-control" aria-label="Row density">
                   {(['compact', 'standard', 'comfortable'] as const).map((option) => <button key={option} type="button" data-active={density === option} onClick={() => setDensity(option)} aria-label={`${option} row density`} title={`${option} density`}><Columns3 size={option === 'compact' ? 12 : option === 'standard' ? 14 : 16} /></button>)}
                 </div>
-                <button type="button" className="alert-toolbar-icon" onClick={refreshQueue} aria-label="Refresh alert queue" title="Refresh rows"><RefreshCw size={15} /></button>
+                <button type="button" className="alert-toolbar-icon" onClick={refreshQueue} aria-label="Refresh alert inventory" title="Refresh rows"><RefreshCw size={15} /></button>
               </div>
         </div>
 
@@ -763,7 +825,7 @@ export function AlertsListPage(): JSX.Element {
 
         <div className="alert-grid-meta">
           <div><strong>{countLabel(totalCount)}</strong><span>matching alerts</span>{summary?.snapshotAt && <><i aria-hidden="true" /><span>snapshot <time dateTime={summary.snapshotAt}>{new Date(summary.snapshotAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time></span></>}</div>
-          <div><span>Virtual queue · 100-row blocks</span><span>Double-click opens investigation</span></div>
+          <div><span>Alert inventory · 100-row blocks</span><span>Click opens drawer · Double-click opens investigation</span></div>
         </div>
       </div>
 
@@ -772,7 +834,7 @@ export function AlertsListPage(): JSX.Element {
           <div className="alert-grid-workspace">
 
             {loadState.state === 'error' && (
-              <div className="alert-grid-error" role="alert"><AlertTriangle size={20} /><div><strong>Alert queue unavailable</strong><span>{loadState.message}. The checked-in backend does not currently expose the list contract described by ALT-014.</span></div><button type="button" onClick={refreshQueue}>Retry</button></div>
+              <div className="alert-grid-error" role="alert"><AlertTriangle size={20} /><div><strong>Alert inventory unavailable</strong><span>{loadState.message}. Confirm GET /api/ha-alerts is reachable for your role.</span></div><button type="button" onClick={refreshQueue}>Retry</button></div>
             )}
 
             <div className="alert-grid-region" aria-busy={loadState.state === 'loading'}>
@@ -786,7 +848,7 @@ export function AlertsListPage(): JSX.Element {
                 infiniteInitialRowCount={100}
                 cacheBlockSize={100}
                 maxBlocksInCache={10}
-                ariaLabel="Alert triage queue"
+                ariaLabel="Alert inventory"
                 suppressRowClickSelection
                 rowSelection={{ mode: 'multiRow', headerCheckbox: false, checkboxes: false, enableClickSelection: false }}
                 onSelectionChanged={(rows) => setSelectedRows(rows as AlertQueueRecord[])}
@@ -814,19 +876,19 @@ export function AlertsListPage(): JSX.Element {
               <div className="alert-selection-bar" role="region" aria-label="Selected alert actions">
                 <div><span className="alert-selection-bar__hex" aria-hidden="true"><Hexagon size={18} /></span><strong>{selectedRows.length} selected</strong><button type="button" onClick={() => { gridRef.current?.api?.deselectAll(); setSelectedRows([]); }}>Clear</button></div>
                 <div>
-                  <button type="button" onClick={() => requestAction('acknowledge')} disabled={!canTriage}><CircleDot size={14} />Acknowledge</button>
-                  <button type="button" onClick={() => requestAction('true_positive')} disabled={!canTriage}><ShieldAlert size={14} />True positive</button>
-                  <button type="button" onClick={() => requestAction('false_positive')} disabled={!canTriage}><CheckCircle2 size={14} />False positive</button>
+                  <button type="button" onClick={() => requestAction('acknowledge')} disabled={!canTriage} title={!canTriage ? TRIAGE_DENIED : undefined}><CircleDot size={14} />Acknowledge</button>
+                  <button type="button" onClick={() => requestAction('true_positive')} disabled={!canTriage} title={!canTriage ? TRIAGE_DENIED : undefined}><ShieldAlert size={14} />True positive</button>
+                  <button type="button" onClick={() => requestAction('false_positive')} disabled={!canTriage} title={!canTriage ? TRIAGE_DENIED : undefined}><CheckCircle2 size={14} />False positive</button>
                   <button
                     type="button"
                     onClick={() => requestAction('assign')}
                     disabled={!(alertTriageFixtureMode || canAssign)}
-                    title={!(alertTriageFixtureMode || canAssign) ? 'Required permission: SOC Manager' : undefined}
+                    title={!(alertTriageFixtureMode || canAssign) ? ASSIGN_DENIED : undefined}
                   >
                     <UserRound size={14} />Assign
                   </button>
-                  <button type="button" onClick={() => requestAction('tag')} disabled={!canTriage}><Tag size={14} />Tag</button>
-                  <button type="button" onClick={() => requestAction('promote')} disabled={!canTriage}><Radar size={14} />Promote</button>
+                  <button type="button" onClick={() => requestAction('tag')} disabled={!canTriage} title={!canTriage ? TRIAGE_DENIED : undefined}><Tag size={14} />Tag</button>
+                  <button type="button" onClick={() => requestAction('promote')} disabled={!canTriage} title={!canTriage ? TRIAGE_DENIED : undefined}><Radar size={14} />Promote</button>
                 </div>
               </div>
             )}

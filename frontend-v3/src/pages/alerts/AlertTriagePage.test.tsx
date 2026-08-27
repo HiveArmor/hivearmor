@@ -195,8 +195,8 @@ describe('Alert triage drawer experience', () => {
   });
 });
 
-describe('Alert triage performance invariants', () => {
-  it('keeps the route lazy, the block bounded, and large visualization libraries out of the queue', async () => {
+describe('Alert inventory performance invariants', () => {
+  it('keeps the route lazy, the block bounded, and large visualization libraries out of the inventory', async () => {
     const routerSource = await import('@/router/index.tsx?raw');
     const pageSource = await import('./AlertsListPage.tsx?raw');
     const datasourceSource = await import('./alertsListDatasource.ts?raw');
@@ -205,6 +205,12 @@ describe('Alert triage performance invariants', () => {
     expect(pageSource.default).not.toContain('echarts');
     expect(pageSource.default).toContain('alert-view-strip');
     expect(pageSource.default).not.toContain('alert-view-rail');
+    expect(pageSource.default).not.toContain('alert-queue-metrics');
+    expect(pageSource.default).toContain('ALERTS_INVENTORY_JOB_SENTENCE');
+    expect(pageSource.default).toContain('to="/queue"');
+    expect(pageSource.default).toContain('to="/dashboard"');
+    expect(pageSource.default).toContain('to="/incidents"');
+    expect(pageSource.default).toContain("useState<AlertQueueView['id']>('all')");
     expect(pageSource.default).toContain('useState<string | null>(null)');
     expect(pageSource.default).not.toContain("matchMedia('(min-width: 1100px)')");
     expect(pageSource.default).toContain('className="alert-queue-sticky"');
@@ -221,5 +227,6 @@ describe('Alert triage performance invariants', () => {
     expect(cssSource).toContain('position: sticky');
     expect(cssSource).toContain('.alert-queue-workspace { position: relative; height: clamp(');
     expect(cssSource).toContain('.alert-grid-region { position: relative;');
+    expect(cssSource).toContain('.alert-inventory-meta');
   });
 });

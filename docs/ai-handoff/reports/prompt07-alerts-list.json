@@ -1,0 +1,70 @@
+{
+  "prompt": "07-alerts-list-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "228557f",
+  "decision": "RESTRUCTURE",
+  "route": "/alerts",
+  "job_sentence": "Search and review the full alert inventory — broader status, history, and filters. Shift triage lives on Analyst Queue.",
+  "distinction": {
+    "queue": "/queue = shift triage workbench (open / in_progress focus)",
+    "alerts": "/alerts = full alert inventory / notables search (broader status, history, filters)"
+  },
+  "ia": {
+    "removed": ["Five-tile triage KPI metrics strip", "Needs triage / My priority / SLA risk / Unassigned / Intel default views"],
+    "added": ["Inventory job sentence", "Mission Control · Analyst Queue · Incidents · Severity board meta links", "Severity + Status compact selects", "Scopes: All / Open / In review / Closed / Critical"],
+    "kept": ["AG Grid infinite inventory", "AlertDetailDrawer", "shared alertColumns", "StatusDock + LiveModeToggle", "bulk status/notes/tags/promote", "GET /api/ha-alerts"]
+  },
+  "backend": {
+    "list": {
+      "method": "createAlertsListDatasource → fetch",
+      "path": "GET /api/ha-alerts",
+      "headers_used": ["X-Total-Count", "Authorization", "X-Tenant-ID"],
+      "params": ["page|cursor", "size|limit", "sort", "severity", "status", "q", "from", "to", "...filters"]
+    },
+    "summary": {
+      "method": "fetchAlertQueueSummary",
+      "note": "Optional; honesty banner when query errors — grid still loads from list"
+    },
+    "mutations": [
+      "POST /api/ha-alerts/status",
+      "POST /api/ha-alerts/notes",
+      "POST /api/ha-alerts/tags",
+      "POST /api/ha-alerts/convert-to-incident"
+    ],
+    "role_gates": {
+      "triage": "ROLE_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN — deny copy uses human labels",
+      "assign": "ROLE_SOC_MANAGER | ROLE_ADMIN — Required permission: SOC Manager"
+    }
+  },
+  "gates": {
+    "lint": "pass",
+    "type_check": "pass",
+    "alerts_tests": "pass (39)",
+    "full_test": "1 pre-existing fail on main: foundation.accessibility.test.tsx missing getDetectionHealthSummary mock (Command Center) — outside alerts tree",
+    "build": "pass"
+  },
+  "ui_ux_tests_planned": [
+    "/alerts loads as admin",
+    "Job sentence visible; meta links to /queue /dashboard /incidents /alerts/board",
+    "Default scope All (not Needs triage)",
+    "Severity/status filters + search strip",
+    "Grid primary; row opens drawer; dbl-click /alerts/:id",
+    "StatusDock live/historical honesty",
+    "No stacked metrics chrome"
+  ],
+  "staging": {
+    "deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 + edge — healthy",
+    "host": "https://72.44.52.187",
+    "http_codes": [
+      {"path": "POST /api/authenticate", "status": 200, "token_len": 219},
+      {"path": "GET /api/ha-alerts?page=0&size=25", "status": 200, "item_count": 9, "totalApproximate": 9, "shape": "cursor envelope"},
+      {"path": "GET /alerts", "status": 200},
+      {"note": "X-Total-Count header not observed on staging response; UI uses totalApproximate / envelope"}
+    ],
+    "bundle_markers": {
+      "ALERTS_INVENTORY_JOB_SENTENCE": true,
+      "Analyst Queue": true,
+      "needs-triage in AlertsListPage.js": false
+    }
+  }
+}
