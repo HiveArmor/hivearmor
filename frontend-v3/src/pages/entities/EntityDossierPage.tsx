@@ -220,6 +220,31 @@ export function EntityDossierPage(): JSX.Element {
     const is403 = detailQuery.error instanceof ApiError && detailQuery.error.status === 403;
     return (
       <section className="ha-dossier-page">
+        <header className="ha-dossier-page__topbar">
+          <button type="button" className="ha-dossier-page__back" onClick={handleBack} aria-label="Back to entity inventory">
+            <ArrowLeft size={16} />
+          </button>
+          <div className="ha-dossier-page__topbar-title">
+            <span>Entity dossier</span>
+            <strong>{id}</strong>
+            <p className="ha-dossier-page__job">{ENTITY_DOSSIER_JOB_SENTENCE}</p>
+          </div>
+        </header>
+        <p className="ha-dossier-page__meta">
+          <Link to="/dashboard">Mission Control</Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/entities">Inventory</Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/search">Search &amp; Hunt</Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/alerts">Alerts</Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/investigations">Investigations</Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/incidents">Incidents</Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/posture/sensors">Sensors</Link>
+        </p>
         <div className="ha-dossier-page__error">
           <AlertTriangle size={24} />
           <h2>{is404 ? 'Entity not found' : is403 ? 'Access denied' : 'Failed to load dossier'}</h2>
