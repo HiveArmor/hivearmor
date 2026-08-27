@@ -1,0 +1,109 @@
+{
+  "prompt": "08-correlated-findings-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "d74e90c",
+  "based_on_main_includes_pr93": true,
+  "tip_sha": "a542543cabefa6032d483784d9d1f503f9b84fae",
+  "pr": "https://github.com/HiveArmor/hivearmor/pull/94",
+  "decision": "RESTRUCTURE",
+  "route": "/correlated-findings",
+  "job_sentence": "Review related alerts rolled into one correlated finding — offense-class grouping, not raw alert inventory. Promote to an incident when case ownership is required.",
+  "distinction": {
+    "queue": "/queue = shift triage workbench",
+    "alerts": "/alerts = full alert inventory / notables search",
+    "correlated_findings": "/correlated-findings = offense-class grouping of related alerts",
+    "incidents": "/incidents = owned response cases"
+  },
+  "ia": {
+    "removed": [
+      "Five-tile correlation KPI metrics strip",
+      "Queue-like views (Needs review / My findings / SLA risk / Unassigned / Multi-stage) as primary scopes"
+    ],
+    "added": [
+      "Offense-class job sentence",
+      "Mission Control · Analyst Queue · Alerts inventory · Incidents meta links",
+      "Scopes: All / Open / Critical",
+      "Compact status + severity + search filters",
+      "List-primary workspace (≥58% list column)",
+      "SEC-03 status mutate via PUT /api/offenses/{id}/status with canMutateFindingStatus",
+      "Related alerts from GET /api/offenses/{id}/alerts with honest empty"
+    ],
+    "kept": [
+      "Dense card list (no SiemDataGrid — perf boundary)",
+      "FindingWorkbench preview + detail",
+      "Fixture-disabled production path",
+      "Legacy /offenses redirects",
+      "GAP_SEC_03_RESOLVED honesty"
+    ]
+  },
+  "backend": {
+    "list": {
+      "method": "getOffenses",
+      "path": "GET /api/offenses",
+      "headers_used": ["X-Total-Count", "Authorization"],
+      "params": ["page", "size", "status"],
+      "staging": { "status": 200, "item_count": 25, "x_total_count": "25" }
+    },
+    "detail": {
+      "method": "getOffense",
+      "path": "GET /api/offenses/{id}",
+      "staging": { "status": 200 }
+    },
+    "related_alerts": {
+      "method": "getOffenseAlerts",
+      "path": "GET /api/offenses/{id}/alerts",
+      "staging": { "status": 200, "item_count": 2 }
+    },
+    "status": {
+      "method": "updateOffenseStatus",
+      "path": "PUT /api/offenses/{id}/status",
+      "authz": "@PreAuthorize ALERT_QUEUE_AUTH + allowlisted statuses",
+      "ui_gate": "canMutateFindingStatus",
+      "staging": {
+        "PUT reviewing": 200,
+        "PUT open restore": 500,
+        "note": "Admin mutate path works for reviewing; restore to open returned 500 on staging — document codes only, do not claim PRODUCTION READY"
+      }
+    },
+    "ha_correlated_findings": {
+      "path": "GET /api/ha-correlated-findings",
+      "staging": { "status": 500 },
+      "note": "List intentionally uses /api/offenses; COR twin remains optional enrichment / promotion preview only"
+    },
+    "promotion": {
+      "preview": "POST /api/ha-correlated-findings/{id}/incident-promotion/preview",
+      "execute": "POST /api/ha-correlated-findings/{id}/incident-promotion/execute",
+      "honesty": "Offense-sourced findings disable Promote with human reason; Incidents link remains"
+    },
+    "role_gates": {
+      "status_mutate": "ROLE_ADMIN | ROLE_SOC_MANAGER | ROLE_ANALYST | ROLE_SOC_ANALYST — deny copy uses human labels"
+    }
+  },
+  "gates": {
+    "lint": "pass (correlated-findings + offenses.service)",
+    "type_check": "pass",
+    "correlated_findings_tests": "pass (13)",
+    "offenses_finding_status_tests": "pass",
+    "build": "pass"
+  },
+  "staging": {
+    "deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 + edge — healthy",
+    "host": "https://72.44.52.187",
+    "auth": { "status": 200, "token_len": 219 },
+    "ui_routes": [
+      { "path": "/correlated-findings", "status": 200 },
+      { "path": "/alerts", "status": 200 },
+      { "path": "/incidents", "status": 200 },
+      { "path": "/queue", "status": 200 },
+      { "path": "/dashboard", "status": 200 },
+      { "path": "/offenses", "status": 200, "note": "legacy SPA route still served" }
+    ],
+    "bundle_markers": {
+      "offense-class grouping": true,
+      "rolled into one correlated finding": true,
+      "GET /api/offenses": true,
+      "Alerts inventory": true,
+      "chunk": "CorrelatedFindingsPage-RNLLABJZ.js"
+    }
+  }
+}
