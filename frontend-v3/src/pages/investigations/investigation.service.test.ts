@@ -8,6 +8,10 @@ import {
   createInvestigationTask,
   deleteInvestigationTask,
   fetchInvestigationTasks,
+  pinInvestigationItem,
+  previewInvestigationPromotion,
+  promoteInvestigationToIncident,
+  unpinInvestigationItem,
   updateInvestigationTask,
 } from './investigation.service';
 import type { InvestigationSessionTask } from './investigation.types';
@@ -123,6 +127,118 @@ describe('investigation session tasks', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/ha-investigation-sessions/42/tasks/7',
       expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+});
+
+describe('investigation session items + INV-012 promote', () => {
+  it('POSTs pin to /items', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          id: 1,
+          sessionId: 42,
+          itemType: 'NOTE',
+          itemRef: 'note-1',
+          itemSnapshot: null,
+          note: 'obs',
+          addedBy: 'admin',
+          addedAt: '2026-08-27T10:00:00Z',
+        }),
+        { status: 201, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    localStorage.setItem('hivearmor_auth_token', 'test-token');
+
+    await pinInvestigationItem(42, { itemType: 'NOTE', itemRef: 'note-1', note: 'obs' });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/ha-investigation-sessions/42/items',
+      expect.objectContaining({ method: 'POST' }),
+    );
+  });
+
+  it('DELETEs unpin /items/{itemId}', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await unpinInvestigationItem(42, 9);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/ha-investigation-sessions/42/items/9',
+      expect.objectContaining({ method: 'DELETE' }),
+    );
+  });
+
+  it('POSTs promotion-preview then promote with previewToken + expectedVersion + reason', async () => {
+    const preview = {
+      sessionId: 42,
+      sessionVersion: 3,
+      incidentSummary: {
+        title: 't',
+        descriptionExcerpt: 'd',
+        recommendedSeverity: 2,
+        recommendedPriority: 'P3',
+        severityReasons: ['r'],
+        assignee: null,
+        targetTenantId: null,
+      },
+      eligibleEvidence: { totalArtifacts: 1, alertCount: 0, entityCount: 0, eventCount: 0, otherCount: 1 },
+      duplicateOrSimilarIncidents: [],
+      policyGates: [],
+      missingPrerequisites: [],
+      warnings: [],
+      blastRadius: {
+        createsIncident: true,
+        marksSessionConverted: true,
+        linksSessionIncidentId: true,
+        doesNotAutoLinkOpenSearchAlertsYet: true,
+      },
+      previewToken: 'tok-abc',
+      expiresInSeconds: 300,
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(preview), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ incidentId: 99, sessionId: 42, status: 'created' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    localStorage.setItem('hivearmor_auth_token', 'test-token');
+
+    const got = await previewInvestigationPromotion(42);
+    expect(got.previewToken).toBe('tok-abc');
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/ha-investigation-sessions/42/promotion-preview',
+      expect.objectContaining({ method: 'POST' }),
+    );
+
+    await promoteInvestigationToIncident(42, {
+      previewToken: 'tok-abc',
+      expectedVersion: 3,
+      reason: 'Confirmed malicious lateral movement',
+      idempotencyKey: 'fixed-key',
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/ha-investigation-sessions/42/promote',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          previewToken: 'tok-abc',
+          expectedVersion: 3,
+          reason: 'Confirmed malicious lateral movement',
+          idempotencyKey: 'fixed-key',
+        }),
+      }),
     );
   });
 });

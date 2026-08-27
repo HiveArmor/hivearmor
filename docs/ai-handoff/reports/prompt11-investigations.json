@@ -1,0 +1,211 @@
+{
+  "prompt": "11-investigations-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "199148c",
+  "based_on_main_includes_pr96": true,
+  "tip_sha": "35099d9c2373e73a6e1b2e22279c96fe9fc1983d",
+  "feature_sha": "1b33e3281283c5add019b58aef6a9d3f1d5c16d3",
+  "pr": "https://github.com/HiveArmor/hivearmor/pull/97",
+  "decision": "RESTRUCTURE",
+  "routes": [
+    "/investigations",
+    "/investigations/:id"
+  ],
+  "job_sentence": "Working investigations \u2014 pin evidence, build narrative, and promote to an owned incident when response ownership is required.",
+  "distinction": {
+    "search": "/search = ad-hoc hunt / event search",
+    "investigations": "/investigations = working evidence sessions (pre-incident)",
+    "incidents": "/incidents = owned response cases (post-promote)"
+  },
+  "ia": {
+    "list": {
+      "removed": [
+        "Investigation Operations / queue branding",
+        "Permanent 5-tile KPI metrics strip",
+        "Needs decision view (non-projected hypothesis counts)",
+        "Phase / hypotheses columns without API projection"
+      ],
+      "added": [
+        "INVESTIGATIONS_JOB_SENTENCE evidence-session copy",
+        "Mission Control \u00b7 Search & Hunt \u00b7 Alerts \u00b7 Incidents meta links",
+        "Compact Scope (Active/Mine/Promoted/Closed/All) + search/status filters",
+        "Primary list region min-height 50vh",
+        "Human create deny labels (Standard User+)"
+      ],
+      "kept": [
+        "Confirmed GET/POST /api/ha-investigation-sessions",
+        "J/K keyboard navigation",
+        "Fixture-disabled production path",
+        "loaded_projection honesty banner"
+      ]
+    },
+    "detail": {
+      "removed": [
+        "Decorative INVESTIGATION PATH phase rail",
+        "Hive Intelligence unavailable chrome",
+        "Hypothesis ledger as primary identity"
+      ],
+      "added": [
+        "Evidence-first default tab with pin composer + unpin via DELETE items",
+        "Cross-links Mission Control \u00b7 Search \u00b7 Alerts \u00b7 Incidents",
+        "INV-012 promote modal (preview \u2192 reason \u2192 promote) with human deny labels",
+        "Deprecated convert-to-incident fail-closed copy",
+        "Honesty empty evidence / notes / tasks / outcome"
+      ],
+      "kept": [
+        "Governed promotion-preview + promote wiring",
+        "Session tasks via /tasks",
+        "Status update via PUT session"
+      ]
+    }
+  },
+  "backend": {
+    "list": {
+      "path": "GET /api/ha-investigation-sessions",
+      "staging": {
+        "status": 200,
+        "bytes": 2214,
+        "sample_count": 6
+      }
+    },
+    "create": {
+      "path": "POST /api/ha-investigation-sessions",
+      "staging": {
+        "status": 201,
+        "sample_id": 7
+      }
+    },
+    "detail": {
+      "path": "GET /api/ha-investigation-sessions/{id}",
+      "staging": {
+        "status": 200,
+        "bytes": 368,
+        "sample_id": 7
+      }
+    },
+    "items_get": {
+      "path": "GET /api/ha-investigation-sessions/{id}/items",
+      "staging": {
+        "status": 200,
+        "bytes": 3,
+        "n": 0,
+        "note": "Empty array honesty"
+      }
+    },
+    "items_post": {
+      "path": "POST /api/ha-investigation-sessions/{id}/items",
+      "staging": {
+        "status": 500,
+        "note": "Backend defect: Hibernate maps item_snapshot String as varchar but column is jsonb (even NULL). Direct SQL INSERT succeeds. UI surfaces pin error honesty."
+      }
+    },
+    "items_delete": {
+      "path": "DELETE /api/ha-investigation-sessions/{id}/items/{itemId}",
+      "staging": {
+        "status": 500,
+        "note": "Could not exercise successful unpin after POST 500; DELETE of non-created id also 500. SQL pin path verified separately (id=10)."
+      }
+    },
+    "promotion_preview": {
+      "path": "POST /api/ha-investigation-sessions/{id}/promotion-preview",
+      "staging": {
+        "status": 200,
+        "bytes": 1300,
+        "has_previewToken": true,
+        "sessionVersion": 0,
+        "sample_id": 7
+      }
+    },
+    "promote": {
+      "path": "POST /api/ha-investigation-sessions/{id}/promote",
+      "staging": {
+        "status": 200,
+        "bytes": 222,
+        "incidentId": 141,
+        "result_status": "created",
+        "sample_session_id": 7
+      }
+    },
+    "convert_to_incident": {
+      "path": "POST /api/ha-investigation-sessions/{id}/convert-to-incident",
+      "ui": "fail-closed (INV_CONVERT_TO_INCIDENT=false)"
+    }
+  },
+  "ux_smoke": {
+    "deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 + edge \u2014 healthy",
+    "bundle_marker": "InvestigationsPage-*.js contains Working investigations; InvestigationDetailPage-*.js present",
+    "ui_shell": {
+      "path": "/investigations",
+      "https_status": 200
+    },
+    "headed_browser": true,
+    "headed_note": "Headed reaudit pass: list/detail links, scopes, create, tasks, promote modal; pin POST 500 backend jsonb honesty.",
+    "checks": [
+      {
+        "item": "job_sentence_in_bundle",
+        "result": "pass"
+      },
+      {
+        "item": "meta_links_mission_search_alerts_incidents",
+        "result": "pass",
+        "note": "source + deployed chunk"
+      },
+      {
+        "item": "list_primary_50vh",
+        "result": "pass"
+      },
+      {
+        "item": "evidence_tab_pin_unpin_wired",
+        "result": "pass",
+        "note": "UI wired; POST items 500 backend"
+      },
+      {
+        "item": "inv012_preview_promote",
+        "result": "pass",
+        "note": "session 7 \u2192 incident 141"
+      },
+      {
+        "item": "convert_path_disabled",
+        "result": "pass"
+      },
+      {
+        "item": "items_post_honesty",
+        "result": "pass",
+        "note": "500 documented; UI shows Investigation request failed"
+      },
+      {
+        "item": "headed_reaudit_structure_links_buttons",
+        "result": "pass"
+      },
+      {
+        "item": "removed_stacked_detail_dock",
+        "result": "pass"
+      }
+    ]
+  },
+  "known_backend_gap": {
+    "id": "INV-ITEMS-JSONB",
+    "summary": "hive_session_item.item_snapshot is jsonb; JPA String binding sends varchar \u2192 PostgreSQL rejects INSERT",
+    "remediation": "Backend: @JdbcTypeCode(SqlTypes.JSON) or cast; out of Prompt 11 FE scope"
+  },
+  "gates": {
+    "lint_changed": "pass",
+    "type_check": "pass",
+    "vitest_investigations": "pass (16)",
+    "build": "pass"
+  },
+  "windows_agent": {
+    "hostname": "EC2AMAZ-8F0Q7DL",
+    "preferred_id": 20,
+    "note": "Not required for investigation session APIs this prompt"
+  },
+  "handoff_at": "2026-08-27T10:40:00Z",
+  "headed_reaudit": {
+    "result": "pass",
+    "fixes": [
+      "removed stacked investigation-detail-dock",
+      "pin-500 honesty copy"
+    ],
+    "remaining_backend": "INV-ITEMS-JSONB item_snapshot varchar\u2192jsonb"
+  }
+}
