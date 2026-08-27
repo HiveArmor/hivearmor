@@ -19,6 +19,10 @@
 .finding-workbench__actions a, .finding-workbench__actions button { display: inline-flex; min-height: 32px; align-items: center; gap: 5px; padding: 0 9px; border: 1px solid var(--ha-border-default); border-radius: 7px; background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); cursor: pointer; font: var(--ha-type-compact); font-weight: 680; text-decoration: none; white-space: nowrap; }
 .finding-workbench__actions button { border-color: color-mix(in srgb, var(--ha-action-primary) 45%, var(--ha-border-default)); color: var(--ha-action-secondary); }
 .finding-workbench__actions button:disabled { opacity: .45; cursor: not-allowed; }
+.finding-workbench__status { min-width: 148px; }
+.finding-workbench__deny { margin: 0; padding: 6px 14px; border-bottom: 1px solid color-mix(in srgb, var(--ha-state-warning) 35%, var(--ha-border-subtle)); background: color-mix(in srgb, var(--ha-state-warning) 10%, var(--ha-surface-panel)); color: var(--ha-state-warning); font: var(--ha-type-compact); font-weight: 650; }
+.finding-evidence__empty, .finding-story__empty { display: grid; gap: 6px; place-items: start; margin: 10px 0; padding: 14px; border: 1px dashed var(--ha-border-default); border-radius: 6px; color: var(--ha-foreground-secondary); font: var(--ha-type-compact); }
+.finding-evidence__empty a { color: var(--ha-foreground-link); font-weight: 650; }
 .finding-workbench__incident { color: var(--ha-state-healthy) !important; }
 .finding-workbench__metrics { display: grid; min-height: 58px; flex: 0 0 auto; grid-template-columns: repeat(5, minmax(0, 1fr)); border-bottom: 1px solid var(--ha-border-subtle); background: var(--ha-surface-input); }
 .finding-workbench__metrics > div { position: relative; display: grid; grid-template-columns: auto auto; align-content: center; justify-content: start; column-gap: 3px; padding: 8px 12px; border-right: 1px solid var(--ha-border-subtle); }

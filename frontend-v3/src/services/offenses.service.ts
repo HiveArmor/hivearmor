@@ -52,6 +52,19 @@ export interface OffenseAlertRef {
   destinationIp?: string;
 }
 
+/** Allowlisted by OffenseResource statusUpdateScript (SEC-03). */
+export const OFFENSE_STATUS_VALUES = [
+  'open',
+  'closed',
+  'new',
+  'reviewing',
+  'confirmed',
+  'dismissed',
+  'promoted',
+] as const;
+
+export type OffenseStatusValue = (typeof OFFENSE_STATUS_VALUES)[number];
+
 export interface OffenseListParams {
   page?: number;
   size?: number;
@@ -60,7 +73,8 @@ export interface OffenseListParams {
 }
 
 export interface UpdateOffenseStatusRequest {
-  status: AlertStatus;
+  /** Prefer OffenseResource allowlist; AlertStatus kept for legacy callers. */
+  status: OffenseStatusValue | AlertStatus;
 }
 
 export async function getOffenses(params: OffenseListParams): Promise<PaginatedResponse<OffenseDTO>> {
