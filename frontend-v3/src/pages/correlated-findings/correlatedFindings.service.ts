@@ -7,13 +7,25 @@ import type {
   FindingAvailableAction,
   FindingEntity,
   FindingPromotionPreview,
+  FindingSignal,
 } from './correlatedFindings.types';
 
 import { apiClient } from '@/lib/apiClient';
 import type { SeverityLevel } from '@/lib/severity';
+import {
+  getOffense,
+  getOffenseAlerts,
+  getOffenses,
+  type OffenseAlertRef,
+  type OffenseDTO,
+  type OffenseStatusValue,
+} from '@/services/offenses.service';
 
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
 const RESULT_LIMIT = 25;
+
+/** Staging-primary contract marker — list loads via GET /api/offenses. */
+export const CORRELATED_FINDINGS_LIST_CONTRACT = 'GET /api/offenses';
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -252,13 +264,264 @@ export function isCorrelatedFindingDTO(value: unknown): value is CorrelatedFindi
 }
 
 function matchesView(finding: CorrelatedFindingDTO, view: CorrelatedFindingsFilter['view']): boolean {
-  if (view === 'needs_review') return finding.status === 'open' || finding.status === 'investigating';
+  if (view === 'open' || view === 'needs_review') return finding.status === 'open' || finding.status === 'investigating';
   if (view === 'mine') return finding.owner?.id === 'usr-41' && (finding.status === 'open' || finding.status === 'investigating');
   if (view === 'critical') return finding.severity === 'critical' && finding.status !== 'resolved' && finding.status !== 'false_positive';
   if (view === 'multi_stage') return finding.mitreTactics.length >= 3 && finding.status !== 'resolved' && finding.status !== 'false_positive';
   if (view === 'sla_risk') return finding.slaStatus === 'at_risk' || finding.slaStatus === 'breached';
   if (view === 'unassigned') return !finding.owner && (finding.status === 'open' || finding.status === 'investigating');
   return true;
+}
+
+function offenseStatusToFinding(value: unknown): CorrelatedFindingStatus {
+  const status = String(value ?? '').toLowerCase();
+  if (status === 'reviewing' || status === 'confirmed' || status === 'in_progress' || status === 'investigating') return 'investigating';
+  if (status === 'promoted' || status === 'incident_created') return 'incident_created';
+  if (status === 'closed' || status === 'resolved') return 'resolved';
+  if (status === 'dismissed' || status === 'false_positive') return 'false_positive';
+  return 'open';
+}
+
+function findingStatusToOffenseParam(status: CorrelatedFindingStatus | undefined): OffenseStatusValue | undefined {
+  if (!status) return undefined;
+  if (status === 'investigating') return 'reviewing';
+  if (status === 'incident_created') return 'promoted';
+  if (status === 'resolved') return 'closed';
+  if (status === 'false_positive') return 'dismissed';
+  return 'open';
+}
+
+/** Map allowlisted offense UI status → PUT /api/offenses/{id}/status body. */
+export function findingUiStatusToOffenseStatus(status: CorrelatedFindingStatus): OffenseStatusValue {
+  return findingStatusToOffenseParam(status) ?? 'open';
+}
+
+function asOffenseRecord(value: unknown): OffenseDTO {
+  const row = asRecord(value);
+  const id = textValue(row.id, row._id) ?? 'offense-id-unavailable';
+  return {
+    id,
+    name: textValue(row.name, row.title) ?? 'Untitled correlated finding',
+    description: textValue(row.description, row.summary),
+    severity: normalizeSeverity(row.severity),
+    status: (offenseStatusToFinding(row.status) === 'investigating'
+      ? 'in_progress'
+      : offenseStatusToFinding(row.status) === 'false_positive'
+        ? 'false_positive'
+        : offenseStatusToFinding(row.status) === 'resolved'
+          ? 'resolved'
+          : 'open') as OffenseDTO['status'],
+    alertCount: numericValue(row.alertCount) ?? (Array.isArray(row.alerts) ? row.alerts.length : 0),
+    firstEventTimestamp: textValue(row.firstEventTimestamp, row.firstSeen, row.createdAt, row['@timestamp']) ?? new Date(0).toISOString(),
+    lastEventTimestamp: textValue(row.lastEventTimestamp, row.lastSeen, row.updatedAt, row['@timestamp']) ?? new Date(0).toISOString(),
+    tenant: row.tenant && typeof row.tenant === 'object' ? row.tenant as OffenseDTO['tenant'] : undefined,
+    mitreTechniques: Array.isArray(row.mitreTechniques) ? row.mitreTechniques as OffenseDTO['mitreTechniques'] : undefined,
+    sourceIps: stringList(row.sourceIps),
+    targetIps: stringList(row.targetIps),
+    users: stringList(row.users),
+  };
+}
+
+function signalsFromOffenseAlerts(findingId: string, alerts: OffenseAlertRef[]): FindingSignal[] {
+  return alerts.map((alert, index) => ({
+    id: `${findingId}-alert-${alert.id || index + 1}`,
+    alertId: alert.id,
+    detectedAt: alert.timestamp || new Date(0).toISOString(),
+    title: alert.title || 'Supporting alert',
+    severity: normalizeSeverity(alert.severity),
+    category: 'correlation',
+    ruleName: alert.title || 'Correlated alert',
+    entityLabel: textValue(alert.sourceIp, alert.destinationIp) ?? 'Authorized scope',
+    tactic: null,
+    technique: null,
+  }));
+}
+
+/**
+ * Projects a confirmed `/api/offenses` document into the workbench DTO.
+ * Narrative/graph fields stay honest projections — not invented attack stories.
+ */
+export function mapOffenseToCorrelatedFinding(
+  value: unknown,
+  alerts: OffenseAlertRef[] = []
+): CorrelatedFindingDTO {
+  const offense = asOffenseRecord(value);
+  const detail = value && typeof value === 'object' ? asRecord(value) : {};
+  const mitreTechniques = (offense.mitreTechniques ?? []).map((tech) => textValue(tech.id, tech.name) ?? '').filter(Boolean);
+  const tactics = stringList(detail.mitreTactics);
+  const entities: FindingEntity[] = [
+    ...((offense.sourceIps ?? []).map((ip, index) => ({
+      id: `${offense.id}-src-${index}`,
+      type: 'ip' as const,
+      label: ip,
+      role: 'source' as const,
+      riskScore: null,
+      criticality: null,
+      alertCount: 0,
+    }))),
+    ...((offense.targetIps ?? []).map((ip, index) => ({
+      id: `${offense.id}-dst-${index}`,
+      type: 'ip' as const,
+      label: ip,
+      role: 'target' as const,
+      riskScore: null,
+      criticality: null,
+      alertCount: 0,
+    }))),
+    ...((offense.users ?? []).map((user, index) => ({
+      id: `${offense.id}-user-${index}`,
+      type: 'user' as const,
+      label: user,
+      role: 'pivot' as const,
+      riskScore: null,
+      criticality: null,
+      alertCount: 0,
+    }))),
+  ];
+  const signals = alerts.length
+    ? signalsFromOffenseAlerts(offense.id, alerts)
+    : signalsFromOffenseAlerts(offense.id, Array.isArray(detail.alerts)
+      ? (detail.alerts as UnknownRecord[]).map((alert, index) => ({
+          id: textValue(alert.id) ?? `${offense.id}-embedded-${index}`,
+          title: textValue(alert.title, alert.name) ?? 'Supporting alert',
+          severity: normalizeSeverity(alert.severity),
+          timestamp: textValue(alert.timestamp, alert.detectedAt, offense.firstEventTimestamp) ?? offense.firstEventTimestamp,
+          sourceIp: textValue(alert.sourceIp),
+          destinationIp: textValue(alert.destinationIp),
+        }))
+      : []);
+
+  const summary = offense.description
+    ?? 'Related alerts rolled into one correlated finding. Full narrative projection is incomplete until the correlation detail contract returns it.';
+
+  return {
+    id: offense.id,
+    title: offense.name,
+    summary,
+    severity: offense.severity,
+    riskScore: numericValue(detail.riskScore) ?? null,
+    confidence: Math.round((numericValue(detail.confidence) ?? 0) * ((numericValue(detail.confidence) ?? 0) <= 1 ? 100 : 1)),
+    status: offenseStatusToFinding(detail.status ?? offense.status),
+    correlationKind: normalizeCorrelationKind(detail.correlationKind, tactics, []),
+    firstSeen: offense.firstEventTimestamp,
+    lastSeen: offense.lastEventTimestamp,
+    alertCount: offense.alertCount || signals.length,
+    eventCount: numericValue(detail.eventCount) ?? 0,
+    dataSourceCount: numericValue(detail.dataSourceCount) ?? 0,
+    intelMatchCount: numericValue(detail.intelMatchCount) ?? 0,
+    relatedFindingCount: numericValue(detail.relatedFindingCount) ?? 0,
+    tenantName: textValue(asRecord(offense.tenant).name, detail.tenantName) ?? 'Authorized tenant',
+    owner: textValue(detail.assignee, asRecord(detail.owner).name)
+      ? { id: textValue(detail.assignee, asRecord(detail.owner).id) ?? 'assigned', name: textValue(detail.assignee, asRecord(detail.owner).name) ?? 'Assigned analyst' }
+      : null,
+    slaStatus: 'none',
+    mitreTactics: tactics,
+    mitreTechniques,
+    entities,
+    correlationReasons: [{
+      id: `${offense.id}-reason-offense`,
+      kind: 'shared_entity',
+      label: 'Offense-index correlation',
+      detail: 'This finding is loaded from GET /api/offenses. Supporting alerts load from GET /api/offenses/{id}/alerts when present.',
+      strength: 50,
+      evidenceCount: Math.max(1, offense.alertCount || signals.length),
+    }],
+    stages: [],
+    signals,
+    relationshipNodes: entities.slice(0, 8).map((entity, index) => ({
+      id: entity.id,
+      label: entity.label,
+      type: entity.type,
+      severity: null,
+      x: 18 + (index % 4) * 24,
+      y: 24 + Math.floor(index / 4) * 36,
+    })),
+    relationshipEdges: [],
+    narrative: {
+      summary,
+      keyJudgments: [
+        `${offense.alertCount || signals.length} related alert signal(s) are associated with this finding.`,
+        'Promote to an incident only when case ownership is required — Incidents own response workflow.',
+      ],
+      source: 'correlation_engine',
+      generatedAt: offense.lastEventTimestamp,
+      confidence: 0,
+    },
+    availableActions: [
+      { id: 'change_status', allowed: true },
+      {
+        id: 'promote_incident',
+        allowed: false,
+        reason: 'Incident promotion preview requires the correlated-findings promotion contract. Open Incidents to create a case, or retry when COR promotion is available for this id.',
+      },
+    ],
+    correlationEngine: {
+      version: textValue(asRecord(detail.correlationEngine).version) ?? 'offense-index',
+      ruleIds: stringList(asRecord(detail.correlationEngine).ruleIds),
+      evaluatedAt: offense.lastEventTimestamp,
+    },
+    incident: null,
+    version: numericValue(detail.version) ?? 0,
+    dataCompleteness: 'projection',
+  };
+}
+
+function buildSummaryFromItems(items: CorrelatedFindingDTO[], snapshotAt: string): CorrelatedFindingsResponse['summary'] {
+  return {
+    total: items.length,
+    open: items.filter((finding) => finding.status === 'open' || finding.status === 'investigating').length,
+    critical: items.filter((finding) => finding.severity === 'critical' && finding.status !== 'resolved' && finding.status !== 'false_positive').length,
+    unassigned: items.filter((finding) => !finding.owner && (finding.status === 'open' || finding.status === 'investigating')).length,
+    slaPressure: items.filter((finding) => finding.slaStatus === 'at_risk' || finding.slaStatus === 'breached').length,
+    multiStage: items.filter((finding) => finding.mitreTactics.length >= 3 && finding.status !== 'resolved' && finding.status !== 'false_positive').length,
+    newLast24h: items.filter((finding) => new Date(snapshotAt).getTime() - new Date(finding.firstSeen).getTime() <= 86_400_000).length,
+  };
+}
+
+async function fetchOffensesAsFindings(
+  filters: CorrelatedFindingsFilter,
+  signal?: AbortSignal
+): Promise<CorrelatedFindingsResponse> {
+  void signal;
+  const statusParam = filters.view === 'open' || filters.view === 'needs_review'
+    ? 'open'
+    : findingStatusToOffenseParam(filters.status);
+  const page = await getOffenses({
+    page: 0,
+    size: RESULT_LIMIT,
+    status: statusParam,
+    severity: filters.severity,
+  });
+  let items = page.items.map((item) => mapOffenseToCorrelatedFinding(item));
+  const search = filters.search?.trim().toLocaleLowerCase();
+  if (filters.view === 'critical') {
+    items = items.filter((finding) => finding.severity === 'critical' && finding.status !== 'resolved' && finding.status !== 'false_positive');
+  }
+  if (filters.severity) {
+    items = items.filter((finding) => finding.severity === filters.severity);
+  }
+  if (search) {
+    items = items.filter((finding) => {
+      const haystack = [finding.id, finding.title, finding.summary, finding.tenantName, ...finding.entities.map((entity) => entity.label)].join(' ').toLocaleLowerCase();
+      return haystack.includes(search);
+    });
+  }
+  items = [...items].sort((left, right) => {
+    if (filters.sort === 'newest') return new Date(right.lastSeen).getTime() - new Date(left.lastSeen).getTime();
+    if (filters.sort === 'confidence_desc') return right.confidence - left.confidence;
+    if (filters.sort === 'alerts_desc') return right.alertCount - left.alertCount;
+    return (right.riskScore ?? -1) - (left.riskScore ?? -1) || new Date(right.lastSeen).getTime() - new Date(left.lastSeen).getTime();
+  });
+  const snapshotAt = filters.to;
+  return {
+    summary: buildSummaryFromItems(items, snapshotAt),
+    items,
+    total: page.total > 0 ? page.total : items.length,
+    nextCursor: null,
+    snapshotAt,
+    totalApproximate: page.total === 0 && items.length > 0,
+    dataCompleteness: 'projection',
+  };
 }
 
 export function buildCorrelatedFindingsFixture(
@@ -325,35 +588,9 @@ export async function fetchCorrelatedFindings(
     const { foundationCorrelatedFindings } = await import('./correlatedFindings.fixtures');
     return buildCorrelatedFindingsFixture(foundationCorrelatedFindings, filters);
   }
-  const response = await apiClient.get<unknown>('/ha-correlated-findings', {
-    signal,
-    params: { ...filters, limit: RESULT_LIMIT } as unknown as Record<string, string | number | boolean | string[] | undefined>,
-  });
-  const envelope = asRecord(response);
-  const items = Array.isArray(envelope.items) ? envelope.items.map(normalizeCorrelatedFinding) : [];
-  const rawSummary = asRecord(envelope.summary);
-  const bySeverity = asRecord(rawSummary.bySeverity);
-  const byStatus = asRecord(rawSummary.byStatus);
-  const snapshotAt = textValue(envelope.snapshotAt, items[0]?.lastSeen, filters.to) ?? filters.to;
-  const open = numericValue(rawSummary.open)
-    ?? (numericValue(byStatus.open) ?? 0) + (numericValue(byStatus.new) ?? 0) + (numericValue(byStatus.reviewing) ?? 0) + (numericValue(byStatus.investigating) ?? 0);
-  return {
-    summary: {
-      total: numericValue(rawSummary.total) ?? numericValue(envelope.total) ?? items.length,
-      open,
-      critical: numericValue(rawSummary.critical) ?? numericValue(bySeverity.critical) ?? items.filter((item) => item.severity === 'critical').length,
-      unassigned: numericValue(rawSummary.unassigned) ?? items.filter((item) => !item.owner && (item.status === 'open' || item.status === 'investigating')).length,
-      slaPressure: numericValue(rawSummary.slaPressure) ?? items.filter((item) => item.slaStatus === 'at_risk' || item.slaStatus === 'breached').length,
-      multiStage: numericValue(rawSummary.multiStage) ?? items.filter((item) => item.mitreTactics.length >= 3).length,
-      newLast24h: numericValue(rawSummary.newLast24h) ?? items.filter((item) => new Date(snapshotAt).getTime() - new Date(item.firstSeen).getTime() <= 86_400_000).length,
-    },
-    items,
-    total: numericValue(envelope.total) ?? items.length,
-    nextCursor: textValue(envelope.nextCursor, envelope.cursor) ?? null,
-    snapshotAt,
-    totalApproximate: envelope.totalApproximate === true,
-    dataCompleteness: envelope.dataCompleteness === 'complete' && items.every((item) => item.dataCompleteness === 'complete') ? 'complete' : 'projection',
-  };
+  // Staging-primary: confirmed GET /api/offenses (page/size → X-Total-Count).
+  // COR /ha-correlated-findings remains optional enrichment — not required for list.
+  return fetchOffensesAsFindings(filters, signal);
 }
 
 export async function fetchCorrelatedFindingDetail(id: string, signal?: AbortSignal): Promise<CorrelatedFindingDTO> {
@@ -363,9 +600,23 @@ export async function fetchCorrelatedFindingDetail(id: string, signal?: AbortSig
     if (!finding) throw new Error(`Correlated finding ${id} was not found.`);
     return finding;
   }
-  const response = await apiClient.get<unknown>(`/ha-correlated-findings/${encodeURIComponent(id)}`, { signal });
-  const envelope = asRecord(response);
-  return normalizeCorrelatedFinding(envelope.finding ?? response);
+  void signal;
+  try {
+    const [offense, alerts] = await Promise.all([
+      getOffense(id),
+      getOffenseAlerts(id).catch(() => [] as OffenseAlertRef[]),
+    ]);
+    return mapOffenseToCorrelatedFinding(offense, Array.isArray(alerts) ? alerts : []);
+  } catch (offenseError) {
+    // Honest fallback: try COR detail if offense document is missing for this id.
+    try {
+      const response = await apiClient.get<unknown>(`/ha-correlated-findings/${encodeURIComponent(id)}`, { signal });
+      const envelope = asRecord(response);
+      return normalizeCorrelatedFinding(envelope.finding ?? response);
+    } catch {
+      throw offenseError instanceof Error ? offenseError : new Error(`Correlated finding ${id} was not found.`);
+    }
+  }
 }
 
 export async function previewFindingPromotion(id: string): Promise<FindingPromotionPreview> {
@@ -387,7 +638,7 @@ export async function previewFindingPromotion(id: string): Promise<FindingPromot
 export async function promoteFindingToIncident(id: string, previewToken: string): Promise<{ incidentId: string; auditId: string }> {
   if (fixtureMode) return { incidentId: 'INC-SIMULATED', auditId: `AUDIT-${id}` };
   return apiClient.post<{ incidentId: string; auditId: string }>(
-    `/ha-correlated-findings/${encodeURIComponent(id)}/incident-promotion`,
+    `/ha-correlated-findings/${encodeURIComponent(id)}/incident-promotion/execute`,
     { previewToken },
     { headers: { 'Idempotency-Key': crypto.randomUUID() } }
   );

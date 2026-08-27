@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import {
   AlertTriangle,
   ChevronRight,
-  Clock3,
   GitBranch,
   Layers3,
   ListFilter,
@@ -12,19 +11,18 @@ import {
   Search,
   ShieldAlert,
   Sparkles,
-  Target,
   UserRound,
   type LucideIcon,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import {
+  CORRELATED_FINDINGS_LIST_CONTRACT,
   correlatedFindingsFixtureMode,
   fetchCorrelatedFindings,
 } from './correlatedFindings.service';
 import type {
   CorrelatedFindingDTO,
-  FindingOwnership,
   FindingSort,
   FindingView,
 } from './correlatedFindings.types';
@@ -37,21 +35,23 @@ import { StatusDock } from '@/components/status-dock/StatusDock';
 import { TimeRangeSelector, resolveTimeRange, type TimeRange } from '@/components/time-range-selector';
 import { useAlertStream } from '@/hooks/useAlertStream';
 import { useEpsStream } from '@/hooks/useEpsStream';
-import { getSeverityLabel } from '@/lib/severity';
+import { getSeverityLabel, type SeverityLevel } from '@/lib/severity';
+import { canMutateFindingStatus, findingStatusBlockedTitle } from '@/services/findingStatus.capabilities';
 import { useAlertStreamStore } from '@/store/alertStream.store';
+import { useAuthStore } from '@/store/auth.store';
 
 import './CorrelatedFindingsPage.css';
 
+/** Distinct from Alerts inventory and Incidents case ownership. */
+export const CORRELATED_FINDINGS_JOB_SENTENCE =
+  'Review related alerts rolled into one correlated finding — offense-class grouping, not raw alert inventory. Promote to an incident when case ownership is required.';
+
 const livePreset: TimeRange = { type: 'preset', preset: '24h' };
 
-const views: Array<{ id: FindingView; label: string; icon: LucideIcon; countKey?: 'open' | 'critical' | 'multiStage' | 'slaPressure' | 'unassigned' }> = [
-  { id: 'needs_review', label: 'Needs review', icon: ListFilter, countKey: 'open' },
-  { id: 'mine', label: 'My findings', icon: UserRound },
-  { id: 'critical', label: 'Critical', icon: ShieldAlert, countKey: 'critical' },
-  { id: 'multi_stage', label: 'Multi-stage', icon: GitBranch, countKey: 'multiStage' },
-  { id: 'sla_risk', label: 'SLA risk', icon: Clock3, countKey: 'slaPressure' },
-  { id: 'unassigned', label: 'Unassigned', icon: Target, countKey: 'unassigned' },
+const views: Array<{ id: FindingView; label: string; icon: LucideIcon }> = [
   { id: 'all', label: 'All findings', icon: Layers3 },
+  { id: 'open', label: 'Open', icon: ListFilter },
+  { id: 'critical', label: 'Critical', icon: ShieldAlert },
 ];
 
 const statusLabels: Record<CorrelatedFindingDTO['status'], string> = {
@@ -61,6 +61,24 @@ const statusLabels: Record<CorrelatedFindingDTO['status'], string> = {
 const kindLabels: Record<CorrelatedFindingDTO['correlationKind'], string> = {
   attack_chain: 'Attack chain', shared_entity: 'Shared entity', behavior_sequence: 'Behavior sequence', campaign: 'Campaign', duplicate_cluster: 'Duplicate cluster',
 };
+
+const SEVERITY_OPTIONS: Array<{ value: '' | SeverityLevel; label: string }> = [
+  { value: '', label: 'All severities' },
+  { value: 'critical', label: 'Critical' },
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' },
+  { value: 'info', label: 'Info' },
+];
+
+const STATUS_OPTIONS: Array<{ value: '' | CorrelatedFindingDTO['status']; label: string }> = [
+  { value: '', label: 'All statuses' },
+  { value: 'open', label: 'Open' },
+  { value: 'investigating', label: 'Investigating' },
+  { value: 'incident_created', label: 'Incident created' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'false_positive', label: 'False positive' },
+];
 
 function relativeTime(value: string): string {
   const difference = Math.max(0, Date.now() - new Date(value).getTime());
@@ -89,12 +107,17 @@ function FindingQueueCard({ finding, selected, onSelect }: { finding: Correlated
 }
 
 export function CorrelatedFindingsPage(): JSX.Element {
+  const roles = useAuthStore((state) => state.user?.roles);
+  const canMutateStatus = canMutateFindingStatus(roles);
+  const statusDenyTitle = findingStatusBlockedTitle(roles);
+
   const [mode, setMode] = useState<'live' | 'historical'>('live');
   const [timeRange, setTimeRange] = useState<TimeRange>({ type: 'preset', preset: '24h' });
   const [liveRange, setLiveRange] = useState(() => resolveTimeRange(livePreset));
-  const [activeView, setActiveView] = useState<FindingView>('needs_review');
-  const [ownership, setOwnership] = useState<FindingOwnership>('all');
-  const [sort, setSort] = useState<FindingSort>('risk_desc');
+  const [activeView, setActiveView] = useState<FindingView>('all');
+  const [statusFilter, setStatusFilter] = useState<'' | CorrelatedFindingDTO['status']>('');
+  const [severityFilter, setSeverityFilter] = useState<'' | SeverityLevel>('');
+  const [sort, setSort] = useState<FindingSort>('newest');
   const [search, setSearch] = useState('');
   const deferredSearch = useDeferredValue(search.trim());
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -109,10 +132,12 @@ export function CorrelatedFindingsPage(): JSX.Element {
   const filters = useMemo(() => ({
     ...selectedRange,
     view: activeView,
-    ownership,
+    ownership: 'all' as const,
     sort,
     search: deferredSearch || undefined,
-  }), [activeView, deferredSearch, ownership, selectedRange, sort]);
+    status: statusFilter || undefined,
+    severity: severityFilter || undefined,
+  }), [activeView, deferredSearch, selectedRange, severityFilter, sort, statusFilter]);
 
   const findingsQuery = useQuery({
     queryKey: ['correlated-findings', filters],
@@ -143,50 +168,151 @@ export function CorrelatedFindingsPage(): JSX.Element {
       {correlatedFindingsFixtureMode && <div className="correlated-findings-page__fixture" role="status"><span><strong>Design fixture:</strong> fictional correlated attack stories are enabled for visual review.</span><span>Production never receives these records.</span></div>}
 
       <header className="correlated-findings-header">
-        <div className="correlated-findings-header__identity"><span aria-hidden="true"><GitBranch size={21} /></span><div><small>Correlation operations</small><h1>Correlated Findings</h1><p>Review related alerts as one explainable attack story, then decide whether to investigate, dismiss, or promote.</p></div></div>
-        <div className="correlated-findings-header__actions"><span className="correlated-findings-live" data-state={effectiveConnected ? 'live' : 'delayed'}><i />{effectiveConnected ? 'Correlation stream live' : 'Updates delayed'}</span><Link to="/alerts"><ListFilter size={14} />Alert queue</Link><LiveModeToggle mode={mode} onChange={(nextMode) => { setMode(nextMode); if (nextMode === 'live') setLiveRange(resolveTimeRange(livePreset)); }} sseConnected={effectiveConnected} /></div>
+        <div className="correlated-findings-header__identity">
+          <span aria-hidden="true"><GitBranch size={21} /></span>
+          <div>
+            <small>Correlation operations</small>
+            <h1>Correlated Findings</h1>
+            <p>{CORRELATED_FINDINGS_JOB_SENTENCE}</p>
+          </div>
+        </div>
+        <div className="correlated-findings-header__actions">
+          <span className="correlated-findings-live" data-state={effectiveConnected ? 'live' : 'delayed'}><i />{effectiveConnected ? 'Correlation stream live' : 'Updates delayed'}</span>
+          <LiveModeToggle mode={mode} onChange={(nextMode) => { setMode(nextMode); if (nextMode === 'live') setLiveRange(resolveTimeRange(livePreset)); }} sseConnected={effectiveConnected} />
+        </div>
       </header>
 
-      <div className="correlated-findings-sticky" aria-label="Correlation controls and workload summary">
-        <section className="correlated-findings-metrics" aria-label="Correlation workload summary">
-          <button type="button" onClick={() => setActiveView('needs_review')}><span>Open stories</span><strong>{findingsQuery.isLoading ? '—' : result?.summary.open ?? 0}</strong><em>requiring disposition</em></button>
-          <button type="button" data-tone="critical" onClick={() => setActiveView('critical')}><span>Critical exposure</span><strong>{findingsQuery.isLoading ? '—' : result?.summary.critical ?? 0}</strong><em>highest impact</em></button>
-          <button type="button" data-tone="warning" onClick={() => setActiveView('sla_risk')}><span>SLA pressure</span><strong>{findingsQuery.isLoading ? '—' : result?.summary.slaPressure ?? 0}</strong><em>risk or breach</em></button>
-          <button type="button" onClick={() => setActiveView('unassigned')}><span>Unassigned</span><strong>{findingsQuery.isLoading ? '—' : result?.summary.unassigned ?? 0}</strong><em>without owner</em></button>
-          <button type="button" data-tone="intel" onClick={() => setActiveView('multi_stage')}><span>Multi-stage</span><strong>{findingsQuery.isLoading ? '—' : result?.summary.multiStage ?? 0}</strong><em>3+ ATT&amp;CK tactics</em></button>
-        </section>
+      <p className="correlated-findings-meta">
+        <Link to="/dashboard">Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/queue">Analyst Queue</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/alerts">Alerts inventory</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/incidents">Incidents</Link>
+        {!canMutateStatus && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span className="correlated-findings-meta__warn" title={statusDenyTitle}>Read-only status — {statusDenyTitle}</span>
+          </>
+        )}
+      </p>
 
-        <nav className="correlated-findings-views" aria-label="Correlated finding views">
-          <strong>Views</strong>{views.map((view) => { const Icon = view.icon; const count = view.id === 'all' ? result?.summary.total : view.countKey ? result?.summary[view.countKey] : undefined; return <button key={view.id} type="button" data-active={activeView === view.id} onClick={() => setActiveView(view.id)} aria-pressed={activeView === view.id}><Icon size={12} aria-hidden="true" />{view.label}{count !== undefined && <em>{count}</em>}</button>; })}
+      <div className="correlated-findings-sticky" aria-label="Correlation filters">
+        <nav className="correlated-findings-views" aria-label="Correlated finding scopes">
+          <strong>Scope</strong>
+          {views.map((view) => {
+            const Icon = view.icon;
+            const count = view.id === 'all'
+              ? result?.summary.total
+              : view.id === 'open'
+                ? result?.summary.open
+                : view.id === 'critical'
+                  ? result?.summary.critical
+                  : undefined;
+            return (
+              <button key={view.id} type="button" data-active={activeView === view.id} onClick={() => setActiveView(view.id)} aria-pressed={activeView === view.id}>
+                <Icon size={12} aria-hidden="true" />{view.label}{count !== undefined && <em>{count}</em>}
+              </button>
+            );
+          })}
         </nav>
 
         <div className="correlated-findings-toolbar">
-          <label className="correlated-findings-search"><Search size={14} aria-hidden="true" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search stories, entities, techniques…" aria-label="Search correlated findings" />{search && <button type="button" onClick={() => setSearch('')} aria-label="Clear finding search">×</button>}</label>
-          <HaCompactSelect ariaLabel="Finding ownership" label="Ownership" value={ownership} options={[{ value: 'all', label: 'All ownership' }, { value: 'mine', label: 'Assigned to me' }, { value: 'unassigned', label: 'Unassigned' }]} onChange={setOwnership} />
-          <HaCompactSelect ariaLabel="Finding order" label="Order" value={sort} options={[{ value: 'risk_desc', label: 'Highest risk' }, { value: 'newest', label: 'Newest activity' }, { value: 'confidence_desc', label: 'Highest confidence' }, { value: 'alerts_desc', label: 'Most alerts' }]} onChange={setSort} />
+          <HaCompactSelect
+            ariaLabel="Finding status filter"
+            label="Status"
+            value={statusFilter}
+            options={STATUS_OPTIONS}
+            onChange={(value) => setStatusFilter(value as '' | CorrelatedFindingDTO['status'])}
+          />
+          <HaCompactSelect
+            ariaLabel="Finding severity filter"
+            label="Severity"
+            value={severityFilter}
+            options={SEVERITY_OPTIONS}
+            onChange={(value) => setSeverityFilter(value as '' | SeverityLevel)}
+          />
+          <label className="correlated-findings-search">
+            <Search size={14} aria-hidden="true" />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search findings, entities…" aria-label="Search correlated findings" />
+            {search && <button type="button" onClick={() => setSearch('')} aria-label="Clear finding search">×</button>}
+          </label>
+          <HaCompactSelect
+            ariaLabel="Finding order"
+            label="Order"
+            value={sort}
+            options={[
+              { value: 'newest', label: 'Newest activity' },
+              { value: 'risk_desc', label: 'Highest risk' },
+              { value: 'confidence_desc', label: 'Highest confidence' },
+              { value: 'alerts_desc', label: 'Most alerts' },
+            ]}
+            onChange={setSort}
+          />
           <div className="correlated-findings-toolbar__spacer" />
           <TimeRangeSelector value={timeRange} onChange={setTimeRange} presets={['1h', '4h', '24h', '7d']} disabled={mode === 'live'} />
-          <span className="correlated-findings-snapshot">Snapshot <strong>{result?.snapshotAt ? new Date(result.snapshotAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</strong></span>
+          <span className="correlated-findings-snapshot" title={CORRELATED_FINDINGS_LIST_CONTRACT}>
+            Snapshot <strong>{result?.snapshotAt ? new Date(result.snapshotAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</strong>
+          </span>
           <button type="button" className="correlated-findings-refresh" onClick={refresh} aria-label="Refresh correlated findings" title="Refresh findings"><RefreshCw size={15} /></button>
         </div>
 
-        {newAlertCount > 0 && <div className="correlated-findings-updates" role="status" aria-live="polite"><GitBranch size={13} /><span><strong>{newAlertCount} signal update{newAlertCount === 1 ? '' : 's'} buffered.</strong> Current story ordering is preserved.</span><button type="button" onClick={refresh}>Load updates</button></div>}
+        {newAlertCount > 0 && (
+          <div className="correlated-findings-updates" role="status" aria-live="polite">
+            <GitBranch size={13} />
+            <span><strong>{newAlertCount} signal update{newAlertCount === 1 ? '' : 's'} buffered.</strong> Current finding ordering is preserved.</span>
+            <button type="button" onClick={refresh}>Load updates</button>
+          </div>
+        )}
       </div>
 
       <main className="correlated-findings-workspace">
         <aside className="correlation-feed" aria-label="Correlated findings list">
-          <header><div><span>Attack stories</span><strong>{findingsQuery.isLoading ? '—' : result?.total ?? 0}</strong></div><p>Risk-ranked · 25-item batch · {result?.totalApproximate ? 'approximate' : 'exact'} count</p></header>
+          <header>
+            <div><span>Correlated findings</span><strong>{findingsQuery.isLoading ? '—' : result?.total ?? 0}</strong></div>
+            <p>{CORRELATED_FINDINGS_LIST_CONTRACT} · {result?.totalApproximate ? 'approximate' : 'exact'} count</p>
+          </header>
           <div className="correlation-feed__list">
             {findingsQuery.isLoading && Array.from({ length: 6 }, (_, index) => <div className="correlation-card-skeleton" key={index}><span /><span /><span /><span /></div>)}
-            {findingsQuery.isError && <section className="correlation-feed__state" role="alert"><AlertTriangle size={22} /><strong>Correlation workload unavailable</strong><p>{findingsQuery.error instanceof Error ? findingsQuery.error.message : 'The attack-story projection could not be loaded.'} Production requires contract `COR-001`.</p><button type="button" onClick={() => void findingsQuery.refetch()}>Retry</button></section>}
-            {!findingsQuery.isLoading && !findingsQuery.isError && findings.length === 0 && <section className="correlation-feed__state"><GitBranch size={22} /><strong>No stories match this view</strong><p>Adjust the view, ownership, search, or time range.</p><button type="button" onClick={() => { setActiveView('all'); setOwnership('all'); setSearch(''); }}>Clear filters</button></section>}
-            {findings.map((finding) => <FindingQueueCard key={finding.id} finding={finding} selected={finding.id === selectedId} onSelect={() => setSelectedId(finding.id)} />)}
+            {findingsQuery.isError && (
+              <section className="correlation-feed__state" role="alert">
+                <AlertTriangle size={22} />
+                <strong>Correlated findings unavailable</strong>
+                <p>{findingsQuery.error instanceof Error ? findingsQuery.error.message : 'The offense list could not be loaded.'} Primary contract: {CORRELATED_FINDINGS_LIST_CONTRACT}.</p>
+                <button type="button" onClick={() => void findingsQuery.refetch()}>Retry</button>
+              </section>
+            )}
+            {!findingsQuery.isLoading && !findingsQuery.isError && findings.length === 0 && (
+              <section className="correlation-feed__state">
+                <GitBranch size={22} />
+                <strong>No findings match this scope</strong>
+                <p>Adjust status, severity, search, or time range. Empty lists are honest when the offense index has no matching documents.</p>
+                <button type="button" onClick={() => { setActiveView('all'); setStatusFilter(''); setSeverityFilter(''); setSearch(''); }}>Clear filters</button>
+              </section>
+            )}
+            {findings.map((finding) => (
+              <FindingQueueCard key={finding.id} finding={finding} selected={finding.id === selectedId} onSelect={() => setSelectedId(finding.id)} />
+            ))}
           </div>
-          {result?.nextCursor && <footer><span>Showing the highest-priority {findings.length} stories.</span><button type="button" disabled title="Cursor pagination activates with the production COR-001 contract">Load more</button></footer>}
+          {result?.nextCursor && (
+            <footer>
+              <span>Showing the highest-priority {findings.length} findings.</span>
+              <button type="button" disabled title="Cursor pagination activates when the list contract returns a next cursor">Load more</button>
+            </footer>
+          )}
         </aside>
 
-        <section className="correlation-preview" aria-label="Selected correlation preview">
-          {selectedFinding ? <FindingWorkbench finding={selectedFinding} compact onPromote={() => setPromotionFinding(selectedFinding)} /> : <div className="correlation-preview__empty"><GitBranch size={26} /><strong>Select an attack story</strong><p>Its correlation explanation, chronology, entities, and evidence will open here without losing queue context.</p></div>}
+        <section className="correlation-preview" aria-label="Selected finding preview">
+          {selectedFinding ? (
+            <FindingWorkbench finding={selectedFinding} compact onPromote={() => setPromotionFinding(selectedFinding)} />
+          ) : (
+            <div className="correlation-preview__empty">
+              <GitBranch size={26} />
+              <strong>Select a correlated finding</strong>
+              <p>Related alerts, status controls, and promotion honesty open here without leaving the list.</p>
+            </div>
+          )}
         </section>
       </main>
 

@@ -5,7 +5,8 @@ export type CorrelatedFindingStatus = 'open' | 'investigating' | 'incident_creat
 export type CorrelationKind = 'attack_chain' | 'shared_entity' | 'behavior_sequence' | 'campaign' | 'duplicate_cluster';
 export type FindingOwnership = 'all' | 'mine' | 'unassigned';
 export type FindingSort = 'risk_desc' | 'newest' | 'confidence_desc' | 'alerts_desc';
-export type FindingView = 'needs_review' | 'mine' | 'critical' | 'multi_stage' | 'sla_risk' | 'unassigned' | 'all';
+/** Inventory scopes for correlated findings (distinct from Queue shift views). */
+export type FindingView = 'all' | 'open' | 'critical' | 'needs_review' | 'mine' | 'multi_stage' | 'sla_risk' | 'unassigned';
 
 export interface FindingOwner {
   id: string;

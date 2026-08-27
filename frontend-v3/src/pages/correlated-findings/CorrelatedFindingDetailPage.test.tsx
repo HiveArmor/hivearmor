@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render } from '@testing-library/react';
 import axe from 'axe-core';
 import { MemoryRouter } from 'react-router-dom';
@@ -10,6 +11,15 @@ function heroFinding() {
   const finding = getFoundationCorrelatedFinding('FND-26-0841');
   if (!finding) throw new Error('Hero finding fixture unavailable');
   return finding;
+}
+
+function renderWorkbench(ui: React.ReactElement) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  return render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter>{ui}</MemoryRouter>
+    </QueryClientProvider>
+  );
 }
 
 describe('Correlated Finding investigation integrity', () => {
@@ -29,7 +39,7 @@ describe('Correlated Finding investigation integrity', () => {
   });
 
   it('moves between story, evidence, and relationship views without losing context', () => {
-    const { getByRole } = render(<MemoryRouter><FindingWorkbench finding={heroFinding()} compact /></MemoryRouter>);
+    const { getByRole } = renderWorkbench(<FindingWorkbench finding={heroFinding()} compact />);
     expect(getByRole('heading', { name: 'What the correlation means' })).toBeInTheDocument();
     fireEvent.click(getByRole('tab', { name: /Evidence/ }));
     expect(getByRole('table', { name: 'Correlated alerts' })).toBeInTheDocument();
@@ -38,7 +48,7 @@ describe('Correlated Finding investigation integrity', () => {
   });
 
   it('has no serious or critical WCAG violations in the default attack story', async () => {
-    const { container } = render(<MemoryRouter><FindingWorkbench finding={heroFinding()} compact /></MemoryRouter>);
+    const { container } = renderWorkbench(<FindingWorkbench finding={heroFinding()} compact />);
     const result = await axe.run(container, {
       runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag22aa'] },
       rules: { 'color-contrast': { enabled: false } },

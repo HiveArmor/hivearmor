@@ -6,7 +6,10 @@ import { describe, expect, it } from 'vitest';
 import { foundationCorrelatedFindings } from './correlatedFindings.fixtures';
 import {
   buildCorrelatedFindingsFixture,
+  CORRELATED_FINDINGS_LIST_CONTRACT,
+  findingUiStatusToOffenseStatus,
   isCorrelatedFindingDTO,
+  mapOffenseToCorrelatedFinding,
   normalizeCorrelatedFinding,
 } from './correlatedFindings.service';
 
@@ -67,10 +70,40 @@ describe('Correlated Findings projection', () => {
     expect(finding.signals[0].alertId).toBe('alert-1');
     expect(finding.dataCompleteness).toBe('projection');
   });
+
+  it('maps offense documents into honest finding projections', () => {
+    const finding = mapOffenseToCorrelatedFinding({
+      id: 'off-42',
+      name: 'Multi-host credential spray',
+      description: 'Related alerts sharing source IP.',
+      severity: 'high',
+      status: 'reviewing',
+      alertCount: 3,
+      firstEventTimestamp: '2026-08-10T09:00:00.000Z',
+      lastEventTimestamp: '2026-08-10T10:00:00.000Z',
+      sourceIps: ['203.0.113.10'],
+      targetIps: ['10.0.0.5'],
+    }, [{ id: 'a1', title: 'Failed logons', severity: 'high', timestamp: '2026-08-10T09:30:00.000Z' }]);
+
+    expect(finding.id).toBe('off-42');
+    expect(finding.status).toBe('investigating');
+    expect(finding.signals).toHaveLength(1);
+    expect(finding.signals[0].alertId).toBe('a1');
+    expect(finding.dataCompleteness).toBe('projection');
+    expect(finding.availableActions.find((action) => action.id === 'promote_incident')?.allowed).toBe(false);
+  });
+
+  it('maps finding UI status to OffenseResource allowlisted values', () => {
+    expect(findingUiStatusToOffenseStatus('open')).toBe('open');
+    expect(findingUiStatusToOffenseStatus('investigating')).toBe('reviewing');
+    expect(findingUiStatusToOffenseStatus('resolved')).toBe('closed');
+    expect(findingUiStatusToOffenseStatus('false_positive')).toBe('dismissed');
+    expect(findingUiStatusToOffenseStatus('incident_created')).toBe('promoted');
+  });
 });
 
 describe('Correlated Findings performance boundaries', () => {
-  it('keeps both routes lazy and removes grid and graph libraries from first use', async () => {
+  it('keeps both routes lazy and list contract on offenses without AG Grid', async () => {
     const routerSource = await import('@/router/index.tsx?raw');
     const listSource = await import('./CorrelatedFindingsPage.tsx?raw');
     const detailSource = await import('./CorrelatedFindingDetailPage.tsx?raw');
@@ -80,20 +113,30 @@ describe('Correlated Findings performance boundaries', () => {
     expect(routerSource.default).toContain("import('@/pages/correlated-findings/CorrelatedFindingDetailPage')");
     expect(listSource.default).not.toContain('SiemDataGrid');
     expect(listSource.default).not.toContain('echarts');
+    expect(listSource.default).toContain('CORRELATED_FINDINGS_JOB_SENTENCE');
     expect(listSource.default).toContain('<HaCompactSelect');
     expect(listSource.default).toContain('className="correlated-findings-sticky"');
+    expect(listSource.default).toContain('to="/alerts"');
+    expect(listSource.default).toContain('to="/queue"');
+    expect(listSource.default).toContain('to="/incidents"');
+    expect(listSource.default).toContain('to="/dashboard"');
     expect(detailSource.default).not.toContain('reactflow');
-    expect(serviceSource.default).toContain("'/ha-correlated-findings'");
+    expect(serviceSource.default).toContain('/ha-correlated-findings/');
+    expect(serviceSource.default).toContain('getOffenses');
+    expect(serviceSource.default).toContain('getOffenseAlerts');
     expect(serviceSource.default).toContain('const RESULT_LIMIT = 25');
+    expect(CORRELATED_FINDINGS_LIST_CONTRACT).toBe('GET /api/offenses');
     expect(routerSource.default).toContain('OffenseIdRedirect');
     expect(routerSource.default).toContain('ALERT_QUEUE_ROLES');
   });
 
-  it('keeps correlated cards in document flow and contains compact-workbench overflow', () => {
+  it('keeps correlated cards in document flow with list-primary workspace', () => {
     const cssSource = readFileSync(join(__dirname, 'CorrelatedFindingsPage.css'), 'utf8');
     const workbenchCssSource = readFileSync(join(__dirname, 'FindingWorkbench.css'), 'utf8');
 
     expect(cssSource).toContain('.correlated-findings-sticky { position: sticky');
+    expect(cssSource).toContain('minmax(0, 58%)');
+    expect(cssSource).not.toContain('.correlated-findings-metrics {');
     expect(cssSource).toContain('.correlation-feed__list { min-height: 0; flex: 0 0 auto; overflow: visible');
     expect(cssSource).toContain('content-visibility: auto');
     expect(cssSource).toContain('.correlation-preview .finding-workbench__body { flex: 0 0 auto; overflow-x: hidden; overflow-y: visible; }');
