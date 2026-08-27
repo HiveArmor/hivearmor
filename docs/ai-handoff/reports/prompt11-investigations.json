@@ -3,7 +3,7 @@
   "status": "STAGING CANDIDATE",
   "base_tip": "199148c",
   "based_on_main_includes_pr96": true,
-  "tip_sha": "4e7d3d6c0bb35c343b918ed42314257758f7eb13",
+  "tip_sha": "35099d9c2373e73a6e1b2e22279c96fe9fc1983d",
   "feature_sha": "1b33e3281283c5add019b58aef6a9d3f1d5c16d3",
   "pr": "https://github.com/HiveArmor/hivearmor/pull/97",
   "decision": "RESTRUCTURE",
@@ -11,7 +11,7 @@
     "/investigations",
     "/investigations/:id"
   ],
-  "job_sentence": "Working investigations — pin evidence, build narrative, and promote to an owned incident when response ownership is required.",
+  "job_sentence": "Working investigations \u2014 pin evidence, build narrative, and promote to an owned incident when response ownership is required.",
   "distinction": {
     "search": "/search = ad-hoc hunt / event search",
     "investigations": "/investigations = working evidence sessions (pre-incident)",
@@ -27,7 +27,7 @@
       ],
       "added": [
         "INVESTIGATIONS_JOB_SENTENCE evidence-session copy",
-        "Mission Control · Search & Hunt · Alerts · Incidents meta links",
+        "Mission Control \u00b7 Search & Hunt \u00b7 Alerts \u00b7 Incidents meta links",
         "Compact Scope (Active/Mine/Promoted/Closed/All) + search/status filters",
         "Primary list region min-height 50vh",
         "Human create deny labels (Standard User+)"
@@ -47,8 +47,8 @@
       ],
       "added": [
         "Evidence-first default tab with pin composer + unpin via DELETE items",
-        "Cross-links Mission Control · Search · Alerts · Incidents",
-        "INV-012 promote modal (preview → reason → promote) with human deny labels",
+        "Cross-links Mission Control \u00b7 Search \u00b7 Alerts \u00b7 Incidents",
+        "INV-012 promote modal (preview \u2192 reason \u2192 promote) with human deny labels",
         "Deprecated convert-to-incident fail-closed copy",
         "Honesty empty evidence / notes / tasks / outcome"
       ],
@@ -62,19 +62,35 @@
   "backend": {
     "list": {
       "path": "GET /api/ha-investigation-sessions",
-      "staging": { "status": 200, "bytes": 2214, "sample_count": 6 }
+      "staging": {
+        "status": 200,
+        "bytes": 2214,
+        "sample_count": 6
+      }
     },
     "create": {
       "path": "POST /api/ha-investigation-sessions",
-      "staging": { "status": 201, "sample_id": 7 }
+      "staging": {
+        "status": 201,
+        "sample_id": 7
+      }
     },
     "detail": {
       "path": "GET /api/ha-investigation-sessions/{id}",
-      "staging": { "status": 200, "bytes": 368, "sample_id": 7 }
+      "staging": {
+        "status": 200,
+        "bytes": 368,
+        "sample_id": 7
+      }
     },
     "items_get": {
       "path": "GET /api/ha-investigation-sessions/{id}/items",
-      "staging": { "status": 200, "bytes": 3, "n": 0, "note": "Empty array honesty" }
+      "staging": {
+        "status": 200,
+        "bytes": 3,
+        "n": 0,
+        "note": "Empty array honesty"
+      }
     },
     "items_post": {
       "path": "POST /api/ha-investigation-sessions/{id}/items",
@@ -116,24 +132,60 @@
     }
   },
   "ux_smoke": {
-    "deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 + edge — healthy",
+    "deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 + edge \u2014 healthy",
     "bundle_marker": "InvestigationsPage-*.js contains Working investigations; InvestigationDetailPage-*.js present",
-    "ui_shell": { "path": "/investigations", "https_status": 200 },
-    "headed_browser": "partial",
-    "headed_note": "Staging UI shell loads (self-signed TLS). Interactive login skipped in-agent (no local ADMIN_BOOTSTRAP; credential pull blocked). API INV-012 promote smoke + deploy markers stand in.",
+    "ui_shell": {
+      "path": "/investigations",
+      "https_status": 200
+    },
+    "headed_browser": true,
+    "headed_note": "Headed reaudit pass: list/detail links, scopes, create, tasks, promote modal; pin POST 500 backend jsonb honesty.",
     "checks": [
-      { "item": "job_sentence_in_bundle", "result": "pass" },
-      { "item": "meta_links_mission_search_alerts_incidents", "result": "pass", "note": "source + deployed chunk" },
-      { "item": "list_primary_50vh", "result": "pass" },
-      { "item": "evidence_tab_pin_unpin_wired", "result": "pass", "note": "UI wired; POST items 500 backend" },
-      { "item": "inv012_preview_promote", "result": "pass", "note": "session 7 → incident 141" },
-      { "item": "convert_path_disabled", "result": "pass" },
-      { "item": "items_post_honesty", "result": "pass", "note": "500 documented; UI shows Investigation request failed" }
+      {
+        "item": "job_sentence_in_bundle",
+        "result": "pass"
+      },
+      {
+        "item": "meta_links_mission_search_alerts_incidents",
+        "result": "pass",
+        "note": "source + deployed chunk"
+      },
+      {
+        "item": "list_primary_50vh",
+        "result": "pass"
+      },
+      {
+        "item": "evidence_tab_pin_unpin_wired",
+        "result": "pass",
+        "note": "UI wired; POST items 500 backend"
+      },
+      {
+        "item": "inv012_preview_promote",
+        "result": "pass",
+        "note": "session 7 \u2192 incident 141"
+      },
+      {
+        "item": "convert_path_disabled",
+        "result": "pass"
+      },
+      {
+        "item": "items_post_honesty",
+        "result": "pass",
+        "note": "500 documented; UI shows Investigation request failed"
+      },
+      {
+        "item": "headed_reaudit_structure_links_buttons",
+        "result": "pass"
+      },
+      {
+        "item": "removed_stacked_detail_dock",
+        "result": "pass"
+      }
     ]
   },
   "known_backend_gap": {
     "id": "INV-ITEMS-JSONB",
-    "summary": "hive_session_item.item_snapshot is jsonb; JPA String binding sends varchar → PostgreSQL rejects INSERT",
+    "summary": "hive_session_item.item_snapshot is jsonb; JPA String binding sends varchar \u2192 PostgreSQL rejects INSERT",
     "remediation": "Backend: @JdbcTypeCode(SqlTypes.JSON) or cast; out of Prompt 11 FE scope"
   },
   "gates": {
@@ -147,5 +199,13 @@
     "preferred_id": 20,
     "note": "Not required for investigation session APIs this prompt"
   },
-  "handoff_at": "2026-08-27T10:40:00Z"
+  "handoff_at": "2026-08-27T10:40:00Z",
+  "headed_reaudit": {
+    "result": "pass",
+    "fixes": [
+      "removed stacked investigation-detail-dock",
+      "pin-500 honesty copy"
+    ],
+    "remaining_backend": "INV-ITEMS-JSONB item_snapshot varchar\u2192jsonb"
+  }
 }
