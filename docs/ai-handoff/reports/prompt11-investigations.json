@@ -3,7 +3,7 @@
   "status": "STAGING CANDIDATE",
   "base_tip": "199148c",
   "based_on_main_includes_pr96": true,
-  "tip_sha": "ba421b6066d09d5d1366811401779edb69b39321",
+  "tip_sha": "4e7d3d6c0bb35c343b918ed42314257758f7eb13",
   "feature_sha": "1b33e3281283c5add019b58aef6a9d3f1d5c16d3",
   "pr": "https://github.com/HiveArmor/hivearmor/pull/97",
   "decision": "RESTRUCTURE",
