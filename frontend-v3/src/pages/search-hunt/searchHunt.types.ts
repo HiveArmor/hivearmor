@@ -163,13 +163,18 @@ export interface SearchExecuteResponse {
   histogram: HistogramBucket[];
 }
 
+/** Matches backend UtmSavedQuery /api/ha-saved-queries */
 export interface SavedQueryDTO {
-  id?: string;
-  name: string;
-  queryString: string;
-  timeRange: TimeRangeDTO;
-  createdBy?: string;
+  id?: number;
+  userLogin?: string;
+  queryName: string;
+  queryText: string;
+  indexPattern?: string | null;
+  timeRange?: string | null;
+  filters?: string | null;
+  isShared?: boolean;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AiQueryRequest { prompt: string; }
