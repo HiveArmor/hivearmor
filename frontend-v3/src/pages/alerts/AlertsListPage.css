@@ -107,7 +107,54 @@
 }
 
 .alert-triage-header p {
-  display: none;
+  margin: 2px 0 0;
+  max-width: 52rem;
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+  line-height: 1.35;
+}
+
+.alert-inventory-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 4px var(--ha-page-header-padding-inline) 6px;
+  border-bottom: 1px solid var(--ha-border-subtle);
+  background: color-mix(in srgb, var(--ha-surface-panel) 96%, transparent);
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+}
+
+.alert-inventory-meta a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ha-foreground-link);
+  text-decoration: none;
+  font-weight: 650;
+}
+
+.alert-inventory-meta a:hover {
+  color: var(--ha-foreground-primary);
+  text-decoration: underline;
+}
+
+.alert-inventory-meta__warn {
+  color: var(--ha-state-warning);
+  font-weight: 650;
+}
+
+.alert-query-toolbar__filters {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.alert-query-toolbar__filters > * {
+  min-width: 132px;
 }
 
 .alert-triage-header__actions { justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
@@ -206,7 +253,7 @@
 .alert-queue-metric em { margin-top: 2px; overflow: hidden; color: var(--ha-foreground-tertiary); font: 10px/1.2 var(--ha-font-ui); font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
 .alert-queue-metric > svg { color: var(--ha-foreground-tertiary); }
 
-.alert-queue-workspace { position: relative; height: clamp(540px, 68vh, 760px); min-height: 540px; flex: 0 0 auto; overflow: hidden; }
+.alert-queue-workspace { position: relative; height: clamp(560px, 72vh, 820px); min-height: 560px; flex: 0 0 auto; overflow: hidden; }
 .alert-queue-main { height: 100%; min-width: 0; }
 
 .alert-view-strip {
