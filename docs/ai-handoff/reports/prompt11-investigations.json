@@ -3,8 +3,8 @@
   "status": "STAGING CANDIDATE",
   "base_tip": "199148c",
   "based_on_main_includes_pr96": true,
-  "tip_sha": null,
-  "feature_sha": null,
+  "tip_sha": "1b33e3281283c5add019b58aef6a9d3f1d5c16d3",
+  "feature_sha": "1b33e3281283c5add019b58aef6a9d3f1d5c16d3",
   "pr": null,
   "decision": "RESTRUCTURE",
   "routes": [
