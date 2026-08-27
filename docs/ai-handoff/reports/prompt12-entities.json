@@ -3,9 +3,9 @@
   "status": "STAGING CANDIDATE",
   "base_tip": "87cc44b",
   "based_on_main_includes_pr97": true,
-  "tip_sha": "6fa1903ea22734a4518a73fa491daa4653544183",
+  "tip_sha": "28ea040c",
   "feature_sha": "854a0eab127405ffed3ec29687adb398e523f4f6",
-  "pr": "PENDING",
+  "pr": "https://github.com/HiveArmor/hivearmor/pull/99",
   "decision": "RESTRUCTURE",
   "routes": [
     "/entities",
