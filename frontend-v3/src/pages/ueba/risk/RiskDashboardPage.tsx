@@ -1,25 +1,20 @@
 /**
  * RiskDashboardPage — UEBA Risk Dashboard at `/ueba/risk`.
  *
- * Contains four panels:
- * - Horizontal bar chart of high-risk users (HaChart, backed by /risk-scores)
- * - 30-day risk-trend line chart (HaChart, backed by /risk-trend)
- * - Anomaly-count chips (backed by /anomaly-counts)
- * - UserRiskTable (AG Grid / SiemDataGrid, backed by /risk-scores)
+ * Table-primary layout: user risk scores grid (≥50vh) with trend/anomaly charts
+ * in a secondary sidebar. All data from confirmed `/api/ha-ueba/*` endpoints.
  *
  * Actions:
- * - "View Timeline" opens View_Timeline_Drawer embedding EntityTimelinePage
+ * - "View Timeline" opens drawer embedding EntityTimelinePage
  * - "Create Incident" opens honest guidance to collect evidence in Search & Hunt
  *
- * All fetches go through uebaService (JWT injection is automatic via apiClient).
- * No raw fetch() or axios calls. No hex color literals. No `any` types.
- *
- * Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 7.7, 7.8
+ * Requirements: Prompt 14 UEBA Risk UX — STAGING CANDIDATE
  */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
+import { Activity, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { UserRiskTable } from './UserRiskTable';
@@ -31,7 +26,12 @@ import { EntityTimelinePage } from '@/pages/ueba/entity-timeline/EntityTimelineP
 import { getAnomalyCounts, getRiskScores, getRiskTrend } from '@/services/ueba.service';
 import type { AnomalyCountsDTO, RiskTrendPointDTO, UserRiskDTO } from '@/types/ueba.types';
 
-// ── Theme tokens ─────────────────────────────────────────────────────────────
+import './RiskDashboardPage.css';
+
+/** Bundle-visible job sentence — behavioral risk overview, not alert triage or entity inventory. */
+export const UEBA_RISK_JOB_SENTENCE =
+  'UEBA risk overview — prioritize users by behavioral risk score, inspect trends and anomaly tiers, then pivot into per-user timeline or hunt.';
+
 const DASHBOARD_TOKENS = [
   '--ha-high',
   '--ha-medium',
@@ -39,8 +39,6 @@ const DASHBOARD_TOKENS = [
   '--ha-primary',
   '--ha-text-secondary',
 ] as const;
-
-// ── Hooks (all go through uebaService → apiClient → JWT auto-injection) ──────
 
 function useHighRiskUsers() {
   return useQuery<UserRiskDTO[], Error>({
@@ -66,12 +64,9 @@ function useAnomalyCounts() {
   });
 }
 
-// ── Component ────────────────────────────────────────────────────────────────
-
 export function RiskDashboardPage(): JSX.Element {
   const tokens = useHaThemeTokens(DASHBOARD_TOKENS);
 
-  // Data queries — all go through uebaService (task 7.8: no raw fetch/axios)
   const {
     data: riskScores,
     isLoading: scoresLoading,
@@ -91,7 +86,6 @@ export function RiskDashboardPage(): JSX.Element {
     refetch: refetchCounts,
   } = useAnomalyCounts();
 
-  // ── Drawer state (task 7.6: View Timeline opens View_Timeline_Drawer) ────
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerUserId, setDrawerUserId] = useState('');
   const originatingRowRef = useRef<HTMLElement | null>(null);
@@ -99,21 +93,17 @@ export function RiskDashboardPage(): JSX.Element {
   const openTimelineDrawer = useCallback((userId: string) => {
     setDrawerUserId(userId);
     setDrawerOpen(true);
-    // Capture the currently focused element for focus return on close
     originatingRowRef.current = document.activeElement as HTMLElement | null;
   }, []);
 
   const closeTimelineDrawer = useCallback(() => {
     setDrawerOpen(false);
-    // Return focus to the originating row (Req 6.7)
     if (originatingRowRef.current) {
       originatingRowRef.current.focus();
       originatingRowRef.current = null;
     }
   }, []);
 
-  // A2-UEBA-02: prior window event had no listener; POST /ha-incidents requires alertList.
-  // Guide analysts to Search & Hunt (?q=) for evidence collection.
   const [incidentGuidanceUserId, setIncidentGuidanceUserId] = useState<string | null>(null);
 
   const handleCreateIncident = useCallback((userId: string) => {
@@ -124,150 +114,177 @@ export function RiskDashboardPage(): JSX.Element {
     setIncidentGuidanceUserId(null);
   }, []);
 
-  // ── Bar chart: top high-risk users ────────────────────────────────────────
+  const refreshAll = useCallback(() => {
+    void refetchScores();
+    void refetchTrend();
+    void refetchCounts();
+  }, [refetchCounts, refetchScores, refetchTrend]);
+
+  const retryFailed = useCallback(() => {
+    if (scoresError) void refetchScores();
+    if (trendError) void refetchTrend();
+    if (countsError) void refetchCounts();
+  }, [countsError, refetchCounts, refetchScores, refetchTrend, scoresError, trendError]);
+
+  const scoreRows = riskScores ?? [];
+  const trendRows = riskTrend ?? [];
+  const hasPartialError = scoresError || trendError || countsError;
+
+  const allPanelsEmpty = useMemo(() => {
+    if (scoresLoading || trendLoading || countsLoading) return false;
+    if (hasPartialError) return false;
+    const anomalyTotal = (anomalyCounts?.tier10 ?? 0) + (anomalyCounts?.tier25 ?? 0) + (anomalyCounts?.tier50 ?? 0);
+    return scoreRows.length === 0 && trendRows.length === 0 && anomalyTotal === 0;
+  }, [
+    anomalyCounts,
+    countsLoading,
+    hasPartialError,
+    scoreRows.length,
+    scoresLoading,
+    trendLoading,
+    trendRows.length,
+  ]);
+
   const barChartOption = buildBarChartOption(
-    riskScores ?? [],
+    scoreRows,
     tokens['--ha-high'],
     tokens['--ha-medium'],
     tokens['--ha-text-secondary'],
   );
 
-  // ── Line chart: 30-day risk trend ─────────────────────────────────────────
   const lineChartOption = buildLineChartOption(
-    riskTrend ?? [],
+    trendRows,
     tokens['--ha-primary'],
     tokens['--ha-text-secondary'],
   );
 
   return (
-    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {(scoresError || trendError || countsError) && (
+    <section className="ueba-risk-page" aria-label="UEBA risk dashboard">
+      <header className="ueba-risk-page__header">
+        <div className="ueba-risk-page__title-icon">
+          <Activity size={20} aria-hidden="true" />
+        </div>
+        <div className="ueba-risk-page__title">
+          <div className="ueba-risk-page__eyebrow">
+            <span>Behavioral analytics</span>
+            <span className="ueba-risk-page__badge">STAGING CANDIDATE</span>
+          </div>
+          <h1>UEBA Risk</h1>
+          <p className="ueba-risk-page__job">{UEBA_RISK_JOB_SENTENCE}</p>
+        </div>
+        <div className="ueba-risk-page__header-actions">
+          <button
+            type="button"
+            className="ueba-risk-page__refresh"
+            onClick={refreshAll}
+            aria-label="Refresh UEBA risk data"
+          >
+            <RefreshCw size={15} aria-hidden="true" />
+          </button>
+        </div>
+      </header>
+
+      <p className="ueba-risk-page__meta">
+        <Link to="/dashboard">Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/search">Search &amp; Hunt</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/entities">Entities</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/intelligence">Hive Intelligence</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/investigations">Investigations</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/incidents">Incidents</Link>
+      </p>
+
+      {allPanelsEmpty && (
+        <div className="ueba-risk-page__honesty" role="status" data-testid="ueba-risk-empty-honesty">
+          <strong>No UEBA risk data yet.</strong>
+          <span>
+            The baseline engine may have no scored users on this tenant. Panels below stay empty until
+            `/api/ha-ueba/*` returns rows — not a production-ready UEBA deployment claim.
+          </span>
+        </div>
+      )}
+
+      {hasPartialError && (
         <div
+          className="ueba-risk-page__partial-error"
           role="alert"
           data-testid="ueba-risk-partial-error"
-          style={{
-            background: 'var(--ha-surface-raised)',
-            border: '1px solid var(--ha-border)',
-            borderRadius: 'var(--ha-radius-base)',
-            padding: '12px 16px',
-            color: 'var(--ha-text-primary)',
-            fontSize: 'var(--ha-text-base)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 16,
-          }}
         >
           <span>
             <strong>Partial UEBA data unavailable.</strong> One or more risk panels failed to load.
             Available panels remain below.
           </span>
-          <button
-            type="button"
-            onClick={() => {
-              if (scoresError) void refetchScores();
-              if (trendError) void refetchTrend();
-              if (countsError) void refetchCounts();
-            }}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--ha-border)',
-              borderRadius: 'var(--ha-radius-base)',
-              color: 'var(--ha-primary)',
-              padding: '6px 12px',
-              cursor: 'pointer',
-              fontSize: 'var(--ha-text-sm)',
-            }}
-          >
+          <button type="button" onClick={retryFailed}>
             Retry
           </button>
         </div>
       )}
-      {/* Top row: bar chart + trend line */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-        {/* High-risk users bar chart */}
-        <div
-          data-testid="risk-bar-chart-panel"
-          style={{
-            background: 'var(--ha-surface-primary)',
-            border: '1px solid var(--ha-border)',
-            borderRadius: 8,
-            padding: 16,
-          }}
-        >
-          <h3 style={{ margin: '0 0 12px', color: 'var(--ha-text-primary)', fontSize: 'var(--ha-text-md)' }}>
-            High-Risk Users
-          </h3>
-          {scoresError ? (
-            <p style={{ color: 'var(--ha-text-secondary)', fontSize: 'var(--ha-text-sm)', margin: 0 }}>
-              High-risk user scores could not be loaded.
-            </p>
-          ) : !scoresLoading && (riskScores?.length ?? 0) === 0 ? (
-            <p style={{ color: 'var(--ha-text-secondary)', fontSize: 'var(--ha-text-sm)', margin: 0 }}>
-              No high-risk users were returned for the current scope.
-            </p>
-          ) : (
-            <HaChart
-              option={barChartOption}
-              height={260}
-              loading={scoresLoading}
-              ariaLabel="High-risk users horizontal bar chart"
-            />
-          )}
+
+      <div className="ueba-risk-page__body">
+        <div className="ueba-risk-page__primary" data-testid="user-risk-table-panel">
+          <UserRiskTable
+            data={riskScores}
+            isLoading={scoresLoading}
+            isError={scoresError}
+            onViewTimeline={openTimelineDrawer}
+            onCreateIncident={handleCreateIncident}
+          />
         </div>
 
-        {/* 30-day risk trend */}
-        <div
-          data-testid="risk-trend-panel"
-          style={{
-            background: 'var(--ha-surface-primary)',
-            border: '1px solid var(--ha-border)',
-            borderRadius: 8,
-            padding: 16,
-          }}
-        >
-          <h3 style={{ margin: '0 0 12px', color: 'var(--ha-text-primary)', fontSize: 'var(--ha-text-md)' }}>
-            30-Day Risk Trend
-          </h3>
-          {trendError ? (
-            <p style={{ color: 'var(--ha-text-secondary)', fontSize: 'var(--ha-text-sm)', margin: 0 }}>
-              Risk trend could not be loaded.
-            </p>
-          ) : !trendLoading && (riskTrend?.length ?? 0) === 0 ? (
-            <p style={{ color: 'var(--ha-text-secondary)', fontSize: 'var(--ha-text-sm)', margin: 0 }}>
-              No risk-trend points were returned for the last 30 days.
-            </p>
-          ) : (
-            <HaChart
-              option={lineChartOption}
-              height={260}
-              loading={trendLoading}
-              ariaLabel="30-day risk trend line chart"
-            />
-          )}
-        </div>
+        <aside className="ueba-risk-page__secondary" aria-label="UEBA risk summary charts">
+          <AnomalyChips
+            counts={anomalyCounts}
+            loading={countsLoading}
+            isError={countsError}
+            mediumColor={tokens['--ha-medium']}
+            highColor={tokens['--ha-high']}
+            criticalColor={tokens['--ha-critical']}
+          />
+
+          <div className="ueba-risk-page__panel" data-testid="risk-bar-chart-panel">
+            <h3>High-Risk Users</h3>
+            {scoresError ? (
+              <p className="ueba-risk-page__panel-empty">
+                High-risk user scores could not be loaded.
+              </p>
+            ) : !scoresLoading && scoreRows.length === 0 ? (
+              <p className="ueba-risk-page__panel-empty">
+                No high-risk users were returned for the current scope.
+              </p>
+            ) : (
+              <HaChart
+                option={barChartOption}
+                height={200}
+                loading={scoresLoading}
+                ariaLabel="High-risk users horizontal bar chart"
+              />
+            )}
+          </div>
+
+          <div className="ueba-risk-page__panel" data-testid="risk-trend-panel">
+            <h3>30-Day Risk Trend</h3>
+            {trendError ? (
+              <p className="ueba-risk-page__panel-empty">Risk trend could not be loaded.</p>
+            ) : !trendLoading && trendRows.length === 0 ? (
+              <p className="ueba-risk-page__panel-empty">
+                No risk-trend points were returned for the last 30 days.
+              </p>
+            ) : (
+              <HaChart
+                option={lineChartOption}
+                height={200}
+                loading={trendLoading}
+                ariaLabel="30-day risk trend line chart"
+              />
+            )}
+          </div>
+        </aside>
       </div>
 
-      {/* Middle: anomaly-count chips */}
-      <AnomalyChips
-        counts={anomalyCounts}
-        loading={countsLoading}
-        mediumColor={tokens['--ha-medium']}
-        highColor={tokens['--ha-high']}
-        criticalColor={tokens['--ha-critical']}
-      />
-
-      {/* Bottom: UserRiskTable */}
-      <div data-testid="user-risk-table-panel">
-        <UserRiskTable
-          data={riskScores}
-          isLoading={scoresLoading}
-          onViewTimeline={openTimelineDrawer}
-          onCreateIncident={handleCreateIncident}
-        />
-      </div>
-
-      {/* View Timeline Drawer (task 7.6) */}
       {drawerOpen && (
         <div data-testid="view-timeline-drawer" data-user-id={drawerUserId}>
           <HaDrawer
@@ -357,37 +374,45 @@ export function RiskDashboardPage(): JSX.Element {
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }
-
-// ── Sub-components ───────────────────────────────────────────────────────────
 
 interface AnomalyChipsProps {
   counts: AnomalyCountsDTO | undefined;
   loading: boolean;
+  isError: boolean;
   mediumColor: string;
   highColor: string;
   criticalColor: string;
 }
 
-function AnomalyChips({ counts, loading, mediumColor, highColor, criticalColor }: AnomalyChipsProps): JSX.Element {
-  if (loading || !counts) {
+function AnomalyChips({
+  counts,
+  loading,
+  isError,
+  mediumColor,
+  highColor,
+  criticalColor,
+}: AnomalyChipsProps): JSX.Element {
+  if (loading) {
     return (
-      <div data-testid="anomaly-chips-panel" style={{ display: 'flex', gap: 16 }}>
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{
-              padding: '12px 20px',
-              borderRadius: 8,
-              background: 'var(--ha-surface-primary)',
-              border: '1px solid var(--ha-border)',
-              width: 140,
-              height: 56,
-            }}
-          />
-        ))}
+      <div className="ueba-risk-page__panel" data-testid="anomaly-chips-panel">
+        <h3>Anomaly Tiers</h3>
+        <div className="ueba-risk-page__chips">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="ueba-risk-page__chip-skeleton" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !counts) {
+    return (
+      <div className="ueba-risk-page__panel" data-testid="anomaly-chips-panel">
+        <h3>Anomaly Tiers</h3>
+        <p className="ueba-risk-page__panel-empty">Anomaly counts could not be loaded.</p>
       </div>
     );
   }
@@ -398,36 +423,34 @@ function AnomalyChips({ counts, loading, mediumColor, highColor, criticalColor }
     { testId: 'chip-tier50', label: '50-point', count: counts.tier50, color: criticalColor },
   ];
 
+  const allZero = chips.every((chip) => chip.count === 0);
+
   return (
-    <div data-testid="anomaly-chips-panel" style={{ display: 'flex', gap: 16 }}>
-      {chips.map((chip) => (
-        <div
-          key={chip.testId}
-          data-testid={chip.testId}
-          style={{
-            padding: '12px 20px',
-            borderRadius: 8,
-            backgroundColor: chip.color,
-            border: `1px solid ${chip.color}`,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            minWidth: 120,
-          }}
-        >
-          <span style={{ fontSize: 'var(--ha-text-lg)', fontWeight: 700, color: 'var(--ha-text-primary)' }}>
-            {chip.count}
-          </span>
-          <span style={{ fontSize: 'var(--ha-text-xs)', color: 'var(--ha-text-secondary)' }}>
-            {chip.label}
-          </span>
+    <div className="ueba-risk-page__panel" data-testid="anomaly-chips-panel">
+      <h3>Anomaly Tiers</h3>
+      {allZero ? (
+        <p className="ueba-risk-page__panel-empty">No anomaly tier counts for the current scope.</p>
+      ) : (
+        <div className="ueba-risk-page__chips">
+          {chips.map((chip) => (
+            <div
+              key={chip.testId}
+              data-testid={chip.testId}
+              className="ueba-risk-page__chip"
+              style={{
+                background: `color-mix(in srgb, ${chip.color} 15%, transparent)`,
+                borderColor: `color-mix(in srgb, ${chip.color} 35%, var(--ha-border))`,
+              }}
+            >
+              <span className="ueba-risk-page__chip-count">{chip.count}</span>
+              <span className="ueba-risk-page__chip-label">{chip.label}</span>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }
-
-// ── Chart builders ───────────────────────────────────────────────────────────
 
 function buildBarChartOption(
   scores: UserRiskDTO[],
@@ -435,24 +458,23 @@ function buildBarChartOption(
   mediumColor: string,
   axisColor: string,
 ) {
-  // Sort descending, take top 10
   const sorted = [...scores].sort((a, b) => b.totalScore - a.totalScore).slice(0, 10);
   const maxScore = sorted.length > 0 ? sorted[0].totalScore : 100;
   const topDecileThreshold = maxScore * 0.9;
 
   return {
     tooltip: { trigger: 'axis' as const },
-    grid: { left: '20%', right: '10%', top: '5%', bottom: '10%' },
+    grid: { left: '22%', right: '8%', top: '5%', bottom: '10%' },
     xAxis: {
       type: 'value' as const,
       axisLine: { lineStyle: { color: axisColor } },
-      axisLabel: { color: axisColor },
+      axisLabel: { color: axisColor, fontSize: 10 },
     },
     yAxis: {
       type: 'category' as const,
       data: sorted.map((s) => s.userId),
       axisLine: { lineStyle: { color: axisColor } },
-      axisLabel: { color: axisColor },
+      axisLabel: { color: axisColor, fontSize: 10 },
     },
     series: [
       {
@@ -475,17 +497,17 @@ function buildLineChartOption(
 ) {
   return {
     tooltip: { trigger: 'axis' as const },
-    grid: { left: '10%', right: '5%', top: '10%', bottom: '15%' },
+    grid: { left: '12%', right: '6%', top: '10%', bottom: '18%' },
     xAxis: {
       type: 'category' as const,
       data: trend.map((t) => t.day),
       axisLine: { lineStyle: { color: axisColor } },
-      axisLabel: { color: axisColor, rotate: 30 },
+      axisLabel: { color: axisColor, fontSize: 9, rotate: 35 },
     },
     yAxis: {
       type: 'value' as const,
       axisLine: { lineStyle: { color: axisColor } },
-      axisLabel: { color: axisColor },
+      axisLabel: { color: axisColor, fontSize: 10 },
     },
     series: [
       {

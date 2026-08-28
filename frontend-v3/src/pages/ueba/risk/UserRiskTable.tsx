@@ -1,17 +1,14 @@
 /**
  * UserRiskTable — AG Grid table for per-user risk scores.
  *
- * Columns: user identifier, current risk score, top contributing metric, last updated.
- * Actions column: "View Timeline" and "Create Incident" buttons.
- *
- * The TanStack Query data is shared with the bar chart (passed as prop).
- *
- * Requirements: 6.5, 6.6
+ * Primary work surface on the UEBA risk dashboard (≥50vh).
+ * Columns: user identifier, risk score, top metric, last updated, actions.
  */
 
 import { useCallback, useMemo } from 'react';
 
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
+import { Link } from 'react-router-dom';
 
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import type { UserRiskDTO } from '@/types/ueba.types';
@@ -19,15 +16,15 @@ import type { UserRiskDTO } from '@/types/ueba.types';
 export interface UserRiskTableProps {
   data: UserRiskDTO[] | undefined;
   isLoading: boolean;
-  /** Called when the "View Timeline" action is activated for a user row. */
+  isError?: boolean;
   onViewTimeline?: (userId: string) => void;
-  /** Called when the "Create Incident" action is activated for a user row. */
   onCreateIncident?: (userId: string) => void;
 }
 
 export function UserRiskTable({
   data,
   isLoading,
+  isError = false,
   onViewTimeline,
   onCreateIncident,
 }: UserRiskTableProps): JSX.Element {
@@ -57,6 +54,13 @@ export function UserRiskTable({
       {
         field: 'totalScore',
         headerName: 'Risk Score',
+        flex: 1,
+        sortable: true,
+        filter: true,
+      },
+      {
+        field: 'anomalyCount',
+        headerName: 'Anomalies',
         flex: 1,
         sortable: true,
         filter: true,
@@ -93,28 +97,55 @@ export function UserRiskTable({
         },
       },
     ],
-    [handleViewTimeline, handleCreateIncident],
+    [handleCreateIncident, handleViewTimeline],
   );
 
+  const rowCount = data?.length ?? 0;
+  const showEmpty = !isLoading && !isError && rowCount === 0;
+
   return (
-    <div className="ha-panel" style={{ minHeight: 300 }}>
-      <h2 style={{ margin: '0 0 0.75rem', fontSize: '1rem', fontWeight: 500 }}>
-        User Risk Scores
-      </h2>
-      <SiemDataGrid
-        columnDefs={columnDefs}
-        rowData={data ?? []}
-        height={400}
-        loading={isLoading}
-        rowHeight={40}
-        defaultColDef={{ resizable: true }}
-        getRowId={(params) => (params.data as UserRiskDTO).userId}
-      />
+    <div className="ueba-risk-table" data-testid="ueba-risk-table">
+      <div className="ueba-risk-table__header">
+        <h2>User Risk Scores</h2>
+        {!isLoading && (
+          <span className="ueba-risk-table__count" data-testid="ueba-risk-row-count">
+            {rowCount} user{rowCount === 1 ? '' : 's'}
+          </span>
+        )}
+      </div>
+
+      {isError && (
+        <div className="ueba-risk-table__inline-state" role="alert" data-testid="ueba-risk-table-error">
+          <strong>Risk scores unavailable.</strong>
+          <span>User risk scores could not be loaded from `/api/ha-ueba/risk-scores`.</span>
+        </div>
+      )}
+
+      {showEmpty && (
+        <div className="ueba-risk-table__inline-state" role="status" data-testid="ueba-risk-table-empty">
+          <strong>No scored users returned.</strong>
+          <span>
+            The UEBA baseline engine may not have processed users on this tenant yet. Pivot to{' '}
+            <Link to="/search">Search &amp; Hunt</Link> or <Link to="/entities">Entities</Link> while
+            baselines build.
+          </span>
+        </div>
+      )}
+
+      <div className="ueba-risk-table__grid">
+        <SiemDataGrid
+          columnDefs={columnDefs}
+          rowData={data ?? []}
+          height="100%"
+          loading={isLoading}
+          rowHeight={40}
+          defaultColDef={{ resizable: true }}
+          getRowId={(params) => (params.data as UserRiskDTO).userId}
+        />
+      </div>
     </div>
   );
 }
-
-// ── Row Actions Cell ────────────────────────────────────────────────────────
 
 interface RowActionsProps {
   userId: string;
