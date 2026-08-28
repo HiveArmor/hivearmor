@@ -15,6 +15,5 @@ public interface HiveIntelligenceFindingRepository extends JpaRepository<HiveInt
     @EntityGraph(attributePaths = {"facts", "inferences", "evidenceGaps"})
     Optional<HiveIntelligenceFinding> findWithDetailsById(Long id);
 
-    @EntityGraph(attributePaths = {"facts", "inferences", "evidenceGaps"})
     Page<HiveIntelligenceFinding> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }
