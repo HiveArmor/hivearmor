@@ -1,0 +1,161 @@
+{
+  "prompt": "14-ueba-risk-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "4a6aa9d",
+  "based_on_main_includes_pr100": true,
+  "tip_sha": "21eda50348b25eca5abfabb8565f1792a4265648",
+  "decision": "RESTRUCTURE",
+  "routes": [
+    "/ueba/risk",
+    "/ueba/entity-timeline"
+  ],
+  "job_sentence": "UEBA risk overview — prioritize users by behavioral risk score, inspect trends and anomaly tiers, then pivot into per-user timeline or hunt.",
+  "distinction": {
+    "entities": "/entities = entity inventory + risk dossier pivots",
+    "intelligence": "/intelligence = threat intel + assistive SOC AI",
+    "ueba_risk": "/ueba/risk = behavioral risk scores, trends, anomaly tiers",
+    "search": "/search = ad-hoc hunt / event search",
+    "investigations": "/investigations = working evidence sessions",
+    "incidents": "/incidents = owned response cases"
+  },
+  "ia": {
+    "risk_dashboard": {
+      "removed": [
+        "Chart-heavy top row burying user risk table",
+        "Solid-fill anomaly chip backgrounds"
+      ],
+      "added": [
+        "UEBA_RISK_JOB_SENTENCE + STAGING CANDIDATE badge",
+        "Mission Control · Search · Entities · Hive Intelligence · Investigations · Incidents meta links",
+        "Table-primary layout (≥50vh) with chart sidebar",
+        "Tenant-wide empty honesty banner when all panels empty",
+        "Per-panel empty/error copy for bar, trend, chips",
+        "UserRiskTable inline empty + error states",
+        "color-mix anomaly tier chips from live /anomaly-counts"
+      ],
+      "kept": [
+        "Confirmed GET /api/ha-ueba/risk-scores | risk-trend | anomaly-counts",
+        "View Timeline drawer → EntityTimelinePage",
+        "Create Incident → Search & Hunt evidence guidance (A2-UEBA-02)",
+        "Partial-error retry banner",
+        "Analyst | SOC Manager | Platform Administrator AuthGuard"
+      ]
+    },
+    "entity_timeline": {
+      "touched": false,
+      "note": "Drawer embed unchanged; deep-link route /ueba/entity-timeline kept"
+    }
+  },
+  "backend": {
+    "risk_scores": {
+      "path": "GET /api/ha-ueba/risk-scores",
+      "staging": {
+        "status": 200,
+        "bytes": 3,
+        "row_count": 0
+      }
+    },
+    "risk_trend": {
+      "path": "GET /api/ha-ueba/risk-trend",
+      "staging": {
+        "status": 200,
+        "bytes": 3,
+        "point_count": 0
+      }
+    },
+    "anomaly_counts": {
+      "path": "GET /api/ha-ueba/anomaly-counts",
+      "staging": {
+        "status": 200,
+        "bytes": 50,
+        "tier_total": 0,
+        "note": "tier10+tier25+tier50 all zero"
+      }
+    },
+    "deviations": {
+      "path": "GET /api/ha-ueba/deviations",
+      "staging": {
+        "status": 500,
+        "note": "Not used on risk dashboard UI; engine error on staging"
+      }
+    },
+    "peer_groups": {
+      "path": "GET /api/ha-ueba/peer-groups",
+      "staging": {
+        "status": 200,
+        "bytes": 3,
+        "row_count": 0
+      }
+    },
+    "entity_timeline": {
+      "path": "GET /api/ha-ueba/entity-timeline?userId=admin",
+      "staging": {
+        "status": 200,
+        "bytes": 41,
+        "points": 0,
+        "note": "Empty timeline for probe user; drawer would show EmptyState"
+      }
+    }
+  },
+  "ux_smoke": {
+    "deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 — healthy (tip 21eda50)",
+    "bundle_marker": "RiskDashboardPage-YNCLXUZA.js contains UEBA risk overview, ueba-risk-empty-honesty, ueba-risk-table-empty, /entities, /intelligence",
+    "ui_shell": {
+      "path": "/ueba/risk",
+      "https_status": 200
+    },
+    "headed_browser": false,
+    "headed_note": "Authenticated headed smoke blocked by credential-handling policy; bundle + API probes + Vitest component tests used instead",
+    "checks": [
+      {
+        "item": "job_sentence_in_bundle",
+        "result": "pass"
+      },
+      {
+        "item": "staging_honesty_markers_in_bundle",
+        "result": "pass"
+      },
+      {
+        "item": "meta_links_entities_intelligence_in_bundle",
+        "result": "pass"
+      },
+      {
+        "item": "empty_api_honesty_banner_wired",
+        "result": "pass",
+        "note": "all ha-ueba counts zero on staging — banner + table empty state expected at runtime"
+      },
+      {
+        "item": "view_timeline_drawer_wired",
+        "result": "pass",
+        "note": "Vitest; no scored user rows on staging to click"
+      },
+      {
+        "item": "create_incident_guidance",
+        "result": "pass",
+        "note": "Vitest A2-UEBA-02"
+      },
+      {
+        "item": "cross_links_runtime",
+        "result": "not_run",
+        "note": "headed auth smoke not executed"
+      }
+    ]
+  },
+  "windows_agent": {
+    "hostname": "EC2AMAZ-8F0Q7DL",
+    "preferred_id": 20,
+    "note": "Agent online per prompt; UEBA risk-scores empty — no user row for timeline drawer click"
+  },
+  "gates": {
+    "lint_changed": "pass",
+    "type_check": "pass",
+    "vitest_ueba": "pass (60)",
+    "build": "pass"
+  },
+  "known_backend_gap": {
+    "id": "UEBA-EMPTY-STAGING",
+    "summary": "Staging ha-ueba risk-scores/trend/peer-groups return []; anomaly tiers all zero; deviations 500",
+    "remediation": "UEBA baseline engine population — out of Prompt 14 FE scope"
+  },
+  "handoff_at": "2026-08-28T09:10:00Z"
+}
