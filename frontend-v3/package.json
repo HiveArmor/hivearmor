@@ -14,7 +14,9 @@
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:intelligence": "playwright test e2e/hive-intelligence.spec.ts",
+    "test:e2e:intelligence:headed": "playwright test e2e/hive-intelligence.spec.ts --headed"
   },
   "dependencies": {
     "@monaco-editor/react": "4.6.0",

@@ -55,13 +55,22 @@ export function isSocAiUnavailableAnswer(response: SocAiQueryResponse): boolean 
   return false;
 }
 
-export function formatSocAiHttpHonesty(error: unknown): string {
+export function formatSocAiHttpHonesty(
+  error: unknown,
+  options?: { hasLocalRole?: boolean }
+): string {
   if (error instanceof ApiError) {
     if (error.status === 503) {
       return 'SOC AI is unavailable (HTTP 503). Assistive Q&A is STAGING CANDIDATE until the service is configured.';
     }
     if (error.status === 403) {
+      if (options?.hasLocalRole) {
+        return 'Authorization failed (HTTP 403). Your session may be outdated — sign out and sign in again to refresh permissions.';
+      }
       return 'Required permission: Analyst, SOC Manager, or Platform Administrator.';
+    }
+    if (error.status === 401) {
+      return 'Session expired. Sign in again to use Ask Hive.';
     }
     return `SOC AI request failed (HTTP ${error.status}).`;
   }

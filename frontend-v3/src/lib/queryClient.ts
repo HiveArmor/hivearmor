@@ -24,7 +24,12 @@ export const queryClient = new QueryClient({
     mutations: {
       onError: (error) => {
         if (error instanceof ApiError) {
-          showErrorToast(error.body.detail ?? error.body.message ?? 'An error occurred');
+          const message =
+            error.body.detail?.trim() ||
+            error.body.message?.trim() ||
+            error.body.title?.trim() ||
+            `Request failed (HTTP ${error.status})`;
+          showErrorToast(message);
         }
       },
     },

@@ -1,4 +1,4 @@
-import { Tabs, Tab, TabTitleText } from '@patternfly/react-core';
+import './HaTabs.css';
 
 export interface HaTabsProps {
   tabs: Array<{
@@ -18,29 +18,42 @@ export function HaTabs({
   onSelect,
   className,
 }: HaTabsProps): JSX.Element {
+  const resolvedKey = activeKey !== undefined ? String(activeKey) : String(tabs[0]?.key ?? '');
+
   return (
-    <Tabs
-      activeKey={activeKey}
-      onSelect={(_event, eventKey) => onSelect?.(String(eventKey))}
-      className={className}
-      style={{
-        '--pf-v5-c-tabs--BackgroundColor': 'var(--ha-surface-primary)',
-        '--pf-v5-c-tabs__link--Color': 'var(--ha-text-secondary)',
-        '--pf-v5-c-tabs__link--active--Color': 'var(--ha-primary)',
-        '--pf-v5-c-tabs__link--BorderBottomColor': 'var(--ha-border)',
-        '--pf-v5-c-tabs__link--active--BorderBottomColor': 'var(--ha-primary)',
-      } as React.CSSProperties}
-    >
+    <div className={className ? `ha-tabs ${className}` : 'ha-tabs'}>
+      <div className="ha-tabs__list" role="tablist">
+        {tabs.map((tab) => {
+          const isActive = resolvedKey === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              id={`ha-tab-${tab.key}`}
+              aria-selected={isActive}
+              aria-controls={`ha-tabpanel-${tab.key}`}
+              disabled={tab.isDisabled}
+              className={isActive ? 'ha-tabs__tab ha-tabs__tab--active' : 'ha-tabs__tab'}
+              onClick={() => onSelect?.(tab.key)}
+            >
+              {tab.title}
+            </button>
+          );
+        })}
+      </div>
       {tabs.map((tab) => (
-        <Tab
+        <div
           key={tab.key}
-          eventKey={tab.key}
-          title={<TabTitleText>{tab.title}</TabTitleText>}
-          isDisabled={tab.isDisabled}
+          role="tabpanel"
+          id={`ha-tabpanel-${tab.key}`}
+          aria-labelledby={`ha-tab-${tab.key}`}
+          hidden={resolvedKey !== tab.key}
+          className="ha-tabs__panel"
         >
           {tab.content}
-        </Tab>
+        </div>
       ))}
-    </Tabs>
+    </div>
   );
 }

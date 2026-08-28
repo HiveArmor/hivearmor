@@ -263,12 +263,41 @@ export function HiveIntelligencePage(): JSX.Element {
     </section>
   );
 
+  const feedPicker = (
+    <div className="hi-feed-list hi-feed-list--picker">
+      {feeds?.map((feed) => (
+        <button
+          key={feed.id}
+          type="button"
+          className={
+            selectedFeed?.id === feed.id
+              ? 'hi-feed-card hi-feed-card--selected'
+              : 'hi-feed-card'
+          }
+          onClick={() => {
+            setSelectedFeed(feed);
+            setIocPage(0);
+          }}
+        >
+          <span className="hi-feed-card__name">{feed.name}</span>
+          <span className="hi-feed-card__meta">
+            {(feed.indicatorCount ?? 0).toLocaleString()} IOCs
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+
   const indicatorsPanel = (
     <section className="hi-ioc-browser" aria-label="Feed indicator browser">
       {!selectedFeed ? (
-        <div className="hi-honesty">
-          Select a feed below to browse indicators, or use Look up for ad-hoc enrichment.
-        </div>
+        <>
+          <div className="hi-honesty">
+            Select a feed to browse indicators, or use Look up for ad-hoc enrichment.
+          </div>
+          {feedsQuery.isLoading && <div className="hi-honesty">Loading feeds…</div>}
+          {feeds && feeds.length > 0 && feedPicker}
+        </>
       ) : (
         <>
           <div className="hi-ioc-browser__head">
@@ -385,25 +414,7 @@ export function HiveIntelligencePage(): JSX.Element {
             </div>
           )}
 
-          <div className="hi-feed-list" style={{ marginTop: 12 }}>
-            {feeds?.map((feed) => (
-              <button
-                key={feed.id}
-                type="button"
-                className={
-                  selectedFeed.id === feed.id
-                    ? 'hi-feed-card hi-feed-card--selected'
-                    : 'hi-feed-card'
-                }
-                onClick={() => {
-                  setSelectedFeed(feed);
-                  setIocPage(0);
-                }}
-              >
-                {feed.name}
-              </button>
-            ))}
-          </div>
+          <div style={{ marginTop: 12 }}>{feedPicker}</div>
         </>
       )}
     </section>

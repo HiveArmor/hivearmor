@@ -87,7 +87,7 @@ export function AskHivePanel({
 
           {aiMutation.isError && (
             <p className="hi-ask-hive__honesty hi-ask-hive__honesty--error" role="alert">
-              {formatSocAiHttpHonesty(aiMutation.error)}
+              {formatSocAiHttpHonesty(aiMutation.error, { hasLocalRole: hasSocAiRole })}
             </p>
           )}
 

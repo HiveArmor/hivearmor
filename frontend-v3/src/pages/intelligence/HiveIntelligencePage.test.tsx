@@ -2,7 +2,7 @@
  * HiveIntelligencePage.test.tsx — Prompt 13 + HI tab layout
  */
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -174,8 +174,10 @@ describe('HiveIntelligencePage — tab workbench', () => {
   it('shows feeds on Feeds tab', () => {
     renderPage();
     fireEvent.click(screen.getByRole('tab', { name: 'Feeds' }));
-    expect(screen.getByRole('region', { name: 'Threat feeds' })).toBeVisible();
-    expect(screen.getByText('Test Feed')).toBeVisible();
+    const feedsPanel = document.getElementById('ha-tabpanel-feeds');
+    expect(feedsPanel).not.toBeNull();
+    expect(within(feedsPanel as HTMLElement).getByRole('region', { name: 'Threat feeds' })).toBeVisible();
+    expect(within(feedsPanel as HTMLElement).getByText('Test Feed')).toBeVisible();
   });
 
   it('shows Ask Hive panel on Ask Hive tab', () => {
@@ -183,6 +185,13 @@ describe('HiveIntelligencePage — tab workbench', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Ask Hive' }));
     expect(screen.getByRole('region', { name: 'Ask Hive' })).toBeVisible();
     expect(screen.getByRole('button', { name: /Ask Hive/i })).toBeVisible();
+  });
+
+  it('shows feed picker on Indicators tab when no feed is selected', () => {
+    renderPage();
+    fireEvent.click(screen.getByRole('tab', { name: 'Indicators' }));
+    expect(screen.getByText(/Select a feed to browse indicators/i)).toBeVisible();
+    expect(screen.getByRole('button', { name: /Test Feed/i })).toBeVisible();
   });
 });
 
@@ -197,7 +206,8 @@ describe('HiveIntelligencePage — TLP-aware IOC display', () => {
 
     renderPage();
     fireEvent.click(screen.getByRole('tab', { name: 'Indicators' }));
-    fireEvent.click(screen.getByText('Test Feed'));
+    const indicatorsPanel = document.getElementById('ha-tabpanel-indicators');
+    fireEvent.click(within(indicatorsPanel as HTMLElement).getByRole('button', { name: /Test Feed/i }));
 
     await waitFor(() => {
       expect(screen.getByText('TLP:GREEN')).toBeInTheDocument();
