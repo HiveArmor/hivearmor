@@ -1,0 +1,76 @@
+.hi-ask-hive {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hi-ask-hive__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hi-ask-hive__head h2 {
+  margin: 0;
+  font-size: var(--ha-text-md);
+}
+
+.hi-ask-hive__badge {
+  padding: 2px 6px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-sm);
+  color: var(--ha-intelligence);
+  font-size: var(--ha-text-xs);
+}
+
+.hi-ask-hive__hint {
+  margin: 0;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+}
+
+.hi-ask-hive textarea {
+  min-height: 88px;
+  padding: 8px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  background: var(--ha-surface-primary);
+  color: var(--ha-text-primary);
+  font-family: var(--ha-font-ui);
+  font-size: var(--ha-text-base);
+  resize: vertical;
+}
+
+.hi-ask-hive__submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 6px 12px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  background: var(--ha-surface-raised);
+  color: var(--ha-primary);
+  cursor: pointer;
+  font-size: var(--ha-text-sm);
+}
+
+.hi-ask-hive__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hi-ask-hive__honesty {
+  margin: 0;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+}
+
+.hi-ask-hive__honesty--error {
+  color: var(--ha-high);
+}
+
+.hi-ask-hive--compact textarea {
+  min-height: 72px;
+}

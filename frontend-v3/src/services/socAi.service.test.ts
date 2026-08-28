@@ -33,6 +33,14 @@ describe('socAi.service', () => {
       confidence: 0,
       sources: [],
       durationMs: 0,
+      finding: {
+        facts: [],
+        inferences: [],
+        contradictions: [],
+        missingEvidence: [],
+        confidence: 0,
+        sources: [],
+      },
     });
 
     await socAiService.query({ prompt: 'What is 8.8.8.8?' });
@@ -58,6 +66,15 @@ describe('socAi.service', () => {
         confidence: 0,
         sources: [],
         durationMs: 0,
+        finding: {
+          facts: [{ text: 'AI service not configured. Set SOC_AI_BASE_URL to enable Hive Intelligence.' }],
+          inferences: [],
+          contradictions: [],
+          missingEvidence: [],
+          confidence: 0,
+          sources: [],
+          provenance: 'soc-ai-unconfigured',
+        },
       })
     ).toBe(true);
     expect(
@@ -66,6 +83,14 @@ describe('socAi.service', () => {
         confidence: 0.8,
         sources: ['feed-x'],
         durationMs: 120,
+        finding: {
+          facts: [],
+          inferences: [{ text: 'Suspicious IP linked to feed X' }],
+          contradictions: [],
+          missingEvidence: [],
+          confidence: 0.8,
+          sources: ['feed-x'],
+        },
       })
     ).toBe(false);
   });

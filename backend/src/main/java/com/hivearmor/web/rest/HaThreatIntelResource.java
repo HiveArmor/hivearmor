@@ -4,6 +4,8 @@ import com.hivearmor.domain.threat_intel.UtmIocIndicator;
 import com.hivearmor.repository.threat_intel.UtmIocIndicatorRepository;
 import com.hivearmor.repository.threat_intel.UtmThreatFeedRepository;
 import com.hivearmor.security.AuthoritiesConstants;
+import com.hivearmor.service.ThreatIntelLookupService;
+import com.hivearmor.service.dto.TlpFilteredIocDTO;
 import com.hivearmor.service.dto.threat_intel.IocResultDTO;
 import com.hivearmor.service.dto.threat_intel.ThreatFeedDTO;
 import com.hivearmor.service.threat_intel.ThreatIntelService;
@@ -16,10 +18,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * REST controller — Threat Intelligence hub (P3 endpoints).
@@ -44,13 +52,16 @@ public class HaThreatIntelResource {
     private final ThreatIntelService threatIntelService;
     private final UtmIocIndicatorRepository iocRepo;
     private final UtmThreatFeedRepository feedRepo;
+    private final ThreatIntelLookupService threatIntelLookupService;
 
     public HaThreatIntelResource(ThreatIntelService threatIntelService,
                                   UtmIocIndicatorRepository iocRepo,
-                                  UtmThreatFeedRepository feedRepo) {
+                                  UtmThreatFeedRepository feedRepo,
+                                  ThreatIntelLookupService threatIntelLookupService) {
         this.threatIntelService = threatIntelService;
         this.iocRepo = iocRepo;
         this.feedRepo = feedRepo;
+        this.threatIntelLookupService = threatIntelLookupService;
     }
 
     // ------------------------------------------------------------------
@@ -136,7 +147,7 @@ public class HaThreatIntelResource {
         log.debug("POST /api/ha-threat-intel/lookup value={}", value);
 
         return threatIntelService.lookupIoc(value)
-            .map(dto -> ResponseEntity.ok(new IocLookupResponse(dto, toThreatIntelSummary(dto))))
+            .map(dto -> ResponseEntity.ok(new IocLookupResponse(dto, toThreatIntelSummary(dto, value))))
             .orElse(ResponseEntity.ok(new IocLookupResponse(null, unknownSummary(value))));
     }
 
@@ -178,7 +189,7 @@ public class HaThreatIntelResource {
         }
 
         List<IocBrowserEntry> entries = results.stream()
-            .map(IocBrowserEntry::from)
+            .map(ind -> toBrowserEntry(ind, currentUserRoles()))
             .toList();
 
         HttpHeaders headers = UtilPagination.generatePaginationHttpHeaders(
@@ -204,7 +215,8 @@ public class HaThreatIntelResource {
         String sourceFeed,
         String firstSeen,
         String lastSeen,
-        List<String> attackTechniques
+        List<String> attackTechniques,
+        String tlp
     ) {}
 
     /** Flat row shape for the IOC browser grid */
@@ -217,19 +229,23 @@ public class HaThreatIntelResource {
         String  country,
         String  feedId,
         String  lastSeen,
-        Integer alertCount
+        Integer alertCount,
+        String  tlp,
+        boolean restricted
     ) {
-        static IocBrowserEntry from(UtmIocIndicator ind) {
+        static IocBrowserEntry from(UtmIocIndicator ind, String displayValue, String tlp, boolean restricted) {
             return new IocBrowserEntry(
                 ind.getId(),
-                ind.getValue(),
+                displayValue,
                 ind.getIocType(),
                 ind.getThreatScore(),
                 ind.getClassification(),
                 ind.getCountry(),
                 ind.getFeedId(),
                 ind.getLastSeen() != null ? ind.getLastSeen().toString() : null,
-                ind.getAlertCount() != null ? ind.getAlertCount() : 0
+                ind.getAlertCount() != null ? ind.getAlertCount() : 0,
+                tlp,
+                restricted
             );
         }
     }
@@ -238,7 +254,7 @@ public class HaThreatIntelResource {
     // Helpers
     // ------------------------------------------------------------------
 
-    private ThreatIntelSummary toThreatIntelSummary(IocResultDTO dto) {
+    private ThreatIntelSummary toThreatIntelSummary(IocResultDTO dto, String lookupValue) {
         String verdict = deriveVerdict(dto.getThreatScore());
         String sourceFeed = dto.getSourceFeds() != null && !dto.getSourceFeds().isEmpty()
             ? String.valueOf(dto.getSourceFeds().get(0).getOrDefault("name", "unknown"))
@@ -249,18 +265,47 @@ public class HaThreatIntelResource {
                 .filter(s -> !s.isBlank())
                 .toList()
             : List.of();
+        String tlp = resolveTlp(lookupValue);
         return new ThreatIntelSummary(
             dto.getValue(),
             verdict,
             sourceFeed,
             dto.getFirstSeen() != null ? dto.getFirstSeen().toString() : null,
             dto.getLastSeen()  != null ? dto.getLastSeen().toString()  : null,
-            techniques
+            techniques,
+            tlp
         );
     }
 
     private ThreatIntelSummary unknownSummary(String value) {
-        return new ThreatIntelSummary(value, "unknown", null, null, null, List.of());
+        return new ThreatIntelSummary(value, "unknown", null, null, null, List.of(), resolveTlp(value));
+    }
+
+    private IocBrowserEntry toBrowserEntry(UtmIocIndicator ind, Collection<String> roles) {
+        Optional<TlpFilteredIocDTO> tlpMatch =
+            threatIntelLookupService.lookupIOCForUser(ind.getValue(), roles);
+        if (tlpMatch.isPresent()) {
+            TlpFilteredIocDTO filtered = tlpMatch.get();
+            String display = filtered.getIocValue() != null ? filtered.getIocValue() : ind.getValue();
+            return IocBrowserEntry.from(ind, display, filtered.getTlp(), filtered.isRestricted());
+        }
+        return IocBrowserEntry.from(ind, ind.getValue(), "WHITE", false);
+    }
+
+    private String resolveTlp(String value) {
+        return threatIntelLookupService.lookupIOCForUser(value, currentUserRoles())
+            .map(TlpFilteredIocDTO::getTlp)
+            .orElse(null);
+    }
+
+    private Collection<String> currentUserRoles() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return List.of();
+        }
+        return auth.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .collect(Collectors.toSet());
     }
 
     private static String deriveVerdict(Integer threatScore) {

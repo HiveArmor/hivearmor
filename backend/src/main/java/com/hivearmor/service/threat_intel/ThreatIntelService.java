@@ -49,9 +49,9 @@ public class ThreatIntelService {
     public ThreatFeedDTO syncFeed(String id) {
         UtmThreatFeed feed = feedRepo.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Feed not found: " + id));
-        // Record that sync was triggered; real ingestion would happen async
+        // STAGING CANDIDATE: legacy utm feed sync is a stub — record honest status, no fake ingestion.
         feed.setLastUpdated(Instant.now());
-        feed.setStatus("active");
+        feed.setStatus("SYNC_STUB");
         return new ThreatFeedDTO(feedRepo.save(feed));
     }
 

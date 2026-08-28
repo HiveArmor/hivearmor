@@ -8,6 +8,7 @@
  */
 
 import { apiClient, ApiError } from '@/lib/apiClient';
+import type { IntelligenceFindingDTO } from '@/types/intelligenceFinding.types';
 
 /** Roles allowed to call SOC AI (matches backend @PreAuthorize). */
 export const SOC_AI_QUERY_ROLES = [
@@ -22,6 +23,8 @@ export const SOC_AI_ASSISTIVE_ONLY = true;
 export interface SocAiQueryRequest {
   prompt: string;
   context?: string;
+  /** When true, backend persists the structured finding (optional HI-04). */
+  persist?: boolean;
 }
 
 export interface SocAiQueryResponse {
@@ -29,6 +32,7 @@ export interface SocAiQueryResponse {
   confidence: number;
   sources: string[];
   durationMs: number;
+  finding: IntelligenceFindingDTO;
 }
 
 export function canQuerySocAi(roles: readonly string[]): boolean {

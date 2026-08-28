@@ -1,5 +1,6 @@
 package com.hivearmor.service.dto.threat_intel;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hivearmor.domain.threat_intel.UtmThreatFeed;
 
 import java.time.Instant;
@@ -34,18 +35,37 @@ public class ThreatFeedDTO {
     public void setId(String id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
+
+    @JsonProperty("sourceType")
+    public String getSourceType() { return type; }
+
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }
+
+    @JsonProperty("url")
+    public String getUrl() { return source; }
+
     public Instant getLastUpdated() { return lastUpdated; }
     public void setLastUpdated(Instant lastUpdated) { this.lastUpdated = lastUpdated; }
+
     public Long getIocCount() { return iocCount; }
     public void setIocCount(Long iocCount) { this.iocCount = iocCount; }
+
+    @JsonProperty("indicatorCount")
+    public Long getIndicatorCount() { return iocCount; }
+
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    @JsonProperty("lastSyncStatus")
+    public String getLastSyncStatus() { return status; }
+
     public Boolean getEnabled() { return enabled; }
     public void setEnabled(Boolean enabled) { this.enabled = enabled; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 }
+

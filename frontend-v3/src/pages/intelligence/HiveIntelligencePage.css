@@ -615,3 +615,32 @@
     border-bottom: 1px solid var(--ha-border);
   }
 }
+
+.hi-page__tabs {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 12px 12px;
+}
+
+.hi-page__tabs .pf-v5-c-tabs {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.hi-page__tabs .pf-v5-c-tab-content {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding-top: 12px;
+}
+
+.hi-findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

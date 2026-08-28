@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!-- HI-04 STAGING CANDIDATE — durable intelligence findings with facts/inference separation -->
+    <changeSet id="20260828001-1" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_intelligence_finding">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="BIGINT"/>
+            <column name="title" type="VARCHAR(512)"/>
+            <column name="summary" type="TEXT"/>
+            <column name="answer" type="TEXT"/>
+            <column name="confidence" type="DOUBLE PRECISION" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="confidence_explanation" type="TEXT"/>
+            <column name="provenance" type="VARCHAR(128)"/>
+            <column name="context_type" type="VARCHAR(64)"/>
+            <column name="context_ref" type="VARCHAR(512)"/>
+            <column name="sources_json" type="TEXT"/>
+            <column name="created_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="hive_intelligence_finding" indexName="idx_hive_intel_finding_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="hive_intelligence_finding" indexName="idx_hive_intel_finding_created_by">
+            <column name="created_by"/>
+        </createIndex>
+        <createIndex tableName="hive_intelligence_finding" indexName="idx_hive_intel_finding_context">
+            <column name="context_type"/>
+            <column name="context_ref"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260828001-2" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_intelligence_finding_fact">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="finding_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_intel_fact_finding"
+                             references="hive_intelligence_finding(id)"
+                             deleteCascade="true"/>
+            </column>
+            <column name="text" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source" type="VARCHAR(255)"/>
+            <column name="sort_order" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="hive_intelligence_finding_fact" indexName="idx_intel_fact_finding_id">
+            <column name="finding_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260828001-3" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_intelligence_finding_inference">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="finding_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_intel_inference_finding"
+                             references="hive_intelligence_finding(id)"
+                             deleteCascade="true"/>
+            </column>
+            <column name="text" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="confidence" type="DOUBLE PRECISION"/>
+            <column name="is_contradiction" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sort_order" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="hive_intelligence_finding_inference" indexName="idx_intel_inference_finding_id">
+            <column name="finding_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260828001-4" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_intelligence_evidence_gap">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="finding_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_intel_gap_finding"
+                             references="hive_intelligence_finding(id)"
+                             deleteCascade="true"/>
+            </column>
+            <column name="text" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sort_order" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="hive_intelligence_evidence_gap" indexName="idx_intel_gap_finding_id">
+            <column name="finding_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260828001-5" author="hivearmor" context="dev,prod">
+        <createTable tableName="hive_intelligence_finding_feedback">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="finding_id" type="BIGINT">
+                <constraints nullable="false"
+                             foreignKeyName="fk_intel_feedback_finding"
+                             references="hive_intelligence_finding(id)"
+                             deleteCascade="true"/>
+            </column>
+            <column name="user_login" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rating" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comment" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="hive_intelligence_finding_feedback" indexName="idx_intel_feedback_finding_id">
+            <column name="finding_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

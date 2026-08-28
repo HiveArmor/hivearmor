@@ -17,6 +17,8 @@ export interface ThreatFeedDTO {
   lastUpdated: string | null; // ISO 8601
   indicatorCount: number;
   url: string | null;
+  /** STAGING CANDIDATE — honest sync status from backend when available */
+  lastSyncStatus?: string | null;
 }
 
 export interface IocBrowserEntryDTO {
@@ -45,6 +47,7 @@ export interface ThreatIntelSummary {
   firstSeen: string | null; // ISO 8601
   lastSeen: string | null; // ISO 8601
   attackTechniques: string[];
+  tlp?: string | null;
 }
 
 export interface IocResultDTO {

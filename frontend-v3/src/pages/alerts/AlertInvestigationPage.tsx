@@ -83,9 +83,12 @@ import { useInvestigationStream } from './hooks/useInvestigationStream';
 
 import { ErrorState } from '@/components/error-state/ErrorState';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
+import { IntelligenceFindingCard } from '@/components/intelligence/IntelligenceFindingCard';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import { foundationAlertInvestigation } from '@/pages/alerts/alertInvestigation.fixtures';
 import { useAuthStore } from '@/store/auth.store';
+import type { IntelligenceFindingDTO } from '@/types/intelligenceFinding.types';
+
 
 import './AlertInvestigationPage.css';
 
@@ -494,12 +497,12 @@ export function AlertInvestigationPage(): JSX.Element {
   const [fixtureActionResult, setFixtureActionResult] = useState<string | null>(null);
   const [activityCursor, setActivityCursor] = useState<string | undefined>(undefined);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiFinding, setAiFinding] = useState<IntelligenceFindingDTO | null>(null);
 
   const enrichMutation = useMutation({
     mutationFn: () => enrichAlertWithAi(id),
     onSuccess: (result) => {
-      setAiSummary(result.summary);
+      setAiFinding(result.finding);
       addToast({
         variant: 'success',
         title: 'Hive enrichment ready',
@@ -843,7 +846,22 @@ export function AlertInvestigationPage(): JSX.Element {
               title={canAskHive ? 'Enrich this alert with Hive Intelligence' : 'Required permission: Analyst'}
               onClick={() => {
                 if (fixtureMode) {
-                  setAiSummary('Fixture mode: Ask Hive is simulated and no model was called.');
+                  setAiFinding({
+                    title: 'Fixture enrichment',
+                    summary: 'Fixture mode: Ask Hive is simulated and no model was called.',
+                    answer: 'Fixture mode: Ask Hive is simulated and no model was called.',
+                    facts: [
+                      {
+                        text: 'Fixture mode: Ask Hive is simulated and no model was called.',
+                      },
+                    ],
+                    inferences: [],
+                    contradictions: [],
+                    missingEvidence: [],
+                    confidence: 0,
+                    sources: [],
+                    provenance: 'fixture',
+                  });
                   return;
                 }
                 enrichMutation.mutate();
@@ -875,14 +893,14 @@ export function AlertInvestigationPage(): JSX.Element {
           <Metric label="SLA" value={investigation.slaDeadline ? formatDateTime(investigation.slaDeadline) : 'Not set'} />
         </div>
 
-        {aiSummary && (
+        {aiFinding && (
           <section className="investigation-guide" aria-label="Ask Hive enrichment">
             <div>
               <Bot size={17} aria-hidden="true" />
               <div><strong>Ask Hive</strong><span>SOC AI enrichment</span></div>
             </div>
-            <p style={{ margin: 0, color: 'var(--ha-text-secondary)', font: 'var(--ha-type-compact)' }}>{aiSummary}</p>
-            <button className="alert-icon-button" type="button" onClick={() => setAiSummary(null)} aria-label="Dismiss Ask Hive result"><X size={15} /></button>
+            <IntelligenceFindingCard finding={aiFinding} compact title="Alert enrichment" />
+            <button className="alert-icon-button" type="button" onClick={() => setAiFinding(null)} aria-label="Dismiss Ask Hive result"><X size={15} /></button>
           </section>
         )}
 

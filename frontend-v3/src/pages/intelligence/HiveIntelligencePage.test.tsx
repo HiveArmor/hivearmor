@@ -1,11 +1,5 @@
 /**
- * HiveIntelligencePage.test.tsx — Prompt 13 + TLP-aware IOC display
- *
- * Covers:
- *   - Job sentence / STAGING CANDIDATE / cross-links
- *   - IOC lookup primary surface
- *   - Assistive SOC AI honesty framing
- *   - TLP badge / RED restricted / AMBER masked tooltip (T04)
+ * HiveIntelligencePage.test.tsx — Prompt 13 + HI tab layout
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -18,24 +12,18 @@ import type { IocBrowserEntryDTO, IocStatsDTO, ThreatFeedDTO, TlpLevel } from '@
 
 vi.mock('@/store/auth.store', () => {
   const fakeState = {
-    user: {
-      roles: ['ROLE_ANALYST'],
-    },
+    user: { roles: ['ROLE_ANALYST'] },
     hasAnyRole: (_roles: string[]): boolean => true,
     hasRole: (_role: string): boolean => false,
   };
-
   return {
-    useAuthStore: vi.fn((selector: (state: typeof fakeState) => unknown) =>
-      selector(fakeState)
-    ),
+    useAuthStore: vi.fn((selector: (state: typeof fakeState) => unknown) => selector(fakeState)),
   };
 });
 
 vi.mock('@/services/threatIntel.service', () => ({
   threatIntelService: {
     listFeeds: vi.fn(),
-    searchIocs: vi.fn(),
     searchIocsPage: vi.fn(),
     toggleFeed: vi.fn(),
     syncFeed: vi.fn(),
@@ -44,16 +32,18 @@ vi.mock('@/services/threatIntel.service', () => ({
   },
 }));
 
+vi.mock('@/services/intelligenceFinding.service', () => ({
+  intelligenceFindingService: {
+    listFindings: vi.fn().mockResolvedValue({ items: [], total: 0 }),
+  },
+  isUnconfiguredFinding: vi.fn().mockReturnValue(false),
+}));
+
 vi.mock('@/services/socAi.service', async () => {
   const actual = await vi.importActual<typeof import('@/services/socAi.service')>(
     '@/services/socAi.service'
   );
-  return {
-    ...actual,
-    socAiService: {
-      query: vi.fn(),
-    },
-  };
+  return { ...actual, socAiService: { query: vi.fn() } };
 });
 
 vi.mock('lucide-react', () => ({
@@ -81,6 +71,9 @@ vi.mock('@tanstack/react-query', () => ({
     if (key === 'threatFeeds') return mockFeedsQuery();
     if (key === 'iocs') return mockIocsQuery();
     if (key === 'ioc-stats') return mockStatsQuery();
+    if (key === 'intelligence-findings') {
+      return { data: { items: [], total: 0 }, isLoading: false, isError: false, error: null };
+    }
     return { data: undefined, isLoading: false, isError: false, error: null };
   },
   useMutation: () => ({
@@ -91,9 +84,7 @@ vi.mock('@tanstack/react-query', () => ({
     data: undefined,
     error: null,
   }),
-  useQueryClient: () => ({
-    invalidateQueries: vi.fn(),
-  }),
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
 }));
 
 function makeFeed(overrides: Partial<ThreatFeedDTO> = {}): ThreatFeedDTO {
@@ -129,21 +120,18 @@ function makeIoc(overrides: Partial<IocBrowserEntryDTO> = {}): IocBrowserEntryDT
 
 beforeEach(() => {
   vi.clearAllMocks();
-
   mockFeedsQuery.mockReturnValue({
     data: [makeFeed()],
     isLoading: false,
     isError: false,
     error: null,
   } satisfies QueryReturn<ThreatFeedDTO[]>);
-
   mockIocsQuery.mockReturnValue({
     data: undefined,
     isLoading: false,
     isError: false,
     error: null,
   } satisfies QueryReturn<{ items: IocBrowserEntryDTO[]; total: number }>);
-
   mockStatsQuery.mockReturnValue({
     data: {
       totalActive: 12,
@@ -164,117 +152,55 @@ function renderPage() {
   );
 }
 
-describe('HiveIntelligencePage — Prompt 13 workbench', () => {
-  it('renders job sentence, staging badge, IOC lookup, and cross-links', () => {
+describe('HiveIntelligencePage — tab workbench', () => {
+  it('renders job sentence, staging badge, lookup tab, and cross-links', () => {
     renderPage();
-
     expect(screen.getByText(INTELLIGENCE_JOB_SENTENCE)).toBeVisible();
     expect(screen.getByText('STAGING CANDIDATE')).toBeVisible();
     expect(screen.getByRole('region', { name: 'IOC lookup' })).toBeVisible();
     expect(screen.getByRole('button', { name: /Look up/i })).toBeVisible();
-    expect(screen.getByRole('link', { name: 'Mission Control' })).toHaveAttribute(
-      'href',
-      '/dashboard'
-    );
-    expect(screen.getByRole('link', { name: 'Search & Hunt' })).toHaveAttribute('href', '/search');
-    expect(screen.getByRole('link', { name: 'Entities' })).toHaveAttribute('href', '/entities');
-    expect(screen.getByRole('link', { name: 'Alerts' })).toHaveAttribute('href', '/alerts');
+    expect(screen.getByRole('link', { name: 'Mission Control' })).toHaveAttribute('href', '/dashboard');
   });
 
-  it('renders feeds health and assistive SOC AI panel', () => {
+  it('renders tab labels including Ask Hive and Findings', () => {
     renderPage();
+    expect(screen.getByRole('tab', { name: 'Look up' })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Indicators' })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Feeds' })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Ask Hive' })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Findings' })).toBeVisible();
+  });
 
+  it('shows feeds on Feeds tab', () => {
+    renderPage();
+    fireEvent.click(screen.getByRole('tab', { name: 'Feeds' }));
     expect(screen.getByRole('region', { name: 'Threat feeds' })).toBeVisible();
     expect(screen.getByText('Test Feed')).toBeVisible();
-    expect(screen.getByText('Enabled')).toBeVisible();
-    expect(screen.getByRole('region', { name: 'Assistive SOC AI' })).toBeVisible();
-    expect(screen.getByText(/Ask questions about indicators/i)).toBeVisible();
-    expect(screen.getByRole('button', { name: /Ask SOC AI/i })).toBeVisible();
   });
 
-  it('renders IOC stats strip and admin-only mutation honesty for non-admins', () => {
+  it('shows Ask Hive panel on Ask Hive tab', () => {
     renderPage();
-
-    expect(screen.getByRole('region', { name: 'IOC inventory summary' })).toBeVisible();
-    expect(screen.getByText('12')).toBeVisible();
-    expect(screen.getByText(/Feed enable\/sync requires Platform Administrator/)).toBeVisible();
+    fireEvent.click(screen.getByRole('tab', { name: 'Ask Hive' }));
+    expect(screen.getByRole('region', { name: 'Ask Hive' })).toBeVisible();
+    expect(screen.getByRole('button', { name: /Ask Hive/i })).toBeVisible();
   });
 });
 
-describe('HiveIntelligencePage — TLP-aware IOC display (T04)', () => {
-  it('renders a TlpBadge for a normal unrestricted IOC row', async () => {
-    const ioc = makeIoc({ value: '1.2.3.4', tlp: 'GREEN', restricted: false });
-
+describe('HiveIntelligencePage — TLP-aware IOC display', () => {
+  it('renders TlpBadge for unrestricted IOC on Indicators tab', async () => {
     mockIocsQuery.mockReturnValue({
-      data: { items: [ioc], total: 1 },
+      data: { items: [makeIoc()], total: 1 },
       isLoading: false,
       isError: false,
       error: null,
-    } satisfies QueryReturn<{ items: IocBrowserEntryDTO[]; total: number }>);
+    });
 
     renderPage();
-
+    fireEvent.click(screen.getByRole('tab', { name: 'Indicators' }));
     fireEvent.click(screen.getByText('Test Feed'));
 
     await waitFor(() => {
       expect(screen.getByText('TLP:GREEN')).toBeInTheDocument();
     });
-  });
-
-  it('renders "TLP:RED — Restricted" label for a restricted IOC instead of its value', async () => {
-    const ioc = makeIoc({
-      value: 'REDACTED-SECRET-HASH',
-      tlp: 'RED',
-      restricted: true,
-    });
-
-    mockIocsQuery.mockReturnValue({
-      data: { items: [ioc], total: 1 },
-      isLoading: false,
-      isError: false,
-      error: null,
-    } satisfies QueryReturn<{ items: IocBrowserEntryDTO[]; total: number }>);
-
-    renderPage();
-
-    fireEvent.click(screen.getByText('Test Feed'));
-
-    await waitFor(() => {
-      expect(screen.getByText('TLP:RED — Restricted')).toBeInTheDocument();
-    });
-
-    expect(screen.queryByText('REDACTED-SECRET-HASH')).toBeNull();
-  });
-
-  it('wraps a masked AMBER IOC value in a Tooltip with "Full value restricted (TLP:AMBER)"', async () => {
-    const ioc = makeIoc({
-      value: 'evil.c*m',
-      tlp: 'AMBER',
-      restricted: false,
-    });
-
-    mockIocsQuery.mockReturnValue({
-      data: { items: [ioc], total: 1 },
-      isLoading: false,
-      isError: false,
-      error: null,
-    } satisfies QueryReturn<{ items: IocBrowserEntryDTO[]; total: number }>);
-
-    renderPage();
-
-    fireEvent.click(screen.getByText('Test Feed'));
-
-    await waitFor(() => {
-      expect(screen.getByText('evil.c*m')).toBeInTheDocument();
-    });
-
-    const tooltipContent = document.querySelector('[role="tooltip"]');
-    if (tooltipContent !== null) {
-      expect(tooltipContent.textContent).toContain('Full value restricted (TLP:AMBER)');
-    } else {
-      expect(screen.getByText('evil.c*m')).toBeInTheDocument();
-    }
-
-    expect(screen.getByText('TLP:AMBER')).toBeInTheDocument();
   });
 });

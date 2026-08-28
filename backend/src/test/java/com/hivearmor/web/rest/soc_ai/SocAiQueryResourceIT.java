@@ -38,7 +38,10 @@ class SocAiQueryResourceIT {
                 .content("{\"prompt\":\"What is the top threat today?\"}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.answer", notNullValue()))
-            .andExpect(jsonPath("$.confidence").isNumber());
+            .andExpect(jsonPath("$.confidence").isNumber())
+            .andExpect(jsonPath("$.finding", notNullValue()))
+            .andExpect(jsonPath("$.finding.facts", notNullValue()))
+            .andExpect(jsonPath("$.finding.provenance", containsString("unconfigured")));
     }
 
     @Test
@@ -76,7 +79,8 @@ class SocAiQueryResourceIT {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"alertId\":\"alert-123\"}"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.summary", notNullValue()));
+            .andExpect(jsonPath("$.summary", notNullValue()))
+            .andExpect(jsonPath("$.finding", notNullValue()));
     }
 
     @Test
