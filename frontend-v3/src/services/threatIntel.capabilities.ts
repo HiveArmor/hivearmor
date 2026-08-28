@@ -3,6 +3,7 @@
  *
  * Not PRODUCTION READY. Documents auth/honesty boundaries for threat-intel ops.
  * Frontend must never call legacy `/api/v1/threat-intel` even after TI-003 harden.
+ * Prompt 13: analyst workbench uses ha-threat-intel only; SOC AI uses ha-soc-ai/query.
  */
 
 /** Feed list/get + stats authorize Admin|User|Analyst|SOC Manager explicitly (no ROLE_USER co-assignment reliance). */

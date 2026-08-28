@@ -1,5 +1,8 @@
 package com.hivearmor.web.rest.soc_ai;
 
+import com.hivearmor.security.SecurityUtils;
+import com.hivearmor.service.dto.intelligence.IntelligenceFindingDTO;
+import com.hivearmor.service.intelligence.IntelligenceFindingService;
 import com.hivearmor.service.soc_ai.SocAiChatService;
 import com.hivearmor.service.dto.soc_ai.ChatRequest;
 import jakarta.validation.Valid;
@@ -13,13 +16,12 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Non-streaming SOC AI query endpoints.
  *
- * POST /api/ha-soc-ai/query      — single-turn query → SocAiResponseDTO
- * POST /api/ha-soc-ai/enrich-alert — alert enrichment → AlertEnrichmentDTO
+ * POST /api/ha-soc-ai/query      — single-turn query → SocAiResponseDTO + IntelligenceFindingDTO
+ * POST /api/ha-soc-ai/enrich-alert — alert enrichment → AlertEnrichmentDTO + IntelligenceFindingDTO
  *
  * Falls back gracefully when SOC_AI_BASE_URL is not configured.
  * Auth: ADMIN | SOC_MANAGER | ANALYST — READ_ONLY is blocked (AI usage is auditable).
@@ -35,14 +37,30 @@ public class SocAiQueryResource {
     private final Logger log = LoggerFactory.getLogger(SocAiQueryResource.class);
 
     private final SocAiChatService socAiChatService;
+    private final IntelligenceFindingService intelligenceFindingService;
 
-    public record SocAiQueryRequest(@NotBlank String prompt, String context) {}
+    public record SocAiQueryRequest(
+        @NotBlank String prompt,
+        String context,
+        Boolean persist
+    ) {}
 
-    public record SocAiResponseDTO(String answer, double confidence, List<String> sources, long durationMs) {}
+    public record SocAiResponseDTO(
+        String answer,
+        double confidence,
+        List<String> sources,
+        long durationMs,
+        IntelligenceFindingDTO finding
+    ) {}
 
     public record AlertEnrichRequest(@NotBlank String alertId) {}
 
-    public record AlertEnrichmentDTO(String summary, List<String> tactics, List<String> recommendedActions) {}
+    public record AlertEnrichmentDTO(
+        String summary,
+        List<String> tactics,
+        List<String> recommendedActions,
+        IntelligenceFindingDTO finding
+    ) {}
 
     /**
      * POST /api/ha-soc-ai/query
@@ -56,22 +74,28 @@ public class SocAiQueryResource {
         long start = System.currentTimeMillis();
 
         if (!isAiConfigured()) {
-            return ResponseEntity.ok(new SocAiResponseDTO(
-                "AI service not configured. Set SOC_AI_BASE_URL to enable Hive Intelligence.",
-                0.0, List.of(), 0
-            ));
+            String answer =
+                "AI service not configured. Set SOC_AI_BASE_URL to enable Hive Intelligence.";
+            IntelligenceFindingDTO finding = intelligenceFindingService.buildFromSocAiAnswer(
+                answer, 0.0, List.of(), "soc-ai-query", req.prompt(), false);
+            finding = maybePersist(finding, req.persist());
+            return ResponseEntity.ok(new SocAiResponseDTO(answer, 0.0, List.of(), 0, finding));
         }
 
         try {
             ChatRequest chatReq = buildChatRequest(req.prompt(), req.context());
             String answer = socAiChatService.querySynchronous(chatReq);
             long durationMs = System.currentTimeMillis() - start;
-            return ResponseEntity.ok(new SocAiResponseDTO(answer, 1.0, List.of(), durationMs));
+            IntelligenceFindingDTO finding = intelligenceFindingService.buildFromSocAiAnswer(
+                answer, 1.0, List.of(), "soc-ai-query", req.prompt(), true);
+            finding = maybePersist(finding, req.persist());
+            return ResponseEntity.ok(new SocAiResponseDTO(answer, 1.0, List.of(), durationMs, finding));
         } catch (Exception e) {
             log.warn("{}.query failed: {}", CLASSNAME, e.getMessage());
-            return ResponseEntity.ok(new SocAiResponseDTO(
-                "AI service unavailable: " + e.getMessage(), 0.0, List.of(), 0
-            ));
+            String answer = "AI service unavailable: " + e.getMessage();
+            IntelligenceFindingDTO finding = intelligenceFindingService.buildFromSocAiAnswer(
+                answer, 0.0, List.of(), "soc-ai-query", req.prompt(), false);
+            return ResponseEntity.ok(new SocAiResponseDTO(answer, 0.0, List.of(), 0, finding));
         }
     }
 
@@ -85,10 +109,10 @@ public class SocAiQueryResource {
         log.debug("{}.enrichAlert alertId={}", CLASSNAME, req.alertId());
 
         if (!isAiConfigured()) {
-            return ResponseEntity.ok(new AlertEnrichmentDTO(
-                "AI enrichment unavailable — set SOC_AI_BASE_URL to enable.",
-                List.of(), List.of()
-            ));
+            String summary = "AI enrichment unavailable — set SOC_AI_BASE_URL to enable.";
+            IntelligenceFindingDTO finding = intelligenceFindingService.buildFromSocAiAnswer(
+                summary, 0.0, List.of(), "alert-enrichment", req.alertId(), false);
+            return ResponseEntity.ok(new AlertEnrichmentDTO(summary, List.of(), List.of(), finding));
         }
 
         try {
@@ -97,13 +121,24 @@ public class SocAiQueryResource {
                 + "3) recommended SOC actions (bullet points).";
             ChatRequest chatReq = buildChatRequest(prompt, null);
             String raw = socAiChatService.querySynchronous(chatReq);
-            return ResponseEntity.ok(new AlertEnrichmentDTO(raw, List.of(), List.of()));
+            IntelligenceFindingDTO finding = intelligenceFindingService.buildFromSocAiAnswer(
+                raw, 1.0, List.of(), "alert-enrichment", req.alertId(), true);
+            return ResponseEntity.ok(new AlertEnrichmentDTO(raw, List.of(), List.of(), finding));
         } catch (Exception e) {
             log.warn("{}.enrichAlert failed: {}", CLASSNAME, e.getMessage());
-            return ResponseEntity.ok(new AlertEnrichmentDTO(
-                "Enrichment failed: " + e.getMessage(), List.of(), List.of()
-            ));
+            String summary = "Enrichment failed: " + e.getMessage();
+            IntelligenceFindingDTO finding = intelligenceFindingService.buildFromSocAiAnswer(
+                summary, 0.0, List.of(), "alert-enrichment", req.alertId(), false);
+            return ResponseEntity.ok(new AlertEnrichmentDTO(summary, List.of(), List.of(), finding));
         }
+    }
+
+    private IntelligenceFindingDTO maybePersist(IntelligenceFindingDTO finding, Boolean persist) {
+        if (!Boolean.TRUE.equals(persist)) {
+            return finding;
+        }
+        String user = SecurityUtils.getCurrentUserLogin().orElse("system");
+        return intelligenceFindingService.persistSocAiFinding(finding, user);
     }
 
     private boolean isAiConfigured() {

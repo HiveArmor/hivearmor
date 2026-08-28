@@ -784,5 +784,9 @@
     <!-- TI-004 STAGING CANDIDATE — MISP last_sync_status parity with TAXII -->
     <include file="/config/liquibase/changelog/20260825001_misp_feed_last_sync_status.xml" relativeToChangelogFile="false"/>
 
+    <!-- HI-04 STAGING CANDIDATE — intelligence findings (facts vs inference) -->
+    <include file="/config/liquibase/changelog/20260828001_hive_intelligence_finding.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
+
 

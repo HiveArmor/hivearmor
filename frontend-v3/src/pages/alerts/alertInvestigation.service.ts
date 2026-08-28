@@ -389,6 +389,7 @@ export interface AlertEnrichmentResult {
   summary: string;
   tactics: string[];
   recommendedActions: string[];
+  finding: import('@/types/intelligenceFinding.types').IntelligenceFindingDTO;
 }
 
 /** Ask Hive — POST /ha-soc-ai/enrich-alert (graceful when AI is not configured). */
