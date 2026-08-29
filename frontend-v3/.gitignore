@@ -27,6 +27,10 @@ npm-debug.log*
 coverage/
 .nyc_output/
 
+# Playwright
+playwright-report/
+test-results/
+
 # TypeScript
 *.tsbuildinfo
 
