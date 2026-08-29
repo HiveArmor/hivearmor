@@ -1,9 +1,8 @@
 /**
- * Asset Intelligence — Phase 8 posture and exposure inventory.
+ * Posture Assets — inventory-first asset hub (Prompt 23 / Wave B2).
  *
- * Uses a bounded safe projection. The legacy /ha-clients entity response is
- * normalized and stripped in posture.service; production never imports the
- * visual fixture records.
+ * Production inventory: GET /api/ha-assets only. Legacy /ha-clients normalization
+ * lives in posture.service; production never imports visual fixture records.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -12,7 +11,6 @@ import { useQuery } from '@tanstack/react-query';
 import type { ColDef, ICellRendererParams, RowClickedEvent } from 'ag-grid-community';
 import type { AgGridReact } from 'ag-grid-react';
 import {
-  Activity,
   AlignJustify,
   AlertTriangle,
   Boxes,
@@ -20,7 +18,6 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleHelp,
-  Clock3,
   Cloud,
   Copy,
   ExternalLink,
@@ -40,8 +37,8 @@ import {
   ShieldCheck,
   ShieldQuestion,
   Tags,
-  UserRound,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { assetFixtureMode, fetchAssetDetail, fetchAssets } from '../posture.service';
 import type {
@@ -58,6 +55,7 @@ import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect'
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
+import { ROUTES } from '@/constants/routes.constants';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
@@ -65,6 +63,10 @@ import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standa
 
 import './AssetsPage.css';
 import '../../response/response-grid-standard.css';
+
+/** Bundle-visible job sentence — posture asset inventory, not entity dossier or fleet admin. */
+export const POSTURE_ASSETS_JOB_SENTENCE =
+  'Posture asset inventory — review discovered hosts, risk scores, exposure, and sensor coverage across authorized tenants. Entity dossiers live on Entities; fleet enrollment lives on Sensors.';
 
 const PAGE_SIZE = 50;
 type AssetView = 'all' | AssetCategory;
@@ -163,7 +165,7 @@ function AssetDrawer({ asset: initialAsset, onClose }: { asset: AssetDTO; onClos
   const entityId = asset.canonicalEntityId ?? String(asset.id);
   return (
     <HaDrawer isOpen onClose={onClose} title={asset.clientName} subtitle={`${VIEW_LABELS[asset.category ?? 'unknown']} · ${asset.clientDomain}`} width={540}
-      footer={<><a className="ast-drawer-action" href={`/entities/${encodeURIComponent(entityId)}`}><Layers3 size={13} />Open entity dossier</a><a className="ast-drawer-action ast-drawer-action--primary" href={`/search?query=${encodeURIComponent(`host.name:"${asset.clientName}"`)}`}><Search size={13} />Hunt activity</a></>}>
+      footer={<><Link className="ast-drawer-action" to={`${ROUTES.ENTITIES}/${encodeURIComponent(entityId)}/dossier`}><Layers3 size={13} />Open entity dossier</Link><Link className="ast-drawer-action ast-drawer-action--primary" to={`${ROUTES.SEARCH}?query=${encodeURIComponent(`host.name:"${asset.clientName}"`)}`}><Search size={13} />Hunt activity</Link></>}>
       <div className="ast-drawer">
         <div className="ast-drawer__headline">
           <span className="ast-drawer__icon">{categoryIcon(asset.category, 20)}</span>
@@ -192,7 +194,7 @@ function AssetDrawer({ asset: initialAsset, onClose }: { asset: AssetDTO; onClos
           <section className="ast-risk-summary"><div><span>Active alerts</span><strong>{asset.activeAlertCount ?? 0}</strong></div><div><span>Critical CVEs</span><strong>{asset.criticalVulnerabilityCount ?? 0}</strong></div><div><span>Attack paths</span><strong>{asset.attackPathCount ?? 0}</strong></div></section>
           <section className="ast-drawer-card"><header><ShieldAlert size={14} /><div><strong>Risk drivers</strong><span>Evidence contributing to current priority</span></div></header><ul className="ast-driver-list">{(asset.riskDrivers ?? []).map((driver) => <li key={driver.id} data-level={driver.severity}><span /><div><strong>{driver.label}</strong><p>{driver.summary}</p><small>{driver.evidenceCount} evidence references · {driver.kind}</small></div></li>)}</ul></section>
           <section className="ast-drawer-card"><header><CheckCircle2 size={14} /><div><strong>Recommended work</strong><span>Prioritized by exposure reduction</span></div></header><ul className="ast-recommendations">{(asset.recommendations ?? []).map((item) => <li key={item.id}><div><strong>{item.title}</strong><span>{item.ownerTeam ?? 'Owner required'} · {item.state.replace('_', ' ')}</span></div><em>−{item.exposureReduction}</em></li>)}</ul></section>
-          <div className="ast-pivots"><a href={`/posture/vulnerabilities?asset=${encodeURIComponent(entityId)}`}>View vulnerabilities<ExternalLink size={11} /></a><a href={`/posture/exposure?asset=${encodeURIComponent(entityId)}`}>Review exposure paths<ExternalLink size={11} /></a></div>
+          <div className="ast-pivots"><Link to={`${ROUTES.VULNERABILITIES}?asset=${encodeURIComponent(entityId)}`}>View vulnerabilities<ExternalLink size={11} /></Link><Link to={`${ROUTES.EXPOSURE}?asset=${encodeURIComponent(entityId)}`}>Review exposure paths<ExternalLink size={11} /></Link></div>
         </>}
 
         {tab === 'coverage' && <section className="ast-drawer-card"><header><Radar size={14} /><div><strong>Telemetry coverage</strong><span>Per-source health and freshness</span></div></header><ul className="ast-coverage-list">{(asset.coverage ?? []).map((source) => <li key={source.id} data-state={source.state}><span /><div><strong>{source.name}</strong><small>{source.state} · {source.lastObserved ? `observed ${formatRelativeTime(source.lastObserved)}` : 'never observed'}</small></div></li>)}</ul><p className="ast-drawer-note">Missing coverage lowers confidence; it does not mean the asset has no exposure or risk.</p></section>}
@@ -281,20 +283,64 @@ export function AssetsPage(): JSX.Element {
   const hasFilters = view !== 'all' || risk !== 'all' || exposure !== 'all' || sensor !== 'all' || Boolean(search);
   const errorMessage = query.error instanceof Error ? query.error.message : 'The authorized asset projection could not be loaded.';
   const forbidden = /403|forbidden|permission/i.test(errorMessage);
+  const showEmptyHonesty = !query.isLoading && !query.isError && rows.length === 0 && !hasFilters;
+  const projectionNote = query.data?.partialFailures?.length
+    ? `${query.data.partialFailures.length} inventory source failed; usable records are preserved.`
+    : query.data?.stale
+      ? 'This asset projection is stale while sources recover.'
+      : null;
 
   return (
-    <section className="ast-page" data-fixture={assetFixtureMode || undefined} aria-label="Asset intelligence inventory">
-      <header className="ast-header"><div className="ast-header__identity"><span className="ast-header__mark"><Boxes size={19} /></span><div><span>Posture &amp; exposure</span><h1>Asset Intelligence</h1></div></div><div className="ast-header__actions"><span className="ast-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect</span><a href="/posture/exposure"><Eye size={13} />Exposure</a><a href="/posture/vulnerabilities"><ShieldAlert size={13} />Vulnerabilities</a><a href="/posture/identities"><UserRound size={13} />Identities</a><button type="button" onClick={() => query.refetch()} disabled={query.isFetching} aria-label="Refresh asset inventory"><RefreshCw size={14} className={query.isFetching ? 'ast-spin' : undefined} /></button></div></header>
+    <section className="ast-page" data-fixture={assetFixtureMode || undefined} aria-label="Posture asset inventory">
+      <header className="ast-header">
+        <div className="ast-header__identity">
+          <span className="ast-header__mark"><Boxes size={19} aria-hidden="true" /></span>
+          <div>
+            <div className="ast-header__eyebrow">
+              <span>POSTURE</span>
+              <span className="ast-header__badge">STAGING CANDIDATE</span>
+            </div>
+            <h1>Assets</h1>
+            <p className="ast-header__job">{POSTURE_ASSETS_JOB_SENTENCE}</p>
+            {projectionNote && (
+              <p className="ast-page__projection-note" role="note">
+                {projectionNote} Inventory API: GET /api/ha-assets — no legacy /ha-clients or /ha-network-scans on this page.
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="ast-header__actions">
+          <span className="ast-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect</span>
+          <button type="button" onClick={() => query.refetch()} disabled={query.isFetching} aria-label="Refresh asset inventory"><RefreshCw size={14} className={query.isFetching ? 'ast-spin' : undefined} /></button>
+        </div>
+      </header>
+
+      <p className="ast-page__meta">
+        <Link to={ROUTES.DASHBOARD}>Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.SENSORS}>Sensors</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.ENTITIES}>Entities</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.EXPOSURE}>Exposure</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.VULNERABILITIES}>Vulnerabilities</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.IDENTITIES}>Identities</Link>
+        <span aria-hidden="true">·</span>
+        <span className="ast-page__access">Analyst · SOC Manager · Platform Administrator</span>
+      </p>
+
       {assetFixtureMode && <div className="ast-fixture"><strong>Design fixture:</strong> fictional asset and exposure records are enabled for visual review.<span>Production never receives these records.</span></div>}
 
-      <section className="ast-summary" aria-label="Asset posture summary">
-        <div><span><Boxes size={13} />Known assets</span><strong>{summary?.total.toLocaleString() ?? query.data?.totalElements.toLocaleString() ?? '—'}</strong><small>authorized inventory</small></div>
-        <div data-tone="critical"><span><ShieldAlert size={13} />Critical assets</span><strong>{summary?.criticalAssets ?? '—'}</strong><small>mission-critical value</small></div>
-        <div data-tone="danger"><span><Activity size={13} />High risk</span><strong>{summary?.highRisk ?? '—'}</strong><small>active threat likelihood</small></div>
-        <div data-tone="warning"><span><Eye size={13} />High exposure</span><strong>{summary?.highExposure ?? '—'}</strong><small>exploitable weaknesses</small></div>
-        <div data-tone="warning"><span><Radar size={13} />Not onboarded</span><strong>{summary?.notOnboarded ?? '—'}</strong><small>discovered, not protected</small></div>
-        <div data-tone="info"><span><Clock3 size={13} />Sensor attention</span><strong>{summary?.sensorAttention ?? '—'}</strong><small>{summary ? `${summary.newlyDiscovered} newly discovered` : 'summary unavailable'}</small></div>
-      </section>
+      {showEmptyHonesty && (
+        <div className="assets-empty-honesty" role="status" data-testid="assets-empty-honesty">
+          <strong>No assets discovered in authorized tenant scope.</strong>
+          <span>
+            An empty inventory does not imply platform health — deploy a sensor or connect an authorized discovery source on Sensors. Entity dossiers on Entities may still have behavioral risk data from other sources.
+          </span>
+        </div>
+      )}
 
       <section className="ast-operations">
         <nav className="ast-tabs" aria-label="Asset categories">{(['all', 'endpoint', 'server', 'cloud', 'network', 'iot_ot', 'unknown'] as const).map((item) => <button key={item} type="button" data-active={view === item} onClick={() => selectView(item)}>{item === 'all' ? <Boxes size={13} /> : categoryIcon(item)}{VIEW_LABELS[item]}</button>)}</nav>
@@ -309,11 +355,23 @@ export function AssetsPage(): JSX.Element {
         </div>
       </section>
 
-      {Boolean(query.data?.stale || query.data?.partialFailures?.length) && <div className="ast-warning" role="status"><AlertTriangle size={14} /><span>{query.data?.partialFailures?.length ? `${query.data.partialFailures.length} inventory source failed; usable records are preserved.` : 'This asset projection is stale while sources recover.'}</span><button type="button" onClick={() => query.refetch()}>Retry sources</button></div>}
+      <div className="ast-results-toolbar">
+        <div>
+          <strong>{VIEW_LABELS[view]}</strong>
+          <span>{query.data ? `${rows.length} loaded · ${query.data.totalElements.toLocaleString()} matching` : 'bounded authorized projection'}</span>
+          {summary && (
+            <span className="ast-inline-stats" aria-label="Inventory summary">
+              <span>{summary.total.toLocaleString()} total</span>
+              {summary.highRisk != null && <span data-tone="danger">{summary.highRisk} high risk</span>}
+              {summary.notOnboarded != null && <span data-tone="warning">{summary.notOnboarded} not onboarded</span>}
+            </span>
+          )}
+          {hasFilters && rows.length > 0 && <button type="button" onClick={() => { selectView('all'); setRisk('all'); setExposure('all'); setSensor('all'); setSearch(''); setSearchDraft(''); }}>Clear filters</button>}
+        </div>
+        <div className="ast-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button></div>
+      </div>
 
-      <div className="ast-results-toolbar"><div><strong>{VIEW_LABELS[view]}</strong><span>{query.data ? `${rows.length} loaded · ${query.data.totalElements.toLocaleString()} matching` : 'bounded authorized projection'}</span>{hasFilters && rows.length > 0 && <button type="button" onClick={() => { selectView('all'); setRisk('all'); setExposure('all'); setSensor('all'); setSearch(''); setSearchDraft(''); }}>Clear filters</button>}</div><div className="ast-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button></div></div>
-
-      {query.isError && !query.data ? <div className="ast-inline-state" role="alert"><AlertTriangle size={26} /><strong>{forbidden ? 'Asset inventory access denied' : 'Asset inventory unavailable'}</strong><span>{forbidden ? 'Your current role or tenant scope does not permit this inventory.' : errorMessage}</span>{!forbidden && <button type="button" onClick={() => query.refetch()}>Retry inventory</button>}</div> : !query.isLoading && rows.length === 0 ? <div className="ast-inline-state" role="status"><ShieldCheck size={26} /><strong>{hasFilters ? 'No assets match these filters' : 'No assets discovered'}</strong><span>{hasFilters ? 'Clear filters or broaden the authorized scope.' : 'Deploy a sensor or connect an authorized discovery source to build the inventory.'}</span>{hasFilters && <button type="button" onClick={() => { selectView('all'); setRisk('all'); setExposure('all'); setSensor('all'); setSearch(''); setSearchDraft(''); }}>Clear filters</button>}</div> : <main className="ast-grid-wrap"><SiemDataGrid ref={gridRef} className="response-grid ast-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} loading={query.isLoading} rowSelection="single" suppressRowClickSelection={false} onRowClicked={(event: RowClickedEvent) => setSelectedAsset(event.data as AssetDTO)} getRowId={(params) => String((params.data as AssetDTO).id)} defaultColDef={{ filter: false }} ariaLabel="Asset intelligence inventory" /></main>}
+      {query.isError && !query.data ? <div className="ast-inline-state" role="alert"><AlertTriangle size={26} /><strong>{forbidden ? 'Asset inventory access denied' : 'Asset inventory unavailable'}</strong><span>{forbidden ? 'Your current role or tenant scope does not permit this inventory.' : errorMessage}</span>{!forbidden && <button type="button" onClick={() => query.refetch()}>Retry inventory</button>}</div> : !query.isLoading && rows.length === 0 && hasFilters ? <div className="ast-inline-state" role="status"><ShieldCheck size={26} /><strong>No assets match these filters</strong><span>Clear filters or broaden the authorized scope.</span><button type="button" onClick={() => { selectView('all'); setRisk('all'); setExposure('all'); setSensor('all'); setSearch(''); setSearchDraft(''); }}>Clear filters</button></div> : !showEmptyHonesty ? <main className="ast-inventory"><div className="ast-grid-wrap"><SiemDataGrid ref={gridRef} className="response-grid ast-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} loading={query.isLoading} rowSelection="single" suppressRowClickSelection={false} onRowClicked={(event: RowClickedEvent) => setSelectedAsset(event.data as AssetDTO)} getRowId={(params) => String((params.data as AssetDTO).id)} defaultColDef={{ filter: false }} ariaLabel="Posture asset inventory" /></div></main> : null}
 
       <footer className="ast-pagination" aria-label="Asset inventory pagination"><span>{query.data?.totalElements.toLocaleString() ?? 0} matching assets</span><span>Page {page + 1} of {Math.max(1, query.data?.totalPages ?? 1)} · up to {PAGE_SIZE} rows</span><div><button type="button" disabled={page === 0 || query.isFetching} onClick={() => { setPage((value) => Math.max(0, value - 1)); setActiveIndex(0); }}><ChevronLeft size={13} />Previous</button><button type="button" disabled={!query.data?.hasMore || !query.data.nextCursor || query.isFetching} onClick={() => { const nextCursor = query.data?.nextCursor; if (!nextCursor) return; setPageCursors((current) => { const next = current.slice(0, page + 1); next[page + 1] = nextCursor; return next; }); setPage((value) => value + 1); setActiveIndex(0); }}>Next<ChevronRight size={13} /></button></div></footer>
       <StatusDock className="ast-status" sseConnected={assetFixtureMode || epsStream.connected} eps={assetFixtureMode ? 12840 : epsStream.eps} mode={assetFixtureMode ? 'historical' : 'live'} lastUpdated={query.dataUpdatedAt ? new Date(query.dataUpdatedAt) : undefined} />

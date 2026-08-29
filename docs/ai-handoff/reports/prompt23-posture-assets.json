@@ -1,0 +1,103 @@
+{
+  "prompt": "23-posture-assets-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "18ac487",
+  "based_on_main_includes_pr22": true,
+  "decision": "RESTRUCTURE",
+  "routes": ["/posture/assets"],
+  "job_sentence": "Posture asset inventory — review discovered hosts, risk scores, exposure, and sensor coverage across authorized tenants. Entity dossiers live on Entities; fleet enrollment lives on Sensors.",
+  "distinction": {
+    "assets": "/posture/assets = posture asset inventory — risk, exposure, sensor coverage (this slice)",
+    "entities": "/entities = entity dossier + behavioral risk — different API/shape",
+    "sensors": "/posture/sensors = agent fleet admin (enroll, packages)",
+    "endpoints": "/edr/endpoints = per-host timeline workbench",
+    "exposure": "/posture/exposure = attack-path / exposure analysis (Prompt 26)",
+    "vulnerabilities": "/posture/vulnerabilities = vuln findings inventory (Prompt 25)",
+    "identities": "/posture/identities = identity security posture (Prompt 24)"
+  },
+  "ia": {
+    "posture_assets": {
+      "removed": [
+        "Hero .ast-summary 6-tile KPI strip",
+        "Legacy Posture & exposure eyebrow and Asset Intelligence title",
+        "Raw <a href> header and drawer cross-links",
+        "Separate ast-warning partial-failure banner"
+      ],
+      "added": [
+        "POSTURE_ASSETS_JOB_SENTENCE + STAGING CANDIDATE badge (POSTURE eyebrow)",
+        "Meta cross-links: Mission Control · Sensors · Entities · Exposure · Vulnerabilities · Identities (Link + ROUTES)",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator (nav also allows SOC Analyst — omitted from nav copy per Wave A3 pattern)",
+        "Empty-inventory honesty banner (assets-empty-honesty) distinct from filter-empty and API error",
+        "Grid workspace min-height 50vh (.ast-inventory)",
+        "Compact inline stats in results toolbar (.ast-inline-stats) when summary exists",
+        "Partial-failure / stale projection folded into ast-page__projection-note",
+        "AssetsUxHonesty.sourceScan.test.ts",
+        "ROUTES.VULNERABILITIES constant"
+      ],
+      "kept": [
+        "Category tabs (all · endpoint · server · cloud · network · IoT/OT · unknown)",
+        "Compact filters: risk · exposure · sensor coverage · search",
+        "AG Grid inventory, cursor pagination, row density, J/K/Enter/ shortcuts",
+        "Asset drawer tabs: overview · risk · coverage · activity",
+        "assetFixtureMode dev-only",
+        "Drawer pivots to vulnerabilities/exposure (as Link)"
+      ],
+      "forbidden": [
+        "GET /api/ha-network-scans/*",
+        "GET /api/ha-clients as production inventory path",
+        "Fake risk/exposure scores when API returns null"
+      ]
+    }
+  },
+  "backend": {
+    "assets_list": {
+      "path": "GET /api/ha-assets?limit=5&page=0",
+      "auth": "ROLE_ANALYST | ROLE_SOC_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN",
+      "staging": {
+        "http": 200,
+        "body_bytes": 2981,
+        "total_elements": 1,
+        "note": "Populated staging tenant — 1 asset (id=1); not ASSETS-EMPTY-STAGING"
+      }
+    },
+    "assets_detail": {
+      "path": "GET /api/ha-assets/{id}",
+      "staging": {
+        "id": 1,
+        "http": 200,
+        "body_bytes": 1593
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist build contains POSTURE_ASSETS_JOB_SENTENCE, STAGING CANDIDATE, assets-empty-honesty, Analyst · SOC Manager · Platform Administrator",
+    "ui_shell": {
+      "path": "/posture/assets",
+      "staging_https": "api_probed_admin_jwt_ok",
+      "fe_deploy": "not_run_local_build_only"
+    },
+    "headed_browser": false,
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_mission_control_sensors_entities_exposure_vulns_identities", "result": "pass" },
+      { "item": "empty_inventory_honesty_banner_wired", "result": "pass" },
+      { "item": "api_error_distinct_from_empty_inventory", "result": "pass" },
+      { "item": "filter_empty_distinct_from_empty_inventory", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_summary_exists", "result": "pass" },
+      { "item": "inventory_min_height_50vh", "result": "pass" },
+      { "item": "drawer_pivots_use_link_routes", "result": "pass" },
+      { "item": "staging_api_ha_assets_list", "result": "pass", "http": 200 },
+      { "item": "staging_api_ha_assets_detail", "result": "pass", "http": 200 }
+    ]
+  },
+  "gates": {
+    "lint": "pass slice files (0 errors); repo lint 5 pre-existing warnings unrelated to this slice",
+    "type_check": "pass",
+    "vitest_assets_slice": "pass (17)",
+    "build": "pass"
+  },
+  "next_recommended": "/posture/identities (Prompt 24)",
+  "handoff_at": "2026-08-29T22:20:00+05:30"
+}
