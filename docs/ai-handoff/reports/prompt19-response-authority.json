@@ -1,0 +1,111 @@
+{
+  "prompt": "19-response-authority-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "40f757f",
+  "based_on_main_includes_pr18": true,
+  "decision": "RESTRUCTURE",
+  "routes": ["/response/authority"],
+  "job_sentence": "Response approval queue — review blast radius and record approve/reject decisions for governed playbook actions. Execution history lives on Response Activity; policy authoring is not available yet.",
+  "distinction": {
+    "playbooks": "/response/playbooks = SOAR playbook inventory + governed execute (Prompt 17)",
+    "activity": "/response/activity = execution history ledger (Prompt 18)",
+    "authority": "/response/authority = human approval queue (this slice)",
+    "detection_rules": "/detection-rules = detection content manager",
+    "incidents": "/incidents = owned response cases"
+  },
+  "ia": {
+    "response_authority": {
+      "removed": [
+        "Hero 6-tile .gov-summary KPI strip",
+        "Full-width RESP-020 technical banner stack",
+        "Legacy eyebrow Response automation / title Response Governance"
+      ],
+      "added": [
+        "RESPONSE_AUTHORITY_JOB_SENTENCE + STAGING CANDIDATE badge",
+        "Meta links: Mission Control · Response Playbooks · Response Activity · Detection Rules · Incidents",
+        "Human role access note: SOC Manager · Platform Administrator (ROLE_ANALYST API note)",
+        "Empty-queue honesty banner (authority-empty-honesty)",
+        "Compact inline summary stats in results toolbar (when data exists)",
+        "Approval grid min-height 50vh (.gov-inventory)",
+        "canDecide ADMIN-only gate in ApprovalDrawer",
+        "Policy tab empty honesty when !RESP_020_GOVERNANCE",
+        "ResponseAuthorityUxHonesty.sourceScan.test.ts"
+      ],
+      "kept": [
+        "GET /api/ha-response-governance/approvals projection (RESP-020)",
+        "POST /api/ha-response-governance/approvals/{id}/decision bridge",
+        "Tabs: Approval queue · Decision history · Authority policy",
+        "Compact filters: state · risk · search; J/K/Enter keyboard nav",
+        "ApprovalDrawer blast-radius review, evidence, approval path, mandatory rationale",
+        "Cross-links to playbook, alert, incident, activity execution",
+        "fixtureMode dev-only",
+        "Editor routes fail-closed when !RESP_020_GOVERNANCE"
+      ]
+    }
+  },
+  "backend": {
+    "approvals": {
+      "path": "GET /api/ha-response-governance/approvals?limit=5",
+      "auth": "ROLE_ADMIN | ROLE_SOC_MANAGER | ROLE_ANALYST",
+      "staging": {
+        "http": 200,
+        "body_bytes": 869
+      }
+    },
+    "approvals_pending": {
+      "path": "GET /api/ha-response-governance/approvals?state=PENDING&limit=5",
+      "auth": "ROLE_ADMIN | ROLE_SOC_MANAGER | ROLE_ANALYST",
+      "staging": {
+        "http": 200,
+        "body_bytes": 869
+      }
+    },
+    "decision": {
+      "path": "POST /api/ha-response-governance/approvals/{id}/decision",
+      "auth": "ROLE_ADMIN",
+      "staging": {
+        "probed": false,
+        "note": "Not probed — no safe pending item to mutate on staging"
+      }
+    },
+    "executions_awaiting_approval": {
+      "path": "GET /api/ha-playbooks/executions?status=AWAITING_APPROVAL&limit=5",
+      "auth": "ROLE_ADMIN | ROLE_SOC_MANAGER | ROLE_ANALYST | ROLE_USER",
+      "staging": {
+        "http": 200,
+        "body_bytes": 175
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist build contains Response approval queue, STAGING CANDIDATE, authority-empty-honesty, Platform Administrator",
+    "ui_shell": {
+      "path": "/response/authority",
+      "staging_https": "api_probed_admin_jwt_ok",
+      "fe_deploy": "not_run_local_build_only"
+    },
+    "headed_browser": false,
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_playbooks_activity_detection_incidents", "result": "pass" },
+      { "item": "empty_queue_honesty_banner_wired", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_data_exists", "result": "pass" },
+      { "item": "canDecide_gates_approve_reject", "result": "pass" },
+      { "item": "policy_tab_empty_honesty", "result": "pass" },
+      { "item": "grid_min_height_50vh", "result": "pass" },
+      { "item": "staging_api_approvals_list", "result": "pass", "http": 200 },
+      { "item": "staging_api_approvals_pending", "result": "pass", "http": 200 },
+      { "item": "staging_api_executions_awaiting", "result": "pass", "http": 200 }
+    ]
+  },
+  "gates": {
+    "lint": "pass (5 pre-existing warnings, 0 errors)",
+    "type_check": "pass",
+    "vitest_response_slice": "pass (127)",
+    "build": "pass"
+  },
+  "next_recommended": "/response/quarantine (Prompt 20)",
+  "handoff_at": "2026-08-29T19:05:00+05:30"
+}

@@ -35,8 +35,11 @@ describe('Wave A3 Defend/respond honesty', () => {
     expect(page).toContain('STAGING CANDIDATE');
     expect(page).toContain('activity-empty-honesty');
     const authority = readFileSync(join(process.cwd(), 'src/pages/response/ResponseAuthorityPage.tsx'), 'utf8');
+    expect(authority).toContain('RESPONSE_AUTHORITY_JOB_SENTENCE');
     expect(authority).toContain('RESP_020_APPROVAL_PROJECTION_TITLE');
     expect(authority).toContain('STAGING CANDIDATE');
+    expect(authority).toContain('authority-empty-honesty');
+    expect(authority).toContain('canDecide');
   });
 
   it('A3-PB-01: playbook mutate UI is Admin-only (canManage)', () => {
