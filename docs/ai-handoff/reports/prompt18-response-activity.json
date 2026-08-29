@@ -1,0 +1,112 @@
+{
+  "prompt": "18-response-activity-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "9e75068",
+  "based_on_main_includes_pr17": true,
+  "decision": "RESTRUCTURE",
+  "routes": ["/response/activity"],
+  "job_sentence": "Playbook execution ledger — review run history, step traces, and approval pauses. Author playbooks on Response Playbooks; decide approvals on Response Approvals.",
+  "distinction": {
+    "playbooks": "/response/playbooks = SOAR playbook inventory + governed execute (Prompt 17)",
+    "activity": "/response/activity = execution history ledger (this slice)",
+    "authority": "/response/authority = approval projection / governance (Prompt 19)",
+    "detection_rules": "/detection-rules = detection content manager",
+    "incidents": "/incidents = owned response cases"
+  },
+  "ia": {
+    "response_activity": {
+      "removed": [
+        "Hero 6-tile .act-summary KPI strip",
+        "Full-width RESP-018 technical banner stack",
+        "Legacy eyebrow Response automation"
+      ],
+      "added": [
+        "RESPONSE_ACTIVITY_JOB_SENTENCE + STAGING CANDIDATE badge",
+        "Meta links: Mission Control · Response Playbooks · Response Approvals · Detection Rules · Incidents",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator (ROLE_USER documented)",
+        "Empty-window honesty banner (activity-empty-honesty)",
+        "Compact inline summary stats in results toolbar (when data exists)",
+        "Execution grid min-height 50vh (.act-inventory)",
+        "Drawer approve/reject for AWAITING_APPROVAL (ADMIN only)",
+        "ResponseActivityUxHonesty.sourceScan.test.ts"
+      ],
+      "kept": [
+        "GET /api/ha-playbooks/executions inventory (RESP-018)",
+        "GET /api/ha-playbooks/executions/summary for inline stats",
+        "GET /api/ha-playbooks/executions/{id}/trace drawer trace tab",
+        "Compact filters: status · trigger · time window · search",
+        "AG Grid via SiemDataGrid + cursor pagination + row density",
+        "Detail drawer overview / trace / audit tabs + J/K/Enter/ shortcuts",
+        "Link pivots to playbook, alert, incident, authority approval ref",
+        "Fixture mode dev-only (VITE_USE_FOUNDATION_FIXTURES)",
+        "Stale/partial snapshot warning",
+        "Production export disabled — fixture export dev-only"
+      ]
+    }
+  },
+  "backend": {
+    "executions": {
+      "path": "GET /api/ha-playbooks/executions?limit=5",
+      "auth": "ROLE_ADMIN | ROLE_SOC_MANAGER | ROLE_ANALYST | ROLE_USER",
+      "staging": {
+        "http": 200,
+        "body_bytes": 761
+      }
+    },
+    "executions_summary": {
+      "path": "GET /api/ha-playbooks/executions/summary",
+      "auth": "ROLE_ADMIN | ROLE_SOC_MANAGER | ROLE_ANALYST | ROLE_USER",
+      "staging": {
+        "http": 200,
+        "body_bytes": 274
+      }
+    },
+    "execution_trace": {
+      "path": "GET /api/ha-playbooks/executions/{id}/trace",
+      "auth": "ROLE_ADMIN | ROLE_SOC_MANAGER | ROLE_ANALYST | ROLE_USER",
+      "staging": {
+        "http": 200,
+        "body_bytes": 570,
+        "sample_id": "4a48382c-176f-42c5-9971-ea1385af0b91"
+      }
+    },
+    "cancel": {
+      "path": "DELETE /api/ha-playbooks/{executionId}",
+      "auth": "ROLE_ADMIN",
+      "staging": {
+        "probed": false,
+        "note": "Not probed — no destructive cancel on staging runs"
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist build contains Playbook execution ledger, STAGING CANDIDATE, activity-empty-honesty, Platform Administrator",
+    "ui_shell": {
+      "path": "/response/activity",
+      "staging_https": "api_probed_admin_jwt_ok",
+      "fe_deploy": "not_run_local_build_only"
+    },
+    "headed_browser": false,
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_playbooks_authority_detection_incidents", "result": "pass" },
+      { "item": "empty_inventory_honesty_banner_wired", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_data_exists", "result": "pass" },
+      { "item": "canAdmin_gates_cancel_approve", "result": "pass" },
+      { "item": "grid_min_height_50vh", "result": "pass" },
+      { "item": "staging_api_executions_list", "result": "pass", "http": 200 },
+      { "item": "staging_api_executions_summary", "result": "pass", "http": 200 },
+      { "item": "staging_api_execution_trace", "result": "pass", "http": 200 }
+    ]
+  },
+  "gates": {
+    "lint_changed": "pass",
+    "type_check": "pass",
+    "vitest_response_slice": "pass (121)",
+    "build": "pass"
+  },
+  "next_recommended": "/response/authority (Prompt 19)",
+  "handoff_at": "2026-08-29T18:45:00+05:30"
+}
