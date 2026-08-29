@@ -26,6 +26,7 @@
 import React from 'react';
 
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { FileQuarantinePage } from './FileQuarantinePage';
@@ -205,7 +206,11 @@ function makeRow(overrides: Partial<QuarantinedFileDTO> = {}): QuarantinedFileDT
 // ---------------------------------------------------------------------------
 
 function renderPage() {
-  return render(<FileQuarantinePage />);
+  return render(
+    <MemoryRouter>
+      <FileQuarantinePage />
+    </MemoryRouter>,
+  );
 }
 
 // ---------------------------------------------------------------------------

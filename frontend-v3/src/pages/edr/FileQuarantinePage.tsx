@@ -13,7 +13,6 @@ import { Alert } from '@patternfly/react-core';
 import type { ColDef, ICellRendererParams, RowClickedEvent } from 'ag-grid-community';
 import type { AgGridReact } from 'ag-grid-react';
 import {
-  Activity,
   AlignJustify,
   AlertTriangle,
   ArchiveRestore,
@@ -24,7 +23,6 @@ import {
   Copy,
   ExternalLink,
   FileArchive,
-  FileClock,
   FileWarning,
   Filter,
   History,
@@ -40,17 +38,26 @@ import {
   Trash2,
   Workflow,
 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { AccessDeniedState } from '@/components/access-denied-state/AccessDeniedState';
+import { HaButton } from '@/components/ha-button/HaButton';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock/StatusDock';
+import { ROUTES } from '@/constants/routes.constants';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useIsolatedHosts, useQuarantineBulkAction, useQuarantineAction, useQuarantinedFiles } from '@/hooks/useQuarantine';
 import { useRowDensity, type RowDensity } from '@/hooks/useRowDensity';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
+import {
+  QUARANTINE_MUTATE_DENIED_TITLE,
+  RESP_021_ISOLATION_INVENTORY,
+  RESP_021_ISOLATION_MUTATE,
+  RESP_021_ISOLATION_PROJECTION_TITLE,
+} from '@/pages/response/response.capabilities';
 import { fixtureMode } from '@/pages/response/responsePlaybooks.service';
 import { useAuthStore } from '@/store/auth.store';
 import type { IsolatedHostDTO, QuarantinedFileDTO } from '@/types/edr';
@@ -60,6 +67,10 @@ import '../response/response-grid-standard.css';
 
 /** Matches nav + HaEdrResource quarantine PreAuthorize (not legacy /api/edr/*). */
 const QUARANTINE_ACCESS_ROLES = ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] as const;
+
+/** Bundle-visible job sentence — containment inventory, not playbooks or approvals. */
+export const QUARANTINE_CONTAINMENT_JOB_SENTENCE =
+  'Quarantine and containment inventory — review isolated files and host isolation state, then restore or delete preserved files when authorized. SOAR orchestration lives on Response Playbooks; approvals live on Response Approvals.';
 
 const PAGE_SIZE = 25;
 type WorkspaceView = 'files' | 'endpoints';
@@ -134,26 +145,29 @@ interface RowActionsProps {
   row: QuarantinedFileDTO;
   onRestore: (row: QuarantinedFileDTO) => void;
   onDelete: (row: QuarantinedFileDTO) => void;
+  canMutate: boolean;
 }
 
-function RowActions({ row, onRestore, onDelete }: RowActionsProps): JSX.Element {
-  const disabled = !fileActionEligible(row);
+function RowActions({ row, onRestore, onDelete, canMutate }: RowActionsProps): JSX.Element {
+  const disabled = !canMutate || !fileActionEligible(row);
+  const denyTitle = canMutate ? undefined : QUARANTINE_MUTATE_DENIED_TITLE;
   return (
     <div className="qrn-row-actions" onClick={(event) => event.stopPropagation()}>
-      <button type="button" onClick={() => onRestore(row)} disabled={disabled} aria-label={`Restore ${row.filename}`} title="Request governed restore"><ArchiveRestore size={13} /></button>
-      <button type="button" onClick={() => onDelete(row)} disabled={disabled} aria-label={`Delete ${row.filename}`} title="Permanently delete"><Trash2 size={13} /></button>
+      <button type="button" onClick={() => onRestore(row)} disabled={disabled} aria-label={`Restore ${row.filename}`} title={denyTitle ?? 'Request governed restore'}><ArchiveRestore size={13} /></button>
+      <button type="button" onClick={() => onDelete(row)} disabled={disabled} aria-label={`Delete ${row.filename}`} title={denyTitle ?? 'Permanently delete'}><Trash2 size={13} /></button>
     </div>
   );
 }
 
-function FileDrawer({ row, onClose, onRestore, onDelete }: {
+function FileDrawer({ row, onClose, onRestore, onDelete, canMutate }: {
   row: QuarantinedFileDTO;
   onClose: () => void;
   onRestore: (row: QuarantinedFileDTO) => void;
   onDelete: (row: QuarantinedFileDTO) => void;
+  canMutate: boolean;
 }): JSX.Element {
   const [view, setView] = useState<FileDetailView>('overview');
-  const eligible = fileActionEligible(row);
+  const eligible = canMutate && fileActionEligible(row);
   const detailViews: FileDetailView[] = ['overview', 'evidence', 'history'];
   const handleTabKey = (event: ReactKeyboardEvent<HTMLButtonElement>, current: FileDetailView) => {
     const currentIndex = detailViews.indexOf(current);
@@ -208,10 +222,10 @@ function FileDrawer({ row, onClose, onRestore, onDelete }: {
             <div className="qrn-copy-value"><code>{row.sha256Hash ?? 'Not reported'}</code><button type="button" onClick={() => copyText(row.sha256Hash)} aria-label="Copy SHA-256"><Copy size={13} /></button></div>
           </section>
           <div className="qrn-pivots">
-            <a href={`/search?query=${encodeURIComponent(row.sha256Hash ? `file.hash.sha256:"${row.sha256Hash}"` : `file.name:"${row.filename}"`)}`}><Search size={13} />Hunt file observations<ExternalLink size={11} /></a>
-            <a href={`/entities/${encodeURIComponent(row.agentId)}`}><Laptop size={13} />Open endpoint dossier<ExternalLink size={11} /></a>
-            {row.linkedAlertId && <a href={`/alerts/${encodeURIComponent(row.linkedAlertId)}`}><ShieldAlert size={13} />Open {row.linkedAlertId}<ExternalLink size={11} /></a>}
-            {row.linkedIncidentId && <a href={`/incidents/${encodeURIComponent(row.linkedIncidentId)}`}><Workflow size={13} />Open {row.linkedIncidentId}<ExternalLink size={11} /></a>}
+            <Link to={`${ROUTES.SEARCH}?query=${encodeURIComponent(row.sha256Hash ? `file.hash.sha256:"${row.sha256Hash}"` : `file.name:"${row.filename}"`)}`}><Search size={13} />Hunt file observations<ExternalLink size={11} /></Link>
+            <Link to={`${ROUTES.ENTITIES}/${encodeURIComponent(row.agentId)}`}><Laptop size={13} />Open endpoint dossier<ExternalLink size={11} /></Link>
+            {row.linkedAlertId && <Link to={`${ROUTES.ALERTS}/${encodeURIComponent(row.linkedAlertId)}`}><ShieldAlert size={13} />Open {row.linkedAlertId}<ExternalLink size={11} /></Link>}
+            {row.linkedIncidentId && <Link to={`${ROUTES.INCIDENTS}/${encodeURIComponent(row.linkedIncidentId)}`}><Workflow size={13} />Open {row.linkedIncidentId}<ExternalLink size={11} /></Link>}
           </div>
         </div>}
 
@@ -244,6 +258,7 @@ function EndpointContainmentPanel({ density, search, status, page, onPageChange 
   page: number;
   onPageChange: (page: number) => void;
 }): JSX.Element {
+  const navigate = useNavigate();
   const [selected, setSelected] = useState<IsolatedHostDTO | null>(null);
   const [releaseReview, setReleaseReview] = useState<IsolatedHostDTO | null>(null);
   const query = useMemo(
@@ -339,7 +354,7 @@ function EndpointContainmentPanel({ density, search, status, page, onPageChange 
         <span>{formatFreshnessLabel(data?.snapshotAt, data?.asOf, dataUpdatedAt)}</span>
         <small>STAGING CANDIDATE · page read time, not cursor/PIT-bound</small>
       </div>
-      <main className="qrn-grid-wrap">
+      <main className="qrn-grid-wrap qrn-grid-wrap--inventory">
         <SiemDataGrid
           className="response-grid qrn-grid"
           columnDefs={columns}
@@ -380,13 +395,14 @@ function EndpointContainmentPanel({ density, search, status, page, onPageChange 
           width={500}
           footer={(
             <>
-              <a className="qrn-drawer-button" href={`/entities/${encodeURIComponent(selected.agentId)}`}>
+              <Link className="qrn-drawer-button" to={`${ROUTES.ENTITIES}/${encodeURIComponent(selected.agentId)}`}>
                 <Laptop size={13} />Open endpoint dossier
-              </a>
+              </Link>
               <button
                 className="qrn-drawer-button"
                 type="button"
-                disabled={selected.status !== 'ACTIVE'}
+                disabled={selected.status !== 'ACTIVE' || !RESP_021_ISOLATION_MUTATE}
+                title={RESP_021_ISOLATION_MUTATE ? undefined : RESP_021_ISOLATION_PROJECTION_TITLE}
                 onClick={() => setReleaseReview(selected)}
               >
                 <ArchiveRestore size={13} />Review release
@@ -458,7 +474,7 @@ function EndpointContainmentPanel({ density, search, status, page, onPageChange 
         cancelLabel="Keep isolated"
         onConfirm={() => {
           if (!releaseReview) return;
-          window.location.assign(`/response/authority?search=${encodeURIComponent(releaseReview.hostname ?? releaseReview.agentId)}`);
+          navigate(`${ROUTES.RESPONSE_AUTHORITY}?search=${encodeURIComponent(releaseReview.hostname ?? releaseReview.agentId)}`);
         }}
         onCancel={() => setReleaseReview(null)}
       />
@@ -488,6 +504,7 @@ export function FileQuarantinePage(): JSX.Element {
 }
 
 function FileQuarantineContent(): JSX.Element {
+  const canMutate = useAuthStore((state) => state.hasAnyRole([...QUARANTINE_ACCESS_ROLES]));
   const gridRef = useRef<AgGridReact>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const [view, setView] = useState<WorkspaceView>('files');
@@ -559,12 +576,14 @@ function FileQuarantineContent(): JSX.Element {
     { field: 'quarantineTime', headerName: 'Quarantined', width: 128, valueFormatter: ({ value }: { value: string }) => formatTimestamp(value) },
     { field: 'status', headerName: 'State', width: 118, cellRenderer: ({ data: row }: ICellRendererParams<QuarantinedFileDTO>) => row ? <FileState status={row.status} /> : null },
     { field: 'actionState', headerName: 'Delivery', width: 94, cellRenderer: ({ data: row }: ICellRendererParams<QuarantinedFileDTO>) => <span className="qrn-delivery" data-state={row?.actionState ?? 'unknown'}><span />{row?.actionState ?? 'unknown'}</span> },
-    { headerName: 'Actions', colId: 'actions', width: 82, sortable: false, resizable: false, suppressHeaderMenuButton: true, cellRenderer: ({ data: row }: ICellRendererParams<QuarantinedFileDTO>) => row ? <RowActions row={row} onRestore={requestRestore} onDelete={requestDelete} /> : null },
-  ], [requestDelete, requestRestore]);
+    { headerName: 'Actions', colId: 'actions', width: 82, sortable: false, resizable: false, suppressHeaderMenuButton: true, cellRenderer: ({ data: row }: ICellRendererParams<QuarantinedFileDTO>) => row ? <RowActions row={row} canMutate={canMutate} onRestore={requestRestore} onDelete={requestDelete} /> : null },
+  ], [canMutate, requestDelete, requestRestore]);
 
   const visibleActive = rows.filter((row) => row.status === 'quarantined').length;
-  const visibleMalicious = rows.filter((row) => row.verdict === 'malicious').length;
   const visiblePending = rows.filter((row) => row.actionState === 'pending' || row.actionState === 'failed').length;
+  const hasFilters = status !== 'all' || verdict !== 'all' || search.trim().length > 0;
+  const filesEmptyHonesty = !isLoading && !isError && view === 'files' && (data?.totalElements ?? 0) === 0 && !hasFilters;
+  const showInlineStats = view === 'files' && (data?.totalElements ?? 0) > 0;
   const errorMessage = error instanceof Error ? error.message : 'An error occurred while loading quarantined files.';
   const eligibleSelectedRows = selectedRows.filter(fileActionEligible);
   const actionTitle = pendingAction?.action === 'restore' ? 'Restore quarantined file?' : 'Permanently delete preserved file?';
@@ -579,21 +598,60 @@ function FileQuarantineContent(): JSX.Element {
 
   return (
     <section className="qrn-page" data-fixture={fixtureMode || undefined} aria-label="Quarantine and containment">
-      <header className="qrn-header">
-        <div className="qrn-header__identity"><span className="qrn-header__mark"><ShieldOff size={19} /></span><div><span>Response automation</span><h1>Quarantine &amp; Containment</h1></div></div>
-        <div className="qrn-header__actions"><span className="qrn-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect</span><a href="/response/playbooks"><Workflow size={13} />Playbooks</a><a href="/response/activity"><Activity size={13} />Activity</a><a href="/response/authority"><LockKeyhole size={13} />Approvals</a><button type="button" onClick={() => refetch()} disabled={isFetching} aria-label="Refresh quarantine"><RefreshCw size={14} className={isFetching ? 'qrn-spin' : undefined} /></button></div>
+      <header className="qrn-page__identity">
+        <span className="qrn-page__icon"><ShieldOff size={20} aria-hidden="true" /></span>
+        <div className="qrn-page__title">
+          <div className="qrn-page__eyebrow">
+            <small>RESPOND</small>
+            <span className="qrn-page__badge">STAGING CANDIDATE</span>
+          </div>
+          <h1>Quarantine &amp; Containment</h1>
+          <p className="qrn-page__job">{QUARANTINE_CONTAINMENT_JOB_SENTENCE}</p>
+          {!fixtureMode && RESP_021_ISOLATION_INVENTORY && !RESP_021_ISOLATION_MUTATE && (
+            <p className="qrn-page__projection-note" role="note">{RESP_021_ISOLATION_PROJECTION_TITLE}</p>
+          )}
+        </div>
+        <div className="qrn-page__identity-actions">
+          <span className="qrn-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect <kbd>/</kbd> search</span>
+          <HaButton variant="plain" onClick={() => refetch()} isDisabled={isFetching} icon={<RefreshCw size={14} className={isFetching ? 'qrn-spin' : undefined} />} aria-label="Refresh quarantine inventory" />
+        </div>
       </header>
-      {fixtureMode && <div className="qrn-fixture"><strong>Design fixture:</strong> fictional quarantine and containment records are enabled for visual review.<span>Production never receives these records.</span></div>}
-      <section className="qrn-summary" aria-label="Quarantine health summary">
-        <div><span><FileArchive size={13} />Inventory</span><strong>{data?.totalElements.toLocaleString() ?? '—'}</strong><small>authorized file records</small></div>
-        <div data-tone="danger"><span><ShieldAlert size={13} />Malicious</span><strong>{visibleMalicious}</strong><small>on loaded page</small></div>
-        <div data-tone="warning"><span><ShieldOff size={13} />Active quarantine</span><strong>{visibleActive}</strong><small>on loaded page</small></div>
-        <div data-tone="warning"><span><FileClock size={13} />Needs attention</span><strong>{visiblePending}</strong><small>pending or failed on page</small></div>
-        <div data-tone="positive"><span><ShieldCheck size={13} />Connector health</span><strong>{rows.filter((row) => row.connectorState === 'healthy').length}</strong><small>{rows.filter((row) => row.connectorState !== 'healthy').length} degraded on page</small></div>
-        <div><span><Clock3 size={13} />Freshness</span><strong>{data?.snapshotAt ? 'Server' : dataUpdatedAt ? 'Client' : '—'}</strong><small>{data?.snapshotAt ? formatFreshnessLabel(data.snapshotAt, data.asOf) : dataUpdatedAt ? `updated ${new Date(dataUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'awaiting snapshot'}</small></div>
-      </section>
+
+      <p className="qrn-page__meta">
+        <Link to={ROUTES.DASHBOARD}>Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.RESPONSE_PLAYBOOKS}>Response Playbooks</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.RESPONSE_ACTIVITY}>Response Activity</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.RESPONSE_AUTHORITY}>Response Approvals</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.EDR_ENDPOINTS}>Endpoints</Link>
+        <span aria-hidden="true">·</span>
+        <span className="qrn-page__access">Analyst · SOC Manager · Platform Administrator</span>
+      </p>
+
+      {fixtureMode && (
+        <div className="qrn-page__fixture" role="status">
+          <span><strong>Design fixture:</strong> fictional quarantine and containment records are enabled for visual review.</span>
+          <span>Production never receives these records.</span>
+        </div>
+      )}
+
+      {filesEmptyHonesty && (
+        <div className="qrn-page__honesty" role="status" data-testid="quarantine-empty-honesty">
+          <strong>No quarantined files in inventory.</strong>
+          <span>
+            Files preserved by HiveArmor agents appear here when quarantine actions complete. Empty inventory does not imply platform health — operational counts are not shown until records exist.
+          </span>
+        </div>
+      )}
+
       <section className="qrn-operations">
-        <nav className="qrn-tabs" aria-label="Quarantine workspace views" role="tablist"><button id="qrn-workspace-tab-files" type="button" role="tab" aria-selected={view === 'files'} aria-controls="qrn-workspace-panel-files" tabIndex={view === 'files' ? 0 : -1} data-active={view === 'files'} onClick={() => setView('files')} onKeyDown={(event) => { if (event.key === 'ArrowRight' || event.key === 'End') { event.preventDefault(); setView('endpoints'); document.getElementById('qrn-workspace-tab-endpoints')?.focus(); } }}><FileArchive size={13} />Quarantined files <span>{data?.totalElements ?? '—'}</span></button><button id="qrn-workspace-tab-endpoints" type="button" role="tab" aria-selected={view === 'endpoints'} aria-controls="qrn-workspace-panel-endpoints" tabIndex={view === 'endpoints' ? 0 : -1} data-active={view === 'endpoints'} onClick={() => setView('endpoints')} onKeyDown={(event) => { if (event.key === 'ArrowLeft' || event.key === 'Home') { event.preventDefault(); setView('files'); document.getElementById('qrn-workspace-tab-files')?.focus(); } }}><Laptop size={13} />Endpoint isolation</button></nav>
+        <nav className="qrn-tabs" aria-label="Quarantine workspace views" role="tablist">
+          <button id="qrn-workspace-tab-files" type="button" role="tab" aria-selected={view === 'files'} aria-controls="qrn-workspace-panel-files" tabIndex={view === 'files' ? 0 : -1} data-active={view === 'files'} onClick={() => setView('files')} onKeyDown={(event) => { if (event.key === 'ArrowRight' || event.key === 'End') { event.preventDefault(); setView('endpoints'); document.getElementById('qrn-workspace-tab-endpoints')?.focus(); } }}><FileArchive size={13} />Quarantined files <span>{data?.totalElements ?? '—'}</span></button>
+          <button id="qrn-workspace-tab-endpoints" type="button" role="tab" aria-selected={view === 'endpoints'} aria-controls="qrn-workspace-panel-endpoints" tabIndex={view === 'endpoints' ? 0 : -1} data-active={view === 'endpoints'} onClick={() => setView('endpoints')} onKeyDown={(event) => { if (event.key === 'ArrowLeft' || event.key === 'Home') { event.preventDefault(); setView('files'); document.getElementById('qrn-workspace-tab-files')?.focus(); } }}><Laptop size={13} />Endpoint isolation</button>
+        </nav>
         <div className="qrn-toolbar" role="toolbar" aria-label="Quarantine filters">
           <label className="qrn-search"><Search size={14} /><input ref={searchRef} type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={view === 'files' ? 'Search file, hash, endpoint, threat…' : 'Search host, agent, initiator, reason…'} aria-label={view === 'files' ? 'Search quarantined files' : 'Search host isolation'} /><kbd>/</kbd></label>
           <Filter size={13} className="qrn-filter-icon" />
@@ -611,22 +669,86 @@ function FileQuarantineContent(): JSX.Element {
         </div>
       </section>
 
-      {Boolean(isError || data?.stale || data?.partialFailures?.length) && <div className="qrn-warning" role="status"><AlertTriangle size={14} /><span>{isError ? 'Refresh failed. The file source is unavailable.' : 'Some endpoint sources are delayed; the last usable projection remains visible.'}</span><button type="button" onClick={() => refetch()}>Retry</button></div>}
+      {Boolean(isError || data?.stale || data?.partialFailures?.length) && (
+        <div className="qrn-warning" role="status">
+          <AlertTriangle size={14} />
+          <span>{isError ? 'Refresh failed. The file source is unavailable.' : 'Some endpoint sources are delayed; the last usable projection remains visible.'}</span>
+          <button type="button" onClick={() => refetch()}>Retry</button>
+        </div>
+      )}
 
-      <div className="qrn-results-toolbar"><div><strong>{view === 'files' ? 'Quarantined files' : 'Host isolation'}</strong><span>{view === 'files' ? `${rows.length} loaded · ${data?.totalElements ?? 0} total` : 'secured /api/ha-edr/isolation inventory'}</span></div><div className="qrn-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button></div></div>
+      <main className="qrn-inventory">
+        <div className="qrn-results-toolbar">
+          <div>
+            <strong>{view === 'files' ? 'Quarantined files' : 'Host isolation'}</strong>
+            <span>{view === 'files' ? `${rows.length} loaded · bounded authorized scope` : 'secured /api/ha-edr/isolation inventory'}</span>
+            {showInlineStats && (
+              <span className="qrn-inline-stats" aria-label="Quarantine inventory summary">
+                <span>{data?.totalElements.toLocaleString() ?? 0} total</span>
+                {visibleActive > 0 && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span data-tone="warning">{visibleActive} active on page</span>
+                  </>
+                )}
+                {visiblePending > 0 && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span data-tone="danger">{visiblePending} pending delivery</span>
+                  </>
+                )}
+              </span>
+            )}
+          </div>
+          <div className="qrn-density" role="group" aria-label="Row density">
+            <span>Rows</span>
+            <button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button>
+            <button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button>
+            <button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button>
+          </div>
+        </div>
 
-      {selectedRows.length > 0 && view === 'files' && <div className="qrn-selection" role="toolbar" aria-label="Selected quarantine actions"><strong>{selectedRows.length} selected</strong><span>{eligibleSelectedRows.length} eligible · actions exclude restored, deleted, pending, and offline records.</span><button type="button" disabled={!eligibleSelectedRows.length} onClick={() => setPendingAction({ kind: 'bulk', action: 'restore', ids: eligibleSelectedRows.map((row) => row.id), count: eligibleSelectedRows.length, excluded: selectedRows.length - eligibleSelectedRows.length })}><ArchiveRestore size={13} />Restore eligible</button><button type="button" disabled={!eligibleSelectedRows.length} onClick={() => setPendingAction({ kind: 'bulk', action: 'delete', ids: eligibleSelectedRows.map((row) => row.id), count: eligibleSelectedRows.length, excluded: selectedRows.length - eligibleSelectedRows.length })}><Trash2 size={13} />Delete eligible</button></div>}
+        {selectedRows.length > 0 && view === 'files' && (
+          <div className="qrn-selection" role="toolbar" aria-label="Selected quarantine actions">
+            <strong>{selectedRows.length} selected</strong>
+            <span>{eligibleSelectedRows.length} eligible · actions exclude restored, deleted, pending, and offline records.</span>
+            <button type="button" disabled={!canMutate || !eligibleSelectedRows.length} title={canMutate ? undefined : QUARANTINE_MUTATE_DENIED_TITLE} onClick={() => setPendingAction({ kind: 'bulk', action: 'restore', ids: eligibleSelectedRows.map((row) => row.id), count: eligibleSelectedRows.length, excluded: selectedRows.length - eligibleSelectedRows.length })}><ArchiveRestore size={13} />Restore eligible</button>
+            <button type="button" disabled={!canMutate || !eligibleSelectedRows.length} title={canMutate ? undefined : QUARANTINE_MUTATE_DENIED_TITLE} onClick={() => setPendingAction({ kind: 'bulk', action: 'delete', ids: eligibleSelectedRows.map((row) => row.id), count: eligibleSelectedRows.length, excluded: selectedRows.length - eligibleSelectedRows.length })}><Trash2 size={13} />Delete eligible</button>
+          </div>
+        )}
 
-      {view === 'files' ? <div id="qrn-workspace-panel-files" className="qrn-workspace-panel" role="tabpanel" aria-labelledby="qrn-workspace-tab-files">
-        {isError && !data && <div className="qrn-error"><Alert variant="danger" isInline title="Failed to load quarantined files">{errorMessage}</Alert></div>}
-        <main className="qrn-grid-wrap">
-          {!isLoading && !isError && rows.length === 0 ? <div className="qrn-inline-state" role="status" aria-label="No quarantined files"><ShieldCheck size={26} /><strong>No quarantined files found</strong><span>Files quarantined by HiveArmor agents will appear here. Clear filters or move to another page.</span></div> : <SiemDataGrid ref={gridRef} className="response-grid qrn-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} height="100%" rowSelection="multiple" suppressRowClickSelection onSelectionChanged={(selected) => setSelectedRows(selected as QuarantinedFileDTO[])} onRowClicked={(event: RowClickedEvent) => setSelectedFile(event.data as QuarantinedFileDTO)} getRowId={(params) => String((params.data as QuarantinedFileDTO).id)} loading={isLoading} defaultColDef={{ filter: false }} ariaLabel="Quarantined file inventory" />}
-        </main>
-        <footer className="qrn-pagination" aria-label="Quarantine pagination"><span>{data?.totalElements.toLocaleString() ?? 0} matching records</span><span>Page {page + 1} of {Math.max(1, data?.totalPages ?? 1)} · up to {PAGE_SIZE} rows</span><div><button type="button" disabled={page === 0} onClick={() => { setPage((value) => Math.max(0, value - 1)); setActiveIndex(0); }}><ChevronLeft size={13} />Previous</button><button type="button" disabled={!data || page + 1 >= data.totalPages} onClick={() => { setPage((value) => value + 1); setActiveIndex(0); }}>Next<ChevronRight size={13} /></button></div></footer>
-      </div> : <div id="qrn-workspace-panel-endpoints" className="qrn-workspace-panel" role="tabpanel" aria-labelledby="qrn-workspace-tab-endpoints"><EndpointContainmentPanel density={density} search={search} status={containmentStatus} page={isolationPage} onPageChange={setIsolationPage} /></div>}
+        {view === 'files' ? (
+          <div id="qrn-workspace-panel-files" className="qrn-workspace-panel" role="tabpanel" aria-labelledby="qrn-workspace-tab-files">
+            {isError && !data && <div className="qrn-error"><Alert variant="danger" isInline title="Failed to load quarantined files">{errorMessage}</Alert></div>}
+            <div className="qrn-grid-wrap qrn-grid-wrap--inventory">
+              {!isLoading && !isError && rows.length === 0 ? (
+                <div className="qrn-inline-state" role="status" aria-label="No quarantined files">
+                  <ShieldCheck size={26} />
+                  <strong>No quarantined files found</strong>
+                  <span>{hasFilters ? 'No files match the active filters. Clear filters or move to another page.' : 'Files quarantined by HiveArmor agents will appear here when endpoint quarantine actions complete.'}</span>
+                </div>
+              ) : (
+                <SiemDataGrid ref={gridRef} className="response-grid qrn-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} height="100%" rowSelection="multiple" suppressRowClickSelection onSelectionChanged={(selected) => setSelectedRows(selected as QuarantinedFileDTO[])} onRowClicked={(event: RowClickedEvent) => setSelectedFile(event.data as QuarantinedFileDTO)} getRowId={(params) => String((params.data as QuarantinedFileDTO).id)} loading={isLoading} defaultColDef={{ filter: false }} ariaLabel="Quarantined file inventory" />
+              )}
+            </div>
+            <footer className="qrn-pagination" aria-label="Quarantine pagination">
+              <span>{data?.totalElements.toLocaleString() ?? 0} matching records</span>
+              <span>Page {page + 1} of {Math.max(1, data?.totalPages ?? 1)} · up to {PAGE_SIZE} rows</span>
+              <div>
+                <button type="button" disabled={page === 0} onClick={() => { setPage((value) => Math.max(0, value - 1)); setActiveIndex(0); }}><ChevronLeft size={13} />Previous</button>
+                <button type="button" disabled={!data || page + 1 >= data.totalPages} onClick={() => { setPage((value) => value + 1); setActiveIndex(0); }}>Next<ChevronRight size={13} /></button>
+              </div>
+            </footer>
+          </div>
+        ) : (
+          <div id="qrn-workspace-panel-endpoints" className="qrn-workspace-panel" role="tabpanel" aria-labelledby="qrn-workspace-tab-endpoints">
+            <EndpointContainmentPanel density={density} search={search} status={containmentStatus} page={isolationPage} onPageChange={setIsolationPage} />
+          </div>
+        )}
+      </main>
 
       <div className="qrn-status"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={data?.snapshotAt ? new Date(data.snapshotAt) : dataUpdatedAt ? new Date(dataUpdatedAt) : undefined} /></div>
-      {selectedFile && <FileDrawer row={selectedFile} onClose={() => setSelectedFile(null)} onRestore={requestRestore} onDelete={requestDelete} />}
+      {selectedFile && <FileDrawer row={selectedFile} canMutate={canMutate} onClose={() => setSelectedFile(null)} onRestore={requestRestore} onDelete={requestDelete} />}
       <HaConfirmationModal isOpen={pendingAction !== null} title={actionTitle} message={actionMessage} confirmLabel={pendingAction?.action === 'restore' ? 'Request restore' : 'Delete permanently'} cancelLabel="Cancel" variant={pendingAction?.action === 'delete' ? 'danger' : 'primary'} onConfirm={confirmAction} onCancel={() => setPendingAction(null)} />
     </section>
   );
