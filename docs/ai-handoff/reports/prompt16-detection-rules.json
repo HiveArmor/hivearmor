@@ -1,0 +1,121 @@
+{
+  "prompt": "16-detection-rules-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "f76745c",
+  "based_on_main_includes_pr15": true,
+  "tip_sha": "f76745c+local",
+  "decision": "RESTRUCTURE",
+  "routes": [
+    "/detection-rules",
+    "/detection-rules/new",
+    "/detection-rules/:id/edit",
+    "/detection-rules/:id/test"
+  ],
+  "job_sentence": "Manage detection content inventory — review rule status, MITRE mapping, and coverage honesty, then test or activate only when authorized. Alert triage lives on Analyst Queue.",
+  "distinction": {
+    "queue": "/queue = shift triage workbench",
+    "alerts": "/alerts = full alert inventory search",
+    "correlated_findings": "/correlated-findings = offense / correlated finding queue",
+    "detection_rules": "/detection-rules = detection content manager (inventory-first)",
+    "playbooks": "/response/playbooks = SOAR orchestration (Prompt 17 next)"
+  },
+  "ia": {
+    "detection_engineering": {
+      "removed": [
+        "Six-tile KPI summary strip (healthy/degraded/coverage greens)",
+        "Health and origin filters in primary command bar",
+        "Shortcut chrome referencing rule health navigation",
+        "Fake healthy/degraded counts in live summary when backend projection is limited"
+      ],
+      "added": [
+        "DETECTION_RULES_JOB_SENTENCE + STAGING CANDIDATE badge",
+        "Meta links: Mission Control · Alerts · Correlated Findings · Playbooks",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator",
+        "Empty-inventory honesty banner (detection-empty-honesty)",
+        "Compact filters: status · severity · MITRE tactic · search",
+        "canManage gate on Create / Test / Activate with DETECTION_MANAGE_DENIED_TITLE",
+        "Rule grid min-height 50vh (.detection-inventory)"
+      ],
+      "kept": [
+        "GET /api/ha-detection-rules inventory (HaDetectionRuleResource DET-008)",
+        "Secondary tabs: Rule monitoring · ATT&CK coverage · Test console",
+        "AG Grid inventory via SiemDataGrid",
+        "Rule detail drawer with MITRE pivot to coverage tab",
+        "Sigma sync via POST /api/ha-sigma-sync/trigger (Admin)",
+        "Bulk status via POST /api/ha-detection-rules/bulk/status",
+        "Fixture mode dev-only strip",
+        "RuleEditorPage Monaco/CEL editor (unchanged this session)"
+      ]
+    }
+  },
+  "backend": {
+    "inventory": {
+      "path": "GET /api/ha-detection-rules",
+      "auth": "ALERT_QUEUE_AUTH (Analyst | SOC Manager | Admin)",
+      "staging": {
+        "note": "Staging authenticate probe failed with localdev password — bundle + Vitest source-scan used instead",
+        "expected_params": ["limit", "q", "status", "severity", "tactics", "scope", "sort", "cursor"]
+      }
+    },
+    "mutations": {
+      "activate": "POST /api/ha-detection-rules/bulk/status",
+      "delete": "POST /api/ha-detection-rules/bulk/delete",
+      "create": "POST /api/ha-detection-rules",
+      "update": "PATCH /api/ha-detection-rules/{id}",
+      "validate": "POST /api/ha-detection-rules/validate",
+      "preview": "POST /api/ha-detection-rules/preview",
+      "sigma_sync": "POST /api/ha-sigma-sync/trigger"
+    },
+    "legacy_correlation_rule": {
+      "paths": [
+        "GET /api/correlation-rule/search-by-filters",
+        "POST /api/correlation-rule/test"
+      ],
+      "note": "UtmCorrelationRulesResource YAML engine — UI inventory uses ha-detection-rules; sandbox test may call /api/ha-rules/test for Sigma YAML"
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist build contains DETECTION_RULES_JOB_SENTENCE, STAGING CANDIDATE, detection-empty-honesty, Platform Administrator",
+    "ui_shell": {
+      "path": "/detection-rules",
+      "staging_https": "not_probed_auth_failed"
+    },
+    "headed_browser": false,
+    "headed_note": "Unauthenticated staging redirect expected; Vitest source-scan + production build used",
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_alerts_findings_playbooks", "result": "pass" },
+      { "item": "empty_inventory_honesty_banner_wired", "result": "pass" },
+      { "item": "canManage_gates_create_test_activate", "result": "pass" },
+      { "item": "no_fake_health_kpi_strip", "result": "pass" },
+      { "item": "grid_min_height_50vh", "result": "pass" },
+      { "item": "staging_api_inventory", "result": "not_run", "note": "admin auth failed on 72.44.52.187 with localdev password" }
+    ]
+  },
+  "gates": {
+    "lint_changed": "pass (0 errors; pre-existing warnings in unrelated files)",
+    "type_check": "pass",
+    "vitest_detection_rules": "pass (29)",
+    "build": "pass"
+  },
+  "known_backend_gap": {
+    "id": "DETECTION-CONTENT-GAP",
+    "summary": "~0 shipped YAML rules in dev/staging — empty inventory is expected; UI shows honesty banner instead of fake coverage greens",
+    "remediation": "Seed via local-dev/seed-detection-rules.sh or ops Sigma sync — out of Prompt 16 FE scope"
+  },
+  "scorecard": {
+    "job_sentence_and_badge": 10,
+    "meta_links_and_distinction": 10,
+    "inventory_first_grid": 9,
+    "compact_filters": 9,
+    "canManage_honesty": 10,
+    "no_fake_health_coverage": 10,
+    "backend_wiring_ha_detection_rules": 9,
+    "tests_and_build_gates": 10,
+    "staging_live_probe": 5,
+    "overall": 9.1
+  },
+  "next_recommended": "/response/playbooks (Prompt 17)",
+  "handoff_at": "2026-08-29T12:49:00Z"
+}

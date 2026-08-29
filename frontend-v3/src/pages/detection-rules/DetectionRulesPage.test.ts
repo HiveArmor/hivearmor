@@ -78,6 +78,7 @@ describe('columnDefs', () => {
     const toggleLoadingIds = new Set<number>();
     const columnDefs = module.createColumnDefs(
       'ROLE_ANALYST',
+      false,
       () => {
         /* no-op */
       },

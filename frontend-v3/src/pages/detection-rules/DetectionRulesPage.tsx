@@ -6,9 +6,9 @@ import type { AgGridReact } from 'ag-grid-react';
 import {
   Activity, AlertTriangle, BarChart3, CheckCircle2, ChevronLeft, ChevronRight,
   CircleSlash2, Clock3, Columns3, Filter, GitBranch, Import, Library,
-  Plus, Radio, RefreshCw, Search, ShieldAlert, TestTube2, X, Zap,
+  Plus, RefreshCw, Search, ShieldAlert, TestTube2, X, Zap,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 import { createColumnDefs } from './columnDefs';
 import { DetectionMonitoringView } from './DetectionMonitoringView';
@@ -19,13 +19,21 @@ import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect'
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { StatusDock } from '@/components/status-dock/StatusDock';
+import { ROUTES } from '@/constants/routes.constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity, ROW_HEIGHTS, type RowDensity } from '@/hooks/useRowDensity';
+import { RULE_TACTIC_OPTIONS } from '@/pages/detection-rules/detectionRules.constants';
 import { foundationDetectionRuleSummary } from '@/pages/detection-rules/detectionRules.fixtures';
 import { useAuthStore } from '@/store/auth.store';
 
 import './DetectionRulesPage.css';
+
+/** Bundle-visible job sentence — detection content manager, not alert triage. */
+export const DETECTION_RULES_JOB_SENTENCE =
+  'Manage detection content inventory — review rule status, MITRE mapping, and coverage honesty, then test or activate only when authorized. Alert triage lives on Analyst Queue.';
+
+export const DETECTION_MANAGE_DENIED_TITLE = 'Required permission: SOC Manager or Platform Administrator';
 
 type RuleView = 'rules' | 'monitoring' | 'coverage' | 'test';
 const DetectionCoverageView = lazy(() => import('./DetectionCoverageView'));
@@ -44,17 +52,9 @@ const STATUS_OPTIONS = [
   { value: 'true', label: 'Enabled' },
   { value: 'false', label: 'Disabled' },
 ];
-const HEALTH_OPTIONS = [
-  { value: 'all', label: 'All responses' },
-  { value: 'healthy', label: 'Healthy' },
-  { value: 'warning', label: 'Delayed' },
-  { value: 'failed', label: 'Failed' },
-  { value: 'unknown', label: 'Unknown' },
-];
-const ORIGIN_OPTIONS = [
-  { value: 'all', label: 'All sources' },
-  { value: 'managed', label: 'Managed content' },
-  { value: 'custom', label: 'Custom rules' },
+const MITRE_OPTIONS = [
+  { value: 'all', label: 'All tactics' },
+  ...RULE_TACTIC_OPTIONS.map((tactic) => ({ value: tactic, label: tactic })),
 ];
 const SEVERITY_OPTIONS = [
   { value: 'all', label: 'All severities' },
@@ -88,8 +88,7 @@ export function DetectionRulesPage(): JSX.Element {
   const [searchText, setSearchText] = useState('');
   const search = useDebounce(searchText.trim(), 250);
   const [activeFilter, setActiveFilter] = useState<'all' | 'true' | 'false'>('all');
-  const [healthFilter, setHealthFilter] = useState<'all' | NonNullable<DetectionRule['health']>>('all');
-  const [originFilter, setOriginFilter] = useState<'all' | 'managed' | 'custom'>('all');
+  const [mitreFilter, setMitreFilter] = useState<'all' | typeof RULE_TACTIC_OPTIONS[number]>('all');
   const [severityFilter, setSeverityFilter] = useState<'all' | NonNullable<DetectionRule['severity']>>('all');
   const [pageIndex, setPageIndex] = useState(0);
   const [density, setDensity] = useRowDensity();
@@ -118,10 +117,9 @@ export function DetectionRulesPage(): JSX.Element {
     sort: 'lastModified,desc',
     search: search || undefined,
     active: activeFilter === 'all' ? 'all' : activeFilter === 'true',
-    health: healthFilter,
-    origin: originFilter,
+    technique: mitreFilter === 'all' ? undefined : mitreFilter,
     severity: severityFilter,
-  }), [activeFilter, healthFilter, originFilter, pageIndex, search, severityFilter]);
+  }), [activeFilter, mitreFilter, pageIndex, search, severityFilter]);
 
   const rulesQuery = useQuery({
     queryKey: ['detection-rules', filters],
@@ -140,16 +138,17 @@ export function DetectionRulesPage(): JSX.Element {
 
   const total = Math.max(0, (rulesQuery.data?.total ?? 0) - hiddenFixtureIds.size);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const hasFilters = Boolean(search || activeFilter !== 'all' || healthFilter !== 'all' || originFilter !== 'all' || severityFilter !== 'all');
+  const hasFilters = Boolean(search || activeFilter !== 'all' || mitreFilter !== 'all' || severityFilter !== 'all');
   const limitedContract = !detectionRulesFixtureMode && rules.some((rule) => rule.health === 'unknown' && rule.lastRunAt == null);
+  const inventoryEmpty = !rulesQuery.isLoading && !rulesQuery.isError && total === 0 && !hasFilters;
 
   const summary = useMemo<DetectionRuleSummary>(() => {
     if (detectionRulesFixtureMode) return foundationDetectionRuleSummary;
     return {
       total,
       enabled: rules.filter((rule) => rule.ruleActive).length,
-      healthy: rules.filter((rule) => rule.health === 'healthy').length,
-      degraded: rules.filter((rule) => rule.health === 'failed' || rule.health === 'warning').length,
+      healthy: 0,
+      degraded: 0,
       alerts24h: rules.reduce((count, rule) => count + (rule.alerts24h ?? 0), 0),
       coverageTechniques: new Set(rules.map((rule) => rule.techniqueId).filter(Boolean)).size,
       coverageTechniquesTotal: 0,
@@ -161,7 +160,7 @@ export function DetectionRulesPage(): JSX.Element {
     setPageIndex(0);
     setSelectedRules([]);
     setActiveRule(null);
-  }, [activeFilter, healthFilter, originFilter, search, severityFilter, view]);
+  }, [activeFilter, mitreFilter, search, severityFilter, view]);
 
   useEffect(() => {
     if (!activeRule) return undefined;
@@ -173,8 +172,7 @@ export function DetectionRulesPage(): JSX.Element {
   const resetFilters = useCallback(() => {
     setSearchText('');
     setActiveFilter('all');
-    setHealthFilter('all');
-    setOriginFilter('all');
+    setMitreFilter('all');
     setSeverityFilter('all');
   }, []);
 
@@ -222,9 +220,9 @@ export function DetectionRulesPage(): JSX.Element {
     }
   }, [queryClient]);
 
-  const columns = useMemo<ColDef<DetectionRule>[]>(() => createColumnDefs(userRole, handleToggleActive, setDeleteTarget, toggleLoadingIds, navigate)
+  const columns = useMemo<ColDef<DetectionRule>[]>(() => createColumnDefs(userRole, canManage, handleToggleActive, setDeleteTarget, toggleLoadingIds, navigate)
     .filter((column) => visibleColumns.includes(column.colId ?? '')),
-  [handleToggleActive, navigate, toggleLoadingIds, userRole, visibleColumns]);
+  [canManage, handleToggleActive, navigate, toggleLoadingIds, userRole, visibleColumns]);
 
   const handleKeyboard = useCallback((event: React.KeyboardEvent<HTMLElement>) => {
     const target = event.target as HTMLElement;
@@ -253,22 +251,43 @@ export function DetectionRulesPage(): JSX.Element {
   return (
     <section className="detection-page" tabIndex={-1} onKeyDown={handleKeyboard}>
       <header className="detection-page__identity">
-        <div className="detection-page__title"><span><Zap size={20} /></span><div><small>DEFEND</small><h1>Detection Engineering</h1></div></div>
+        <span className="detection-page__icon"><Zap size={20} aria-hidden="true" /></span>
+        <div className="detection-page__title">
+          <div className="detection-page__eyebrow">
+            <small>DEFEND</small>
+            <span className="detection-page__badge">STAGING CANDIDATE</span>
+          </div>
+          <h1>Detection Engineering</h1>
+          <p className="detection-page__job">{DETECTION_RULES_JOB_SENTENCE}</p>
+        </div>
         <div className="detection-page__identity-actions">
-          <span className="detection-page__shortcut"><Radio size={12} /> Rule health and coverage <kbd>J</kbd><span>/</span><kbd>K</kbd><span>navigate</span></span>
-          <button type="button" disabled={!canManage} title={canManage ? 'Import and stage detection content' : 'Requires SOC Manager'} onClick={() => setImportOpen(true)}><Import size={14} /> Import</button>
-          <button type="button" disabled={!canSync} title={canSync ? 'Synchronize Sigma content' : 'Requires Administrator role'} onClick={() => setSyncOpen(true)}><GitBranch size={14} /> Sigma sync</button>
-          <button type="button" className="detection-primary-button" disabled={!canManage} title={canManage ? 'Create rule' : 'Requires SOC Manager'} onClick={() => navigate('/detection-rules/new')}><Plus size={15} /> Create rule</button>
+          <button type="button" disabled={!canManage} title={canManage ? 'Import and stage detection content' : DETECTION_MANAGE_DENIED_TITLE} onClick={() => setImportOpen(true)}><Import size={14} /> Import</button>
+          <button type="button" disabled={!canSync} title={canSync ? 'Synchronize Sigma content' : 'Required permission: Platform Administrator'} onClick={() => setSyncOpen(true)}><GitBranch size={14} /> Sigma sync</button>
+          <button type="button" className="detection-primary-button" disabled={!canManage} title={canManage ? 'Create rule' : DETECTION_MANAGE_DENIED_TITLE} onClick={() => navigate('/detection-rules/new')}><Plus size={15} /> Create rule</button>
         </div>
       </header>
 
+      <p className="detection-page__meta">
+        <Link to="/dashboard">Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.ALERTS}>Alerts</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.CORRELATED_FINDINGS}>Correlated Findings</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.RESPONSE_PLAYBOOKS}>Playbooks</Link>
+        <span aria-hidden="true">·</span>
+        <span className="detection-page__access" title="Requires Analyst, SOC Manager, or Platform Administrator">Analyst · SOC Manager · Platform Administrator</span>
+      </p>
+
       {detectionRulesFixtureMode && <div className="detection-page__fixture"><span><strong>Design fixture:</strong> fictional detection content and execution telemetry are enabled.</span><span>Production never receives these records.</span></div>}
+
+      {inventoryEmpty && <div className="detection-page__honesty" role="status" data-testid="detection-empty-honesty"><strong>No detection rules installed yet.</strong><span>The tenant inventory may be empty — import managed content or create a custom rule. Coverage and health metrics are not implied when the inventory is blank.</span></div>}
 
       <nav className="detection-views" aria-label="Detection engineering views">
         <button type="button" aria-current={view === 'rules' ? 'page' : undefined} onClick={() => { resetFilters(); setView('rules'); }}><Library size={14} /> Rules <span>{summary.total}</span></button>
         <button type="button" aria-current={view === 'monitoring' ? 'page' : undefined} onClick={() => { resetFilters(); setView('monitoring'); }}><Activity size={14} /> Rule monitoring <span>{summary.enabled}</span></button>
         <button type="button" aria-current={view === 'coverage' ? 'page' : undefined} onClick={() => { resetFilters(); setView('coverage'); }}><BarChart3 size={14} /> ATT&amp;CK coverage <span>{summary.coverageTechniques}</span></button>
-        <button type="button" aria-current={view === 'test' ? 'page' : undefined} onClick={() => { resetFilters(); setTestRuleId(undefined); setView('test'); }}><TestTube2 size={14} /> Test console</button>
+        <button type="button" aria-current={view === 'test' ? 'page' : undefined} disabled={!canManage} title={canManage ? 'Open secure test console' : DETECTION_MANAGE_DENIED_TITLE} onClick={() => { if (!canManage) return; resetFilters(); setTestRuleId(undefined); setView('test'); }}><TestTube2 size={14} /> Test console</button>
       </nav>
 
       {actionMessage && <div className="detection-action-message" role="status"><CheckCircle2 size={14} /><span>{actionMessage}</span><button type="button" onClick={() => setActionMessage(null)} aria-label="Dismiss message"><X size={13} /></button></div>}
@@ -277,24 +296,14 @@ export function DetectionRulesPage(): JSX.Element {
       <div className="detection-command-bar" role="search" aria-label="Detection rule filters">
         <label className="detection-search"><Search size={15} /><input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Search rule, Sigma ID, tactic, or technique…" aria-label="Search detection rules" />{searchText && <button type="button" onClick={() => setSearchText('')} aria-label="Clear search"><X size={13} /></button>}</label>
         <HaCompactSelect ariaLabel="Rule state" value={activeFilter} onChange={(value) => setActiveFilter(value as typeof activeFilter)} options={STATUS_OPTIONS} />
-        <HaCompactSelect ariaLabel="Execution response" value={healthFilter} onChange={(value) => setHealthFilter(value as typeof healthFilter)} options={HEALTH_OPTIONS} />
-        <HaCompactSelect ariaLabel="Rule source" value={originFilter} onChange={(value) => setOriginFilter(value as typeof originFilter)} options={ORIGIN_OPTIONS} />
         <HaCompactSelect ariaLabel="Rule severity" value={severityFilter} onChange={(value) => setSeverityFilter(value as typeof severityFilter)} options={SEVERITY_OPTIONS} />
+        <HaCompactSelect ariaLabel="MITRE tactic" value={mitreFilter} onChange={(value) => setMitreFilter(value as typeof mitreFilter)} options={MITRE_OPTIONS} />
         <button className="detection-icon-button" type="button" onClick={() => void rulesQuery.refetch()} disabled={rulesQuery.isFetching} aria-label="Refresh detection rules" title="Refresh"><RefreshCw size={15} className={rulesQuery.isFetching ? 'detection-spin' : ''} /></button>
       </div>
 
-      {limitedContract && <div className="detection-contract-warning" role="status"><AlertTriangle size={14} /><span><strong>Limited execution projection.</strong> Health, run duration, alert volume, gaps, schedule, version, and exact coverage require the registered Detection Rules inventory contract.</span></div>}
+      {limitedContract && <div className="detection-contract-warning" role="status"><AlertTriangle size={14} /><span><strong>Limited execution projection.</strong> Last-run health, alert volume, and schedule telemetry require backend execution history — unknown values stay uncolored.</span></div>}
 
-      <div className="detection-kpis" aria-label="Detection rule summary">
-        <article><span><Library size={14} /> Installed rules</span><strong>{summary.total}</strong><small>authorized scope</small></article>
-        <article data-tone="active"><span><Zap size={14} /> Enabled</span><strong>{summary.enabled}</strong><small>{summary.total ? `${Math.round(summary.enabled / summary.total * 100)}% of inventory` : 'No inventory'}</small></article>
-        <article data-tone="health"><span><CheckCircle2 size={14} /> Healthy</span><strong>{summary.healthy || '—'}</strong><small>last execution succeeded</small></article>
-        <article data-tone="warning"><span><AlertTriangle size={14} /> Needs attention</span><strong>{summary.degraded || '—'}</strong><small>delayed or failed</small></article>
-        <article><span><ShieldAlert size={14} /> Alerts · 24h</span><strong>{summary.alerts24h || '—'}</strong><small>generated by enabled rules</small></article>
-        <article><span><BarChart3 size={14} /> ATT&amp;CK coverage</span><strong>{summary.coverageTechniques}{summary.coverageTechniquesTotal ? `/${summary.coverageTechniquesTotal}` : ''}</strong><small>mapped techniques</small></article>
-      </div>
-
-      <main className="detection-results">
+      <main className="detection-inventory">
         <div className="detection-results__toolbar">
           <div><strong>Installed rules</strong><span>{rulesQuery.data ? `${total.toLocaleString()} matching` : 'Loading inventory'}</span>{rulesQuery.isFetching && rules.length > 0 && <em><RefreshCw size={11} /> Refreshing cached rows</em>}</div>
           <div className="detection-results__actions">
@@ -354,7 +363,7 @@ export function DetectionRulesPage(): JSX.Element {
         <section><h3>Detection intent</h3><p>{activeRule.description ?? 'No analyst-facing description is available.'}</p><dl><div><dt>Source</dt><dd>{activeRule.origin ?? 'Unknown'}</dd></div><div><dt>Schedule</dt><dd>{activeRule.schedule ?? 'Unavailable'}</dd></div><div><dt>Lookback</dt><dd>{activeRule.lookback ?? 'Unavailable'}</dd></div><div><dt>Last run</dt><dd>{formatDateTime(activeRule.lastRunAt)}</dd></div><div><dt>Duration</dt><dd>{activeRule.lastRunDurationMs == null ? 'Unavailable' : `${activeRule.lastRunDurationMs.toLocaleString()} ms`}</dd></div></dl></section>
         <section><h3>ATT&amp;CK and telemetry</h3>{activeRule.techniqueId ? <button className="detection-drawer__pivot" type="button" onClick={() => { setActiveRule(null); setView('coverage'); }}><BarChart3 size={16} /><span><strong>{activeRule.techniqueId} · {activeRule.techniqueName ?? 'Technique'}</strong><small>{activeRule.tactic ?? 'Tactic unavailable'}</small></span><ChevronRight size={14} /></button> : <p>Rule has no ATT&amp;CK mapping.</p>}{activeRule.dataTypes.length ? <div className="detection-drawer__chips">{activeRule.dataTypes.map((type) => <span key={type}>{type}</span>)}</div> : <p>Telemetry requirements are not reported by this rule projection.</p>}{activeRule.tags?.length ? <div className="detection-drawer__chips" aria-label="Rule tags">{activeRule.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}</section>
         <section><h3>Change provenance</h3><dl><div><dt>Modified</dt><dd>{formatDateTime(activeRule.lastModified)}</dd></div><div><dt>Updated by</dt><dd>{activeRule.updatedBy ?? activeRule.createdBy ?? 'Unavailable'}</dd></div></dl><p>Version comparison and rollback are available after opening the editor.</p></section>
-        <footer><button type="button" onClick={() => { setTestRuleId(activeRule.id); setActiveRule(null); setView('test'); }}><TestTube2 size={14} /> Test rule</button><button type="button" className="detection-primary-button" disabled={!canManage} onClick={() => navigate(`/detection-rules/${activeRule.id}/edit`)}>Open editor <ChevronRight size={14} /></button></footer>
+        <footer><button type="button" disabled={!canManage} title={canManage ? 'Test rule in sandbox' : DETECTION_MANAGE_DENIED_TITLE} onClick={() => { setTestRuleId(activeRule.id); setActiveRule(null); setView('test'); }}><TestTube2 size={14} /> Test rule</button><button type="button" className="detection-primary-button" disabled={!canManage} title={canManage ? 'Open rule editor' : DETECTION_MANAGE_DENIED_TITLE} onClick={() => navigate(`/detection-rules/${activeRule.id}/edit`)}>Open editor <ChevronRight size={14} /></button></footer>
       </aside></div>}
 
       {importOpen && <Suspense fallback={<div className="detection-drawer-scrim"><div className="detection-section-loading"><RefreshCw size={20} className="detection-spin" /><span>Loading import validation…</span></div></div>}><DetectionImportPanel existingRules={rules} onClose={() => setImportOpen(false)} onStaged={setActionMessage} /></Suspense>}
