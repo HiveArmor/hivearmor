@@ -34,4 +34,15 @@ describe('Wave B1 Endpoint defense honesty', () => {
     expect(source).toContain('event.data?.agentId');
     expect(source).not.toContain('event.data?.agentId ?? event.data?.hostname');
   });
+
+  it('B1-FIM-02: FIM dashboard uses summary-only honesty chrome (Prompt 22)', () => {
+    const page = readFileSync(join(process.cwd(), 'src/pages/edr/FimDashboardPage.tsx'), 'utf8');
+    const styles = readFileSync(join(process.cwd(), 'src/pages/edr/FimDashboardPage.css'), 'utf8');
+    expect(page).toContain('FIM_DASHBOARD_JOB_SENTENCE');
+    expect(page).toContain('STAGING CANDIDATE');
+    expect(page).toContain('fim-empty-honesty');
+    expect(page).toContain('/api/ha-edr/fim/summary');
+    expect(page).not.toMatch(/\/api\/ha-edr\/fim\/events/);
+    expect(styles).toContain('min-height: 50vh');
+  });
 });

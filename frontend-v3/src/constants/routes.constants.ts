@@ -34,6 +34,8 @@ export const ROUTES = {
   RESPONSE_LIBRARY: '/response/library',
   DASHBOARD: '/dashboard',
   EDR_ENDPOINTS: '/edr/endpoints',
+  EDR_FIM: '/edr/fim',
+  EDR_POLICIES: '/edr/policies',
 
   // POSTURE
   ASSETS: '/posture/assets',
