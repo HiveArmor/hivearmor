@@ -31,7 +31,9 @@ describe('Wave A3 Defend/respond honesty', () => {
     expect(source).not.toContain('/ha-playbooks/quarantine');
     expect(source).not.toContain('/ha-action-catalog');
     const page = readFileSync(join(process.cwd(), 'src/pages/response/ResponseActivityPage.tsx'), 'utf8');
-    expect(page).toContain('RESP_018_INVENTORY_TITLE');
+    expect(page).toContain('RESPONSE_ACTIVITY_JOB_SENTENCE');
+    expect(page).toContain('STAGING CANDIDATE');
+    expect(page).toContain('activity-empty-honesty');
     const authority = readFileSync(join(process.cwd(), 'src/pages/response/ResponseAuthorityPage.tsx'), 'utf8');
     expect(authority).toContain('RESP_020_APPROVAL_PROJECTION_TITLE');
     expect(authority).toContain('STAGING CANDIDATE');

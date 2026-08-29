@@ -43,7 +43,6 @@ import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
 import {
   RESP_018_DISABLED_TITLE,
   RESP_018_EXECUTION_INVENTORY,
-  RESP_018_INVENTORY_TITLE,
   RESP_018_SOAR_AUDIT_PROJECTION,
   RESP_018_SOAR_AUDIT_TITLE,
 } from './response.capabilities';
@@ -55,7 +54,14 @@ import type {
   ResponseActivityStatus,
   TriggerType,
 } from './response.types';
-import { cancelExecution, fetchResponseActivity, fetchResponseExecutionTrace, fixtureMode } from './responsePlaybooks.service';
+import {
+  approvePlaybookExecution,
+  cancelExecution,
+  fetchResponseActivity,
+  fetchResponseExecutionTrace,
+  fixtureMode,
+  rejectPlaybookExecution,
+} from './responsePlaybooks.service';
 
 import { AccessDeniedState } from '@/components/access-denied-state/AccessDeniedState';
 import { EmptyState } from '@/components/empty-state/EmptyState';
@@ -67,12 +73,19 @@ import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useToastStore } from '@/components/toast-stack/toastStore';
+import { ROUTES } from '@/constants/routes.constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
 import { useAuthStore } from '@/store/auth.store';
 import './ResponseActivityPage.css';
 import './response-grid-standard.css';
+
+/** Bundle-visible job sentence — execution ledger, not playbook inventory or approval queue. */
+export const RESPONSE_ACTIVITY_JOB_SENTENCE =
+  'Playbook execution ledger — review run history, step traces, and approval pauses. Author playbooks on Response Playbooks; decide approvals on Response Approvals.';
+
+export const ACTIVITY_MUTATE_DENIED_TITLE = 'Required permission: Platform Administrator';
 
 type StatusFilter = ResponseActivityStatus | 'ALL';
 type TriggerFilter = TriggerType | 'ALL';
@@ -201,10 +214,20 @@ function ActivityDetailDrawer({
   entry,
   onClose,
   onCancelExecution,
+  canAdmin,
+  onApprove,
+  onReject,
+  approvePending,
+  rejectPending,
 }: {
   entry: ResponseActivityDTO;
   onClose: () => void;
   onCancelExecution: (entry: ResponseActivityDTO) => void;
+  canAdmin: boolean;
+  onApprove: (entry: ResponseActivityDTO) => void;
+  onReject: (entry: ResponseActivityDTO) => void;
+  approvePending: boolean;
+  rejectPending: boolean;
 }): JSX.Element {
   const [view, setView] = useState<DrawerView>('overview');
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
@@ -238,6 +261,13 @@ function ActivityDetailDrawer({
       ? `/incidents/${entry.linkedEntityId}`
       : null;
 
+  const canCancelRun = canAdmin && (
+    entry.capabilities?.canCancel
+    || entry.status === 'RUNNING'
+    || entry.status === 'QUEUED'
+    || entry.status === 'AWAITING_APPROVAL'
+  );
+
   return (
     <HaDrawer
       isOpen
@@ -247,8 +277,13 @@ function ActivityDetailDrawer({
       width={560}
       footer={
         <>
-          {entry.capabilities?.canCancel && (
-            <button type="button" className="act-drawer-button act-drawer-button--danger" onClick={() => onCancelExecution(entry)}>
+          {canCancelRun && (
+            <button
+              type="button"
+              className="act-drawer-button act-drawer-button--danger"
+              onClick={() => onCancelExecution(entry)}
+              title={canAdmin ? 'Cancel at next governed boundary' : ACTIVITY_MUTATE_DENIED_TITLE}
+            >
               <XCircle size={14} /> Cancel run
             </button>
           )}
@@ -307,7 +342,22 @@ function ActivityDetailDrawer({
             {entry.status === 'AWAITING_APPROVAL' && (
               <section className="act-state-notice" data-tone="warning">
                 <PauseCircle size={16} />
-                <div><strong>Human approval required</strong><span>Execution is paused before a governed high-impact action.</span></div>
+                <div>
+                  <strong>Human approval required</strong>
+                  <span>Execution is paused before a governed high-impact action. Decide here or on Response Approvals (projection only).</span>
+                  {canAdmin ? (
+                    <div className="act-approval-actions">
+                      <button type="button" className="act-drawer-button act-drawer-button--primary" onClick={() => onApprove(entry)} disabled={approvePending || rejectPending}>
+                        <ShieldCheck size={14} /> {approvePending ? 'Approving…' : 'Approve run'}
+                      </button>
+                      <button type="button" className="act-drawer-button act-drawer-button--danger" onClick={() => onReject(entry)} disabled={approvePending || rejectPending}>
+                        <ShieldX size={14} /> {rejectPending ? 'Rejecting…' : 'Reject run'}
+                      </button>
+                    </div>
+                  ) : (
+                    <small className="act-approval-hint">Required permission: Platform Administrator</small>
+                  )}
+                </div>
               </section>
             )}
             {entry.status === 'BLOCKED' && (
@@ -424,7 +474,11 @@ export function ResponseActivityPage(): JSX.Element {
   const [activeIndex, setActiveIndex] = useState(0);
   const [density, setDensity] = useRowDensity();
 
-  const canView = user?.roles?.some((role) => ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'].includes(role)) ?? false;
+  const hasAdminRole = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const canView = user?.roles?.some((role) =>
+    ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN', 'ROLE_USER'].includes(role)
+  ) ?? false;
+  const canAdmin = hasAdminRole;
 
   const resetPaging = useCallback(() => {
     setCursor(undefined);
@@ -471,6 +525,33 @@ export function ResponseActivityPage(): JSX.Element {
       variant: 'danger',
       title: 'Could not cancel execution',
       description: mutationError instanceof Error ? mutationError.message : 'The execution state may have changed. Refresh and try again.',
+    }),
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: (executionId: string) => approvePlaybookExecution(executionId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['resp-activity'] });
+      addToast({ variant: 'success', title: 'Execution approved', description: 'The playbook will resume from the approval gate.' });
+    },
+    onError: (mutationError) => addToast({
+      variant: 'danger',
+      title: 'Could not approve execution',
+      description: mutationError instanceof Error ? mutationError.message : 'The execution state may have changed.',
+    }),
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: (executionId: string) => rejectPlaybookExecution(executionId),
+    onSuccess: async () => {
+      setSelectedEntry(null);
+      await queryClient.invalidateQueries({ queryKey: ['resp-activity'] });
+      addToast({ variant: 'success', title: 'Execution rejected', description: 'The run was stopped at the approval gate.' });
+    },
+    onError: (mutationError) => addToast({
+      variant: 'danger',
+      title: 'Could not reject execution',
+      description: mutationError instanceof Error ? mutationError.message : 'The execution state may have changed.',
     }),
   });
 
@@ -576,8 +657,27 @@ export function ResponseActivityPage(): JSX.Element {
     URL.revokeObjectURL(url);
   };
 
-  if (!canView) return <div className="act-page act-page--center"><AccessDeniedState message="Response activity requires the Analyst role or higher." /></div>;
-  if (isError && !data) return <div className="act-page act-page--center"><ErrorState title="Could not load response activity" message={error instanceof Error ? error.message : 'Unexpected error'} onRetry={() => refetch()} /></div>;
+  if (!canView) {
+    return (
+      <div className="act-page act-page--center">
+        <AccessDeniedState message="Response activity requires Analyst, SOC Manager, or Platform Administrator access." />
+      </div>
+    );
+  }
+  if (isError && !data) {
+    return (
+      <div className="act-page act-page--center">
+        <ErrorState title="Could not load response activity" message={error instanceof Error ? error.message : 'Unexpected error'} onRetry={() => refetch()} />
+      </div>
+    );
+  }
+
+  const hasFilters = statusFilter !== 'ALL' || triggerFilter !== 'ALL' || Boolean(search) || timeRange !== 'all';
+  const inventoryEmpty = !isLoading && !isError && (data?.total ?? 0) === 0 && !hasFilters;
+  const showInlineStats = Boolean(summary && (summary.total > 0 || items.length > 0));
+  const inventoryMode = !fixtureMode && RESP_018_EXECUTION_INVENTORY;
+  const auditFallbackMode = !fixtureMode && !RESP_018_EXECUTION_INVENTORY && RESP_018_SOAR_AUDIT_PROJECTION;
+  const inventoryUnavailable = !fixtureMode && !RESP_018_EXECUTION_INVENTORY && !RESP_018_SOAR_AUDIT_PROJECTION;
 
   const nextPage = () => {
     if (!data?.nextCursor) return;
@@ -596,47 +696,83 @@ export function ResponseActivityPage(): JSX.Element {
 
   return (
     <section className="act-page" data-fixture={fixtureMode || undefined} aria-label="Response activity">
-      <header className="act-header">
-        <div className="act-header__identity">
-          <span className="act-header__mark"><Activity size={19} /></span>
-          <div><span className="act-header__eyebrow">Response automation</span><h1>Response Activity</h1></div>
+      <header className="act-page__identity">
+        <span className="act-page__icon"><Activity size={20} aria-hidden="true" /></span>
+        <div className="act-page__title">
+          <div className="act-page__eyebrow">
+            <small>RESPOND</small>
+            <span className="act-page__badge">STAGING CANDIDATE</span>
+          </div>
+          <h1>Response Activity</h1>
+          <p className="act-page__job">{RESPONSE_ACTIVITY_JOB_SENTENCE}</p>
+          {inventoryMode && (
+            <p className="act-page__trace-note" role="note">
+              Step trace is best-effort from stored steps_log — missing structured steps stay empty with honesty.
+            </p>
+          )}
+          {auditFallbackMode && (
+            <p className="act-page__trace-note" role="note">{RESP_018_SOAR_AUDIT_TITLE}</p>
+          )}
+          {inventoryUnavailable && (
+            <p className="act-page__trace-note" role="note">{RESP_018_DISABLED_TITLE}</p>
+          )}
         </div>
-        <div className="act-header__actions">
-          <span className="act-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect</span>
-          <HaButton variant="secondary" onClick={() => navigate('/response/playbooks')} icon={<Workflow size={14} />}>Playbooks</HaButton>
+        <div className="act-page__identity-actions">
+          <span className="act-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect <kbd>/</kbd> search</span>
           <HaButton variant="plain" onClick={() => refetch()} isDisabled={isFetching} icon={<RefreshCw size={14} className={isFetching ? 'act-spin' : undefined} />} aria-label="Refresh activity" />
-          <HaButton variant="secondary" onClick={exportFixture} isDisabled={!fixtureMode || !items.length} icon={<Download size={14} />} title={fixtureMode ? 'Export the loaded fictional page' : 'Authoritative export endpoint required'}>Export</HaButton>
+          <HaButton
+            variant="secondary"
+            onClick={exportFixture}
+            isDisabled={!fixtureMode || !items.length}
+            icon={<Download size={14} />}
+            title={fixtureMode ? 'Export the loaded fictional page' : 'Authoritative export endpoint required'}
+          >
+            Export
+          </HaButton>
         </div>
       </header>
 
-      {fixtureMode && <div className="act-fixture-banner"><strong>Design fixture:</strong> fictional response executions are enabled for visual review.<span>Production never receives these records.</span></div>}
-      {!fixtureMode && RESP_018_EXECUTION_INVENTORY && (
-        <div className="act-fixture-banner" role="status">
-          <strong>RESP-018 inventory:</strong> {RESP_018_INVENTORY_TITLE}
-          <span>Step trace is best-effort from stored steps_log; missing structured steps stay empty with honesty.</span>
-        </div>
-      )}
-      {!fixtureMode && !RESP_018_EXECUTION_INVENTORY && RESP_018_SOAR_AUDIT_PROJECTION && (
-        <div className="act-fixture-banner" role="status">
-          <strong>SOAR audit projection:</strong> {RESP_018_SOAR_AUDIT_TITLE}
-          <span>Progressive step trace and cancel remain unavailable until RESP-018 inventory ships.</span>
-        </div>
-      )}
-      {!fixtureMode && !RESP_018_EXECUTION_INVENTORY && !RESP_018_SOAR_AUDIT_PROJECTION && (
-        <div className="act-fixture-banner" role="status">
-          <strong>Execution inventory unavailable:</strong> {RESP_018_DISABLED_TITLE}
-          <span>Runs appear here when the secured executions contract is connected.</span>
+      <p className="act-page__meta">
+        <Link to="/dashboard">Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.RESPONSE_PLAYBOOKS}>Response Playbooks</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/response/authority">Response Approvals</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.DETECTION_RULES}>Detection Rules</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.INCIDENTS}>Incidents</Link>
+        <span aria-hidden="true">·</span>
+        <span
+          className="act-page__access"
+          title="Backend also allows Standard User (ROLE_USER); navigation may restrict access"
+        >
+          Analyst · SOC Manager · Platform Administrator
+        </span>
+      </p>
+
+      {fixtureMode && (
+        <div className="act-page__fixture" role="status">
+          <span><strong>Design fixture:</strong> fictional response executions are enabled for visual review.</span>
+          <span>Production never receives these records.</span>
         </div>
       )}
 
-      <section className="act-summary" aria-label="Execution health summary">
-        <div><span><Activity size={13} />Executions</span><strong>{summary?.total.toLocaleString() ?? '—'}</strong><small>{summary?.totalIsExact ? 'exact in window' : 'estimated'}</small></div>
-        <div data-tone="live"><span><PlayCircle size={13} />In progress</span><strong>{summary?.running ?? '—'}</strong><small>queued or running</small></div>
-        <div data-tone="warning"><span><PauseCircle size={13} />Awaiting approval</span><strong>{summary?.awaitingApproval ?? '—'}</strong><small>human decision</small></div>
-        <div data-tone="danger"><span><ShieldX size={13} />Failed</span><strong>{summary?.failed ?? '—'}</strong><small>{summary?.partial ?? 0} partial</small></div>
-        <div data-tone="positive"><span><CheckCircle2 size={13} />Success rate</span><strong>{summary ? `${summary.successRate}%` : '—'}</strong><small>completed runs</small></div>
-        <div><span><TimerReset size={13} />Median duration</span><strong>{formatDurationMs(summary?.medianDurationMs)}</strong><small>{summary?.degradedConnectors ?? 0} degraded connectors</small></div>
-      </section>
+      {inventoryEmpty && inventoryMode && (
+        <div className="act-page__honesty" role="status" data-testid="activity-empty-honesty">
+          <strong>No playbook executions yet.</strong>
+          <span>
+            The tenant ledger may be empty — runs appear here after governed playbook execution. Operational counts are not shown until executions exist; empty data does not imply platform health.
+          </span>
+        </div>
+      )}
+
+      {inventoryEmpty && auditFallbackMode && (
+        <div className="act-page__honesty" role="status" data-testid="activity-empty-honesty">
+          <strong>No executions in SOAR audit projection.</strong>
+          <span>{RESP_018_SOAR_AUDIT_TITLE}</span>
+        </div>
+      )}
 
       <div className="act-toolbar" role="toolbar" aria-label="Response activity filters">
         <label className="act-search-wrap"><Search size={14} /><input ref={searchInputRef} type="search" value={searchText} onChange={(event) => { setSearchText(event.target.value); resetPaging(); }} placeholder="Search playbook, execution or context…" aria-label="Search response activity" /><kbd>/</kbd></label>
@@ -653,39 +789,66 @@ export function ResponseActivityPage(): JSX.Element {
         <div className="act-data-warning" role="status"><AlertTriangle size={14} /><span>{isError ? 'Refresh failed. Showing the last usable snapshot.' : 'Some execution sources are delayed or unavailable.'}</span><button type="button" onClick={() => refetch()}>Retry</button></div>
       )}
 
-      <div className="act-results-toolbar">
-        <div><strong>Executions</strong><span>{data?.total.toLocaleString() ?? 0} matching · page {cursorHistory.length + 1}</span></div>
-        <div className="act-density" role="group" aria-label="Row density">
-          <span>Rows</span>
-          <button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button>
-          <button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button>
-          <button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={17} /></button>
+      <main className="act-inventory">
+        <div className="act-results-toolbar">
+          <div>
+            <strong>Execution ledger</strong>
+            <span>{data?.total.toLocaleString() ?? 0} matching · page {cursorHistory.length + 1}</span>
+            {showInlineStats && summary && (
+              <span className="act-inline-stats" aria-label="Execution summary for current filter window">
+                <span data-tone="live">{summary.running} in progress</span>
+                <span aria-hidden="true">·</span>
+                <span data-tone="warning">{summary.awaitingApproval} awaiting approval</span>
+                <span aria-hidden="true">·</span>
+                <span data-tone="danger">{summary.failed} failed</span>
+                <span aria-hidden="true">·</span>
+                <span data-tone="positive">{summary.successRate}% success</span>
+                <span aria-hidden="true">·</span>
+                <span>{formatDurationMs(summary.medianDurationMs)} median</span>
+              </span>
+            )}
+          </div>
+          <div className="act-density" role="group" aria-label="Row density">
+            <span>Rows</span>
+            <button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button>
+            <button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button>
+            <button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={17} /></button>
+          </div>
         </div>
-      </div>
 
-      <main className="act-grid-wrap">
+        <div className="act-grid-wrap">
         {isLoading ? (
           <div className="act-skeleton" role="status" aria-live="polite">{Array.from({ length: 12 }, (_, index) => <div key={index} className="act-skeleton-row" />)}</div>
         ) : !items.length ? (
           <EmptyState
             title={
-              !fixtureMode && !RESP_018_EXECUTION_INVENTORY && !RESP_018_SOAR_AUDIT_PROJECTION
+              inventoryUnavailable
                 ? 'Execution inventory unavailable'
-                : 'No executions in this window'
+                : hasFilters
+                  ? 'No executions match your filters'
+                  : 'No executions in this window'
             }
             description={
-              !fixtureMode && !RESP_018_EXECUTION_INVENTORY && !RESP_018_SOAR_AUDIT_PROJECTION
+              inventoryUnavailable
                 ? RESP_018_DISABLED_TITLE
-                : statusFilter !== 'ALL' || triggerFilter !== 'ALL' || search
+                : hasFilters
                   ? 'Clear filters or widen the time window.'
-                  : RESP_018_SOAR_AUDIT_PROJECTION && !fixtureMode
+                  : auditFallbackMode
                     ? 'SOAR audit has no executions in this page window yet.'
                     : 'Playbook executions appear here as they are queued.'
+            }
+            action={
+              !hasFilters && !inventoryUnavailable ? (
+                <HaButton variant="secondary" icon={<Workflow size={14} />} onClick={() => navigate('/response/playbooks')}>
+                  Open Response Playbooks
+                </HaButton>
+              ) : undefined
             }
           />
         ) : (
           <SiemDataGrid ref={gridRef} className="response-grid act-grid" columnDefs={columnDefs} rowData={items} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} onRowClicked={handleRowClick} rowSelection="single" suppressRowClickSelection={false} getRowId={(params) => (params.data as ResponseActivityDTO).id} ariaLabel="Response execution ledger" defaultColDef={{ filter: false }} />
         )}
+        </div>
       </main>
 
       <footer className="act-pagination" aria-label="Response activity pagination">
@@ -695,7 +858,19 @@ export function ResponseActivityPage(): JSX.Element {
       </footer>
 
       <div className="act-status-dock"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={dataUpdatedAt ? new Date(dataUpdatedAt) : undefined} /></div>
-      {selectedEntry && <ActivityDetailDrawer key={selectedEntry.id} entry={selectedEntry} onClose={() => setSelectedEntry(null)} onCancelExecution={setCancelTarget} />}
+      {selectedEntry && (
+        <ActivityDetailDrawer
+          key={selectedEntry.id}
+          entry={selectedEntry}
+          onClose={() => setSelectedEntry(null)}
+          onCancelExecution={setCancelTarget}
+          canAdmin={canAdmin}
+          onApprove={(entry) => { if (!approveMutation.isPending) approveMutation.mutate(entry.id); }}
+          onReject={(entry) => { if (!rejectMutation.isPending) rejectMutation.mutate(entry.id); }}
+          approvePending={approveMutation.isPending}
+          rejectPending={rejectMutation.isPending}
+        />
+      )}
       <HaConfirmationModal
         isOpen={!!cancelTarget}
         title="Cancel this execution?"
