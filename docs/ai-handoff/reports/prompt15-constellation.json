@@ -1,0 +1,157 @@
+{
+  "prompt": "15-constellation-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "a9641b4",
+  "based_on_main_includes_pr101": true,
+  "tip_sha": "a9641b4+local",
+  "decision": "RESTRUCTURE",
+  "routes": [
+    "/constellation"
+  ],
+  "job_sentence": "Relationship graph for investigation — explore evidence-backed entity and activity links, inspect edge evidence, then pivot into dossier, hunt, or an investigation session.",
+  "distinction": {
+    "entities": "/entities = entity inventory + risk dossier pivots",
+    "constellation": "/constellation = relationship graph for investigation (evidence-backed links)",
+    "investigations": "/investigations = working evidence sessions",
+    "search": "/search = ad-hoc hunt / event search",
+    "intelligence": "/intelligence = threat intel + assistive SOC AI",
+    "ueba_risk": "/ueba/risk = behavioral risk overview (Prompt 14 — out of scope)"
+  },
+  "ia": {
+    "threat_constellation": {
+      "removed": [
+        "Six-tile KPI summary strip (65px) stacking above workspace",
+        "Generic subtitle without bundle-visible job sentence"
+      ],
+      "added": [
+        "CONSTELLATION_JOB_SENTENCE + STAGING CANDIDATE badge",
+        "Meta links: Mission Control · Entities · Investigations · Search & Hunt · Hive Intelligence",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator",
+        "Empty-graph honesty banner (constellation-empty-honesty) when explore returns zero nodes",
+        "Workspace min-height 50vh — graph + rail own primary viewport"
+      ],
+      "kept": [
+        "POST /api/ha-constellation/explore (not ha-graph dual-fetch)",
+        "Snapshot SSE stream + refresh + expired banner",
+        "Partial graph / expansion failure banners",
+        "Accessible listbox rail (entities + relationships tabs)",
+        "NodeDetailPanel edge evidence drawer with retry",
+        "Fixture mode dev-only strip",
+        "ECharts force graph via ThreatConstellationCanvas",
+        "AuthGuard ALERT_QUEUE_ROLES"
+      ]
+    }
+  },
+  "backend": {
+    "explore_wildcard": {
+      "path": "POST /api/ha-constellation/explore",
+      "body": "seed query * / 24h",
+      "staging": {
+        "status": 200,
+        "bytes": 412,
+        "nodes": 0,
+        "edges": 0,
+        "snapshot_len": 0,
+        "note": "Empty graph — snapshotId null when zero nodes; UI shows honesty banner"
+      }
+    },
+    "explore_host_seed": {
+      "path": "POST /api/ha-constellation/explore",
+      "body": "seed entity EC2AMAZ-8F0Q7DL / 7d",
+      "staging": {
+        "status": 200,
+        "nodes": 1,
+        "edges": 0,
+        "snapshot_len": 36,
+        "note": "Windows agent host resolves as single node; no edges in relationship index"
+      }
+    },
+    "relationship_evidence": {
+      "path": "GET /api/ha-constellation/relationships/{id}",
+      "staging": {
+        "status": 404,
+        "probe_id": "rel-nonexistent-probe",
+        "error": "Relationship not found",
+        "note": "Honest 404 for unknown edge; drawer retry path wired"
+      }
+    },
+    "legacy_ha_graph": {
+      "paths": [
+        "GET /api/ha-graph/nodes",
+        "GET /api/ha-graph/edges"
+      ],
+      "staging": {
+        "status": 200,
+        "nodes": 0,
+        "edges": 0,
+        "note": "Legacy INV-06 endpoints empty on staging — UI does not call these"
+      }
+    },
+    "stream": {
+      "path": "GET /api/ha-constellation/stream?snapshot=",
+      "staging": {
+        "note": "Requires valid snapshotId from explore; not probed without edges"
+      }
+    }
+  },
+  "ux_smoke": {
+    "deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 + edge — healthy",
+    "bundle_marker": "ThreatConstellationPage-UXCSSEOR.js contains Relationship graph for investigation, constellation-empty-honesty, STAGING CANDIDATE, /intelligence, Platform Administrator",
+    "ui_shell": {
+      "path": "/constellation",
+      "https_status": 200
+    },
+    "headed_browser": false,
+    "headed_note": "Unauthenticated browser redirected to /login; bundle + API probes + Vitest source-scan used instead",
+    "checks": [
+      {
+        "item": "job_sentence_in_bundle",
+        "result": "pass"
+      },
+      {
+        "item": "staging_honesty_markers_in_bundle",
+        "result": "pass"
+      },
+      {
+        "item": "meta_links_entities_intelligence_in_bundle",
+        "result": "pass"
+      },
+      {
+        "item": "empty_api_honesty_banner_wired",
+        "result": "pass",
+        "note": "wildcard explore returns 0 nodes on staging — banner expected at runtime"
+      },
+      {
+        "item": "host_seed_single_node",
+        "result": "pass",
+        "note": "EC2AMAZ-8F0Q7DL explore returns 1 node, 0 edges"
+      },
+      {
+        "item": "relationship_evidence_404_honest",
+        "result": "pass"
+      },
+      {
+        "item": "cross_links_runtime",
+        "result": "not_run",
+        "note": "headed auth smoke not executed"
+      }
+    ]
+  },
+  "windows_agent": {
+    "hostname": "EC2AMAZ-8F0Q7DL",
+    "preferred_id": 20,
+    "note": "Host seed yields 1 graph node on staging; relationship index empty (0 edges)"
+  },
+  "gates": {
+    "lint_changed": "pass",
+    "type_check": "pass",
+    "vitest_constellation": "pass (10)",
+    "build": "pass"
+  },
+  "known_backend_gap": {
+    "id": "CONSTELLATION-EMPTY-STAGING",
+    "summary": "Wildcard explore and ha-graph return empty; host seed yields node-only graph without relationship edges",
+    "remediation": "Populate v3-hive-entity-* and v3-hive-relationship-* indices on staging — out of Prompt 15 FE scope"
+  },
+  "handoff_at": "2026-08-29T12:30:00Z"
+}

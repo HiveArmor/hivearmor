@@ -2,9 +2,9 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 import {
-  AlertTriangle, Clock3, Database, GitBranch, List, Network, Radio, RefreshCw, ShieldAlert,
+  AlertTriangle, GitBranch, List, Network, Radio, RefreshCw,
 } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { ConstellationToolbar } from './ConstellationToolbar';
 import { useConstellationSnapshotStream } from './hooks/useConstellationSnapshotStream';
@@ -19,6 +19,10 @@ import type {
 } from '@/types/constellation.types';
 
 import './ThreatConstellationPage.css';
+
+/** Bundle-visible job sentence — relationship graph for investigation, not entity inventory or UEBA. */
+export const CONSTELLATION_JOB_SENTENCE =
+  'Relationship graph for investigation — explore evidence-backed entity and activity links, inspect edge evidence, then pivot into dossier, hunt, or an investigation session.';
 
 const ThreatConstellationCanvas = lazy(() => import('./ThreatConstellationCanvas').then((module) => ({ default: module.ThreatConstellationCanvas })));
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
@@ -148,9 +152,7 @@ export function ThreatConstellationPage(): JSX.Element {
     return [];
   }).sort((a, b) => (b.edge.confidence ?? 0) - (a.edge.confidence ?? 0)) : [], [edges, nodeById, selectedNodeId]);
 
-  const highestRisk = nodes.reduce((maximum, node) => Math.max(maximum, node.riskScore), 0);
-  const activeAlerts = nodes.reduce((total, node) => total + node.alertCount, 0);
-  const externalCount = nodes.filter((node) => node.scope === 'external').length;
+  const graphEmpty = !graphQuery.isLoading && !graphQuery.isError && nodes.length === 0;
 
   const selectNode = useCallback((nodeId: string) => { setSelectedNodeId(nodeId); setSelectedEdgeId(null); }, []);
   const selectEdge = useCallback((edgeId: string) => { setSelectedEdgeId(edgeId); setSelectedNodeId(null); }, []);
@@ -179,20 +181,42 @@ export function ThreatConstellationPage(): JSX.Element {
   };
 
   return <section className={`constellation-page${focusMode ? ' constellation-page--focus' : ''}`} aria-keyshortcuts={focusMode ? 'Escape' : undefined}>
-    <header className="constellation-page__identity"><span className="constellation-page__icon"><Network size={20} /></span><div><small>INVESTIGATION</small><h1>Threat Constellation</h1><p>Evidence-backed entity and activity relationships</p></div><div className="constellation-page__header-status"><span data-state={snapshotStream.connected ? graph?.freshness ?? 'fresh' : 'degraded'}><Radio size={12} />{snapshotStream.connected ? 'Snapshot live' : graphQuery.isLoading ? 'Loading' : 'Snapshot only'}</span><button type="button" onClick={refreshSnapshot} disabled={graphQuery.isFetching}><RefreshCw size={14} className={graphQuery.isFetching ? 'constellation-spin' : undefined} /> Refresh</button></div></header>
+    <header className="constellation-page__identity">
+      <span className="constellation-page__icon"><Network size={20} aria-hidden="true" /></span>
+      <div className="constellation-page__title">
+        <div className="constellation-page__eyebrow">
+          <small>INVESTIGATION</small>
+          <span className="constellation-page__badge">STAGING CANDIDATE</span>
+        </div>
+        <h1>Threat Constellation</h1>
+        <p className="constellation-page__job">{CONSTELLATION_JOB_SENTENCE}</p>
+      </div>
+      <div className="constellation-page__header-status">
+        <span data-state={snapshotStream.connected ? graph?.freshness ?? 'fresh' : 'degraded'}><Radio size={12} aria-hidden="true" />{snapshotStream.connected ? 'Snapshot live' : graphQuery.isLoading ? 'Loading' : 'Snapshot only'}</span>
+        <button type="button" onClick={refreshSnapshot} disabled={graphQuery.isFetching} aria-label="Refresh graph snapshot"><RefreshCw size={14} className={graphQuery.isFetching ? 'constellation-spin' : undefined} aria-hidden="true" /> Refresh</button>
+      </div>
+    </header>
+
+    <p className="constellation-page__meta">
+      <Link to="/dashboard">Mission Control</Link>
+      <span aria-hidden="true">·</span>
+      <Link to="/entities">Entities</Link>
+      <span aria-hidden="true">·</span>
+      <Link to="/investigations">Investigations</Link>
+      <span aria-hidden="true">·</span>
+      <Link to="/search">Search &amp; Hunt</Link>
+      <span aria-hidden="true">·</span>
+      <Link to="/intelligence">Hive Intelligence</Link>
+      <span aria-hidden="true">·</span>
+      <span className="constellation-page__access" title="Requires Analyst, SOC Manager, or Platform Administrator">Analyst · SOC Manager · Platform Administrator</span>
+    </p>
+
     {fixtureMode && <div className="constellation-page__fixture"><span><strong>Design fixture:</strong> fictional entity relationships are enabled for visual review.</span><span>Production never receives these records.</span></div>}
-    {graph?.partialFailures?.length ? <div className="constellation-page__partial" role="status"><AlertTriangle size={14} /><strong>Partial graph:</strong>{graph.partialFailures.map((failure) => failure.message).join(' ')}</div> : null}
-    {snapshotStream.pendingChanges > 0 ? <div className="constellation-page__updates" role="status"><Radio size={13} /><span>{snapshotStream.pendingChanges} graph {snapshotStream.pendingChanges === 1 ? 'change is' : 'changes are'} available. The current investigation view remains stable.</span><button type="button" onClick={refreshSnapshot}>Load updates</button></div> : null}
-    {snapshotStream.expired ? <div className="constellation-page__partial" role="alert"><AlertTriangle size={14} /><strong>Snapshot expired:</strong><span>Refresh to create a new authorized investigation projection.</span><button type="button" onClick={refreshSnapshot}>Refresh snapshot</button></div> : null}
-    {expandMutation.isError ? <div className="constellation-page__partial" role="alert"><AlertTriangle size={14} /><strong>Expansion failed:</strong><span>{expandMutation.error instanceof Error ? expandMutation.error.message : 'The selected node could not be expanded.'}</span><button type="button" onClick={() => expandMutation.reset()}>Dismiss</button></div> : null}
-    <section className="constellation-summary" aria-label="Relationship graph summary">
-      <article><span><Database size={12} /> Visible entities</span><strong>{nodes.length}</strong><small>{externalCount} external</small></article>
-      <article><span><GitBranch size={12} /> Relationships</span><strong>{edges.length}</strong><small>{graph?.totalEdges ?? edges.length} authorized</small></article>
-      <article data-level={riskLevel(highestRisk)}><span><ShieldAlert size={12} /> Highest risk</span><strong>{highestRisk || '—'}</strong><small>normalized /100</small></article>
-      <article><span><AlertTriangle size={12} /> Alert references</span><strong>{activeAlerts}</strong><small>across visible entities</small></article>
-      <article><span><Clock3 size={12} /> Activity window</span><strong>{filters.timeRange}</strong><small>{filters.depth} relationship hops</small></article>
-      <article><span><RefreshCw size={12} /> Snapshot</span><strong>{formatSnapshot(graph?.snapshotAt)}</strong><small>{graph?.queryDurationMs ? `${graph.queryDurationMs} ms query` : 'Awaiting data'}</small></article>
-    </section>
+    {graphEmpty && <div className="constellation-page__honesty" role="status" data-testid="constellation-empty-honesty"><strong>No relationship graph data yet.</strong><span>The entity/relationship index may be empty on this tenant. Broaden filters or seed graph data — not a production-ready constellation deployment claim.</span></div>}
+    {graph?.partialFailures?.length ? <div className="constellation-page__partial" role="status"><AlertTriangle size={14} aria-hidden="true" /><strong>Partial graph:</strong>{graph.partialFailures.map((failure) => failure.message).join(' ')}</div> : null}
+    {snapshotStream.pendingChanges > 0 ? <div className="constellation-page__updates" role="status"><Radio size={13} aria-hidden="true" /><span>{snapshotStream.pendingChanges} graph {snapshotStream.pendingChanges === 1 ? 'change is' : 'changes are'} available. The current investigation view remains stable.</span><button type="button" onClick={refreshSnapshot}>Load updates</button></div> : null}
+    {snapshotStream.expired ? <div className="constellation-page__partial" role="alert"><AlertTriangle size={14} aria-hidden="true" /><strong>Snapshot expired:</strong><span>Refresh to create a new authorized investigation projection.</span><button type="button" onClick={refreshSnapshot}>Refresh snapshot</button></div> : null}
+    {expandMutation.isError ? <div className="constellation-page__partial" role="alert"><AlertTriangle size={14} aria-hidden="true" /><strong>Expansion failed:</strong><span>{expandMutation.error instanceof Error ? expandMutation.error.message : 'The selected node could not be expanded.'}</span><button type="button" onClick={() => expandMutation.reset()}>Dismiss</button></div> : null}
     <ConstellationToolbar filters={filters} paused={paused} focusMode={focusMode} onFiltersChange={updateFilters} onResetView={resetWorkspace} onFitView={() => { setZoom(1); setFitRevision((revision) => revision + 1); }} onZoomIn={() => setZoom((value) => Math.min(2.2, value + .2))} onZoomOut={() => setZoom((value) => Math.max(.45, value - .2))} onTogglePaused={() => setPaused((value) => !value)} onToggleFocusMode={() => setFocusMode((value) => !value)} />
 
     <main className={`constellation-workspace${hasSelection ? ' constellation-workspace--detail' : ''}${focusMode ? ' constellation-workspace--focus' : ''}`}>

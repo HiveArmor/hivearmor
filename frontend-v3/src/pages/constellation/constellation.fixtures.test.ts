@@ -70,6 +70,10 @@ describe('threat constellation design contract', () => {
     expect(page).toContain('queryFn: ({ signal })');
     expect(page).toContain('useConstellationSnapshotStream');
     expect(detail).toContain('Supporting evidence');
+    expect(page).toContain('CONSTELLATION_JOB_SENTENCE');
+    expect(page).toContain('constellation-empty-honesty');
+    expect(page).toContain('Mission Control');
+    expect(page).toContain('/intelligence');
     expect(service).toContain('/ha-constellation');
     expect(service).toContain('expandConstellation');
     expect(styles).toContain('.constellation-toolbar');
