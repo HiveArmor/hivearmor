@@ -3,7 +3,7 @@ import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AssetsPage } from './AssetsPage';
+import { AssetsPage, POSTURE_ASSETS_JOB_SENTENCE } from './AssetsPage';
 import type { AssetDTO, AssetListResponse } from '../posture.types';
 
 const mockUseQuery = vi.fn();
@@ -34,15 +34,21 @@ vi.mock('@/components/siem-data-grid', () => ({
     _ref: React.Ref<unknown>,
   ) {
     if (loading) return <div aria-label="Loading asset inventory" />;
-    return <div aria-label="Asset intelligence inventory">{rowData.map((asset) => <button key={asset.id} type="button" onClick={() => onRowClicked({ data: asset })}>{asset.clientName}</button>)}</div>;
+    return <div aria-label="Posture asset inventory">{rowData.map((asset) => <button key={asset.id} type="button" onClick={() => onRowClicked({ data: asset })}>{asset.clientName}</button>)}</div>;
   }),
+}));
+
+vi.mock('react-router-dom', () => ({
+  Link: ({ to, children, className }: { to: string; children: React.ReactNode; className?: string }) => (
+    <a href={to} className={className}>{children}</a>
+  ),
 }));
 
 vi.mock('../posture.service', () => ({
   assetFixtureMode: false,
   fetchAssets: vi.fn(),
+  fetchAssetDetail: vi.fn(),
 }));
-
 
 const asset: AssetDTO = {
   id: 1,
@@ -104,11 +110,13 @@ beforeEach(() => {
 });
 
 describe('AssetsPage', () => {
-  it('renders a bounded summary and does not auto-open the detail drawer', () => {
+  it('renders honesty chrome with inline stats and does not auto-open the detail drawer', () => {
     render(<AssetsPage />);
 
-    expect(screen.getByText('Asset Intelligence')).toBeInTheDocument();
-    expect(screen.getByText('84')).toBeInTheDocument();
+    expect(screen.getByText('Assets')).toBeInTheDocument();
+    expect(screen.getByText(POSTURE_ASSETS_JOB_SENTENCE)).toBeInTheDocument();
+    expect(screen.getByText('STAGING CANDIDATE')).toBeInTheDocument();
+    expect(screen.getByLabelText('Inventory summary')).toHaveTextContent('84 total');
     expect(screen.getByRole('button', { name: 'FIN-WKS-044' })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Asset detail views' })).not.toBeInTheDocument();
     expect(screen.getByTestId('status-dock')).toBeInTheDocument();
@@ -142,6 +150,14 @@ describe('AssetsPage', () => {
 
     expect(screen.getByText('No assets match these filters')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Clear filters' })).toBeInTheDocument();
+  });
+
+  it('shows empty-inventory honesty distinct from filter-empty', () => {
+    mockUseQuery.mockReturnValue(queryState({ data: { ...response, content: [], totalElements: 0, totalPages: 0, summary: { total: 0, criticalAssets: 0, highRisk: 0, highExposure: 0, notOnboarded: 0, sensorAttention: 0, newlyDiscovered: 0 } } }));
+    render(<AssetsPage />);
+
+    expect(screen.getByTestId('assets-empty-honesty')).toBeInTheDocument();
+    expect(screen.queryByText('No assets match these filters')).not.toBeInTheDocument();
   });
 
   it('separates permission denial from a recoverable loading failure', () => {

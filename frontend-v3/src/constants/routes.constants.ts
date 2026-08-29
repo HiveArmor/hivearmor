@@ -42,6 +42,7 @@ export const ROUTES = {
   IDENTITIES: '/posture/identities',
   ACTIVE_DIRECTORY: '/posture/active-directory',
   EXPOSURE: '/posture/exposure',
+  VULNERABILITIES: '/posture/vulnerabilities',
   SENSORS: '/posture/sensors',
   COMPLIANCE: '/compliance',
 
