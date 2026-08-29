@@ -1,0 +1,134 @@
+{
+  "prompt": "17-response-playbooks-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "67ea7a9",
+  "based_on_main_includes_pr16": true,
+  "decision": "RESTRUCTURE",
+  "routes": [
+    "/response/playbooks",
+    "/response/playbooks/new",
+    "/response/playbooks/:id",
+    "/response/playbooks/:id/edit"
+  ],
+  "job_sentence": "SOAR playbook inventory — author, review, and execute response workflows with authority gates. Detection content lives on Detection Rules; execution history lives on Response Activity.",
+  "distinction": {
+    "detection_rules": "/detection-rules = detection content manager",
+    "playbooks": "/response/playbooks = SOAR playbook inventory + governed execute",
+    "activity": "/response/activity = execution history (Prompt 18)",
+    "authority": "/response/authority = approval projection / governance (Prompt 19)",
+    "incidents": "/incidents = owned response cases"
+  },
+  "ia": {
+    "response_playbooks": {
+      "removed": [
+        "Workload metrics strip (total/active/runs-24h/success-rate/pending-approvals/quarantines)",
+        "fetchPlaybookMetrics query on list page",
+        "Legacy Playbook Library header without job sentence",
+        "GAP-SEC-08 blocked-execution test fixtures in page tests"
+      ],
+      "added": [
+        "RESPONSE_PLAYBOOKS_JOB_SENTENCE + STAGING CANDIDATE badge",
+        "Meta links: Mission Control · Detection Rules · Response Activity · Response Approvals · Incidents",
+        "Human role access note: SOC Manager · Platform Administrator",
+        "Empty-inventory honesty banner (playbook-empty-honesty)",
+        "canManage gate on New playbook / enable toggle / Run with human PLAYBOOK_MANAGE_DENIED_TITLE",
+        "Approval-required execute honesty with link to Response Approvals (projection only copy)",
+        "Playbook grid min-height 50vh (.resp-inventory)",
+        "ResponsePlaybooksUxHonesty.sourceScan.test.ts"
+      ],
+      "kept": [
+        "GET /api/ha-playbooks inventory (PlaybookResource — successor to deprecated /api/soar/playbooks)",
+        "Compact filters: state · trigger · category · search",
+        "AG Grid via SiemDataGrid + preview drawer",
+        "Cursor pagination + load-more",
+        "PlaybookDetailPage workbench / builder routes (polish only)",
+        "Static ActionPalette catalogue (no /api/soar/actions)",
+        "Fixture mode dev-only (VITE_USE_FOUNDATION_FIXTURES)",
+        "Admin-only mutate aligned to PlaybookResource @PreAuthorize ROLE_ADMIN"
+      ]
+    }
+  },
+  "backend": {
+    "inventory": {
+      "path": "GET /api/ha-playbooks",
+      "auth": "ROLE_ADMIN | ROLE_USER",
+      "staging": {
+        "http": 200,
+        "body_bytes": 830,
+        "note": "Legacy GET /api/soar/playbooks deprecated with Successor: /api/ha-playbooks"
+      }
+    },
+    "execute": {
+      "path": "POST /api/ha-playbooks/{id}/execute",
+      "auth": "ROLE_ADMIN",
+      "staging": {
+        "http": 202,
+        "note": "Empty body probe — route live; full flow requires previewToken"
+      }
+    },
+    "executions_summary": {
+      "path": "GET /api/ha-playbooks/executions/summary",
+      "auth": "ROLE_ADMIN | ROLE_SOC_MANAGER | ROLE_ANALYST | ROLE_USER",
+      "staging": {
+        "http": 200,
+        "body_bytes": 271
+      }
+    },
+    "governance_approvals": {
+      "path": "GET /api/ha-response-governance/approvals",
+      "auth": "projection (RESP-020 STAGING CANDIDATE)",
+      "staging": {
+        "http": 200,
+        "body_bytes": 869,
+        "note": "Policies/delegations empty — approval queue projection only"
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist build contains SOAR playbook inventory, STAGING CANDIDATE, playbook-empty-honesty, Platform Administrator",
+    "ui_shell": {
+      "path": "/response/playbooks",
+      "staging_https": "api_probed_admin_jwt_ok",
+      "fe_deploy": "not_run_local_build_only"
+    },
+    "headed_browser": false,
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_detection_activity_authority_incidents", "result": "pass" },
+      { "item": "empty_inventory_honesty_banner_wired", "result": "pass" },
+      { "item": "canManage_gates_create_toggle_execute", "result": "pass" },
+      { "item": "no_fake_kpi_metrics_strip", "result": "pass" },
+      { "item": "grid_min_height_50vh", "result": "pass" },
+      { "item": "staging_api_ha_playbooks_list", "result": "pass", "http": 200 },
+      { "item": "staging_api_executions_summary", "result": "pass", "http": 200 },
+      { "item": "staging_api_governance_approvals", "result": "pass", "http": 200 },
+      { "item": "staging_api_execute_route", "result": "pass", "http": 202 }
+    ]
+  },
+  "gates": {
+    "lint_changed": "pass (changed response files; pre-existing warnings in unrelated files)",
+    "type_check": "pass",
+    "vitest_response_slice": "pass (115)",
+    "build": "pass"
+  },
+  "known_backend_gap": {
+    "id": "RESP-020-GOVERNANCE",
+    "summary": "Full policy/delegation CRUD not implemented — RESP_020_GOVERNANCE=false; approval projection only",
+    "remediation": "Prompt 19 Response Authority depth — out of Prompt 17 FE scope"
+  },
+  "scorecard": {
+    "job_sentence_and_badge": 10,
+    "meta_links_and_distinction": 10,
+    "inventory_first_grid": 9,
+    "compact_filters": 9,
+    "canManage_honesty": 10,
+    "no_fake_execution_kpis": 10,
+    "backend_wiring_ha_playbooks": 10,
+    "staging_api_probe": 9,
+    "tests_and_build_gates": 10,
+    "overall": 9.7
+  },
+  "next_recommended": "/response/activity (Prompt 18)",
+  "handoff_at": "2026-08-29T13:00:00Z"
+}

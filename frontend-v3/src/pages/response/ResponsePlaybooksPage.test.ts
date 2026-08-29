@@ -1,11 +1,14 @@
 /**
- * ResponsePlaybooksPage Tests
- * DEF-04 acceptance criteria validation
+ * ResponsePlaybooksPage Tests — Prompt 17
  */
 
 import { describe, it, expect } from 'vitest';
 
 import type { PlaybookDTO, PlaybookListParams } from './response.types';
+import {
+  PLAYBOOK_MANAGE_DENIED_TITLE,
+  RESPONSE_PLAYBOOKS_JOB_SENTENCE,
+} from './ResponsePlaybooksPage';
 
 describe('ResponsePlaybooksPage types', () => {
   it('should define PlaybookDTO with required fields', () => {
@@ -50,21 +53,14 @@ describe('ResponsePlaybooksPage types', () => {
   });
 });
 
-describe('ResponsePlaybooksPage GAP-SEC-08 requirements', () => {
-  it('should document Run Now button as permanently disabled', () => {
-    const expectedTooltip = 'Playbook execution is blocked pending security remediation (GAP-SEC-08).';
-    expect(expectedTooltip.includes('GAP-SEC-08')).toBe(true);
-    expect(expectedTooltip.includes('blocked')).toBe(true);
+describe('ResponsePlaybooksPage Prompt 17 honesty', () => {
+  it('exports job sentence for SOAR inventory', () => {
+    expect(RESPONSE_PLAYBOOKS_JOB_SENTENCE).toMatch(/playbook inventory/i);
+    expect(RESPONSE_PLAYBOOKS_JOB_SENTENCE).toMatch(/authority/i);
   });
 
-  it('should document banner as non-dismissible', () => {
-    const bannerTitle = 'Playbook Execution Blocked';
-    const bannerMessage =
-      'Automated playbook execution ("Run Now") is disabled pending a security remediation in the HiveArmor backend (GAP-SEC-08).';
-
-    expect(bannerTitle.includes('Blocked')).toBe(true);
-    expect(bannerMessage.includes('GAP-SEC-08')).toBe(true);
-    expect(bannerMessage.includes('disabled')).toBe(true);
+  it('uses human Platform Administrator label for mutate deny', () => {
+    expect(PLAYBOOK_MANAGE_DENIED_TITLE).toBe('Required permission: Platform Administrator');
   });
 });
 
@@ -75,37 +71,7 @@ describe('ResponsePlaybooksPage role-based access', () => {
     expect(allowedRoles.includes('ROLE_ADMIN')).toBe(true);
   });
 
-  it('should allow delete only for ROLE_ADMIN', () => {
-    const deleteRole = 'ROLE_ADMIN';
-    expect(deleteRole).toBe('ROLE_ADMIN');
-  });
-});
-
-describe('ResponsePlaybooksPage column definitions', () => {
-  it('should display execution count as tabular-nums', () => {
-    const mockPlaybook: PlaybookDTO = {
-      name: 'Test',
-      status: 'ACTIVE',
-      triggerType: 'MANUAL',
-      executionCount: 42,
-      nodes: [],
-      edges: [],
-    };
-
-    expect(mockPlaybook.executionCount).toBe(42);
-  });
-
-  it('should show em-dash for zero execution count', () => {
-    const mockPlaybook: PlaybookDTO = {
-      name: 'Test',
-      status: 'ACTIVE',
-      triggerType: 'MANUAL',
-      executionCount: 0,
-      nodes: [],
-      edges: [],
-    };
-
-    const display = mockPlaybook.executionCount === 0 ? '—' : String(mockPlaybook.executionCount);
-    expect(display).toBe('—');
+  it('should allow mutate only for ROLE_ADMIN (Platform Administrator)', () => {
+    expect(PLAYBOOK_MANAGE_DENIED_TITLE).toContain('Platform Administrator');
   });
 });

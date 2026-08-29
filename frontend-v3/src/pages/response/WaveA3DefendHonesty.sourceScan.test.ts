@@ -37,10 +37,10 @@ describe('Wave A3 Defend/respond honesty', () => {
     expect(authority).toContain('STAGING CANDIDATE');
   });
 
-  it('A3-PB-01: playbook mutate UI is Admin-only', () => {
+  it('A3-PB-01: playbook mutate UI is Admin-only (canManage)', () => {
     const list = readFileSync(join(process.cwd(), 'src/pages/response/ResponsePlaybooksPage.tsx'), 'utf8');
     const detail = readFileSync(join(process.cwd(), 'src/pages/response/PlaybookDetailPage.tsx'), 'utf8');
-    expect(list).toContain('const canMutate = hasAdminRole');
+    expect(list).toContain('const canManage = hasAdminRole');
     expect(detail).toContain('const canMutate = hasAdminRole');
   });
 

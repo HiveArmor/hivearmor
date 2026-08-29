@@ -1,8 +1,8 @@
 /**
- * ResponsePlaybooksPage — Phase 7 redesign
- * RESP-001: Playbook library — compact header, workload metrics strip, virtual AG Grid,
- *            cursor pagination, filter/sort controls, inline activation toggle,
- *            and a preview drawer with step summary / last execution / blast-radius context.
+ * ResponsePlaybooksPage — Prompt 17 SOAR playbook hub
+ * RESP-001: Inventory-first playbook library — compact filters, AG Grid ≥50vh,
+ *           cursor pagination, inline activation toggle, preview drawer with
+ *           governed execute honesty (approval projection via RESP-020).
  *
  * Routes all API calls through /api/ha-playbooks (secured @PreAuthorize).
  * Fixture mode: VITE_USE_FOUNDATION_FIXTURES=true (DEV only)
@@ -27,19 +27,18 @@ import {
   Plus,
   RefreshCw,
   Search,
-  Settings2,
   ShieldCheck,
   ShieldX,
   Timer,
+  Workflow,
   Zap,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { RESPONSE_GRID_ROW_HEIGHTS } from './response-grid-standard';
 import type { PlaybookListItem, PlaybookListParams, PlaybookCategory } from './response.types';
 import {
   fetchPlaybookList,
-  fetchPlaybookMetrics,
   setPlaybookActive,
   seedStarterPlaybooks,
   fixtureMode,
@@ -54,12 +53,19 @@ import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfir
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { StatusDock } from '@/components/status-dock/StatusDock';
+import { ROUTES } from '@/constants/routes.constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
 import { useAuthStore } from '@/store/auth.store';
 import './ResponsePlaybooksPage.css';
 import './response-grid-standard.css';
+
+/** Bundle-visible job sentence — SOAR orchestration, not alert triage or detection content. */
+export const RESPONSE_PLAYBOOKS_JOB_SENTENCE =
+  'SOAR playbook inventory — author, review, and execute response workflows with authority gates. Detection content lives on Detection Rules; execution history lives on Response Activity.';
+
+export const PLAYBOOK_MANAGE_DENIED_TITLE = 'Required permission: Platform Administrator';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -215,14 +221,20 @@ function PlaybookPreviewDrawer({
   onClose,
   onEdit,
   onRunNow,
-  canMutate,
+  canManage,
 }: {
   playbook: PlaybookListItem;
   onClose: () => void;
   onEdit: (id: string) => void;
   onRunNow: (id: string) => void;
-  canMutate: boolean;
+  canManage: boolean;
 }): JSX.Element {
+  const runDisabledReason = !canManage
+    ? PLAYBOOK_MANAGE_DENIED_TITLE
+    : playbook.status !== 'ACTIVE'
+      ? 'Enable the playbook before executing'
+      : undefined;
+
   return (
     <HaDrawer
       isOpen
@@ -232,16 +244,15 @@ function PlaybookPreviewDrawer({
       width={520}
       footer={
         <div className="resp-drawer-footer">
-          {canMutate && (
-            <HaButton
-              variant="primary"
-              onClick={() => onRunNow(playbook.id)}
-              isDisabled={playbook.status !== 'ACTIVE'}
-              aria-label={playbook.status !== 'ACTIVE' ? 'Run now (playbook must be active to run)' : 'Run now'}
-            >
-              Run now
-            </HaButton>
-          )}
+          <HaButton
+            variant="primary"
+            onClick={() => onRunNow(playbook.id)}
+            isDisabled={Boolean(runDisabledReason)}
+            title={runDisabledReason}
+            aria-label={runDisabledReason ?? (playbook.approvalRequired ? 'Run now — approval may be required' : 'Run now')}
+          >
+            {playbook.approvalRequired ? 'Run with approval' : 'Run now'}
+          </HaButton>
           <HaButton variant="secondary" onClick={() => onEdit(playbook.id)}>
             Open workbench
           </HaButton>
@@ -291,8 +302,12 @@ function PlaybookPreviewDrawer({
           <div className="resp-drawer-notice resp-drawer-notice--warning">
             <AlertTriangle size={14} />
             <div>
-              <strong>Approval required</strong>
-              <p>This playbook performs disruptive actions. An authorized SOC Manager must approve the run before it proceeds.</p>
+              <strong>Approval required (STAGING CANDIDATE)</strong>
+              <p>
+                Execution pauses at the approval gate. A Platform Administrator must decide on{' '}
+                <Link to="/response/authority" onClick={onClose}>Response Approvals</Link>
+                {' '}before disruptive steps proceed. Policy CRUD is not implemented — projection only.
+              </p>
             </div>
           </div>
         )}
@@ -344,7 +359,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
   const hasSocManagerRole = user?.roles?.includes('ROLE_SOC_MANAGER') ?? false;
   /** List/detail: SOC Manager or Admin. Mutate/execute: Admin only (PlaybookResource). */
   const canView = hasAdminRole || hasSocManagerRole;
-  const canMutate = hasAdminRole;
+  const canManage = hasAdminRole;
 
   // ─── Queries ──────────────────────────────────────────────────────────────
 
@@ -375,15 +390,6 @@ export function ResponsePlaybooksPage(): JSX.Element {
     enabled: canView,
   });
 
-  const {
-    data: metrics,
-  } = useQuery({
-    queryKey: ['resp-playbook-metrics'],
-    queryFn: fetchPlaybookMetrics,
-    staleTime: 60_000,
-    enabled: canView,
-  });
-
   // ─── Mutations ────────────────────────────────────────────────────────────
 
   const toggleMutation = useMutation({
@@ -393,7 +399,6 @@ export function ResponsePlaybooksPage(): JSX.Element {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['resp-playbooks'] });
-      void queryClient.invalidateQueries({ queryKey: ['resp-playbook-metrics'] });
     },
     onError: (_err, { id }) => {
       setOptimisticOverrides((prev) => {
@@ -412,7 +417,6 @@ export function ResponsePlaybooksPage(): JSX.Element {
     mutationFn: seedStarterPlaybooks,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['resp-playbooks'] });
-      void queryClient.invalidateQueries({ queryKey: ['resp-playbook-metrics'] });
     },
   });
 
@@ -549,7 +553,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
             active={optimisticOverrides[data.id] ?? data.status === 'ACTIVE'}
             status={data.status}
             onToggle={handleToggleRequest}
-            disabled={!canMutate || toggleMutation.isPending}
+            disabled={!canManage || toggleMutation.isPending}
           />
         ),
       },
@@ -571,7 +575,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
         ),
       },
     ],
-    [canMutate, handleEdit, handleToggleRequest, optimisticOverrides, toggleMutation.isPending]
+    [canManage, handleEdit, handleToggleRequest, optimisticOverrides, toggleMutation.isPending]
   );
 
   // ─── Access denied ─────────────────────────────────────────────────────────
@@ -580,7 +584,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
     return (
       <div className="resp-access-denied">
         <AccessDeniedState
-          message="Response playbooks require the SOC Manager role or higher."
+          message="Response playbooks require the SOC Manager role or Platform Administrator."
         />
       </div>
     );
@@ -602,78 +606,70 @@ export function ResponsePlaybooksPage(): JSX.Element {
 
   const items = listResult?.items ?? [];
   const total = listResult?.total ?? 0;
+  const hasFilters = Boolean(search || statusFilter !== 'ALL' || triggerFilter !== 'ALL' || categoryFilter !== 'ALL');
+  const inventoryEmpty = !isLoading && !isError && total === 0 && !hasFilters;
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="resp-page" data-fixture={fixtureMode || undefined}>
 
-      {/* ── Page identity ── */}
-      <header className="resp-page-header">
-        <div className="resp-page-header__left">
-          <div className="resp-page-header__eyebrow">
-            <Layers size={13} />
-            Response
+      <header className="resp-page__identity">
+        <span className="resp-page__icon"><Workflow size={20} aria-hidden="true" /></span>
+        <div className="resp-page__title">
+          <div className="resp-page__eyebrow">
+            <small>RESPOND</small>
+            <span className="resp-page__badge">STAGING CANDIDATE</span>
           </div>
-          <h1 className="resp-page-header__title">Playbook Library</h1>
+          <h1>Response Playbooks</h1>
+          <p className="resp-page__job">{RESPONSE_PLAYBOOKS_JOB_SENTENCE}</p>
         </div>
-        <div className="resp-page-header__right">
-          {fixtureMode && (
-            <span className="resp-fixture-chip" aria-label="Demonstration data — not connected to a real environment">
-              Demonstration data
-            </span>
-          )}
+        <div className="resp-page__identity-actions">
           <HaButton
             variant="plain"
             icon={<RefreshCw size={14} />}
-            aria-label="Refresh"
+            aria-label="Refresh playbooks"
             onClick={() => refetch()}
             isDisabled={isFetching}
             style={{ minWidth: 'unset', padding: '6px 8px' }}
           />
-          {canMutate && (
-            <HaButton
-              variant="primary"
-              icon={<Plus size={14} />}
-              onClick={() => navigate('/response/playbooks/new')}
-            >
-              New playbook
-            </HaButton>
-          )}
+          <HaButton
+            variant="primary"
+            icon={<Plus size={14} />}
+            onClick={() => navigate('/response/playbooks/new')}
+            isDisabled={!canManage}
+            title={canManage ? 'Create playbook' : PLAYBOOK_MANAGE_DENIED_TITLE}
+          >
+            New playbook
+          </HaButton>
         </div>
       </header>
 
-      {/* ── Workload metrics strip ── */}
-      {metrics && (
-        <div className="resp-metrics-strip" role="region" aria-label="Playbook workload summary">
-          <div className="resp-metric">
-            <span className="resp-metric__value">{metrics.total}</span>
-            <span className="resp-metric__label">Total</span>
-          </div>
-          <div className="resp-metric">
-            <span className="resp-metric__value resp-metric__value--action">{metrics.active}</span>
-            <span className="resp-metric__label">Active</span>
-          </div>
-          <div className="resp-metric resp-metric--divider">
-            <span className="resp-metric__value resp-metric__value--bright">{metrics.executionsLast24h}</span>
-            <span className="resp-metric__label">Runs · 24h</span>
-          </div>
-          <div className="resp-metric">
-            <span className="resp-metric__value resp-metric__value--positive">{metrics.successRate24h.toFixed(1)}%</span>
-            <span className="resp-metric__label">Success rate</span>
-          </div>
-          {metrics.pendingApprovals > 0 && (
-            <div className="resp-metric resp-metric--divider">
-              <span className="resp-metric__value resp-metric__value--warning">{metrics.pendingApprovals}</span>
-              <span className="resp-metric__label">Pending approvals</span>
-            </div>
-          )}
-          {metrics.activeQuarantines > 0 && (
-            <div className="resp-metric">
-              <span className="resp-metric__value resp-metric__value--critical">{metrics.activeQuarantines}</span>
-              <span className="resp-metric__label">Active quarantines</span>
-            </div>
-          )}
+      <p className="resp-page__meta">
+        <Link to="/dashboard">Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.DETECTION_RULES}>Detection Rules</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.RESPONSE_ACTIVITY}>Response Activity</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/response/authority">Response Approvals</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.INCIDENTS}>Incidents</Link>
+        <span aria-hidden="true">·</span>
+        <span className="resp-page__access" title="View requires SOC Manager or Platform Administrator">SOC Manager · Platform Administrator</span>
+      </p>
+
+      {fixtureMode && (
+        <div className="resp-page__fixture" role="status">
+          <span><strong>Design fixture:</strong> fictional playbook inventory and execution telemetry are enabled.</span>
+          <span>Production never receives these records.</span>
+        </div>
+      )}
+
+      {inventoryEmpty && (
+        <div className="resp-page__honesty" role="status" data-testid="playbook-empty-honesty">
+          <strong>No SOAR playbooks configured yet.</strong>
+          <span>The tenant library may be empty — create a playbook or seed starter templates when authorized. Success-rate and run-volume metrics are not shown until executions exist.</span>
         </div>
       )}
 
@@ -729,11 +725,11 @@ export function ResponsePlaybooksPage(): JSX.Element {
           <button
             type="button"
             className="resp-toolbar-btn"
-            onClick={() => navigate('/response/activity')}
+            onClick={() => navigate(ROUTES.RESPONSE_ACTIVITY)}
             aria-label="View execution history"
           >
-            <Settings2 size={13} />
-            Activity log
+            <Activity size={13} />
+            Activity
           </button>
           <button
             type="button"
@@ -748,7 +744,17 @@ export function ResponsePlaybooksPage(): JSX.Element {
       </div>
 
       {/* ── Data grid ── */}
-      <div className="resp-grid-wrap">
+      <main className="resp-inventory">
+        <div className="resp-results__toolbar">
+          <div>
+            <strong>Installed playbooks</strong>
+            <span>{isLoading ? 'Loading inventory' : `${total.toLocaleString()} matching`}</span>
+            {isFetching && !isLoading && items.length > 0 && (
+              <em><RefreshCw size={11} className="resp-spin" /> Refreshing</em>
+            )}
+          </div>
+        </div>
+        <div className="resp-grid-wrap">
         {isLoading ? (
           <div className="resp-grid-skeleton" role="status" aria-live="polite">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -757,14 +763,14 @@ export function ResponsePlaybooksPage(): JSX.Element {
           </div>
         ) : items.length === 0 ? (
           <EmptyState
-            title={search || statusFilter !== 'ALL' || triggerFilter !== 'ALL' ? 'No playbooks match your filters' : 'No playbooks configured'}
+            title={hasFilters ? 'No playbooks match your filters' : 'No playbooks configured'}
             description={
-              search || statusFilter !== 'ALL' || triggerFilter !== 'ALL'
+              hasFilters
                 ? 'Try clearing one or more filters to see more results.'
-                : 'Start from a blank canvas or seed three SOC starter playbooks (isolation, malware containment, manual triage).'
+                : 'Create a playbook from the builder or seed starter templates when you have Platform Administrator access.'
             }
             action={
-              canMutate && !search && statusFilter === 'ALL' ? (
+              canManage && !hasFilters ? (
                 <div className="resp-empty-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <HaButton variant="primary" icon={<Plus size={14} />} onClick={() => navigate('/response/playbooks/new')}>
                     New playbook
@@ -795,7 +801,8 @@ export function ResponsePlaybooksPage(): JSX.Element {
             getRowId={(params) => (params.data as PlaybookListItem).id}
           />
         )}
-      </div>
+        </div>
+      </main>
 
       {/* ── Load-more ── */}
       {listResult?.hasMore && (
@@ -822,7 +829,7 @@ export function ResponsePlaybooksPage(): JSX.Element {
           onClose={() => setSelectedPlaybook(null)}
           onEdit={handleEdit}
           onRunNow={handleRunNow}
-          canMutate={canMutate}
+          canManage={canManage}
         />
       )}
 
