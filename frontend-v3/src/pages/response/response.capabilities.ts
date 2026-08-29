@@ -53,3 +53,5 @@ export const RESP_020_APPROVAL_PROJECTION_TITLE =
 
 export const RESP_PLAYBOOK_AUDIT_DISABLED_TITLE =
   'Dedicated playbook audit endpoint is not available; showing execution history projection';
+
+export const AUTHORITY_DECIDE_DENIED_TITLE = 'Required permission: Platform Administrator';
