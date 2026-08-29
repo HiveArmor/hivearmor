@@ -459,7 +459,7 @@ describe('RiskDashboardPage', () => {
       expect(option.yAxis.axisLabel.color).toBe('token-ha-text-secondary');
     });
 
-    it('anomaly chips use token-resolved colors (no hex literals)', async () => {
+    it('anomaly chips use color-mix token backgrounds (no solid hex fills)', async () => {
       renderPage();
 
       await waitFor(() => {
@@ -470,10 +470,30 @@ describe('RiskDashboardPage', () => {
       const chip25 = screen.getByTestId('chip-tier25');
       const chip50 = screen.getByTestId('chip-tier50');
 
-      // The chips apply backgroundColor from the token values
-      expect(chip10).toHaveStyle({ backgroundColor: 'token-ha-medium' });
-      expect(chip25).toHaveStyle({ backgroundColor: 'token-ha-high' });
-      expect(chip50).toHaveStyle({ backgroundColor: 'token-ha-critical' });
+      expect(chip10).toHaveStyle({
+        background: expect.stringContaining('color-mix(in srgb, token-ha-medium 15%, transparent)'),
+      });
+      expect(chip25).toHaveStyle({
+        background: expect.stringContaining('color-mix(in srgb, token-ha-high 15%, transparent)'),
+      });
+      expect(chip50).toHaveStyle({
+        background: expect.stringContaining('color-mix(in srgb, token-ha-critical 15%, transparent)'),
+      });
+    });
+
+    it('renders job sentence and sibling meta links', async () => {
+      renderPage();
+
+      await waitFor(() => {
+        expect(screen.getByText(/UEBA risk overview/i)).toBeInTheDocument();
+      });
+
+      expect(screen.getByRole('link', { name: /mission control/i })).toHaveAttribute('href', '/dashboard');
+      expect(screen.getByRole('link', { name: /search & hunt/i })).toHaveAttribute('href', '/search');
+      expect(screen.getByRole('link', { name: /^entities$/i })).toHaveAttribute('href', '/entities');
+      expect(screen.getByRole('link', { name: /hive intelligence/i })).toHaveAttribute('href', '/intelligence');
+      expect(screen.getByRole('link', { name: /investigations/i })).toHaveAttribute('href', '/investigations');
+      expect(screen.getByRole('link', { name: /incidents/i })).toHaveAttribute('href', '/incidents');
     });
   });
 });

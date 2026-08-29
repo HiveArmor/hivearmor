@@ -1,0 +1,330 @@
+/**
+ * UEBA Risk Dashboard — user risk scores, trends, anomalies.
+ * STAGING CANDIDATE — never PRODUCTION READY without evidence.
+ */
+
+.ueba-risk-page {
+  display: flex;
+  height: calc(100dvh - var(--ha-masthead-height));
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ha-background);
+  color: var(--ha-text-primary);
+}
+
+.ueba-risk-page__header {
+  display: flex;
+  min-height: 72px;
+  flex: none;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-raised);
+}
+
+.ueba-risk-page__title-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  place-items: center;
+  margin-top: 2px;
+  border: 1px solid color-mix(in srgb, var(--ha-primary) 46%, var(--ha-border));
+  border-radius: var(--ha-radius-base);
+  background: var(--ha-surface-primary);
+  color: var(--ha-primary);
+}
+
+.ueba-risk-page__title {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.ueba-risk-page__eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.ueba-risk-page__eyebrow > span:first-child {
+  color: var(--ha-primary);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.ueba-risk-page__badge {
+  padding: 2px 6px;
+  border: 1px solid color-mix(in srgb, var(--ha-high) 40%, var(--ha-border));
+  border-radius: var(--ha-radius-sm);
+  background: color-mix(in srgb, var(--ha-high) 12%, transparent);
+  color: var(--ha-high);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ueba-risk-page__title h1 {
+  margin: 2px 0 0;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.ueba-risk-page__job {
+  margin: 6px 0 0;
+  max-width: 760px;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+  line-height: 1.4;
+}
+
+.ueba-risk-page__header-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ueba-risk-page__refresh {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  background: var(--ha-surface-primary);
+  color: var(--ha-text-secondary);
+  cursor: pointer;
+}
+
+.ueba-risk-page__refresh:hover {
+  color: var(--ha-primary);
+  border-color: color-mix(in srgb, var(--ha-primary) 40%, var(--ha-border));
+}
+
+.ueba-risk-page__meta {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-primary);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+}
+
+.ueba-risk-page__meta a {
+  color: var(--ha-text-secondary);
+  text-decoration: none;
+}
+
+.ueba-risk-page__meta a:hover {
+  color: var(--ha-primary);
+}
+
+.ueba-risk-page__honesty {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ha-border);
+  background: color-mix(in srgb, var(--ha-medium) 10%, transparent);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+}
+
+.ueba-risk-page__honesty strong {
+  color: var(--ha-text-primary);
+}
+
+.ueba-risk-page__partial-error {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-raised);
+  color: var(--ha-text-primary);
+  font-size: var(--ha-text-base);
+}
+
+.ueba-risk-page__partial-error button {
+  padding: 6px 12px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  background: transparent;
+  color: var(--ha-primary);
+  cursor: pointer;
+  font-size: var(--ha-text-sm);
+}
+
+.ueba-risk-page__body {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 0;
+  overflow: hidden;
+}
+
+.ueba-risk-page__primary {
+  display: flex;
+  min-height: 50vh;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--ha-border);
+}
+
+.ueba-risk-page__secondary {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+  background: var(--ha-surface-primary);
+}
+
+.ueba-risk-page__panel {
+  padding: 12px;
+  border-bottom: 1px solid var(--ha-border);
+}
+
+.ueba-risk-page__panel h3 {
+  margin: 0 0 10px;
+  color: var(--ha-text-primary);
+  font-size: var(--ha-text-md);
+  font-weight: 600;
+}
+
+.ueba-risk-page__panel-empty {
+  margin: 0;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+}
+
+.ueba-risk-page__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ueba-risk-page__chip {
+  display: flex;
+  min-width: 88px;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+}
+
+.ueba-risk-page__chip-count {
+  font-size: var(--ha-text-lg);
+  font-weight: 700;
+  color: var(--ha-text-primary);
+}
+
+.ueba-risk-page__chip-label {
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+}
+
+.ueba-risk-page__chip-skeleton {
+  width: 88px;
+  height: 52px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  background: var(--ha-surface-raised);
+}
+
+.ueba-risk-table {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.ueba-risk-table__header {
+  display: flex;
+  flex: none;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.ueba-risk-table__header h2 {
+  margin: 0;
+  font-size: var(--ha-text-md);
+  font-weight: 600;
+}
+
+.ueba-risk-table__count {
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+}
+
+.ueba-risk-table__inline-state {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  background: var(--ha-surface-raised);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+}
+
+.ueba-risk-table__inline-state strong {
+  color: var(--ha-text-primary);
+}
+
+.ueba-risk-table__inline-state a {
+  color: var(--ha-primary);
+}
+
+.ueba-risk-table__grid {
+  min-height: 0;
+  flex: 1;
+  min-height: 50vh;
+}
+
+@media (max-width: 1100px) {
+  .ueba-risk-page__body {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+
+  .ueba-risk-page__primary {
+    min-height: 50vh;
+    border-right: none;
+    border-bottom: 1px solid var(--ha-border);
+  }
+
+  .ueba-risk-page__secondary {
+    overflow: visible;
+  }
+}
