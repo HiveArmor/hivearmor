@@ -1,0 +1,103 @@
+{
+  "prompt": "22-edr-fim-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "57ba337",
+  "based_on_main_includes_pr21": true,
+  "decision": "RESTRUCTURE",
+  "routes": ["/edr/fim"],
+  "job_sentence": "File integrity analytics — review change trends, top modified paths, and suspicious hashes from endpoint FIM telemetry. Per-host investigation lives on Endpoints; fleet enrollment lives on Sensors.",
+  "distinction": {
+    "sensors": "/posture/sensors = agent fleet admin (enroll, packages, containment gates)",
+    "endpoints": "/edr/endpoints = per-host timeline workbench",
+    "policies": "/edr/policies = agent policy templates + assignment honesty",
+    "fim": "/edr/fim = FIM analytics dashboard — summary-only API (this slice)",
+    "quarantine": "/response/quarantine = file quarantine + host isolation inventory",
+    "search": "/search = ad-hoc hunt — not FIM dashboard"
+  },
+  "ia": {
+    "edr_fim": {
+      "removed": [
+        "Bare 48px title-only header",
+        "Heavy inline layout/styles across page shell",
+        "Centered PatternFly EmptyState hiding entire dashboard",
+        "Separate Agent filter partial-failure Alert banner"
+      ],
+      "added": [
+        "FIM_DASHBOARD_JOB_SENTENCE + STAGING CANDIDATE badge (DEFEND eyebrow)",
+        "Meta links: Sensors · Endpoints · Agent Policies · Quarantine · Search",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator",
+        "Empty-window honesty banner (fim-empty-honesty) distinct from API error",
+        "Dashboard workspace min-height 50vh (.fim-dashboard)",
+        "Compact inline stats in filter toolbar (.fim-filter-bar__stats)",
+        "Agent filter partial failure folded into fim-page__projection-note",
+        "FimDashboardPage.css extracted with design tokens only",
+        "FimDashboardUxHonesty.sourceScan.test.ts",
+        "ROUTES.EDR_FIM and ROUTES.EDR_POLICIES constants"
+      ],
+      "kept": [
+        "GET /api/ha-edr/fim/summary only — changesOverTime, topPaths, suspiciousHashes",
+        "ECharts via HaChart patterns (dispose on unmount; resolveHaToken for colours)",
+        "Filter bar: time range, agent select, change-type chips",
+        "Three-panel layout: Changes Over Time · Top Changed Paths · Suspicious Hashes",
+        "Access denied for non-Analyst roles with human labels"
+      ],
+      "forbidden": [
+        "GET /api/ha-edr/fim/events",
+        "Paginated FIM event inventory grid",
+        "Legacy non-ha-edr FIM paths"
+      ]
+    }
+  },
+  "backend": {
+    "fim_summary": {
+      "path": "GET /api/ha-edr/fim/summary",
+      "auth": "ROLE_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN",
+      "staging": {
+        "default_24h": {
+          "http": 200,
+          "body_bytes": 77,
+          "empty_series": true,
+          "note": "FIM-EMPTY-STAGING — changesOverTime=0, topPaths=0, suspiciousHashes=0"
+        },
+        "changeTypes_modify": {
+          "http": 200,
+          "body_bytes": 77,
+          "empty_series": true
+        }
+      }
+    },
+    "agent_filter": {
+      "path": "GET /api/agent-manager/agents",
+      "use": "Agent dropdown via fetchSensors only"
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist build contains FIM_DASHBOARD_JOB_SENTENCE, STAGING CANDIDATE, fim-empty-honesty, Analyst · SOC Manager · Platform Administrator",
+    "ui_shell": {
+      "path": "/edr/fim",
+      "staging_https": "api_probed_admin_jwt_ok",
+      "fe_deploy": "not_run_local_build_only"
+    },
+    "headed_browser": false,
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_sensors_endpoints_policies_quarantine_search", "result": "pass" },
+      { "item": "empty_window_honesty_banner_wired", "result": "pass" },
+      { "item": "api_error_distinct_from_empty_window", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_data_exists", "result": "pass" },
+      { "item": "dashboard_min_height_50vh", "result": "pass" },
+      { "item": "styles_extracted_to_css", "result": "pass" },
+      { "item": "staging_api_fim_summary", "result": "pass", "http": 200, "empty": true }
+    ]
+  },
+  "gates": {
+    "lint": "pass (5 pre-existing warnings, 0 errors — none from FIM slice)",
+    "type_check": "pass",
+    "vitest_fim_slice": "pass (17)",
+    "build": "pass"
+  },
+  "next_recommended": "/posture/assets (Prompt 23 — Wave B2)",
+  "handoff_at": "2026-08-29T22:10:00+05:30"
+}

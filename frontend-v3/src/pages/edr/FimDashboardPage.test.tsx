@@ -21,6 +21,7 @@
  */
 
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { FimDashboardPage } from './FimDashboardPage';
@@ -113,6 +114,10 @@ vi.mock('@/hooks/useFimSummary', () => ({
   useFimSummary: (...args: unknown[]) => mockUseFimSummary(...args),
 }));
 
+vi.mock('@/services/sensorsService', () => ({
+  fetchSensors: vi.fn().mockResolvedValue({ sensors: [], total: 0 }),
+}));
+
 // ---------------------------------------------------------------------------
 // Fixture helpers
 // ---------------------------------------------------------------------------
@@ -162,7 +167,11 @@ function makeFimSummary(overrides: Partial<FimSummaryDTO> = {}): FimSummaryDTO {
 // ---------------------------------------------------------------------------
 
 function renderPage() {
-  return render(<FimDashboardPage />);
+  return render(
+    <MemoryRouter>
+      <FimDashboardPage />
+    </MemoryRouter>,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -206,8 +215,8 @@ describe('FimDashboardPage', () => {
     expect(skeletons.length).toBe(3);
   });
 
-  // 2. Empty state — PatternFly EmptyState with no-FIM-data body text
-  it('renders a PatternFly EmptyState with FIM data message when all arrays are empty and not loading', () => {
+  // 2. Empty state — honesty banner + dashboard panels (not API error)
+  it('renders empty-window honesty banner and dashboard panels when all arrays are empty', () => {
     mockUseFimSummary.mockReturnValue({
       data: makeFimSummary({
         changesOverTime: [],
@@ -221,15 +230,12 @@ describe('FimDashboardPage', () => {
 
     renderPage();
 
-    // The empty-state body text — from FimDashboardPage's EmptyStateBody
-    expect(
-      screen.getByText(/no file integrity events found for the selected time range/i),
-    ).toBeDefined();
+    expect(screen.getByTestId('fim-empty-honesty')).toBeDefined();
+    expect(screen.getByText(/No FIM summary data for the selected window/i)).toBeDefined();
+    expect(screen.getByText(/No suspicious hashes detected/i)).toBeDefined();
+    expect(screen.getByLabelText(/FIM analytics dashboard/i)).toBeDefined();
 
-    // No skeleton placeholders should be visible
     expect(screen.queryByRole('status', { name: /loading chart/i })).toBeNull();
-
-    // No danger alert
     expect(screen.queryByRole('heading', { name: /failed to load fim data/i })).toBeNull();
   });
 
@@ -297,6 +303,24 @@ describe('FimDashboardPage', () => {
 
     // Threat Intel HIT badge for the suspicious hash
     expect(screen.getByText('HIT')).toBeDefined();
+
+    // Compact inline stats from summary data
+    expect(screen.getByLabelText(/FIM summary counts/i)).toBeDefined();
+  });
+
+  it('renders STAGING CANDIDATE identity chrome and job sentence', () => {
+    mockUseFimSummary.mockReturnValue({
+      data: makeFimSummary(),
+      isLoading: false,
+      isError: false,
+      error: null,
+    } satisfies UseFimSummaryReturn);
+
+    renderPage();
+
+    expect(screen.getByText('STAGING CANDIDATE')).toBeDefined();
+    expect(screen.getByText(/File integrity analytics — review change trends/i)).toBeDefined();
+    expect(screen.getByText(/Analyst · SOC Manager · Platform Administrator/i)).toBeDefined();
   });
 
   it('shows honest access denied when the user lacks Analyst, SOC Manager, or Platform Administrator', () => {
