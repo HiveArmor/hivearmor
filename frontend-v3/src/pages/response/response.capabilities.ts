@@ -55,3 +55,19 @@ export const RESP_PLAYBOOK_AUDIT_DISABLED_TITLE =
   'Dedicated playbook audit endpoint is not available; showing execution history projection';
 
 export const AUTHORITY_DECIDE_DENIED_TITLE = 'Required permission: Platform Administrator';
+
+/**
+ * RESP-021 STAGING CANDIDATE — host isolation inventory read model.
+ * GET /api/ha-edr/isolation lists persisted isolation state with snapshotAt/asOf freshness.
+ * Governed lift/release mutate APIs are not shipped; keep actions fail-closed.
+ */
+export const RESP_021_ISOLATION_INVENTORY = true;
+
+/** Governed host isolation lift/release — no secured mutate API yet. */
+export const RESP_021_ISOLATION_MUTATE = false;
+
+export const RESP_021_ISOLATION_PROJECTION_TITLE =
+  'Host isolation inventory is read-only from GET /api/ha-edr/isolation — lift and release require RESP-021 governed preview and approval before execution';
+
+export const QUARANTINE_MUTATE_DENIED_TITLE =
+  'Required permission: Analyst, SOC Manager, or Platform Administrator';

@@ -29,6 +29,10 @@ export const ROUTES = {
   RULES: '/rules',
   RESPONSE_PLAYBOOKS: '/response/playbooks',
   RESPONSE_ACTIVITY: '/response/activity',
+  RESPONSE_AUTHORITY: '/response/authority',
+  RESPONSE_QUARANTINE: '/response/quarantine',
+  DASHBOARD: '/dashboard',
+  EDR_ENDPOINTS: '/edr/endpoints',
 
   // POSTURE
   ASSETS: '/posture/assets',

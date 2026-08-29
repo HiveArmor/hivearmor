@@ -40,6 +40,12 @@ describe('Wave A3 Defend/respond honesty', () => {
     expect(authority).toContain('STAGING CANDIDATE');
     expect(authority).toContain('authority-empty-honesty');
     expect(authority).toContain('canDecide');
+    const quarantine = readFileSync(join(process.cwd(), 'src/pages/edr/FileQuarantinePage.tsx'), 'utf8');
+    expect(quarantine).toContain('QUARANTINE_CONTAINMENT_JOB_SENTENCE');
+    expect(quarantine).toContain('RESP_021_ISOLATION_PROJECTION_TITLE');
+    expect(quarantine).toContain('STAGING CANDIDATE');
+    expect(quarantine).toContain('quarantine-empty-honesty');
+    expect(quarantine).toContain('canMutate');
   });
 
   it('A3-PB-01: playbook mutate UI is Admin-only (canManage)', () => {

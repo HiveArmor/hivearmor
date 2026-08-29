@@ -1,0 +1,106 @@
+{
+  "prompt": "20-response-quarantine-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "4d6a6d8",
+  "based_on_main_includes_pr19": true,
+  "decision": "RESTRUCTURE",
+  "routes": ["/response/quarantine", "/edr/quarantine"],
+  "job_sentence": "Quarantine and containment inventory — review isolated files and host isolation state, then restore or delete preserved files when authorized. SOAR orchestration lives on Response Playbooks; approvals live on Response Approvals.",
+  "distinction": {
+    "playbooks": "/response/playbooks = SOAR playbook inventory + governed execute (Prompt 17)",
+    "activity": "/response/activity = execution history ledger (Prompt 18)",
+    "authority": "/response/authority = human approval queue (Prompt 19)",
+    "quarantine": "/response/quarantine = containment inventory — files + host isolation read model (this slice)",
+    "sensors": "/posture/sensors = agent fleet admin",
+    "endpoints": "/edr/endpoints = endpoint timeline workbench"
+  },
+  "ia": {
+    "response_quarantine": {
+      "removed": [
+        "Hero 6-tile .qrn-summary KPI strip",
+        "Legacy eyebrow Response automation",
+        "Raw <a href> cross-links in header and drawer pivots"
+      ],
+      "added": [
+        "QUARANTINE_CONTAINMENT_JOB_SENTENCE + STAGING CANDIDATE badge",
+        "Meta links: Mission Control · Response Playbooks · Response Activity · Response Approvals · Endpoints",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator",
+        "Empty-inventory honesty banner (quarantine-empty-honesty)",
+        "Compact inline summary stats in results toolbar (when data exists)",
+        "Inventory grid min-height 50vh (.qrn-inventory)",
+        "RESP-021 projection note in identity chrome",
+        "canMutate role gate on restore/delete actions",
+        "FileQuarantineUxHonesty.sourceScan.test.ts"
+      ],
+      "kept": [
+        "GET /api/ha-edr/quarantine file inventory",
+        "PATCH /api/ha-edr/quarantine/{id} + POST bulk restore/delete",
+        "GET /api/ha-edr/isolation host isolation read model",
+        "Dual tabs: Quarantined files · Endpoint isolation",
+        "Compact filters, AG Grid, row density, J/K/Enter/ shortcuts",
+        "Confirmation modal before restore/delete",
+        "Drawer evidence/history + eligibility rules",
+        "Host isolation lift/release fail-closed (RESP-021)",
+        "fixtureMode dev-only",
+        "Stale/partial snapshot warnings"
+      ]
+    }
+  },
+  "backend": {
+    "quarantine_list": {
+      "path": "GET /api/ha-edr/quarantine?page=0&size=5",
+      "auth": "ROLE_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN",
+      "staging": {
+        "http": 200,
+        "body_bytes": 148
+      }
+    },
+    "isolation_list": {
+      "path": "GET /api/ha-edr/isolation?page=0&size=5",
+      "auth": "ROLE_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN",
+      "staging": {
+        "http": 200,
+        "body_bytes": 2068
+      }
+    },
+    "quarantine_patch": {
+      "path": "PATCH /api/ha-edr/quarantine/{id}",
+      "auth": "ROLE_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN",
+      "staging": {
+        "probed": false,
+        "note": "Not probed — no safe test row to mutate on staging"
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist build contains containment inventory, STAGING CANDIDATE, quarantine-empty-honesty, Analyst · SOC Manager · Platform Administrator",
+    "ui_shell": {
+      "path": "/response/quarantine",
+      "alias": "/edr/quarantine",
+      "staging_https": "api_probed_admin_jwt_ok",
+      "fe_deploy": "not_run_local_build_only"
+    },
+    "headed_browser": false,
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_playbooks_activity_approvals_endpoints", "result": "pass" },
+      { "item": "empty_inventory_honesty_banner_wired", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_data_exists", "result": "pass" },
+      { "item": "canMutate_gates_restore_delete", "result": "pass" },
+      { "item": "resp021_isolation_read_only", "result": "pass" },
+      { "item": "grid_min_height_50vh", "result": "pass" },
+      { "item": "staging_api_quarantine_list", "result": "pass", "http": 200 },
+      { "item": "staging_api_isolation_list", "result": "pass", "http": 200 }
+    ]
+  },
+  "gates": {
+    "lint": "pass (5 pre-existing warnings, 0 errors)",
+    "type_check": "pass",
+    "vitest_response_slice": "pass (144)",
+    "build": "pass"
+  },
+  "next_recommended": "/response/library (Prompt 21)",
+  "handoff_at": "2026-08-29T21:45:00+05:30"
+}
