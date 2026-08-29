@@ -80,7 +80,7 @@ function normalizeAction(dto: ResponseActionCatalogDTO): ResponseAction {
 /**
  * Fetch the built-in response action library.
  * GET /api/response/actions (HaResponseActionResource) — confirmed ALT-010 path.
- * A1-AI-01: fail closed to development fixtures / empty unavailable list — never invent alternate URLs.
+ * A1-AI-01: fail closed — never invent alternate URLs; propagate API errors so the library page can distinguish unavailable vs empty catalog.
  *
  * The older /ha-response-actions/library endpoint is intentionally not used as the primary
  * catalogue: it does not expose target, risk, permission, or integration-readiness data.
@@ -93,11 +93,6 @@ export async function fetchResponseActionLibrary(
     const { fixtureResponseActions } = await import('@/services/responseActionService.fixtures');
     return fixtureResponseActions;
   }
-  try {
-    const actions = await apiClient.get<ResponseActionCatalogDTO[]>('/response/actions', { signal });
-    return actions.map(normalizeAction);
-  } catch {
-    // Fail closed: no invented catalogue URL; return empty so UI shows unavailable honesty.
-    return [];
-  }
+  const actions = await apiClient.get<ResponseActionCatalogDTO[]>('/response/actions', { signal });
+  return actions.map(normalizeAction);
 }

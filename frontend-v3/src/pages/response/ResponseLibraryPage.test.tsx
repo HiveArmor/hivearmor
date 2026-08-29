@@ -3,7 +3,7 @@ import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ResponseLibraryPage } from './ResponseLibraryPage';
+import { RESPONSE_LIBRARY_JOB_SENTENCE, ResponseLibraryPage } from './ResponseLibraryPage';
 
 import type { ResponseAction } from '@/types/responseAction';
 
@@ -21,6 +21,11 @@ vi.mock('@/services/responseActionService', () => ({ fetchResponseActionLibrary:
 const useQuery = vi.fn();
 vi.mock('@tanstack/react-query', () => ({ useQuery: (...args: unknown[]) => useQuery(...args) }));
 
+vi.mock('@/components/ha-button/HaButton', () => ({
+  HaButton: ({ children, onClick, 'aria-label': ariaLabel, icon }: { children?: React.ReactNode; onClick?: () => void; 'aria-label'?: string; icon?: React.ReactNode }) => (
+    <button type="button" onClick={onClick} aria-label={ariaLabel}>{icon}{children}</button>
+  ),
+}));
 vi.mock('@/components/status-dock/StatusDock', () => ({ StatusDock: () => <div data-testid="status-dock">Connected</div> }));
 vi.mock('@/components/ha-drawer/HaDrawer', () => ({
   HaDrawer: ({ isOpen, title, children, footer }: { isOpen: boolean; title: string; children: React.ReactNode; footer?: React.ReactNode }) => isOpen ? <aside role="dialog" aria-label={title}>{children}{footer}</aside> : null,
@@ -43,12 +48,15 @@ beforeEach(() => {
 });
 
 describe('ResponseLibraryPage', () => {
-  it('renders the governed action inventory and status dock', () => {
+  it('renders honesty chrome, governed inventory, and status dock', () => {
     render(<ResponseLibraryPage />);
-    expect(screen.getByRole('heading', { name: 'Action & Connector Library' })).toBeDefined();
+    expect(screen.getByRole('heading', { name: 'Response Library' })).toBeDefined();
+    expect(screen.getByText('STAGING CANDIDATE')).toBeDefined();
+    expect(screen.getByText(RESPONSE_LIBRARY_JOB_SENTENCE)).toBeDefined();
     expect(screen.getAllByRole('row')).toHaveLength(4);
     expect(screen.getByText('Network enforcement')).toBeDefined();
     expect(screen.getByTestId('status-dock')).toBeDefined();
+    expect(screen.getByText('Analyst · SOC Manager · Platform Administrator')).toBeDefined();
   });
 
   it('filters the inventory across action names and parameter schema', () => {
@@ -82,7 +90,7 @@ describe('ResponseLibraryPage', () => {
     expect(document.activeElement).toBe(screen.getByRole('searchbox', { name: 'Search actions' }));
   });
 
-  it('renders loading, error, and access-denied states without exposing fixtures', () => {
+  it('renders loading, error, empty-catalog honesty, and access-denied states', () => {
     useQuery.mockReturnValue(queryState({ data: undefined, isLoading: true }));
     const { rerender } = render(<ResponseLibraryPage />);
     expect(screen.getByText('Loading governed action catalog')).toBeDefined();
@@ -90,6 +98,10 @@ describe('ResponseLibraryPage', () => {
     useQuery.mockReturnValue(queryState({ data: undefined, isError: true, error: new Error('catalog offline') }));
     rerender(<ResponseLibraryPage />);
     expect(screen.getByText('Could not load the action catalog')).toBeDefined();
+
+    useQuery.mockReturnValue(queryState({ data: [] }));
+    rerender(<ResponseLibraryPage />);
+    expect(screen.getByTestId('library-empty-honesty')).toBeDefined();
 
     hasAnyRole.mockReturnValue(false);
     rerender(<ResponseLibraryPage />);

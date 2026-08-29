@@ -31,6 +31,7 @@ export const ROUTES = {
   RESPONSE_ACTIVITY: '/response/activity',
   RESPONSE_AUTHORITY: '/response/authority',
   RESPONSE_QUARANTINE: '/response/quarantine',
+  RESPONSE_LIBRARY: '/response/library',
   DASHBOARD: '/dashboard',
   EDR_ENDPOINTS: '/edr/endpoints',
 

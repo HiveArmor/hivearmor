@@ -1,4 +1,4 @@
-/** Governed response action and connector catalog. */
+/** Governed response action and connector catalog — browse only; never execute here. */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -18,7 +18,6 @@ import {
   FileCode2,
   Filter,
   Gavel,
-  History,
   Laptop,
   ListFilter,
   LockKeyhole,
@@ -40,9 +39,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AccessDeniedState } from '@/components/access-denied-state/AccessDeniedState';
 import { EmptyState } from '@/components/empty-state/EmptyState';
 import { ErrorState } from '@/components/error-state/ErrorState';
+import { HaButton } from '@/components/ha-button/HaButton';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { StatusDock } from '@/components/status-dock/StatusDock';
+import { ROUTES } from '@/constants/routes.constants';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { formatAuthorityLabel } from '@/lib/roles';
 import { fetchResponseActionLibrary } from '@/services/responseActionService';
@@ -50,6 +51,13 @@ import { useAuthStore } from '@/store/auth.store';
 import type { ResponseAction, ResponseActionRisk, ResponseIntegrationStatus } from '@/types/responseAction';
 
 import './ResponseLibraryPage.css';
+
+/** Bundle-visible job sentence — governed catalog browse, not orchestration or approvals. */
+export const RESPONSE_LIBRARY_JOB_SENTENCE =
+  'Response action catalog — browse governed SOAR primitives and connector readiness, then add actions to versioned playbooks. Never execute from the catalog; orchestration lives on Response Playbooks and approvals on Response Approvals.';
+
+const CATALOG_PROJECTION_NOTE =
+  'Catalog browsing is side-effect free. Connector readiness is advisory until preview on a versioned playbook — execution and approval gates are enforced on Response Playbooks and Response Approvals.';
 
 const PAGE_SIZE = 25;
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
@@ -114,10 +122,6 @@ function MetaValue({ label, children }: { label: string; children: React.ReactNo
   return <div className="ral-meta"><span>{label}</span><strong>{children}</strong></div>;
 }
 
-function Metric({ icon: Icon, label, value, detail, tone }: { icon: LucideIcon; label: string; value: string | number; detail: string; tone?: string }): JSX.Element {
-  return <div className="ral-metric" data-tone={tone}><span><Icon size={13} />{label}</span><strong>{value}</strong><small>{detail}</small></div>;
-}
-
 function ActionDrawer({ action, onClose }: { action: ResponseAction | null; onClose: () => void }): JSX.Element {
   const [tab, setTab] = useState<DetailTab>('overview');
   const tabs: Array<{ id: DetailTab; label: string }> = [
@@ -146,7 +150,7 @@ function ActionDrawer({ action, onClose }: { action: ResponseAction | null; onCl
       subtitle={action ? `${action.id} · ${titleCase(action.category)}` : undefined}
       width={520}
       footer={action ? <>
-        <Link className="ral-drawer-primary" to={`/response/playbooks/new?action=${encodeURIComponent(action.id)}`}><Workflow size={14} />Add to playbook</Link>
+        <Link className="ral-drawer-primary" to={`${ROUTES.RESPONSE_PLAYBOOKS}/new?action=${encodeURIComponent(action.id)}`}><Workflow size={14} />Add to playbook</Link>
         <button type="button" className="ral-drawer-secondary" onClick={onClose}>Close</button>
       </> : undefined}
     >
@@ -168,7 +172,7 @@ function ActionDrawer({ action, onClose }: { action: ResponseAction | null; onCl
             <MetaValue label="Used by">{action.usageCount ? `${action.usageCount} playbooks` : 'Not reported'}</MetaValue>
             <MetaValue label="Action ID"><code>{action.id}</code></MetaValue>
           </div>
-          <div className="ral-notice"><ShieldCheck size={15} /><div><strong>Preview before execution</strong><span>Catalog health is advisory. Target state, connector health, permissions, blast radius, and approval eligibility are revalidated during an authoritative preview.</span></div></div>
+          <div className="ral-notice"><ShieldCheck size={15} /><div><strong>Preview before execution</strong><span>Catalog health is advisory. Target state, connector health, permissions, blast radius, and approval eligibility are revalidated during an authoritative preview on a versioned playbook.</span></div></div>
         </div>}
 
         {tab === 'inputs' && <div className="ral-drawer-section" role="tabpanel">
@@ -194,7 +198,7 @@ function ActionDrawer({ action, onClose }: { action: ResponseAction | null; onCl
             <div><RotateCcw size={15} /><span>Rollback</span><strong>{action.rollbackSupported === null || action.rollbackSupported === undefined ? 'Determined in preview' : action.rollbackSupported ? 'Supported' : 'Not supported'}</strong></div>
             <div><ShieldAlert size={15} /><span>Blast radius</span><strong>Target-specific preview</strong></div>
           </div>
-          <div className="ral-notice ral-notice--warning"><AlertTriangle size={15} /><div><strong>Never execute from the catalog</strong><span>Add the primitive to a versioned playbook, validate the graph, preview the exact target, and satisfy any authority policy before execution.</span></div></div>
+          <div className="ral-notice ral-notice--warning"><AlertTriangle size={15} /><div><strong>Never execute from the catalog</strong><span>Add the primitive to a versioned playbook on Response Playbooks, validate the graph, preview the exact target, and satisfy any authority policy on Response Approvals before execution.</span></div></div>
         </div>}
       </>}
     </HaDrawer>
@@ -256,74 +260,147 @@ export function ResponseLibraryPage(): JSX.Element {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [selectedAction]);
 
-  const metrics = useMemo(() => ({
+  const inlineStats = useMemo(() => ({
     healthy: actions.filter((action) => action.integrationStatus === 'healthy').length,
-    unavailable: actions.filter((action) => action.integrationStatus === 'unavailable' || action.integrationStatus === 'degraded').length,
+    attention: actions.filter((action) => action.integrationStatus === 'unavailable' || action.integrationStatus === 'degraded').length,
     highImpact: actions.filter((action) => action.riskLevel === 'critical' || action.riskLevel === 'high').length,
-    approval: actions.filter((action) => action.requiresApproval === true).length,
-    rollback: actions.filter((action) => action.rollbackSupported === true).length,
   }), [actions]);
 
-  if (!hasAccess) return <section className="response-library-page"><AccessDeniedState title="Response library restricted" message="Required permission: Analyst, SOC Manager, or Platform Administrator." /></section>;
+  const hasFilters = search.trim().length > 0 || category !== 'all' || risk !== 'all' || status !== 'all';
+  const catalogEmptyHonesty = !catalogQuery.isLoading && !catalogQuery.isError && actions.length === 0 && !hasFilters;
+  const showInlineStats = actions.length > 0;
 
-  return <section className="response-library-page" aria-label="Response action and connector library">
-    <header className="ral-header">
-      <div className="ral-header__identity"><div className="ral-header__icon"><PlugZap size={21} /></div><div><span>Response automation</span><h1>Action &amp; Connector Library</h1></div></div>
-      <div className="ral-header__actions"><span className="ral-shortcuts"><kbd>/</kbd> search <kbd>Enter</kbd> inspect</span><Link to="/response/playbooks"><Workflow size={14} />Playbooks</Link><Link to="/response/activity"><History size={14} />Activity</Link><button type="button" onClick={() => void catalogQuery.refetch()} disabled={catalogQuery.isFetching} aria-label="Refresh action catalog" title="Refresh action catalog"><RefreshCw size={15} className={catalogQuery.isFetching ? 'ral-spin' : ''} /></button></div>
-    </header>
-
-    {fixtureMode && <div className="ral-fixture"><strong>Design fixture:</strong> fictional connector readiness and action schemas are enabled for visual review.<span>Production never receives these records.</span></div>}
-
-    <div className="ral-metrics" aria-label="Catalog summary">
-      <Metric icon={Box} label="Actions" value={actions.length || '—'} detail="authorized catalog" />
-      <Metric icon={CheckCircle2} label="Healthy" value={actions.length ? metrics.healthy : '—'} detail="catalog reported" tone="healthy" />
-      <Metric icon={AlertTriangle} label="Attention" value={actions.length ? metrics.unavailable : '—'} detail="degraded or unavailable" tone={metrics.unavailable ? 'warning' : undefined} />
-      <Metric icon={ShieldAlert} label="High impact" value={actions.length ? metrics.highImpact : '—'} detail="high or critical" tone={metrics.highImpact ? 'critical' : undefined} />
-      <Metric icon={Gavel} label="Approval gated" value={actions.length ? (fixtureMode ? metrics.approval : 'Preview') : '—'} detail={fixtureMode ? 'catalog declared' : 'target dependent'} />
-      <Metric icon={RotateCcw} label="Rollback" value={actions.length ? (fixtureMode ? metrics.rollback : 'Preview') : '—'} detail={fixtureMode ? 'catalog declared' : 'target dependent'} />
-    </div>
-
-    <div className="ral-toolbar" aria-label="Action catalog filters">
-      <label className="ral-search"><Search size={15} /><input ref={searchRef} type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search action, target, parameter, or connector…" aria-label="Search actions"/><kbd>/</kbd></label>
-      <HaCompactSelect ariaLabel="Filter by risk" label="Risk" value={risk} options={RISK_OPTIONS} onChange={setRisk} />
-      <HaCompactSelect ariaLabel="Filter by readiness" label="Readiness" value={status} options={STATUS_OPTIONS} onChange={setStatus} />
-      <button type="button" className="ral-reset" onClick={resetFilters} disabled={!search && category === 'all' && risk === 'all' && status === 'all'}><RotateCcw size={13} />Reset</button>
-      <span className="ral-snapshot">{catalogQuery.isFetching ? 'Refreshing catalog…' : catalogQuery.dataUpdatedAt ? `Snapshot ${new Date(catalogQuery.dataUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Snapshot unavailable'}</span>
-    </div>
-
-    <main className="ral-workspace">
-      <aside className="ral-categories" aria-label="Action categories">
-        <header><span><ListFilter size={14} />Categories</span><strong>{categories.length}</strong></header>
-        <button type="button" aria-pressed={category === 'all'} onClick={() => setCategory('all')}><Box size={15} /><span>All actions</span><strong>{actions.length}</strong></button>
-        {categories.map(([name, count]) => { const Icon = categoryIcon(name); return <button key={name} type="button" aria-pressed={category === name} onClick={() => setCategory(name)}><Icon size={15} /><span>{titleCase(name)}</span><strong>{count}</strong></button>; })}
-        <div className="ral-categories__note"><ShieldCheck size={15} /><div><strong>Governed primitives</strong><span>Actions are added to versioned playbooks. Execution always requires an exact target preview.</span></div></div>
-      </aside>
-
-      <section className="ral-inventory" aria-label="Available response actions">
-        <header className="ral-inventory__header"><div><strong>Available actions</strong><span>{filtered.length} matching · bounded authorized projection</span></div><span><Filter size={13} />Select a row to inspect its schema</span></header>
-        <div className="ral-table" role="grid" aria-label="Response action catalog" aria-rowcount={pageRows.length}>
-          <div className="ral-table__head" role="row"><span role="columnheader">Action</span><span role="columnheader">Connector</span><span role="columnheader">Target</span><span role="columnheader">Readiness</span><span role="columnheader">Risk</span><span role="columnheader">Required role</span><span role="columnheader" aria-label="Open details" /></div>
-          <div className="ral-table__body">
-            {catalogQuery.isLoading && !actions.length ? <div className="ral-inline-state"><RefreshCw size={22} className="ral-spin"/><strong>Loading governed action catalog</strong><span>Connector and permission metadata are loading.</span></div>
-              : catalogQuery.isError && !actions.length ? <ErrorState title="Could not load the action catalog" message={catalogQuery.error?.message || 'The response catalog is unavailable.'} onRetry={() => void catalogQuery.refetch()} />
-              : pageRows.length === 0 ? <EmptyState icon={<Search size={32} />} title="No matching actions" description="Adjust the category, readiness, risk, or search filters." action={<button type="button" className="ral-empty-reset" onClick={resetFilters}>Clear filters</button>} />
-              : pageRows.map((action) => { const Icon = categoryIcon(action.category); return <button key={action.id} type="button" className="ral-row" role="row" onClick={() => setSelectedAction(action)} onDoubleClick={() => navigate(`/response/playbooks/new?action=${encodeURIComponent(action.id)}`)}>
-                <span className="ral-action-cell" role="gridcell"><span className="ral-row-icon"><Icon size={17} /></span><span><strong>{action.name}</strong><small>{action.id} · {titleCase(action.category)}</small></span></span>
-                <span className="ral-cell-stack" role="gridcell"><strong>{integrationLabel(action)}</strong><small>{action.params.length} input{action.params.length === 1 ? '' : 's'}</small></span>
-                <span className="ral-target" role="gridcell">{titleCase(action.targetType)}</span>
-                <span role="gridcell"><StatusBadge status={action.integrationStatus} /></span>
-                <span role="gridcell"><RiskBadge risk={action.riskLevel} /></span>
-                <span className="ral-role" role="gridcell">{formatAuthorityLabel(action.requiredRole)}</span>
-                <span className="ral-open" role="gridcell"><ArrowRight size={15} /></span>
-              </button>; })}
-          </div>
-        </div>
-        <footer className="ral-pagination"><span>{filtered.length ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, filtered.length)} of ${filtered.length}` : '0 actions'}</span><span>Page {page} of {totalPages}</span><div><button type="button" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page <= 1}><ChevronLeft size={14} />Previous</button><button type="button" onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={page >= totalPages}>Next<ChevronRight size={14} /></button></div></footer>
+  if (!hasAccess) {
+    return (
+      <section className="ral-page">
+        <AccessDeniedState title="Response library restricted" message="Required permission: Analyst, SOC Manager, or Platform Administrator." />
       </section>
-    </main>
+    );
+  }
 
-    {catalogQuery.isError && actions.length > 0 && <div className="ral-stale" role="status"><AlertTriangle size={14} />Refresh failed. Showing the last successful catalog snapshot.</div>}
-    <div className="ral-status-dock"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={catalogQuery.dataUpdatedAt ? new Date(catalogQuery.dataUpdatedAt) : undefined} /><span><ShieldCheck size={12} />Catalog browsing is side-effect free</span></div>
-    <ActionDrawer action={selectedAction} onClose={() => setSelectedAction(null)} />
-  </section>;
+  return (
+    <section className="ral-page" data-fixture={fixtureMode || undefined} aria-label="Response action and connector library">
+      <header className="ral-page__identity">
+        <span className="ral-page__icon"><PlugZap size={20} aria-hidden="true" /></span>
+        <div className="ral-page__title">
+          <div className="ral-page__eyebrow">
+            <small>RESPOND</small>
+            <span className="ral-page__badge">STAGING CANDIDATE</span>
+          </div>
+          <h1>Response Library</h1>
+          <p className="ral-page__job">{RESPONSE_LIBRARY_JOB_SENTENCE}</p>
+          <p className="ral-page__projection-note" role="note">{CATALOG_PROJECTION_NOTE}</p>
+        </div>
+        <div className="ral-page__identity-actions">
+          <span className="ral-shortcuts"><kbd>/</kbd> search <kbd>Enter</kbd> inspect</span>
+          <HaButton
+            variant="plain"
+            onClick={() => void catalogQuery.refetch()}
+            isDisabled={catalogQuery.isFetching}
+            icon={<RefreshCw size={14} className={catalogQuery.isFetching ? 'ral-spin' : undefined} />}
+            aria-label="Refresh action catalog"
+          />
+        </div>
+      </header>
+
+      <p className="ral-page__meta">
+        <Link to={ROUTES.DASHBOARD}>Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.DETECTION_RULES}>Detection Rules</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.RESPONSE_PLAYBOOKS}>Response Playbooks</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.RESPONSE_ACTIVITY}>Response Activity</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.RESPONSE_AUTHORITY}>Response Approvals</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.RESPONSE_QUARANTINE}>Quarantine</Link>
+        <span aria-hidden="true">·</span>
+        <span className="ral-page__access">Analyst · SOC Manager · Platform Administrator</span>
+      </p>
+
+      {fixtureMode && (
+        <div className="ral-page__fixture" role="status">
+          <span><strong>Design fixture:</strong> fictional connector readiness and action schemas are enabled for visual review.</span>
+          <span>Production never receives these records.</span>
+        </div>
+      )}
+
+      {catalogEmptyHonesty && (
+        <div className="ral-page__honesty" role="status" data-testid="library-empty-honesty">
+          <strong>Action catalog is empty on this tenant.</strong>
+          <span>
+            Governed SOAR primitives appear when integrations register actions. An empty catalog does not imply connector health — readiness metrics are not shown until actions exist.
+          </span>
+        </div>
+      )}
+
+      <div className="ral-toolbar" role="toolbar" aria-label="Action catalog filters">
+        <label className="ral-search"><Search size={15} /><input ref={searchRef} type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search action, target, parameter, or connector…" aria-label="Search actions"/><kbd>/</kbd></label>
+        <HaCompactSelect ariaLabel="Filter by risk" label="Risk" value={risk} options={RISK_OPTIONS} onChange={setRisk} />
+        <HaCompactSelect ariaLabel="Filter by readiness" label="Readiness" value={status} options={STATUS_OPTIONS} onChange={setStatus} />
+        <button type="button" className="ral-reset" onClick={resetFilters} disabled={!hasFilters}><RotateCcw size={13} />Reset</button>
+        <span className="ral-snapshot">{catalogQuery.isFetching ? 'Refreshing catalog…' : catalogQuery.dataUpdatedAt ? `Snapshot ${new Date(catalogQuery.dataUpdatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Snapshot unavailable'}</span>
+      </div>
+
+      <main className="ral-workspace">
+        <aside className="ral-categories" aria-label="Action categories">
+          <header><span><ListFilter size={14} />Categories</span><strong>{categories.length}</strong></header>
+          <button type="button" aria-pressed={category === 'all'} onClick={() => setCategory('all')}><Box size={15} /><span>All actions</span><strong>{actions.length}</strong></button>
+          {categories.map(([name, count]) => { const Icon = categoryIcon(name); return <button key={name} type="button" aria-pressed={category === name} onClick={() => setCategory(name)}><Icon size={15} /><span>{titleCase(name)}</span><strong>{count}</strong></button>; })}
+        </aside>
+
+        <section className="ral-inventory" aria-label="Available response actions">
+          <header className="ral-inventory__header">
+            <div>
+              <strong>Available actions</strong>
+              <span>{filtered.length} matching · bounded authorized projection</span>
+              {showInlineStats && (
+                <span className="ral-inline-stats" aria-label="Catalog summary">
+                  <span>{actions.length} actions</span>
+                  <span aria-hidden="true">·</span>
+                  <span data-tone="positive">{inlineStats.healthy} healthy</span>
+                  {inlineStats.attention > 0 && (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span data-tone="warning">{inlineStats.attention} need attention</span>
+                    </>
+                  )}
+                  {inlineStats.highImpact > 0 && (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span data-tone="danger">{inlineStats.highImpact} high impact</span>
+                    </>
+                  )}
+                </span>
+              )}
+            </div>
+            <span><Filter size={13} />Select a row to inspect its schema</span>
+          </header>
+          <div className="ral-table" role="grid" aria-label="Response action catalog" aria-rowcount={pageRows.length}>
+            <div className="ral-table__head" role="row"><span role="columnheader">Action</span><span role="columnheader">Connector</span><span role="columnheader">Target</span><span role="columnheader">Readiness</span><span role="columnheader">Risk</span><span role="columnheader">Required role</span><span role="columnheader" aria-label="Open details" /></div>
+            <div className="ral-table__body">
+              {catalogQuery.isLoading && !actions.length ? <div className="ral-inline-state"><RefreshCw size={22} className="ral-spin"/><strong>Loading governed action catalog</strong><span>Connector and permission metadata are loading.</span></div>
+                : catalogQuery.isError && !actions.length ? <ErrorState title="Could not load the action catalog" message={catalogQuery.error?.message || 'GET /api/response/actions is unavailable — the catalog cannot be shown.'} onRetry={() => void catalogQuery.refetch()} />
+                : pageRows.length === 0 ? <EmptyState icon={<Search size={32} />} title={hasFilters ? 'No matching actions' : 'No actions in catalog'} description={hasFilters ? 'Adjust the category, readiness, risk, or search filters.' : 'The authorized action catalog returned no primitives for this tenant.'} action={hasFilters ? <button type="button" className="ral-empty-reset" onClick={resetFilters}>Clear filters</button> : undefined} />
+                : pageRows.map((action) => { const Icon = categoryIcon(action.category); return <button key={action.id} type="button" className="ral-row" role="row" onClick={() => setSelectedAction(action)} onDoubleClick={() => navigate(`${ROUTES.RESPONSE_PLAYBOOKS}/new?action=${encodeURIComponent(action.id)}`)}>
+                  <span className="ral-action-cell" role="gridcell"><span className="ral-row-icon"><Icon size={17} /></span><span><strong>{action.name}</strong><small>{action.id} · {titleCase(action.category)}</small></span></span>
+                  <span className="ral-cell-stack" role="gridcell"><strong>{integrationLabel(action)}</strong><small>{action.params.length} input{action.params.length === 1 ? '' : 's'}</small></span>
+                  <span className="ral-target" role="gridcell">{titleCase(action.targetType)}</span>
+                  <span role="gridcell"><StatusBadge status={action.integrationStatus} /></span>
+                  <span role="gridcell"><RiskBadge risk={action.riskLevel} /></span>
+                  <span className="ral-role" role="gridcell">{formatAuthorityLabel(action.requiredRole)}</span>
+                  <span className="ral-open" role="gridcell"><ArrowRight size={15} /></span>
+                </button>; })}
+            </div>
+          </div>
+          <footer className="ral-pagination"><span>{filtered.length ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, filtered.length)} of ${filtered.length}` : '0 actions'}</span><span>Page {page} of {totalPages}</span><div><button type="button" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page <= 1}><ChevronLeft size={14} />Previous</button><button type="button" onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={page >= totalPages}>Next<ChevronRight size={14} /></button></div></footer>
+        </section>
+      </main>
+
+      {catalogQuery.isError && actions.length > 0 && <div className="ral-stale" role="status"><AlertTriangle size={14} />Refresh failed. Showing the last successful catalog snapshot.</div>}
+      <div className="ral-status-dock"><StatusDock sseConnected={fixtureMode || epsStream.connected} eps={fixtureMode ? 12840 : epsStream.eps} mode={fixtureMode ? 'historical' : 'live'} lastUpdated={catalogQuery.dataUpdatedAt ? new Date(catalogQuery.dataUpdatedAt) : undefined} /></div>
+      <ActionDrawer action={selectedAction} onClose={() => setSelectedAction(null)} />
+    </section>
+  );
 }

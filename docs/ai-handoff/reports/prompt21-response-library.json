@@ -1,0 +1,104 @@
+{
+  "prompt": "21-response-library-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "ed08b02",
+  "based_on_main_includes_pr20": true,
+  "decision": "RESTRUCTURE",
+  "routes": ["/response/library"],
+  "job_sentence": "Response action catalog — browse governed SOAR primitives and connector readiness, then add actions to versioned playbooks. Never execute from the catalog; orchestration lives on Response Playbooks and approvals on Response Approvals.",
+  "distinction": {
+    "detection_rules": "/detection-rules = detection content manager (Prompt 16)",
+    "playbooks": "/response/playbooks = SOAR playbook inventory + governed execute (Prompt 17)",
+    "activity": "/response/activity = execution history ledger (Prompt 18)",
+    "authority": "/response/authority = human approval queue (Prompt 19)",
+    "quarantine": "/response/quarantine = containment inventory (Prompt 20)",
+    "library": "/response/library = governed action & connector catalog — browse only (this slice)",
+    "action_palette": "ActionPalette in builder = static in-playbook palette — separate from catalog hub"
+  },
+  "ia": {
+    "response_library": {
+      "removed": [
+        "Hero 6-tile .ral-metrics KPI strip",
+        "Legacy eyebrow Response automation / title Action & Connector Library",
+        "Status-dock duplicate side-effect-free note",
+        "Header-only Playbooks/Activity links (moved to meta row)"
+      ],
+      "added": [
+        "RESPONSE_LIBRARY_JOB_SENTENCE + STAGING CANDIDATE badge",
+        "Meta links: Mission Control · Detection Rules · Response Playbooks · Response Activity · Response Approvals · Quarantine",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator",
+        "Empty-catalog honesty banner (library-empty-honesty) distinct from API error",
+        "Compact inline summary stats in results toolbar (.ral-inline-stats)",
+        "Catalog workspace min-height 50vh (.ral-inventory)",
+        "ral-page__projection-note for side-effect-free + connector readiness",
+        "ResponseLibraryUxHonesty.sourceScan.test.ts",
+        "ROUTES.RESPONSE_LIBRARY constant"
+      ],
+      "kept": [
+        "GET /api/response/actions primary catalog",
+        "Category sidebar + filter toolbar (risk, readiness, search)",
+        "Dense action table + pagination + drawer tabs",
+        "Add to playbook affordance — no Run/Execute",
+        "fixtureMode dev-only",
+        "Honest Not reported for missing metadata",
+        "Stale snapshot warning on refresh failure",
+        "Drawer Never execute from the catalog governance notice"
+      ],
+      "forbidden": [
+        "POST /api/response/actions/{actionId}/preview from library page",
+        "POST /api/response/actions/{actionId}/execute from library page",
+        "GET /api/soar/actions (does not exist)",
+        "GET /api/ha-response-actions/library as primary"
+      ]
+    }
+  },
+  "backend": {
+    "actions_catalog": {
+      "path": "GET /api/response/actions",
+      "auth": "ROLE_ANALYST | ROLE_SOC_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN",
+      "staging": {
+        "http": 200,
+        "body_bytes": 4219
+      }
+    },
+    "deprecated_library": {
+      "path": "GET /api/ha-response-actions/library",
+      "staging": {
+        "http": 200,
+        "body_bytes": 4123,
+        "deprecation_header": "Deprecation: true",
+        "successor_link": "</api/response/actions>; rel=\"successor-version\"",
+        "note": "Documented only — not adopted as primary"
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist build contains RESPONSE_LIBRARY_JOB_SENTENCE, STAGING CANDIDATE, library-empty-honesty, Analyst · SOC Manager · Platform Administrator",
+    "ui_shell": {
+      "path": "/response/library",
+      "staging_https": "api_probed_admin_jwt_ok",
+      "fe_deploy": "not_run_local_build_only"
+    },
+    "headed_browser": false,
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_detection_playbooks_activity_approvals_quarantine", "result": "pass" },
+      { "item": "empty_catalog_honesty_banner_wired", "result": "pass" },
+      { "item": "api_error_distinct_from_empty_catalog", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_data_exists", "result": "pass" },
+      { "item": "no_execute_or_preview_from_library", "result": "pass" },
+      { "item": "grid_min_height_50vh", "result": "pass" },
+      { "item": "staging_api_actions_catalog", "result": "pass", "http": 200 }
+    ]
+  },
+  "gates": {
+    "lint": "pass (5 pre-existing warnings, 0 errors)",
+    "type_check": "pass",
+    "vitest_response_slice": "pass (133)",
+    "build": "pass"
+  },
+  "next_recommended": "/edr/fim (Prompt 22 — Wave B1)",
+  "handoff_at": "2026-08-29T22:15:00+05:30"
+}
