@@ -1,6 +1,7 @@
 package com.hivearmor.service.elasticsearch;
 
 import com.hivearmor.domain.User;
+import com.hivearmor.multitenancy.MsspIndexResolver;
 import com.hivearmor.domain.UtmSpaceNotificationControl;
 import com.hivearmor.domain.application_events.enums.ApplicationEventType;
 import com.hivearmor.domain.chart_builder.types.query.FilterType;
@@ -58,6 +59,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class ElasticsearchService {
     private static final String CLASSNAME = "ElasticsearchService";
+    private static final String COMPLIANCE_EVIDENCE_DATA_TYPE = "compliance-evidence";
     private static final int FIELD_VALUES_MAX_BUCKETS = 500;
     private final Logger log = LoggerFactory.getLogger(ElasticsearchService.class);
     private final ApplicationEventService eventService;
@@ -67,13 +69,15 @@ public class ElasticsearchService {
     private final IndexPolicyService indexPolicyService;
     private final OpensearchClientBuilder client;
     private final Cache<String, List<String>> fieldValuesCache;
+    private final MsspIndexResolver msspIndexResolver;
 
     public ElasticsearchService(ApplicationEventService eventService, UserRepository userRepository,
                                 MailService mailService,
                                 UtmSpaceNotificationControlService spaceNotificationControlService,
                                 IndexPolicyService indexPolicyService,
                                 OpensearchClientBuilder client,
-                                Cache<String, List<String>> fieldValuesCache) {
+                                Cache<String, List<String>> fieldValuesCache,
+                                MsspIndexResolver msspIndexResolver) {
         this.eventService = eventService;
         this.userRepository = userRepository;
         this.mailService = mailService;
@@ -81,6 +85,7 @@ public class ElasticsearchService {
         this.indexPolicyService = indexPolicyService;
         this.client = client;
         this.fieldValuesCache = fieldValuesCache;
+        this.msspIndexResolver = msspIndexResolver;
     }
 
     /**
@@ -537,13 +542,14 @@ public class ElasticsearchService {
     public List<UtmComplianceControlEvaluationHistoryDto> getControlEvaluations(Long controlId) {
         final String ctx = CLASSNAME + ".getControlEvaluations";
         try {
-            Query query = Query.of(q -> q.term(t -> t
-                    .field("controlId")
-                    .value(FieldValue.of(controlId.toString())))
-            );
+            Query query = Query.of(q -> q.bool(b -> b
+                    .must(m -> m.term(t -> t
+                            .field("control_id")
+                            .value(FieldValue.of(controlId))))
+            ));
 
             SearchRequest request = new SearchRequest.Builder()
-                    .index("v3-hive-compliance-evidence-*")
+                    .index(complianceEvidenceIndexPattern())
                     .query(query)
                     .size(30)
                     .sort(s -> s.field(f -> f
@@ -556,6 +562,7 @@ public class ElasticsearchService {
 
             return response.hits().hits().stream()
                     .map(hit -> UtmComplianceControlEvaluationHistoryMapper.mapToEvaluationDto(hit.source()))
+                    .filter(Objects::nonNull)
                     .toList();
 
         } catch (Exception e) {
@@ -569,10 +576,11 @@ public class ElasticsearchService {
     public UtmComplianceControlEvaluationHistoryDto getLatestControlEvaluation(Long controlId) {
         try {
             SearchRequest request = new SearchRequest.Builder()
-                    .index("v3-hive-compliance-evidence-*")
-                    .query(q -> q.term(t -> t
-                            .field("controlId")
-                            .value(v -> v.longValue(controlId))
+                    .index(complianceEvidenceIndexPattern())
+                    .query(q -> q.bool(b -> b
+                            .must(m -> m.term(t -> t
+                                    .field("control_id")
+                                    .value(FieldValue.of(controlId))))
                     ))
                     .sort(s -> s.field(f -> f.field("@timestamp").order(SortOrder.Desc)))
                     .size(1)
@@ -608,14 +616,14 @@ public class ElasticsearchService {
                     .collect(Collectors.toList());
 
             SearchRequest request = SearchRequest.of(s -> s
-                    .index("v3-hive-compliance-evidence-*")
+                    .index(complianceEvidenceIndexPattern())
                     .query(q -> q.terms(t -> t
-                            .field("controlId")
+                            .field("control_id")
                             .terms(tv -> tv.value(values))
                     ))
                     .aggregations("by_control_id", agg -> agg
                             .terms(t -> t
-                                    .field("controlId")
+                                    .field("control_id")
                                     .size(controlIds.size())
                             )
                             .aggregations("latest", sub -> sub
@@ -657,6 +665,10 @@ public class ElasticsearchService {
             if (e instanceof Exception && isIndexNotFoundException((Exception) e)) return Collections.emptyMap();
             throw new RuntimeException("Failed to batch-fetch compliance evaluations: " + e.getMessage(), e);
         }
+    }
+
+    private String complianceEvidenceIndexPattern() {
+        return msspIndexResolver.resolveIndexPattern(COMPLIANCE_EVIDENCE_DATA_TYPE);
     }
 
     private static boolean isIndexNotFoundException(Exception e) {

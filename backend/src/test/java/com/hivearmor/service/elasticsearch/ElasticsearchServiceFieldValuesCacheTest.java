@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.hivearmor.opensearch.OpenSearch;
 import com.hivearmor.opensearch.enums.TermOrder;
+import com.hivearmor.multitenancy.MsspIndexResolver;
 import com.hivearmor.service.MailService;
 import com.hivearmor.service.UtmSpaceNotificationControlService;
 import com.hivearmor.service.application_events.ApplicationEventService;
@@ -47,7 +48,8 @@ class ElasticsearchServiceFieldValuesCacheTest {
                 mock(UtmSpaceNotificationControlService.class),
                 mock(IndexPolicyService.class),
                 clientBuilder,
-                fieldValuesCache
+                fieldValuesCache,
+                new MsspIndexResolver()
         );
     }
 

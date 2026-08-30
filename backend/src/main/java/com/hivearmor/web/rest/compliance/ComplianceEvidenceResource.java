@@ -1,5 +1,6 @@
 package com.hivearmor.web.rest.compliance;
 
+import com.hivearmor.security.AuthoritiesConstants;
 import com.hivearmor.service.compliance.ComplianceEvidenceService;
 import com.hivearmor.service.dto.compliance.ComplianceEvidenceDTO;
 import com.hivearmor.web.rest.util.PaginationUtil;
@@ -20,6 +21,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/compliance/controls")
+@PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
+              "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
 public class ComplianceEvidenceResource {
 
     private final ComplianceEvidenceService evidenceService;
@@ -29,7 +32,6 @@ public class ComplianceEvidenceResource {
     }
 
     @GetMapping("/{controlId}/evidence")
-    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<ComplianceEvidenceDTO>> getControlEvidence(
             @PathVariable Long controlId,
             @RequestParam(defaultValue = "0") int page,
@@ -47,7 +49,6 @@ public class ComplianceEvidenceResource {
     }
 
     @GetMapping("/{controlId}/evidence/export")
-    @PreAuthorize("hasRole('USER')")
     public void exportEvidence(
             @PathVariable Long controlId,
             @RequestParam(defaultValue = "csv") String format,

@@ -1,17 +1,21 @@
 package com.hivearmor.web.rest.compliance.config;
 
+import com.hivearmor.security.AuthoritiesConstants;
 import com.hivearmor.service.compliance.config.UtmComplianceControlEvaluationLatestService;
 import com.hivearmor.service.dto.compliance.UtmComplianceControlLatestEvaluationDto;
 import com.hivearmor.web.rest.util.PaginationUtil;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/compliance/control-config")
+@PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
+              "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
 public class UtmComplianceControlLatestEvaluationResource {
 
     private final UtmComplianceControlEvaluationLatestService latestEvaluationService;
