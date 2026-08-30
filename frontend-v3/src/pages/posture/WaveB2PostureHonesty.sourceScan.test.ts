@@ -126,4 +126,23 @@ describe('Wave B2 Posture & compliance honesty', () => {
     expect(service).toContain('/ha-vuln/findings');
     expect(service).not.toMatch(/\/api\/v1\/threat-intel/);
   });
+
+  it('B2-CIS-02 (Prompt 28): CIS benchmark page uses honesty chrome and canonical /ha-cis only', () => {
+    const page = readFileSync(join(process.cwd(), 'src/pages/posture/cis-benchmark/CisBenchmarkPage.tsx'), 'utf8');
+    const service = readFileSync(join(process.cwd(), 'src/services/vulnService.ts'), 'utf8');
+    expect(page).toContain('POSTURE_CIS_BENCHMARK_JOB_SENTENCE');
+    expect(page).toContain('STAGING CANDIDATE');
+    expect(page).toContain('cis-empty-honesty');
+    expect(page).toContain('ROUTES.ASSETS');
+    expect(page).toContain('ROUTES.VULNERABILITIES');
+    expect(page).toContain('ROUTES.COMPLIANCE');
+    expect(page).toContain('ROUTES.READINESS');
+    expect(page).toContain('ROUTES.EXPOSURE');
+    expect(page).not.toContain('className="cis-summary"');
+    expect(page).not.toMatch(/href="\/posture\//);
+    expect(page).not.toMatch(/previewAction|Execute/);
+    expect(service).toContain('/ha-cis/results');
+    expect(service).toContain('/ha-cis/catalog');
+    expect(service).not.toMatch(/POST \/ha-cis\/actions/);
+  });
 });
