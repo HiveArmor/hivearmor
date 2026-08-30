@@ -1,0 +1,111 @@
+{
+  "prompt": "28-posture-cis-benchmark-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "758e7fd",
+  "based_on_main_includes_pr27": true,
+  "decision": "RESTRUCTURE",
+  "routes": ["/posture/cis-benchmark"],
+  "job_sentence": "CIS benchmark posture — review SCA assessment checks, pass/fail/error outcomes, and observed packs across authorized agents. Official CIS Benchmark text is not licensed here; CVE findings live on Vulnerabilities; framework mapping lives on Compliance.",
+  "distinction": {
+    "cis_benchmark": "/posture/cis-benchmark = CIS SCA posture — host-file assessment checks, pass/fail/error, observed packs (this slice)",
+    "vulnerabilities": "/posture/vulnerabilities = CVE findings inventory (Prompt 27)",
+    "assets": "/posture/assets = host/asset posture inventory (Prompt 23)",
+    "compliance": "/compliance = framework assurance (Prompt 30)",
+    "readiness": "/posture/readiness = detection coverage / MITRE readiness (Prompt 29)",
+    "exposure": "/posture/exposure = attack-path analysis (Prompt 26)"
+  },
+  "ia": {
+    "posture_cis_benchmark": {
+      "removed": [
+        "Hero .cis-summary 6-tile strip",
+        "Legacy Posture & exposure eyebrow and CIS Benchmark Posture title",
+        "Raw <a href> header and drawer cross-links",
+        "Hero .cis-warning banners for collection errors, LICENSE_REQUIRED_NOT_SHIPPED, summary error"
+      ],
+      "added": [
+        "POSTURE_CIS_BENCHMARK_JOB_SENTENCE + STAGING CANDIDATE badge (POSTURE eyebrow)",
+        "Meta cross-links: Mission Control · Assets · Vulnerabilities · Compliance · Detection Coverage · Exposure (Link + ROUTES)",
+        "ROUTES.READINESS = /posture/readiness",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator (SOC Analyst omitted — matches nav gate)",
+        "Empty-honesty (cis-empty-honesty) for default FAIL priority empty vs all-outcomes truly empty vs filter-empty vs API error",
+        "Grid workspace min-height 50vh (.cis-inventory)",
+        "Compact inline stats in results toolbar (.cis-inline-stats) when summary exists (failed + errors + pass rate only if denominator > 0)",
+        "Error / license / summary-unavailable / mutation fail-closed folded into cis-page__projection-note",
+        "Compact observed-pack catalog below toolbar (not a KPI strip)",
+        "CisBenchmarkUxHonesty.sourceScan.test.ts"
+      ],
+      "kept": [
+        "Filters: outcome · CIS level · agent · exact check ID search",
+        "Default FAIL priority view",
+        "AG Grid inventory, page pagination, row density, J/K/Enter/ shortcuts",
+        "Check drawer (observed vs expected evidence)",
+        "CIS_MUTATION_AVAILABLE=false — no preview/execute CTA",
+        "Official CIS not shipped honesty (LICENSE_REQUIRED_NOT_SHIPPED)",
+        "GET /api/ha-cis/results, summary, detail, catalog"
+      ],
+      "forbidden": [
+        "POST /api/ha-cis/actions or /actions/preview as live CTAs",
+        "Official CIS recommendation text / licensed catalog claims",
+        "Fake pass rates when summary is empty or denominator is 0",
+        "CVE findings from /api/ha-vuln as CIS checks",
+        "Missing-contract panel when contract exists but inventory is empty"
+      ]
+    }
+  },
+  "backend": {
+    "cis": {
+      "status": "IMPLEMENTED",
+      "label": "populated (not CIS-EMPTY-STAGING)",
+      "frontend_contract": "fetchScaResults → GET /api/ha-cis/results; fetchScaSummary → GET /api/ha-cis/results/summary; fetchCisCatalog → GET /api/ha-cis/catalog; tenant via X-Tenant-ID",
+      "staging_probe": {
+        "auth": "admin JWT via staging VM (token field, not id_token)",
+        "account_control": { "path": "GET /api/account", "http": 200, "body_bytes": 422 },
+        "without_tenant": [
+          { "path": "GET /api/ha-cis/results?size=5&page=0", "http": 422, "body_bytes": 321, "code": "TELEMETRY_TENANT_REQUIRED" },
+          { "path": "GET /api/ha-cis/results/summary", "http": 422, "body_bytes": 329, "code": "TELEMETRY_TENANT_REQUIRED" },
+          { "path": "GET /api/ha-cis/catalog", "http": 422, "body_bytes": 321, "code": "TELEMETRY_TENANT_REQUIRED" }
+        ],
+        "with_x_tenant_id_1": [
+          { "path": "GET /api/ha-cis/results?size=5&page=0", "http": 200, "body_bytes": 2642, "x_total_count": 25, "list_len": 5, "note": "observed HA-OS/HA-USER/HA-LOGIN/HA-SSH checks; mixed PASS/FAIL/NOT_APPLICABLE" },
+          { "path": "GET /api/ha-cis/results/summary", "http": 200, "body_bytes": 3518, "counts": { "pass": 4, "fail": 4, "error": 0, "na": 17, "agents": 13 } },
+          { "path": "GET /api/ha-cis/catalog", "http": 200, "body_bytes": 926, "packs": [{ "packId": "ha-linux-observed-ssh", "licenseState": "SHIPPED_OBSERVED", "officialBenchmark": false }, { "packId": "cis-linux", "licenseState": "LICENSE_REQUIRED_NOT_SHIPPED", "officialBenchmark": true }] }
+        ],
+        "verdict": "Populated staging inventory (25 results, 13 agent summaries, 2 catalog packs including LICENSE_REQUIRED_NOT_SHIPPED) — not CIS-EMPTY-STAGING. Empty HTTP 200 remains distinct from 422 tenant-required and other API errors. Official CIS catalog text is not shipped."
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist CIS chunk contains job sentence, STAGING CANDIDATE, cis-empty-honesty, Analyst · SOC Manager · Platform Administrator",
+    "ui_shell": {
+      "path": "/posture/cis-benchmark",
+      "staging_https": "api_probed_admin_jwt_ok",
+      "fe_deploy": "not_run_local_build_only"
+    },
+    "headed_browser": false,
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_mission_control_assets_vulnerabilities_compliance_readiness_exposure", "result": "pass" },
+      { "item": "empty_priority_honesty_banner_wired", "result": "pass" },
+      { "item": "true_empty_distinct_from_priority_empty", "result": "pass" },
+      { "item": "api_error_distinct_from_empty_inventory", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_summary_exists", "result": "pass" },
+      { "item": "pass_rate_only_if_denominator_gt_0", "result": "pass" },
+      { "item": "inventory_min_height_50vh", "result": "pass" },
+      { "item": "drawer_pivots_use_link_routes", "result": "pass" },
+      { "item": "role_note_omits_soc_analyst", "result": "pass" },
+      { "item": "cis_mutation_fail_closed", "result": "pass" },
+      { "item": "official_cis_not_shipped_honesty", "result": "pass" },
+      { "item": "staging_cis_inventory_populated", "result": "pass", "label": "25 results · 4 fail · 4 pass · 0 error · LICENSE_REQUIRED_NOT_SHIPPED present" }
+    ]
+  },
+  "gates": {
+    "lint": "pass slice files (0 errors); repo lint 5 pre-existing warnings unrelated to this slice",
+    "type_check": "pass",
+    "vitest_cis_slice": "pass (25)",
+    "build": "pass"
+  },
+  "next_recommended": "/posture/readiness (Prompt 29)",
+  "handoff_at": "2026-08-30T19:18:00+05:30"
+}
