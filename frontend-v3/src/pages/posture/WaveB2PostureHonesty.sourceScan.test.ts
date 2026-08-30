@@ -109,4 +109,21 @@ describe('Wave B2 Posture & compliance honesty', () => {
     expect(service).toContain("contractState: 'missing'");
     expect(service).not.toMatch(/\/api\/ha-exposure/);
   });
+
+  it('B2-VULN-02 (Prompt 27): vulnerabilities page uses honesty chrome and canonical /ha-vuln only', () => {
+    const page = readFileSync(join(process.cwd(), 'src/pages/posture/vulnerabilities/VulnerabilitiesPage.tsx'), 'utf8');
+    const service = readFileSync(join(process.cwd(), 'src/services/vulnService.ts'), 'utf8');
+    expect(page).toContain('POSTURE_VULNERABILITIES_JOB_SENTENCE');
+    expect(page).toContain('STAGING CANDIDATE');
+    expect(page).toContain('vulnerabilities-empty-honesty');
+    expect(page).toContain('ROUTES.ASSETS');
+    expect(page).toContain('ROUTES.EXPOSURE');
+    expect(page).toContain('ROUTES.CIS_BENCHMARK');
+    expect(page).toContain('ROUTES.COMPLIANCE');
+    expect(page).not.toContain('vuln-summary');
+    expect(page).not.toMatch(/href="\/posture\//);
+    expect(page).not.toContain('Execute');
+    expect(service).toContain('/ha-vuln/findings');
+    expect(service).not.toMatch(/\/api\/v1\/threat-intel/);
+  });
 });

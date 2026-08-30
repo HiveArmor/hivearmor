@@ -1,0 +1,104 @@
+{
+  "prompt": "27-posture-vulnerabilities-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "f2e96d8",
+  "based_on_main_includes_pr26": true,
+  "decision": "RESTRUCTURE",
+  "routes": ["/posture/vulnerabilities"],
+  "job_sentence": "Vulnerability findings inventory — review CVE findings, severity, CISA KEV matches, and affected assets across authorized scanner coverage. Asset posture lives on Assets; attack-path analysis lives on Exposure.",
+  "distinction": {
+    "vulnerabilities": "/posture/vulnerabilities = CVE findings inventory — severity, CISA KEV, affected assets, read-only remediation (this slice)",
+    "assets": "/posture/assets = host/asset posture inventory (Prompt 23)",
+    "exposure": "/posture/exposure = attack-path analysis (Prompt 26)",
+    "identities": "/posture/identities = user/service identity inventory (Prompt 24)",
+    "cis_benchmark": "/posture/cis-benchmark = CIS SCA posture (Prompt 28)",
+    "compliance": "/compliance = framework assurance"
+  },
+  "ia": {
+    "posture_vulnerabilities": {
+      "removed": [
+        "Hero .vuln-summary 6-tile KPI strip",
+        "Legacy Posture & exposure eyebrow and Vulnerability Operations title",
+        "Raw <a href> header and drawer cross-links",
+        "Hero .vuln-kev-strip KEV and connector banners"
+      ],
+      "added": [
+        "POSTURE_VULNERABILITIES_JOB_SENTENCE + STAGING CANDIDATE badge (POSTURE eyebrow)",
+        "Meta cross-links: Mission Control · Assets · Exposure · Identities · CIS Benchmark · Compliance (Link + ROUTES)",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator (SOC Analyst omitted — matches nav gate)",
+        "Empty-inventory honesty banner (vulnerabilities-empty-honesty) distinct from filter-empty and API error",
+        "Grid workspace min-height 50vh (.vuln-inventory)",
+        "Compact inline stats in results toolbar (.vuln-inline-stats) when summary exists",
+        "KEV + connector + fail-closed execute folded into vuln-page__projection-note",
+        "?asset= deep-link mapped to findings agentId",
+        "ROUTES.CIS_BENCHMARK",
+        "VulnerabilitiesUxHonesty.sourceScan.test.ts"
+      ],
+      "kept": [
+        "Filters: severity · CISA KEV · first-seen window · CVE search",
+        "AG Grid inventory, page pagination, row density, J/K/Enter/ shortcuts",
+        "Finding drawer (description, remediation guidance read-only)",
+        "Remediation execute disabled (VULN_REMEDIATION_EXECUTE_AVAILABLE=false)",
+        "GET /api/ha-vuln/findings, summary, detail, remediation, remediation-connectors"
+      ],
+      "forbidden": [
+        "Fake CVE counts when API returns empty",
+        "/api/v1/threat-intel as vuln source",
+        "Remediation execute / patch job mutations",
+        "Missing-contract panel when contract exists but inventory is empty"
+      ]
+    }
+  },
+  "backend": {
+    "vuln": {
+      "status": "IMPLEMENTED",
+      "label": "populated (not VULN-EMPTY-STAGING)",
+      "frontend_contract": "fetchVulnFindings → GET /api/ha-vuln/findings; fetchVulnSummary → GET /api/ha-vuln/findings/summary; tenant via X-Tenant-ID",
+      "staging_probe": {
+        "auth": "admin JWT via staging VM (token field, not id_token)",
+        "account_control": { "path": "GET /api/account", "http": 200, "body_bytes": 422 },
+        "without_tenant": [
+          { "path": "GET /api/ha-vuln/findings?size=5&page=0", "http": 422, "body_bytes": 323, "code": "TELEMETRY_TENANT_REQUIRED" },
+          { "path": "GET /api/ha-vuln/findings/summary", "http": 422, "body_bytes": 331, "code": "TELEMETRY_TENANT_REQUIRED" }
+        ],
+        "with_x_tenant_id_1": [
+          { "path": "GET /api/ha-vuln/findings?size=5&page=0", "http": 200, "body_bytes": 550, "x_total_count": 1, "list_len": 1, "note": "1 LOW finding; KEV false" },
+          { "path": "GET /api/ha-vuln/findings/summary", "http": 200, "body_bytes": 317, "counts": { "critical": 0, "high": 0, "medium": 0, "low": 1, "info": 0, "kevCount": 0, "affectedAgents": 1 } }
+        ],
+        "verdict": "Populated staging inventory (1 finding, 1 affected agent) — not VULN-EMPTY-STAGING. Empty HTTP 200 remains distinct from 422 tenant-required and other API errors."
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist VulnerabilitiesPage chunk contains job sentence, STAGING CANDIDATE, vulnerabilities-empty-honesty, Analyst · SOC Manager · Platform Administrator",
+    "ui_shell": {
+      "path": "/posture/vulnerabilities",
+      "staging_https": "api_probed_admin_jwt_ok",
+      "fe_deploy": "not_run_local_build_only"
+    },
+    "headed_browser": false,
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_mission_control_assets_exposure_identities_cis_compliance", "result": "pass" },
+      { "item": "empty_inventory_honesty_banner_wired", "result": "pass" },
+      { "item": "api_error_distinct_from_empty_inventory", "result": "pass" },
+      { "item": "filter_empty_distinct_from_empty_inventory", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_summary_exists", "result": "pass" },
+      { "item": "inventory_min_height_50vh", "result": "pass" },
+      { "item": "drawer_pivots_use_link_routes", "result": "pass" },
+      { "item": "role_note_omits_soc_analyst", "result": "pass" },
+      { "item": "remediation_execute_fail_closed", "result": "pass" },
+      { "item": "staging_vuln_inventory_populated", "result": "pass", "label": "1 LOW finding · 0 KEV · 1 affected agent" }
+    ]
+  },
+  "gates": {
+    "lint": "pass slice files (0 errors); repo lint 5 pre-existing warnings unrelated to this slice",
+    "type_check": "pass",
+    "vitest_vulnerabilities_slice": "pass (23)",
+    "build": "pass"
+  },
+  "next_recommended": "/posture/cis-benchmark (Prompt 28)",
+  "handoff_at": "2026-08-30T18:45:00+05:30"
+}

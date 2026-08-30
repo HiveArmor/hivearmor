@@ -26,7 +26,6 @@
 .vuln-toolbar,
 .vuln-search,
 .vuln-scope,
-.vuln-kev-strip,
 .vuln-refreshing,
 .vuln-results-toolbar,
 .vuln-results-toolbar > div,
@@ -65,12 +64,82 @@
   border-radius: var(--ha-radius-control);
 }
 .vuln-header__identity > div { min-width: 0; align-items: flex-start; flex-direction: column; }
-.vuln-header__identity span:not(.vuln-header__mark) { color: var(--ha-action-secondary); font: 600 9px/1 var(--ha-font-ui); letter-spacing: .16em; text-transform: uppercase; }
+.vuln-header__eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.vuln-header__eyebrow > span:first-child {
+  font: 600 9px/1 var(--ha-font-ui);
+  color: var(--ha-action-secondary);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.vuln-header__badge {
+  padding: 2px 6px;
+  border: 1px solid color-mix(in srgb, var(--ha-severity-high) 40%, var(--ha-border-default));
+  border-radius: var(--ha-radius-sm);
+  background: color-mix(in srgb, var(--ha-severity-high) 12%, transparent);
+  color: var(--ha-severity-high);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.vuln-header__job {
+  margin: 4px 0 0;
+  max-width: 760px;
+  color: var(--ha-foreground-secondary);
+  font-size: var(--ha-text-sm, 12px);
+  line-height: 1.4;
+}
+.vuln-page__projection-note {
+  margin: 4px 0 0;
+  max-width: 760px;
+  color: var(--ha-foreground-tertiary);
+  font-size: var(--ha-text-xs, 11px);
+  line-height: 1.35;
+}
+.vuln-page__meta {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0;
+  padding: 6px var(--ha-page-header-padding-inline);
+  border-bottom: 1px solid var(--ha-border-subtle);
+  background: var(--ha-surface-panel);
+  color: var(--ha-foreground-secondary);
+  font-size: var(--ha-text-xs, 11px);
+}
+.vuln-page__meta a {
+  color: var(--ha-action-secondary);
+  text-decoration: none;
+}
+.vuln-page__meta a:hover { text-decoration: underline; }
+.vuln-page__access {
+  color: var(--ha-foreground-tertiary);
+  font-size: 9px;
+}
+.vulnerabilities-empty-honesty {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px var(--ha-page-header-padding-inline);
+  border-bottom: 1px solid var(--ha-border-subtle);
+  background: color-mix(in srgb, var(--ha-severity-medium) 10%, transparent);
+  color: var(--ha-foreground-secondary);
+  font-size: var(--ha-text-xs, 11px);
+}
+.vulnerabilities-empty-honesty strong { color: var(--ha-foreground-primary); font-size: 11px; }
 .vuln-header h1 { margin: 2px 0 0; font: 600 var(--ha-page-title-compact); white-space: nowrap; }
 .vuln-header__actions { min-width: 0; gap: 7px; }
 .vuln-header__actions a,
 .vuln-header__actions button,
-.vuln-kev-strip button,
 .vuln-clear,
 .vuln-state button,
 .vuln-pagination button,
@@ -91,7 +160,6 @@
 }
 .vuln-header__actions a:hover,
 .vuln-header__actions button:hover,
-.vuln-kev-strip button:hover,
 .vuln-clear:hover,
 .vuln-state button:hover,
 .vuln-pagination button:hover:not(:disabled),
@@ -102,24 +170,6 @@
 .vuln-shortcuts { color: var(--ha-foreground-tertiary); font-size: 10px; white-space: nowrap; }
 .vuln-shortcuts kbd,
 .vuln-search kbd { padding: 1px 4px; color: var(--ha-foreground-secondary); background: var(--ha-surface-input); border: 1px solid var(--ha-border-default); border-radius: 4px; font: 10px/1 var(--ha-font-mono); }
-
-.vuln-summary {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  min-height: 72px;
-  flex: 0 0 auto;
-  background: var(--ha-surface-panel);
-  border-bottom: 1px solid var(--ha-border-subtle);
-}
-.vuln-summary > div { min-width: 0; padding: 8px 12px; border-right: 1px solid var(--ha-border-subtle); }
-.vuln-summary > div:last-child { border-right: 0; }
-.vuln-summary span { display: flex; align-items: center; gap: 6px; color: var(--ha-foreground-secondary); font-size: 10px; }
-.vuln-summary strong { display: block; margin-top: 3px; font: 600 21px/1 var(--ha-font-mono); font-variant-numeric: tabular-nums; }
-.vuln-summary small { display: block; margin-top: 4px; overflow: hidden; color: var(--ha-foreground-tertiary); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.vuln-summary [data-tone='critical'] strong { color: var(--ha-severity-critical); }
-.vuln-summary [data-tone='danger'] strong { color: var(--ha-severity-high); }
-.vuln-summary [data-tone='warning'] strong { color: var(--ha-severity-medium); }
-.vuln-summary [data-tone='info'] strong { color: var(--ha-state-info); }
 
 .vuln-operations { flex: 0 0 auto; background: var(--ha-surface-panel); border-bottom: 1px solid var(--ha-border-subtle); }
 .vuln-toolbar { min-height: 42px; padding: 5px 10px; gap: 7px; overflow-x: auto; scrollbar-width: thin; }
@@ -141,12 +191,22 @@
 .vuln-clear { height: 30px; color: var(--ha-action-secondary); background: transparent; }
 .vuln-scope { margin-left: auto; gap: 5px; flex: 0 0 auto; color: var(--ha-foreground-tertiary); font-size: 10px; white-space: nowrap; }
 
-.vuln-kev-strip,
-.vuln-refreshing { min-height: 30px; padding: 4px 10px; gap: 8px; flex: 0 0 auto; font-size: 11px; }
-.vuln-kev-strip { color: var(--ha-state-warning); background: var(--ha-fill-medium-subtle); border-bottom: 1px solid var(--ha-border-warning); }
-.vuln-kev-strip span { flex: 1; }
-.vuln-kev-strip button { height: 25px; color: var(--ha-state-warning); background: transparent; border-color: var(--ha-border-warning); }
-.vuln-refreshing { color: var(--ha-foreground-secondary); background: var(--ha-fill-info-subtle); border-bottom: 1px solid var(--ha-border-info); }
+.vuln-refreshing { min-height: 30px; padding: 4px 10px; gap: 8px; flex: 0 0 auto; font-size: 11px; color: var(--ha-foreground-secondary); background: var(--ha-fill-info-subtle); border-bottom: 1px solid var(--ha-border-info); }
+
+.vuln-inline-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+  padding-left: 8px;
+  border-left: 1px solid var(--ha-border-subtle);
+  color: var(--ha-foreground-tertiary);
+  font: 10px/1 var(--ha-font-mono);
+}
+.vuln-inline-stats span { display: inline-flex; align-items: center; gap: 4px; }
+.vuln-inline-stats [data-tone='critical'] { color: var(--ha-severity-critical); }
+.vuln-inline-stats [data-tone='high'] { color: var(--ha-severity-high); }
+.vuln-inline-stats [data-tone='warning'] { color: var(--ha-severity-medium); }
 
 .vuln-results-toolbar { min-height: 38px; padding: 0 10px; justify-content: space-between; gap: 10px; flex: 0 0 auto; background: var(--ha-surface-panel); border-bottom: 1px solid var(--ha-border-subtle); }
 .vuln-results-toolbar > div { min-width: 0; gap: 8px; }
@@ -157,6 +217,7 @@
 .vuln-density button { width: 27px; height: 25px; display: grid; place-items: center; padding: 0; color: var(--ha-foreground-secondary); background: transparent; border: 0; border-radius: 5px; cursor: pointer; }
 .vuln-density button[aria-pressed='true'] { color: var(--ha-action-secondary); background: var(--ha-fill-primary-muted); }
 
+.vuln-inventory { display: flex; flex-direction: column; min-height: 50vh; flex: 1 1 auto; min-width: 0; overflow: hidden; }
 .vuln-grid-wrap { min-height: 0; flex: 1 1 auto; overflow: hidden; }
 .vuln-grid.ag-theme-quartz-dark.ha-grid { height: 100%; border: 0; border-radius: 0; }
 .vuln-grid .ag-row-focus { box-shadow: inset 2px 0 0 var(--ha-action-primary); }
@@ -251,17 +312,11 @@
 @keyframes vuln-spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 1050px) {
-  .vuln-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .vuln-summary > div:nth-child(3) { border-right: 0; }
-  .vuln-summary > div:nth-child(-n+3) { border-bottom: 1px solid var(--ha-border-subtle); }
   .vuln-shortcuts { display: none; }
 }
 
 @media (max-width: 760px) {
   .vuln-header__actions a { display: none; }
-  .vuln-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .vuln-summary > div:nth-child(odd) { border-right: 1px solid var(--ha-border-subtle); }
-  .vuln-summary > div:nth-child(even) { border-right: 0; }
   .vuln-search { width: min(260px, 70vw); }
   .vuln-scope { display: none; }
   .vuln-pagination > span { display: none; }
