@@ -1,0 +1,110 @@
+{
+  "prompt": "24-posture-identities-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "f1f5d9c",
+  "based_on_main_includes_pr23": true,
+  "decision": "RESTRUCTURE",
+  "routes": ["/posture/identities"],
+  "job_sentence": "Identity posture inventory — review user and service identities, risk scores, privilege signals, and control gaps across authorized tenants. Full entity dossiers live on Entities; host posture lives on Assets.",
+  "distinction": {
+    "identities": "/posture/identities = identity posture inventory — risk, privilege, auth gaps (this slice)",
+    "entities": "/entities = entity dossier + behavioral timeline",
+    "assets": "/posture/assets = host/asset posture inventory (Prompt 23)",
+    "active_directory": "/posture/active-directory = AD domain/report posture (Prompt 25)",
+    "exposure": "/posture/exposure = attack-path analysis (Prompt 26)",
+    "vulnerabilities": "/posture/vulnerabilities = vuln findings inventory"
+  },
+  "ia": {
+    "posture_identities": {
+      "removed": [
+        "Hero .idp-summary 6-tile KPI strip",
+        "Legacy Posture & exposure eyebrow and Identity Security title",
+        "Raw <a href> header and drawer cross-links",
+        "Separate .idp-warning partial-failure banner"
+      ],
+      "added": [
+        "POSTURE_IDENTITIES_JOB_SENTENCE + STAGING CANDIDATE badge (POSTURE eyebrow)",
+        "Meta cross-links: Mission Control · Assets · Entities · Exposure · Vulnerabilities · Active Directory (Link + ROUTES)",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator",
+        "Empty-inventory honesty banner (identities-empty-honesty) distinct from filter-empty and API error",
+        "Grid workspace min-height 50vh (.idp-inventory)",
+        "Compact inline stats in results toolbar (.idp-inline-stats) when summary exists",
+        "Partial contract folded into idp-page__projection-note",
+        "IdentitiesUxHonesty.sourceScan.test.ts",
+        "Drawer tabs renamed: overview · risk · controls · activity"
+      ],
+      "kept": [
+        "View tabs (all · high risk · privileged · non-human · control gaps · stale) with fixture/backend gating",
+        "Compact filters: risk · kind · auth · sort · search",
+        "AG Grid inventory, cursor pagination, row density, J/K/Enter/ shortcuts",
+        "Identity drawer progressive detail via preview API",
+        "identityFixtureMode dev-only",
+        "Drawer pivots to dossier/hunt/intelligence (as Link)"
+      ],
+      "forbidden": [
+        "GET /api/ha-entities/{id}/risk",
+        "Fake privileged/nonHuman/controlGaps/stale when API returns null",
+        "IAM connector mutations"
+      ]
+    }
+  },
+  "backend": {
+    "entities_list": {
+      "path": "GET /api/ha-entities?types=user&limit=5",
+      "auth": "ROLE_ANALYST | ROLE_SOC_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN",
+      "staging": {
+        "http": 200,
+        "body_bytes": 53,
+        "items": 0,
+        "total": 0,
+        "note": "IDENTITIES-EMPTY-STAGING — no user entities in authorized tenant"
+      }
+    },
+    "entities_summary": {
+      "path": "GET /api/ha-entities/summary?types=user",
+      "staging": {
+        "http": 200,
+        "body_bytes": 251,
+        "summary": { "total": 0, "highRisk": 0 }
+      }
+    },
+    "entities_preview": {
+      "path": "GET /api/ha-entities/{id}/preview",
+      "staging": {
+        "skipped": true,
+        "reason": "no user entities — IDENTITIES-EMPTY-STAGING"
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist build contains POSTURE_IDENTITIES_JOB_SENTENCE, STAGING CANDIDATE, identities-empty-honesty, Analyst · SOC Manager · Platform Administrator",
+    "ui_shell": {
+      "path": "/posture/identities",
+      "staging_https": "api_probed_admin_jwt_ok",
+      "fe_deploy": "not_run_local_build_only"
+    },
+    "headed_browser": false,
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_mission_control_assets_entities_exposure_vulns_ad", "result": "pass" },
+      { "item": "empty_inventory_honesty_banner_wired", "result": "pass" },
+      { "item": "api_error_distinct_from_empty_inventory", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_summary_exists", "result": "pass" },
+      { "item": "inventory_min_height_50vh", "result": "pass" },
+      { "item": "drawer_pivots_use_link_routes", "result": "pass" },
+      { "item": "partial_contract_note_not_fake_metrics", "result": "pass" },
+      { "item": "staging_api_ha_entities_list", "result": "pass", "http": 200 },
+      { "item": "staging_api_ha_entities_summary", "result": "pass", "http": 200 }
+    ]
+  },
+  "gates": {
+    "lint": "pass slice files (0 errors); repo lint 5 pre-existing warnings unrelated to this slice",
+    "type_check": "pass",
+    "vitest_identities_slice": "pass (18)",
+    "build": "pass"
+  },
+  "next_recommended": "/posture/active-directory (Prompt 25)",
+  "handoff_at": "2026-08-29T22:45:00+05:30"
+}

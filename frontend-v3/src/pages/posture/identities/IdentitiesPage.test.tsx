@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { IdentitiesPage } from './IdentitiesPage';
+import { IdentitiesPage, POSTURE_IDENTITIES_JOB_SENTENCE } from './IdentitiesPage';
 import type { IdentityPostureItem, IdentityPosturePage, IdentityPosturePreview } from './identity.types';
 
 vi.mock('@/hooks/useEpsStream', () => ({ useEpsStream: () => ({ connected: true, eps: 12840 }) }));
@@ -53,17 +54,28 @@ beforeEach(() => {
     : queryState());
 });
 
+function renderPage(): ReturnType<typeof render> {
+  return render(
+    <MemoryRouter>
+      <IdentitiesPage />
+    </MemoryRouter>,
+  );
+}
+
 describe('IdentitiesPage', () => {
-  it('renders the identity-risk queue, posture summary and operational dock', () => {
-    render(<IdentitiesPage />);
-    expect(screen.getByRole('heading', { name: 'Identity Security' })).toBeDefined();
-    expect(screen.getByText('Known identities')).toBeDefined();
-    expect(screen.getByRole('grid', { name: 'Identity security posture inventory' })).toBeDefined();
+  it('renders inventory-first honesty chrome, inline stats, and operational dock', () => {
+    renderPage();
+    expect(screen.getByRole('heading', { name: 'Identities' })).toBeDefined();
+    expect(screen.getByText(POSTURE_IDENTITIES_JOB_SENTENCE)).toBeDefined();
+    expect(screen.getByText('STAGING CANDIDATE')).toBeDefined();
+    expect(screen.getByText('186 total')).toBeDefined();
+    expect(screen.getByText('71 high risk')).toBeDefined();
+    expect(screen.getByRole('grid', { name: 'Posture identity inventory' })).toBeDefined();
     expect(screen.getByTestId('status-dock')).toBeDefined();
   });
 
   it('provides compact risk, identity kind, authentication and sort filters', () => {
-    render(<IdentitiesPage />);
+    renderPage();
     expect(screen.getByRole('combobox', { name: 'Filter by risk' })).toBeDefined();
     expect(screen.getByRole('combobox', { name: 'Filter by identity kind' })).toBeDefined();
     expect(screen.getByRole('combobox', { name: 'Filter by authentication strength' })).toBeDefined();
@@ -71,18 +83,18 @@ describe('IdentitiesPage', () => {
   });
 
   it('opens progressive identity context with risk signals and access paths', () => {
-    render(<IdentitiesPage />);
+    renderPage();
     fireEvent.click(screen.getByRole('row', { name: /Sarah Chen/ }));
     expect(screen.getByRole('dialog', { name: 'Sarah Chen' })).toBeDefined();
     expect(screen.getByText('Hive Intelligence')).toBeDefined();
-    fireEvent.click(screen.getByRole('tab', { name: 'signals' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'risk' }));
     expect(screen.getByText('Credential exposure signal')).toBeDefined();
-    fireEvent.click(screen.getByRole('tab', { name: 'access' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'controls' }));
     expect(screen.getByText('Global Administrator')).toBeDefined();
   });
 
   it('supports slash focus and icon-based density controls', () => {
-    render(<IdentitiesPage />);
+    renderPage();
     fireEvent.keyDown(window, { key: '/' });
     expect(document.activeElement).toBe(screen.getByRole('searchbox', { name: 'Search identities' }));
     expect(screen.getByRole('button', { name: 'Compact rows' })).toBeDefined();
@@ -90,17 +102,33 @@ describe('IdentitiesPage', () => {
     expect(screen.getByRole('button', { name: 'Comfortable rows' })).toBeDefined();
   });
 
-  it('keeps error, partial-contract and filtered-empty states distinct', () => {
+  it('keeps error, partial-contract, empty-inventory and filtered-empty states distinct', () => {
     useQuery.mockReturnValue(queryState({ data: undefined, isError: true, error: new Error('403 forbidden') }));
-    const { rerender } = render(<IdentitiesPage />);
+    const { rerender } = renderPage();
     expect(screen.getByText('Identity posture access denied')).toBeDefined();
 
-    useQuery.mockReturnValue(queryState({ data: { ...page, items: [], total: 0 } }));
-    rerender(<IdentitiesPage />);
-    expect(screen.getByText('No identities observed')).toBeDefined();
+    useQuery.mockReturnValue(queryState({
+      data: { ...page, items: [], total: 0, summary: { ...page.summary, total: 0, highRisk: 0 } },
+    }));
+    rerender(
+      <MemoryRouter>
+        <IdentitiesPage />
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId('identities-empty-honesty')).toBeDefined();
 
-    useQuery.mockReturnValue(queryState({ data: { ...page, partialFailures: [{ source: 'identity-posture', message: 'Authentication projection unavailable.' }] } }));
-    rerender(<IdentitiesPage />);
-    expect(screen.getByText('Authentication projection unavailable.')).toBeDefined();
+    useQuery.mockReturnValue(queryState({
+      data: {
+        ...page,
+        contractState: 'partial',
+        partialFailures: [{ source: 'identity-posture', message: 'Authentication projection unavailable.' }],
+      },
+    }));
+    rerender(
+      <MemoryRouter>
+        <IdentitiesPage />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(/Authentication projection unavailable/)).toBeDefined();
   });
 });
