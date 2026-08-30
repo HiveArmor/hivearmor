@@ -40,3 +40,42 @@ export interface ComplianceFilters {
   controlId?: string;
   q?: string;
 }
+
+/** CMP-002 — latest evaluation projection for a catalog control. */
+export interface ComplianceControlLatestEvaluationDTO {
+  id: number;
+  standardSectionId: number;
+  controlName: string;
+  controlSolution?: string | null;
+  controlRemediation?: string | null;
+  controlStrategy?: string | null;
+  lastEvaluationStatus?: string | null;
+  lastEvaluationTimestamp?: string | null;
+}
+
+/** CMP-003 — grouped evaluation history for a control. */
+export interface ComplianceControlEvaluationGroupedDTO {
+  controlId?: number;
+  controlName?: string;
+  status?: string | null;
+  timestamp?: string | null;
+}
+
+export interface ComplianceControlEvaluationHistoryDTO {
+  startDate?: string | null;
+  endDate?: string | null;
+  evaluations: ComplianceControlEvaluationGroupedDTO[];
+}
+
+/** CMP-003 — evidence row for a control. */
+export interface ComplianceEvidenceItemDTO {
+  evidenceId?: string | null;
+  controlId?: number | null;
+  mappingType?: string | null;
+  timestamp?: string | null;
+  weight?: number | null;
+  eventId?: string | null;
+  eventSource?: string | null;
+  eventSummary?: string | null;
+  eventIndexPath?: string | null;
+}
