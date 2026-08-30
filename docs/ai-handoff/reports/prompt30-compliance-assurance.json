@@ -1,0 +1,116 @@
+{
+  "prompt": "30-compliance-assurance-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "2dd17b3",
+  "based_on_main_includes_pr29": true,
+  "branch": "main",
+  "decision": "RESTRUCTURE",
+  "wave_b2_closure": true,
+  "routes": ["/compliance"],
+  "job_sentence": "Compliance assurance — review framework assessment scores, catalog controls, and evaluation freshness across authorized standards. Technical scores are not certification or legal attestation; CIS host checks live on CIS Benchmark; detection coverage lives on Detection Coverage.",
+  "wave_b2_program": {
+    "status": "COMPLETE",
+    "slices": [
+      { "slice": 1, "prompt": 23, "route": "/posture/assets", "job": "Asset inventory" },
+      { "slice": 2, "prompt": 24, "route": "/posture/identities", "job": "Identity inventory" },
+      { "slice": 3, "prompt": 25, "route": "/posture/active-directory", "job": "AD posture (missing contract projection)" },
+      { "slice": 4, "prompt": 26, "route": "/posture/exposure", "job": "Attack-path analysis (missing contract projection)" },
+      { "slice": 5, "prompt": 27, "route": "/posture/vulnerabilities", "job": "CVE findings" },
+      { "slice": 6, "prompt": 28, "route": "/posture/cis-benchmark", "job": "CIS SCA host checks" },
+      { "slice": 7, "prompt": 29, "route": "/posture/readiness", "job": "MITRE detection coverage" },
+      { "slice": 8, "prompt": 30, "route": "/compliance", "job": "Framework assurance (closure)" }
+    ]
+  },
+  "distinction": {
+    "compliance": "/compliance = framework assurance — aggregate score + per-framework inventory (this slice)",
+    "cis_benchmark": "/posture/cis-benchmark = CIS SCA host-file checks (Prompt 28)",
+    "readiness": "/posture/readiness = MITRE detection coverage (Prompt 29)",
+    "vulnerabilities": "/posture/vulnerabilities = CVE findings (Prompt 27)",
+    "assets": "/posture/assets = asset inventory (Prompt 23)",
+    "reports_scheduled": "/reports/scheduled = scheduled reporting workspace"
+  },
+  "ia": {
+    "compliance": {
+      "removed": [
+        "Hero .cmp-summary 6-tile strip",
+        "Separate .cmp-trust-strip (folded into .cmp-page__projection-note)",
+        "Title Compliance Assurance (nav-aligned title Compliance)",
+        "Raw <a href> header/drawer/footer links",
+        "Standalone aggregate score warning banner (folded into projection note)"
+      ],
+      "added": [
+        "COMPLIANCE_ASSURANCE_JOB_SENTENCE + STAGING CANDIDATE badge (POSTURE eyebrow)",
+        "Meta cross-links: Mission Control · CIS Benchmark · Detection Coverage · Vulnerabilities · Assets · Scheduled Reports (Link + ROUTES)",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator (SOC Analyst omitted — matches nav gate)",
+        "Empty-inventory honesty (compliance-empty-honesty) distinct from filter-empty and API error",
+        "Grid workspace min-height 50vh (.cmp-inventory)",
+        "Compact inline stats (.cmp-inline-stats) when score/frameworks exist",
+        "ComplianceUxHonesty.sourceScan.test.ts",
+        "WaveB2PostureHonesty B2-CMP-02 UI honesty marker"
+      ],
+      "kept": [
+        "Framework filters: assessment state · sort · search",
+        "AG Grid inventory, row density, J/K/Enter// shortcuts",
+        "Framework drawer with honest CMP-002/CMP-003 blocked workspace",
+        "Technical assurance, not attestation honesty in drawer",
+        "Aggregate score error does not hide framework rows (partial projection)"
+      ],
+      "forbidden": [
+        "Control-level outcomes, evidence lineage, owners, exceptions without CMP contracts",
+        "Certification / attestation claims from aggregate scores",
+        "CIS SCA or MITRE coverage as compliance evidence",
+        "Fake framework scores when lastAssessed is null"
+      ]
+    }
+  },
+  "backend": {
+    "posture": {
+      "status": "IMPLEMENTED",
+      "label": "populated (not COMPLIANCE-EMPTY-STAGING)",
+      "frontend_contract": "postureService.getScore → GET /api/ha-posture/score; getFrameworks → GET /api/ha-posture/frameworks",
+      "auth": "HaPostureResource @PreAuthorize — ROLE_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN (SOC Analyst not in nav gate)",
+      "staging_probe": {
+        "auth": "admin JWT via staging VM (token field, not id_token)",
+        "account_control": { "path": "GET /api/account", "http": 200, "body_bytes": 422 },
+        "score": { "path": "GET /api/ha-posture/score", "http": 200, "body_bytes": 199, "overall_score": 0.0, "controls_total": 703, "trend": "stable" },
+        "frameworks": { "path": "GET /api/ha-posture/frameworks", "http": 200, "body_bytes": 4517, "framework_count": 12, "assessed_count": 11 },
+        "verdict": "Populated staging framework inventory (12 frameworks, 11 assessed) — not COMPLIANCE-EMPTY-STAGING. Empty HTTP 200 remains distinct from API error."
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "CompliancePage chunk contains STAGING CANDIDATE, compliance-empty-honesty, POSTURE eyebrow",
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_mission_control_cis_detection_vulnerabilities_assets_scheduled_reports", "result": "pass" },
+      { "item": "empty_inventory_honesty_banner_wired", "result": "pass" },
+      { "item": "api_error_distinct_from_empty_inventory", "result": "pass" },
+      { "item": "inventory_shell_persists_on_empty", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_data_exists", "result": "pass" },
+      { "item": "inventory_min_height_50vh", "result": "pass" },
+      { "item": "drawer_cmp_blocked_honest", "result": "pass" },
+      { "item": "role_note_omits_soc_analyst", "result": "pass" },
+      { "item": "staging_posture_inventory_populated", "result": "pass", "label": "12 frameworks · 11 assessed" }
+    ]
+  },
+  "validation": {
+    "vitest_compliance_and_b2": "pass (24 tests)",
+    "eslint_repo_wide": "fail_preexisting (5 react-refresh warnings on main — not introduced by this slice)",
+    "type_check": "pass",
+    "build": "pass"
+  },
+  "files": {
+    "research": "docs/ai-handoff/research/prompt30-compliance-assurance-oem.md",
+    "report": "docs/ai-handoff/reports/prompt30-compliance-assurance.json",
+    "page": "frontend-v3/src/pages/compliance/CompliancePage.tsx",
+    "css": "frontend-v3/src/pages/compliance/CompliancePage.css",
+    "tests": [
+      "frontend-v3/src/pages/compliance/CompliancePage.test.tsx",
+      "frontend-v3/src/pages/compliance/ComplianceUxHonesty.sourceScan.test.ts",
+      "frontend-v3/src/pages/posture/WaveB2PostureHonesty.sourceScan.test.ts (B2-CMP-02)"
+    ]
+  },
+  "wave_b2_closure_note": "Prompt 30 completes Wave B2 Posture & compliance — all eight routes carry honesty chrome, canonical API contracts or missing-contract projections, and STAGING CANDIDATE labeling."
+}
