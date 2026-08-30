@@ -1,9 +1,10 @@
 import { forwardRef } from 'react';
 
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ExposurePage } from './ExposurePage';
+import { ExposurePage, POSTURE_EXPOSURE_JOB_SENTENCE } from './ExposurePage';
 
 import type { AttackPathDTO, ExposurePageDTO, ExposureRow } from '@/types/exposure.types';
 
@@ -27,19 +28,32 @@ function state(overrides: Record<string, unknown> = {}) { return { data: page, i
 
 beforeEach(() => { vi.clearAllMocks(); useQuery.mockReturnValue(state()); window.history.replaceState({}, '', '/posture/exposure'); });
 
+function renderPage(): ReturnType<typeof render> {
+  return render(
+    <MemoryRouter>
+      <ExposurePage />
+    </MemoryRouter>,
+  );
+}
+
 describe('ExposurePage', () => {
-  it('renders prioritized exposure KPIs, coordinated views, filters and the dock', () => {
-    render(<ExposurePage />);
-    expect(screen.getByRole('heading', { name: 'Exposure Management' })).toBeDefined();
-    expect(screen.getByText('Exposure score')).toBeDefined();
+  it('renders honesty chrome, coordinated views, filters and the dock', () => {
+    renderPage();
+    expect(screen.getByRole('heading', { name: 'Exposure' })).toBeDefined();
+    expect(screen.getByText('STAGING CANDIDATE')).toBeDefined();
+    expect(screen.getByText(POSTURE_EXPOSURE_JOB_SENTENCE)).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Assets' })).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Vulnerabilities' })).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Constellation' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Choke points' })).toBeDefined();
     expect(screen.getByRole('combobox', { name: 'Filter by exposure scope' })).toBeDefined();
     expect(screen.getByRole('grid', { name: 'Attack paths exposure inventory' })).toBeDefined();
     expect(screen.getByTestId('status-dock')).toBeDefined();
+    expect(screen.queryByText('Exposure score')).toBeNull();
   });
 
   it('opens path, evidence and remediation context without executing a change', () => {
-    render(<ExposurePage />);
+    renderPage();
     fireEvent.click(screen.getByRole('row', { name: path.title }));
     expect(screen.getByRole('dialog', { name: path.title })).toBeDefined();
     expect(screen.getByText('Hive Intelligence')).toBeDefined();
@@ -52,7 +66,7 @@ describe('ExposurePage', () => {
   });
 
   it('supports slash focus and icon-based row density', () => {
-    render(<ExposurePage />);
+    renderPage();
     fireEvent.keyDown(window, { key: '/' });
     expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Search exposure records' }));
     expect(screen.getByRole('button', { name: 'Compact rows' })).toBeDefined();
@@ -62,19 +76,19 @@ describe('ExposurePage', () => {
 
   it('keeps missing backend, zero paths, stale, and errors distinct', () => {
     useQuery.mockReturnValue(state({ data: { ...page, items: [], total: 0, contractState: 'missing', partialFailures: [{ source: 'graph', message: 'Backend required.' }] } }));
-    const { rerender } = render(<ExposurePage />);
-    expect(screen.getByText('Exposure graph integration required')).toBeDefined();
-    expect(screen.getByText(/empty KPIs here mean the contract is missing/)).toBeDefined();
+    const { rerender } = renderPage();
+    expect(screen.getByTestId('exposure-contract-missing-honesty')).toBeDefined();
+    expect(screen.getByText(/missing contract is not an empty risk assessment/)).toBeDefined();
     expect(screen.getByText('Contract not implemented')).toBeDefined();
     expect(screen.queryByRole('grid', { name: 'Attack paths exposure inventory' })).toBeNull();
     useQuery.mockReturnValue(state({ data: { ...page, items: [], total: 0 } }));
-    rerender(<ExposurePage />);
+    rerender(<MemoryRouter><ExposurePage /></MemoryRouter>);
     expect(screen.getByText('No active attack paths were generated')).toBeDefined();
     useQuery.mockReturnValue(state({ data: { ...page, freshness: 'stale' } }));
-    rerender(<ExposurePage />);
+    rerender(<MemoryRouter><ExposurePage /></MemoryRouter>);
     expect(screen.getByText(/exposure projection is stale/)).toBeDefined();
     useQuery.mockReturnValue(state({ data: undefined, isError: true, error: new Error('403 forbidden') }));
-    rerender(<ExposurePage />);
+    rerender(<MemoryRouter><ExposurePage /></MemoryRouter>);
     expect(screen.getByText('Exposure projection unavailable')).toBeDefined();
   });
 });

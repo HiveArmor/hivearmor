@@ -1,0 +1,101 @@
+{
+  "prompt": "26-posture-exposure-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "dc1c721",
+  "based_on_main_includes_pr25": true,
+  "decision": "RESTRUCTURE",
+  "routes": ["/posture/exposure"],
+  "job_sentence": "Exposure analysis — review attack paths, choke points, critical assets at risk, and remediation impact across authorized topology. Asset inventory lives on Assets; vulnerability findings live on Vulnerabilities.",
+  "distinction": {
+    "exposure": "/posture/exposure = attack-path analysis — paths, choke points, critical assets at risk, remediation impact (this slice)",
+    "assets": "/posture/assets = host/asset posture inventory (Prompt 23)",
+    "vulnerabilities": "/posture/vulnerabilities = vuln findings inventory (Prompt 27)",
+    "identities": "/posture/identities = user/service identity inventory (Prompt 24)",
+    "active_directory": "/posture/active-directory = AD domain posture (Prompt 25)",
+    "constellation": "/constellation = graph exploration (not a substitute for exposure contract)"
+  },
+  "ia": {
+    "posture_exposure": {
+      "removed": [
+        "Hero .exp-summary 6-tile KPI strip",
+        "Legacy Posture & exposure eyebrow and Exposure Management title",
+        "Raw <a href> header and drawer cross-links",
+        "Separate .exp-warning stale and partial-failure banners"
+      ],
+      "added": [
+        "POSTURE_EXPOSURE_JOB_SENTENCE + STAGING CANDIDATE badge (POSTURE eyebrow)",
+        "Meta cross-links: Mission Control · Assets · Vulnerabilities · Identities · Active Directory · Constellation (Link + ROUTES)",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator (SOC Analyst omitted — matches nav gate)",
+        "Missing-contract honesty banner (exposure-contract-missing-honesty) distinct from filter-empty and API error",
+        "Grid workspace min-height 50vh (.exp-inventory)",
+        "Compact inline stats in results toolbar (.exp-inline-stats) when summary exists",
+        "Stale + partial-failure folded into exp-page__projection-note",
+        "ExposureUxHonesty.sourceScan.test.ts",
+        "ROUTES.CONSTELLATION for drawer/meta pivots"
+      ],
+      "kept": [
+        "View tabs: attack paths · choke points · critical assets · remediation impact",
+        "Compact filters: risk · scope · state · time window · search",
+        "AG Grid inventory (fixture mode), cursor pagination, row density, J/K/Enter/ shortcuts",
+        "Exposure detail drawer",
+        "exposureFixtureMode dev-only",
+        "Distinction: missing contract ≠ empty inventory ≠ filter-empty",
+        "?asset= deep-link filter support"
+      ],
+      "forbidden": [
+        "Fake attack paths, choke points, or exposure scores from asset inventory",
+        "/api/ha-exposure or unverified exposure paths as primary",
+        "Constellation graph as a substitute for the exposure contract"
+      ]
+    }
+  },
+  "backend": {
+    "exposure": {
+      "status": "NOT_IMPLEMENTED",
+      "label": "EXPOSURE-CONTRACT-MISSING-STAGING",
+      "frontend_contract": "fetchExposure returns contractState: 'missing' with null summary fields; does not call /api/ha-exposure",
+      "staging_probe": {
+        "auth": "admin JWT via staging VM (token field, not id_token)",
+        "account_control": { "path": "GET /api/account", "http": 200, "body_bytes": 422 },
+        "candidate_paths": [
+          { "path": "GET /api/ha-exposure", "http": 500, "body_bytes": 312, "note": "No backend resource — generic error" },
+          { "path": "GET /api/ha-exposure/summary", "http": 500, "body_bytes": 320 },
+          { "path": "GET /api/ha-attack-paths", "http": 500, "body_bytes": 316 },
+          { "path": "GET /api/ha-posture/exposure", "http": 500, "body_bytes": 320 }
+        ],
+        "verdict": "EXPOSURE-CONTRACT-MISSING-STAGING — no verified exposure graph endpoint in backend source"
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist ExposurePage chunk contains job sentence, STAGING CANDIDATE, exposure-contract-missing-honesty, Analyst · SOC Manager · Platform Administrator",
+    "ui_shell": {
+      "path": "/posture/exposure",
+      "staging_https": "api_probed_admin_jwt_ok",
+      "fe_deploy": "not_run_local_build_only"
+    },
+    "headed_browser": false,
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_mission_control_assets_vulns_identities_ad_constellation", "result": "pass" },
+      { "item": "missing_contract_honesty_banner_wired", "result": "pass" },
+      { "item": "api_error_distinct_from_missing_contract", "result": "pass" },
+      { "item": "filter_empty_distinct_from_empty_inventory", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_summary_exists", "result": "pass" },
+      { "item": "inventory_min_height_50vh", "result": "pass" },
+      { "item": "drawer_pivots_use_link_routes", "result": "pass" },
+      { "item": "role_note_omits_soc_analyst", "result": "pass" },
+      { "item": "staging_exposure_contract_missing", "result": "pass", "label": "EXPOSURE-CONTRACT-MISSING-STAGING" }
+    ]
+  },
+  "gates": {
+    "lint": "pass slice files (0 errors); repo lint 5 pre-existing warnings unrelated to this slice",
+    "type_check": "pass",
+    "vitest_exposure_slice": "pass (22)",
+    "build": "pass"
+  },
+  "next_recommended": "/posture/vulnerabilities (Prompt 27)",
+  "handoff_at": "2026-08-30T18:10:00+05:30"
+}

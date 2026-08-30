@@ -1,3 +1,10 @@
+/**
+ * Posture Exposure — inventory-first attack-path hub (Prompt 26 / Wave B2).
+ *
+ * Production: fetchExposure returns explicit contractState: 'missing' until graph APIs ship.
+ * Fixtures only in dev via exposureFixtureMode. Do not substitute Constellation or asset inventory.
+ */
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
@@ -33,11 +40,13 @@ import {
   Workflow,
   Wrench,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
+import { ROUTES } from '@/constants/routes.constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
@@ -60,6 +69,10 @@ import type {
 
 import './ExposurePage.css';
 import '../../response/response-grid-standard.css';
+
+/** Bundle-visible job sentence — attack-path analysis, not asset inventory or vuln findings. */
+export const POSTURE_EXPOSURE_JOB_SENTENCE =
+  'Exposure analysis — review attack paths, choke points, critical assets at risk, and remediation impact across authorized topology. Asset inventory lives on Assets; vulnerability findings live on Vulnerabilities.';
 
 const PAGE_SIZE = 50;
 
@@ -116,8 +129,11 @@ function RiskBadge({ risk, score }: { risk: ExposureRisk; score?: number }): JSX
 function ExposureDrawer({ row, onClose }: { row: ExposureRow; onClose: () => void }): JSX.Element {
   const [tab, setTab] = useState('overview');
   const tabs = isPath(row) ? ['overview', 'path', 'evidence', 'remediation'] : ['overview', 'related paths', 'remediation'];
+  const huntTo = `${ROUTES.SEARCH}?query=${encodeURIComponent(`exposure.id:"${row.id}"`)}`;
+  const graphTo = `${ROUTES.CONSTELLATION}?focus=${encodeURIComponent(row.id)}`;
+  const responseTo = `${ROUTES.RESPONSE_PLAYBOOKS}/new?template=exposure-remediation&target=${encodeURIComponent(row.id)}`;
   return (
-    <HaDrawer isOpen onClose={onClose} title={rowName(row)} subtitle={isPath(row) ? `${row.scope} path · ${row.hopCount} hops` : isChokePoint(row) ? `${row.pathCount} converging paths` : isCriticalAsset(row) ? row.classification : `${row.exposureReduction}% projected reduction`} width={600} footer={<><a className="exp-drawer-action" href={`/search?query=${encodeURIComponent(`exposure.id:"${row.id}"`)}`}><Search size={13} />Hunt evidence</a><a className="exp-drawer-action" href={`/constellation?focus=${encodeURIComponent(row.id)}`}><GitBranch size={13} />Open graph</a><a className="exp-drawer-action exp-drawer-action--primary" href={`/response/playbooks/new?template=exposure-remediation&target=${encodeURIComponent(row.id)}`}><Workflow size={13} />Create plan</a></>}>
+    <HaDrawer isOpen onClose={onClose} title={rowName(row)} subtitle={isPath(row) ? `${row.scope} path · ${row.hopCount} hops` : isChokePoint(row) ? `${row.pathCount} converging paths` : isCriticalAsset(row) ? row.classification : `${row.exposureReduction}% projected reduction`} width={600} footer={<><Link className="exp-drawer-action" to={huntTo}><Search size={13} />Hunt evidence</Link><Link className="exp-drawer-action" to={graphTo}><GitBranch size={13} />Open graph</Link><Link className="exp-drawer-action exp-drawer-action--primary" to={responseTo}><Workflow size={13} />Create plan</Link></>}>
       <div className="exp-drawer">
         <nav className="exp-drawer-tabs" aria-label="Exposure detail views">{tabs.map((value) => <button key={value} type="button" role="tab" aria-selected={tab === value} onClick={() => setTab(value)}>{value}</button>)}</nav>
         {isPath(row) && <>
@@ -201,28 +217,110 @@ export function ExposurePage(): JSX.Element {
   const missingContract = query.data?.contractState === 'missing';
   const hasFilters = risk !== 'all' || scope !== 'all' || state !== 'active' || timeRange !== '24h' || Boolean(search) || Boolean(initialAsset);
   const reset = (): void => { setRisk('all'); setScope('all'); setState('active'); setTimeRange('24h'); setSearchDraft(''); };
+  const showContractMissingHonesty = missingContract && !query.isLoading;
+  const showEmptyHonesty = !query.isLoading && !query.isError && !missingContract && rows.length === 0 && !hasFilters;
+  const hasInlineStats = summary != null && (summary.exposureScore != null || summary.activeAttackPaths != null);
+  const projectionNote = [
+    query.data?.freshness === 'stale' ? 'This exposure projection is stale. Path state may have changed since it was calculated.' : null,
+    query.data?.partialFailures?.[0]?.message,
+    missingContract ? 'Exposure graph APIs are not implemented — label: EXPOSURE-CONTRACT-MISSING-STAGING.' : null,
+  ].filter((part): part is string => Boolean(part)).join(' ');
 
   return (
-    <section className="exp-page" data-fixture={exposureFixtureMode || undefined} aria-label="Exposure management">
-      <header className="exp-header"><div className="exp-header__identity"><span className="exp-header__mark"><Network size={19} /></span><div><span>Posture &amp; exposure</span><h1>Exposure Management</h1></div></div><div className="exp-header__actions"><span className="exp-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect</span><a href="/posture/assets"><Boxes size={13} />Assets</a><a href="/posture/vulnerabilities"><ShieldAlert size={13} />Vulnerabilities</a><a href="/constellation"><GitBranch size={13} />Constellation</a><button type="button" onClick={() => query.refetch()} disabled={query.isFetching} aria-label="Refresh exposure snapshot"><RefreshCw size={14} className={query.isFetching ? 'exp-spin' : undefined} /></button></div></header>
+    <section className="exp-page" data-fixture={exposureFixtureMode || undefined} aria-label="Exposure">
+      <header className="exp-header">
+        <div className="exp-header__identity">
+          <span className="exp-header__mark"><Network size={19} aria-hidden="true" /></span>
+          <div>
+            <div className="exp-header__eyebrow">
+              <span>POSTURE</span>
+              <span className="exp-header__badge">STAGING CANDIDATE</span>
+            </div>
+            <h1>Exposure</h1>
+            <p className="exp-header__job">{POSTURE_EXPOSURE_JOB_SENTENCE}</p>
+            {projectionNote && (
+              <p className="exp-page__projection-note" role="note" id="exposure-contract-state">
+                {projectionNote}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="exp-header__actions">
+          <span className="exp-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect</span>
+          <button type="button" onClick={() => query.refetch()} disabled={query.isFetching} aria-label="Refresh exposure snapshot"><RefreshCw size={14} className={query.isFetching ? 'exp-spin' : undefined} /></button>
+        </div>
+      </header>
+
+      <p className="exp-page__meta">
+        <Link to={ROUTES.DASHBOARD}>Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.ASSETS}>Assets</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.VULNERABILITIES}>Vulnerabilities</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.IDENTITIES}>Identities</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.ACTIVE_DIRECTORY}>Active Directory</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.CONSTELLATION}>Constellation</Link>
+        <span aria-hidden="true">·</span>
+        <span className="exp-page__access">Analyst · SOC Manager · Platform Administrator</span>
+      </p>
+
       {exposureFixtureMode && <div className="exp-fixture"><strong>Design fixture:</strong> fictional exposure paths are enabled for visual review.<span>Production never receives these records.</span></div>}
-      <section className="exp-summary" aria-label="Exposure summary">
-        <button type="button" data-tone={riskTone(summary?.exposureScore)} disabled={missingContract} onClick={() => { if (!missingContract) setView('attack_paths'); }}><span><Activity size={12} />Exposure score</span><strong>{summary?.exposureScore ?? '—'}<small>/100</small></strong><em>{missingContract ? 'contract unavailable' : 'cross-domain effective risk'}</em></button>
-        <button type="button" data-tone="critical" disabled={missingContract} onClick={() => { if (!missingContract) { setView('attack_paths'); setRisk('critical'); } }}><span><Route size={12} />Active attack paths</span><strong>{summary?.activeAttackPaths ?? '—'}</strong><em>{missingContract ? 'contract unavailable' : 'entry point to impact'}</em></button>
-        <button type="button" data-tone="critical" disabled={missingContract} onClick={() => { if (!missingContract) setView('critical_assets'); }}><span><Target size={12} />Critical assets at risk</span><strong>{summary?.criticalAssetsAtRisk ?? '—'}</strong><em>{missingContract ? 'contract unavailable' : 'reachable crown jewels'}</em></button>
-        <button type="button" data-tone="high" disabled={missingContract} onClick={() => { if (!missingContract) { setView('attack_paths'); setScope('external'); } }}><span><Globe2 size={12} />Internet entry points</span><strong>{summary?.internetEntryPoints ?? '—'}</strong><em>{missingContract ? 'contract unavailable' : 'validated external exposure'}</em></button>
-        <button type="button" data-tone="warning" disabled={missingContract} onClick={() => { if (!missingContract) setView('choke_points'); }}><span><Crosshair size={12} />Choke points</span><strong>{summary?.chokePoints ?? '—'}</strong><em>{missingContract ? 'contract unavailable' : 'shared weak points'}</em></button>
-        <button type="button" data-tone="info" disabled={missingContract} onClick={() => { if (!missingContract) setView('remediation'); }}><span><Wrench size={12} />Reducible paths</span><strong>{summary?.reduciblePaths ?? '—'}</strong><em>{missingContract ? 'contract unavailable' : 'priority control changes'}</em></button>
+
+      {showContractMissingHonesty && (
+        <div className="exposure-contract-missing-honesty" role="status" data-testid="exposure-contract-missing-honesty">
+          <strong>Exposure graph integration required</strong>
+          <span>
+            Attack-path and choke-point APIs are not available in this deployment. HiveArmor will not invent paths, choke points, or a safe posture from generic asset records — a missing contract is not an empty risk assessment and does not imply exposure is zero.
+          </span>
+        </div>
+      )}
+
+      <section className="exp-operations">
+        <nav className="exp-tabs" aria-label="Exposure views">{VIEWS.map(({ value, label, icon: Icon }) => <button key={value} type="button" data-active={view === value} aria-pressed={view === value} onClick={() => setView(value)}><Icon size={13} />{label}</button>)}</nav>
+        <div className="exp-toolbar">
+          <label className="exp-search"><Search size={14} /><input ref={searchRef} value={searchDraft} onChange={(event) => setSearchDraft(event.target.value)} placeholder="Find path, asset, identity, IP, or control…" aria-label="Search exposure records" /><kbd>/</kbd></label>
+          <HaCompactSelect ariaLabel="Filter by risk" label="Risk" value={risk} options={RISKS} onChange={setRisk} />
+          {view === 'attack_paths' && <><HaCompactSelect ariaLabel="Filter by exposure scope" label="Scope" value={scope} options={SCOPES} onChange={setScope} /><HaCompactSelect ariaLabel="Filter by path state" label="State" value={state} options={STATES} onChange={setState} /></>}
+          <HaCompactSelect ariaLabel="Filter by calculation window" label="Window" value={timeRange} options={WINDOWS} onChange={setTimeRange} />
+          <span className="exp-auth"><KeyRound size={12} />Authorized topology</span>
+          <span className="exp-snapshot">Snapshot {formatTime(query.data?.snapshotAt)}</span>
+        </div>
       </section>
-      <section className="exp-operations"><nav className="exp-tabs" aria-label="Exposure views">{VIEWS.map(({ value, label, icon: Icon }) => <button key={value} type="button" data-active={view === value} aria-pressed={view === value} disabled={missingContract} onClick={() => { if (!missingContract) setView(value); }}><Icon size={13} />{label}</button>)}</nav><div className="exp-toolbar"><label className="exp-search"><Search size={14} /><input ref={searchRef} value={searchDraft} onChange={(event) => setSearchDraft(event.target.value)} placeholder="Find path, asset, identity, IP, or control…" aria-label="Search exposure records" disabled={missingContract} /><kbd>/</kbd></label><HaCompactSelect ariaLabel="Filter by risk" label="Risk" value={risk} options={RISKS} onChange={setRisk} disabled={missingContract} />{view === 'attack_paths' && <><HaCompactSelect ariaLabel="Filter by exposure scope" label="Scope" value={scope} options={SCOPES} onChange={setScope} disabled={missingContract} /><HaCompactSelect ariaLabel="Filter by path state" label="State" value={state} options={STATES} onChange={setState} disabled={missingContract} /></>}<HaCompactSelect ariaLabel="Filter by calculation window" label="Window" value={timeRange} options={WINDOWS} onChange={setTimeRange} disabled={missingContract} /><span className="exp-auth"><KeyRound size={12} />Authorized topology</span><span className="exp-snapshot">Snapshot {formatTime(query.data?.snapshotAt)}</span></div></section>
-      {query.data?.freshness === 'stale' && <div className="exp-warning" role="status"><AlertTriangle size={14} /><span>This exposure projection is stale. Path state may have changed since it was calculated.</span><button type="button" onClick={() => query.refetch()}>Refresh</button></div>}
-      {Boolean(query.data?.partialFailures.length) && <div className="exp-warning" role="status"><AlertTriangle size={14} /><span>{query.data?.partialFailures[0]?.message}</span><a href="#exposure-contract-state">Review backend contract</a></div>}
-      <div className="exp-results"><div><strong>{VIEWS.find((item) => item.value === view)?.label}</strong><span>{missingContract ? 'Backend contract unavailable — not an empty risk assessment' : query.data ? `${rows.length} loaded · ${query.data.total.toLocaleString()} matching` : 'bounded authorized projection'}</span>{hasFilters && !missingContract && <button type="button" onClick={reset}>Clear filters</button>}</div><div className="exp-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button></div></div>
-      {query.isError && !query.data ? <div className="exp-state" role="alert"><AlertTriangle size={28} /><strong>Exposure projection unavailable</strong><span>{query.error instanceof Error ? query.error.message : 'The authorized exposure graph could not be loaded.'}</span><button type="button" onClick={() => query.refetch()}>Retry</button></div> : missingContract ? <div className="exp-state" role="status"><Network size={30} /><strong>Exposure graph integration required</strong><span>Attack-path and choke-point APIs are not available in this deployment. HiveArmor will not invent paths or a safe posture from generic asset records — empty KPIs here mean the contract is missing, not that exposure is zero.</span><a href="#exposure-contract-state">View contract state</a></div> : !query.isLoading && rows.length === 0 ? <div className="exp-state" role="status"><ShieldCheck size={28} /><strong>{hasFilters ? 'No exposure records match these filters' : 'No active attack paths were generated'}</strong><span>{hasFilters ? 'Clear filters or broaden the authorized topology and time range.' : 'This is not proof of zero risk; confirm graph coverage and critical-asset classification.'}</span>{hasFilters && <button type="button" onClick={reset}>Clear filters</button>}</div> : <main className="exp-grid-wrap"><SiemDataGrid key={view} ref={gridRef} className="response-grid exp-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} loading={query.isLoading} rowSelection="single" onRowClicked={(event: RowClickedEvent) => setSelected(event.data as ExposureRow)} getRowId={(params) => String((params.data as ExposureRow).id)} defaultColDef={{ filter: false }} ariaLabel={`${VIEWS.find((item) => item.value === view)?.label} exposure inventory`} /></main>}
+
+      <div className="exp-results">
+        <div>
+          <strong>{VIEWS.find((item) => item.value === view)?.label}</strong>
+          <span>{missingContract ? 'Backend contract unavailable — not an empty risk assessment' : query.data ? `${rows.length} loaded · ${query.data.total.toLocaleString()} matching` : 'bounded authorized projection'}</span>
+          {hasInlineStats && summary && (
+            <span className="exp-inline-stats" aria-label="Exposure summary">
+              {summary.exposureScore != null && <span data-tone={riskTone(summary.exposureScore)}><Activity size={11} />{summary.exposureScore}/100</span>}
+              {summary.activeAttackPaths != null && <span data-tone="critical"><Route size={11} />{summary.activeAttackPaths} paths</span>}
+              {summary.criticalAssetsAtRisk != null && <span data-tone="critical"><Target size={11} />{summary.criticalAssetsAtRisk} assets</span>}
+              {summary.chokePoints != null && <span data-tone="warning"><Crosshair size={11} />{summary.chokePoints} choke</span>}
+            </span>
+          )}
+          {hasFilters && !missingContract && rows.length > 0 && <button type="button" onClick={reset}>Clear filters</button>}
+        </div>
+        <div className="exp-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button></div>
+      </div>
+
+      {query.isError && !query.data ? (
+        <div className="exp-state" role="alert"><AlertTriangle size={28} /><strong>Exposure projection unavailable</strong><span>{query.error instanceof Error ? query.error.message : 'The authorized exposure graph could not be loaded.'}</span><button type="button" onClick={() => query.refetch()}>Retry</button></div>
+      ) : showContractMissingHonesty ? null : showEmptyHonesty ? (
+        <div className="exp-state" role="status"><ShieldCheck size={28} /><strong>No active attack paths were generated</strong><span>This is not proof of zero risk; confirm graph coverage and critical-asset classification. Asset inventory may still be available on Assets; vulnerability findings on Vulnerabilities.</span></div>
+      ) : !query.isLoading && rows.length === 0 && hasFilters ? (
+        <div className="exp-state" role="status"><ShieldCheck size={28} /><strong>No exposure records match these filters</strong><span>Clear filters or broaden the authorized topology and time range.</span><button type="button" onClick={reset}>Clear filters</button></div>
+      ) : !showContractMissingHonesty && !showEmptyHonesty ? (
+        <main className="exp-inventory"><div className="exp-grid-wrap"><SiemDataGrid key={view} ref={gridRef} className="response-grid exp-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} loading={query.isLoading} rowSelection="single" onRowClicked={(event: RowClickedEvent) => setSelected(event.data as ExposureRow)} getRowId={(params) => String((params.data as ExposureRow).id)} defaultColDef={{ filter: false }} ariaLabel={`${VIEWS.find((item) => item.value === view)?.label} exposure inventory`} /></div></main>
+      ) : null}
+
       <footer className="exp-pagination" aria-label="Exposure results pagination"><span>{missingContract ? 'Contract not implemented' : `${query.data?.total.toLocaleString() ?? 0} matching records`}</span><span>Page {page + 1} · up to {PAGE_SIZE} rows</span><div><button type="button" disabled={page === 0 || query.isFetching || missingContract} onClick={() => { setPage((current) => Math.max(0, current - 1)); setActiveIndex(0); }}><ChevronLeft size={13} />Previous</button><button type="button" disabled={missingContract || !query.data?.nextCursor || query.isFetching} onClick={() => { const cursor = query.data?.nextCursor; if (!cursor) return; setCursors((current) => { const next = current.slice(0, page + 1); next[page + 1] = cursor; return next; }); setPage((current) => current + 1); setActiveIndex(0); }}>Next<ChevronRight size={13} /></button></div></footer>
       <StatusDock className="exp-status" sseConnected={exposureFixtureMode || eps.connected} eps={exposureFixtureMode ? 12840 : eps.eps} mode={exposureFixtureMode ? 'historical' : 'live'} lastUpdated={query.dataUpdatedAt ? new Date(query.dataUpdatedAt) : undefined} />
       {selected && <ExposureDrawer row={selected} onClose={() => setSelected(null)} />}
-      <span id="exposure-contract-state" className="exp-sr-only">Exposure management contract state: {query.data?.contractState ?? 'unavailable'}</span>
+      <span className="exp-sr-only">Exposure contract state: {query.data?.contractState ?? 'unavailable'}</span>
     </section>
   );
 }
