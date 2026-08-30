@@ -36,8 +36,9 @@ public class UtmComplianceControlEvaluationHistoryService {
         }
 
         var queryConfigIds = evaluations.stream()
-                .flatMap(ev -> ev.getQueryEvaluations().stream())
+                .flatMap(ev -> ev.getQueryEvaluations() != null ? ev.getQueryEvaluations().stream() : java.util.stream.Stream.empty())
                 .map(UtmComplianceQueryEvaluationDto::getQueryConfigId)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
         var configMap = queryConfigRepository.findAllById(queryConfigIds).stream()
@@ -68,23 +69,30 @@ public class UtmComplianceControlEvaluationHistoryService {
             List<UtmComplianceControlEvaluationHistoryDto> evaluations,
             Map<Long, UtmComplianceQueryConfig> configMap
     ) {
-        evaluations.forEach(controlEval ->
-                controlEval.getQueryEvaluations().forEach(queryEval -> {
+        evaluations.forEach(controlEval -> {
+            if (controlEval.getQueryEvaluations() == null) {
+                return;
+            }
+            controlEval.getQueryEvaluations().forEach(queryEval -> {
                     var cfg = configMap.get(queryEval.getQueryConfigId());
                     if (cfg != null) {
                         queryEval.setQueryDescription(cfg.getQueryDescription());
                         queryEval.setIndexPatternId(cfg.getIndexPattern().getId());
                         queryEval.setIndexPatternName(cfg.getIndexPattern().getPattern());
                     }
-                })
-        );
+                });
+        });
         return evaluations;
     }
 
     private List<UtmComplianceIndexPatternQueriesGroupDto> groupByIndexPattern(
             UtmComplianceControlEvaluationHistoryDto evaluation
     ) {
+        if (evaluation.getQueryEvaluations() == null) {
+            return List.of();
+        }
         return evaluation.getQueryEvaluations().stream()
+                .filter(q -> q.getIndexPatternId() != null)
                 .collect(Collectors.groupingBy(UtmComplianceQueryEvaluationDto::getIndexPatternId))
                 .entrySet().stream()
                 .map(entry -> {

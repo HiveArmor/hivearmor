@@ -146,7 +146,16 @@ public class ComplianceEvidenceService {
     }
 
     private boolean isIndexNotFound(Exception e) {
-        String msg = e.getMessage();
-        return msg != null && (msg.contains("index_not_found") || msg.contains("no such index"));
+        Throwable t = e;
+        while (t != null) {
+            String msg = t.getMessage();
+            if (msg != null && (msg.contains("index_not_found_exception")
+                    || msg.contains("no such index")
+                    || msg.contains("index_not_found"))) {
+                return true;
+            }
+            t = t.getCause();
+        }
+        return false;
     }
 }
