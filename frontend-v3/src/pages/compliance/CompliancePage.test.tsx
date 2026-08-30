@@ -76,6 +76,15 @@ const frameworks: HiveFrameworkScoreDTO[] = [
   },
 ];
 
+const cmpControl = {
+  id: 1,
+  standardSectionId: 10,
+  controlName: 'Access control policy',
+  controlStrategy: 'AUTOMATED',
+  lastEvaluationStatus: 'PASS',
+  lastEvaluationTimestamp: '2026-08-21T09:42:00Z',
+};
+
 function queryState(data: unknown, overrides: Record<string, unknown> = {}) {
   return {
     data,
@@ -89,11 +98,21 @@ function queryState(data: unknown, overrides: Record<string, unknown> = {}) {
   };
 }
 
+function resolveQuery(options: { queryKey: unknown[] }) {
+  const key = String(options.queryKey[0]);
+  if (key === 'postureScore') return queryState(score);
+  if (key === 'postureFrameworks') return queryState(frameworks);
+  if (key === 'compliance-control-latest') return queryState(cmpControl);
+  if (key === 'compliance-control-evaluations') {
+    return queryState({ evaluations: [], startDate: null, endDate: null });
+  }
+  if (key === 'compliance-control-evidence') return queryState([]);
+  return queryState(undefined);
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
-  mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) =>
-    options.queryKey[0] === 'postureScore' ? queryState(score) : queryState(frameworks),
-  );
+  mockUseQuery.mockImplementation(resolveQuery);
 });
 
 describe('CompliancePage', () => {
@@ -118,13 +137,29 @@ describe('CompliancePage', () => {
     expect(screen.getByText(/1 of 2 records/i)).toBeInTheDocument();
   });
 
-  it('opens context only after explicit row selection and exposes canonical contract gaps', () => {
+  it('progressively loads CMP workspace after explicit row selection', () => {
     render(<CompliancePage />);
     expect(screen.queryByText('Control and evidence workspace')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
-    expect(screen.getByText('Control and evidence workspace')).toBeInTheDocument();
+    expect(screen.getByTestId('cmp-control-workspace')).toBeInTheDocument();
+    expect(screen.getByText('Access control policy')).toBeInTheDocument();
+    expect(screen.getByText(/No evidence was returned/i)).toBeInTheDocument();
     expect(screen.getByText(/does not return assessment scope/i)).toBeInTheDocument();
-    expect(screen.getByText(/will not fabricate these records/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Requires CMP-002 and CMP-003/i)).not.toBeInTheDocument();
+  });
+
+  it('shows distinct CMP error state instead of fabricated records', () => {
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'compliance-control-latest') {
+        return queryState(undefined, { error: new Error('503 upstream'), isError: true });
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    expect(screen.getByText('Control workspace unavailable')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry CMP read' })).toBeInTheDocument();
   });
 
   it('distinguishes permission denial from an empty framework projection', () => {

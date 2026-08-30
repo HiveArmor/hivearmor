@@ -14,7 +14,11 @@ describe('Compliance Assurance UX honesty (Prompt 30)', () => {
     join(process.cwd(), 'src/pages/compliance/CompliancePage.css'),
     'utf8',
   );
-  const service = readFileSync(join(process.cwd(), 'src/services/posture.service.ts'), 'utf8');
+  const postureService = readFileSync(join(process.cwd(), 'src/services/posture.service.ts'), 'utf8');
+  const complianceService = readFileSync(
+    join(process.cwd(), 'src/services/compliance.service.ts'),
+    'utf8',
+  );
 
   it('states compliance assurance job sentence distinct from CIS and detection coverage', () => {
     expect(COMPLIANCE_ASSURANCE_JOB_SENTENCE).toMatch(/Compliance assurance/i);
@@ -40,14 +44,20 @@ describe('Compliance Assurance UX honesty (Prompt 30)', () => {
     expect(page).not.toMatch(/href="\/compliance/);
   });
 
-  it('uses canonical /ha-posture APIs only and keeps CMP-002/CMP-003 blocked', () => {
-    expect(service).toContain('/ha-posture/score');
-    expect(service).toContain('/ha-posture/frameworks');
-    expect(service).not.toMatch(/\/api\/compliance\//);
+  it('uses canonical posture APIs for inventory and CMP read contracts in the drawer', () => {
+    expect(postureService).toContain('/ha-posture/score');
+    expect(postureService).toContain('/ha-posture/frameworks');
+    expect(postureService).not.toMatch(/\/api\/compliance\//);
+    expect(complianceService).toContain('/compliance/control-config/get-by-id/');
+    expect(complianceService).toContain('/compliance/control-config/');
+    expect(complianceService).toContain('/compliance/controls/');
     expect(page).toContain('cmp-page__projection-note');
     expect(page).toContain('Control and evidence workspace');
-    expect(page).toContain('Requires CMP-002 and CMP-003');
-    expect(page).toContain('will not fabricate these records');
+    expect(page).toContain('cmp-control-workspace');
+    expect(page).toContain('No control outcomes were returned');
+    expect(page).toContain('No evidence was returned');
+    expect(page).not.toContain('cmp-drawer__card--blocked');
+    expect(page).not.toContain('Requires CMP-002 and CMP-003');
     expect(page).not.toContain('className="cmp-summary"');
     expect(page).not.toContain('cmp-trust-strip');
     expect(page).not.toMatch(/certified|attestation claim|compliant by default/i);
@@ -65,5 +75,6 @@ describe('Compliance Assurance UX honesty (Prompt 30)', () => {
   it('drawer and footer pivots use Link + ROUTES', () => {
     expect(page).toContain('ROUTES.CIS_BENCHMARK');
     expect(page).toContain('ROUTES.REPORTS_SCHEDULED');
+    expect(page).toContain('CMP read contracts live');
   });
 });

@@ -7,7 +7,6 @@ import type { ColDef, ICellRendererParams, RowClickedEvent } from 'ag-grid-commu
 import type { AgGridReact } from 'ag-grid-react';
 import {
   AlertTriangle,
-  CheckCircle2,
   ChevronRight,
   CircleHelp,
   ClipboardCheck,
@@ -33,7 +32,12 @@ import { ROUTES } from '@/constants/routes.constants';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
+import { CMP_DRAWER_SEED_CONTROL_ID, complianceService } from '@/services/compliance.service';
 import { postureService } from '@/services/posture.service';
+import type {
+  ComplianceControlEvaluationGroupedDTO,
+  ComplianceEvidenceItemDTO,
+} from '@/types/compliance.types';
 import type { HiveFrameworkScoreDTO } from '@/types/posture.types';
 
 import './CompliancePage.css';
@@ -106,6 +110,174 @@ function ScoreCell({ score, assessed }: { score: number; assessed: boolean }): J
   );
 }
 
+function ControlEvidenceWorkspace({ controlId }: { controlId: number }): JSX.Element {
+  const controlQuery = useQuery({
+    queryKey: ['compliance-control-latest', controlId],
+    queryFn: ({ signal }) => complianceService.getControlLatestEvaluation(controlId, signal),
+    staleTime: 30_000,
+    retry: 1,
+  });
+  const evaluationsQuery = useQuery({
+    queryKey: ['compliance-control-evaluations', controlId],
+    queryFn: ({ signal }) => complianceService.getControlEvaluations(controlId, signal),
+    staleTime: 30_000,
+    retry: 1,
+  });
+  const evidenceQuery = useQuery({
+    queryKey: ['compliance-control-evidence', controlId],
+    queryFn: ({ signal }) => complianceService.getControlEvidence(controlId, signal),
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  const loading = controlQuery.isLoading || evaluationsQuery.isLoading || evidenceQuery.isLoading;
+  const error =
+    controlQuery.isError || evaluationsQuery.isError || evidenceQuery.isError
+      ? [
+          controlQuery.error instanceof Error ? controlQuery.error.message : null,
+          evaluationsQuery.error instanceof Error ? evaluationsQuery.error.message : null,
+          evidenceQuery.error instanceof Error ? evidenceQuery.error.message : null,
+        ]
+          .filter(Boolean)
+          .join(' · ') || 'CMP read contracts could not be loaded.'
+      : null;
+  const evaluations = evaluationsQuery.data?.evaluations ?? [];
+  const evidence = evidenceQuery.data ?? [];
+  const latestStatus = controlQuery.data?.lastEvaluationStatus?.trim();
+  const hasOutcomes = evaluations.length > 0 || Boolean(latestStatus);
+
+  return (
+    <section className="cmp-drawer__card" data-testid="cmp-control-workspace">
+      <header>
+        <FileClock size={15} />
+        <div>
+          <strong>Control and evidence workspace</strong>
+          <span>CMP-002 / CMP-003 read contracts</span>
+        </div>
+      </header>
+
+      <p className="cmp-drawer__workspace-note">
+        Aggregate framework rows are not yet mapped to catalog control IDs. Showing authorized control
+        record #{controlId.toLocaleString()} from the live CMP projection — not certification or
+        attestation.
+      </p>
+
+      {loading && (
+        <div className="cmp-drawer-state" role="status">
+          <RefreshCw size={14} className="cmp-spin" aria-hidden="true" />
+          <strong>Loading control projection</strong>
+          <span>Fetching status, evaluation history and evidence from authorized CMP endpoints.</span>
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="cmp-drawer-state" role="alert">
+          <AlertTriangle size={16} aria-hidden="true" />
+          <strong>Control workspace unavailable</strong>
+          <span>{error}</span>
+          <button
+            type="button"
+            onClick={() =>
+              void Promise.all([
+                controlQuery.refetch(),
+                evaluationsQuery.refetch(),
+                evidenceQuery.refetch(),
+              ])
+            }
+          >
+            Retry CMP read
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && controlQuery.data && (
+        <>
+          <dl className="cmp-workspace-grid">
+            <div>
+              <dt>Control</dt>
+              <dd>{controlQuery.data.controlName}</dd>
+            </div>
+            <div>
+              <dt>Latest status</dt>
+              <dd>{latestStatus || 'No evaluation recorded'}</dd>
+            </div>
+            <div>
+              <dt>Strategy</dt>
+              <dd>{controlQuery.data.controlStrategy ?? 'Not reported'}</dd>
+            </div>
+            <div>
+              <dt>Last evaluated</dt>
+              <dd>{formatTimestamp(controlQuery.data.lastEvaluationTimestamp)}</dd>
+            </div>
+          </dl>
+
+          <div className="cmp-workspace-section">
+            <header>
+              <ClipboardCheck size={13} />
+              <strong>Control outcomes</strong>
+            </header>
+            {hasOutcomes ? (
+              <ul className="cmp-workspace-list">
+                {latestStatus && (
+                  <li>
+                    <span>{latestStatus}</span>
+                    <small>
+                      Latest projection · {formatTimestamp(controlQuery.data.lastEvaluationTimestamp)}
+                    </small>
+                  </li>
+                )}
+                {evaluations.map((evaluation: ComplianceControlEvaluationGroupedDTO, index) => (
+                  <li key={`${evaluation.controlId ?? controlId}-${evaluation.timestamp ?? index}`}>
+                    <span>{evaluation.status ?? 'Unknown status'}</span>
+                    <small>
+                      {evaluation.controlName ?? controlQuery.data?.controlName ?? 'Control'} ·{' '}
+                      {formatTimestamp(evaluation.timestamp)}
+                    </small>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="cmp-drawer-empty" role="status">
+                No control outcomes were returned for this catalog record.
+              </p>
+            )}
+          </div>
+
+          <div className="cmp-workspace-section">
+            <header>
+              <FileText size={13} />
+              <strong>Evidence</strong>
+            </header>
+            {evidence.length > 0 ? (
+              <ul className="cmp-workspace-list">
+                {evidence.map((item: ComplianceEvidenceItemDTO, index) => (
+                  <li key={item.evidenceId ?? `${item.eventId ?? 'evidence'}-${index}`}>
+                    <span>{item.eventSummary?.trim() || item.mappingType || 'Evidence event'}</span>
+                    <small>
+                      {item.eventSource ?? 'Unknown source'} · {formatTimestamp(item.timestamp)}
+                    </small>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="cmp-drawer-empty" role="status">
+                No evidence was returned for this control in the authorized observation window.
+              </p>
+            )}
+          </div>
+
+          <div className="cmp-capability-list cmp-capability-list--muted">
+            <span>
+              <ShieldCheck size={13} />
+              Owners, testing state and exceptions remain unavailable — mutation CTAs stay disabled.
+            </span>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
 function FrameworkDrawer({
   framework,
   onClose,
@@ -172,33 +344,7 @@ function FrameworkDrawer({
           </dl>
           <p>{framework.description ?? 'No framework description was supplied by the current API.'}</p>
         </section>
-        <section className="cmp-drawer__card cmp-drawer__card--blocked">
-          <header>
-            <FileClock size={15} />
-            <div>
-              <strong>Control and evidence workspace</strong>
-              <span>Requires CMP-002 and CMP-003</span>
-            </div>
-          </header>
-          <div className="cmp-capability-list">
-            <span>
-              <CheckCircle2 size={13} />
-              Control status and applicability
-            </span>
-            <span>
-              <FileText size={13} />
-              Evidence lineage and observation windows
-            </span>
-            <span>
-              <ShieldCheck size={13} />
-              Owners, testing state and exceptions
-            </span>
-          </div>
-          <p>
-            HiveArmor will not fabricate these records. The drawer will progressively load them once the
-            canonical tenant-scoped contracts are available.
-          </p>
-        </section>
+        <ControlEvidenceWorkspace controlId={CMP_DRAWER_SEED_CONTROL_ID} />
         <nav className="cmp-pivots" aria-label="Framework pivots">
           <Link to={ROUTES.CIS_BENCHMARK}>
             Review technical checks
@@ -656,7 +802,7 @@ export function CompliancePage(): JSX.Element {
 
       <footer className="cmp-footer">
         <span>{frameworks.length.toLocaleString()} framework records in the loaded projection</span>
-        <strong>Control evidence requires canonical CMP contracts</strong>
+        <strong>CMP read contracts live — control mutations remain disabled</strong>
         <Link to={ROUTES.REPORTS_SCHEDULED}>
           Open reporting workspace
           <Link2 size={11} aria-hidden="true" />
