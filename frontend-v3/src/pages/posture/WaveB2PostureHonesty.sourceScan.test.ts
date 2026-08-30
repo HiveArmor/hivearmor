@@ -145,4 +145,28 @@ describe('Wave B2 Posture & compliance honesty', () => {
     expect(service).toContain('/ha-cis/catalog');
     expect(service).not.toMatch(/POST \/ha-cis\/actions/);
   });
+
+  it('B2-COV-02 (Prompt 29): detection coverage page uses honesty chrome and canonical /mitre only', () => {
+    const page = readFileSync(
+      join(process.cwd(), 'src/pages/posture/readiness/ReadinessMatrixPage.tsx'),
+      'utf8',
+    );
+    const service = readFileSync(join(process.cwd(), 'src/services/mitre.service.ts'), 'utf8');
+    expect(page).toContain('POSTURE_DETECTION_COVERAGE_JOB_SENTENCE');
+    expect(page).toContain('STAGING CANDIDATE');
+    expect(page).toContain('detection-coverage-empty-honesty');
+    expect(page).toContain('ROUTES.DASHBOARD');
+    expect(page).toContain('ROUTES.DETECTION_RULES');
+    expect(page).toContain('ROUTES.CIS_BENCHMARK');
+    expect(page).toContain('ROUTES.COMPLIANCE');
+    expect(page).toContain('ROUTES.VULNERABILITIES');
+    expect(page).toContain('ROUTES.EXPOSURE');
+    expect(page).toContain('HaDrawer');
+    expect(page).not.toContain('SiemPageHeader');
+    expect(page).not.toMatch(/href="\/posture\//);
+    expect(service).toContain('/mitre/coverage');
+    expect(service).toContain('/mitre/rules');
+    expect(service).toContain('/api/mitre/coverage/export');
+    expect(service).not.toContain('/ha-cis');
+  });
 });

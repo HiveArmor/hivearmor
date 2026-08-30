@@ -1,48 +1,173 @@
 /**
- * ReadinessMatrixPage — POS-06 → Detection Coverage
- * Renamed per PD-08 resolution: "Detection Coverage" instead of "Readiness Matrix"
+ * ReadinessMatrixPage — Detection Coverage hub (Prompt 29 / Wave B2).
+ *
+ * Route stays /posture/readiness (nav: Detection Coverage).
+ * Production: GET /api/mitre/coverage + /rules + /coverage/export.
+ * Empty HTTP 200 is not a missing contract and not an API error.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, Download, Loader2, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  Crosshair,
+  Download,
+  Link2,
+  Loader2,
+  RefreshCw,
+  ShieldCheck,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-import { SiemPageHeader } from '@/components/ha-page-header/SiemPageHeader';
+import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
+import { StatusDock } from '@/components/status-dock';
+import { ROUTES } from '@/constants/routes.constants';
+import { useEpsStream } from '@/hooks/useEpsStream';
 import { mitreService } from '@/services/mitre.service';
 import type { TechniqueCoverageDTO } from '@/types/mitre.types';
+
+import './ReadinessMatrixPage.css';
+
+/** Bundle-visible job sentence — MITRE detection coverage, not CIS SCA or framework assurance. */
+export const POSTURE_DETECTION_COVERAGE_JOB_SENTENCE =
+  'Detection coverage — review MITRE ATT&CK techniques mapped from correlation rules, active rule counts, and coverage gaps across authorized detections. Rule editing lives on Detection Rules; CIS host checks live on CIS Benchmark; framework assurance lives on Compliance.';
+
+function coverageBand(activeCount: number): 'none' | 'low' | 'medium' | 'high' {
+  if (activeCount === 0) return 'none';
+  if (activeCount <= 2) return 'low';
+  if (activeCount <= 5) return 'medium';
+  return 'high';
+}
+
+function TechniqueRulesDrawer({
+  technique,
+  onClose,
+}: {
+  technique: TechniqueCoverageDTO;
+  onClose: () => void;
+}): JSX.Element {
+  const rulesQuery = useQuery({
+    queryKey: ['mitreRules', technique.technique],
+    queryFn: () => mitreService.getRulesByTechnique(technique.technique),
+    staleTime: 20_000,
+  });
+
+  const rules = rulesQuery.data ?? [];
+  const rulesErrorText =
+    rulesQuery.error instanceof Error
+      ? rulesQuery.error.message
+      : 'The rule projection for this technique could not be loaded.';
+
+  return (
+    <HaDrawer
+      isOpen
+      onClose={onClose}
+      title={technique.technique}
+      subtitle={`${technique.activeCount} active · ${technique.ruleCount} total mapped rules`}
+      width={480}
+    >
+      <div className="rdn-drawer">
+        <section className="rdn-drawer__card">
+          <header>
+            <Crosshair size={15} aria-hidden="true" />
+            <div>
+              <strong>Technique coverage</strong>
+              <span>Correlation rules that report this MITRE technique id</span>
+            </div>
+          </header>
+          <p className="rdn-drawer__hint">
+            Coverage is a mapping projection from authorized detections — not proof that every ATT&amp;CK
+            technique is monitored in production.
+          </p>
+        </section>
+
+        {rulesQuery.isLoading && (
+          <div className="rdn-drawer__state" role="status">
+            <Loader2 size={22} className="rdn-spin" aria-hidden="true" />
+            <span>Loading mapped rules…</span>
+          </div>
+        )}
+
+        {rulesQuery.isError && (
+          <div className="rdn-drawer__state" role="alert">
+            <AlertTriangle size={22} aria-hidden="true" />
+            <strong>Rule projection unavailable</strong>
+            <span>{rulesErrorText}</span>
+          </div>
+        )}
+
+        {!rulesQuery.isLoading && !rulesQuery.isError && rules.length === 0 && (
+          <div className="rdn-drawer__state" role="status">
+            <strong>No rules returned for this technique</strong>
+            <span>
+              The coverage cell reported mappings, but the rules query returned an empty list. Confirm
+              correlation-rule technique tags on Detection Rules.
+            </span>
+          </div>
+        )}
+
+        {!rulesQuery.isLoading && !rulesQuery.isError && rules.length > 0 && (
+          <ul className="rdn-rule-list" aria-label={`Rules for ${technique.technique}`}>
+            {rules.map((rule) => (
+              <li key={rule.id} className="rdn-rule-row">
+                <span className="rdn-rule-row__name">{rule.name}</span>
+                <span className="rdn-rule-row__status" data-active={rule.active ? 'true' : 'false'}>
+                  {rule.active ? 'Active' : 'Inactive'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <nav className="rdn-pivots" aria-label="Coverage pivots">
+          <Link to={ROUTES.DETECTION_RULES}>
+            Open Detection Rules
+            <Link2 size={11} aria-hidden="true" />
+          </Link>
+        </nav>
+      </div>
+    </HaDrawer>
+  );
+}
 
 export function ReadinessMatrixPage(): JSX.Element {
   const [selectedTechnique, setSelectedTechnique] = useState<TechniqueCoverageDTO | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [exportFailed, setExportFailed] = useState(false);
+  const eps = useEpsStream();
 
-  const {
-    data: coverage,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  const coverageQuery = useQuery({
     queryKey: ['mitreCoverage'],
     queryFn: mitreService.getCoverage,
+    staleTime: 20_000,
+    gcTime: 5 * 60_000,
+    retry: 1,
   });
 
-  const {
-    data: rules,
-    isLoading: isLoadingRules,
-    isError: isRulesError,
-  } = useQuery({
-    queryKey: ['mitreRules', selectedTechnique?.technique],
-    queryFn: () => {
-      if (!selectedTechnique) {
-        throw new Error('No technique selected');
-      }
-      return mitreService.getRulesByTechnique(selectedTechnique.technique);
-    },
-    enabled: !!selectedTechnique,
-  });
+  const coverage = useMemo(() => coverageQuery.data ?? [], [coverageQuery.data]);
+  const hasCoverage = coverage.length > 0;
+  const techniquesWithActive = useMemo(
+    () => coverage.filter((tech) => tech.activeCount >= 1).length,
+    [coverage],
+  );
+  const uncoveredTechniques = useMemo(
+    () => coverage.filter((tech) => tech.activeCount === 0).length,
+    [coverage],
+  );
+
+  const showEmptyHonesty =
+    !coverageQuery.isLoading && !coverageQuery.isError && coverage.length === 0;
+  const errorText =
+    coverageQuery.error instanceof Error
+      ? coverageQuery.error.message
+      : 'The detection coverage source could not be loaded.';
+  const forbidden = /403|forbidden|permission/i.test(errorText);
 
   const handleExport = async () => {
+    if (!hasCoverage || isExporting) return;
     setIsExporting(true);
+    setExportFailed(false);
     try {
       const blob = await mitreService.exportCoverage();
       const url = URL.createObjectURL(blob);
@@ -52,357 +177,198 @@ export function ReadinessMatrixPage(): JSX.Element {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      // Fail closed — no console noise with customer/export context.
+      // Fail closed — no fake CSV, no customer/export context in console.
+      setExportFailed(true);
     } finally {
       setIsExporting(false);
     }
   };
 
-  const getCellColor = (activeCount: number): string => {
-    if (activeCount === 0) return 'var(--ha-border)';
-    if (activeCount <= 2) return 'var(--ha-medium)';
-    if (activeCount <= 5) return 'var(--ha-positive)';
-    return 'var(--ha-primary)';
-  };
-
-  if (isLoading) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          background: 'var(--ha-background)',
-        }}
-      >
-        <SiemPageHeader title="Detection Coverage" description="MITRE ATT&CK technique coverage" />
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Loader2 size={32} style={{ color: 'var(--ha-primary)', animation: 'spin 1s linear infinite' }} />
-        </div>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          background: 'var(--ha-background)',
-        }}
-      >
-        <SiemPageHeader title="Detection Coverage" description="MITRE ATT&CK technique coverage" />
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-          }}
-        >
-          <div
-            style={{
-              background: 'var(--ha-surface-primary)',
-              border: '1px solid var(--ha-border)',
-              borderRadius: 'var(--ha-radius-base)',
-              padding: '48px',
-              textAlign: 'center',
-              maxWidth: '600px',
-            }}
-          >
-            <AlertCircle size={48} style={{ color: 'var(--ha-critical)', marginBottom: '16px' }} />
-            <h2 style={{ fontSize: 'var(--ha-text-xl)', color: 'var(--ha-text-primary)' }}>
-              Error Loading Coverage
-            </h2>
-            <p style={{ fontSize: 'var(--ha-text-base)', color: 'var(--ha-text-secondary)' }}>
-              {error instanceof Error ? error.message : 'An unknown error occurred'}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!coverage || coverage.length === 0) {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          background: 'var(--ha-background)',
-        }}
-      >
-        <SiemPageHeader title="Detection Coverage" description="MITRE ATT&CK technique coverage" />
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-          }}
-        >
-          <div
-            style={{
-              background: 'var(--ha-surface-primary)',
-              border: '1px solid var(--ha-border)',
-              borderRadius: 'var(--ha-radius-base)',
-              padding: '48px',
-              textAlign: 'center',
-              maxWidth: '600px',
-            }}
-          >
-            <h2 style={{ fontSize: 'var(--ha-text-xl)', color: 'var(--ha-text-primary)' }}>
-              No technique coverage projected
-            </h2>
-            <p style={{ fontSize: 'var(--ha-text-base)', color: 'var(--ha-text-secondary)' }}>
-              No correlation rules currently report a MITRE technique id. This is an empty
-              technique projection — not proof of full ATT&amp;CK coverage or ingest failure.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: 'var(--ha-background)',
-      }}
+    <section
+      className="rdn-page"
+      aria-label="Detection Coverage"
+      data-testid="detection-coverage-page"
     >
-      <SiemPageHeader
-        title="Detection Coverage"
-        description="MITRE ATT&CK technique coverage"
-        actions={
+      <header className="rdn-header">
+        <div className="rdn-header__identity">
+          <span className="rdn-header__mark">
+            <Crosshair size={19} aria-hidden="true" />
+          </span>
+          <div>
+            <div className="rdn-header__eyebrow">
+              <span>POSTURE</span>
+              <span className="rdn-header__badge">STAGING CANDIDATE</span>
+            </div>
+            <h1>Detection Coverage</h1>
+            <p className="rdn-header__job">{POSTURE_DETECTION_COVERAGE_JOB_SENTENCE}</p>
+            {exportFailed && (
+              <p className="rdn-page__projection-note" role="note">
+                CSV export failed. HiveArmor will not invent a coverage file.
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="rdn-header__actions">
+          {hasCoverage && (
+            <button
+              type="button"
+              onClick={() => void handleExport()}
+              disabled={isExporting || coverageQuery.isFetching}
+              aria-label="Export MITRE coverage CSV"
+            >
+              <Download size={14} aria-hidden="true" />
+              {isExporting ? 'Exporting…' : 'Export CSV'}
+            </button>
+          )}
           <button
-            onClick={handleExport}
-            disabled={isExporting}
-            style={{
-              padding: '8px 16px',
-              background: 'var(--ha-surface-raised)',
-              border: '1px solid var(--ha-border)',
-              borderRadius: 'var(--ha-radius-base)',
-              color: 'var(--ha-text-primary)',
-              fontSize: 'var(--ha-text-sm)',
-              cursor: isExporting ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
+            type="button"
+            onClick={() => void coverageQuery.refetch()}
+            disabled={coverageQuery.isFetching}
+            aria-label="Refresh detection coverage"
           >
-            <Download size={16} />
-            {isExporting ? 'Exporting...' : 'Export CSV'}
+            <RefreshCw
+              size={14}
+              className={coverageQuery.isFetching ? 'rdn-spin' : undefined}
+              aria-hidden="true"
+            />
           </button>
+        </div>
+      </header>
+
+      <p className="rdn-page__meta">
+        <Link to={ROUTES.DASHBOARD}>Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.DETECTION_RULES}>Detection Rules</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.CIS_BENCHMARK}>CIS Benchmark</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.COMPLIANCE}>Compliance</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.VULNERABILITIES}>Vulnerabilities</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.EXPOSURE}>Exposure</Link>
+        <span aria-hidden="true">·</span>
+        <span className="rdn-page__access">Analyst · SOC Manager · Platform Administrator</span>
+      </p>
+
+      {showEmptyHonesty && (
+        <div
+          className="detection-coverage-empty-honesty readiness-empty-honesty"
+          role="status"
+          data-testid="detection-coverage-empty-honesty"
+        >
+          <strong>No technique coverage projected</strong>
+          <span>
+            No correlation rules currently report a MITRE technique id. This is an empty technique
+            projection — not proof of full ATT&amp;CK coverage, not a missing API contract, and not an
+            ingest failure. Map technique ids on Detection Rules to populate this matrix.
+          </span>
+          <Link to={ROUTES.DETECTION_RULES}>Open Detection Rules</Link>
+        </div>
+      )}
+
+      {hasCoverage && (
+        <div className="rdn-inline-stats" aria-label="Detection coverage summary">
+          <span>
+            <ShieldCheck size={11} aria-hidden="true" />
+            {coverage.length.toLocaleString()} techniques with mapped rules
+          </span>
+          <span data-tone="positive">
+            {techniquesWithActive.toLocaleString()} with ≥1 active rule
+          </span>
+          <span data-tone={uncoveredTechniques > 0 ? 'warning' : undefined}>
+            {uncoveredTechniques.toLocaleString()} uncovered (0 active)
+          </span>
+        </div>
+      )}
+
+      {coverageQuery.isFetching && coverageQuery.data && (
+        <div className="rdn-refreshing" role="status">
+          <RefreshCw size={12} className="rdn-spin" aria-hidden="true" />
+          Refreshing the coverage projection without clearing loaded techniques…
+        </div>
+      )}
+
+      {coverageQuery.isError && !coverageQuery.data ? (
+        <div className="rdn-state" role="alert">
+          <AlertTriangle size={28} aria-hidden="true" />
+          <strong>
+            {forbidden ? 'Detection coverage access denied' : 'Coverage projection unavailable'}
+          </strong>
+          <span>
+            {forbidden
+              ? 'Required permission: Analyst, SOC Manager, or Platform Administrator.'
+              : errorText}
+          </span>
+          {!forbidden && (
+            <button type="button" onClick={() => void coverageQuery.refetch()}>
+              Retry coverage
+            </button>
+          )}
+        </div>
+      ) : coverageQuery.isLoading && !coverageQuery.data ? (
+        <div className="rdn-state" role="status">
+          <Loader2 size={28} className="rdn-spin" aria-hidden="true" />
+          <strong>Loading detection coverage…</strong>
+          <span>Fetching MITRE technique projections from authorized correlation rules.</span>
+        </div>
+      ) : showEmptyHonesty ? (
+        <main className="rdn-matrix coverage-inventory" aria-label="Detection coverage matrix">
+          <div className="rdn-matrix__placeholder" role="presentation">
+            <Crosshair size={32} aria-hidden="true" />
+            <p>Matrix workspace reserved — populate technique tags on correlation rules to project coverage cells.</p>
+          </div>
+        </main>
+      ) : (
+        <main className="rdn-matrix coverage-inventory" aria-label="Detection coverage matrix">
+          <div className="rdn-matrix__grid">
+            {coverage.map((tech) => {
+              const selected = selectedTechnique?.technique === tech.technique;
+              return (
+                <button
+                  key={tech.technique}
+                  type="button"
+                  className="rdn-cell"
+                  data-band={coverageBand(tech.activeCount)}
+                  data-selected={selected ? 'true' : 'false'}
+                  aria-pressed={selected}
+                  aria-label={`${tech.technique}: ${tech.activeCount} active of ${tech.ruleCount} rules`}
+                  onClick={() => setSelectedTechnique(tech)}
+                >
+                  <span className="rdn-cell__id">{tech.technique}</span>
+                  <span className="rdn-cell__counts">
+                    {tech.activeCount} / {tech.ruleCount}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="rdn-legend" aria-label="Coverage legend">
+            <span data-band="none">0 active</span>
+            <span data-band="low">1–2 active</span>
+            <span data-band="medium">3–5 active</span>
+            <span data-band="high">6+ active</span>
+          </p>
+        </main>
+      )}
+
+      <StatusDock
+        className="rdn-status-dock"
+        sseConnected={eps.connected}
+        eps={eps.eps}
+        mode="historical"
+        lastUpdated={
+          coverageQuery.dataUpdatedAt ? new Date(coverageQuery.dataUpdatedAt) : undefined
         }
       />
 
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          gap: '16px',
-          padding: '24px',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Heatmap Grid */}
-        <div
-          style={{
-            flex: selectedTechnique ? '0 0 60%' : 1,
-            background: 'var(--ha-surface-primary)',
-            border: '1px solid var(--ha-border)',
-            borderRadius: 'var(--ha-radius-base)',
-            padding: '24px',
-            overflow: 'auto',
-          }}
-        >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
-              gap: '8px',
-            }}
-          >
-            {coverage.map((tech) => (
-              <button
-                key={tech.technique}
-                onClick={() => setSelectedTechnique(tech)}
-                style={{
-                  padding: '12px',
-                  background: getCellColor(tech.activeCount),
-                  border:
-                    selectedTechnique?.technique === tech.technique
-                      ? '2px solid var(--ha-text-primary)'
-                      : '1px solid var(--ha-border)',
-                  borderRadius: 'var(--ha-radius-base)',
-                  cursor: 'pointer',
-                  textAlign: 'center',
-                  transition: 'all 0.2s',
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 'var(--ha-text-xs)',
-                    fontFamily: 'var(--ha-font-mono)',
-                    color: 'var(--ha-text-primary)',
-                    fontWeight: 600,
-                    marginBottom: '4px',
-                  }}
-                >
-                  {tech.technique}
-                </div>
-                <div
-                  style={{
-                    fontSize: 'var(--ha-text-xs)',
-                    color: 'var(--ha-text-secondary)',
-                  }}
-                >
-                  {tech.activeCount} / {tech.ruleCount}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Side Panel - Rule List */}
-        {selectedTechnique && (
-          <div
-            style={{
-              flex: '0 0 40%',
-              background: 'var(--ha-surface-primary)',
-              border: '1px solid var(--ha-border)',
-              borderRadius: 'var(--ha-radius-base)',
-              padding: '24px',
-              overflow: 'auto',
-              position: 'relative',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '16px',
-              }}
-            >
-              <div>
-                <h3
-                  style={{
-                    fontSize: 'var(--ha-text-md)',
-                    fontWeight: 600,
-                    color: 'var(--ha-text-primary)',
-                    fontFamily: 'var(--ha-font-mono)',
-                  }}
-                >
-                  {selectedTechnique.technique}
-                </h3>
-                <p style={{ fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-secondary)' }}>
-                  {selectedTechnique.activeCount} active, {selectedTechnique.ruleCount} total
-                </p>
-              </div>
-              <button
-                onClick={() => setSelectedTechnique(null)}
-                style={{
-                  padding: '4px',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--ha-text-secondary)',
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {isLoadingRules && (
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '48px' }}>
-                <Loader2 size={32} style={{ color: 'var(--ha-primary)', animation: 'spin 1s linear infinite' }} />
-              </div>
-            )}
-
-            {isRulesError && (
-              <div
-                style={{
-                  padding: '24px',
-                  textAlign: 'center',
-                  color: 'var(--ha-text-secondary)',
-                }}
-              >
-                Failed to load rules
-              </div>
-            )}
-
-            {rules && rules.length === 0 && (
-              <div
-                style={{
-                  padding: '24px',
-                  textAlign: 'center',
-                  color: 'var(--ha-text-secondary)',
-                }}
-              >
-                No rules found for this technique
-              </div>
-            )}
-
-            {rules && rules.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {rules.map((rule) => (
-                  <div
-                    key={rule.id}
-                    style={{
-                      padding: '12px',
-                      background: 'var(--ha-background)',
-                      border: '1px solid var(--ha-border)',
-                      borderRadius: 'var(--ha-radius-base)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 'var(--ha-text-sm)',
-                        color: 'var(--ha-text-primary)',
-                      }}
-                    >
-                      {rule.name}
-                    </span>
-                    <span
-                      style={{
-                        padding: '2px 8px',
-                        borderRadius: 'var(--ha-radius-sm)',
-                        fontSize: 'var(--ha-text-xs)',
-                        fontWeight: 600,
-                        background: rule.active
-                          ? 'var(--ha-fill-low-muted)'
-                          : 'var(--ha-fill-neutral-muted)',
-                        color: rule.active ? 'var(--ha-positive)' : 'var(--ha-text-secondary)',
-                      }}
-                    >
-                      {rule.active ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+      {selectedTechnique && (
+        <TechniqueRulesDrawer
+          technique={selectedTechnique}
+          onClose={() => setSelectedTechnique(null)}
+        />
+      )}
+    </section>
   );
 }

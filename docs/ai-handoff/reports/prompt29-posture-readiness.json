@@ -1,0 +1,111 @@
+{
+  "prompt": "29-posture-readiness-detection-coverage-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "b9dcdc6",
+  "based_on_main_includes_pr28": true,
+  "branch": "prompt29-posture-readiness",
+  "decision": "RESTRUCTURE",
+  "routes": ["/posture/readiness"],
+  "job_sentence": "Detection coverage — review MITRE ATT&CK techniques mapped from correlation rules, active rule counts, and coverage gaps across authorized detections. Rule editing lives on Detection Rules; CIS host checks live on CIS Benchmark; framework assurance lives on Compliance.",
+  "distinction": {
+    "readiness": "/posture/readiness = Detection Coverage — MITRE technique × correlation-rule matrix (this slice)",
+    "detection_rules": "/detection-rules = rule authoring / activation inventory (Wave A)",
+    "cis_benchmark": "/posture/cis-benchmark = CIS SCA host-file checks (Prompt 28)",
+    "compliance": "/compliance = framework assurance (Prompt 30 — next)",
+    "vulnerabilities": "/posture/vulnerabilities = CVE findings (Prompt 27)",
+    "exposure": "/posture/exposure = attack-path analysis (Prompt 26)"
+  },
+  "ia": {
+    "posture_readiness": {
+      "removed": [
+        "SiemPageHeader-only chrome with early-return unmount of matrix shell on loading/error/empty",
+        "Inline style bags for layout/colors",
+        "Fixed side panel (replaced with HaDrawer for technique rules)"
+      ],
+      "added": [
+        "POSTURE_DETECTION_COVERAGE_JOB_SENTENCE + STAGING CANDIDATE badge (POSTURE eyebrow)",
+        "Meta cross-links: Mission Control · Detection Rules · CIS Benchmark · Compliance · Vulnerabilities · Exposure (Link + ROUTES)",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator (SOC Analyst omitted — matches nav gate)",
+        "Empty-coverage honesty (detection-coverage-empty-honesty / readiness-empty-honesty) distinct from API error",
+        "Matrix workspace min-height 50vh (.rdn-matrix / .coverage-inventory)",
+        "Compact inline stats (.rdn-inline-stats) when coverage exists — not a 6-tile hero strip",
+        "ReadinessMatrixPage.css extracted from inline styles",
+        "ReadinessMatrixPage.test.tsx + DetectionCoverageUxHonesty.sourceScan.test.ts",
+        "WaveB2PostureHonesty B2-COV-02 UI honesty marker"
+      ],
+      "kept": [
+        "Route path /posture/readiness; nav label Detection Coverage",
+        "GET /api/mitre/coverage + rules-by-technique drill-down",
+        "CSV export when coverage exists; fail closed on export error",
+        "Honest empty projection language (strengthened)"
+      ],
+      "forbidden": [
+        "Fake ATT&CK navigator heatmaps from incomplete data",
+        "Claims of full ATT&CK coverage when empty or sparse",
+        "CIS SCA or Compliance framework endpoints on this page",
+        "Invented CSV on export failure"
+      ]
+    }
+  },
+  "backend": {
+    "mitre": {
+      "status": "IMPLEMENTED",
+      "label": "populated (not MITRE-EMPTY-STAGING)",
+      "frontend_contract": "mitreService.getCoverage → GET /api/mitre/coverage; getRulesByTechnique → GET /api/mitre/rules?techniqueId=; exportCoverage → GET /api/mitre/coverage/export",
+      "auth": "MITRE_READ_AUTH = ROLE_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN (SOC Analyst not in auth or nav)",
+      "staging_probe": {
+        "auth": "admin JWT via staging VM (token field, not id_token)",
+        "account_control": { "path": "GET /api/account", "http": 200, "body_bytes": 422 },
+        "coverage": { "path": "GET /api/mitre/coverage", "http": 200, "body_bytes": 26051, "technique_count": 251, "with_active_ge_1": 251, "uncovered_zero_active": 0, "sample_technique": "Account Access Removal", "note": "Technique ids are correlation-rule rule_technique strings (names, not always T####.### ids)" },
+        "rules": { "path": "GET /api/mitre/rules?techniqueId=Account%20Access%20Removal", "http": 200, "body_bytes": 90 },
+        "export": { "path": "GET /api/mitre/coverage/export", "http": 200, "body_bytes": 11272, "content_type": "text/csv" },
+        "verdict": "Populated staging coverage (251 techniques, all with ≥1 active rule in this deployment) — not MITRE-EMPTY-STAGING. Empty HTTP 200 remains distinct from API error."
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "ReadinessMatrixPage chunk contains STAGING CANDIDATE, detection-coverage-empty-honesty, POSTURE eyebrow",
+    "ui_shell": {
+      "path": "/posture/readiness",
+      "staging_https": "frontend-v3 dist deployed via rsync + docker compose build/recreate (healthy)",
+      "fe_deploy": "rsync frontend-v3; docker compose build/recreate frontend-v3 + edge — healthy"
+    },
+    "headed_browser": false,
+    "headed_browser_note": "Staging TLS login page reachable (HTTP 200). Deployed bundle verified in hivearmor-staging-frontend-v3-1 container. Interactive headed pass blocked for automated credential entry; manual check: https://72.44.52.187/posture/readiness",
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_mission_control_detection_rules_cis_compliance_vulnerabilities_exposure", "result": "pass" },
+      { "item": "empty_coverage_honesty_banner_wired", "result": "pass" },
+      { "item": "api_error_distinct_from_empty_coverage", "result": "pass" },
+      { "item": "matrix_shell_persists_on_empty", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_coverage_exists", "result": "pass" },
+      { "item": "inventory_min_height_50vh", "result": "pass" },
+      { "item": "technique_drawer_ha_drawer", "result": "pass" },
+      { "item": "export_fail_closed", "result": "pass" },
+      { "item": "role_note_omits_soc_analyst", "result": "pass" },
+      { "item": "staging_mitre_inventory_populated", "result": "pass", "label": "251 techniques · CSV export 11.3KB" },
+      { "item": "staging_frontend_deployed", "result": "pass" }
+    ]
+  },
+  "validation": {
+    "vitest_readiness_and_b2": "pass (21 tests)",
+    "eslint_changed_files": "pass",
+    "eslint_repo_wide": "fail_preexisting (5 react-refresh warnings on main — not introduced by this slice)",
+    "type_check": "pass",
+    "build": "pass"
+  },
+  "files": {
+    "research": "docs/ai-handoff/research/prompt29-posture-readiness-oem.md",
+    "report": "docs/ai-handoff/reports/prompt29-posture-readiness.json",
+    "page": "frontend-v3/src/pages/posture/readiness/ReadinessMatrixPage.tsx",
+    "css": "frontend-v3/src/pages/posture/readiness/ReadinessMatrixPage.css",
+    "tests": [
+      "frontend-v3/src/pages/posture/readiness/ReadinessMatrixPage.test.tsx",
+      "frontend-v3/src/pages/posture/readiness/DetectionCoverageUxHonesty.sourceScan.test.ts",
+      "frontend-v3/src/pages/posture/WaveB2PostureHonesty.sourceScan.test.ts (B2-COV-02)"
+    ]
+  },
+  "next_recommended_slice": "/compliance (Prompt 30 — Wave B2 closure)"
+}
