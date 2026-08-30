@@ -1,9 +1,10 @@
 import React from 'react';
 
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { VulnerabilitiesPage } from './VulnerabilitiesPage';
+import { POSTURE_VULNERABILITIES_JOB_SENTENCE, VulnerabilitiesPage } from './VulnerabilitiesPage';
 
 import type { VulnFindingDTO } from '@/types/vuln.types';
 
@@ -77,27 +78,45 @@ function summaryState(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.history.replaceState({}, '', '/posture/vulnerabilities');
   mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
     if (options.queryKey[0] === 'vulnerability-summary') return summaryState();
     if (options.queryKey[0] === 'vulnerability-finding') return findingsState({ data: finding });
     if (options.queryKey[0] === 'vulnerability-remediation') {
       return { data: { state: 'unavailable', reason: 'Governed remediation execute is not configured; HiveArmor will not invent a patch job.' }, error: null, isError: false, isFetching: false, isLoading: false, refetch: vi.fn() };
     }
+    if (options.queryKey[0] === 'vulnerability-connectors') {
+      return { data: [{ id: 'patch-job', name: 'Patch job', kind: 'patch', state: 'not_configured', note: 'Not configured' }], error: null, isError: false, isFetching: false, isLoading: false, refetch: vi.fn() };
+    }
     return findingsState();
   });
 });
 
+function renderPage(): ReturnType<typeof render> {
+  return render(
+    <MemoryRouter>
+      <VulnerabilitiesPage />
+    </MemoryRouter>,
+  );
+}
+
 describe('VulnerabilitiesPage', () => {
-  it('renders fleet context, the bounded queue and the shared operational dock', () => {
-    render(<VulnerabilitiesPage />);
-    expect(screen.getByText('Vulnerability Operations')).toBeInTheDocument();
-    expect(screen.getByText('61')).toBeInTheDocument();
+  it('renders honesty chrome, inline stats, bounded queue and the shared operational dock', () => {
+    renderPage();
+    expect(screen.getByRole('heading', { name: 'Vulnerabilities' })).toBeInTheDocument();
+    expect(screen.getByText('STAGING CANDIDATE')).toBeInTheDocument();
+    expect(screen.getByText(POSTURE_VULNERABILITIES_JOB_SENTENCE)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Assets' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Exposure' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'CIS Benchmark' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Vulnerability summary')).toHaveTextContent('12 critical');
     expect(screen.getByRole('button', { name: finding.cveId })).toBeInTheDocument();
     expect(screen.getByTestId('status-dock')).toBeInTheDocument();
+    expect(screen.queryByText('Vulnerability Operations')).not.toBeInTheDocument();
   });
 
   it('updates the server query key when severity and KEV filters change', () => {
-    render(<VulnerabilitiesPage />);
+    renderPage();
     fireEvent.change(screen.getByLabelText('Filter by severity'), { target: { value: 'CRITICAL' } });
     fireEvent.change(screen.getByLabelText('Filter by exploitation evidence'), { target: { value: 'kev' } });
 
@@ -107,27 +126,39 @@ describe('VulnerabilitiesPage', () => {
   });
 
   it('opens finding context only after an explicit selection', () => {
-    render(<VulnerabilitiesPage />);
+    renderPage();
     expect(screen.queryByText('Affected software')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: finding.cveId }));
     expect(screen.getByText('Affected software')).toBeInTheDocument();
     expect(screen.getByText('Known exploitation evidence')).toBeInTheDocument();
     expect(screen.getByText(/does not by itself prove exploitation/i)).toBeInTheDocument();
     expect(screen.getByText(/does not invent EPSS scores/i)).toBeInTheDocument();
-    expect(screen.getByText(/will not invent a patch job/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/will not invent a patch job/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: /Hunt this CVE/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Execute/i })).not.toBeInTheDocument();
   });
 
   it('distinguishes access denial from an empty inventory', () => {
-    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => options.queryKey[0] === 'vulnerability-summary' ? summaryState() : findingsState({ data: undefined, error: new Error('403 Forbidden'), isError: true }));
-    render(<VulnerabilitiesPage />);
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      if (options.queryKey[0] === 'vulnerability-summary') return summaryState();
+      if (options.queryKey[0] === 'vulnerability-connectors') return { data: [], error: null, isError: false, isFetching: false, isLoading: false, refetch: vi.fn() };
+      return findingsState({ data: undefined, error: new Error('403 Forbidden'), isError: true });
+    });
+    renderPage();
     expect(screen.getByText('Vulnerability access denied')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Retry findings' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('vulnerabilities-empty-honesty')).not.toBeInTheDocument();
   });
 
-  it('warns that an unfiltered empty response is not proof of safety', () => {
-    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => options.queryKey[0] === 'vulnerability-summary' ? summaryState() : findingsState({ data: { findings: [], total: 0 } }));
-    render(<VulnerabilitiesPage />);
-    expect(screen.getByText('No vulnerability findings were returned')).toBeInTheDocument();
+  it('shows empty-inventory honesty distinct from filter-empty', () => {
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      if (options.queryKey[0] === 'vulnerability-summary') return summaryState({ data: { critical: 0, high: 0, medium: 0, low: 0, info: 0, kevCount: 0, affectedAgents: 0, topCves: [] } });
+      if (options.queryKey[0] === 'vulnerability-connectors') return { data: [], error: null, isError: false, isFetching: false, isLoading: false, refetch: vi.fn() };
+      return findingsState({ data: { findings: [], total: 0 } });
+    });
+    renderPage();
+    expect(screen.getByTestId('vulnerabilities-empty-honesty')).toBeInTheDocument();
     expect(screen.getByText(/not proof of zero exposure/i)).toBeInTheDocument();
+    expect(screen.queryByText('No findings match these filters')).not.toBeInTheDocument();
   });
 });

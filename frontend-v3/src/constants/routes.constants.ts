@@ -44,6 +44,7 @@ export const ROUTES = {
   ACTIVE_DIRECTORY: '/posture/active-directory',
   EXPOSURE: '/posture/exposure',
   VULNERABILITIES: '/posture/vulnerabilities',
+  CIS_BENCHMARK: '/posture/cis-benchmark',
   SENSORS: '/posture/sensors',
   COMPLIANCE: '/compliance',
 

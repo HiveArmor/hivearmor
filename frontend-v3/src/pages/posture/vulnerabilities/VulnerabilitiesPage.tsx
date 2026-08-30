@@ -1,8 +1,8 @@
 /**
- * Vulnerability Operations — Phase 8 posture and exposure workflow.
+ * Posture Vulnerabilities — inventory-first CVE findings hub (Prompt 27 / Wave B2).
  *
- * The page intentionally renders only signals provided by /api/ha-vuln. Future
- * contextual priority and remediation features are tracked under VUL-001+.
+ * Production: GET /api/ha-vuln/findings + summary. Empty HTTP 200 is not a missing contract.
+ * Remediation execute stays fail-closed (VULN_REMEDIATION_EXECUTE_AVAILABLE).
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -12,17 +12,16 @@ import type { ColDef, ICellRendererParams, RowClickedEvent } from 'ag-grid-commu
 import type { AgGridReact } from 'ag-grid-react';
 import {
   AlertTriangle,
+  AlignJustify,
   Bug,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
   CircleHelp,
-  Columns3,
   Copy,
   ExternalLink,
   Filter,
   History,
-  LayoutList,
   List,
   PackageOpen,
   RefreshCw,
@@ -32,18 +31,26 @@ import {
   ShieldCheck,
   Text,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
+import { ROUTES } from '@/constants/routes.constants';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
+import { VULN_REMEDIATION_EXECUTE_AVAILABLE } from '@/pages/posture/posture.capabilities';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
 import { fetchVulnFinding, fetchVulnFindings, fetchVulnRemediation, fetchVulnRemediationConnectors, fetchVulnSummary } from '@/services/vulnService';
 import type { VulnFindingDTO, VulnSeverity } from '@/types/vuln.types';
 
 import './VulnerabilitiesPage.css';
+import '../../response/response-grid-standard.css';
+
+/** Bundle-visible job sentence — CVE findings inventory, not asset posture or attack-path analysis. */
+export const POSTURE_VULNERABILITIES_JOB_SENTENCE =
+  'Vulnerability findings inventory — review CVE findings, severity, CISA KEV matches, and affected assets across authorized scanner coverage. Asset posture lives on Assets; attack-path analysis lives on Exposure.';
 
 const PAGE_SIZE = 50;
 
@@ -131,7 +138,8 @@ function FindingDrawer({ finding, onClose }: { finding: VulnFindingDTO; onClose:
     if (value) void navigator.clipboard?.writeText(value);
   }, []);
 
-  const huntQuery = `vulnerability.id:${detail.cveId}`;
+  const huntTo = `${ROUTES.SEARCH}?query=${encodeURIComponent(`vulnerability.id:${detail.cveId}`)}`;
+  const assetTo = `${ROUTES.ASSETS}?search=${encodeURIComponent(detail.agentHostname ?? detail.agentId)}`;
   return (
     <HaDrawer
       isOpen
@@ -203,11 +211,14 @@ function FindingDrawer({ finding, onClose }: { finding: VulnFindingDTO; onClose:
         </section>
 
         <nav className="vuln-pivots" aria-label="Investigation pivots">
-          <a href={`/search?query=${encodeURIComponent(huntQuery)}`}>Hunt this CVE<ExternalLink size={11} /></a>
-          <a href={`/posture/assets?search=${encodeURIComponent(detail.agentHostname ?? detail.agentId)}`}>Inspect asset<ExternalLink size={11} /></a>
+          <Link to={huntTo}>Hunt this CVE<ExternalLink size={11} /></Link>
+          <Link to={assetTo}>Inspect asset<ExternalLink size={11} /></Link>
         </nav>
 
-        <p className="vuln-drawer__governance"><ShieldCheck size={13} />{remQuery.data?.reason ?? 'Governed remediation execute is not configured; HiveArmor will not invent a patch job.'}</p>
+        <p className="vuln-drawer__governance">
+          <ShieldCheck size={13} />
+          {remQuery.data?.reason ?? 'Governed remediation execute is not configured; HiveArmor will not invent a patch job.'}
+        </p>
       </div>
     </HaDrawer>
   );
@@ -216,25 +227,27 @@ function FindingDrawer({ finding, onClose }: { finding: VulnFindingDTO; onClose:
 export function VulnerabilitiesPage(): JSX.Element {
   const gridRef = useRef<AgGridReact>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const initialAsset = new URLSearchParams(window.location.search).get('asset') ?? undefined;
   const [page, setPage] = useState(0);
   const [searchDraft, setSearchDraft] = useState('');
   const [cve, setCve] = useState('');
   const [severity, setSeverity] = useState<SeverityFilter>('all');
   const [exploitation, setExploitation] = useState<ExploitationFilter>('all');
-  const [window, setWindow] = useState<WindowFilter>('all');
+  const [firstSeenWindow, setFirstSeenWindow] = useState<WindowFilter>('all');
   const [density, setDensity] = useRowDensity();
   const [activeIndex, setActiveIndex] = useState(0);
   const [selected, setSelected] = useState<VulnFindingDTO | null>(null);
   const eps = useEpsStream();
 
   const filters = useMemo(() => ({
+    agentId: initialAsset,
     cve: cve || undefined,
     severity: severity === 'all' ? undefined : severity,
     isKev: exploitation === 'kev' ? true : undefined,
-    from: fromForWindow(window),
+    from: fromForWindow(firstSeenWindow),
     page,
     size: PAGE_SIZE,
-  }), [cve, exploitation, page, severity, window]);
+  }), [cve, exploitation, initialAsset, page, severity, firstSeenWindow]);
 
   const findingsQuery = useQuery({
     queryKey: ['vulnerability-findings', filters],
@@ -245,8 +258,8 @@ export function VulnerabilitiesPage(): JSX.Element {
     retry: 1,
   });
   const summaryQuery = useQuery({
-    queryKey: ['vulnerability-summary', { cve: filters.cve, severity: filters.severity, isKev: filters.isKev, from: filters.from }],
-    queryFn: ({ signal }) => fetchVulnSummary({ cve: filters.cve, severity: filters.severity, isKev: filters.isKev, from: filters.from }, signal),
+    queryKey: ['vulnerability-summary', { agentId: filters.agentId, cve: filters.cve, severity: filters.severity, isKev: filters.isKev, from: filters.from }],
+    queryFn: ({ signal }) => fetchVulnSummary({ agentId: filters.agentId, cve: filters.cve, severity: filters.severity, isKev: filters.isKev, from: filters.from }, signal),
     staleTime: 20_000,
     gcTime: 5 * 60_000,
     retry: 1,
@@ -262,18 +275,26 @@ export function VulnerabilitiesPage(): JSX.Element {
   const rows = useMemo(() => findingsQuery.data?.findings ?? [], [findingsQuery.data?.findings]);
   const total = findingsQuery.data?.total ?? 0;
   const summary = summaryQuery.data;
-  const totalFindings = summary ? summary.critical + summary.high + summary.medium + summary.low + summary.info : undefined;
-  const hasFilters = Boolean(cve) || severity !== 'all' || exploitation !== 'all' || window !== 'all';
+  const hasFilters = Boolean(cve) || severity !== 'all' || exploitation !== 'all' || firstSeenWindow !== 'all' || Boolean(initialAsset);
   const totalPages = total ? Math.ceil(total / PAGE_SIZE) : 0;
   const pageStart = rows.length ? page * PAGE_SIZE + 1 : 0;
   const pageEnd = page * PAGE_SIZE + rows.length;
+  const showEmptyHonesty = !findingsQuery.isLoading && !findingsQuery.isError && rows.length === 0 && !hasFilters;
+  const hasInlineStats = summary != null;
+  const connectorCount = Array.isArray(connectorsQuery.data) ? connectorsQuery.data.length : 0;
+  const projectionNote = [
+    summary?.kevCount ? `${summary.kevCount} CISA KEV matches in the current summary scope — a catalog signal, not proof of local exploitation.` : null,
+    connectorCount ? `${connectorCount} remediation connectors are listed as not configured.` : null,
+    VULN_REMEDIATION_EXECUTE_AVAILABLE ? null : 'Remediation execute is fail-closed — HiveArmor will not invent a patch job.',
+    initialAsset ? `Scoped to asset ${initialAsset} via ?asset= (agentId).` : null,
+  ].filter((part): part is string => Boolean(part)).join(' ');
 
   const resetFilters = useCallback(() => {
     setSearchDraft('');
     setCve('');
     setSeverity('all');
     setExploitation('all');
-    setWindow('all');
+    setFirstSeenWindow('all');
     setPage(0);
     setActiveIndex(0);
   }, []);
@@ -286,7 +307,7 @@ export function VulnerabilitiesPage(): JSX.Element {
   useEffect(() => {
     setPage(0);
     setActiveIndex(0);
-  }, [severity, exploitation, window]);
+  }, [severity, exploitation, firstSeenWindow]);
 
   useEffect(() => {
     const handleKeyboard = (event: KeyboardEvent) => {
@@ -323,20 +344,54 @@ export function VulnerabilitiesPage(): JSX.Element {
   const forbidden = /403|forbidden|permission/i.test(errorText);
 
   return (
-    <section className="vuln-page" aria-label="Vulnerability operations">
+    <section className="vuln-page" aria-label="Vulnerabilities" data-remediation-execute={VULN_REMEDIATION_EXECUTE_AVAILABLE ? 'open' : 'fail-closed'}>
       <header className="vuln-header">
-        <div className="vuln-header__identity"><span className="vuln-header__mark"><Bug size={19} /></span><div><span>Posture &amp; exposure</span><h1>Vulnerability Operations</h1></div></div>
-        <div className="vuln-header__actions"><span className="vuln-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect</span><a href="/posture/assets"><Server size={13} />Assets</a><a href="/posture/exposure"><ShieldAlert size={13} />Exposure</a><button type="button" onClick={() => void Promise.all([findingsQuery.refetch(), summaryQuery.refetch()])} disabled={findingsQuery.isFetching || summaryQuery.isFetching} aria-label="Refresh vulnerability snapshot"><RefreshCw size={14} className={findingsQuery.isFetching || summaryQuery.isFetching ? 'vuln-spin' : undefined} /></button></div>
+        <div className="vuln-header__identity">
+          <span className="vuln-header__mark"><Bug size={19} aria-hidden="true" /></span>
+          <div>
+            <div className="vuln-header__eyebrow">
+              <span>POSTURE</span>
+              <span className="vuln-header__badge">STAGING CANDIDATE</span>
+            </div>
+            <h1>Vulnerabilities</h1>
+            <p className="vuln-header__job">{POSTURE_VULNERABILITIES_JOB_SENTENCE}</p>
+            {projectionNote && (
+              <p className="vuln-page__projection-note" role="note">
+                {projectionNote}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="vuln-header__actions">
+          <span className="vuln-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect</span>
+          <button type="button" onClick={() => void Promise.all([findingsQuery.refetch(), summaryQuery.refetch(), connectorsQuery.refetch()])} disabled={findingsQuery.isFetching || summaryQuery.isFetching} aria-label="Refresh vulnerability snapshot"><RefreshCw size={14} className={findingsQuery.isFetching || summaryQuery.isFetching ? 'vuln-spin' : undefined} /></button>
+        </div>
       </header>
 
-      <section className="vuln-summary" aria-label="Fleet vulnerability summary">
-        <div><span><Bug size={13} />Open findings</span><strong>{totalFindings?.toLocaleString() ?? '—'}</strong><small>{hasFilters ? 'matching current filters' : 'fleet summary'}</small></div>
-        <div data-tone="critical"><span><ShieldAlert size={13} />Critical</span><strong>{summary?.critical.toLocaleString() ?? '—'}</strong><small>CVSS severity class</small></div>
-        <div data-tone="danger"><span><AlertTriangle size={13} />High</span><strong>{summary?.high.toLocaleString() ?? '—'}</strong><small>CVSS severity class</small></div>
-        <div data-tone="warning"><span><Bug size={13} />CISA KEV</span><strong>{summary?.kevCount.toLocaleString() ?? '—'}</strong><small>known exploitation evidence</small></div>
-        <div data-tone="info"><span><Server size={13} />Affected assets</span><strong>{summary?.affectedAgents.toLocaleString() ?? '—'}</strong><small>distinct reporting agents</small></div>
-        <div><span><History size={13} />Current page</span><strong>{rows.length ? `${pageStart}–${pageEnd}` : '—'}</strong><small>{total.toLocaleString()} matching findings</small></div>
-      </section>
+      <p className="vuln-page__meta">
+        <Link to={ROUTES.DASHBOARD}>Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.ASSETS}>Assets</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.EXPOSURE}>Exposure</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.IDENTITIES}>Identities</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.CIS_BENCHMARK}>CIS Benchmark</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.COMPLIANCE}>Compliance</Link>
+        <span aria-hidden="true">·</span>
+        <span className="vuln-page__access">Analyst · SOC Manager · Platform Administrator</span>
+      </p>
+
+      {showEmptyHonesty && (
+        <div className="vulnerabilities-empty-honesty" role="status" data-testid="vulnerabilities-empty-honesty">
+          <strong>No vulnerability findings in authorized scanner coverage.</strong>
+          <span>
+            An empty inventory is not proof of zero exposure — confirm scanner coverage and source health. Asset posture may still be available on Assets; attack-path analysis on Exposure. HiveArmor will not invent CVE counts.
+          </span>
+        </div>
+      )}
 
       <section className="vuln-operations" aria-label="Vulnerability filters">
         <form className="vuln-toolbar" onSubmit={(event) => { event.preventDefault(); commitSearch(); }}>
@@ -344,28 +399,37 @@ export function VulnerabilitiesPage(): JSX.Element {
           <Filter className="vuln-filter-icon" size={13} aria-hidden="true" />
           <HaCompactSelect ariaLabel="Filter by severity" value={severity} onChange={setSeverity} options={SEVERITY_OPTIONS} />
           <HaCompactSelect ariaLabel="Filter by exploitation evidence" value={exploitation} onChange={setExploitation} options={EXPLOITATION_OPTIONS} />
-          <HaCompactSelect ariaLabel="Filter by first-seen window" value={window} onChange={setWindow} options={WINDOW_OPTIONS} />
+          <HaCompactSelect ariaLabel="Filter by first-seen window" value={firstSeenWindow} onChange={setFirstSeenWindow} options={WINDOW_OPTIONS} />
           {hasFilters && <button className="vuln-clear" type="button" onClick={resetFilters}>Clear filters</button>}
           <span className="vuln-scope"><ShieldCheck size={12} />Authorized API scope</span>
         </form>
       </section>
 
-      {summary?.kevCount ? <div className="vuln-kev-strip"><ShieldAlert size={14} /><span><strong>{summary.kevCount} CISA KEV matches</strong> are present in the current summary scope. Prioritize with asset context and current exposure evidence.</span><button type="button" onClick={() => { setExploitation('kev'); setPage(0); }}>Review KEV</button></div> : null}
-      {Array.isArray(connectorsQuery.data) && connectorsQuery.data.length ? <div className="vuln-kev-strip"><ShieldCheck size={14} /><span><strong>{connectorsQuery.data.length} remediation connectors</strong> are listed as not configured. HiveArmor will not invent a patch job.</span></div> : null}
       {findingsQuery.isFetching && findingsQuery.data && <div className="vuln-refreshing" role="status"><RefreshCw size={12} className="vuln-spin" />Refreshing the current projection without clearing loaded rows…</div>}
 
       <header className="vuln-results-toolbar">
-        <div><strong>Priority findings</strong><span>{rows.length ? `${pageStart}–${pageEnd} of ${total.toLocaleString()} loaded` : 'No rows loaded'} · backend order: CVSS then KEV</span></div>
-        <div className="vuln-density" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={14} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><LayoutList size={14} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><Columns3 size={14} /></button></div>
+        <div>
+          <strong>Findings</strong>
+          <span>{rows.length ? `${pageStart}–${pageEnd} of ${total.toLocaleString()} loaded` : 'No rows loaded'} · backend order: CVSS then KEV</span>
+          {hasInlineStats && summary && (
+            <span className="vuln-inline-stats" aria-label="Vulnerability summary">
+              <span data-tone="critical"><ShieldAlert size={11} />{summary.critical.toLocaleString()} critical</span>
+              <span data-tone="high"><AlertTriangle size={11} />{summary.high.toLocaleString()} high</span>
+              <span data-tone="warning"><Bug size={11} />{summary.kevCount.toLocaleString()} KEV</span>
+              <span><Server size={11} />{summary.affectedAgents.toLocaleString()} assets</span>
+            </span>
+          )}
+        </div>
+        <div className="vuln-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button></div>
       </header>
 
       {findingsQuery.isError && !findingsQuery.data ? (
         <div className="vuln-state" role="alert"><AlertTriangle size={28} /><strong>{forbidden ? 'Vulnerability access denied' : 'Vulnerability projection unavailable'}</strong><span>{forbidden ? 'Your role or current tenant scope is not permitted to view these findings.' : errorText}</span>{!forbidden && <button type="button" onClick={() => findingsQuery.refetch()}>Retry findings</button>}</div>
-      ) : !findingsQuery.isLoading && rows.length === 0 ? (
-        <div className="vuln-state" role="status"><CheckCircle2 size={28} /><strong>{hasFilters ? 'No findings match these filters' : 'No vulnerability findings were returned'}</strong><span>{hasFilters ? 'Clear filters or broaden the first-seen window.' : 'This is not proof of zero exposure. Confirm scanner coverage and source health because the current backend cannot report partial-source failures.'}</span>{hasFilters && <button type="button" onClick={resetFilters}>Clear filters</button>}</div>
-      ) : (
-        <main className="vuln-grid-wrap"><SiemDataGrid ref={gridRef} className="response-grid vuln-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} loading={findingsQuery.isLoading} rowSelection="single" onRowClicked={(event: RowClickedEvent) => { const finding = event.data as VulnFindingDTO; setActiveIndex(rows.findIndex((row) => row.id === finding.id)); setSelected(finding); }} getRowId={(params) => String((params.data as VulnFindingDTO).id)} defaultColDef={{ filter: false, sortable: false }} ariaLabel="Vulnerability findings" /></main>
-      )}
+      ) : showEmptyHonesty ? null : !findingsQuery.isLoading && rows.length === 0 && hasFilters ? (
+        <div className="vuln-state" role="status"><CheckCircle2 size={28} /><strong>No findings match these filters</strong><span>Clear filters or broaden the first-seen window. An empty filtered result is not proof of zero exposure.</span><button type="button" onClick={resetFilters}>Clear filters</button></div>
+      ) : !showEmptyHonesty ? (
+        <main className="vuln-inventory"><div className="vuln-grid-wrap"><SiemDataGrid ref={gridRef} className="response-grid vuln-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} loading={findingsQuery.isLoading} rowSelection="single" onRowClicked={(event: RowClickedEvent) => { const finding = event.data as VulnFindingDTO; setActiveIndex(rows.findIndex((row) => row.id === finding.id)); setSelected(finding); }} getRowId={(params) => String((params.data as VulnFindingDTO).id)} defaultColDef={{ filter: false, sortable: false }} ariaLabel="Vulnerability findings" /></div></main>
+      ) : null}
 
       <footer className="vuln-pagination" aria-label="Vulnerability pagination"><span>{total.toLocaleString()} matching findings</span><strong>Page {totalPages ? page + 1 : 0} <small>{pageStart}–{pageEnd}</small></strong><div><button type="button" disabled={page === 0 || findingsQuery.isFetching} onClick={() => { setPage((value) => Math.max(0, value - 1)); setActiveIndex(0); }}><ChevronLeft size={13} />Previous</button><button type="button" disabled={pageEnd >= total || findingsQuery.isFetching} onClick={() => { setPage((value) => value + 1); setActiveIndex(0); }}>Next<ChevronRight size={13} /></button></div></footer>
       <StatusDock className="vuln-status" sseConnected={eps.connected} eps={eps.eps} mode="historical" lastUpdated={findingsQuery.dataUpdatedAt ? new Date(findingsQuery.dataUpdatedAt) : undefined} />
