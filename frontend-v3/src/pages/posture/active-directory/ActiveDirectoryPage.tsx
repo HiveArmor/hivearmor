@@ -1,20 +1,24 @@
+/**
+ * Posture Active Directory — inventory-first AD domain hub (Prompt 25 / Wave B2).
+ *
+ * Production: fetchAdPosture returns explicit contractState: 'missing' until ADP-001+ ships.
+ * Fixtures only in dev via activeDirectoryFixtureMode.
+ */
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import type { ColDef, ICellRendererParams, RowClickedEvent } from 'ag-grid-community';
 import type { AgGridReact } from 'ag-grid-react';
 import {
-  Activity,
   AlignJustify,
   AlertTriangle,
   BadgeCheck,
-  Building2,
   ChevronLeft,
   ChevronRight,
   CircleDot,
-  Eye,
+  ExternalLink,
   FileKey2,
-  Fingerprint,
   GitBranch,
   History,
   Link2,
@@ -29,11 +33,13 @@ import {
   Sparkles,
   Workflow,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
+import { ROUTES } from '@/constants/routes.constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
@@ -54,6 +60,10 @@ import type {
 
 import './ActiveDirectoryPage.css';
 import '../../response/response-grid-standard.css';
+
+/** Bundle-visible job sentence — AD domain posture, not identity inventory or asset host inventory. */
+export const POSTURE_ACTIVE_DIRECTORY_JOB_SENTENCE =
+  'Active Directory posture — review domain assessments, trust relationships, privileged changes, and identity infrastructure health across authorized domains. User identity inventory lives on Identities; host posture lives on Assets.';
 
 const PAGE_SIZE = 50;
 
@@ -108,14 +118,18 @@ function AdDetailDrawer({ row, onClose }: { row: AdRow; onClose: () => void }): 
   const title = isAssessment(row) ? row.title : isDomain(row) ? row.domainName : isInfrastructure(row) ? row.name : row.target;
   const subtitle = isAssessment(row) ? `${categoryLabel(row.category)} · ${row.domainName}` : isDomain(row) ? `${row.forestName} forest` : row.domainName;
   const tabs = isAssessment(row) ? ['overview', 'evidence', 'exposure'] : isDomain(row) ? ['overview', 'controllers', 'trusts'] : ['overview', 'context'];
+  const huntQuery = isAssessment(row) ? `ad.assessment.id:"${row.id}"` : `ad.domain:"${subtitle}"`;
+  const huntTo = `${ROUTES.SEARCH}?query=${encodeURIComponent(huntQuery)}`;
+  const responseTo = `${ROUTES.RESPONSE_PLAYBOOKS}/new?template=directory-hardening&target=${encodeURIComponent(row.id)}`;
+
   return (
-    <HaDrawer isOpen onClose={onClose} title={title} subtitle={subtitle} width={570} footer={<><a className="adp-drawer-action" href={`/search?query=${encodeURIComponent(isAssessment(row) ? `ad.assessment.id:"${row.id}"` : `ad.domain:"${subtitle}"`)}`}><Search size={13} />Hunt events</a><a className="adp-drawer-action adp-drawer-action--primary" href={`/response/playbooks/new?template=directory-hardening&target=${encodeURIComponent(row.id)}`}><Workflow size={13} />Preview response</a></>}>
+    <HaDrawer isOpen onClose={onClose} title={title} subtitle={subtitle} width={570} footer={<><Link className="adp-drawer-action" to={huntTo}><Search size={13} />Hunt events</Link><Link className="adp-drawer-action adp-drawer-action--primary" to={responseTo}><Workflow size={13} />Preview response</Link></>}>
       <div className="adp-drawer">
         <nav className="adp-drawer-tabs" aria-label="Directory context views">{tabs.map((value) => <button key={value} type="button" role="tab" aria-selected={tab === value} onClick={() => setTab(value)}>{value}</button>)}</nav>
         {isAssessment(row) && <>
           {tab === 'overview' && <><section className="adp-drawer-hero"><RiskBadge level={row.riskLevel} /><div><span>Score impact</span><strong>−{row.scoreImpact}</strong></div><div><span>Exposed objects</span><strong>{row.exposedEntityCount}</strong></div></section><section className="adp-intelligence"><header><Sparkles size={14} /><strong>Hive Intelligence</strong><span>Analyst review required</span></header><p>{row.summary} This exposure overlaps {row.attackTechniques.join(', ')} and should be validated against the documented directory dependency before remediation.</p></section><section className="adp-drawer-card"><header><ShieldAlert size={14} /><div><strong>Why this matters</strong><span>Continuous posture assessment</span></div></header><p>{row.summary}</p><dl className="adp-detail-grid"><div><dt>State</dt><dd>{row.state}</dd></div><div><dt>Owner</dt><dd>{row.owner ?? 'Unassigned'}</dd></div><div><dt>First detected</dt><dd>{formatTime(row.firstDetectedAt)}</dd></div><div><dt>Last evaluated</dt><dd>{formatTime(row.lastEvaluatedAt)}</dd></div></dl></section><section className="adp-drawer-card"><header><BadgeCheck size={14} /><div><strong>Recommended action</strong><span>Governed change required</span></div></header><p>{row.recommendation}</p></section></>}
           {tab === 'evidence' && <section className="adp-drawer-card"><header><FileKey2 size={14} /><div><strong>Evidence and provenance</strong><span>Bounded supporting observations</span></div></header><ul className="adp-evidence-list">{row.evidence.map((item) => <li key={item.id}><span /><div><strong>{item.label}</strong><p>{item.value}</p><small>{item.source} · {formatTime(item.observedAt)}</small></div></li>)}</ul></section>}
-          {tab === 'exposure' && <section className="adp-drawer-card"><header><GitBranch size={14} /><div><strong>Affected objects and paths</strong><span>Tier‑0 and sensitive reachability</span></div></header><ul className="adp-entity-list">{row.affectedEntities.map((entity) => <li key={entity.id} data-level={entity.criticality}><span>{entity.type}</span><strong>{entity.name}</strong><small>{entity.path ?? entity.criticality.replace('_', ' ')}</small></li>)}</ul></section>}
+          {tab === 'exposure' && <section className="adp-drawer-card"><header><GitBranch size={14} /><div><strong>Affected objects and paths</strong><span>Tier‑0 and sensitive reachability</span></div></header><ul className="adp-entity-list">{row.affectedEntities.map((entity) => <li key={entity.id} data-level={entity.criticality}><span>{entity.type}</span><strong>{entity.name}</strong><small>{entity.path ?? entity.criticality.replace('_', ' ')}</small></li>)}</ul><Link className="adp-drawer-pivot" to={ROUTES.EXPOSURE}><ExternalLink size={12} />Open attack-path analysis on Exposure</Link></section>}
         </>}
         {isDomain(row) && <>
           {tab === 'overview' && <><section className="adp-drawer-hero"><HealthBadge state={row.health} /><div><span>Posture</span><strong>{row.postureScore}</strong></div><div><span>Tier‑0 paths</span><strong>{row.tierZeroPathCount}</strong></div></section><section className="adp-drawer-card"><header><Network size={14} /><div><strong>Directory domain</strong><span>Forest and monitoring context</span></div></header><dl className="adp-detail-grid"><div><dt>Forest</dt><dd>{row.forestName}</dd></div><div><dt>NetBIOS</dt><dd>{row.netbiosName}</dd></div><div><dt>Functional level</dt><dd>{row.functionalLevel}</dd></div><div><dt>Last observed</dt><dd>{formatTime(row.lastObservedAt)}</dd></div></dl></section></>}
@@ -191,39 +205,106 @@ export function ActiveDirectoryPage(): JSX.Element {
   const summary = query.data?.summary;
   const missingContract = query.data?.contractState === 'missing';
   const domainOptions = [{ value: '', label: 'All domains' }, ...(query.data?.domains ?? [])];
+  const projectionNote = query.data?.partialFailures?.length ? query.data.partialFailures[0]?.message : null;
+  const showContractMissingHonesty = missingContract && !query.isLoading;
+  const showEmptyHonesty = !query.isLoading && !query.isError && !missingContract && rows.length === 0 && !hasFilters;
+  const hasInlineStats = summary != null && (summary.criticalAssessments != null || summary.tierZeroPaths != null);
 
   return (
-    <section className="adp-page" data-fixture={activeDirectoryFixtureMode || undefined} aria-label="Active Directory security posture">
-      <header className="adp-header"><div className="adp-header__identity"><span className="adp-header__mark"><Network size={19} /></span><div><span>Identity threat exposure</span><h1>Active Directory Security</h1></div></div><div className="adp-header__actions"><span className="adp-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect</span><a href="/posture/identities"><Fingerprint size={13} />Identities</a><a href="/posture/exposure"><Eye size={13} />Exposure</a><a href="/posture/assets"><Building2 size={13} />Assets</a><button type="button" onClick={() => query.refetch()} disabled={query.isFetching} aria-label="Refresh directory posture"><RefreshCw size={14} className={query.isFetching ? 'adp-spin' : undefined} /></button></div></header>
+    <section className="adp-page" data-fixture={activeDirectoryFixtureMode || undefined} aria-label="Active Directory posture">
+      <header className="adp-header">
+        <div className="adp-header__identity">
+          <span className="adp-header__mark"><Network size={19} aria-hidden="true" /></span>
+          <div>
+            <div className="adp-header__eyebrow">
+              <span>POSTURE</span>
+              <span className="adp-header__badge">STAGING CANDIDATE</span>
+            </div>
+            <h1>Active Directory</h1>
+            <p className="adp-header__job">{POSTURE_ACTIVE_DIRECTORY_JOB_SENTENCE}</p>
+            {projectionNote && (
+              <p className="adp-page__projection-note" role="note" id="ad-contract-state">
+                {projectionNote} AD posture APIs (ADP-001+) are not implemented — label: AD-CONTRACT-MISSING-STAGING.
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="adp-header__actions">
+          <span className="adp-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect</span>
+          <button type="button" onClick={() => query.refetch()} disabled={query.isFetching} aria-label="Refresh directory posture"><RefreshCw size={14} className={query.isFetching ? 'adp-spin' : undefined} /></button>
+        </div>
+      </header>
+
+      <p className="adp-page__meta">
+        <Link to={ROUTES.DASHBOARD}>Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.IDENTITIES}>Identities</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.ASSETS}>Assets</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.ENTITIES}>Entities</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.EXPOSURE}>Exposure</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.VULNERABILITIES}>Vulnerabilities</Link>
+        <span aria-hidden="true">·</span>
+        <span className="adp-page__access">Analyst · SOC Manager · Platform Administrator</span>
+      </p>
+
       {activeDirectoryFixtureMode && <div className="adp-fixture"><strong>Design fixture:</strong> fictional domain, trust, posture and change records are enabled for visual review.<span>Production never receives these records.</span></div>}
 
-      <section className="adp-summary" aria-label="Directory posture summary">
-        <div><span><ShieldCheck size={13} />Posture score</span><strong>{summary?.postureScore ?? '—'}{summary?.postureScore != null && <small>/100</small>}</strong><em>continuous directory posture</em></div>
-        <button type="button" data-tone="critical" onClick={() => { setView('assessments'); setRisk('critical'); }}><span><ShieldAlert size={13} />Critical assessments</span><strong>{summary?.criticalAssessments ?? '—'}</strong><em>exploitable configurations</em></button>
-        <button type="button" data-tone="danger" onClick={() => setView('domains')}><span><GitBranch size={13} />Tier‑0 attack paths</span><strong>{summary?.tierZeroPaths ?? '—'}</strong><em>domain compromise routes</em></button>
-        <button type="button" data-tone="warning" onClick={() => setView('changes')}><span><History size={13} />Risky changes · 24h</span><strong>{summary?.riskyChanges24h ?? '—'}</strong><em>privileged directory events</em></button>
-        <button type="button" data-tone="warning" onClick={() => setView('infrastructure')}><span><Activity size={13} />Sensor gaps</span><strong>{summary?.unhealthySensors ?? '—'}</strong><em>partial or missing coverage</em></button>
-        <button type="button" data-tone="info" onClick={() => setView('domains')}><span><GitBranch size={13} />Replication issues</span><strong>{summary?.replicationIssues ?? '—'}</strong><em>lagging or failed partners</em></button>
+      {showContractMissingHonesty && (
+        <div className="ad-contract-missing-honesty" role="status" data-testid="ad-contract-missing-honesty">
+          <strong>Active Directory backend integration required</strong>
+          <span>
+            Directory posture APIs are not available in this deployment. HiveArmor will not invent domain health, Tier‑0 paths, or privileged changes from incomplete data — a missing contract is not an empty risk assessment and does not imply the directory is safe.
+          </span>
+        </div>
+      )}
+
+      <section className="adp-operations">
+        <nav className="adp-tabs" aria-label="Directory security views">{VIEWS.map(({ value, label, icon: Icon }) => <button key={value} type="button" data-active={view === value} onClick={() => setView(value)}><Icon size={13} />{label}</button>)}</nav>
+        <div className="adp-toolbar" role="toolbar" aria-label="Directory posture filters">
+          <label className="adp-search"><Search size={14} /><input ref={searchRef} type="search" value={searchDraft} onChange={(event) => setSearchDraft(event.target.value)} placeholder="Search assessment, domain, actor, target…" aria-label="Search directory posture" /><kbd>/</kbd></label>
+          <HaCompactSelect ariaLabel="Filter by domain" label="Domain" value={domain} options={domainOptions} onChange={setDomain} />
+          <HaCompactSelect ariaLabel="Filter by risk" label="Risk" value={risk} options={RISKS} onChange={setRisk} />
+          {view === 'assessments' && <HaCompactSelect ariaLabel="Filter by assessment category" label="Category" value={category} options={CATEGORIES} onChange={setCategory} />}
+          {view === 'changes' && <HaCompactSelect ariaLabel="Filter by time range" label="Window" value={timeRange} options={WINDOWS} onChange={setTimeRange} />}
+          <span className="adp-scope"><LockKeyhole size={12} />All authorized domains</span>
+          <span className="adp-snapshot">Snapshot {query.data?.snapshotAt ? formatTime(query.data.snapshotAt) : '—'}</span>
+        </div>
       </section>
 
-      <section className="adp-operations"><nav className="adp-tabs" aria-label="Directory security views">{VIEWS.map(({ value, label, icon: Icon }) => <button key={value} type="button" data-active={view === value} onClick={() => setView(value)}><Icon size={13} />{label}</button>)}</nav><div className="adp-toolbar" role="toolbar" aria-label="Directory posture filters">
-        <label className="adp-search"><Search size={14} /><input ref={searchRef} type="search" value={searchDraft} onChange={(event) => setSearchDraft(event.target.value)} placeholder="Search assessment, domain, actor, target…" aria-label="Search directory posture" /><kbd>/</kbd></label>
-        <HaCompactSelect ariaLabel="Filter by domain" label="Domain" value={domain} options={domainOptions} onChange={setDomain} />
-        <HaCompactSelect ariaLabel="Filter by risk" label="Risk" value={risk} options={RISKS} onChange={setRisk} />
-        {view === 'assessments' && <HaCompactSelect ariaLabel="Filter by assessment category" label="Category" value={category} options={CATEGORIES} onChange={setCategory} />}
-        {view === 'changes' && <HaCompactSelect ariaLabel="Filter by time range" label="Window" value={timeRange} options={WINDOWS} onChange={setTimeRange} />}
-        <span className="adp-scope"><LockKeyhole size={12} />All authorized domains</span><span className="adp-snapshot">Snapshot {query.data?.snapshotAt ? formatTime(query.data.snapshotAt) : '—'}</span>
-      </div></section>
+      <div className="adp-results-toolbar">
+        <div>
+          <strong>{VIEWS.find((item) => item.value === view)?.label}</strong>
+          <span>{missingContract ? 'Backend contract unavailable — not an empty risk assessment' : query.data ? `${rows.length} loaded · ${query.data.total.toLocaleString()} matching` : 'bounded authorized projection'}</span>
+          {hasInlineStats && summary && (
+            <span className="adp-inline-stats" aria-label="Directory posture summary">
+              {summary.postureScore != null && <span>{summary.postureScore}/100 posture</span>}
+              {summary.criticalAssessments != null && <span data-tone="critical">{summary.criticalAssessments} critical</span>}
+              {summary.tierZeroPaths != null && <span data-tone="danger">{summary.tierZeroPaths} Tier‑0 paths</span>}
+            </span>
+          )}
+          {hasFilters && !missingContract && rows.length > 0 && <button type="button" onClick={reset}>Clear filters</button>}
+        </div>
+        <div className="adp-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button></div>
+      </div>
 
-      {Boolean(query.data?.partialFailures.length) && <div className="adp-warning" role="status"><AlertTriangle size={14} /><span>{query.data?.partialFailures[0]?.message}</span><a href="#ad-contract-state">Review backend contract</a></div>}
-      <div className="adp-results"><div><strong>{VIEWS.find((item) => item.value === view)?.label}</strong><span>{missingContract ? 'Backend contract unavailable — not an empty risk assessment' : query.data ? `${rows.length} loaded · ${query.data.total.toLocaleString()} matching` : 'bounded authorized projection'}</span>{hasFilters && !missingContract && <button type="button" onClick={reset}>Clear filters</button>}</div><div className="adp-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button></div></div>
-
-      {query.isError && !query.data ? <div className="adp-state" role="alert"><AlertTriangle size={28} /><strong>Directory posture unavailable</strong><span>{query.error instanceof Error ? query.error.message : 'The authorized directory projection could not be loaded.'}</span><button type="button" onClick={() => query.refetch()}>Retry</button></div> : missingContract ? <div className="adp-state" role="status"><Network size={30} /><strong>Active Directory backend integration required</strong><span>Directory posture APIs are not available in this deployment. HiveArmor will not invent domain health, Tier‑0 paths, or privileged changes from incomplete data — empty KPIs here mean the contract is missing, not that the directory is safe.</span><a href="#ad-contract-state">View contract state</a></div> : !query.isLoading && rows.length === 0 ? <div className="adp-state" role="status"><ShieldCheck size={28} /><strong>{hasFilters ? 'No directory records match these filters' : 'No directory observations available'}</strong><span>{hasFilters ? 'Clear filters or broaden the authorized domain scope.' : 'Connect directory sensors to establish posture and change visibility.'}</span>{hasFilters && <button type="button" onClick={reset}>Clear filters</button>}</div> : <main className="adp-grid-wrap"><SiemDataGrid key={view} ref={gridRef} className="response-grid adp-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} loading={query.isLoading} rowSelection="single" onRowClicked={(event: RowClickedEvent) => setSelected(event.data as AdRow)} getRowId={(params) => String((params.data as AdRow).id)} defaultColDef={{ filter: false }} ariaLabel="Active Directory posture inventory" /></main>}
+      {query.isError && !query.data ? (
+        <div className="adp-inline-state" role="alert"><AlertTriangle size={28} /><strong>Directory posture unavailable</strong><span>{query.error instanceof Error ? query.error.message : 'The authorized directory projection could not be loaded.'}</span><button type="button" onClick={() => query.refetch()}>Retry</button></div>
+      ) : showContractMissingHonesty ? null : showEmptyHonesty ? (
+        <div className="adp-inline-state" role="status"><ShieldCheck size={28} /><strong>No directory observations available</strong><span>Connect directory sensors to establish posture and change visibility. User identity inventory may still be available on Identities.</span></div>
+      ) : !query.isLoading && rows.length === 0 && hasFilters ? (
+        <div className="adp-inline-state" role="status"><ShieldCheck size={28} /><strong>No directory records match these filters</strong><span>Clear filters or broaden the authorized domain scope.</span><button type="button" onClick={reset}>Clear filters</button></div>
+      ) : !showContractMissingHonesty && !showEmptyHonesty ? (
+        <main className="adp-inventory"><div className="adp-grid-wrap"><SiemDataGrid key={view} ref={gridRef} className="response-grid adp-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} loading={query.isLoading} rowSelection="single" onRowClicked={(event: RowClickedEvent) => setSelected(event.data as AdRow)} getRowId={(params) => String((params.data as AdRow).id)} defaultColDef={{ filter: false }} ariaLabel="Active Directory posture inventory" /></div></main>
+      ) : null}
 
       <footer className="adp-pagination" aria-label="Directory posture pagination"><span>{missingContract ? 'Contract not implemented' : `${query.data?.total.toLocaleString() ?? 0} matching records`}</span><span>Page {page + 1} · up to {PAGE_SIZE} rows</span><div><button type="button" disabled={page === 0 || query.isFetching || missingContract} onClick={() => { setPage((current) => Math.max(0, current - 1)); setActiveIndex(0); }}><ChevronLeft size={13} />Previous</button><button type="button" disabled={missingContract || !query.data?.cursor || query.isFetching} onClick={() => { const cursor = query.data?.cursor; if (!cursor) return; setCursors((current) => { const next = current.slice(0, page + 1); next[page + 1] = cursor; return next; }); setPage((current) => current + 1); setActiveIndex(0); }}>Next<ChevronRight size={13} /></button></div></footer>
       <StatusDock className="adp-status" sseConnected={activeDirectoryFixtureMode || eps.connected} eps={activeDirectoryFixtureMode ? 12840 : eps.eps} mode={activeDirectoryFixtureMode ? 'historical' : 'live'} lastUpdated={query.dataUpdatedAt ? new Date(query.dataUpdatedAt) : undefined} />
       {selected && <AdDetailDrawer row={selected} onClose={() => setSelected(null)} />}
-      <span id="ad-contract-state" className="adp-sr-only">Active Directory posture contract state: {query.data?.contractState ?? 'unavailable'}</span>
+      <span className="adp-sr-only">Active Directory posture contract state: {query.data?.contractState ?? 'unavailable'}</span>
     </section>
   );
 }
