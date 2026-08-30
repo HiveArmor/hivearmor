@@ -58,4 +58,21 @@ describe('Wave B2 Posture & compliance honesty', () => {
     expect(service).not.toContain('/ha-clients');
     expect(service).not.toContain('/ha-network-scans');
   });
+
+  it('B2-ID-03 (Prompt 24): identities page uses honesty chrome and canonical /ha-entities only', () => {
+    const page = readFileSync(join(process.cwd(), 'src/pages/posture/identities/IdentitiesPage.tsx'), 'utf8');
+    const service = readFileSync(join(process.cwd(), 'src/pages/posture/identities/identity.service.ts'), 'utf8');
+    expect(page).toContain('POSTURE_IDENTITIES_JOB_SENTENCE');
+    expect(page).toContain('STAGING CANDIDATE');
+    expect(page).toContain('identities-empty-honesty');
+    expect(page).toContain('ROUTES.ASSETS');
+    expect(page).toContain('ROUTES.ENTITIES');
+    expect(page).toContain('ROUTES.ACTIVE_DIRECTORY');
+    expect(page).not.toContain('idp-summary');
+    expect(page).not.toMatch(/href="\/posture\//);
+    expect(service).toContain('/ha-entities');
+    expect(service).not.toContain('fetchIdentityRiskDetail');
+    expect(service).not.toContain('/ha-entities/${id}/risk');
+    expect(service).toContain('privileged: null');
+  });
 });

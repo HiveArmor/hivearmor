@@ -1,3 +1,10 @@
+/**
+ * Posture Identities — inventory-first identity hub (Prompt 24 / Wave B2).
+ *
+ * Production inventory: GET /api/ha-entities?types=user + summary + preview.
+ * Partial contract: only total + highRisk from summary; privileged/nonHuman/controlGaps/stale are null.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
@@ -15,7 +22,6 @@ import {
   Clock3,
   Copy,
   ExternalLink,
-  Eye,
   Fingerprint,
   History,
   KeyRound,
@@ -32,6 +38,7 @@ import {
   UsersRound,
   Workflow,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import {
   fetchIdentityPosture,
@@ -56,6 +63,7 @@ import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect'
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
+import { ROUTES } from '@/constants/routes.constants';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
@@ -63,6 +71,10 @@ import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standa
 
 import './IdentitiesPage.css';
 import '../../response/response-grid-standard.css';
+
+/** Bundle-visible job sentence — posture identity inventory, not entity dossier or asset host inventory. */
+export const POSTURE_IDENTITIES_JOB_SENTENCE =
+  'Identity posture inventory — review user and service identities, risk scores, privilege signals, and control gaps across authorized tenants. Full entity dossiers live on Entities; host posture lives on Assets.';
 
 const PAGE_SIZE = 50;
 
@@ -142,7 +154,7 @@ function AuthCell({ item }: { item: IdentityPostureItem }): JSX.Element {
 }
 
 function IdentityDrawer({ item, onClose }: { item: IdentityPostureItem; onClose: () => void }): JSX.Element {
-  const [tab, setTab] = useState<'overview' | 'signals' | 'access' | 'activity'>('overview');
+  const [tab, setTab] = useState<'overview' | 'risk' | 'controls' | 'activity'>('overview');
   const query = useQuery({
     queryKey: ['identity-posture-preview', item.id],
     queryFn: ({ signal }) => fetchIdentityPreview(item, signal),
@@ -150,8 +162,10 @@ function IdentityDrawer({ item, onClose }: { item: IdentityPostureItem; onClose:
     retry: 1,
   });
   const preview: IdentityPosturePreview | undefined = query.data;
-  const dossier = item.pivots.find((pivot) => pivot.type === 'dossier')?.route ?? `/entities/${encodeURIComponent(item.id)}`;
-  const hunt = item.pivots.find((pivot) => pivot.type === 'hunt')?.route ?? `/search?query=${encodeURIComponent(`user.name:"${item.value}"`)}`;
+  const dossierPivot = item.pivots.find((pivot) => pivot.type === 'dossier');
+  const dossierTo = dossierPivot?.route ?? `${ROUTES.ENTITIES}/${encodeURIComponent(item.id)}`;
+  const huntTo = item.pivots.find((pivot) => pivot.type === 'hunt')?.route
+    ?? `${ROUTES.SEARCH}?query=${encodeURIComponent(`user.name:"${item.value}"`)}`;
   const unavailable = preview?.dataCompleteness === 'partial';
 
   return (
@@ -161,7 +175,7 @@ function IdentityDrawer({ item, onClose }: { item: IdentityPostureItem; onClose:
       title={item.displayName}
       subtitle={`${identityKindLabel(item.kind)} identity · ${item.tenantName ?? 'authorized scope'}`}
       width={560}
-      footer={<><a className="idp-drawer-action" href={dossier}><ExternalLink size={13} />Open dossier</a><a className="idp-drawer-action idp-drawer-action--primary" href={hunt}><Search size={13} />Hunt activity</a></>}
+      footer={<><Link className="idp-drawer-action" to={dossierTo}><ExternalLink size={13} />Open dossier</Link><Link className="idp-drawer-action idp-drawer-action--primary" to={huntTo}><Search size={13} />Hunt activity</Link></>}
     >
       <div className="idp-drawer">
         <section className="idp-drawer__hero">
@@ -171,7 +185,7 @@ function IdentityDrawer({ item, onClose }: { item: IdentityPostureItem; onClose:
         </section>
 
         <nav className="idp-drawer-tabs" aria-label="Identity context views">
-          {(['overview', 'signals', 'access', 'activity'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={tab === value} onClick={() => setTab(value)}>{value}</button>)}
+          {(['overview', 'risk', 'controls', 'activity'] as const).map((value) => <button key={value} type="button" role="tab" aria-selected={tab === value} onClick={() => setTab(value)}>{value}</button>)}
         </nav>
 
         {query.isLoading && <div className="idp-drawer-state" role="status"><span className="idp-loader" /><strong>Loading identity context</strong><small>Fetching a bounded risk and control projection.</small></div>}
@@ -179,7 +193,7 @@ function IdentityDrawer({ item, onClose }: { item: IdentityPostureItem; onClose:
 
         {preview && tab === 'overview' && <>
           {unavailable && <div className="idp-drawer-notice"><AlertTriangle size={14} /><span>Authentication, privilege and credential posture are not exposed by the current production contract. Unknown is preserved as unknown.</span></div>}
-          <section className="idp-intelligence"><header><Sparkles size={14} /><strong>Hive Intelligence</strong><span>Analyst review required</span></header><p>{preview.intelligenceSummary ?? 'An AI risk narrative is unavailable until governed identity signals and provenance are exposed by the backend.'}</p><a href={`/intelligence?entity=${encodeURIComponent(item.id)}`}><BrainCircuit size={12} />Investigate with Hive Intelligence</a></section>
+          <section className="idp-intelligence"><header><Sparkles size={14} /><strong>Hive Intelligence</strong><span>Analyst review required</span></header><p>{preview.intelligenceSummary ?? 'An AI risk narrative is unavailable until governed identity signals and provenance are exposed by the backend.'}</p><Link to={`${ROUTES.INTELLIGENCE}?entity=${encodeURIComponent(item.id)}`}><BrainCircuit size={12} />Investigate with Hive Intelligence</Link></section>
           <section className="idp-drawer-card"><header><Fingerprint size={14} /><div><strong>Identity and ownership</strong><span>Directory and business context</span></div></header><dl className="idp-detail-grid">
             <div><dt>Principal</dt><dd>{preview.value}</dd></div><div><dt>Account state</dt><dd>{preview.accountState}</dd></div>
             <div><dt>Department</dt><dd>{preview.department ?? 'Unknown'}</dd></div><div><dt>Role / title</dt><dd>{preview.jobTitle ?? 'Unknown'}</dd></div>
@@ -191,12 +205,12 @@ function IdentityDrawer({ item, onClose }: { item: IdentityPostureItem; onClose:
             <div data-state={preview.conditionalAccess === 'enforced' ? 'healthy' : preview.conditionalAccess === 'missing' ? 'danger' : 'warning'}><LockKeyhole size={14} /><span>Access policy</span><strong>{preview.conditionalAccess}</strong></div>
             <div data-state={preview.credentialExposure === 'none' ? 'healthy' : preview.credentialExposure === 'unknown' ? 'unknown' : 'danger'}><ShieldAlert size={14} /><span>Credentials</span><strong>{preview.credentialExposure}</strong></div>
           </section>
-          <section className="idp-drawer-card"><header><Workflow size={14} /><div><strong>Recommended analyst path</strong><span>Review evidence before disruptive response</span></div></header>{preview.recommendedActions.length ? <ol className="idp-actions-list">{preview.recommendedActions.map((action) => <li key={action}>{action}</li>)}</ol> : <p className="idp-empty-copy">Recommendations require an authoritative identity posture projection.</p>}{preview.permissions.requestRemediation && <a className="idp-remediation" href={`/response/playbooks/new?identity=${encodeURIComponent(item.id)}&template=identity-containment`}><Workflow size={12} />Preview governed remediation</a>}</section>
+          <section className="idp-drawer-card"><header><Workflow size={14} /><div><strong>Recommended analyst path</strong><span>Review evidence before disruptive response</span></div></header>{preview.recommendedActions.length ? <ol className="idp-actions-list">{preview.recommendedActions.map((action) => <li key={action}>{action}</li>)}</ol> : <p className="idp-empty-copy">Recommendations require an authoritative identity posture projection.</p>}{preview.permissions.requestRemediation && <Link className="idp-remediation" to={`${ROUTES.RESPONSE_PLAYBOOKS}/new?identity=${encodeURIComponent(item.id)}&template=identity-containment`}><Workflow size={12} />Preview governed remediation</Link>}</section>
         </>}
 
-        {preview && tab === 'signals' && <section className="idp-drawer-card"><header><ShieldAlert size={14} /><div><strong>Risk signals</strong><span>Why this identity is prioritized</span></div></header>{preview.riskSignals.length ? <ul className="idp-signal-list">{preview.riskSignals.map((signal) => <li key={signal.id} data-level={signal.severity}><span /><div><strong>{signal.label}</strong><p>{signal.description}</p><small>{signal.source} · {signal.evidenceCount} evidence · +{signal.contribution} risk</small></div></li>)}</ul> : <p className="idp-empty-copy">Risk score drivers and provenance are unavailable from the current identity contract.</p>}<div className="idp-calculated"><History size={12} />Calculated {formatDateTime(preview.riskCalculatedAt)}</div></section>}
+        {preview && tab === 'risk' && <section className="idp-drawer-card"><header><ShieldAlert size={14} /><div><strong>Risk signals</strong><span>Why this identity is prioritized</span></div></header>{preview.riskSignals.length ? <ul className="idp-signal-list">{preview.riskSignals.map((signal) => <li key={signal.id} data-level={signal.severity}><span /><div><strong>{signal.label}</strong><p>{signal.description}</p><small>{signal.source} · {signal.evidenceCount} evidence · +{signal.contribution} risk</small></div></li>)}</ul> : <p className="idp-empty-copy">Risk score drivers and provenance are unavailable from the current identity contract.</p>}<div className="idp-calculated"><History size={12} />Calculated {formatDateTime(preview.riskCalculatedAt)}</div></section>}
 
-        {preview && tab === 'access' && <><section className="idp-access-summary"><div><span>Privilege tier</span><strong>{preview.privilege.replace('_', ' ')}</strong></div><div><span>Active sessions</span><strong>{preview.activeSessions ?? '—'}</strong></div><div><span>Risky sign-ins · 30d</span><strong>{preview.riskySignIns30d ?? '—'}</strong></div></section><section className="idp-drawer-card"><header><Link2 size={14} /><div><strong>Effective access and blast radius</strong><span>Direct and inherited reachability</span></div></header>{preview.accessPaths.length ? <ul className="idp-access-list">{preview.accessPaths.map((path) => <li key={path.id} data-level={path.criticality}><span>{path.type}</span><strong>{path.label}</strong><small>{path.inherited ? 'Inherited' : 'Direct'}</small></li>)}</ul> : <p className="idp-empty-copy">Effective roles, nested groups and lateral movement paths are unavailable.</p>}</section></>}
+        {preview && tab === 'controls' && <><section className="idp-access-summary"><div><span>Privilege tier</span><strong>{preview.privilege.replace('_', ' ')}</strong></div><div><span>Active sessions</span><strong>{preview.activeSessions ?? '—'}</strong></div><div><span>Risky sign-ins · 30d</span><strong>{preview.riskySignIns30d ?? '—'}</strong></div></section><section className="idp-drawer-card"><header><Link2 size={14} /><div><strong>Effective access and blast radius</strong><span>Direct and inherited reachability</span></div></header>{preview.accessPaths.length ? <ul className="idp-access-list">{preview.accessPaths.map((path) => <li key={path.id} data-level={path.criticality}><span>{path.type}</span><strong>{path.label}</strong><small>{path.inherited ? 'Inherited' : 'Direct'}</small></li>)}</ul> : <p className="idp-empty-copy">Effective roles, nested groups and lateral movement paths are unavailable.</p>}</section></>}
 
         {preview && tab === 'activity' && <section className="idp-drawer-card"><header><Activity size={14} /><div><strong>Identity activity</strong><span>Recent risk and control events</span></div></header>{preview.activity.length ? <ol className="idp-activity-list">{preview.activity.map((event) => <li key={event.id} data-state={event.state}><span /><div><strong>{event.title}</strong><p>{event.detail}</p><small>{formatDateTime(event.occurredAt)} · {event.source}</small></div></li>)}</ol> : <p className="idp-empty-copy">A bounded identity-specific risk timeline is not available.</p>}</section>}
       </div>
@@ -281,23 +295,65 @@ export function IdentitiesPage(): JSX.Element {
   const resetFilters = useCallback(() => { setView('all'); setRisk('all'); setKind('all'); setAuth('all'); setSort('risk_desc'); setSearchDraft(''); }, []);
   const errorMessage = query.error instanceof Error ? query.error.message : 'The authorized identity projection could not be loaded.';
   const forbidden = /403|forbidden|permission/i.test(errorMessage);
+  const showEmptyHonesty = !query.isLoading && !query.isError && rows.length === 0 && !hasFilters;
+  const projectionNote = query.data?.partialFailures?.length
+    ? query.data.partialFailures[0]?.message
+    : null;
 
   return (
-    <section className="idp-page" data-fixture={identityFixtureMode || undefined} aria-label="Identity security posture">
-      <header className="idp-header"><div className="idp-header__identity"><span className="idp-header__mark"><Fingerprint size={19} /></span><div><span>Posture &amp; exposure</span><h1>Identity Security</h1></div></div><div className="idp-header__actions"><span className="idp-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect</span><a href="/posture/assets"><Eye size={13} />Assets</a><a href="/posture/exposure"><ShieldAlert size={13} />Exposure</a><a href="/entities"><UsersRound size={13} />Entities</a><button type="button" onClick={() => query.refetch()} disabled={query.isFetching} aria-label="Refresh identity posture"><RefreshCw size={14} className={query.isFetching ? 'idp-spin' : undefined} /></button></div></header>
+    <section className="idp-page" data-fixture={identityFixtureMode || undefined} aria-label="Posture identity inventory">
+      <header className="idp-header">
+        <div className="idp-header__identity">
+          <span className="idp-header__mark"><Fingerprint size={19} aria-hidden="true" /></span>
+          <div>
+            <div className="idp-header__eyebrow">
+              <span>POSTURE</span>
+              <span className="idp-header__badge">STAGING CANDIDATE</span>
+            </div>
+            <h1>Identities</h1>
+            <p className="idp-header__job">{POSTURE_IDENTITIES_JOB_SENTENCE}</p>
+            {projectionNote && (
+              <p className="idp-page__projection-note" role="note" id="identity-contract-state">
+                {projectionNote} Inventory API: GET /api/ha-entities?types=user — privileged, non-human, control-gap, and stale counters unavailable until backend projection ships.
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="idp-header__actions">
+          <span className="idp-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> inspect</span>
+          <button type="button" onClick={() => query.refetch()} disabled={query.isFetching} aria-label="Refresh identity inventory"><RefreshCw size={14} className={query.isFetching ? 'idp-spin' : undefined} /></button>
+        </div>
+      </header>
+
+      <p className="idp-page__meta">
+        <Link to={ROUTES.DASHBOARD}>Mission Control</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.ASSETS}>Assets</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.ENTITIES}>Entities</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.EXPOSURE}>Exposure</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.VULNERABILITIES}>Vulnerabilities</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.ACTIVE_DIRECTORY}>Active Directory</Link>
+        <span aria-hidden="true">·</span>
+        <span className="idp-page__access">Analyst · SOC Manager · Platform Administrator</span>
+      </p>
+
       {identityFixtureMode && <div className="idp-fixture"><strong>Design fixture:</strong> fictional identity-risk and access records are enabled for visual review.<span>Production never receives these records.</span></div>}
 
-      <section className="idp-summary" aria-label="Identity posture summary">
-        <button type="button" onClick={() => selectView('all')} data-active={view === 'all'}><span><UsersRound size={13} />Known identities</span><strong>{summary?.total.toLocaleString() ?? '—'}</strong><small>authorized identity fabric</small></button>
-        <button type="button" onClick={() => selectView('high_risk')} data-tone="critical" data-active={view === 'high_risk'}><span><ShieldAlert size={13} />High risk</span><strong>{summary?.highRisk.toLocaleString() ?? '—'}</strong><small>critical or high confidence</small></button>
-        <button type="button" disabled={!identityFilterAvailability.posture} onClick={() => selectView('privileged')} data-tone="warning" data-active={view === 'privileged'}><span><KeyRound size={13} />Privileged</span><strong>{summary?.privileged ?? '—'}</strong><small>{summary?.privileged == null ? 'projection unavailable' : 'tier 0 or elevated access'}</small></button>
-        <button type="button" disabled={!identityFilterAvailability.kind} onClick={() => selectView('non_human')} data-tone="info" data-active={view === 'non_human'}><span><Bot size={13} />Non-human</span><strong>{summary?.nonHuman ?? '—'}</strong><small>{summary?.nonHuman == null ? 'projection unavailable' : 'service and workload identities'}</small></button>
-        <button type="button" disabled={!identityFilterAvailability.auth} onClick={() => selectView('control_gaps')} data-tone="danger" data-active={view === 'control_gaps'}><span><ShieldQuestion size={13} />Control gaps</span><strong>{summary?.controlGaps ?? '—'}</strong><small>{summary?.controlGaps == null ? 'projection unavailable' : 'authentication or policy exposure'}</small></button>
-        <button type="button" disabled={!identityFilterAvailability.posture} onClick={() => selectView('stale')} data-tone="warning" data-active={view === 'stale'}><span><Clock3 size={13} />Stale access</span><strong>{summary?.stale ?? '—'}</strong><small>{summary?.stale == null ? 'projection unavailable' : 'not observed in 30 days'}</small></button>
-      </section>
+      {showEmptyHonesty && (
+        <div className="identities-empty-honesty" role="status" data-testid="identities-empty-honesty">
+          <strong>No identities observed in authorized tenant scope.</strong>
+          <span>
+            An empty inventory does not imply platform health — connect an identity provider or ingest authentication telemetry. Entity dossiers on Entities may still have behavioral risk data from other sources.
+          </span>
+        </div>
+      )}
 
       <section className="idp-operations">
-        <nav className="idp-tabs" aria-label="Identity posture views">{VIEW_OPTIONS.map(({ value, label, icon: Icon }) => { const disabled = !identityFixtureMode && ['privileged', 'non_human', 'control_gaps', 'stale'].includes(value); return <button key={value} type="button" disabled={disabled} title={disabled ? 'Requires the identity posture backend contract' : undefined} data-active={view === value} onClick={() => selectView(value)}><Icon size={13} />{label}</button>; })}</nav>
+        <nav className="idp-tabs" aria-label="Identity posture views">{VIEW_OPTIONS.map(({ value, label, icon: Icon }) => { const disabled = !identityFixtureMode && ['privileged', 'non_human', 'control_gaps', 'stale'].includes(value); return <button key={value} type="button" disabled={disabled} title={disabled ? 'Projection unavailable — requires the identity posture backend contract' : undefined} data-active={view === value} onClick={() => selectView(value)}><Icon size={13} />{label}</button>; })}</nav>
         <div className="idp-toolbar" role="toolbar" aria-label="Identity posture filters">
           <label className="idp-search"><Search size={14} /><input ref={searchRef} type="search" value={searchDraft} onChange={(event) => setSearchDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Escape') setSearchDraft(''); }} placeholder="Search identity, owner, tenant, tag…" aria-label="Search identities" /><kbd>/</kbd></label>
           <HaCompactSelect ariaLabel="Filter by risk" label="Risk" value={risk} options={RISK_OPTIONS} onChange={setRisk} />
@@ -309,16 +365,27 @@ export function IdentitiesPage(): JSX.Element {
         </div>
       </section>
 
-      {Boolean(query.data?.partialFailures.length) && <div className="idp-warning" role="status"><AlertTriangle size={14} /><span>{query.data?.partialFailures[0]?.message}</span><a href="#identity-contract-state">Review unavailable controls</a></div>}
+      <div className="idp-results-toolbar">
+        <div>
+          <strong>{VIEW_OPTIONS.find((option) => option.value === view)?.label}</strong>
+          <span>{query.data ? `${rows.length} loaded · ${query.data.total.toLocaleString()} matching` : 'bounded authorized projection'}</span>
+          {summary && (
+            <span className="idp-inline-stats" aria-label="Inventory summary">
+              <span>{summary.total.toLocaleString()} total</span>
+              {summary.highRisk != null && <span data-tone="danger">{summary.highRisk.toLocaleString()} high risk</span>}
+            </span>
+          )}
+          {hasFilters && rows.length > 0 && <button type="button" onClick={resetFilters}>Clear filters</button>}
+        </div>
+        <div className="idp-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button></div>
+      </div>
 
-      <div className="idp-results-toolbar"><div><strong>{VIEW_OPTIONS.find((option) => option.value === view)?.label}</strong><span>{query.data ? `${rows.length} loaded · ${query.data.total.toLocaleString()} matching` : 'bounded authorized projection'}</span>{hasFilters && <button type="button" onClick={resetFilters}>Clear filters</button>}</div><div className="idp-density" role="group" aria-label="Row density"><span>Rows</span><button type="button" aria-label="Compact rows" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}><List size={15} /></button><button type="button" aria-label="Standard rows" aria-pressed={density === 'standard'} onClick={() => setDensity('standard')}><AlignJustify size={15} /></button><button type="button" aria-label="Comfortable rows" aria-pressed={density === 'comfortable'} onClick={() => setDensity('comfortable')}><AlignJustify size={18} /></button></div></div>
-
-      {query.isError && !query.data ? <div className="idp-inline-state" role="alert"><AlertTriangle size={26} /><strong>{forbidden ? 'Identity posture access denied' : 'Identity posture unavailable'}</strong><span>{forbidden ? 'Your current role or tenant scope does not permit this identity inventory.' : errorMessage}</span>{!forbidden && <button type="button" onClick={() => query.refetch()}>Retry identity posture</button>}</div> : !query.isLoading && rows.length === 0 ? <div className="idp-inline-state" role="status"><ShieldCheck size={26} /><strong>{hasFilters ? 'No identities match these filters' : 'No identities observed'}</strong><span>{hasFilters ? 'Clear filters or broaden the authorized scope.' : 'Connect an identity provider or ingest authentication telemetry to build the identity inventory.'}</span>{hasFilters && <button type="button" onClick={resetFilters}>Clear filters</button>}</div> : <main className="idp-grid-wrap"><SiemDataGrid ref={gridRef} className="response-grid idp-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} loading={query.isLoading} rowSelection="single" suppressRowClickSelection={false} onRowClicked={(event: RowClickedEvent) => setSelected(event.data as IdentityPostureItem)} getRowId={(params) => String((params.data as IdentityPostureItem).id)} defaultColDef={{ filter: false }} ariaLabel="Identity security posture inventory" /></main>}
+      {query.isError && !query.data ? <div className="idp-inline-state" role="alert"><AlertTriangle size={26} /><strong>{forbidden ? 'Identity posture access denied' : 'Identity posture unavailable'}</strong><span>{forbidden ? 'Your current role or tenant scope does not permit this identity inventory.' : errorMessage}</span>{!forbidden && <button type="button" onClick={() => query.refetch()}>Retry identity posture</button>}</div> : !query.isLoading && rows.length === 0 && hasFilters ? <div className="idp-inline-state" role="status"><ShieldCheck size={26} /><strong>No identities match these filters</strong><span>Clear filters or broaden the authorized scope.</span><button type="button" onClick={resetFilters}>Clear filters</button></div> : !showEmptyHonesty ? <main className="idp-inventory"><div className="idp-grid-wrap"><SiemDataGrid ref={gridRef} className="response-grid idp-grid" columnDefs={columns} rowData={rows} rowHeight={RESPONSE_GRID_ROW_HEIGHTS[density]} loading={query.isLoading} rowSelection="single" suppressRowClickSelection={false} onRowClicked={(event: RowClickedEvent) => setSelected(event.data as IdentityPostureItem)} getRowId={(params) => String((params.data as IdentityPostureItem).id)} defaultColDef={{ filter: false }} ariaLabel="Posture identity inventory" /></div></main> : null}
 
       <footer className="idp-pagination" aria-label="Identity posture pagination"><span>{query.data?.total.toLocaleString() ?? 0} matching identities</span><span>Page {page + 1} · up to {PAGE_SIZE} rows</span><div><button type="button" disabled={page === 0 || query.isFetching} onClick={() => { setPage((current) => Math.max(0, current - 1)); setActiveIndex(0); }}><ChevronLeft size={13} />Previous</button><button type="button" disabled={!query.data?.cursor || query.isFetching} onClick={() => { const cursor = query.data?.cursor; if (!cursor) return; setCursors((current) => { const next = current.slice(0, page + 1); next[page + 1] = cursor; return next; }); setPage((current) => current + 1); setActiveIndex(0); }}>Next<ChevronRight size={13} /></button></div></footer>
       <StatusDock className="idp-status" sseConnected={identityFixtureMode || eps.connected} eps={identityFixtureMode ? 12840 : eps.eps} mode={identityFixtureMode ? 'historical' : 'live'} lastUpdated={query.dataUpdatedAt ? new Date(query.dataUpdatedAt) : undefined} />
       {selected && <IdentityDrawer item={selected} onClose={() => setSelected(null)} />}
-      <span id="identity-contract-state" className="idp-sr-only">Identity posture contract state: {query.data?.contractState ?? 'unavailable'}</span>
+      <span className="idp-sr-only">Identity posture contract state: {query.data?.contractState ?? 'unavailable'}</span>
     </section>
   );
 }
