@@ -23,6 +23,7 @@ export const ROUTES = {
   INVESTIGATIONS: '/investigations',
   ENTITIES: '/entities',
   INTELLIGENCE: '/intelligence',
+  CONSTELLATION: '/constellation',
 
   // DEFEND
   DETECTION_RULES: '/detection-rules',
