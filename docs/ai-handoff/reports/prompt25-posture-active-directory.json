@@ -1,0 +1,100 @@
+{
+  "prompt": "25-posture-active-directory-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "d9759fa",
+  "based_on_main_includes_pr24": true,
+  "decision": "RESTRUCTURE",
+  "routes": ["/posture/active-directory"],
+  "job_sentence": "Active Directory posture — review domain assessments, trust relationships, privileged changes, and identity infrastructure health across authorized domains. User identity inventory lives on Identities; host posture lives on Assets.",
+  "distinction": {
+    "active_directory": "/posture/active-directory = AD domain posture — assessments, trusts, privileged changes, identity infrastructure (this slice)",
+    "identities": "/posture/identities = user/service identity inventory (Prompt 24)",
+    "assets": "/posture/assets = host/asset posture inventory (Prompt 23)",
+    "entities": "/entities = entity dossier + behavioral timeline",
+    "exposure": "/posture/exposure = attack-path analysis (Prompt 26)",
+    "vulnerabilities": "/posture/vulnerabilities = vuln findings inventory"
+  },
+  "ia": {
+    "posture_active_directory": {
+      "removed": [
+        "Hero .adp-summary 6-tile KPI strip",
+        "Legacy Identity threat exposure eyebrow and Active Directory Security title",
+        "Raw <a href> header and drawer cross-links",
+        "Separate .adp-warning partial-failure banner"
+      ],
+      "added": [
+        "POSTURE_ACTIVE_DIRECTORY_JOB_SENTENCE + STAGING CANDIDATE badge (POSTURE eyebrow)",
+        "Meta cross-links: Mission Control · Identities · Assets · Entities · Exposure · Vulnerabilities (Link + ROUTES)",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator",
+        "Missing-contract honesty banner (ad-contract-missing-honesty) distinct from filter-empty and API error",
+        "Grid workspace min-height 50vh (.adp-inventory)",
+        "Compact inline stats in results toolbar (.adp-inline-stats) when summary exists",
+        "Partial-failure folded into adp-page__projection-note",
+        "ActiveDirectoryUxHonesty.sourceScan.test.ts",
+        "Drawer pivot to Exposure via Link + ROUTES"
+      ],
+      "kept": [
+        "View tabs: assessments · domains & trusts · privileged changes · identity infrastructure",
+        "Compact filters: domain · risk · category · time window · search",
+        "AG Grid inventory (fixture mode), cursor pagination, row density, J/K/Enter/ shortcuts",
+        "AD detail drawer",
+        "activeDirectoryFixtureMode dev-only",
+        "Distinction: missing contract ≠ empty inventory ≠ filter-empty"
+      ],
+      "forbidden": [
+        "Fake domain health, Tier-0 paths, privileged changes, or posture scores",
+        "Legacy AD compatibility empties (getAdReportSummary, getAdDomainSummary)",
+        "Any unverified /api/ha-ad-* path without backend source confirmation"
+      ]
+    }
+  },
+  "backend": {
+    "ad_posture": {
+      "status": "NOT_IMPLEMENTED",
+      "label": "AD-CONTRACT-MISSING-STAGING",
+      "frontend_contract": "fetchAdPosture returns contractState: 'missing' with null summary fields",
+      "staging_probe": {
+        "auth": "admin JWT via staging VM (token field, not id_token)",
+        "account_control": { "path": "GET /api/account", "http": 200, "body_bytes": 422 },
+        "candidate_paths": [
+          { "path": "GET /api/ha-ad-posture", "http": 500, "body_bytes": 314, "note": "No backend resource — generic error" },
+          { "path": "GET /api/ha-ad-posture/summary", "http": 500, "body_bytes": 322 },
+          { "path": "GET /api/ha-active-directory", "http": 500, "body_bytes": 320 },
+          { "path": "GET /api/ha-posture/active-directory", "http": 500, "body_bytes": 328 },
+          { "path": "GET /api/ha-posture/ad", "http": 500, "body_bytes": 314 }
+        ],
+        "verdict": "AD-CONTRACT-MISSING-STAGING — no verified AD posture endpoint in backend source"
+      }
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "dist build contains POSTURE_ACTIVE_DIRECTORY_JOB_SENTENCE, STAGING CANDIDATE, ad-contract-missing-honesty, Analyst · SOC Manager · Platform Administrator",
+    "ui_shell": {
+      "path": "/posture/active-directory",
+      "staging_https": "api_probed_admin_jwt_ok",
+      "fe_deploy": "not_run_local_build_only"
+    },
+    "headed_browser": false,
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_mission_control_identities_assets_entities_exposure_vulns", "result": "pass" },
+      { "item": "missing_contract_honesty_banner_wired", "result": "pass" },
+      { "item": "api_error_distinct_from_missing_contract", "result": "pass" },
+      { "item": "filter_empty_distinct_from_empty_inventory", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_summary_exists", "result": "pass" },
+      { "item": "inventory_min_height_50vh", "result": "pass" },
+      { "item": "drawer_pivots_use_link_routes", "result": "pass" },
+      { "item": "staging_ad_contract_missing", "result": "pass", "label": "AD-CONTRACT-MISSING-STAGING" }
+    ]
+  },
+  "gates": {
+    "lint": "pass slice files (0 errors); repo lint 5 pre-existing warnings unrelated to this slice",
+    "type_check": "pass",
+    "vitest_ad_slice": "pass (17)",
+    "build": "pass"
+  },
+  "next_recommended": "/posture/exposure (Prompt 26)",
+  "handoff_at": "2026-08-30T15:55:00+05:30"
+}

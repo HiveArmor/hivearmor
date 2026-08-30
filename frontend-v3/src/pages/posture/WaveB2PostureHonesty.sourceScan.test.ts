@@ -75,4 +75,21 @@ describe('Wave B2 Posture & compliance honesty', () => {
     expect(service).not.toContain('/ha-entities/${id}/risk');
     expect(service).toContain('privileged: null');
   });
+
+  it('B2-AD-02 (Prompt 25): AD page uses honesty chrome and missing-contract projection', () => {
+    const page = readFileSync(join(process.cwd(), 'src/pages/posture/active-directory/ActiveDirectoryPage.tsx'), 'utf8');
+    const service = readFileSync(join(process.cwd(), 'src/services/active-directory.service.ts'), 'utf8');
+    expect(page).toContain('POSTURE_ACTIVE_DIRECTORY_JOB_SENTENCE');
+    expect(page).toContain('STAGING CANDIDATE');
+    expect(page).toContain('ad-contract-missing-honesty');
+    expect(page).toContain('ROUTES.IDENTITIES');
+    expect(page).toContain('ROUTES.ASSETS');
+    expect(page).toContain('ROUTES.ENTITIES');
+    expect(page).toContain('ROUTES.EXPOSURE');
+    expect(page).not.toContain('adp-summary');
+    expect(page).not.toMatch(/href="\/posture\//);
+    expect(service).toContain("contractState: 'missing'");
+    expect(service).not.toContain('getAdReportSummary');
+    expect(service).not.toContain('getAdDomainSummary');
+  });
 });

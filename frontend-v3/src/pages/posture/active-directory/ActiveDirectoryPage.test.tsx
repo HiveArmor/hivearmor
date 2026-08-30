@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ActiveDirectoryPage } from './ActiveDirectoryPage';
+import { ActiveDirectoryPage, POSTURE_ACTIVE_DIRECTORY_JOB_SENTENCE } from './ActiveDirectoryPage';
 
 import type { AdAssessmentDTO, AdPosturePage, AdRow } from '@/types/active-directory.types';
 
@@ -30,19 +31,31 @@ function state(overrides: Record<string, unknown> = {}) { return { data: page, i
 
 beforeEach(() => { vi.clearAllMocks(); useQuery.mockReturnValue(state()); });
 
+function renderPage(): ReturnType<typeof render> {
+  return render(
+    <MemoryRouter>
+      <ActiveDirectoryPage />
+    </MemoryRouter>,
+  );
+}
+
 describe('ActiveDirectoryPage', () => {
-  it('renders domain posture KPIs, coordinated views, filters and the operational dock', () => {
-    render(<ActiveDirectoryPage />);
-    expect(screen.getByRole('heading', { name: 'Active Directory Security' })).toBeDefined();
-    expect(screen.getByText('Posture score')).toBeDefined();
+  it('renders honesty chrome, coordinated views, filters and the operational dock', () => {
+    renderPage();
+    expect(screen.getByRole('heading', { name: 'Active Directory' })).toBeDefined();
+    expect(screen.getByText('STAGING CANDIDATE')).toBeDefined();
+    expect(screen.getByText(POSTURE_ACTIVE_DIRECTORY_JOB_SENTENCE)).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Identities' })).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Exposure' })).toBeDefined();
     expect(screen.getByRole('button', { name: /Domains & trusts/ })).toBeDefined();
     expect(screen.getByRole('combobox', { name: 'Filter by domain' })).toBeDefined();
     expect(screen.getByRole('grid', { name: 'Active Directory posture inventory' })).toBeDefined();
     expect(screen.getByTestId('status-dock')).toBeDefined();
+    expect(screen.queryByText('Posture score')).toBeNull();
   });
 
   it('opens progressive assessment detail with evidence and exposure paths', () => {
-    render(<ActiveDirectoryPage />);
+    renderPage();
     fireEvent.click(screen.getByRole('row', { name: assessment.title }));
     expect(screen.getByRole('dialog', { name: assessment.title })).toBeDefined();
     expect(screen.getByText('Hive Intelligence')).toBeDefined();
@@ -53,7 +66,7 @@ describe('ActiveDirectoryPage', () => {
   });
 
   it('supports slash focus and icon row-density controls', () => {
-    render(<ActiveDirectoryPage />);
+    renderPage();
     fireEvent.keyDown(window, { key: '/' });
     expect(document.activeElement).toBe(screen.getByRole('searchbox', { name: 'Search directory posture' }));
     expect(screen.getByRole('button', { name: 'Compact rows' })).toBeDefined();
@@ -61,18 +74,18 @@ describe('ActiveDirectoryPage', () => {
     expect(screen.getByRole('button', { name: 'Comfortable rows' })).toBeDefined();
   });
 
-  it('keeps missing backend, empty and error states distinct', () => {
+  it('keeps missing contract, empty and error states distinct', () => {
     useQuery.mockReturnValue(state({ data: { ...page, items: [], total: 0, contractState: 'missing', partialFailures: [{ source: 'ad', message: 'Backend required.' }] } }));
-    const { rerender } = render(<ActiveDirectoryPage />);
-    expect(screen.getByText('Active Directory backend integration required')).toBeDefined();
-    expect(screen.getByText(/empty KPIs here mean the contract is missing/)).toBeDefined();
+    const { rerender } = renderPage();
+    expect(screen.getByTestId('ad-contract-missing-honesty')).toBeDefined();
+    expect(screen.getByText(/missing contract is not an empty risk assessment/)).toBeDefined();
     expect(screen.getByText('Contract not implemented')).toBeDefined();
     expect(screen.queryByRole('grid', { name: 'Active Directory posture inventory' })).toBeNull();
     useQuery.mockReturnValue(state({ data: { ...page, items: [], total: 0 } }));
-    rerender(<ActiveDirectoryPage />);
+    rerender(<MemoryRouter><ActiveDirectoryPage /></MemoryRouter>);
     expect(screen.getByText('No directory observations available')).toBeDefined();
     useQuery.mockReturnValue(state({ data: undefined, isError: true, error: new Error('403 forbidden') }));
-    rerender(<ActiveDirectoryPage />);
+    rerender(<MemoryRouter><ActiveDirectoryPage /></MemoryRouter>);
     expect(screen.getByText('Directory posture unavailable')).toBeDefined();
   });
 });
