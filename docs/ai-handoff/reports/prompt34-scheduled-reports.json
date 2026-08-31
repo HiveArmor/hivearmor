@@ -1,0 +1,103 @@
+{
+  "prompt": "34-scheduled-reports-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "4808ef4",
+  "based_on_main_includes_pr31_pr32": true,
+  "branch": "feat/c1-reports-scheduled-honesty",
+  "decision": "RESTRUCTURE",
+  "wave_c1_slice": 4,
+  "routes": ["/reports/scheduled"],
+  "job_sentence": "Scheduled reporting — manage delivery schedules and last-execution stamps for authorized report definitions. Dashboard gallery and Studio stay under Dashboards; runtime panels open on selection; template inventory lives on Templates — this workspace does not author dashboards or claim artifact generation from schedule run.",
+  "wave_c1_program": {
+    "status": "IN_PROGRESS",
+    "slices": [
+      { "slice": 1, "prompt": 31, "route": "/dashboards", "job": "Dashboard gallery discover (merged)" },
+      { "slice": 2, "prompt": 32, "route": "/dashboards/studio", "job": "Studio authoring honesty (merged)" },
+      { "slice": 3, "prompt": 33, "route": "/dashboards/:id", "job": "Runtime panels honesty (parallel)" },
+      { "slice": 4, "prompt": 34, "route": "/reports/scheduled", "job": "Scheduled reporting honesty (this slice)" },
+      { "slice": 5, "prompt": 35, "route": "/reports/templates", "job": "Report templates honesty (parallel)" }
+    ]
+  },
+  "distinction": {
+    "gallery": "/dashboards = dashboard gallery discover (Prompt 31)",
+    "studio": "/dashboards/studio = low-code authoring (Prompt 32)",
+    "runtime": "/dashboards/:id = panel runtime (Prompt 33)",
+    "reports_scheduled": "/reports/scheduled = scheduled reporting workspace (this slice)",
+    "reports_templates": "/reports/templates = template inventory (Prompt 35)",
+    "compliance": "/compliance = framework assurance (Prompt 30)"
+  },
+  "ia": {
+    "reports_scheduled": {
+      "removed": [
+        "Thin wrapper that reused ReportingOperationsPage shared tabs/KPI strip for /reports/scheduled",
+        "Ambiguous Run semantics implying artifact generation"
+      ],
+      "added": [
+        "SCHEDULED_REPORTS_JOB_SENTENCE + STAGING CANDIDATE badge (SCHEDULED REPORTS eyebrow)",
+        "Meta cross-links: Gallery · Studio · Templates · Compliance (Link + ROUTES)",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator",
+        "Empty-inventory honesty (scheduled-reports-empty-honesty) distinct from filter-empty and API error",
+        "Projection note for legacy GET /api/ha-reports/scheduled + REP-004 stamp-only run",
+        "Stamp / Pause / Resume admin actions with honest toasts (no 'report generated')",
+        "ScheduledReportsUxHonesty.sourceScan.test.ts",
+        "StatusDock mode=historical (C1-LIVE-01)",
+        "Dedicated ScheduledReports.css (sched-* inventory min-height 50vh)"
+      ],
+      "kept": [
+        "AuthGate Analyst|SOC Manager|Admin (router)",
+        "reports.service schedule APIs (list/pause/resume/run)",
+        "CronHumanLabel for cadence display",
+        "Access restricted copy for non-Analyst roles"
+      ],
+      "forbidden": [
+        "Toast or copy claiming report generated from POST …/run",
+        "Fictional Northwind/Contoso tenants",
+        "Invented delivery-health endpoints",
+        "Editing /dashboards/:id or /reports/templates in this slice"
+      ]
+    }
+  },
+  "backend": {
+    "schedules_list": {
+      "path": "GET /api/ha-reports/scheduled",
+      "frontend_contract": "fetchScheduledReports",
+      "auth": "ROLE_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN",
+      "notes": "Legacy array response — bounded=false, tenantScoped=false until pagination headers exist"
+    },
+    "schedule_run": {
+      "path": "POST /api/ha-reports/scheduled/{id}/run",
+      "frontend_contract": "runScheduledReport",
+      "notes": "REP-004 — stamps lastExecutionTime only; UI toast is stamp-only"
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "ScheduledReportsPage contains STAGING CANDIDATE, scheduled-reports-empty-honesty, SCHEDULED_REPORTS_JOB_SENTENCE",
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_gallery_studio_templates_compliance", "result": "pass" },
+      { "item": "empty_inventory_honesty_banner_wired", "result": "pass" },
+      { "item": "api_error_distinct_from_empty_inventory", "result": "pass" },
+      { "item": "rep004_stamp_only_run_copy", "result": "pass" },
+      { "item": "statusdock_historical", "result": "pass" }
+    ]
+  },
+  "validation": {
+    "vitest_scheduled": "pass (16 tests)",
+    "eslint_scheduled_files": "pass",
+    "type_check": "pass",
+    "build": "pass"
+  },
+  "files": {
+    "research": "docs/ai-handoff/research/prompt34-scheduled-reports-oem.md",
+    "report": "docs/ai-handoff/reports/prompt34-scheduled-reports.json",
+    "page": "frontend-v3/src/pages/reports/ScheduledReportsPage.tsx",
+    "css": "frontend-v3/src/pages/reports/ScheduledReports.css",
+    "tests": [
+      "frontend-v3/src/pages/reports/ScheduledReportsPage.test.ts",
+      "frontend-v3/src/pages/reports/ScheduledReportsPage.access.test.tsx",
+      "frontend-v3/src/pages/reports/ScheduledReportsUxHonesty.sourceScan.test.ts"
+    ]
+  },
+  "wave_c1_note": "Prompt 34 continues Wave C1 after gallery+Studio merge — scheduled reporting honesty; templates remain Prompt 35."
+}

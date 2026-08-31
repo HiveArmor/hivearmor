@@ -23,6 +23,10 @@ vi.mock('./reports.service', () => ({
   runScheduledReport: vi.fn(),
 }));
 
+vi.mock('@/hooks/useEpsStream', () => ({
+  useEpsStream: () => ({ connected: false, eps: 0 }),
+}));
+
 function userWithRoles(roles: string[]): HaUser {
   return {
     id: 1,
@@ -61,7 +65,8 @@ describe('ScheduledReportsPage access', () => {
       selectedTenantId: 1,
     });
     renderPage();
-    expect(await screen.findByText('No scheduled reports')).toBeVisible();
+    expect(await screen.findByTestId('scheduled-reports-empty-honesty')).toBeVisible();
+    expect(screen.getByText('STAGING CANDIDATE')).toBeVisible();
     expect(screen.queryByText('Reporting access restricted')).toBeNull();
   });
 
