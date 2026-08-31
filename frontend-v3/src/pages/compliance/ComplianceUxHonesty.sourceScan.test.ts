@@ -55,8 +55,11 @@ describe('Compliance Assurance UX honesty (Prompt 30)', () => {
     expect(complianceService).toContain('/compliance/controls/');
     expect(complianceService).toContain('parseFrameworkStandardId');
     expect(complianceService).toContain('resolveFrameworkRepresentativeControl');
+    expect(complianceService).toContain('getSectionControlsPage');
+    expect(complianceService).toContain('CMP_SECTION_CONTROLS_PAGE_SIZE');
     expect(page).toContain('cmp-page__projection-note');
     expect(page).toContain('Control and evidence workspace');
+    expect(page).toContain('cmp-control-picker');
     expect(page).toContain('cmp-control-workspace');
     expect(page).toContain('cmp-control-mapping-empty');
     expect(page).toContain('No control outcomes were returned');

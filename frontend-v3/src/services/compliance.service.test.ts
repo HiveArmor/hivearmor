@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   complianceService,
@@ -100,5 +100,49 @@ describe('complianceService.resolveFrameworkRepresentativeControl', () => {
       controlId: 101,
       controlName: 'Asset inventory',
     });
+  });
+});
+
+describe('complianceService.getSectionControlsPage', () => {
+  const originalFetch = globalThis.fetch;
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  beforeEach(() => {
+    mockGet.mockReset();
+  });
+
+  it('returns items and X-Total-Count for section control picker', async () => {
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock;
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({ 'X-Total-Count': '42' }),
+      json: async () => [
+        {
+          id: 7,
+          standardSectionId: 10,
+          controlName: 'Access control policy',
+        },
+      ],
+    } as Response);
+
+    const result = await complianceService.getSectionControlsPage({ sectionId: 10, page: 1, size: 25 });
+    expect(result).toEqual({
+      items: [
+        {
+          id: 7,
+          standardSectionId: 10,
+          controlName: 'Access control policy',
+        },
+      ],
+      total: 42,
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/compliance/control-config/get-by-section?sectionId=10&page=1&size=25&sort=id%2Casc',
+      expect.objectContaining({ headers: expect.objectContaining({ Accept: 'application/json' }) }),
+    );
   });
 });
