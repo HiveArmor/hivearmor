@@ -68,6 +68,7 @@ describe('Compliance Assurance UX honesty (Prompt 30)', () => {
     expect(complianceService).toContain('getControlExceptions');
     expect(complianceService).toContain('getFrameworkReportSnapshots');
     expect(complianceService).toContain('getFrameworkScheduledReports');
+    expect(complianceService).toContain('getReportSnapshotExportPath');
     expect(page).toContain('cmp-page__projection-note');
     expect(page).toContain('Control and evidence workspace');
     expect(page).toContain('cmp-control-picker');

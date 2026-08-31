@@ -152,34 +152,67 @@ describe('complianceService.getSectionControlsPage', () => {
   });
 });
 
-describe('CMP-007 drawer read contracts', () => {
-  it('enables evaluation history and keeps report snapshots fail-closed', () => {
+describe('CMP-009 drawer read contracts', () => {
+  it('enables report snapshots after @PreAuthorize is verified on export list GET', () => {
     expect(CMP_EVALUATION_HISTORY_READ_AVAILABLE).toBe(true);
-    expect(CMP_REPORT_SNAPSHOTS_READ_AVAILABLE).toBe(false);
+    expect(CMP_REPORT_SNAPSHOTS_READ_AVAILABLE).toBe(true);
   });
 
-  it('rejects report snapshot reads while the contract is unavailable', async () => {
-    await expect(complianceService.getFrameworkReportSnapshots(1)).rejects.toThrow(
-      /not authorized yet/i,
+  it('loads report snapshots when the contract is available', async () => {
+    mockGet.mockResolvedValueOnce([
+      {
+        id: 1,
+        reportName: 'SOC2 export',
+        standard: '3',
+        status: 'Ready',
+        createdDate: '2026-08-21T09:42:00Z',
+        createdBy: 'admin',
+      },
+    ]);
+    const rows = await complianceService.getFrameworkReportSnapshots(3);
+    expect(rows).toHaveLength(1);
+    expect(mockGet).toHaveBeenCalledWith('/ha-compliance-report-config', {
+      params: { page: 0, size: 20 },
+      signal: undefined,
+    });
+  });
+
+  it('returns PDF export path when report snapshot read is authorized', () => {
+    expect(complianceService.getReportSnapshotExportPath(42)).toBe(
+      '/api/ha-compliance-report-config/42/export',
     );
-    expect(mockGet).not.toHaveBeenCalled();
   });
 });
 
-describe('CMP-008 scheduled report read contracts', () => {
-  it('keeps scheduled report listing fail-closed until @PreAuthorize is verified', () => {
-    expect(CMP_SCHEDULED_REPORTS_READ_AVAILABLE).toBe(false);
+describe('CMP-009 scheduled report read contracts', () => {
+  it('enables scheduled report listing after @PreAuthorize is verified', () => {
+    expect(CMP_SCHEDULED_REPORTS_READ_AVAILABLE).toBe(true);
   });
 
-  it('rejects scheduled report reads while the contract is unavailable', async () => {
-    await expect(complianceService.getFrameworkScheduledReports(1)).rejects.toThrow(
-      /not authorized yet/i,
-    );
-    expect(mockGet).not.toHaveBeenCalled();
+  it('loads scheduled reports when the contract is available', async () => {
+    mockGet.mockResolvedValueOnce([
+      {
+        id: 2,
+        name: 'Monthly HIPAA export',
+        frequency: '0 0 1 * *',
+        nextRun: '2026-09-01T00:00:00Z',
+        status: 'Active',
+      },
+    ]);
+    const rows = await complianceService.getFrameworkScheduledReports(1);
+    expect(rows).toHaveLength(1);
+    expect(mockGet).toHaveBeenCalledWith('/compliance-report-schedules-by-user', {
+      params: { page: 0, size: 20, sort: 'id,desc' },
+      signal: undefined,
+    });
   });
 });
 
 describe('CMP-006 governance read contracts', () => {
+  beforeEach(() => {
+    mockGet.mockReset();
+  });
+
   it('keeps improvement actions and exceptions fail-closed until REST is authorized', () => {
     expect(CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE).toBe(false);
     expect(CMP_EXCEPTIONS_READ_AVAILABLE).toBe(false);

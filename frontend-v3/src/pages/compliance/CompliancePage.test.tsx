@@ -139,6 +139,29 @@ function resolveQuery(options: { queryKey: unknown[] }) {
     return queryState({ evaluations: [], startDate: null, endDate: null });
   }
   if (key === 'compliance-control-evidence') return queryState([]);
+  if (key === 'cmp-report-snapshots') {
+    return queryState([
+      {
+        id: 9,
+        reportName: 'NIST CSF export',
+        standard: '1',
+        status: 'Ready',
+        createdDate: '2026-08-21T09:42:00Z',
+        createdBy: 'admin',
+      },
+    ]);
+  }
+  if (key === 'cmp-scheduled-reports') {
+    return queryState([
+      {
+        id: 3,
+        name: 'Weekly NIST export',
+        frequency: '0 0 * * 1',
+        nextRun: '2026-09-01T00:00:00Z',
+        status: 'Active',
+      },
+    ]);
+  }
   return queryState(undefined);
 }
 
@@ -232,23 +255,85 @@ describe('CompliancePage', () => {
     expect(refetch).toHaveBeenCalled();
   });
 
-  it('shows blocked report snapshots panel for framework-scoped exports', () => {
+  it('loads report snapshots with PDF export when read contract is authorized', () => {
     render(<CompliancePage />);
     fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
     const reportsPanel = screen.getByTestId('cmp-framework-reports');
-    expect(within(reportsPanel).getByTestId('cmp-report_snapshots-unavailable')).toBeInTheDocument();
-    expect(within(reportsPanel).getByText(/ha-compliance-report-config lacks @PreAuthorize/i)).toBeInTheDocument();
-    expect(within(reportsPanel).getByText(/Report snapshot listing remains blocked/i)).toBeInTheDocument();
+    expect(within(reportsPanel).getByTestId('cmp-report-snapshots-list')).toBeInTheDocument();
+    expect(within(reportsPanel).getByText('NIST CSF export')).toBeInTheDocument();
+    expect(within(reportsPanel).getByTestId('cmp-report-export-9')).toHaveAttribute(
+      'href',
+      '/api/ha-compliance-report-config/9/export',
+    );
+    expect(within(reportsPanel).getByText(/Report regeneration and schedule mutations stay disabled/i)).toBeInTheDocument();
   });
 
-  it('shows blocked scheduled reports panel for framework-scoped cadence', () => {
+  it('shows report snapshots empty state', () => {
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'cmp-report-snapshots') {
+        return queryState([]);
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    expect(screen.getByTestId('cmp-report_snapshots-empty')).toBeInTheDocument();
+  });
+
+  it('shows report snapshots error and retry', () => {
+    const refetch = vi.fn();
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'cmp-report-snapshots') {
+        return queryState(undefined, { error: new Error('503 upstream'), isError: true, refetch });
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    expect(screen.getByText('Report snapshots unavailable')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry report snapshots' }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
+  it('loads scheduled reports when read contract is authorized', () => {
     render(<CompliancePage />);
     fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
     expect(screen.getByTestId('cmp-framework-schedules')).toBeInTheDocument();
-    expect(screen.getByTestId('cmp-scheduled_reports-unavailable')).toBeInTheDocument();
-    expect(screen.getByText(/compliance-report-schedules-by-user lacks @PreAuthorize/i)).toBeInTheDocument();
-    expect(screen.getByText(/Schedule listing remains blocked/i)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Retry scheduled reports/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId('cmp-scheduled-reports-list')).toBeInTheDocument();
+    expect(screen.getByText('Weekly NIST export')).toBeInTheDocument();
+    expect(screen.getByText(/Schedule mutations remain disabled/i)).toBeInTheDocument();
+    expect(screen.queryByTestId('cmp-scheduled_reports-unavailable')).not.toBeInTheDocument();
+  });
+
+  it('shows scheduled reports empty state', () => {
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'cmp-scheduled-reports') {
+        return queryState([]);
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    expect(screen.getByTestId('cmp-scheduled_reports-empty')).toBeInTheDocument();
+  });
+
+  it('shows scheduled reports error and retry', () => {
+    const refetch = vi.fn();
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'cmp-scheduled-reports') {
+        return queryState(undefined, { error: new Error('503 upstream'), isError: true, refetch });
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    expect(screen.getByText('Scheduled reports unavailable')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry scheduled reports' }));
+    expect(refetch).toHaveBeenCalled();
   });
 
   it('resets workspace tab when analyst selects a different catalog control', () => {

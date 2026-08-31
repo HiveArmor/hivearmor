@@ -316,16 +316,30 @@ function ReportSnapshotsReadPanel({
 
   return (
     <ul className="cmp-workspace-list" data-testid="cmp-report-snapshots-list">
-      {rows.map((item) => (
-        <li key={item.id}>
-          <span>{item.reportName}</span>
-          <small>
-            {item.status}
-            {item.createdDate ? ` · ${formatTimestamp(item.createdDate)}` : ''}
-            {item.createdBy ? ` · ${item.createdBy}` : ''}
-          </small>
-        </li>
-      ))}
+      {rows.map((item) => {
+        const exportPath =
+          CMP_REPORT_SNAPSHOTS_READ_AVAILABLE
+            ? complianceService.getReportSnapshotExportPath(item.id)
+            : null;
+        return (
+          <li key={item.id}>
+            <span>{item.reportName}</span>
+            <small>
+              {item.status}
+              {item.createdDate ? ` · ${formatTimestamp(item.createdDate)}` : ''}
+              {item.createdBy ? ` · ${item.createdBy}` : ''}
+              {exportPath ? (
+                <>
+                  {' · '}
+                  <a href={exportPath} download data-testid={`cmp-report-export-${item.id}`}>
+                    Download PDF
+                  </a>
+                </>
+              ) : null}
+            </small>
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -366,7 +380,7 @@ function FrameworkReportsWorkspace({
           <ShieldCheck size={13} />
           {CMP_REPORT_SNAPSHOTS_READ_AVAILABLE
             ? 'Report regeneration and schedule mutations stay disabled until authorized write contracts exist.'
-            : 'Report snapshot listing remains blocked — see Scheduled reports below for schedule visibility status.'}
+            : 'Report snapshot listing remains blocked until authorized read contracts are verified.'}
         </span>
       </div>
     </section>
@@ -485,7 +499,7 @@ function FrameworkScheduledReportsWorkspace({
           <ShieldCheck size={13} />
           {CMP_SCHEDULED_REPORTS_READ_AVAILABLE
             ? 'Schedule mutations remain disabled until @PreAuthorize write contracts are verified.'
-            : 'Schedule listing remains blocked — use Reports → Scheduled for the platform schedule workspace pivot.'}
+            : 'Schedule listing remains blocked until authorized read contracts are verified.'}
         </span>
       </div>
     </section>
