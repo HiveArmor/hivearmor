@@ -37,6 +37,12 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class ComplianceReportExportResource {
 
+    private static final String READ_AUTH =
+        "hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
+        "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')";
+    private static final String MUTATE_AUTH =
+        "hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.SOC_MANAGER + "')";
+
     private static final String CLASSNAME = "ComplianceReportExportResource";
     private final Logger log = LoggerFactory.getLogger(ComplianceReportExportResource.class);
 
@@ -56,8 +62,7 @@ public class ComplianceReportExportResource {
 
     /** List generated reports (paged). */
     @GetMapping("/ha-compliance-report-config")
-    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
-                  "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<UtmComplianceReportExport>> listReports(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "50") int size
@@ -75,6 +80,7 @@ public class ComplianceReportExportResource {
 
     /** Create / kick off a new compliance report. */
     @PostMapping("/ha-compliance-report-config")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<UtmComplianceReportExport> createReport(@RequestBody Map<String, Object> body) {
         final String ctx = CLASSNAME + ".createReport";
         try {
@@ -93,6 +99,7 @@ public class ComplianceReportExportResource {
 
     /** Delete a report record. */
     @DeleteMapping("/ha-compliance-report-config/{id}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> deleteReport(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".deleteReport";
         try {
@@ -108,8 +115,7 @@ public class ComplianceReportExportResource {
 
     /** Stream a generated PDF for the given report. */
     @GetMapping(value = "/ha-compliance-report-config/{id}/export", produces = MediaType.APPLICATION_PDF_VALUE)
-    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
-                  "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<byte[]> exportPdf(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".exportPdf";
         try {

@@ -70,7 +70,12 @@ describe('Compliance Assurance UX honesty (Prompt 30)', () => {
     expect(complianceService).toContain('getControlExceptions');
     expect(complianceService).toContain('getFrameworkReportSnapshots');
     expect(complianceService).toContain('getFrameworkScheduledReports');
-    expect(complianceService).toContain('getReportSnapshotExportPath');
+    expect(complianceService).toContain('CMP_REPORT_SNAPSHOTS_WRITE_AVAILABLE');
+    expect(complianceService).toContain('CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE');
+    expect(complianceService).toContain('createReportSnapshot');
+    expect(complianceService).toContain('deleteReportSnapshot');
+    expect(complianceService).toContain('createComplianceReportSchedule');
+    expect(complianceService).toContain('deleteComplianceReportSchedule');
     expect(page).toContain('cmp-page__projection-note');
     expect(page).toContain('Control and evidence workspace');
     expect(page).toContain('cmp-control-picker');
@@ -108,6 +113,7 @@ describe('Compliance Assurance UX honesty (Prompt 30)', () => {
   it('drawer and footer pivots use Link + ROUTES', () => {
     expect(page).toContain('ROUTES.CIS_BENCHMARK');
     expect(page).toContain('ROUTES.REPORTS_SCHEDULED');
-    expect(page).toContain('CMP governance write mutations live');
+    expect(page).toContain('canMutateComplianceReports');
+    expect(page).toContain('CMP-013 / CMP-014 write mutations live');
   });
 });

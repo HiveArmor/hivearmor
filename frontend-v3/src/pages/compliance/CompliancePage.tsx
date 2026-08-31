@@ -37,7 +37,9 @@ import { useRowDensity } from '@/hooks/useRowDensity';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
 import {
   CMP_GOVERNANCE_MUTATE_DENIED_TITLE,
+  CMP_REPORT_MUTATE_DENIED_TITLE,
   canMutateComplianceGovernance,
+  canMutateComplianceReports,
 } from '@/services/compliance.capabilities';
 import {
   CMP_DRAWER_READ_CONTRACTS,
@@ -46,7 +48,9 @@ import {
   CMP_GOVERNANCE_READ_CONTRACTS,
   CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE,
   CMP_REPORT_SNAPSHOTS_READ_AVAILABLE,
+  CMP_REPORT_SNAPSHOTS_WRITE_AVAILABLE,
   CMP_SCHEDULED_REPORTS_READ_AVAILABLE,
+  CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE,
   CMP_SECTION_CONTROLS_PAGE_SIZE,
   complianceService,
   parseFrameworkStandardId,
@@ -266,17 +270,40 @@ function EvaluationHistoryReadPanel({
 function ReportSnapshotsReadPanel({
   standardId,
   frameworkName,
+  canMutate,
 }: {
   standardId: number;
   frameworkName: string;
+  canMutate: boolean;
 }): JSX.Element {
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(() => ['cmp-report-snapshots', standardId] as const, [standardId]);
   const reportsContract = drawerReadContract('report_snapshots');
   const query = useQuery({
-    queryKey: ['cmp-report-snapshots', standardId],
+    queryKey,
     queryFn: ({ signal }) => complianceService.getFrameworkReportSnapshots(standardId, signal),
     enabled: reportsContract.available,
     staleTime: 30_000,
     retry: 1,
+  });
+
+  const invalidate = useCallback(
+    () => void queryClient.invalidateQueries({ queryKey }),
+    [queryClient, queryKey],
+  );
+
+  const generateMutation = useMutation({
+    mutationFn: () =>
+      complianceService.createReportSnapshot({
+        reportName: `${frameworkName} snapshot`,
+        standard: String(standardId),
+      }),
+    onSuccess: invalidate,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => complianceService.deleteReportSnapshot(id),
+    onSuccess: invalidate,
   });
 
   if (!reportsContract.available) {
@@ -314,50 +341,92 @@ function ReportSnapshotsReadPanel({
   }
 
   const rows = query.data ?? [];
-  if (rows.length === 0) {
-    return (
-      <p className="cmp-drawer-empty" role="status" data-testid="cmp-report_snapshots-empty">
-        No report snapshots were returned for this framework in the authorized projection.
-      </p>
-    );
-  }
 
   return (
-    <ul className="cmp-workspace-list" data-testid="cmp-report-snapshots-list">
-      {rows.map((item) => {
-        const exportPath =
-          CMP_REPORT_SNAPSHOTS_READ_AVAILABLE
-            ? complianceService.getReportSnapshotExportPath(item.id)
-            : null;
-        return (
-          <li key={item.id}>
-            <span>{item.reportName}</span>
-            <small>
-              {item.status}
-              {item.createdDate ? ` · ${formatTimestamp(item.createdDate)}` : ''}
-              {item.createdBy ? ` · ${item.createdBy}` : ''}
-              {exportPath ? (
-                <>
-                  {' · '}
-                  <a href={exportPath} download data-testid={`cmp-report-export-${item.id}`}>
-                    Download PDF
-                  </a>
-                </>
-              ) : null}
-            </small>
-          </li>
-        );
-      })}
-    </ul>
+    <>
+      {canMutate && CMP_REPORT_SNAPSHOTS_WRITE_AVAILABLE ? (
+        <div className="cmp-governance-actions">
+          <button
+            type="button"
+            data-testid="cmp-report-generate"
+            disabled={generateMutation.isPending}
+            onClick={() => generateMutation.mutate()}
+          >
+            Generate report snapshot
+          </button>
+          {generateMutation.isError && (
+            <span role="alert">
+              {generateMutation.error instanceof Error
+                ? generateMutation.error.message
+                : 'Report generation failed.'}
+            </span>
+          )}
+        </div>
+      ) : (
+        <p className="cmp-drawer__workspace-note" role="note">
+          {CMP_REPORT_SNAPSHOTS_WRITE_AVAILABLE
+            ? CMP_REPORT_MUTATE_DENIED_TITLE
+            : 'Report regeneration remains unavailable until authorized write contracts are verified.'}
+        </p>
+      )}
+
+      {rows.length === 0 ? (
+        <p className="cmp-drawer-empty" role="status" data-testid="cmp-report_snapshots-empty">
+          No report snapshots were returned for this framework in the authorized projection.
+        </p>
+      ) : (
+        <ul className="cmp-workspace-list" data-testid="cmp-report-snapshots-list">
+          {rows.map((item) => {
+            const exportPath =
+              CMP_REPORT_SNAPSHOTS_READ_AVAILABLE
+                ? complianceService.getReportSnapshotExportPath(item.id)
+                : null;
+            return (
+              <li key={item.id}>
+                <span>{item.reportName}</span>
+                <small>
+                  {item.status}
+                  {item.createdDate ? ` · ${formatTimestamp(item.createdDate)}` : ''}
+                  {item.createdBy ? ` · ${item.createdBy}` : ''}
+                  {exportPath ? (
+                    <>
+                      {' · '}
+                      <a href={exportPath} download data-testid={`cmp-report-export-${item.id}`}>
+                        Download PDF
+                      </a>
+                    </>
+                  ) : null}
+                  {canMutate && CMP_REPORT_SNAPSHOTS_WRITE_AVAILABLE ? (
+                    <>
+                      {' · '}
+                      <button
+                        type="button"
+                        data-testid={`cmp-report-delete-${item.id}`}
+                        disabled={deleteMutation.isPending}
+                        onClick={() => deleteMutation.mutate(item.id)}
+                      >
+                        Delete
+                      </button>
+                    </>
+                  ) : null}
+                </small>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </>
   );
 }
 
 function FrameworkReportsWorkspace({
   standardId,
   frameworkName,
+  canMutate,
 }: {
   standardId: number;
   frameworkName: string;
+  canMutate: boolean;
 }): JSX.Element {
   const reportsContract = drawerReadContract('report_snapshots');
 
@@ -367,7 +436,7 @@ function FrameworkReportsWorkspace({
         <FileText size={15} />
         <div>
           <strong>Report snapshots</strong>
-          <span>CMP-007 — framework-scoped exports</span>
+          <span>CMP-007 / CMP-014 — framework-scoped exports</span>
         </div>
       </header>
       <p className="cmp-drawer__workspace-note">
@@ -376,7 +445,11 @@ function FrameworkReportsWorkspace({
         loaded grid rows.
       </p>
       {reportsContract.available ? (
-        <ReportSnapshotsReadPanel standardId={standardId} frameworkName={frameworkName} />
+        <ReportSnapshotsReadPanel
+          standardId={standardId}
+          frameworkName={frameworkName}
+          canMutate={canMutate}
+        />
       ) : (
         <DrawerReadUnavailablePanel
           contract={reportsContract}
@@ -387,7 +460,9 @@ function FrameworkReportsWorkspace({
         <span>
           <ShieldCheck size={13} />
           {CMP_REPORT_SNAPSHOTS_READ_AVAILABLE
-            ? 'Report regeneration and schedule mutations stay disabled until authorized write contracts exist.'
+            ? CMP_REPORT_SNAPSHOTS_WRITE_AVAILABLE
+              ? 'Report regeneration and deletion require Platform Administrator or SOC Manager.'
+              : 'Report regeneration stays disabled until authorized write contracts exist.'
             : 'Report snapshot listing remains blocked until authorized read contracts are verified.'}
         </span>
       </div>
@@ -398,17 +473,48 @@ function FrameworkReportsWorkspace({
 function ScheduledReportsReadPanel({
   standardId,
   frameworkName,
+  canMutate,
 }: {
   standardId: number;
   frameworkName: string;
+  canMutate: boolean;
 }): JSX.Element {
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(() => ['cmp-scheduled-reports', standardId] as const, [standardId]);
+  const [showForm, setShowForm] = useState(false);
+  const [complianceId, setComplianceId] = useState('');
+  const [scheduleString, setScheduleString] = useState('0 0 8 * * MON');
+
   const schedulesContract = drawerReadContract('scheduled_reports');
   const query = useQuery({
-    queryKey: ['cmp-scheduled-reports', standardId],
+    queryKey,
     queryFn: ({ signal }) => complianceService.getFrameworkScheduledReports(standardId, signal),
     enabled: schedulesContract.available,
     staleTime: 30_000,
     retry: 1,
+  });
+
+  const invalidate = useCallback(
+    () => void queryClient.invalidateQueries({ queryKey }),
+    [queryClient, queryKey],
+  );
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      complianceService.createComplianceReportSchedule({
+        complianceId: Number.parseInt(complianceId, 10),
+        scheduleString: scheduleString.trim(),
+      }),
+    onSuccess: () => {
+      setComplianceId('');
+      setShowForm(false);
+      invalidate();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => complianceService.deleteComplianceReportSchedule(id),
+    onSuccess: invalidate,
   });
 
   if (!schedulesContract.available) {
@@ -446,36 +552,114 @@ function ScheduledReportsReadPanel({
   }
 
   const rows = query.data ?? [];
-  if (rows.length === 0) {
-    return (
-      <p className="cmp-drawer-empty" role="status" data-testid="cmp-scheduled_reports-empty">
-        No scheduled reports were returned for this framework in the authorized projection.
-      </p>
-    );
-  }
 
   return (
-    <ul className="cmp-workspace-list" data-testid="cmp-scheduled-reports-list">
-      {rows.map((item) => (
-        <li key={item.id}>
-          <span>{item.name}</span>
-          <small>
-            {item.status}
-            {item.frequency ? ` · ${item.frequency}` : ''}
-            {item.nextRun ? ` · next ${formatTimestamp(item.nextRun)}` : ''}
-          </small>
-        </li>
-      ))}
-    </ul>
+    <>
+      {canMutate && CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE ? (
+        <div className="cmp-governance-actions">
+          <button
+            type="button"
+            data-testid="cmp-schedule-add"
+            onClick={() => setShowForm((open) => !open)}
+          >
+            {showForm ? 'Cancel' : 'Add schedule'}
+          </button>
+          {showForm && (
+            <form
+              className="cmp-governance-form"
+              data-testid="cmp-schedule-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!complianceId.trim() || !scheduleString.trim() || createMutation.isPending) return;
+                createMutation.mutate();
+              }}
+            >
+              <label>
+                Report config ID
+                <input
+                  type="number"
+                  min={1}
+                  value={complianceId}
+                  onChange={(event) => setComplianceId(event.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Cron schedule
+                <input
+                  value={scheduleString}
+                  onChange={(event) => setScheduleString(event.target.value)}
+                  required
+                  maxLength={250}
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={!complianceId.trim() || !scheduleString.trim() || createMutation.isPending}
+              >
+                Save schedule
+              </button>
+              {createMutation.isError && (
+                <span role="alert">
+                  {createMutation.error instanceof Error
+                    ? createMutation.error.message
+                    : 'Schedule create failed.'}
+                </span>
+              )}
+            </form>
+          )}
+        </div>
+      ) : (
+        <p className="cmp-drawer__workspace-note" role="note">
+          {CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE
+            ? CMP_REPORT_MUTATE_DENIED_TITLE
+            : 'Schedule mutations remain unavailable until authorized write contracts are verified.'}
+        </p>
+      )}
+
+      {rows.length === 0 ? (
+        <p className="cmp-drawer-empty" role="status" data-testid="cmp-scheduled_reports-empty">
+          No scheduled reports were returned for this framework in the authorized projection.
+        </p>
+      ) : (
+        <ul className="cmp-workspace-list" data-testid="cmp-scheduled-reports-list">
+          {rows.map((item) => (
+            <li key={item.id}>
+              <span>{item.name}</span>
+              <small>
+                {item.status}
+                {item.frequency ? ` · ${item.frequency}` : ''}
+                {item.nextRun ? ` · next ${formatTimestamp(item.nextRun)}` : ''}
+                {canMutate && CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE ? (
+                  <>
+                    {' · '}
+                    <button
+                      type="button"
+                      data-testid={`cmp-schedule-delete-${item.id}`}
+                      disabled={deleteMutation.isPending}
+                      onClick={() => deleteMutation.mutate(item.id)}
+                    >
+                      Delete
+                    </button>
+                  </>
+                ) : null}
+              </small>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }
 
 function FrameworkScheduledReportsWorkspace({
   standardId,
   frameworkName,
+  canMutate,
 }: {
   standardId: number;
   frameworkName: string;
+  canMutate: boolean;
 }): JSX.Element {
   const schedulesContract = drawerReadContract('scheduled_reports');
 
@@ -485,17 +669,20 @@ function FrameworkScheduledReportsWorkspace({
         <FileClock size={15} />
         <div>
           <strong>Scheduled reports</strong>
-          <span>CMP-008 — framework-scoped cadence</span>
+          <span>CMP-008 / CMP-014 — framework-scoped cadence</span>
         </div>
       </header>
       <p className="cmp-drawer__workspace-note">
         Recurring compliance report jobs for <strong>{frameworkName}</strong> (catalog standard #
-        {standardId.toLocaleString()}). Schedule create, pause, and run-now mutations stay disabled
-        until authorized write contracts exist — this panel is read-only when the schedule list API is
-        authorized.
+        {standardId.toLocaleString()}). Schedule create and delete require an existing report config ID
+        and Platform Administrator or SOC Manager authorization.
       </p>
       {schedulesContract.available ? (
-        <ScheduledReportsReadPanel standardId={standardId} frameworkName={frameworkName} />
+        <ScheduledReportsReadPanel
+          standardId={standardId}
+          frameworkName={frameworkName}
+          canMutate={canMutate}
+        />
       ) : (
         <DrawerReadUnavailablePanel
           contract={schedulesContract}
@@ -506,7 +693,9 @@ function FrameworkScheduledReportsWorkspace({
         <span>
           <ShieldCheck size={13} />
           {CMP_SCHEDULED_REPORTS_READ_AVAILABLE
-            ? 'Schedule mutations remain disabled until @PreAuthorize write contracts are verified.'
+            ? CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE
+              ? 'Schedule create and delete require Platform Administrator or SOC Manager.'
+              : 'Schedule mutations stay disabled until @PreAuthorize write contracts are verified.'
             : 'Schedule listing remains blocked until authorized read contracts are verified.'}
         </span>
       </div>
@@ -1159,7 +1348,7 @@ function ControlEvidenceWorkspace({
           {CMP_EVALUATION_HISTORY_READ_AVAILABLE
             ? CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE && CMP_EXCEPTIONS_WRITE_AVAILABLE
               ? 'Evaluation history is read-only — POA&M and exception mutations require Platform Administrator or SOC Manager.'
-              : 'Evaluation history is read-only — report snapshots and governance mutations stay disabled until authorized write contracts exist.'
+              : 'Evaluation history is read-only — governance and report mutations require Platform Administrator or SOC Manager.'
             : 'Evaluation history, report snapshots and governance mutations remain unavailable.'}
         </span>
       </div>
@@ -1171,10 +1360,12 @@ function FrameworkControlBrowser({
   mapping,
   frameworkName,
   canMutateGovernance,
+  canMutateReports,
 }: {
   mapping: FrameworkControlResolution;
   frameworkName: string;
   canMutateGovernance: boolean;
+  canMutateReports: boolean;
 }): JSX.Element {
   const [sectionId, setSectionId] = useState(mapping.sectionId);
   const [controlId, setControlId] = useState(mapping.controlId);
@@ -1236,8 +1427,16 @@ function FrameworkControlBrowser({
 
   return (
     <>
-      <FrameworkReportsWorkspace standardId={mapping.standardId} frameworkName={frameworkName} />
-      <FrameworkScheduledReportsWorkspace standardId={mapping.standardId} frameworkName={frameworkName} />
+      <FrameworkReportsWorkspace
+        standardId={mapping.standardId}
+        frameworkName={frameworkName}
+        canMutate={canMutateReports}
+      />
+      <FrameworkScheduledReportsWorkspace
+        standardId={mapping.standardId}
+        frameworkName={frameworkName}
+        canMutate={canMutateReports}
+      />
 
       <section className="cmp-drawer__card cmp-control-picker" data-testid="cmp-control-picker">
         <header>
@@ -1434,6 +1633,7 @@ function FrameworkDrawer({
   const standardId = parseFrameworkStandardId(framework.id);
   const roles = useAuthStore((state) => state.user?.roles);
   const canMutateGovernance = canMutateComplianceGovernance(roles);
+  const canMutateReports = canMutateComplianceReports(roles);
   const mappingQuery = useQuery({
     queryKey: ['compliance-framework-control', framework.id],
     queryFn: ({ signal }) =>
@@ -1534,6 +1734,7 @@ function FrameworkDrawer({
             mapping={mappingQuery.data}
             frameworkName={framework.name}
             canMutateGovernance={canMutateGovernance}
+            canMutateReports={canMutateReports}
           />
         ) : (
           <FrameworkControlMappingEmpty framework={framework} reason="no-catalog" />
@@ -1995,7 +2196,7 @@ export function CompliancePage(): JSX.Element {
 
       <footer className="cmp-footer">
         <span>{frameworks.length.toLocaleString()} framework records in the loaded projection</span>
-        <strong>CMP governance write mutations live for Platform Administrator and SOC Manager</strong>
+        <strong>CMP-013 / CMP-014 write mutations live for Platform Administrator and SOC Manager</strong>
         <Link to={ROUTES.REPORTS_SCHEDULED}>
           Open reporting workspace
           <Link2 size={11} aria-hidden="true" />

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CMP_GOVERNANCE_MUTATE_DENIED_TITLE,
   canMutateComplianceGovernance,
+  canMutateComplianceReports,
 } from './compliance.capabilities';
 
 describe('compliance.capabilities', () => {
@@ -23,5 +24,10 @@ describe('compliance.capabilities', () => {
     expect(CMP_GOVERNANCE_MUTATE_DENIED_TITLE).toContain('Platform Administrator');
     expect(CMP_GOVERNANCE_MUTATE_DENIED_TITLE).toContain('SOC Manager');
     expect(CMP_GOVERNANCE_MUTATE_DENIED_TITLE).not.toContain('ROLE_');
+  });
+
+  it('reuses governance mutate tier for report writes', () => {
+    expect(canMutateComplianceReports(['ROLE_ADMIN'])).toBe(true);
+    expect(canMutateComplianceReports(['ROLE_ANALYST'])).toBe(false);
   });
 });

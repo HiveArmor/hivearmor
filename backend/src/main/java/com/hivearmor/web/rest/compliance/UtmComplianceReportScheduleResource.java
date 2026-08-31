@@ -36,6 +36,12 @@ import jakarta.validation.Valid;
 @RequestMapping("/api")
 public class UtmComplianceReportScheduleResource {
 
+    private static final String READ_AUTH =
+        "hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
+        "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')";
+    private static final String MUTATE_AUTH =
+        "hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.SOC_MANAGER + "')";
+
     private static final String CLASSNAME = "UtmComplianceReportScheduleResource";
     private final Logger log = LoggerFactory.getLogger(UtmComplianceReportScheduleResource.class);
 
@@ -65,6 +71,7 @@ public class UtmComplianceReportScheduleResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/compliance-report-schedules")
+    @PreAuthorize(MUTATE_AUTH)
     @AuditEvent(
         attemptType = ApplicationEventType.COMPLIANCE_SCHEDULE_CREATE_ATTEMPT,
         attemptMessage = "Attempting to create compliance report schedule for report ID: {complianceId}",
@@ -104,6 +111,7 @@ public class UtmComplianceReportScheduleResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/compliance-report-schedules")
+    @PreAuthorize(MUTATE_AUTH)
     @AuditEvent(
         attemptType = ApplicationEventType.CONFIG_UPDATE_ATTEMPT,
         attemptMessage = "Attempting to update compliance report schedule with ID: {id}",
@@ -143,8 +151,7 @@ public class UtmComplianceReportScheduleResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of utmComplianceReportSchedules in body.
      */
     @GetMapping("/compliance-report-schedules-by-user")
-    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
-                  "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<UtmComplianceReportSchedule>> getAllUtmComplianceReportSchedules(UtmComplianceReportScheduleCriteria criteria, Pageable pageable) {
         final String ctx = CLASSNAME + ".getAllUtmComplianceReportSchedules";
         try {
@@ -187,6 +194,7 @@ public class UtmComplianceReportScheduleResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/compliance-report-schedules/{id}")
+    @PreAuthorize(MUTATE_AUTH)
     @AuditEvent(
         attemptType = ApplicationEventType.COMPLIANCE_SCHEDULE_DELETE_ATTEMPT,
         attemptMessage = "Attempting to delete compliance report schedule with ID: {id}",

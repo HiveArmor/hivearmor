@@ -76,6 +76,18 @@ export const CMP_REPORT_SNAPSHOTS_READ_AVAILABLE = true;
  */
 export const CMP_SCHEDULED_REPORTS_READ_AVAILABLE = true;
 
+/**
+ * CMP-014 — ComplianceReportExportResource POST/DELETE /ha-compliance-report-config has
+ * method-level @PreAuthorize (ADMIN|SOC_MANAGER).
+ */
+export const CMP_REPORT_SNAPSHOTS_WRITE_AVAILABLE = true;
+
+/**
+ * CMP-014 — UtmComplianceReportScheduleResource POST/PUT/DELETE /compliance-report-schedules has
+ * method-level @PreAuthorize (ADMIN|SOC_MANAGER).
+ */
+export const CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE = true;
+
 export type CmpDrawerReadKind = 'evaluation_history' | 'report_snapshots' | 'scheduled_reports';
 
 export interface CmpDrawerReadContract {
@@ -410,5 +422,87 @@ export const complianceService = {
   getReportSnapshotExportPath: (reportId: number): string | null => {
     if (!CMP_REPORT_SNAPSHOTS_READ_AVAILABLE) return null;
     return `/api/ha-compliance-report-config/${reportId}/export`;
+  },
+
+  /** CMP-014 — generate a new report snapshot when write contract is authorized. */
+  createReportSnapshot: (
+    body: { reportName: string; standard: string },
+    signal?: AbortSignal,
+  ) => {
+    if (!CMP_REPORT_SNAPSHOTS_WRITE_AVAILABLE) {
+      return Promise.reject(
+        new Error('CMP-014 report-snapshot write contract is not authorized yet.'),
+      );
+    }
+    return apiClient.post<ComplianceReportSnapshotDTO>('/ha-compliance-report-config', body, {
+      signal,
+    });
+  },
+
+  /** CMP-014 — delete a report snapshot row. */
+  deleteReportSnapshot: (id: number, signal?: AbortSignal) => {
+    if (!CMP_REPORT_SNAPSHOTS_WRITE_AVAILABLE) {
+      return Promise.reject(
+        new Error('CMP-014 report-snapshot write contract is not authorized yet.'),
+      );
+    }
+    return apiClient.delete<void>(`/ha-compliance-report-config/${id}`, { signal });
+  },
+
+  /** CMP-014 — create a compliance report schedule when write contract is authorized. */
+  createComplianceReportSchedule: (
+    body: {
+      complianceId: number;
+      scheduleString: string;
+      urlWithParams?: string;
+    },
+    signal?: AbortSignal,
+  ) => {
+    if (!CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE) {
+      return Promise.reject(
+        new Error('CMP-014 scheduled-report write contract is not authorized yet.'),
+      );
+    }
+    return apiClient.post<ComplianceScheduledReportDTO>(
+      '/compliance-report-schedules',
+      {
+        complianceId: body.complianceId,
+        scheduleString: body.scheduleString,
+        urlWithParams: body.urlWithParams ?? '/compliance',
+      },
+      { signal },
+    );
+  },
+
+  /** CMP-014 — update schedule cadence string. */
+  updateComplianceReportSchedule: (
+    body: { id: number; scheduleString: string; complianceId: number; urlWithParams?: string },
+    signal?: AbortSignal,
+  ) => {
+    if (!CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE) {
+      return Promise.reject(
+        new Error('CMP-014 scheduled-report write contract is not authorized yet.'),
+      );
+    }
+    return apiClient.put<ComplianceScheduledReportDTO>(
+      '/compliance-report-schedules',
+      {
+        id: body.id,
+        complianceId: body.complianceId,
+        scheduleString: body.scheduleString,
+        urlWithParams: body.urlWithParams ?? '/compliance',
+      },
+      { signal },
+    );
+  },
+
+  /** CMP-014 — delete a compliance report schedule. */
+  deleteComplianceReportSchedule: (id: number, signal?: AbortSignal) => {
+    if (!CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE) {
+      return Promise.reject(
+        new Error('CMP-014 scheduled-report write contract is not authorized yet.'),
+      );
+    }
+    return apiClient.delete<void>(`/compliance-report-schedules/${id}`, { signal });
   },
 };

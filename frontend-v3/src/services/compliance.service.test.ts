@@ -7,7 +7,9 @@ import {
   CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE,
   CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE,
   CMP_REPORT_SNAPSHOTS_READ_AVAILABLE,
+  CMP_REPORT_SNAPSHOTS_WRITE_AVAILABLE,
   CMP_SCHEDULED_REPORTS_READ_AVAILABLE,
+  CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE,
   complianceService,
   parseFrameworkStandardId,
 } from './compliance.service';
@@ -345,5 +347,64 @@ describe('CMP-013 governance write contracts', () => {
       undefined,
       { signal: undefined },
     );
+  });
+});
+
+describe('CMP-014 report and schedule write contracts', () => {
+  beforeEach(() => {
+    mockGet.mockReset();
+    mockPost.mockReset();
+    mockPut.mockReset();
+    mockPatch.mockReset();
+    mockDelete.mockReset();
+  });
+
+  it('enables report snapshot and schedule write flags', () => {
+    expect(CMP_REPORT_SNAPSHOTS_WRITE_AVAILABLE).toBe(true);
+    expect(CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE).toBe(true);
+  });
+
+  it('creates and deletes report snapshots via authorized write contract', async () => {
+    mockPost.mockResolvedValueOnce({ id: 11, reportName: 'NIST snapshot', standard: '3' });
+    mockDelete.mockResolvedValueOnce(undefined);
+
+    await complianceService.createReportSnapshot({
+      reportName: 'NIST snapshot',
+      standard: '3',
+    });
+    expect(mockPost).toHaveBeenCalledWith(
+      '/ha-compliance-report-config',
+      { reportName: 'NIST snapshot', standard: '3' },
+      { signal: undefined },
+    );
+
+    await complianceService.deleteReportSnapshot(11);
+    expect(mockDelete).toHaveBeenCalledWith('/ha-compliance-report-config/11', {
+      signal: undefined,
+    });
+  });
+
+  it('creates and deletes schedules via authorized write contract', async () => {
+    mockPost.mockResolvedValueOnce({ id: 5, name: 'Weekly export' });
+    mockDelete.mockResolvedValueOnce(undefined);
+
+    await complianceService.createComplianceReportSchedule({
+      complianceId: 2,
+      scheduleString: '0 0 8 * * MON',
+    });
+    expect(mockPost).toHaveBeenCalledWith(
+      '/compliance-report-schedules',
+      {
+        complianceId: 2,
+        scheduleString: '0 0 8 * * MON',
+        urlWithParams: '/compliance',
+      },
+      { signal: undefined },
+    );
+
+    await complianceService.deleteComplianceReportSchedule(5);
+    expect(mockDelete).toHaveBeenCalledWith('/compliance-report-schedules/5', {
+      signal: undefined,
+    });
   });
 });
