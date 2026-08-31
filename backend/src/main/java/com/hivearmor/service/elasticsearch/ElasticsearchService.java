@@ -553,7 +553,7 @@ public class ElasticsearchService {
                     .query(query)
                     .size(30)
                     .sort(s -> s.field(f -> f
-                            .field("@timestamp")
+                            .field("timestamp")
                             .order(SortOrder.Desc)
                     ))
                     .build();
@@ -582,7 +582,7 @@ public class ElasticsearchService {
                                     .field("control_id")
                                     .value(FieldValue.of(controlId))))
                     ))
-                    .sort(s -> s.field(f -> f.field("@timestamp").order(SortOrder.Desc)))
+                    .sort(s -> s.field(f -> f.field("timestamp").order(SortOrder.Desc)))
                     .size(1)
                     .build();
 
@@ -630,7 +630,7 @@ public class ElasticsearchService {
                                     .topHits(th -> th
                                             .size(1)
                                             .sort(sort -> sort.field(f -> f
-                                                    .field("@timestamp")
+                                                    .field("timestamp")
                                                     .order(SortOrder.Desc)))
                                     )
                             )
