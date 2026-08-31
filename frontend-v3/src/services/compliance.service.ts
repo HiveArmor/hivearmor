@@ -52,16 +52,17 @@ export interface CmpGovernanceReadContract {
 export const CMP_EVALUATION_HISTORY_READ_AVAILABLE = true;
 
 /**
- * CMP-007 / CMP-008 — ComplianceReportExportResource lists GET /ha-compliance-report-config but has
- * no @PreAuthorize; UI stays blocked until an authorized read contract is verified.
+ * CMP-009 — ComplianceReportExportResource GET /ha-compliance-report-config and
+ * GET /ha-compliance-report-config/{id}/export have @PreAuthorize
+ * (ADMIN|USER|ANALYST|SOC_MANAGER).
  */
-export const CMP_REPORT_SNAPSHOTS_READ_AVAILABLE = false;
+export const CMP_REPORT_SNAPSHOTS_READ_AVAILABLE = true;
 
 /**
- * CMP-008 — UtmComplianceReportScheduleResource serves GET /compliance-report-schedules-by-user but has
- * no @PreAuthorize; drawer schedule listing stays blocked until an authorized read contract is verified.
+ * CMP-009 — UtmComplianceReportScheduleResource GET /compliance-report-schedules-by-user has
+ * @PreAuthorize (ADMIN|USER|ANALYST|SOC_MANAGER).
  */
-export const CMP_SCHEDULED_REPORTS_READ_AVAILABLE = false;
+export const CMP_SCHEDULED_REPORTS_READ_AVAILABLE = true;
 
 export type CmpDrawerReadKind = 'evaluation_history' | 'report_snapshots' | 'scheduled_reports';
 
@@ -89,7 +90,7 @@ export const CMP_DRAWER_READ_CONTRACTS: readonly CmpDrawerReadContract[] = [
     available: CMP_REPORT_SNAPSHOTS_READ_AVAILABLE,
     label: 'Report snapshots',
     blockedReason:
-      'Generated report exports exist server-side, but GET /api/ha-compliance-report-config lacks @PreAuthorize — snapshot listing stays blocked until backend adds an authorized read contract (CMP-008).',
+      'Generated report exports require an authorized read contract with explicit @PreAuthorize.',
     futurePath: '/ha-compliance-report-config',
   },
   {
@@ -97,7 +98,7 @@ export const CMP_DRAWER_READ_CONTRACTS: readonly CmpDrawerReadContract[] = [
     available: CMP_SCHEDULED_REPORTS_READ_AVAILABLE,
     label: 'Scheduled reports',
     blockedReason:
-      'Compliance report schedules exist server-side, but GET /api/compliance-report-schedules-by-user lacks @PreAuthorize — schedule listing stays blocked.',
+      'Compliance report schedules require an authorized read contract with explicit @PreAuthorize.',
     futurePath: '/compliance-report-schedules-by-user',
   },
 ] as const;
@@ -244,7 +245,7 @@ export const complianceService = {
     });
   },
 
-  /** CMP-007 — wired when {@link CMP_REPORT_SNAPSHOTS_READ_AVAILABLE} flips true. */
+  /** CMP-009 — wired when {@link CMP_REPORT_SNAPSHOTS_READ_AVAILABLE} is true. */
   getFrameworkReportSnapshots: (standardId: number, signal?: AbortSignal) => {
     if (!CMP_REPORT_SNAPSHOTS_READ_AVAILABLE) {
       return Promise.reject(
@@ -265,7 +266,7 @@ export const complianceService = {
       );
   },
 
-  /** CMP-008 — wired when {@link CMP_SCHEDULED_REPORTS_READ_AVAILABLE} flips true. */
+  /** CMP-009 — wired when {@link CMP_SCHEDULED_REPORTS_READ_AVAILABLE} is true. */
   getFrameworkScheduledReports: (_standardId: number, signal?: AbortSignal) => {
     if (!CMP_SCHEDULED_REPORTS_READ_AVAILABLE) {
       return Promise.reject(
@@ -276,5 +277,11 @@ export const complianceService = {
       params: { page: 0, size: 20, sort: 'id,desc' },
       signal,
     });
+  },
+
+  /** CMP-009 — PDF export path when report snapshot read contract is authorized. */
+  getReportSnapshotExportPath: (reportId: number): string | null => {
+    if (!CMP_REPORT_SNAPSHOTS_READ_AVAILABLE) return null;
+    return `/api/ha-compliance-report-config/${reportId}/export`;
   },
 };
