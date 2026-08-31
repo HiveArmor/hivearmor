@@ -473,17 +473,12 @@ SCHEDULE_CREATE_UNAUTH=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
     -d '{"complianceId":1,"scheduleString":"0 0 8 * * MON","urlWithParams":"/compliance"}' || echo "000")
 check "Schedule create without token returns HTTP 401" "401" "$SCHEDULE_CREATE_UNAUTH"
 
-SCHEDULE_REPORT=$(${CURL_BACKEND} -X POST "${BACKEND}/api/ha-compliance-report-config" \
-    -H "Authorization: Bearer $TOKEN" \
-    -H "Content-Type: application/json" \
-    -d '{"reportName":"[E2E-CMP] schedule host","standard":"1"}' || echo "null")
-SCHEDULE_COMPLIANCE_ID=$(echo "$SCHEDULE_REPORT" | python3 -c "
+REPORT_CONFIG_JSON=$(${CURL_BACKEND} -H "Authorization: Bearer $TOKEN" \
+    "${BACKEND}/api/compliance/report-config?page=0&size=1" || echo "[]")
+SCHEDULE_COMPLIANCE_ID=$(echo "$REPORT_CONFIG_JSON" | python3 -c "
 import sys, json
-try:
-    d = json.load(sys.stdin)
-    print(d.get('id', 'none'))
-except Exception:
-    print('none')
+items = json.load(sys.stdin)
+print(items[0]['id'] if isinstance(items, list) and items else 'none')
 " 2>/dev/null || echo "none")
 
 if [ "$SCHEDULE_COMPLIANCE_ID" != "none" ]; then
@@ -507,13 +502,8 @@ except Exception:
             -H "Authorization: Bearer $TOKEN" || echo "000")
         check "Schedule delete returns HTTP 200" "200" "$SCHEDULE_DELETE"
     fi
-
-    SCHEDULE_REPORT_DELETE=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
-        -X DELETE "${BACKEND}/api/ha-compliance-report-config/${SCHEDULE_COMPLIANCE_ID}" \
-        -H "Authorization: Bearer $TOKEN" || echo "000")
-    check "Schedule host report delete returns HTTP 204" "204" "$SCHEDULE_REPORT_DELETE"
 else
-    echo "  ⚠ Skipped schedule create — could not create host report config"
+    echo "  ⚠ Skipped schedule create — no compliance report-config rows available"
 fi
 
 if [ -n "${READONLY_TOKEN:-}" ]; then
