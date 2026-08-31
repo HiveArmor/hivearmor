@@ -9,6 +9,7 @@ import type {
   ComplianceControlExceptionDTO,
   ComplianceEvidenceItemDTO,
   ComplianceImprovementActionDTO,
+  ComplianceReportConfigDTO,
   ComplianceReportSnapshotDTO,
   ComplianceScheduledReportDTO,
   ComplianceStandardSectionDTO,
@@ -414,6 +415,17 @@ export const complianceService = {
     }
     return apiClient.get<ComplianceScheduledReportDTO[]>('/compliance-report-schedules-by-user', {
       params: { page: 0, size: 20, sort: 'id,desc' },
+      signal,
+    });
+  },
+
+  /**
+   * CMP-015 — list report configs for a framework standard.
+   * Schedule create FK targets these IDs (`hive_compliance_report_config`), not export snapshots.
+   */
+  getComplianceReportConfigsByStandard: (standardId: number, signal?: AbortSignal) => {
+    return apiClient.get<ComplianceReportConfigDTO[]>('/compliance/report-config/get-by-filters', {
+      params: { standardId, page: 0, size: 100, setStatus: false, expandDashboard: false },
       signal,
     });
   },

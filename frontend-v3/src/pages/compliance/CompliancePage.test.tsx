@@ -171,6 +171,22 @@ function resolveQuery(options: { queryKey: unknown[] }) {
       },
     ]);
   }
+  if (key === 'cmp-report-configs') {
+    return queryState([
+      {
+        id: 1235,
+        configReportName: 'NIST Access Control Report',
+        configSolution: 'NIST',
+        standardSectionId: 10,
+      },
+      {
+        id: 1236,
+        configReportName: 'NIST Audit Report',
+        configSolution: 'NIST',
+        standardSectionId: 11,
+      },
+    ]);
+  }
   if (key === 'cmp-improvement_actions') {
     return queryState([
       {
@@ -410,6 +426,34 @@ describe('CompliancePage', () => {
     expect(screen.getByText('Weekly NIST export')).toBeInTheDocument();
     expect(screen.getByText(/Schedule create and delete require Platform Administrator/i)).toBeInTheDocument();
     expect(screen.queryByTestId('cmp-scheduled_reports-unavailable')).not.toBeInTheDocument();
+  });
+
+  it('picks a report config from catalog instead of a manual ID for schedule create', () => {
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    fireEvent.click(screen.getByTestId('cmp-schedule-add'));
+    expect(screen.getByTestId('cmp-schedule-form')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Report config ID/i)).not.toBeInTheDocument();
+    const picker = screen.getByLabelText('Select report config for schedule');
+    expect(picker).toBeInTheDocument();
+    expect(within(picker).getByRole('option', { name: /NIST Access Control Report \(#1235\)/ })).toBeInTheDocument();
+    fireEvent.change(picker, { target: { value: '1236' } });
+    expect(picker).toHaveValue('1236');
+  });
+
+  it('shows honest empty state when framework has no report configs for schedule create', () => {
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'cmp-report-configs') {
+        return queryState([]);
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    fireEvent.click(screen.getByTestId('cmp-schedule-add'));
+    expect(screen.getByTestId('cmp-schedule-config-empty')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save schedule' })).toBeDisabled();
   });
 
   it('shows scheduled reports empty state', () => {

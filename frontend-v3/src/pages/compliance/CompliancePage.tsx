@@ -481,6 +481,10 @@ function ScheduledReportsReadPanel({
 }): JSX.Element {
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => ['cmp-scheduled-reports', standardId] as const, [standardId]);
+  const reportConfigsKey = useMemo(
+    () => ['cmp-report-configs', standardId] as const,
+    [standardId],
+  );
   const [showForm, setShowForm] = useState(false);
   const [complianceId, setComplianceId] = useState('');
   const [scheduleString, setScheduleString] = useState('0 0 8 * * MON');
@@ -494,6 +498,33 @@ function ScheduledReportsReadPanel({
     retry: 1,
   });
 
+  const reportConfigsQuery = useQuery({
+    queryKey: reportConfigsKey,
+    queryFn: ({ signal }) =>
+      complianceService.getComplianceReportConfigsByStandard(standardId, signal),
+    enabled: schedulesContract.available && canMutate && CMP_SCHEDULED_REPORTS_WRITE_AVAILABLE,
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  const reportConfigOptions = useMemo(() => {
+    const rows = reportConfigsQuery.data ?? [];
+    return rows.map((row) => {
+      const name = row.configReportName?.trim() || row.configSolution?.trim() || `Config #${row.id}`;
+      return { value: String(row.id), label: `${name} (#${row.id})` };
+    });
+  }, [reportConfigsQuery.data]);
+
+  useEffect(() => {
+    if (reportConfigOptions.length === 0) {
+      setComplianceId('');
+      return;
+    }
+    if (!reportConfigOptions.some((option) => option.value === complianceId)) {
+      setComplianceId(reportConfigOptions[0].value);
+    }
+  }, [complianceId, reportConfigOptions]);
+
   const invalidate = useCallback(
     () => void queryClient.invalidateQueries({ queryKey }),
     [queryClient, queryKey],
@@ -506,7 +537,6 @@ function ScheduledReportsReadPanel({
         scheduleString: scheduleString.trim(),
       }),
     onSuccess: () => {
-      setComplianceId('');
       setShowForm(false);
       invalidate();
     },
@@ -552,6 +582,11 @@ function ScheduledReportsReadPanel({
   }
 
   const rows = query.data ?? [];
+  const canSubmitSchedule =
+    Boolean(complianceId.trim()) &&
+    Boolean(scheduleString.trim()) &&
+    reportConfigOptions.length > 0 &&
+    !createMutation.isPending;
 
   return (
     <>
@@ -570,20 +605,41 @@ function ScheduledReportsReadPanel({
               data-testid="cmp-schedule-form"
               onSubmit={(event) => {
                 event.preventDefault();
-                if (!complianceId.trim() || !scheduleString.trim() || createMutation.isPending) return;
+                if (!canSubmitSchedule) return;
                 createMutation.mutate();
               }}
             >
-              <label>
-                Report config ID
-                <input
-                  type="number"
-                  min={1}
+              {reportConfigsQuery.isLoading ? (
+                <span className="cmp-control-picker__loading" role="status">
+                  <RefreshCw size={12} className="cmp-spin" aria-hidden="true" />
+                  Loading report configs…
+                </span>
+              ) : reportConfigsQuery.isError ? (
+                <div className="cmp-control-picker__error" role="alert">
+                  <span>
+                    {reportConfigsQuery.error instanceof Error
+                      ? reportConfigsQuery.error.message
+                      : 'Report configs could not be loaded.'}
+                  </span>
+                  <button type="button" onClick={() => void reportConfigsQuery.refetch()}>
+                    Retry report configs
+                  </button>
+                </div>
+              ) : reportConfigOptions.length === 0 ? (
+                <p className="cmp-drawer-empty" role="status" data-testid="cmp-schedule-config-empty">
+                  No report configs were returned for this framework. Schedule create requires an
+                  existing entry from /api/compliance/report-config.
+                </p>
+              ) : (
+                <HaCompactSelect
+                  layout="stacked"
+                  label="Report config"
+                  ariaLabel="Select report config for schedule"
                   value={complianceId}
-                  onChange={(event) => setComplianceId(event.target.value)}
-                  required
+                  onChange={setComplianceId}
+                  options={reportConfigOptions}
                 />
-              </label>
+              )}
               <label>
                 Cron schedule
                 <input
@@ -593,10 +649,7 @@ function ScheduledReportsReadPanel({
                   maxLength={250}
                 />
               </label>
-              <button
-                type="submit"
-                disabled={!complianceId.trim() || !scheduleString.trim() || createMutation.isPending}
-              >
+              <button type="submit" disabled={!canSubmitSchedule}>
                 Save schedule
               </button>
               {createMutation.isError && (
@@ -674,8 +727,9 @@ function FrameworkScheduledReportsWorkspace({
       </header>
       <p className="cmp-drawer__workspace-note">
         Recurring compliance report jobs for <strong>{frameworkName}</strong> (catalog standard #
-        {standardId.toLocaleString()}). Schedule create and delete require an existing report config ID
-        and Platform Administrator or SOC Manager authorization.
+        {standardId.toLocaleString()}). CMP-015 picks a report config from the framework catalog
+        (`/api/compliance/report-config`); create and delete require Platform Administrator or SOC
+        Manager authorization.
       </p>
       {schedulesContract.available ? (
         <ScheduledReportsReadPanel
