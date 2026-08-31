@@ -146,6 +146,17 @@ export interface ComplianceScheduledReportDTO {
   status: string;
 }
 
+/**
+ * CMP-015 — row from GET /api/compliance/report-config/get-by-filters.
+ * Schedule FK `complianceId` points at `hive_compliance_report_config.id` (not export snapshots).
+ */
+export interface ComplianceReportConfigDTO {
+  id: number;
+  configReportName: string | null;
+  configSolution: string | null;
+  standardSectionId: number | null;
+}
+
 /** CMP-003 — evidence row for a control. */
 export interface ComplianceEvidenceItemDTO {
   evidenceId?: string | null;

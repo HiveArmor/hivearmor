@@ -467,6 +467,7 @@ fi
 # ─────────────────────────────────────────────────────────────────────────────
 echo ""
 echo "[15] Schedule write mutations  (POST/DELETE /api/compliance-report-schedules)"
+echo "     CMP-015 — complianceId must be hive_compliance_report_config id from get-by-filters"
 SCHEDULE_CREATE_UNAUTH=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
     -X POST "${BACKEND}/api/compliance-report-schedules" \
     -H "Content-Type: application/json" \
@@ -474,7 +475,7 @@ SCHEDULE_CREATE_UNAUTH=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
 check "Schedule create without token returns HTTP 401" "401" "$SCHEDULE_CREATE_UNAUTH"
 
 REPORT_CONFIG_JSON=$(${CURL_BACKEND} -H "Authorization: Bearer $TOKEN" \
-    "${BACKEND}/api/compliance/report-config?page=0&size=1" || echo "[]")
+    "${BACKEND}/api/compliance/report-config/get-by-filters?page=0&size=1&setStatus=false&expandDashboard=false" || echo "[]")
 SCHEDULE_COMPLIANCE_ID=$(echo "$REPORT_CONFIG_JSON" | python3 -c "
 import sys, json
 items = json.load(sys.stdin)

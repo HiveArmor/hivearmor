@@ -398,12 +398,25 @@ describe('CMP-014 report and schedule write contracts', () => {
         complianceId: 2,
         scheduleString: '0 0 8 * * MON',
         urlWithParams: '/compliance',
+        filterDef: [],
       },
       { signal: undefined },
     );
 
     await complianceService.deleteComplianceReportSchedule(5);
     expect(mockDelete).toHaveBeenCalledWith('/compliance-report-schedules/5', {
+      signal: undefined,
+    });
+  });
+
+  it('lists report configs by standard for CMP-015 schedule picker', async () => {
+    mockGet.mockResolvedValueOnce([
+      { id: 1235, configReportName: 'Access Control', configSolution: 'NIST', standardSectionId: 10 },
+    ]);
+    const rows = await complianceService.getComplianceReportConfigsByStandard(1);
+    expect(rows).toHaveLength(1);
+    expect(mockGet).toHaveBeenCalledWith('/compliance/report-config/get-by-filters', {
+      params: { standardId: 1, page: 0, size: 100, setStatus: false, expandDashboard: false },
       signal: undefined,
     });
   });
