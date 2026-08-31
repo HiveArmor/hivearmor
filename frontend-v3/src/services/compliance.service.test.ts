@@ -1,0 +1,104 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import {
+  complianceService,
+  parseFrameworkStandardId,
+} from './compliance.service';
+
+const mockGet = vi.fn();
+
+vi.mock('@/lib/apiClient', () => ({
+  apiClient: {
+    get: (...args: unknown[]) => mockGet(...args),
+  },
+}));
+
+describe('parseFrameworkStandardId', () => {
+  it('returns numeric standard ids from posture framework rows', () => {
+    expect(parseFrameworkStandardId('42')).toBe(42);
+    expect(parseFrameworkStandardId(' 7 ')).toBe(7);
+  });
+
+  it('returns null for non-numeric fixture or slug ids', () => {
+    expect(parseFrameworkStandardId('nist-csf-2')).toBeNull();
+    expect(parseFrameworkStandardId('')).toBeNull();
+    expect(parseFrameworkStandardId('0')).toBeNull();
+  });
+});
+
+describe('complianceService.resolveFrameworkRepresentativeControl', () => {
+  beforeEach(() => {
+    mockGet.mockReset();
+  });
+
+  it('returns null when framework id is not a numeric standard id', async () => {
+    const result = await complianceService.resolveFrameworkRepresentativeControl('hipaa-security');
+    expect(result).toBeNull();
+    expect(mockGet).not.toHaveBeenCalled();
+  });
+
+  it('returns null when standard has no sections', async () => {
+    mockGet.mockResolvedValueOnce([]);
+    const result = await complianceService.resolveFrameworkRepresentativeControl('3');
+    expect(result).toBeNull();
+    expect(mockGet).toHaveBeenCalledWith('/compliance/standard-section', {
+      params: { 'standardId.equals': 3, size: 50, sort: 'id,asc' },
+      signal: undefined,
+    });
+  });
+
+  it('walks sections until the first control is found', async () => {
+    mockGet
+      .mockResolvedValueOnce([
+        { id: 10, standardId: 3, standardSectionName: 'Access' },
+        { id: 11, standardId: 3, standardSectionName: 'Logging' },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 55,
+          standardSectionId: 11,
+          controlName: 'Audit logging',
+          lastEvaluationStatus: 'PASS',
+        },
+      ]);
+
+    const result = await complianceService.resolveFrameworkRepresentativeControl('3');
+    expect(result).toEqual({
+      standardId: 3,
+      sectionId: 11,
+      sectionName: 'Logging',
+      controlId: 55,
+      controlName: 'Audit logging',
+    });
+    expect(mockGet).toHaveBeenNthCalledWith(2, '/compliance/control-config/get-by-section', {
+      params: { sectionId: 10, size: 1, sort: 'id,asc' },
+      signal: undefined,
+    });
+    expect(mockGet).toHaveBeenNthCalledWith(3, '/compliance/control-config/get-by-section', {
+      params: { sectionId: 11, size: 1, sort: 'id,asc' },
+      signal: undefined,
+    });
+  });
+
+  it('uses the first control from the first section with catalog rows', async () => {
+    mockGet
+      .mockResolvedValueOnce([{ id: 20, standardId: 5, standardSectionName: 'Identify' }])
+      .mockResolvedValueOnce([
+        {
+          id: 101,
+          standardSectionId: 20,
+          controlName: 'Asset inventory',
+        },
+      ]);
+
+    const result = await complianceService.resolveFrameworkRepresentativeControl('5');
+    expect(result).toEqual({
+      standardId: 5,
+      sectionId: 20,
+      sectionName: 'Identify',
+      controlId: 101,
+      controlName: 'Asset inventory',
+    });
+  });
+});

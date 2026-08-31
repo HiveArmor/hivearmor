@@ -41,6 +41,23 @@ export interface ComplianceFilters {
   q?: string;
 }
 
+/** CMP-004 — standard section row from /api/compliance/standard-section. */
+export interface ComplianceStandardSectionDTO {
+  id: number;
+  standardId?: number | null;
+  standardSectionName?: string | null;
+  standardSectionDescription?: string | null;
+}
+
+/** CMP-004 — representative catalog control resolved for a framework drawer. */
+export interface FrameworkControlResolution {
+  standardId: number;
+  sectionId: number;
+  sectionName: string | null;
+  controlId: number;
+  controlName: string | null;
+}
+
 /** CMP-002 — latest evaluation projection for a catalog control. */
 export interface ComplianceControlLatestEvaluationDTO {
   id: number;
