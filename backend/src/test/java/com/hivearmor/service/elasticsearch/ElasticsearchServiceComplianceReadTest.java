@@ -11,7 +11,12 @@ import com.hivearmor.service.application_events.ApplicationEventService;
 import com.hivearmor.service.index_policy.IndexPolicyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.core.search.HitsMetadata;
+import org.opensearch.client.opensearch.core.search.TotalHits;
+import org.opensearch.client.opensearch.core.search.TotalHitsRelation;
 
 import java.util.List;
 import java.util.Map;
@@ -60,5 +65,25 @@ class ElasticsearchServiceComplianceReadTest {
                 .thenThrow(new RuntimeException("no such index"));
 
         assertThat(service.getLatestControlEvaluation(1L)).isNull();
+    }
+
+    @Test
+    void getLatestControlEvaluation_sortsOnTimestampField() throws Exception {
+        ArgumentCaptor<SearchRequest> requestCaptor = ArgumentCaptor.forClass(SearchRequest.class);
+        SearchResponse<Map> emptyResponse = SearchResponse.searchResponseOf(r -> r
+                .hits(HitsMetadata.of(h -> h
+                        .total(TotalHits.of(t -> t.value(0L).relation(TotalHitsRelation.Eq)))
+                        .hits(List.of())))
+                .took(1L)
+                .timedOut(false)
+                .shards(s -> s.total(1).successful(1).failed(0)));
+        when(openSearch.search(requestCaptor.capture(), eq(Map.class))).thenReturn(emptyResponse);
+
+        service.getLatestControlEvaluation(1L);
+
+        String requestJson = requestCaptor.getValue().toString();
+        assertThat(requestJson).contains("control_id");
+        assertThat(requestJson).contains("timestamp");
+        assertThat(requestJson).doesNotContain("@timestamp");
     }
 }

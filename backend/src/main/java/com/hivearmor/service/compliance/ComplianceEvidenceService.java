@@ -45,14 +45,14 @@ public class ComplianceEvidenceService {
         SearchRequest request = SearchRequest.of(s -> s
                 .index(msspIndexResolver.resolveIndexPattern(COMPLIANCE_EVIDENCE_DATA_TYPE))
                 .query(q -> q.bool(b -> {
-                    b.must(m -> m.term(t -> t.field("controlId").value(FieldValue.of(controlId))));
-                    b.filter(f -> f.range(r -> r.field("@timestamp").gte(JsonData.of(sinceStr))));
+                    b.must(m -> m.term(t -> t.field("control_id").value(FieldValue.of(controlId))));
+                    b.filter(f -> f.range(r -> r.field("timestamp").gte(JsonData.of(sinceStr))));
                     if (mt != null && !mt.isBlank()) {
                         b.filter(f -> f.term(t -> t.field("mappingType.keyword").value(FieldValue.of(mt))));
                     }
                     return b;
                 }))
-                .sort(sort -> sort.field(f -> f.field("@timestamp").order(SortOrder.Desc)))
+                .sort(sort -> sort.field(f -> f.field("timestamp").order(SortOrder.Desc)))
                 .from((int) pageable.getOffset())
                 .size(pageable.getPageSize())
                 .trackTotalHits(th -> th.enabled(true))
@@ -83,11 +83,11 @@ public class ComplianceEvidenceService {
         SearchRequest request = SearchRequest.of(s -> s
                 .index(msspIndexResolver.resolveIndexPattern(COMPLIANCE_EVIDENCE_DATA_TYPE))
                 .query(q -> q.bool(b -> {
-                    b.must(m -> m.term(t -> t.field("controlId").value(FieldValue.of(controlId))));
-                    b.filter(f -> f.range(r -> r.field("@timestamp").gte(JsonData.of(sinceStr2))));
+                    b.must(m -> m.term(t -> t.field("control_id").value(FieldValue.of(controlId))));
+                    b.filter(f -> f.range(r -> r.field("timestamp").gte(JsonData.of(sinceStr2))));
                     return b;
                 }))
-                .sort(sort -> sort.field(f -> f.field("@timestamp").order(SortOrder.Desc)))
+                .sort(sort -> sort.field(f -> f.field("timestamp").order(SortOrder.Desc)))
                 .size(10_000)
         );
 
@@ -109,10 +109,10 @@ public class ComplianceEvidenceService {
 
         ComplianceEvidenceDTO dto = new ComplianceEvidenceDTO();
         dto.setEvidenceId(hitId);
-        dto.setControlId(getLong(src.get("controlId")));
+        dto.setControlId(getLong(src.get("control_id") != null ? src.get("control_id") : src.get("controlId")));
         dto.setMappingType(getString(src.get("mappingType")));
 
-        Object ts = src.get("@timestamp");
+        Object ts = src.get("timestamp") != null ? src.get("timestamp") : src.get("@timestamp");
         if (ts != null) {
             try { dto.setTimestamp(Instant.parse(ts.toString())); } catch (Exception ignored) {}
         }
