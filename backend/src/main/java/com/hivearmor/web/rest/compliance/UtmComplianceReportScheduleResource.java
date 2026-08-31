@@ -4,6 +4,7 @@ import com.hivearmor.aop.logging.AuditEvent;
 import com.hivearmor.domain.application_events.enums.ApplicationEventType;
 import com.hivearmor.domain.compliance.UtmComplianceReportSchedule;
 import com.hivearmor.repository.compliance.UtmComplianceReportScheduleRepository;
+import com.hivearmor.security.AuthoritiesConstants;
 import com.hivearmor.service.application_events.ApplicationEventService;
 import com.hivearmor.service.compliance.UtmComplianceReportScheduleService;
 import com.hivearmor.service.dto.compliance.UtmComplianceReportScheduleCriteria;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -141,6 +143,8 @@ public class UtmComplianceReportScheduleResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of utmComplianceReportSchedules in body.
      */
     @GetMapping("/compliance-report-schedules-by-user")
+    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
+                  "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
     public ResponseEntity<List<UtmComplianceReportSchedule>> getAllUtmComplianceReportSchedules(UtmComplianceReportScheduleCriteria criteria, Pageable pageable) {
         final String ctx = CLASSNAME + ".getAllUtmComplianceReportSchedules";
         try {
