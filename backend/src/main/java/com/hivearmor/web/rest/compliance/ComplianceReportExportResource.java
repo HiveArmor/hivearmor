@@ -4,6 +4,7 @@ import com.hivearmor.domain.application_events.enums.ApplicationEventType;
 import com.hivearmor.domain.compliance.UtmComplianceReportExport;
 import com.hivearmor.domain.compliance.UtmComplianceReportSchedule;
 import com.hivearmor.repository.compliance.UtmComplianceReportScheduleRepository;
+import com.hivearmor.security.AuthoritiesConstants;
 import com.hivearmor.service.application_events.ApplicationEventService;
 import com.hivearmor.service.compliance.ComplianceReportExportService;
 import com.hivearmor.util.ResponseUtil;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -54,6 +56,8 @@ public class ComplianceReportExportResource {
 
     /** List generated reports (paged). */
     @GetMapping("/ha-compliance-report-config")
+    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
+                  "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
     public ResponseEntity<List<UtmComplianceReportExport>> listReports(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "50") int size
@@ -104,6 +108,8 @@ public class ComplianceReportExportResource {
 
     /** Stream a generated PDF for the given report. */
     @GetMapping(value = "/ha-compliance-report-config/{id}/export", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAnyAuthority('" + AuthoritiesConstants.ADMIN + "','" + AuthoritiesConstants.USER +
+                  "','" + AuthoritiesConstants.ANALYST + "','" + AuthoritiesConstants.SOC_MANAGER + "')")
     public ResponseEntity<byte[]> exportPdf(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".exportPdf";
         try {
