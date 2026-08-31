@@ -7,6 +7,7 @@ import type { ColDef, ICellRendererParams, RowClickedEvent } from 'ag-grid-commu
 import type { AgGridReact } from 'ag-grid-react';
 import {
   AlertTriangle,
+  ChevronLeft,
   ChevronRight,
   CircleHelp,
   ClipboardCheck,
@@ -32,7 +33,11 @@ import { ROUTES } from '@/constants/routes.constants';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
-import { complianceService, parseFrameworkStandardId } from '@/services/compliance.service';
+import {
+  CMP_SECTION_CONTROLS_PAGE_SIZE,
+  complianceService,
+  parseFrameworkStandardId,
+} from '@/services/compliance.service';
 import { postureService } from '@/services/posture.service';
 import type {
   ComplianceControlEvaluationGroupedDTO,
@@ -113,12 +118,14 @@ function ScoreCell({ score, assessed }: { score: number; assessed: boolean }): J
 
 function ControlEvidenceWorkspace({
   controlId,
-  mapping,
   frameworkName,
+  sectionName,
+  controlName,
 }: {
   controlId: number;
-  mapping: FrameworkControlResolution;
   frameworkName: string;
+  sectionName: string | null;
+  controlName: string | null;
 }): JSX.Element {
   const controlQuery = useQuery({
     queryKey: ['compliance-control-latest', controlId],
@@ -166,16 +173,16 @@ function ControlEvidenceWorkspace({
       </header>
 
       <p className="cmp-drawer__workspace-note">
-        Representative catalog control for <strong>{frameworkName}</strong>
-        {mapping.sectionName ? (
+        Selected catalog control for <strong>{frameworkName}</strong>
+        {sectionName ? (
           <>
             {' '}
-            — first control in section <strong>{mapping.sectionName}</strong>
+            in section <strong>{sectionName}</strong>
           </>
         ) : null}
         . Catalog record #{controlId.toLocaleString()}
-        {mapping.controlName ? ` (${mapping.controlName})` : ''} from the live CMP projection — not
-        certification or attestation.
+        {controlName ? ` (${controlName})` : ''} from the live CMP projection — not certification or
+        attestation.
       </p>
 
       {loading && (
@@ -291,6 +298,193 @@ function ControlEvidenceWorkspace({
         </>
       )}
     </section>
+  );
+}
+
+function FrameworkControlBrowser({
+  mapping,
+  frameworkName,
+}: {
+  mapping: FrameworkControlResolution;
+  frameworkName: string;
+}): JSX.Element {
+  const [sectionId, setSectionId] = useState(mapping.sectionId);
+  const [controlId, setControlId] = useState(mapping.controlId);
+  const [controlPage, setControlPage] = useState(0);
+
+  const sectionsQuery = useQuery({
+    queryKey: ['compliance-framework-sections', mapping.standardId],
+    queryFn: ({ signal }) => complianceService.getStandardSections(mapping.standardId, signal),
+    staleTime: 60_000,
+    retry: 1,
+  });
+  const controlsQuery = useQuery({
+    queryKey: ['compliance-section-controls', sectionId, controlPage],
+    queryFn: ({ signal }) =>
+      complianceService.getSectionControlsPage(
+        { sectionId, page: controlPage, size: CMP_SECTION_CONTROLS_PAGE_SIZE },
+        signal,
+      ),
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  const sections = sectionsQuery.data ?? [];
+  const controls = controlsQuery.data?.items ?? [];
+  const controlsTotal = controlsQuery.data?.total ?? 0;
+  const pageSize = CMP_SECTION_CONTROLS_PAGE_SIZE;
+  const pageStart = controlsTotal === 0 ? 0 : controlPage * pageSize + 1;
+  const pageEnd = Math.min(controlsTotal, (controlPage + 1) * pageSize);
+  const hasNextPage = pageEnd < controlsTotal;
+
+  const sectionName =
+    sections.find((section) => section.id === sectionId)?.standardSectionName ??
+    mapping.sectionName;
+  const controlName =
+    controls.find((control) => control.id === controlId)?.controlName ?? mapping.controlName;
+
+  useEffect(() => {
+    setSectionId(mapping.sectionId);
+    setControlId(mapping.controlId);
+    setControlPage(0);
+  }, [mapping.controlId, mapping.sectionId]);
+
+  useEffect(() => {
+    if (!controls.length || controlsQuery.isLoading) return;
+    if (controls.some((control) => control.id === controlId)) return;
+    const firstControl = controls[0];
+    if (firstControl?.id != null) setControlId(firstControl.id);
+  }, [controlId, controls, controlsQuery.isLoading]);
+
+  const sectionOptions = sections.map((section) => ({
+    value: String(section.id),
+    label: section.standardSectionName?.trim() || `Section ${section.id}`,
+  }));
+
+  const controlOptions = controls.map((control) => ({
+    value: String(control.id),
+    label: control.controlName?.trim() || `Control ${control.id}`,
+  }));
+
+  return (
+    <>
+      <section className="cmp-drawer__card cmp-control-picker" data-testid="cmp-control-picker">
+        <header>
+          <List size={15} />
+          <div>
+            <strong>Catalog control browser</strong>
+            <span>CMP-005 — section-scoped picker</span>
+          </div>
+        </header>
+
+        {sectionsQuery.isLoading && (
+          <div className="cmp-drawer-state" role="status">
+            <RefreshCw size={14} className="cmp-spin" aria-hidden="true" />
+            <strong>Loading framework sections</strong>
+            <span>Fetching authorized standard sections for this framework record.</span>
+          </div>
+        )}
+
+        {!sectionsQuery.isLoading && sectionsQuery.isError && (
+          <div className="cmp-drawer-state" role="alert">
+            <AlertTriangle size={16} aria-hidden="true" />
+            <strong>Section catalog unavailable</strong>
+            <span>
+              {sectionsQuery.error instanceof Error
+                ? sectionsQuery.error.message
+                : 'CMP section lookup could not be loaded.'}
+            </span>
+            <button type="button" onClick={() => void sectionsQuery.refetch()}>
+              Retry section lookup
+            </button>
+          </div>
+        )}
+
+        {!sectionsQuery.isLoading && !sectionsQuery.isError && sectionOptions.length === 0 && (
+          <p className="cmp-drawer-empty" role="status">
+            No catalog sections were returned for this framework in the authorized CMP projection.
+          </p>
+        )}
+
+        {!sectionsQuery.isLoading && !sectionsQuery.isError && sectionOptions.length > 0 && (
+          <>
+            <div className="cmp-control-picker__filters">
+              <HaCompactSelect
+                ariaLabel="Select catalog section"
+                value={String(sectionId)}
+                onChange={(value) => {
+                  setSectionId(Number.parseInt(value, 10));
+                  setControlPage(0);
+                }}
+                options={sectionOptions}
+              />
+              {controlsQuery.isLoading ? (
+                <span className="cmp-control-picker__loading" role="status">
+                  <RefreshCw size={12} className="cmp-spin" aria-hidden="true" />
+                  Loading controls…
+                </span>
+              ) : controlsQuery.isError ? (
+                <div className="cmp-control-picker__error" role="alert">
+                  <span>
+                    {controlsQuery.error instanceof Error
+                      ? controlsQuery.error.message
+                      : 'Control list could not be loaded.'}
+                  </span>
+                  <button type="button" onClick={() => void controlsQuery.refetch()}>
+                    Retry controls
+                  </button>
+                </div>
+              ) : controlOptions.length === 0 ? (
+                <p className="cmp-drawer-empty" role="status">
+                  No catalog controls were returned for this section.
+                </p>
+              ) : (
+                <HaCompactSelect
+                  ariaLabel="Select catalog control"
+                  value={String(controlId)}
+                  onChange={(value) => setControlId(Number.parseInt(value, 10))}
+                  options={controlOptions}
+                />
+              )}
+            </div>
+
+            {!controlsQuery.isLoading && !controlsQuery.isError && controlsTotal > pageSize && (
+              <footer className="cmp-control-picker__pagination" aria-label="Section control pagination">
+                <span>
+                  {pageStart.toLocaleString()}–{pageEnd.toLocaleString()} of{' '}
+                  {controlsTotal.toLocaleString()} controls in section
+                </span>
+                <div>
+                  <button
+                    type="button"
+                    disabled={controlPage === 0 || controlsQuery.isFetching}
+                    onClick={() => setControlPage((page) => Math.max(0, page - 1))}
+                  >
+                    <ChevronLeft size={13} aria-hidden="true" />
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!hasNextPage || controlsQuery.isFetching}
+                    onClick={() => setControlPage((page) => page + 1)}
+                  >
+                    Next
+                    <ChevronRight size={13} aria-hidden="true" />
+                  </button>
+                </div>
+              </footer>
+            )}
+          </>
+        )}
+      </section>
+
+      <ControlEvidenceWorkspace
+        controlId={controlId}
+        frameworkName={frameworkName}
+        sectionName={sectionName}
+        controlName={controlName}
+      />
+    </>
   );
 }
 
@@ -461,11 +655,7 @@ function FrameworkDrawer({
             onRetry={() => void mappingQuery.refetch()}
           />
         ) : mappingQuery.data ? (
-          <ControlEvidenceWorkspace
-            controlId={mappingQuery.data.controlId}
-            mapping={mappingQuery.data}
-            frameworkName={framework.name}
-          />
+          <FrameworkControlBrowser mapping={mappingQuery.data} frameworkName={framework.name} />
         ) : (
           <FrameworkControlMappingEmpty framework={framework} reason="no-catalog" />
         )}

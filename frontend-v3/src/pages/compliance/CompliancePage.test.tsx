@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { COMPLIANCE_ASSURANCE_JOB_SENTENCE, CompliancePage } from './CompliancePage';
@@ -107,11 +107,33 @@ function queryState(data: unknown, overrides: Record<string, unknown> = {}) {
   };
 }
 
+const sectionControlsPage = {
+  items: [
+    cmpControl,
+    {
+      id: 43,
+      standardSectionId: 10,
+      controlName: 'Account management',
+      controlStrategy: 'MANUAL',
+      lastEvaluationStatus: 'FAIL',
+      lastEvaluationTimestamp: '2026-08-20T09:42:00Z',
+    },
+  ],
+  total: 2,
+};
+
+const frameworkSections = [
+  { id: 10, standardId: 1, standardSectionName: 'Access control' },
+  { id: 11, standardId: 1, standardSectionName: 'Audit' },
+];
+
 function resolveQuery(options: { queryKey: unknown[] }) {
   const key = String(options.queryKey[0]);
   if (key === 'postureScore') return queryState(score);
   if (key === 'postureFrameworks') return queryState(frameworks);
   if (key === 'compliance-framework-control') return queryState(frameworkMapping);
+  if (key === 'compliance-framework-sections') return queryState(frameworkSections);
+  if (key === 'compliance-section-controls') return queryState(sectionControlsPage);
   if (key === 'compliance-control-latest') return queryState(cmpControl);
   if (key === 'compliance-control-evaluations') {
     return queryState({ evaluations: [], startDate: null, endDate: null });
@@ -147,17 +169,74 @@ describe('CompliancePage', () => {
     expect(screen.getByText(/1 of 2 records/i)).toBeInTheDocument();
   });
 
-  it('progressively loads CMP workspace after framework control mapping resolves', () => {
+  it('progressively loads CMP workspace with section-scoped control picker', () => {
     render(<CompliancePage />);
     expect(screen.queryByText('Control and evidence workspace')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    expect(screen.getByTestId('cmp-control-picker')).toBeInTheDocument();
     expect(screen.getByTestId('cmp-control-workspace')).toBeInTheDocument();
-    expect(screen.getByText('Access control policy')).toBeInTheDocument();
-    expect(screen.getByText(/Representative catalog control for/i)).toBeInTheDocument();
-    expect(screen.getByText('Access control')).toBeInTheDocument();
-    expect(screen.getByText(/No evidence was returned/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Select catalog section')).toBeInTheDocument();
+    expect(screen.getByLabelText('Select catalog control')).toBeInTheDocument();
+    const workspace = screen.getByTestId('cmp-control-workspace');
+    expect(within(workspace).getByText('Access control policy')).toBeInTheDocument();
+    expect(within(workspace).getByText(/Selected catalog control for/i)).toBeInTheDocument();
+    expect(within(workspace).getByText('Access control')).toBeInTheDocument();
+    expect(within(workspace).getByText(/No evidence was returned/i)).toBeInTheDocument();
     expect(screen.getByText(/does not return assessment scope/i)).toBeInTheDocument();
     expect(screen.queryByText(/Requires CMP-002 and CMP-003/i)).not.toBeInTheDocument();
+  });
+
+  it('reloads workspace when analyst selects a different catalog control', () => {
+    const latestQueries: unknown[][] = [];
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      latestQueries.push(options.queryKey);
+      if (options.queryKey[0] === 'compliance-control-latest' && options.queryKey[1] === 43) {
+        return queryState({
+          ...cmpControl,
+          id: 43,
+          controlName: 'Account management',
+          lastEvaluationStatus: 'FAIL',
+        });
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    fireEvent.change(screen.getByLabelText('Select catalog control'), { target: { value: '43' } });
+    const workspace = screen.getByTestId('cmp-control-workspace');
+    expect(within(workspace).getByText('Account management')).toBeInTheDocument();
+    expect(latestQueries.some((key) => key[0] === 'compliance-control-latest' && key[1] === 43)).toBe(
+      true,
+    );
+  });
+
+  it('shows honest empty state when selected section has no controls', () => {
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'compliance-section-controls') {
+        return queryState({ items: [], total: 0 });
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    expect(screen.getByText(/No catalog controls were returned for this section/i)).toBeInTheDocument();
+  });
+
+  it('shows picker error and retry when section controls fail to load', () => {
+    const refetch = vi.fn();
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'compliance-section-controls') {
+        return queryState(undefined, { error: new Error('503 upstream'), isError: true, refetch });
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    expect(screen.getByRole('button', { name: 'Retry controls' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry controls' }));
+    expect(refetch).toHaveBeenCalled();
   });
 
   it('shows honest empty mapping when framework id is not a numeric standard id', () => {

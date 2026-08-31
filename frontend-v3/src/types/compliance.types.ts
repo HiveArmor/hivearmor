@@ -58,6 +58,20 @@ export interface FrameworkControlResolution {
   controlName: string | null;
 }
 
+/** CMP-005 — paginated section control list from get-by-section. */
+export interface SectionControlsPage {
+  items: ComplianceControlLatestEvaluationDTO[];
+  total: number;
+}
+
+export interface SectionControlsQuery {
+  sectionId: number;
+  page?: number;
+  size?: number;
+  sort?: string;
+  search?: string;
+}
+
 /** CMP-002 — latest evaluation projection for a catalog control. */
 export interface ComplianceControlLatestEvaluationDTO {
   id: number;
