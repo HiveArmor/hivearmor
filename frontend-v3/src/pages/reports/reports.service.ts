@@ -15,9 +15,12 @@ import type {
 import { apiClient } from '@/lib/apiClient';
 
 // Generic Reports
-export async function fetchReportsByType(type?: ReportType): Promise<ReportDTO[]> {
+export async function fetchReportsByType(
+  type?: ReportType,
+  signal?: AbortSignal,
+): Promise<ReportDTO[]> {
   const params = type ? { repType: type } : undefined;
-  return apiClient.get<ReportDTO[]>('/ha-reports', { params });
+  return apiClient.get<ReportDTO[]>('/ha-reports', { params, signal });
 }
 
 export async function fetchReportById(id: number): Promise<ReportDTO> {
