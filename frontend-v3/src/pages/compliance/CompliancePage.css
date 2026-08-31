@@ -22,3 +22,11 @@
 .cmp-spin{animation:cmp-spin 900ms linear infinite}@keyframes cmp-spin{to{transform:rotate(360deg)}}
 @media(max-width:760px){.cmp-shortcuts{display:none}.cmp-search{width:min(260px,70vw)}.cmp-scope,.cmp-footer>strong,.cmp-inline-stats{display:none}}
 @media(prefers-reduced-motion:reduce){.cmp-spin{animation:none}}
+.cmp-governance-actions{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.cmp-governance-actions>button{align-self:flex-start;height:28px;padding:0 10px;color:var(--ha-action-secondary);background:var(--ha-surface-elevated);border:1px solid var(--ha-border-default);border-radius:var(--ha-radius-control);font:500 10px/1 var(--ha-font-ui);cursor:pointer}
+.cmp-governance-form{display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--ha-surface-elevated);border:1px solid var(--ha-border-subtle);border-radius:var(--ha-radius-control)}
+.cmp-governance-form label{display:flex;flex-direction:column;gap:4px;color:var(--ha-foreground-tertiary);font-size:9px}
+.cmp-governance-form input{height:28px;padding:0 8px;color:var(--ha-foreground-primary);background:var(--ha-surface-panel);border:1px solid var(--ha-border-default);border-radius:var(--ha-radius-control);font:10px/1 var(--ha-font-ui)}
+.cmp-governance-form button{align-self:flex-start;height:28px;padding:0 10px;color:var(--ha-foreground-primary);background:var(--ha-action-primary);border:0;border-radius:var(--ha-radius-control);font:500 10px/1 var(--ha-font-ui);cursor:pointer}
+.cmp-workspace-list button{padding:0;color:var(--ha-action-secondary);background:transparent;border:0;font:inherit;cursor:pointer;text-decoration:underline}
+.cmp-workspace-list button:disabled{color:var(--ha-foreground-disabled);cursor:not-allowed;text-decoration:none}

@@ -34,6 +34,18 @@ export const CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE = true;
  */
 export const CMP_EXCEPTIONS_READ_AVAILABLE = true;
 
+/**
+ * CMP-013 — HaPoamItemResource POST/PUT/DELETE /ha-compliance/poam has method-level @PreAuthorize
+ * (ADMIN|SOC_MANAGER).
+ */
+export const CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE = true;
+
+/**
+ * CMP-013 — HaComplianceExceptionResource POST/PATCH/DELETE /ha-compliance/exceptions has
+ * method-level @PreAuthorize (ADMIN|SOC_MANAGER).
+ */
+export const CMP_EXCEPTIONS_WRITE_AVAILABLE = true;
+
 export type CmpGovernanceReadKind = 'improvement_actions' | 'exceptions';
 
 export interface CmpGovernanceReadContract {
@@ -243,6 +255,121 @@ export const complianceService = {
       params: { controlId, page: 0, size: 20, sort: 'effectiveUntil,asc' },
       signal,
     });
+  },
+
+  /** CMP-013 — create POA&M row when write contract is authorized. */
+  createImprovementAction: (
+    body: {
+      frameworkId: string;
+      controlId: number;
+      title: string;
+      description?: string | null;
+      dueDate?: string | null;
+      assignee?: string | null;
+      status?: string | null;
+    },
+    signal?: AbortSignal,
+  ) => {
+    if (!CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE) {
+      return Promise.reject(
+        new Error('CMP-013 improvement-action write contract is not authorized yet.'),
+      );
+    }
+    return apiClient.post<ComplianceImprovementActionDTO>('/ha-compliance/poam', body, { signal });
+  },
+
+  /** CMP-013 — update POA&M row (status, assignee, due date, title). */
+  updateImprovementAction: (
+    id: number,
+    body: {
+      title?: string | null;
+      status?: string | null;
+      assignee?: string | null;
+      dueDate?: string | null;
+    },
+    signal?: AbortSignal,
+  ) => {
+    if (!CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE) {
+      return Promise.reject(
+        new Error('CMP-013 improvement-action write contract is not authorized yet.'),
+      );
+    }
+    return apiClient.put<ComplianceImprovementActionDTO>(`/ha-compliance/poam/${id}`, body, {
+      signal,
+    });
+  },
+
+  /** CMP-013 — delete POA&M row. */
+  deleteImprovementAction: (id: number, signal?: AbortSignal) => {
+    if (!CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE) {
+      return Promise.reject(
+        new Error('CMP-013 improvement-action write contract is not authorized yet.'),
+      );
+    }
+    return apiClient.delete<void>(`/ha-compliance/poam/${id}`, { signal });
+  },
+
+  /** CMP-013 — request compensating-control exception (status pending). */
+  createControlException: (
+    body: {
+      controlId: number;
+      title: string;
+      reason?: string | null;
+      effectiveFrom?: string | null;
+      effectiveUntil?: string | null;
+    },
+    signal?: AbortSignal,
+  ) => {
+    if (!CMP_EXCEPTIONS_WRITE_AVAILABLE) {
+      return Promise.reject(new Error('CMP-013 exception write contract is not authorized yet.'));
+    }
+    return apiClient.post<ComplianceControlExceptionDTO>('/ha-compliance/exceptions', body, {
+      signal,
+    });
+  },
+
+  /** CMP-013 — approve pending exception. */
+  approveControlException: (id: number, signal?: AbortSignal) => {
+    if (!CMP_EXCEPTIONS_WRITE_AVAILABLE) {
+      return Promise.reject(new Error('CMP-013 exception write contract is not authorized yet.'));
+    }
+    return apiClient.patch<ComplianceControlExceptionDTO>(
+      `/ha-compliance/exceptions/${id}/approve`,
+      undefined,
+      { signal },
+    );
+  },
+
+  /** CMP-013 — reject pending exception. */
+  rejectControlException: (id: number, signal?: AbortSignal) => {
+    if (!CMP_EXCEPTIONS_WRITE_AVAILABLE) {
+      return Promise.reject(new Error('CMP-013 exception write contract is not authorized yet.'));
+    }
+    return apiClient.patch<ComplianceControlExceptionDTO>(
+      `/ha-compliance/exceptions/${id}/reject`,
+      undefined,
+      { signal },
+    );
+  },
+
+  /** CMP-013 — revoke approved exception. */
+  revokeControlException: (id: number, signal?: AbortSignal) => {
+    if (!CMP_EXCEPTIONS_WRITE_AVAILABLE) {
+      return Promise.reject(new Error('CMP-013 exception write contract is not authorized yet.'));
+    }
+    return apiClient.patch<ComplianceControlExceptionDTO>(
+      `/ha-compliance/exceptions/${id}/revoke`,
+      undefined,
+      { signal },
+    );
+  },
+
+  /** CMP-013 — delete exception row. */
+  deleteControlException: (id: number, signal?: AbortSignal) => {
+    if (!CMP_EXCEPTIONS_WRITE_AVAILABLE) {
+      return Promise.reject(new Error('CMP-013 exception write contract is not authorized yet.'));
+    }
+    return apiClient.delete<void>(`/ha-compliance/exceptions/${id}`, { signal });
   },
 
   /** CMP-009 — wired when {@link CMP_REPORT_SNAPSHOTS_READ_AVAILABLE} is true. */

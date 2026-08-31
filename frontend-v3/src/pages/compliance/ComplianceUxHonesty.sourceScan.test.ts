@@ -59,6 +59,8 @@ describe('Compliance Assurance UX honesty (Prompt 30)', () => {
     expect(complianceService).toContain('CMP_SECTION_CONTROLS_PAGE_SIZE');
     expect(complianceService).toContain('CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE');
     expect(complianceService).toContain('CMP_EXCEPTIONS_READ_AVAILABLE');
+    expect(complianceService).toContain('CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE');
+    expect(complianceService).toContain('CMP_EXCEPTIONS_WRITE_AVAILABLE');
     expect(complianceService).toContain('CMP_EVALUATION_HISTORY_READ_AVAILABLE');
     expect(complianceService).toContain('CMP_REPORT_SNAPSHOTS_READ_AVAILABLE');
     expect(complianceService).toContain('CMP_SCHEDULED_REPORTS_READ_AVAILABLE');
@@ -80,6 +82,9 @@ describe('Compliance Assurance UX honesty (Prompt 30)', () => {
     expect(page).toContain('FrameworkReportsWorkspace');
     expect(page).toContain('FrameworkScheduledReportsWorkspace');
     expect(page).toContain('GovernanceUnavailablePanel');
+    expect(page).toContain('ImprovementActionsPanel');
+    expect(page).toContain('ExceptionsPanel');
+    expect(page).toContain('canMutateComplianceGovernance');
     expect(page).toContain('Evaluation history is read-only');
     expect(page).toContain('cmp-control-mapping-empty');
     expect(page).toContain('No evidence was returned');
@@ -103,6 +108,6 @@ describe('Compliance Assurance UX honesty (Prompt 30)', () => {
   it('drawer and footer pivots use Link + ROUTES', () => {
     expect(page).toContain('ROUTES.CIS_BENCHMARK');
     expect(page).toContain('ROUTES.REPORTS_SCHEDULED');
-    expect(page).toContain('CMP read contracts live');
+    expect(page).toContain('CMP governance write mutations live');
   });
 });
