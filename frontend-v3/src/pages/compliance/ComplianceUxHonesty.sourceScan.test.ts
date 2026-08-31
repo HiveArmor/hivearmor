@@ -61,11 +61,13 @@ describe('Compliance Assurance UX honesty (Prompt 30)', () => {
     expect(complianceService).toContain('CMP_EXCEPTIONS_READ_AVAILABLE');
     expect(complianceService).toContain('CMP_EVALUATION_HISTORY_READ_AVAILABLE');
     expect(complianceService).toContain('CMP_REPORT_SNAPSHOTS_READ_AVAILABLE');
+    expect(complianceService).toContain('CMP_SCHEDULED_REPORTS_READ_AVAILABLE');
     expect(complianceService).toContain('CMP_GOVERNANCE_READ_CONTRACTS');
     expect(complianceService).toContain('CMP_DRAWER_READ_CONTRACTS');
     expect(complianceService).toContain('getControlImprovementActions');
     expect(complianceService).toContain('getControlExceptions');
     expect(complianceService).toContain('getFrameworkReportSnapshots');
+    expect(complianceService).toContain('getFrameworkScheduledReports');
     expect(page).toContain('cmp-page__projection-note');
     expect(page).toContain('Control and evidence workspace');
     expect(page).toContain('cmp-control-picker');
@@ -75,6 +77,7 @@ describe('Compliance Assurance UX honesty (Prompt 30)', () => {
     expect(page).toContain('cmp-workspace-tab-');
     expect(page).toContain('EvaluationHistoryReadPanel');
     expect(page).toContain('FrameworkReportsWorkspace');
+    expect(page).toContain('FrameworkScheduledReportsWorkspace');
     expect(page).toContain('GovernanceUnavailablePanel');
     expect(page).toContain('Evaluation history is read-only');
     expect(page).toContain('cmp-control-mapping-empty');

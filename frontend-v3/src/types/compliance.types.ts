@@ -137,6 +137,15 @@ export interface ComplianceReportSnapshotDTO {
   createdBy: string | null;
 }
 
+/** CMP-008 — scheduled compliance report row — schema until @PreAuthorize read is verified. */
+export interface ComplianceScheduledReportDTO {
+  id: number;
+  name: string;
+  frequency: string;
+  nextRun: string | null;
+  status: string;
+}
+
 /** CMP-003 — evidence row for a control. */
 export interface ComplianceEvidenceItemDTO {
   evidenceId?: string | null;

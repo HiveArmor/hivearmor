@@ -1,5 +1,5 @@
 /**
- * compliance.service.ts — CMP read contracts (CMP-002 … CMP-007).
+ * compliance.service.ts — CMP read contracts (CMP-002 … CMP-008).
  */
 
 import { apiClient } from '@/lib/apiClient';
@@ -10,6 +10,7 @@ import type {
   ComplianceEvidenceItemDTO,
   ComplianceImprovementActionDTO,
   ComplianceReportSnapshotDTO,
+  ComplianceScheduledReportDTO,
   ComplianceStandardSectionDTO,
   FrameworkControlResolution,
   SectionControlsPage,
@@ -51,12 +52,18 @@ export interface CmpGovernanceReadContract {
 export const CMP_EVALUATION_HISTORY_READ_AVAILABLE = true;
 
 /**
- * CMP-007 — ComplianceReportExportResource lists GET /ha-compliance-report-config but has
+ * CMP-007 / CMP-008 — ComplianceReportExportResource lists GET /ha-compliance-report-config but has
  * no @PreAuthorize; UI stays blocked until an authorized read contract is verified.
  */
 export const CMP_REPORT_SNAPSHOTS_READ_AVAILABLE = false;
 
-export type CmpDrawerReadKind = 'evaluation_history' | 'report_snapshots';
+/**
+ * CMP-008 — UtmComplianceReportScheduleResource serves GET /compliance-report-schedules-by-user but has
+ * no @PreAuthorize; drawer schedule listing stays blocked until an authorized read contract is verified.
+ */
+export const CMP_SCHEDULED_REPORTS_READ_AVAILABLE = false;
+
+export type CmpDrawerReadKind = 'evaluation_history' | 'report_snapshots' | 'scheduled_reports';
 
 export interface CmpDrawerReadContract {
   kind: CmpDrawerReadKind;
@@ -82,8 +89,16 @@ export const CMP_DRAWER_READ_CONTRACTS: readonly CmpDrawerReadContract[] = [
     available: CMP_REPORT_SNAPSHOTS_READ_AVAILABLE,
     label: 'Report snapshots',
     blockedReason:
-      'Generated report exports exist server-side, but GET /api/ha-compliance-report-config lacks @PreAuthorize — snapshot listing stays blocked.',
+      'Generated report exports exist server-side, but GET /api/ha-compliance-report-config lacks @PreAuthorize — snapshot listing stays blocked until backend adds an authorized read contract (CMP-008).',
     futurePath: '/ha-compliance-report-config',
+  },
+  {
+    kind: 'scheduled_reports',
+    available: CMP_SCHEDULED_REPORTS_READ_AVAILABLE,
+    label: 'Scheduled reports',
+    blockedReason:
+      'Compliance report schedules exist server-side, but GET /api/compliance-report-schedules-by-user lacks @PreAuthorize — schedule listing stays blocked.',
+    futurePath: '/compliance-report-schedules-by-user',
   },
 ] as const;
 
@@ -248,5 +263,18 @@ export const complianceService = {
             row.standard.toLocaleLowerCase().includes(String(standardId)),
         ),
       );
+  },
+
+  /** CMP-008 — wired when {@link CMP_SCHEDULED_REPORTS_READ_AVAILABLE} flips true. */
+  getFrameworkScheduledReports: (_standardId: number, signal?: AbortSignal) => {
+    if (!CMP_SCHEDULED_REPORTS_READ_AVAILABLE) {
+      return Promise.reject(
+        new Error('CMP-008 scheduled-report read contract is not authorized yet.'),
+      );
+    }
+    return apiClient.get<ComplianceScheduledReportDTO[]>('/compliance-report-schedules-by-user', {
+      params: { page: 0, size: 20, sort: 'id,desc' },
+      signal,
+    });
   },
 };

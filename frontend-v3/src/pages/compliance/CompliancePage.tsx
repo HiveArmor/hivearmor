@@ -40,6 +40,7 @@ import {
   CMP_EVALUATION_HISTORY_READ_AVAILABLE,
   CMP_GOVERNANCE_READ_CONTRACTS,
   CMP_REPORT_SNAPSHOTS_READ_AVAILABLE,
+  CMP_SCHEDULED_REPORTS_READ_AVAILABLE,
   CMP_SECTION_CONTROLS_PAGE_SIZE,
   complianceService,
   parseFrameworkStandardId,
@@ -365,7 +366,126 @@ function FrameworkReportsWorkspace({
           <ShieldCheck size={13} />
           {CMP_REPORT_SNAPSHOTS_READ_AVAILABLE
             ? 'Report regeneration and schedule mutations stay disabled until authorized write contracts exist.'
-            : 'Report snapshot listing remains blocked — use Scheduled Reports for schedule visibility.'}
+            : 'Report snapshot listing remains blocked — see Scheduled reports below for schedule visibility status.'}
+        </span>
+      </div>
+    </section>
+  );
+}
+
+function ScheduledReportsReadPanel({
+  standardId,
+  frameworkName,
+}: {
+  standardId: number;
+  frameworkName: string;
+}): JSX.Element {
+  const schedulesContract = drawerReadContract('scheduled_reports');
+  const query = useQuery({
+    queryKey: ['cmp-scheduled-reports', standardId],
+    queryFn: ({ signal }) => complianceService.getFrameworkScheduledReports(standardId, signal),
+    enabled: schedulesContract.available,
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  if (!schedulesContract.available) {
+    return (
+      <DrawerReadUnavailablePanel
+        contract={schedulesContract}
+        scopeLabel={`Framework ${frameworkName} (standard #${standardId.toLocaleString()})`}
+      />
+    );
+  }
+
+  if (query.isLoading) {
+    return (
+      <div className="cmp-drawer-state" role="status">
+        <RefreshCw size={14} className="cmp-spin" aria-hidden="true" />
+        <strong>Loading scheduled reports</strong>
+        <span>Fetching authorized CMP report schedules for this framework record.</span>
+      </div>
+    );
+  }
+
+  if (query.isError) {
+    return (
+      <div className="cmp-drawer-state" role="alert">
+        <AlertTriangle size={16} aria-hidden="true" />
+        <strong>Scheduled reports unavailable</strong>
+        <span>
+          {query.error instanceof Error ? query.error.message : 'CMP schedule read could not be loaded.'}
+        </span>
+        <button type="button" onClick={() => void query.refetch()}>
+          Retry scheduled reports
+        </button>
+      </div>
+    );
+  }
+
+  const rows = query.data ?? [];
+  if (rows.length === 0) {
+    return (
+      <p className="cmp-drawer-empty" role="status" data-testid="cmp-scheduled_reports-empty">
+        No scheduled reports were returned for this framework in the authorized projection.
+      </p>
+    );
+  }
+
+  return (
+    <ul className="cmp-workspace-list" data-testid="cmp-scheduled-reports-list">
+      {rows.map((item) => (
+        <li key={item.id}>
+          <span>{item.name}</span>
+          <small>
+            {item.status}
+            {item.frequency ? ` · ${item.frequency}` : ''}
+            {item.nextRun ? ` · next ${formatTimestamp(item.nextRun)}` : ''}
+          </small>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function FrameworkScheduledReportsWorkspace({
+  standardId,
+  frameworkName,
+}: {
+  standardId: number;
+  frameworkName: string;
+}): JSX.Element {
+  const schedulesContract = drawerReadContract('scheduled_reports');
+
+  return (
+    <section className="cmp-drawer__card" data-testid="cmp-framework-schedules">
+      <header>
+        <FileClock size={15} />
+        <div>
+          <strong>Scheduled reports</strong>
+          <span>CMP-008 — framework-scoped cadence</span>
+        </div>
+      </header>
+      <p className="cmp-drawer__workspace-note">
+        Recurring compliance report jobs for <strong>{frameworkName}</strong> (catalog standard #
+        {standardId.toLocaleString()}). Schedule create, pause, and run-now mutations stay disabled
+        until authorized write contracts exist — this panel is read-only when the schedule list API is
+        authorized.
+      </p>
+      {schedulesContract.available ? (
+        <ScheduledReportsReadPanel standardId={standardId} frameworkName={frameworkName} />
+      ) : (
+        <DrawerReadUnavailablePanel
+          contract={schedulesContract}
+          scopeLabel={`Framework ${frameworkName} (standard #${standardId.toLocaleString()})`}
+        />
+      )}
+      <div className="cmp-capability-list cmp-capability-list--muted">
+        <span>
+          <ShieldCheck size={13} />
+          {CMP_SCHEDULED_REPORTS_READ_AVAILABLE
+            ? 'Schedule mutations remain disabled until @PreAuthorize write contracts are verified.'
+            : 'Schedule listing remains blocked — use Reports → Scheduled for the platform schedule workspace pivot.'}
         </span>
       </div>
     </section>
@@ -804,6 +924,7 @@ function FrameworkControlBrowser({
   return (
     <>
       <FrameworkReportsWorkspace standardId={mapping.standardId} frameworkName={frameworkName} />
+      <FrameworkScheduledReportsWorkspace standardId={mapping.standardId} frameworkName={frameworkName} />
 
       <section className="cmp-drawer__card cmp-control-picker" data-testid="cmp-control-picker">
         <header>

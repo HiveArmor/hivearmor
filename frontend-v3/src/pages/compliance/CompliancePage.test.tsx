@@ -235,9 +235,20 @@ describe('CompliancePage', () => {
   it('shows blocked report snapshots panel for framework-scoped exports', () => {
     render(<CompliancePage />);
     fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
-    expect(screen.getByTestId('cmp-report_snapshots-unavailable')).toBeInTheDocument();
-    expect(screen.getByText(/lacks @PreAuthorize/i)).toBeInTheDocument();
-    expect(screen.getByText(/Report snapshot listing remains blocked/i)).toBeInTheDocument();
+    const reportsPanel = screen.getByTestId('cmp-framework-reports');
+    expect(within(reportsPanel).getByTestId('cmp-report_snapshots-unavailable')).toBeInTheDocument();
+    expect(within(reportsPanel).getByText(/ha-compliance-report-config lacks @PreAuthorize/i)).toBeInTheDocument();
+    expect(within(reportsPanel).getByText(/Report snapshot listing remains blocked/i)).toBeInTheDocument();
+  });
+
+  it('shows blocked scheduled reports panel for framework-scoped cadence', () => {
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    expect(screen.getByTestId('cmp-framework-schedules')).toBeInTheDocument();
+    expect(screen.getByTestId('cmp-scheduled_reports-unavailable')).toBeInTheDocument();
+    expect(screen.getByText(/compliance-report-schedules-by-user lacks @PreAuthorize/i)).toBeInTheDocument();
+    expect(screen.getByText(/Schedule listing remains blocked/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Retry scheduled reports/i })).not.toBeInTheDocument();
   });
 
   it('resets workspace tab when analyst selects a different catalog control', () => {
