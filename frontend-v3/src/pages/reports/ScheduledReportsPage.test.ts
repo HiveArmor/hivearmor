@@ -1,18 +1,23 @@
 /**
  * ScheduledReportsPage — Tests
- * Session: S35
- * Spec: .plan/frontend-v3-spec/screens/RPT-04-scheduled-reports.md
+ * Session: S35 / Prompt 34 Wave C1 slice 4
  */
 
 import { describe, expect, it } from 'vitest';
 
 import * as reportsService from './reports.service';
+import { SCHEDULED_REPORTS_JOB_SENTENCE } from './ScheduledReportsPage';
 
 describe('ScheduledReportsPage', () => {
   it('exports ScheduledReportsPage component', async () => {
     const module = await import('./ScheduledReportsPage.tsx');
     expect(module.ScheduledReportsPage).toBeDefined();
     expect(typeof module.ScheduledReportsPage).toBe('function');
+  });
+
+  it('exports a scheduled-reporting job sentence distinct from gallery generation claims', () => {
+    expect(SCHEDULED_REPORTS_JOB_SENTENCE).toMatch(/Scheduled reporting/i);
+    expect(SCHEDULED_REPORTS_JOB_SENTENCE).not.toMatch(/report generated/i);
   });
 });
 
