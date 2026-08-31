@@ -1,0 +1,108 @@
+{
+  "prompt": "35-reports-templates-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "4808ef4",
+  "based_on_main_includes_pr32": true,
+  "branch": "feat/c1-reports-templates-honesty",
+  "decision": "RESTRUCTURE",
+  "wave_c1_slice": 5,
+  "routes": ["/reports/templates"],
+  "job_sentence": "Report templates — browse reusable SOC communication definitions for generation. Dashboard authoring stays in Studio; schedule delivery ops live on Scheduled Reports — this surface does not claim governed generation success until REP contracts land.",
+  "wave_c1_program": {
+    "status": "IN_PROGRESS",
+    "note": "Slice 5 of 5 for templates; wave closes only when sibling Prompt 33 + 34 also merge",
+    "slices": [
+      { "slice": 1, "prompt": 31, "route": "/dashboards", "job": "Dashboard gallery discover (done @ bba98b1)" },
+      { "slice": 2, "prompt": 32, "route": "/dashboards/studio", "job": "Studio authoring honesty (done @ 4808ef4)" },
+      { "slice": 3, "prompt": 33, "route": "/dashboards/:id", "job": "Runtime panels honesty (parallel sibling)" },
+      { "slice": 4, "prompt": 34, "route": "/reports/scheduled", "job": "Scheduled reporting honesty (parallel sibling)" },
+      { "slice": 5, "prompt": 35, "route": "/reports/templates", "job": "Report templates honesty (this slice)" }
+    ]
+  },
+  "distinction": {
+    "gallery": "/dashboards = dashboard gallery discover (Prompt 31)",
+    "studio": "/dashboards/studio = low-code authoring (Prompt 32)",
+    "runtime": "/dashboards/:id = panel runtime (Prompt 33)",
+    "reports_scheduled": "/reports/scheduled = scheduled reporting workspace (Prompt 34)",
+    "reports_templates": "/reports/templates = template inventory (this slice)",
+    "compliance": "/compliance = framework assurance (Prompt 30)"
+  },
+  "ia": {
+    "reports_templates": {
+      "removed": [
+        "Shared ReportingOperations hub wrapper for /reports/templates",
+        "Empty state conflating templates with 'No scheduled reports'",
+        "Generate/create affordances implying success without REP/GAP-BE-09 contracts"
+      ],
+      "added": [
+        "Dedicated ReportTemplatesPage with REPORT_TEMPLATES_JOB_SENTENCE + STAGING CANDIDATE",
+        "Meta cross-links: Dashboards · Studio · Scheduled Reports · SITREP · Compliance (Link + ROUTES)",
+        "Human role access note: SOC Manager · Platform Administrator",
+        "Empty-inventory honesty (templates-empty-honesty) distinct from filter-empty and API error",
+        "Fail-closed create/generate buttons + trust banner outside fixtures",
+        "reportTemplatesService.list → GET /api/ha-reports?repType=TEMPLATE",
+        "ReportTemplatesUxHonesty.sourceScan.test.ts",
+        "StatusDock mode=historical"
+      ],
+      "kept": [
+        "AuthGuard ROLE_SOC_MANAGER | ROLE_ADMIN on route",
+        "ReportingOperations.css shared token surface (additive honesty classes)",
+        "Fixture mode banner (dev-only; vite fixture-disabled in prod)"
+      ],
+      "forbidden": [
+        "Fake generation success toast",
+        "Fictional Northwind/Contoso tenants",
+        "Invented /api/ha-reports/templates CRUD",
+        "Dashboard authoring or schedule ops claimed on this surface",
+        "Production fixture import"
+      ]
+    }
+  },
+  "backend": {
+    "templates_list": {
+      "path": "GET /api/ha-reports?repType=TEMPLATE",
+      "frontend_contract": "reportTemplatesService.list",
+      "auth": "ROLE_SOC_MANAGER | ROLE_ADMIN (AuthGuard + canManage)",
+      "notes": "Legacy array — bounded=false, tenantScoped=false; dedicated templates CRUD not shipped (GAP-BE-09)"
+    },
+    "templates_create_generate": {
+      "path": "not shipped — fail-closed",
+      "frontend_contract": "disabled New template / Generate report",
+      "notes": "No fake success; builder and governed generation remain unavailable"
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "ReportTemplatesPage contains STAGING CANDIDATE, templates-empty-honesty, REPORT_TEMPLATES_JOB_SENTENCE",
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_dashboards_studio_scheduled_compliance", "result": "pass" },
+      { "item": "empty_inventory_honesty_banner_wired", "result": "pass" },
+      { "item": "api_error_distinct_from_empty_inventory", "result": "pass" },
+      { "item": "create_generate_fail_closed", "result": "pass" },
+      { "item": "no_fake_generation_success", "result": "pass" },
+      { "item": "no_northwind_contoso", "result": "pass" },
+      { "item": "statusdock_historical", "result": "pass" }
+    ]
+  },
+  "validation": {
+    "vitest_reports_templates": "pass (7 dedicated + reports/WaveC1 suite)",
+    "vitest_full_suite": "1 fail preexisting foundation.accessibility.test.tsx (commandCenter mock missing getDetectionHealthSummary) — not introduced by this slice",
+    "eslint_slice_files": "pass (0 errors)",
+    "eslint_repo_wide": "fail_preexisting (6 react-refresh/hooks warnings on main — not introduced by this slice)",
+    "type_check": "pass",
+    "build": "pass"
+  },
+  "files": {
+    "research": "docs/ai-handoff/research/prompt35-reports-templates-oem.md",
+    "report": "docs/ai-handoff/reports/prompt35-reports-templates.json",
+    "page": "frontend-v3/src/pages/reports/ReportTemplatesPage.tsx",
+    "service": "frontend-v3/src/pages/reports/reportTemplates.service.ts",
+    "css": "frontend-v3/src/pages/reports/ReportingOperations.css",
+    "tests": [
+      "frontend-v3/src/pages/reports/ReportTemplatesPage.test.ts",
+      "frontend-v3/src/pages/reports/ReportTemplatesUxHonesty.sourceScan.test.ts"
+    ]
+  },
+  "wave_c1_completion": "NOT CLOSED by this slice alone — awaiting Prompt 33 + 34 merges"
+}
