@@ -787,6 +787,9 @@
     <!-- HI-04 STAGING CANDIDATE — intelligence findings (facts vs inference) -->
     <include file="/config/liquibase/changelog/20260828001_hive_intelligence_finding.xml" relativeToChangelogFile="false"/>
 
+    <!-- CMP-011 STAGING CANDIDATE — control exception governance read -->
+    <include file="/config/liquibase/changelog/20260831001_ha_compliance_exception.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
 

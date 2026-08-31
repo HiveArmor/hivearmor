@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260831001-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="ha_compliance_exception"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="ha_compliance_exception">
+            <column name="id" type="bigserial" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="control_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="status" type="varchar(30)" defaultValue="pending">
+                <constraints nullable="false"/>
+            </column>
+            <column name="effective_from" type="date">
+                <constraints nullable="true"/>
+            </column>
+            <column name="effective_until" type="date">
+                <constraints nullable="true"/>
+            </column>
+            <column name="approver" type="varchar(200)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_ha_compliance_exception_control" tableName="ha_compliance_exception">
+            <column name="control_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_ha_compliance_exception_status" tableName="ha_compliance_exception">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_ha_compliance_exception_effective_until" tableName="ha_compliance_exception">
+            <column name="effective_until"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
