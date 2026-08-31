@@ -5,6 +5,7 @@ import {
   CMP_EXCEPTIONS_READ_AVAILABLE,
   CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE,
   CMP_REPORT_SNAPSHOTS_READ_AVAILABLE,
+  CMP_SCHEDULED_REPORTS_READ_AVAILABLE,
   complianceService,
   parseFrameworkStandardId,
 } from './compliance.service';
@@ -159,6 +160,19 @@ describe('CMP-007 drawer read contracts', () => {
 
   it('rejects report snapshot reads while the contract is unavailable', async () => {
     await expect(complianceService.getFrameworkReportSnapshots(1)).rejects.toThrow(
+      /not authorized yet/i,
+    );
+    expect(mockGet).not.toHaveBeenCalled();
+  });
+});
+
+describe('CMP-008 scheduled report read contracts', () => {
+  it('keeps scheduled report listing fail-closed until @PreAuthorize is verified', () => {
+    expect(CMP_SCHEDULED_REPORTS_READ_AVAILABLE).toBe(false);
+  });
+
+  it('rejects scheduled report reads while the contract is unavailable', async () => {
+    await expect(complianceService.getFrameworkScheduledReports(1)).rejects.toThrow(
       /not authorized yet/i,
     );
     expect(mockGet).not.toHaveBeenCalled();
