@@ -175,6 +175,9 @@ describe('CompliancePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
     expect(screen.getByTestId('cmp-control-picker')).toBeInTheDocument();
     expect(screen.getByTestId('cmp-control-workspace')).toBeInTheDocument();
+    expect(screen.getByTestId('cmp-workspace-tab-controls')).toBeInTheDocument();
+    expect(screen.getByTestId('cmp-workspace-tab-actions')).toBeInTheDocument();
+    expect(screen.getByTestId('cmp-workspace-tab-exceptions')).toBeInTheDocument();
     expect(screen.getByLabelText('Select catalog section')).toBeInTheDocument();
     expect(screen.getByLabelText('Select catalog control')).toBeInTheDocument();
     const workspace = screen.getByTestId('cmp-control-workspace');
@@ -184,6 +187,31 @@ describe('CompliancePage', () => {
     expect(within(workspace).getByText(/No evidence was returned/i)).toBeInTheDocument();
     expect(screen.getByText(/does not return assessment scope/i)).toBeInTheDocument();
     expect(screen.queryByText(/Requires CMP-002 and CMP-003/i)).not.toBeInTheDocument();
+  });
+
+  it('shows honest blocked states on improvement actions and exceptions tabs', () => {
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    fireEvent.click(screen.getByTestId('cmp-workspace-tab-actions'));
+    expect(screen.getByTestId('cmp-improvement_actions-unavailable')).toBeInTheDocument();
+    expect(screen.getByText(/POA&M persistence exists server-side/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Retry improvement actions/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('cmp-workspace-tab-exceptions'));
+    expect(screen.getByTestId('cmp-exceptions-unavailable')).toBeInTheDocument();
+    expect(screen.getByText(/governed approval lifecycle/i)).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId('cmp-control-workspace')).getByText(
+        /Improvement actions and exceptions remain unavailable/i,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('resets workspace tab when analyst selects a different catalog control', () => {
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    fireEvent.click(screen.getByTestId('cmp-workspace-tab-actions'));
+    fireEvent.change(screen.getByLabelText('Select catalog control'), { target: { value: '43' } });
+    expect(screen.getByTestId('cmp-workspace-tab-controls')).toHaveAttribute('aria-selected', 'true');
   });
 
   it('reloads workspace when analyst selects a different catalog control', () => {

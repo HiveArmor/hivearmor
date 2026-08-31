@@ -98,6 +98,35 @@ export interface ComplianceControlEvaluationHistoryDTO {
   evaluations: ComplianceControlEvaluationGroupedDTO[];
 }
 
+/** CMP-006 — improvement action (POA&M) row — schema only until REST is authorized. */
+export interface ComplianceImprovementActionDTO {
+  id: number;
+  frameworkId: string;
+  controlId: string;
+  title: string;
+  description: string | null;
+  dueDate: string | null;
+  status: string;
+  assignee: string | null;
+  createdAt: string;
+  updatedAt: string;
+  overdue: boolean;
+}
+
+/** CMP-006 — control exception row — schema only until REST is authorized. */
+export interface ComplianceControlExceptionDTO {
+  id: number;
+  controlId: number;
+  title: string;
+  reason: string | null;
+  status: string;
+  effectiveFrom: string | null;
+  effectiveUntil: string | null;
+  approver: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** CMP-003 — evidence row for a control. */
 export interface ComplianceEvidenceItemDTO {
   evidenceId?: string | null;
