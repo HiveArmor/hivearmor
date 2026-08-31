@@ -1,14 +1,21 @@
 /**
- * DashboardStudioPage Tests
- * Session S32 — Dashboard Studio tests
+ * DashboardStudioPage Tests — Prompt 32 / Wave C1 slice 2
  */
 
 import { describe, it, expect } from 'vitest';
 
+import { DASHBOARD_STUDIO_JOB_SENTENCE, DashboardStudioPage } from './DashboardStudioPage';
+
 describe('DashboardStudioPage', () => {
-  it('should export DashboardStudioPage component', async () => {
-    const module = await import('./DashboardStudioPage');
-    expect(typeof module.DashboardStudioPage).toBe('function');
+  it('should export DashboardStudioPage component', () => {
+    expect(DashboardStudioPage).toBeDefined();
+    expect(typeof DashboardStudioPage).toBe('function');
+  });
+
+  it('exports Studio job sentence distinct from gallery and reports', () => {
+    expect(DASHBOARD_STUDIO_JOB_SENTENCE).toMatch(/Dashboard Studio/i);
+    expect(DASHBOARD_STUDIO_JOB_SENTENCE).toMatch(/Gallery|Dashboards/i);
+    expect(DASHBOARD_STUDIO_JOB_SENTENCE).toMatch(/Reports|reporting/i);
   });
 });
 

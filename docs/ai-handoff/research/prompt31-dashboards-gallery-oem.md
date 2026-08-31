@@ -88,4 +88,4 @@ Confirmed APIs for this slice (verified in backend source — do **not** invent)
 
 ## Next recommended slice
 
-**`/dashboards/studio`** (Prompt 32) — Studio authoring honesty chrome, distinct from gallery discover and report generation; preserve fixture-only save fail-closed until DSH versioned contracts land.
+**`/dashboards/studio`** (Prompt 32) — Studio authoring honesty chrome, distinct from gallery discover and report generation; preserve fixture-only save fail-closed until DSH versioned contracts land. *(Implemented — see `prompt32-dashboards-studio-oem.md`.)*

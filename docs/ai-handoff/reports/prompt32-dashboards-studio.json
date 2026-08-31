@@ -1,0 +1,102 @@
+{
+  "prompt": "32-dashboards-studio-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "bba98b1",
+  "based_on_main_includes_pr31": true,
+  "branch": "feat/c1-dashboards-studio-honesty",
+  "decision": "RESTRUCTURE",
+  "wave_c1_slice": 2,
+  "routes": ["/dashboards/studio", "/dashboards/:id/edit"],
+  "job_sentence": "Dashboard Studio — author governed panel layouts and draft definitions for operational views. Gallery discover stays on Dashboards; runtime panels open on selection; scheduled reporting and templates live under Reports — Studio does not generate SOC communications.",
+  "wave_c1_program": {
+    "status": "IN_PROGRESS",
+    "slices": [
+      { "slice": 1, "prompt": 31, "route": "/dashboards", "job": "Dashboard gallery discover (done @ bba98b1)" },
+      { "slice": 2, "prompt": 32, "route": "/dashboards/studio", "job": "Studio authoring honesty (this slice)" },
+      { "slice": 3, "prompt": 33, "route": "/dashboards/:id", "job": "Runtime panels honesty (next)" },
+      { "slice": 4, "prompt": 34, "route": "/reports/scheduled", "job": "Scheduled reporting honesty" },
+      { "slice": 5, "prompt": 35, "route": "/reports/templates", "job": "Report templates honesty" }
+    ]
+  },
+  "distinction": {
+    "gallery": "/dashboards = dashboard gallery discover (Prompt 31)",
+    "studio": "/dashboards/studio = low-code authoring (this slice)",
+    "runtime": "/dashboards/:id = panel runtime (Prompt 33)",
+    "reports_scheduled": "/reports/scheduled = scheduled reporting workspace",
+    "reports_templates": "/reports/templates = template inventory",
+    "compliance": "/compliance = framework assurance (Prompt 30)"
+  },
+  "ia": {
+    "dashboards_studio": {
+      "removed": [
+        "Eyebrow without STAGING CANDIDATE",
+        "Validate copy implying publish readiness",
+        "StatusDock mode=live when not fixture for definition authoring",
+        "Ambiguous save affordance without fail-closed banner outside fixtures"
+      ],
+      "added": [
+        "DASHBOARD_STUDIO_JOB_SENTENCE + STAGING CANDIDATE badge (DASHBOARD STUDIO eyebrow)",
+        "Meta cross-links: Dashboards · Mission Control · Scheduled Reports · Templates · Compliance (Link + ROUTES)",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator",
+        "Projection note for fixture-only vs fail-closed save",
+        "data-studio-save fixture|fail-closed + studio-save-fail-closed trust banner",
+        "Local structural validation explicitly not a publish gate",
+        "DashboardStudioUxHonesty.sourceScan.test.ts",
+        "StatusDock mode=historical for definition authoring"
+      ],
+      "kept": [
+        "Three-pane palette / canvas / inspector",
+        "Managed clone-before-edit on load",
+        "Save draft disabled outside fixtureMode",
+        "dashboardOperationsService.save throws outside fixtures",
+        "Edit alias /dashboards/:id/edit same surface"
+      ],
+      "forbidden": [
+        "Fake Ready to publish",
+        "Production fixture import",
+        "Canonical versioned save outside fixtures",
+        "Report generation from Studio",
+        "Merging gallery discover into Studio"
+      ]
+    }
+  },
+  "backend": {
+    "dashboard_get": {
+      "path": "GET /api/ha-dashboards/{id}",
+      "frontend_contract": "dashboardOperationsService.get",
+      "auth": "ROLE_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN (AuthGuard on studio + edit)"
+    },
+    "dashboard_save": {
+      "path": "not shipped — fail-closed",
+      "frontend_contract": "dashboardOperationsService.save",
+      "notes": "Throws Canonical versioned dashboard save contract is unavailable unless DEV fixtures"
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "DashboardStudioPage contains STAGING CANDIDATE, DASHBOARD_STUDIO_JOB_SENTENCE, fail-closed save",
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_gallery_reports_compliance", "result": "pass" },
+      { "item": "save_fail_closed_outside_fixtures", "result": "pass" },
+      { "item": "no_fake_publish_action", "result": "pass" },
+      { "item": "statusdock_historical", "result": "pass" }
+    ]
+  },
+  "validation": {
+    "vitest_dashboards": "pass (54 tests)",
+    "eslint_studio_files": "pass (0 errors; repo-wide warnings preexist on main)",
+    "type_check": "pass",
+    "build": "pass"
+  },
+  "files": {
+    "research": "docs/ai-handoff/research/prompt32-dashboards-studio-oem.md",
+    "report": "docs/ai-handoff/reports/prompt32-dashboards-studio.json",
+    "page": "frontend-v3/src/pages/dashboards/DashboardStudioPage.tsx",
+    "tests": [
+      "frontend-v3/src/pages/dashboards/DashboardStudioPage.test.ts",
+      "frontend-v3/src/pages/dashboards/DashboardStudioUxHonesty.sourceScan.test.ts"
+    ]
+  },
+  "wave_c1_note": "Prompt 32 continues Wave C1 after gallery opener — Studio authoring honesty; runtime panels are Prompt 33."
+}
