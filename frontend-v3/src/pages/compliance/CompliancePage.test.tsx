@@ -9,8 +9,17 @@ import type { FrameworkControlResolution } from '@/types/compliance.types';
 import type { HiveFrameworkScoreDTO, HivePostureScoreDTO } from '@/types/posture.types';
 
 const mockUseQuery = vi.fn();
+const mockInvalidateQueries = vi.fn();
 
-vi.mock('@tanstack/react-query', () => ({ useQuery: (options: unknown) => mockUseQuery(options) }));
+vi.mock('@tanstack/react-query', () => ({
+  useQuery: (options: unknown) => mockUseQuery(options),
+  useMutation: () => ({ mutate: vi.fn(), isPending: false, isError: false, error: null }),
+  useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
+}));
+vi.mock('@/store/auth.store', () => ({
+  useAuthStore: (selector: (state: { user: { roles: string[] } | null }) => unknown) =>
+    selector({ user: { roles: ['ROLE_ADMIN'] } }),
+}));
 vi.mock('@/hooks/useEpsStream', () => ({ useEpsStream: () => ({ connected: true, eps: 12840 }) }));
 vi.mock('@/components/status-dock', () => ({
   StatusDock: () => <div data-testid="status-dock">Connected · Live</div>,

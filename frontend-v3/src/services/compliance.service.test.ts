@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CMP_EVALUATION_HISTORY_READ_AVAILABLE,
   CMP_EXCEPTIONS_READ_AVAILABLE,
+  CMP_EXCEPTIONS_WRITE_AVAILABLE,
   CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE,
+  CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE,
   CMP_REPORT_SNAPSHOTS_READ_AVAILABLE,
   CMP_SCHEDULED_REPORTS_READ_AVAILABLE,
   complianceService,
@@ -11,10 +13,18 @@ import {
 } from './compliance.service';
 
 const mockGet = vi.fn();
+const mockPost = vi.fn();
+const mockPut = vi.fn();
+const mockPatch = vi.fn();
+const mockDelete = vi.fn();
 
 vi.mock('@/lib/apiClient', () => ({
   apiClient: {
     get: (...args: unknown[]) => mockGet(...args),
+    post: (...args: unknown[]) => mockPost(...args),
+    put: (...args: unknown[]) => mockPut(...args),
+    patch: (...args: unknown[]) => mockPatch(...args),
+    delete: (...args: unknown[]) => mockDelete(...args),
   },
 }));
 
@@ -34,6 +44,10 @@ describe('parseFrameworkStandardId', () => {
 describe('complianceService.resolveFrameworkRepresentativeControl', () => {
   beforeEach(() => {
     mockGet.mockReset();
+    mockPost.mockReset();
+    mockPut.mockReset();
+    mockPatch.mockReset();
+    mockDelete.mockReset();
   });
 
   it('returns null when framework id is not a numeric standard id', async () => {
@@ -117,6 +131,10 @@ describe('complianceService.getSectionControlsPage', () => {
 
   beforeEach(() => {
     mockGet.mockReset();
+    mockPost.mockReset();
+    mockPut.mockReset();
+    mockPatch.mockReset();
+    mockDelete.mockReset();
   });
 
   it('returns items and X-Total-Count for section control picker', async () => {
@@ -211,6 +229,10 @@ describe('CMP-009 scheduled report read contracts', () => {
 describe('CMP-006 governance read contracts', () => {
   beforeEach(() => {
     mockGet.mockReset();
+    mockPost.mockReset();
+    mockPut.mockReset();
+    mockPatch.mockReset();
+    mockDelete.mockReset();
   });
 
   it('enables improvement actions and exceptions when governance read REST is authorized', () => {
@@ -263,5 +285,65 @@ describe('CMP-006 governance read contracts', () => {
       params: { controlId: 42, page: 0, size: 20, sort: 'effectiveUntil,asc' },
       signal: undefined,
     });
+  });
+});
+
+describe('CMP-013 governance write contracts', () => {
+  beforeEach(() => {
+    mockGet.mockReset();
+    mockPost.mockReset();
+    mockPut.mockReset();
+    mockPatch.mockReset();
+    mockDelete.mockReset();
+  });
+
+  it('enables improvement-action and exception write flags', () => {
+    expect(CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE).toBe(true);
+    expect(CMP_EXCEPTIONS_WRITE_AVAILABLE).toBe(true);
+  });
+
+  it('creates and updates improvement actions via authorized write contract', async () => {
+    mockPost.mockResolvedValueOnce({ id: 9, status: 'open', title: 'Enable MFA' });
+    mockPut.mockResolvedValueOnce({ id: 9, status: 'closed', title: 'Enable MFA' });
+
+    await complianceService.createImprovementAction({
+      frameworkId: '1',
+      controlId: 42,
+      title: 'Enable MFA',
+    });
+    expect(mockPost).toHaveBeenCalledWith(
+      '/ha-compliance/poam',
+      { frameworkId: '1', controlId: 42, title: 'Enable MFA' },
+      { signal: undefined },
+    );
+
+    await complianceService.updateImprovementAction(9, { status: 'closed' });
+    expect(mockPut).toHaveBeenCalledWith(
+      '/ha-compliance/poam/9',
+      { status: 'closed' },
+      { signal: undefined },
+    );
+  });
+
+  it('creates and approves exceptions via authorized write contract', async () => {
+    mockPost.mockResolvedValueOnce({ id: 4, status: 'pending', title: 'Vendor SLA exception' });
+    mockPatch.mockResolvedValueOnce({ id: 4, status: 'approved', title: 'Vendor SLA exception' });
+
+    await complianceService.createControlException({
+      controlId: 42,
+      title: 'Vendor SLA exception',
+    });
+    expect(mockPost).toHaveBeenCalledWith(
+      '/ha-compliance/exceptions',
+      { controlId: 42, title: 'Vendor SLA exception' },
+      { signal: undefined },
+    );
+
+    await complianceService.approveControlException(4);
+    expect(mockPatch).toHaveBeenCalledWith(
+      '/ha-compliance/exceptions/4/approve',
+      undefined,
+      { signal: undefined },
+    );
   });
 });

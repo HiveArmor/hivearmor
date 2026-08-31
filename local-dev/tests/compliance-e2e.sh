@@ -2,6 +2,7 @@
 # HiveArmor Sprint 07 — Compliance E2E Test
 # Tests real compliance API endpoints against a running local-dev stack.
 # CMP-012: includes POA&M + exception read auth/shape checks (run seed-compliance-governance.sh first for non-empty rows).
+# CMP-013: includes governance write mutation auth/create/teardown checks.
 # Run: bash local-dev/tests/compliance-e2e.sh
 set -euo pipefail
 
@@ -260,6 +261,136 @@ print(len(d) if isinstance(d, list) else 0)
         check "Exception seed rows present (run seed-compliance-governance.sh)" "true" "true"
     else
         echo "  ⚠ No exception rows — run: cd local-dev && bash seed-compliance-governance.sh"
+    fi
+else
+    echo "  ⚠ Skipped — no control ID available"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "[12] POA&M write mutations  (POST/PUT/DELETE /api/ha-compliance/poam)"
+if [ "$CONTROL_ID" != "none" ]; then
+    FW_ID=$(echo "$FRAMEWORKS_JSON" | python3 -c "
+import sys, json
+fw = json.load(sys.stdin)
+print(fw[0]['frameworkId'] if fw else '1')
+" 2>/dev/null || echo "1")
+
+    POAM_CREATE_UNAUTH=$(curl -so /dev/null -w "%{http_code}" \
+        -X POST "${BACKEND}/api/ha-compliance/poam" \
+        -H "Content-Type: application/json" \
+        -d "{\"frameworkId\":\"${FW_ID}\",\"controlId\":${CONTROL_ID},\"title\":\"[E2E-GOV] temp poam\"}" || echo "000")
+    check "POA&M create without token returns HTTP 401" "401" "$POAM_CREATE_UNAUTH"
+
+    POAM_CREATE=$(curl -sf -X POST "${BACKEND}/api/ha-compliance/poam" \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json" \
+        -d "{\"frameworkId\":\"${FW_ID}\",\"controlId\":${CONTROL_ID},\"title\":\"[E2E-GOV] temp poam\",\"status\":\"open\"}" || echo "null")
+    POAM_ID=$(echo "$POAM_CREATE" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(d.get('id', 'none'))
+except Exception:
+    print('none')
+" 2>/dev/null || echo "none")
+    check "POA&M create with admin JWT returns id" "true" "$([ "$POAM_ID" != "none" ] && echo true || echo false)"
+
+    if [ "$POAM_ID" != "none" ]; then
+        POAM_LIST=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+            "${BACKEND}/api/ha-compliance/poam?controlId=${CONTROL_ID}" || echo "[]")
+        POAM_FOUND=$(echo "$POAM_LIST" | python3 -c "
+import sys, json
+items = json.load(sys.stdin)
+print('true' if any(i.get('title') == '[E2E-GOV] temp poam' for i in items if isinstance(items, list)) else 'false')
+" 2>/dev/null || echo "false")
+        check "POA&M GET lists created row" "true" "$POAM_FOUND"
+
+        POAM_CLOSE=$(curl -so /dev/null -w "%{http_code}" \
+            -X PUT "${BACKEND}/api/ha-compliance/poam/${POAM_ID}" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"status":"closed"}' || echo "000")
+        check "POA&M update (close) returns HTTP 200" "200" "$POAM_CLOSE"
+
+        POAM_DELETE=$(curl -so /dev/null -w "%{http_code}" \
+            -X DELETE "${BACKEND}/api/ha-compliance/poam/${POAM_ID}" \
+            -H "Authorization: Bearer $TOKEN" || echo "000")
+        check "POA&M delete returns HTTP 204" "204" "$POAM_DELETE"
+    fi
+
+    READONLY_TOKEN=$(curl -sf -X POST "${BACKEND}/api/authenticate" \
+        -H "Content-Type: application/json" \
+        -d '{"username":"readonly","password":"localdev123!","rememberMe":false}' \
+        | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))" 2>/dev/null || echo "")
+    if [ -n "$READONLY_TOKEN" ]; then
+        POAM_FORBIDDEN=$(curl -so /dev/null -w "%{http_code}" \
+            -X POST "${BACKEND}/api/ha-compliance/poam" \
+            -H "Authorization: Bearer $READONLY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"frameworkId\":\"${FW_ID}\",\"controlId\":${CONTROL_ID},\"title\":\"[E2E-GOV] forbidden\"}" || echo "000")
+        check "POA&M create with READ_ONLY JWT returns HTTP 403" "403" "$POAM_FORBIDDEN"
+    else
+        echo "  ⚠ Skipped READ_ONLY POA&M deny — readonly user unavailable"
+    fi
+else
+    echo "  ⚠ Skipped — no control ID available"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "[13] Exception write mutations  (POST/PATCH /api/ha-compliance/exceptions)"
+if [ "$CONTROL_ID" != "none" ]; then
+    EXC_CREATE_UNAUTH=$(curl -so /dev/null -w "%{http_code}" \
+        -X POST "${BACKEND}/api/ha-compliance/exceptions" \
+        -H "Content-Type: application/json" \
+        -d "{\"controlId\":${CONTROL_ID},\"title\":\"[E2E-GOV] temp exception\"}" || echo "000")
+    check "Exception create without token returns HTTP 401" "401" "$EXC_CREATE_UNAUTH"
+
+    EXC_CREATE=$(curl -sf -X POST "${BACKEND}/api/ha-compliance/exceptions" \
+        -H "Authorization: Bearer $TOKEN" \
+        -H "Content-Type: application/json" \
+        -d "{\"controlId\":${CONTROL_ID},\"title\":\"[E2E-GOV] temp exception\",\"reason\":\"e2e\"}" || echo "null")
+    EXC_ID=$(echo "$EXC_CREATE" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(d.get('id', 'none'))
+except Exception:
+    print('none')
+" 2>/dev/null || echo "none")
+    check "Exception create with admin JWT returns id" "true" "$([ "$EXC_ID" != "none" ] && echo true || echo false)"
+
+    if [ "$EXC_ID" != "none" ]; then
+        EXC_LIST=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+            "${BACKEND}/api/ha-compliance/exceptions?controlId=${CONTROL_ID}" || echo "[]")
+        EXC_FOUND=$(echo "$EXC_LIST" | python3 -c "
+import sys, json
+items = json.load(sys.stdin)
+print('true' if any(i.get('title') == '[E2E-GOV] temp exception' for i in items if isinstance(items, list)) else 'false')
+" 2>/dev/null || echo "false")
+        check "Exception GET lists created row" "true" "$EXC_FOUND"
+
+        EXC_APPROVE=$(curl -so /dev/null -w "%{http_code}" \
+            -X PATCH "${BACKEND}/api/ha-compliance/exceptions/${EXC_ID}/approve" \
+            -H "Authorization: Bearer $TOKEN" || echo "000")
+        check "Exception approve returns HTTP 200" "200" "$EXC_APPROVE"
+
+        EXC_DELETE=$(curl -so /dev/null -w "%{http_code}" \
+            -X DELETE "${BACKEND}/api/ha-compliance/exceptions/${EXC_ID}" \
+            -H "Authorization: Bearer $TOKEN" || echo "000")
+        check "Exception delete returns HTTP 204" "204" "$EXC_DELETE"
+    fi
+
+    if [ -n "${READONLY_TOKEN:-}" ]; then
+        EXC_FORBIDDEN=$(curl -so /dev/null -w "%{http_code}" \
+            -X POST "${BACKEND}/api/ha-compliance/exceptions" \
+            -H "Authorization: Bearer $READONLY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"controlId\":${CONTROL_ID},\"title\":\"[E2E-GOV] forbidden exception\"}" || echo "000")
+        check "Exception create with READ_ONLY JWT returns HTTP 403" "403" "$EXC_FORBIDDEN"
+    else
+        echo "  ⚠ Skipped READ_ONLY exception deny — readonly user unavailable"
     fi
 else
     echo "  ⚠ Skipped — no control ID available"

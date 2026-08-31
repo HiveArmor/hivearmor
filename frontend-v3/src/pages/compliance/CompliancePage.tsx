@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ColDef, ICellRendererParams, RowClickedEvent } from 'ag-grid-community';
 import type { AgGridReact } from 'ag-grid-react';
 import {
@@ -36,9 +36,15 @@ import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
 import {
+  CMP_GOVERNANCE_MUTATE_DENIED_TITLE,
+  canMutateComplianceGovernance,
+} from '@/services/compliance.capabilities';
+import {
   CMP_DRAWER_READ_CONTRACTS,
   CMP_EVALUATION_HISTORY_READ_AVAILABLE,
+  CMP_EXCEPTIONS_WRITE_AVAILABLE,
   CMP_GOVERNANCE_READ_CONTRACTS,
+  CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE,
   CMP_REPORT_SNAPSHOTS_READ_AVAILABLE,
   CMP_SCHEDULED_REPORTS_READ_AVAILABLE,
   CMP_SECTION_CONTROLS_PAGE_SIZE,
@@ -48,8 +54,10 @@ import {
   type CmpGovernanceReadContract,
 } from '@/services/compliance.service';
 import { postureService } from '@/services/posture.service';
+import { useAuthStore } from '@/store/auth.store';
 import type {
   ComplianceEvidenceItemDTO,
+  ComplianceImprovementActionDTO,
   FrameworkControlResolution,
 } from '@/types/compliance.types';
 import type { HiveFrameworkScoreDTO } from '@/types/posture.types';
@@ -526,12 +534,56 @@ function GovernanceUnavailablePanel({
   );
 }
 
-function ImprovementActionsReadPanel({ controlId }: { controlId: number }): JSX.Element {
+function ImprovementActionsPanel({
+  controlId,
+  frameworkId,
+  canMutate,
+}: {
+  controlId: number;
+  frameworkId: string;
+  canMutate: boolean;
+}): JSX.Element {
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(() => ['cmp-improvement_actions', controlId] as const, [controlId]);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState('');
+  const [assignee, setAssignee] = useState('');
+  const [dueDate, setDueDate] = useState('');
+
   const query = useQuery({
-    queryKey: ['cmp-improvement_actions', controlId],
+    queryKey,
     queryFn: ({ signal }) => complianceService.getControlImprovementActions(controlId, signal),
     staleTime: 30_000,
     retry: 1,
+  });
+
+  const invalidate = useCallback(
+    () => void queryClient.invalidateQueries({ queryKey }),
+    [queryClient, queryKey],
+  );
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      complianceService.createImprovementAction({
+        frameworkId,
+        controlId,
+        title: title.trim(),
+        assignee: assignee.trim() || null,
+        dueDate: dueDate || null,
+      }),
+    onSuccess: () => {
+      setTitle('');
+      setAssignee('');
+      setDueDate('');
+      setShowForm(false);
+      invalidate();
+    },
+  });
+
+  const closeMutation = useMutation({
+    mutationFn: (item: ComplianceImprovementActionDTO) =>
+      complianceService.updateImprovementAction(item.id, { status: 'closed' }),
+    onSuccess: invalidate,
   });
 
   if (query.isLoading) {
@@ -560,39 +612,164 @@ function ImprovementActionsReadPanel({ controlId }: { controlId: number }): JSX.
   }
 
   const rows = query.data ?? [];
-  if (rows.length === 0) {
-    return (
-      <p className="cmp-drawer-empty" role="status" data-testid="cmp-improvement_actions-empty">
-        No improvement actions were returned for this catalog control in the authorized projection.
-      </p>
-    );
-  }
 
   return (
-    <ul className="cmp-workspace-list" data-testid="cmp-improvement-actions-list">
-      {rows.map((item) => (
-        <li key={item.id}>
-          <span>
-            {item.title}
-            {item.overdue ? ' · overdue' : ''}
-          </span>
-          <small>
-            {item.status}
-            {item.dueDate ? ` · due ${item.dueDate}` : ''}
-            {item.assignee ? ` · ${item.assignee}` : ''}
-          </small>
-        </li>
-      ))}
-    </ul>
+    <>
+      {canMutate && CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE ? (
+        <div className="cmp-governance-actions">
+          <button
+            type="button"
+            data-testid="cmp-poam-add"
+            onClick={() => setShowForm((open) => !open)}
+          >
+            {showForm ? 'Cancel' : 'Add improvement action'}
+          </button>
+          {showForm && (
+            <form
+              className="cmp-governance-form"
+              data-testid="cmp-poam-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!title.trim() || createMutation.isPending) return;
+                createMutation.mutate();
+              }}
+            >
+              <label>
+                Title
+                <input
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  required
+                  maxLength={500}
+                />
+              </label>
+              <label>
+                Assignee
+                <input value={assignee} onChange={(event) => setAssignee(event.target.value)} />
+              </label>
+              <label>
+                Due date
+                <input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
+              </label>
+              <button type="submit" disabled={!title.trim() || createMutation.isPending}>
+                Save POA&amp;M item
+              </button>
+              {createMutation.isError && (
+                <span role="alert">
+                  {createMutation.error instanceof Error
+                    ? createMutation.error.message
+                    : 'Create failed.'}
+                </span>
+              )}
+            </form>
+          )}
+        </div>
+      ) : (
+        <p className="cmp-drawer__workspace-note" role="note">
+          {CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE
+            ? CMP_GOVERNANCE_MUTATE_DENIED_TITLE
+            : 'POA&M mutations remain unavailable until authorized write contracts are verified.'}
+        </p>
+      )}
+
+      {rows.length === 0 ? (
+        <p className="cmp-drawer-empty" role="status" data-testid="cmp-improvement_actions-empty">
+          No improvement actions were returned for this catalog control in the authorized projection.
+        </p>
+      ) : (
+        <ul className="cmp-workspace-list" data-testid="cmp-improvement-actions-list">
+          {rows.map((item) => (
+            <li key={item.id}>
+              <span>
+                {item.title}
+                {item.overdue ? ' · overdue' : ''}
+              </span>
+              <small>
+                {item.status}
+                {item.dueDate ? ` · due ${item.dueDate}` : ''}
+                {item.assignee ? ` · ${item.assignee}` : ''}
+                {canMutate &&
+                CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE &&
+                item.status !== 'closed' &&
+                item.status !== 'risk_accepted' ? (
+                  <>
+                    {' · '}
+                    <button
+                      type="button"
+                      data-testid={`cmp-poam-close-${item.id}`}
+                      disabled={closeMutation.isPending}
+                      title="Mark closed"
+                      onClick={() => closeMutation.mutate(item)}
+                    >
+                      Close
+                    </button>
+                  </>
+                ) : null}
+              </small>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }
 
-function ExceptionsReadPanel({ controlId }: { controlId: number }): JSX.Element {
+function ExceptionsPanel({
+  controlId,
+  canMutate,
+}: {
+  controlId: number;
+  canMutate: boolean;
+}): JSX.Element {
+  const queryClient = useQueryClient();
+  const queryKey = useMemo(() => ['cmp-exceptions', controlId] as const, [controlId]);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState('');
+  const [reason, setReason] = useState('');
+  const [effectiveUntil, setEffectiveUntil] = useState('');
+
   const query = useQuery({
-    queryKey: ['cmp-exceptions', controlId],
+    queryKey,
     queryFn: ({ signal }) => complianceService.getControlExceptions(controlId, signal),
     staleTime: 30_000,
     retry: 1,
+  });
+
+  const invalidate = useCallback(
+    () => void queryClient.invalidateQueries({ queryKey }),
+    [queryClient, queryKey],
+  );
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      complianceService.createControlException({
+        controlId,
+        title: title.trim(),
+        reason: reason.trim() || null,
+        effectiveUntil: effectiveUntil || null,
+      }),
+    onSuccess: () => {
+      setTitle('');
+      setReason('');
+      setEffectiveUntil('');
+      setShowForm(false);
+      invalidate();
+    },
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: (id: number) => complianceService.approveControlException(id),
+    onSuccess: invalidate,
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: (id: number) => complianceService.rejectControlException(id),
+    onSuccess: invalidate,
+  });
+
+  const revokeMutation = useMutation({
+    mutationFn: (id: number) => complianceService.revokeControlException(id),
+    onSuccess: invalidate,
   });
 
   if (query.isLoading) {
@@ -621,53 +798,161 @@ function ExceptionsReadPanel({ controlId }: { controlId: number }): JSX.Element 
   }
 
   const rows = query.data ?? [];
-  if (rows.length === 0) {
-    return (
-      <p className="cmp-drawer-empty" role="status" data-testid="cmp-exceptions-empty">
-        No exceptions were returned for this catalog control in the authorized projection.
-      </p>
-    );
-  }
 
   return (
-    <ul className="cmp-workspace-list" data-testid="cmp-exceptions-list">
-      {rows.map((item) => (
-        <li key={item.id}>
-          <span>{item.title}</span>
-          <small>
-            {item.status}
-            {item.effectiveUntil ? ` · until ${item.effectiveUntil}` : ''}
-            {item.approver ? ` · ${item.approver}` : ''}
-          </small>
-        </li>
-      ))}
-    </ul>
+    <>
+      {canMutate && CMP_EXCEPTIONS_WRITE_AVAILABLE ? (
+        <div className="cmp-governance-actions">
+          <button
+            type="button"
+            data-testid="cmp-exception-request"
+            onClick={() => setShowForm((open) => !open)}
+          >
+            {showForm ? 'Cancel' : 'Request exception'}
+          </button>
+          {showForm && (
+            <form
+              className="cmp-governance-form"
+              data-testid="cmp-exception-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!title.trim() || createMutation.isPending) return;
+                createMutation.mutate();
+              }}
+            >
+              <label>
+                Title
+                <input
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  required
+                  maxLength={500}
+                />
+              </label>
+              <label>
+                Reason
+                <input value={reason} onChange={(event) => setReason(event.target.value)} />
+              </label>
+              <label>
+                Effective until
+                <input
+                  type="date"
+                  value={effectiveUntil}
+                  onChange={(event) => setEffectiveUntil(event.target.value)}
+                />
+              </label>
+              <button type="submit" disabled={!title.trim() || createMutation.isPending}>
+                Submit exception request
+              </button>
+              {createMutation.isError && (
+                <span role="alert">
+                  {createMutation.error instanceof Error
+                    ? createMutation.error.message
+                    : 'Request failed.'}
+                </span>
+              )}
+            </form>
+          )}
+        </div>
+      ) : (
+        <p className="cmp-drawer__workspace-note" role="note">
+          {CMP_EXCEPTIONS_WRITE_AVAILABLE
+            ? CMP_GOVERNANCE_MUTATE_DENIED_TITLE
+            : 'Exception mutations remain unavailable until authorized write contracts are verified.'}
+        </p>
+      )}
+
+      {rows.length === 0 ? (
+        <p className="cmp-drawer-empty" role="status" data-testid="cmp-exceptions-empty">
+          No exceptions were returned for this catalog control in the authorized projection.
+        </p>
+      ) : (
+        <ul className="cmp-workspace-list" data-testid="cmp-exceptions-list">
+          {rows.map((item) => (
+            <li key={item.id}>
+              <span>{item.title}</span>
+              <small>
+                {item.status}
+                {item.effectiveUntil ? ` · until ${item.effectiveUntil}` : ''}
+                {item.approver ? ` · ${item.approver}` : ''}
+                {canMutate && CMP_EXCEPTIONS_WRITE_AVAILABLE ? (
+                  <>
+                    {' · '}
+                    {item.status === 'pending' ? (
+                      <>
+                        <button
+                          type="button"
+                          data-testid={`cmp-exception-approve-${item.id}`}
+                          disabled={approveMutation.isPending || rejectMutation.isPending}
+                          onClick={() => approveMutation.mutate(item.id)}
+                        >
+                          Approve
+                        </button>
+                        {' · '}
+                        <button
+                          type="button"
+                          data-testid={`cmp-exception-reject-${item.id}`}
+                          disabled={approveMutation.isPending || rejectMutation.isPending}
+                          onClick={() => rejectMutation.mutate(item.id)}
+                        >
+                          Reject
+                        </button>
+                      </>
+                    ) : null}
+                    {item.status === 'approved' ? (
+                      <button
+                        type="button"
+                        data-testid={`cmp-exception-revoke-${item.id}`}
+                        disabled={revokeMutation.isPending}
+                        onClick={() => revokeMutation.mutate(item.id)}
+                      >
+                        Revoke
+                      </button>
+                    ) : null}
+                  </>
+                ) : null}
+              </small>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }
 
 function GovernanceReadPanel({
   contract,
   controlId,
+  frameworkId,
+  canMutate,
 }: {
   contract: CmpGovernanceReadContract;
   controlId: number;
+  frameworkId: string;
+  canMutate: boolean;
 }): JSX.Element {
   if (contract.kind === 'improvement_actions') {
-    return <ImprovementActionsReadPanel controlId={controlId} />;
+    return (
+      <ImprovementActionsPanel controlId={controlId} frameworkId={frameworkId} canMutate={canMutate} />
+    );
   }
-  return <ExceptionsReadPanel controlId={controlId} />;
+  return <ExceptionsPanel controlId={controlId} canMutate={canMutate} />;
 }
 
 function ControlEvidenceWorkspace({
   controlId,
+  frameworkId,
   frameworkName,
   sectionName,
   controlName,
+  canMutateGovernance,
 }: {
   controlId: number;
+  frameworkId: string;
   frameworkName: string;
   sectionName: string | null;
   controlName: string | null;
+  canMutateGovernance: boolean;
 }): JSX.Element {
   const [activeTab, setActiveTab] = useState<ControlWorkspaceTab>('controls');
   const actionsContract = governanceContract('actions');
@@ -835,7 +1120,12 @@ function ControlEvidenceWorkspace({
             verification — not browser-side completion.
           </p>
           {actionsContract.available ? (
-            <GovernanceReadPanel contract={actionsContract} controlId={controlId} />
+            <GovernanceReadPanel
+              contract={actionsContract}
+              controlId={controlId}
+              frameworkId={frameworkId}
+              canMutate={canMutateGovernance}
+            />
           ) : (
             <GovernanceUnavailablePanel contract={actionsContract} controlId={controlId} />
           )}
@@ -851,7 +1141,12 @@ function ControlEvidenceWorkspace({
             client-side waivers.
           </p>
           {exceptionsContract.available ? (
-            <GovernanceReadPanel contract={exceptionsContract} controlId={controlId} />
+            <GovernanceReadPanel
+              contract={exceptionsContract}
+              controlId={controlId}
+              frameworkId={frameworkId}
+              canMutate={canMutateGovernance}
+            />
           ) : (
             <GovernanceUnavailablePanel contract={exceptionsContract} controlId={controlId} />
           )}
@@ -862,7 +1157,9 @@ function ControlEvidenceWorkspace({
         <span>
           <ShieldCheck size={13} />
           {CMP_EVALUATION_HISTORY_READ_AVAILABLE
-            ? 'Evaluation history is read-only — report snapshots and governance mutations stay disabled until authorized write contracts exist.'
+            ? CMP_IMPROVEMENT_ACTIONS_WRITE_AVAILABLE && CMP_EXCEPTIONS_WRITE_AVAILABLE
+              ? 'Evaluation history is read-only — POA&M and exception mutations require Platform Administrator or SOC Manager.'
+              : 'Evaluation history is read-only — report snapshots and governance mutations stay disabled until authorized write contracts exist.'
             : 'Evaluation history, report snapshots and governance mutations remain unavailable.'}
         </span>
       </div>
@@ -873,9 +1170,11 @@ function ControlEvidenceWorkspace({
 function FrameworkControlBrowser({
   mapping,
   frameworkName,
+  canMutateGovernance,
 }: {
   mapping: FrameworkControlResolution;
   frameworkName: string;
+  canMutateGovernance: boolean;
 }): JSX.Element {
   const [sectionId, setSectionId] = useState(mapping.sectionId);
   const [controlId, setControlId] = useState(mapping.controlId);
@@ -1052,9 +1351,11 @@ function FrameworkControlBrowser({
 
       <ControlEvidenceWorkspace
         controlId={controlId}
+        frameworkId={String(mapping.standardId)}
         frameworkName={frameworkName}
         sectionName={sectionName}
         controlName={controlName}
+        canMutateGovernance={canMutateGovernance}
       />
     </>
   );
@@ -1131,6 +1432,8 @@ function FrameworkDrawer({
 }): JSX.Element {
   const assessed = Boolean(framework.lastAssessed);
   const standardId = parseFrameworkStandardId(framework.id);
+  const roles = useAuthStore((state) => state.user?.roles);
+  const canMutateGovernance = canMutateComplianceGovernance(roles);
   const mappingQuery = useQuery({
     queryKey: ['compliance-framework-control', framework.id],
     queryFn: ({ signal }) =>
@@ -1227,7 +1530,11 @@ function FrameworkDrawer({
             onRetry={() => void mappingQuery.refetch()}
           />
         ) : mappingQuery.data ? (
-          <FrameworkControlBrowser mapping={mappingQuery.data} frameworkName={framework.name} />
+          <FrameworkControlBrowser
+            mapping={mappingQuery.data}
+            frameworkName={framework.name}
+            canMutateGovernance={canMutateGovernance}
+          />
         ) : (
           <FrameworkControlMappingEmpty framework={framework} reason="no-catalog" />
         )}
@@ -1688,7 +1995,7 @@ export function CompliancePage(): JSX.Element {
 
       <footer className="cmp-footer">
         <span>{frameworks.length.toLocaleString()} framework records in the loaded projection</span>
-        <strong>CMP read contracts live — control mutations remain disabled</strong>
+        <strong>CMP governance write mutations live for Platform Administrator and SOC Manager</strong>
         <Link to={ROUTES.REPORTS_SCHEDULED}>
           Open reporting workspace
           <Link2 size={11} aria-hidden="true" />
