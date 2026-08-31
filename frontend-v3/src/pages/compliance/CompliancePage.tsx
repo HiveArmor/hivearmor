@@ -32,11 +32,12 @@ import { ROUTES } from '@/constants/routes.constants';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
-import { CMP_DRAWER_SEED_CONTROL_ID, complianceService } from '@/services/compliance.service';
+import { complianceService, parseFrameworkStandardId } from '@/services/compliance.service';
 import { postureService } from '@/services/posture.service';
 import type {
   ComplianceControlEvaluationGroupedDTO,
   ComplianceEvidenceItemDTO,
+  FrameworkControlResolution,
 } from '@/types/compliance.types';
 import type { HiveFrameworkScoreDTO } from '@/types/posture.types';
 
@@ -110,7 +111,15 @@ function ScoreCell({ score, assessed }: { score: number; assessed: boolean }): J
   );
 }
 
-function ControlEvidenceWorkspace({ controlId }: { controlId: number }): JSX.Element {
+function ControlEvidenceWorkspace({
+  controlId,
+  mapping,
+  frameworkName,
+}: {
+  controlId: number;
+  mapping: FrameworkControlResolution;
+  frameworkName: string;
+}): JSX.Element {
   const controlQuery = useQuery({
     queryKey: ['compliance-control-latest', controlId],
     queryFn: ({ signal }) => complianceService.getControlLatestEvaluation(controlId, signal),
@@ -157,9 +166,16 @@ function ControlEvidenceWorkspace({ controlId }: { controlId: number }): JSX.Ele
       </header>
 
       <p className="cmp-drawer__workspace-note">
-        Aggregate framework rows are not yet mapped to catalog control IDs. Showing authorized control
-        record #{controlId.toLocaleString()} from the live CMP projection — not certification or
-        attestation.
+        Representative catalog control for <strong>{frameworkName}</strong>
+        {mapping.sectionName ? (
+          <>
+            {' '}
+            — first control in section <strong>{mapping.sectionName}</strong>
+          </>
+        ) : null}
+        . Catalog record #{controlId.toLocaleString()}
+        {mapping.controlName ? ` (${mapping.controlName})` : ''} from the live CMP projection — not
+        certification or attestation.
       </p>
 
       {loading && (
@@ -278,6 +294,68 @@ function ControlEvidenceWorkspace({ controlId }: { controlId: number }): JSX.Ele
   );
 }
 
+function FrameworkControlMappingEmpty({
+  framework,
+  reason,
+}: {
+  framework: HiveFrameworkScoreDTO;
+  reason: 'unmapped-id' | 'no-catalog';
+}): JSX.Element {
+  const message =
+    reason === 'unmapped-id'
+      ? `Framework id "${framework.id}" is not a numeric catalog standard id — no representative control can be resolved from the authorized CMP APIs.`
+      : `No catalog sections or controls were returned for this framework in the authorized CMP projection.`;
+  return (
+    <section className="cmp-drawer__card" data-testid="cmp-control-mapping-empty">
+      <header>
+        <FileClock size={15} />
+        <div>
+          <strong>Control and evidence workspace</strong>
+          <span>CMP-004 — framework catalog mapping</span>
+        </div>
+      </header>
+      <p className="cmp-drawer-empty" role="status">
+        {message}
+      </p>
+      <div className="cmp-capability-list cmp-capability-list--muted">
+        <span>
+          <ShieldCheck size={13} />
+          Full control ledgers, owners, testing state and exceptions remain unavailable — mutation CTAs
+          stay disabled.
+        </span>
+      </div>
+    </section>
+  );
+}
+
+function FrameworkControlMappingError({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry: () => void;
+}): JSX.Element {
+  return (
+    <section className="cmp-drawer__card" data-testid="cmp-control-mapping-error">
+      <header>
+        <FileClock size={15} />
+        <div>
+          <strong>Control and evidence workspace</strong>
+          <span>CMP-004 — framework catalog mapping</span>
+        </div>
+      </header>
+      <div className="cmp-drawer-state" role="alert">
+        <AlertTriangle size={16} aria-hidden="true" />
+        <strong>Framework control mapping unavailable</strong>
+        <span>{message}</span>
+        <button type="button" onClick={onRetry}>
+          Retry catalog lookup
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function FrameworkDrawer({
   framework,
   onClose,
@@ -286,6 +364,16 @@ function FrameworkDrawer({
   onClose: () => void;
 }): JSX.Element {
   const assessed = Boolean(framework.lastAssessed);
+  const standardId = parseFrameworkStandardId(framework.id);
+  const mappingQuery = useQuery({
+    queryKey: ['compliance-framework-control', framework.id],
+    queryFn: ({ signal }) =>
+      complianceService.resolveFrameworkRepresentativeControl(framework.id, signal),
+    enabled: standardId !== null,
+    staleTime: 60_000,
+    retry: 1,
+  });
+
   return (
     <HaDrawer
       isOpen
@@ -344,7 +432,43 @@ function FrameworkDrawer({
           </dl>
           <p>{framework.description ?? 'No framework description was supplied by the current API.'}</p>
         </section>
-        <ControlEvidenceWorkspace controlId={CMP_DRAWER_SEED_CONTROL_ID} />
+        {standardId === null ? (
+          <FrameworkControlMappingEmpty framework={framework} reason="unmapped-id" />
+        ) : mappingQuery.isLoading ? (
+          <section className="cmp-drawer__card" data-testid="cmp-control-mapping-loading">
+            <header>
+              <FileClock size={15} />
+              <div>
+                <strong>Control and evidence workspace</strong>
+                <span>CMP-004 — framework catalog mapping</span>
+              </div>
+            </header>
+            <div className="cmp-drawer-state" role="status">
+              <RefreshCw size={14} className="cmp-spin" aria-hidden="true" />
+              <strong>Resolving catalog control</strong>
+              <span>
+                Looking up standard sections and representative controls for this framework record.
+              </span>
+            </div>
+          </section>
+        ) : mappingQuery.isError ? (
+          <FrameworkControlMappingError
+            message={
+              mappingQuery.error instanceof Error
+                ? mappingQuery.error.message
+                : 'CMP catalog mapping could not be loaded.'
+            }
+            onRetry={() => void mappingQuery.refetch()}
+          />
+        ) : mappingQuery.data ? (
+          <ControlEvidenceWorkspace
+            controlId={mappingQuery.data.controlId}
+            mapping={mappingQuery.data}
+            frameworkName={framework.name}
+          />
+        ) : (
+          <FrameworkControlMappingEmpty framework={framework} reason="no-catalog" />
+        )}
         <nav className="cmp-pivots" aria-label="Framework pivots">
           <Link to={ROUTES.CIS_BENCHMARK}>
             Review technical checks
