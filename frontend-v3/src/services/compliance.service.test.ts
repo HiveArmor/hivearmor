@@ -213,9 +213,9 @@ describe('CMP-006 governance read contracts', () => {
     mockGet.mockReset();
   });
 
-  it('enables improvement actions when POA&M read REST is authorized; keeps exceptions fail-closed', () => {
+  it('enables improvement actions and exceptions when governance read REST is authorized', () => {
     expect(CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE).toBe(true);
-    expect(CMP_EXCEPTIONS_READ_AVAILABLE).toBe(false);
+    expect(CMP_EXCEPTIONS_READ_AVAILABLE).toBe(true);
   });
 
   it('loads improvement actions via authorized POA&M read contract', async () => {
@@ -242,8 +242,26 @@ describe('CMP-006 governance read contracts', () => {
     });
   });
 
-  it('rejects exception reads while the contract is unavailable', async () => {
-    await expect(complianceService.getControlExceptions(42)).rejects.toThrow(/not authorized yet/i);
-    expect(mockGet).not.toHaveBeenCalled();
+  it('loads exceptions via authorized read contract', async () => {
+    mockGet.mockResolvedValueOnce([
+      {
+        id: 2,
+        controlId: 42,
+        title: 'Legacy auth waiver',
+        reason: 'Migration window',
+        status: 'approved',
+        effectiveFrom: '2026-07-01',
+        effectiveUntil: '2026-12-31',
+        approver: 'soc-manager',
+        createdAt: '2026-07-01T00:00:00Z',
+        updatedAt: '2026-07-15T00:00:00Z',
+      },
+    ]);
+    const rows = await complianceService.getControlExceptions(42);
+    expect(rows).toHaveLength(1);
+    expect(mockGet).toHaveBeenCalledWith('/ha-compliance/exceptions', {
+      params: { controlId: 42, page: 0, size: 20, sort: 'effectiveUntil,asc' },
+      signal: undefined,
+    });
   });
 });

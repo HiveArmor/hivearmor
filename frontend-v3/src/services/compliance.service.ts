@@ -29,10 +29,10 @@ export const CMP_SECTION_CONTROLS_PAGE_SIZE = 25;
 export const CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE = true;
 
 /**
- * CMP-006 — no control-exception entity or REST surface exists in backend yet.
- * Flip when GET list-by-control is verified in SecurityConfiguration.
+ * CMP-011 — HaComplianceExceptionResource GET /ha-compliance/exceptions has class-level @PreAuthorize
+ * (ADMIN|USER|ANALYST|SOC_MANAGER) matching evaluation-history auth tier.
  */
-export const CMP_EXCEPTIONS_READ_AVAILABLE = false;
+export const CMP_EXCEPTIONS_READ_AVAILABLE = true;
 
 export type CmpGovernanceReadKind = 'improvement_actions' | 'exceptions';
 
