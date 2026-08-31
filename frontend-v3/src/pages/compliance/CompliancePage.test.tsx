@@ -179,6 +179,22 @@ function resolveQuery(options: { queryKey: unknown[] }) {
       },
     ]);
   }
+  if (key === 'cmp-exceptions') {
+    return queryState([
+      {
+        id: 2,
+        controlId: 42,
+        title: 'Legacy auth waiver',
+        reason: 'Migration window',
+        status: 'approved',
+        effectiveFrom: '2026-07-01',
+        effectiveUntil: '2026-12-31',
+        approver: 'soc-manager',
+        createdAt: '2026-07-01T00:00:00Z',
+        updatedAt: '2026-07-15T00:00:00Z',
+      },
+    ]);
+  }
   return queryState(undefined);
 }
 
@@ -271,18 +287,44 @@ describe('CompliancePage', () => {
     expect(refetch).toHaveBeenCalled();
   });
 
-  it('shows honest blocked state on exceptions tab', () => {
+  it('loads exceptions when read contract is authorized', () => {
     render(<CompliancePage />);
     fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
     fireEvent.click(screen.getByTestId('cmp-workspace-tab-exceptions'));
-    expect(screen.getByTestId('cmp-exceptions-unavailable')).toBeInTheDocument();
-    expect(screen.getByText(/governed approval lifecycle/i)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Retry exceptions/i })).not.toBeInTheDocument();
-    expect(
-      within(screen.getByTestId('cmp-control-workspace')).getByText(
-        /Evaluation history is read-only/i,
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('cmp-exceptions-list')).toBeInTheDocument();
+    expect(screen.getByText('Legacy auth waiver')).toBeInTheDocument();
+    expect(screen.queryByTestId('cmp-exceptions-unavailable')).not.toBeInTheDocument();
+  });
+
+  it('shows exceptions empty state', () => {
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'cmp-exceptions') {
+        return queryState([]);
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    fireEvent.click(screen.getByTestId('cmp-workspace-tab-exceptions'));
+    expect(screen.getByTestId('cmp-exceptions-empty')).toBeInTheDocument();
+  });
+
+  it('shows exceptions error and retry', () => {
+    const refetch = vi.fn();
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'cmp-exceptions') {
+        return queryState(undefined, { error: new Error('503 upstream'), isError: true, refetch });
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    fireEvent.click(screen.getByTestId('cmp-workspace-tab-exceptions'));
+    expect(screen.getByText('Exceptions unavailable')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry exceptions' }));
+    expect(refetch).toHaveBeenCalled();
   });
 
   it('shows evaluation history empty state on history tab', () => {
