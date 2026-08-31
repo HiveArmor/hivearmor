@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  CMP_EVALUATION_HISTORY_READ_AVAILABLE,
   CMP_EXCEPTIONS_READ_AVAILABLE,
   CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE,
+  CMP_REPORT_SNAPSHOTS_READ_AVAILABLE,
   complianceService,
   parseFrameworkStandardId,
 } from './compliance.service';
@@ -146,6 +148,20 @@ describe('complianceService.getSectionControlsPage', () => {
       '/api/compliance/control-config/get-by-section?sectionId=10&page=1&size=25&sort=id%2Casc',
       expect.objectContaining({ headers: expect.objectContaining({ Accept: 'application/json' }) }),
     );
+  });
+});
+
+describe('CMP-007 drawer read contracts', () => {
+  it('enables evaluation history and keeps report snapshots fail-closed', () => {
+    expect(CMP_EVALUATION_HISTORY_READ_AVAILABLE).toBe(true);
+    expect(CMP_REPORT_SNAPSHOTS_READ_AVAILABLE).toBe(false);
+  });
+
+  it('rejects report snapshot reads while the contract is unavailable', async () => {
+    await expect(complianceService.getFrameworkReportSnapshots(1)).rejects.toThrow(
+      /not authorized yet/i,
+    );
+    expect(mockGet).not.toHaveBeenCalled();
   });
 });
 

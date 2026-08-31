@@ -127,6 +127,16 @@ export interface ComplianceControlExceptionDTO {
   updatedAt: string;
 }
 
+/** CMP-007 — generated report snapshot row — schema until @PreAuthorize read is verified. */
+export interface ComplianceReportSnapshotDTO {
+  id: number;
+  reportName: string;
+  standard: string;
+  status: string;
+  createdDate: string;
+  createdBy: string | null;
+}
+
 /** CMP-003 — evidence row for a control. */
 export interface ComplianceEvidenceItemDTO {
   evidenceId?: string | null;

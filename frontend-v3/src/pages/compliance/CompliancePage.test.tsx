@@ -176,8 +176,10 @@ describe('CompliancePage', () => {
     expect(screen.getByTestId('cmp-control-picker')).toBeInTheDocument();
     expect(screen.getByTestId('cmp-control-workspace')).toBeInTheDocument();
     expect(screen.getByTestId('cmp-workspace-tab-controls')).toBeInTheDocument();
+    expect(screen.getByTestId('cmp-workspace-tab-history')).toBeInTheDocument();
     expect(screen.getByTestId('cmp-workspace-tab-actions')).toBeInTheDocument();
     expect(screen.getByTestId('cmp-workspace-tab-exceptions')).toBeInTheDocument();
+    expect(screen.getByTestId('cmp-framework-reports')).toBeInTheDocument();
     expect(screen.getByLabelText('Select catalog section')).toBeInTheDocument();
     expect(screen.getByLabelText('Select catalog control')).toBeInTheDocument();
     const workspace = screen.getByTestId('cmp-control-workspace');
@@ -201,9 +203,41 @@ describe('CompliancePage', () => {
     expect(screen.getByText(/governed approval lifecycle/i)).toBeInTheDocument();
     expect(
       within(screen.getByTestId('cmp-control-workspace')).getByText(
-        /Improvement actions and exceptions remain unavailable/i,
+        /Evaluation history is read-only/i,
       ),
     ).toBeInTheDocument();
+  });
+
+  it('shows evaluation history empty state on history tab', () => {
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    fireEvent.click(screen.getByTestId('cmp-workspace-tab-history'));
+    expect(screen.getByTestId('cmp-evaluation_history-empty')).toBeInTheDocument();
+  });
+
+  it('shows evaluation history error and retry', () => {
+    const refetch = vi.fn();
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'compliance-control-evaluations') {
+        return queryState(undefined, { error: new Error('503 upstream'), isError: true, refetch });
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    fireEvent.click(screen.getByTestId('cmp-workspace-tab-history'));
+    expect(screen.getByText('Evaluation history unavailable')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry evaluation history' }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
+  it('shows blocked report snapshots panel for framework-scoped exports', () => {
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    expect(screen.getByTestId('cmp-report_snapshots-unavailable')).toBeInTheDocument();
+    expect(screen.getByText(/lacks @PreAuthorize/i)).toBeInTheDocument();
+    expect(screen.getByText(/Report snapshot listing remains blocked/i)).toBeInTheDocument();
   });
 
   it('resets workspace tab when analyst selects a different catalog control', () => {
