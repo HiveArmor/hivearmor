@@ -75,6 +75,7 @@ public class UtmComplianceReportScheduleService extends QueryService<UtmComplian
         } catch (IllegalArgumentException arg) {
             throw new BadRequestAlertException(ctx + ": " + "Invalid value of field -> scheduleString", "utmComplianceReportSchedule", "invalidvalue");
         }
+        utmComplianceReportSchedule.ensureFiltersDefault();
         if (utmComplianceReportSchedule.getId() == null) { // When inserting set time to now
             utmComplianceReportSchedule.setLastExecutionTime(Instant.now(Clock.systemUTC()));
         } else { // When updating, use db Instant to avoid update
