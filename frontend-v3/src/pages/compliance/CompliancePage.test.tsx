@@ -162,6 +162,23 @@ function resolveQuery(options: { queryKey: unknown[] }) {
       },
     ]);
   }
+  if (key === 'cmp-improvement_actions') {
+    return queryState([
+      {
+        id: 1,
+        frameworkId: '1',
+        controlId: '42',
+        title: 'Patch cadence gap',
+        description: null,
+        dueDate: '2026-09-01',
+        status: 'open',
+        assignee: 'analyst',
+        createdAt: '2026-08-01T00:00:00Z',
+        updatedAt: '2026-08-15T00:00:00Z',
+        overdue: false,
+      },
+    ]);
+  }
   return queryState(undefined);
 }
 
@@ -214,16 +231,53 @@ describe('CompliancePage', () => {
     expect(screen.queryByText(/Requires CMP-002 and CMP-003/i)).not.toBeInTheDocument();
   });
 
-  it('shows honest blocked states on improvement actions and exceptions tabs', () => {
+  it('loads improvement actions when POA&M read contract is authorized', () => {
     render(<CompliancePage />);
     fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
     fireEvent.click(screen.getByTestId('cmp-workspace-tab-actions'));
-    expect(screen.getByTestId('cmp-improvement_actions-unavailable')).toBeInTheDocument();
-    expect(screen.getByText(/POA&M persistence exists server-side/i)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Retry improvement actions/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId('cmp-improvement-actions-list')).toBeInTheDocument();
+    expect(screen.getByText('Patch cadence gap')).toBeInTheDocument();
+    expect(screen.queryByTestId('cmp-improvement_actions-unavailable')).not.toBeInTheDocument();
+  });
+
+  it('shows improvement actions empty state', () => {
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'cmp-improvement_actions') {
+        return queryState([]);
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    fireEvent.click(screen.getByTestId('cmp-workspace-tab-actions'));
+    expect(screen.getByTestId('cmp-improvement_actions-empty')).toBeInTheDocument();
+  });
+
+  it('shows improvement actions error and retry', () => {
+    const refetch = vi.fn();
+    mockUseQuery.mockImplementation((options: { queryKey: unknown[] }) => {
+      const key = String(options.queryKey[0]);
+      if (key === 'cmp-improvement_actions') {
+        return queryState(undefined, { error: new Error('503 upstream'), isError: true, refetch });
+      }
+      return resolveQuery(options);
+    });
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
+    fireEvent.click(screen.getByTestId('cmp-workspace-tab-actions'));
+    expect(screen.getByText('Improvement actions unavailable')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry improvement actions' }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
+  it('shows honest blocked state on exceptions tab', () => {
+    render(<CompliancePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
     fireEvent.click(screen.getByTestId('cmp-workspace-tab-exceptions'));
     expect(screen.getByTestId('cmp-exceptions-unavailable')).toBeInTheDocument();
     expect(screen.getByText(/governed approval lifecycle/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Retry exceptions/i })).not.toBeInTheDocument();
     expect(
       within(screen.getByTestId('cmp-control-workspace')).getByText(
         /Evaluation history is read-only/i,

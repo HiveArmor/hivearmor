@@ -23,10 +23,10 @@ const TOKEN_KEY = 'hivearmor_auth_token';
 export const CMP_SECTION_CONTROLS_PAGE_SIZE = 25;
 
 /**
- * CMP-006 — backend has `ha_poam_item` + `PoamItemDTO` but no `@PreAuthorize` REST resource yet.
- * Flip when GET list-by-control is verified in SecurityConfiguration.
+ * CMP-010 — HaPoamItemResource GET /ha-compliance/poam has class-level @PreAuthorize
+ * (ADMIN|USER|ANALYST|SOC_MANAGER) matching evaluation-history auth tier.
  */
-export const CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE = false;
+export const CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE = true;
 
 /**
  * CMP-006 — no control-exception entity or REST surface exists in backend yet.

@@ -213,16 +213,33 @@ describe('CMP-006 governance read contracts', () => {
     mockGet.mockReset();
   });
 
-  it('keeps improvement actions and exceptions fail-closed until REST is authorized', () => {
-    expect(CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE).toBe(false);
+  it('enables improvement actions when POA&M read REST is authorized; keeps exceptions fail-closed', () => {
+    expect(CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE).toBe(true);
     expect(CMP_EXCEPTIONS_READ_AVAILABLE).toBe(false);
   });
 
-  it('rejects improvement-action reads while the contract is unavailable', async () => {
-    await expect(complianceService.getControlImprovementActions(42)).rejects.toThrow(
-      /not authorized yet/i,
-    );
-    expect(mockGet).not.toHaveBeenCalled();
+  it('loads improvement actions via authorized POA&M read contract', async () => {
+    mockGet.mockResolvedValueOnce([
+      {
+        id: 1,
+        frameworkId: '1',
+        controlId: '42',
+        title: 'Patch gap',
+        description: null,
+        dueDate: '2026-09-01',
+        status: 'open',
+        assignee: 'analyst',
+        createdAt: '2026-08-01T00:00:00Z',
+        updatedAt: '2026-08-15T00:00:00Z',
+        overdue: false,
+      },
+    ]);
+    const rows = await complianceService.getControlImprovementActions(42);
+    expect(rows).toHaveLength(1);
+    expect(mockGet).toHaveBeenCalledWith('/ha-compliance/poam', {
+      params: { controlId: 42, page: 0, size: 20, sort: 'dueDate,asc' },
+      signal: undefined,
+    });
   });
 
   it('rejects exception reads while the contract is unavailable', async () => {
