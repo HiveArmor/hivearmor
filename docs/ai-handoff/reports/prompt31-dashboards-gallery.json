@@ -1,0 +1,106 @@
+{
+  "prompt": "31-dashboards-gallery-ux",
+  "status": "STAGING CANDIDATE",
+  "base_tip": "8264de1",
+  "based_on_main_includes_pr30": true,
+  "branch": "feat/c1-dashboards-gallery-honesty",
+  "decision": "RESTRUCTURE",
+  "wave_c1_opener": true,
+  "routes": ["/dashboards"],
+  "job_sentence": "Dashboard gallery — discover operational dashboards, managed content, and health across authorized inventory. Runtime panels open on selection; Studio authoring is Analyst or above; scheduled reporting lives on Scheduled Reports.",
+  "wave_c1_program": {
+    "status": "IN_PROGRESS",
+    "slices": [
+      { "slice": 1, "prompt": 31, "route": "/dashboards", "job": "Dashboard gallery discover (this slice)" },
+      { "slice": 2, "prompt": 32, "route": "/dashboards/studio", "job": "Studio authoring honesty (next)" },
+      { "slice": 3, "prompt": 33, "route": "/dashboards/:id", "job": "Runtime panels honesty" },
+      { "slice": 4, "prompt": 34, "route": "/reports/scheduled", "job": "Scheduled reporting honesty" },
+      { "slice": 5, "prompt": 35, "route": "/reports/templates", "job": "Report templates honesty" }
+    ]
+  },
+  "distinction": {
+    "gallery": "/dashboards = dashboard gallery discover (this slice)",
+    "studio": "/dashboards/studio = low-code authoring (Prompt 32)",
+    "runtime": "/dashboards/:id = panel runtime",
+    "reports_scheduled": "/reports/scheduled = scheduled reporting workspace",
+    "reports_templates": "/reports/templates = template inventory",
+    "compliance": "/compliance = framework assurance (Prompt 30)"
+  },
+  "ia": {
+    "dashboards_gallery": {
+      "removed": [
+        "Hero .dsh-summary 5-tile KPI strip",
+        "Title Operational Dashboards (nav-aligned title Dashboards)",
+        "Eyebrow OBSERVE · DASHBOARD OPERATIONS",
+        "StatusDock mode=live on snapshot inventory",
+        "Filter-empty conflated with true empty inventory"
+      ],
+      "added": [
+        "DASHBOARD_GALLERY_JOB_SENTENCE + STAGING CANDIDATE badge (DASHBOARDS eyebrow)",
+        "Meta cross-links: Mission Control · Studio · Scheduled Reports · Templates · Compliance (Link + ROUTES)",
+        "Human role access note: Analyst · SOC Manager · Platform Administrator",
+        "Empty-inventory honesty (dashboards-empty-honesty) distinct from filter-empty and API error",
+        "Gallery workspace min-height 50vh (.dsh-inventory)",
+        "Compact inline stats (.dsh-inline-stats) when inventory exists",
+        "Projection note for legacy unbound list / SEC-06 panel run",
+        "DashboardGalleryUxHonesty.sourceScan.test.ts",
+        "StatusDock mode=historical (C1-LIVE-01)"
+      ],
+      "kept": [
+        "Access / health / search / sort filters",
+        "Grid and list layouts",
+        "J/K/Enter keyboard navigation",
+        "New dashboard → Studio (role-gated)",
+        "Fixture mode banner (dev-only)",
+        "dashboardOperationsService.list → GET /api/ha-dashboards"
+      ],
+      "forbidden": [
+        "Bounded/tenant-scoped claims when X-Total-Count absent",
+        "Fictional Northwind/Contoso tenants",
+        "Production fixture import",
+        "Report generation from gallery",
+        "Canonical versioned save outside fixtures"
+      ]
+    }
+  },
+  "backend": {
+    "dashboards_list": {
+      "path": "GET /api/ha-dashboards?page=0&size=100&sort=modifiedDate,desc",
+      "frontend_contract": "dashboardOperationsService.list",
+      "auth": "authenticated (Studio create gated ROLE_ANALYST | ROLE_SOC_MANAGER | ROLE_ADMIN)",
+      "notes": "Legacy array response — bounded=false, tenantScoped=false until pagination headers exist"
+    }
+  },
+  "ux_smoke": {
+    "bundle_marker": "DashboardGalleryPage contains STAGING CANDIDATE, dashboards-empty-honesty, DASHBOARD_GALLERY_JOB_SENTENCE",
+    "checks": [
+      { "item": "job_sentence_in_source", "result": "pass" },
+      { "item": "staging_honesty_markers_in_source", "result": "pass" },
+      { "item": "meta_links_mission_studio_reports_compliance", "result": "pass" },
+      { "item": "empty_inventory_honesty_banner_wired", "result": "pass" },
+      { "item": "api_error_distinct_from_empty_inventory", "result": "pass" },
+      { "item": "no_hero_kpi_strip", "result": "pass" },
+      { "item": "inline_stats_when_data_exists", "result": "pass" },
+      { "item": "inventory_min_height_50vh", "result": "pass" },
+      { "item": "statusdock_historical", "result": "pass" }
+    ]
+  },
+  "validation": {
+    "vitest_dashboards": "pass (49 tests)",
+    "eslint_gallery_file": "pass",
+    "eslint_repo_wide": "fail_preexisting (warnings on main — not introduced by this slice)",
+    "type_check": "pass",
+    "build": "pass"
+  },
+  "files": {
+    "research": "docs/ai-handoff/research/prompt31-dashboards-gallery-oem.md",
+    "report": "docs/ai-handoff/reports/prompt31-dashboards-gallery.json",
+    "page": "frontend-v3/src/pages/dashboards/DashboardGalleryPage.tsx",
+    "css": "frontend-v3/src/pages/dashboards/DashboardOperations.css",
+    "tests": [
+      "frontend-v3/src/pages/dashboards/DashboardGalleryPage.test.ts",
+      "frontend-v3/src/pages/dashboards/DashboardGalleryUxHonesty.sourceScan.test.ts"
+    ]
+  },
+  "wave_c1_opener_note": "Prompt 31 opens Wave C1 Dashboards & reports deep UX — thin honesty (#62) remains; this slice adds gallery honesty chrome matching Wave B2 openers."
+}
