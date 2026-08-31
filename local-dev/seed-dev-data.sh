@@ -345,6 +345,15 @@ if ! $OS_ONLY; then
   }' > /dev/null 2>&1 || warn "  Scheduled report may already exist"
   ok "  1 scheduled report seeded"
 
+  # ── Compliance governance (POA&M + exceptions) ─────────────
+  log "Seeding compliance governance (POA&M + exceptions)…"
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if bash "${SCRIPT_DIR}/seed-compliance-governance.sh"; then
+    ok "  Compliance governance seed complete"
+  else
+    warn "  Compliance governance seed skipped (PostgreSQL or tables unavailable)"
+  fi
+
   ok "API / PostgreSQL seeding complete"
 fi
 
@@ -359,6 +368,7 @@ echo "  Saved Queries: up to 5 seeded (check /hunt)"
 echo "  Correlation Rules: up to 5 seeded (check /defend/detection-rules)"
 echo "  SOAR Playbooks: up to 6 seeded with steps (check /response/playbooks)"
 echo "  Reports: up to 3 report records + 1 scheduled (check /reports)"
+echo "  Compliance governance: POA&M + exceptions (check /compliance drawer tabs)"
 echo ""
 echo "Indices written:"
 echo "  v3-hive-alert-${TODAY}"

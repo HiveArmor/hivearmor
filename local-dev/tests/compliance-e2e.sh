@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # HiveArmor Sprint 07 — Compliance E2E Test
 # Tests real compliance API endpoints against a running local-dev stack.
+# CMP-012: includes POA&M + exception read auth/shape checks (run seed-compliance-governance.sh first for non-empty rows).
 # Run: bash local-dev/tests/compliance-e2e.sh
 set -euo pipefail
 
@@ -198,6 +199,70 @@ else:
         "$([ "${FW_TOTAL:-0}" -gt 0 ] && echo true || echo false)"
 else
     echo "  ⚠ Skipped — no frameworks returned"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "[10] POA&M read  (GET /api/ha-compliance/poam?controlId={id})"
+if [ "$CONTROL_ID" != "none" ]; then
+    POAM_UNAUTH=$(curl -so /dev/null -w "%{http_code}" \
+        "${BACKEND}/api/ha-compliance/poam?controlId=${CONTROL_ID}" || echo "000")
+    check "POA&M without token returns HTTP 401" "401" "$POAM_UNAUTH"
+
+    POAM_RESP=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+        "${BACKEND}/api/ha-compliance/poam?controlId=${CONTROL_ID}" || echo "null")
+    POAM_OK=$(echo "$POAM_RESP" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print('true' if isinstance(d, list) else 'false')
+" 2>/dev/null || echo "false")
+    check "POA&M with admin JWT returns JSON array" "true" "$POAM_OK"
+
+    POAM_COUNT=$(echo "$POAM_RESP" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print(len(d) if isinstance(d, list) else 0)
+" 2>/dev/null || echo "0")
+    echo "  ℹ POA&M items for control ${CONTROL_ID}: ${POAM_COUNT}"
+    if [ "${POAM_COUNT:-0}" -gt 0 ]; then
+        check "POA&M seed rows present (run seed-compliance-governance.sh)" "true" "true"
+    else
+        echo "  ⚠ No POA&M rows — run: cd local-dev && bash seed-compliance-governance.sh"
+    fi
+else
+    echo "  ⚠ Skipped — no control ID available"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "[11] Control exceptions read  (GET /api/ha-compliance/exceptions?controlId={id})"
+if [ "$CONTROL_ID" != "none" ]; then
+    EXC_UNAUTH=$(curl -so /dev/null -w "%{http_code}" \
+        "${BACKEND}/api/ha-compliance/exceptions?controlId=${CONTROL_ID}" || echo "000")
+    check "Exceptions without token returns HTTP 401" "401" "$EXC_UNAUTH"
+
+    EXC_RESP=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+        "${BACKEND}/api/ha-compliance/exceptions?controlId=${CONTROL_ID}" || echo "null")
+    EXC_OK=$(echo "$EXC_RESP" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print('true' if isinstance(d, list) else 'false')
+" 2>/dev/null || echo "false")
+    check "Exceptions with admin JWT returns JSON array" "true" "$EXC_OK"
+
+    EXC_COUNT=$(echo "$EXC_RESP" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+print(len(d) if isinstance(d, list) else 0)
+" 2>/dev/null || echo "0")
+    echo "  ℹ Exception rows for control ${CONTROL_ID}: ${EXC_COUNT}"
+    if [ "${EXC_COUNT:-0}" -gt 0 ]; then
+        check "Exception seed rows present (run seed-compliance-governance.sh)" "true" "true"
+    else
+        echo "  ⚠ No exception rows — run: cd local-dev && bash seed-compliance-governance.sh"
+    fi
+else
+    echo "  ⚠ Skipped — no control ID available"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────
