@@ -1,5 +1,5 @@
 /**
- * compliance.service.ts — CMP read contracts (CMP-002 … CMP-006).
+ * compliance.service.ts — CMP read contracts (CMP-002 … CMP-007).
  */
 
 import { apiClient } from '@/lib/apiClient';
@@ -9,6 +9,7 @@ import type {
   ComplianceControlExceptionDTO,
   ComplianceEvidenceItemDTO,
   ComplianceImprovementActionDTO,
+  ComplianceReportSnapshotDTO,
   ComplianceStandardSectionDTO,
   FrameworkControlResolution,
   SectionControlsPage,
@@ -42,6 +43,49 @@ export interface CmpGovernanceReadContract {
   /** Documented future path — not called while {@link available} is false. */
   futurePath: string;
 }
+
+/**
+ * CMP-007 — UtmComplianceControlEvaluationHistoryResource has class-level @PreAuthorize
+ * (ADMIN|USER|ANALYST|SOC_MANAGER) on GET /compliance/control-config/{id}/evaluations.
+ */
+export const CMP_EVALUATION_HISTORY_READ_AVAILABLE = true;
+
+/**
+ * CMP-007 — ComplianceReportExportResource lists GET /ha-compliance-report-config but has
+ * no @PreAuthorize; UI stays blocked until an authorized read contract is verified.
+ */
+export const CMP_REPORT_SNAPSHOTS_READ_AVAILABLE = false;
+
+export type CmpDrawerReadKind = 'evaluation_history' | 'report_snapshots';
+
+export interface CmpDrawerReadContract {
+  kind: CmpDrawerReadKind;
+  available: boolean;
+  label: string;
+  blockedReason: string;
+  /** Documented future path — not called while {@link available} is false. */
+  futurePath: string;
+}
+
+/** CMP-007 drawer tab contracts — honest availability for progressive disclosure. */
+export const CMP_DRAWER_READ_CONTRACTS: readonly CmpDrawerReadContract[] = [
+  {
+    kind: 'evaluation_history',
+    available: CMP_EVALUATION_HISTORY_READ_AVAILABLE,
+    label: 'Evaluation history',
+    blockedReason:
+      'Control evaluation history requires an authorized read contract with explicit @PreAuthorize.',
+    futurePath: '/compliance/control-config/{id}/evaluations',
+  },
+  {
+    kind: 'report_snapshots',
+    available: CMP_REPORT_SNAPSHOTS_READ_AVAILABLE,
+    label: 'Report snapshots',
+    blockedReason:
+      'Generated report exports exist server-side, but GET /api/ha-compliance-report-config lacks @PreAuthorize — snapshot listing stays blocked.',
+    futurePath: '/ha-compliance-report-config',
+  },
+] as const;
 
 /** CMP-006 drawer tab contracts — honest availability for progressive disclosure. */
 export const CMP_GOVERNANCE_READ_CONTRACTS: readonly CmpGovernanceReadContract[] = [
@@ -183,5 +227,26 @@ export const complianceService = {
       params: { controlId, page: 0, size: 20, sort: 'effectiveUntil,asc' },
       signal,
     });
+  },
+
+  /** CMP-007 — wired when {@link CMP_REPORT_SNAPSHOTS_READ_AVAILABLE} flips true. */
+  getFrameworkReportSnapshots: (standardId: number, signal?: AbortSignal) => {
+    if (!CMP_REPORT_SNAPSHOTS_READ_AVAILABLE) {
+      return Promise.reject(
+        new Error('CMP-007 report-snapshot read contract is not authorized yet.'),
+      );
+    }
+    return apiClient
+      .get<ComplianceReportSnapshotDTO[]>('/ha-compliance-report-config', {
+        params: { page: 0, size: 20 },
+        signal,
+      })
+      .then((rows) =>
+        rows.filter(
+          (row) =>
+            row.standard.trim() === String(standardId) ||
+            row.standard.toLocaleLowerCase().includes(String(standardId)),
+        ),
+      );
   },
 };
