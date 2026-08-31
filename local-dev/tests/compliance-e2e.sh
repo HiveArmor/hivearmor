@@ -3,6 +3,7 @@
 # Tests real compliance API endpoints against a running local-dev stack.
 # CMP-012: includes POA&M + exception read auth/shape checks (run seed-compliance-governance.sh first for non-empty rows).
 # CMP-013: includes governance write mutation auth/create/teardown checks.
+# CMP-014: includes report snapshot and schedule write mutation auth checks.
 # Run: bash local-dev/tests/compliance-e2e.sh
 set -euo pipefail
 
@@ -10,9 +11,28 @@ PASS=0
 FAIL=0
 
 BACKEND="${BACKEND_URL:-http://localhost:8088}"
+if [[ "${BACKEND}" == https:* ]]; then
+  CURL_BACKEND="${CURL_BACKEND:-curl -skf}"
+  CURL_BACKEND_STATUS="${CURL_BACKEND_STATUS:-curl -sko}"
+else
+  CURL_BACKEND="${CURL_BACKEND:-curl -sf}"
+  CURL_BACKEND_STATUS="${CURL_BACKEND_STATUS:-curl -so}"
+fi
 OPENSEARCH="${OPENSEARCH_URL:-https://localhost:9200}"
 OPENSEARCH_USER="${OPENSEARCH_USER:-admin}"
 OPENSEARCH_PASS="${OPENSEARCH_PASSWORD:-LocalDev@2024!}"
+AUTH_USER="${AUTH_USER:-admin}"
+AUTH_PASS="${AUTH_PASS:-localdev123!}"
+OPENSEARCH_DOCKER="${OPENSEARCH_DOCKER:-}"
+
+os_curl() {
+    if [[ -n "$OPENSEARCH_DOCKER" ]]; then
+        docker exec "$OPENSEARCH_DOCKER" curl -skf \
+            -u "${OPENSEARCH_USER}:${OPENSEARCH_PASS}" "$@"
+    else
+        curl -skf -u "${OPENSEARCH_USER}:${OPENSEARCH_PASS}" "$@"
+    fi
+}
 
 check() {
     local label="$1" expected="$2" got="$3"
@@ -26,9 +46,9 @@ check() {
 }
 
 # ── Auth ─────────────────────────────────────────────────────────────────────
-TOKEN=$(curl -sf -X POST "${BACKEND}/api/authenticate" \
+TOKEN=$(${CURL_BACKEND} -X POST "${BACKEND}/api/authenticate" \
     -H "Content-Type: application/json" \
-    -d '{"username":"admin","password":"localdev123!","rememberMe":false}' \
+    -d "{\"username\":\"${AUTH_USER}\",\"password\":\"${AUTH_PASS}\",\"rememberMe\":false}" \
     | python3 -c "import sys,json; print(json.load(sys.stdin)['token'])")
 
 AUTH="-H \"Authorization: Bearer $TOKEN\""
@@ -38,7 +58,7 @@ echo ""
 
 # ─────────────────────────────────────────────────────────────────────────────
 echo "[1] Framework presence  (GET /api/ha-compliance/frameworks)"
-FRAMEWORKS_JSON=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+FRAMEWORKS_JSON=$(${CURL_BACKEND} -H "Authorization: Bearer $TOKEN" \
     "${BACKEND}/api/ha-compliance/frameworks")
 
 # Seeded frameworks: HIPAA, PCI DSS, SOC 2 Type II, NIS2, DORA
@@ -89,8 +109,7 @@ check "DORA has controls seeded (controlsTotal > 0)" "true" \
 # ─────────────────────────────────────────────────────────────────────────────
 echo ""
 echo "[3] Compliance evidence records in OpenSearch  (v3-hive-compliance-evidence-*)"
-EVIDENCE_COUNT=$(curl -skf \
-    -u "${OPENSEARCH_USER}:${OPENSEARCH_PASS}" \
+EVIDENCE_COUNT=$(os_curl \
     "${OPENSEARCH}/v3-hive-compliance-evidence-*/_count" \
     | python3 -c "import sys,json; print(json.load(sys.stdin)['count'])" 2>/dev/null || echo "0")
 echo "  ℹ Evidence records: $EVIDENCE_COUNT"
@@ -116,7 +135,7 @@ check "PCI DSS overallScore > 0" "true" \
 # ─────────────────────────────────────────────────────────────────────────────
 echo ""
 echo "[5] Control list endpoint  (GET /api/compliance/control-config)"
-CONTROLS_JSON=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+CONTROLS_JSON=$(${CURL_BACKEND} -H "Authorization: Bearer $TOKEN" \
     "${BACKEND}/api/compliance/control-config?page=0&size=1" || echo "[]")
 CONTROL_ID=$(echo "$CONTROLS_JSON" | python3 -c "
 import sys, json
@@ -130,7 +149,7 @@ check "Control config list returns at least one item" "true" \
 echo ""
 echo "[6] Evidence drilldown  (GET /api/compliance/controls/{id}/evidence)"
 if [ "$CONTROL_ID" != "none" ]; then
-    EVIDENCE_RESP=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+    EVIDENCE_RESP=$(${CURL_BACKEND} -H "Authorization: Bearer $TOKEN" \
         "${BACKEND}/api/compliance/controls/${CONTROL_ID}/evidence?page=0&size=5" || echo "null")
     DRILLDOWN_OK=$(echo "$EVIDENCE_RESP" | python3 -c "
 import sys, json
@@ -146,7 +165,7 @@ fi
 echo ""
 echo "[7] Control evaluation history  (GET /api/compliance/control-config/{id}/evaluations)"
 if [ "$CONTROL_ID" != "none" ]; then
-    HISTORY_RESP=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+    HISTORY_RESP=$(${CURL_BACKEND} -H "Authorization: Bearer $TOKEN" \
         "${BACKEND}/api/compliance/control-config/${CONTROL_ID}/evaluations" || echo "null")
     HISTORY_OK=$(echo "$HISTORY_RESP" | python3 -c "
 import sys, json
@@ -163,7 +182,7 @@ fi
 echo ""
 echo "[8] CSV evidence export  (GET /api/compliance/controls/{id}/evidence/export)"
 if [ "$CONTROL_ID" != "none" ]; then
-    EXPORT_STATUS=$(curl -so /dev/null -w "%{http_code}" \
+    EXPORT_STATUS=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
         -H "Authorization: Bearer $TOKEN" \
         "${BACKEND}/api/compliance/controls/${CONTROL_ID}/evidence/export?format=csv&days=30")
     check "Evidence CSV export returns HTTP 200" "200" "$EXPORT_STATUS"
@@ -206,11 +225,11 @@ fi
 echo ""
 echo "[10] POA&M read  (GET /api/ha-compliance/poam?controlId={id})"
 if [ "$CONTROL_ID" != "none" ]; then
-    POAM_UNAUTH=$(curl -so /dev/null -w "%{http_code}" \
+    POAM_UNAUTH=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
         "${BACKEND}/api/ha-compliance/poam?controlId=${CONTROL_ID}" || echo "000")
     check "POA&M without token returns HTTP 401" "401" "$POAM_UNAUTH"
 
-    POAM_RESP=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+    POAM_RESP=$(${CURL_BACKEND} -H "Authorization: Bearer $TOKEN" \
         "${BACKEND}/api/ha-compliance/poam?controlId=${CONTROL_ID}" || echo "null")
     POAM_OK=$(echo "$POAM_RESP" | python3 -c "
 import sys, json
@@ -238,11 +257,11 @@ fi
 echo ""
 echo "[11] Control exceptions read  (GET /api/ha-compliance/exceptions?controlId={id})"
 if [ "$CONTROL_ID" != "none" ]; then
-    EXC_UNAUTH=$(curl -so /dev/null -w "%{http_code}" \
+    EXC_UNAUTH=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
         "${BACKEND}/api/ha-compliance/exceptions?controlId=${CONTROL_ID}" || echo "000")
     check "Exceptions without token returns HTTP 401" "401" "$EXC_UNAUTH"
 
-    EXC_RESP=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+    EXC_RESP=$(${CURL_BACKEND} -H "Authorization: Bearer $TOKEN" \
         "${BACKEND}/api/ha-compliance/exceptions?controlId=${CONTROL_ID}" || echo "null")
     EXC_OK=$(echo "$EXC_RESP" | python3 -c "
 import sys, json
@@ -276,13 +295,13 @@ fw = json.load(sys.stdin)
 print(fw[0]['frameworkId'] if fw else '1')
 " 2>/dev/null || echo "1")
 
-    POAM_CREATE_UNAUTH=$(curl -so /dev/null -w "%{http_code}" \
+    POAM_CREATE_UNAUTH=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
         -X POST "${BACKEND}/api/ha-compliance/poam" \
         -H "Content-Type: application/json" \
         -d "{\"frameworkId\":\"${FW_ID}\",\"controlId\":${CONTROL_ID},\"title\":\"[E2E-GOV] temp poam\"}" || echo "000")
     check "POA&M create without token returns HTTP 401" "401" "$POAM_CREATE_UNAUTH"
 
-    POAM_CREATE=$(curl -sf -X POST "${BACKEND}/api/ha-compliance/poam" \
+    POAM_CREATE=$(${CURL_BACKEND} -X POST "${BACKEND}/api/ha-compliance/poam" \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
         -d "{\"frameworkId\":\"${FW_ID}\",\"controlId\":${CONTROL_ID},\"title\":\"[E2E-GOV] temp poam\",\"status\":\"open\"}" || echo "null")
@@ -297,7 +316,7 @@ except Exception:
     check "POA&M create with admin JWT returns id" "true" "$([ "$POAM_ID" != "none" ] && echo true || echo false)"
 
     if [ "$POAM_ID" != "none" ]; then
-        POAM_LIST=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+        POAM_LIST=$(${CURL_BACKEND} -H "Authorization: Bearer $TOKEN" \
             "${BACKEND}/api/ha-compliance/poam?controlId=${CONTROL_ID}" || echo "[]")
         POAM_FOUND=$(echo "$POAM_LIST" | python3 -c "
 import sys, json
@@ -306,25 +325,25 @@ print('true' if any(i.get('title') == '[E2E-GOV] temp poam' for i in items if is
 " 2>/dev/null || echo "false")
         check "POA&M GET lists created row" "true" "$POAM_FOUND"
 
-        POAM_CLOSE=$(curl -so /dev/null -w "%{http_code}" \
+        POAM_CLOSE=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
             -X PUT "${BACKEND}/api/ha-compliance/poam/${POAM_ID}" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d '{"status":"closed"}' || echo "000")
         check "POA&M update (close) returns HTTP 200" "200" "$POAM_CLOSE"
 
-        POAM_DELETE=$(curl -so /dev/null -w "%{http_code}" \
+        POAM_DELETE=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
             -X DELETE "${BACKEND}/api/ha-compliance/poam/${POAM_ID}" \
             -H "Authorization: Bearer $TOKEN" || echo "000")
         check "POA&M delete returns HTTP 204" "204" "$POAM_DELETE"
     fi
 
-    READONLY_TOKEN=$(curl -sf -X POST "${BACKEND}/api/authenticate" \
+    READONLY_TOKEN=$(${CURL_BACKEND} -X POST "${BACKEND}/api/authenticate" \
         -H "Content-Type: application/json" \
         -d '{"username":"readonly","password":"localdev123!","rememberMe":false}' \
         | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))" 2>/dev/null || echo "")
     if [ -n "$READONLY_TOKEN" ]; then
-        POAM_FORBIDDEN=$(curl -so /dev/null -w "%{http_code}" \
+        POAM_FORBIDDEN=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
             -X POST "${BACKEND}/api/ha-compliance/poam" \
             -H "Authorization: Bearer $READONLY_TOKEN" \
             -H "Content-Type: application/json" \
@@ -341,13 +360,13 @@ fi
 echo ""
 echo "[13] Exception write mutations  (POST/PATCH /api/ha-compliance/exceptions)"
 if [ "$CONTROL_ID" != "none" ]; then
-    EXC_CREATE_UNAUTH=$(curl -so /dev/null -w "%{http_code}" \
+    EXC_CREATE_UNAUTH=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
         -X POST "${BACKEND}/api/ha-compliance/exceptions" \
         -H "Content-Type: application/json" \
         -d "{\"controlId\":${CONTROL_ID},\"title\":\"[E2E-GOV] temp exception\"}" || echo "000")
     check "Exception create without token returns HTTP 401" "401" "$EXC_CREATE_UNAUTH"
 
-    EXC_CREATE=$(curl -sf -X POST "${BACKEND}/api/ha-compliance/exceptions" \
+    EXC_CREATE=$(${CURL_BACKEND} -X POST "${BACKEND}/api/ha-compliance/exceptions" \
         -H "Authorization: Bearer $TOKEN" \
         -H "Content-Type: application/json" \
         -d "{\"controlId\":${CONTROL_ID},\"title\":\"[E2E-GOV] temp exception\",\"reason\":\"e2e\"}" || echo "null")
@@ -362,7 +381,7 @@ except Exception:
     check "Exception create with admin JWT returns id" "true" "$([ "$EXC_ID" != "none" ] && echo true || echo false)"
 
     if [ "$EXC_ID" != "none" ]; then
-        EXC_LIST=$(curl -sf -H "Authorization: Bearer $TOKEN" \
+        EXC_LIST=$(${CURL_BACKEND} -H "Authorization: Bearer $TOKEN" \
             "${BACKEND}/api/ha-compliance/exceptions?controlId=${CONTROL_ID}" || echo "[]")
         EXC_FOUND=$(echo "$EXC_LIST" | python3 -c "
 import sys, json
@@ -371,19 +390,19 @@ print('true' if any(i.get('title') == '[E2E-GOV] temp exception' for i in items 
 " 2>/dev/null || echo "false")
         check "Exception GET lists created row" "true" "$EXC_FOUND"
 
-        EXC_APPROVE=$(curl -so /dev/null -w "%{http_code}" \
+        EXC_APPROVE=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
             -X PATCH "${BACKEND}/api/ha-compliance/exceptions/${EXC_ID}/approve" \
             -H "Authorization: Bearer $TOKEN" || echo "000")
         check "Exception approve returns HTTP 200" "200" "$EXC_APPROVE"
 
-        EXC_DELETE=$(curl -so /dev/null -w "%{http_code}" \
+        EXC_DELETE=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
             -X DELETE "${BACKEND}/api/ha-compliance/exceptions/${EXC_ID}" \
             -H "Authorization: Bearer $TOKEN" || echo "000")
         check "Exception delete returns HTTP 204" "204" "$EXC_DELETE"
     fi
 
     if [ -n "${READONLY_TOKEN:-}" ]; then
-        EXC_FORBIDDEN=$(curl -so /dev/null -w "%{http_code}" \
+        EXC_FORBIDDEN=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
             -X POST "${BACKEND}/api/ha-compliance/exceptions" \
             -H "Authorization: Bearer $READONLY_TOKEN" \
             -H "Content-Type: application/json" \
@@ -394,6 +413,73 @@ print('true' if any(i.get('title') == '[E2E-GOV] temp exception' for i in items 
     fi
 else
     echo "  ⚠ Skipped — no control ID available"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "[14] Report snapshot write mutations  (POST/DELETE /api/ha-compliance-report-config)"
+REPORT_CREATE_UNAUTH=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
+    -X POST "${BACKEND}/api/ha-compliance-report-config" \
+    -H "Content-Type: application/json" \
+    -d '{"reportName":"[E2E-CMP] temp report","standard":"1"}' || echo "000")
+check "Report snapshot create without token returns HTTP 401" "401" "$REPORT_CREATE_UNAUTH"
+
+REPORT_CREATE=$(${CURL_BACKEND} -X POST "${BACKEND}/api/ha-compliance-report-config" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"reportName":"[E2E-CMP] temp report","standard":"1"}' || echo "null")
+REPORT_ID=$(echo "$REPORT_CREATE" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(d.get('id', 'none'))
+except Exception:
+    print('none')
+" 2>/dev/null || echo "none")
+check "Report snapshot create with admin JWT returns id" "true" "$([ "$REPORT_ID" != "none" ] && echo true || echo false)"
+
+if [ "$REPORT_ID" != "none" ]; then
+    REPORT_DELETE=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
+        -X DELETE "${BACKEND}/api/ha-compliance-report-config/${REPORT_ID}" \
+        -H "Authorization: Bearer $TOKEN" || echo "000")
+    check "Report snapshot delete returns HTTP 204" "204" "$REPORT_DELETE"
+fi
+
+if [ -z "${READONLY_TOKEN:-}" ]; then
+    READONLY_TOKEN=$(${CURL_BACKEND} -X POST "${BACKEND}/api/authenticate" \
+        -H "Content-Type: application/json" \
+        -d '{"username":"readonly","password":"localdev123!","rememberMe":false}' \
+        | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))" 2>/dev/null || echo "")
+fi
+if [ -n "${READONLY_TOKEN:-}" ]; then
+    REPORT_FORBIDDEN=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
+        -X POST "${BACKEND}/api/ha-compliance-report-config" \
+        -H "Authorization: Bearer $READONLY_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{"reportName":"[E2E-CMP] forbidden","standard":"1"}' || echo "000")
+    check "Report snapshot create with READ_ONLY JWT returns HTTP 403" "403" "$REPORT_FORBIDDEN"
+else
+    echo "  ⚠ Skipped READ_ONLY report deny — readonly user unavailable"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+echo ""
+echo "[15] Schedule write mutations  (POST/DELETE /api/compliance-report-schedules)"
+SCHEDULE_CREATE_UNAUTH=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
+    -X POST "${BACKEND}/api/compliance-report-schedules" \
+    -H "Content-Type: application/json" \
+    -d '{"complianceId":1,"scheduleString":"0 0 8 * * MON","urlWithParams":"/compliance"}' || echo "000")
+check "Schedule create without token returns HTTP 401" "401" "$SCHEDULE_CREATE_UNAUTH"
+
+if [ -n "${READONLY_TOKEN:-}" ]; then
+    SCHEDULE_FORBIDDEN=$(${CURL_BACKEND_STATUS} /dev/null -w "%{http_code}" \
+        -X POST "${BACKEND}/api/compliance-report-schedules" \
+        -H "Authorization: Bearer $READONLY_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{"complianceId":1,"scheduleString":"0 0 8 * * MON","urlWithParams":"/compliance"}' || echo "000")
+    check "Schedule create with READ_ONLY JWT returns HTTP 403" "403" "$SCHEDULE_FORBIDDEN"
+else
+    echo "  ⚠ Skipped READ_ONLY schedule deny — readonly user unavailable"
 fi
 
 # ─────────────────────────────────────────────────────────────────────────────

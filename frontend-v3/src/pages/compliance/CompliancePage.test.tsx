@@ -370,7 +370,7 @@ describe('CompliancePage', () => {
       'href',
       '/api/ha-compliance-report-config/9/export',
     );
-    expect(within(reportsPanel).getByText(/Report regeneration and schedule mutations stay disabled/i)).toBeInTheDocument();
+    expect(within(reportsPanel).getByText(/Report regeneration and deletion require Platform Administrator/i)).toBeInTheDocument();
   });
 
   it('shows report snapshots empty state', () => {
@@ -408,7 +408,7 @@ describe('CompliancePage', () => {
     expect(screen.getByTestId('cmp-framework-schedules')).toBeInTheDocument();
     expect(screen.getByTestId('cmp-scheduled-reports-list')).toBeInTheDocument();
     expect(screen.getByText('Weekly NIST export')).toBeInTheDocument();
-    expect(screen.getByText(/Schedule mutations remain disabled/i)).toBeInTheDocument();
+    expect(screen.getByText(/Schedule create and delete require Platform Administrator/i)).toBeInTheDocument();
     expect(screen.queryByTestId('cmp-scheduled_reports-unavailable')).not.toBeInTheDocument();
   });
 
