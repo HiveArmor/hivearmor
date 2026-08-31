@@ -1,12 +1,14 @@
 /**
- * compliance.service.ts — CMP read contracts (CMP-002 / CMP-003 / CMP-004 / CMP-005).
+ * compliance.service.ts — CMP read contracts (CMP-002 … CMP-006).
  */
 
 import { apiClient } from '@/lib/apiClient';
 import type {
   ComplianceControlEvaluationHistoryDTO,
   ComplianceControlLatestEvaluationDTO,
+  ComplianceControlExceptionDTO,
   ComplianceEvidenceItemDTO,
+  ComplianceImprovementActionDTO,
   ComplianceStandardSectionDTO,
   FrameworkControlResolution,
   SectionControlsPage,
@@ -17,6 +19,49 @@ const TOKEN_KEY = 'hivearmor_auth_token';
 
 /** Page size for drawer control picker — honest pagination boundary. */
 export const CMP_SECTION_CONTROLS_PAGE_SIZE = 25;
+
+/**
+ * CMP-006 — backend has `ha_poam_item` + `PoamItemDTO` but no `@PreAuthorize` REST resource yet.
+ * Flip when GET list-by-control is verified in SecurityConfiguration.
+ */
+export const CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE = false;
+
+/**
+ * CMP-006 — no control-exception entity or REST surface exists in backend yet.
+ * Flip when GET list-by-control is verified in SecurityConfiguration.
+ */
+export const CMP_EXCEPTIONS_READ_AVAILABLE = false;
+
+export type CmpGovernanceReadKind = 'improvement_actions' | 'exceptions';
+
+export interface CmpGovernanceReadContract {
+  kind: CmpGovernanceReadKind;
+  available: boolean;
+  label: string;
+  blockedReason: string;
+  /** Documented future path — not called while {@link available} is false. */
+  futurePath: string;
+}
+
+/** CMP-006 drawer tab contracts — honest availability for progressive disclosure. */
+export const CMP_GOVERNANCE_READ_CONTRACTS: readonly CmpGovernanceReadContract[] = [
+  {
+    kind: 'improvement_actions',
+    available: CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE,
+    label: 'Improvement actions',
+    blockedReason:
+      'POA&M persistence exists server-side, but no authorized read API is exposed for this control yet.',
+    futurePath: '/ha-compliance/poam',
+  },
+  {
+    kind: 'exceptions',
+    available: CMP_EXCEPTIONS_READ_AVAILABLE,
+    label: 'Exceptions',
+    blockedReason:
+      'Control exceptions require a governed approval lifecycle that is not exposed by the backend yet.',
+    futurePath: '/ha-compliance/exceptions',
+  },
+] as const;
 
 /** Parses posture framework id (numeric standard id) for CMP catalog mapping. */
 export function parseFrameworkStandardId(frameworkId: string): number | null {
@@ -115,4 +160,28 @@ export const complianceService = {
       params: { page: 0, size: 20, days: 30 },
       signal,
     }),
+
+  /** CMP-006 — wired when {@link CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE} flips true. */
+  getControlImprovementActions: (controlId: number, signal?: AbortSignal) => {
+    if (!CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE) {
+      return Promise.reject(
+        new Error('CMP-006 improvement-action read contract is not authorized yet.'),
+      );
+    }
+    return apiClient.get<ComplianceImprovementActionDTO[]>('/ha-compliance/poam', {
+      params: { controlId, page: 0, size: 20, sort: 'dueDate,asc' },
+      signal,
+    });
+  },
+
+  /** CMP-006 — wired when {@link CMP_EXCEPTIONS_READ_AVAILABLE} flips true. */
+  getControlExceptions: (controlId: number, signal?: AbortSignal) => {
+    if (!CMP_EXCEPTIONS_READ_AVAILABLE) {
+      return Promise.reject(new Error('CMP-006 exception read contract is not authorized yet.'));
+    }
+    return apiClient.get<ComplianceControlExceptionDTO[]>('/ha-compliance/exceptions', {
+      params: { controlId, page: 0, size: 20, sort: 'effectiveUntil,asc' },
+      signal,
+    });
+  },
 };

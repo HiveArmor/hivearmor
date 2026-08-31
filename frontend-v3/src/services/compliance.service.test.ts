@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  CMP_EXCEPTIONS_READ_AVAILABLE,
+  CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE,
   complianceService,
   parseFrameworkStandardId,
 } from './compliance.service';
@@ -144,5 +146,24 @@ describe('complianceService.getSectionControlsPage', () => {
       '/api/compliance/control-config/get-by-section?sectionId=10&page=1&size=25&sort=id%2Casc',
       expect.objectContaining({ headers: expect.objectContaining({ Accept: 'application/json' }) }),
     );
+  });
+});
+
+describe('CMP-006 governance read contracts', () => {
+  it('keeps improvement actions and exceptions fail-closed until REST is authorized', () => {
+    expect(CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE).toBe(false);
+    expect(CMP_EXCEPTIONS_READ_AVAILABLE).toBe(false);
+  });
+
+  it('rejects improvement-action reads while the contract is unavailable', async () => {
+    await expect(complianceService.getControlImprovementActions(42)).rejects.toThrow(
+      /not authorized yet/i,
+    );
+    expect(mockGet).not.toHaveBeenCalled();
+  });
+
+  it('rejects exception reads while the contract is unavailable', async () => {
+    await expect(complianceService.getControlExceptions(42)).rejects.toThrow(/not authorized yet/i);
+    expect(mockGet).not.toHaveBeenCalled();
   });
 });

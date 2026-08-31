@@ -11,6 +11,7 @@ import {
   ChevronRight,
   CircleHelp,
   ClipboardCheck,
+  ClipboardList,
   Columns3,
   FileClock,
   FileText,
@@ -22,6 +23,7 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
+  ShieldOff,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -34,9 +36,13 @@ import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
 import { RESPONSE_GRID_ROW_HEIGHTS } from '@/pages/response/response-grid-standard';
 import {
+  CMP_EXCEPTIONS_READ_AVAILABLE,
+  CMP_GOVERNANCE_READ_CONTRACTS,
+  CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE,
   CMP_SECTION_CONTROLS_PAGE_SIZE,
   complianceService,
   parseFrameworkStandardId,
+  type CmpGovernanceReadContract,
 } from '@/services/compliance.service';
 import { postureService } from '@/services/posture.service';
 import type {
@@ -116,6 +122,172 @@ function ScoreCell({ score, assessed }: { score: number; assessed: boolean }): J
   );
 }
 
+type ControlWorkspaceTab = 'controls' | 'actions' | 'exceptions';
+
+const CONTROL_WORKSPACE_TABS: Array<{ id: ControlWorkspaceTab; label: string }> = [
+  { id: 'controls', label: 'Controls & evidence' },
+  { id: 'actions', label: 'Improvement actions' },
+  { id: 'exceptions', label: 'Exceptions' },
+];
+
+function governanceContract(tab: ControlWorkspaceTab): CmpGovernanceReadContract | null {
+  if (tab === 'controls') return null;
+  const kind = tab === 'actions' ? 'improvement_actions' : 'exceptions';
+  return CMP_GOVERNANCE_READ_CONTRACTS.find((contract) => contract.kind === kind) ?? null;
+}
+
+function GovernanceUnavailablePanel({
+  contract,
+  controlId,
+}: {
+  contract: CmpGovernanceReadContract;
+  controlId: number;
+}): JSX.Element {
+  return (
+    <div className="cmp-drawer-state cmp-drawer-state--blocked" role="status" data-testid={`cmp-${contract.kind}-unavailable`}>
+      <ShieldOff size={16} aria-hidden="true" />
+      <strong>{contract.label} unavailable</strong>
+      <span>{contract.blockedReason}</span>
+      <span>
+        Catalog control #{controlId.toLocaleString()} — mutation, approval and verification workflows stay
+        disabled until an authorized read contract and @PreAuthorize mutates exist.
+      </span>
+    </div>
+  );
+}
+
+function ImprovementActionsReadPanel({ controlId }: { controlId: number }): JSX.Element {
+  const query = useQuery({
+    queryKey: ['cmp-improvement_actions', controlId],
+    queryFn: ({ signal }) => complianceService.getControlImprovementActions(controlId, signal),
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  if (query.isLoading) {
+    return (
+      <div className="cmp-drawer-state" role="status">
+        <RefreshCw size={14} className="cmp-spin" aria-hidden="true" />
+        <strong>Loading improvement actions</strong>
+        <span>Fetching authorized CMP governance records for this catalog control.</span>
+      </div>
+    );
+  }
+
+  if (query.isError) {
+    return (
+      <div className="cmp-drawer-state" role="alert">
+        <AlertTriangle size={16} aria-hidden="true" />
+        <strong>Improvement actions unavailable</strong>
+        <span>
+          {query.error instanceof Error ? query.error.message : 'CMP governance read could not be loaded.'}
+        </span>
+        <button type="button" onClick={() => void query.refetch()}>
+          Retry improvement actions
+        </button>
+      </div>
+    );
+  }
+
+  const rows = query.data ?? [];
+  if (rows.length === 0) {
+    return (
+      <p className="cmp-drawer-empty" role="status" data-testid="cmp-improvement_actions-empty">
+        No improvement actions were returned for this catalog control in the authorized projection.
+      </p>
+    );
+  }
+
+  return (
+    <ul className="cmp-workspace-list" data-testid="cmp-improvement-actions-list">
+      {rows.map((item) => (
+        <li key={item.id}>
+          <span>
+            {item.title}
+            {item.overdue ? ' · overdue' : ''}
+          </span>
+          <small>
+            {item.status}
+            {item.dueDate ? ` · due ${item.dueDate}` : ''}
+            {item.assignee ? ` · ${item.assignee}` : ''}
+          </small>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ExceptionsReadPanel({ controlId }: { controlId: number }): JSX.Element {
+  const query = useQuery({
+    queryKey: ['cmp-exceptions', controlId],
+    queryFn: ({ signal }) => complianceService.getControlExceptions(controlId, signal),
+    staleTime: 30_000,
+    retry: 1,
+  });
+
+  if (query.isLoading) {
+    return (
+      <div className="cmp-drawer-state" role="status">
+        <RefreshCw size={14} className="cmp-spin" aria-hidden="true" />
+        <strong>Loading exceptions</strong>
+        <span>Fetching authorized CMP governance records for this catalog control.</span>
+      </div>
+    );
+  }
+
+  if (query.isError) {
+    return (
+      <div className="cmp-drawer-state" role="alert">
+        <AlertTriangle size={16} aria-hidden="true" />
+        <strong>Exceptions unavailable</strong>
+        <span>
+          {query.error instanceof Error ? query.error.message : 'CMP governance read could not be loaded.'}
+        </span>
+        <button type="button" onClick={() => void query.refetch()}>
+          Retry exceptions
+        </button>
+      </div>
+    );
+  }
+
+  const rows = query.data ?? [];
+  if (rows.length === 0) {
+    return (
+      <p className="cmp-drawer-empty" role="status" data-testid="cmp-exceptions-empty">
+        No exceptions were returned for this catalog control in the authorized projection.
+      </p>
+    );
+  }
+
+  return (
+    <ul className="cmp-workspace-list" data-testid="cmp-exceptions-list">
+      {rows.map((item) => (
+        <li key={item.id}>
+          <span>{item.title}</span>
+          <small>
+            {item.status}
+            {item.effectiveUntil ? ` · until ${item.effectiveUntil}` : ''}
+            {item.approver ? ` · ${item.approver}` : ''}
+          </small>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function GovernanceReadPanel({
+  contract,
+  controlId,
+}: {
+  contract: CmpGovernanceReadContract;
+  controlId: number;
+}): JSX.Element {
+  if (contract.kind === 'improvement_actions') {
+    return <ImprovementActionsReadPanel controlId={controlId} />;
+  }
+  return <ExceptionsReadPanel controlId={controlId} />;
+}
+
 function ControlEvidenceWorkspace({
   controlId,
   frameworkName,
@@ -127,6 +299,10 @@ function ControlEvidenceWorkspace({
   sectionName: string | null;
   controlName: string | null;
 }): JSX.Element {
+  const [activeTab, setActiveTab] = useState<ControlWorkspaceTab>('controls');
+  const actionsContract = governanceContract('actions');
+  const exceptionsContract = governanceContract('exceptions');
+
   const controlQuery = useQuery({
     queryKey: ['compliance-control-latest', controlId],
     queryFn: ({ signal }) => complianceService.getControlLatestEvaluation(controlId, signal),
@@ -162,141 +338,199 @@ function ControlEvidenceWorkspace({
   const latestStatus = controlQuery.data?.lastEvaluationStatus?.trim();
   const hasOutcomes = evaluations.length > 0 || Boolean(latestStatus);
 
+  useEffect(() => {
+    setActiveTab('controls');
+  }, [controlId]);
+
   return (
     <section className="cmp-drawer__card" data-testid="cmp-control-workspace">
       <header>
         <FileClock size={15} />
         <div>
           <strong>Control and evidence workspace</strong>
-          <span>CMP-002 / CMP-003 read contracts</span>
+          <span>CMP-002 / CMP-003 / CMP-006 read contracts</span>
         </div>
       </header>
 
-      <p className="cmp-drawer__workspace-note">
-        Selected catalog control for <strong>{frameworkName}</strong>
-        {sectionName ? (
-          <>
-            {' '}
-            in section <strong>{sectionName}</strong>
-          </>
-        ) : null}
-        . Catalog record #{controlId.toLocaleString()}
-        {controlName ? ` (${controlName})` : ''} from the live CMP projection — not certification or
-        attestation.
-      </p>
-
-      {loading && (
-        <div className="cmp-drawer-state" role="status">
-          <RefreshCw size={14} className="cmp-spin" aria-hidden="true" />
-          <strong>Loading control projection</strong>
-          <span>Fetching status, evaluation history and evidence from authorized CMP endpoints.</span>
-        </div>
-      )}
-
-      {!loading && error && (
-        <div className="cmp-drawer-state" role="alert">
-          <AlertTriangle size={16} aria-hidden="true" />
-          <strong>Control workspace unavailable</strong>
-          <span>{error}</span>
+      <nav className="cmp-drawer-tabs" aria-label="Control workspace views">
+        {CONTROL_WORKSPACE_TABS.map((tab) => (
           <button
+            key={tab.id}
             type="button"
-            onClick={() =>
-              void Promise.all([
-                controlQuery.refetch(),
-                evaluationsQuery.refetch(),
-                evidenceQuery.refetch(),
-              ])
-            }
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            data-testid={`cmp-workspace-tab-${tab.id}`}
+            onClick={() => setActiveTab(tab.id)}
           >
-            Retry CMP read
+            {tab.id === 'actions' && <ClipboardList size={12} aria-hidden="true" />}
+            {tab.id === 'exceptions' && <ShieldOff size={12} aria-hidden="true" />}
+            {tab.label}
           </button>
+        ))}
+      </nav>
+
+      {activeTab === 'controls' && (
+        <div role="tabpanel" aria-label="Controls and evidence">
+          <p className="cmp-drawer__workspace-note">
+            Selected catalog control for <strong>{frameworkName}</strong>
+            {sectionName ? (
+              <>
+                {' '}
+                in section <strong>{sectionName}</strong>
+              </>
+            ) : null}
+            . Catalog record #{controlId.toLocaleString()}
+            {controlName ? ` (${controlName})` : ''} from the live CMP projection — not certification or
+            attestation.
+          </p>
+
+          {loading && (
+            <div className="cmp-drawer-state" role="status">
+              <RefreshCw size={14} className="cmp-spin" aria-hidden="true" />
+              <strong>Loading control projection</strong>
+              <span>Fetching status, evaluation history and evidence from authorized CMP endpoints.</span>
+            </div>
+          )}
+
+          {!loading && error && (
+            <div className="cmp-drawer-state" role="alert">
+              <AlertTriangle size={16} aria-hidden="true" />
+              <strong>Control workspace unavailable</strong>
+              <span>{error}</span>
+              <button
+                type="button"
+                onClick={() =>
+                  void Promise.all([
+                    controlQuery.refetch(),
+                    evaluationsQuery.refetch(),
+                    evidenceQuery.refetch(),
+                  ])
+                }
+              >
+                Retry CMP read
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && controlQuery.data && (
+            <>
+              <dl className="cmp-workspace-grid">
+                <div>
+                  <dt>Control</dt>
+                  <dd>{controlQuery.data.controlName}</dd>
+                </div>
+                <div>
+                  <dt>Latest status</dt>
+                  <dd>{latestStatus || 'No evaluation recorded'}</dd>
+                </div>
+                <div>
+                  <dt>Strategy</dt>
+                  <dd>{controlQuery.data.controlStrategy ?? 'Not reported'}</dd>
+                </div>
+                <div>
+                  <dt>Last evaluated</dt>
+                  <dd>{formatTimestamp(controlQuery.data.lastEvaluationTimestamp)}</dd>
+                </div>
+              </dl>
+
+              <div className="cmp-workspace-section">
+                <header>
+                  <ClipboardCheck size={13} />
+                  <strong>Control outcomes</strong>
+                </header>
+                {hasOutcomes ? (
+                  <ul className="cmp-workspace-list">
+                    {latestStatus && (
+                      <li>
+                        <span>{latestStatus}</span>
+                        <small>
+                          Latest projection · {formatTimestamp(controlQuery.data.lastEvaluationTimestamp)}
+                        </small>
+                      </li>
+                    )}
+                    {evaluations.map((evaluation: ComplianceControlEvaluationGroupedDTO, index) => (
+                      <li key={`${evaluation.controlId ?? controlId}-${evaluation.timestamp ?? index}`}>
+                        <span>{evaluation.status ?? 'Unknown status'}</span>
+                        <small>
+                          {evaluation.controlName ?? controlQuery.data?.controlName ?? 'Control'} ·{' '}
+                          {formatTimestamp(evaluation.timestamp)}
+                        </small>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="cmp-drawer-empty" role="status">
+                    No control outcomes were returned for this catalog record.
+                  </p>
+                )}
+              </div>
+
+              <div className="cmp-workspace-section">
+                <header>
+                  <FileText size={13} />
+                  <strong>Evidence</strong>
+                </header>
+                {evidence.length > 0 ? (
+                  <ul className="cmp-workspace-list">
+                    {evidence.map((item: ComplianceEvidenceItemDTO, index) => (
+                      <li key={item.evidenceId ?? `${item.eventId ?? 'evidence'}-${index}`}>
+                        <span>{item.eventSummary?.trim() || item.mappingType || 'Evidence event'}</span>
+                        <small>
+                          {item.eventSource ?? 'Unknown source'} · {formatTimestamp(item.timestamp)}
+                        </small>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="cmp-drawer-empty" role="status">
+                    No evidence was returned for this control in the authorized observation window.
+                  </p>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
 
-      {!loading && !error && controlQuery.data && (
-        <>
-          <dl className="cmp-workspace-grid">
-            <div>
-              <dt>Control</dt>
-              <dd>{controlQuery.data.controlName}</dd>
-            </div>
-            <div>
-              <dt>Latest status</dt>
-              <dd>{latestStatus || 'No evaluation recorded'}</dd>
-            </div>
-            <div>
-              <dt>Strategy</dt>
-              <dd>{controlQuery.data.controlStrategy ?? 'Not reported'}</dd>
-            </div>
-            <div>
-              <dt>Last evaluated</dt>
-              <dd>{formatTimestamp(controlQuery.data.lastEvaluationTimestamp)}</dd>
-            </div>
-          </dl>
-
-          <div className="cmp-workspace-section">
-            <header>
-              <ClipboardCheck size={13} />
-              <strong>Control outcomes</strong>
-            </header>
-            {hasOutcomes ? (
-              <ul className="cmp-workspace-list">
-                {latestStatus && (
-                  <li>
-                    <span>{latestStatus}</span>
-                    <small>
-                      Latest projection · {formatTimestamp(controlQuery.data.lastEvaluationTimestamp)}
-                    </small>
-                  </li>
-                )}
-                {evaluations.map((evaluation: ComplianceControlEvaluationGroupedDTO, index) => (
-                  <li key={`${evaluation.controlId ?? controlId}-${evaluation.timestamp ?? index}`}>
-                    <span>{evaluation.status ?? 'Unknown status'}</span>
-                    <small>
-                      {evaluation.controlName ?? controlQuery.data?.controlName ?? 'Control'} ·{' '}
-                      {formatTimestamp(evaluation.timestamp)}
-                    </small>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="cmp-drawer-empty" role="status">
-                No control outcomes were returned for this catalog record.
-              </p>
-            )}
-          </div>
-
-          <div className="cmp-workspace-section">
-            <header>
-              <FileText size={13} />
-              <strong>Evidence</strong>
-            </header>
-            {evidence.length > 0 ? (
-              <ul className="cmp-workspace-list">
-                {evidence.map((item: ComplianceEvidenceItemDTO, index) => (
-                  <li key={item.evidenceId ?? `${item.eventId ?? 'evidence'}-${index}`}>
-                    <span>{item.eventSummary?.trim() || item.mappingType || 'Evidence event'}</span>
-                    <small>
-                      {item.eventSource ?? 'Unknown source'} · {formatTimestamp(item.timestamp)}
-                    </small>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="cmp-drawer-empty" role="status">
-                No evidence was returned for this control in the authorized observation window.
-              </p>
-            )}
-          </div>
-
-          <div className="cmp-capability-list cmp-capability-list--muted">
-            <span>
-              <ShieldCheck size={13} />
-              Owners, testing state and exceptions remain unavailable — mutation CTAs stay disabled.
-            </span>
-          </div>
-        </>
+      {activeTab === 'actions' && actionsContract && (
+        <div role="tabpanel" aria-label="Improvement actions">
+          <p className="cmp-drawer__workspace-note">
+            Governed remediation items for catalog control #{controlId.toLocaleString()}
+            {controlName ? ` (${controlName})` : ''}. POA&amp;M records require ownership, due dates and
+            verification — not browser-side completion.
+          </p>
+          {actionsContract.available ? (
+            <GovernanceReadPanel contract={actionsContract} controlId={controlId} />
+          ) : (
+            <GovernanceUnavailablePanel contract={actionsContract} controlId={controlId} />
+          )}
+        </div>
       )}
+
+      {activeTab === 'exceptions' && exceptionsContract && (
+        <div role="tabpanel" aria-label="Exceptions">
+          <p className="cmp-drawer__workspace-note">
+            Approved compensating controls and time-bound exceptions for catalog control #
+            {controlId.toLocaleString()}
+            {controlName ? ` (${controlName})` : ''}. Exceptions require approver, scope and expiry — not
+            client-side waivers.
+          </p>
+          {exceptionsContract.available ? (
+            <GovernanceReadPanel contract={exceptionsContract} controlId={controlId} />
+          ) : (
+            <GovernanceUnavailablePanel contract={exceptionsContract} controlId={controlId} />
+          )}
+        </div>
+      )}
+
+      <div className="cmp-capability-list cmp-capability-list--muted">
+        <span>
+          <ShieldCheck size={13} />
+          {CMP_IMPROVEMENT_ACTIONS_READ_AVAILABLE || CMP_EXCEPTIONS_READ_AVAILABLE
+            ? 'Governance mutations stay disabled until authorized write contracts and approval paths exist.'
+            : 'Improvement actions and exceptions remain unavailable — mutation CTAs stay disabled.'}
+        </span>
+      </div>
     </section>
   );
 }
