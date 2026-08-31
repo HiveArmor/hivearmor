@@ -469,6 +469,7 @@ export const complianceService = {
         complianceId: body.complianceId,
         scheduleString: body.scheduleString,
         urlWithParams: body.urlWithParams ?? '/compliance',
+        filterDef: [],
       },
       { signal },
     );
@@ -491,6 +492,7 @@ export const complianceService = {
         complianceId: body.complianceId,
         scheduleString: body.scheduleString,
         urlWithParams: body.urlWithParams ?? '/compliance',
+        filterDef: [],
       },
       { signal },
     );

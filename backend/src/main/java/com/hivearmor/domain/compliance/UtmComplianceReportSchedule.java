@@ -127,6 +127,13 @@ public class UtmComplianceReportSchedule implements Serializable, AuditableDTO {
         this.urlWithParams = urlWithParams;
     }
 
+    /** Default empty filters when client omits filterDef (NOT NULL column). */
+    public void ensureFiltersDefault() {
+        if (_filters == null || _filters.isBlank()) {
+            _filters = "[]";
+        }
+    }
+
     @Override
     public Map<String, Object> toAuditMap() {
         return Map.of(
