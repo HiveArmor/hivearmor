@@ -4,6 +4,8 @@
 # CMP-012: includes POA&M + exception read auth/shape checks (run seed-compliance-governance.sh first for non-empty rows).
 # CMP-013: includes governance write mutation auth/create/teardown checks.
 # CMP-014: includes report snapshot and schedule write mutation auth checks.
+# Staging: BACKEND_URL=https://host AUTH_PASS=... OPENSEARCH_DOCKER=hivearmor-staging-opensearch-1
+# Run seed-compliance-evidence.sh first when OpenSearch evidence count or PCI score is zero.
 # Run: bash local-dev/tests/compliance-e2e.sh
 set -euo pipefail
 

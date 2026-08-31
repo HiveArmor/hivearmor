@@ -354,6 +354,14 @@ if ! $OS_ONLY; then
     warn "  Compliance governance seed skipped (PostgreSQL or tables unavailable)"
   fi
 
+  # ── Compliance evidence (OpenSearch + PCI score) ─────────────
+  log "Seeding compliance evidence (OpenSearch)…"
+  if bash "${SCRIPT_DIR}/seed-compliance-evidence.sh"; then
+    ok "  Compliance evidence seed complete"
+  else
+    warn "  Compliance evidence seed skipped (OpenSearch or PostgreSQL unavailable)"
+  fi
+
   ok "API / PostgreSQL seeding complete"
 fi
 
@@ -369,6 +377,7 @@ echo "  Correlation Rules: up to 5 seeded (check /defend/detection-rules)"
 echo "  SOAR Playbooks: up to 6 seeded with steps (check /response/playbooks)"
 echo "  Reports: up to 3 report records + 1 scheduled (check /reports)"
 echo "  Compliance governance: POA&M + exceptions (check /compliance drawer tabs)"
+echo "  Compliance evidence: OpenSearch v3-hive-compliance-evidence-* (check /compliance)"
 echo ""
 echo "Indices written:"
 echo "  v3-hive-alert-${TODAY}"
