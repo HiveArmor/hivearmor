@@ -206,14 +206,21 @@ public class HaAgentKeyService {
     }
 
     /**
-     * Returns true when the server host looks like a local development environment.
-     * In local dev, the install script uses insecure TLS to allow self-signed certificates.
+     * Returns true when the install script should skip TLS / agent cert validation.
+     * Local dev and bare-IP staging hosts typically use self-signed certificates.
      */
     private boolean isLocalDev(String serverHost) {
-        return serverHost != null && (
-            serverHost.startsWith("localhost") ||
-            serverHost.startsWith("127.0.0.1") ||
-            serverHost.startsWith("0.0.0.0")
-        );
+        if (serverHost == null || serverHost.isBlank()) {
+            return false;
+        }
+        String host = serverHost.split(",")[0].trim();
+        int colon = host.indexOf(':');
+        if (colon > 0) {
+            host = host.substring(0, colon);
+        }
+        return host.startsWith("localhost")
+            || host.startsWith("127.0.0.1")
+            || host.startsWith("0.0.0.0")
+            || host.matches("^[0-9]{1,3}(\\.[0-9]{1,3}){3}$");
     }
 }
