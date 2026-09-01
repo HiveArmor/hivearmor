@@ -64,7 +64,7 @@ describe('Admin integrations UX honesty (Prompt 37)', () => {
     expect(styles).toContain('.integrations-empty-honesty');
     expect(styles).toContain('.int-page__meta');
     expect(styles).toContain('.int-header__badge');
-    expect(operations).toContain('showEmptyHonesty');
+    expect(operations).toContain('showIntegrationsEmptyHonesty');
     expect(operations).toContain('data-integrations-honesty');
   });
 

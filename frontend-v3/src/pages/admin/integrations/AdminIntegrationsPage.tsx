@@ -19,7 +19,7 @@ export function AdminIntegrationsPage(): JSX.Element {
   return (
     <IntegrationOperationsPage
       initialView={initialView}
-      honestyChrome={{ jobSentence: INTEGRATIONS_JOB_SENTENCE }}
+      honestyChrome={{ jobSentence: INTEGRATIONS_JOB_SENTENCE, variant: 'integrations' }}
     />
   );
 }
