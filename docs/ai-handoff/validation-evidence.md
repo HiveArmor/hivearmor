@@ -729,6 +729,14 @@ No production-readiness claim is made by this baseline entry.
 - Local-dev API smoke: **BLOCKED** — Docker socket permission denied in agent environment (`docker compose ps` failed).
 - No secrets logged or committed.
 
+## 2026-09-01 18:53:00 IST (UTC+05:30) — Windows PS1 install script hardening (#163) deployed to staging
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED).
+- Merge: **#163** → `main` `9ccf581` — fixes Windows one-click install crashes (UAC elevation, BOM-free token file, `Unblock-File`, locale-safe ACL via SID, TLS bypass for staging IP hosts).
+- Staging: fresh `hivearmor.war` built (Temurin JDK 17) + `docker compose build/recreate backend` — **healthy**; `GET /api/healthcheck` **200**.
+- **Action required on Windows laptop:** regenerate install script from Sensors → Add Agent (old `hivearmor-install-demo-server-1.ps1` was generated before this fix).
+- Windows live proof: still **not run** this session — user to re-test regenerated `.ps1`.
+
 ## 2026-09-01 18:06:00 IST (UTC+05:30) — Agent packages published on staging
 
 - Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED).
