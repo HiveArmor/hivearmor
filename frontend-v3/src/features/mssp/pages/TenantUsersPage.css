@@ -1,0 +1,371 @@
+.mssp-tenant-users-page {
+  height: calc(100dvh - var(--ha-masthead-height));
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--ha-text-primary);
+  background: var(--ha-background);
+}
+
+.mssp-tenant-users-header,
+.mssp-tenant-users-header__identity,
+.mssp-tenant-users-header__actions,
+.mssp-tenant-users-trust,
+.mssp-tenant-users-empty-honesty,
+.mssp-tenant-users-empty-honesty__links,
+.mssp-tenant-users-toolbar,
+.mssp-tenant-users-results-head,
+.mssp-tenant-users-empty,
+.mssp-tenant-users-add-form,
+.mssp-tenant-users-add-form__row {
+  display: flex;
+  align-items: center;
+}
+
+.mssp-tenant-users-header {
+  min-height: 56px;
+  padding: 0 var(--ha-space-6);
+  justify-content: space-between;
+  gap: 12px;
+  flex: 0 0 auto;
+  background: var(--ha-surface-primary);
+  border-bottom: 1px solid var(--ha-border);
+}
+
+.mssp-tenant-users-header__identity {
+  min-width: 0;
+  gap: 10px;
+}
+
+.mssp-tenant-users-header__mark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--ha-primary);
+  background: color-mix(in srgb, var(--ha-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ha-primary) 42%, var(--ha-border));
+  border-radius: var(--ha-radius-base);
+}
+
+.mssp-tenant-users-header__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.mssp-tenant-users-header__eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mssp-tenant-users-header__eyebrow > span:first-child {
+  display: block;
+  color: var(--ha-primary);
+  font: 600 9px/1 var(--ha-font-ui);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.mssp-tenant-users-header__badge {
+  padding: 2px 6px;
+  border: 1px solid color-mix(in srgb, var(--ha-high) 40%, var(--ha-border));
+  border-radius: var(--ha-radius-sm);
+  background: color-mix(in srgb, var(--ha-high) 12%, transparent);
+  color: var(--ha-high);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mssp-tenant-users-header h1 {
+  margin: 3px 0 0;
+  font-size: var(--ha-text-xl);
+  font-weight: var(--ha-weight-semibold);
+  white-space: nowrap;
+}
+
+.mssp-tenant-users-header__job {
+  margin: 4px 0 0;
+  max-width: 760px;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+  line-height: 1.4;
+}
+
+.mssp-tenant-users-page__projection-note {
+  margin: 4px 0 0;
+  max-width: 760px;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+  line-height: 1.35;
+}
+
+.mssp-tenant-users-header__actions {
+  gap: 7px;
+}
+
+.mssp-tenant-users-page__meta {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0;
+  padding: 6px var(--ha-space-6);
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-primary);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+}
+
+.mssp-tenant-users-page__meta a {
+  color: var(--ha-primary);
+  text-decoration: none;
+}
+
+.mssp-tenant-users-page__meta a:hover {
+  text-decoration: underline;
+}
+
+.mssp-tenant-users-page__access {
+  color: var(--ha-text-secondary);
+  font-size: 9px;
+}
+
+.mssp-tenant-users-trust {
+  flex: 0 0 auto;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px var(--ha-space-6);
+  border-bottom: 1px solid var(--ha-border);
+  background: color-mix(in srgb, var(--ha-primary) 8%, transparent);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+  line-height: 1.45;
+}
+
+.mssp-tenant-users-trust strong {
+  color: var(--ha-text-primary);
+}
+
+.mssp-tenant-users-empty-honesty {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px var(--ha-space-6);
+  border-bottom: 1px solid var(--ha-border);
+  background: color-mix(in srgb, var(--ha-medium) 10%, transparent);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+  line-height: 1.45;
+}
+
+.mssp-tenant-users-empty-honesty strong {
+  color: var(--ha-text-primary);
+  font-size: 11px;
+}
+
+.mssp-tenant-users-empty-honesty__links {
+  gap: 12px;
+}
+
+.mssp-tenant-users-empty-honesty__links a {
+  color: var(--ha-primary);
+  text-decoration: none;
+  font-size: 10px;
+}
+
+.mssp-tenant-users-empty-honesty__links a:hover {
+  text-decoration: underline;
+}
+
+.mssp-tenant-users-workspace {
+  min-height: 50vh;
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: var(--ha-space-4) var(--ha-space-6);
+  gap: var(--ha-space-4);
+}
+
+.mssp-tenant-users-add-form {
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ha-space-3);
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  padding: var(--ha-space-4);
+}
+
+.mssp-tenant-users-add-form__field {
+  flex: 1 1 140px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-1);
+}
+
+.mssp-tenant-users-add-form__field--role {
+  flex: 1 1 160px;
+}
+
+.mssp-tenant-users-add-form__field label {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+}
+
+.mssp-tenant-users-add-form__input,
+.mssp-tenant-users-add-form__select {
+  width: 100%;
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  color: var(--ha-text-primary);
+  font-size: var(--ha-text-sm);
+  padding: var(--ha-space-2) var(--ha-space-3);
+}
+
+.mssp-tenant-users-add-form__select {
+  cursor: pointer;
+}
+
+.mssp-tenant-users-add-form__select--inline {
+  padding: 2px var(--ha-space-2);
+}
+
+.mssp-tenant-users-add-form__actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-1);
+}
+
+.mssp-tenant-users-add-form__error {
+  flex: 1 0 100%;
+  color: var(--ha-critical);
+  font-size: var(--ha-text-sm);
+  margin: 0;
+}
+
+.mssp-tenant-users-button {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  color: var(--ha-background);
+  background: var(--ha-primary);
+  border: none;
+  border-radius: var(--ha-radius-base);
+  font: 500 var(--ha-text-sm) / 1 var(--ha-font-ui);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mssp-tenant-users-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.mssp-tenant-users-button--secondary {
+  color: var(--ha-text-primary);
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+}
+
+.mssp-tenant-users-icon-button {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--ha-text-secondary);
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  cursor: pointer;
+}
+
+.mssp-tenant-users-results-head {
+  min-height: 38px;
+  padding: 0 var(--ha-space-2);
+  justify-content: space-between;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.mssp-tenant-users-results-head strong {
+  font-size: var(--ha-text-sm);
+}
+
+.mssp-tenant-users-results-head span {
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+}
+
+.mssp-tenant-users-grid-wrap {
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+}
+
+.mssp-tenant-users-remove-button {
+  padding: 2px var(--ha-space-3);
+  font-size: var(--ha-text-xs);
+  font-weight: var(--ha-weight-medium);
+  border-radius: var(--ha-radius-base);
+  border: 1px solid var(--ha-critical);
+  background: transparent;
+  color: var(--ha-critical);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mssp-tenant-users-empty {
+  height: 100%;
+  min-height: 260px;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 30px;
+  text-align: center;
+  color: var(--ha-text-secondary);
+}
+
+.mssp-tenant-users-empty strong {
+  color: var(--ha-text-primary);
+  font-size: var(--ha-text-md);
+}
+
+.mssp-tenant-users-empty span {
+  max-width: 560px;
+  font-size: var(--ha-text-sm);
+  line-height: 1.5;
+}
+
+.mssp-tenant-users-empty--error strong {
+  color: var(--ha-critical);
+}
+
+.mssp-tenant-users-loading {
+  min-height: 50vh;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ha-space-6);
+}
