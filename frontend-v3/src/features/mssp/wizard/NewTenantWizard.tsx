@@ -1,29 +1,38 @@
-import type { CSSProperties, ReactElement } from "react";
+/**
+ * NewTenantWizard — MSSP tenant provisioning honesty (Prompt 47 / Wave C3 slice 3).
+ *
+ * Production create: POST /api/ha-mssp/tenants (MSSP_ADMIN-gated).
+ * Successful POST persists ha_client + inactive admin user — not activation, indices, or IAM governance.
+ */
+
+import type { ReactElement } from "react";
 import { useState } from "react";
 
 import { Form } from "@patternfly/react-core";
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Building2, ShieldCheck } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
+import {
+  MSSP_ROUTES,
+  MSSP_TENANT_LIFECYCLE_GOVERNANCE_LIVE,
+  NEW_TENANT_JOB_SENTENCE,
+  NEW_TENANT_PROVISION_FAIL_CLOSED_TITLE,
+} from "./msspTenantCreate.honesty";
 import { createTenant } from "../api/msspTenantApi";
 import { MsspConflictError } from "../api/msspTypes";
 import type { NewTenantRequest } from "../api/msspTypes";
+
+import "./NewTenantWizard.css";
 
 import { HaButton } from "@/components/ha-button/HaButton";
 import { HaFormGroup } from "@/components/ha-form-group/HaFormGroup";
 import { HaInlineBanner } from "@/components/ha-inline-banner/HaInlineBanner";
 import { HaSelect } from "@/components/ha-select/HaSelect";
 import { HaTextInput } from "@/components/ha-text-input/HaTextInput";
-
-// ---------------------------------------------------------------------------
-// Prefix validation — shared constant (Requirement 10.3)
-// ---------------------------------------------------------------------------
+import { ROUTES } from "@/constants/routes.constants";
 
 const PREFIX_REGEX = /^[a-z0-9-]{2,20}$/;
-
-// ---------------------------------------------------------------------------
-// Wizard state
-// ---------------------------------------------------------------------------
 
 interface WizardState {
   name: string;
@@ -56,60 +65,87 @@ const LICENCE_OPTIONS = [
   { value: "enterprise", label: "Enterprise" },
 ];
 
-// ---------------------------------------------------------------------------
-// Styles (no hex literals — all CSS custom properties from tokens.css)
-// ---------------------------------------------------------------------------
+function PageHeader(): ReactElement {
+  return (
+    <header className="mssp-tenant-new-header">
+      <div className="mssp-tenant-new-header__identity">
+        <span className="mssp-tenant-new-header__mark">
+          <Building2 size={18} aria-hidden="true" />
+        </span>
+        <div className="mssp-tenant-new-header__copy">
+          <div className="mssp-tenant-new-header__eyebrow">
+            <span>MSSP PORTAL · NEW TENANT</span>
+            <span className="mssp-tenant-new-header__badge">STAGING CANDIDATE</span>
+          </div>
+          <h1>New tenant</h1>
+          <p className="mssp-tenant-new-header__job">{NEW_TENANT_JOB_SENTENCE}</p>
+          <p className="mssp-tenant-new-page__projection-note" role="note">
+            Create via POST /api/ha-mssp/tenants with clientPrefix matching ^[a-z0-9-]&#123;2,20&#125;$.
+            Admin user is created inactive — activation, membership governance, and lifecycle audit
+            remain partial (IAM-005).
+          </p>
+        </div>
+      </div>
+    </header>
+  );
+}
 
-const CONTAINER_STYLE: CSSProperties = {
-  padding: "24px",
-  backgroundColor: "var(--ha-surface-primary)",
-  minHeight: "400px",
-  color: "var(--ha-text-primary)",
-};
+function MetaLinks(): ReactElement {
+  return (
+    <p className="mssp-tenant-new-page__meta">
+      <Link to={MSSP_ROUTES.OVERVIEW}>Overview</Link>
+      <span aria-hidden="true">·</span>
+      <Link to={MSSP_ROUTES.TENANTS}>Tenants</Link>
+      <span aria-hidden="true">·</span>
+      <Link to={ROUTES.ADMIN_TENANTS}>Platform tenants</Link>
+      <span aria-hidden="true">·</span>
+      <Link to={ROUTES.ADMIN_USERS}>Identity &amp; Tenancy</Link>
+      <span aria-hidden="true">·</span>
+      <span className="mssp-tenant-new-page__access">MSSP Administrator</span>
+    </p>
+  );
+}
 
-const STEP_NAV_STYLE: CSSProperties = {
-  display: "flex",
-  marginBottom: "24px",
-  borderBottom: "1px solid var(--ha-border)",
-};
+function TrustBanner(): ReactElement {
+  return (
+    <div
+      className="mssp-tenant-new-trust"
+      role="status"
+      data-testid="new-tenant-create-trust-banner"
+    >
+      <ShieldCheck size={13} aria-hidden="true" />
+      <span>
+        <strong>Provisioning fail-closed:</strong> HiveArmor navigates to tenant detail only after
+        HTTP 201 with a persisted id — never to API Location headers and never with simulated
+        success. No success toast implies production readiness.
+      </span>
+    </div>
+  );
+}
 
-const FOOTER_STYLE: CSSProperties = {
-  display: "flex",
-  gap: "8px",
-  justifyContent: "flex-end",
-  paddingTop: "24px",
-  borderTop: "1px solid var(--ha-border)",
-  marginTop: "24px",
-};
-
-const REVIEW_ROW_STYLE: CSSProperties = {
-  display: "flex",
-  gap: "8px",
-  marginBottom: "8px",
-  fontSize: "var(--ha-text-sm)",
-};
-
-const REVIEW_LABEL_STYLE: CSSProperties = {
-  color: "var(--ha-text-secondary)",
-  minWidth: "140px",
-  flexShrink: 0,
-};
-
-const REVIEW_VALUE_STYLE: CSSProperties = {
-  color: "var(--ha-text-primary)",
-  fontFamily: "var(--ha-font-mono, monospace)",
-};
-
-// ---------------------------------------------------------------------------
-// Step indicator
-// ---------------------------------------------------------------------------
+function ProvisionFailClosedBanner(): ReactElement {
+  return (
+    <div
+      className="mssp-tenant-new-provision-note"
+      role="status"
+      data-testid="new-tenant-provision-fail-closed-banner"
+    >
+      <strong>{NEW_TENANT_PROVISION_FAIL_CLOSED_TITLE}</strong>
+    </div>
+  );
+}
 
 function StepNav({ currentStep }: { currentStep: number }): ReactElement {
   return (
-    <div role="tablist" aria-label="Wizard steps" style={STEP_NAV_STYLE}>
+    <div role="tablist" aria-label="Wizard steps" className="mssp-tenant-new-wizard__step-nav">
       {([1, 2, 3, 4] as const).map((step) => {
         const isActive = currentStep === step;
         const isCompleted = currentStep > step;
+        const stepClass = isActive
+          ? "mssp-tenant-new-wizard__step mssp-tenant-new-wizard__step--active"
+          : isCompleted
+            ? "mssp-tenant-new-wizard__step mssp-tenant-new-wizard__step--completed"
+            : "mssp-tenant-new-wizard__step mssp-tenant-new-wizard__step--pending";
 
         return (
           <div
@@ -117,26 +153,11 @@ function StepNav({ currentStep }: { currentStep: number }): ReactElement {
             role="tab"
             aria-selected={isActive}
             aria-label={`Step ${step}: ${STEP_LABELS[step]}`}
-            style={{
-              padding: "8px 16px",
-              fontSize: "var(--ha-text-sm)",
-              fontWeight: isActive ? 600 : 400,
-              color: isActive
-                ? "var(--ha-primary)"
-                : isCompleted
-                  ? "var(--ha-positive)"
-                  : "var(--ha-text-secondary)",
-              borderBottom: isActive
-                ? "2px solid var(--ha-primary)"
-                : "2px solid transparent",
-              cursor: "default",
-              userSelect: "none",
-              whiteSpace: "nowrap",
-            }}
+            className={stepClass}
           >
             {step}. {STEP_LABELS[step]}
             {isCompleted && (
-              <span aria-hidden="true" style={{ marginLeft: "6px", color: "var(--ha-positive)" }}>
+              <span aria-hidden="true" style={{ marginLeft: "6px" }}>
                 ✓
               </span>
             )}
@@ -146,10 +167,6 @@ function StepNav({ currentStep }: { currentStep: number }): ReactElement {
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Step 1 — Tenant details
-// ---------------------------------------------------------------------------
 
 interface Step1Props {
   state: WizardState;
@@ -182,15 +199,7 @@ function StepTenantDetails({ state, onChange }: Step1Props): ReactElement {
           aria-describedby={prefixInvalid ? "wizard-prefix-helper" : undefined}
         />
         {prefixInvalid && (
-          <div
-            id="wizard-prefix-helper"
-            role="alert"
-            style={{
-              fontSize: "var(--ha-text-xs)",
-              color: "var(--ha-critical)",
-              marginTop: "4px",
-            }}
-          >
+          <div id="wizard-prefix-helper" role="alert" className="mssp-tenant-new-prefix-error">
             {"Prefix must match ^[a-z0-9-]{2,20}$"}
           </div>
         )}
@@ -198,10 +207,6 @@ function StepTenantDetails({ state, onChange }: Step1Props): ReactElement {
     </Form>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Step 2 — Admin user
-// ---------------------------------------------------------------------------
 
 interface Step2Props {
   state: WizardState;
@@ -235,10 +240,6 @@ function StepAdminUser({ state, onChange }: Step2Props): ReactElement {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Step 3 — Licence
-// ---------------------------------------------------------------------------
-
 interface Step3Props {
   state: WizardState;
   onChange: (key: keyof WizardState, value: string) => void;
@@ -270,10 +271,6 @@ function StepLicence({ state, onChange }: Step3Props): ReactElement {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Step 4 — Review
-// ---------------------------------------------------------------------------
-
 interface Step4Props {
   state: WizardState;
   error: string | null;
@@ -284,9 +281,9 @@ interface Step4Props {
 
 function ReviewRow({ label, value }: { label: string; value: string }): ReactElement {
   return (
-    <div style={REVIEW_ROW_STYLE}>
-      <span style={REVIEW_LABEL_STYLE}>{label}</span>
-      <span style={REVIEW_VALUE_STYLE}>{value}</span>
+    <div className="mssp-tenant-new-review-row">
+      <span className="mssp-tenant-new-review-row__label">{label}</span>
+      <span className="mssp-tenant-new-review-row__value">{value}</span>
     </div>
   );
 }
@@ -297,102 +294,48 @@ function StepReview({ state, error, onDismissError, onSubmit, isSubmitting }: St
       {error !== null && (
         <HaInlineBanner
           variant="danger"
-          title="Provisioning failed"
+          title="Provisioning request failed"
           description={error}
           onDismiss={onDismissError}
         />
       )}
 
-      <div
-        style={{
-          backgroundColor: "var(--ha-surface-raised)",
-          border: "1px solid var(--ha-border)",
-          borderRadius: "var(--ha-radius-base, 4px)",
-          padding: "16px",
-          marginBottom: "24px",
-        }}
-      >
-        <div
-          style={{
-            fontSize: "var(--ha-text-xs)",
-            color: "var(--ha-text-secondary)",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            marginBottom: "12px",
-          }}
-        >
-          Tenant details
-        </div>
+      <div className="mssp-tenant-new-review-block">
+        <div className="mssp-tenant-new-review-block__label">Tenant details</div>
         <ReviewRow label="Tenant name" value={state.name} />
         <ReviewRow label="Client prefix" value={state.clientPrefix} />
       </div>
 
-      <div
-        style={{
-          backgroundColor: "var(--ha-surface-raised)",
-          border: "1px solid var(--ha-border)",
-          borderRadius: "var(--ha-radius-base, 4px)",
-          padding: "16px",
-          marginBottom: "24px",
-        }}
-      >
-        <div
-          style={{
-            fontSize: "var(--ha-text-xs)",
-            color: "var(--ha-text-secondary)",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            marginBottom: "12px",
-          }}
-        >
-          Admin user
-        </div>
+      <div className="mssp-tenant-new-review-block">
+        <div className="mssp-tenant-new-review-block__label">Admin user</div>
         <ReviewRow label="Admin email" value={state.adminEmail} />
         <ReviewRow label="Admin login" value={state.adminLogin} />
       </div>
 
-      <div
-        style={{
-          backgroundColor: "var(--ha-surface-raised)",
-          border: "1px solid var(--ha-border)",
-          borderRadius: "var(--ha-radius-base, 4px)",
-          padding: "16px",
-          marginBottom: "24px",
-        }}
-      >
-        <div
-          style={{
-            fontSize: "var(--ha-text-xs)",
-            color: "var(--ha-text-secondary)",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            marginBottom: "12px",
-          }}
-        >
-          Licence
-        </div>
+      <div className="mssp-tenant-new-review-block">
+        <div className="mssp-tenant-new-review-block__label">Licence</div>
         <ReviewRow label="Max users" value={state.maxUsers} />
         <ReviewRow label="Licence type" value={state.licenceType} />
       </div>
 
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div className="mssp-tenant-new-review-submit">
+        <p className="mssp-tenant-new-review-submit__hint" role="note">
+          Submit sends POST /api/ha-mssp/tenants. A 201 response opens tenant detail at
+          /mssp/tenants/&#123;id&#125; — admin account remains inactive until activation completes.
+        </p>
         <HaButton
           variant="primary"
           onClick={onSubmit}
           isDisabled={isSubmitting}
           isLoading={isSubmitting}
-          aria-label="Provision tenant"
+          aria-label="Submit provisioning request"
         >
-          Provision tenant
+          Submit provisioning request
         </HaButton>
       </div>
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Validation helpers
-// ---------------------------------------------------------------------------
 
 function isStep1Valid(state: WizardState): boolean {
   return state.name.trim().length > 0 && PREFIX_REGEX.test(state.clientPrefix);
@@ -407,9 +350,24 @@ function isStep3Valid(state: WizardState): boolean {
   return !isNaN(maxUsers) && maxUsers > 0 && state.licenceType.trim().length > 0;
 }
 
-// ---------------------------------------------------------------------------
-// Main wizard component
-// ---------------------------------------------------------------------------
+function provisioningErrorMessage(err: unknown): string {
+  if (err instanceof MsspConflictError) {
+    const fieldLabel = err.field === "adminLogin" ? "Admin login" : "Client prefix";
+    return (
+      `Conflict: a tenant or user with this ${fieldLabel} already exists. ` +
+      "Please go back and choose a different value."
+    );
+  }
+  if (err instanceof Error) {
+    if (err.message === "401" || err.message === "403") {
+      return "MSSP access restricted — required permission: MSSP Administrator.";
+    }
+    if (err.message === "400") {
+      return "The submitted data is invalid. Please review all fields and try again.";
+    }
+  }
+  return "An unexpected error occurred while submitting the provisioning request. Please try again.";
+}
 
 export function NewTenantWizard(): ReactElement {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -419,7 +377,6 @@ export function NewTenantWizard(): ReactElement {
 
   const handleChange = (key: keyof WizardState, value: string): void => {
     setState((prev) => ({ ...prev, [key]: value }));
-    // Clear submit error when user edits fields on review step
     if (step === 4) {
       setError(null);
     }
@@ -431,22 +388,7 @@ export function NewTenantWizard(): ReactElement {
       navigate(`/mssp/tenants/${created.id}`);
     },
     onError: (err: unknown) => {
-      if (err instanceof MsspConflictError) {
-        const fieldLabel =
-          err.field === "adminLogin" ? "Admin login" : "Client prefix";
-        setError(
-          `Conflict: a tenant or user with this ${fieldLabel} already exists. ` +
-            `Please go back and choose a different value.`
-        );
-      } else if (err instanceof Error && err.message === "400") {
-        setError(
-          "The submitted data is invalid. Please review all fields and try again."
-        );
-      } else {
-        setError(
-          "An unexpected error occurred while provisioning the tenant. Please try again."
-        );
-      }
+      setError(provisioningErrorMessage(err));
     },
   });
 
@@ -493,55 +435,63 @@ export function NewTenantWizard(): ReactElement {
   };
 
   return (
-    <div data-testid="new-tenant-wizard" style={CONTAINER_STYLE}>
-      <div
-        style={{
-          fontSize: "var(--ha-text-lg)",
-          fontWeight: 600,
-          color: "var(--ha-text-primary)",
-          marginBottom: "24px",
-        }}
-      >
-        New tenant — Step {step} of 4: {STEP_LABELS[step]}
-      </div>
+    <section
+      className="mssp-tenant-new-page"
+      aria-label="New MSSP tenant"
+      data-mssp-tenant-create-honesty="true"
+      data-tenant-lifecycle-governance={MSSP_TENANT_LIFECYCLE_GOVERNANCE_LIVE ? "live" : "fail-closed"}
+      data-testid="new-tenant-wizard"
+    >
+      <PageHeader />
+      <MetaLinks />
+      <TrustBanner />
+      <ProvisionFailClosedBanner />
 
-      <StepNav currentStep={step} />
+      <div className="mssp-tenant-new-workspace">
+        <div className="mssp-tenant-new-wizard">
+          <p className="mssp-tenant-new-wizard__title">
+            Step {step} of 4: {STEP_LABELS[step]}
+          </p>
 
-      <div style={{ minHeight: "240px" }}>{renderStepContent()}</div>
+          <StepNav currentStep={step} />
 
-      {step < 4 && (
-        <div style={FOOTER_STYLE}>
-          {step > 1 && (
-            <HaButton
-              variant="secondary"
-              onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3 | 4)}
-              isDisabled={mutation.isPending}
-            >
-              Back
-            </HaButton>
+          <div className="mssp-tenant-new-wizard__content">{renderStepContent()}</div>
+
+          {step < 4 && (
+            <div className="mssp-tenant-new-wizard__footer">
+              {step > 1 && (
+                <HaButton
+                  variant="secondary"
+                  onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3 | 4)}
+                  isDisabled={mutation.isPending}
+                >
+                  Back
+                </HaButton>
+              )}
+              <HaButton
+                variant="primary"
+                onClick={() => setStep((s) => (s + 1) as 1 | 2 | 3 | 4)}
+                isDisabled={!canAdvance}
+                aria-label={`Advance to step ${step + 1}: ${STEP_LABELS[(step + 1) as 1 | 2 | 3 | 4]}`}
+              >
+                Next: {STEP_LABELS[(step + 1) as 1 | 2 | 3 | 4]}
+              </HaButton>
+            </div>
           )}
-          <HaButton
-            variant="primary"
-            onClick={() => setStep((s) => (s + 1) as 1 | 2 | 3 | 4)}
-            isDisabled={!canAdvance}
-            aria-label={`Advance to step ${step + 1}: ${STEP_LABELS[(step + 1) as 1 | 2 | 3 | 4]}`}
-          >
-            Next: {STEP_LABELS[(step + 1) as 1 | 2 | 3 | 4]}
-          </HaButton>
-        </div>
-      )}
 
-      {step === 4 && (
-        <div style={FOOTER_STYLE}>
-          <HaButton
-            variant="secondary"
-            onClick={() => setStep(3)}
-            isDisabled={mutation.isPending}
-          >
-            Back
-          </HaButton>
+          {step === 4 && (
+            <div className="mssp-tenant-new-wizard__footer">
+              <HaButton
+                variant="secondary"
+                onClick={() => setStep(3)}
+                isDisabled={mutation.isPending}
+              >
+                Back
+              </HaButton>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </section>
   );
 }
