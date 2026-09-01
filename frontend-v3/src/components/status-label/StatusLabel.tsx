@@ -3,6 +3,7 @@ import type { ForwardRefExoticComponent, RefAttributes } from 'react';
 import type { LucideProps } from 'lucide-react';
 import { Circle, Clock, CheckCircle, XCircle, MinusCircle } from 'lucide-react';
 
+import { HaLabel } from '@/components/ha-label';
 import type { AlertStatus } from '@/lib/status';
 import { STATUS_LABELS, STATUS_COLORS } from '@/lib/status';
 
@@ -24,26 +25,19 @@ const STATUS_ICONS: Record<AlertStatus, LucideComponent> = {
 
 export function StatusLabel({ status, size = 'md', className = '' }: StatusLabelProps): JSX.Element {
   const iconSize = size === 'sm' ? 12 : 14;
-  const fontSize = size === 'sm' ? 'var(--ha-text-xs)' : 'var(--ha-text-sm)';
   const color = STATUS_COLORS[status];
   const label = STATUS_LABELS[status];
-
   const Icon = STATUS_ICONS[status];
 
   return (
-    <span
-      className={`status-label ${className}`}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-        fontSize,
-        fontWeight: 'var(--ha-weight-medium)',
-      }}
+    <HaLabel
+      className={`status-label ${className}`.trim()}
+      size={size}
+      color={color}
+      icon={<Icon size={iconSize} color="currentColor" aria-hidden="true" />}
       aria-label={`Status: ${label}`}
     >
-      <Icon size={iconSize} color={color} />
-      <span style={{ color }}>{label}</span>
-    </span>
+      {label}
+    </HaLabel>
   );
 }

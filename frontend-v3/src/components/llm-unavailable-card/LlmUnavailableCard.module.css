@@ -6,34 +6,31 @@
  * Colors: --ha-* design tokens only. No raw hex (NoRawHexInvariant).
  */
 
-.card {
+.body {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--ha-space-3);
-  padding: var(--ha-space-6) var(--ha-space-4);
-  background: var(--ha-surface-primary);
-  border: 1px solid var(--ha-border);
-  border-radius: var(--ha-radius-md);
+  gap: 12px;
+  padding: 24px 16px;
   text-align: center;
 }
 
 .icon {
-  color: var(--ha-text-secondary);
+  color: var(--ha-foreground-secondary);
   opacity: 0.7;
 }
 
 .title {
-  font-size: var(--ha-text-base);
-  font-weight: var(--ha-weight-semibold);
-  color: var(--ha-text-primary);
+  font: var(--ha-type-body);
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
   margin: 0;
 }
 
 .description {
-  font-size: var(--ha-text-sm);
-  color: var(--ha-text-secondary);
+  font: var(--ha-type-compact);
+  color: var(--ha-foreground-secondary);
   line-height: 1.5;
   margin: 0;
   max-width: 320px;

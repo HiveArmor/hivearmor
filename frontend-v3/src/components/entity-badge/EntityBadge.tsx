@@ -1,5 +1,6 @@
 import { EntityTypeIcon } from '@/components/entity-type-icon';
 import type { CanonicalEntityIconType } from '@/components/entity-type-icon';
+import { HaBadge } from '@/components/ha-badge';
 import { SEVERITY_COLORS } from '@/lib/severity';
 
 export interface EntityBadgeProps {
@@ -34,38 +35,29 @@ export function EntityBadge({
   const useMonoFont = isIpAddress(label);
 
   return (
-    <span
+    <HaBadge
       className="entity-badge"
+      size={size}
+      mono={useMonoFont}
       onClick={onClick}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '6px',
-        background: 'var(--ha-surface-raised)',
-        border: '1px solid var(--ha-border)',
-        borderRadius: 'var(--ha-radius-md)',
-        padding: '3px 8px',
-        fontSize: 'var(--ha-text-xs)',
-        color: 'var(--ha-text-primary)',
-        cursor: onClick ? 'pointer' : 'default',
-        fontFamily: useMonoFont ? 'var(--ha-font-mono)' : 'inherit',
-      }}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
+      icon={
+        <>
+          {riskScore !== undefined && (
+            <span
+              style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: getRiskColor(riskScore),
+              }}
+              aria-label={`Risk score: ${riskScore}`}
+            />
+          )}
+          <EntityTypeIcon type={type} size={iconSize} className="entity-badge__type-icon" />
+        </>
+      }
     >
-      {riskScore !== undefined && (
-        <span
-          style={{
-            width: '6px',
-            height: '6px',
-            borderRadius: '50%',
-            background: getRiskColor(riskScore),
-          }}
-          aria-label={`Risk score: ${riskScore}`}
-        />
-      )}
-      <EntityTypeIcon type={type} size={iconSize} className="entity-badge__type-icon" />
-      <span>{label}</span>
-    </span>
+      {label}
+    </HaBadge>
   );
 }

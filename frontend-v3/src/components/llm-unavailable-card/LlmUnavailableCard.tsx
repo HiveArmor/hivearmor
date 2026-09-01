@@ -18,6 +18,9 @@ import { BrainCircuit, AlertTriangle } from 'lucide-react';
 
 import styles from './LlmUnavailableCard.module.css';
 
+import { HaCard } from '@/components/ha-card';
+
+
 // ---------------------------------------------------------------------------
 // LlmUnavailableCard
 // ---------------------------------------------------------------------------
@@ -45,20 +48,18 @@ export function LlmUnavailableCard({
   description = 'Ask an administrator to configure an AI provider.',
 }: LlmUnavailableCardProps): JSX.Element {
   return (
-    <div
-      className={styles.card}
-      role="status"
-      aria-label="AI unavailable"
-    >
-      <BrainCircuit
-        size={32}
-        className={styles.icon}
-        aria-hidden="true"
-        strokeWidth={1.5}
-      />
-      <p className={styles.title}>AI provider unavailable</p>
-      <p className={styles.description}>{description}</p>
-    </div>
+    <HaCard role="status" aria-label="AI unavailable">
+      <HaCard.Body className={styles.body}>
+        <BrainCircuit
+          size={32}
+          className={styles.icon}
+          aria-hidden="true"
+          strokeWidth={1.5}
+        />
+        <p className={styles.title}>AI provider unavailable</p>
+        <p className={styles.description}>{description}</p>
+      </HaCard.Body>
+    </HaCard>
   );
 }
 

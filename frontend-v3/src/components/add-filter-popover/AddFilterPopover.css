@@ -1,7 +1,11 @@
-.add-alert-filter { position: relative; }
+/**
+ * AddFilterPopover styles — inner chrome only. The anchored-panel shell (position, surface, border,
+ * shadow, z-index, responsive dock) is owned by HaPopover; this file styles the trigger and the
+ * form content (header / body / join / footer) rendered inside the popover panel.
+ */
+
 .add-alert-filter__trigger { display: flex; align-items: center; gap: 5px; padding-inline: 10px !important; cursor: pointer; white-space: nowrap; }
 
-.add-alert-filter__popover { position: absolute; z-index: 120; top: calc(100% + 7px); right: 0; width: min(370px, calc(100vw - 32px)); overflow: hidden; border: 1px solid var(--ha-border-default); border-radius: 10px; background: var(--ha-surface-overlay); box-shadow: var(--ha-shadow-medium); color: var(--ha-foreground-primary); }
 .add-alert-filter__popover > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 11px 12px; border-bottom: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
 .add-alert-filter__popover > header strong,
 .add-alert-filter__popover > header span { display: block; }
@@ -28,7 +32,3 @@
 .add-alert-filter__popover > footer button { min-height: 32px; padding: 0 10px; border: 1px solid var(--ha-border-default); border-radius: 7px; background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); cursor: pointer; font: var(--ha-type-compact); font-weight: 650; }
 .add-alert-filter__popover > footer button:last-child { border-color: var(--ha-action-primary); background: var(--ha-action-primary); color: var(--ha-foreground-on-action); }
 .add-alert-filter__popover > footer button:disabled { border-color: var(--ha-border-subtle); background: var(--ha-action-disabled); color: var(--ha-foreground-disabled); cursor: not-allowed; }
-
-@media (max-width: 700px) {
-  .add-alert-filter__popover { position: fixed; top: auto; right: 8px; bottom: 42px; left: 80px; width: auto; }
-}
