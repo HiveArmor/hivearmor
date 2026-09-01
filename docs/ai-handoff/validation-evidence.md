@@ -704,3 +704,16 @@ No production-readiness claim is made by this baseline entry.
 - SPA `/posture/sensors` **200**.
 - Report: `/tmp/hivearmor-staging-sensors-add-agent-rebuild.json`.
 - Next: run `publish-agent-packages.sh` with signed CI binaries for Downloadable packages.
+
+## 2026-09-01 17:45:00 IST (UTC+05:30) — SENS-001 install script enrollment token + download UX
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED).
+- Branch: `feat/sensors-install-script-download`.
+- Backend: `AgentInstallScriptBuilder` now pipes enrollment tokens via `--enrollment-token-file -` (bash stdin; PowerShell protected temp file + stdin). Removed positional key argument. `HaAgentKeyService` creates tenant-scoped enrollment tokens via `AgentGrpcService` (Option A); fails closed without masthead tenant.
+- Frontend: `AddAgentDrawer` Step 2 adds Download `.sh`/`.ps1` buttons (Blob + `URL.createObjectURL`); tenant gate blocks Generate when masthead is All tenants; copy/download content match.
+- Focused backend test: `JAVA_HOME=temurin-17 mvn -s settings.xml -Dtest=AgentInstallScriptBuilderTest test` — **4/4 passed**.
+- Frontend: `npm run type-check` — **passed**; `npm run test` — **1,676/1,676 passed** (284 files); `npm run build` — **passed**.
+- Frontend lint: `npm run lint` — **6 pre-existing warnings** in unrelated files (`AbsoluteCalendarFields.tsx`, `CompliancePage.tsx`, `IndexScopePicker.tsx`); **zero errors** in SENS-001 touched files.
+- Windows validation: **BLOCKED** — no Windows VM/sandbox available; `agent/release/verify-packaged-windows.ps1` not executed this session.
+- Local-dev API smoke: **BLOCKED** — Docker socket permission denied in agent environment (`docker compose ps` failed).
+- No secrets logged or committed.

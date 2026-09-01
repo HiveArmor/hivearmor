@@ -71,36 +71,37 @@ public class AgentInstallScriptBuilder {
      * <ol>
      *   <li>Auto-detects OS (linux / darwin) and CPU architecture (amd64 / arm64)</li>
      *   <li>Downloads the correct agent binary from {@code /agent-packages/} on HTTPS 443</li>
-     *   <li>Runs the install command with the provided key and mode</li>
+     *   <li>Runs the install command with the enrollment token via {@code --enrollment-token-file -}</li>
      * </ol>
      *
-     * @param serverHost server hostname (from {@link #resolveServerHost()})
-     * @param alias      human-readable agent alias (used only in comments)
-     * @param key        raw connection key to embed in the script
-     * @param mode       "log" or "edr"
-     * @param expiresAt  human-readable expiry string (used only in comments)
-     * @param insecure   whether to skip TLS certificate validation (true for local dev)
+     * @param serverHost       server hostname (from {@link #resolveServerHost()})
+     * @param alias            human-readable agent alias (used only in comments)
+     * @param enrollmentToken  one-time enrollment token to embed in the script
+     * @param mode             "log" or "edr"
+     * @param expiresAt        human-readable expiry string (used only in comments)
+     * @param insecure         whether to skip TLS certificate validation (true for local dev)
      * @return complete, executable bash script
      */
-    public String buildBashScript(String serverHost, String alias, String key,
+    public String buildBashScript(String serverHost, String alias, String enrollmentToken,
                                   String mode, String expiresAt, boolean insecure) {
         String insecureFlag = insecure ? "yes" : "no";
         String curlInsecureFlag = insecure ? " -k" : "";
+        String escapedToken = escapeBashDoubleQuoted(enrollmentToken);
 
         return "#!/bin/bash\n"
             + "# ============================================================\n"
             + "#  HiveArmor Agent — One-Click Install Script\n"
             + "#  Agent alias : " + alias + "\n"
-            + "#  Key expires : " + expiresAt + "\n"
+            + "#  Token expires : " + expiresAt + "\n"
             + "#  Platform    : Linux / macOS\n"
             + "#\n"
-            + "#  WARNING: This script contains your connection key.\n"
+            + "#  WARNING: This script contains your one-time enrollment token.\n"
             + "#  Treat it like a password. Do NOT share or commit to Git.\n"
             + "# ============================================================\n"
             + "set -e\n"
             + "\n"
             + "SERVER=\"" + serverHost + "\"\n"
-            + "KEY=\"" + key + "\"\n"
+            + "TOKEN=\"" + escapedToken + "\"\n"
             + "MODE=\"" + mode + "\"\n"
             + "INSECURE=\"" + insecureFlag + "\"\n"
             + "\n"
@@ -132,7 +133,7 @@ public class AgentInstallScriptBuilder {
             + "\n"
             + "# ---- Install ------------------------------------------------\n"
             + "echo \"[2/3] Installing (mode: ${MODE})...\"\n"
-            + "sudo \"$DEST\" install \"$SERVER\" \"$KEY\" \"$INSECURE\" --mode=\"$MODE\"\n"
+            + "echo \"$TOKEN\" | sudo \"$DEST\" install \"$SERVER\" \"$INSECURE\" --enrollment-token-file - --mode=\"$MODE\"\n"
             + "\n"
             + "# ---- Verify -------------------------------------------------\n"
             + "echo \"[3/3] Verifying service...\"\n"
@@ -149,29 +150,31 @@ public class AgentInstallScriptBuilder {
      * <ol>
      *   <li>Detects CPU architecture (amd64 / arm64)</li>
      *   <li>Downloads the correct .exe binary from {@code /agent-packages/} on HTTPS 443</li>
-     *   <li>Runs the installer elevated (RunAs)</li>
+     *   <li>Runs the installer elevated (RunAs) with enrollment token via stdin</li>
      * </ol>
      *
-     * @param serverHost server hostname
-     * @param alias      human-readable agent alias (used only in comments)
-     * @param key        raw connection key to embed in the script
-     * @param mode       "log" or "edr"
-     * @param expiresAt  human-readable expiry string (used only in comments)
-     * @param insecure   whether to skip TLS certificate validation
+     * @param serverHost       server hostname
+     * @param alias            human-readable agent alias (used only in comments)
+     * @param enrollmentToken  one-time enrollment token to embed in the script
+     * @param mode             "log" or "edr"
+     * @param expiresAt        human-readable expiry string (used only in comments)
+     * @param insecure         whether to skip TLS certificate validation
      * @return complete, executable PowerShell script
      */
-    public String buildPowerShellScript(String serverHost, String alias, String key,
+    public String buildPowerShellScript(String serverHost, String alias, String enrollmentToken,
                                         String mode, String expiresAt, boolean insecure) {
         String skipTls = insecure
             ? "[System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }\n"
             : "";
+        String skipCert = insecure ? "yes" : "no";
+        String escapedToken = escapePowerShellDoubleQuoted(enrollmentToken);
 
         return "# ============================================================\n"
             + "#  HiveArmor Agent — One-Click Install Script (Windows)\n"
             + "#  Agent alias : " + alias + "\n"
-            + "#  Key expires : " + expiresAt + "\n"
+            + "#  Token expires : " + expiresAt + "\n"
             + "#\n"
-            + "#  WARNING: This script contains your connection key.\n"
+            + "#  WARNING: This script contains your one-time enrollment token.\n"
             + "#  Treat it like a password. Do NOT share or commit to Git.\n"
             + "#\n"
             + "#  Run in an elevated (Administrator) PowerShell session.\n"
@@ -179,8 +182,9 @@ public class AgentInstallScriptBuilder {
             + "$ErrorActionPreference = 'Stop'\n"
             + "\n"
             + "$Server  = \"" + serverHost + "\"\n"
-            + "$Key     = \"" + key + "\"\n"
+            + "$Token   = \"" + escapedToken + "\"\n"
             + "$Mode    = \"" + mode + "\"\n"
+            + "$SkipCert = \"" + skipCert + "\"\n"
             + "\n"
             + skipTls
             + "# ---- Detect architecture ------------------------------------\n"
@@ -201,13 +205,47 @@ public class AgentInstallScriptBuilder {
             + "\n"
             + "# ---- Install ------------------------------------------------\n"
             + "Write-Host \"[2/3] Installing (mode: $Mode)...\"\n"
-            + "$args = \"install $Server $Key no --mode=$Mode\"\n"
-            + "Start-Process -FilePath $Dest -ArgumentList $args -Verb RunAs -Wait\n"
+            + "$TokenFile = Join-Path $env:TEMP (\"hivearmor-enroll-\" + [guid]::NewGuid().ToString(\"N\") + \".token\")\n"
+            + "try {\n"
+            + "  Set-Content -Path $TokenFile -Value $Token -NoNewline -Encoding utf8\n"
+            + "  icacls $TokenFile /inheritance:r | Out-Null\n"
+            + "  icacls $TokenFile /grant:r \"$($env:USERNAME):(R,W)\" \"Administrators:(R,W)\" \"SYSTEM:(R,W)\" | Out-Null\n"
+            + "  Get-Content -Raw $TokenFile | & $Dest install $Server $SkipCert --enrollment-token-file - --mode=$Mode\n"
+            + "} finally {\n"
+            + "  Remove-Item -Force $TokenFile -ErrorAction SilentlyContinue\n"
+            + "}\n"
             + "\n"
             + "# ---- Verify -------------------------------------------------\n"
             + "Write-Host \"[3/3] Verifying service...\"\n"
             + "$svc = Get-Service -Name 'HiveArmorAgent' -ErrorAction SilentlyContinue\n"
             + "if ($svc) { Write-Host \"Service status: $($svc.Status)\" }\n"
             + "Write-Host \"Done. Agent '" + alias + "' registered with HiveArmor.\"\n";
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /** Escapes a value for embedding inside bash double-quoted strings. */
+    static String escapeBashDoubleQuoted(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("$", "\\$")
+            .replace("`", "\\`");
+    }
+
+    /** Escapes a value for embedding inside PowerShell double-quoted strings. */
+    static String escapePowerShellDoubleQuoted(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+            .replace("`", "``")
+            .replace("\"", "`\"")
+            .replace("$", "`$");
     }
 }

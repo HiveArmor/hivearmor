@@ -28,7 +28,7 @@ export interface AgentKeyCreatedDTO {
   /** Human-readable machine alias chosen by the admin. */
   alias: string;
   /**
-   * Raw connection key. Present only in POST response.
+   * One-time enrollment token. Present only in POST response.
    * Treat like a password — do not log or persist.
    */
   key: string;

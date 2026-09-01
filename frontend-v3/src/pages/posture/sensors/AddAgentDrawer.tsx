@@ -13,12 +13,13 @@
 import { lazy, Suspense, useCallback, useRef, useState } from 'react';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Copy, Monitor, Server, Shield, ShieldAlert, Terminal } from 'lucide-react';
+import { Check, Copy, Download, Monitor, Server, Shield, ShieldAlert, Terminal } from 'lucide-react';
 
 import { HaButton } from '@/components/ha-button/HaButton';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { HaInlineBanner } from '@/components/ha-inline-banner';
 import { ApiError, apiClient } from '@/lib/apiClient';
+import { downloadInstallScript, installScriptDownloadFilename } from '@/lib/installScriptDownload';
 import { defineHiveArmorMonacoTheme } from '@/lib/monacoTheme';
 import { createAgentKey } from '@/services/agentProvisioningService';
 import { useAuthStore } from '@/store/auth.store';
@@ -150,6 +151,13 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
     copyTimeoutRef.current = setTimeout(() => setCopied(false), 2500);
   };
 
+  const handleDownload = () => {
+    if (!created) return;
+    const script = activeTab === 'linux' ? created.bashScript : created.powershellScript;
+    const filename = installScriptDownloadFilename(created.alias, activeTab);
+    downloadInstallScript(script, filename);
+  };
+
   // ── Close / reset ──────────────────────────────────────────────────────────
 
   const handleClose = () => {
@@ -201,7 +209,7 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
             <HaInlineBanner
               variant="warning"
               title="Select a tenant in the masthead"
-              description='Agent keys can still be generated under “All authorized tenants”, but Enrollment audit and tenant-scoped follow-up need a concrete masthead tenant (not All tenants).'
+              description='Agent enrollment requires a concrete tenant. Choose a tenant in the masthead (not "All tenants") before generating install scripts.'
               isDismissible={false}
             />
           )}
@@ -279,7 +287,7 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
           <div>
             <label style={labelStyle}>Script expiry</label>
             <p style={hintStyle}>
-              The install script contains a one-time connection key. After this period the key expires
+              The install script contains a one-time enrollment token. After this period the token expires
               and cannot be used to register new agents.
             </p>
             <select
@@ -299,7 +307,7 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
               variant="primary"
               onClick={handleGenerate}
               isLoading={mutation.isPending}
-              disabled={!alias.trim() || !!aliasError || mutation.isPending}
+              isDisabled={!tenantSelected || !alias.trim() || !!aliasError || mutation.isPending}
             >
               Generate install script
             </HaButton>
@@ -320,7 +328,7 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
             <InfoChip label="Mode" value={created.mode === 'edr' ? 'Log + EDR' : 'Log Only'} />
             <InfoChip label="Server" value={created.serverHost} />
             <InfoChip
-              label="Key expires"
+              label="Token expires"
               value={new Date(created.expiresAt).toLocaleString()}
               warn={true}
             />
@@ -331,7 +339,7 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
             <HaInlineBanner
               variant="warning"
               title="Security notice"
-              description="This script contains your one-time connection key. Treat it like a password — do not share it, log it, or commit it to version control. The key is shown only once."
+              description="This script contains your one-time enrollment token. Treat it like a password — do not share it, log it, or commit it to version control. The token is shown only once."
               isDismissible={false}
             />
           </div>
@@ -434,13 +442,23 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
 
           {/* Copy + ports note */}
           <div style={{ padding: '12px 24px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
               <HaButton
                 variant="primary"
                 icon={copied ? <Check size={16} /> : <Copy size={16} />}
                 onClick={handleCopy}
               >
                 {copied ? 'Copied!' : `Copy ${activeTab === 'linux' ? 'bash' : 'PowerShell'} script`}
+              </HaButton>
+
+              <HaButton
+                variant="secondary"
+                icon={<Download size={16} />}
+                onClick={handleDownload}
+              >
+                {activeTab === 'linux'
+                  ? `Download hivearmor-install-${created.alias}.sh`
+                  : `Download hivearmor-install-${created.alias}.ps1`}
               </HaButton>
 
               {activeTab === 'linux' && (
