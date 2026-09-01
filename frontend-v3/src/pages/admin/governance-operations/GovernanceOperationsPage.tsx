@@ -5,9 +5,9 @@ import { Activity, AlertTriangle, Archive, Bot, Braces, ChevronRight, CircleSlas
 import { Link, useNavigate } from 'react-router-dom';
 
 import './GovernanceOperationsPage.css';
-import { ADMIN_AUDIT_PROPOSE_FAIL_CLOSED_TITLE } from '../audit/adminAudit.honesty';
 import { governanceOperationsService } from './governanceOperations.service';
 import type { ApiLifecycleEntry, GovernanceAuditEvent, GovernanceChangeRequest, GovernanceInventory, GovernanceRetentionPolicy, GovernanceSelection, GovernanceView } from './governanceOperations.types';
+import { ADMIN_AUDIT_PROPOSE_FAIL_CLOSED_TITLE } from '../audit/adminAudit.honesty';
 
 import { StatusDock } from '@/components/status-dock';
 import { ROUTES } from '@/constants/routes.constants';
