@@ -25,4 +25,11 @@ describe('HaChart', () => {
   it('has index.ts', () => {
     expect(existsSync(join(__dirname, 'index.ts'))).toBe(true);
   });
+
+  it('exposes accessible chart description for screen readers', () => {
+    const src = readFileSync(join(__dirname, 'HaChart.tsx'), 'utf-8');
+    expect(src).toContain('role="img"');
+    expect(src).toContain('aria-label={ariaLabel');
+    expect(src).toContain('aria-describedby');
+  });
 });

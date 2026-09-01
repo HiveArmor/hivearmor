@@ -24,6 +24,7 @@ export function LiveAlertStream(): JSX.Element {
 
   return (
     <div
+      role="region"
       aria-label="Live alert stream"
       style={{
         width: '100%',
@@ -72,8 +73,9 @@ export function LiveAlertStream(): JSX.Element {
               borderRadius: '50%',
               background: connected ? 'var(--ha-positive)' : 'var(--ha-high)',
             }}
+            aria-hidden="true"
           />
-          {connected ? 'Live' : 'Disconnected'}
+          <span role="status">{connected ? 'Live' : 'Disconnected'}</span>
         </div>
       </div>
 
@@ -109,7 +111,7 @@ export function LiveAlertStream(): JSX.Element {
         </div>
       )}
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '6px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '6px' }} aria-live="polite" aria-atomic="false">
         {events.length === 0 ? (
           <div
             style={{
