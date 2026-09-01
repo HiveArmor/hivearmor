@@ -37,21 +37,43 @@ export function StatusDock({
     return null;
   }, [lastUpdated]);
 
+  const statusSummary = useMemo(() => {
+    const parts = [connectionStatus.label];
+    if (mode === 'live') {
+      parts.push('Live mode');
+    } else if (mode === 'historical') {
+      parts.push('Historical mode');
+    }
+    parts.push(`${eps} events per second`);
+    if (staleDuration) {
+      parts.push(staleDuration);
+    }
+    return parts.join(', ');
+  }, [connectionStatus.label, eps, mode, staleDuration]);
+
   return (
-    <div className={`status-dock ${className}`}>
+    <div
+      className={`status-dock ${className}`}
+      role="status"
+      aria-label={statusSummary}
+    >
       <div className="status-dock__left">
-        <div className="status-dock__indicator" style={{ backgroundColor: connectionStatus.color }} />
+        <div
+          className="status-dock__indicator"
+          style={{ backgroundColor: connectionStatus.color }}
+          aria-hidden="true"
+        />
         <span className="status-dock__connection-text">{connectionStatus.label}</span>
         {mode === 'live' && (
           <>
-            <span className="status-dock__separator">•</span>
-            <div className="status-dock__live-indicator" />
+            <span className="status-dock__separator" aria-hidden="true">•</span>
+            <div className="status-dock__live-indicator" aria-hidden="true" />
             <span className="status-dock__mode-text status-dock__mode-text--live">Live</span>
           </>
         )}
         {mode === 'historical' && (
           <>
-            <span className="status-dock__separator">•</span>
+            <span className="status-dock__separator" aria-hidden="true">•</span>
             <span className="status-dock__mode-text">■ Historical</span>
           </>
         )}
