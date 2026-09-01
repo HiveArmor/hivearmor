@@ -4,8 +4,7 @@
   z-index: 150;
   height: var(--ha-masthead-height);
   display: grid;
-  grid-template-columns: minmax(184px, auto) minmax(260px, 640px) auto;
-  align-items: center;
+  grid-template-columns: minmax(184px, auto) minmax(260px, 640px) auto;  align-items: center;
   gap: 12px;
   padding: 0 12px;
   background: var(--ha-surface-masthead);
@@ -20,8 +19,7 @@
   align-items: center;
 }
 
-.ha-masthead__brand { gap: 8px; }
-.ha-masthead__actions { justify-content: flex-end; gap: 3px; }
+.ha-masthead__brand { gap: 8px; }.ha-masthead__actions { justify-content: flex-end; gap: 3px; }
 .ha-masthead__context { gap: 8px; min-width: 0; }
 
 .ha-masthead__wordmark {
@@ -365,4 +363,33 @@
   .ha-search-trigger span,
   .ha-search-trigger kbd { display: none; }
   .ha-search-trigger { min-width: 40px; width: 40px; flex: 0; justify-content: center; padding: 0; margin-left: auto; }
+}
+
+/* MastheadClock — live UTC clock + tz label (C3). Mono, tabular-nums. */
+.ha-masthead__clock {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 8px;
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-masthead__clock-time {
+  font-family: var(--ha-font-mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ha-masthead__clock-tz {
+  font-family: var(--ha-font-ui);
+  font-size: 11px;
+  color: var(--ha-foreground-tertiary);
+}
+
+/* Tenant selector relocated into the brand cluster, far-left by the logo (C3). */
+.ha-context-menu--brand {
+  margin-left: 6px;
+  padding-left: 10px;
+  border-left: 1px solid var(--ha-border-subtle);
 }

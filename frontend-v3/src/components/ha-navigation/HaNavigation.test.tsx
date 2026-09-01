@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -26,7 +27,12 @@ describe('HaNavigation', () => {
   });
 
   function renderNavigation(): void {
-    render(<MemoryRouter initialEntries={['/dashboard']}><HaNavigation /></MemoryRouter>);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/dashboard']}><HaNavigation /></MemoryRouter>
+      </QueryClientProvider>,
+    );
   }
 
   it('starts collapsed with an accessible active route', () => {
