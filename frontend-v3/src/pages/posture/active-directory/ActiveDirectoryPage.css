@@ -88,7 +88,7 @@
 
 .adp-inventory { display: flex; flex-direction: column; min-height: 50vh; flex: 1 1 auto; min-width: 0; overflow: hidden; }
 .adp-grid-wrap { min-height: 0; flex: 1 1 auto; overflow: hidden; }
-.adp-grid.ag-theme-quartz-dark.ha-grid { height: 100%; border: 0; border-radius: 0; }
+.adp-grid.ha-grid { height: 100%; border: 0; border-radius: 0; }
 .adp-grid .ag-row-focus { box-shadow: inset 2px 0 0 var(--ha-action-primary); }
 .adp-primary { min-width: 0; height: 100%; gap: 8px; }
 .adp-primary > span:last-child { min-width: 0; display: flex; align-items: flex-start; flex-direction: column; gap: 2px; }

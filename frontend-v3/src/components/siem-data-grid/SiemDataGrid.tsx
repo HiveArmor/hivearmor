@@ -2,8 +2,10 @@ import { forwardRef } from 'react';
 
 import type { CellClickedEvent, CellDoubleClickedEvent, CellKeyDownEvent, ColDef, GridOptions, IDatasource, IServerSideDatasource, RowClickedEvent, RowDoubleClickedEvent } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
+
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
+import { useThemeStore } from '@/store/theme.store';
 
 // ServerSideRowModel is enterprise-only in AG Grid 36.
 // We bridge IServerSideDatasource → IDatasource (InfiniteRowModel) automatically
@@ -98,6 +100,9 @@ export const SiemDataGrid = forwardRef<AgGridReact, SiemDataGridProps>(
     },
     ref
   ) => {
+    const theme = useThemeStore((state) => state.theme);
+    const agThemeClass = theme === 'light' ? 'ag-theme-quartz' : 'ag-theme-quartz-dark';
+
     const gridOptions: GridOptions = {
       columnDefs,
       rowData,
@@ -146,7 +151,7 @@ export const SiemDataGrid = forwardRef<AgGridReact, SiemDataGridProps>(
 
     return (
       <div
-        className={`ag-theme-quartz-dark ha-grid ${className || ''}`}
+        className={`${agThemeClass} ha-grid${className ? ` ${className}` : ''}`}
         style={containerStyle}
         aria-label={ariaLabel}
       >

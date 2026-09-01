@@ -10,6 +10,7 @@ import type { AgGridReact } from 'ag-grid-react';
 import { RuleHealthBadge } from './RuleHealthBadge';
 
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
 import type { RulePreview } from '@/pages/detection-rules/types/detection.types';
 
 interface RuleInventoryTableProps {
@@ -66,6 +67,7 @@ export function RuleInventoryTable({
   onRuleClick,
   onSelectionChanged,
 }: RuleInventoryTableProps): JSX.Element {
+  const [density] = useRowDensity();
   const gridRef = useRef<AgGridReact>(null);
 
   const columnDefs = useMemo<ColDef<RulePreview>[]>(() => [
@@ -161,7 +163,7 @@ export function RuleInventoryTable({
       columnDefs={columnDefs}
       rowData={rules}
       rowModelType="clientSide"
-      rowHeight={36}
+      rowHeight={ROW_HEIGHTS[density]}
       rowSelection="multiple"
       suppressRowClickSelection
       getRowId={({ data }) => (data as RulePreview).id}

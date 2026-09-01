@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import type { ColDef } from 'ag-grid-community';
 
 import { SiemDataGrid } from '@/components/siem-data-grid';
+import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
 
 export interface AlertTableRendererProps {
   data: unknown;
@@ -23,6 +24,7 @@ export interface AlertTableWidgetConfig {
 }
 
 export function AlertTableRenderer({ data, config, height = '100%' }: AlertTableRendererProps): React.JSX.Element {
+  const [density] = useRowDensity();
   const alerts = parseAlertData(data);
 
   const columnDefs = useMemo<ColDef[]>(
@@ -95,6 +97,7 @@ export function AlertTableRenderer({ data, config, height = '100%' }: AlertTable
       columnDefs={columnDefs}
       rowData={filteredAlerts}
       height={height}
+      rowHeight={ROW_HEIGHTS[density]}
       rowSelection="single"
       defaultColDef={{
         sortable: true,

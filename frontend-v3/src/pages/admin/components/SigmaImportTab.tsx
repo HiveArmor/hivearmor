@@ -24,6 +24,7 @@ import { HaButton } from '@/components/ha-button';
 import { HaDrawer } from '@/components/ha-drawer';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { useAppConfig } from '@/hooks/useAppConfig';
+import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
 import { useSigmaRules, useSigmaSync } from '@/hooks/useSigmaRules';
 import { ROLES } from '@/lib/roles';
 import { useAuthStore } from '@/store/auth.store';
@@ -314,6 +315,7 @@ function SyncNowButton({
 // ---------------------------------------------------------------------------
 
 export function SigmaImportTab(): JSX.Element {
+  const [density] = useRowDensity();
   // Auth state
   const { hasRole } = useAuthStore();
   const isAdmin = hasRole(ROLES.ADMIN);
@@ -604,7 +606,7 @@ export function SigmaImportTab(): JSX.Element {
         <SiemDataGrid
           columnDefs={columnDefs}
           rowData={rules ?? []}
-          rowHeight={32}
+          rowHeight={ROW_HEIGHTS[density]}
           paginationPageSize={25}
           loading={isLoading}
           onRowClicked={handleRowClicked}

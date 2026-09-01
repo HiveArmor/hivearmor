@@ -1,5 +1,5 @@
 /** Shared data-density and clipping contract for every Response Automation grid. */
-.response-grid.ag-theme-quartz-dark.ha-grid {
+.response-grid.ha-grid {
   --ag-header-height: 34px;
   --ag-cell-horizontal-padding: 10px;
   --ag-row-hover-color: var(--ha-surface-hover);

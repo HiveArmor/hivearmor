@@ -1,10 +1,10 @@
 /**
  * HiveArmor AG Grid theme overrides.
- * Applied on top of ag-grid-community ag-theme-quartz-dark.
+ * Applied on top of ag-grid-community quartz themes via .ha-grid (light/dark class from SiemDataGrid).
  * All colors reference CSS custom properties — no hardcoded hex.
  */
 
-.ag-theme-quartz-dark.ha-grid {
+.ha-grid {
   --ag-background-color:           var(--ha-surface-primary);
   --ag-foreground-color:           var(--ha-text-primary);
   --ag-header-background-color:    var(--ha-surface-raised);
@@ -31,7 +31,7 @@
 /* AG Grid 36 scopes the legacy Quartz variables on the generated root wrapper.
  * Repeat the semantic token bridge there so its bundled defaults cannot win the
  * cascade and reintroduce the stock blue/grey palette. */
-.ag-theme-quartz-dark.ha-grid .ag-root-wrapper {
+.ha-grid .ag-root-wrapper {
   --ag-background-color:           var(--ha-surface-primary);
   --ag-foreground-color:           var(--ha-text-primary);
   --ag-header-background-color:    var(--ha-surface-raised);
@@ -47,24 +47,24 @@
   color: var(--ha-text-primary);
 }
 
-.ag-theme-quartz-dark.ha-grid .ag-header {
+.ha-grid .ag-header {
   background: var(--ha-surface-raised);
 }
 
-.ag-theme-quartz-dark.ha-grid .ag-row {
+.ha-grid .ag-row {
   background: var(--ha-surface-primary);
   color: var(--ha-text-primary);
 }
 
-.ag-theme-quartz-dark.ha-grid .ag-row-odd {
+.ha-grid .ag-row-odd {
   background: color-mix(in srgb, var(--ha-surface-primary) 97%, var(--ha-action-primary));
 }
 
-.ag-theme-quartz-dark.ha-grid .ag-row-hover {
+.ha-grid .ag-row-hover {
   background: color-mix(in srgb, var(--ha-surface-primary) 92%, var(--ha-action-primary));
 }
 
-.ag-theme-quartz-dark.ha-grid .ag-header-cell-label {
+.ha-grid .ag-header-cell-label {
   font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
@@ -72,22 +72,22 @@
   color: var(--ha-text-secondary);
 }
 
-.ag-theme-quartz-dark.ha-grid .ag-row-selected {
+.ha-grid .ag-row-selected {
   background-color: color-mix(in srgb, var(--ha-action-primary) 13%, transparent) !important;
 }
 
-.ag-theme-quartz-dark.ha-grid .ag-paging-panel {
+.ha-grid .ag-paging-panel {
   background-color: var(--ha-surface-raised);
   border-top: 1px solid var(--ha-border);
   color: var(--ha-text-secondary);
   font-size: 12px;
 }
 
-.ag-theme-quartz-dark.ha-grid .ag-sort-indicator-icon {
+.ha-grid .ag-sort-indicator-icon {
   color: var(--ha-primary);
 }
 
 /* Loading overlay */
-.ag-theme-quartz-dark.ha-grid .ag-loading-overlay {
+.ha-grid .ag-loading-overlay {
   background: color-mix(in srgb, var(--ha-surface-app) 88%, transparent);
 }

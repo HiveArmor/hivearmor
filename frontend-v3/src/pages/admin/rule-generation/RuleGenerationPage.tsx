@@ -41,6 +41,7 @@ import { SiemPageHeader } from '@/components/ha-page-header/SiemPageHeader';
 import { LoadingState } from '@/components/loading-state/LoadingState';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { useToastStore } from '@/components/toast-stack/toastStore';
+import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
 import { ruleGenerationService } from '@/services/ruleGeneration.service';
 import type { RuleGenSessionDTO, SignalSummaryDTO } from '@/types/ruleGeneration.types';
 import { RuleGenerationError } from '@/types/ruleGeneration.types';
@@ -433,6 +434,7 @@ interface PendingQueueSectionProps {
  * and renders them in a SiemDataGrid. Row activation triggers the drawer.
  */
 function PendingQueueSection({ onRowActivate }: PendingQueueSectionProps): JSX.Element {
+  const [density] = useRowDensity();
   const {
     data: pendingSessions,
     isLoading,
@@ -498,7 +500,7 @@ function PendingQueueSection({ onRowActivate }: PendingQueueSectionProps): JSX.E
           <SiemDataGrid
             columnDefs={PENDING_COLUMNS}
             rowData={pendingSessions}
-            rowHeight={36}
+            rowHeight={ROW_HEIGHTS[density]}
             paginationPageSize={10}
             onRowClicked={handleRowClicked}
             height="100%"

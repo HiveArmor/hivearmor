@@ -20,6 +20,7 @@ import { LoadingState } from "@/components/loading-state/LoadingState";
 import { SiemDataGrid } from "@/components/siem-data-grid/SiemDataGrid";
 import { ROUTES } from "@/constants/routes.constants";
 import { useMsspNavStore } from "@/features/mssp/store/msspNavStore";
+import { ROW_HEIGHTS, useRowDensity } from "@/hooks/useRowDensity";
 
 import "./TenantsListPage.css";
 
@@ -131,6 +132,7 @@ function EmptyHonesty(): ReactElement {
 }
 
 export function TenantsListPage(): ReactElement {
+  const [density] = useRowDensity();
   const navigate = useNavigate();
   const setLastTenantId = useMsspNavStore((s) => s.setLastTenantId);
 
@@ -290,6 +292,7 @@ export function TenantsListPage(): ReactElement {
               columnDefs={TENANTS_COLUMN_DEFS}
               rowData={items as TenantHealthDTO[]}
               height="100%"
+              rowHeight={ROW_HEIGHTS[density]}
               defaultColDef={{ resizable: true, sortable: true }}
               onRowClicked={handleRowClick}
             />

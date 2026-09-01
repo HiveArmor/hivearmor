@@ -30,6 +30,7 @@ import { HaChart } from "@/components/ha-chart/HaChart";
 import { LoadingState } from "@/components/loading-state/LoadingState";
 import { SiemDataGrid } from "@/components/siem-data-grid/SiemDataGrid";
 import { ROUTES } from "@/constants/routes.constants";
+import { ROW_HEIGHTS, useRowDensity } from "@/hooks/useRowDensity";
 
 import "./MsspOverviewPage.css";
 
@@ -244,6 +245,7 @@ function buildBarChartOption(data: MsspOverviewDTO): EChartsOption {
 }
 
 export function MsspOverviewPage(): ReactElement {
+  const [density] = useRowDensity();
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["mssp", "overview"] as const,
     queryFn: fetchMsspOverview,
@@ -298,6 +300,7 @@ export function MsspOverviewPage(): ReactElement {
           columnDefs={TENANTS_COLUMN_DEFS}
           rowData={data.tenants as TenantHealthDTO[]}
           height="100%"
+          rowHeight={ROW_HEIGHTS[density]}
           defaultColDef={{ resizable: true, sortable: true }}
         />
       </div>

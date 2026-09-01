@@ -11,6 +11,7 @@ import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { Link } from 'react-router-dom';
 
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
 import type { UserRiskDTO } from '@/types/ueba.types';
 
 export interface UserRiskTableProps {
@@ -28,6 +29,7 @@ export function UserRiskTable({
   onViewTimeline,
   onCreateIncident,
 }: UserRiskTableProps): JSX.Element {
+  const [density] = useRowDensity();
   const handleViewTimeline = useCallback(
     (userId: string) => {
       onViewTimeline?.(userId);
@@ -138,7 +140,7 @@ export function UserRiskTable({
           rowData={data ?? []}
           height="100%"
           loading={isLoading}
-          rowHeight={40}
+          rowHeight={ROW_HEIGHTS[density]}
           defaultColDef={{ resizable: true }}
           getRowId={(params) => (params.data as UserRiskDTO).userId}
         />
