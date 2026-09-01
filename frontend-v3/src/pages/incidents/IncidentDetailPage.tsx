@@ -61,6 +61,7 @@ import { HaSelect } from '@/components/ha-select/HaSelect';
 import { LoadingState } from '@/components/loading-state/LoadingState';
 import { SlaIndicator } from '@/components/sla-indicator/SlaIndicator';
 import type { IncidentStatus } from '@/constants/status.constants';
+import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
 import { ROLE_LABELS, ROLES } from '@/lib/roles';
 import { ALERT_COLUMNS_DEFAULT } from '@/pages/alerts/alertColumns';
 import {
@@ -196,6 +197,7 @@ export function IncidentDetailPage(): JSX.Element {
   });
 
   const { hasRole } = useAuthStore();
+  const [density] = useRowDensity();
   const canEdit = hasRole(ROLES.ANALYST) || hasRole(ROLES.SOC_MANAGER) || hasRole(ROLES.ADMIN);
 
   const incidentQuery = useQuery({
@@ -612,7 +614,7 @@ export function IncidentDetailPage(): JSX.Element {
                           <SiemDataGrid
                             columnDefs={ALERT_COLUMNS_DEFAULT}
                             rowData={alertsQuery.data?.items ?? []}
-                            rowHeight={34}
+                            rowHeight={ROW_HEIGHTS[density]}
                             rowModelType="clientSide"
                             height="100%"
                             onRowClicked={(event: RowClickedEvent) => {

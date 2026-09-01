@@ -134,7 +134,7 @@
 .entity-column-picker__menu input { accent-color: var(--ha-action-primary); }
 
 .entity-grid-shell { position: relative; min-height: 240px; flex: 1; overflow: hidden; }
-.entity-grid.ag-theme-quartz-dark.ha-grid { --ag-header-height: 33px; --ag-cell-horizontal-padding: 8px; --ag-row-hover-color: var(--ha-surface-hover); --ag-selected-row-background-color: var(--ha-surface-selected); }
+.entity-grid.ha-grid { --ag-header-height: 33px; --ag-cell-horizontal-padding: 8px; --ag-row-hover-color: var(--ha-surface-hover); --ag-selected-row-background-color: var(--ha-surface-selected); }
 .entity-grid .ag-row { cursor: pointer; }
 .entity-grid .ag-cell { font-size: 11px; }
 .entity-grid .entity-grid__mono { font-family: var(--ha-font-mono); font-variant-numeric: tabular-nums; }

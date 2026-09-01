@@ -127,7 +127,7 @@
 .entity-dossier-data-view > header strong, .entity-relationships > header strong { color: var(--ha-foreground-primary); font-size: 11px; }
 .entity-dossier-data-view > header small, .entity-relationships > header small { margin-top: 1px; color: var(--ha-foreground-tertiary); }
 .entity-dossier-grid-shell { position: relative; min-height: 280px; flex: 1; overflow: hidden; }
-.entity-dossier-grid.ag-theme-quartz-dark.ha-grid { --ag-header-height: 33px; --ag-cell-horizontal-padding: 8px; --ag-row-hover-color: var(--ha-surface-hover); }
+.entity-dossier-grid.ha-grid { --ag-header-height: 33px; --ag-cell-horizontal-padding: 8px; --ag-row-hover-color: var(--ha-surface-hover); }
 .entity-dossier-grid .ag-row { cursor: pointer; }
 .entity-dossier-grid .ag-cell { font-size: 10.5px; }
 .entity-dossier-grid .entity-dossier-grid__mono { font-family: var(--ha-font-mono); font-variant-numeric: tabular-nums; }

@@ -369,7 +369,7 @@
 
 .alert-grid-region { position: relative; min-height: 260px; flex: 1 1 auto; padding: 0; overflow: hidden; background: var(--ha-surface-panel); }
 .alert-grid-region .ag-root-wrapper { border: 0; border-radius: 0; }
-.alert-triage-grid.ag-theme-quartz-dark.ha-grid { --ag-header-height: 38px; --ag-cell-horizontal-padding: 10px; --ag-row-hover-color: color-mix(in srgb, var(--ha-action-primary) 8%, transparent); --ag-selected-row-background-color: color-mix(in srgb, var(--ha-action-primary) 14%, transparent); }
+.alert-triage-grid.ha-grid { --ag-header-height: 38px; --ag-cell-horizontal-padding: 10px; --ag-row-hover-color: color-mix(in srgb, var(--ha-action-primary) 8%, transparent); --ag-selected-row-background-color: color-mix(in srgb, var(--ha-action-primary) 14%, transparent); }
 .alert-triage-grid .ag-header { border-bottom-color: var(--ha-border-default); }
 .alert-triage-grid .ag-header-cell { border-right-color: var(--ha-border-subtle); }
 .alert-triage-grid .ag-header-cell-text { color: var(--ha-foreground-secondary); font: var(--ha-type-metadata); font-weight: 700; letter-spacing: .06em; }

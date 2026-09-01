@@ -8,6 +8,7 @@ import type { ColDef, RowClickedEvent } from 'ag-grid-community';
 import { useNavigate } from 'react-router-dom';
 
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
 import type { IncidentDTO } from '@/types/api.types';
 
 export interface RecentIncidentsTableProps {
@@ -171,6 +172,7 @@ export function RecentIncidentsTable({
   incidents,
   loading,
 }: RecentIncidentsTableProps): JSX.Element {
+  const [density] = useRowDensity();
   const navigate = useNavigate();
 
   const handleRowClicked = (event: RowClickedEvent): void => {
@@ -266,7 +268,7 @@ export function RecentIncidentsTable({
           <SiemDataGrid
             columnDefs={INCIDENT_COLUMNS}
             rowData={incidents}
-            rowHeight={40}
+            rowHeight={ROW_HEIGHTS[density]}
             rowModelType="clientSide"
             height="200px"
             onRowClicked={handleRowClicked}

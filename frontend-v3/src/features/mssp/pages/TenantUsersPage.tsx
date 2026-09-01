@@ -27,6 +27,7 @@ import { HaConfirmationModal } from "@/components/ha-confirmation-modal/HaConfir
 import { LoadingState } from "@/components/loading-state/LoadingState";
 import { SiemDataGrid } from "@/components/siem-data-grid/SiemDataGrid";
 import { ROUTES } from "@/constants/routes.constants";
+import { ROW_HEIGHTS, useRowDensity } from "@/hooks/useRowDensity";
 
 import "./TenantUsersPage.css";
 
@@ -265,6 +266,7 @@ function AddMemberForm({ tenantId }: AddMemberFormProps): ReactElement {
 }
 
 export function TenantUsersPage(): ReactElement {
+  const [density] = useRowDensity();
   const { tenantId } = useParams<{ tenantId: string }>();
   const safeId = tenantId ?? "";
 
@@ -509,6 +511,7 @@ export function TenantUsersPage(): ReactElement {
             columnDefs={columnDefs}
             rowData={members as TenantMemberDTO[]}
             height="100%"
+            rowHeight={ROW_HEIGHTS[density]}
             defaultColDef={{ resizable: true }}
           />
         </div>

@@ -90,7 +90,7 @@
 
 .detection-grid-shell { position: relative; min-height: 50vh; flex: 1; overflow: hidden; }
 .detection-grid-shell > .ha-grid { position: absolute; inset: 0; height: auto !important; }
-.detection-grid.ag-theme-quartz-dark.ha-grid { --ag-header-height: 33px; --ag-cell-horizontal-padding: 8px; --ag-row-hover-color: var(--ha-surface-hover); --ag-selected-row-background-color: var(--ha-surface-selected); }
+.detection-grid.ha-grid { --ag-header-height: 33px; --ag-cell-horizontal-padding: 8px; --ag-row-hover-color: var(--ha-surface-hover); --ag-selected-row-background-color: var(--ha-surface-selected); }
 .detection-grid .ag-row { cursor: pointer; }
 .detection-grid .ag-cell { font-size: 11px; }
 .detection-grid .detection-grid__numeric { text-align: right; font-family: var(--ha-font-mono); }

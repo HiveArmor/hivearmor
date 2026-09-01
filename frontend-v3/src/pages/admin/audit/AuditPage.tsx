@@ -15,6 +15,7 @@ import { HaButton } from '@/components/ha-button/HaButton';
 import { SiemPageHeader } from '@/components/ha-page-header/SiemPageHeader';
 import { LoadingState } from '@/components/loading-state/LoadingState';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
+import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
 import { ApiError, apiClient } from '@/lib/apiClient';
 import { downloadAuditLogExport } from '@/services/auditLog.service';
 import { useAuthStore } from '@/store/auth.store';
@@ -43,6 +44,7 @@ async function getAuditLog(filters: AuditLogFilters): Promise<{ data: AuditLogDT
 }
 
 export function AuditPage(): JSX.Element {
+  const [density] = useRowDensity();
   const { hasRole } = useAuthStore();
   const isAdmin = hasRole('ROLE_ADMIN');
 
@@ -363,6 +365,7 @@ export function AuditPage(): JSX.Element {
                 columnDefs={columnDefs}
                 rowData={data.data}
                 height="100%"
+                rowHeight={ROW_HEIGHTS[density]}
                 getRowId={(params) => (params.data as AuditLogDTO).id}
               />
             </div>

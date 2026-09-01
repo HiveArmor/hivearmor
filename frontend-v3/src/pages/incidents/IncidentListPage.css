@@ -334,7 +334,7 @@
   min-height: 50%;
   overflow: hidden;
 }
-.incident-grid.ag-theme-quartz-dark.ha-grid {
+.incident-grid.ha-grid {
   --ag-header-height: 34px;
   --ag-cell-horizontal-padding: 10px;
   --ag-row-hover-color: color-mix(in srgb, var(--ha-primary) 8%, transparent);

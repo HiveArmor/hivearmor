@@ -30,6 +30,7 @@ import { HaModal } from '@/components/ha-modal/HaModal';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { useEdrTimeline } from '@/hooks/useEdrTimeline';
 import { useProcessTree } from '@/hooks/useProcessTree';
+import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
 import { defineHiveArmorMonacoTheme } from '@/lib/monacoTheme';
 import { useThemeStore } from '@/store/theme.store';
 import type { EdrEventDTO, EdrEventType, EdrTimelineQuery } from '@/types/edr';
@@ -478,6 +479,7 @@ function FilterBar({
 // ---------------------------------------------------------------------------
 
 export function EndpointTimelinePage(): JSX.Element {
+  const [density] = useRowDensity();
   const { agentId = '' } = useParams<{ agentId: string }>();
 
   // ── Filter state ──────────────────────────────────────────────────────────
@@ -689,7 +691,7 @@ export function EndpointTimelinePage(): JSX.Element {
             <SiemDataGrid
               columnDefs={columnDefs}
               rowData={events}
-              rowHeight={32}
+              rowHeight={ROW_HEIGHTS[density]}
               height="100%"
               getRowId={(params) => String((params.data as EdrEventDTO).id)}
               onRowClicked={(event) => {

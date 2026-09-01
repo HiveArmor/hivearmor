@@ -22,6 +22,13 @@ describe('SiemDataGrid', () => {
     expect(src.includes('import type')).toBe(true);
   });
 
+  it('selects AG Grid theme class from useThemeStore', () => {
+    const src = readFileSync(join(__dirname, 'SiemDataGrid.tsx'), 'utf-8');
+    expect(src).toContain('useThemeStore');
+    expect(src).toContain("theme === 'light' ? 'ag-theme-quartz' : 'ag-theme-quartz-dark'");
+    expect(src).not.toContain('className={`ag-theme-quartz-dark ha-grid');
+  });
+
   it('no hardcoded hex colors', () => {
     const src = readFileSync(join(__dirname, 'SiemDataGrid.tsx'), 'utf-8');
     expect(src.match(/#[0-9a-fA-F]{6}\b/)).toBeFalsy();

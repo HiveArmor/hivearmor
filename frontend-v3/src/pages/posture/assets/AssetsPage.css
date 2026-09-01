@@ -259,7 +259,7 @@
   overflow: hidden;
 }
 .ast-grid-wrap { min-height: 0; flex: 1 1 auto; overflow: hidden; }
-.ast-grid.ag-theme-quartz-dark.ha-grid { height: 100%; border: 0; border-radius: 0; }
+.ast-grid.ha-grid { height: 100%; border: 0; border-radius: 0; }
 .ast-grid .ag-row-focus { box-shadow: inset 2px 0 0 var(--ha-action-primary); }
 .ast-primary-cell { min-width: 0; height: 100%; gap: 8px; }
 .ast-primary-cell > span:last-child { min-width: 0; align-items: flex-start; flex-direction: column; gap: 2px; }

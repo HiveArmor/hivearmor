@@ -449,7 +449,7 @@
 .hunt-column-picker__reset { display: block; width: 100%; margin-top: 4px; padding: 6px 8px; border: none; border-top: 1px solid var(--ha-border-subtle); border-radius: 0 0 4px 4px; background: transparent; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); cursor: pointer; text-align: center; }
 .hunt-column-picker__reset:hover { color: var(--ha-action-primary); background: var(--ha-surface-hover); }
 .hunt-grid-shell { position: relative; height: clamp(360px, calc(100dvh - 360px), 640px); min-height: 50%; flex: 1 0 auto; overflow: hidden; }
-.hunt-results-grid.ag-theme-quartz-dark.ha-grid { --ag-header-height: 32px; --ag-cell-horizontal-padding: 8px; --ag-row-hover-color: var(--ha-surface-hover); --ag-selected-row-background-color: var(--ha-surface-selected); }
+.hunt-results-grid.ha-grid { --ag-header-height: 32px; --ag-cell-horizontal-padding: 8px; --ag-row-hover-color: var(--ha-surface-hover); --ag-selected-row-background-color: var(--ha-surface-selected); }
 .hunt-results-grid .ag-row { cursor: pointer; }
 .hunt-results-grid .ag-cell { font-size: 11px; }
 .hunt-results-grid .hunt-grid__mono { font-family: var(--ha-font-mono); font-variant-numeric: tabular-nums; }
