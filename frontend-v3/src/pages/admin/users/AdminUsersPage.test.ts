@@ -1,11 +1,26 @@
 /**
- * AdminUsersPage tests
+ * AdminUsersPage — Wave C2 slice 1 honesty tests
  * ADM-01 Users & Roles
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
+import { ADMIN_USERS_JOB_SENTENCE } from './AdminUsersPage';
 
 describe('AdminUsersPage', () => {
+  it('exports AdminUsersPage component', async () => {
+    const module = await import('./AdminUsersPage.tsx');
+    expect(module.AdminUsersPage).toBeDefined();
+    expect(typeof module.AdminUsersPage).toBe('function');
+  });
+
+  it('exports identity-tenancy job sentence distinct from posture and audit surfaces', () => {
+    expect(ADMIN_USERS_JOB_SENTENCE).toMatch(/Identity & Tenancy/i);
+    expect(ADMIN_USERS_JOB_SENTENCE).toMatch(/Identities/i);
+    expect(ADMIN_USERS_JOB_SENTENCE).toMatch(/fail-closed/i);
+    expect(ADMIN_USERS_JOB_SENTENCE).not.toMatch(/PRODUCTION READY/i);
+  });
+
   describe('role badge mapping', () => {
     it('maps ROLE_ADMIN correctly', () => {
       const ROLE_ADMIN = 'ROLE_ADMIN';

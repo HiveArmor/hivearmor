@@ -16,6 +16,7 @@ import { HaFormGroup } from '@/components/ha-form-group';
 import { HaSelect } from '@/components/ha-select';
 import { HaTextInput } from '@/components/ha-text-input';
 import { HaToggle } from '@/components/ha-toggle';
+import { formatAuthorityLabel } from '@/lib/roles';
 
 export interface UserDrawerProps {
   isOpen: boolean;
@@ -308,7 +309,10 @@ export function UserDrawer({
               value={formData.authorities[0] ?? ''}
               onChange={(value) => handleChange('authorities', [value])}
               placeholder="Select a role"
-              options={selectableRoles.map((auth) => ({ value: auth.name, label: auth.name }))}
+              options={selectableRoles.map((auth) => ({
+                value: auth.name,
+                label: formatAuthorityLabel(auth.name),
+              }))}
             />
           </HaFormGroup>
 
