@@ -9,9 +9,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ChevronRight, Copy, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+
 import { QUEUE_TRIAGE_DENIED } from '../analystQueue.capabilities';
 
 import type { AlertDetailDTO, AlertSideDTO, RelatedAlertDTO } from '@/components/alert-context-drawer/alertContextDrawer.types';
+import { HaDefinitionList } from '@/components/ha-definition-list';
 import { ALERT_STATUS } from '@/constants/status.constants';
 import type { AlertStatus } from '@/constants/status.constants';
 import { apiClient } from '@/lib/apiClient';
@@ -79,38 +81,17 @@ function EntityObservableCard({ title, data }: { title: string; data: AlertSideD
       <div style={{ fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-secondary)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         {title}
       </div>
-      <dl style={{ margin: 0, padding: 8, background: 'var(--ha-surface-raised)', borderRadius: 'var(--ha-radius-base)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {data.ip && (
-          <>
-            <dt style={{ fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-secondary)', fontWeight: 600 }}>IP Address</dt>
-            <dd style={{ margin: 0, fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-primary)', fontFamily: 'var(--ha-font-mono)' }}>{data.ip}</dd>
-          </>
-        )}
-        {data.hostname && (
-          <>
-            <dt style={{ fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-secondary)', fontWeight: 600 }}>Hostname</dt>
-            <dd style={{ margin: 0, fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-primary)', fontFamily: 'var(--ha-font-mono)' }}>{data.hostname}</dd>
-          </>
-        )}
-        {data.processName && (
-          <>
-            <dt style={{ fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-secondary)', fontWeight: 600 }}>Process</dt>
-            <dd style={{ margin: 0, fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-primary)', fontFamily: 'var(--ha-font-mono)' }}>{data.processName}</dd>
-          </>
-        )}
-        {data.username && (
-          <>
-            <dt style={{ fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-secondary)', fontWeight: 600 }}>Username</dt>
-            <dd style={{ margin: 0, fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-primary)', fontFamily: 'var(--ha-font-mono)' }}>{data.username}</dd>
-          </>
-        )}
-        {data.networkIds.length > 0 && (
-          <>
-            <dt style={{ fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-secondary)', fontWeight: 600 }}>Network IDs</dt>
-            <dd style={{ margin: 0, fontSize: 'var(--ha-text-sm)', color: 'var(--ha-text-primary)', fontFamily: 'var(--ha-font-mono)' }}>{data.networkIds.join(', ')}</dd>
-          </>
-        )}
-      </dl>
+      <div style={{ padding: 8, background: 'var(--ha-surface-raised)', borderRadius: 'var(--ha-radius-base)' }}>
+        <HaDefinitionList
+          items={[
+            { term: 'IP Address', value: data.ip, mono: true },
+            { term: 'Hostname', value: data.hostname, mono: true },
+            { term: 'Process', value: data.processName, mono: true },
+            { term: 'Username', value: data.username, mono: true },
+            { term: 'Network IDs', value: data.networkIds.length > 0 ? data.networkIds.join(', ') : '', mono: true },
+          ]}
+        />
+      </div>
     </div>
   );
 }
