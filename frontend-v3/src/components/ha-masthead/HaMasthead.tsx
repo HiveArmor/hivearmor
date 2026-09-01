@@ -9,6 +9,7 @@ import { DataHealthBadge } from './DataHealthBadge';
 import { HelpButton } from './HelpButton';
 import { HiveArmorLogo } from './HiveArmorLogo';
 import { LiveEpsBadge } from './LiveEpsBadge';
+import { MastheadClock } from './MastheadClock';
 import { NotificationsBell } from './NotificationsBell';
 
 import { useMastheadTenants } from '@/hooks/useMastheadTenants';
@@ -72,10 +73,7 @@ export function HaMasthead(_props: HaMastheadProps): JSX.Element {
         <HiveArmorLogo size={28} />
         <span className="ha-masthead__wordmark">HiveArmor</span>
         <span className="ha-masthead__product-kicker">Security operations</span>
-      </div>
-
-      <div className="ha-masthead__context">
-        <div className="ha-context-menu" ref={tenantMenuRef}>
+        <div className="ha-context-menu ha-context-menu--brand" ref={tenantMenuRef}>
           <button
             type="button"
             className="ha-context-button"
@@ -131,6 +129,9 @@ export function HaMasthead(_props: HaMastheadProps): JSX.Element {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="ha-masthead__context">
         <button className="ha-search-trigger" type="button" onClick={() => navigate('/search')}>
           <Search size={15} aria-hidden="true" />
           <span>Search alerts, incidents, entities…</span>
@@ -148,6 +149,7 @@ export function HaMasthead(_props: HaMastheadProps): JSX.Element {
 
       <div className="ha-masthead__actions">
         <DataHealthBadge />
+        <MastheadClock />
         <LiveEpsBadge />
         <NotificationsBell />
         <HelpButton />

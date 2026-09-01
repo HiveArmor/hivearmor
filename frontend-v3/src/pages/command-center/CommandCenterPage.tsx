@@ -32,6 +32,7 @@ import {
 
 import { HaChart } from '@/components/ha-chart';
 import { useAlertStream } from '@/hooks/useAlertStream';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import {
   foundationActivity,
@@ -151,9 +152,7 @@ export function CommandCenterPage(): JSX.Element {
     enabled: !fixtureMode,
   });
 
-  useEffect(() => {
-    document.title = 'Mission Control — HiveArmor';
-  }, []);
+  useDocumentTitle('Mission Control');
 
   useEffect(() => {
     if (

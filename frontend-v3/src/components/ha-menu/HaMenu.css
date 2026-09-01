@@ -1,0 +1,77 @@
+/**
+ * HaMenu styles — token-only. The menu surface + z-index come from HaPopover; this styles the
+ * item list, action items, checkbox rows, and section labels (merged from the Detection + Entity
+ * column-picker CSS the two pages hand-rolled).
+ */
+
+.ha-menu__list {
+  display: grid;
+  gap: 1px;
+  padding: 5px;
+  max-height: min(390px, calc(100vh - 210px));
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.ha-menu__label {
+  padding: 5px 7px 7px;
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.ha-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 4px 7px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ha-menu__item:hover:not(:disabled) {
+  background: var(--ha-surface-hover);
+  color: var(--ha-foreground-primary);
+}
+
+.ha-menu__item:disabled {
+  color: var(--ha-foreground-disabled);
+  cursor: not-allowed;
+}
+
+.ha-menu__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 4px 7px;
+  border-radius: 4px;
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+  cursor: pointer;
+}
+
+.ha-menu__checkbox:hover {
+  background: var(--ha-surface-hover);
+  color: var(--ha-foreground-primary);
+}
+
+.ha-menu__checkbox:has(input:disabled) {
+  color: var(--ha-foreground-disabled);
+  cursor: not-allowed;
+}
+
+.ha-menu__checkbox input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--ha-action-primary);
+}

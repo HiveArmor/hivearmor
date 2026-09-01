@@ -14,6 +14,7 @@
  * Zustand stores are mocked so the component renders in isolation.
  */
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, test, expect, vi, beforeEach } from "vitest";
@@ -74,10 +75,13 @@ vi.mock("@/store/auth.store", () => ({
 // ---------------------------------------------------------------------------
 
 function renderNav() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter>
-      <HaNavigation />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <HaNavigation />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

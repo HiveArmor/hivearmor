@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { EntityTypeIcon, entityTypeLabel } from '@/components/entity-type-icon';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
+import { HaMenu } from '@/components/ha-menu';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -138,7 +139,6 @@ export function EntityListPage(): JSX.Element {
   const [sort, setSort] = useState<SortMode>('risk_desc');
   const [density, setDensity] = useRowDensity();
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS);
-  const [columnsOpen, setColumnsOpen] = useState(false);
   const [cursorStack, setCursorStack] = useState<Array<string | null>>([null]);
   const [pageIndex, setPageIndex] = useState(0);
   const [activeEntity, setActiveEntity] = useState<EntityDTO | null>(null);
@@ -333,7 +333,7 @@ export function EntityListPage(): JSX.Element {
             {selectedEntities.length > 0 && <span className="entity-selection-count">{selectedEntities.length} selected</span>}
             {hasActiveFilters && <button className="entity-text-button" type="button" onClick={resetFilters}><Filter size={13} /> Clear filters</button>}
             <div className="entity-density-control" role="group" aria-label="Row density"><span>Rows</span><div>{(['compact', 'standard', 'comfortable'] as RowDensity[]).map((item) => <button key={item} type="button" aria-label={`${item} rows`} aria-pressed={density === item} onClick={() => setDensity(item)}><DensityGlyph density={item} /></button>)}</div></div>
-            <div className="entity-column-picker"><button className="entity-text-button" type="button" aria-expanded={columnsOpen} onClick={() => setColumnsOpen((open) => !open)}><Columns3 size={14} /> Columns</button>{columnsOpen && <div className="entity-column-picker__menu">{COLUMN_OPTIONS.map(([id, label]) => <label key={id}><input type="checkbox" checked={visibleColumns.includes(id)} disabled={id === 'name'} onChange={() => setVisibleColumns((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id])} /><span>{label}</span></label>)}</div>}</div>
+            <div className="entity-column-picker"><HaMenu ariaLabel="Visible columns" width={210} trigger={<button className="entity-text-button" type="button"><Columns3 size={14} /> Columns</button>}>{COLUMN_OPTIONS.map(([id, label]) => <HaMenu.CheckboxItem key={id} checked={visibleColumns.includes(id)} disabled={id === 'name'} onToggle={() => setVisibleColumns((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id])}>{label}</HaMenu.CheckboxItem>)}</HaMenu></div>
           </div>
         </div>
 

@@ -14,6 +14,7 @@ import type { NavItemSpec } from './types';
 
 import { UserAvatarMenu } from '@/components/ha-masthead/UserAvatarMenu';
 import { useMsspNavStore } from '@/features/mssp/store/msspNavStore';
+import { useOpenAlertCount } from '@/hooks/useOpenAlertCount';
 import { hasAuthority } from '@/lib/auth/hasAuthority';
 import { ALERT_QUEUE_ROLES } from '@/services/findingStatus.capabilities';
 import { useAuthStore } from '@/store/auth.store';
@@ -124,6 +125,7 @@ export function HaNavigation(_props: HaNavigationProps): JSX.Element {
   const { theme, toggleTheme } = useThemeStore();
   const [hoverExpanded, setHoverExpanded] = useState(false);
   const { hasAnyRole } = useAuthStore();
+  const { count: openAlertCount } = useOpenAlertCount();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -142,7 +144,13 @@ export function HaNavigation(_props: HaNavigationProps): JSX.Element {
     });
   };
 
-  const commandItems = filterItemsByRole(COMMAND_ITEMS);
+  const commandItems = filterItemsByRole(COMMAND_ITEMS).map((item) =>
+    // Live nav badge: open-alert count on the queue + alerts entries (proof-of-pattern; NavItem
+    // already renders item.badge as a count when expanded / a dot when collapsed).
+    item.route === '/queue' || item.route === '/alerts'
+      ? { ...item, badge: openAlertCount }
+      : item,
+  );
   const investigateItems = filterItemsByRole(INVESTIGATE_ITEMS);
   const defendItems = filterItemsByRole(DEFEND_ITEMS);
   const postureItems = filterItemsByRole(POSTURE_ITEMS);

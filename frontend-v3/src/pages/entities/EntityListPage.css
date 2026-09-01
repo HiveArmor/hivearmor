@@ -128,10 +128,6 @@
 .entity-density-glyph i { display: block; width: 13px; height: 1px; border-radius: 1px; background: currentColor; }
 
 .entity-column-picker { position: relative; }
-.entity-column-picker__menu { position: absolute; z-index: 80; top: 34px; right: 0; display: grid; width: 210px; max-height: 320px; overflow-y: auto; padding: 5px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-elevated); box-shadow: var(--ha-shadow-control); scrollbar-width: thin; }
-.entity-column-picker__menu label { display: grid; min-height: 29px; grid-template-columns: 18px 1fr; align-items: center; gap: 5px; padding: 3px 6px; border-radius: 5px; cursor: pointer; }
-.entity-column-picker__menu label:hover { background: var(--ha-surface-hover); }
-.entity-column-picker__menu input { accent-color: var(--ha-action-primary); }
 
 .entity-grid-shell { position: relative; min-height: 240px; flex: 1; overflow: hidden; }
 .entity-grid.ha-grid { --ag-header-height: 33px; --ag-cell-horizontal-padding: 8px; --ag-row-hover-color: var(--ha-surface-hover); --ag-selected-row-background-color: var(--ha-surface-selected); }

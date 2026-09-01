@@ -1,0 +1,85 @@
+/**
+ * HaToolbar styles — token-only. The locked sticky control strip: transparent (no fill), pins under
+ * the masthead so page identity scrolls away while controls stay. Rebuilt from the dead SiemToolbar.
+ */
+
+.ha-toolbar {
+  background: var(--ha-surface-app);
+  border-bottom: 1px solid var(--ha-border-subtle);
+}
+
+.ha-toolbar--sticky {
+  position: sticky;
+  top: var(--ha-masthead-height);
+  z-index: var(--ha-z-sticky);
+}
+
+.ha-toolbar__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 16px;
+}
+
+.ha-toolbar__left,
+.ha-toolbar__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ha-toolbar__right {
+  margin-left: auto;
+}
+
+.ha-toolbar__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--ha-border-subtle);
+}
+
+.ha-toolbar__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--ha-action-primary) 30%, transparent);
+  border-radius: var(--ha-radius-pill);
+  background: var(--ha-fill-primary-subtle);
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-compact);
+}
+
+.ha-toolbar__chip-remove {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ha-foreground-tertiary);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.ha-toolbar__chip-remove:hover {
+  color: var(--ha-foreground-primary);
+}
+
+.ha-toolbar__clear {
+  padding: 4px 8px;
+  border: 0;
+  background: none;
+  color: var(--ha-action-secondary);
+  font: var(--ha-type-compact);
+  cursor: pointer;
+}
+
+.ha-toolbar__clear:hover {
+  text-decoration: underline;
+}

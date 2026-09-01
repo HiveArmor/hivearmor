@@ -1,0 +1,44 @@
+/**
+ * HaDefinitionList styles — token-only. Semantic dl/dt/dd key-value list extracted from the
+ * app's many hand-built detail lists. Value font follows the value-color rule (mono = identifier).
+ */
+
+.ha-dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ha-dl__term {
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+  font-weight: 600;
+}
+
+.ha-dl__value {
+  margin: 0;
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-compact);
+  word-break: break-word;
+}
+
+.ha-dl__value--mono {
+  font-family: var(--ha-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stacked: term above value (narrow drawers). */
+.ha-dl--stacked .ha-dl__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Inline: term | value two-column (wider panels). */
+.ha-dl--inline .ha-dl__row {
+  display: grid;
+  grid-template-columns: minmax(96px, 34%) 1fr;
+  gap: 12px;
+  align-items: baseline;
+}

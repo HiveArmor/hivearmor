@@ -17,6 +17,7 @@ import type { DetectionRule, DetectionRuleSummary, RuleListParams } from './dete
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
+import { HaMenu } from '@/components/ha-menu';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { ROUTES } from '@/constants/routes.constants';
@@ -93,7 +94,6 @@ export function DetectionRulesPage(): JSX.Element {
   const [pageIndex, setPageIndex] = useState(0);
   const [density, setDensity] = useRowDensity();
   const [importOpen, setImportOpen] = useState(false);
-  const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS);
   const [selectedRules, setSelectedRules] = useState<DetectionRule[]>([]);
   const [activeRule, setActiveRule] = useState<DetectionRule | null>(null);
@@ -311,27 +311,29 @@ export function DetectionRulesPage(): JSX.Element {
             {hasFilters && <button type="button" onClick={resetFilters}><Filter size={13} /> Clear filters</button>}
             <div className="detection-density" role="group" aria-label="Row density"><span>Rows</span><div>{(['compact', 'standard', 'comfortable'] as RowDensity[]).map((item) => <button key={item} type="button" aria-label={`${item} rows`} aria-pressed={density === item} onClick={() => setDensity(item)}><DensityGlyph density={item} /></button>)}</div></div>
             <div className="detection-column-picker">
-              <button type="button" aria-haspopup="menu" aria-expanded={columnsOpen} onClick={() => setColumnsOpen((open) => !open)}>
-                <Columns3 size={14} /> Columns
-              </button>
-              {columnsOpen && (
-                <div className="detection-column-picker__menu" role="menu" aria-label="Visible detection rule columns">
-                  <strong>Visible columns</strong>
-                  {COLUMN_OPTIONS.map(([id, label]) => (
-                    <label key={id} role="menuitemcheckbox" aria-checked={visibleColumns.includes(id)}>
-                      <input
-                        type="checkbox"
-                        checked={visibleColumns.includes(id)}
-                        disabled={id === 'ruleName' || id === 'actions'}
-                        onChange={() => setVisibleColumns((current) => current.includes(id)
-                          ? current.filter((value) => value !== id)
-                          : [...current, id])}
-                      />
-                      <span>{label}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
+              <HaMenu
+                ariaLabel="Visible detection rule columns"
+                width={212}
+                trigger={
+                  <button type="button">
+                    <Columns3 size={14} /> Columns
+                  </button>
+                }
+              >
+                <HaMenu.Label>Visible columns</HaMenu.Label>
+                {COLUMN_OPTIONS.map(([id, label]) => (
+                  <HaMenu.CheckboxItem
+                    key={id}
+                    checked={visibleColumns.includes(id)}
+                    disabled={id === 'ruleName' || id === 'actions'}
+                    onToggle={() => setVisibleColumns((current) => current.includes(id)
+                      ? current.filter((value) => value !== id)
+                      : [...current, id])}
+                  >
+                    {label}
+                  </HaMenu.CheckboxItem>
+                ))}
+              </HaMenu>
             </div>
           </div>
         </div>

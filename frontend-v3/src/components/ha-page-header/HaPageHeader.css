@@ -1,0 +1,114 @@
+/**
+ * HaPageHeader styles — the locked compact page-context band (design system §8). Token-only.
+ * Transparent on the app canvas, bottom border only. No fill, no chip on the title.
+ */
+
+.ha-page-header {
+  background: transparent;
+  border-bottom: 1px solid var(--ha-border-subtle);
+}
+
+/* Breadcrumbs — drill-down routes only. */
+.ha-page-header__breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px 0;
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+}
+
+.ha-page-header__crumb-link {
+  color: var(--ha-action-secondary);
+  text-decoration: none;
+}
+
+.ha-page-header__crumb-link:hover {
+  text-decoration: underline;
+}
+
+.ha-page-header__crumb-sep {
+  color: var(--ha-foreground-tertiary);
+}
+
+/* Title row — 36px, plain-text title, identity scrolls, actions pin. */
+.ha-page-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 16px;
+}
+
+.ha-page-header__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ha-foreground-primary);
+}
+
+.ha-page-header__meta {
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+  font-variant-numeric: tabular-nums;
+}
+
+.ha-page-header__spacer {
+  flex: 1;
+}
+
+.ha-page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Tabs row — 34px, underline active, inline mono count badges. */
+.ha-page-header__tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 34px;
+  padding: 0 14px;
+  border-top: 1px solid var(--ha-border-subtle);
+}
+
+.ha-page-header__tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 0;
+  background: transparent;
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-compact);
+  cursor: pointer;
+}
+
+.ha-page-header__tab:hover {
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-page-header__tab--on {
+  color: var(--ha-foreground-primary);
+}
+
+.ha-page-header__tab--on::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--ha-action-primary);
+}
+
+.ha-page-header__tab-count {
+  font-family: var(--ha-font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-foreground-tertiary);
+}
