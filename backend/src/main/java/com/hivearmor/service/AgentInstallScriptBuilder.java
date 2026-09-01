@@ -148,9 +148,10 @@ public class AgentInstallScriptBuilder {
     /**
      * Builds a PowerShell script for Windows that:
      * <ol>
+     *   <li>Self-elevates when double-clicked without administrator rights</li>
      *   <li>Detects CPU architecture (amd64 / arm64)</li>
      *   <li>Downloads the correct .exe binary from {@code /agent-packages/} on HTTPS 443</li>
-     *   <li>Runs the installer elevated (RunAs) with enrollment token via stdin</li>
+     *   <li>Runs the installer elevated with enrollment token via a protected temp file</li>
      * </ol>
      *
      * @param serverHost       server hostname
@@ -163,11 +164,11 @@ public class AgentInstallScriptBuilder {
      */
     public String buildPowerShellScript(String serverHost, String alias, String enrollmentToken,
                                         String mode, String expiresAt, boolean insecure) {
-        String skipTls = insecure
-            ? "[System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }\n"
-            : "";
+        String skipTls = insecure ? POWER_SHELL_TLS_BYPASS_SNIPPET : "";
         String skipCert = insecure ? "yes" : "no";
+        String escapedHost = escapePowerShellDoubleQuoted(serverHost);
         String escapedToken = escapePowerShellDoubleQuoted(enrollmentToken);
+        String escapedMode = escapePowerShellDoubleQuoted(mode);
 
         return "# ============================================================\n"
             + "#  HiveArmor Agent — One-Click Install Script (Windows)\n"
@@ -176,20 +177,31 @@ public class AgentInstallScriptBuilder {
             + "#\n"
             + "#  WARNING: This script contains your one-time enrollment token.\n"
             + "#  Treat it like a password. Do NOT share or commit to Git.\n"
-            + "#\n"
-            + "#  Run in an elevated (Administrator) PowerShell session.\n"
             + "# ============================================================\n"
             + "$ErrorActionPreference = 'Stop'\n"
             + "\n"
-            + "$Server  = \"" + serverHost + "\"\n"
+            + "# ---- Self-elevate when launched without admin (e.g. double-click) ----\n"
+            + "$isAdmin = ([Security.Principal.WindowsPrincipal]"
+            + "[Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole("
+            + "[Security.Principal.WindowsBuiltInRole]::Administrator)\n"
+            + "if (-not $isAdmin) {\n"
+            + "  if ($PSCommandPath) {\n"
+            + "    $elevateArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $PSCommandPath)\n"
+            + "    Start-Process powershell.exe -Verb RunAs -ArgumentList $elevateArgs -Wait | Out-Null\n"
+            + "    exit $LASTEXITCODE\n"
+            + "  }\n"
+            + "  Write-Error 'Re-run this script in an elevated (Run as Administrator) PowerShell session.'\n"
+            + "  exit 1\n"
+            + "}\n"
+            + "\n"
+            + "$Server  = \"" + escapedHost + "\"\n"
             + "$Token   = \"" + escapedToken + "\"\n"
-            + "$Mode    = \"" + mode + "\"\n"
+            + "$Mode    = \"" + escapedMode + "\"\n"
             + "$SkipCert = \"" + skipCert + "\"\n"
             + "\n"
             + skipTls
             + "# ---- Detect architecture ------------------------------------\n"
-            + "$Arch = if ([System.Environment]::Is64BitOperatingSystem -and\n"
-            + "            ($env:PROCESSOR_ARCHITECTURE -match 'ARM64|arm64')) { 'arm64' } else { 'amd64' }\n"
+            + "$Arch = if ($env:PROCESSOR_ARCHITECTURE -match 'ARM64') { 'arm64' } else { 'amd64' }\n"
             + "\n"
             + "$Binary = \"hivearmor_agent_service_windows_$Arch.exe\"\n"
             + "$Url    = \"https://$Server/agent-packages/$Binary\"\n"
@@ -202,15 +214,21 @@ public class AgentInstallScriptBuilder {
             + "  Write-Host \"Primary package URL unavailable, trying dependency server...\"\n"
             + "  Invoke-WebRequest -Uri $Fallback -OutFile $Dest -UseBasicParsing\n"
             + "}\n"
+            + "Unblock-File -Path $Dest -ErrorAction SilentlyContinue\n"
             + "\n"
             + "# ---- Install ------------------------------------------------\n"
             + "Write-Host \"[2/3] Installing (mode: $Mode)...\"\n"
             + "$TokenFile = Join-Path $env:TEMP (\"hivearmor-enroll-\" + [guid]::NewGuid().ToString(\"N\") + \".token\")\n"
             + "try {\n"
-            + "  Set-Content -Path $TokenFile -Value $Token -NoNewline -Encoding utf8\n"
+            + "  $utf8NoBom = New-Object System.Text.UTF8Encoding $false\n"
+            + "  [System.IO.File]::WriteAllText($TokenFile, $Token, $utf8NoBom)\n"
             + "  icacls $TokenFile /inheritance:r | Out-Null\n"
-            + "  icacls $TokenFile /grant:r \"$($env:USERNAME):(R,W)\" \"Administrators:(R,W)\" \"SYSTEM:(R,W)\" | Out-Null\n"
-            + "  Get-Content -Raw $TokenFile | & $Dest install $Server $SkipCert --enrollment-token-file - --mode=$Mode\n"
+            + "  $adminSid = New-Object System.Security.Principal.SecurityIdentifier 'S-1-5-32-544'\n"
+            + "  $adminName = $adminSid.Translate([System.Security.Principal.NTAccount]).Value\n"
+            + "  icacls $TokenFile /grant:r \"$($env:USERNAME):(R,W)\" \"$($adminName):(R,W)\" \"SYSTEM:(R,W)\" | Out-Null\n"
+            + "  $installArgs = @('install', $Server, $SkipCert, '--enrollment-token-file', $TokenFile, '--mode', $Mode)\n"
+            + "  $proc = Start-Process -FilePath $Dest -ArgumentList $installArgs -Wait -PassThru\n"
+            + "  if ($proc.ExitCode -ne 0) { throw \"Agent install failed (exit $($proc.ExitCode))\" }\n"
             + "} finally {\n"
             + "  Remove-Item -Force $TokenFile -ErrorAction SilentlyContinue\n"
             + "}\n"
@@ -221,6 +239,15 @@ public class AgentInstallScriptBuilder {
             + "if ($svc) { Write-Host \"Service status: $($svc.Status)\" }\n"
             + "Write-Host \"Done. Agent '" + alias + "' registered with HiveArmor.\"\n";
     }
+
+    /**
+     * PowerShell 5.1 TLS bypass for self-signed staging / local-dev certificates.
+     * Matches the pattern used in {@code agent/release/verify-packaged-windows.ps1}.
+     */
+    private static final String POWER_SHELL_TLS_BYPASS_SNIPPET =
+        "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12\n"
+        + "[System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }\n"
+        + "\n";
 
     // -------------------------------------------------------------------------
     // Helpers

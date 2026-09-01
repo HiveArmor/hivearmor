@@ -22,16 +22,52 @@ class AgentInstallScriptBuilderTest {
     }
 
     @Test
-    void powershellScriptUsesEnrollmentTokenFileAndProtectedTempFile() {
+    void powershellScriptUsesProtectedTokenFileAndElevatedInstall() {
         AgentInstallScriptBuilder builder = new AgentInstallScriptBuilder();
         String script = builder.buildPowerShellScript(
             "siem.example", "web-01", "ha_enroll_test.secret", "edr", "tomorrow", false);
 
-        assertThat(script).contains("--enrollment-token-file -");
-        assertThat(script).contains("Get-Content -Raw $TokenFile | & $Dest install $Server $SkipCert");
-        assertThat(script).contains("icacls $TokenFile");
-        assertThat(script).doesNotContain("install $Server $Key");
+        assertThat(script).contains("--enrollment-token-file', $TokenFile, '--mode', $Mode)");
+        assertThat(script).contains("Start-Process -FilePath $Dest -ArgumentList $installArgs -Wait -PassThru");
+        assertThat(script).contains("Unblock-File -Path $Dest");
+        assertThat(script).contains("[System.IO.File]::WriteAllText($TokenFile, $Token, $utf8NoBom)");
+        assertThat(script).contains("SecurityIdentifier 'S-1-5-32-544'");
+        assertThat(script).contains("-ExecutionPolicy', 'Bypass'");
+        assertThat(script).doesNotContain("Get-Content -Raw $TokenFile |");
         assertThat(script).doesNotContain("install $Server ha_enroll_test.secret");
+        assertThat(script).doesNotContain("Set-Content -Path $TokenFile");
+    }
+
+    @Test
+    void powershellScriptEnablesTlsBypassForInsecureHosts() {
+        AgentInstallScriptBuilder builder = new AgentInstallScriptBuilder();
+        String script = builder.buildPowerShellScript(
+            "localhost", "web-01", "ha_enroll_test.secret", "edr", "tomorrow", true);
+
+        assertThat(script).contains("$SkipCert = \"yes\"");
+        assertThat(script).contains("SecurityProtocolType]::Tls12");
+        assertThat(script).contains("ServerCertificateValidationCallback = { $true }");
+    }
+
+    @Test
+    void powershellScriptEscapesSpecialCharactersInTokenAndServer() {
+        AgentInstallScriptBuilder builder = new AgentInstallScriptBuilder();
+        String script = builder.buildPowerShellScript(
+            "host\"$`1.example", "web-01", "ha_enroll_\"$`tok.en", "edr", "tomorrow", false);
+
+        assertThat(script).contains("$Server  = \"host`\"`$``1.example\"");
+        assertThat(script).contains("$Token   = \"ha_enroll_`\"`$``tok.en\"");
+        assertThat(script).doesNotContain("$Server  = \"host\"$`1.example\"");
+    }
+
+    @Test
+    void powershellScriptDetectsArm64FromProcessorArchitecture() {
+        AgentInstallScriptBuilder builder = new AgentInstallScriptBuilder();
+        String script = builder.buildPowerShellScript(
+            "siem.example", "web-01", "ha_enroll_test.secret", "edr", "tomorrow", false);
+
+        assertThat(script).contains("$Arch = if ($env:PROCESSOR_ARCHITECTURE -match 'ARM64') { 'arm64' } else { 'amd64' }");
+        assertThat(script).doesNotContain("Is64BitOperatingSystem");
     }
 
     @Test
