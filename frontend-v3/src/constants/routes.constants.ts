@@ -76,6 +76,7 @@ export const ROUTES = {
   ADMIN_SETTINGS: '/admin/settings',
   ADMIN_THREAT_INTEL: '/admin/threat-intel',
   ADMIN_PIPELINE_SIGNALS: '/admin/pipeline-signals',
+  SETTINGS_API_KEYS: '/settings/api-keys',
 } as const;
 
 export type RouteValue = (typeof ROUTES)[keyof typeof ROUTES];
