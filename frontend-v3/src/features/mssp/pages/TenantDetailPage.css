@@ -1,0 +1,346 @@
+.mssp-tenant-detail-page {
+  height: calc(100dvh - var(--ha-masthead-height));
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--ha-text-primary);
+  background: var(--ha-background);
+}
+
+.mssp-tenant-detail-header,
+.mssp-tenant-detail-header__identity,
+.mssp-tenant-detail-header__actions,
+.mssp-tenant-detail-trust,
+.mssp-tenant-detail-meta-row,
+.mssp-tenant-detail-workspace,
+.mssp-tenant-detail-empty {
+  display: flex;
+  align-items: center;
+}
+
+.mssp-tenant-detail-header {
+  min-height: var(--ha-page-header-height, 56px);
+  padding: 0 var(--ha-space-6);
+  justify-content: space-between;
+  gap: 12px;
+  flex: 0 0 auto;
+  background: var(--ha-surface-primary);
+  border-bottom: 1px solid var(--ha-border);
+}
+
+.mssp-tenant-detail-header__identity {
+  min-width: 0;
+  gap: 10px;
+}
+
+.mssp-tenant-detail-header__mark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--ha-primary);
+  background: color-mix(in srgb, var(--ha-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ha-primary) 42%, var(--ha-border));
+  border-radius: var(--ha-radius-base);
+}
+
+.mssp-tenant-detail-header__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.mssp-tenant-detail-header__eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mssp-tenant-detail-header__eyebrow > span:first-child {
+  display: block;
+  color: var(--ha-primary);
+  font: 600 9px/1 var(--ha-font-ui);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.mssp-tenant-detail-header__badge {
+  padding: 2px 6px;
+  border: 1px solid color-mix(in srgb, var(--ha-high) 40%, var(--ha-border));
+  border-radius: var(--ha-radius-sm);
+  background: color-mix(in srgb, var(--ha-high) 12%, transparent);
+  color: var(--ha-high);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mssp-tenant-detail-header h1 {
+  margin: 3px 0 0;
+  font-size: var(--ha-text-xl);
+  font-weight: var(--ha-weight-semibold);
+  white-space: nowrap;
+}
+
+.mssp-tenant-detail-header__job {
+  margin: 4px 0 0;
+  max-width: 760px;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+  line-height: 1.4;
+}
+
+.mssp-tenant-detail-page__projection-note {
+  margin: 4px 0 0;
+  max-width: 760px;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+  line-height: 1.35;
+}
+
+.mssp-tenant-detail-header__actions {
+  gap: 7px;
+}
+
+.mssp-tenant-detail-page__meta {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0;
+  padding: 6px var(--ha-space-6);
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-primary);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+}
+
+.mssp-tenant-detail-page__meta a {
+  color: var(--ha-primary);
+  text-decoration: none;
+}
+
+.mssp-tenant-detail-page__meta a:hover {
+  text-decoration: underline;
+}
+
+.mssp-tenant-detail-page__access {
+  color: var(--ha-text-secondary);
+  font-size: 9px;
+}
+
+.mssp-tenant-detail-trust {
+  flex: 0 0 auto;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px var(--ha-space-6);
+  border-bottom: 1px solid var(--ha-border);
+  background: color-mix(in srgb, var(--ha-primary) 8%, transparent);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+  line-height: 1.45;
+}
+
+.mssp-tenant-detail-trust strong {
+  color: var(--ha-text-primary);
+}
+
+.mssp-tenant-detail-workspace {
+  min-height: 50vh;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--ha-space-6);
+  overflow: auto;
+  padding: var(--ha-space-6);
+}
+
+.mssp-tenant-detail-meta-row {
+  flex-wrap: wrap;
+  gap: var(--ha-space-4);
+}
+
+.mssp-tenant-detail-stat {
+  min-width: 120px;
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  padding: var(--ha-space-3);
+}
+
+.mssp-tenant-detail-stat__label {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+  margin-bottom: var(--ha-space-1);
+}
+
+.mssp-tenant-detail-stat__value {
+  font-size: var(--ha-text-base);
+  font-weight: var(--ha-weight-semibold);
+  color: var(--ha-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.mssp-tenant-detail-chart {
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  padding: var(--ha-space-4);
+}
+
+.mssp-tenant-detail-chart h2 {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  margin: 0 0 var(--ha-space-3);
+}
+
+.mssp-tenant-detail-edit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-3);
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  padding: var(--ha-space-4);
+}
+
+.mssp-tenant-detail-edit h3 {
+  font-size: var(--ha-text-base);
+  font-weight: var(--ha-weight-semibold);
+  color: var(--ha-text-primary);
+  margin: 0 0 var(--ha-space-2);
+}
+
+.mssp-tenant-detail-edit label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-1);
+}
+
+.mssp-tenant-detail-edit label span {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+}
+
+.mssp-tenant-detail-edit input {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  color: var(--ha-text-primary);
+  padding: var(--ha-space-2) var(--ha-space-3);
+  font-size: var(--ha-text-sm);
+}
+
+.mssp-tenant-detail-edit__actions {
+  display: flex;
+  gap: var(--ha-space-3);
+  justify-content: flex-end;
+}
+
+.mssp-tenant-detail-edit__error {
+  color: var(--ha-critical);
+  font-size: var(--ha-text-sm);
+  margin: 0;
+}
+
+.mssp-tenant-detail-button {
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  font: 500 var(--ha-text-sm)/1 var(--ha-font-ui);
+  border-radius: var(--ha-radius-base);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mssp-tenant-detail-button--primary {
+  color: var(--ha-background);
+  background: var(--ha-primary);
+  border: none;
+}
+
+.mssp-tenant-detail-button--secondary {
+  color: var(--ha-text-primary);
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+}
+
+.mssp-tenant-detail-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.mssp-tenant-detail-icon-button {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--ha-text-secondary);
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  cursor: pointer;
+}
+
+.mssp-tenant-detail-icon-button:hover {
+  color: var(--ha-primary);
+}
+
+.mssp-tenant-detail-empty {
+  height: 100%;
+  min-height: 260px;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 30px;
+  text-align: center;
+  color: var(--ha-text-secondary);
+}
+
+.mssp-tenant-detail-empty strong {
+  color: var(--ha-text-primary);
+  font-size: var(--ha-text-md);
+}
+
+.mssp-tenant-detail-empty span {
+  max-width: 560px;
+  font-size: var(--ha-text-sm);
+  line-height: 1.5;
+}
+
+.mssp-tenant-detail-empty--error strong {
+  color: var(--ha-critical);
+}
+
+.mssp-tenant-detail-loading {
+  min-height: 50vh;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ha-space-6);
+}
+
+@media (max-width: 760px) {
+  .mssp-tenant-detail-header__job,
+  .mssp-tenant-detail-page__projection-note {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}
