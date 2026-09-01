@@ -43,10 +43,11 @@ import {
 import { LockIcon } from '@patternfly/react-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { ThreatIntelAdminHonestyLayout } from './ThreatIntelAdminHonestyLayout';
+
 import { EmptyState } from '@/components/empty-state/EmptyState';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { HaModal } from '@/components/ha-modal/HaModal';
-import { SiemPageHeader } from '@/components/ha-page-header/SiemPageHeader';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import { formatBoundedRelativeTime } from '@/lib/threatIntelFreshness';
 import { threatIntelService } from '@/services/threatIntel.service';
@@ -1000,60 +1001,63 @@ function MispFeedsTab(): JSX.Element {
  */
 export function ThreatIntelAdminPage(): JSX.Element {
   const hasRole = useAuthStore((s) => s.hasRole);
+  const canAdminister = hasRole('ROLE_ADMIN');
   const [activeTab, setActiveTab] = useState<number>(0);
 
   const {
     data: stats,
     isLoading: statsLoading,
     isError: statsError,
+    dataUpdatedAt: statsUpdatedAt,
   } = useQuery({
     queryKey: ['ioc-stats'],
     queryFn: () => threatIntelService.getIocStats(),
-    // Refresh stats every 60 seconds
+    enabled: canAdminister,
     refetchInterval: 60_000,
   });
 
-  // Access denied state — rendered when user lacks ROLE_ADMIN
-  if (!hasRole('ROLE_ADMIN')) {
+  const taxiiFeedsQuery = useQuery({
+    queryKey: ['taxii-feeds'],
+    queryFn: () => threatIntelService.listTaxiiFeeds(),
+    enabled: canAdminister,
+  });
+
+  const mispFeedsQuery = useQuery({
+    queryKey: ['misp-feeds'],
+    queryFn: () => threatIntelService.listMispFeeds(),
+    enabled: canAdminister,
+  });
+
+  const showFeedsEmptyHonesty =
+    canAdminister &&
+    !taxiiFeedsQuery.isLoading &&
+    !mispFeedsQuery.isLoading &&
+    !taxiiFeedsQuery.isError &&
+    !mispFeedsQuery.isError &&
+    (taxiiFeedsQuery.data?.length ?? 0) === 0 &&
+    (mispFeedsQuery.data?.length ?? 0) === 0;
+
+  if (!canAdminister) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          background: 'var(--ha-background)',
-        }}
-      >
-        <EmptyState
-          icon={<LockIcon color="var(--ha-text-secondary)" />}
-          title="Administrator access required"
-          description="Required permission: Platform Administrator. Contact your platform administrator to request access to threat intelligence source management."
-        />
-      </div>
+      <ThreatIntelAdminHonestyLayout showFeedsEmptyHonesty={false}>
+        <div className="ti-access-denied">
+          <EmptyState
+            icon={<LockIcon color="var(--ha-text-secondary)" />}
+            title="Threat intelligence administration access restricted"
+            description="Required permission: Platform Administrator. Contact your platform administrator to request access to threat intelligence source management."
+          />
+        </div>
+      </ThreatIntelAdminHonestyLayout>
     );
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        background: 'var(--ha-background)',
-      }}
+    <ThreatIntelAdminHonestyLayout
+      showFeedsEmptyHonesty={showFeedsEmptyHonesty}
+      lastUpdated={statsUpdatedAt}
     >
-      {/* Page Header */}
-      <SiemPageHeader
-        title="Threat Intelligence"
-        description="Manage TAXII 2.1 and MISP feed sources. Configure, sync, and monitor IOC ingestion pipelines."
-        breadcrumbs={[{ label: 'Admin' }, { label: 'Threat Intelligence' }]}
-      />
-
-      {/* IOC Stats Panel */}
       <IocStatsPanel stats={stats} isLoading={statsLoading} isError={statsError} />
 
-      {/* Tab layout */}
       <div style={{ flex: 1, overflow: 'auto' }}>
         <Tabs
           activeKey={activeTab}
@@ -1080,6 +1084,6 @@ export function ThreatIntelAdminPage(): JSX.Element {
           </Tab>
         </Tabs>
       </div>
-    </div>
+    </ThreatIntelAdminHonestyLayout>
   );
 }
