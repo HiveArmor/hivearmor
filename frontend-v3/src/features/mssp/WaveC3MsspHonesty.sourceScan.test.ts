@@ -36,6 +36,14 @@ describe('Wave C3 MSSP honesty', () => {
     expect(page).not.toContain('is404 || (isError && !data)');
   });
 
+  it('C3-05b: tenant users maps 401/403 separately from 404', () => {
+    const page = readFileSync(join(process.cwd(), 'src/features/mssp/pages/TenantUsersPage.tsx'), 'utf8');
+    expect(page).toContain('tenant-users-error');
+    expect(page).toContain('tenant-users-notfound');
+    expect(page).toContain('MSSP access restricted');
+    expect(page).not.toContain('is404 || (isError && !data)');
+  });
+
   it('C3-06: AccessDenied uses MSSP Administrator human label', () => {
     const guard = readFileSync(join(process.cwd(), 'src/features/mssp/guards/MsspAdminGuard.tsx'), 'utf8');
     expect(guard).toContain('requiredPermission="MSSP Administrator"');
