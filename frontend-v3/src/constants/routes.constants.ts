@@ -76,6 +76,8 @@ export const ROUTES = {
   ADMIN_SETTINGS: '/admin/settings',
   ADMIN_THREAT_INTEL: '/admin/threat-intel',
   ADMIN_PIPELINE_SIGNALS: '/admin/pipeline-signals',
+  ADMIN_DATA_PARSING: '/admin/data-parsing',
+  INPUTS_SOURCES: '/inputs/sources',
   SETTINGS_API_KEYS: '/settings/api-keys',
 } as const;
 
