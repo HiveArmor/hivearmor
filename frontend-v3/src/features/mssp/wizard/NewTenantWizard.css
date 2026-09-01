@@ -1,0 +1,293 @@
+.mssp-tenant-new-page {
+  height: calc(100dvh - var(--ha-masthead-height));
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--ha-text-primary);
+  background: var(--ha-background);
+}
+
+.mssp-tenant-new-header,
+.mssp-tenant-new-header__identity,
+.mssp-tenant-new-trust,
+.mssp-tenant-new-provision-note,
+.mssp-tenant-new-wizard__footer {
+  display: flex;
+  align-items: center;
+}
+
+.mssp-tenant-new-header {
+  min-height: var(--ha-page-header-height, 56px);
+  padding: 0 var(--ha-space-6);
+  justify-content: space-between;
+  gap: 12px;
+  flex: 0 0 auto;
+  background: var(--ha-surface-primary);
+  border-bottom: 1px solid var(--ha-border);
+}
+
+.mssp-tenant-new-header__identity {
+  min-width: 0;
+  gap: 10px;
+}
+
+.mssp-tenant-new-header__mark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--ha-primary);
+  background: color-mix(in srgb, var(--ha-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ha-primary) 42%, var(--ha-border));
+  border-radius: var(--ha-radius-base);
+}
+
+.mssp-tenant-new-header__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.mssp-tenant-new-header__eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mssp-tenant-new-header__eyebrow > span:first-child {
+  display: block;
+  color: var(--ha-primary);
+  font: 600 9px/1 var(--ha-font-ui);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.mssp-tenant-new-header__badge {
+  padding: 2px 6px;
+  border: 1px solid color-mix(in srgb, var(--ha-high) 40%, var(--ha-border));
+  border-radius: var(--ha-radius-sm);
+  background: color-mix(in srgb, var(--ha-high) 12%, transparent);
+  color: var(--ha-high);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mssp-tenant-new-header h1 {
+  margin: 3px 0 0;
+  font-size: var(--ha-text-xl);
+  font-weight: var(--ha-weight-semibold);
+  white-space: nowrap;
+}
+
+.mssp-tenant-new-header__job {
+  margin: 4px 0 0;
+  max-width: 760px;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+  line-height: 1.4;
+}
+
+.mssp-tenant-new-page__projection-note {
+  margin: 4px 0 0;
+  max-width: 760px;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+  line-height: 1.35;
+}
+
+.mssp-tenant-new-page__meta {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 0;
+  padding: 6px var(--ha-space-6);
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-primary);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+}
+
+.mssp-tenant-new-page__meta a {
+  color: var(--ha-primary);
+  text-decoration: none;
+}
+
+.mssp-tenant-new-page__meta a:hover {
+  text-decoration: underline;
+}
+
+.mssp-tenant-new-page__access {
+  color: var(--ha-text-secondary);
+  font-size: 9px;
+}
+
+.mssp-tenant-new-trust {
+  flex: 0 0 auto;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px var(--ha-space-6);
+  border-bottom: 1px solid var(--ha-border);
+  background: color-mix(in srgb, var(--ha-primary) 8%, transparent);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+  line-height: 1.45;
+}
+
+.mssp-tenant-new-trust strong {
+  color: var(--ha-text-primary);
+}
+
+.mssp-tenant-new-provision-note {
+  flex: 0 0 auto;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px var(--ha-space-6);
+  border-bottom: 1px solid var(--ha-border);
+  background: color-mix(in srgb, var(--ha-high) 10%, transparent);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+  line-height: 1.45;
+}
+
+.mssp-tenant-new-provision-note strong {
+  color: var(--ha-text-primary);
+  font-size: 11px;
+}
+
+.mssp-tenant-new-workspace {
+  min-height: 50vh;
+  min-width: 0;
+  flex: 1;
+  overflow: auto;
+  padding: var(--ha-space-6);
+  background: var(--ha-surface-primary);
+}
+
+.mssp-tenant-new-wizard {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.mssp-tenant-new-wizard__title {
+  font-size: var(--ha-text-md);
+  font-weight: 600;
+  color: var(--ha-text-primary);
+  margin: 0 0 var(--ha-space-4);
+}
+
+.mssp-tenant-new-wizard__step-nav {
+  display: flex;
+  margin-bottom: var(--ha-space-6);
+  border-bottom: 1px solid var(--ha-border);
+}
+
+.mssp-tenant-new-wizard__step {
+  padding: 8px 16px;
+  font-size: var(--ha-text-sm);
+  border-bottom: 2px solid transparent;
+  cursor: default;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.mssp-tenant-new-wizard__step--active {
+  font-weight: 600;
+  color: var(--ha-primary);
+  border-bottom-color: var(--ha-primary);
+}
+
+.mssp-tenant-new-wizard__step--completed {
+  color: var(--ha-positive);
+}
+
+.mssp-tenant-new-wizard__step--pending {
+  color: var(--ha-text-secondary);
+}
+
+.mssp-tenant-new-wizard__content {
+  min-height: 240px;
+}
+
+.mssp-tenant-new-wizard__footer {
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: var(--ha-space-6);
+  border-top: 1px solid var(--ha-border);
+  margin-top: var(--ha-space-6);
+}
+
+.mssp-tenant-new-review-block {
+  background: var(--ha-surface-raised);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  padding: 16px;
+  margin-bottom: var(--ha-space-4);
+}
+
+.mssp-tenant-new-review-block__label {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+
+.mssp-tenant-new-review-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: var(--ha-text-sm);
+}
+
+.mssp-tenant-new-review-row__label {
+  color: var(--ha-text-secondary);
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.mssp-tenant-new-review-row__value {
+  color: var(--ha-text-primary);
+  font-family: var(--ha-font-mono);
+}
+
+.mssp-tenant-new-review-submit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.mssp-tenant-new-review-submit__hint {
+  max-width: 520px;
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+  line-height: 1.45;
+  text-align: right;
+}
+
+.mssp-tenant-new-prefix-error {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-critical);
+  margin-top: 4px;
+}
+
+@media (max-width: 760px) {
+  .mssp-tenant-new-header__job,
+  .mssp-tenant-new-page__projection-note {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}

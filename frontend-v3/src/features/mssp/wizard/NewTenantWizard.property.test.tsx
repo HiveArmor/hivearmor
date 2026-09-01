@@ -16,6 +16,7 @@
 
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import * as fc from "fast-check";
+import { MemoryRouter } from "react-router-dom";
 import { describe, test, expect, vi, afterEach, beforeEach } from "vitest";
 
 import { NewTenantWizard } from "./NewTenantWizard";
@@ -92,7 +93,11 @@ const NEXT_BUTTON_ARIA_LABEL = "Advance to step 2: Admin user";
  * unmount function for cleanup.
  */
 function renderWizard() {
-  return render(<NewTenantWizard />);
+  return render(
+    <MemoryRouter>
+      <NewTenantWizard />
+    </MemoryRouter>,
+  );
 }
 
 /**
