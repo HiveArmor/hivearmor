@@ -1,24 +1,25 @@
 # Next production slice
 
-Updated: **2026-09-01 18:02:00 IST (UTC+05:30)**
+Updated: **2026-09-01 18:06:00 IST (UTC+05:30)**
 
 ## Completed this slice — SENS-001 install script download + enrollment token fix (#162)
 
 Status: **MERGED** tip `7a1ba6c` (#162) — **STAGING CANDIDATE**. Not `PRODUCTION READY`.
-Staging deploy (2026-09-01 18:02 IST): frontend-v3 + edge + **backend WAR rebuilt** — **STAGING CANDIDATE**.
+Staging deploy (2026-09-01): backend WAR + frontend-v3 + edge recreated; agent packages published (linux amd64 + windows amd64).
 
 | Check | Result |
 |---|---|
-| PR #162 / tip | `7a1ba6c` + docs `4c68c5e` |
-| frontend-v3 / edge / backend (staging) | healthy after recreate |
+| PR #162 / docs | `7a1ba6c` + handoff commits `4c68c5e`, `ab12abd` |
+| frontend-v3 / edge / backend (staging) | healthy |
 | `GET /api/healthcheck` | 200 |
-| SPA `/posture/sensors` | 200 — `assets/chunks/SensorGridPage-*.js` has `hivearmor-install` |
-| Backend enrollment scripts on staging | **deployed** (fresh WAR; `--enrollment-token-file` in `AgentInstallScriptBuilder`) |
-| `ha-agent-packages/summary` | auth required; **publishedCount unverified** (no binaries published) |
-| `POST /api/ha-agent-keys` script smoke | **not run** — no bootstrap creds on VM |
+| SPA `/posture/sensors` | 200 — download UX live |
+| Backend enrollment scripts | **deployed** (`--enrollment-token-file` in WAR) |
+| Agent packages (public) | **200** — linux amd64 + windows amd64 (~55MB exe verified) |
+| `ha-agent-packages/summary` (auth) | **not verified** — no bootstrap creds on VM |
+| `POST /api/ha-agent-keys` script smoke | **not run** |
 | Windows install proof | **BLOCKED** — no VM |
 
-Next: place `ADMIN_BOOTSTRAP.txt` or document staging admin creds; run `publish-agent-packages.sh` with `SOURCE_DIR` CI binaries; authenticated API smoke for install scripts; `verify-packaged-windows-staging.ps1` when VM available.
+Next: restore `ADMIN_BOOTSTRAP.txt` on staging VM for authenticated smoke; run `verify-packaged-windows-staging.ps1` when Windows VM available; publish arm64/darwin if needed.
 
 ## Completed this slice — Sensors Add Agent UX + package publish (#82)
 

@@ -729,6 +729,15 @@ No production-readiness claim is made by this baseline entry.
 - Local-dev API smoke: **BLOCKED** — Docker socket permission denied in agent environment (`docker compose ps` failed).
 - No secrets logged or committed.
 
+## 2026-09-01 18:06:00 IST (UTC+05:30) — Agent packages published on staging
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED).
+- Source: extracted `hivearmor_agent_service_linux_amd64` + `hivearmor_agent_service_windows_amd64.exe` from `hivearmor-staging-agentmanager-1:/dependencies/agent/`; ran `publish-agent-packages.sh` on staging (`VERSION=11.0.0-staging`).
+- Backend bind mount `/opt/hivearmor/agent-packages/` now has 2 binaries + `version.json` (arm64/darwin packages still absent — expected for staging subset).
+- Public download: `GET /agent-packages/hivearmor_agent_service_windows_amd64.exe` → **200** (~55MB via staging localhost).
+- `GET /api/ha-agent-packages/summary` authenticated check: **not run** — `ADMIN_BOOTSTRAP.txt` still absent on VM.
+- Windows install proof: still **BLOCKED** — no VM.
+
 ## 2026-09-01 18:02:00 IST (UTC+05:30) — Staging full slice deploy (backend WAR + FE rebuild)
 
 - Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED).
