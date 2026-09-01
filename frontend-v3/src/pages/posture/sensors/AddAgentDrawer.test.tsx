@@ -40,6 +40,19 @@ vi.mock('@monaco-editor/react', () => ({
   default: () => <div data-testid="monaco" />,
 }));
 
+const mockCreated = {
+  id: '1',
+  alias: 'web-server-01',
+  key: 'ha_enroll_test.secret',
+  expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+  mode: 'edr' as const,
+  bashScript: '#!/bin/bash\necho "$TOKEN" | sudo install --enrollment-token-file -',
+  powershellScript: '# PowerShell\nGet-Content -Raw $TokenFile | install --enrollment-token-file -',
+  serverHost: 'localhost',
+  createdAt: new Date().toISOString(),
+  status: 'active' as const,
+};
+
 function renderDrawer(): void {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -66,7 +79,7 @@ describe('AddAgentDrawer honesty + 409 UX', () => {
     ]);
   });
 
-  it('warns when masthead is All tenants and packages are unpublished', async () => {
+  it('warns when masthead is All tenants and blocks generate', async () => {
     renderDrawer();
 
     expect(
@@ -75,6 +88,9 @@ describe('AddAgentDrawer honesty + 409 UX', () => {
     expect(
       await screen.findByText(/Agent packages not published on this server/i)
     ).toBeVisible();
+
+    const generateButton = screen.getByRole('button', { name: /Generate install script/i });
+    expect(generateButton).toBeDisabled();
   });
 
   it('maps duplicate alias 409 onto the agent name field', async () => {
@@ -103,5 +119,69 @@ describe('AddAgentDrawer honesty + 409 UX', () => {
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent(/already exists/i);
     });
+  });
+});
+
+describe('AddAgentDrawer script download', () => {
+  let downloadInstallScript: ReturnType<typeof vi.fn>;
+
+  beforeEach(async () => {
+    mockCreate.mockReset();
+    mockGet.mockReset();
+    mockSelectedTenantId = 2;
+    mockGet.mockResolvedValue([
+      {
+        filename: 'hivearmor_agent_service_linux_amd64',
+        href: '/agent-packages/hivearmor_agent_service_linux_amd64',
+        available: true,
+        sizeBytes: 10,
+      },
+    ]);
+    mockCreate.mockResolvedValue(mockCreated);
+
+    const downloadModule = await import('@/lib/installScriptDownload');
+    downloadInstallScript = vi.spyOn(downloadModule, 'downloadInstallScript').mockImplementation(() => undefined);
+    vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
+  });
+
+  it('offers Linux download with sanitized filename and copy still works', async () => {
+    const user = userEvent.setup();
+    renderDrawer();
+
+    await user.type(screen.getByPlaceholderText(/web-server-01/i), 'web-server-01');
+    await user.click(screen.getByRole('button', { name: /Generate install script/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Download hivearmor-install-web-server-01\.sh/i })).toBeVisible();
+    });
+
+    await user.click(screen.getByRole('button', { name: /Copy bash script/i }));
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockCreated.bashScript);
+
+    await user.click(screen.getByRole('button', { name: /Download hivearmor-install-web-server-01\.sh/i }));
+    expect(downloadInstallScript).toHaveBeenCalledWith(
+      mockCreated.bashScript,
+      'hivearmor-install-web-server-01.sh'
+    );
+  });
+
+  it('offers Windows download with sanitized filename on Windows tab', async () => {
+    const user = userEvent.setup();
+    renderDrawer();
+
+    await user.type(screen.getByPlaceholderText(/web-server-01/i), 'web-server-01');
+    await user.click(screen.getByRole('button', { name: /Generate install script/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Download hivearmor-install-web-server-01\.sh/i })).toBeVisible();
+    });
+
+    await user.click(screen.getByRole('button', { name: /Windows/i }));
+    await user.click(screen.getByRole('button', { name: /Download hivearmor-install-web-server-01\.ps1/i }));
+
+    expect(downloadInstallScript).toHaveBeenCalledWith(
+      mockCreated.powershellScript,
+      'hivearmor-install-web-server-01.ps1'
+    );
   });
 });

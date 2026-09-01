@@ -1,8 +1,12 @@
 package com.hivearmor.service;
 
+import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.repository.api_key.ApiKeyRepository;
+import com.hivearmor.service.agent_manager.AgentGrpcService;
 import com.hivearmor.service.api_key.ApiKeyService;
 import com.hivearmor.service.dto.HaAgentKeyDTO;
+import com.hivearmor.service.dto.agent_manager.EnrollmentTokenCreateDTO;
+import com.hivearmor.service.dto.agent_manager.EnrollmentTokenCreatedDTO;
 import com.hivearmor.service.dto.api_key.ApiKeyUpsertDTO;
 import com.hivearmor.service.dto.api_key.ApiKeyResponseDTO;
 import com.hivearmor.util.exceptions.ApiKeyExistException;
@@ -39,13 +43,16 @@ public class HaAgentKeyService {
     private final ApiKeyService apiKeyService;
     private final ApiKeyRepository apiKeyRepository;
     private final AgentInstallScriptBuilder scriptBuilder;
+    private final AgentGrpcService agentGrpcService;
 
     public HaAgentKeyService(ApiKeyService apiKeyService,
                              ApiKeyRepository apiKeyRepository,
-                             AgentInstallScriptBuilder scriptBuilder) {
+                             AgentInstallScriptBuilder scriptBuilder,
+                             AgentGrpcService agentGrpcService) {
         this.apiKeyService = apiKeyService;
         this.apiKeyRepository = apiKeyRepository;
         this.scriptBuilder = scriptBuilder;
+        this.agentGrpcService = agentGrpcService;
     }
 
     // -------------------------------------------------------------------------
@@ -56,35 +63,45 @@ public class HaAgentKeyService {
      * Creates a new agent provisioning key for the given admin user.
      *
      * @param userId     the admin user's database ID
+     * @param actor      authenticated admin login (for enrollment audit)
      * @param alias      human-readable machine name (DNS-label compatible)
      * @param mode       "log" or "edr"
      * @param expiresIn  expiry duration in hours (24, 48, or 168 for 7 days)
-     * @return DTO containing the raw key and generated install scripts (key shown once only)
+     * @return DTO containing the enrollment token and generated install scripts (shown once only)
      * @throws ApiKeyExistException (HTTP 409) if the alias already exists for this user
-     * @throws IllegalArgumentException if the alias fails validation
+     * @throws IllegalArgumentException if the alias fails validation or tenant is not selected
      */
-    public HaAgentKeyDTO createAgentKey(Long userId, String alias, String mode, int expiresIn) {
+    public HaAgentKeyDTO createAgentKey(Long userId, String actor, String alias, String mode, int expiresIn) {
         final String ctx = CLASSNAME + ".createAgentKey";
         log.debug("{}: userId={} alias={} mode={} expiresIn={}h", ctx, userId, alias, mode, expiresIn);
 
-        // 1. Validate alias format.
+        // 1. Require a concrete tenant — enrollment tokens are tenant-scoped.
+        Long tenantId = TenantContext.getClientId();
+        if (tenantId == null || tenantId <= 0) {
+            throw new IllegalArgumentException(
+                "Select an authorized tenant before generating install scripts");
+        }
+
+        // 2. Validate alias format.
         validateAlias(alias);
 
-        // 2. Validate mode.
+        // 3. Validate mode.
         if (!"log".equals(mode) && !"edr".equals(mode)) {
             throw new IllegalArgumentException("mode must be 'log' or 'edr', got: " + mode);
         }
 
-        // 3. Validate expiresIn (24h, 48h, or up to 7 days = 168h).
+        // 4. Validate expiresIn (24h, 48h, or up to 7 days = 168h).
         if (expiresIn < 1 || expiresIn > 168) {
             throw new IllegalArgumentException("expiresIn must be between 1 and 168 hours");
         }
 
-        // 4. Create the API key record (ApiKeyService.createApiKey checks alias uniqueness
+        Instant expiresAt = Instant.now().plus(expiresIn, ChronoUnit.HOURS);
+
+        // 5. Create the API key record (ApiKeyService.createApiKey checks alias uniqueness
         //    via findByNameAndUserId and throws ApiKeyExistException on duplicate).
         ApiKeyUpsertDTO upsert = new ApiKeyUpsertDTO();
         upsert.setName(alias); // alias stored in the name column
-        upsert.setExpiresAt(Instant.now().plus(expiresIn, ChronoUnit.HOURS));
+        upsert.setExpiresAt(expiresAt);
         upsert.setAllowedIp(List.of());
 
         ApiKeyResponseDTO created = apiKeyService.createApiKey(userId, upsert);
@@ -95,10 +112,14 @@ public class HaAgentKeyService {
             apiKeyRepository.save(apiKey);
         });
 
-        // 5. Generate the raw key (one-time; ApiKeyService hashes it internally).
-        String rawKey = apiKeyService.generateApiKey(userId, created.getId());
+        // 6. Create a one-time enrollment token for agent registration.
+        EnrollmentTokenCreateDTO enrollRequest = new EnrollmentTokenCreateDTO(
+            alias, "any", expiresAt, 1);
+        EnrollmentTokenCreatedDTO enrolled = agentGrpcService.createEnrollmentToken(
+            tenantId, enrollRequest, actor);
+        String enrollmentToken = enrolled.token();
 
-        // 6. Build the install scripts.
+        // 7. Build the install scripts.
         String serverHost = scriptBuilder.resolveServerHost();
         String expiresAtStr = created.getExpiresAt() != null
             ? created.getExpiresAt().toString()
@@ -106,15 +127,15 @@ public class HaAgentKeyService {
         boolean insecure = isLocalDev(serverHost);
 
         String bashScript = scriptBuilder.buildBashScript(
-            serverHost, alias, rawKey, mode, expiresAtStr, insecure);
+            serverHost, alias, enrollmentToken, mode, expiresAtStr, insecure);
         String psScript = scriptBuilder.buildPowerShellScript(
-            serverHost, alias, rawKey, mode, expiresAtStr, insecure);
+            serverHost, alias, enrollmentToken, mode, expiresAtStr, insecure);
 
-        // 7. Build response DTO.
+        // 8. Build response DTO.
         HaAgentKeyDTO dto = new HaAgentKeyDTO();
         dto.setId(String.valueOf(created.getId()));
         dto.setAlias(alias);
-        dto.setKey(rawKey);
+        dto.setKey(enrollmentToken);
         dto.setExpiresAt(created.getExpiresAt());
         dto.setMode(mode);
         dto.setBashScript(bashScript);

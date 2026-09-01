@@ -91,7 +91,8 @@ public class HaAgentKeyResource {
 
         try {
             Long userId = userService.getCurrentUserLogin().getId();
-            HaAgentKeyDTO dto = agentKeyService.createAgentKey(userId, alias, mode, expiresIn);
+            String actor = userService.getCurrentUserLogin().getLogin();
+            HaAgentKeyDTO dto = agentKeyService.createAgentKey(userId, actor, alias, mode, expiresIn);
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
 
         } catch (ApiKeyExistException e) {
