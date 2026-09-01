@@ -1,0 +1,120 @@
+/**
+ * ReasoningStream styles — token-only. Live agent-thinking surface in intelligence-violet.
+ * Blinking caret honors prefers-reduced-motion. Citations are violet pivot chips.
+ */
+
+.ha-reasoning {
+  border: 1px solid var(--ha-border-default);
+  border-left: 2px solid var(--ha-intelligence-primary);
+  border-radius: var(--ha-radius-panel);
+  background: var(--ha-surface-panel);
+  overflow: hidden;
+}
+
+.ha-reasoning__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ha-border-subtle);
+}
+
+.ha-reasoning__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-compact);
+  font-weight: 600;
+}
+
+.ha-reasoning__glyph {
+  color: var(--ha-intelligence-primary);
+}
+
+.ha-reasoning__stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--ha-severity-critical) 50%, transparent);
+  border-radius: var(--ha-radius-control);
+  background: transparent;
+  color: var(--ha-severity-critical);
+  font: var(--ha-type-metadata);
+  cursor: pointer;
+}
+
+.ha-reasoning__stop:hover {
+  background: color-mix(in srgb, var(--ha-severity-critical) 12%, transparent);
+}
+
+.ha-reasoning__lines {
+  margin: 0;
+  padding: 10px 12px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.ha-reasoning__line {
+  font: var(--ha-type-compact);
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-reasoning__text {
+  color: var(--ha-foreground-primary);
+}
+
+.ha-reasoning__caret {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  margin-left: 3px;
+  vertical-align: text-bottom;
+  background: var(--ha-intelligence-primary);
+  animation: ha-reasoning-blink 1s step-end infinite;
+}
+
+@keyframes ha-reasoning-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-reasoning__caret {
+    animation: none;
+  }
+}
+
+.ha-reasoning__cites {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-left: 6px;
+}
+
+.ha-reasoning__cite {
+  padding: 1px 7px;
+  border: 1px solid color-mix(in srgb, var(--ha-intelligence-primary) 40%, transparent);
+  border-radius: var(--ha-radius-pill);
+  background: color-mix(in srgb, var(--ha-intelligence-primary) 10%, transparent);
+  color: var(--ha-intelligence-primary);
+  font: var(--ha-type-metadata);
+  font-family: var(--ha-font-mono);
+  cursor: pointer;
+}
+
+.ha-reasoning__cite:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.ha-reasoning__cite:not(:disabled):hover {
+  background: color-mix(in srgb, var(--ha-intelligence-primary) 18%, transparent);
+}
