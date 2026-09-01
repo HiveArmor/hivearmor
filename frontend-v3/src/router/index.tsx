@@ -72,6 +72,9 @@ const AdminUsersPage = React.lazy(() =>
 const AdminAuditPage = React.lazy(() =>
   import('@/pages/admin/audit/AdminAuditPage').then(m => ({ default: m.AdminAuditPage }))
 );
+const AdminRetentionPage = React.lazy(() =>
+  import('@/pages/admin/retention/AdminRetentionPage').then(m => ({ default: m.AdminRetentionPage }))
+);
 const AdminSettingsPage = React.lazy(() =>
   import('@/pages/admin/settings/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage }))
 );
@@ -894,7 +897,7 @@ export const router = createBrowserRouter([
         path: 'admin/retention',
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <GovernanceOperationsPage initialView="retention" />
+            <AdminRetentionPage />
           </AuthGuard>
         ),
       },
