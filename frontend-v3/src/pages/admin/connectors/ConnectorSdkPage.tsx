@@ -1,8 +1,29 @@
 import { useMemo, useState } from 'react';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link2, Plus, RefreshCw, ShieldCheck, Unplug, Upload } from 'lucide-react';
+import {
+  AlertTriangle,
+  CircleSlash2,
+  Link2,
+  LockKeyhole,
+  Plug,
+  Plus,
+  RefreshCw,
+  ShieldCheck,
+  Unplug,
+  Upload,
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
 
+import { StatusDock } from '@/components/status-dock';
+import { ROUTES } from '@/constants/routes.constants';
+import { useEpsStream } from '@/hooks/useEpsStream';
+import {
+  CONNECTOR_FETCH_ALERTS_DRY_RUN_ONLY,
+  CONNECTOR_PROMOTE_ADMIN_ONLY,
+  CONNECTOR_PROMOTE_DENIED_TITLE,
+  CONNECTOR_VENDOR_LIVE_VERIFIED,
+} from '@/services/connector.capabilities';
 import {
   connectorService,
   type ConnectorCatalogEntry,
@@ -14,12 +35,15 @@ import { useAuthStore } from '@/store/auth.store';
 
 import './ConnectorSdkPage.css';
 
-/**
- * Admin surface for the typed Connector SDK catalog + instances + staged promote.
- * Schema-driven create form — no per-vendor hardcoded field lists.
- * Promote writes labeled connector-promoted docs only (never v3-hive-alert-*).
- */
+/** Bundle-visible job sentence — typed SDK admin, not legacy integrations or SOAR catalog. */
+export const CONNECTOR_SDK_JOB_SENTENCE =
+  'Typed connector SDK — configure schema-driven vendor instances, bounded connection tests, staging ingest, and admin-governed promote to labeled connector-promoted docs. Legacy integration inventory lives on Integrations; SOAR action readiness lives on Response Library — vendor live credentials are not production-verified.';
+
+const CONNECTOR_PROJECTION_NOTE =
+  'Catalog and instances via GET /api/ha-connectors/*. Secrets are write-only and never returned. Staging queue is PostgreSQL (ha_connector_alert_staging); promote writes v3-hive-connector-promoted-* only — not correlated SIEM alert indices. Vendor isolate mesh stays feature-flagged off until live proofs land.';
+
 export function ConnectorSdkPage(): JSX.Element {
+  const eps = useEpsStream();
   const { hasRole } = useAuthStore();
   const canManage = hasRole('ROLE_ADMIN') || hasRole('ROLE_SOC_MANAGER');
   /** Backend promote endpoints require ROLE_ADMIN only. */
@@ -132,65 +156,150 @@ export function ConnectorSdkPage(): JSX.Element {
 
   const promotePending = promoteOneMutation.isPending || promoteBatchMutation.isPending;
 
+  const catalogCount = catalogQuery.data?.length ?? 0;
+  const instanceCount = instancesQuery.data?.length ?? 0;
+  const testedCount =
+    instancesQuery.data?.filter((row) => row.lastTestOk !== null).length ?? 0;
+  const stagedCount = stagedQuery.data?.count ?? 0;
+  const pendingStaged =
+    stagedQuery.data?.alerts.filter((row) => row.status === 'PENDING').length ?? 0;
+
+  const refreshAll = (): void => {
+    void catalogQuery.refetch();
+    void instancesQuery.refetch();
+    if (selectedInstanceId !== null) void stagedQuery.refetch();
+  };
+
   if (!canManage) {
     return (
-      <section className="ha-connector-page">
-        <header className="ha-connector-page__header">
-          <h1>Connectors</h1>
+      <section className="cnx-page" aria-label="Connector SDK">
+        <header className="cnx-header">
+          <div className="cnx-header__identity">
+            <span className="cnx-header__mark">
+              <Plug size={18} aria-hidden="true" />
+            </span>
+            <div className="cnx-header__copy">
+              <div className="cnx-header__eyebrow">
+                <span>ADMINISTRATION · CONNECTOR SDK</span>
+                <span className="cnx-header__badge">STAGING CANDIDATE</span>
+              </div>
+              <h1>Typed Connectors</h1>
+              <p className="cnx-header__job">{CONNECTOR_SDK_JOB_SENTENCE}</p>
+            </div>
+          </div>
         </header>
-        <p className="ha-connector-page__muted">
-          Required permission: Platform Administrator or SOC Manager.
-        </p>
+        <div className="cnx-empty" role="status">
+          <CircleSlash2 size={30} />
+          <strong>Connector SDK access restricted</strong>
+          <span>Required permission: Platform Administrator or SOC Manager.</span>
+        </div>
       </section>
     );
   }
 
   return (
-    <section className="ha-connector-page">
-      <header className="ha-connector-page__header">
-        <div>
-          <span className="ha-connector-page__eyebrow">ADMINISTRATION · CONNECTOR SDK</span>
-          <h1>Typed connectors</h1>
-          <p className="ha-connector-page__muted">
-            Catalog-driven vendor connectors (schema / test / fetch / normalize / capabilities).
-            Staged alerts promote to labeled connector-promoted docs only — not SIEM alert indices.
-            STAGING CANDIDATE — live vendor credentials not production-verified.
-          </p>
+    <section className="cnx-page" aria-label="Connector SDK">
+      <header className="cnx-header">
+        <div className="cnx-header__identity">
+          <span className="cnx-header__mark">
+            <Plug size={18} aria-hidden="true" />
+          </span>
+          <div className="cnx-header__copy">
+            <div className="cnx-header__eyebrow">
+              <span>ADMINISTRATION · CONNECTOR SDK</span>
+              <span className="cnx-header__badge">STAGING CANDIDATE</span>
+            </div>
+            <h1>Typed Connectors</h1>
+            <p className="cnx-header__job">{CONNECTOR_SDK_JOB_SENTENCE}</p>
+            <p className="cnx-page__projection-note" role="note">
+              {CONNECTOR_PROJECTION_NOTE}
+              {!CONNECTOR_VENDOR_LIVE_VERIFIED &&
+                ' Vendor live credentials are not production-verified.'}
+              {CONNECTOR_FETCH_ALERTS_DRY_RUN_ONLY &&
+                ' fetch-alerts without persist remains dry-run preview only.'}
+            </p>
+          </div>
         </div>
-        <button
-          type="button"
-          className="ha-connector-btn"
-          onClick={() => {
-            void catalogQuery.refetch();
-            void instancesQuery.refetch();
-            if (selectedInstanceId !== null) void stagedQuery.refetch();
-          }}
-        >
-          <RefreshCw size={14} /> Refresh
-        </button>
+        <div className="cnx-header__actions">
+          <button type="button" className="cnx-button" onClick={refreshAll}>
+            <RefreshCw size={14} /> Refresh
+          </button>
+        </div>
       </header>
 
-      {message && <div className="ha-connector-banner">{message}</div>}
+      <p className="cnx-page__meta">
+        <Link to={ROUTES.ADMIN_INTEGRATIONS}>Integrations</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={`${ROUTES.ADMIN_INTEGRATIONS}?view=connectors`}>Connections</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.RESPONSE_LIBRARY}>Response Library</Link>
+        <span aria-hidden="true">·</span>
+        <Link to={ROUTES.RESPONSE_PLAYBOOKS}>Playbooks</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/settings/api-keys">Service access</Link>
+        <span aria-hidden="true">·</span>
+        <span className="cnx-page__access">SOC Manager · Platform Administrator</span>
+      </p>
 
-      <div className="ha-connector-grid">
-        <section className="ha-connector-panel" aria-label="Connector catalog">
+      <section className="cnx-summary" aria-label="Connector SDK summary">
+        <div>
+          <span>Catalog vendors</span>
+          <strong>{catalogCount}</strong>
+          <small>typed registry</small>
+        </div>
+        <div>
+          <span>Instances</span>
+          <strong>{instanceCount}</strong>
+          <small>saved configurations</small>
+        </div>
+        <div data-tone={testedCount < instanceCount && instanceCount > 0 ? 'warning' : undefined}>
+          <span>Tested</span>
+          <strong>{testedCount}</strong>
+          <small>bounded dry tests</small>
+        </div>
+        <div>
+          <span>Staged · selected</span>
+          <strong>{selectedInstanceId === null ? '—' : stagedCount}</strong>
+          <small>{pendingStaged} pending promote</small>
+        </div>
+        <div>
+          <span>Vendor live</span>
+          <strong>{CONNECTOR_VENDOR_LIVE_VERIFIED ? 'Verified' : 'Deferred'}</strong>
+          <small>credentials not proven</small>
+        </div>
+      </section>
+
+      {message && <div className="cnx-banner">{message}</div>}
+
+      <div className="cnx-grid">
+        <section className="cnx-panel" aria-label="Connector catalog">
           <h2>
-            <PackageIcon /> Catalog ({catalogQuery.data?.length ?? 0})
+            <PackageIcon /> Catalog ({catalogCount})
           </h2>
-          {catalogQuery.isLoading && <p className="ha-connector-page__muted">Loading catalog…</p>}
+          {catalogQuery.isLoading && <p className="cnx-muted">Loading catalog…</p>}
           {catalogQuery.isError && (
-            <p className="ha-connector-page__error">
+            <p className="cnx-error">
               {catalogQuery.error instanceof Error
                 ? catalogQuery.error.message
                 : 'Catalog unavailable'}
             </p>
           )}
-          <ul className="ha-connector-list">
+          {!catalogQuery.isLoading && !catalogQuery.isError && catalogCount === 0 && (
+            <div className="connectors-empty-honesty" role="status">
+              <AlertTriangle size={22} />
+              <strong>No catalog vendors returned</strong>
+              <span>
+                The typed connector registry is empty — this is not proof that vendor
+                integrations are unavailable.
+              </span>
+            </div>
+          )}
+          <ul className="cnx-list">
             {(catalogQuery.data ?? []).map((entry) => (
               <li key={entry.connectorId}>
                 <button
                   type="button"
-                  className="ha-connector-card"
+                  className="cnx-card"
                   data-selected={selectedCatalogId === entry.connectorId}
                   onClick={() => {
                     setSelectedCatalogId(entry.connectorId);
@@ -213,22 +322,22 @@ export function ConnectorSdkPage(): JSX.Element {
           </ul>
         </section>
 
-        <section className="ha-connector-panel" aria-label="Create instance">
+        <section className="cnx-panel" aria-label="Create instance">
           <h2>
             <Plus size={16} /> Configure instance
           </h2>
           {!selected && (
-            <p className="ha-connector-page__muted">Select a catalog entry to configure.</p>
+            <p className="cnx-muted">Select a catalog entry to configure.</p>
           )}
           {selected && (
             <form
-              className="ha-connector-form"
+              className="cnx-form"
               onSubmit={(e) => {
                 e.preventDefault();
                 createMutation.mutate();
               }}
             >
-              <p className="ha-connector-page__muted">{selected.description}</p>
+              <p className="cnx-muted">{selected.description}</p>
               <label>
                 Instance name
                 <input
@@ -256,28 +365,32 @@ export function ConnectorSdkPage(): JSX.Element {
               ))}
               <button
                 type="submit"
-                className="ha-connector-btn ha-connector-btn--primary"
+                className="cnx-button cnx-button--primary"
                 disabled={createMutation.isPending}
               >
                 <ShieldCheck size={14} /> Save instance
               </button>
+              <p className="cnx-notice">
+                <LockKeyhole size={12} />
+                Secret fields are encrypted at rest and never returned by list or get.
+              </p>
             </form>
           )}
         </section>
 
-        <section className="ha-connector-panel ha-connector-panel--wide" aria-label="Instances">
+        <section className="cnx-panel cnx-panel--wide" aria-label="Instances">
           <h2>
-            <Unplug size={16} /> Instances ({instancesQuery.data?.length ?? 0})
+            <Unplug size={16} /> Instances ({instanceCount})
           </h2>
-          {instancesQuery.isLoading && <p className="ha-connector-page__muted">Loading…</p>}
+          {instancesQuery.isLoading && <p className="cnx-muted">Loading…</p>}
           {instancesQuery.isError && (
-            <p className="ha-connector-page__error">
+            <p className="cnx-error">
               {instancesQuery.error instanceof Error
                 ? instancesQuery.error.message
                 : 'Instances unavailable'}
             </p>
           )}
-          <table className="ha-connector-table">
+          <table className="cnx-table">
             <thead>
               <tr>
                 <th>Name</th>
@@ -292,7 +405,7 @@ export function ConnectorSdkPage(): JSX.Element {
                 <tr
                   key={row.id}
                   data-selected={selectedInstanceId === row.id}
-                  className="ha-connector-table__row--selectable"
+                  className="cnx-table__row--selectable"
                   onClick={() => {
                     setSelectedInstanceId(row.id);
                     setSelectedStagingIds(new Set());
@@ -300,16 +413,16 @@ export function ConnectorSdkPage(): JSX.Element {
                 >
                   <td>
                     <strong>{row.name}</strong>
-                    <div className="ha-connector-page__muted">
+                    <div className="cnx-muted">
                       {row.enabled ? 'Enabled' : 'Disabled'}
                       {selectedInstanceId === row.id ? ' · Selected' : ''}
                     </div>
                   </td>
                   <td>
                     {row.connectorName}
-                    <div className="ha-connector-page__muted">{row.connectorId}</div>
+                    <div className="cnx-muted">{row.connectorId}</div>
                   </td>
-                  <td className="ha-connector-mono">
+                  <td className="cnx-mono">
                     {row.secretFieldsConfigured.length
                       ? row.secretFieldsConfigured.join(', ')
                       : 'None'}
@@ -320,13 +433,18 @@ export function ConnectorSdkPage(): JSX.Element {
                       : row.lastTestOk
                         ? 'OK'
                         : 'Failed'}
-                    <div className="ha-connector-page__muted">{row.lastTestMessage ?? '—'}</div>
+                    <div className="cnx-muted">{row.lastTestMessage ?? '—'}</div>
                   </td>
                   <td>
                     <button
                       type="button"
-                      className="ha-connector-btn"
+                      className="cnx-button"
                       disabled={testMutation.isPending}
+                      title={
+                        CONNECTOR_VENDOR_LIVE_VERIFIED
+                          ? undefined
+                          : 'Bounded dry test — vendor live credentials not production-verified'
+                      }
                       onClick={(e) => {
                         e.stopPropagation();
                         testMutation.mutate(row.id);
@@ -340,26 +458,33 @@ export function ConnectorSdkPage(): JSX.Element {
             </tbody>
           </table>
           {(instancesQuery.data ?? []).length === 0 && !instancesQuery.isLoading && (
-            <p className="ha-connector-page__muted">No instances yet.</p>
+            <div className="connectors-empty-honesty" role="status">
+              <Unplug size={22} />
+              <strong>No connector instances yet</strong>
+              <span>
+                Select a catalog vendor and save a configuration. Empty inventory is not proof of
+                vendor readiness.
+              </span>
+            </div>
           )}
         </section>
 
         <section
-          className="ha-connector-panel ha-connector-panel--wide"
+          className="cnx-panel cnx-panel--wide"
           aria-label="Staged connector alerts"
         >
-          <div className="ha-connector-panel__toolbar">
+          <div className="cnx-panel__toolbar">
             <h2>
               <Upload size={16} /> Staged alerts
               {selectedInstance
                 ? ` · ${selectedInstance.name}`
                 : ''}{' '}
-              ({stagedQuery.data?.count ?? 0})
+              ({stagedCount})
             </h2>
             {canPromote && pendingSelectedIds.length > 0 && (
               <button
                 type="button"
-                className="ha-connector-btn ha-connector-btn--primary"
+                className="cnx-button cnx-button--primary"
                 disabled={promotePending}
                 onClick={() => promoteBatchMutation.mutate(pendingSelectedIds)}
               >
@@ -368,21 +493,23 @@ export function ConnectorSdkPage(): JSX.Element {
             )}
           </div>
 
-          <p className="ha-connector-page__muted">
+          <p className="cnx-muted">
             PostgreSQL staging queue ({stagedQuery.data?.destination ?? 'ha_connector_alert_staging'}
             ). Promote writes labeled connector-promoted documents — not correlated SIEM alerts.
+            {CONNECTOR_PROMOTE_ADMIN_ONLY &&
+              ' Promote requires Platform Administrator; SOC Manager may view the queue.'}
           </p>
 
           {selectedInstanceId === null && (
-            <p className="ha-connector-page__muted">Select an instance to list staged alerts.</p>
+            <p className="cnx-muted">Select an instance to list staged alerts.</p>
           )}
 
           {selectedInstanceId !== null && stagedQuery.isLoading && (
-            <p className="ha-connector-page__muted">Loading staged alerts…</p>
+            <p className="cnx-muted">Loading staged alerts…</p>
           )}
 
           {selectedInstanceId !== null && stagedQuery.isError && (
-            <p className="ha-connector-page__error">
+            <p className="cnx-error">
               {stagedQuery.error instanceof Error
                 ? stagedQuery.error.message
                 : 'Staged alerts unavailable'}
@@ -392,11 +519,16 @@ export function ConnectorSdkPage(): JSX.Element {
           {selectedInstanceId !== null &&
             stagedQuery.isSuccess &&
             (stagedQuery.data.alerts.length === 0 ? (
-              <p className="ha-connector-page__muted">
-                No staged alerts for this instance. Ingest must land in the staging queue first.
-              </p>
+              <div className="connectors-empty-honesty" role="status">
+                <Upload size={22} />
+                <strong>No staged alerts for this instance</strong>
+                <span>
+                  Ingest must land in the staging queue first — empty queue is not proof that
+                  vendor fetch succeeded.
+                </span>
+              </div>
             ) : (
-              <table className="ha-connector-table">
+              <table className="cnx-table">
                 <thead>
                   <tr>
                     {canPromote && <th aria-label="Select" />}
@@ -432,7 +564,7 @@ export function ConnectorSdkPage(): JSX.Element {
                         )}
                         <td>
                           <span
-                            className="ha-connector-status"
+                            className="cnx-status"
                             data-status={row.status.toLowerCase()}
                           >
                             {row.status}
@@ -440,10 +572,10 @@ export function ConnectorSdkPage(): JSX.Element {
                         </td>
                         <td>
                           <strong>{row.title?.trim() || 'Untitled'}</strong>
-                          <div className="ha-connector-mono">{row.externalId}</div>
+                          <div className="cnx-mono">{row.externalId}</div>
                         </td>
                         <td>
-                          <span className="ha-connector-page__muted">
+                          <span className="cnx-muted">
                             {formatTimestamp(row.alertCreatedAt ?? row.ingestedAt)}
                           </span>
                         </td>
@@ -451,14 +583,14 @@ export function ConnectorSdkPage(): JSX.Element {
                           {canPromote && isPending ? (
                             <button
                               type="button"
-                              className="ha-connector-btn"
+                              className="cnx-button"
                               disabled={promotePending}
                               onClick={() => promoteOneMutation.mutate(row.id)}
                             >
                               Promote
                             </button>
                           ) : (
-                            <span className="ha-connector-page__muted">—</span>
+                            <span className="cnx-muted">—</span>
                           )}
                         </td>
                       </tr>
@@ -469,12 +601,39 @@ export function ConnectorSdkPage(): JSX.Element {
             ))}
 
           {!canPromote && selectedInstanceId !== null && (
-            <p className="ha-connector-page__muted">
+            <p className="cnx-muted" title={CONNECTOR_PROMOTE_DENIED_TITLE}>
               Promote requires Platform Administrator. SOC Manager can view the staging queue.
             </p>
           )}
         </section>
       </div>
+
+      <div className="cnx-trust">
+        <span>
+          <LockKeyhole size={11} />
+          Secrets never render after write; promote never targets v3-hive-alert-* indices
+        </span>
+        <strong>
+          {CONNECTOR_VENDOR_LIVE_VERIFIED
+            ? 'Vendor live projection current'
+            : 'Vendor live credentials deferred — bounded tests and staging only'}
+        </strong>
+        <span>
+          {CONNECTOR_PROMOTE_ADMIN_ONLY
+            ? 'Promote · Platform Administrator only'
+            : 'Promote authority not proven'}
+        </span>
+      </div>
+
+      <StatusDock
+        className="cnx-status-dock"
+        sseConnected={eps.connected}
+        eps={eps.eps}
+        mode="historical"
+        lastUpdated={
+          instancesQuery.dataUpdatedAt ? new Date(instancesQuery.dataUpdatedAt) : undefined
+        }
+      />
     </section>
   );
 }
