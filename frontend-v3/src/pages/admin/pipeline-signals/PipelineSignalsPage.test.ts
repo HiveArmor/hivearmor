@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import type { PipelineSignalsDTO } from './PipelineSignalsPage';
+import type { PipelineSignalsDTO } from '../pipeline-operations/pipelineOperations.types';
 
 describe('PipelineSignalsDTO contract shape', () => {
   it('accepts measured-only fields without inventing thresholds', () => {
