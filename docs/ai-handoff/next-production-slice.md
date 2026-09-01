@@ -1,22 +1,24 @@
 # Next production slice
 
-Updated: **2026-09-01 17:52:00 IST (UTC+05:30)**
+Updated: **2026-09-01 18:02:00 IST (UTC+05:30)**
 
 ## Completed this slice — SENS-001 install script download + enrollment token fix (#162)
 
 Status: **MERGED** tip `7a1ba6c` (#162) — **STAGING CANDIDATE**. Not `PRODUCTION READY`.
-Staging FE rebuild: frontend-v3 + edge healthy; download UX live. Backend script fix **not yet on staging** (WAR rebuild pending).
+Staging deploy (2026-09-01 18:02 IST): frontend-v3 + edge + **backend WAR rebuilt** — **STAGING CANDIDATE**.
 
 | Check | Result |
 |---|---|
-| PR #162 CI | pass (admin merge) |
-| frontend-v3 / edge (staging) | healthy |
+| PR #162 / tip | `7a1ba6c` + docs `4c68c5e` |
+| frontend-v3 / edge / backend (staging) | healthy after recreate |
 | `GET /api/healthcheck` | 200 |
-| SPA `/posture/sensors` | 200 — bundle has `hivearmor-install` marker |
-| Backend enrollment scripts on staging | **pending** WAR upload + recreate |
+| SPA `/posture/sensors` | 200 — `assets/chunks/SensorGridPage-*.js` has `hivearmor-install` |
+| Backend enrollment scripts on staging | **deployed** (fresh WAR; `--enrollment-token-file` in `AgentInstallScriptBuilder`) |
+| `ha-agent-packages/summary` | auth required; **publishedCount unverified** (no binaries published) |
+| `POST /api/ha-agent-keys` script smoke | **not run** — no bootstrap creds on VM |
 | Windows install proof | **BLOCKED** — no VM |
 
-Next: build `hivearmor.war` (JDK 17 + `MAVEN_TK`), rsync to staging, recreate `backend`; run `verify-packaged-windows-staging.ps1`; publish agent packages if `publishedCount=0`.
+Next: place `ADMIN_BOOTSTRAP.txt` or document staging admin creds; run `publish-agent-packages.sh` with `SOURCE_DIR` CI binaries; authenticated API smoke for install scripts; `verify-packaged-windows-staging.ps1` when VM available.
 
 ## Completed this slice — Sensors Add Agent UX + package publish (#82)
 

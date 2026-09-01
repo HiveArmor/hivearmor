@@ -728,3 +728,16 @@ No production-readiness claim is made by this baseline entry.
 - Windows validation: **BLOCKED** — no Windows VM/sandbox available; `agent/release/verify-packaged-windows.ps1` not executed this session.
 - Local-dev API smoke: **BLOCKED** — Docker socket permission denied in agent environment (`docker compose ps` failed).
 - No secrets logged or committed.
+
+## 2026-09-01 18:02:00 IST (UTC+05:30) — Staging full slice deploy (backend WAR + FE rebuild)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED).
+- Git: handoff pre-deploy commit `4c68c5e` on `main`; code tip includes SENS-001 `7a1ba6c`.
+- Build: local `mvn -s settings.xml -B -DskipTests package -Pprod -Denforcer.skip=true` with Temurin JDK 17 — **SUCCESS** (~21s); `backend/target/hivearmor.war` uploaded via rsync.
+- Staging: `ubuntu@72.44.52.187` — rsync WAR + `frontend-v3/` + `filters/` + `rules/`; `docker compose build backend frontend-v3`; `up -d --no-deps --force-recreate backend frontend-v3 edge` — **healthy**.
+- Smoke (external HTTPS `72.44.52.187`): `GET /api/healthcheck` **200**; SPA `/posture/sensors` **200**; bundle `assets/chunks/SensorGridPage-*.js` contains `hivearmor-install` marker.
+- Backend WAR on staging: `AgentInstallScriptBuilder` includes `--enrollment-token-file` (verified via class strings in local WAR; container lacks `unzip`).
+- Agent packages: **not published** — no `SOURCE_DIR` binaries locally or on staging (`agent-packages/` empty); `GET /api/ha-agent-packages/summary` requires auth.
+- API script smoke (`POST /api/ha-agent-keys`): **not run** — `ADMIN_BOOTSTRAP.txt` absent; staging `.env` has no `APP_ADMIN_PASSWORD`; default dev password did not authenticate.
+- Windows validation: still **BLOCKED** — no Windows VM.
+
