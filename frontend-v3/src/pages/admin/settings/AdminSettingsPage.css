@@ -1,0 +1,32 @@
+.adm-settings-page{height:calc(100dvh - var(--ha-masthead-height));min-height:0;display:flex;flex-direction:column;overflow:hidden;color:var(--ha-foreground-primary);background:var(--ha-surface-app)}
+.adm-settings-header,.adm-settings-header__identity,.admin-settings-empty-honesty,.admin-settings-empty-honesty__links{display:flex;align-items:center}
+.adm-settings-header{min-height:var(--ha-page-header-height);padding:0 var(--ha-page-header-padding-inline);justify-content:space-between;gap:12px;flex:0 0 auto;background:var(--ha-surface-panel);border-bottom:1px solid var(--ha-border-subtle)}
+.adm-settings-header__identity{min-width:0;gap:10px}
+.adm-settings-header__mark{width:var(--ha-page-header-icon-size);height:var(--ha-page-header-icon-size);display:grid;place-items:center;flex:0 0 auto;color:var(--ha-action-secondary);background:var(--ha-fill-primary-subtle);border:1px solid color-mix(in srgb,var(--ha-action-primary) 42%,var(--ha-border-default));border-radius:var(--ha-radius-control)}
+.adm-settings-header__copy{min-width:0;display:flex;flex-direction:column;align-items:flex-start}
+.adm-settings-header__eyebrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.adm-settings-header__eyebrow>span:first-child{display:block;color:var(--ha-action-secondary);font:600 9px/1 var(--ha-font-ui);letter-spacing:.16em;text-transform:uppercase}
+.adm-settings-header__badge{padding:2px 6px;border:1px solid color-mix(in srgb,var(--ha-severity-high) 40%,var(--ha-border-default));border-radius:var(--ha-radius-sm);background:color-mix(in srgb,var(--ha-severity-high) 12%,transparent);color:var(--ha-severity-high);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.adm-settings-header h1{margin:3px 0 0;font:600 var(--ha-page-title-compact);white-space:nowrap}
+.adm-settings-header__job{margin:4px 0 0;max-width:760px;color:var(--ha-foreground-secondary);font-size:var(--ha-text-sm,12px);line-height:1.4}
+.adm-settings-page__projection-note{margin:4px 0 0;max-width:760px;color:var(--ha-foreground-tertiary);font-size:var(--ha-text-xs,11px);line-height:1.35}
+.adm-settings-page__meta{display:flex;flex:0 0 auto;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:0;padding:6px var(--ha-page-header-padding-inline);border-bottom:1px solid var(--ha-border-subtle);background:var(--ha-surface-panel);color:var(--ha-foreground-secondary);font-size:var(--ha-text-xs,11px)}
+.adm-settings-page__meta a{color:var(--ha-action-secondary);text-decoration:none}
+.adm-settings-page__meta a:hover{text-decoration:underline}
+.adm-settings-page__access{color:var(--ha-foreground-tertiary);font-size:9px}
+.adm-settings-trust{flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:6px var(--ha-page-header-padding-inline);color:var(--ha-foreground-secondary);background:var(--ha-fill-primary-subtle);border-bottom:1px solid var(--ha-border-accent);font-size:var(--ha-text-xs,11px)}
+.adm-settings-trust strong{color:var(--ha-foreground-primary)}
+.admin-settings-empty-honesty{flex:0 0 auto;flex-wrap:wrap;gap:8px;padding:8px var(--ha-page-header-padding-inline);border-bottom:1px solid var(--ha-border-subtle);background:color-mix(in srgb,var(--ha-severity-medium) 10%,transparent);color:var(--ha-foreground-secondary);font-size:var(--ha-text-xs,11px);line-height:1.45}
+.admin-settings-empty-honesty strong{color:var(--ha-foreground-primary);font-size:11px}
+.admin-settings-empty-honesty__links{gap:12px}
+.admin-settings-empty-honesty__links a{color:var(--ha-action-secondary);text-decoration:none;font-size:10px}
+.admin-settings-empty-honesty__links a:hover{text-decoration:underline}
+.adm-settings-page__body{min-height:0;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.adm-settings-page__body .gov-page{height:100%;min-height:0}
+.adm-settings-page__body .gov-header{display:none}
+.adm-settings-empty{height:100%;min-height:260px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;padding:30px;text-align:center;color:var(--ha-foreground-secondary)}
+.adm-settings-empty svg{color:var(--ha-foreground-tertiary)}
+.adm-settings-empty strong{color:var(--ha-foreground-primary);font-size:13px}
+.adm-settings-empty span{max-width:560px;font-size:10px;line-height:1.5}
+@media(max-width:760px){.adm-settings-header__job,.adm-settings-page__projection-note{display:none}}
+@media(prefers-reduced-motion:reduce){.adm-settings-page *{scroll-behavior:auto!important}}
