@@ -1,22 +1,18 @@
 /**
- * TenantDetailPage — detail view for a single MSSP-managed tenant.
+ * TenantDetailPage — MSSP tenant workspace honesty (Prompt 48 / Wave C3 slice 4).
  *
- * Renders three mutually exclusive page-state branches:
- *   loading    — initial fetch in progress
- *   not-found  — backend returned 404 (or tenant is not mssp_managed)
- *   populated  — data arrived; shows sparkline chart, 7-day trend chart,
- *                read-only metadata, and an inline edit form
- *
- * Requirements: 13.1 – 13.9
+ * Production detail: GET /api/ha-mssp/tenants/{id}; metadata updates via PUT.
+ * Membership and tenant-scoped roles live on Users; platform tenant boundaries on
+ * Identity & Tenancy — lifecycle governance and delegated audit remain fail-closed (IAM-005).
  */
 
 import type { ReactElement } from "react";
 import { useState } from "react";
 
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { EChartsOption } from "echarts";
-import { useParams } from "react-router-dom";
+import { Building2, CircleSlash2, RefreshCw, ShieldCheck } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
 
 import { fetchTenantDetail, updateTenant } from "../api/msspTenantApi";
 import type { UpdateTenantRequest } from "../api/msspTypes";
@@ -24,10 +20,13 @@ import { useMsspNavStore } from "../store/msspNavStore";
 
 import { HaChart } from "@/components/ha-chart/HaChart";
 import { LoadingState } from "@/components/loading-state/LoadingState";
+import { ROUTES } from "@/constants/routes.constants";
 
-// ---------------------------------------------------------------------------
-// Chart option builders
-// ---------------------------------------------------------------------------
+import "./TenantDetailPage.css";
+
+/** Bundle-visible job sentence — delegated tenant workspace, not inventory list or membership admin. */
+export const TENANT_DETAIL_JOB_SENTENCE =
+  "MSSP tenant workspace — inspect observability and metadata for one delegated customer tenant authorized for MSSP Administrators. Tenant inventory stays on Tenants; membership and tenant-scoped roles live on Users; platform tenant boundaries on Identity & Tenancy — client prefix is immutable after provision; suspension, delegation scope, and immutable audit remain fail-closed until IAM contracts land.";
 
 function buildSparklineOption(data: readonly number[]): EChartsOption {
   const style = window.getComputedStyle(document.documentElement);
@@ -97,7 +96,6 @@ function buildTrendOption(
   };
 }
 
-/** Generate the last-7-day ISO date labels (ending yesterday UTC). */
 function last7DayLabels(): string[] {
   const labels: string[] = [];
   const now = new Date();
@@ -110,9 +108,81 @@ function last7DayLabels(): string[] {
   return labels;
 }
 
-// ---------------------------------------------------------------------------
-// Inline edit form
-// ---------------------------------------------------------------------------
+interface PageHeaderProps {
+  title: string;
+  onRefresh?: () => void;
+}
+
+function PageHeader({ title, onRefresh }: PageHeaderProps): ReactElement {
+  return (
+    <header className="mssp-tenant-detail-header">
+      <div className="mssp-tenant-detail-header__identity">
+        <span className="mssp-tenant-detail-header__mark">
+          <Building2 size={18} aria-hidden="true" />
+        </span>
+        <div className="mssp-tenant-detail-header__copy">
+          <div className="mssp-tenant-detail-header__eyebrow">
+            <span>MSSP PORTAL · TENANT WORKSPACE</span>
+            <span className="mssp-tenant-detail-header__badge">STAGING CANDIDATE</span>
+          </div>
+          <h1>{title}</h1>
+          <p className="mssp-tenant-detail-header__job">{TENANT_DETAIL_JOB_SENTENCE}</p>
+          <p className="mssp-tenant-detail-page__projection-note" role="note">
+            Detail via GET /api/ha-mssp/tenants/&#123;id&#125;. EPS sparkline and 7-day alert trend
+            are observability projections — not SLO pass/fail. Metadata edits use PUT (name, licence,
+            contact, max users); client prefix is immutable. Membership and tenant-scoped roles are
+            partial on Users (IAM-005).
+          </p>
+        </div>
+      </div>
+      {onRefresh && (
+        <div className="mssp-tenant-detail-header__actions">
+          <button
+            className="mssp-tenant-detail-icon-button"
+            type="button"
+            aria-label="Refresh tenant workspace"
+            onClick={onRefresh}
+          >
+            <RefreshCw size={13} />
+          </button>
+        </div>
+      )}
+    </header>
+  );
+}
+
+function MetaLinks({ tenantId }: { tenantId?: string }): ReactElement {
+  const usersPath = tenantId ? `/mssp/tenants/${tenantId}/users` : "/mssp/tenants";
+
+  return (
+    <p className="mssp-tenant-detail-page__meta">
+      <Link to="/mssp/overview">Overview</Link>
+      <span aria-hidden="true">·</span>
+      <Link to="/mssp/tenants">Tenants</Link>
+      <span aria-hidden="true">·</span>
+      <Link to={usersPath}>Users</Link>
+      <span aria-hidden="true">·</span>
+      <Link to={ROUTES.ADMIN_TENANTS}>Platform tenants</Link>
+      <span aria-hidden="true">·</span>
+      <Link to={ROUTES.ADMIN_USERS}>Identity &amp; Tenancy</Link>
+      <span aria-hidden="true">·</span>
+      <span className="mssp-tenant-detail-page__access">MSSP Administrator</span>
+    </p>
+  );
+}
+
+function TrustBanner(): ReactElement {
+  return (
+    <div className="mssp-tenant-detail-trust" data-testid="tenant-detail-trust-banner">
+      <ShieldCheck size={13} aria-hidden="true" />
+      <span>
+        <strong>Workspace fail-closed:</strong> HTTP 404 means the tenant is not MSSP-managed or
+        missing; 401/403 means MSSP Administrator is required — never conflated. Charts reflect
+        authorized projections only; they do not prove customer health or contractual uptime.
+      </span>
+    </div>
+  );
+}
 
 interface EditFormState {
   name: string;
@@ -141,7 +211,7 @@ function EditForm({ tenantId, initial, onClose }: EditFormProps): ReactElement {
       onClose();
     },
     onError: () => {
-      setFormError("Update failed. Please try again.");
+      setFormError("Update failed. PUT /api/ha-mssp/tenants/{id} rejected the change.");
     },
   });
 
@@ -157,142 +227,63 @@ function EditForm({ tenantId, initial, onClose }: EditFormProps): ReactElement {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--ha-space-3)",
-        background: "var(--ha-surface-primary)",
-        border: "1px solid var(--ha-border)",
-        borderRadius: "var(--ha-radius-base)",
-        padding: "var(--ha-space-4)",
-        marginTop: "var(--ha-space-4)",
-      }}
-    >
-      <h3
-        style={{
-          fontSize: "var(--ha-text-base)",
-          fontWeight: "var(--ha-weight-semibold)",
-          color: "var(--ha-text-primary)",
-          marginBottom: "var(--ha-space-2)",
-        }}
-      >
-        Edit Tenant
-      </h3>
+    <form className="mssp-tenant-detail-edit" onSubmit={handleSubmit}>
+      <h3>Edit tenant metadata</h3>
+      <p className="mssp-tenant-detail-page__projection-note" role="note">
+        Client prefix cannot be changed after provision. Membership and tenant roles are managed on
+        Users — not here.
+      </p>
 
-      {formError && (
-        <p style={{ color: "var(--ha-critical)", fontSize: "var(--ha-text-sm)" }}>
-          {formError}
-        </p>
-      )}
+      {formError && <p className="mssp-tenant-detail-edit__error">{formError}</p>}
 
-      <label style={{ display: "flex", flexDirection: "column", gap: "var(--ha-space-1)" }}>
-        <span style={{ fontSize: "var(--ha-text-sm)", color: "var(--ha-text-secondary)" }}>
-          Name
-        </span>
+      <label>
+        <span>Name</span>
         <input
           value={form.name}
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          style={{
-            background: "var(--ha-surface-raised)",
-            border: "1px solid var(--ha-border)",
-            borderRadius: "var(--ha-radius-base)",
-            color: "var(--ha-text-primary)",
-            padding: "var(--ha-space-2) var(--ha-space-3)",
-            fontSize: "var(--ha-text-sm)",
-          }}
         />
       </label>
 
-      <label style={{ display: "flex", flexDirection: "column", gap: "var(--ha-space-1)" }}>
-        <span style={{ fontSize: "var(--ha-text-sm)", color: "var(--ha-text-secondary)" }}>
-          Max Users
-        </span>
+      <label>
+        <span>Max Users</span>
         <input
           type="number"
           value={form.maxUsers}
           onChange={(e) =>
             setForm((f) => ({ ...f, maxUsers: parseInt(e.target.value, 10) || 0 }))
           }
-          style={{
-            background: "var(--ha-surface-raised)",
-            border: "1px solid var(--ha-border)",
-            borderRadius: "var(--ha-radius-base)",
-            color: "var(--ha-text-primary)",
-            padding: "var(--ha-space-2) var(--ha-space-3)",
-            fontSize: "var(--ha-text-sm)",
-          }}
         />
       </label>
 
-      <label style={{ display: "flex", flexDirection: "column", gap: "var(--ha-space-1)" }}>
-        <span style={{ fontSize: "var(--ha-text-sm)", color: "var(--ha-text-secondary)" }}>
-          Licence Type
-        </span>
+      <label>
+        <span>Licence Type</span>
         <input
           value={form.licenceType}
           onChange={(e) => setForm((f) => ({ ...f, licenceType: e.target.value }))}
-          style={{
-            background: "var(--ha-surface-raised)",
-            border: "1px solid var(--ha-border)",
-            borderRadius: "var(--ha-radius-base)",
-            color: "var(--ha-text-primary)",
-            padding: "var(--ha-space-2) var(--ha-space-3)",
-            fontSize: "var(--ha-text-sm)",
-          }}
         />
       </label>
 
-      <label style={{ display: "flex", flexDirection: "column", gap: "var(--ha-space-1)" }}>
-        <span style={{ fontSize: "var(--ha-text-sm)", color: "var(--ha-text-secondary)" }}>
-          Contact Email
-        </span>
+      <label>
+        <span>Contact Email</span>
         <input
           type="email"
           value={form.contactEmail}
           onChange={(e) => setForm((f) => ({ ...f, contactEmail: e.target.value }))}
-          style={{
-            background: "var(--ha-surface-raised)",
-            border: "1px solid var(--ha-border)",
-            borderRadius: "var(--ha-radius-base)",
-            color: "var(--ha-text-primary)",
-            padding: "var(--ha-space-2) var(--ha-space-3)",
-            fontSize: "var(--ha-text-sm)",
-          }}
         />
       </label>
 
-      <div style={{ display: "flex", gap: "var(--ha-space-3)", justifyContent: "flex-end" }}>
+      <div className="mssp-tenant-detail-edit__actions">
         <button
+          className="mssp-tenant-detail-button mssp-tenant-detail-button--secondary"
           type="button"
           onClick={onClose}
-          style={{
-            padding: "var(--ha-space-2) var(--ha-space-4)",
-            fontSize: "var(--ha-text-sm)",
-            borderRadius: "var(--ha-radius-base)",
-            border: "1px solid var(--ha-border)",
-            background: "var(--ha-surface-raised)",
-            color: "var(--ha-text-primary)",
-            cursor: "pointer",
-          }}
         >
           Cancel
         </button>
         <button
+          className="mssp-tenant-detail-button mssp-tenant-detail-button--primary"
           type="submit"
           disabled={mutation.isPending}
-          style={{
-            padding: "var(--ha-space-2) var(--ha-space-4)",
-            fontSize: "var(--ha-text-sm)",
-            fontWeight: "var(--ha-weight-medium)",
-            borderRadius: "var(--ha-radius-base)",
-            border: "none",
-            background: "var(--ha-primary)",
-            color: "var(--ha-background)",
-            cursor: mutation.isPending ? "not-allowed" : "pointer",
-            opacity: mutation.isPending ? 0.7 : 1,
-          }}
         >
           {mutation.isPending ? "Saving…" : "Save changes"}
         </button>
@@ -300,10 +291,6 @@ function EditForm({ tenantId, initial, onClose }: EditFormProps): ReactElement {
     </form>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Page component
-// ---------------------------------------------------------------------------
 
 export function TenantDetailPage(): ReactElement {
   const { tenantId } = useParams<{ tenantId: string }>();
@@ -317,308 +304,190 @@ export function TenantDetailPage(): ReactElement {
     enabled: Boolean(tenantId),
   });
 
-  // Track the last-visited tenant id for sidebar dynamic links
   if (data && tenantId) {
     setLastTenantId(tenantId);
   }
 
-  // ── Loading branch ─────────────────────────────────────────────────────────
+  const handleRefresh = (): void => {
+    void refetch();
+  };
+
+  const status = error instanceof Error ? error.message : "";
+  const isAuth = status === "401" || status === "403";
+  const is404 = isError && status === "404";
+  const headerTitle = data?.name ?? "Tenant workspace";
+
   if (isLoading) {
     return (
-      <div
+      <section
+        className="mssp-tenant-detail-page"
+        aria-label="MSSP tenant workspace"
         data-testid="tenant-detail-loading"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          padding: "var(--ha-space-6)",
-        }}
       >
-        <LoadingState message="Loading tenant details…" />
-      </div>
+        <PageHeader title="Tenant workspace" onRefresh={handleRefresh} />
+        <MetaLinks tenantId={tenantId} />
+        <TrustBanner />
+        <div className="mssp-tenant-detail-loading">
+          <LoadingState message="Loading tenant workspace…" />
+        </div>
+      </section>
     );
   }
-
-  // ── Not-found branch (HTTP 404 only) ───────────────────────────────────────
-  const is404 =
-    isError &&
-    error instanceof Error &&
-    error.message === "404";
 
   if (is404) {
     return (
-      <div
+      <section
+        className="mssp-tenant-detail-page"
+        aria-label="MSSP tenant workspace"
         data-testid="tenant-detail-notfound"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100%",
-          padding: "var(--ha-space-6)",
-        }}
       >
-        <h2
-          style={{
-            fontSize: "var(--ha-text-xl)",
-            fontWeight: "var(--ha-weight-semibold)",
-            color: "var(--ha-text-primary)",
-            marginBottom: "var(--ha-space-2)",
-          }}
-        >
-          Tenant not found
-        </h2>
-        <p
-          style={{
-            fontSize: "var(--ha-text-sm)",
-            color: "var(--ha-text-secondary)",
-            textAlign: "center",
-          }}
-        >
-          The requested tenant does not exist or is not MSSP-managed.
-        </p>
-        <button
-          type="button"
-          onClick={() => void refetch()}
-          style={{
-            marginTop: "var(--ha-space-4)",
-            padding: "var(--ha-space-2) var(--ha-space-4)",
-            fontSize: "var(--ha-text-sm)",
-            borderRadius: "var(--ha-radius-base)",
-            border: "1px solid var(--ha-border)",
-            background: "var(--ha-surface-raised)",
-            color: "var(--ha-text-primary)",
-            cursor: "pointer",
-          }}
-        >
-          Retry
-        </button>
-      </div>
+        <PageHeader title="Tenant workspace" onRefresh={handleRefresh} />
+        <MetaLinks tenantId={tenantId} />
+        <div className="mssp-tenant-detail-empty" role="status">
+          <strong>Tenant not found</strong>
+          <span>
+            The requested tenant does not exist or is not MSSP-managed. HTTP 404 is distinct from
+            authorization failure.
+          </span>
+          <button
+            className="mssp-tenant-detail-button mssp-tenant-detail-button--secondary"
+            type="button"
+            onClick={handleRefresh}
+          >
+            Retry
+          </button>
+        </div>
+      </section>
     );
   }
 
-  // ── Auth / generic error branch ────────────────────────────────────────────
-  if (isError || !data) {
-    const status = error instanceof Error ? error.message : "";
-    const isAuth = status === "401" || status === "403";
+  if (isAuth) {
     return (
-      <div
+      <section
+        className="mssp-tenant-detail-page"
+        aria-label="MSSP tenant workspace"
         data-testid="tenant-detail-error"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100%",
-          padding: "var(--ha-space-6)",
-        }}
       >
-        <h2
-          style={{
-            fontSize: "var(--ha-text-xl)",
-            fontWeight: "var(--ha-weight-semibold)",
-            color: "var(--ha-text-primary)",
-            marginBottom: "var(--ha-space-2)",
-          }}
-        >
-          {isAuth ? "MSSP access restricted" : "Tenant details unavailable"}
-        </h2>
-        <p
-          style={{
-            fontSize: "var(--ha-text-sm)",
-            color: "var(--ha-text-secondary)",
-            textAlign: "center",
-          }}
-        >
-          {isAuth
-            ? "Required permission: MSSP Administrator. Sign in again or ask an administrator for access."
-            : "The tenant could not be loaded. Retry or return to the tenants list."}
-        </p>
-        <button
-          type="button"
-          onClick={() => void refetch()}
-          style={{
-            marginTop: "var(--ha-space-4)",
-            padding: "var(--ha-space-2) var(--ha-space-4)",
-            fontSize: "var(--ha-text-sm)",
-            borderRadius: "var(--ha-radius-base)",
-            border: "1px solid var(--ha-border)",
-            background: "var(--ha-surface-raised)",
-            color: "var(--ha-text-primary)",
-            cursor: "pointer",
-          }}
-        >
-          Retry
-        </button>
-      </div>
+        <PageHeader title="Tenant workspace" onRefresh={handleRefresh} />
+        <MetaLinks tenantId={tenantId} />
+        <div className="mssp-tenant-detail-empty" role="status">
+          <CircleSlash2 size={30} />
+          <strong>MSSP access restricted</strong>
+          <span>
+            Required permission: MSSP Administrator. Sign in again or ask an administrator for
+            access.
+          </span>
+        </div>
+      </section>
     );
   }
 
-  // ── Populated branch ───────────────────────────────────────────────────────
+  if (isError || !data) {
+    return (
+      <section
+        className="mssp-tenant-detail-page"
+        aria-label="MSSP tenant workspace"
+        data-testid="tenant-detail-error"
+      >
+        <PageHeader title="Tenant workspace" onRefresh={handleRefresh} />
+        <MetaLinks tenantId={tenantId} />
+        <TrustBanner />
+        <div className="mssp-tenant-detail-empty mssp-tenant-detail-empty--error" role="status">
+          <strong>Tenant workspace unavailable</strong>
+          <span>
+            GET /api/ha-mssp/tenants/&#123;id&#125; failed. Retry or return to the tenants list.
+          </span>
+          <button
+            className="mssp-tenant-detail-button mssp-tenant-detail-button--secondary"
+            type="button"
+            onClick={handleRefresh}
+          >
+            Retry
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   const trendLabels = last7DayLabels();
 
   return (
-    <div
+    <section
+      className="mssp-tenant-detail-page"
+      aria-label="MSSP tenant workspace"
       data-testid="tenant-detail-populated"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        padding: "var(--ha-space-6)",
-      }}
     >
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "var(--ha-space-4)",
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "var(--ha-text-xl)",
-            fontWeight: "var(--ha-weight-semibold)",
-            color: "var(--ha-text-primary)",
-          }}
-        >
-          {data.name}
-        </h1>
-        <button
-          type="button"
-          onClick={() => setEditOpen((open) => !open)}
-          style={{
-            padding: "var(--ha-space-2) var(--ha-space-4)",
-            fontSize: "var(--ha-text-sm)",
-            fontWeight: "var(--ha-weight-medium)",
-            borderRadius: "var(--ha-radius-base)",
-            border: "1px solid var(--ha-border)",
-            background: "var(--ha-surface-raised)",
-            color: "var(--ha-text-primary)",
-            cursor: "pointer",
-          }}
-        >
-          {editOpen ? "Close" : "Edit"}
-        </button>
-      </div>
+      <PageHeader title={headerTitle} onRefresh={handleRefresh} />
+      <MetaLinks tenantId={tenantId} />
+      <TrustBanner />
 
-      {/* Metadata row */}
-      <div
-        style={{
-          display: "flex",
-          gap: "var(--ha-space-6)",
-          flexWrap: "wrap",
-          marginBottom: "var(--ha-space-6)",
-        }}
-      >
-        {(
-          [
-            ["Client Prefix", data.clientPrefix],
-            ["Max Users", String(data.maxUsers)],
-            ["Licence Type", data.licenceType],
-            ["Contact Email", data.contactEmail ?? "—"],
-            ["Active Users", String(data.userCount)],
-            ["EPS", String(data.eps)],
-          ] as [string, string][]
-        ).map(([label, value]) => (
-          <div
-            key={label}
-            style={{
-              minWidth: "120px",
-              background: "var(--ha-surface-primary)",
-              border: "1px solid var(--ha-border)",
-              borderRadius: "var(--ha-radius-base)",
-              padding: "var(--ha-space-3)",
-            }}
+      <div className="mssp-tenant-detail-workspace">
+        <div className="mssp-tenant-detail-header__actions" style={{ justifyContent: "flex-end" }}>
+          <button
+            className="mssp-tenant-detail-button mssp-tenant-detail-button--secondary"
+            type="button"
+            onClick={() => setEditOpen((open) => !open)}
           >
-            <div
-              style={{
-                fontSize: "var(--ha-text-xs)",
-                color: "var(--ha-text-secondary)",
-                marginBottom: "var(--ha-space-1)",
-              }}
-            >
-              {label}
+            {editOpen ? "Close edit" : "Edit metadata"}
+          </button>
+          <Link
+            className="mssp-tenant-detail-button mssp-tenant-detail-button--primary"
+            to={`/mssp/tenants/${tenantId}/users`}
+            style={{ textDecoration: "none" }}
+          >
+            Manage users
+          </Link>
+        </div>
+
+        <div className="mssp-tenant-detail-meta-row">
+          {(
+            [
+              ["Client Prefix", data.clientPrefix],
+              ["Max Users", String(data.maxUsers)],
+              ["Licence Type", data.licenceType],
+              ["Contact Email", data.contactEmail ?? "—"],
+              ["Active Users", String(data.userCount)],
+              ["EPS", String(data.eps)],
+            ] as [string, string][]
+          ).map(([label, value]) => (
+            <div key={label} className="mssp-tenant-detail-stat">
+              <div className="mssp-tenant-detail-stat__label">{label}</div>
+              <div className="mssp-tenant-detail-stat__value">{value}</div>
             </div>
-            <div
-              style={{
-                fontSize: "var(--ha-text-base)",
-                fontWeight: "var(--ha-weight-semibold)",
-                color: "var(--ha-text-primary)",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {value}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* Inline edit form */}
-      {editOpen && (
-        <EditForm
-          tenantId={tenantId ?? ""}
-          initial={{
-            name: data.name,
-            maxUsers: data.maxUsers,
-            licenceType: data.licenceType,
-            contactEmail: data.contactEmail ?? "",
-          }}
-          onClose={() => setEditOpen(false)}
-        />
-      )}
+        {editOpen && (
+          <EditForm
+            tenantId={tenantId ?? ""}
+            initial={{
+              name: data.name,
+              maxUsers: data.maxUsers,
+              licenceType: data.licenceType,
+              contactEmail: data.contactEmail ?? "",
+            }}
+            onClose={() => setEditOpen(false)}
+          />
+        )}
 
-      {/* EPS sparkline (60 min) */}
-      <div
-        style={{
-          background: "var(--ha-surface-primary)",
-          border: "1px solid var(--ha-border)",
-          borderRadius: "var(--ha-radius-base)",
-          padding: "var(--ha-space-4)",
-          marginBottom: "var(--ha-space-6)",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: "var(--ha-text-sm)",
-            color: "var(--ha-text-secondary)",
-            marginBottom: "var(--ha-space-3)",
-          }}
-        >
-          EPS — Last 60 Minutes
-        </h2>
-        <HaChart
-          option={buildSparklineOption(data.epsSparkline)}
-          height={200}
-          ariaLabel="Line chart showing events per second over the last 60 minutes"
-        />
-      </div>
+        <div className="mssp-tenant-detail-chart">
+          <h2>EPS — Last 60 Minutes</h2>
+          <HaChart
+            option={buildSparklineOption(data.epsSparkline)}
+            height={200}
+            ariaLabel="Line chart showing events per second over the last 60 minutes"
+          />
+        </div>
 
-      {/* 7-day alert trend */}
-      <div
-        style={{
-          background: "var(--ha-surface-primary)",
-          border: "1px solid var(--ha-border)",
-          borderRadius: "var(--ha-radius-base)",
-          padding: "var(--ha-space-4)",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: "var(--ha-text-sm)",
-            color: "var(--ha-text-secondary)",
-            marginBottom: "var(--ha-space-3)",
-          }}
-        >
-          Alerts — Last 7 Days
-        </h2>
-        <HaChart
-          option={buildTrendOption(data.alertsTrend7d, trendLabels)}
-          height={200}
-          ariaLabel="Bar chart showing alert counts for the last 7 days"
-        />
+        <div className="mssp-tenant-detail-chart">
+          <h2>Alerts — Last 7 Days</h2>
+          <HaChart
+            option={buildTrendOption(data.alertsTrend7d, trendLabels)}
+            height={200}
+            ariaLabel="Bar chart showing alert counts for the last 7 days"
+          />
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
