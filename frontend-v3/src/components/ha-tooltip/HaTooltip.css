@@ -1,0 +1,38 @@
+/**
+ * HaTooltip styles — token-only. Paints the PatternFly Tooltip content in Hive Carbon Hybrid
+ * and gives it a calm entrance. Colors come from CSS-var overrides in HaTooltip.tsx; this file
+ * adds the border (PF has no content border-color var) and the motion contract.
+ */
+
+.ha-tooltip .pf-v6-c-tooltip__content {
+  border: 1px solid var(--ha-border-strong);
+  font-family: var(--ha-font-ui);
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+.ha-tooltip .pf-v6-c-tooltip__arrow {
+  border-inline-start: 1px solid var(--ha-border-strong);
+  border-block-start: 1px solid var(--ha-border-strong);
+}
+
+/* Calm fade-in; short enough not to lag a scan. */
+.ha-tooltip {
+  animation: ha-tooltip-in var(--ha-transition-fast) ease;
+}
+
+@keyframes ha-tooltip-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-tooltip {
+    animation: none;
+  }
+}
