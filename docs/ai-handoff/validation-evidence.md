@@ -705,6 +705,17 @@ No production-readiness claim is made by this baseline entry.
 - Report: `/tmp/hivearmor-staging-sensors-add-agent-rebuild.json`.
 - Next: run `publish-agent-packages.sh` with signed CI binaries for Downloadable packages.
 
+## 2026-09-01 17:52:00 IST (UTC+05:30) — SENS-001 merged + staging FE rebuild (tip 7a1ba6c)
+
+- Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED).
+- Merge: **#162** → `main` `7a1ba6c` (`feat/sensors-install-script-download`).
+- CI: Go deps, CEL pack, MSSP isolation, AI review — **pass**; Approver / Decide — expected fail (admin merge).
+- Staging deploy: rsync `frontend-v3/` → `ubuntu@72.44.52.187`; `docker compose build/recreate frontend-v3 edge` — **healthy**.
+- Smoke: `GET /api/healthcheck` **200**; SPA `/posture/sensors` **200**; bundle contains `hivearmor-install` download marker (`SensorGridPage-*.js`).
+- Backend on staging: **not rebuilt this pass** — local WAR build blocked (Java enforcer / no Docker daemon); staging VM has no JDK/Maven. Enrollment-token script fix requires uploading a fresh `backend/target/hivearmor.war` and `docker compose build/recreate backend`.
+- API script smoke (`POST /api/ha-agent-keys`): **not run** — `ADMIN_BOOTSTRAP.txt` absent on staging VM (known gap).
+- Windows validation: still **BLOCKED** — no Windows VM this session.
+
 ## 2026-09-01 17:45:00 IST (UTC+05:30) — SENS-001 install script enrollment token + download UX
 
 - Label: **STAGING CANDIDATE** (not PRODUCTION READY / not LIVE VERIFIED).

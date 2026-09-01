@@ -1,6 +1,22 @@
 # Next production slice
 
-Updated: **2026-08-26 08:35:00 IST (UTC+05:30)**
+Updated: **2026-09-01 17:52:00 IST (UTC+05:30)**
+
+## Completed this slice — SENS-001 install script download + enrollment token fix (#162)
+
+Status: **MERGED** tip `7a1ba6c` (#162) — **STAGING CANDIDATE**. Not `PRODUCTION READY`.
+Staging FE rebuild: frontend-v3 + edge healthy; download UX live. Backend script fix **not yet on staging** (WAR rebuild pending).
+
+| Check | Result |
+|---|---|
+| PR #162 CI | pass (admin merge) |
+| frontend-v3 / edge (staging) | healthy |
+| `GET /api/healthcheck` | 200 |
+| SPA `/posture/sensors` | 200 — bundle has `hivearmor-install` marker |
+| Backend enrollment scripts on staging | **pending** WAR upload + recreate |
+| Windows install proof | **BLOCKED** — no VM |
+
+Next: build `hivearmor.war` (JDK 17 + `MAVEN_TK`), rsync to staging, recreate `backend`; run `verify-packaged-windows-staging.ps1`; publish agent packages if `publishedCount=0`.
 
 ## Completed this slice — Sensors Add Agent UX + package publish (#82)
 
