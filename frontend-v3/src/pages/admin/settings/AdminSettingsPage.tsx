@@ -17,8 +17,12 @@ import {
 import { governanceOperationsService } from '../governance-operations/governanceOperations.service';
 import { GovernanceOperationsPage } from '../governance-operations/GovernanceOperationsPage';
 
+import { LegacyRouteLinkChip } from '@/components/legacy-route-notice';
 import { ROUTES } from '@/constants/routes.constants';
+import { getLegacyRouteLinkEntry } from '@/lib/deprecation.honesty';
 import { useAuthStore } from '@/store/auth.store';
+
+const systemSettingsLegacy = getLegacyRouteLinkEntry('/settings/system');
 
 export function AdminSettingsPage(): JSX.Element {
   const { hasRole } = useAuthStore();
@@ -107,7 +111,10 @@ export function AdminSettingsPage(): JSX.Element {
         <span aria-hidden="true">·</span>
         <Link to="/admin/retention">Retention</Link>
         <span aria-hidden="true">·</span>
-        <Link to="/settings/system">System settings</Link>
+        <Link to="/settings/system">
+          System settings
+          {systemSettingsLegacy && <LegacyRouteLinkChip entry={systemSettingsLegacy} />}
+        </Link>
         <span aria-hidden="true">·</span>
         <Link to={ROUTES.SETTINGS_API_KEYS}>API Keys</Link>
         <span aria-hidden="true">·</span>

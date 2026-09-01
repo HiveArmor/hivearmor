@@ -12,6 +12,7 @@ import { LiveEpsBadge } from './LiveEpsBadge';
 import { NotificationsBell } from './NotificationsBell';
 
 import { useMastheadTenants } from '@/hooks/useMastheadTenants';
+import { FRONTEND_V3_BOUNDARY } from '@/lib/deprecation.honesty';
 import { ALL_TENANTS_OPTION } from '@/services/mastheadTenants.service';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -135,6 +136,13 @@ export function HaMasthead(_props: HaMastheadProps): JSX.Element {
           <span>Search alerts, incidents, entities…</span>
           <kbd aria-hidden="true">⌘ K</kbd>
         </button>
+        <span
+          className="ha-masthead__ui-generation"
+          title={`${FRONTEND_V3_BOUNDARY.title}. ${FRONTEND_V3_BOUNDARY.detail}`}
+          data-testid="frontend-v3-boundary-chip"
+        >
+          {FRONTEND_V3_BOUNDARY.chipLabel}
+        </span>
         <span className="ha-masthead__environment">{environmentLabel()}</span>
       </div>
 

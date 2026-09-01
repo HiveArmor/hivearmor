@@ -218,6 +218,23 @@
   white-space: nowrap;
 }
 
+.ha-masthead__ui-generation {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-control);
+  background: var(--ha-surface-input);
+  color: var(--ha-foreground-tertiary);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: help;
+}
+
 .ha-masthead__environment::before {
   content: '';
   width: 7px;
@@ -337,6 +354,7 @@
   .ha-masthead { grid-template-columns: 176px minmax(220px, 1fr) auto; }
   .ha-masthead__product-kicker,
   .ha-masthead__environment,
+  .ha-masthead__ui-generation,
   .ha-live-eps { display: none; }
 }
 

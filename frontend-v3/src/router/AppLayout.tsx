@@ -7,13 +7,15 @@
 
 import { Suspense, useEffect } from 'react';
 
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 
 import { AirGapBanner } from '@/components/AirGapBanner';
 import { AppSuspenseFallback } from '@/components/app-suspense-fallback/AppSuspenseFallback';
 import { HaMasthead } from '@/components/ha-masthead/HaMasthead';
 import { HaNavigation } from '@/components/ha-navigation/HaNavigation';
+import { LegacyRouteNotice } from '@/components/legacy-route-notice';
 import { ToastStack } from '@/components/toast-stack/ToastStack';
+import { matchLegacyRoute } from '@/lib/deprecation.honesty';
 import { useSidebarStore } from '@/store/sidebar.store';
 import { type SystemInfo, useSystemInfoStore } from '@/store/systemInfoStore';
 
@@ -23,6 +25,8 @@ const visualFixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDA
 
 export function AppLayout(): JSX.Element {
   const { collapsed } = useSidebarStore();
+  const location = useLocation();
+  const legacyRoute = matchLegacyRoute(location.pathname);
 
   useEffect(() => {
     if (visualFixtureMode) return;
@@ -48,6 +52,7 @@ export function AppLayout(): JSX.Element {
       <a href="#main-content" className="skip-nav">Skip to main content</a>
       <HaMasthead />
       <AirGapBanner />
+      {legacyRoute && <LegacyRouteNotice entry={legacyRoute} />}
       <HaNavigation />
       <main
         id="main-content"
