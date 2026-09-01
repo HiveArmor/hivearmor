@@ -1,0 +1,216 @@
+/**
+ * AiVerdictCard styles — token-only. Wears --ha-intelligence-primary provenance (left rule + glyph).
+ * Verdict = meaning (violet family + text label, never color-alone). Built on HaCard.
+ */
+
+.ai-verdict {
+  border-left: 2px solid var(--ha-intelligence-primary);
+}
+
+.ai-verdict__header {
+  gap: 10px;
+}
+
+.ai-verdict__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: var(--ha-type-section-title);
+  color: var(--ha-foreground-primary);
+}
+
+.ai-verdict__glyph {
+  color: var(--ha-intelligence-primary);
+}
+
+.ai-verdict__verdict {
+  font: var(--ha-type-compact);
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: var(--ha-radius-pill);
+  margin-left: auto;
+}
+
+/* Verdict tones — meaning, paired with the text label above. */
+.ai-verdict__verdict[data-verdict='malicious'] {
+  color: var(--ha-severity-critical);
+  background: color-mix(in srgb, var(--ha-severity-critical) 14%, transparent);
+}
+
+.ai-verdict__verdict[data-verdict='suspicious'] {
+  color: var(--ha-severity-high);
+  background: color-mix(in srgb, var(--ha-severity-high) 14%, transparent);
+}
+
+.ai-verdict__verdict[data-verdict='benign'] {
+  color: var(--ha-state-healthy);
+  background: color-mix(in srgb, var(--ha-state-healthy) 14%, transparent);
+}
+
+.ai-verdict__verdict[data-verdict='inconclusive'] {
+  color: var(--ha-foreground-tertiary);
+  background: var(--ha-surface-elevated);
+}
+
+/* Tabs */
+.ai-verdict__tabs {
+  display: flex;
+  gap: 2px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--ha-border-subtle);
+}
+
+.ai-verdict__tab {
+  position: relative;
+  padding: 8px 11px;
+  border: 0;
+  background: transparent;
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-compact);
+  cursor: pointer;
+}
+
+.ai-verdict__tab--on {
+  color: var(--ha-foreground-primary);
+}
+
+.ai-verdict__tab--on::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--ha-intelligence-primary);
+}
+
+.ai-verdict__summary {
+  margin: 0 0 10px;
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-body);
+}
+
+/* Reasoning timeline */
+.ai-verdict__timeline {
+  position: relative;
+  margin: 0;
+  padding: 0 0 0 16px;
+  list-style: none;
+}
+
+.ai-verdict__timeline::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  background: var(--ha-border-default);
+}
+
+.ai-verdict__step {
+  position: relative;
+  padding: 4px 0;
+  font: var(--ha-type-compact);
+}
+
+.ai-verdict__step::before {
+  content: '';
+  position: absolute;
+  left: -15px;
+  top: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ha-border-strong);
+}
+
+.ai-verdict__step--done::before {
+  background: var(--ha-state-healthy);
+}
+
+.ai-verdict__step--active::before {
+  background: var(--ha-intelligence-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ha-intelligence-primary) 25%, transparent);
+}
+
+.ai-verdict__step-label {
+  color: var(--ha-foreground-primary);
+}
+
+.ai-verdict__step-detail {
+  display: block;
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+}
+
+.ai-verdict__conclusion {
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-body);
+}
+
+/* Evidence locker */
+.ai-verdict__evidence {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-verdict__evidence-row {
+  display: grid;
+  grid-template-columns: minmax(96px, 32%) 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.ai-verdict__evidence-row dt {
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+  font-weight: 600;
+}
+
+.ai-verdict__evidence-row dd {
+  margin: 0;
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-compact);
+  word-break: break-word;
+}
+
+/* Footer + feedback */
+.ai-verdict__footer {
+  gap: 10px;
+}
+
+.ai-verdict__provenance {
+  color: var(--ha-intelligence-primary);
+  font: var(--ha-type-metadata);
+}
+
+.ai-verdict__feedback {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.ai-verdict__thumb {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-control);
+  background: var(--ha-surface-input);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.ai-verdict__thumb:hover {
+  border-color: var(--ha-border-strong);
+}
+
+.ai-verdict__thumb--on {
+  border-color: var(--ha-intelligence-primary);
+  background: color-mix(in srgb, var(--ha-intelligence-primary) 14%, transparent);
+}

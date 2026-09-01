@@ -1,0 +1,46 @@
+/**
+ * AiProvenanceFrame styles — token-only. Codifies the AI provenance treatment: intelligence-violet
+ * label + glyph, optional violet left rule (rule variant), caveat footer.
+ */
+
+.ha-provenance__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ha-intelligence-primary);
+  font: var(--ha-type-metadata);
+  font-weight: 600;
+}
+
+.ha-provenance__glyph {
+  color: var(--ha-intelligence-primary);
+}
+
+.ha-provenance__body {
+  color: var(--ha-foreground-primary);
+}
+
+.ha-provenance__caveat {
+  display: block;
+  color: color-mix(in srgb, var(--ha-intelligence-primary) 78%, var(--ha-foreground-tertiary));
+  font: var(--ha-type-metadata);
+}
+
+/* Rule variant — violet left rule, framed block. */
+.ha-provenance--rule {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--ha-border-subtle);
+  border-left: 2px solid var(--ha-intelligence-primary);
+  border-radius: var(--ha-radius-panel);
+  background: var(--ha-surface-panel);
+}
+
+/* Subtle variant — just the label above the content, no border. */
+.ha-provenance--subtle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

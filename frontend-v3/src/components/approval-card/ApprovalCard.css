@@ -1,0 +1,108 @@
+/**
+ * ApprovalCard styles — token-only. Risk-toned left rule (risk = meaning, paired with text label);
+ * blast-radius/reversibility fact list; Approve/Modify/Reject actions.
+ */
+
+.ha-approval {
+  border-left: 3px solid var(--ha-border-strong);
+}
+
+.ha-approval--low { border-left-color: var(--ha-severity-low); }
+.ha-approval--medium { border-left-color: var(--ha-severity-medium); }
+.ha-approval--high { border-left-color: var(--ha-severity-high); }
+.ha-approval--critical { border-left-color: var(--ha-severity-critical); }
+
+.ha-approval__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: var(--ha-type-section-title);
+  color: var(--ha-foreground-primary);
+}
+
+.ha-approval__glyph {
+  color: var(--ha-intelligence-primary);
+}
+
+.ha-approval__risk {
+  margin-left: auto;
+  padding: 2px 9px;
+  border-radius: var(--ha-radius-pill);
+  font: var(--ha-type-compact);
+  font-weight: 700;
+}
+
+.ha-approval__risk[data-risk='low'] { color: var(--ha-severity-low); background: color-mix(in srgb, var(--ha-severity-low) 14%, transparent); }
+.ha-approval__risk[data-risk='medium'] { color: var(--ha-severity-medium); background: color-mix(in srgb, var(--ha-severity-medium) 14%, transparent); }
+.ha-approval__risk[data-risk='high'] { color: var(--ha-severity-high); background: color-mix(in srgb, var(--ha-severity-high) 14%, transparent); }
+.ha-approval__risk[data-risk='critical'] { color: var(--ha-severity-critical); background: color-mix(in srgb, var(--ha-severity-critical) 14%, transparent); }
+
+.ha-approval__facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ha-approval__fact {
+  display: grid;
+  grid-template-columns: minmax(96px, 30%) 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.ha-approval__fact dt {
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+  font-weight: 600;
+}
+
+.ha-approval__fact dd {
+  margin: 0;
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-compact);
+}
+
+.ha-approval__yes { color: var(--ha-state-healthy); }
+.ha-approval__no { color: var(--ha-severity-high); }
+
+.ha-approval__expiry {
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+  font-variant-numeric: tabular-nums;
+}
+
+.ha-approval__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.ha-approval__btn {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-control);
+  background: var(--ha-surface-input);
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+  cursor: pointer;
+}
+
+.ha-approval__btn:hover {
+  border-color: var(--ha-border-strong);
+  color: var(--ha-foreground-primary);
+}
+
+.ha-approval__btn--approve {
+  border-color: var(--ha-action-primary);
+  background: var(--ha-action-primary);
+  color: var(--ha-foreground-on-action);
+  font-weight: 600;
+}
+
+.ha-approval__btn--reject {
+  border-color: color-mix(in srgb, var(--ha-severity-critical) 50%, transparent);
+  color: var(--ha-severity-critical);
+  background: transparent;
+}

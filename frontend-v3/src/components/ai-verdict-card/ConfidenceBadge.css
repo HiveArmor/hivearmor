@@ -1,0 +1,33 @@
+/**
+ * ConfidenceBadge styles — token-only. Intelligence-violet provenance (AI signal, not severity).
+ */
+
+.ha-confidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid color-mix(in srgb, var(--ha-intelligence-primary) 40%, transparent);
+  border-radius: var(--ha-radius-pill);
+  background: color-mix(in srgb, var(--ha-intelligence-primary) 12%, transparent);
+  color: var(--ha-intelligence-primary);
+  white-space: nowrap;
+}
+
+.ha-confidence--sm {
+  padding: 2px 8px;
+  font: var(--ha-type-metadata);
+}
+
+.ha-confidence--md {
+  padding: 3px 10px;
+  font: var(--ha-type-compact);
+}
+
+.ha-confidence__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.ha-confidence__label {
+  color: color-mix(in srgb, var(--ha-intelligence-primary) 75%, var(--ha-foreground-secondary));
+}

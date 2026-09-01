@@ -1,0 +1,76 @@
+/**
+ * AutonomyControl styles — token-only. Segmented trust gradient; active tier + all tiers up to it
+ * fill in intelligence-violet so escalating autonomy reads as escalating "fill".
+ */
+
+.ha-autonomy {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ha-autonomy__label {
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-metadata);
+  font-weight: 600;
+}
+
+.ha-autonomy__track {
+  display: inline-flex;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-control);
+  background: var(--ha-surface-input);
+  overflow: hidden;
+}
+
+.ha-autonomy__seg {
+  border: 0;
+  border-right: 1px solid var(--ha-border-default);
+  background: transparent;
+  color: var(--ha-foreground-tertiary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ha-autonomy__seg:last-child {
+  border-right: 0;
+}
+
+.ha-autonomy__track--sm .ha-autonomy__seg {
+  padding: 4px 9px;
+  font: var(--ha-type-metadata);
+}
+
+.ha-autonomy__track--md .ha-autonomy__seg {
+  padding: 5px 12px;
+  font: var(--ha-type-compact);
+}
+
+/* Filled tiers (up to and including the active one) tint violet — the trust gradient. */
+.ha-autonomy__seg--filled {
+  background: color-mix(in srgb, var(--ha-intelligence-primary) 12%, transparent);
+  color: var(--ha-intelligence-primary);
+}
+
+.ha-autonomy__seg--on {
+  background: color-mix(in srgb, var(--ha-intelligence-primary) 22%, transparent);
+  color: var(--ha-intelligence-primary);
+  font-weight: 700;
+}
+
+.ha-autonomy__seg:not(:disabled):hover {
+  color: var(--ha-foreground-primary);
+}
+
+.ha-autonomy__track--disabled {
+  opacity: 0.6;
+}
+
+.ha-autonomy__track--disabled .ha-autonomy__seg {
+  cursor: not-allowed;
+}
+
+.ha-autonomy__hint {
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+}
