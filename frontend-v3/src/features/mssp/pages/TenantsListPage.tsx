@@ -1,30 +1,31 @@
 /**
- * TenantsListPage — MSSP tenants list with search, pagination, and row navigation.
+ * TenantsListPage — MSSP tenant inventory honesty (Prompt 46 / Wave C3 slice 2).
  *
- * Supports four mutually exclusive render states: loading, error, empty, populated.
- * Row click stores the tenant id in msspNavStore and navigates to the detail page.
- *
- * Requirements: 9.1 – 9.8
+ * Production inventory: GET /api/ha-mssp/tenants (MSSP_ADMIN-gated, X-Total-Count).
+ * Platform tenant boundaries on Identity & Tenancy; delegated membership and lifecycle
+ * governance remain fail-closed (IAM-005).
  */
 
 import { type ReactElement, useEffect, useRef, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import type { ColDef, RowClickedEvent } from "ag-grid-community";
-import { useNavigate } from "react-router-dom";
+import { Building2, CircleSlash2, RefreshCw, Search, ShieldCheck } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 import { fetchTenants } from "../api/msspTenantApi";
 import type { TenantHealthDTO } from "../api/msspTypes";
 
-
-import { ErrorState } from "@/components/error-state/ErrorState";
 import { LoadingState } from "@/components/loading-state/LoadingState";
 import { SiemDataGrid } from "@/components/siem-data-grid/SiemDataGrid";
+import { ROUTES } from "@/constants/routes.constants";
 import { useMsspNavStore } from "@/features/mssp/store/msspNavStore";
 
-// ---------------------------------------------------------------------------
-// Column definitions
-// ---------------------------------------------------------------------------
+import "./TenantsListPage.css";
+
+/** Bundle-visible job sentence — MSSP delegated inventory, not platform tenants or overview KPIs. */
+export const TENANTS_LIST_JOB_SENTENCE =
+  "MSSP tenant inventory — search and open delegated customer tenants authorized for MSSP Administrators. Overview aggregates fleet KPIs; platform tenant boundaries live under Identity & Tenancy — provisioning creates MSSP-managed records via POST /api/ha-mssp/tenants; delegated membership, lifecycle governance, and immutable audit remain fail-closed until IAM contracts land.";
 
 const TENANTS_COLUMN_DEFS: ColDef<TenantHealthDTO>[] = [
   { headerName: "Name", field: "name", flex: 2, sortable: true, filter: true },
@@ -43,17 +44,96 @@ const TENANTS_COLUMN_DEFS: ColDef<TenantHealthDTO>[] = [
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Page component
-// ---------------------------------------------------------------------------
-
 const PAGE_SIZE = 50;
+
+function PageHeader({ onRefresh }: { onRefresh: () => void }): ReactElement {
+  return (
+    <header className="mssp-tenants-header">
+      <div className="mssp-tenants-header__identity">
+        <span className="mssp-tenants-header__mark">
+          <Building2 size={18} aria-hidden="true" />
+        </span>
+        <div className="mssp-tenants-header__copy">
+          <div className="mssp-tenants-header__eyebrow">
+            <span>MSSP PORTAL · TENANTS</span>
+            <span className="mssp-tenants-header__badge">STAGING CANDIDATE</span>
+          </div>
+          <h1>Tenants</h1>
+          <p className="mssp-tenants-header__job">{TENANTS_LIST_JOB_SENTENCE}</p>
+          <p className="mssp-tenants-page__projection-note" role="note">
+            Inventory via GET /api/ha-mssp/tenants (X-Total-Count header, optional q filter).
+            Health and EPS columns are observability projections — not SLO pass/fail. Member
+            listing, delegation scope, and tenant lifecycle governance remain partial (IAM-005).
+          </p>
+        </div>
+      </div>
+      <div className="mssp-tenants-header__actions">
+        <button
+          className="mssp-tenants-icon-button"
+          type="button"
+          aria-label="Refresh tenant inventory"
+          onClick={onRefresh}
+        >
+          <RefreshCw size={13} />
+        </button>
+      </div>
+    </header>
+  );
+}
+
+function MetaLinks(): ReactElement {
+  return (
+    <p className="mssp-tenants-page__meta">
+      <Link to="/mssp/overview">Overview</Link>
+      <span aria-hidden="true">·</span>
+      <Link to="/mssp/tenants/new">New tenant</Link>
+      <span aria-hidden="true">·</span>
+      <Link to={ROUTES.ADMIN_TENANTS}>Platform tenants</Link>
+      <span aria-hidden="true">·</span>
+      <Link to={ROUTES.ADMIN_USERS}>Identity &amp; Tenancy</Link>
+      <span aria-hidden="true">·</span>
+      <span className="mssp-tenants-page__access">MSSP Administrator</span>
+    </p>
+  );
+}
+
+function TrustBanner(): ReactElement {
+  return (
+    <div className="mssp-tenants-trust" data-testid="tenants-list-trust-banner">
+      <ShieldCheck size={13} aria-hidden="true" />
+      <span>
+        <strong>Inventory fail-closed:</strong> Only MSSP-managed tenants returned by authorized
+        GET appear here. Masthead tenant switcher reads the same contract — no placeholder
+        customers.
+      </span>
+    </div>
+  );
+}
+
+function EmptyHonesty(): ReactElement {
+  return (
+    <div
+      className="mssp-tenants-empty-honesty"
+      role="status"
+      data-testid="tenants-list-empty-honesty"
+    >
+      <strong>No MSSP-managed tenants in authorized inventory.</strong>
+      <span>
+        An empty list is not an error — provision a tenant or broaden search. Platform tenant
+        records on Identity &amp; Tenancy are a separate inventory.
+      </span>
+      <div className="mssp-tenants-empty-honesty__links">
+        <Link to="/mssp/tenants/new">Provision tenant</Link>
+        <Link to={ROUTES.ADMIN_TENANTS}>Platform tenants</Link>
+      </div>
+    </div>
+  );
+}
 
 export function TenantsListPage(): ReactElement {
   const navigate = useNavigate();
   const setLastTenantId = useMsspNavStore((s) => s.setLastTenantId);
 
-  // ── Search state with debounced querystring update ────────────────────────
   const [inputValue, setInputValue] = useState("");
   const [q, setQ] = useState("");
   const [page] = useState(0);
@@ -74,13 +154,11 @@ export function TenantsListPage(): ReactElement {
     };
   }, [inputValue]);
 
-  // ── Data fetching ─────────────────────────────────────────────────────────
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["mssp", "tenants", { q, page, size: PAGE_SIZE }] as const,
     queryFn: () => fetchTenants({ q: q || undefined, page, size: PAGE_SIZE }),
   });
 
-  // ── Row click handler ─────────────────────────────────────────────────────
   const handleRowClick = (event: RowClickedEvent<TenantHealthDTO>) => {
     if (!event.data) return;
     const id = String(event.data.id);
@@ -88,168 +166,136 @@ export function TenantsListPage(): ReactElement {
     navigate(`/mssp/tenants/${id}`);
   };
 
-  // ── Loading branch ────────────────────────────────────────────────────────
+  const handleRefresh = (): void => {
+    void refetch();
+  };
+
+  const status = error instanceof Error ? error.message : "";
+  const isAuth = status === "401" || status === "403";
+  const hasSearch = Boolean(q);
+  const items = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
+  const showEmptyHonesty = !isLoading && !isError && data !== undefined && items.length === 0 && !hasSearch;
+  const showFilterEmpty = !isLoading && !isError && data !== undefined && items.length === 0 && hasSearch;
+
   if (isLoading) {
     return (
-      <div
-        data-testid="tenants-list-loading"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          padding: "var(--ha-space-6)",
-        }}
-      >
-        <LoadingState message="Loading tenants…" />
-      </div>
+      <section className="mssp-tenants-page" aria-label="MSSP tenants" data-testid="tenants-list-loading">
+        <PageHeader onRefresh={handleRefresh} />
+        <MetaLinks />
+        <TrustBanner />
+        <div className="mssp-tenants-loading">
+          <LoadingState message="Loading tenant inventory…" />
+        </div>
+      </section>
     );
   }
 
-  // ── Error branch ──────────────────────────────────────────────────────────
+  if (isAuth) {
+    return (
+      <section className="mssp-tenants-page" aria-label="MSSP tenants" data-testid="tenants-list-error">
+        <PageHeader onRefresh={handleRefresh} />
+        <MetaLinks />
+        <div className="mssp-tenants-empty" role="status">
+          <CircleSlash2 size={30} />
+          <strong>MSSP access restricted</strong>
+          <span>
+            Required permission: MSSP Administrator. Sign in again or ask an administrator for
+            access.
+          </span>
+        </div>
+      </section>
+    );
+  }
+
   if (isError || !data) {
     return (
-      <div
-        data-testid="tenants-list-error"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          padding: "var(--ha-space-6)",
-        }}
-      >
-        <ErrorState
-          title="Could not load tenants"
-          message="An error occurred while fetching the tenants list."
-          onRetry={() => void refetch()}
-        />
-      </div>
+      <section className="mssp-tenants-page" aria-label="MSSP tenants" data-testid="tenants-list-error">
+        <PageHeader onRefresh={handleRefresh} />
+        <MetaLinks />
+        <TrustBanner />
+        <div className="mssp-tenants-empty mssp-tenants-empty--error" role="status">
+          <strong>Could not load tenant inventory</strong>
+          <span>An error occurred while fetching GET /api/ha-mssp/tenants. Retry or contact support.</span>
+          <button className="mssp-tenants-button" type="button" onClick={handleRefresh}>
+            Retry
+          </button>
+        </div>
+      </section>
     );
   }
 
-  const isEmpty = data.items.length === 0;
-
-  // ── Shared toolbar ────────────────────────────────────────────────────────
-  const toolbar = (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--ha-space-3)",
-        marginBottom: "var(--ha-space-4)",
-      }}
-    >
-      <h1
-        style={{
-          fontSize: "var(--ha-text-xl)",
-          fontWeight: "var(--ha-weight-semibold)",
-          color: "var(--ha-text-primary)",
-          margin: 0,
-          flex: "0 0 auto",
-        }}
-      >
-        Tenants
-      </h1>
-
-      <input
-        type="search"
-        aria-label="Search tenants"
-        placeholder="Search tenants…"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        style={{
-          flex: "1 1 0",
-          minWidth: "160px",
-          maxWidth: "400px",
-          padding: "6px var(--ha-space-3)",
-          fontSize: "var(--ha-text-sm)",
-          color: "var(--ha-text-primary)",
-          background: "var(--ha-surface-raised)",
-          border: "1px solid var(--ha-border)",
-          borderRadius: "var(--ha-radius-base)",
-          outline: "none",
-        }}
-      />
-
-      <button
-        type="button"
-        onClick={() => navigate("/mssp/tenants/new")}
-        style={{
-          flex: "0 0 auto",
-          padding: "6px var(--ha-space-4)",
-          fontSize: "var(--ha-text-sm)",
-          fontWeight: "var(--ha-weight-medium)",
-          color: "var(--ha-background)",
-          background: "var(--ha-primary)",
-          border: "none",
-          borderRadius: "var(--ha-radius-base)",
-          cursor: "pointer",
-          whiteSpace: "nowrap",
-        }}
-      >
-        New tenant
-      </button>
-    </div>
-  );
-
-  // ── Empty branch ──────────────────────────────────────────────────────────
-  if (isEmpty) {
-    return (
-      <div
-        data-testid="tenants-list-empty"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          padding: "var(--ha-space-6)",
-        }}
-      >
-        {toolbar}
-
-        <p
-          style={{
-            color: "var(--ha-text-secondary)",
-            fontSize: "var(--ha-text-sm)",
-            textAlign: "center",
-            marginTop: "var(--ha-space-6)",
-          }}
-        >
-          No tenants found
-        </p>
-      </div>
-    );
-  }
-
-  // ── Populated branch ──────────────────────────────────────────────────────
   return (
-    <div
-      data-testid="tenants-list-populated"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        padding: "var(--ha-space-6)",
-      }}
+    <section
+      className="mssp-tenants-page"
+      aria-label="MSSP tenants"
+      data-testid={items.length === 0 ? "tenants-list-empty" : "tenants-list-populated"}
     >
-      {toolbar}
+      <PageHeader onRefresh={handleRefresh} />
+      <MetaLinks />
+      <TrustBanner />
+      {showEmptyHonesty && <EmptyHonesty />}
 
-      <div
-        style={{
-          flex: 1,
-          background: "var(--ha-surface-primary)",
-          border: "1px solid var(--ha-border)",
-          borderRadius: "var(--ha-radius-base)",
-          overflow: "hidden",
-          minHeight: "300px",
-        }}
-      >
-        <SiemDataGrid
-          columnDefs={TENANTS_COLUMN_DEFS}
-          rowData={data.items as TenantHealthDTO[]}
-          height="100%"
-          defaultColDef={{ resizable: true, sortable: true }}
-          onRowClicked={handleRowClick}
-        />
+      <div className="mssp-tenants-toolbar">
+        <label className="mssp-tenants-search">
+          <Search size={13} aria-hidden="true" />
+          <input
+            type="search"
+            aria-label="Search tenants"
+            placeholder="Search tenants…"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+          />
+        </label>
+        <button
+          className="mssp-tenants-button"
+          type="button"
+          onClick={() => navigate("/mssp/tenants/new")}
+        >
+          New tenant
+        </button>
       </div>
-    </div>
+
+      <div className="mssp-tenants-inventory">
+        <div className="mssp-tenants-results-head">
+          <div>
+            <strong>Authorized inventory</strong>
+            <span>
+              {totalCount.toLocaleString()} tenant{totalCount === 1 ? "" : "s"}
+              {hasSearch ? ` matching “${q}”` : ""}
+            </span>
+          </div>
+        </div>
+
+        {showFilterEmpty ? (
+          <div className="mssp-tenants-empty" role="status">
+            <strong>No tenants match this search</strong>
+            <span>Clear the filter or provision a new MSSP-managed tenant.</span>
+            <button
+              className="mssp-tenants-button"
+              type="button"
+              onClick={() => setInputValue("")}
+            >
+              Clear search
+            </button>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="mssp-tenants-empty" role="status">
+            <strong>No tenants in inventory</strong>
+            <span>Use New tenant to provision the first MSSP-managed customer.</span>
+          </div>
+        ) : (
+          <div className="mssp-tenants-grid-wrap">
+            <SiemDataGrid
+              columnDefs={TENANTS_COLUMN_DEFS}
+              rowData={items as TenantHealthDTO[]}
+              height="100%"
+              defaultColDef={{ resizable: true, sortable: true }}
+              onRowClicked={handleRowClick}
+            />
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
