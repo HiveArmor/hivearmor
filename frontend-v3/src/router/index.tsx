@@ -69,6 +69,12 @@ const PipelineSignalsPage = React.lazy(() =>
 const AdminUsersPage = React.lazy(() =>
   import('@/pages/admin/users/AdminUsersPage').then(m => ({ default: m.AdminUsersPage }))
 );
+const AdminAuditPage = React.lazy(() =>
+  import('@/pages/admin/audit/AdminAuditPage').then(m => ({ default: m.AdminAuditPage }))
+);
+const AdminSettingsPage = React.lazy(() =>
+  import('@/pages/admin/settings/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage }))
+);
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 const ApiKeyPage = React.lazy(() =>
@@ -936,7 +942,7 @@ export const router = createBrowserRouter([
         path: 'admin/audit',
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <GovernanceOperationsPage initialView="audit" />
+            <AdminAuditPage />
           </AuthGuard>
         ),
       },
@@ -953,7 +959,7 @@ export const router = createBrowserRouter([
         path: 'admin/settings',
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN']}>
-            <GovernanceOperationsPage initialView="configuration" />
+            <AdminSettingsPage />
           </AuthGuard>
         ),
       },
