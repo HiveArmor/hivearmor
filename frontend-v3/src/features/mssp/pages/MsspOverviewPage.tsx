@@ -1,6 +1,7 @@
 /**
- * MsspOverviewPage — MSSP admin dashboard.
+ * MsspOverviewPage — MSSP admin dashboard (Prompt 45 / Wave C3).
  *
+ * Production reads: GET /api/ha-mssp/overview (MSSP_ADMIN-gated).
  * Displays four KPI cards, one ECharts bar chart (per-tenant EPS), and one
  * AG Grid tenants table. Supports four mutually exclusive render states:
  * loading, error, empty, and populated.
@@ -8,13 +9,19 @@
  * Requirements: 7.1 – 7.12, 17.4, 17.5, 17.6, 17.7
  */
 
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import type { ColDef } from "ag-grid-community";
 import type { EChartsOption } from "echarts";
+import { LayoutDashboard } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { DownloadAggregateButton } from "./DownloadAggregateButton";
+import {
+  MSSP_OVERVIEW_JOB_SENTENCE,
+  MSSP_ROUTES,
+} from "./msspOverview.honesty";
 import { fetchMsspOverview } from "../api/msspOverviewApi";
 import type { MsspOverviewDTO, TenantHealthDTO } from "../api/msspTypes";
 
@@ -22,13 +29,9 @@ import { ErrorState } from "@/components/error-state/ErrorState";
 import { HaChart } from "@/components/ha-chart/HaChart";
 import { LoadingState } from "@/components/loading-state/LoadingState";
 import { SiemDataGrid } from "@/components/siem-data-grid/SiemDataGrid";
+import { ROUTES } from "@/constants/routes.constants";
 
-
-// ---------------------------------------------------------------------------
-// Color palette — read from CSS custom properties at render time so that
-// theme overrides are reflected without a page reload.
-// No hex literal appears anywhere in this file.
-// ---------------------------------------------------------------------------
+import "./MsspOverviewPage.css";
 
 function readPalette(): readonly string[] {
   const style = window.getComputedStyle(document.documentElement);
@@ -42,10 +45,91 @@ function readPalette(): readonly string[] {
   ];
 }
 
-// ---------------------------------------------------------------------------
-// KPI card — inline component; no external dependency.
-// Styled exclusively with design tokens.
-// ---------------------------------------------------------------------------
+function MsspOverviewHonestyHeader(): ReactElement {
+  return (
+    <header className="mssp-overview-header">
+      <div className="mssp-overview-header__identity">
+        <span className="mssp-overview-header__mark">
+          <LayoutDashboard size={18} aria-hidden="true" />
+        </span>
+        <div className="mssp-overview-header__copy">
+          <div className="mssp-overview-header__eyebrow">
+            <span>MSSP PORTAL</span>
+            <span className="mssp-overview-header__badge">STAGING CANDIDATE</span>
+          </div>
+          <h1>MSSP Overview</h1>
+          <p className="mssp-overview-header__job">{MSSP_OVERVIEW_JOB_SENTENCE}</p>
+          <p className="mssp-overview-page__projection-note" role="note">
+            Inventory via GET /api/ha-mssp/overview (60s refresh). KPI totals reflect
+            authorized managed tenants only — zero tenants is a valid empty state, not an
+            error. Aggregate XLSX export via GET /api/ha-mssp/reports/aggregate remains
+            MSSP_ADMIN-gated.
+          </p>
+        </div>
+      </div>
+      <div className="mssp-overview-header__actions">
+        <DownloadAggregateButton />
+      </div>
+    </header>
+  );
+}
+
+function MsspOverviewMeta(): ReactElement {
+  return (
+    <p className="mssp-overview-page__meta">
+      <Link to={MSSP_ROUTES.TENANTS}>Tenants</Link>
+      <span aria-hidden="true">·</span>
+      <Link to={MSSP_ROUTES.NEW_TENANT}>New tenant</Link>
+      <span aria-hidden="true">·</span>
+      <Link to={ROUTES.ADMIN_TENANTS}>Platform Tenants</Link>
+      <span aria-hidden="true">·</span>
+      <Link to={ROUTES.DASHBOARD}>Mission Control</Link>
+      <span aria-hidden="true">·</span>
+      <span className="mssp-overview-page__access">MSSP Administrator</span>
+    </p>
+  );
+}
+
+function MsspOverviewShell({
+  testId,
+  children,
+  showEmptyHonesty = false,
+}: {
+  testId: string;
+  children: ReactNode;
+  showEmptyHonesty?: boolean;
+}): ReactElement {
+  return (
+    <section
+      className="mssp-overview-page"
+      aria-label="MSSP Overview"
+      data-mssp-overview-honesty="true"
+      data-testid={testId}
+    >
+      <MsspOverviewHonestyHeader />
+      <MsspOverviewMeta />
+      {showEmptyHonesty && (
+        <div
+          className="mssp-overview-empty-honesty"
+          role="status"
+          data-testid="mssp-overview-empty-honesty"
+        >
+          <strong>No managed tenants in authorized inventory.</strong>
+          <span>
+            An empty overview does not imply platform failure — create a tenant on New tenant
+            when ready, or open Platform Tenants for platform-scoped inventory. Mission Control
+            remains available for triage widgets.
+          </span>
+          <span className="mssp-overview-empty-honesty__links">
+            <Link to={MSSP_ROUTES.NEW_TENANT}>Create tenant</Link>
+            <Link to={MSSP_ROUTES.TENANTS}>Open Tenants</Link>
+          </span>
+        </div>
+      )}
+      <div className="mssp-overview-page__body">{children}</div>
+    </section>
+  );
+}
 
 interface KpiCardProps {
   label: string;
@@ -54,47 +138,12 @@ interface KpiCardProps {
 
 function KpiCard({ label, value }: KpiCardProps): ReactElement {
   return (
-    <div
-      style={{
-        flex: "1 1 0",
-        minWidth: "160px",
-        background: "var(--ha-surface-primary)",
-        border: "1px solid var(--ha-border)",
-        borderRadius: "var(--ha-radius-base)",
-        padding: "var(--ha-space-4)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "var(--ha-space-1)",
-      }}
-    >
-      <span
-        style={{
-          fontSize: "var(--ha-text-sm)",
-          color: "var(--ha-text-secondary)",
-          textAlign: "center",
-        }}
-      >
-        {label}
-      </span>
-      <span
-        style={{
-          fontSize: "var(--ha-text-2xl)",
-          fontWeight: "var(--ha-weight-semibold)",
-          color: "var(--ha-text-primary)",
-          fontVariantNumeric: "tabular-nums",
-        }}
-      >
-        {value.toLocaleString()}
-      </span>
+    <div className="mssp-overview-kpi-card">
+      <span className="mssp-overview-kpi-card__label">{label}</span>
+      <span className="mssp-overview-kpi-card__value">{value.toLocaleString()}</span>
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Column definitions for the tenants data grid
-// ---------------------------------------------------------------------------
 
 const TENANTS_COLUMN_DEFS: ColDef<TenantHealthDTO>[] = [
   { headerName: "Name", field: "name", flex: 2, sortable: true, filter: true },
@@ -138,20 +187,9 @@ const TENANTS_COLUMN_DEFS: ColDef<TenantHealthDTO>[] = [
   },
 ];
 
-// ---------------------------------------------------------------------------
-// KPI card row — extracted so it can be reused in both empty and populated branches
-// ---------------------------------------------------------------------------
-
 function KpiCardRow({ data }: { data: MsspOverviewDTO }): ReactElement {
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: "var(--ha-space-4)",
-        flexWrap: "wrap",
-        marginBottom: "var(--ha-space-6)",
-      }}
-    >
+    <div className="mssp-overview-kpi-row">
       <KpiCard label="Managed Tenants" value={data.tenantCount} />
       <KpiCard label="Active Users" value={data.activeUserCount} />
       <KpiCard label="Total EPS" value={data.totalEps} />
@@ -159,10 +197,6 @@ function KpiCardRow({ data }: { data: MsspOverviewDTO }): ReactElement {
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// ECharts bar chart option builder
-// ---------------------------------------------------------------------------
 
 function buildBarChartOption(data: MsspOverviewDTO): EChartsOption {
   const palette = readPalette();
@@ -209,10 +243,6 @@ function buildBarChartOption(data: MsspOverviewDTO): EChartsOption {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Page component
-// ---------------------------------------------------------------------------
-
 export function MsspOverviewPage(): ReactElement {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["mssp", "overview"] as const,
@@ -220,172 +250,42 @@ export function MsspOverviewPage(): ReactElement {
     refetchInterval: 60_000,
   });
 
-  // ── Loading branch ─────────────────────────────────────────────────────────
-  // NO KPI cards, NO chart, NO grid.
   if (isLoading) {
     return (
-      <div
-        data-testid="mssp-overview-loading"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          padding: "var(--ha-space-6)",
-        }}
-      >
+      <MsspOverviewShell testId="mssp-overview-loading">
         <LoadingState message="Loading MSSP overview…" />
-      </div>
+      </MsspOverviewShell>
     );
   }
 
-  // ── Error branch ───────────────────────────────────────────────────────────
-  // NO KPI cards, NO chart, NO grid.
   if (isError || !data) {
     return (
-      <div
-        data-testid="mssp-overview-error"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          padding: "var(--ha-space-6)",
-        }}
-      >
+      <MsspOverviewShell testId="mssp-overview-error">
         <ErrorState
           title="Could not load MSSP overview"
-          message="An error occurred while fetching the dashboard data."
+          message="An error occurred while fetching dashboard data from GET /api/ha-mssp/overview. This is a transport or authorization failure — not an empty tenant inventory."
           onRetry={() => void refetch()}
         />
-      </div>
+      </MsspOverviewShell>
     );
   }
 
   const isEmpty = data.tenants.length === 0;
 
-  const stagingBanner = (
-    <div
-      style={{
-        marginBottom: "var(--ha-space-4)",
-        padding: "var(--ha-space-2) var(--ha-space-3)",
-        border: "1px solid var(--ha-border)",
-        borderRadius: "var(--ha-radius-base)",
-        background: "var(--ha-surface-raised)",
-        fontSize: "var(--ha-text-sm)",
-        color: "var(--ha-text-secondary)",
-      }}
-    >
-      <strong style={{ color: "var(--ha-text-primary)" }}>STAGING CANDIDATE</strong>
-      {" — "}
-      MSSP portal is an authorized ops plane for MSSP Administrators. Not PRODUCTION READY.
-    </div>
-  );
-
-  // ── Empty branch ───────────────────────────────────────────────────────────
-  // 4 KPI cards + "No managed tenants yet". NO chart. NO grid.
   if (isEmpty) {
     return (
-      <div
-        data-testid="mssp-overview-empty"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          padding: "var(--ha-space-6)",
-        }}
-      >
-        {stagingBanner}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "var(--ha-space-4)",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "var(--ha-text-xl)",
-              fontWeight: "var(--ha-weight-semibold)",
-              color: "var(--ha-text-primary)",
-              margin: 0,
-            }}
-          >
-            MSSP Overview
-          </h1>
-          <DownloadAggregateButton />
-        </div>
-
+      <MsspOverviewShell testId="mssp-overview-empty" showEmptyHonesty>
         <KpiCardRow data={data} />
-
-        <p
-          style={{
-            color: "var(--ha-text-secondary)",
-            fontSize: "var(--ha-text-sm)",
-            textAlign: "center",
-            marginTop: "var(--ha-space-6)",
-          }}
-        >
-          No managed tenants yet
-        </p>
-      </div>
+      </MsspOverviewShell>
     );
   }
 
-  // ── Populated branch ───────────────────────────────────────────────────────
-  // 4 KPI cards + bar chart + data grid.
   return (
-    <div
-      data-testid="mssp-overview-populated"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        padding: "var(--ha-space-6)",
-      }}
-    >
-      {stagingBanner}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "var(--ha-space-4)",
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "var(--ha-text-xl)",
-            fontWeight: "var(--ha-weight-semibold)",
-            color: "var(--ha-text-primary)",
-            margin: 0,
-          }}
-        >
-          MSSP Overview
-        </h1>
-        <DownloadAggregateButton />
-      </div>
-
+    <MsspOverviewShell testId="mssp-overview-populated">
       <KpiCardRow data={data} />
 
-      {/* EPS bar chart */}
-      <div
-        style={{
-          background: "var(--ha-surface-primary)",
-          border: "1px solid var(--ha-border)",
-          borderRadius: "var(--ha-radius-base)",
-          padding: "var(--ha-space-4)",
-          marginBottom: "var(--ha-space-6)",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: "var(--ha-text-sm)",
-            color: "var(--ha-text-secondary)",
-            marginBottom: "var(--ha-space-3)",
-          }}
-        >
-          EPS by Tenant
-        </h2>
+      <div className="mssp-overview-chart-panel">
+        <h2>EPS by Tenant</h2>
         <HaChart
           option={buildBarChartOption(data)}
           height={260}
@@ -393,17 +293,7 @@ export function MsspOverviewPage(): ReactElement {
         />
       </div>
 
-      {/* Tenants grid */}
-      <div
-        style={{
-          flex: 1,
-          background: "var(--ha-surface-primary)",
-          border: "1px solid var(--ha-border)",
-          borderRadius: "var(--ha-radius-base)",
-          overflow: "hidden",
-          minHeight: "300px",
-        }}
-      >
+      <div className="mssp-overview-grid-panel">
         <SiemDataGrid
           columnDefs={TENANTS_COLUMN_DEFS}
           rowData={data.tenants as TenantHealthDTO[]}
@@ -411,6 +301,6 @@ export function MsspOverviewPage(): ReactElement {
           defaultColDef={{ resizable: true, sortable: true }}
         />
       </div>
-    </div>
+    </MsspOverviewShell>
   );
 }
