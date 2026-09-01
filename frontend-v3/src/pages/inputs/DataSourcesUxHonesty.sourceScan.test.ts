@@ -35,6 +35,7 @@ describe('Data Sources UX honesty (Prompt 40)', () => {
     expect(DATA_SOURCES_JOB_SENTENCE).not.toMatch(/PRODUCTION READY/i);
     expect(page).toContain('honestyChrome');
     expect(page).toContain('DATA_SOURCES_JOB_SENTENCE');
+    expect(page).toContain("variant: 'data-sources'");
   });
 
   it('wires staging honesty, meta links, and human role labels', () => {
@@ -71,7 +72,8 @@ describe('Data Sources UX honesty (Prompt 40)', () => {
     expect(styles).toContain('.pipe-page__meta');
     expect(styles).toContain('.pipe-header__badge');
     expect(styles).toContain('min-height:50vh');
-    expect(pipeline).toContain('showEmptyHonesty');
+    expect(pipeline).toContain('showDataSourcesEmptyHonesty');
+    expect(page).toContain("variant: 'data-sources'");
     expect(pipeline).toContain('data-sources-honesty');
   });
 
