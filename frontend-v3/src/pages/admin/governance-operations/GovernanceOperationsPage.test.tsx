@@ -66,6 +66,7 @@ describe('GovernanceOperationsPage',()=>{
     useAuthStore.setState({user:{id:2,login:'analyst',firstName:'SOC',lastName:'Analyst',email:'analyst@example.test',roles:['ROLE_ANALYST'],langKey:'en'},token:'test-token',isAuthenticated:true,isLoading:false,selectedTenantId:1});
     renderPage();
     expect(screen.getByText('Governance access restricted')).toBeVisible();
+    expect(screen.getByText(/Required permission: Platform Administrator/)).toBeVisible();
     expect(listMock).not.toHaveBeenCalled();
   });
 });
