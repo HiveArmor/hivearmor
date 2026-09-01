@@ -9,7 +9,10 @@ import {
   Trash2,
 } from 'lucide-react';
 
+import { HaCard } from '@/components/ha-card';
 import type { EvidenceItem } from '@/types/api.types';
+
+import './EvidenceCard.css';
 
 export interface EvidenceCardProps {
   evidence: EvidenceItem;
@@ -30,133 +33,40 @@ export function EvidenceCard({ evidence, onEdit, onDelete }: EvidenceCardProps):
   const Icon = EVIDENCE_ICONS[evidence.type];
 
   return (
-    <div
-      className="evidence-card"
-      style={{
-        background: 'var(--ha-surface-raised)',
-        border: '1px solid var(--ha-border)',
-        borderRadius: 'var(--ha-radius-lg)',
-        boxShadow: 'var(--ha-shadow-low)',
-        overflow: 'hidden',
-      }}
-    >
-      <div
-        style={{
-          padding: '12px 16px',
-          borderBottom: '1px solid var(--ha-border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-          <Icon size={16} style={{ color: 'var(--ha-primary)' }} />
-          <span
-            style={{
-              fontSize: 'var(--ha-text-sm)',
-              fontWeight: 'var(--ha-weight-semibold)',
-              color: 'var(--ha-text-primary)',
-            }}
-          >
-            {evidence.title}
-          </span>
-          <span
-            style={{
-              fontSize: 'var(--ha-text-xs)',
-              color: 'var(--ha-text-secondary)',
-              marginLeft: 'auto',
-            }}
-          >
-            {new Date(evidence.timestamp).toLocaleString()}
-          </span>
+    <HaCard className="evidence-card">
+      <HaCard.Header>
+        <div className="evidence-card__title">
+          <Icon size={16} className="evidence-card__icon" aria-hidden="true" />
+          <span className="evidence-card__name">{evidence.title}</span>
         </div>
-      </div>
+        <span className="evidence-card__time">
+          {new Date(evidence.timestamp).toLocaleString()}
+        </span>
+      </HaCard.Header>
 
-      <div
-        style={{
-          padding: '16px',
-          maxHeight: '200px',
-          overflowY: 'auto',
-        }}
-      >
+      <HaCard.Body className="evidence-card__content">
         {evidence.type === 'log_excerpt' && (
-          <pre
-            style={{
-              fontFamily: 'var(--ha-font-mono)',
-              fontSize: 'var(--ha-text-xs)',
-              color: 'var(--ha-text-primary)',
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              margin: 0,
-            }}
-          >
-            {evidence.content}
-          </pre>
+          <pre className="evidence-card__log">{evidence.content}</pre>
         )}
-        {evidence.type === 'note' && (
-          <p
-            style={{
-              fontSize: 'var(--ha-text-sm)',
-              color: 'var(--ha-text-primary)',
-              margin: 0,
-            }}
-          >
-            {evidence.content}
-          </p>
-        )}
+        {evidence.type === 'note' && <p className="evidence-card__note">{evidence.content}</p>}
         {evidence.type === 'file_hash' && (
-          <div
-            style={{
-              fontFamily: 'var(--ha-font-mono)',
-              fontSize: 'var(--ha-text-xs)',
-              color: 'var(--ha-text-primary)',
-            }}
-          >
-            {evidence.content}
-          </div>
+          <div className="evidence-card__hash">{evidence.content}</div>
         )}
         {(evidence.type === 'screenshot' ||
           evidence.type === 'file' ||
           evidence.type === 'network_capture') && (
-          <div
-            style={{
-              fontSize: 'var(--ha-text-sm)',
-              color: 'var(--ha-text-secondary)',
-            }}
-          >
-            {evidence.content}
-          </div>
+          <div className="evidence-card__meta-text">{evidence.content}</div>
         )}
-      </div>
+      </HaCard.Body>
 
-      <div
-        style={{
-          padding: '12px 16px',
-          borderTop: '1px solid var(--ha-border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <span
-          style={{
-            fontSize: 'var(--ha-text-xs)',
-            color: 'var(--ha-text-secondary)',
-          }}
-        >
-          Added by {evidence.addedBy}
-        </span>
-        <div style={{ display: 'flex', gap: '8px' }}>
+      <HaCard.Footer>
+        <span className="evidence-card__added">Added by {evidence.addedBy}</span>
+        <div className="evidence-card__actions">
           {onEdit && (
             <button
+              type="button"
               onClick={() => onEdit(evidence.id)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '4px',
-                color: 'var(--ha-text-secondary)',
-              }}
+              className="evidence-card__action"
               aria-label="Edit evidence"
             >
               <Edit2 size={14} />
@@ -164,21 +74,16 @@ export function EvidenceCard({ evidence, onEdit, onDelete }: EvidenceCardProps):
           )}
           {onDelete && (
             <button
+              type="button"
               onClick={() => onDelete(evidence.id)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '4px',
-                color: 'var(--ha-text-secondary)',
-              }}
+              className="evidence-card__action"
               aria-label="Delete evidence"
             >
               <Trash2 size={14} />
             </button>
           )}
         </div>
-      </div>
-    </div>
+      </HaCard.Footer>
+    </HaCard>
   );
 }

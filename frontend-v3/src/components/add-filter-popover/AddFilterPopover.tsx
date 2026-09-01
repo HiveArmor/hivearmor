@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { Plus, X } from 'lucide-react';
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
+import { HaPopover } from '@/components/ha-popover';
 import { ALERT_FILTER_FIELDS, type AlertFilterField, type AlertQueryJoin } from '@/lib/alertFilterFields';
 
 import './AddFilterPopover.css';
@@ -24,12 +25,10 @@ export interface AddFilterPopoverProps {
 }
 
 export function AddFilterPopover({ hasExistingExpression = false, onAddFilter }: AddFilterPopoverProps): JSX.Element {
-  const [isOpen, setIsOpen] = useState(false);
   const [selectedField, setSelectedField] = useState<AlertFilterField | null>(null);
   const [operator, setOperator] = useState<StructuredFilterOperator>('is');
   const [conjunction, setConjunction] = useState<AlertQueryJoin>('AND');
   const [value, setValue] = useState('');
-  const popoverRef = useRef<HTMLDivElement>(null);
 
   const resetForm = useCallback((): void => {
     setSelectedField(null);
@@ -38,28 +37,7 @@ export function AddFilterPopover({ hasExistingExpression = false, onAddFilter }:
     setValue('');
   }, []);
 
-  const close = useCallback((): void => {
-    setIsOpen(false);
-    resetForm();
-  }, [resetForm]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handlePointerDown = (event: MouseEvent): void => {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) close();
-    };
-    const handleKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') close();
-    };
-    document.addEventListener('mousedown', handlePointerDown);
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [close, isOpen]);
-
-  const handleSubmit = (): void => {
+  const handleSubmit = (close: () => void): void => {
     if (!selectedField || !value.trim()) return;
     onAddFilter({
       field: selectedField.field,
@@ -69,17 +47,26 @@ export function AddFilterPopover({ hasExistingExpression = false, onAddFilter }:
       value: value.trim(),
       conjunction,
     });
+    resetForm();
     close();
   };
 
   return (
-    <div className="add-alert-filter" ref={popoverRef}>
-      <button type="button" className="add-alert-filter__trigger" onClick={() => setIsOpen((current) => !current)} aria-label="Add filter" aria-expanded={isOpen} aria-haspopup="dialog">
-        <Plus size={14} aria-hidden="true" />Add filter
-      </button>
-
-      {isOpen && (
-        <section className="add-alert-filter__popover" role="dialog" aria-modal="false" aria-labelledby="add-alert-filter-title">
+    <HaPopover
+      ariaLabel="Add filter condition"
+      placement="bottom-end"
+      width="min(370px, calc(100vw - 32px))"
+      onOpenChange={(open) => {
+        if (!open) resetForm();
+      }}
+      trigger={
+        <button type="button" className="add-alert-filter__trigger" aria-label="Add filter">
+          <Plus size={14} aria-hidden="true" />Add filter
+        </button>
+      }
+    >
+      {({ close }) => (
+        <div className="add-alert-filter__popover">
           <header>
             <div><strong id="add-alert-filter-title">Add filter condition</strong><span>Build an allowlisted alert query.</span></div>
             <button type="button" onClick={close} aria-label="Close filter builder"><X size={15} /></button>
@@ -135,10 +122,10 @@ export function AddFilterPopover({ hasExistingExpression = false, onAddFilter }:
 
           <footer>
             <button type="button" onClick={close}>Cancel</button>
-            <button type="button" onClick={handleSubmit} disabled={!selectedField || !value.trim()}>Add condition</button>
+            <button type="button" onClick={() => handleSubmit(close)} disabled={!selectedField || !value.trim()}>Add condition</button>
           </footer>
-        </section>
+        </div>
       )}
-    </div>
+    </HaPopover>
   );
 }

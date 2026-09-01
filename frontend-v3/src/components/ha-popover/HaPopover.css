@@ -1,0 +1,72 @@
+/**
+ * HaPopover styles — token-only. The anchored-panel chrome extracted from the two bespoke popovers:
+ * overlay surface, strong border, medium shadow, panel radius, layered on --ha-z-dropdown.
+ */
+
+.ha-popover {
+  position: relative;
+  display: inline-block;
+}
+
+.ha-popover__panel {
+  position: absolute;
+  z-index: var(--ha-z-dropdown);
+  min-width: 200px;
+  max-width: min(420px, calc(100vw - 32px));
+  overflow: hidden;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-panel);
+  background: var(--ha-surface-overlay);
+  box-shadow: var(--ha-shadow-medium);
+  color: var(--ha-foreground-primary);
+  animation: ha-popover-in var(--ha-transition-fast) ease;
+}
+
+/* Placement — 7px gap from the trigger, matching the extracted popovers. */
+.ha-popover__panel--bottom-end {
+  top: calc(100% + 7px);
+  right: 0;
+}
+
+.ha-popover__panel--bottom-start {
+  top: calc(100% + 7px);
+  left: 0;
+}
+
+.ha-popover__panel--top-end {
+  bottom: calc(100% + 7px);
+  right: 0;
+}
+
+.ha-popover__panel--top-start {
+  bottom: calc(100% + 7px);
+  left: 0;
+}
+
+@keyframes ha-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-popover__panel {
+    animation: none;
+  }
+}
+
+/* Small viewports: dock to the bottom, matching AddFilterPopover's responsive fallback. */
+@media (max-width: 700px) {
+  .ha-popover__panel {
+    position: fixed;
+    inset: auto 8px 42px 80px;
+    width: auto !important;
+    max-width: none;
+  }
+}

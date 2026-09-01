@@ -1,0 +1,56 @@
+/**
+ * HaBadge styles — token-only. The bordered inline pill extracted from EntityBadge + TenantBadge.
+ */
+
+.ha-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-control);
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-primary);
+  white-space: nowrap;
+}
+
+.ha-badge--sm {
+  padding: 3px 8px;
+  font: var(--ha-type-metadata);
+}
+
+.ha-badge--md {
+  padding: 4px 10px;
+  font: var(--ha-type-compact);
+}
+
+.ha-badge--pill {
+  border-radius: var(--ha-radius-pill);
+}
+
+.ha-badge--mono {
+  font-family: var(--ha-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.ha-badge--muted {
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-badge--interactive {
+  cursor: pointer;
+}
+
+.ha-badge--interactive:hover {
+  border-color: var(--ha-border-strong);
+}
+
+.ha-badge--interactive:focus-visible {
+  outline: none;
+  border-color: var(--ha-border-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ha-action-primary) 22%, transparent);
+}
+
+.ha-badge__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -85,6 +85,7 @@
   --ha-radius-control: 8px;
   --ha-radius-panel: 12px;
   --ha-radius-workspace: 16px;
+  --ha-radius-pill: 999px;
   --ha-border-width: 1px;
   --ha-shadow-low: 0 1px 2px color-mix(in srgb, var(--ha-foreground-inverse) 24%, transparent);
   --ha-shadow-medium: 0 18px 48px color-mix(in srgb, var(--ha-foreground-inverse) 32%, transparent);
@@ -96,6 +97,16 @@
   --ha-shadow-sidebar-strong: 36px 0 80px color-mix(in srgb, var(--ha-foreground-inverse) 48%, transparent);
   --ha-transition-fast: 140ms ease;
   --ha-transition-base: 200ms ease;
+
+  /* Layering / z-index — source of truth (promoted from tokens.css; base/sticky/dropdown added).
+     Existing drawer/modal/toast/tooltip values are unchanged — components depend on them. */
+  --ha-z-base: 0;
+  --ha-z-sticky: 100;
+  --ha-z-dropdown: 150;
+  --ha-z-drawer: 200;
+  --ha-z-modal: 300;
+  --ha-z-toast: 400;
+  --ha-z-tooltip: 500;
 
   /* Shell */
   --ha-masthead-height: 50px;
@@ -126,9 +137,10 @@
   --ha-type-page-subtitle: 13px/1.5 var(--ha-font-ui);
   --ha-type-section-title: 15px/1.35 var(--ha-font-ui);
   --ha-type-body: 14px/1.5 var(--ha-font-ui);
-  --ha-type-compact: 12px/1.45 var(--ha-font-ui);
+  --ha-type-compact: 13px/1.45 var(--ha-font-ui);
   --ha-type-metadata: 11px/1.4 var(--ha-font-ui);
   --ha-type-metric: 28px/1.1 var(--ha-font-ui);
+  --ha-type-mono: 13px/1.5 var(--ha-font-mono);
 
   /* Legacy aliases — preserve existing components during migration */
   --ha-background: var(--ha-surface-app);

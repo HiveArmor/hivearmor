@@ -1,0 +1,25 @@
+/**
+ * HaLabel styles — token-only. Inline icon + colored text; color carries meaning (status/verdict)
+ * and is set inline via the `color` prop (a token). No border/pill — that's HaBadge's job.
+ */
+
+.ha-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.ha-label--sm {
+  font: var(--ha-type-metadata);
+  font-weight: 500;
+}
+
+.ha-label--md {
+  font: var(--ha-type-compact);
+  font-weight: 500;
+}
+
+.ha-label__text {
+  color: inherit;
+}

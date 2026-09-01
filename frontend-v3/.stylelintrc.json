@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/stylelintrc",
+  "rules": {
+    "declaration-property-value-disallowed-list": {
+      "/^(color|background|background-color|border|border-color|fill|stroke|outline|outline-color)$/": [
+        "/(?<!var\\([^)]*)#[0-9a-fA-F]{3,8}/",
+        "/(?<!var\\([^)]*)\\brgba?\\(/",
+        "/(?<!var\\([^)]*)\\bhsla?\\(/"
+      ]
+    }
+  },
+  "overrides": [
+    {
+      "files": ["src/styles/foundation.css", "src/styles/tokens.css"],
+      "rules": {
+        "declaration-property-value-disallowed-list": null
+      }
+    }
+  ],
+  "ignoreFiles": [
+    "dist/**",
+    "build/**",
+    "node_modules/**",
+    "storybook-static/**"
+  ]
+}

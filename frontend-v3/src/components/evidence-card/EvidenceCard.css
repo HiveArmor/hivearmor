@@ -1,0 +1,88 @@
+/**
+ * EvidenceCard styles — token-only. Card chrome (surface/border/radius/dividers) comes from HaCard;
+ * this file styles the evidence-specific content. Replaces former inline styles + stale aliases.
+ */
+
+.evidence-card__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.evidence-card__icon {
+  color: var(--ha-action-primary);
+  flex-shrink: 0;
+}
+
+.evidence-card__name {
+  font: var(--ha-type-compact);
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.evidence-card__time {
+  font: var(--ha-type-metadata);
+  color: var(--ha-foreground-secondary);
+  flex-shrink: 0;
+}
+
+.evidence-card__content {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.evidence-card__log {
+  margin: 0;
+  font: var(--ha-type-mono);
+  color: var(--ha-foreground-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.evidence-card__note {
+  margin: 0;
+  font: var(--ha-type-body);
+  color: var(--ha-foreground-primary);
+}
+
+.evidence-card__hash {
+  font: var(--ha-type-mono);
+  color: var(--ha-foreground-primary);
+  word-break: break-all;
+}
+
+.evidence-card__meta-text {
+  font: var(--ha-type-body);
+  color: var(--ha-foreground-secondary);
+}
+
+.evidence-card__added {
+  font: var(--ha-type-metadata);
+  color: var(--ha-foreground-secondary);
+}
+
+.evidence-card__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.evidence-card__action {
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--ha-foreground-secondary);
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.evidence-card__action:hover {
+  background: var(--ha-surface-hover);
+  color: var(--ha-foreground-primary);
+}

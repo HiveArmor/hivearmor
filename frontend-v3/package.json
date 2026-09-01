@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && node scripts/build.mjs",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:css": "stylelint \"src/**/*.css\"",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest watch",
@@ -66,6 +67,7 @@
     "jsdom": "24.1.1",
     "msw": "^2.15.0",
     "storybook": "^10.5.4",
+    "stylelint": "16.10.0",
     "typescript": "5.5.3",
     "vite": "8.1.5",
     "vitest": "4.1.10"

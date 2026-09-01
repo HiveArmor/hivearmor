@@ -12,9 +12,11 @@
 
 import styles from './AiIncidentSummaryCard.module.css';
 
+import { HaCard } from '@/components/ha-card';
 import { LlmUnavailableCard, LlmUnavailableErrorStrip } from '@/components/llm-unavailable-card';
 import { useAiStatus } from '@/hooks/useAiTriage';
 import { useIncidentAiSummary } from '@/hooks/useIncidentAiSummary';
+
 
 export interface AiIncidentSummaryCardProps {
   incidentId: string;
@@ -40,26 +42,25 @@ export function AiIncidentSummaryCard({ incidentId }: AiIncidentSummaryCardProps
 
   if (q.isLoading) {
     return (
-      <div className={styles.card}>
-        <div className={styles.header}>
+      <HaCard className={styles.card}>
+        <HaCard.Header>
           <span className={styles.title}>AI Incident Summary</span>
-        </div>
-        <div
-          role="status"
-          aria-label="Generating AI analysis"
-          className={styles.statusText}
-        >
-          Generating AI analysis…
-        </div>
-      </div>
+        </HaCard.Header>
+        <HaCard.Body>
+          <div role="status" aria-label="Generating AI analysis" className={styles.statusText}>
+            Generating AI analysis…
+          </div>
+        </HaCard.Body>
+      </HaCard>
     );
   }
 
   // HTTP 503: replace the widget with null-state card, show panel-level error message.
   // The surrounding page continues to render — we never throw here.
+  // Plain wrapper (not HaCard) — LlmUnavailableCard is itself a card; avoids card-in-card.
   if (q.isError && is503(q.error)) {
     return (
-      <div className={styles.card}>
+      <div className={styles.unavailableWrap}>
         <LlmUnavailableErrorStrip />
         <LlmUnavailableCard />
       </div>
@@ -68,27 +69,26 @@ export function AiIncidentSummaryCard({ incidentId }: AiIncidentSummaryCardProps
 
   if (q.isError || !q.data) {
     return (
-      <div
-        className={styles.card}
-        style={{ borderColor: 'var(--ha-critical)' }}
-      >
-        <div className={styles.header}>
+      <HaCard className={styles.card} style={{ borderColor: 'var(--ha-critical)' }}>
+        <HaCard.Header>
           <span className={styles.title}>AI Incident Summary</span>
-        </div>
-        <div role="alert" className={styles.statusText}>
-          AI analysis unavailable.
-        </div>
-      </div>
+        </HaCard.Header>
+        <HaCard.Body>
+          <div role="alert" className={styles.statusText}>
+            AI analysis unavailable.
+          </div>
+        </HaCard.Body>
+      </HaCard>
     );
   }
 
   const summary = q.data;
 
   return (
-    <div className={styles.card}>
-      <div className={styles.header}>
+    <HaCard className={styles.card}>
+      <HaCard.Header>
         <span className={styles.title}>AI Incident Summary</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className={styles.headerActions}>
           {/* Risk badge — color driven by data-level CSS attribute selector */}
           <span
             className={styles.riskBadge}
@@ -106,26 +106,28 @@ export function AiIncidentSummaryCard({ incidentId }: AiIncidentSummaryCardProps
             Regenerate
           </button>
         </div>
-      </div>
+      </HaCard.Header>
 
-      <p className={styles.narrative}>{summary.narrative}</p>
+      <HaCard.Body>
+        <p className={styles.narrative}>{summary.narrative}</p>
 
-      {summary.threatActorType && (
-        <p className={styles.threatActor}>
-          <strong>Threat Actor:</strong> {summary.threatActorType}
-        </p>
-      )}
+        {summary.threatActorType && (
+          <p className={styles.threatActor}>
+            <strong>Threat Actor:</strong> {summary.threatActorType}
+          </p>
+        )}
 
-      {summary.recommendedSteps.length > 0 && (
-        <>
-          <p className={styles.stepsLabel}>Recommended Steps</p>
-          <ol className={styles.stepsList}>
-            {summary.recommendedSteps.map((step, i) => (
-              <li key={i}>{step}</li>
-            ))}
-          </ol>
-        </>
-      )}
-    </div>
+        {summary.recommendedSteps.length > 0 && (
+          <>
+            <p className={styles.stepsLabel}>Recommended Steps</p>
+            <ol className={styles.stepsList}>
+              {summary.recommendedSteps.map((step, i) => (
+                <li key={i}>{step}</li>
+              ))}
+            </ol>
+          </>
+        )}
+      </HaCard.Body>
+    </HaCard>
   );
 }

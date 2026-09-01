@@ -2,6 +2,7 @@
  * IntelligenceFindingCard — shared structured finding surface (HI-05/HI-08)
  */
 
+import { HaCard } from '@/components/ha-card';
 import { FactsInferenceLayout } from '@/components/intelligence/FactsInferenceLayout';
 import { isUnconfiguredFinding } from '@/services/intelligenceFinding.service';
 import type { IntelligenceFindingDTO } from '@/types/intelligenceFinding.types';
@@ -24,11 +25,8 @@ export function IntelligenceFindingCard({
   const unconfigured = isUnconfiguredFinding(finding);
 
   return (
-    <article
-      className={compact ? 'hi-finding-card hi-finding-card--compact' : 'hi-finding-card'}
-      aria-label="Intelligence finding"
-    >
-      <header className="hi-finding-card__head">
+    <HaCard as="article" compact={compact} className="hi-finding-card" aria-label="Intelligence finding">
+      <HaCard.Header className="hi-finding-card__head">
         <div>
           <strong>{title ?? finding.title ?? 'Hive Intelligence finding'}</strong>
           {finding.provenance && (
@@ -36,25 +34,27 @@ export function IntelligenceFindingCard({
           )}
         </div>
         <span className="hi-finding-card__badge">STAGING CANDIDATE</span>
-      </header>
+      </HaCard.Header>
 
-      {unconfigured ? (
-        <p className="hi-finding-card__honesty" role="status">
-          {finding.answer ?? finding.summary ?? 'Assistive SOC AI is not configured.'}
-        </p>
-      ) : (
-        <>
-          {finding.summary && !showAnswer && (
-            <p className="hi-finding-card__summary">{finding.summary}</p>
-          )}
-          {showAnswer && finding.answer && (
-            <p className="hi-finding-card__summary">{finding.answer}</p>
-          )}
-          <FactsInferenceLayout finding={finding} compact={compact} />
-        </>
-      )}
+      <HaCard.Body className="hi-finding-card__body">
+        {unconfigured ? (
+          <p className="hi-finding-card__honesty" role="status">
+            {finding.answer ?? finding.summary ?? 'Assistive SOC AI is not configured.'}
+          </p>
+        ) : (
+          <>
+            {finding.summary && !showAnswer && (
+              <p className="hi-finding-card__summary">{finding.summary}</p>
+            )}
+            {showAnswer && finding.answer && (
+              <p className="hi-finding-card__summary">{finding.answer}</p>
+            )}
+            <FactsInferenceLayout finding={finding} compact={compact} />
+          </>
+        )}
+      </HaCard.Body>
 
-      <footer className="hi-finding-card__meta">
+      <HaCard.Footer className="hi-finding-card__meta">
         <span>
           Confidence:{' '}
           {Number.isFinite(finding.confidence) ? finding.confidence.toFixed(2) : '—'}
@@ -66,7 +66,7 @@ export function IntelligenceFindingCard({
         {finding.confidenceExplanation && (
           <span className="hi-finding-card__explanation">{finding.confidenceExplanation}</span>
         )}
-      </footer>
-    </article>
+      </HaCard.Footer>
+    </HaCard>
   );
 }

@@ -1,0 +1,56 @@
+/**
+ * FieldSelectorPopover styles — token-only. Replaces the former inline styles; panel chrome comes
+ * from HaPopover, this file styles the trigger + the column checklist inside it.
+ */
+
+.field-selector__trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-control);
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-compact);
+  cursor: pointer;
+}
+
+.field-selector__trigger:hover {
+  border-color: var(--ha-border-strong);
+}
+
+.field-selector__header {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ha-border-subtle);
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-metadata);
+  font-weight: 600;
+}
+
+.field-selector__list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.field-selector__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-compact);
+  cursor: pointer;
+}
+
+.field-selector__item:hover {
+  background: var(--ha-surface-hover);
+}
+
+.field-selector__item input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
