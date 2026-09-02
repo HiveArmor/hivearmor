@@ -1,6 +1,8 @@
 package rules
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +11,7 @@ import (
 	"time"
 
 	"github.com/hivearmor/event-processor/enterprise/sequence"
+	"github.com/hivearmor/event-processor/sigma"
 	"gopkg.in/yaml.v3"
 )
 
@@ -201,6 +204,19 @@ func LoadFromDir(dir string) LoadReport {
 			}
 			return nil
 		}
+		// Sigma-format file (title + detection, no native `name`/`where`):
+		// compile the detection block to CEL at load time and load it as a rule.
+		var sig sigma.SigmaRule
+		if err := yaml.Unmarshal(data, &sig); err == nil && sig.IsSigma() {
+			compiled, cerr := sigma.Compile(&sig)
+			if cerr != nil {
+				report.Skipped++
+				report.Invalid = append(report.Invalid, fmt.Sprintf("%s: %v", filepath.Base(path), cerr))
+				return nil
+			}
+			addRule(sigmaToRule(compiled), path)
+			return nil
+		}
 		report.Skipped++
 		return nil
 	})
@@ -256,4 +272,43 @@ func compileRule(r *Rule) error {
 		return fmt.Errorf("CEL compile: %w", err)
 	}
 	return nil
+}
+
+// sigmaToRule maps a compiled Sigma rule onto the native Rule struct so it flows
+// through the same compileRule() gate and GetRules(dataType) path as CEL rules.
+func sigmaToRule(c *sigma.CompiledRule) *Rule {
+	r := &Rule{
+		ID:            stableID(c.Name),
+		Name:          c.Name,
+		Where:         c.Where,
+		DataTypes:     c.DataTypes,
+		Severity:      c.Severity,
+		Description:   c.Description,
+		References:    c.References,
+		DeduplicateBy: c.DeduplicateBy,
+		GroupBy:       c.GroupBy,
+	}
+	if len(c.MitreTactics) > 0 || len(c.MitreAttacks) > 0 {
+		r.MITRE = &MITRERef{Tactics: c.MitreTactics, Attacks: c.MitreAttacks}
+	}
+	if c.Impact != [3]uint32{} {
+		r.Impact = &Impact{
+			Confidentiality: c.Impact[0],
+			Integrity:       c.Impact[1],
+			Availability:    c.Impact[2],
+		}
+	}
+	return r
+}
+
+// stableID derives a deterministic positive int64 id from a rule name (Sigma
+// ids are UUID strings; the Rule.ID field is int64). Stable across reloads so
+// dedup by id in AllRules() behaves.
+func stableID(name string) int64 {
+	sum := sha256.Sum256([]byte(name))
+	v := int64(binary.BigEndian.Uint64(sum[:8]) >> 1) // clear sign bit → always positive
+	if v == 0 {
+		v = 1
+	}
+	return v
 }
