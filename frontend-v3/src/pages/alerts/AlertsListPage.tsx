@@ -15,11 +15,9 @@ import type { ColDef } from 'ag-grid-community';
 import type { AgGridReact } from 'ag-grid-react';
 import {
   AlertTriangle,
-  BellRing,
   CheckCircle2,
   CircleDot,
   Columns3,
-  Filter,
   Hexagon,
   Keyboard,
   Layers3,
@@ -65,6 +63,8 @@ import { AddFilterPopover, type StructuredAlertFilter } from '@/components/add-f
 import { HaExportMenu } from '@/components/export-menu';
 import { FieldSelectorPopover } from '@/components/field-selector-popover/FieldSelectorPopover';
 import { HaCompactSelect, type HaCompactSelectOption } from '@/components/ha-compact-select/HaCompactSelect';
+import { HaPageHeader } from '@/components/ha-page-header';
+import { HaToolbar } from '@/components/ha-toolbar';
 import { LiveModeToggle } from '@/components/live-mode-toggle/LiveModeToggle';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock/StatusDock';
@@ -72,6 +72,7 @@ import { TimeRangeSelector, resolveTimeRange } from '@/components/time-range-sel
 import type { TimeRange } from '@/components/time-range-selector';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import { useAlertStream } from '@/hooks/useAlertStream';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
 import { getAlertQuerySuggestions, parseAlertQueryExpression } from '@/lib/alertFilterFields';
@@ -292,6 +293,7 @@ function BulkActionDialog({ action, selectedCount, isPending, onCancel, onConfir
 }
 
 export function AlertsListPage(): JSX.Element {
+  useDocumentTitle('Alerts');
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
@@ -676,20 +678,18 @@ export function AlertsListPage(): JSX.Element {
         <div className="alert-triage__fixture" role="status"><span><strong>Design fixture:</strong> fictional alert telemetry is enabled for visual review.</span><span>Production never receives these records.</span></div>
       )}
 
-      <header className="alert-triage-header">
-        <div className="alert-triage-header__identity">
-          <span className="alert-triage-header__hex" aria-hidden="true"><BellRing size={20} /></span>
-          <div>
-            <span>Detection operations</span>
-            <h1>Alerts</h1>
-            <p>{ALERTS_INVENTORY_JOB_SENTENCE}</p>
-          </div>
-        </div>
-        <div className="alert-triage-header__actions">
-          <div className="alert-stream-state" data-state={effectiveStreamConnected ? 'live' : 'delayed'}><span aria-hidden="true" /><div><strong>{effectiveStreamConnected ? 'Live intake' : 'Intake delayed'}</strong><small>{loadState.state === 'ready' ? `Rows updated ${new Date(loadState.loadedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Automatic retry active'}</small></div></div>
-          <LiveModeToggle mode={mode} onChange={handleModeChange} sseConnected={effectiveStreamConnected} />
-        </div>
-      </header>
+      <HaPageHeader
+        title="Alerts"
+        description={
+          <span className="alert-inventory-scope">Detection operations · full alert inventory</span>
+        }
+        actions={
+          <>
+            <div className="alert-stream-state" data-state={effectiveStreamConnected ? 'live' : 'delayed'}><span aria-hidden="true" /><div><strong>{effectiveStreamConnected ? 'Live intake' : 'Intake delayed'}</strong><small>{loadState.state === 'ready' ? `Rows updated ${new Date(loadState.loadedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Automatic retry active'}</small></div></div>
+            <LiveModeToggle mode={mode} onChange={handleModeChange} sseConnected={effectiveStreamConnected} />
+          </>
+        }
+      />
 
       <p className="alert-inventory-meta">
         <Link to="/dashboard">Mission Control</Link>
@@ -735,7 +735,20 @@ export function AlertsListPage(): JSX.Element {
               </div>
         </nav>
 
-        <div className="alert-query-toolbar">
+        <HaToolbar
+          sticky={false}
+          className="alert-query-toolbar"
+          activeFilters={visibleFilterEntries.map(([key, value]) => ({
+            label: `${filterLabels[key]} ${value.replace(/_/g, ' ')}`,
+            onRemove: () => removeFilter(key),
+          }))}
+          onClearAllFilters={
+            visibleFilterEntries.length > 0
+              ? () => { setFilters(mode === 'historical' ? resolveTimeRange(timeRange) : {}); setQueryInput(''); setQueryError(null); setSearchParams({}); setActiveViewId('all'); }
+              : undefined
+          }
+          left={
+            <>
               <div className="alert-query-toolbar__filters" aria-label="Severity and status filters">
                 <HaCompactSelect
                   ariaLabel="Severity filter"
@@ -821,7 +834,10 @@ export function AlertsListPage(): JSX.Element {
                 )}
               </div>
               <div id="alert-query-help" className="alert-sr-only">Use field colon value conditions joined by AND or OR. Arrow keys select autocomplete suggestions. Press Enter to run.</div>
-              <div className="alert-query-toolbar__actions">
+            </>
+          }
+          right={
+            <div className="alert-query-toolbar__actions">
                 <AddFilterPopover hasExistingExpression={Boolean(queryInput.trim() || filters.queryExpression)} onAddFilter={addStructuredFilter} />
                 <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} disabled={mode === 'live'} />
                 <FieldSelectorPopover optionalColumns={ALERT_COLUMNS_OPTIONAL} selectedColIds={selectedColIds} onToggleColumn={(id) => setSelectedColIds((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id])} />
@@ -830,17 +846,11 @@ export function AlertsListPage(): JSX.Element {
                 </div>
                 <button type="button" className="alert-toolbar-icon" onClick={refreshQueue} aria-label="Refresh alert inventory" title="Refresh rows"><RefreshCw size={15} /></button>
                 <HaExportMenu surface="alert-list" disabled={!hasResults} onExport={handleExport} />
-              </div>
-        </div>
+            </div>
+          }
+        />
 
         {queryError && <div id="alert-query-error" className="alert-query-error" role="alert"><AlertTriangle size={13} />{queryError}</div>}
-        {visibleFilterEntries.length > 0 && (
-          <div className="alert-filter-row" aria-label="Active alert filters">
-            <Filter size={13} aria-hidden="true" />
-            {visibleFilterEntries.map(([key, value]) => <span key={key}><strong>{filterLabels[key]}</strong>{value.replace(/_/g, ' ')}<button type="button" onClick={() => removeFilter(key)} aria-label={`Remove ${filterLabels[key]} filter`}><X size={11} /></button></span>)}
-            <button type="button" onClick={() => { setFilters(mode === 'historical' ? resolveTimeRange(timeRange) : {}); setQueryInput(''); setQueryError(null); setSearchParams({}); setActiveViewId('all'); }}>Clear filters</button>
-          </div>
-        )}
 
         <div className="alert-grid-meta">
           <div><strong>{countLabel(totalCount)}</strong><span>matching alerts</span>{summary?.snapshotAt && <><i aria-hidden="true" /><span>snapshot <time dateTime={summary.snapshotAt}>{new Date(summary.snapshotAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time></span></>}</div>

@@ -129,7 +129,7 @@ function RiskBadge({ risk, score }: { risk: ExposureRisk; score?: number }): JSX
 function ExposureDrawer({ row, onClose }: { row: ExposureRow; onClose: () => void }): JSX.Element {
   const [tab, setTab] = useState('overview');
   const tabs = isPath(row) ? ['overview', 'path', 'evidence', 'remediation'] : ['overview', 'related paths', 'remediation'];
-  const huntTo = `${ROUTES.SEARCH}?query=${encodeURIComponent(`exposure.id:"${row.id}"`)}`;
+  const huntTo = `${ROUTES.SEARCH}?q=${encodeURIComponent(`exposure.id:"${row.id}"`)}`;
   const graphTo = `${ROUTES.CONSTELLATION}?focus=${encodeURIComponent(row.id)}`;
   const responseTo = `${ROUTES.RESPONSE_PLAYBOOKS}/new?template=exposure-remediation&target=${encodeURIComponent(row.id)}`;
   return (

@@ -119,7 +119,7 @@ function AdDetailDrawer({ row, onClose }: { row: AdRow; onClose: () => void }): 
   const subtitle = isAssessment(row) ? `${categoryLabel(row.category)} · ${row.domainName}` : isDomain(row) ? `${row.forestName} forest` : row.domainName;
   const tabs = isAssessment(row) ? ['overview', 'evidence', 'exposure'] : isDomain(row) ? ['overview', 'controllers', 'trusts'] : ['overview', 'context'];
   const huntQuery = isAssessment(row) ? `ad.assessment.id:"${row.id}"` : `ad.domain:"${subtitle}"`;
-  const huntTo = `${ROUTES.SEARCH}?query=${encodeURIComponent(huntQuery)}`;
+  const huntTo = `${ROUTES.SEARCH}?q=${encodeURIComponent(huntQuery)}`;
   const responseTo = `${ROUTES.RESPONSE_PLAYBOOKS}/new?template=directory-hardening&target=${encodeURIComponent(row.id)}`;
 
   return (

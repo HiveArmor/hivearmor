@@ -28,8 +28,8 @@ import {
   X,
 } from 'lucide-react';
 
-import { fetchHuntEvent } from '../searchHunt.service';
-import type { HuntEventDetailResponse, HuntEventField, Pivot } from '../searchHunt.types';
+import { fetchHuntEvent, fetchHuntEventDetail } from '../searchHunt.service';
+import type { HuntActionRequest, HuntEventDetail, HuntEventDetailResponse, HuntEventField, Pivot } from '../searchHunt.types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -44,6 +44,8 @@ export interface EventDetailFlyoutProps {
   onClose: () => void;
   /** Called when a pivot is clicked — sets the search bar and auto-executes. */
   onPivot: (query: string) => void;
+  /** Single-event workflow actions (evidence / investigation). */
+  onAction?: (type: HuntActionRequest['type'], eventIds: string[]) => void;
 }
 
 type ViewTab = 'fields' | 'raw';
@@ -89,20 +91,6 @@ function emphasisClass(emphasis: HuntEventField['emphasis']): string {
   }
 }
 
-/** Renders JSON with token-based syntax highlighting using monospace font */
-function highlightJson(obj: Record<string, unknown>): string {
-  const json = JSON.stringify(obj, null, 2);
-  return json
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
-    .replace(/: "([^"]*)"(,?)/g, ': <span class="json-string">"$1"</span>$2')
-    .replace(/: (\d+\.?\d*)(,?)/g, ': <span class="json-number">$1</span>$2')
-    .replace(/: (true|false)(,?)/g, ': <span class="json-boolean">$1</span>$2')
-    .replace(/: (null)(,?)/g, ': <span class="json-null">$1</span>$2');
-}
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -112,6 +100,7 @@ export function EventDetailFlyout({
   searchId,
   onClose,
   onPivot,
+  onAction,
 }: EventDetailFlyoutProps): JSX.Element | null {
   const [viewTab, setViewTab] = useState<ViewTab>('fields');
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -133,6 +122,13 @@ export function EventDetailFlyout({
       ? fetchHuntEvent(eventId, 'raw', searchId)
       : Promise.reject(new Error('Event identifier is required')),
     enabled: Boolean(eventId && searchId) && viewTab === 'raw',
+    staleTime: 60_000,
+  });
+
+  const detailQuery = useQuery<HuntEventDetail>({
+    queryKey: ['hunt-event-detail', searchId, eventId],
+    queryFn: ({ signal }) => fetchHuntEventDetail(eventId ?? '', searchId, signal),
+    enabled: Boolean(eventId && searchId),
     staleTime: 60_000,
   });
 
@@ -260,11 +256,9 @@ export function EventDetailFlyout({
 
         {/* Raw JSON tab */}
         {viewTab === 'raw' && data?.raw && (
-          <pre
-            className="event-flyout__raw"
-            tabIndex={0}
-            dangerouslySetInnerHTML={{ __html: highlightJson(data.raw) }}
-          />
+          <pre className="event-flyout__raw" tabIndex={0}>
+            {JSON.stringify(data.raw, null, 2)}
+          </pre>
         )}
 
         {/* Pivot section */}
@@ -292,6 +286,25 @@ export function EventDetailFlyout({
           </section>
         )}
       </div>
+
+      {onAction && eventId && (
+        <footer className="event-flyout__footer">
+          <button
+            type="button"
+            onClick={() => onAction('add_evidence', [eventId])}
+            disabled={detailQuery.isLoading || (detailQuery.data ? !detailQuery.data.permissions.addEvidence : true)}
+          >
+            Add evidence
+          </button>
+          <button
+            type="button"
+            onClick={() => onAction('create_investigation', [eventId])}
+            disabled={detailQuery.isLoading || (detailQuery.data ? !detailQuery.data.permissions.createInvestigation : true)}
+          >
+            Create investigation
+          </button>
+        </footer>
+      )}
     </aside>
   );
 }

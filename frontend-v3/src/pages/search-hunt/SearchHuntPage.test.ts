@@ -16,12 +16,18 @@ describe('SearchHunt identity', () => {
   it('states ad-hoc hunt job and sibling cross-links', () => {
     expect(pageSource).toContain('SEARCH_HUNT_JOB_SENTENCE');
     expect(pageSource.toLowerCase()).toMatch(/ad-hoc hunt|event search/);
+    expect(pageSource).toContain('HaPageHeader');
+    expect(pageSource).toContain("useDocumentTitle('Search & Hunt')");
     expect(pageSource).toContain('to="/dashboard"');
     expect(pageSource).toContain('to="/alerts"');
     expect(pageSource).toContain('to="/investigations"');
     expect(pageSource).toContain('to="/incidents"');
     expect(pageSource).toContain('runNlQuery');
-    expect(pageSource).toContain('useConfirmedSavedQueries');
+    expect(pageSource).toContain('SearchManagerPanel');
+    expect(pageSource).toContain('EventDetailFlyout');
+    expect(pageSource).toContain("routeSearchParams.get('q') ?? routeSearchParams.get('query')");
+    expect(pageSource).not.toContain('EventContextDrawer');
+    expect(pageSource).not.toContain('useConfirmedSavedQueries');
     expect(pageSource).not.toContain('eps={searchHuntFixtureMode ? 12840');
     expect(pageSource).toContain('Histogram unavailable until the search response includes time buckets');
   });

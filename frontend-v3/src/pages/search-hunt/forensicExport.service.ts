@@ -28,8 +28,8 @@ const BASE_PATH = '/api';
 /** Endpoints per surface — POST streams the file, GET(id) resolves the manifest. */
 const EXPORT_ENDPOINTS: Record<ExportSurface, { stream: string; manifest: (id: string) => string }> = {
   'hunt-search': {
-    stream: '/ha-hunt/search/export',
-    manifest: (id) => `/ha-hunt/search/export/${encodeURIComponent(id)}/manifest`,
+    stream: '/ha-hunts/search/export',
+    manifest: (id) => `/ha-hunts/search/export/${encodeURIComponent(id)}/manifest`,
   },
   'alert-list': {
     stream: '/ha-alerts/export',

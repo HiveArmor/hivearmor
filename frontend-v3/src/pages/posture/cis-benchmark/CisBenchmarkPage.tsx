@@ -122,7 +122,7 @@ function CheckDrawer({ check, onClose }: { check: ScaResultDTO; onClose: () => v
     if (value) void navigator.clipboard?.writeText(value);
   }, []);
   const assetTo = `${ROUTES.ASSETS}?search=${encodeURIComponent(detail.agentHostname ?? detail.agentId)}`;
-  const huntTo = `${ROUTES.SEARCH}?query=${encodeURIComponent(`host.name:${detail.agentHostname ?? detail.agentId}`)}`;
+  const huntTo = `${ROUTES.SEARCH}?q=${encodeURIComponent(`host.name:${detail.agentHostname ?? detail.agentId}`)}`;
 
   return (
     <HaDrawer isOpen onClose={onClose} title={detail.checkId} subtitle={detail.checkTitle} width={540}>

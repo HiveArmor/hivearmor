@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 
-import type { CellClickedEvent, CellDoubleClickedEvent, CellKeyDownEvent, ColDef, GridOptions, IDatasource, IServerSideDatasource, RowClickedEvent, RowDoubleClickedEvent } from 'ag-grid-community';
+import type { CellClickedEvent, CellDoubleClickedEvent, CellKeyDownEvent, ColDef, GridOptions, IDatasource, IServerSideDatasource, RowClickedEvent, RowDoubleClickedEvent, SortChangedEvent } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 
 import 'ag-grid-community/styles/ag-grid.css';
@@ -50,6 +50,7 @@ export interface SiemDataGridProps {
   onCellDoubleClicked?: (event: CellDoubleClickedEvent) => void;
   onCellKeyDown?: (event: CellKeyDownEvent) => void;
   onSelectionChanged?: (selectedRows: unknown[]) => void;
+  onSortChanged?: (event: SortChangedEvent) => void;
   height?: string | number;
   rowHeight?: number;
   rowSelection?: GridOptions['rowSelection'];
@@ -81,6 +82,7 @@ export const SiemDataGrid = forwardRef<AgGridReact, SiemDataGridProps>(
       onCellDoubleClicked,
       onCellKeyDown,
       onSelectionChanged,
+      onSortChanged,
       height = '100%',
       rowHeight,
       rowSelection,
@@ -138,6 +140,7 @@ export const SiemDataGrid = forwardRef<AgGridReact, SiemDataGridProps>(
             onSelectionChanged(selectedRows);
           }
         : undefined,
+      onSortChanged,
       noRowsOverlayComponent,
       loadingOverlayComponent,
       pagination: paginationPageSize !== undefined,

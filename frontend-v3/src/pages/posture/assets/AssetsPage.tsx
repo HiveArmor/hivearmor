@@ -165,7 +165,7 @@ function AssetDrawer({ asset: initialAsset, onClose }: { asset: AssetDTO; onClos
   const entityId = asset.canonicalEntityId ?? String(asset.id);
   return (
     <HaDrawer isOpen onClose={onClose} title={asset.clientName} subtitle={`${VIEW_LABELS[asset.category ?? 'unknown']} · ${asset.clientDomain}`} width={540}
-      footer={<><Link className="ast-drawer-action" to={`${ROUTES.ENTITIES}/${encodeURIComponent(entityId)}/dossier`}><Layers3 size={13} />Open entity dossier</Link><Link className="ast-drawer-action ast-drawer-action--primary" to={`${ROUTES.SEARCH}?query=${encodeURIComponent(`host.name:"${asset.clientName}"`)}`}><Search size={13} />Hunt activity</Link></>}>
+      footer={<><Link className="ast-drawer-action" to={`${ROUTES.ENTITIES}/${encodeURIComponent(entityId)}/dossier`}><Layers3 size={13} />Open entity dossier</Link><Link className="ast-drawer-action ast-drawer-action--primary" to={`${ROUTES.SEARCH}?q=${encodeURIComponent(`host.name:"${asset.clientName}"`)}`}><Search size={13} />Hunt activity</Link></>}>
       <div className="ast-drawer">
         <div className="ast-drawer__headline">
           <span className="ast-drawer__icon">{categoryIcon(asset.category, 20)}</span>

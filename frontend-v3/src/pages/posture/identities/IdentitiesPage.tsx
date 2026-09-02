@@ -165,7 +165,7 @@ function IdentityDrawer({ item, onClose }: { item: IdentityPostureItem; onClose:
   const dossierPivot = item.pivots.find((pivot) => pivot.type === 'dossier');
   const dossierTo = dossierPivot?.route ?? `${ROUTES.ENTITIES}/${encodeURIComponent(item.id)}`;
   const huntTo = item.pivots.find((pivot) => pivot.type === 'hunt')?.route
-    ?? `${ROUTES.SEARCH}?query=${encodeURIComponent(`user.name:"${item.value}"`)}`;
+    ?? `${ROUTES.SEARCH}?q=${encodeURIComponent(`user.name:"${item.value}"`)}`;
   const unavailable = preview?.dataCompleteness === 'partial';
 
   return (

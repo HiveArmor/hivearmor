@@ -138,7 +138,7 @@ function FindingDrawer({ finding, onClose }: { finding: VulnFindingDTO; onClose:
     if (value) void navigator.clipboard?.writeText(value);
   }, []);
 
-  const huntTo = `${ROUTES.SEARCH}?query=${encodeURIComponent(`vulnerability.id:${detail.cveId}`)}`;
+  const huntTo = `${ROUTES.SEARCH}?q=${encodeURIComponent(`vulnerability.id:${detail.cveId}`)}`;
   const assetTo = `${ROUTES.ASSETS}?search=${encodeURIComponent(detail.agentHostname ?? detail.agentId)}`;
   return (
     <HaDrawer

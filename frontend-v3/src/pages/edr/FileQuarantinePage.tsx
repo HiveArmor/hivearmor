@@ -222,7 +222,7 @@ function FileDrawer({ row, onClose, onRestore, onDelete, canMutate }: {
             <div className="qrn-copy-value"><code>{row.sha256Hash ?? 'Not reported'}</code><button type="button" onClick={() => copyText(row.sha256Hash)} aria-label="Copy SHA-256"><Copy size={13} /></button></div>
           </section>
           <div className="qrn-pivots">
-            <Link to={`${ROUTES.SEARCH}?query=${encodeURIComponent(row.sha256Hash ? `file.hash.sha256:"${row.sha256Hash}"` : `file.name:"${row.filename}"`)}`}><Search size={13} />Hunt file observations<ExternalLink size={11} /></Link>
+            <Link to={`${ROUTES.SEARCH}?q=${encodeURIComponent(row.sha256Hash ? `file.hash.sha256:"${row.sha256Hash}"` : `file.name:"${row.filename}"`)}`}><Search size={13} />Hunt file observations<ExternalLink size={11} /></Link>
             <Link to={`${ROUTES.ENTITIES}/${encodeURIComponent(row.agentId)}`}><Laptop size={13} />Open endpoint dossier<ExternalLink size={11} /></Link>
             {row.linkedAlertId && <Link to={`${ROUTES.ALERTS}/${encodeURIComponent(row.linkedAlertId)}`}><ShieldAlert size={13} />Open {row.linkedAlertId}<ExternalLink size={11} /></Link>}
             {row.linkedIncidentId && <Link to={`${ROUTES.INCIDENTS}/${encodeURIComponent(row.linkedIncidentId)}`}><Workflow size={13} />Open {row.linkedIncidentId}<ExternalLink size={11} /></Link>}

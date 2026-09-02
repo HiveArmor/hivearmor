@@ -55,63 +55,10 @@
 
 .alert-triage__fixture strong { color: var(--ha-foreground-primary); }
 
-.alert-triage-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: var(--ha-page-header-height);
-  padding: 6px var(--ha-page-header-padding-inline);
-  border-bottom: 1px solid var(--ha-border-subtle);
-  background: color-mix(in srgb, var(--ha-surface-panel) 97%, transparent);
-  flex: 0 0 auto;
-}
-
-.alert-triage-header__identity,
-.alert-triage-header__actions,
 .alert-stream-state,
 .alert-route-switch {
   display: flex;
   align-items: center;
-}
-
-.alert-triage-header__identity { gap: 12px; min-width: 0; }
-
-.alert-triage-header__hex {
-  display: grid;
-  width: var(--ha-page-header-icon-size);
-  height: 40px;
-  flex: 0 0 var(--ha-page-header-icon-size);
-  place-items: center;
-  clip-path: polygon(25% 5%, 75% 5%, 98% 50%, 75% 95%, 25% 95%, 2% 50%);
-  background: color-mix(in srgb, var(--ha-action-primary) 18%, var(--ha-surface-elevated));
-  color: var(--ha-action-secondary);
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ha-action-primary) 52%, transparent);
-}
-
-.alert-triage-header__identity > div > span {
-  display: block;
-  color: var(--ha-action-secondary);
-  font: 9px/1.15 var(--ha-font-ui);
-  font-weight: 700;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-}
-
-.alert-triage-header h1 {
-  margin: 1px 0 0;
-  color: var(--ha-foreground-primary);
-  font: var(--ha-page-title-compact);
-  font-weight: 680;
-  letter-spacing: -.025em;
-}
-
-.alert-triage-header p {
-  margin: 2px 0 0;
-  max-width: 52rem;
-  color: var(--ha-foreground-secondary);
-  font: var(--ha-type-compact);
-  line-height: 1.35;
 }
 
 .alert-inventory-meta {
@@ -156,8 +103,6 @@
 .alert-query-toolbar__filters > * {
   min-width: 132px;
 }
-
-.alert-triage-header__actions { justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
 
 .alert-stream-state {
   gap: 8px;
@@ -298,14 +243,13 @@
 .alert-queue-banner[data-tone='live'] { background: color-mix(in srgb, var(--ha-action-primary) 9%, var(--ha-surface-panel)); }
 .alert-queue-banner[data-tone='live'] svg { color: var(--ha-action-secondary); }
 
-.alert-query-toolbar {
+/* Root layout + surface now provided by HaToolbar (.ha-toolbar) — transparent no-fill band,
+   sticky strip, and the row/left/right/chip structure. Only child styling remains below. */
+.alert-query-toolbar .ha-toolbar__left {
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 44px;
-  padding: 5px 10px;
-  border-bottom: 1px solid var(--ha-border-subtle);
-  background: var(--ha-surface-panel);
+  flex-wrap: wrap;
 }
 
 .alert-query-toolbar__search { position: relative; display: flex; min-width: 240px; flex: 1 1 520px; align-items: center; height: 34px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-input); color: var(--ha-foreground-tertiary); }
@@ -665,12 +609,9 @@
   .alert-queue-workspace[data-drawer-open='true'] .alert-grid-workspace { margin-right: 0; }
   .alert-drawer-scrim { position: fixed; z-index: calc(var(--ha-z-drawer) - 1); top: var(--ha-masthead-height); right: 0; bottom: 0; left: var(--ha-sidebar-collapsed); display: block; border: 0; background: color-mix(in srgb, var(--ha-surface-app) 58%, transparent); }
   .alert-triage-drawer { width: min(var(--alert-drawer-width), calc(100% - 80px)) !important; }
-  .alert-triage-header__actions .alert-stream-state { display: none; }
 }
 
 @media (max-width: 960px) {
-  .alert-triage-header { align-items: flex-start; flex-direction: column; gap: 9px; }
-  .alert-triage-header__actions { width: 100%; justify-content: flex-start; }
   .alert-queue-metrics { display: flex; overflow-x: auto; padding-inline: 0; }
   .alert-queue-metric { min-width: 174px; }
   .alert-view-strip__label { display: none; }
@@ -681,11 +622,6 @@
   .alert-queue-sticky { position: static; box-shadow: none; }
   .alert-queue-workspace { height: clamp(500px, 66vh, 640px); min-height: 500px; }
   .alert-triage__fixture { align-items: flex-start; flex-direction: column; gap: 1px; padding: 4px 9px; }
-  .alert-triage-header { min-height: auto; padding: 10px; }
-  .alert-triage-header__hex { width: 38px; height: 38px; flex-basis: 38px; }
-  .alert-triage-header h1 { font-size: 20px; }
-  .alert-triage-header p { display: none; }
-  .alert-triage-header__actions { flex-wrap: nowrap; overflow-x: auto; }
   .alert-route-switch { flex: 0 0 auto; }
   .alert-queue-metrics { min-height: 59px; }
   .alert-queue-metric { min-width: 158px; min-height: 58px; grid-template-columns: 28px minmax(0, 1fr) 12px; }

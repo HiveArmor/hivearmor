@@ -71,7 +71,7 @@ const foundationIdentities: IdentityPostureItem[] = Array.from({ length: 186 }, 
     tags,
     pivots: [
       { type: 'dossier', label: 'Open dossier', route: `/entities/${encodeURIComponent(`identity-${kind}-${String(index + 1).padStart(5, '0')}`)}` },
-      { type: 'hunt', label: 'Hunt activity', route: `/search?query=${encodeURIComponent(`user.name:"${value}"`)}` },
+      { type: 'hunt', label: 'Hunt activity', route: `/search?q=${encodeURIComponent(`user.name:"${value}"`)}` },
       { type: 'alerts', label: 'View alerts', route: `/alerts?entity=${encodeURIComponent(value)}` },
       { type: 'incidents', label: 'View incidents', route: `/incidents?entity=${encodeURIComponent(value)}` },
     ],

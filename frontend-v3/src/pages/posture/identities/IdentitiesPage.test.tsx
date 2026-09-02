@@ -23,7 +23,7 @@ const identity: IdentityPostureItem = {
   accountState: 'active', controlState: 'exposed', alertCount: 7, lastSeen: '2026-08-03T13:00:00Z',
   firstSeen: '2026-01-03T13:00:00Z', tenantName: 'Northstar Finance', department: 'Finance Operations',
   observationSources: ['Identity provider'], tags: ['privileged'],
-  pivots: [{ type: 'dossier', label: 'Open dossier', route: '/entities/identity-human-00001' }, { type: 'hunt', label: 'Hunt activity', route: '/search?query=sarah.chen' }],
+  pivots: [{ type: 'dossier', label: 'Open dossier', route: '/entities/identity-human-00001' }, { type: 'hunt', label: 'Hunt activity', route: '/search?q=sarah.chen' }],
 };
 
 const page: IdentityPosturePage = {

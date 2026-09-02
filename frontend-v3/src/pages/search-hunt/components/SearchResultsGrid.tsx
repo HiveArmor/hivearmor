@@ -15,6 +15,7 @@ export interface SearchResultsGridProps {
   density: HuntRowDensity;
   onSelectionChanged: (selectedIds: string[]) => void;
   onActivateEvent: (event: HuntEvent) => void;
+  onSortChanged?: (field: string, direction: 'asc' | 'desc') => void;
 }
 
 const severityOrder: Record<HuntEvent['severity'], number> = {
@@ -32,6 +33,7 @@ export function SearchResultsGrid({
   density,
   onSelectionChanged,
   onActivateEvent,
+  onSortChanged,
 }: SearchResultsGridProps): JSX.Element {
   const gridRef = useRef<AgGridReact>(null);
 
@@ -98,7 +100,13 @@ export function SearchResultsGrid({
       onSelectionChanged={handleSelection}
       onRowClicked={handleRowClicked}
       getRowId={({ data }) => (data as HuntEvent).id}
-      defaultColDef={{ sortable: true, filter: false, resizable: true }}
+      defaultColDef={{ sortable: Boolean(onSortChanged), filter: false, resizable: true }}
+      onSortChanged={(event) => {
+        if (!onSortChanged) return;
+        const sorted = event.api.getColumnState().find((col) => col.sort);
+        if (!sorted?.colId || sorted.colId === 'selection') return;
+        onSortChanged(sorted.colId, sorted.sort === 'asc' ? 'asc' : 'desc');
+      }}
     />
   );
 }

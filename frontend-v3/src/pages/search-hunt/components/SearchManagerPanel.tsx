@@ -51,6 +51,8 @@ export interface SearchManagerPanelProps {
   onExecuteQuery: (query: string) => void;
   /** The current query value (for the "Save Current" modal). */
   currentQuery: string;
+  /** Tab to show when the panel opens. */
+  initialTab?: Tab;
 }
 
 type Tab = 'saved' | 'history';
@@ -85,9 +87,10 @@ export function SearchManagerPanel({
   onLoadQuery,
   onExecuteQuery,
   currentQuery,
+  initialTab = 'saved',
 }: SearchManagerPanelProps): JSX.Element | null {
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<Tab>('saved');
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [searchFilter, setSearchFilter] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{ huntId: string; x: number; y: number } | null>(null);
@@ -101,6 +104,10 @@ export function SearchManagerPanel({
   const [saveTags, setSaveTags] = useState('');
   const [saveShared, setSaveShared] = useState(false);
   const contextRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen) setTab(initialTab);
+  }, [initialTab, isOpen]);
 
   // ------ Data fetching ------
 

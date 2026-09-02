@@ -74,7 +74,7 @@ describe('exportHuntResults', () => {
 
     // First call: streamed export POST with committed body + format + JWT.
     const [streamUrl, streamInit] = mockFetch.mock.calls[0];
-    expect(streamUrl).toBe('/api/ha-hunt/search/export');
+    expect(streamUrl).toBe('/api/ha-hunts/search/export');
     expect(streamInit.method).toBe('POST');
     expect((streamInit.headers as Record<string, string>).Authorization).toBe('Bearer jwt-abc');
     const sentBody = JSON.parse(streamInit.body as string);
@@ -83,7 +83,7 @@ describe('exportHuntResults', () => {
     expect(sentBody.timeRange).toEqual({ from: '2026-09-01T00:00:00Z', to: '2026-09-02T00:00:00Z' });
 
     // Second call: manifest GET keyed by the returned export id.
-    expect(mockFetch.mock.calls[1][0]).toBe('/api/ha-hunt/search/export/exp-123/manifest');
+    expect(mockFetch.mock.calls[1][0]).toBe('/api/ha-hunts/search/export/exp-123/manifest');
 
     // Blob download fired, hash + count surfaced.
     expect(clickSpy).toHaveBeenCalledTimes(1);
@@ -144,7 +144,7 @@ describe('fetchExportManifest', () => {
   it('GETs the manifest for a surface + id', async () => {
     mockFetch.mockResolvedValueOnce(manifestResponse({ export_id: 'exp-7', sha256: 'c'.repeat(64) }));
     const manifest = await fetchExportManifest('hunt-search', 'exp-7');
-    expect(mockFetch.mock.calls[0][0]).toBe('/api/ha-hunt/search/export/exp-7/manifest');
+    expect(mockFetch.mock.calls[0][0]).toBe('/api/ha-hunts/search/export/exp-7/manifest');
     expect(manifest.sha256).toBe('c'.repeat(64));
   });
 });
