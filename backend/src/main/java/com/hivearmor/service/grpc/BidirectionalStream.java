@@ -86,7 +86,7 @@ private static final long serialVersionUID = 0L;
 
   public static final int COMMAND_FIELD_NUMBER = 1;
   /**
-   * <code>.agent.UtmCommand command = 1;</code>
+   * <code>.agent.RemoteCommand command = 1;</code>
    * @return Whether the command field is set.
    */
   @java.lang.Override
@@ -94,25 +94,25 @@ private static final long serialVersionUID = 0L;
     return streamMessageCase_ == 1;
   }
   /**
-   * <code>.agent.UtmCommand command = 1;</code>
+   * <code>.agent.RemoteCommand command = 1;</code>
    * @return The command.
    */
   @java.lang.Override
-  public com.hivearmor.service.grpc.UtmCommand getCommand() {
+  public com.hivearmor.service.grpc.RemoteCommand getCommand() {
     if (streamMessageCase_ == 1) {
-       return (com.hivearmor.service.grpc.UtmCommand) streamMessage_;
+       return (com.hivearmor.service.grpc.RemoteCommand) streamMessage_;
     }
-    return com.hivearmor.service.grpc.UtmCommand.getDefaultInstance();
+    return com.hivearmor.service.grpc.RemoteCommand.getDefaultInstance();
   }
   /**
-   * <code>.agent.UtmCommand command = 1;</code>
+   * <code>.agent.RemoteCommand command = 1;</code>
    */
   @java.lang.Override
-  public com.hivearmor.service.grpc.UtmCommandOrBuilder getCommandOrBuilder() {
+  public com.hivearmor.service.grpc.RemoteCommandOrBuilder getCommandOrBuilder() {
     if (streamMessageCase_ == 1) {
-       return (com.hivearmor.service.grpc.UtmCommand) streamMessage_;
+       return (com.hivearmor.service.grpc.RemoteCommand) streamMessage_;
     }
-    return com.hivearmor.service.grpc.UtmCommand.getDefaultInstance();
+    return com.hivearmor.service.grpc.RemoteCommand.getDefaultInstance();
   }
 
   public static final int RESULT_FIELD_NUMBER = 2;
@@ -161,7 +161,7 @@ private static final long serialVersionUID = 0L;
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
     if (streamMessageCase_ == 1) {
-      output.writeMessage(1, (com.hivearmor.service.grpc.UtmCommand) streamMessage_);
+      output.writeMessage(1, (com.hivearmor.service.grpc.RemoteCommand) streamMessage_);
     }
     if (streamMessageCase_ == 2) {
       output.writeMessage(2, (com.hivearmor.service.grpc.CommandResult) streamMessage_);
@@ -177,7 +177,7 @@ private static final long serialVersionUID = 0L;
     size = 0;
     if (streamMessageCase_ == 1) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(1, (com.hivearmor.service.grpc.UtmCommand) streamMessage_);
+        .computeMessageSize(1, (com.hivearmor.service.grpc.RemoteCommand) streamMessage_);
     }
     if (streamMessageCase_ == 2) {
       size += com.google.protobuf.CodedOutputStream
@@ -520,9 +520,9 @@ private static final long serialVersionUID = 0L;
     private int bitField0_;
 
     private com.google.protobuf.SingleFieldBuilder<
-        com.hivearmor.service.grpc.UtmCommand, com.hivearmor.service.grpc.UtmCommand.Builder, com.hivearmor.service.grpc.UtmCommandOrBuilder> commandBuilder_;
+        com.hivearmor.service.grpc.RemoteCommand, com.hivearmor.service.grpc.RemoteCommand.Builder, com.hivearmor.service.grpc.RemoteCommandOrBuilder> commandBuilder_;
     /**
-     * <code>.agent.UtmCommand command = 1;</code>
+     * <code>.agent.RemoteCommand command = 1;</code>
      * @return Whether the command field is set.
      */
     @java.lang.Override
@@ -530,27 +530,27 @@ private static final long serialVersionUID = 0L;
       return streamMessageCase_ == 1;
     }
     /**
-     * <code>.agent.UtmCommand command = 1;</code>
+     * <code>.agent.RemoteCommand command = 1;</code>
      * @return The command.
      */
     @java.lang.Override
-    public com.hivearmor.service.grpc.UtmCommand getCommand() {
+    public com.hivearmor.service.grpc.RemoteCommand getCommand() {
       if (commandBuilder_ == null) {
         if (streamMessageCase_ == 1) {
-          return (com.hivearmor.service.grpc.UtmCommand) streamMessage_;
+          return (com.hivearmor.service.grpc.RemoteCommand) streamMessage_;
         }
-        return com.hivearmor.service.grpc.UtmCommand.getDefaultInstance();
+        return com.hivearmor.service.grpc.RemoteCommand.getDefaultInstance();
       } else {
         if (streamMessageCase_ == 1) {
           return commandBuilder_.getMessage();
         }
-        return com.hivearmor.service.grpc.UtmCommand.getDefaultInstance();
+        return com.hivearmor.service.grpc.RemoteCommand.getDefaultInstance();
       }
     }
     /**
-     * <code>.agent.UtmCommand command = 1;</code>
+     * <code>.agent.RemoteCommand command = 1;</code>
      */
-    public Builder setCommand(com.hivearmor.service.grpc.UtmCommand value) {
+    public Builder setCommand(com.hivearmor.service.grpc.RemoteCommand value) {
       if (commandBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -564,10 +564,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.agent.UtmCommand command = 1;</code>
+     * <code>.agent.RemoteCommand command = 1;</code>
      */
     public Builder setCommand(
-        com.hivearmor.service.grpc.UtmCommand.Builder builderForValue) {
+        com.hivearmor.service.grpc.RemoteCommand.Builder builderForValue) {
       if (commandBuilder_ == null) {
         streamMessage_ = builderForValue.build();
         onChanged();
@@ -578,13 +578,13 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.agent.UtmCommand command = 1;</code>
+     * <code>.agent.RemoteCommand command = 1;</code>
      */
-    public Builder mergeCommand(com.hivearmor.service.grpc.UtmCommand value) {
+    public Builder mergeCommand(com.hivearmor.service.grpc.RemoteCommand value) {
       if (commandBuilder_ == null) {
         if (streamMessageCase_ == 1 &&
-            streamMessage_ != com.hivearmor.service.grpc.UtmCommand.getDefaultInstance()) {
-          streamMessage_ = com.hivearmor.service.grpc.UtmCommand.newBuilder((com.hivearmor.service.grpc.UtmCommand) streamMessage_)
+            streamMessage_ != com.hivearmor.service.grpc.RemoteCommand.getDefaultInstance()) {
+          streamMessage_ = com.hivearmor.service.grpc.RemoteCommand.newBuilder((com.hivearmor.service.grpc.RemoteCommand) streamMessage_)
               .mergeFrom(value).buildPartial();
         } else {
           streamMessage_ = value;
@@ -601,7 +601,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.agent.UtmCommand command = 1;</code>
+     * <code>.agent.RemoteCommand command = 1;</code>
      */
     public Builder clearCommand() {
       if (commandBuilder_ == null) {
@@ -620,38 +620,38 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.agent.UtmCommand command = 1;</code>
+     * <code>.agent.RemoteCommand command = 1;</code>
      */
-    public com.hivearmor.service.grpc.UtmCommand.Builder getCommandBuilder() {
+    public com.hivearmor.service.grpc.RemoteCommand.Builder getCommandBuilder() {
       return getCommandFieldBuilder().getBuilder();
     }
     /**
-     * <code>.agent.UtmCommand command = 1;</code>
+     * <code>.agent.RemoteCommand command = 1;</code>
      */
     @java.lang.Override
-    public com.hivearmor.service.grpc.UtmCommandOrBuilder getCommandOrBuilder() {
+    public com.hivearmor.service.grpc.RemoteCommandOrBuilder getCommandOrBuilder() {
       if ((streamMessageCase_ == 1) && (commandBuilder_ != null)) {
         return commandBuilder_.getMessageOrBuilder();
       } else {
         if (streamMessageCase_ == 1) {
-          return (com.hivearmor.service.grpc.UtmCommand) streamMessage_;
+          return (com.hivearmor.service.grpc.RemoteCommand) streamMessage_;
         }
-        return com.hivearmor.service.grpc.UtmCommand.getDefaultInstance();
+        return com.hivearmor.service.grpc.RemoteCommand.getDefaultInstance();
       }
     }
     /**
-     * <code>.agent.UtmCommand command = 1;</code>
+     * <code>.agent.RemoteCommand command = 1;</code>
      */
     private com.google.protobuf.SingleFieldBuilder<
-        com.hivearmor.service.grpc.UtmCommand, com.hivearmor.service.grpc.UtmCommand.Builder, com.hivearmor.service.grpc.UtmCommandOrBuilder> 
+        com.hivearmor.service.grpc.RemoteCommand, com.hivearmor.service.grpc.RemoteCommand.Builder, com.hivearmor.service.grpc.RemoteCommandOrBuilder> 
         getCommandFieldBuilder() {
       if (commandBuilder_ == null) {
         if (!(streamMessageCase_ == 1)) {
-          streamMessage_ = com.hivearmor.service.grpc.UtmCommand.getDefaultInstance();
+          streamMessage_ = com.hivearmor.service.grpc.RemoteCommand.getDefaultInstance();
         }
         commandBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-            com.hivearmor.service.grpc.UtmCommand, com.hivearmor.service.grpc.UtmCommand.Builder, com.hivearmor.service.grpc.UtmCommandOrBuilder>(
-                (com.hivearmor.service.grpc.UtmCommand) streamMessage_,
+            com.hivearmor.service.grpc.RemoteCommand, com.hivearmor.service.grpc.RemoteCommand.Builder, com.hivearmor.service.grpc.RemoteCommandOrBuilder>(
+                (com.hivearmor.service.grpc.RemoteCommand) streamMessage_,
                 getParentForChildren(),
                 isClean());
         streamMessage_ = null;

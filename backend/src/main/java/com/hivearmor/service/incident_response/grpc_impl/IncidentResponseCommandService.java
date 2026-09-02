@@ -2,7 +2,7 @@ package com.hivearmor.service.incident_response.grpc_impl;
 
 import com.hivearmor.service.grpc.CommandResult;
 import com.hivearmor.service.grpc.PanelServiceGrpc;
-import com.hivearmor.service.grpc.UtmCommand;
+import com.hivearmor.service.grpc.RemoteCommand;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ public class IncidentResponseCommandService {
                             String shell,
                             StreamObserver<CommandResult> responseObserver) {
 
-        UtmCommand.Builder builder = UtmCommand.newBuilder()
+        RemoteCommand.Builder builder = RemoteCommand.newBuilder()
             .setAgentId(agentId)
             .setCommand(command)
             .setOriginId(originId)
@@ -37,16 +37,12 @@ public class IncidentResponseCommandService {
             builder.setShell(shell);
         }
 
-        UtmCommand utmCommand = builder.build();
+        RemoteCommand remoteCommand = builder.build();
 
-        // Send command using the bidirectional stream
-        StreamObserver<UtmCommand> requestObserver = nonBlockingStub.processCommand(responseObserver);
+        StreamObserver<RemoteCommand> requestObserver = nonBlockingStub.processCommand(responseObserver);
         try {
-            requestObserver.onNext(utmCommand);
-            // Mark the end of requests
-            // requestObserver.onCompleted();
+            requestObserver.onNext(remoteCommand);
         } catch (RuntimeException e) {
-            // Cancel RPC
             requestObserver.onError(e);
             throw e;
         }

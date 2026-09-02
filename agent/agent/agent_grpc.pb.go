@@ -19,17 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AgentService_RegisterAgent_FullMethodName         = "/agent.AgentService/RegisterAgent"
-	AgentService_UpdateAgent_FullMethodName           = "/agent.AgentService/UpdateAgent"
-	AgentService_DeleteAgent_FullMethodName           = "/agent.AgentService/DeleteAgent"
-	AgentService_ListAgents_FullMethodName            = "/agent.AgentService/ListAgents"
-	AgentService_AgentStream_FullMethodName           = "/agent.AgentService/AgentStream"
-	AgentService_ListAgentCommands_FullMethodName     = "/agent.AgentService/ListAgentCommands"
-	AgentService_CreateEnrollmentToken_FullMethodName = "/agent.AgentService/CreateEnrollmentToken"
-	AgentService_ListEnrollmentTokens_FullMethodName  = "/agent.AgentService/ListEnrollmentTokens"
-	AgentService_RevokeEnrollmentToken_FullMethodName = "/agent.AgentService/RevokeEnrollmentToken"
-	AgentService_RotateAgentCredential_FullMethodName = "/agent.AgentService/RotateAgentCredential"
-	AgentService_RevokeAgentCredential_FullMethodName = "/agent.AgentService/RevokeAgentCredential"
+	AgentService_RegisterAgent_FullMethodName     = "/agent.AgentService/RegisterAgent"
+	AgentService_UpdateAgent_FullMethodName       = "/agent.AgentService/UpdateAgent"
+	AgentService_DeleteAgent_FullMethodName       = "/agent.AgentService/DeleteAgent"
+	AgentService_ListAgents_FullMethodName        = "/agent.AgentService/ListAgents"
+	AgentService_AgentStream_FullMethodName       = "/agent.AgentService/AgentStream"
+	AgentService_ListAgentCommands_FullMethodName = "/agent.AgentService/ListAgentCommands"
 )
 
 // AgentServiceClient is the client API for AgentService service.
@@ -42,11 +37,6 @@ type AgentServiceClient interface {
 	ListAgents(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListAgentsResponse, error)
 	AgentStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[BidirectionalStream, BidirectionalStream], error)
 	ListAgentCommands(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListAgentsCommandsResponse, error)
-	CreateEnrollmentToken(ctx context.Context, in *CreateEnrollmentTokenRequest, opts ...grpc.CallOption) (*CreateEnrollmentTokenResponse, error)
-	ListEnrollmentTokens(ctx context.Context, in *ListEnrollmentTokensRequest, opts ...grpc.CallOption) (*ListEnrollmentTokensResponse, error)
-	RevokeEnrollmentToken(ctx context.Context, in *RevokeEnrollmentTokenRequest, opts ...grpc.CallOption) (*EnrollmentToken, error)
-	RotateAgentCredential(ctx context.Context, in *AgentCredentialRequest, opts ...grpc.CallOption) (*AgentCredentialResponse, error)
-	RevokeAgentCredential(ctx context.Context, in *AgentCredentialRequest, opts ...grpc.CallOption) (*AgentCredentialResponse, error)
 }
 
 type agentServiceClient struct {
@@ -120,56 +110,6 @@ func (c *agentServiceClient) ListAgentCommands(ctx context.Context, in *ListRequ
 	return out, nil
 }
 
-func (c *agentServiceClient) CreateEnrollmentToken(ctx context.Context, in *CreateEnrollmentTokenRequest, opts ...grpc.CallOption) (*CreateEnrollmentTokenResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CreateEnrollmentTokenResponse)
-	err := c.cc.Invoke(ctx, AgentService_CreateEnrollmentToken_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentServiceClient) ListEnrollmentTokens(ctx context.Context, in *ListEnrollmentTokensRequest, opts ...grpc.CallOption) (*ListEnrollmentTokensResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListEnrollmentTokensResponse)
-	err := c.cc.Invoke(ctx, AgentService_ListEnrollmentTokens_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentServiceClient) RevokeEnrollmentToken(ctx context.Context, in *RevokeEnrollmentTokenRequest, opts ...grpc.CallOption) (*EnrollmentToken, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(EnrollmentToken)
-	err := c.cc.Invoke(ctx, AgentService_RevokeEnrollmentToken_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentServiceClient) RotateAgentCredential(ctx context.Context, in *AgentCredentialRequest, opts ...grpc.CallOption) (*AgentCredentialResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AgentCredentialResponse)
-	err := c.cc.Invoke(ctx, AgentService_RotateAgentCredential_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentServiceClient) RevokeAgentCredential(ctx context.Context, in *AgentCredentialRequest, opts ...grpc.CallOption) (*AgentCredentialResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AgentCredentialResponse)
-	err := c.cc.Invoke(ctx, AgentService_RevokeAgentCredential_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AgentServiceServer is the server API for AgentService service.
 // All implementations must embed UnimplementedAgentServiceServer
 // for forward compatibility.
@@ -180,11 +120,6 @@ type AgentServiceServer interface {
 	ListAgents(context.Context, *ListRequest) (*ListAgentsResponse, error)
 	AgentStream(grpc.BidiStreamingServer[BidirectionalStream, BidirectionalStream]) error
 	ListAgentCommands(context.Context, *ListRequest) (*ListAgentsCommandsResponse, error)
-	CreateEnrollmentToken(context.Context, *CreateEnrollmentTokenRequest) (*CreateEnrollmentTokenResponse, error)
-	ListEnrollmentTokens(context.Context, *ListEnrollmentTokensRequest) (*ListEnrollmentTokensResponse, error)
-	RevokeEnrollmentToken(context.Context, *RevokeEnrollmentTokenRequest) (*EnrollmentToken, error)
-	RotateAgentCredential(context.Context, *AgentCredentialRequest) (*AgentCredentialResponse, error)
-	RevokeAgentCredential(context.Context, *AgentCredentialRequest) (*AgentCredentialResponse, error)
 	mustEmbedUnimplementedAgentServiceServer()
 }
 
@@ -212,21 +147,6 @@ func (UnimplementedAgentServiceServer) AgentStream(grpc.BidiStreamingServer[Bidi
 }
 func (UnimplementedAgentServiceServer) ListAgentCommands(context.Context, *ListRequest) (*ListAgentsCommandsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListAgentCommands not implemented")
-}
-func (UnimplementedAgentServiceServer) CreateEnrollmentToken(context.Context, *CreateEnrollmentTokenRequest) (*CreateEnrollmentTokenResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CreateEnrollmentToken not implemented")
-}
-func (UnimplementedAgentServiceServer) ListEnrollmentTokens(context.Context, *ListEnrollmentTokensRequest) (*ListEnrollmentTokensResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method ListEnrollmentTokens not implemented")
-}
-func (UnimplementedAgentServiceServer) RevokeEnrollmentToken(context.Context, *RevokeEnrollmentTokenRequest) (*EnrollmentToken, error) {
-	return nil, status.Error(codes.Unimplemented, "method RevokeEnrollmentToken not implemented")
-}
-func (UnimplementedAgentServiceServer) RotateAgentCredential(context.Context, *AgentCredentialRequest) (*AgentCredentialResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RotateAgentCredential not implemented")
-}
-func (UnimplementedAgentServiceServer) RevokeAgentCredential(context.Context, *AgentCredentialRequest) (*AgentCredentialResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method RevokeAgentCredential not implemented")
 }
 func (UnimplementedAgentServiceServer) mustEmbedUnimplementedAgentServiceServer() {}
 func (UnimplementedAgentServiceServer) testEmbeddedByValue()                      {}
@@ -346,96 +266,6 @@ func _AgentService_ListAgentCommands_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AgentService_CreateEnrollmentToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateEnrollmentTokenRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentServiceServer).CreateEnrollmentToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentService_CreateEnrollmentToken_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServiceServer).CreateEnrollmentToken(ctx, req.(*CreateEnrollmentTokenRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentService_ListEnrollmentTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListEnrollmentTokensRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentServiceServer).ListEnrollmentTokens(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentService_ListEnrollmentTokens_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServiceServer).ListEnrollmentTokens(ctx, req.(*ListEnrollmentTokensRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentService_RevokeEnrollmentToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RevokeEnrollmentTokenRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentServiceServer).RevokeEnrollmentToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentService_RevokeEnrollmentToken_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServiceServer).RevokeEnrollmentToken(ctx, req.(*RevokeEnrollmentTokenRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentService_RotateAgentCredential_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AgentCredentialRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentServiceServer).RotateAgentCredential(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentService_RotateAgentCredential_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServiceServer).RotateAgentCredential(ctx, req.(*AgentCredentialRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AgentService_RevokeAgentCredential_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AgentCredentialRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentServiceServer).RevokeAgentCredential(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AgentService_RevokeAgentCredential_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServiceServer).RevokeAgentCredential(ctx, req.(*AgentCredentialRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AgentService_ServiceDesc is the grpc.ServiceDesc for AgentService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -463,26 +293,6 @@ var AgentService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "ListAgentCommands",
 			Handler:    _AgentService_ListAgentCommands_Handler,
 		},
-		{
-			MethodName: "CreateEnrollmentToken",
-			Handler:    _AgentService_CreateEnrollmentToken_Handler,
-		},
-		{
-			MethodName: "ListEnrollmentTokens",
-			Handler:    _AgentService_ListEnrollmentTokens_Handler,
-		},
-		{
-			MethodName: "RevokeEnrollmentToken",
-			Handler:    _AgentService_RevokeEnrollmentToken_Handler,
-		},
-		{
-			MethodName: "RotateAgentCredential",
-			Handler:    _AgentService_RotateAgentCredential_Handler,
-		},
-		{
-			MethodName: "RevokeAgentCredential",
-			Handler:    _AgentService_RevokeAgentCredential_Handler,
-		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
@@ -503,7 +313,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PanelServiceClient interface {
-	ProcessCommand(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[UtmCommand, CommandResult], error)
+	ProcessCommand(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[RemoteCommand, CommandResult], error)
 }
 
 type panelServiceClient struct {
@@ -514,24 +324,24 @@ func NewPanelServiceClient(cc grpc.ClientConnInterface) PanelServiceClient {
 	return &panelServiceClient{cc}
 }
 
-func (c *panelServiceClient) ProcessCommand(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[UtmCommand, CommandResult], error) {
+func (c *panelServiceClient) ProcessCommand(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[RemoteCommand, CommandResult], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &PanelService_ServiceDesc.Streams[0], PanelService_ProcessCommand_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[UtmCommand, CommandResult]{ClientStream: stream}
+	x := &grpc.GenericClientStream[RemoteCommand, CommandResult]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type PanelService_ProcessCommandClient = grpc.BidiStreamingClient[UtmCommand, CommandResult]
+type PanelService_ProcessCommandClient = grpc.BidiStreamingClient[RemoteCommand, CommandResult]
 
 // PanelServiceServer is the server API for PanelService service.
 // All implementations must embed UnimplementedPanelServiceServer
 // for forward compatibility.
 type PanelServiceServer interface {
-	ProcessCommand(grpc.BidiStreamingServer[UtmCommand, CommandResult]) error
+	ProcessCommand(grpc.BidiStreamingServer[RemoteCommand, CommandResult]) error
 	mustEmbedUnimplementedPanelServiceServer()
 }
 
@@ -542,7 +352,7 @@ type PanelServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedPanelServiceServer struct{}
 
-func (UnimplementedPanelServiceServer) ProcessCommand(grpc.BidiStreamingServer[UtmCommand, CommandResult]) error {
+func (UnimplementedPanelServiceServer) ProcessCommand(grpc.BidiStreamingServer[RemoteCommand, CommandResult]) error {
 	return status.Error(codes.Unimplemented, "method ProcessCommand not implemented")
 }
 func (UnimplementedPanelServiceServer) mustEmbedUnimplementedPanelServiceServer() {}
@@ -567,11 +377,11 @@ func RegisterPanelServiceServer(s grpc.ServiceRegistrar, srv PanelServiceServer)
 }
 
 func _PanelService_ProcessCommand_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(PanelServiceServer).ProcessCommand(&grpc.GenericServerStream[UtmCommand, CommandResult]{ServerStream: stream})
+	return srv.(PanelServiceServer).ProcessCommand(&grpc.GenericServerStream[RemoteCommand, CommandResult]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type PanelService_ProcessCommandServer = grpc.BidiStreamingServer[UtmCommand, CommandResult]
+type PanelService_ProcessCommandServer = grpc.BidiStreamingServer[RemoteCommand, CommandResult]
 
 // PanelService_ServiceDesc is the grpc.ServiceDesc for PanelService service.
 // It's only intended for direct use with grpc.RegisterService,

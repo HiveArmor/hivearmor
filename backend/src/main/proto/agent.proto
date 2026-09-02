@@ -28,7 +28,7 @@ service AgentService {
 }
 
 service PanelService {
-  rpc ProcessCommand (stream UtmCommand) returns (stream CommandResult){}
+  rpc ProcessCommand (stream RemoteCommand) returns (stream CommandResult){}
 }
 
 enum AgentCommandStatus {
@@ -177,12 +177,12 @@ message ListEnrollmentAuditEventsResponse {
 
 message BidirectionalStream {
   oneof stream_message {
-    UtmCommand command = 1;
+    RemoteCommand command = 1;
     CommandResult result = 2;
   }
 }
 
-message UtmCommand {
+message RemoteCommand {
   string agent_id = 1;
   string command = 2;
   string executed_by = 3;

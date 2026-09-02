@@ -10,19 +10,19 @@ public interface BidirectionalStreamOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>.agent.UtmCommand command = 1;</code>
+   * <code>.agent.RemoteCommand command = 1;</code>
    * @return Whether the command field is set.
    */
   boolean hasCommand();
   /**
-   * <code>.agent.UtmCommand command = 1;</code>
+   * <code>.agent.RemoteCommand command = 1;</code>
    * @return The command.
    */
-  com.hivearmor.service.grpc.UtmCommand getCommand();
+  com.hivearmor.service.grpc.RemoteCommand getCommand();
   /**
-   * <code>.agent.UtmCommand command = 1;</code>
+   * <code>.agent.RemoteCommand command = 1;</code>
    */
-  com.hivearmor.service.grpc.UtmCommandOrBuilder getCommandOrBuilder();
+  com.hivearmor.service.grpc.RemoteCommandOrBuilder getCommandOrBuilder();
 
   /**
    * <code>.agent.CommandResult result = 2;</code>

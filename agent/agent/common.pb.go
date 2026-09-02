@@ -239,8 +239,6 @@ func (x *AuthResponse) GetKey() string {
 type DeleteRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DeletedBy     string                 `protobuf:"bytes,1,opt,name=deleted_by,json=deletedBy,proto3" json:"deleted_by,omitempty"`
-	AgentId       uint32                 `protobuf:"varint,2,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
-	TenantId      int64                  `protobuf:"varint,3,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -282,20 +280,6 @@ func (x *DeleteRequest) GetDeletedBy() string {
 	return ""
 }
 
-func (x *DeleteRequest) GetAgentId() uint32 {
-	if x != nil {
-		return x.AgentId
-	}
-	return 0
-}
-
-func (x *DeleteRequest) GetTenantId() int64 {
-	if x != nil {
-		return x.TenantId
-	}
-	return 0
-}
-
 var File_common_proto protoreflect.FileDescriptor
 
 const file_common_proto_rawDesc = "" +
@@ -309,12 +293,10 @@ const file_common_proto_rawDesc = "" +
 	"\asort_by\x18\x04 \x01(\tR\x06sortBy\"0\n" +
 	"\fAuthResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\rR\x02id\x12\x10\n" +
-	"\x03key\x18\x02 \x01(\tR\x03key\"f\n" +
+	"\x03key\x18\x02 \x01(\tR\x03key\".\n" +
 	"\rDeleteRequest\x12\x1d\n" +
 	"\n" +
-	"deleted_by\x18\x01 \x01(\tR\tdeletedBy\x12\x19\n" +
-	"\bagent_id\x18\x02 \x01(\rR\aagentId\x12\x1b\n" +
-	"\ttenant_id\x18\x03 \x01(\x03R\btenantId*.\n" +
+	"deleted_by\x18\x01 \x01(\tR\tdeletedBy*.\n" +
 	"\x06Status\x12\n" +
 	"\n" +
 	"\x06ONLINE\x10\x00\x12\v\n" +

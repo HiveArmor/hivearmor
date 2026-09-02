@@ -22,7 +22,7 @@ func convertModelToAgentResponse(agents []models.Agent, total int64) *ListAgents
 	}
 }
 
-func createHistoryCommand(cmd *UtmCommand, cmdID string, agentId uint) *models.AgentCommand {
+func createHistoryCommand(cmd *RemoteCommand, cmdID string, agentId uint) *models.AgentCommand {
 	cmdHistory := &models.AgentCommand{
 		AgentID:       agentId,
 		Command:       cmd.Command,

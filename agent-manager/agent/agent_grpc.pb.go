@@ -617,7 +617,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PanelServiceClient interface {
-	ProcessCommand(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[UtmCommand, CommandResult], error)
+	ProcessCommand(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[RemoteCommand, CommandResult], error)
 }
 
 type panelServiceClient struct {
@@ -628,24 +628,24 @@ func NewPanelServiceClient(cc grpc.ClientConnInterface) PanelServiceClient {
 	return &panelServiceClient{cc}
 }
 
-func (c *panelServiceClient) ProcessCommand(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[UtmCommand, CommandResult], error) {
+func (c *panelServiceClient) ProcessCommand(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[RemoteCommand, CommandResult], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &PanelService_ServiceDesc.Streams[0], PanelService_ProcessCommand_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[UtmCommand, CommandResult]{ClientStream: stream}
+	x := &grpc.GenericClientStream[RemoteCommand, CommandResult]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type PanelService_ProcessCommandClient = grpc.BidiStreamingClient[UtmCommand, CommandResult]
+type PanelService_ProcessCommandClient = grpc.BidiStreamingClient[RemoteCommand, CommandResult]
 
 // PanelServiceServer is the server API for PanelService service.
 // All implementations must embed UnimplementedPanelServiceServer
 // for forward compatibility.
 type PanelServiceServer interface {
-	ProcessCommand(grpc.BidiStreamingServer[UtmCommand, CommandResult]) error
+	ProcessCommand(grpc.BidiStreamingServer[RemoteCommand, CommandResult]) error
 	mustEmbedUnimplementedPanelServiceServer()
 }
 
@@ -656,7 +656,7 @@ type PanelServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedPanelServiceServer struct{}
 
-func (UnimplementedPanelServiceServer) ProcessCommand(grpc.BidiStreamingServer[UtmCommand, CommandResult]) error {
+func (UnimplementedPanelServiceServer) ProcessCommand(grpc.BidiStreamingServer[RemoteCommand, CommandResult]) error {
 	return status.Error(codes.Unimplemented, "method ProcessCommand not implemented")
 }
 func (UnimplementedPanelServiceServer) mustEmbedUnimplementedPanelServiceServer() {}
@@ -681,11 +681,11 @@ func RegisterPanelServiceServer(s grpc.ServiceRegistrar, srv PanelServiceServer)
 }
 
 func _PanelService_ProcessCommand_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(PanelServiceServer).ProcessCommand(&grpc.GenericServerStream[UtmCommand, CommandResult]{ServerStream: stream})
+	return srv.(PanelServiceServer).ProcessCommand(&grpc.GenericServerStream[RemoteCommand, CommandResult]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type PanelService_ProcessCommandServer = grpc.BidiStreamingServer[UtmCommand, CommandResult]
+type PanelService_ProcessCommandServer = grpc.BidiStreamingServer[RemoteCommand, CommandResult]
 
 // PanelService_ServiceDesc is the grpc.ServiceDesc for PanelService service.
 // It's only intended for direct use with grpc.RegisterService,

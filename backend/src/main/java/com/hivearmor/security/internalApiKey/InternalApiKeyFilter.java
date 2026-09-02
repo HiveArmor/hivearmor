@@ -18,7 +18,8 @@ import java.io.IOException;
 public class InternalApiKeyFilter extends OncePerRequestFilter {
     private static final String CLASSNAME = "InternalApiKeyFilter";
     private final Logger log = LoggerFactory.getLogger(InternalApiKeyFilter.class);
-    private static final String API_KEY_HEADER = "Utm-Internal-Key";
+    private static final String API_KEY_HEADER = "X-Internal-Key";
+    private static final String LEGACY_API_KEY_HEADER = "Utm-Internal-Key";
     private static Boolean apiKeyHeaderInUse=false;
 
     private final InternalApiKeyProvider internalApiKeyProvider;
@@ -54,10 +55,10 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
     }
 
     static boolean matchesInternalKey(HttpServletRequest request, String envApiKey) {
-        String utm = request.getHeader(API_KEY_HEADER);
-        String xInternal = request.getHeader("X-Internal-Key");
-        return (StringUtils.hasText(utm) && utm.equals(envApiKey))
-                || (StringUtils.hasText(xInternal) && xInternal.equals(envApiKey));
+        String primary = request.getHeader(API_KEY_HEADER);
+        String legacy = request.getHeader(LEGACY_API_KEY_HEADER);
+        return (StringUtils.hasText(primary) && primary.equals(envApiKey))
+                || (StringUtils.hasText(legacy) && legacy.equals(envApiKey));
     }
 
     static boolean isTelemetryIngestWithoutLegacy(HttpServletRequest request) {
