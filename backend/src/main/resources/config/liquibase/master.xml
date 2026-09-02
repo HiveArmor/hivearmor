@@ -790,6 +790,9 @@
     <!-- CMP-011 STAGING CANDIDATE — control exception governance read -->
     <include file="/config/liquibase/changelog/20260831001_ha_compliance_exception.xml" relativeToChangelogFile="false"/>
 
+    <!-- B0-4 Forensic export — chain-of-custody manifest -->
+    <include file="/config/liquibase/changelog/20260902001_ha_export_manifest.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
 

@@ -62,6 +62,7 @@ import { NoteDialog } from './components/NoteDialog';
 import { TagDialog } from './components/TagDialog';
 
 import { AddFilterPopover, type StructuredAlertFilter } from '@/components/add-filter-popover/AddFilterPopover';
+import { HaExportMenu } from '@/components/export-menu';
 import { FieldSelectorPopover } from '@/components/field-selector-popover/FieldSelectorPopover';
 import { HaCompactSelect, type HaCompactSelectOption } from '@/components/ha-compact-select/HaCompactSelect';
 import { LiveModeToggle } from '@/components/live-mode-toggle/LiveModeToggle';
@@ -76,6 +77,8 @@ import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
 import { getAlertQuerySuggestions, parseAlertQueryExpression } from '@/lib/alertFilterFields';
 import { ROLE_LABELS } from '@/lib/roles';
 import { SEVERITY_LEVELS, type SeverityLevel } from '@/lib/severity';
+import { exportAlertResults } from '@/pages/search-hunt/forensicExport.service';
+import type { ExportFormat, ExportResult } from '@/pages/search-hunt/forensicExport.types';
 import { useAlertStreamStore } from '@/store/alertStream.store';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -370,6 +373,21 @@ export function AlertsListPage(): JSX.Element {
   const handleTotalCount = useCallback((count: number) => setTotalCount(count), []);
   const handleLoadState = useCallback((state: AlertQueueLoadState) => setLoadState(state), []);
   const datasource = useMemo(() => createAlertsListDatasource(filters, handleTotalCount, handleLoadState), [filters, handleLoadState, handleTotalCount]);
+
+  // B0-4: export the FULL committed alert filter set (not the visible page).
+  const hasResults = (totalCount ?? 0) > 0;
+  const handleExport = useCallback(
+    (format: ExportFormat, signal: AbortSignal): Promise<ExportResult> => {
+      const exportFilters: Record<string, string> = {};
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') {
+          exportFilters[key === 'queryExpression' ? 'q' : key] = value;
+        }
+      });
+      return exportAlertResults({ filters: exportFilters, columns: selectedColIds }, format, signal);
+    },
+    [filters, selectedColIds],
+  );
 
   const summaryQuery = useQuery<AlertQueueSummary>({
     queryKey: ['alerts', 'summary', filters, activeTenantId],
@@ -811,6 +829,7 @@ export function AlertsListPage(): JSX.Element {
                   {(['compact', 'standard', 'comfortable'] as const).map((option) => <button key={option} type="button" data-active={density === option} onClick={() => setDensity(option)} aria-label={`${option} row density`} title={`${option} density`}><Columns3 size={option === 'compact' ? 12 : option === 'standard' ? 14 : 16} /></button>)}
                 </div>
                 <button type="button" className="alert-toolbar-icon" onClick={refreshQueue} aria-label="Refresh alert inventory" title="Refresh rows"><RefreshCw size={15} /></button>
+                <HaExportMenu surface="alert-list" disabled={!hasResults} onExport={handleExport} />
               </div>
         </div>
 

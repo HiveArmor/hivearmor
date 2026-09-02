@@ -73,12 +73,7 @@ public class ElasticsearchResource {
      * @throws TenantScopeViolationException if the pattern is outside tenant scope
      */
     private void validateTenantScope(String requestedPattern) {
-        if (!TenantContext.isMssp()) {
-            return;
-        }
-        if (!isPatternInScope(requestedPattern)) {
-            throw new TenantScopeViolationException(requestedPattern);
-        }
+        tenantScopeGuard().validate(requestedPattern);
     }
 
     /**
@@ -88,20 +83,23 @@ public class ElasticsearchResource {
      * <p>Allowed patterns look like {@code v3-hive-<type>-<tenantPrefix>-*}. A pattern is in
      * scope when it starts with the tenant's resolved alert or log prefix. This is the single
      * source of truth used by {@link #validateTenantScope(String)} and the scoped-SQL guard so
-     * behavior can never drift between endpoints.
+     * behavior can never drift between endpoints. Delegates to the shared
+     * {@link com.hivearmor.service.elasticsearch.TenantScopeGuard} (B0-4/B0-5).
      *
      * @param requestedPattern the client-supplied index name/pattern; {@code null}/blank is out of scope
      * @return {@code true} iff the pattern is within the current tenant's scope
      */
     private boolean isPatternInScope(String requestedPattern) {
-        if (requestedPattern == null || requestedPattern.isBlank()) {
-            return false;
-        }
-        // resolveIndexPattern returns v3-hive-<type>-<prefix>-* ; strip the trailing wildcard.
-        String alertPrefix = indexResolver.resolveIndexPattern("alert").replace("*", "");
-        String logPrefix = indexResolver.resolveIndexPattern("log").replace("*", "");
-        String trimmed = requestedPattern.trim();
-        return trimmed.startsWith(alertPrefix) || trimmed.startsWith(logPrefix);
+        return tenantScopeGuard().isPatternInScope(requestedPattern);
+    }
+
+    /**
+     * Lazily builds the shared scope guard from {@code indexResolver}. Built lazily (rather than
+     * constructor-injected) so the existing 4-arg constructor — relied on by unit tests — stays
+     * unchanged while behaviour is now sourced from the single shared component.
+     */
+    private com.hivearmor.service.elasticsearch.TenantScopeGuard tenantScopeGuard() {
+        return new com.hivearmor.service.elasticsearch.TenantScopeGuard(indexResolver);
     }
 
     /**

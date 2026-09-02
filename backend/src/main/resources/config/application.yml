@@ -181,3 +181,8 @@ application:
     name-short: "${APPLICATION_BRANDING_NAME_SHORT:NC}"
     support-url: "https://hivearmor.io/contact"
     docs-url: "https://docs.hivearmor.io"
+
+# B0-4 Forensic export guardrails
+export:
+  # Hard cap on records emitted per forensic export (CSV/NDJSON). Default 1,000,000.
+  max-records: ${EXPORT_MAX_RECORDS:1000000}

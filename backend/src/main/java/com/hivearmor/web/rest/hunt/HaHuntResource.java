@@ -13,7 +13,13 @@ import com.hivearmor.service.hunt.SearchProgressTracker.SseEventRecord;
 import com.hivearmor.web.rest.hunt.dto.HuntSearchRequestDTO;
 import com.hivearmor.web.rest.hunt.dto.HuntSearchResponseDTO;
 import com.hivearmor.web.rest.hunt.dto.HuntFieldDefinitionDTO;
+import com.hivearmor.service.export.ExportFormat;
+import com.hivearmor.service.export.ForensicExportService;
+import com.hivearmor.web.rest.export.dto.ExportManifestDTO;
+import com.hivearmor.web.rest.export.dto.HuntExportRequestDTO;
+import com.hivearmor.domain.export.HaExportManifest;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +81,7 @@ public class HaHuntResource {
     private final QueryCapabilityRegistry queryCapabilityRegistry;
     private final HuntHistoryService huntHistoryService;
     private final HuntEventDetailService huntEventDetailService;
+    private final ForensicExportService forensicExportService;
 
     /** Scheduler for SSE progress polling loops. */
     private final ScheduledExecutorService progressPoller =
@@ -88,18 +95,85 @@ public class HaHuntResource {
                           SearchProgressTracker searchProgressTracker,
                           QueryCapabilityRegistry queryCapabilityRegistry,
                           HuntHistoryService huntHistoryService,
-                          HuntEventDetailService huntEventDetailService) {
+                          HuntEventDetailService huntEventDetailService,
+                          ForensicExportService forensicExportService) {
         this.huntService = huntService;
         this.searchProgressTracker = searchProgressTracker;
         this.queryCapabilityRegistry = queryCapabilityRegistry;
         this.huntHistoryService = huntHistoryService;
         this.huntEventDetailService = huntEventDetailService;
+        this.forensicExportService = forensicExportService;
+    }
+
+    // -------------------------------------------------------------------------
+    // B0-4 — Forensic export (CSV / NDJSON) + chain-of-custody manifest
+    // POST /api/ha-hunts/search/export
+    // GET  /api/ha-hunts/search/export/{exportId}/manifest
+    // -------------------------------------------------------------------------
+
+    /**
+     * Streams the full hunt-search result set as CSV or NDJSON, computing a SHA-256 of the exact
+     * bytes delivered (chain of custody). The response carries {@code X-Export-Id}; the finalized
+     * SHA-256 is read from the manifest endpoint once the download completes.
+     */
+    @PostMapping("/search/export")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    public void exportSearch(@RequestBody HuntExportRequestDTO request,
+                             HttpServletResponse response) {
+        final String ctx = CLASSNAME + ".exportSearch";
+        try {
+            ExportFormat format = ExportFormat.parse(request.getFormat());
+            String indexPattern = forensicExportService.resolveIndexPattern(
+                request.getIndexPattern(), ForensicExportService.SURFACE_HUNT);
+
+            // Tenant-scope guard BEFORE streaming.
+            forensicExportService.validateScope(indexPattern);
+
+            String from = request.getTimeRange() != null ? request.getTimeRange().getFrom() : null;
+            String to = request.getTimeRange() != null ? request.getTimeRange().getTo() : null;
+
+            var filters = ForensicExportService.buildHuntFilters(request.getFilters(), from, to);
+
+            Map<String, Object> queryContext = new LinkedHashMap<>();
+            queryContext.put("kql", request.getQuery());
+            queryContext.put("filters", request.getFilters());
+            Map<String, Object> tr = new LinkedHashMap<>();
+            tr.put("from", from);
+            tr.put("to", to);
+            queryContext.put("timeRange", tr);
+
+            var exportRequest = new ForensicExportService.ExportRequest(
+                ForensicExportService.SURFACE_HUNT, format, indexPattern,
+                filters, request.getColumns(), queryContext);
+
+            forensicExportService.streamExport(exportRequest, response);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("{}: {}", ctx, e.getMessage(), e);
+            throw new IllegalStateException("Hunt export failed", e);
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @GetMapping("/search/export/{exportId}/manifest")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    public ResponseEntity<ExportManifestDTO> getExportManifest(@PathVariable String exportId) {
+        try {
+            HaExportManifest manifest = forensicExportService.findManifest(exportId);
+            if (manifest == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(ExportManifestDTO.from(manifest));
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     // -------------------------------------------------------------------------
     // POST /api/ha-hunts/search — HNT-001 + HNT-005 (history recording)
     // -------------------------------------------------------------------------
-
     /**
      * Executes a bounded, cursor-paginated hunt query against raw log and event indices.
      * After successful execution, auto-records the query in the user's history (HNT-005).
