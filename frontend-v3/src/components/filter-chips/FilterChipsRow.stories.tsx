@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { FilterChipsRow } from './FilterChipsRow';
 
 const meta = {
-  title: 'HiveArmor/FilterChipsRow',
+  title: 'HaUI/FilterChipsRow',
   component: FilterChipsRow,
   tags: ['autodocs'],
   parameters: {

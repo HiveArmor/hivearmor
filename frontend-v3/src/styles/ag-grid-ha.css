@@ -91,3 +91,16 @@
 .ha-grid .ag-loading-overlay {
   background: color-mix(in srgb, var(--ha-surface-app) 88%, transparent);
 }
+
+/* No-rows / empty overlay. AG renders this panel with a stock white background that its own
+ * --ag-background-color does not reach, so the light foreground text landed on white (fails
+ * contrast). Bridge it to the app surface + primary text explicitly. */
+.ha-grid .ag-overlay-no-rows-wrapper,
+.ha-grid .ag-overlay-panel {
+  background: var(--ha-surface-primary);
+  color: var(--ha-text-primary);
+}
+
+.ha-grid .ag-overlay-no-rows-center {
+  color: var(--ha-text-secondary);
+}

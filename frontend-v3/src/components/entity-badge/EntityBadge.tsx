@@ -44,6 +44,7 @@ export function EntityBadge({
         <>
           {riskScore !== undefined && (
             <span
+              role="img"
               style={{
                 width: '6px',
                 height: '6px',

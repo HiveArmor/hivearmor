@@ -15,6 +15,8 @@
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build",
+    "test:storybook": "npm run storybook:build && playwright test --config playwright.storybook.config.ts",
+    "test:storybook:update": "npm run storybook:build && playwright test --config playwright.storybook.config.ts --update-snapshots",
     "test:e2e": "playwright test",
     "test:e2e:intelligence": "playwright test e2e/hive-intelligence.spec.ts",
     "test:e2e:intelligence:headed": "playwright test e2e/hive-intelligence.spec.ts --headed"

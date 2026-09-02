@@ -144,7 +144,7 @@ function makeDecorator(user: HaUser): (Story: React.ComponentType) => React.Reac
 // ---------------------------------------------------------------------------
 
 const meta = {
-  title: 'HiveArmor/Pages/SsoProvidersPage',
+  title: 'Pages/SsoProvidersPage',
   component: SsoProvidersPage,
   tags: ['autodocs'],
   parameters: {

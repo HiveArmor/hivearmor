@@ -8,7 +8,7 @@ module.exports = {
     'plugin:react/recommended',
     'plugin:react/jsx-runtime',
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs', 'node_modules', 'vitest.config.ts', 'e2e'],
+  ignorePatterns: ['dist', '.eslintrc.cjs', 'node_modules', 'vitest.config.ts', 'e2e', 'e2e-storybook'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',

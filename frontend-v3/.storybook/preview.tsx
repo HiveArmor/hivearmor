@@ -11,8 +11,9 @@ const preview: Preview = {
     backgrounds: {
       default: 'hivearmor-dark',
       values: [
-        { name: 'hivearmor-dark', value: '#070A0F' },
-        { name: 'hivearmor-surface', value: '#0D131C' },
+        { name: 'hivearmor-dark', value: '#0b0919' },
+        { name: 'hivearmor-panel', value: '#1a1b22' },
+        { name: 'hivearmor-light', value: '#f3f4f6' },
       ],
     },
     layout: 'centered',
@@ -24,6 +25,22 @@ const preview: Preview = {
       },
     },
   },
+  // The Storybook iframe defaults its <html> to the LIGHT theme (data-ha-theme="light"), but HaUI
+  // components are dark-first — their foreground tokens are calibrated for the dark carbon surfaces,
+  // so under light they render light-on-light (fails contrast, and misrepresents the product). Pin
+  // the iframe to the primary dark theme, then paint the real app surface behind every story.
+  decorators: [
+    (Story) => {
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-ha-theme', 'dark');
+      }
+      return (
+        <div style={{ background: 'var(--ha-surface-app)', minHeight: '100vh', padding: 16 }}>
+          <Story />
+        </div>
+      );
+    },
+  ],
 };
 
 export default preview;

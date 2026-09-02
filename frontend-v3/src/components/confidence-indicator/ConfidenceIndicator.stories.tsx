@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { ConfidenceIndicator } from './ConfidenceIndicator';
 
 const meta = {
-  title: 'HiveArmor/ConfidenceIndicator',
+  title: 'HaUI/ConfidenceIndicator',
   component: ConfidenceIndicator,
   tags: ['autodocs'],
   parameters: {

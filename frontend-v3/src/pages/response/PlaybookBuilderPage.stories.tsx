@@ -207,7 +207,7 @@ function makeDecorator(
 // ---------------------------------------------------------------------------
 
 const meta = {
-  title: 'HiveArmor/Pages/PlaybookBuilderPage',
+  title: 'Pages/PlaybookBuilderPage',
   component: PlaybookBuilderPage,
   tags: ['autodocs'],
   parameters: {

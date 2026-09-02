@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { StatusDock } from './StatusDock';
 
 const meta = {
-  title: 'HiveArmor/StatusDock',
+  title: 'HaUI/StatusDock',
   component: StatusDock,
   tags: ['autodocs'],
   parameters: {

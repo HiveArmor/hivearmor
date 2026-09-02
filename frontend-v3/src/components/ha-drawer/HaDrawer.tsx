@@ -49,7 +49,7 @@ export function HaDrawer({
           background: 'var(--ha-scrim)',
           zIndex: 199,
         }}
-        aria-label="Close drawer"
+        aria-hidden="true"
       />
 
       {/* Drawer */}

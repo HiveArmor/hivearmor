@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { ErrorState } from './ErrorState';
 
 const meta = {
-  title: 'HiveArmor/ErrorState',
+  title: 'HaUI/ErrorState',
   component: ErrorState,
   tags: ['autodocs'],
   parameters: {

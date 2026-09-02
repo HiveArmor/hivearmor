@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { HaModal } from './HaModal';
 
 const meta = {
-  title: 'HiveArmor/HaModal',
+  title: 'HaUI/HaModal',
   component: HaModal,
   tags: ['autodocs'],
   parameters: {

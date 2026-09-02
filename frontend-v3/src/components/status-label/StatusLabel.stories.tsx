@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { StatusLabel } from './StatusLabel';
 
 const meta = {
-  title: 'HiveArmor/StatusLabel',
+  title: 'HaUI/StatusLabel',
   component: StatusLabel,
   tags: ['autodocs'],
   parameters: {

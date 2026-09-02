@@ -112,6 +112,6 @@
 .ha-plan__btn--confirm {
   border-color: var(--ha-intelligence-primary);
   background: color-mix(in srgb, var(--ha-intelligence-primary) 18%, transparent);
-  color: var(--ha-intelligence-primary);
+  color: var(--ha-intelligence-strong);
   font-weight: 600;
 }

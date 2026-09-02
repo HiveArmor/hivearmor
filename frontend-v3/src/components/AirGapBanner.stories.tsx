@@ -40,7 +40,7 @@ function WithAirGapDisabled({ children }: { children: React.ReactNode }) {
 }
 
 const meta = {
-  title: 'HiveArmor/AirGapBanner',
+  title: 'HaUI/AirGapBanner',
   component: AirGapBanner,
   tags: ['autodocs'],
   parameters: {

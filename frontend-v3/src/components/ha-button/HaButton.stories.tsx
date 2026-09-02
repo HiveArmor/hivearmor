@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { HaButton } from './HaButton';
 
 const meta = {
-  title: 'HiveArmor/HaButton',
+  title: 'HaUI/HaButton',
   component: HaButton,
   tags: ['autodocs'],
   parameters: {

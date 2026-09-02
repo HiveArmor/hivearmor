@@ -1,0 +1,72 @@
+name: Storybook Visual + A11y
+
+# Visual-regression + accessibility for the HaUI design system (frontend-v3 Storybook).
+# Playwright drives the SERVED static Storybook (no local browser-mode bundling — that path is
+# blocked in this repo; see .plan/COMPONENT-SYSTEM-PLAN.md §6). Screenshot baselines are a hard
+# gate; a11y is advisory until HA_A11Y_STRICT=1. Runs only when frontend-v3 changes.
+#
+# Cross-OS note: screenshot baselines are platform-keyed ({platform} in snapshotPathTemplate).
+# This job renders inside the pinned mcr.microsoft.com/playwright image so its Linux baselines
+# (*-linux.png) are byte-stable. Generate them once with `npm run test:storybook:update` in this
+# same image (or download the failing run's artifact) and commit alongside the *-darwin.png set.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend-v3/**'
+  pull_request:
+    branches:
+      - main
+      - 'release/**'
+    paths:
+      - 'frontend-v3/**'
+
+concurrency:
+  group: storybook-visual-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  visual:
+    name: Visual + a11y
+    runs-on: ubuntu-24.04
+    # Pinned Playwright image → deterministic fonts/rendering for stable screenshot baselines.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.0-noble
+    defaults:
+      run:
+        working-directory: frontend-v3
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend-v3/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Storybook
+        run: npm run storybook:build
+
+      - name: Run visual + a11y tests
+        # Screenshots hard-gate all stories. A11y hard-gates HaUI/* components (all clean) and is
+        # advisory for Pages/*. Set HA_A11Y_STRICT=1 here to make a11y blocking for Pages/* too,
+        # once that backlog is triaged.
+        run: npx playwright test --config playwright.storybook.config.ts
+
+      - name: Upload report + diffs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-visual-report
+          path: |
+            frontend-v3/playwright-report-storybook/
+            frontend-v3/test-results/
+          retention-days: 7

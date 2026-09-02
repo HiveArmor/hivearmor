@@ -156,7 +156,7 @@ export function ProcessTree({
   // ------------------------------------------------------------------
   if (processes.length === 0) {
     return (
-      <div style={{ padding: '1rem' }}>
+      <div style={{ padding: '1rem', color: 'var(--ha-text-secondary)' }}>
         No process data available for the selected window.
       </div>
     );

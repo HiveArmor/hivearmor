@@ -61,6 +61,10 @@
   --ha-state-stale: #a78ad6;
   --ha-state-disconnected: #797680;
   --ha-intelligence-primary: #be7de8;
+  /* Lighter violet for INTEL TEXT sitting on a violet-tint fill (color-mix of the primary):
+     the primary at #be7de8 lands at 4.46:1 on those ~#39_2c49 backgrounds — just under AA.
+     #c88ff0 clears it at ≥5.3:1. Fills/borders still use the primary; only text uses this. */
+  --ha-intelligence-strong: #c88ff0;
 
   /* Reusable translucent fills — never recreate raw colour on an element */
   --ha-fill-primary-subtle: color-mix(in srgb, var(--ha-action-primary) 10%, transparent);
@@ -204,6 +208,8 @@
   --ha-state-stale: #7250a1;
   --ha-state-disconnected: #656b72;
   --ha-intelligence-primary: #7a3ca1;
+  /* Light mode: the darker primary already clears AA as text on its light tints. */
+  --ha-intelligence-strong: #7a3ca1;
 
   --ha-shadow-low: 0 1px 2px color-mix(in srgb, var(--ha-foreground-primary) 10%, transparent);
   --ha-shadow-medium: 0 18px 48px color-mix(in srgb, var(--ha-foreground-primary) 16%, transparent);

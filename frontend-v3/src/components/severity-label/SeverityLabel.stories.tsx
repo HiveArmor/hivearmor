@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { SeverityLabel } from './SeverityLabel';
 
 const meta = {
-  title: 'HiveArmor/SeverityLabel',
+  title: 'HaUI/SeverityLabel',
   component: SeverityLabel,
   tags: ['autodocs'],
   parameters: {

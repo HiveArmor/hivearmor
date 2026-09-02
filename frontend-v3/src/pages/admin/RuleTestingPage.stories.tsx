@@ -49,7 +49,7 @@ function WithProviders({ children }: { children: React.ReactNode }): JSX.Element
 // ---------------------------------------------------------------------------
 
 const meta = {
-  title: 'HiveArmor/Pages/RuleTestingPage',
+  title: 'Pages/RuleTestingPage',
   component: RuleTestingPage,
   tags: ['autodocs'],
   parameters: {

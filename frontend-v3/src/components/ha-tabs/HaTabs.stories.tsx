@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { HaTabs } from './HaTabs';
 
 const meta = {
-  title: 'HiveArmor/HaTabs',
+  title: 'HaUI/HaTabs',
   component: HaTabs,
   tags: ['autodocs'],
   parameters: {

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { LiveModeToggle } from './LiveModeToggle';
 
 const meta = {
-  title: 'HiveArmor/LiveModeToggle',
+  title: 'HaUI/LiveModeToggle',
   component: LiveModeToggle,
   tags: ['autodocs'],
   parameters: {
