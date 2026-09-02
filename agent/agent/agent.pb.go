@@ -254,27 +254,23 @@ func (x *ListAgentsResponse) GetTotal() int32 {
 }
 
 type Agent struct {
-	state               protoimpl.MessageState `protogen:"open.v1"`
-	Ip                  string                 `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitempty"`
-	Hostname            string                 `protobuf:"bytes,2,opt,name=hostname,proto3" json:"hostname,omitempty"`
-	Os                  string                 `protobuf:"bytes,3,opt,name=os,proto3" json:"os,omitempty"`
-	Status              Status                 `protobuf:"varint,4,opt,name=status,proto3,enum=agent.Status" json:"status,omitempty"`
-	Platform            string                 `protobuf:"bytes,5,opt,name=platform,proto3" json:"platform,omitempty"`
-	Version             string                 `protobuf:"bytes,6,opt,name=version,proto3" json:"version,omitempty"`
-	AgentKey            string                 `protobuf:"bytes,7,opt,name=agent_key,json=agentKey,proto3" json:"agent_key,omitempty"`
-	Id                  uint32                 `protobuf:"varint,8,opt,name=id,proto3" json:"id,omitempty"`
-	LastSeen            string                 `protobuf:"bytes,9,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
-	Mac                 string                 `protobuf:"bytes,10,opt,name=mac,proto3" json:"mac,omitempty"`
-	OsMajorVersion      string                 `protobuf:"bytes,11,opt,name=os_major_version,json=osMajorVersion,proto3" json:"os_major_version,omitempty"`
-	OsMinorVersion      string                 `protobuf:"bytes,12,opt,name=os_minor_version,json=osMinorVersion,proto3" json:"os_minor_version,omitempty"`
-	Aliases             string                 `protobuf:"bytes,13,opt,name=aliases,proto3" json:"aliases,omitempty"`
-	Addresses           string                 `protobuf:"bytes,14,opt,name=addresses,proto3" json:"addresses,omitempty"`
-	AgentUuid           string                 `protobuf:"bytes,15,opt,name=agent_uuid,json=agentUuid,proto3" json:"agent_uuid,omitempty"`
-	TenantId            int64                  `protobuf:"varint,16,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
-	CredentialVersion   uint32                 `protobuf:"varint,17,opt,name=credential_version,json=credentialVersion,proto3" json:"credential_version,omitempty"`
-	CredentialRevokedAt *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=credential_revoked_at,json=credentialRevokedAt,proto3" json:"credential_revoked_at,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Ip             string                 `protobuf:"bytes,1,opt,name=ip,proto3" json:"ip,omitempty"`
+	Hostname       string                 `protobuf:"bytes,2,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Os             string                 `protobuf:"bytes,3,opt,name=os,proto3" json:"os,omitempty"`
+	Status         Status                 `protobuf:"varint,4,opt,name=status,proto3,enum=agent.Status" json:"status,omitempty"`
+	Platform       string                 `protobuf:"bytes,5,opt,name=platform,proto3" json:"platform,omitempty"`
+	Version        string                 `protobuf:"bytes,6,opt,name=version,proto3" json:"version,omitempty"`
+	AgentKey       string                 `protobuf:"bytes,7,opt,name=agent_key,json=agentKey,proto3" json:"agent_key,omitempty"`
+	Id             uint32                 `protobuf:"varint,8,opt,name=id,proto3" json:"id,omitempty"`
+	LastSeen       string                 `protobuf:"bytes,9,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
+	Mac            string                 `protobuf:"bytes,10,opt,name=mac,proto3" json:"mac,omitempty"`
+	OsMajorVersion string                 `protobuf:"bytes,11,opt,name=os_major_version,json=osMajorVersion,proto3" json:"os_major_version,omitempty"`
+	OsMinorVersion string                 `protobuf:"bytes,12,opt,name=os_minor_version,json=osMinorVersion,proto3" json:"os_minor_version,omitempty"`
+	Aliases        string                 `protobuf:"bytes,13,opt,name=aliases,proto3" json:"aliases,omitempty"`
+	Addresses      string                 `protobuf:"bytes,14,opt,name=addresses,proto3" json:"addresses,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Agent) Reset() {
@@ -405,650 +401,6 @@ func (x *Agent) GetAddresses() string {
 	return ""
 }
 
-func (x *Agent) GetAgentUuid() string {
-	if x != nil {
-		return x.AgentUuid
-	}
-	return ""
-}
-
-func (x *Agent) GetTenantId() int64 {
-	if x != nil {
-		return x.TenantId
-	}
-	return 0
-}
-
-func (x *Agent) GetCredentialVersion() uint32 {
-	if x != nil {
-		return x.CredentialVersion
-	}
-	return 0
-}
-
-func (x *Agent) GetCredentialRevokedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CredentialRevokedAt
-	}
-	return nil
-}
-
-type CreateEnrollmentTokenRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TenantId      int64                  `protobuf:"varint,1,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
-	PolicyId      string                 `protobuf:"bytes,2,opt,name=policy_id,json=policyId,proto3" json:"policy_id,omitempty"`
-	Platform      string                 `protobuf:"bytes,3,opt,name=platform,proto3" json:"platform,omitempty"`
-	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	MaxUses       int32                  `protobuf:"varint,5,opt,name=max_uses,json=maxUses,proto3" json:"max_uses,omitempty"`
-	CreatedBy     string                 `protobuf:"bytes,6,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateEnrollmentTokenRequest) Reset() {
-	*x = CreateEnrollmentTokenRequest{}
-	mi := &file_agent_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateEnrollmentTokenRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateEnrollmentTokenRequest) ProtoMessage() {}
-
-func (x *CreateEnrollmentTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateEnrollmentTokenRequest.ProtoReflect.Descriptor instead.
-func (*CreateEnrollmentTokenRequest) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *CreateEnrollmentTokenRequest) GetTenantId() int64 {
-	if x != nil {
-		return x.TenantId
-	}
-	return 0
-}
-
-func (x *CreateEnrollmentTokenRequest) GetPolicyId() string {
-	if x != nil {
-		return x.PolicyId
-	}
-	return ""
-}
-
-func (x *CreateEnrollmentTokenRequest) GetPlatform() string {
-	if x != nil {
-		return x.Platform
-	}
-	return ""
-}
-
-func (x *CreateEnrollmentTokenRequest) GetExpiresAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return nil
-}
-
-func (x *CreateEnrollmentTokenRequest) GetMaxUses() int32 {
-	if x != nil {
-		return x.MaxUses
-	}
-	return 0
-}
-
-func (x *CreateEnrollmentTokenRequest) GetCreatedBy() string {
-	if x != nil {
-		return x.CreatedBy
-	}
-	return ""
-}
-
-type EnrollmentToken struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	TenantId         int64                  `protobuf:"varint,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
-	PolicyId         string                 `protobuf:"bytes,3,opt,name=policy_id,json=policyId,proto3" json:"policy_id,omitempty"`
-	Platform         string                 `protobuf:"bytes,4,opt,name=platform,proto3" json:"platform,omitempty"`
-	ExpiresAt        *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
-	MaxUses          int32                  `protobuf:"varint,6,opt,name=max_uses,json=maxUses,proto3" json:"max_uses,omitempty"`
-	UseCount         int32                  `protobuf:"varint,7,opt,name=use_count,json=useCount,proto3" json:"use_count,omitempty"`
-	CreatedAt        *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	CreatedBy        string                 `protobuf:"bytes,9,opt,name=created_by,json=createdBy,proto3" json:"created_by,omitempty"`
-	LastUsedAt       *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=last_used_at,json=lastUsedAt,proto3" json:"last_used_at,omitempty"`
-	RevokedAt        *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=revoked_at,json=revokedAt,proto3" json:"revoked_at,omitempty"`
-	RevokedBy        string                 `protobuf:"bytes,12,opt,name=revoked_by,json=revokedBy,proto3" json:"revoked_by,omitempty"`
-	RevocationReason string                 `protobuf:"bytes,13,opt,name=revocation_reason,json=revocationReason,proto3" json:"revocation_reason,omitempty"`
-	Version          uint64                 `protobuf:"varint,14,opt,name=version,proto3" json:"version,omitempty"`
-	Status           string                 `protobuf:"bytes,15,opt,name=status,proto3" json:"status,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
-}
-
-func (x *EnrollmentToken) Reset() {
-	*x = EnrollmentToken{}
-	mi := &file_agent_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *EnrollmentToken) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*EnrollmentToken) ProtoMessage() {}
-
-func (x *EnrollmentToken) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use EnrollmentToken.ProtoReflect.Descriptor instead.
-func (*EnrollmentToken) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *EnrollmentToken) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *EnrollmentToken) GetTenantId() int64 {
-	if x != nil {
-		return x.TenantId
-	}
-	return 0
-}
-
-func (x *EnrollmentToken) GetPolicyId() string {
-	if x != nil {
-		return x.PolicyId
-	}
-	return ""
-}
-
-func (x *EnrollmentToken) GetPlatform() string {
-	if x != nil {
-		return x.Platform
-	}
-	return ""
-}
-
-func (x *EnrollmentToken) GetExpiresAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return nil
-}
-
-func (x *EnrollmentToken) GetMaxUses() int32 {
-	if x != nil {
-		return x.MaxUses
-	}
-	return 0
-}
-
-func (x *EnrollmentToken) GetUseCount() int32 {
-	if x != nil {
-		return x.UseCount
-	}
-	return 0
-}
-
-func (x *EnrollmentToken) GetCreatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return nil
-}
-
-func (x *EnrollmentToken) GetCreatedBy() string {
-	if x != nil {
-		return x.CreatedBy
-	}
-	return ""
-}
-
-func (x *EnrollmentToken) GetLastUsedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.LastUsedAt
-	}
-	return nil
-}
-
-func (x *EnrollmentToken) GetRevokedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.RevokedAt
-	}
-	return nil
-}
-
-func (x *EnrollmentToken) GetRevokedBy() string {
-	if x != nil {
-		return x.RevokedBy
-	}
-	return ""
-}
-
-func (x *EnrollmentToken) GetRevocationReason() string {
-	if x != nil {
-		return x.RevocationReason
-	}
-	return ""
-}
-
-func (x *EnrollmentToken) GetVersion() uint64 {
-	if x != nil {
-		return x.Version
-	}
-	return 0
-}
-
-func (x *EnrollmentToken) GetStatus() string {
-	if x != nil {
-		return x.Status
-	}
-	return ""
-}
-
-type CreateEnrollmentTokenResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Enrollment    *EnrollmentToken       `protobuf:"bytes,1,opt,name=enrollment,proto3" json:"enrollment,omitempty"`
-	Token         string                 `protobuf:"bytes,2,opt,name=token,proto3" json:"token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CreateEnrollmentTokenResponse) Reset() {
-	*x = CreateEnrollmentTokenResponse{}
-	mi := &file_agent_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CreateEnrollmentTokenResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateEnrollmentTokenResponse) ProtoMessage() {}
-
-func (x *CreateEnrollmentTokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateEnrollmentTokenResponse.ProtoReflect.Descriptor instead.
-func (*CreateEnrollmentTokenResponse) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *CreateEnrollmentTokenResponse) GetEnrollment() *EnrollmentToken {
-	if x != nil {
-		return x.Enrollment
-	}
-	return nil
-}
-
-func (x *CreateEnrollmentTokenResponse) GetToken() string {
-	if x != nil {
-		return x.Token
-	}
-	return ""
-}
-
-type ListEnrollmentTokensRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TenantId      int64                  `protobuf:"varint,1,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
-	PageNumber    int32                  `protobuf:"varint,2,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
-	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListEnrollmentTokensRequest) Reset() {
-	*x = ListEnrollmentTokensRequest{}
-	mi := &file_agent_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListEnrollmentTokensRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListEnrollmentTokensRequest) ProtoMessage() {}
-
-func (x *ListEnrollmentTokensRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListEnrollmentTokensRequest.ProtoReflect.Descriptor instead.
-func (*ListEnrollmentTokensRequest) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *ListEnrollmentTokensRequest) GetTenantId() int64 {
-	if x != nil {
-		return x.TenantId
-	}
-	return 0
-}
-
-func (x *ListEnrollmentTokensRequest) GetPageNumber() int32 {
-	if x != nil {
-		return x.PageNumber
-	}
-	return 0
-}
-
-func (x *ListEnrollmentTokensRequest) GetPageSize() int32 {
-	if x != nil {
-		return x.PageSize
-	}
-	return 0
-}
-
-type ListEnrollmentTokensResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Rows          []*EnrollmentToken     `protobuf:"bytes,1,rep,name=rows,proto3" json:"rows,omitempty"`
-	Total         int32                  `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ListEnrollmentTokensResponse) Reset() {
-	*x = ListEnrollmentTokensResponse{}
-	mi := &file_agent_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ListEnrollmentTokensResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListEnrollmentTokensResponse) ProtoMessage() {}
-
-func (x *ListEnrollmentTokensResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListEnrollmentTokensResponse.ProtoReflect.Descriptor instead.
-func (*ListEnrollmentTokensResponse) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *ListEnrollmentTokensResponse) GetRows() []*EnrollmentToken {
-	if x != nil {
-		return x.Rows
-	}
-	return nil
-}
-
-func (x *ListEnrollmentTokensResponse) GetTotal() int32 {
-	if x != nil {
-		return x.Total
-	}
-	return 0
-}
-
-type RevokeEnrollmentTokenRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Id              string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	TenantId        int64                  `protobuf:"varint,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
-	RevokedBy       string                 `protobuf:"bytes,3,opt,name=revoked_by,json=revokedBy,proto3" json:"revoked_by,omitempty"`
-	Reason          string                 `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
-	ExpectedVersion uint64                 `protobuf:"varint,5,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *RevokeEnrollmentTokenRequest) Reset() {
-	*x = RevokeEnrollmentTokenRequest{}
-	mi := &file_agent_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RevokeEnrollmentTokenRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RevokeEnrollmentTokenRequest) ProtoMessage() {}
-
-func (x *RevokeEnrollmentTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RevokeEnrollmentTokenRequest.ProtoReflect.Descriptor instead.
-func (*RevokeEnrollmentTokenRequest) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *RevokeEnrollmentTokenRequest) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *RevokeEnrollmentTokenRequest) GetTenantId() int64 {
-	if x != nil {
-		return x.TenantId
-	}
-	return 0
-}
-
-func (x *RevokeEnrollmentTokenRequest) GetRevokedBy() string {
-	if x != nil {
-		return x.RevokedBy
-	}
-	return ""
-}
-
-func (x *RevokeEnrollmentTokenRequest) GetReason() string {
-	if x != nil {
-		return x.Reason
-	}
-	return ""
-}
-
-func (x *RevokeEnrollmentTokenRequest) GetExpectedVersion() uint64 {
-	if x != nil {
-		return x.ExpectedVersion
-	}
-	return 0
-}
-
-type AgentCredentialRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	AgentId       uint32                 `protobuf:"varint,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
-	TenantId      int64                  `protobuf:"varint,2,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
-	Actor         string                 `protobuf:"bytes,3,opt,name=actor,proto3" json:"actor,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *AgentCredentialRequest) Reset() {
-	*x = AgentCredentialRequest{}
-	mi := &file_agent_proto_msgTypes[9]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AgentCredentialRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AgentCredentialRequest) ProtoMessage() {}
-
-func (x *AgentCredentialRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[9]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AgentCredentialRequest.ProtoReflect.Descriptor instead.
-func (*AgentCredentialRequest) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *AgentCredentialRequest) GetAgentId() uint32 {
-	if x != nil {
-		return x.AgentId
-	}
-	return 0
-}
-
-func (x *AgentCredentialRequest) GetTenantId() int64 {
-	if x != nil {
-		return x.TenantId
-	}
-	return 0
-}
-
-func (x *AgentCredentialRequest) GetActor() string {
-	if x != nil {
-		return x.Actor
-	}
-	return ""
-}
-
-type AgentCredentialResponse struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	AgentId           uint32                 `protobuf:"varint,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
-	AgentUuid         string                 `protobuf:"bytes,2,opt,name=agent_uuid,json=agentUuid,proto3" json:"agent_uuid,omitempty"`
-	CredentialVersion uint32                 `protobuf:"varint,3,opt,name=credential_version,json=credentialVersion,proto3" json:"credential_version,omitempty"`
-	Key               string                 `protobuf:"bytes,4,opt,name=key,proto3" json:"key,omitempty"`
-	RevokedAt         *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=revoked_at,json=revokedAt,proto3" json:"revoked_at,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *AgentCredentialResponse) Reset() {
-	*x = AgentCredentialResponse{}
-	mi := &file_agent_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AgentCredentialResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AgentCredentialResponse) ProtoMessage() {}
-
-func (x *AgentCredentialResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AgentCredentialResponse.ProtoReflect.Descriptor instead.
-func (*AgentCredentialResponse) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *AgentCredentialResponse) GetAgentId() uint32 {
-	if x != nil {
-		return x.AgentId
-	}
-	return 0
-}
-
-func (x *AgentCredentialResponse) GetAgentUuid() string {
-	if x != nil {
-		return x.AgentUuid
-	}
-	return ""
-}
-
-func (x *AgentCredentialResponse) GetCredentialVersion() uint32 {
-	if x != nil {
-		return x.CredentialVersion
-	}
-	return 0
-}
-
-func (x *AgentCredentialResponse) GetKey() string {
-	if x != nil {
-		return x.Key
-	}
-	return ""
-}
-
-func (x *AgentCredentialResponse) GetRevokedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.RevokedAt
-	}
-	return nil
-}
-
 type BidirectionalStream struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to StreamMessage:
@@ -1062,7 +414,7 @@ type BidirectionalStream struct {
 
 func (x *BidirectionalStream) Reset() {
 	*x = BidirectionalStream{}
-	mi := &file_agent_proto_msgTypes[11]
+	mi := &file_agent_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1074,7 +426,7 @@ func (x *BidirectionalStream) String() string {
 func (*BidirectionalStream) ProtoMessage() {}
 
 func (x *BidirectionalStream) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[11]
+	mi := &file_agent_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1087,7 +439,7 @@ func (x *BidirectionalStream) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BidirectionalStream.ProtoReflect.Descriptor instead.
 func (*BidirectionalStream) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{11}
+	return file_agent_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *BidirectionalStream) GetStreamMessage() isBidirectionalStream_StreamMessage {
@@ -1097,7 +449,7 @@ func (x *BidirectionalStream) GetStreamMessage() isBidirectionalStream_StreamMes
 	return nil
 }
 
-func (x *BidirectionalStream) GetCommand() *UtmCommand {
+func (x *BidirectionalStream) GetCommand() *RemoteCommand {
 	if x != nil {
 		if x, ok := x.StreamMessage.(*BidirectionalStream_Command); ok {
 			return x.Command
@@ -1120,7 +472,7 @@ type isBidirectionalStream_StreamMessage interface {
 }
 
 type BidirectionalStream_Command struct {
-	Command *UtmCommand `protobuf:"bytes,1,opt,name=command,proto3,oneof"`
+	Command *RemoteCommand `protobuf:"bytes,1,opt,name=command,proto3,oneof"`
 }
 
 type BidirectionalStream_Result struct {
@@ -1131,7 +483,7 @@ func (*BidirectionalStream_Command) isBidirectionalStream_StreamMessage() {}
 
 func (*BidirectionalStream_Result) isBidirectionalStream_StreamMessage() {}
 
-type UtmCommand struct {
+type RemoteCommand struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
 	Command       string                 `protobuf:"bytes,2,opt,name=command,proto3" json:"command,omitempty"`
@@ -1145,21 +497,21 @@ type UtmCommand struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UtmCommand) Reset() {
-	*x = UtmCommand{}
-	mi := &file_agent_proto_msgTypes[12]
+func (x *RemoteCommand) Reset() {
+	*x = RemoteCommand{}
+	mi := &file_agent_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UtmCommand) String() string {
+func (x *RemoteCommand) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UtmCommand) ProtoMessage() {}
+func (*RemoteCommand) ProtoMessage() {}
 
-func (x *UtmCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[12]
+func (x *RemoteCommand) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1170,61 +522,61 @@ func (x *UtmCommand) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UtmCommand.ProtoReflect.Descriptor instead.
-func (*UtmCommand) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{12}
+// Deprecated: Use RemoteCommand.ProtoReflect.Descriptor instead.
+func (*RemoteCommand) Descriptor() ([]byte, []int) {
+	return file_agent_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *UtmCommand) GetAgentId() string {
+func (x *RemoteCommand) GetAgentId() string {
 	if x != nil {
 		return x.AgentId
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetCommand() string {
+func (x *RemoteCommand) GetCommand() string {
 	if x != nil {
 		return x.Command
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetExecutedBy() string {
+func (x *RemoteCommand) GetExecutedBy() string {
 	if x != nil {
 		return x.ExecutedBy
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetCmdId() string {
+func (x *RemoteCommand) GetCmdId() string {
 	if x != nil {
 		return x.CmdId
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetOriginType() string {
+func (x *RemoteCommand) GetOriginType() string {
 	if x != nil {
 		return x.OriginType
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetOriginId() string {
+func (x *RemoteCommand) GetOriginId() string {
 	if x != nil {
 		return x.OriginId
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetReason() string {
+func (x *RemoteCommand) GetReason() string {
 	if x != nil {
 		return x.Reason
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetShell() string {
+func (x *RemoteCommand) GetShell() string {
 	if x != nil {
 		return x.Shell
 	}
@@ -1243,7 +595,7 @@ type CommandResult struct {
 
 func (x *CommandResult) Reset() {
 	*x = CommandResult{}
-	mi := &file_agent_proto_msgTypes[13]
+	mi := &file_agent_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1255,7 +607,7 @@ func (x *CommandResult) String() string {
 func (*CommandResult) ProtoMessage() {}
 
 func (x *CommandResult) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[13]
+	mi := &file_agent_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1268,7 +620,7 @@ func (x *CommandResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommandResult.ProtoReflect.Descriptor instead.
 func (*CommandResult) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{13}
+	return file_agent_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CommandResult) GetAgentId() string {
@@ -1309,7 +661,7 @@ type ListAgentsCommandsResponse struct {
 
 func (x *ListAgentsCommandsResponse) Reset() {
 	*x = ListAgentsCommandsResponse{}
-	mi := &file_agent_proto_msgTypes[14]
+	mi := &file_agent_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1321,7 +673,7 @@ func (x *ListAgentsCommandsResponse) String() string {
 func (*ListAgentsCommandsResponse) ProtoMessage() {}
 
 func (x *ListAgentsCommandsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[14]
+	mi := &file_agent_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1334,7 +686,7 @@ func (x *ListAgentsCommandsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAgentsCommandsResponse.ProtoReflect.Descriptor instead.
 func (*ListAgentsCommandsResponse) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{14}
+	return file_agent_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ListAgentsCommandsResponse) GetRows() []*AgentCommand {
@@ -1370,7 +722,7 @@ type AgentCommand struct {
 
 func (x *AgentCommand) Reset() {
 	*x = AgentCommand{}
-	mi := &file_agent_proto_msgTypes[15]
+	mi := &file_agent_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1382,7 +734,7 @@ func (x *AgentCommand) String() string {
 func (*AgentCommand) ProtoMessage() {}
 
 func (x *AgentCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_proto_msgTypes[15]
+	mi := &file_agent_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1395,7 +747,7 @@ func (x *AgentCommand) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentCommand.ProtoReflect.Descriptor instead.
 func (*AgentCommand) Descriptor() ([]byte, []int) {
-	return file_agent_proto_rawDescGZIP(), []int{15}
+	return file_agent_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *AgentCommand) GetCreatedAt() *timestamppb.Timestamp {
@@ -1496,7 +848,7 @@ const file_agent_proto_rawDesc = "" +
 	"\taddresses\x18\v \x01(\tR\taddresses\"L\n" +
 	"\x12ListAgentsResponse\x12 \n" +
 	"\x04rows\x18\x01 \x03(\v2\f.agent.AgentR\x04rows\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total\"\xc3\x04\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\"\x88\x03\n" +
 	"\x05Agent\x12\x0e\n" +
 	"\x02ip\x18\x01 \x01(\tR\x02ip\x12\x1a\n" +
 	"\bhostname\x18\x02 \x01(\tR\bhostname\x12\x0e\n" +
@@ -1512,82 +864,12 @@ const file_agent_proto_rawDesc = "" +
 	"\x10os_major_version\x18\v \x01(\tR\x0eosMajorVersion\x12(\n" +
 	"\x10os_minor_version\x18\f \x01(\tR\x0eosMinorVersion\x12\x18\n" +
 	"\aaliases\x18\r \x01(\tR\aaliases\x12\x1c\n" +
-	"\taddresses\x18\x0e \x01(\tR\taddresses\x12\x1d\n" +
-	"\n" +
-	"agent_uuid\x18\x0f \x01(\tR\tagentUuid\x12\x1b\n" +
-	"\ttenant_id\x18\x10 \x01(\x03R\btenantId\x12-\n" +
-	"\x12credential_version\x18\x11 \x01(\rR\x11credentialVersion\x12N\n" +
-	"\x15credential_revoked_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\x13credentialRevokedAt\"\xe9\x01\n" +
-	"\x1cCreateEnrollmentTokenRequest\x12\x1b\n" +
-	"\ttenant_id\x18\x01 \x01(\x03R\btenantId\x12\x1b\n" +
-	"\tpolicy_id\x18\x02 \x01(\tR\bpolicyId\x12\x1a\n" +
-	"\bplatform\x18\x03 \x01(\tR\bplatform\x129\n" +
-	"\n" +
-	"expires_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12\x19\n" +
-	"\bmax_uses\x18\x05 \x01(\x05R\amaxUses\x12\x1d\n" +
-	"\n" +
-	"created_by\x18\x06 \x01(\tR\tcreatedBy\"\xbb\x04\n" +
-	"\x0fEnrollmentToken\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
-	"\ttenant_id\x18\x02 \x01(\x03R\btenantId\x12\x1b\n" +
-	"\tpolicy_id\x18\x03 \x01(\tR\bpolicyId\x12\x1a\n" +
-	"\bplatform\x18\x04 \x01(\tR\bplatform\x129\n" +
-	"\n" +
-	"expires_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x12\x19\n" +
-	"\bmax_uses\x18\x06 \x01(\x05R\amaxUses\x12\x1b\n" +
-	"\tuse_count\x18\a \x01(\x05R\buseCount\x129\n" +
-	"\n" +
-	"created_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x1d\n" +
-	"\n" +
-	"created_by\x18\t \x01(\tR\tcreatedBy\x12<\n" +
-	"\flast_used_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"lastUsedAt\x129\n" +
-	"\n" +
-	"revoked_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\trevokedAt\x12\x1d\n" +
-	"\n" +
-	"revoked_by\x18\f \x01(\tR\trevokedBy\x12+\n" +
-	"\x11revocation_reason\x18\r \x01(\tR\x10revocationReason\x12\x18\n" +
-	"\aversion\x18\x0e \x01(\x04R\aversion\x12\x16\n" +
-	"\x06status\x18\x0f \x01(\tR\x06status\"m\n" +
-	"\x1dCreateEnrollmentTokenResponse\x126\n" +
-	"\n" +
-	"enrollment\x18\x01 \x01(\v2\x16.agent.EnrollmentTokenR\n" +
-	"enrollment\x12\x14\n" +
-	"\x05token\x18\x02 \x01(\tR\x05token\"x\n" +
-	"\x1bListEnrollmentTokensRequest\x12\x1b\n" +
-	"\ttenant_id\x18\x01 \x01(\x03R\btenantId\x12\x1f\n" +
-	"\vpage_number\x18\x02 \x01(\x05R\n" +
-	"pageNumber\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\"`\n" +
-	"\x1cListEnrollmentTokensResponse\x12*\n" +
-	"\x04rows\x18\x01 \x03(\v2\x16.agent.EnrollmentTokenR\x04rows\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total\"\xad\x01\n" +
-	"\x1cRevokeEnrollmentTokenRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
-	"\ttenant_id\x18\x02 \x01(\x03R\btenantId\x12\x1d\n" +
-	"\n" +
-	"revoked_by\x18\x03 \x01(\tR\trevokedBy\x12\x16\n" +
-	"\x06reason\x18\x04 \x01(\tR\x06reason\x12)\n" +
-	"\x10expected_version\x18\x05 \x01(\x04R\x0fexpectedVersion\"f\n" +
-	"\x16AgentCredentialRequest\x12\x19\n" +
-	"\bagent_id\x18\x01 \x01(\rR\aagentId\x12\x1b\n" +
-	"\ttenant_id\x18\x02 \x01(\x03R\btenantId\x12\x14\n" +
-	"\x05actor\x18\x03 \x01(\tR\x05actor\"\xcf\x01\n" +
-	"\x17AgentCredentialResponse\x12\x19\n" +
-	"\bagent_id\x18\x01 \x01(\rR\aagentId\x12\x1d\n" +
-	"\n" +
-	"agent_uuid\x18\x02 \x01(\tR\tagentUuid\x12-\n" +
-	"\x12credential_version\x18\x03 \x01(\rR\x11credentialVersion\x12\x10\n" +
-	"\x03key\x18\x04 \x01(\tR\x03key\x129\n" +
-	"\n" +
-	"revoked_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\trevokedAt\"\x86\x01\n" +
-	"\x13BidirectionalStream\x12-\n" +
-	"\acommand\x18\x01 \x01(\v2\x11.agent.UtmCommandH\x00R\acommand\x12.\n" +
+	"\taddresses\x18\x0e \x01(\tR\taddresses\"\x89\x01\n" +
+	"\x13BidirectionalStream\x120\n" +
+	"\acommand\x18\x01 \x01(\v2\x14.agent.RemoteCommandH\x00R\acommand\x12.\n" +
 	"\x06result\x18\x02 \x01(\v2\x14.agent.CommandResultH\x00R\x06resultB\x10\n" +
-	"\x0estream_message\"\xe5\x01\n" +
-	"\n" +
-	"UtmCommand\x12\x19\n" +
+	"\x0estream_message\"\xe8\x01\n" +
+	"\rRemoteCommand\x12\x19\n" +
 	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12\x18\n" +
 	"\acommand\x18\x02 \x01(\tR\acommand\x12\x1f\n" +
 	"\vexecuted_by\x18\x03 \x01(\tR\n" +
@@ -1629,7 +911,7 @@ const file_agent_proto_rawDesc = "" +
 	"\x05QUEUE\x10\x01\x12\v\n" +
 	"\aPENDING\x10\x02\x12\f\n" +
 	"\bEXECUTED\x10\x03\x12\t\n" +
-	"\x05ERROR\x10\x042\xf1\x06\n" +
+	"\x05ERROR\x10\x042\x9c\x03\n" +
 	"\fAgentService\x12;\n" +
 	"\rRegisterAgent\x12\x13.agent.AgentRequest\x1a\x13.agent.AuthResponse\"\x00\x129\n" +
 	"\vUpdateAgent\x12\x13.agent.AgentRequest\x1a\x13.agent.AuthResponse\"\x00\x12:\n" +
@@ -1637,14 +919,9 @@ const file_agent_proto_rawDesc = "" +
 	"\n" +
 	"ListAgents\x12\x12.agent.ListRequest\x1a\x19.agent.ListAgentsResponse\"\x00\x12K\n" +
 	"\vAgentStream\x12\x1a.agent.BidirectionalStream\x1a\x1a.agent.BidirectionalStream\"\x00(\x010\x01\x12L\n" +
-	"\x11ListAgentCommands\x12\x12.agent.ListRequest\x1a!.agent.ListAgentsCommandsResponse\"\x00\x12d\n" +
-	"\x15CreateEnrollmentToken\x12#.agent.CreateEnrollmentTokenRequest\x1a$.agent.CreateEnrollmentTokenResponse\"\x00\x12a\n" +
-	"\x14ListEnrollmentTokens\x12\".agent.ListEnrollmentTokensRequest\x1a#.agent.ListEnrollmentTokensResponse\"\x00\x12V\n" +
-	"\x15RevokeEnrollmentToken\x12#.agent.RevokeEnrollmentTokenRequest\x1a\x16.agent.EnrollmentToken\"\x00\x12X\n" +
-	"\x15RotateAgentCredential\x12\x1d.agent.AgentCredentialRequest\x1a\x1e.agent.AgentCredentialResponse\"\x00\x12X\n" +
-	"\x15RevokeAgentCredential\x12\x1d.agent.AgentCredentialRequest\x1a\x1e.agent.AgentCredentialResponse\"\x002O\n" +
-	"\fPanelService\x12?\n" +
-	"\x0eProcessCommand\x12\x11.agent.UtmCommand\x1a\x14.agent.CommandResult\"\x00(\x010\x01B*Z(github.com/hivearmor/agent-manager/agentb\x06proto3"
+	"\x11ListAgentCommands\x12\x12.agent.ListRequest\x1a!.agent.ListAgentsCommandsResponse\"\x002R\n" +
+	"\fPanelService\x12B\n" +
+	"\x0eProcessCommand\x12\x14.agent.RemoteCommand\x1a\x14.agent.CommandResult\"\x00(\x010\x01B*Z(github.com/hivearmor/agent-manager/agentb\x06proto3"
 
 var (
 	file_agent_proto_rawDescOnce sync.Once
@@ -1659,79 +936,52 @@ func file_agent_proto_rawDescGZIP() []byte {
 }
 
 var file_agent_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_agent_proto_goTypes = []any{
-	(AgentCommandStatus)(0),               // 0: agent.AgentCommandStatus
-	(*AgentRequest)(nil),                  // 1: agent.AgentRequest
-	(*ListAgentsResponse)(nil),            // 2: agent.ListAgentsResponse
-	(*Agent)(nil),                         // 3: agent.Agent
-	(*CreateEnrollmentTokenRequest)(nil),  // 4: agent.CreateEnrollmentTokenRequest
-	(*EnrollmentToken)(nil),               // 5: agent.EnrollmentToken
-	(*CreateEnrollmentTokenResponse)(nil), // 6: agent.CreateEnrollmentTokenResponse
-	(*ListEnrollmentTokensRequest)(nil),   // 7: agent.ListEnrollmentTokensRequest
-	(*ListEnrollmentTokensResponse)(nil),  // 8: agent.ListEnrollmentTokensResponse
-	(*RevokeEnrollmentTokenRequest)(nil),  // 9: agent.RevokeEnrollmentTokenRequest
-	(*AgentCredentialRequest)(nil),        // 10: agent.AgentCredentialRequest
-	(*AgentCredentialResponse)(nil),       // 11: agent.AgentCredentialResponse
-	(*BidirectionalStream)(nil),           // 12: agent.BidirectionalStream
-	(*UtmCommand)(nil),                    // 13: agent.UtmCommand
-	(*CommandResult)(nil),                 // 14: agent.CommandResult
-	(*ListAgentsCommandsResponse)(nil),    // 15: agent.ListAgentsCommandsResponse
-	(*AgentCommand)(nil),                  // 16: agent.AgentCommand
-	(Status)(0),                           // 17: agent.Status
-	(*timestamppb.Timestamp)(nil),         // 18: google.protobuf.Timestamp
-	(*DeleteRequest)(nil),                 // 19: agent.DeleteRequest
-	(*ListRequest)(nil),                   // 20: agent.ListRequest
-	(*AuthResponse)(nil),                  // 21: agent.AuthResponse
+	(AgentCommandStatus)(0),            // 0: agent.AgentCommandStatus
+	(*AgentRequest)(nil),               // 1: agent.AgentRequest
+	(*ListAgentsResponse)(nil),         // 2: agent.ListAgentsResponse
+	(*Agent)(nil),                      // 3: agent.Agent
+	(*BidirectionalStream)(nil),        // 4: agent.BidirectionalStream
+	(*RemoteCommand)(nil),              // 5: agent.RemoteCommand
+	(*CommandResult)(nil),              // 6: agent.CommandResult
+	(*ListAgentsCommandsResponse)(nil), // 7: agent.ListAgentsCommandsResponse
+	(*AgentCommand)(nil),               // 8: agent.AgentCommand
+	(Status)(0),                        // 9: agent.Status
+	(*timestamppb.Timestamp)(nil),      // 10: google.protobuf.Timestamp
+	(*DeleteRequest)(nil),              // 11: agent.DeleteRequest
+	(*ListRequest)(nil),                // 12: agent.ListRequest
+	(*AuthResponse)(nil),               // 13: agent.AuthResponse
 }
 var file_agent_proto_depIdxs = []int32{
 	3,  // 0: agent.ListAgentsResponse.rows:type_name -> agent.Agent
-	17, // 1: agent.Agent.status:type_name -> agent.Status
-	18, // 2: agent.Agent.credential_revoked_at:type_name -> google.protobuf.Timestamp
-	18, // 3: agent.CreateEnrollmentTokenRequest.expires_at:type_name -> google.protobuf.Timestamp
-	18, // 4: agent.EnrollmentToken.expires_at:type_name -> google.protobuf.Timestamp
-	18, // 5: agent.EnrollmentToken.created_at:type_name -> google.protobuf.Timestamp
-	18, // 6: agent.EnrollmentToken.last_used_at:type_name -> google.protobuf.Timestamp
-	18, // 7: agent.EnrollmentToken.revoked_at:type_name -> google.protobuf.Timestamp
-	5,  // 8: agent.CreateEnrollmentTokenResponse.enrollment:type_name -> agent.EnrollmentToken
-	5,  // 9: agent.ListEnrollmentTokensResponse.rows:type_name -> agent.EnrollmentToken
-	18, // 10: agent.AgentCredentialResponse.revoked_at:type_name -> google.protobuf.Timestamp
-	13, // 11: agent.BidirectionalStream.command:type_name -> agent.UtmCommand
-	14, // 12: agent.BidirectionalStream.result:type_name -> agent.CommandResult
-	18, // 13: agent.CommandResult.executed_at:type_name -> google.protobuf.Timestamp
-	16, // 14: agent.ListAgentsCommandsResponse.rows:type_name -> agent.AgentCommand
-	18, // 15: agent.AgentCommand.created_at:type_name -> google.protobuf.Timestamp
-	18, // 16: agent.AgentCommand.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 17: agent.AgentCommand.command_status:type_name -> agent.AgentCommandStatus
-	1,  // 18: agent.AgentService.RegisterAgent:input_type -> agent.AgentRequest
-	1,  // 19: agent.AgentService.UpdateAgent:input_type -> agent.AgentRequest
-	19, // 20: agent.AgentService.DeleteAgent:input_type -> agent.DeleteRequest
-	20, // 21: agent.AgentService.ListAgents:input_type -> agent.ListRequest
-	12, // 22: agent.AgentService.AgentStream:input_type -> agent.BidirectionalStream
-	20, // 23: agent.AgentService.ListAgentCommands:input_type -> agent.ListRequest
-	4,  // 24: agent.AgentService.CreateEnrollmentToken:input_type -> agent.CreateEnrollmentTokenRequest
-	7,  // 25: agent.AgentService.ListEnrollmentTokens:input_type -> agent.ListEnrollmentTokensRequest
-	9,  // 26: agent.AgentService.RevokeEnrollmentToken:input_type -> agent.RevokeEnrollmentTokenRequest
-	10, // 27: agent.AgentService.RotateAgentCredential:input_type -> agent.AgentCredentialRequest
-	10, // 28: agent.AgentService.RevokeAgentCredential:input_type -> agent.AgentCredentialRequest
-	13, // 29: agent.PanelService.ProcessCommand:input_type -> agent.UtmCommand
-	21, // 30: agent.AgentService.RegisterAgent:output_type -> agent.AuthResponse
-	21, // 31: agent.AgentService.UpdateAgent:output_type -> agent.AuthResponse
-	21, // 32: agent.AgentService.DeleteAgent:output_type -> agent.AuthResponse
-	2,  // 33: agent.AgentService.ListAgents:output_type -> agent.ListAgentsResponse
-	12, // 34: agent.AgentService.AgentStream:output_type -> agent.BidirectionalStream
-	15, // 35: agent.AgentService.ListAgentCommands:output_type -> agent.ListAgentsCommandsResponse
-	6,  // 36: agent.AgentService.CreateEnrollmentToken:output_type -> agent.CreateEnrollmentTokenResponse
-	8,  // 37: agent.AgentService.ListEnrollmentTokens:output_type -> agent.ListEnrollmentTokensResponse
-	5,  // 38: agent.AgentService.RevokeEnrollmentToken:output_type -> agent.EnrollmentToken
-	11, // 39: agent.AgentService.RotateAgentCredential:output_type -> agent.AgentCredentialResponse
-	11, // 40: agent.AgentService.RevokeAgentCredential:output_type -> agent.AgentCredentialResponse
-	14, // 41: agent.PanelService.ProcessCommand:output_type -> agent.CommandResult
-	30, // [30:42] is the sub-list for method output_type
-	18, // [18:30] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	9,  // 1: agent.Agent.status:type_name -> agent.Status
+	5,  // 2: agent.BidirectionalStream.command:type_name -> agent.RemoteCommand
+	6,  // 3: agent.BidirectionalStream.result:type_name -> agent.CommandResult
+	10, // 4: agent.CommandResult.executed_at:type_name -> google.protobuf.Timestamp
+	8,  // 5: agent.ListAgentsCommandsResponse.rows:type_name -> agent.AgentCommand
+	10, // 6: agent.AgentCommand.created_at:type_name -> google.protobuf.Timestamp
+	10, // 7: agent.AgentCommand.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 8: agent.AgentCommand.command_status:type_name -> agent.AgentCommandStatus
+	1,  // 9: agent.AgentService.RegisterAgent:input_type -> agent.AgentRequest
+	1,  // 10: agent.AgentService.UpdateAgent:input_type -> agent.AgentRequest
+	11, // 11: agent.AgentService.DeleteAgent:input_type -> agent.DeleteRequest
+	12, // 12: agent.AgentService.ListAgents:input_type -> agent.ListRequest
+	4,  // 13: agent.AgentService.AgentStream:input_type -> agent.BidirectionalStream
+	12, // 14: agent.AgentService.ListAgentCommands:input_type -> agent.ListRequest
+	5,  // 15: agent.PanelService.ProcessCommand:input_type -> agent.RemoteCommand
+	13, // 16: agent.AgentService.RegisterAgent:output_type -> agent.AuthResponse
+	13, // 17: agent.AgentService.UpdateAgent:output_type -> agent.AuthResponse
+	13, // 18: agent.AgentService.DeleteAgent:output_type -> agent.AuthResponse
+	2,  // 19: agent.AgentService.ListAgents:output_type -> agent.ListAgentsResponse
+	4,  // 20: agent.AgentService.AgentStream:output_type -> agent.BidirectionalStream
+	7,  // 21: agent.AgentService.ListAgentCommands:output_type -> agent.ListAgentsCommandsResponse
+	6,  // 22: agent.PanelService.ProcessCommand:output_type -> agent.CommandResult
+	16, // [16:23] is the sub-list for method output_type
+	9,  // [9:16] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_agent_proto_init() }
@@ -1740,7 +990,7 @@ func file_agent_proto_init() {
 		return
 	}
 	file_common_proto_init()
-	file_agent_proto_msgTypes[11].OneofWrappers = []any{
+	file_agent_proto_msgTypes[3].OneofWrappers = []any{
 		(*BidirectionalStream_Command)(nil),
 		(*BidirectionalStream_Result)(nil),
 	}
@@ -1750,7 +1000,7 @@ func file_agent_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_proto_rawDesc), len(file_agent_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   16,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

@@ -339,7 +339,7 @@ func (s *AgentService) ProcessCommand(stream PanelService_ProcessCommandServer) 
 
 		err = agentStream.Send(&BidirectionalStream{
 			StreamMessage: &BidirectionalStream_Command{
-				Command: &UtmCommand{
+				Command: &RemoteCommand{
 					AgentId: cmd.AgentId,
 					Command: replaceSecretValues(cmd.Command),
 					CmdId:   cmdID,

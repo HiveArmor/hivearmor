@@ -101,10 +101,10 @@ public final class AgentManagerGrpc {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_agent_BidirectionalStream_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_agent_UtmCommand_descriptor;
+    internal_static_agent_RemoteCommand_descriptor;
   static final 
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_agent_UtmCommand_fieldAccessorTable;
+      internal_static_agent_RemoteCommand_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
     internal_static_agent_CommandResult_descriptor;
   static final 
@@ -217,80 +217,80 @@ public final class AgentManagerGrpc {
       "\nagent_uuid\030\005 \001(\t\022\022\n\nevent_type\030\006 \001(\t\"]\n" +
       "!ListEnrollmentAuditEventsResponse\022)\n\004ro" +
       "ws\030\001 \003(\0132\033.agent.EnrollmentAuditEvent\022\r\n" +
-      "\005total\030\002 \001(\003\"u\n\023BidirectionalStream\022$\n\007c" +
-      "ommand\030\001 \001(\0132\021.agent.UtmCommandH\000\022&\n\006res" +
-      "ult\030\002 \001(\0132\024.agent.CommandResultH\000B\020\n\016str" +
-      "eam_message\"\233\001\n\nUtmCommand\022\020\n\010agent_id\030\001" +
-      " \001(\t\022\017\n\007command\030\002 \001(\t\022\023\n\013executed_by\030\003 \001" +
-      "(\t\022\016\n\006cmd_id\030\004 \001(\t\022\023\n\013origin_type\030\005 \001(\t\022" +
-      "\021\n\torigin_id\030\006 \001(\t\022\016\n\006reason\030\007 \001(\t\022\r\n\005sh" +
-      "ell\030\010 \001(\t\"r\n\rCommandResult\022\020\n\010agent_id\030\001" +
-      " \001(\t\022\016\n\006result\030\002 \001(\t\022/\n\013executed_at\030\003 \001(" +
-      "\0132\032.google.protobuf.Timestamp\022\016\n\006cmd_id\030" +
-      "\004 \001(\t\"N\n\032ListAgentsCommandsResponse\022!\n\004r" +
-      "ows\030\001 \003(\0132\023.agent.AgentCommand\022\r\n\005total\030" +
-      "\002 \001(\005\"\261\002\n\014AgentCommand\022.\n\ncreated_at\030\001 \001" +
-      "(\0132\032.google.protobuf.Timestamp\022.\n\nupdate" +
-      "d_at\030\002 \001(\0132\032.google.protobuf.Timestamp\022\020" +
-      "\n\010agent_id\030\003 \001(\r\022\017\n\007command\030\004 \001(\t\0221\n\016com" +
-      "mand_status\030\005 \001(\0162\031.agent.AgentCommandSt" +
-      "atus\022\016\n\006result\030\006 \001(\t\022\023\n\013executed_by\030\007 \001(" +
-      "\t\022\016\n\006cmd_id\030\010 \001(\t\022\016\n\006reason\030\t \001(\t\022\023\n\013ori" +
-      "gin_type\030\n \001(\t\022\021\n\torigin_id\030\013 \001(\t\"{\n\036Ver" +
-      "ifyConnectorIdentityRequest\022\024\n\014connector" +
-      "_id\030\001 \001(\r\022\025\n\rpresented_key\030\002 \001(\t\022,\n\016conn" +
-      "ector_type\030\003 \001(\0162\024.agent.ConnectorType\"\251" +
-      "\001\n\037VerifyConnectorIdentityResponse\022\n\n\002id" +
-      "\030\001 \001(\r\022\014\n\004uuid\030\002 \001(\t\022\021\n\ttenant_id\030\003 \001(\003\022" +
-      "\032\n\022credential_version\030\004 \001(\r\022\017\n\007revoked\030\005" +
-      " \001(\010\022,\n\016connector_type\030\006 \001(\0162\024.agent.Con" +
-      "nectorType\"y\n!ListConnectorAuthorization" +
-      "Request\022,\n\016connector_type\030\001 \001(\0162\024.agent." +
-      "ConnectorType\022\023\n\013page_number\030\002 \001(\005\022\021\n\tpa" +
-      "ge_size\030\003 \001(\005\"\240\001\n\026ConnectorAuthorization" +
+      "\005total\030\002 \001(\003\"x\n\023BidirectionalStream\022\'\n\007c" +
+      "ommand\030\001 \001(\0132\024.agent.RemoteCommandH\000\022&\n\006" +
+      "result\030\002 \001(\0132\024.agent.CommandResultH\000B\020\n\016" +
+      "stream_message\"\236\001\n\rRemoteCommand\022\020\n\010agen" +
+      "t_id\030\001 \001(\t\022\017\n\007command\030\002 \001(\t\022\023\n\013executed_" +
+      "by\030\003 \001(\t\022\016\n\006cmd_id\030\004 \001(\t\022\023\n\013origin_type\030" +
+      "\005 \001(\t\022\021\n\torigin_id\030\006 \001(\t\022\016\n\006reason\030\007 \001(\t" +
+      "\022\r\n\005shell\030\010 \001(\t\"r\n\rCommandResult\022\020\n\010agen" +
+      "t_id\030\001 \001(\t\022\016\n\006result\030\002 \001(\t\022/\n\013executed_a" +
+      "t\030\003 \001(\0132\032.google.protobuf.Timestamp\022\016\n\006c" +
+      "md_id\030\004 \001(\t\"N\n\032ListAgentsCommandsRespons" +
+      "e\022!\n\004rows\030\001 \003(\0132\023.agent.AgentCommand\022\r\n\005" +
+      "total\030\002 \001(\005\"\261\002\n\014AgentCommand\022.\n\ncreated_" +
+      "at\030\001 \001(\0132\032.google.protobuf.Timestamp\022.\n\n" +
+      "updated_at\030\002 \001(\0132\032.google.protobuf.Times" +
+      "tamp\022\020\n\010agent_id\030\003 \001(\r\022\017\n\007command\030\004 \001(\t\022" +
+      "1\n\016command_status\030\005 \001(\0162\031.agent.AgentCom" +
+      "mandStatus\022\016\n\006result\030\006 \001(\t\022\023\n\013executed_b" +
+      "y\030\007 \001(\t\022\016\n\006cmd_id\030\010 \001(\t\022\016\n\006reason\030\t \001(\t\022" +
+      "\023\n\013origin_type\030\n \001(\t\022\021\n\torigin_id\030\013 \001(\t\"" +
+      "{\n\036VerifyConnectorIdentityRequest\022\024\n\014con" +
+      "nector_id\030\001 \001(\r\022\025\n\rpresented_key\030\002 \001(\t\022," +
+      "\n\016connector_type\030\003 \001(\0162\024.agent.Connector" +
+      "Type\"\251\001\n\037VerifyConnectorIdentityResponse" +
       "\022\n\n\002id\030\001 \001(\r\022\014\n\004uuid\030\002 \001(\t\022\021\n\ttenant_id\030" +
-      "\003 \001(\003\022\017\n\007revoked\030\004 \001(\010\022\032\n\022credential_ver" +
-      "sion\030\005 \001(\r\022,\n\016connector_type\030\006 \001(\0162\024.age" +
-      "nt.ConnectorType\"`\n\"ListConnectorAuthori" +
-      "zationResponse\022+\n\004rows\030\001 \003(\0132\035.agent.Con" +
-      "nectorAuthorization\022\r\n\005total\030\002 \001(\005*W\n\022Ag" +
-      "entCommandStatus\022\020\n\014NOT_EXECUTED\020\000\022\t\n\005QU" +
-      "EUE\020\001\022\013\n\007PENDING\020\002\022\014\n\010EXECUTED\020\003\022\t\n\005ERRO" +
-      "R\020\0042\304\t\n\014AgentService\022;\n\rRegisterAgent\022\023." +
-      "agent.AgentRequest\032\023.agent.AuthResponse\"" +
-      "\000\0229\n\013UpdateAgent\022\023.agent.AgentRequest\032\023." +
-      "agent.AuthResponse\"\000\022:\n\013DeleteAgent\022\024.ag" +
-      "ent.DeleteRequest\032\023.agent.AuthResponse\"\000" +
-      "\022=\n\nListAgents\022\022.agent.ListRequest\032\031.age" +
-      "nt.ListAgentsResponse\"\000\022K\n\013AgentStream\022\032" +
-      ".agent.BidirectionalStream\032\032.agent.Bidir" +
-      "ectionalStream\"\000(\0010\001\022L\n\021ListAgentCommand" +
-      "s\022\022.agent.ListRequest\032!.agent.ListAgents" +
-      "CommandsResponse\"\000\022d\n\025CreateEnrollmentTo" +
-      "ken\022#.agent.CreateEnrollmentTokenRequest" +
-      "\032$.agent.CreateEnrollmentTokenResponse\"\000" +
-      "\022a\n\024ListEnrollmentTokens\022\".agent.ListEnr" +
-      "ollmentTokensRequest\032#.agent.ListEnrollm" +
-      "entTokensResponse\"\000\022V\n\025RevokeEnrollmentT" +
-      "oken\022#.agent.RevokeEnrollmentTokenReques" +
-      "t\032\026.agent.EnrollmentToken\"\000\022X\n\025RotateAge" +
-      "ntCredential\022\035.agent.AgentCredentialRequ" +
-      "est\032\036.agent.AgentCredentialResponse\"\000\022X\n" +
-      "\025RevokeAgentCredential\022\035.agent.AgentCred" +
-      "entialRequest\032\036.agent.AgentCredentialRes" +
-      "ponse\"\000\022p\n\031ListEnrollmentAuditEvents\022\'.a" +
-      "gent.ListEnrollmentAuditEventsRequest\032(." +
-      "agent.ListEnrollmentAuditEventsResponse\"" +
-      "\000\022j\n\027VerifyConnectorIdentity\022%.agent.Ver" +
-      "ifyConnectorIdentityRequest\032&.agent.Veri" +
-      "fyConnectorIdentityResponse\"\000\022s\n\032ListCon" +
-      "nectorAuthorization\022(.agent.ListConnecto" +
-      "rAuthorizationRequest\032).agent.ListConnec" +
-      "torAuthorizationResponse\"\0002O\n\014PanelServi" +
-      "ce\022?\n\016ProcessCommand\022\021.agent.UtmCommand\032" +
-      "\024.agent.CommandResult\"\000(\0010\001B3\n\032com.hivea" +
-      "rmor.service.grpcB\020AgentManagerGrpcP\001\210\001\001" +
-      "b\006proto3"
+      "\003 \001(\003\022\032\n\022credential_version\030\004 \001(\r\022\017\n\007rev" +
+      "oked\030\005 \001(\010\022,\n\016connector_type\030\006 \001(\0162\024.age" +
+      "nt.ConnectorType\"y\n!ListConnectorAuthori" +
+      "zationRequest\022,\n\016connector_type\030\001 \001(\0162\024." +
+      "agent.ConnectorType\022\023\n\013page_number\030\002 \001(\005" +
+      "\022\021\n\tpage_size\030\003 \001(\005\"\240\001\n\026ConnectorAuthori" +
+      "zation\022\n\n\002id\030\001 \001(\r\022\014\n\004uuid\030\002 \001(\t\022\021\n\ttena" +
+      "nt_id\030\003 \001(\003\022\017\n\007revoked\030\004 \001(\010\022\032\n\022credenti" +
+      "al_version\030\005 \001(\r\022,\n\016connector_type\030\006 \001(\016" +
+      "2\024.agent.ConnectorType\"`\n\"ListConnectorA" +
+      "uthorizationResponse\022+\n\004rows\030\001 \003(\0132\035.age" +
+      "nt.ConnectorAuthorization\022\r\n\005total\030\002 \001(\005" +
+      "*W\n\022AgentCommandStatus\022\020\n\014NOT_EXECUTED\020\000" +
+      "\022\t\n\005QUEUE\020\001\022\013\n\007PENDING\020\002\022\014\n\010EXECUTED\020\003\022\t" +
+      "\n\005ERROR\020\0042\304\t\n\014AgentService\022;\n\rRegisterAg" +
+      "ent\022\023.agent.AgentRequest\032\023.agent.AuthRes" +
+      "ponse\"\000\0229\n\013UpdateAgent\022\023.agent.AgentRequ" +
+      "est\032\023.agent.AuthResponse\"\000\022:\n\013DeleteAgen" +
+      "t\022\024.agent.DeleteRequest\032\023.agent.AuthResp" +
+      "onse\"\000\022=\n\nListAgents\022\022.agent.ListRequest" +
+      "\032\031.agent.ListAgentsResponse\"\000\022K\n\013AgentSt" +
+      "ream\022\032.agent.BidirectionalStream\032\032.agent" +
+      ".BidirectionalStream\"\000(\0010\001\022L\n\021ListAgentC" +
+      "ommands\022\022.agent.ListRequest\032!.agent.List" +
+      "AgentsCommandsResponse\"\000\022d\n\025CreateEnroll" +
+      "mentToken\022#.agent.CreateEnrollmentTokenR" +
+      "equest\032$.agent.CreateEnrollmentTokenResp" +
+      "onse\"\000\022a\n\024ListEnrollmentTokens\022\".agent.L" +
+      "istEnrollmentTokensRequest\032#.agent.ListE" +
+      "nrollmentTokensResponse\"\000\022V\n\025RevokeEnrol" +
+      "lmentToken\022#.agent.RevokeEnrollmentToken" +
+      "Request\032\026.agent.EnrollmentToken\"\000\022X\n\025Rot" +
+      "ateAgentCredential\022\035.agent.AgentCredenti" +
+      "alRequest\032\036.agent.AgentCredentialRespons" +
+      "e\"\000\022X\n\025RevokeAgentCredential\022\035.agent.Age" +
+      "ntCredentialRequest\032\036.agent.AgentCredent" +
+      "ialResponse\"\000\022p\n\031ListEnrollmentAuditEven" +
+      "ts\022\'.agent.ListEnrollmentAuditEventsRequ" +
+      "est\032(.agent.ListEnrollmentAuditEventsRes" +
+      "ponse\"\000\022j\n\027VerifyConnectorIdentity\022%.age" +
+      "nt.VerifyConnectorIdentityRequest\032&.agen" +
+      "t.VerifyConnectorIdentityResponse\"\000\022s\n\032L" +
+      "istConnectorAuthorization\022(.agent.ListCo" +
+      "nnectorAuthorizationRequest\032).agent.List" +
+      "ConnectorAuthorizationResponse\"\0002R\n\014Pane" +
+      "lService\022B\n\016ProcessCommand\022\024.agent.Remot" +
+      "eCommand\032\024.agent.CommandResult\"\000(\0010\001B3\n\032" +
+      "com.hivearmor.service.grpcB\020AgentManager" +
+      "GrpcP\001\210\001\001b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -388,11 +388,11 @@ public final class AgentManagerGrpc {
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_agent_BidirectionalStream_descriptor,
         new java.lang.String[] { "Command", "Result", "StreamMessage", });
-    internal_static_agent_UtmCommand_descriptor =
+    internal_static_agent_RemoteCommand_descriptor =
       getDescriptor().getMessageTypes().get(15);
-    internal_static_agent_UtmCommand_fieldAccessorTable = new
+    internal_static_agent_RemoteCommand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-        internal_static_agent_UtmCommand_descriptor,
+        internal_static_agent_RemoteCommand_descriptor,
         new java.lang.String[] { "AgentId", "Command", "ExecutedBy", "CmdId", "OriginType", "OriginId", "Reason", "Shell", });
     internal_static_agent_CommandResult_descriptor =
       getDescriptor().getMessageTypes().get(16);

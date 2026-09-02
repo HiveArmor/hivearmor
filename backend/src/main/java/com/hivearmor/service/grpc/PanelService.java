@@ -14,11 +14,11 @@ public  abstract class PanelService
 
   public interface Interface {
     /**
-     * <code>rpc ProcessCommand(stream .agent.UtmCommand) returns (stream .agent.CommandResult);</code>
+     * <code>rpc ProcessCommand(stream .agent.RemoteCommand) returns (stream .agent.CommandResult);</code>
      */
     public abstract void processCommand(
         com.google.protobuf.RpcController controller,
-        com.hivearmor.service.grpc.UtmCommand request,
+        com.hivearmor.service.grpc.RemoteCommand request,
         com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.CommandResult> done);
 
   }
@@ -29,7 +29,7 @@ public  abstract class PanelService
       @java.lang.Override
       public  void processCommand(
           com.google.protobuf.RpcController controller,
-          com.hivearmor.service.grpc.UtmCommand request,
+          com.hivearmor.service.grpc.RemoteCommand request,
           com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.CommandResult> done) {
         impl.processCommand(controller, request, done);
       }
@@ -57,7 +57,7 @@ public  abstract class PanelService
         }
         switch(method.getIndex()) {
           case 0:
-            return impl.processCommand(controller, (com.hivearmor.service.grpc.UtmCommand)request);
+            return impl.processCommand(controller, (com.hivearmor.service.grpc.RemoteCommand)request);
           default:
             throw new java.lang.AssertionError("Can't get here.");
         }
@@ -73,7 +73,7 @@ public  abstract class PanelService
         }
         switch(method.getIndex()) {
           case 0:
-            return com.hivearmor.service.grpc.UtmCommand.getDefaultInstance();
+            return com.hivearmor.service.grpc.RemoteCommand.getDefaultInstance();
           default:
             throw new java.lang.AssertionError("Can't get here.");
         }
@@ -99,11 +99,11 @@ public  abstract class PanelService
   }
 
   /**
-   * <code>rpc ProcessCommand(stream .agent.UtmCommand) returns (stream .agent.CommandResult);</code>
+   * <code>rpc ProcessCommand(stream .agent.RemoteCommand) returns (stream .agent.CommandResult);</code>
    */
   public abstract void processCommand(
       com.google.protobuf.RpcController controller,
-      com.hivearmor.service.grpc.UtmCommand request,
+      com.hivearmor.service.grpc.RemoteCommand request,
       com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.CommandResult> done);
 
   public static final
@@ -129,7 +129,7 @@ public  abstract class PanelService
     }
     switch(method.getIndex()) {
       case 0:
-        this.processCommand(controller, (com.hivearmor.service.grpc.UtmCommand)request,
+        this.processCommand(controller, (com.hivearmor.service.grpc.RemoteCommand)request,
           com.google.protobuf.RpcUtil.<com.hivearmor.service.grpc.CommandResult>specializeCallback(
             done));
         return;
@@ -148,7 +148,7 @@ public  abstract class PanelService
     }
     switch(method.getIndex()) {
       case 0:
-        return com.hivearmor.service.grpc.UtmCommand.getDefaultInstance();
+        return com.hivearmor.service.grpc.RemoteCommand.getDefaultInstance();
       default:
         throw new java.lang.AssertionError("Can't get here.");
     }
@@ -188,7 +188,7 @@ public  abstract class PanelService
 
     public  void processCommand(
         com.google.protobuf.RpcController controller,
-        com.hivearmor.service.grpc.UtmCommand request,
+        com.hivearmor.service.grpc.RemoteCommand request,
         com.google.protobuf.RpcCallback<com.hivearmor.service.grpc.CommandResult> done) {
       channel.callMethod(
         getDescriptor().getMethods().get(0),
@@ -210,7 +210,7 @@ public  abstract class PanelService
   public interface BlockingInterface {
     public com.hivearmor.service.grpc.CommandResult processCommand(
         com.google.protobuf.RpcController controller,
-        com.hivearmor.service.grpc.UtmCommand request)
+        com.hivearmor.service.grpc.RemoteCommand request)
         throws com.google.protobuf.ServiceException;
   }
 
@@ -223,7 +223,7 @@ public  abstract class PanelService
 
     public com.hivearmor.service.grpc.CommandResult processCommand(
         com.google.protobuf.RpcController controller,
-        com.hivearmor.service.grpc.UtmCommand request)
+        com.hivearmor.service.grpc.RemoteCommand request)
         throws com.google.protobuf.ServiceException {
       return (com.hivearmor.service.grpc.CommandResult) channel.callBlockingMethod(
         getDescriptor().getMethods().get(0),

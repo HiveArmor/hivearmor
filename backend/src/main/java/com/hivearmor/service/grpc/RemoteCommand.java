@@ -6,12 +6,12 @@
 package com.hivearmor.service.grpc;
 
 /**
- * Protobuf type {@code agent.UtmCommand}
+ * Protobuf type {@code agent.RemoteCommand}
  */
-public final class UtmCommand extends
+public final class RemoteCommand extends
     com.google.protobuf.GeneratedMessage implements
-    // @@protoc_insertion_point(message_implements:agent.UtmCommand)
-    UtmCommandOrBuilder {
+    // @@protoc_insertion_point(message_implements:agent.RemoteCommand)
+    RemoteCommandOrBuilder {
 private static final long serialVersionUID = 0L;
   static {
     com.google.protobuf.RuntimeVersion.validateProtobufGencodeVersion(
@@ -20,13 +20,13 @@ private static final long serialVersionUID = 0L;
       /* minor= */ 29,
       /* patch= */ 3,
       /* suffix= */ "",
-      UtmCommand.class.getName());
+      RemoteCommand.class.getName());
   }
-  // Use UtmCommand.newBuilder() to construct.
-  private UtmCommand(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+  // Use RemoteCommand.newBuilder() to construct.
+  private RemoteCommand(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
     super(builder);
   }
-  private UtmCommand() {
+  private RemoteCommand() {
     agentId_ = "";
     command_ = "";
     executedBy_ = "";
@@ -39,15 +39,15 @@ private static final long serialVersionUID = 0L;
 
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return com.hivearmor.service.grpc.AgentManagerGrpc.internal_static_agent_UtmCommand_descriptor;
+    return com.hivearmor.service.grpc.AgentManagerGrpc.internal_static_agent_RemoteCommand_descriptor;
   }
 
   @java.lang.Override
   protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.hivearmor.service.grpc.AgentManagerGrpc.internal_static_agent_UtmCommand_fieldAccessorTable
+    return com.hivearmor.service.grpc.AgentManagerGrpc.internal_static_agent_RemoteCommand_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            com.hivearmor.service.grpc.UtmCommand.class, com.hivearmor.service.grpc.UtmCommand.Builder.class);
+            com.hivearmor.service.grpc.RemoteCommand.class, com.hivearmor.service.grpc.RemoteCommand.Builder.class);
   }
 
   public static final int AGENT_ID_FIELD_NUMBER = 1;
@@ -451,10 +451,10 @@ private static final long serialVersionUID = 0L;
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof com.hivearmor.service.grpc.UtmCommand)) {
+    if (!(obj instanceof com.hivearmor.service.grpc.RemoteCommand)) {
       return super.equals(obj);
     }
-    com.hivearmor.service.grpc.UtmCommand other = (com.hivearmor.service.grpc.UtmCommand) obj;
+    com.hivearmor.service.grpc.RemoteCommand other = (com.hivearmor.service.grpc.RemoteCommand) obj;
 
     if (!getAgentId()
         .equals(other.getAgentId())) return false;
@@ -504,44 +504,44 @@ private static final long serialVersionUID = 0L;
     return hash;
   }
 
-  public static com.hivearmor.service.grpc.UtmCommand parseFrom(
+  public static com.hivearmor.service.grpc.RemoteCommand parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.hivearmor.service.grpc.UtmCommand parseFrom(
+  public static com.hivearmor.service.grpc.RemoteCommand parseFrom(
       java.nio.ByteBuffer data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.hivearmor.service.grpc.UtmCommand parseFrom(
+  public static com.hivearmor.service.grpc.RemoteCommand parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.hivearmor.service.grpc.UtmCommand parseFrom(
+  public static com.hivearmor.service.grpc.RemoteCommand parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.hivearmor.service.grpc.UtmCommand parseFrom(byte[] data)
+  public static com.hivearmor.service.grpc.RemoteCommand parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.hivearmor.service.grpc.UtmCommand parseFrom(
+  public static com.hivearmor.service.grpc.RemoteCommand parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.hivearmor.service.grpc.UtmCommand parseFrom(java.io.InputStream input)
+  public static com.hivearmor.service.grpc.RemoteCommand parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessage
         .parseWithIOException(PARSER, input);
   }
-  public static com.hivearmor.service.grpc.UtmCommand parseFrom(
+  public static com.hivearmor.service.grpc.RemoteCommand parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -549,26 +549,26 @@ private static final long serialVersionUID = 0L;
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
 
-  public static com.hivearmor.service.grpc.UtmCommand parseDelimitedFrom(java.io.InputStream input)
+  public static com.hivearmor.service.grpc.RemoteCommand parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessage
         .parseDelimitedWithIOException(PARSER, input);
   }
 
-  public static com.hivearmor.service.grpc.UtmCommand parseDelimitedFrom(
+  public static com.hivearmor.service.grpc.RemoteCommand parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessage
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.hivearmor.service.grpc.UtmCommand parseFrom(
+  public static com.hivearmor.service.grpc.RemoteCommand parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessage
         .parseWithIOException(PARSER, input);
   }
-  public static com.hivearmor.service.grpc.UtmCommand parseFrom(
+  public static com.hivearmor.service.grpc.RemoteCommand parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -581,7 +581,7 @@ private static final long serialVersionUID = 0L;
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(com.hivearmor.service.grpc.UtmCommand prototype) {
+  public static Builder newBuilder(com.hivearmor.service.grpc.RemoteCommand prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @java.lang.Override
@@ -597,26 +597,26 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
-   * Protobuf type {@code agent.UtmCommand}
+   * Protobuf type {@code agent.RemoteCommand}
    */
   public static final class Builder extends
       com.google.protobuf.GeneratedMessage.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:agent.UtmCommand)
-      com.hivearmor.service.grpc.UtmCommandOrBuilder {
+      // @@protoc_insertion_point(builder_implements:agent.RemoteCommand)
+      com.hivearmor.service.grpc.RemoteCommandOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.hivearmor.service.grpc.AgentManagerGrpc.internal_static_agent_UtmCommand_descriptor;
+      return com.hivearmor.service.grpc.AgentManagerGrpc.internal_static_agent_RemoteCommand_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.hivearmor.service.grpc.AgentManagerGrpc.internal_static_agent_UtmCommand_fieldAccessorTable
+      return com.hivearmor.service.grpc.AgentManagerGrpc.internal_static_agent_RemoteCommand_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.hivearmor.service.grpc.UtmCommand.class, com.hivearmor.service.grpc.UtmCommand.Builder.class);
+              com.hivearmor.service.grpc.RemoteCommand.class, com.hivearmor.service.grpc.RemoteCommand.Builder.class);
     }
 
-    // Construct using com.hivearmor.service.grpc.UtmCommand.newBuilder()
+    // Construct using com.hivearmor.service.grpc.RemoteCommand.newBuilder()
     private Builder() {
 
     }
@@ -644,17 +644,17 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return com.hivearmor.service.grpc.AgentManagerGrpc.internal_static_agent_UtmCommand_descriptor;
+      return com.hivearmor.service.grpc.AgentManagerGrpc.internal_static_agent_RemoteCommand_descriptor;
     }
 
     @java.lang.Override
-    public com.hivearmor.service.grpc.UtmCommand getDefaultInstanceForType() {
-      return com.hivearmor.service.grpc.UtmCommand.getDefaultInstance();
+    public com.hivearmor.service.grpc.RemoteCommand getDefaultInstanceForType() {
+      return com.hivearmor.service.grpc.RemoteCommand.getDefaultInstance();
     }
 
     @java.lang.Override
-    public com.hivearmor.service.grpc.UtmCommand build() {
-      com.hivearmor.service.grpc.UtmCommand result = buildPartial();
+    public com.hivearmor.service.grpc.RemoteCommand build() {
+      com.hivearmor.service.grpc.RemoteCommand result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -662,14 +662,14 @@ private static final long serialVersionUID = 0L;
     }
 
     @java.lang.Override
-    public com.hivearmor.service.grpc.UtmCommand buildPartial() {
-      com.hivearmor.service.grpc.UtmCommand result = new com.hivearmor.service.grpc.UtmCommand(this);
+    public com.hivearmor.service.grpc.RemoteCommand buildPartial() {
+      com.hivearmor.service.grpc.RemoteCommand result = new com.hivearmor.service.grpc.RemoteCommand(this);
       if (bitField0_ != 0) { buildPartial0(result); }
       onBuilt();
       return result;
     }
 
-    private void buildPartial0(com.hivearmor.service.grpc.UtmCommand result) {
+    private void buildPartial0(com.hivearmor.service.grpc.RemoteCommand result) {
       int from_bitField0_ = bitField0_;
       if (((from_bitField0_ & 0x00000001) != 0)) {
         result.agentId_ = agentId_;
@@ -699,16 +699,16 @@ private static final long serialVersionUID = 0L;
 
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof com.hivearmor.service.grpc.UtmCommand) {
-        return mergeFrom((com.hivearmor.service.grpc.UtmCommand)other);
+      if (other instanceof com.hivearmor.service.grpc.RemoteCommand) {
+        return mergeFrom((com.hivearmor.service.grpc.RemoteCommand)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(com.hivearmor.service.grpc.UtmCommand other) {
-      if (other == com.hivearmor.service.grpc.UtmCommand.getDefaultInstance()) return this;
+    public Builder mergeFrom(com.hivearmor.service.grpc.RemoteCommand other) {
+      if (other == com.hivearmor.service.grpc.RemoteCommand.getDefaultInstance()) return this;
       if (!other.getAgentId().isEmpty()) {
         agentId_ = other.agentId_;
         bitField0_ |= 0x00000001;
@@ -1428,23 +1428,23 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    // @@protoc_insertion_point(builder_scope:agent.UtmCommand)
+    // @@protoc_insertion_point(builder_scope:agent.RemoteCommand)
   }
 
-  // @@protoc_insertion_point(class_scope:agent.UtmCommand)
-  private static final com.hivearmor.service.grpc.UtmCommand DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:agent.RemoteCommand)
+  private static final com.hivearmor.service.grpc.RemoteCommand DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new com.hivearmor.service.grpc.UtmCommand();
+    DEFAULT_INSTANCE = new com.hivearmor.service.grpc.RemoteCommand();
   }
 
-  public static com.hivearmor.service.grpc.UtmCommand getDefaultInstance() {
+  public static com.hivearmor.service.grpc.RemoteCommand getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<UtmCommand>
-      PARSER = new com.google.protobuf.AbstractParser<UtmCommand>() {
+  private static final com.google.protobuf.Parser<RemoteCommand>
+      PARSER = new com.google.protobuf.AbstractParser<RemoteCommand>() {
     @java.lang.Override
-    public UtmCommand parsePartialFrom(
+    public RemoteCommand parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -1463,17 +1463,17 @@ private static final long serialVersionUID = 0L;
     }
   };
 
-  public static com.google.protobuf.Parser<UtmCommand> parser() {
+  public static com.google.protobuf.Parser<RemoteCommand> parser() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.google.protobuf.Parser<UtmCommand> getParserForType() {
+  public com.google.protobuf.Parser<RemoteCommand> getParserForType() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.hivearmor.service.grpc.UtmCommand getDefaultInstanceForType() {
+  public com.hivearmor.service.grpc.RemoteCommand getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

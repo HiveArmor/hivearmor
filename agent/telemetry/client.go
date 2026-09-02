@@ -32,7 +32,6 @@ func postJSON(url string, auth ingestAuth, body any, skipTLS bool) error {
 		req.Header.Set("X-HiveArmor-Agent-Id", auth.agentID)
 		req.Header.Set("X-Agent-Key", auth.agentKey)
 	} else if strings.TrimSpace(auth.internalKey) != "" {
-		req.Header.Set("Utm-Internal-Key", auth.internalKey)
 		req.Header.Set("X-Internal-Key", auth.internalKey)
 	}
 

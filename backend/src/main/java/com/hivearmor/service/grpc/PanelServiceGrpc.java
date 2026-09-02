@@ -15,27 +15,27 @@ public final class PanelServiceGrpc {
   public static final java.lang.String SERVICE_NAME = "agent.PanelService";
 
   // Static method descriptors that strictly reflect the proto.
-  private static volatile io.grpc.MethodDescriptor<com.hivearmor.service.grpc.UtmCommand,
+  private static volatile io.grpc.MethodDescriptor<com.hivearmor.service.grpc.RemoteCommand,
       com.hivearmor.service.grpc.CommandResult> getProcessCommandMethod;
 
   @io.grpc.stub.annotations.RpcMethod(
       fullMethodName = SERVICE_NAME + '/' + "ProcessCommand",
-      requestType = com.hivearmor.service.grpc.UtmCommand.class,
+      requestType = com.hivearmor.service.grpc.RemoteCommand.class,
       responseType = com.hivearmor.service.grpc.CommandResult.class,
       methodType = io.grpc.MethodDescriptor.MethodType.BIDI_STREAMING)
-  public static io.grpc.MethodDescriptor<com.hivearmor.service.grpc.UtmCommand,
+  public static io.grpc.MethodDescriptor<com.hivearmor.service.grpc.RemoteCommand,
       com.hivearmor.service.grpc.CommandResult> getProcessCommandMethod() {
-    io.grpc.MethodDescriptor<com.hivearmor.service.grpc.UtmCommand, com.hivearmor.service.grpc.CommandResult> getProcessCommandMethod;
+    io.grpc.MethodDescriptor<com.hivearmor.service.grpc.RemoteCommand, com.hivearmor.service.grpc.CommandResult> getProcessCommandMethod;
     if ((getProcessCommandMethod = PanelServiceGrpc.getProcessCommandMethod) == null) {
       synchronized (PanelServiceGrpc.class) {
         if ((getProcessCommandMethod = PanelServiceGrpc.getProcessCommandMethod) == null) {
           PanelServiceGrpc.getProcessCommandMethod = getProcessCommandMethod =
-              io.grpc.MethodDescriptor.<com.hivearmor.service.grpc.UtmCommand, com.hivearmor.service.grpc.CommandResult>newBuilder()
+              io.grpc.MethodDescriptor.<com.hivearmor.service.grpc.RemoteCommand, com.hivearmor.service.grpc.CommandResult>newBuilder()
               .setType(io.grpc.MethodDescriptor.MethodType.BIDI_STREAMING)
               .setFullMethodName(generateFullMethodName(SERVICE_NAME, "ProcessCommand"))
               .setSampledToLocalTracing(true)
               .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  com.hivearmor.service.grpc.UtmCommand.getDefaultInstance()))
+                  com.hivearmor.service.grpc.RemoteCommand.getDefaultInstance()))
               .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
                   com.hivearmor.service.grpc.CommandResult.getDefaultInstance()))
               .setSchemaDescriptor(new PanelServiceMethodDescriptorSupplier("ProcessCommand"))
@@ -96,7 +96,7 @@ public final class PanelServiceGrpc {
 
     /**
      */
-    default io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.UtmCommand> processCommand(
+    default io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.RemoteCommand> processCommand(
         io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.CommandResult> responseObserver) {
       return io.grpc.stub.ServerCalls.asyncUnimplementedStreamingCall(getProcessCommandMethod(), responseObserver);
     }
@@ -131,7 +131,7 @@ public final class PanelServiceGrpc {
 
     /**
      */
-    public io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.UtmCommand> processCommand(
+    public io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.RemoteCommand> processCommand(
         io.grpc.stub.StreamObserver<com.hivearmor.service.grpc.CommandResult> responseObserver) {
       return io.grpc.stub.ClientCalls.asyncBidiStreamingCall(
           getChannel().newCall(getProcessCommandMethod(), getCallOptions()), responseObserver);
@@ -216,7 +216,7 @@ public final class PanelServiceGrpc {
           getProcessCommandMethod(),
           io.grpc.stub.ServerCalls.asyncBidiStreamingCall(
             new MethodHandlers<
-              com.hivearmor.service.grpc.UtmCommand,
+              com.hivearmor.service.grpc.RemoteCommand,
               com.hivearmor.service.grpc.CommandResult>(
                 service, METHODID_PROCESS_COMMAND)))
         .build();

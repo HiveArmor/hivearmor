@@ -1381,7 +1381,7 @@ func (x *BidirectionalStream) GetStreamMessage() isBidirectionalStream_StreamMes
 	return nil
 }
 
-func (x *BidirectionalStream) GetCommand() *UtmCommand {
+func (x *BidirectionalStream) GetCommand() *RemoteCommand {
 	if x != nil {
 		if x, ok := x.StreamMessage.(*BidirectionalStream_Command); ok {
 			return x.Command
@@ -1404,7 +1404,7 @@ type isBidirectionalStream_StreamMessage interface {
 }
 
 type BidirectionalStream_Command struct {
-	Command *UtmCommand `protobuf:"bytes,1,opt,name=command,proto3,oneof"`
+	Command *RemoteCommand `protobuf:"bytes,1,opt,name=command,proto3,oneof"`
 }
 
 type BidirectionalStream_Result struct {
@@ -1415,7 +1415,7 @@ func (*BidirectionalStream_Command) isBidirectionalStream_StreamMessage() {}
 
 func (*BidirectionalStream_Result) isBidirectionalStream_StreamMessage() {}
 
-type UtmCommand struct {
+type RemoteCommand struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
 	Command       string                 `protobuf:"bytes,2,opt,name=command,proto3" json:"command,omitempty"`
@@ -1429,20 +1429,20 @@ type UtmCommand struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *UtmCommand) Reset() {
-	*x = UtmCommand{}
+func (x *RemoteCommand) Reset() {
+	*x = RemoteCommand{}
 	mi := &file_agent_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UtmCommand) String() string {
+func (x *RemoteCommand) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UtmCommand) ProtoMessage() {}
+func (*RemoteCommand) ProtoMessage() {}
 
-func (x *UtmCommand) ProtoReflect() protoreflect.Message {
+func (x *RemoteCommand) ProtoReflect() protoreflect.Message {
 	mi := &file_agent_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1454,61 +1454,61 @@ func (x *UtmCommand) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UtmCommand.ProtoReflect.Descriptor instead.
-func (*UtmCommand) Descriptor() ([]byte, []int) {
+// Deprecated: Use RemoteCommand.ProtoReflect.Descriptor instead.
+func (*RemoteCommand) Descriptor() ([]byte, []int) {
 	return file_agent_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *UtmCommand) GetAgentId() string {
+func (x *RemoteCommand) GetAgentId() string {
 	if x != nil {
 		return x.AgentId
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetCommand() string {
+func (x *RemoteCommand) GetCommand() string {
 	if x != nil {
 		return x.Command
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetExecutedBy() string {
+func (x *RemoteCommand) GetExecutedBy() string {
 	if x != nil {
 		return x.ExecutedBy
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetCmdId() string {
+func (x *RemoteCommand) GetCmdId() string {
 	if x != nil {
 		return x.CmdId
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetOriginType() string {
+func (x *RemoteCommand) GetOriginType() string {
 	if x != nil {
 		return x.OriginType
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetOriginId() string {
+func (x *RemoteCommand) GetOriginId() string {
 	if x != nil {
 		return x.OriginId
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetReason() string {
+func (x *RemoteCommand) GetReason() string {
 	if x != nil {
 		return x.Reason
 	}
 	return ""
 }
 
-func (x *UtmCommand) GetShell() string {
+func (x *RemoteCommand) GetShell() string {
 	if x != nil {
 		return x.Shell
 	}
@@ -2237,13 +2237,12 @@ const file_agent_proto_rawDesc = "" +
 	"event_type\x18\x06 \x01(\tR\teventType\"j\n" +
 	"!ListEnrollmentAuditEventsResponse\x12/\n" +
 	"\x04rows\x18\x01 \x03(\v2\x1b.agent.EnrollmentAuditEventR\x04rows\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x03R\x05total\"\x86\x01\n" +
-	"\x13BidirectionalStream\x12-\n" +
-	"\acommand\x18\x01 \x01(\v2\x11.agent.UtmCommandH\x00R\acommand\x12.\n" +
+	"\x05total\x18\x02 \x01(\x03R\x05total\"\x89\x01\n" +
+	"\x13BidirectionalStream\x120\n" +
+	"\acommand\x18\x01 \x01(\v2\x14.agent.RemoteCommandH\x00R\acommand\x12.\n" +
 	"\x06result\x18\x02 \x01(\v2\x14.agent.CommandResultH\x00R\x06resultB\x10\n" +
-	"\x0estream_message\"\xe5\x01\n" +
-	"\n" +
-	"UtmCommand\x12\x19\n" +
+	"\x0estream_message\"\xe8\x01\n" +
+	"\rRemoteCommand\x12\x19\n" +
 	"\bagent_id\x18\x01 \x01(\tR\aagentId\x12\x18\n" +
 	"\acommand\x18\x02 \x01(\tR\acommand\x12\x1f\n" +
 	"\vexecuted_by\x18\x03 \x01(\tR\n" +
@@ -2327,9 +2326,9 @@ const file_agent_proto_rawDesc = "" +
 	"\x15RevokeAgentCredential\x12\x1d.agent.AgentCredentialRequest\x1a\x1e.agent.AgentCredentialResponse\"\x00\x12p\n" +
 	"\x19ListEnrollmentAuditEvents\x12'.agent.ListEnrollmentAuditEventsRequest\x1a(.agent.ListEnrollmentAuditEventsResponse\"\x00\x12j\n" +
 	"\x17VerifyConnectorIdentity\x12%.agent.VerifyConnectorIdentityRequest\x1a&.agent.VerifyConnectorIdentityResponse\"\x00\x12s\n" +
-	"\x1aListConnectorAuthorization\x12(.agent.ListConnectorAuthorizationRequest\x1a).agent.ListConnectorAuthorizationResponse\"\x002O\n" +
-	"\fPanelService\x12?\n" +
-	"\x0eProcessCommand\x12\x11.agent.UtmCommand\x1a\x14.agent.CommandResult\"\x00(\x010\x01B*Z(github.com/hivearmor/agent-manager/agentb\x06proto3"
+	"\x1aListConnectorAuthorization\x12(.agent.ListConnectorAuthorizationRequest\x1a).agent.ListConnectorAuthorizationResponse\"\x002R\n" +
+	"\fPanelService\x12B\n" +
+	"\x0eProcessCommand\x12\x14.agent.RemoteCommand\x1a\x14.agent.CommandResult\"\x00(\x010\x01B*Z(github.com/hivearmor/agent-manager/agentb\x06proto3"
 
 var (
 	file_agent_proto_rawDescOnce sync.Once
@@ -2362,7 +2361,7 @@ var file_agent_proto_goTypes = []any{
 	(*ListEnrollmentAuditEventsRequest)(nil),   // 13: agent.ListEnrollmentAuditEventsRequest
 	(*ListEnrollmentAuditEventsResponse)(nil),  // 14: agent.ListEnrollmentAuditEventsResponse
 	(*BidirectionalStream)(nil),                // 15: agent.BidirectionalStream
-	(*UtmCommand)(nil),                         // 16: agent.UtmCommand
+	(*RemoteCommand)(nil),                      // 16: agent.RemoteCommand
 	(*CommandResult)(nil),                      // 17: agent.CommandResult
 	(*ListAgentsCommandsResponse)(nil),         // 18: agent.ListAgentsCommandsResponse
 	(*AgentCommand)(nil),                       // 19: agent.AgentCommand
@@ -2392,7 +2391,7 @@ var file_agent_proto_depIdxs = []int32{
 	26, // 10: agent.AgentCredentialResponse.revoked_at:type_name -> google.protobuf.Timestamp
 	26, // 11: agent.EnrollmentAuditEvent.occurred_at:type_name -> google.protobuf.Timestamp
 	12, // 12: agent.ListEnrollmentAuditEventsResponse.rows:type_name -> agent.EnrollmentAuditEvent
-	16, // 13: agent.BidirectionalStream.command:type_name -> agent.UtmCommand
+	16, // 13: agent.BidirectionalStream.command:type_name -> agent.RemoteCommand
 	17, // 14: agent.BidirectionalStream.result:type_name -> agent.CommandResult
 	26, // 15: agent.CommandResult.executed_at:type_name -> google.protobuf.Timestamp
 	19, // 16: agent.ListAgentsCommandsResponse.rows:type_name -> agent.AgentCommand
@@ -2418,7 +2417,7 @@ var file_agent_proto_depIdxs = []int32{
 	13, // 36: agent.AgentService.ListEnrollmentAuditEvents:input_type -> agent.ListEnrollmentAuditEventsRequest
 	20, // 37: agent.AgentService.VerifyConnectorIdentity:input_type -> agent.VerifyConnectorIdentityRequest
 	22, // 38: agent.AgentService.ListConnectorAuthorization:input_type -> agent.ListConnectorAuthorizationRequest
-	16, // 39: agent.PanelService.ProcessCommand:input_type -> agent.UtmCommand
+	16, // 39: agent.PanelService.ProcessCommand:input_type -> agent.RemoteCommand
 	30, // 40: agent.AgentService.RegisterAgent:output_type -> agent.AuthResponse
 	30, // 41: agent.AgentService.UpdateAgent:output_type -> agent.AuthResponse
 	30, // 42: agent.AgentService.DeleteAgent:output_type -> agent.AuthResponse

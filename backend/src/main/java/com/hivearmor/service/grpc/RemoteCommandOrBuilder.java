@@ -5,8 +5,8 @@
 
 package com.hivearmor.service.grpc;
 
-public interface UtmCommandOrBuilder extends
-    // @@protoc_insertion_point(interface_extends:agent.UtmCommand)
+public interface RemoteCommandOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:agent.RemoteCommand)
     com.google.protobuf.MessageOrBuilder {
 
   /**
