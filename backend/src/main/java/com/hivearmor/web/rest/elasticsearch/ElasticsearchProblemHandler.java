@@ -25,7 +25,7 @@ import java.net.URI;
  * }
  * </pre>
  */
-@RestControllerAdvice(basePackages = "com.hivearmor.web.rest.elasticsearch")
+@RestControllerAdvice(basePackages = "com.hivearmor.web.rest")
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ElasticsearchProblemHandler {
 

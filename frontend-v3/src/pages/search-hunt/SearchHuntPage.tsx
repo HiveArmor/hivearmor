@@ -25,6 +25,8 @@ import { SaveSearchModal } from './components/SaveSearchModal';
 import { SearchManagerPanel } from './components/SearchManagerPanel';
 import { SearchProgressBar } from './components/SearchProgressBar';
 import { SearchResultsGrid } from './components/SearchResultsGrid';
+import { exportHuntResults } from './forensicExport.service';
+import type { ExportFormat, ExportResult } from './forensicExport.types';
 import { addToHuntHistory, getHuntHistory } from './history';
 import { useSearchStream } from './hooks/useSearchStream';
 import { DEFAULT_HUNT_QUERY, normalizeHuntQuery } from './huntQuerySuggestions';
@@ -37,6 +39,7 @@ import type {
 } from './searchHunt.types';
 import { useConfirmedSavedQueries } from './useConfirmedSavedQueries';
 
+import { HaExportMenu } from '@/components/export-menu';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { TimeRangeSelector } from '@/components/time-range-selector/TimeRangeSelector';
 import { resolveTimeRange } from '@/components/time-range-selector/timeRangeUtils';
@@ -410,6 +413,25 @@ export function SearchHuntPage(): JSX.Element {
   const firstVisibleRow = events.length > 0 ? pageIndex * pageSize + 1 : 0;
   const lastVisibleRow = pageIndex * pageSize + events.length;
 
+  // B0-4: export the FULL committed hunt query/filters/timeRange (not the visible page).
+  const hasResults = events.length > 0;
+  const handleExport = useCallback(
+    (format: ExportFormat, signal: AbortSignal): Promise<ExportResult> =>
+      exportHuntResults(
+        {
+          query: committed.query,
+          language: committed.language,
+          timeRange: committed.timeRange,
+          tenantScope: committed.tenantScope,
+          indexPattern: committed.indexPattern,
+          columns: visibleColumns,
+        },
+        format,
+        signal,
+      ),
+    [committed, visibleColumns],
+  );
+
   return (
     <section className="hunt-page" aria-labelledby="hunt-page-title" style={{ '--hunt-sticky-query-height': `${queryWorkspaceHeight}px` } as CSSProperties}>
       <header className="hunt-page__identity">
@@ -589,6 +611,7 @@ export function SearchHuntPage(): JSX.Element {
                   </div>
                 </div>
                 <div className="hunt-column-picker" ref={columnsPickerRef}><button type="button" className="hunt-control-button" onClick={() => setColumnsOpen((open) => !open)} aria-expanded={columnsOpen}><Columns3 size={13} />Columns <ChevronDown size={12} /></button>{columnsOpen && <div className="hunt-column-picker__menu">{COLUMN_OPTIONS.map(([id, label]) => <label key={id}><input type="checkbox" checked={visibleColumns.includes(id)} onChange={() => toggleColumn(id)} /><span>{label}</span>{visibleColumns.includes(id) && <Check size={12} />}</label>)}<button type="button" className="hunt-column-picker__reset" onClick={() => { setVisibleColumns(DEFAULT_COLUMNS); setColumnsOpen(false); }}>Reset to default</button></div>}</div>
+                <HaExportMenu surface="hunt-search" disabled={!hasResults} onExport={handleExport} />
               </div>
             </div>
             <div className="hunt-grid-shell">

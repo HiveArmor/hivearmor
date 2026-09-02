@@ -33,11 +33,18 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import com.hivearmor.service.export.ExportFormat;
+import com.hivearmor.service.export.ForensicExportService;
+import com.hivearmor.web.rest.export.dto.AlertExportRequestDTO;
+import com.hivearmor.web.rest.export.dto.ExportManifestDTO;
+import com.hivearmor.domain.export.HaExportManifest;
 
 @RestController
 @RequestMapping("/api")
@@ -69,19 +76,38 @@ public class HaAlertQueueResource {
     private final HaAlertFacetService facetService;
     private final AlertActionResolver actionResolver;
 
+    /**
+     * Test-friendly constructor (pre-B0-4 signature). The forensic export service is left unset;
+     * the export endpoints are not exercised by the controllers instantiated via this constructor.
+     */
     public HaAlertQueueResource(OpensearchClientBuilder osClient,
                                 MsspIndexResolver indexResolver,
                                 ObjectMapper objectMapper,
                                 HaAlertQueryService alertQueryService,
                                 HaAlertFacetService facetService,
                                 AlertActionResolver actionResolver) {
+        this(osClient, indexResolver, objectMapper, alertQueryService, facetService,
+            actionResolver, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public HaAlertQueueResource(OpensearchClientBuilder osClient,
+                                MsspIndexResolver indexResolver,
+                                ObjectMapper objectMapper,
+                                HaAlertQueryService alertQueryService,
+                                HaAlertFacetService facetService,
+                                AlertActionResolver actionResolver,
+                                ForensicExportService forensicExportService) {
         this.osClient = osClient;
         this.indexResolver = indexResolver;
         this.objectMapper = objectMapper;
         this.alertQueryService = alertQueryService;
         this.facetService = facetService;
         this.actionResolver = actionResolver;
+        this.forensicExportService = forensicExportService;
     }
+
+    private final ForensicExportService forensicExportService;
 
     /**
      * Cursor-paginated alert queue query using OpenSearch search_after.
@@ -311,11 +337,82 @@ public class HaAlertQueueResource {
         }
     }
 
+    // =========================================================================
+    // B0-4 — Forensic export (CSV / NDJSON) + chain-of-custody manifest
+    // POST /api/ha-alerts/export
+    // GET  /api/ha-alerts/export/{exportId}/manifest
+    // =========================================================================
+
+    /**
+     * Streams the full alert-list result set as CSV or NDJSON with an incremental SHA-256 over
+     * the exact bytes delivered. The response carries {@code X-Export-Id}; the finalized SHA-256
+     * is read from the manifest endpoint once the download completes.
+     */
+    @PostMapping("/ha-alerts/export")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    @Operation(summary = "Export the alert list as CSV or NDJSON with chain-of-custody manifest (B0-4)")
+    public void exportAlerts(@RequestBody AlertExportRequestDTO request,
+                             HttpServletResponse response) {
+        try {
+            ExportFormat format = ExportFormat.parse(request.getFormat());
+            String indexPattern = forensicExportService.resolveIndexPattern(
+                request.getIndexPattern(), ForensicExportService.SURFACE_ALERT);
+
+            // Tenant-scope guard BEFORE streaming.
+            forensicExportService.validateScope(indexPattern);
+
+            var filters = ForensicExportService.buildAlertFilters(
+                request.getSeverity(), request.getStatus(), request.getFrom(), request.getTo(),
+                request.getCategory(), request.getAssignee(), request.getTags(),
+                request.getRiskMin(), request.getQ());
+
+            Map<String, Object> queryContext = new LinkedHashMap<>();
+            queryContext.put("severity", request.getSeverity());
+            queryContext.put("status", request.getStatus());
+            queryContext.put("category", request.getCategory());
+            queryContext.put("assignee", request.getAssignee());
+            queryContext.put("tags", request.getTags());
+            queryContext.put("riskMin", request.getRiskMin());
+            queryContext.put("q", request.getQ());
+            Map<String, Object> tr = new LinkedHashMap<>();
+            tr.put("from", request.getFrom());
+            tr.put("to", request.getTo());
+            queryContext.put("timeRange", tr);
+
+            var exportRequest = new ForensicExportService.ExportRequest(
+                ForensicExportService.SURFACE_ALERT, format, indexPattern,
+                filters, request.getColumns(), queryContext);
+
+            forensicExportService.streamExport(exportRequest, response);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("{}.exportAlerts: {}", CLASSNAME, e.getMessage(), e);
+            throw new IllegalStateException("Alert export failed", e);
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @GetMapping("/ha-alerts/export/{exportId}/manifest")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    @Operation(summary = "Get the chain-of-custody manifest for a prior alert export (B0-4)")
+    public ResponseEntity<ExportManifestDTO> getAlertExportManifest(@PathVariable String exportId) {
+        try {
+            HaExportManifest manifest = forensicExportService.findManifest(exportId);
+            if (manifest == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(ExportManifestDTO.from(manifest));
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
     @GetMapping("/ha-alerts/{alertId:(?!severity-board).+}")
     @PreAuthorize(ALERT_QUEUE_AUTH)
     @Operation(
-        summary = "Get alert detail by ID",
-        description = "Returns comprehensive alert detail including MITRE ATT&CK mapping, risk breakdown, "
+        summary = "Get alert detail by ID",        description = "Returns comprehensive alert detail including MITRE ATT&CK mapping, risk breakdown, "
             + "threat intelligence matches, timeline, related alerts, and available actions. "
             + "Returns 404 for both not-found and unauthorized alerts to prevent ID enumeration. (ALT-014)"
     )

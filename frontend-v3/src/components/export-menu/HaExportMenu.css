@@ -1,0 +1,221 @@
+/**
+ * B0-4 — HaExportMenu styles. Token-only (var(--ha-*)); no hex/rgb/hsl. Honors prefers-reduced-motion.
+ * Color is never the sole differentiator — every state pairs an icon + text with its tint.
+ */
+
+.ha-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ha-export__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 4px;
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+  cursor: pointer;
+}
+
+.ha-export__trigger:hover:not(:disabled) {
+  border-color: var(--ha-border-strong);
+  color: var(--ha-foreground-primary);
+}
+
+.ha-export__trigger:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 1px;
+}
+
+.ha-export__trigger:disabled {
+  color: var(--ha-foreground-disabled);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.ha-export__menu {
+  display: grid;
+  gap: 1px;
+  padding: 5px;
+}
+
+.ha-export__menu-label {
+  padding: 5px 7px 7px;
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ha-export__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 4px 7px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ha-export__item:hover {
+  background: var(--ha-surface-hover);
+  color: var(--ha-foreground-primary);
+}
+
+.ha-export__item:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: -2px;
+}
+
+.ha-export__progress,
+.ha-export__attest,
+.ha-export__error {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 4px;
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+}
+
+.ha-export__attest {
+  height: auto;
+  align-items: flex-start;
+  padding: 6px 10px;
+  border-color: var(--ha-state-healthy);
+}
+
+.ha-export__attest-icon {
+  color: var(--ha-state-healthy);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ha-export__attest-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ha-export__attest-body strong {
+  color: var(--ha-foreground-primary);
+  font-weight: 600;
+}
+
+.ha-export__hash-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ha-export__hash-label {
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ha-export__hash {
+  font-family: var(--ha-font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-foreground-primary);
+}
+
+.ha-export__hash-copy,
+.ha-export__cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-metadata);
+  cursor: pointer;
+}
+
+.ha-export__hash-copy:hover,
+.ha-export__cancel:hover {
+  border-color: var(--ha-border-strong);
+  color: var(--ha-foreground-primary);
+}
+
+.ha-export__hash-copy:focus-visible,
+.ha-export__cancel:focus-visible,
+.ha-export__manifest-link:focus-visible,
+.ha-export__dismiss:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 1px;
+}
+
+.ha-export__manifest-link {
+  color: var(--ha-action-secondary);
+  font: var(--ha-type-metadata);
+  text-decoration: underline;
+}
+
+.ha-export__note {
+  color: var(--ha-state-warning);
+}
+
+.ha-export__error {
+  border-color: var(--ha-severity-critical);
+  color: var(--ha-severity-critical);
+}
+
+.ha-export__dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: 0;
+  background: transparent;
+  color: var(--ha-foreground-tertiary);
+  cursor: pointer;
+}
+
+.ha-export__dismiss:hover {
+  color: var(--ha-foreground-primary);
+}
+
+.ha-export__spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--ha-border-strong);
+  border-top-color: var(--ha-action-primary);
+  border-radius: 50%;
+  animation: ha-export-spin 0.7s linear infinite;
+}
+
+@keyframes ha-export-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-export__spinner {
+    animation: none;
+    border-top-color: var(--ha-action-primary);
+  }
+}
