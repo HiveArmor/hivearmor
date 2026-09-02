@@ -36,7 +36,6 @@ describe('Wave D-07 density + theme consistency', () => {
     const pages = [
       'src/pages/incidents/IncidentListPage.tsx',
       'src/pages/detection-rules/DetectionRulesPage.tsx',
-      'src/pages/entities/EntityListPage.tsx',
       'src/pages/response/ResponseActivityPage.tsx',
       'src/pages/response/ResponseAuthorityPage.tsx',
       'src/pages/posture/assets/AssetsPage.tsx',
