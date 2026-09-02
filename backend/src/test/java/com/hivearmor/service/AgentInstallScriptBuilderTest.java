@@ -42,11 +42,13 @@ class AgentInstallScriptBuilderTest {
     void powershellScriptEnablesTlsBypassForInsecureHosts() {
         AgentInstallScriptBuilder builder = new AgentInstallScriptBuilder();
         String script = builder.buildPowerShellScript(
-            "localhost", "web-01", "ha_enroll_test.secret", "edr", "tomorrow", true);
+            "72.44.52.187", "web-01", "ha_enroll_test.secret", "edr", "tomorrow", true);
 
         assertThat(script).contains("$SkipCert = \"yes\"");
-        assertThat(script).contains("SecurityProtocolType]::Tls12");
-        assertThat(script).contains("ServerCertificateValidationCallback = { $true }");
+        assertThat(script).contains("class HaTrustAllCerts");
+        assertThat(script).contains("[HaTrustAllCerts]::Enable()");
+        assertThat(script).contains("Download-HiveArmorPackage");
+        assertThat(script).contains("System.Net.WebClient");
     }
 
     @Test
