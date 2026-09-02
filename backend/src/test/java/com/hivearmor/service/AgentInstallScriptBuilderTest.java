@@ -35,7 +35,19 @@ class AgentInstallScriptBuilderTest {
         assertThat(script).contains("-ExecutionPolicy', 'Bypass'");
         assertThat(script).doesNotContain("Get-Content -Raw $TokenFile |");
         assertThat(script).doesNotContain("install $Server ha_enroll_test.secret");
-        assertThat(script).doesNotContain("Set-Content -Path $TokenFile");
+        assertThat(script).contains("($env:USERNAME + ':(R,W)')");
+        assertThat(script).doesNotContain("\"$($env:USERNAME):(R,W)\"");
+        assertThat(script).doesNotContain("Write-Error (\"Download failed");
+    }
+
+    @Test
+    void powershellScriptAvoidsParenthesesInConcatenatedErrorStrings() {
+        AgentInstallScriptBuilder builder = new AgentInstallScriptBuilder();
+        String script = builder.buildPowerShellScript(
+            "72.44.52.187", "web-01", "ha_enroll_test.secret", "edr", "tomorrow", true);
+
+        assertThat(script).contains("Write-Error \"Download failed from both $Url and $Fallback.");
+        assertThat(script).doesNotContain("+ \"(the server");
     }
 
     @Test
