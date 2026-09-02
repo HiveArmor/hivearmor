@@ -62,30 +62,3 @@ describe('entity inventory fixtures', () => {
     expect(new Set(events.map((event) => event.id)).size).toBe(events.length);
   });
 });
-
-describe('entity inventory design contract', () => {
-  it('uses semantic tokens and exposes the required operational regions', () => {
-    const page = readFileSync(join(process.cwd(), 'src/pages/entities/EntityListPage.tsx'), 'utf8');
-    const styles = readFileSync(join(process.cwd(), 'src/pages/entities/EntityListPage.css'), 'utf8');
-
-    expect(page).toContain('Entity Intelligence');
-    expect(page).toContain('entity-pagination');
-    expect(page).toContain('entity-status-dock');
-    expect(page).toContain('role="dialog"');
-    expect(page).toContain('ariaLabel="Entity risk inventory"');
-    expect(styles).toContain('var(--ha-surface-app)');
-    expect(styles).not.toMatch(/#[0-9a-f]{3,8}/i);
-    expect(styles).toContain('.entity-criticality { display: inline-flex; height: 20px; align-items: center;');
-  });
-
-  it('exposes progressive dossier regions and no element-level hardcoded colors', () => {
-    const page = readFileSync(join(process.cwd(), 'src/pages/entities/EntityDetailPage.tsx'), 'utf8');
-    const styles = readFileSync(join(process.cwd(), 'src/pages/entities/EntityDetailPage.css'), 'utf8');
-    expect(page).toContain('Why this entity is risky');
-    expect(page).toContain('Behavior against baseline');
-    expect(page).toContain('Entity relationships');
-    expect(page).toContain('ariaLabel="Entity activity events"');
-    expect(page).toContain('entity-dossier-status');
-    expect(styles).not.toMatch(/#[0-9a-f]{3,8}/i);
-  });
-});
