@@ -10,13 +10,16 @@ import { ChevronDown, ChevronRight, Copy, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 
+import { alertToVerdict, hasVerdictSignals } from './alertVerdict';
 import { QUEUE_TRIAGE_DENIED } from '../analystQueue.capabilities';
 
+import { AiVerdictCard } from '@/components/ai-verdict-card';
 import type { AlertDetailDTO, AlertSideDTO, RelatedAlertDTO } from '@/components/alert-context-drawer/alertContextDrawer.types';
 import { HaDefinitionList } from '@/components/ha-definition-list';
 import { ALERT_STATUS } from '@/constants/status.constants';
 import type { AlertStatus } from '@/constants/status.constants';
 import { apiClient } from '@/lib/apiClient';
+
 
 export interface QueueDetailDrawerProps {
   alertId: string | null;
@@ -395,9 +398,27 @@ export function QueueDetailDrawer({
               </div>
             </div>
 
+            {/* Section 1.5 — AI Verdict (derived from the alert's own enrichment signals) */}
+            {hasVerdictSignals(alert) && (
+              <div style={{ marginBottom: 20 }}>
+                {(() => {
+                  const v = alertToVerdict(alert);
+                  return (
+                    <AiVerdictCard
+                      verdict={v.verdict}
+                      confidence={v.confidence}
+                      summary={v.summary}
+                      conclusion={v.conclusion}
+                      reasoning={v.reasoning}
+                      evidence={v.evidence}
+                    />
+                  );
+                })()}
+              </div>
+            )}
+
             {/* Section 2 — Adversary */}
             <EntityObservableCard title="Adversary" data={alert.adversary} />
-
             {/* Section 3 — Target */}
             <EntityObservableCard title="Target" data={alert.target} />
 
