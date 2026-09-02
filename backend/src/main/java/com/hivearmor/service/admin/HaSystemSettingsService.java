@@ -1,7 +1,11 @@
 package com.hivearmor.service.admin;
 
 import com.hivearmor.domain.UtmConfigurationParameter;
+import com.hivearmor.domain.mail_sender.MailConfig;
+import com.hivearmor.domain.shared_types.enums.EncryptionType;
 import com.hivearmor.repository.UtmConfigurationParameterRepository;
+import com.hivearmor.service.MailService;
+import com.hivearmor.service.dto.admin.SmtpTestResultDTO;
 import com.hivearmor.service.dto.admin.SystemSettingsAiDTO;
 import com.hivearmor.service.dto.admin.SystemSettingsDTO;
 import com.hivearmor.service.dto.admin.SystemSettingsEmailDTO;
@@ -17,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -92,6 +97,7 @@ public class HaSystemSettingsService {
 
     private final UtmConfigurationParameterRepository configRepo;
     private final HaCipherUtil cipher;
+    private final MailService mailService;
 
     // =========================================================================
     // GET (masked)
@@ -272,6 +278,114 @@ public class HaSystemSettingsService {
         upsert(KEY_PASSWORD_MIN_LEN, String.valueOf(dto.getPasswordMinLength()),      false);
 
         return getMasked().getSecurity();
+    }
+
+    // =========================================================================
+    // SMTP test-send (B0-2 §4)
+    // =========================================================================
+
+    /**
+     * Sends a fixed test email through the persisted SMTP settings and always
+     * returns a result DTO (never propagates the failure as an exception), matching
+     * the always-HTTP-200 contract of the AI probe.
+     *
+     * <p>The persisted password is decrypted via {@link HaCipherUtil} only inside a
+     * local {@link MailConfig} used to build the sender; it is never logged and never
+     * placed in the returned error. The mail-sender strategy is selected from the
+     * persisted {@code useTls} flag: {@code true} → {@code STARTTLS}, {@code false} →
+     * {@code NONE} (matching how {@code MailService} picks a
+     * {@link com.hivearmor.service.mail_sender.MailSenderStrategy}).
+     *
+     * <p>On any failure the exception message is sanitized so it can never contain
+     * the SMTP password, and a full stack trace is never returned to the caller.
+     *
+     * @param recipient the validated recipient address; must not be {@code null}
+     * @return {@code {ok:true}} on success, or {@code {ok:false, error:<sanitized>}}
+     */
+    public SmtpTestResultDTO sendTestEmail(String recipient) {
+        if (recipient == null || recipient.isBlank()) {
+            return SmtpTestResultDTO.failure("Recipient address is required");
+        }
+
+        MailConfig config = loadDecryptedSmtpConfig();
+
+        if (!StringUtils.hasText(config.getHost())) {
+            return SmtpTestResultDTO.failure("SMTP host is not configured — save SMTP settings before testing");
+        }
+
+        try {
+            mailService.sendCheckEmail(Collections.singletonList(recipient), config);
+            log.debug("HaSystemSettingsService: SMTP test email dispatched — ok=true");
+            return SmtpTestResultDTO.success();
+        } catch (Exception ex) {
+            // Never log the plaintext password; only the failure flag is logged.
+            log.debug("HaSystemSettingsService: SMTP test email failed — ok=false");
+            return SmtpTestResultDTO.failure(sanitizeSmtpError(ex, config.getPassword()));
+        }
+    }
+
+    /**
+     * Loads the persisted SMTP settings into a {@link MailConfig}, decrypting the
+     * stored password via {@link HaCipherUtil}. The decrypted password lives only in
+     * the returned object and is never logged.
+     *
+     * @return a {@link MailConfig} populated from the configuration store; the
+     *         password is decrypted, or empty if none is persisted / decryption fails
+     */
+    MailConfig loadDecryptedSmtpConfig() {
+        Map<String, String> params = loadAllAsMap();
+
+        MailConfig config = new MailConfig();
+        config.setHost(params.getOrDefault(KEY_SMTP_HOST, ""));
+        config.setPort(parseInt(params.get(KEY_SMTP_PORT), 25));
+        config.setUsername(params.getOrDefault(KEY_SMTP_USERNAME, ""));
+        config.setFrom(params.getOrDefault(KEY_SMTP_FROM, ""));
+
+        // Map the useTls flag to the mail-sender strategy encryption type.
+        boolean useTls = parseBool(params.get(KEY_SMTP_USE_TLS), false);
+        config.setAuthType(useTls ? EncryptionType.STARTTLS.getType() : EncryptionType.NONE.getType());
+
+        // Decrypt the persisted password only at send time (never in GET / logs).
+        String storedPassword = params.get(KEY_SMTP_PASSWORD);
+        String plaintext = "";
+        if (StringUtils.hasText(storedPassword)) {
+            try {
+                plaintext = cipher.decrypt(storedPassword);
+            } catch (Exception ex) {
+                // Do not log the value; a decrypt failure leaves the password empty.
+                log.warn("HaSystemSettingsService: failed to decrypt persisted SMTP password — using empty string");
+                plaintext = "";
+            }
+        }
+        config.setPassword(plaintext);
+
+        return config;
+    }
+
+    /**
+     * Sanitizes an SMTP send failure so it can safely be returned to the caller:
+     * strips the plaintext password (if present in the message), never returns a
+     * stack trace, and falls back to the exception class name when no message exists.
+     *
+     * @param ex       the failure to sanitize
+     * @param password the plaintext SMTP password to redact; may be blank
+     * @return a caller-safe, single-line error string
+     */
+    private static String sanitizeSmtpError(Throwable ex, String password) {
+        String message = ex != null ? ex.getMessage() : null;
+        if (message == null || message.isBlank()) {
+            message = ex != null ? ex.getClass().getSimpleName() : "unknown error";
+        }
+        // Redact the password if it somehow appears in the exception message.
+        if (password != null && !password.isBlank()) {
+            message = message.replace(password, "[REDACTED]");
+        }
+        // Never return multi-line content (which could resemble a stack trace).
+        int newline = message.indexOf('\n');
+        if (newline >= 0) {
+            message = message.substring(0, newline);
+        }
+        return message;
     }
 
     // =========================================================================

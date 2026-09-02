@@ -84,7 +84,7 @@ class HaSystemSettingsServicePropertyTest {
     void setUp() {
         configRepo  = mock(UtmConfigurationParameterRepository.class);
         testCipher  = new TestCipherUtil();
-        service     = new HaSystemSettingsService(configRepo, testCipher);
+        service     = new HaSystemSettingsService(configRepo, testCipher, mock(com.hivearmor.service.MailService.class));
 
         // Default: no persisted params (empty store)
         when(configRepo.findAll()).thenReturn(List.of());

@@ -19,6 +19,7 @@
 import { apiClient } from '@/lib/apiClient';
 import type {
   LlmProbeResult,
+  SmtpTestResult,
   SystemSettings,
   SystemSettingsAi,
   SystemSettingsEmail,
@@ -75,4 +76,13 @@ export const systemSettingsService = {
    */
   probeLlm: (): Promise<LlmProbeResult> =>
     apiClient.post<LlmProbeResult>('/ha-admin/settings/ai/test'),
+
+  /**
+   * Send a test email through the currently persisted SMTP settings.
+   * The backend always returns HTTP 200 with { ok, error? }; error messages are
+   * sanitized and never include the SMTP password or a stack trace.
+   * Maps to: POST /api/ha-admin/settings/email/test
+   */
+  sendTestEmail: (recipient: string): Promise<SmtpTestResult> =>
+    apiClient.post<SmtpTestResult>('/ha-admin/settings/email/test', { recipient }),
 };

@@ -1,5 +1,8 @@
 package com.hivearmor.service.dto.admin;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 /**
  * DTO for the General settings tab.
  *
@@ -9,6 +12,8 @@ package com.hivearmor.service.dto.admin;
 public class SystemSettingsGeneralDTO {
 
     /** Display name shown in the UI header and email notifications. */
+    @NotBlank
+    @Size(max = 120)
     private String siteName;
 
     /** IANA timezone identifier, e.g. {@code "UTC"}, {@code "America/New_York"}. */
