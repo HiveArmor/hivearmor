@@ -1,5 +1,8 @@
 package com.hivearmor.service.dto.admin;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 /**
  * DTO for the Security settings tab.
  *
@@ -9,12 +12,16 @@ package com.hivearmor.service.dto.admin;
 public class SystemSettingsSecurityDTO {
 
     /** Idle session timeout in minutes; sessions older than this are invalidated. */
+    @Min(5)
+    @Max(1440)
     private int sessionTimeoutMinutes;
 
     /** When {@code true}, all users must complete multi-factor authentication. */
     private boolean mfaRequired;
 
     /** Minimum password length enforced on password create/change operations. */
+    @Min(8)
+    @Max(128)
     private int passwordMinLength;
 
     // -------------------------------------------------------------------------
