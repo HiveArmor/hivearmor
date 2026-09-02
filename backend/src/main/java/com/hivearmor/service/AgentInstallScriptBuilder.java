@@ -208,14 +208,7 @@ public class AgentInstallScriptBuilder {
             + "$Fallback = \"https://$Server`:9001/private/dependencies/agent/$Binary\"\n"
             + "$Dest   = Join-Path $env:TEMP $Binary\n"
             + "\n"
-            + "# ---- Download -----------------------------------------------\n"
-            + "Write-Host \"[1/3] Downloading HiveArmor Agent (windows/$Arch)...\"\n"
-            + "try { Invoke-WebRequest -Uri $Url -OutFile $Dest -UseBasicParsing } catch {\n"
-            + "  Write-Host \"Primary package URL unavailable, trying dependency server...\"\n"
-            + "  Invoke-WebRequest -Uri $Fallback -OutFile $Dest -UseBasicParsing\n"
-            + "}\n"
-            + "Unblock-File -Path $Dest -ErrorAction SilentlyContinue\n"
-            + "\n"
+            + POWER_SHELL_DOWNLOAD_BLOCK
             + "# ---- Install ------------------------------------------------\n"
             + "Write-Host \"[2/3] Installing (mode: $Mode)...\"\n"
             + "$TokenFile = Join-Path $env:TEMP (\"hivearmor-enroll-\" + [guid]::NewGuid().ToString(\"N\") + \".token\")\n"
@@ -242,11 +235,58 @@ public class AgentInstallScriptBuilder {
 
     /**
      * PowerShell 5.1 TLS bypass for self-signed staging / local-dev certificates.
-     * Matches the pattern used in {@code agent/release/verify-packaged-windows.ps1}.
+     * Uses Add-Type (same pattern as {@code deploy/staging/verify-packaged-windows-staging.ps1})
+     * because a scriptblock-only {@code ServerCertificateValidationCallback} is unreliable
+     * with {@code Invoke-WebRequest} on some Windows builds.
      */
     private static final String POWER_SHELL_TLS_BYPASS_SNIPPET =
-        "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12\n"
-        + "[System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }\n"
+        "if (-not ([System.Management.Automation.PSTypeName]'HaTrustAllCerts').Type) {\n"
+        + "  Add-Type @\"\n"
+        + "using System.Net;\n"
+        + "using System.Security.Cryptography.X509Certificates;\n"
+        + "public class HaTrustAllCerts {\n"
+        + "  public static void Enable() {\n"
+        + "    ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };\n"
+        + "    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;\n"
+        + "  }\n"
+        + "}\n"
+        + "\"@\n"
+        + "}\n"
+        + "[HaTrustAllCerts]::Enable()\n"
+        + "\n";
+
+    /** Downloads agent binary — WebClient is more reliable than IWR for large files on PS 5.1. */
+    private static final String POWER_SHELL_DOWNLOAD_BLOCK =
+        "# ---- Download -----------------------------------------------\n"
+        + "function Download-HiveArmorPackage {\n"
+        + "  param([string]$Uri, [string]$OutPath)\n"
+        + "  if ($SkipCert -eq 'yes') {\n"
+        + "    $wc = New-Object System.Net.WebClient\n"
+        + "    $wc.DownloadFile($Uri, $OutPath)\n"
+        + "  } else {\n"
+        + "    Invoke-WebRequest -Uri $Uri -OutFile $OutPath -UseBasicParsing\n"
+        + "  }\n"
+        + "}\n"
+        + "\n"
+        + "Write-Host \"[1/3] Downloading HiveArmor Agent (windows/$Arch)...\"\n"
+        + "try {\n"
+        + "  Download-HiveArmorPackage -Uri $Url -OutPath $Dest\n"
+        + "} catch {\n"
+        + "  Write-Host \"Primary package URL unavailable ($($_.Exception.Message)), trying dependency server...\"\n"
+        + "  try {\n"
+        + "    Download-HiveArmorPackage -Uri $Fallback -OutPath $Dest\n"
+        + "  } catch {\n"
+        + "    Write-Error (\"Download failed from both $Url and $Fallback. \"\n"
+        + "      + \"If this is a staging/lab host with a self-signed certificate, regenerate the script from the UI \"\n"
+        + "      + \"(the server must embed TLS bypass). Otherwise check firewall access to ports 443 and 9001.\")\n"
+        + "    exit 1\n"
+        + "  }\n"
+        + "}\n"
+        + "if (-not (Test-Path $Dest) -or (Get-Item $Dest).Length -lt 1MB) {\n"
+        + "  Write-Error \"Downloaded file is missing or too small — check package publish on the server.\"\n"
+        + "  exit 1\n"
+        + "}\n"
+        + "Unblock-File -Path $Dest -ErrorAction SilentlyContinue\n"
         + "\n";
 
     // -------------------------------------------------------------------------
