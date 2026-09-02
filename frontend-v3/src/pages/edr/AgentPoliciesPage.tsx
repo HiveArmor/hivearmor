@@ -578,7 +578,7 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
         </div>
       )}
 
-      <div className="agent-policies-page__inventory" aria-label="Agent policy inventory">
+      <div className="agent-policies-page__inventory" role="region" aria-label="Agent policy inventory">
         {!isLoading && !isError && policies.length === 0 && (
           <EmptyState>
             <ClipboardList size={40} style={{ opacity: 0.3, marginBottom: 12 }} />
