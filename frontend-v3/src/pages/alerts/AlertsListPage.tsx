@@ -18,10 +18,10 @@ import {
   CheckCircle2,
   CircleDot,
   Columns3,
+  Filter,
   Hexagon,
   Keyboard,
-  Layers3,
-  ListFilter,
+  Focus,
   Radar,
   RefreshCw,
   Search,
@@ -30,7 +30,7 @@ import {
   UserRound,
   X,
 } from 'lucide-react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import {
   ALERT_COLUMNS_OPTIONAL,
@@ -62,9 +62,9 @@ import { TagDialog } from './components/TagDialog';
 import { AddFilterPopover, type StructuredAlertFilter } from '@/components/add-filter-popover/AddFilterPopover';
 import { HaExportMenu } from '@/components/export-menu';
 import { FieldSelectorPopover } from '@/components/field-selector-popover/FieldSelectorPopover';
+import { HaButton } from '@/components/ha-button';
 import { HaCompactSelect, type HaCompactSelectOption } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaPageHeader } from '@/components/ha-page-header';
-import { HaToolbar } from '@/components/ha-toolbar';
 import { LiveModeToggle } from '@/components/live-mode-toggle/LiveModeToggle';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock/StatusDock';
@@ -282,10 +282,15 @@ function BulkActionDialog({ action, selectedCount, isPending, onCancel, onConfir
         </div>
 
         <footer>
-          <button type="button" className="alert-button alert-button--secondary" onClick={onCancel} disabled={isPending}>Cancel</button>
-          <button type="button" className={`alert-button alert-button--${meta.tone}`} onClick={() => onConfirm(reason.trim(), auxiliaryValue.trim())} disabled={reason.trim().length < 6 || !auxiliaryValue || isPending}>
+          <HaButton variant="secondary" onClick={onCancel} isDisabled={isPending}>Cancel</HaButton>
+          <HaButton
+            variant={meta.tone}
+            onClick={() => onConfirm(reason.trim(), auxiliaryValue.trim())}
+            isDisabled={reason.trim().length < 6 || !auxiliaryValue || isPending}
+            isLoading={isPending}
+          >
             {isPending ? 'Applying…' : alertTriageFixtureMode ? `Simulate · ${meta.confirm}` : meta.confirm}
-          </button>
+          </HaButton>
         </footer>
       </section>
     </div>
@@ -681,7 +686,10 @@ export function AlertsListPage(): JSX.Element {
       <HaPageHeader
         title="Alerts"
         description={
-          <span className="alert-inventory-scope">Detection operations · full alert inventory</span>
+          <span className="alert-inventory-scope">
+            Detection operations · full alert inventory
+            {!canTriage && <span className="alert-inventory-scope__warn" title={TRIAGE_DENIED}> · Read-only</span>}
+          </span>
         }
         actions={
           <>
@@ -690,22 +698,6 @@ export function AlertsListPage(): JSX.Element {
           </>
         }
       />
-
-      <p className="alert-inventory-meta">
-        <Link to="/dashboard">Mission Control</Link>
-        <span aria-hidden="true">·</span>
-        <Link to="/queue">Analyst Queue</Link>
-        <span aria-hidden="true">·</span>
-        <Link to="/incidents">Incidents</Link>
-        <span aria-hidden="true">·</span>
-        <Link to="/alerts/board"><Layers3 size={13} aria-hidden="true" />Severity board</Link>
-        {!canTriage && (
-          <>
-            <span aria-hidden="true">·</span>
-            <span className="alert-inventory-meta__warn" title={TRIAGE_DENIED}>Read-only — {TRIAGE_DENIED}</span>
-          </>
-        )}
-      </p>
 
       <div className="alert-queue-sticky" data-drawer-open={Boolean(drawerAlertId)} aria-label="Alert inventory filters">
         {!effectiveStreamConnected && (
@@ -722,11 +714,11 @@ export function AlertsListPage(): JSX.Element {
         )}
 
         <nav className="alert-view-strip" aria-label="Alert inventory scopes">
-              <div className="alert-view-strip__label"><ListFilter size={14} aria-hidden="true" /><strong>Scope</strong></div>
+              <div className="alert-view-strip__label"><Focus size={14} aria-hidden="true" /><strong>Scope</strong></div>
               <div className="alert-view-strip__items">
                 {builtInViews.map((view) => (
                   <button key={view.id} type="button" data-active={activeViewId === view.id} onClick={() => applyView(view)} title={view.description}>
-                    <span aria-hidden="true" /><strong>{view.label}</strong>{view.countKey && <em>{countLabel(summary?.[view.countKey])}</em>}
+                    <strong>{view.label}</strong><em>{countLabel(view.countKey ? summary?.[view.countKey] : view.id === 'all' ? summary?.totalApproximate : undefined)}</em>
                   </button>
                 ))}
               </div>
@@ -735,20 +727,7 @@ export function AlertsListPage(): JSX.Element {
               </div>
         </nav>
 
-        <HaToolbar
-          sticky={false}
-          className="alert-query-toolbar"
-          activeFilters={visibleFilterEntries.map(([key, value]) => ({
-            label: `${filterLabels[key]} ${value.replace(/_/g, ' ')}`,
-            onRemove: () => removeFilter(key),
-          }))}
-          onClearAllFilters={
-            visibleFilterEntries.length > 0
-              ? () => { setFilters(mode === 'historical' ? resolveTimeRange(timeRange) : {}); setQueryInput(''); setQueryError(null); setSearchParams({}); setActiveViewId('all'); }
-              : undefined
-          }
-          left={
-            <>
+        <div className="alert-query-toolbar">
               <div className="alert-query-toolbar__filters" aria-label="Severity and status filters">
                 <HaCompactSelect
                   ariaLabel="Severity filter"
@@ -834,10 +813,7 @@ export function AlertsListPage(): JSX.Element {
                 )}
               </div>
               <div id="alert-query-help" className="alert-sr-only">Use field colon value conditions joined by AND or OR. Arrow keys select autocomplete suggestions. Press Enter to run.</div>
-            </>
-          }
-          right={
-            <div className="alert-query-toolbar__actions">
+              <div className="alert-query-toolbar__actions">
                 <AddFilterPopover hasExistingExpression={Boolean(queryInput.trim() || filters.queryExpression)} onAddFilter={addStructuredFilter} />
                 <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} disabled={mode === 'live'} />
                 <FieldSelectorPopover optionalColumns={ALERT_COLUMNS_OPTIONAL} selectedColIds={selectedColIds} onToggleColumn={(id) => setSelectedColIds((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id])} />
@@ -846,11 +822,17 @@ export function AlertsListPage(): JSX.Element {
                 </div>
                 <button type="button" className="alert-toolbar-icon" onClick={refreshQueue} aria-label="Refresh alert inventory" title="Refresh rows"><RefreshCw size={15} /></button>
                 <HaExportMenu surface="alert-list" disabled={!hasResults} onExport={handleExport} />
-            </div>
-          }
-        />
+              </div>
+        </div>
 
         {queryError && <div id="alert-query-error" className="alert-query-error" role="alert"><AlertTriangle size={13} />{queryError}</div>}
+        {visibleFilterEntries.length > 0 && (
+          <div className="alert-filter-row" aria-label="Active alert filters">
+            <Filter size={13} aria-hidden="true" />
+            {visibleFilterEntries.map(([key, value]) => <span key={key}><strong>{filterLabels[key]}</strong>{value.replace(/_/g, ' ')}<button type="button" onClick={() => removeFilter(key)} aria-label={`Remove ${filterLabels[key]} filter`}><X size={11} /></button></span>)}
+            <button type="button" onClick={() => { setFilters(mode === 'historical' ? resolveTimeRange(timeRange) : {}); setQueryInput(''); setQueryError(null); setSearchParams({}); setActiveViewId('all'); }}>Clear filters</button>
+          </div>
+        )}
 
         <div className="alert-grid-meta">
           <div><strong>{countLabel(totalCount)}</strong><span>matching alerts</span>{summary?.snapshotAt && <><i aria-hidden="true" /><span>snapshot <time dateTime={summary.snapshotAt}>{new Date(summary.snapshotAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</time></span></>}</div>
@@ -873,7 +855,7 @@ export function AlertsListPage(): JSX.Element {
                 columnDefs={activeColumns}
                 rowModelType="infinite"
                 datasource={datasource}
-                rowHeight={ROW_HEIGHTS[density] + 8}
+                rowHeight={ROW_HEIGHTS[density] + 4}
                 infiniteInitialRowCount={100}
                 cacheBlockSize={100}
                 maxBlocksInCache={10}

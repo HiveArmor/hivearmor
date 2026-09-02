@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RESPONSE_LIBRARY_JOB_SENTENCE, ResponseLibraryPage } from './ResponseLibraryPage';
 
+import { selectHaOption } from '@/test/haCompactSelect.testutil';
 import type { ResponseAction } from '@/types/responseAction';
 
 const navigate = vi.fn();
@@ -71,7 +72,7 @@ describe('ResponseLibraryPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /Investigation 1/i }));
     expect(screen.getByText('Collect Forensic Artifacts')).toBeDefined();
     expect(screen.queryByText('Isolate Host')).toBeNull();
-    fireEvent.change(screen.getByRole('combobox', { name: 'Filter by readiness' }), { target: { value: 'healthy' } });
+    selectHaOption('Filter by readiness', 'Healthy');
     expect(screen.getByText('No matching actions')).toBeDefined();
   });
 

@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CisBenchmarkPage, POSTURE_CIS_BENCHMARK_JOB_SENTENCE } from './CisBenchmarkPage';
 
+import { selectHaOption } from '@/test/haCompactSelect.testutil';
 import type { ScaResultDTO, ScaSummaryDTO } from '@/types/vuln.types';
 
 const mockUseQuery = vi.fn();
@@ -142,8 +143,8 @@ describe('CisBenchmarkPage', () => {
     let latest = resultCalls[resultCalls.length - 1]?.[0] as { queryKey: [string, Record<string, unknown>] };
     expect(latest.queryKey[1]).toMatchObject({ status: 'FAIL', page: 0, size: 50 });
 
-    fireEvent.change(screen.getByLabelText('Filter by outcome'), { target: { value: 'ERROR' } });
-    fireEvent.change(screen.getByLabelText('Filter by CIS profile'), { target: { value: 'L2' } });
+    selectHaOption('Filter by outcome', 'Collection errors');
+    selectHaOption('Filter by CIS profile', 'CIS Level 2');
     resultCalls = mockUseQuery.mock.calls.filter(([options]) => (options as { queryKey: unknown[] }).queryKey[0] === 'cis-results');
     latest = resultCalls[resultCalls.length - 1]?.[0] as { queryKey: [string, Record<string, unknown>] };
     expect(latest.queryKey[1]).toMatchObject({ status: 'ERROR', level: 'L2', page: 0, size: 50 });

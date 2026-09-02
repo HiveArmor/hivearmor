@@ -206,10 +206,8 @@ describe('Alert inventory performance invariants', () => {
     expect(pageSource.default).toContain('alert-view-strip');
     expect(pageSource.default).not.toContain('alert-view-rail');
     expect(pageSource.default).not.toContain('alert-queue-metrics');
-    expect(pageSource.default).toContain('ALERTS_INVENTORY_JOB_SENTENCE');
-    expect(pageSource.default).toContain('to="/queue"');
-    expect(pageSource.default).toContain('to="/dashboard"');
-    expect(pageSource.default).toContain('to="/incidents"');
+    expect(pageSource.default).toContain('HaPageHeader');
+    expect(pageSource.default).not.toContain('alert-inventory-meta');
     expect(pageSource.default).toContain("useState<AlertQueueView['id']>('all')");
     expect(pageSource.default).toContain('useState<string | null>(null)');
     expect(pageSource.default).not.toContain("matchMedia('(min-width: 1100px)')");
@@ -227,6 +225,5 @@ describe('Alert inventory performance invariants', () => {
     expect(cssSource).toContain('position: sticky');
     expect(cssSource).toContain('.alert-queue-workspace { position: relative; height: clamp(');
     expect(cssSource).toContain('.alert-grid-region { position: relative;');
-    expect(cssSource).toContain('.alert-inventory-meta');
   });
 });

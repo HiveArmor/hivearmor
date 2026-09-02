@@ -46,7 +46,7 @@ describe('ExposurePage', () => {
     expect(screen.getByRole('link', { name: 'Vulnerabilities' })).toBeDefined();
     expect(screen.getByRole('link', { name: 'Constellation' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Choke points' })).toBeDefined();
-    expect(screen.getByRole('combobox', { name: 'Filter by exposure scope' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Filter by exposure scope' })).toBeDefined();
     expect(screen.getByRole('grid', { name: 'Attack paths exposure inventory' })).toBeDefined();
     expect(screen.getByTestId('status-dock')).toBeDefined();
     expect(screen.queryByText('Exposure score')).toBeNull();

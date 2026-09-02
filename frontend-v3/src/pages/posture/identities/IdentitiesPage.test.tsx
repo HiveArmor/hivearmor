@@ -76,10 +76,10 @@ describe('IdentitiesPage', () => {
 
   it('provides compact risk, identity kind, authentication and sort filters', () => {
     renderPage();
-    expect(screen.getByRole('combobox', { name: 'Filter by risk' })).toBeDefined();
-    expect(screen.getByRole('combobox', { name: 'Filter by identity kind' })).toBeDefined();
-    expect(screen.getByRole('combobox', { name: 'Filter by authentication strength' })).toBeDefined();
-    expect(screen.getByRole('combobox', { name: 'Sort identity posture' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Filter by risk' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Filter by identity kind' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Filter by authentication strength' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Sort identity posture' })).toBeDefined();
   });
 
   it('opens progressive identity context with risk signals and access paths', () => {

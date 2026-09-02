@@ -48,7 +48,7 @@ describe('ActiveDirectoryPage', () => {
     expect(screen.getByRole('link', { name: 'Identities' })).toBeDefined();
     expect(screen.getByRole('link', { name: 'Exposure' })).toBeDefined();
     expect(screen.getByRole('button', { name: /Domains & trusts/ })).toBeDefined();
-    expect(screen.getByRole('combobox', { name: 'Filter by domain' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Filter by domain' })).toBeDefined();
     expect(screen.getByRole('grid', { name: 'Active Directory posture inventory' })).toBeDefined();
     expect(screen.getByTestId('status-dock')).toBeDefined();
     expect(screen.queryByText('Posture score')).toBeNull();
