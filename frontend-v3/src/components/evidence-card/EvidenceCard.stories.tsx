@@ -39,7 +39,7 @@ const hashEvidence: EvidenceItem = {
 };
 
 const meta = {
-  title: 'HiveArmor/EvidenceCard',
+  title: 'HaUI/EvidenceCard',
   component: EvidenceCard,
   tags: ['autodocs'],
   parameters: {

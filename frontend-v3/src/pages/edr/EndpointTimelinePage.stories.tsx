@@ -316,7 +316,7 @@ function makeDecorator(user: HaUser): (Story: React.ComponentType) => React.Reac
 // ---------------------------------------------------------------------------
 
 const meta = {
-  title: 'HiveArmor/Pages/EndpointTimelinePage',
+  title: 'Pages/EndpointTimelinePage',
   component: EndpointTimelinePage,
   tags: ['autodocs'],
   parameters: {

@@ -30,7 +30,7 @@ const rowData: AlertRow[] = [
 ];
 
 const meta = {
-  title: 'HiveArmor/SiemDataGrid',
+  title: 'HaUI/SiemDataGrid',
   component: SiemDataGrid,
   tags: ['autodocs'],
   parameters: {

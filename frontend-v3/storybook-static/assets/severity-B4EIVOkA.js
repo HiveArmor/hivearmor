@@ -1,1 +1,0 @@
-import{n as e}from"./rolldown-runtime-DaJ6WEGw.js";var t,n,r=e((()=>{t={critical:`var(--ha-severity-critical)`,high:`var(--ha-severity-high)`,medium:`var(--ha-severity-medium)`,low:`var(--ha-severity-low)`,info:`var(--ha-severity-info)`},n={critical:`Critical`,high:`High`,medium:`Medium`,low:`Low`,info:`Info`}}));export{n,r,t};

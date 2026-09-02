@@ -90,7 +90,7 @@ const attackChain: ProcessNodeDTO[] = [
 // ---------------------------------------------------------------------------
 
 const meta = {
-  title: 'HiveArmor/EDR/ProcessTree',
+  title: 'HaUI/EDR/ProcessTree',
   component: ProcessTree,
   tags: ['autodocs'],
   parameters: {

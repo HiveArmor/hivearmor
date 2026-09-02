@@ -46,15 +46,16 @@
   font: var(--ha-type-compact);
 }
 
-/* Filled tiers (up to and including the active one) tint violet — the trust gradient. */
+/* Filled tiers (up to and including the active one) tint violet — the trust gradient.
+   Text uses --ha-intelligence-strong (lighter) to clear AA on the violet-tint fill. */
 .ha-autonomy__seg--filled {
   background: color-mix(in srgb, var(--ha-intelligence-primary) 12%, transparent);
-  color: var(--ha-intelligence-primary);
+  color: var(--ha-intelligence-strong);
 }
 
 .ha-autonomy__seg--on {
   background: color-mix(in srgb, var(--ha-intelligence-primary) 22%, transparent);
-  color: var(--ha-intelligence-primary);
+  color: var(--ha-intelligence-strong);
   font-weight: 700;
 }
 

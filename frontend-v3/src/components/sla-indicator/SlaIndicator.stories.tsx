@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { SlaIndicator } from './SlaIndicator';
 
 const meta = {
-  title: 'HiveArmor/SlaIndicator',
+  title: 'HaUI/SlaIndicator',
   component: SlaIndicator,
   tags: ['autodocs'],
   parameters: {

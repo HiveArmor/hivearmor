@@ -6,7 +6,7 @@ import { EmptyState } from './EmptyState';
 import { HaButton } from '@/components/ha-button/HaButton';
 
 const meta = {
-  title: 'HiveArmor/EmptyState',
+  title: 'HaUI/EmptyState',
   component: EmptyState,
   tags: ['autodocs'],
   parameters: {

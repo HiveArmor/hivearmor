@@ -5,7 +5,7 @@ import { HaDrawer } from './HaDrawer';
 import { HaButton } from '@/components/ha-button/HaButton';
 
 const meta = {
-  title: 'HiveArmor/HaDrawer',
+  title: 'HaUI/HaDrawer',
   component: HaDrawer,
   tags: ['autodocs'],
   parameters: {

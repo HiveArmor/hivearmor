@@ -70,7 +70,7 @@ const pieOption: EChartsOption = {
 };
 
 const meta = {
-  title: 'HiveArmor/HaChart',
+  title: 'HaUI/HaChart',
   component: HaChart,
   tags: ['autodocs'],
   parameters: {

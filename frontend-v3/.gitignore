@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 dist-ssr/
+storybook-static/
 
 # Environment
 .env
@@ -29,6 +30,7 @@ coverage/
 
 # Playwright
 playwright-report/
+playwright-report-storybook/
 test-results/
 
 # TypeScript

@@ -10,7 +10,7 @@ import { HaMasthead } from './HaMasthead';
  * For full interactive testing use the running dev server.
  */
 const meta = {
-  title: 'HiveArmor/HaMasthead',
+  title: 'HaUI/HaMasthead',
   component: HaMasthead,
   tags: ['autodocs'],
   parameters: {

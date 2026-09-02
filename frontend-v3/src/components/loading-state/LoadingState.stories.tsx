@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { LoadingState } from './LoadingState';
 
 const meta = {
-  title: 'HiveArmor/LoadingState',
+  title: 'HaUI/LoadingState',
   component: LoadingState,
   tags: ['autodocs'],
   parameters: {

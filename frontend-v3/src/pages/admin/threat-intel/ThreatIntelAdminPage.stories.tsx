@@ -274,7 +274,7 @@ function makeDecorator(
 // ---------------------------------------------------------------------------
 
 const meta: Meta<typeof ThreatIntelAdminPage> = {
-  title: 'HiveArmor/Pages/Admin/ThreatIntelAdminPage',
+  title: 'Pages/Admin/ThreatIntelAdminPage',
   component: ThreatIntelAdminPage,
   tags: ['autodocs'],
   parameters: {
