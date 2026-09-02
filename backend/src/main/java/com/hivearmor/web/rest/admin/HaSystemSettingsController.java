@@ -5,6 +5,8 @@ import com.hivearmor.service.admin.HaLlmService;
 import com.hivearmor.service.admin.HaSystemSettingsService;
 import com.hivearmor.service.admin.event.LlmConfigChangedEvent;
 import com.hivearmor.service.dto.admin.LlmProbeResultDTO;
+import com.hivearmor.service.dto.admin.SmtpTestRequestDTO;
+import com.hivearmor.service.dto.admin.SmtpTestResultDTO;
 import com.hivearmor.service.dto.admin.SystemSettingsAiDTO;
 import com.hivearmor.service.dto.admin.SystemSettingsDTO;
 import com.hivearmor.service.dto.admin.SystemSettingsEmailDTO;
@@ -129,6 +131,37 @@ public class HaSystemSettingsController {
     @PreAuthorize("hasAuthority('" + AuthoritiesConstants.ADMIN + "')")
     public ResponseEntity<SystemSettingsEmailDTO> updateEmail(@Valid @RequestBody SystemSettingsEmailDTO body) {
         return ResponseEntity.ok(service.updateEmail(body).masked());
+    }
+
+    // =========================================================================
+    // POST — SMTP test-send (B0-2 §4)
+    // =========================================================================
+
+    /**
+     * Sends a fixed test email through the currently persisted SMTP settings.
+     *
+     * <p>Always returns HTTP 200, mirroring the AI-probe contract:
+     * <ul>
+     *   <li>On success: {@code {"ok":true}}</li>
+     *   <li>On failure: {@code {"ok":false,"error":"<sanitized>"}}</li>
+     * </ul>
+     *
+     * <p>The {@code error} field never contains the SMTP password or a stack trace;
+     * {@link HaSystemSettingsService#sendTestEmail(String)} decrypts the persisted
+     * password only at send time and sanitizes any failure before it is returned.
+     * No plaintext password is ever written to a log statement (B0-2 §4).
+     *
+     * @param body the request carrying the validated recipient address
+     * @return HTTP 200 with the test-send result; {@code ok} is {@code false} on failure
+     */
+    @PostMapping("/email/test")
+    @PreAuthorize("hasAuthority('" + AuthoritiesConstants.ADMIN + "')")
+    public ResponseEntity<SmtpTestResultDTO> testEmail(@Valid @RequestBody SmtpTestRequestDTO body) {
+        log.debug("HaSystemSettingsController: SMTP test-send requested");
+        SmtpTestResultDTO result = service.sendTestEmail(body.getRecipient());
+        // Do NOT log result.error() — it may still contain host/URL fragments.
+        log.debug("HaSystemSettingsController: SMTP test-send completed — ok={}", result.ok());
+        return ResponseEntity.ok(result);
     }
 
     // =========================================================================

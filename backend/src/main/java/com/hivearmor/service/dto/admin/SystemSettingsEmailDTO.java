@@ -1,5 +1,9 @@
 package com.hivearmor.service.dto.admin;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 /**
  * DTO for the Email/SMTP settings tab.
  *
@@ -15,6 +19,9 @@ package com.hivearmor.service.dto.admin;
 public class SystemSettingsEmailDTO {
 
     private String host;
+
+    @Min(1)
+    @Max(65535)
     private int port;
     private String username;
 
@@ -30,6 +37,7 @@ public class SystemSettingsEmailDTO {
     private String password;
 
     /** Sender address shown in the {@code From:} header. */
+    @Email
     private String from;
 
     /** Whether to upgrade the connection via STARTTLS (port 587 convention). */

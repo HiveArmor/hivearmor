@@ -96,3 +96,19 @@ export interface LlmProbeResult {
   latencyMs?: number;
   error?: string;
 }
+
+// ── SMTP test-send result ──────────────────────────────────────────────────────
+
+/**
+ * Response shape from POST /api/ha-admin/settings/email/test.
+ *
+ * The backend always returns HTTP 200 with this body (same contract as the AI
+ * probe):
+ *   - ok: true  → { ok: true }
+ *   - ok: false → { ok: false, error: string }  (sanitized — never includes the
+ *                                                 SMTP password or a stack trace)
+ */
+export interface SmtpTestResult {
+  ok: boolean;
+  error?: string;
+}
