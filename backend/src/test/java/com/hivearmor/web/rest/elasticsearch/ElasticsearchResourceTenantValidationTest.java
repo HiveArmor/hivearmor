@@ -227,8 +227,214 @@ class ElasticsearchResourceTenantValidationTest {
     }
 
     // =========================================================================
+    // B0-5a — genericSearch tenant-scope enforcement
+    // =========================================================================
+
+    @Test
+    @DisplayName("MSSP: genericSearch denies another tenant's index")
+    void genericSearch_tenantCwm_otherTenantDenied() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            assertThatThrownBy(() -> resource.genericSearch(buildGenericBody("v3-hive-alert-other-*"), pageable))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("MSSP: genericSearch denies global index")
+    void genericSearch_tenantCwm_globalDenied() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            assertThatThrownBy(() -> resource.genericSearch(buildGenericBody("v3-hive-alert-*"), pageable))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("MSSP: genericSearch allows own tenant index")
+    void genericSearch_tenantCwm_ownAllowed() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            try {
+                resource.genericSearch(buildGenericBody("v3-hive-log-cwm-*"), pageable);
+            } catch (TenantScopeViolationException e) {
+                throw new AssertionError("Own-tenant pattern must not be a scope violation", e);
+            } catch (Exception ignored) {
+                // acceptable — downstream mock behavior
+            }
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("Non-MSSP: genericSearch allows any index")
+    void genericSearch_noContext_anyAllowed() {
+        assertThat(TenantContext.get()).isNull();
+        Pageable pageable = PageRequest.of(0, 10);
+        try {
+            resource.genericSearch(buildGenericBody("v3-hive-alert-other-*"), pageable);
+        } catch (TenantScopeViolationException e) {
+            throw new AssertionError("Non-MSSP must not raise scope violation", e);
+        } catch (Exception ignored) {
+            // acceptable
+        }
+    }
+
+    // =========================================================================
+    // B0-5a — count tenant-scope enforcement
+    // =========================================================================
+
+    @Test
+    @DisplayName("MSSP: count denies another tenant's index")
+    void count_tenantCwm_otherTenantDenied() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            assertThatThrownBy(() -> resource.count(null, "v3-hive-log-beta-*", pageable))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("MSSP: count allows own tenant index")
+    void count_tenantCwm_ownAllowed() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            try {
+                resource.count(null, "v3-hive-log-cwm-*", pageable);
+            } catch (TenantScopeViolationException e) {
+                throw new AssertionError("Own-tenant pattern must not be a scope violation", e);
+            } catch (Exception ignored) {
+                // acceptable
+            }
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("Non-MSSP: count allows any index")
+    void count_noContext_anyAllowed() {
+        assertThat(TenantContext.get()).isNull();
+        Pageable pageable = PageRequest.of(0, 10);
+        try {
+            resource.count(null, "v3-hive-alert-other-*", pageable);
+        } catch (TenantScopeViolationException e) {
+            throw new AssertionError("Non-MSSP must not raise scope violation", e);
+        } catch (Exception ignored) {
+            // acceptable
+        }
+    }
+
+    // =========================================================================
+    // B0-5a — searchBySql scoped-SQL enforcement
+    // =========================================================================
+
+    @Test
+    @DisplayName("MSSP: searchBySql denies another tenant's FROM target")
+    void searchBySql_tenantCwm_otherTenantDenied() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            assertThatThrownBy(() -> resource.searchBySql(
+                    buildSql("SELECT * FROM \"v3-hive-alert-other-*\""), pageable))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("MSSP: searchBySql denies global FROM target")
+    void searchBySql_tenantCwm_globalDenied() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            assertThatThrownBy(() -> resource.searchBySql(
+                    buildSql("SELECT * FROM \"v3-hive-alert-*\""), pageable))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("MSSP: searchBySql denies a query with no identifiable FROM target")
+    void searchBySql_tenantCwm_noFromDenied() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            assertThatThrownBy(() -> resource.searchBySql(buildSql("SELECT 1"), pageable))
+                .isInstanceOf(TenantScopeViolationException.class);
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("MSSP: searchBySql allows own-tenant FROM target")
+    void searchBySql_tenantCwm_ownAllowed() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            try {
+                resource.searchBySql(buildSql("SELECT * FROM \"v3-hive-alert-cwm-*\""), pageable);
+            } catch (TenantScopeViolationException e) {
+                throw new AssertionError("Own-tenant FROM target must not be a scope violation", e);
+            } catch (Exception ignored) {
+                // acceptable — downstream mock behavior
+            }
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("Non-MSSP: searchBySql allows any FROM target")
+    void searchBySql_noContext_anyAllowed() {
+        assertThat(TenantContext.get()).isNull();
+        Pageable pageable = PageRequest.of(0, 10);
+        try {
+            resource.searchBySql(buildSql("SELECT * FROM \"v3-hive-alert-other-*\""), pageable);
+        } catch (TenantScopeViolationException e) {
+            throw new AssertionError("Non-MSSP must not raise scope violation", e);
+        } catch (Exception ignored) {
+            // acceptable
+        }
+    }
+
+    // =========================================================================
     // Helper methods
     // =========================================================================
+
+    private ElasticsearchResource.GenericSearchBody buildGenericBody(String index) {
+        var body = new ElasticsearchResource.GenericSearchBody();
+        body.setIndex(index);
+        body.setTop(100);
+        return body;
+    }
+
+    private com.hivearmor.service.dto.elastic.SqlSearchDto buildSql(String query) {
+        var dto = new com.hivearmor.service.dto.elastic.SqlSearchDto();
+        dto.setQuery(query);
+        return dto;
+    }
 
     private com.hivearmor.domain.shared_types.CsvExportingParams buildCsvParams(String indexPattern) {
         var params = new com.hivearmor.domain.shared_types.CsvExportingParams();

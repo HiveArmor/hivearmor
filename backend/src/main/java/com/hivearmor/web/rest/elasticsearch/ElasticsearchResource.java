@@ -76,19 +76,83 @@ public class ElasticsearchResource {
         if (!TenantContext.isMssp()) {
             return;
         }
-        String tenantPrefix = TenantContext.get();
-        // The tenant prefix segment must appear in the requested pattern.
-        // Allowed patterns look like: v3-hive-<type>-<tenantPrefix>-*
-        String alertAllowed = indexResolver.resolveIndexPattern("alert");
-        String logAllowed = indexResolver.resolveIndexPattern("log");
-        // Extract the tenant-specific prefix portion (e.g., "v3-hive-alert-cwm-" or "v3-hive-log-cwm-")
-        String alertPrefix = alertAllowed.replace("*", "");
-        String logPrefix = logAllowed.replace("*", "");
-        if (requestedPattern.startsWith(alertPrefix) || requestedPattern.startsWith(logPrefix)) {
+        if (!isPatternInScope(requestedPattern)) {
+            throw new TenantScopeViolationException(requestedPattern);
+        }
+    }
+
+    /**
+     * Core scope check shared by every query endpoint. Returns {@code true} when the requested
+     * index pattern is within the active tenant's scope.
+     *
+     * <p>Allowed patterns look like {@code v3-hive-<type>-<tenantPrefix>-*}. A pattern is in
+     * scope when it starts with the tenant's resolved alert or log prefix. This is the single
+     * source of truth used by {@link #validateTenantScope(String)} and the scoped-SQL guard so
+     * behavior can never drift between endpoints.
+     *
+     * @param requestedPattern the client-supplied index name/pattern; {@code null}/blank is out of scope
+     * @return {@code true} iff the pattern is within the current tenant's scope
+     */
+    private boolean isPatternInScope(String requestedPattern) {
+        if (requestedPattern == null || requestedPattern.isBlank()) {
+            return false;
+        }
+        // resolveIndexPattern returns v3-hive-<type>-<prefix>-* ; strip the trailing wildcard.
+        String alertPrefix = indexResolver.resolveIndexPattern("alert").replace("*", "");
+        String logPrefix = indexResolver.resolveIndexPattern("log").replace("*", "");
+        String trimmed = requestedPattern.trim();
+        return trimmed.startsWith(alertPrefix) || trimmed.startsWith(logPrefix);
+    }
+
+    /**
+     * Tenant-scope guard for the raw-SQL search path. Unlike the other query endpoints,
+     * {@code /search/sql} carries no {@code indexPattern} argument — the target index lives
+     * inside the SQL string ({@code SELECT ... FROM <index> [JOIN <index> ...]}). In MSSP mode
+     * we cannot trust any index name in the SQL, so every table token following {@code FROM} or
+     * {@code JOIN} must resolve into the tenant's own scope; otherwise the query is rejected.
+     *
+     * <p>In non-MSSP (single-tenant) mode this is a no-op, preserving existing behavior.
+     *
+     * @param sql the sanitized SQL query
+     * @throws TenantScopeViolationException if any referenced index is outside tenant scope
+     */
+    private void validateSqlTenantScope(String sql) {
+        if (!TenantContext.isMssp()) {
             return;
         }
-        throw new TenantScopeViolationException(requestedPattern);
+        if (sql == null || sql.isBlank()) {
+            throw new TenantScopeViolationException("<empty sql>");
+        }
+        // Extract every table token after FROM / JOIN. Tokens may be bare, "double-quoted",
+        // or 'single-quoted'. We require each to be within the tenant's index scope.
+        java.util.regex.Matcher m = SQL_TABLE_TOKEN.matcher(sql);
+        boolean sawTable = false;
+        while (m.find()) {
+            sawTable = true;
+            String token = m.group(1);
+            if (token == null) {
+                token = m.group(2);
+            }
+            if (token == null) {
+                token = m.group(3);
+            }
+            if (!isPatternInScope(token)) {
+                throw new TenantScopeViolationException(token);
+            }
+        }
+        if (!sawTable) {
+            // Could not identify a FROM target — fail closed in MSSP mode rather than
+            // allow an unscoped query to reach OpenSearch.
+            throw new TenantScopeViolationException(sql);
+        }
     }
+
+    /**
+     * Matches the index token immediately following a {@code FROM} or {@code JOIN} keyword.
+     * Group 1 = double-quoted, group 2 = single-quoted, group 3 = bare identifier.
+     */
+    private static final java.util.regex.Pattern SQL_TABLE_TOKEN = java.util.regex.Pattern.compile(
+            "(?i)\\b(?:FROM|JOIN)\\s+(?:\"([^\"]+)\"|'([^']+)'|([A-Za-z0-9_.*\\-]+))");
 
 
 
@@ -278,12 +342,12 @@ public class ElasticsearchResource {
     public ResponseEntity<List<Map>> searchBySql(@RequestBody @Valid SqlSearchDto request,
                                                                      Pageable pageable) {
         final String ctx = CLASSNAME + ".searchBySql";
+        String sanitizedQuery = request.getQuery()
+                .trim()
+                .replaceAll(";+$", "")
+                .trim();
+        validateSqlTenantScope(sanitizedQuery);
         try {
-            String sanitizedQuery = request.getQuery()
-                    .trim()
-                    .replaceAll(";+$", "")
-                    .trim();
-
             String sqlQuery = SqlPaginationUtil.applyPagination(sanitizedQuery, pageable);
 
             SearchSqlResponse<Map> response = elasticsearchService
@@ -311,6 +375,7 @@ public class ElasticsearchResource {
     @PostMapping("/generic-search")
     public ResponseEntity<List<Map>> genericSearch(@Valid @RequestBody GenericSearchBody body, Pageable pageable) {
         final String ctx = CLASSNAME + ".genericSearch";
+        validateTenantScope(body.getIndex());
         try {
             SearchResponse<Map> searchResponse = elasticsearchService.search(body.getFilters(), body.getTop(),
                     body.getIndex(), pageable, Map.class);
@@ -352,6 +417,7 @@ public class ElasticsearchResource {
                                       @RequestParam String indexPattern,
                                       Pageable pageable) {
         final String ctx = CLASSNAME + ".count";
+        validateTenantScope(indexPattern);
         try {
             return ResponseEntity.ok().body(elasticsearchService.exists(filters, indexPattern));
         } catch (Exception e) {
