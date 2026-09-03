@@ -413,7 +413,9 @@
 .hunt-field-row { display: grid; width: 100%; min-height: 38px; grid-template-columns: minmax(0, 1fr) 40px; align-items: center; padding: 4px 30px 4px 9px; border: 0; background: transparent; color: var(--ha-foreground-primary); cursor: pointer; text-align: left; }
 .hunt-field-row:hover { background: var(--ha-surface-hover); }
 .hunt-field-group li[data-expanded] > .hunt-field-row { background: var(--ha-fill-primary-subtle); }
-.hunt-field-row > span { min-width: 0; }
+.hunt-field-row > span { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.hunt-field-row__type-icon { margin-top: 1px; }
+.hunt-field-row__text { min-width: 0; }
 .hunt-field-row strong, .hunt-field-row small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hunt-field-row strong { font: 10.5px/1.3 var(--ha-font-mono); font-weight: 560; }
 .hunt-field-row small { color: var(--ha-foreground-tertiary); font-size: 9px; }

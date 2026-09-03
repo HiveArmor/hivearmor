@@ -85,10 +85,13 @@
   --ha-scrim: color-mix(in srgb, var(--ha-foreground-inverse) 42%, transparent);
   --ha-scrim-strong: color-mix(in srgb, var(--ha-foreground-inverse) 70%, transparent);
 
-  /* Geometry and motion */
-  --ha-radius-control: 8px;
-  --ha-radius-panel: 12px;
-  --ha-radius-workspace: 16px;
+  /* Geometry and motion — squared scale for a dense SOC surface.
+     Values retuned squarer (control 8->6, panel 12->8, workspace 16->10);
+     token names kept so every consumer inherits without a rename sweep.
+     Keeps primary surfaces at <=8px per the design-system radius rule. */
+  --ha-radius-control: 6px;
+  --ha-radius-panel: 8px;
+  --ha-radius-workspace: 10px;
   --ha-radius-pill: 999px;
   --ha-border-width: 1px;
   --ha-shadow-low: 0 1px 2px color-mix(in srgb, var(--ha-foreground-inverse) 24%, transparent);
