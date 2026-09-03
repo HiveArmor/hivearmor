@@ -1,5 +1,4 @@
-.finding-promotion__backdrop { position: fixed; z-index: 350; inset: 0; display: grid; place-items: center; padding: 24px; background: color-mix(in srgb, var(--ha-surface-app) 84%, transparent); backdrop-filter: none; }
-.finding-promotion { width: min(610px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; border: 1px solid var(--ha-border-strong); border-radius: 11px; background: var(--ha-surface-overlay); box-shadow: var(--ha-shadow-high); color: var(--ha-foreground-primary); }
+.finding-promotion { color: var(--ha-foreground-primary); }
 .finding-promotion > header { display: grid; grid-template-columns: 44px minmax(0, 1fr) 32px; gap: 10px; padding: 14px; border-bottom: 1px solid var(--ha-border-subtle); background: linear-gradient(115deg, color-mix(in srgb, var(--ha-action-primary) 10%, transparent), transparent 48%), var(--ha-surface-panel); }
 .finding-promotion > header > span { display: grid; width: 42px; height: 46px; place-items: center; clip-path: polygon(25% 3%,75% 3%,100% 50%,75% 97%,25% 97%,0 50%); background: color-mix(in srgb, var(--ha-action-primary) 17%, var(--ha-surface-elevated)); color: var(--ha-action-secondary); }
 .finding-promotion > header small { color: var(--ha-action-secondary); font: 8px/1.2 var(--ha-font-ui); font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
