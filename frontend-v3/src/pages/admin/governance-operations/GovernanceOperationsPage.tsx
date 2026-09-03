@@ -9,6 +9,7 @@ import { governanceOperationsService } from './governanceOperations.service';
 import type { ApiLifecycleEntry, GovernanceAuditEvent, GovernanceChangeRequest, GovernanceInventory, GovernanceRetentionPolicy, GovernanceSelection, GovernanceView } from './governanceOperations.types';
 import { ADMIN_AUDIT_PROPOSE_FAIL_CLOSED_TITLE } from '../audit/adminAudit.honesty';
 
+import { HaStepper } from '@/components/ha-stepper';
 import { StatusDock } from '@/components/status-dock';
 import { ROUTES } from '@/constants/routes.constants';
 import { useEpsStream } from '@/hooks/useEpsStream';
@@ -123,11 +124,12 @@ function GovernanceDialog({kind,fixture,onClose}:{kind:'retention'|'configuratio
         </header>
         <div className="gov-dialog__body">
           <p>{content.description}</p>
-          <div className="gov-stepper">
-            {content.steps.map((step,index)=>(
-              <span key={step} data-active={index===0||undefined}>{step}</span>
-            ))}
-          </div>
+          <HaStepper
+            className="gov-stepper"
+            ariaLabel={content.title}
+            current={0}
+            steps={content.steps.map((step) => ({ id: step, label: step }))}
+          />
           <div className="gov-form-grid">
             {content.fields.map(([label,placeholder],index)=>(
               <label className={index > 1 ? 'gov-field gov-field--wide' : 'gov-field'} key={label}>
