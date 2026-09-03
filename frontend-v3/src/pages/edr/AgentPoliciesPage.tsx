@@ -551,6 +551,9 @@ function AgentPoliciesContent({ canMutate }: { canMutate: boolean }): JSX.Elemen
             <Link to="/posture/sensors" className="agent-policies-page__link">
               Sensors — fleet / enroll
             </Link>
+            <Link to="/posture/sensors/fim-policies" className="agent-policies-page__link">
+              FIM push policies (schema v1)
+            </Link>
             <Link to="/edr/endpoints" className="agent-policies-page__link">
               Endpoints — timelines
             </Link>

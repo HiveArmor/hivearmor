@@ -221,9 +221,10 @@ public class HaAgentPolicyService {
             );
         } else {
             evidence.setHonestyNote(
-                "appliedVersion/lastAppliedAt fields exist for assigned agents, but the production "
-                    + "agent apply/ack path is not LIVE VERIFIED (Admin JWT report-state only). "
-                    + "STAGING CANDIDATE — never treat as enforced on host."
+                "appliedVersion/lastAppliedAt fields exist for assigned agents, but host enforcement "
+                    + "is not LIVE VERIFIED. Agent device ACK (X-HiveArmor-Agent-Id + X-Agent-Key) is "
+                    + "STAGING CANDIDATE on /api/agent-policies; Ha EDR policies still do not push "
+                    + "APPLY_POLICY. Never treat as enforced on host."
             );
         }
     }

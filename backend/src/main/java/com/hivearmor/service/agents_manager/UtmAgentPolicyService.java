@@ -26,37 +26,31 @@ public class UtmAgentPolicyService {
     private final UtmAgentPolicyStateRepository stateRepo;
     private final UtmAgentGroupMemberRepository memberRepo;
     private final IncidentResponseCommandService commandService;
+    private final AgentPolicySchemaService schemaService;
 
     public UtmAgentPolicyService(UtmAgentPolicyRepository policyRepo,
                                   UtmPolicyGroupAssignmentRepository assignmentRepo,
                                   UtmPolicyPushLogRepository pushLogRepo,
                                   UtmAgentPolicyStateRepository stateRepo,
                                   UtmAgentGroupMemberRepository memberRepo,
-                                  IncidentResponseCommandService commandService) {
+                                  IncidentResponseCommandService commandService,
+                                  AgentPolicySchemaService schemaService) {
         this.policyRepo = policyRepo;
         this.assignmentRepo = assignmentRepo;
         this.pushLogRepo = pushLogRepo;
         this.stateRepo = stateRepo;
         this.memberRepo = memberRepo;
         this.commandService = commandService;
+        this.schemaService = schemaService;
     }
 
     public List<AgentPolicyDTO> listAll() {
-        return policyRepo.findAllByOrderByPolicyNameAsc().stream().map(p -> {
-            AgentPolicyDTO dto = new AgentPolicyDTO(p);
-            dto.setAssignedGroupIds(assignmentRepo.findByPolicyId(p.getId()).stream()
-                .map(UtmPolicyGroupAssignment::getGroupId).collect(Collectors.toList()));
-            return dto;
-        }).collect(Collectors.toList());
+        return policyRepo.findAllByOrderByPolicyNameAsc().stream().map(this::toDto)
+            .collect(Collectors.toList());
     }
 
     public Optional<AgentPolicyDTO> getById(Long id) {
-        return policyRepo.findById(id).map(p -> {
-            AgentPolicyDTO dto = new AgentPolicyDTO(p);
-            dto.setAssignedGroupIds(assignmentRepo.findByPolicyId(p.getId()).stream()
-                .map(UtmPolicyGroupAssignment::getGroupId).collect(Collectors.toList()));
-            return dto;
-        });
+        return policyRepo.findById(id).map(this::toDto);
     }
 
     public AgentPolicyDTO create(AgentPolicyDTO dto, String createdBy) {
@@ -64,11 +58,12 @@ public class UtmAgentPolicyService {
         p.setPolicyName(dto.getPolicyName());
         p.setDescription(dto.getDescription());
         p.setPlatform(dto.getPlatform());
-        p.setPolicyConfig(dto.getPolicyConfig() != null ? dto.getPolicyConfig() : "{}");
+        p.setPolicyConfig(schemaService.normalizePolicyConfig(
+            dto.getPolicyConfig() != null ? dto.getPolicyConfig() : "{}"));
         p.setVersionNum(1);
         p.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
         p.setCreatedBy(createdBy);
-        return new AgentPolicyDTO(policyRepo.save(p));
+        return toDto(policyRepo.save(p));
     }
 
     public AgentPolicyDTO update(Long id, AgentPolicyDTO dto) {
@@ -77,11 +72,25 @@ public class UtmAgentPolicyService {
         p.setPolicyName(dto.getPolicyName());
         p.setDescription(dto.getDescription());
         p.setPlatform(dto.getPlatform());
-        if (dto.getPolicyConfig() != null) p.setPolicyConfig(dto.getPolicyConfig());
+        if (dto.getPolicyConfig() != null) {
+            p.setPolicyConfig(schemaService.normalizePolicyConfig(dto.getPolicyConfig()));
+        }
         if (dto.getIsActive() != null) p.setIsActive(dto.getIsActive());
         p.setVersionNum(p.getVersionNum() + 1);
         p.setUpdatedAt(Instant.now());
-        return new AgentPolicyDTO(policyRepo.save(p));
+        return toDto(policyRepo.save(p));
+    }
+
+    /**
+     * Maps entity → DTO and ensures {@code policyConfig} is served as schema v1 JSON
+     * even for legacy rows written before BE-POL-01.
+     */
+    private AgentPolicyDTO toDto(UtmAgentPolicy p) {
+        AgentPolicyDTO dto = new AgentPolicyDTO(p);
+        dto.setPolicyConfig(schemaService.normalizePolicyConfigForServe(p.getPolicyConfig()));
+        dto.setAssignedGroupIds(assignmentRepo.findByPolicyId(p.getId()).stream()
+            .map(UtmPolicyGroupAssignment::getGroupId).collect(Collectors.toList()));
+        return dto;
     }
 
     public void delete(Long id) {

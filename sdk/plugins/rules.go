@@ -1,3 +1,5 @@
+//go:build !agent_slim
+
 package plugins
 
 import (

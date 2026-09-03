@@ -47,6 +47,8 @@ export const ROUTES = {
   CIS_BENCHMARK: '/posture/cis-benchmark',
   READINESS: '/posture/readiness',
   SENSORS: '/posture/sensors',
+  /** Utm agent-policies FIM console (schema v1 push) — STAGING CANDIDATE */
+  AGENT_FIM_POLICIES: '/posture/sensors/fim-policies',
   COMPLIANCE: '/compliance',
 
   // UEBA

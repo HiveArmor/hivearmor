@@ -104,6 +104,24 @@ func commandProcessor(path string, stream AgentService_AgentStreamClient, cnf *c
 		return nil
 	}
 
+	// Unstructured remote shell — deny by default (AGT-SEC-01).
+	if !ShellExecutionAllowed(cnf != nil && cnf.AllowRemoteShell) {
+		utils.Logger.LogF(200, "REMOTE_SHELL denied for cmdId=%s", cmdId)
+		if err := stream.Send(&BidirectionalStream{
+			StreamMessage: &BidirectionalStream_Result{
+				Result: &CommandResult{
+					Result:     ShellDeniedMessage,
+					AgentId:    strconv.Itoa(int(cnf.AgentID)),
+					ExecutedAt: timestamppb.Now(),
+					CmdId:      cmdId,
+				},
+			},
+		}); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	switch runtime.GOOS {
 	case "windows":
 		if shell == "powershell" {

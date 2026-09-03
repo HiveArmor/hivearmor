@@ -31,7 +31,7 @@ class AgentPolicyResourcePreAuthorizeTest {
 
     @Test
     void readsAllowAnalystIncludingStates() {
-        for (String name : List.of("listPolicies", "getPolicy", "getPushLog", "getPolicyStates")) {
+        for (String name : List.of("listPolicies", "getPushLog", "getPolicyStates")) {
             Method m = methodNamed(name);
             PreAuthorize pre = m.getAnnotation(PreAuthorize.class);
             assertThat(pre).as(name).isNotNull();
@@ -40,6 +40,15 @@ class AgentPolicyResourcePreAuthorizeTest {
             assertThat(pre.value()).as(name).contains("ROLE_ADMIN");
             assertThat(m.getAnnotation(GetMapping.class)).as(name).isNotNull();
         }
+    }
+
+    @Test
+    void getPolicyAllowsAgentDevice() {
+        Method m = methodNamed("getPolicy");
+        PreAuthorize pre = m.getAnnotation(PreAuthorize.class);
+        assertThat(pre).isNotNull();
+        assertThat(pre.value()).contains("ROLE_AGENT_DEVICE");
+        assertThat(pre.value()).contains("ROLE_ANALYST");
     }
 
     @Test
@@ -55,5 +64,16 @@ class AgentPolicyResourcePreAuthorizeTest {
             assertThat(pre.value()).as(name).contains("ROLE_SOC_MANAGER");
             assertThat(pre.value()).as(name).doesNotContain("ROLE_ANALYST");
         }
+    }
+
+    @Test
+    void reportStateAllowsAdminSocManagerAndAgentDevice() {
+        Method m = methodNamed("reportState");
+        PreAuthorize pre = m.getAnnotation(PreAuthorize.class);
+        assertThat(pre).isNotNull();
+        assertThat(pre.value()).contains("ROLE_ADMIN");
+        assertThat(pre.value()).contains("ROLE_SOC_MANAGER");
+        assertThat(pre.value()).contains("ROLE_AGENT_DEVICE");
+        assertThat(pre.value()).doesNotContain("ROLE_ANALYST");
     }
 }

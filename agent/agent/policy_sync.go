@@ -2,6 +2,7 @@ package agent
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -98,6 +99,13 @@ func handleApplyPolicy(cnf *config.Config, command string) string {
 		utils.Logger.ErrorF("policy_sync: store error: %v", err)
 		reportPolicyStateToBackend(cnf, policyID, version, "FAILED", fmt.Sprintf("store error: %v", err))
 		return fmt.Sprintf("APPLY_POLICY error: store: %v", err)
+	}
+
+	// Runtime apply (FIM + collector desired state + shell gate) before APPLIED ACK.
+	if err := ApplyPolicyConfig(policyConfig); err != nil {
+		utils.Logger.ErrorF("policy_sync: apply error: %v", err)
+		reportPolicyStateToBackend(cnf, policyID, version, "FAILED", fmt.Sprintf("apply error: %v", err))
+		return fmt.Sprintf("APPLY_POLICY error: apply: %v", err)
 	}
 
 	reportPolicyStateToBackend(cnf, policyID, version, "APPLIED", "")
@@ -212,8 +220,28 @@ func notifyRuleSyncAck(cnf *config.Config, ruleID int64) error {
 	return nil
 }
 
+// Agent auth header names — must match telemetry ingest (TelemetryAgentIdentityFilter).
+const (
+	HeaderAgentID  = "X-HiveArmor-Agent-Id"
+	HeaderAgentKey = "X-Agent-Key"
+)
+
+// setAgentAuthHeaders attaches device identity headers used by agent→backend calls.
+// Matches agent/telemetry/client.go: X-HiveArmor-Agent-Id + X-Agent-Key (not Bearer).
+// Backend must accept these on GET /api/agent-policies/{id} and POST report-state (BE-POL-01).
+func setAgentAuthHeaders(req *http.Request, cnf *config.Config) {
+	if req == nil || cnf == nil {
+		return
+	}
+	if cnf.AgentID == 0 || strings.TrimSpace(cnf.AgentKey) == "" {
+		return
+	}
+	req.Header.Set(HeaderAgentID, strconv.Itoa(int(cnf.AgentID)))
+	req.Header.Set(HeaderAgentKey, cnf.AgentKey)
+}
+
 // doBackendRequest performs an authenticated HTTP request to the backend.
-// Uses the agent key as a Bearer token.
+// Auth: X-HiveArmor-Agent-Id + X-Agent-Key (same as telemetry), not Bearer agent key.
 func doBackendRequest(cnf *config.Config, method, url string, body []byte) (*http.Response, error) {
 	var reqBody io.Reader
 	if body != nil {
@@ -223,9 +251,15 @@ func doBackendRequest(cnf *config.Config, method, url string, body []byte) (*htt
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+cnf.AgentKey)
 	req.Header.Set("Content-Type", "application/json")
+	setAgentAuthHeaders(req, cnf)
 
-	client := &http.Client{Timeout: 15 * time.Second}
+	skipTLS := cnf != nil && cnf.SkipCertValidation
+	client := &http.Client{
+		Timeout: 15 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: skipTLS}, //nolint:gosec
+		},
+	}
 	return client.Do(req)
 }

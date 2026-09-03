@@ -70,6 +70,12 @@ const POSTURE_ITEMS: NavItemSpec[] = [
   { label: 'CIS Benchmark', icon: 'ClipboardCheck', route: '/posture/cis-benchmark', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Detection Coverage', icon: 'Grid3x3', route: '/posture/readiness', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Sensors', icon: 'Activity', route: '/posture/sensors', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  {
+    label: 'Agent FIM Policies',
+    icon: 'FileSearch',
+    route: '/posture/sensors/fim-policies',
+    roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'],
+  },
   { label: 'Compliance', icon: 'CheckSquare', route: '/compliance', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
 ];
 // Section: ENDPOINT DEFENSE
