@@ -25,7 +25,7 @@ describe('agentPolicy.capabilities', () => {
     expect(AGENT_POLICY_HONESTY_BANNER).toMatch(/apply\/ack path unavailable/i);
     expect(AGENT_POLICY_HONESTY_BANNER).toMatch(/never treat .* enforced on host/i);
     expect(AGENT_POLICY_JOB_SENTENCE).toMatch(/config only/i);
-    expect(AGENT_POLICY_JOB_SENTENCE).toMatch(/Sensors/i);
+    expect(AGENT_POLICY_JOB_SENTENCE).toMatch(/Agent FIM policies/i);
     expect(AGENT_POLICY_JOB_SENTENCE).toMatch(/Endpoints/i);
     expect(AGENT_POLICY_JOB_SENTENCE).not.toMatch(/LIVE VERIFIED/i);
   });

@@ -227,6 +227,11 @@ const ReadinessMatrixPage = React.lazy(() =>
 const SensorGridPage = React.lazy(() =>
   import('@/pages/posture/sensors/SensorGridPage').then(m => ({ default: m.SensorGridPage }))
 );
+const AgentFimPolicyPage = React.lazy(() =>
+  import('@/pages/posture/sensors/AgentFimPolicyPage').then(m => ({
+    default: m.AgentFimPolicyPage,
+  }))
+);
 const VulnerabilitiesPage = React.lazy(() =>
   import('@/pages/posture/vulnerabilities/VulnerabilitiesPage').then(m => ({ default: m.VulnerabilitiesPage }))
 );
@@ -758,6 +763,14 @@ export const router = createBrowserRouter([
         element: (
           <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <SensorGridPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'posture/sensors/fim-policies',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <AgentFimPolicyPage />
           </AuthGuard>
         ),
       },

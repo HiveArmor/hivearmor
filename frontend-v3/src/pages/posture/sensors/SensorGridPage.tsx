@@ -450,6 +450,9 @@ export function SensorGridPage(): JSX.Element {
           <Link to="/edr/endpoints" className="sensor-fleet-page__link">
             Endpoint telemetry
           </Link>
+          <Link to="/posture/sensors/fim-policies" className="sensor-fleet-page__link">
+            Agent FIM policies
+          </Link>
           {canViewEnrollmentAudit && (
             <Link to="/admin/enrollment-audit" className="sensor-fleet-page__link">
               Enrollment audit

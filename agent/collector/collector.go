@@ -8,7 +8,6 @@ import (
 	"github.com/hivearmor/sdk/plugins"
 	"github.com/hivearmor/agent/agent"
 	"github.com/hivearmor/agent/collector/file"
-	"github.com/hivearmor/agent/collector/netflow"
 	"github.com/hivearmor/agent/collector/platform"
 	"github.com/hivearmor/agent/collector/syslog"
 	"github.com/hivearmor/agent/utils"
@@ -42,19 +41,29 @@ func StartAll(ctx context.Context) {
 	activeCollectors = nil
 
 	// Create syslog collector
-	syslogCollector := syslog.New()
-	activeCollectors = append(activeCollectors, syslogCollector)
-	go runCollector(ctx, syslogCollector, agent.LogQueue)
+	if agent.CollectorDesiredEnabled("syslog") {
+		syslogCollector := syslog.New()
+		activeCollectors = append(activeCollectors, syslogCollector)
+		go runCollector(ctx, syslogCollector, agent.LogQueue)
+	} else {
+		utils.Logger.Info("syslog: disabled by applied policy collectors.syslog=false")
+	}
 
-	// Create netflow collector
-	netflowCollector := netflow.New()
-	activeCollectors = append(activeCollectors, netflowCollector)
-	go runCollector(ctx, netflowCollector, agent.LogQueue)
+	// Netflow: build-tag optional (see registerNetflowCollector) + policy toggle.
+	if agent.CollectorDesiredEnabled("netflow") {
+		registerNetflowCollector(ctx, &activeCollectors)
+	} else {
+		utils.Logger.Info("netflow: disabled by applied policy collectors.netflow=false")
+	}
 
 	// Create file collector (nginx, postgresql, etc.)
-	fileCollector := file.New()
-	activeCollectors = append(activeCollectors, fileCollector)
-	go runCollector(ctx, fileCollector, agent.LogQueue)
+	if agent.CollectorDesiredEnabled("file") {
+		fileCollector := file.New()
+		activeCollectors = append(activeCollectors, fileCollector)
+		go runCollector(ctx, fileCollector, agent.LogQueue)
+	} else {
+		utils.Logger.Info("file: disabled by applied policy collectors.file=false")
+	}
 
 	// Create platform collectors (filebeat, winlogbeat, macos, etc.)
 	platformCollectors := platform.GetCollectors()

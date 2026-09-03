@@ -169,6 +169,10 @@ describe('SensorGridPage fleet UX', () => {
       'href',
       '/edr/endpoints'
     );
+    expect(screen.getByRole('link', { name: 'Agent FIM policies' })).toHaveAttribute(
+      'href',
+      '/posture/sensors/fim-policies'
+    );
     const timelineLinks = screen.getAllByRole('link', {
       name: /Open EDR timeline for wks-01/i,
     });
