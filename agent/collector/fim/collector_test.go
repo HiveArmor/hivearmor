@@ -241,6 +241,82 @@ func TestIsExcluded(t *testing.T) {
 	}
 }
 
+// TestShouldDropPath_ExcludeEnforced verifies covering-rule + exclude filter
+// used by handleEvent (STAGING CANDIDATE — exclude was previously a dead helper).
+func TestShouldDropPath_ExcludeEnforced(t *testing.T) {
+	rules := []WatchRule{
+		{Path: "/etc", Recursive: true, Exclude: []string{"*.tmp", "shadow"}},
+		{Path: "/var/log", Recursive: false},
+	}
+	cases := []struct {
+		name string
+		path string
+		drop bool
+	}{
+		{"watched file", "/etc/passwd", false},
+		{"basename exclude", "/etc/shadow", true},
+		{"glob exclude", "/etc/cache.tmp", true},
+		{"nested under recursive", "/etc/cron.d/job", false},
+		{"outside all rules", "/opt/app/bin", true},
+		{"non-recursive child", "/var/log/syslog", false},
+		{"non-recursive nested", "/var/log/a/b", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := shouldDropPath(tc.path, rules)
+			if got != tc.drop {
+				t.Fatalf("shouldDropPath(%q)=%v want %v", tc.path, got, tc.drop)
+			}
+		})
+	}
+}
+
+func TestCoveringRule_MostSpecific(t *testing.T) {
+	rules := []WatchRule{
+		{Path: "/etc", Recursive: true, Exclude: []string{"*.tmp"}},
+		{Path: "/etc/special", Recursive: true},
+	}
+	r, ok := coveringRule("/etc/special/file.txt", rules)
+	if !ok {
+		t.Fatal("expected covering rule")
+	}
+	if r.Path != "/etc/special" {
+		t.Fatalf("want most specific /etc/special, got %s", r.Path)
+	}
+	// Specific rule has no exclude → do not drop even if parent would.
+	if shouldDropPath("/etc/special/x.tmp", rules) {
+		t.Fatal("most-specific rule without exclude should keep path")
+	}
+	if !shouldDropPath("/etc/other.tmp", rules) {
+		t.Fatal("parent exclude should drop")
+	}
+}
+
+// TestSeedBaselineSkipsExcluded verifies excluded files are not baselined.
+func TestSeedBaselineSkipsExcluded(t *testing.T) {
+	dir := t.TempDir()
+	dbPath := filepath.Join(dir, "bl.db")
+	bl, err := openBaselineDB(dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer bl.close()
+
+	fPath := filepath.Join(dir, "noise.tmp")
+	if err := os.WriteFile(fPath, []byte("skip-me"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	c := &Collector{baseline: bl}
+	rule := WatchRule{Path: dir, Recursive: true, Exclude: []string{"*.tmp"}}
+	if err := c.seedBaseline(fPath, rule); err != nil {
+		t.Fatalf("seedBaseline: %v", err)
+	}
+	got, _ := bl.get(fPath)
+	if got != nil {
+		t.Fatal("excluded file must not receive a baseline entry")
+	}
+}
+
 // TestWatchRuleDefaults checks that exclusion lists default to nil (not nil-panic).
 func TestWatchRuleDefaults(t *testing.T) {
 	r := WatchRule{Path: "/tmp", Recursive: true}
@@ -260,8 +336,9 @@ func TestSeedBaselineSkipsDir(t *testing.T) {
 	defer bl.close()
 
 	c := &Collector{baseline: bl}
+	rule := WatchRule{Path: dir, Recursive: true}
 	// Seed a directory — should be silently skipped.
-	if err := c.seedBaseline(dir); err != nil {
+	if err := c.seedBaseline(dir, rule); err != nil {
 		t.Errorf("seedBaseline(dir): %v", err)
 	}
 	got, _ := bl.get(dir)
@@ -286,7 +363,8 @@ func TestSeedBaselineCreatesEntry(t *testing.T) {
 	}
 
 	c := &Collector{baseline: bl}
-	if err := c.seedBaseline(fPath); err != nil {
+	rule := WatchRule{Path: dir, Recursive: true}
+	if err := c.seedBaseline(fPath, rule); err != nil {
 		t.Fatalf("seedBaseline: %v", err)
 	}
 
@@ -322,10 +400,11 @@ func TestSeedBaselineIdempotent(t *testing.T) {
 	}
 
 	c := &Collector{baseline: bl}
-	if err := c.seedBaseline(fPath); err != nil {
+	rule := WatchRule{Path: dir, Recursive: true}
+	if err := c.seedBaseline(fPath, rule); err != nil {
 		t.Fatalf("first seed: %v", err)
 	}
-	if err := c.seedBaseline(fPath); err != nil {
+	if err := c.seedBaseline(fPath, rule); err != nil {
 		t.Fatalf("second seed: %v", err)
 	}
 

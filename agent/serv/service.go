@@ -165,6 +165,12 @@ func (p *program) run() {
 		utils.Logger.ErrorF("error syncing collector config: %v", err)
 	}
 
+	// Apply last stored agent policy before starting collectors (AGT-POL-01).
+	fim.RegisterPolicyApplier()
+	if err := pb.LoadAndApplyLatestPolicy(); err != nil {
+		utils.Logger.ErrorF("policy_apply on startup: %v", err)
+	}
+
 	// EDR subsystems — only started in EDR mode.
 	if cnf.IsEDR() {
 		// Legacy Linux /proc-poll EDR (context-aware; exits when ctx cancelled).
@@ -194,28 +200,38 @@ func (p *program) run() {
 		})
 
 		// FIM engine — file integrity monitoring (all platforms).
-		fimCollector := fim.New(cnf)
-		p.goSafe("FIMCollector", func() {
-			fimCollector.Start(ctx, pb.LogQueue)
-		})
+		if pb.CollectorDesiredEnabled("fim") {
+			fimCollector := fim.New(cnf)
+			p.goSafe("FIMCollector", func() {
+				fimCollector.Start(ctx, pb.LogQueue)
+			})
+		} else {
+			utils.Logger.Info("fim: disabled by applied policy collectors.fim=false")
+		}
 
 		// DNS telemetry (Linux tcpdump+/proc; Windows via ETW; macOS via ESF).
-		dnsCollector := dns.New(cnf)
-		p.goSafe("DNSCollector", func() {
-			dnsCollector.Start(ctx, pb.LogQueue)
-		})
+		if pb.CollectorDesiredEnabled("dns") {
+			dnsCollector := dns.New(cnf)
+			p.goSafe("DNSCollector", func() {
+				dnsCollector.Start(ctx, pb.LogQueue)
+			})
+		}
 
 		// Per-process network connection telemetry (all platforms).
-		netconnCollector := netconn.New(cnf)
-		p.goSafe("NetConnCollector", func() {
-			netconnCollector.Start(ctx, pb.LogQueue)
-		})
+		if pb.CollectorDesiredEnabled("netconn") {
+			netconnCollector := netconn.New(cnf)
+			p.goSafe("NetConnCollector", func() {
+				netconnCollector.Start(ctx, pb.LogQueue)
+			})
+		}
 
 		// USB / removable media event collector (Linux inotify; Windows/macOS via ETW/ESF).
-		usbCollector := usb.New(cnf)
-		p.goSafe("USBCollector", func() {
-			usbCollector.Start(ctx, pb.LogQueue)
-		})
+		if pb.CollectorDesiredEnabled("usb") {
+			usbCollector := usb.New(cnf)
+			p.goSafe("USBCollector", func() {
+				usbCollector.Start(ctx, pb.LogQueue)
+			})
+		}
 	}
 
 	// Start legacy log collectors (syslog, netflow, file, platform).

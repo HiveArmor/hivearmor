@@ -41,6 +41,10 @@ type Config struct {
 	AgentKey           string    `yaml:"agent-key"`
 	SkipCertValidation bool      `yaml:"insecure"`
 	Mode               AgentMode `yaml:"mode"`
+	// AllowRemoteShell enables unstructured RemoteCommand shell execution.
+	// Default false. Prefer structured EDR_* commands. Staging may also use
+	// env HIVEARMOR_ALLOW_REMOTE_SHELL or policy response.allow_shell.
+	AllowRemoteShell bool `yaml:"allow_remote_shell"`
 }
 
 // IsEDR returns true when the agent is configured for EDR mode.
@@ -81,6 +85,7 @@ func GetCurrentConfig() (*Config, error) {
 		cnf.AgentKey = agentKey
 		cnf.SkipCertValidation = encryptConfig.SkipCertValidation
 		cnf.Mode = encryptConfig.Mode
+		cnf.AllowRemoteShell = encryptConfig.AllowRemoteShell
 		if cnf.Mode == "" {
 			cnf.Mode = AgentModeLog
 		}
@@ -108,6 +113,7 @@ func SaveConfig(cnf *Config) error {
 		AgentKey:           agentKey,
 		SkipCertValidation: cnf.SkipCertValidation,
 		Mode:               cnf.Mode,
+		AllowRemoteShell:   cnf.AllowRemoteShell,
 	}
 
 	if err := writeProtectedYAML(ConfigurationFile, encryptConf); err != nil {

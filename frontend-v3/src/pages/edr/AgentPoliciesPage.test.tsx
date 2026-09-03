@@ -233,7 +233,7 @@ describe('AgentPoliciesPage', () => {
     expect(screen.getByText(/apply\/ack path unavailable/i)).toBeDefined();
     expect(screen.getByText(/never treat .* enforced on host/i)).toBeDefined();
     expect(
-      screen.getByText(/Define and assign agent monitoring policies \(config only\)/i),
+      screen.getByText(/Define and assign agent monitoring policies \(config only/i),
     ).toBeDefined();
     expect(screen.queryByText(/enforced on host$/i)).toBeNull();
   });
@@ -251,6 +251,9 @@ describe('AgentPoliciesPage', () => {
     expect(
       screen.getByRole('link', { name: /Sensors — fleet \/ enroll/i }),
     ).toHaveAttribute('href', '/posture/sensors');
+    expect(
+      screen.getByRole('link', { name: /FIM push policies \(schema v1\)/i }),
+    ).toHaveAttribute('href', '/posture/sensors/fim-policies');
     expect(
       screen.getByRole('link', { name: /Endpoints — timelines/i }),
     ).toHaveAttribute('href', '/edr/endpoints');

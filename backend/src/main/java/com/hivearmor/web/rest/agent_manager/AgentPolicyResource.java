@@ -1,6 +1,7 @@
 package com.hivearmor.web.rest.agent_manager;
 
 import com.hivearmor.domain.application_events.enums.ApplicationEventType;
+import com.hivearmor.security.telemetry.TelemetryAgentIdentityFilter;
 import com.hivearmor.service.agents_manager.UtmAgentPolicyService;
 import com.hivearmor.service.application_events.ApplicationEventService;
 import com.hivearmor.service.dto.agent_manager.*;
@@ -13,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +22,8 @@ import java.util.Map;
  * Agent-manager policy CRUD, push, and state reads.
  *
  * <p>Reads: Admin | SOC Manager | Analyst. Mutations: Admin | SOC Manager.
- * {@code report-state} remains Admin-only (not an agent INTERNAL_KEY path).
+ * Agent device identity ({@code X-HiveArmor-Agent-Id} + {@code X-Agent-Key}) may
+ * {@code GET /{id}} and {@code POST /report-state} (BE-POL-01 ACK).
  * STAGING CANDIDATE — not PRODUCTION READY.
  */
 @RestController
@@ -32,6 +35,11 @@ public class AgentPolicyResource {
         "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST')";
     private static final String MUTATE_AUTH =
         "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER')";
+    /** Operator JWT or enrolled agent device ({@code ROLE_AGENT_DEVICE}). */
+    private static final String AGENT_FETCH_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST','ROLE_AGENT_DEVICE')";
+    private static final String REPORT_STATE_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_AGENT_DEVICE')";
 
     private final Logger log = LoggerFactory.getLogger(AgentPolicyResource.class);
     private final UtmAgentPolicyService policyService;
@@ -57,7 +65,7 @@ public class AgentPolicyResource {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize(READ_AUTH)
+    @PreAuthorize(AGENT_FETCH_AUTH)
     public ResponseEntity<AgentPolicyDTO> getPolicy(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".getPolicy";
         try {
@@ -79,6 +87,10 @@ public class AgentPolicyResource {
         try {
             String user = SecurityContextHolder.getContext().getAuthentication().getName();
             return ResponseEntity.status(HttpStatus.CREATED).body(policyService.create(dto, user));
+        } catch (IllegalArgumentException e) {
+            String msg = ctx + ": " + e.getMessage();
+            log.warn(msg);
+            return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST, msg);
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);
@@ -93,6 +105,10 @@ public class AgentPolicyResource {
         final String ctx = CLASSNAME + ".updatePolicy";
         try {
             return ResponseEntity.ok(policyService.update(id, dto));
+        } catch (IllegalArgumentException e) {
+            String msg = ctx + ": " + e.getMessage();
+            log.warn(msg);
+            return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST, msg);
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);
@@ -189,20 +205,42 @@ public class AgentPolicyResource {
         }
     }
 
+    /**
+     * Agent ACK path. Prefer enrolled agent headers; Admin|SOC Manager JWT also allowed.
+     * When device-authenticated, {@code agentId} is bound to the verified connector id
+     * (body spoofing ignored). Never logs agent keys.
+     */
     @PostMapping("/report-state")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Void> reportState(@RequestBody Map<String, Object> body) {
+    @PreAuthorize(REPORT_STATE_AUTH)
+    public ResponseEntity<Void> reportState(@RequestBody Map<String, Object> body,
+                                            HttpServletRequest request) {
         final String ctx = CLASSNAME + ".reportState";
         try {
-            String agentId = (String) body.get("agentId");
+            Object attr = request.getAttribute(TelemetryAgentIdentityFilter.ATTR_AGENT_CONNECTOR_ID);
+            String agentId;
+            if (attr instanceof Integer connectorId) {
+                agentId = String.valueOf(connectorId);
+            } else {
+                agentId = body.get("agentId") != null ? body.get("agentId").toString() : null;
+            }
+            if (agentId == null || agentId.isBlank()) {
+                return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST, ctx + ": agentId required");
+            }
+            if (body.get("policyId") == null) {
+                return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST, ctx + ": policyId required");
+            }
             Long policyId = Long.valueOf(body.get("policyId").toString());
-            Integer appliedVersion = body.containsKey("appliedVersion")
+            Integer appliedVersion = body.containsKey("appliedVersion") && body.get("appliedVersion") != null
                 ? Integer.valueOf(body.get("appliedVersion").toString())
                 : null;
-            String state = (String) body.get("state");
-            String driftDetails = (String) body.get("driftDetails");
+            String state = body.get("state") != null ? body.get("state").toString() : null;
+            String driftDetails = body.get("driftDetails") != null ? body.get("driftDetails").toString() : null;
             policyService.updatePolicyState(agentId, policyId, appliedVersion, state, driftDetails);
             return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            String msg = ctx + ": " + e.getMessage();
+            log.warn(msg);
+            return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST, msg);
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);

@@ -1,0 +1,380 @@
+/**
+ * Agent FIM Policy Console — Sensors posture surface.
+ * Tokens only; density matches Agent Policies inventory pattern.
+ */
+
+.agent-fim-policy-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--ha-masthead-height));
+  overflow: hidden;
+  background: var(--ha-background);
+}
+
+.agent-fim-policy-page__banner {
+  flex-shrink: 0;
+  margin: 8px 16px 0;
+}
+
+.agent-fim-policy-page__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 52px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-primary);
+}
+
+.agent-fim-policy-page__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.agent-fim-policy-page__title-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.agent-fim-policy-page__title {
+  margin: 0;
+  font-size: var(--ha-text-xl);
+  font-weight: 600;
+  color: var(--ha-text-primary);
+}
+
+.agent-fim-policy-page__count {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.agent-fim-policy-page__job,
+.agent-fim-policy-page__dual {
+  margin: 0;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  max-width: 52rem;
+}
+
+.agent-fim-policy-page__dual {
+  margin-top: 2px;
+  color: var(--ha-text-secondary);
+  opacity: 0.9;
+}
+
+.agent-fim-policy-page__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.agent-fim-policy-page__links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.agent-fim-policy-page__link {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-primary);
+  text-decoration: none;
+}
+
+.agent-fim-policy-page__link:hover {
+  text-decoration: underline;
+}
+
+.agent-fim-policy-page__readonly {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+}
+
+.agent-fim-policy-page__error {
+  margin: 8px 20px;
+  padding: 8px 12px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  background: color-mix(in srgb, var(--ha-critical) 12%, transparent);
+  color: var(--ha-text-primary);
+  font-size: var(--ha-text-sm);
+}
+
+.agent-fim-policy-page__inventory {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px 20px 24px;
+}
+
+.agent-fim-policy-page__loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.agent-fim-policy-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ha-text-sm);
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+}
+
+.agent-fim-policy-page__table th,
+.agent-fim-policy-page__table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--ha-border);
+  color: var(--ha-text-primary);
+  vertical-align: middle;
+}
+
+.agent-fim-policy-page__table th {
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ha-text-secondary);
+  background: var(--ha-surface-raised);
+}
+
+.agent-fim-policy-page__name {
+  font-weight: 500;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-fim-policy-page__inactive {
+  font-weight: 400;
+  color: var(--ha-text-secondary);
+}
+
+.agent-fim-policy-page__mono {
+  font-family: var(--ha-font-mono);
+  font-size: var(--ha-text-xs);
+}
+
+.agent-fim-policy-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.agent-fim-policy-page__action {
+  appearance: none;
+  border: 1px solid var(--ha-border);
+  background: var(--ha-surface-raised);
+  color: var(--ha-text-primary);
+  font-size: var(--ha-text-xs);
+  border-radius: var(--ha-radius-sm);
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.agent-fim-policy-page__action--primary {
+  border-color: var(--ha-primary);
+  color: var(--ha-primary);
+}
+
+.agent-fim-policy-page__action--danger {
+  color: var(--ha-critical);
+  border-color: color-mix(in srgb, var(--ha-critical) 40%, var(--ha-border));
+}
+
+.agent-fim-policy-page__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.agent-fim-policy-page__modal-body {
+  padding-top: 8px;
+}
+
+.agent-fim-policy-page__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.agent-fim-policy-page__field label {
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+  color: var(--ha-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.agent-fim-policy-page__field input,
+.agent-fim-policy-page__field select,
+.agent-fim-policy-page__rule input[type='text'] {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ha-surface-primary);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  color: var(--ha-text-primary);
+  font-size: var(--ha-text-base);
+  padding: 6px 10px;
+}
+
+.agent-fim-policy-page__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.agent-fim-policy-page__req {
+  color: var(--ha-critical);
+}
+
+.agent-fim-policy-page__fieldset {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  background: var(--ha-surface-raised);
+}
+
+.agent-fim-policy-page__fieldset legend {
+  padding: 0 4px;
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+  color: var(--ha-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.agent-fim-policy-page__hint {
+  margin: 0 0 8px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+}
+
+.agent-fim-policy-page__rule {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.agent-fim-policy-page__rule-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-fim-policy-page__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-primary);
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+}
+
+.agent-fim-policy-page__collectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.agent-fim-policy-page__shell {
+  padding: 10px 12px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  background: var(--ha-surface-raised);
+}
+
+.agent-fim-policy-page__text-btn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--ha-primary);
+  font-size: var(--ha-text-xs);
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.agent-fim-policy-page__text-btn--danger {
+  color: var(--ha-critical);
+}
+
+.agent-fim-policy-page__form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--ha-border);
+}
+
+.agent-fim-policy-page__drawer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.agent-fim-policy-page__section-title {
+  margin: 16px 0 8px;
+  font-size: var(--ha-text-md);
+  font-weight: 600;
+  color: var(--ha-text-primary);
+}
+
+.agent-fim-policy-page__chip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.agent-fim-policy-page__chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  background: var(--ha-surface-primary);
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-primary);
+}
+
+.agent-fim-policy-page__log-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-secondary);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--ha-border);
+}
+
+@media (max-width: 720px) {
+  .agent-fim-policy-page__row {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-fim-policy-page__header {
+    flex-direction: column;
+  }
+}

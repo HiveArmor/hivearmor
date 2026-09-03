@@ -51,9 +51,9 @@ export const AGENT_POLICY_HONESTY_BANNER =
 
 /** Header job sentence — configuration / assignment workbench. */
 export const AGENT_POLICY_JOB_SENTENCE =
-  'Define and assign agent monitoring policies (config only). Enforcement evidence is ' +
+  'Define and assign agent monitoring policies (config only — Ha plane). Enforcement evidence is ' +
   'partial or unavailable when apply/ack fields are missing — not live host proof. ' +
-  'Use Sensors for fleet enrollment; Endpoints for host timelines.';
+  'Schema v1 FIM push lives under Sensors → Agent FIM policies; Endpoints for host timelines.';
 
 /** True only when a state row carries appliedVersion or lastAppliedAt (POL-003). */
 export function hasAgentPolicyApplyAckEvidence(state: AgentPolicyStateDTO | null | undefined): boolean {

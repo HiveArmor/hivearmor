@@ -1,14 +1,11 @@
-// Package fim implements the File Integrity Monitoring engine.
-// It uses fsnotify (inotify on Linux, ReadDirectoryChangesW on Windows,
-// FSEvents/kqueue on macOS) for kernel-speed change detection, backed by a
-// SQLite baseline DB that stores SHA-256/MD5 hashes, permissions, and
-// ownership per file.  Changes are emitted as dataType "fim" (files) or
-// "fim-registry" (Windows registry keys) on the shared LogQueue.
 package fim
 
 import (
 	"path/filepath"
 	"runtime"
+	"sync"
+
+	"github.com/hivearmor/agent/agent"
 )
 
 // WatchRule describes a single policy entry for FIM.
@@ -23,8 +20,81 @@ type WatchRule struct {
 	Exclude []string `json:"exclude,omitempty" yaml:"exclude,omitempty"`
 }
 
+var (
+	runtimeRulesMu sync.RWMutex
+	runtimeRules   []WatchRule
+	liveCollector  *Collector
+)
+
+// ResolveWatchRules builds the effective watch list from defaults + policy.
+// mode: "merge" (default) appends policy rules to platform defaults;
+// "replace" uses only policy rules (falls back to defaults if policy rules empty).
+func ResolveWatchRules(policyRules []WatchRule, mode string) []WatchRule {
+	defaults := defaultRules()
+	if len(policyRules) == 0 {
+		return defaults
+	}
+	switch mode {
+	case agent.FIMModeReplace:
+		return append([]WatchRule(nil), policyRules...)
+	default:
+		merged := append([]WatchRule(nil), defaults...)
+		return append(merged, policyRules...)
+	}
+}
+
+// RulesFromAgentPolicy converts agent schema FIM rules to WatchRule.
+func RulesFromAgentPolicy(in []agent.FIMWatchRule) []WatchRule {
+	out := make([]WatchRule, 0, len(in))
+	for _, r := range in {
+		out = append(out, WatchRule{
+			Path:      r.Path,
+			Recursive: r.Recursive,
+			Exclude:   append([]string(nil), r.Exclude...),
+		})
+	}
+	return out
+}
+
+// RegisterPolicyApplier wires agent APPLY_POLICY → live FIM rule updates.
+func RegisterPolicyApplier() {
+	agent.SetFIMPolicyApplier(func(rules []agent.FIMWatchRule, mode string) error {
+		return ApplyPolicyRules(RulesFromAgentPolicy(rules), mode)
+	})
+}
+
+// ApplyPolicyRules updates the runtime rule set and, if a collector is running,
+// refreshes fsnotify watches (STAGING CANDIDATE).
+// Excludes and new roots hot-apply; removed recursive trees may need restart
+// (see Collector.replaceWatchRules).
+func ApplyPolicyRules(policyRules []WatchRule, mode string) error {
+	resolved := ResolveWatchRules(policyRules, mode)
+
+	runtimeRulesMu.Lock()
+	runtimeRules = resolved
+	c := liveCollector
+	runtimeRulesMu.Unlock()
+
+	if c != nil {
+		return c.replaceWatchRules(resolved)
+	}
+	return nil
+}
+
+// currentStartupRules returns rules for a newly constructed collector.
+func currentStartupRules() []WatchRule {
+	if rules, mode, ok := agent.PeekPendingFIMPolicy(); ok {
+		return ResolveWatchRules(RulesFromAgentPolicy(rules), mode)
+	}
+	runtimeRulesMu.RLock()
+	defer runtimeRulesMu.RUnlock()
+	if len(runtimeRules) > 0 {
+		return append([]WatchRule(nil), runtimeRules...)
+	}
+	return defaultRules()
+}
+
 // defaultRules returns the built-in monitored paths for the current platform.
-// These are always active regardless of server-pushed policy.
 func defaultRules() []WatchRule {
 	switch runtime.GOOS {
 	case "linux":
