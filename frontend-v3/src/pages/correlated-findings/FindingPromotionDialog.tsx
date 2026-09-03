@@ -1,11 +1,10 @@
-import { useEffect, useRef } from 'react';
-
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { AlertTriangle, CheckCircle2, Hexagon, ShieldAlert, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Hexagon, ShieldAlert } from 'lucide-react';
 
 import { previewFindingPromotion, promoteFindingToIncident } from './correlatedFindings.service';
 import type { CorrelatedFindingDTO } from './correlatedFindings.types';
 
+import { HaModal } from '@/components/ha-modal/HaModal';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 
 import './FindingPromotionDialog.css';
@@ -16,7 +15,6 @@ export interface FindingPromotionDialogProps {
 }
 
 export function FindingPromotionDialog({ finding, onClose }: FindingPromotionDialogProps): JSX.Element | null {
-  const closeRef = useRef<HTMLButtonElement>(null);
   const addToast = useToastStore((state) => state.addToast);
   const preview = useQuery({
     queryKey: ['correlated-findings', finding?.id, 'promotion-preview'],
@@ -32,19 +30,12 @@ export function FindingPromotionDialog({ finding, onClose }: FindingPromotionDia
     },
   });
 
-  useEffect(() => {
-    if (!finding) return;
-    closeRef.current?.focus();
-    const handleEscape = (event: KeyboardEvent): void => { if (event.key === 'Escape' && !promotion.isPending) onClose(); };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [finding, onClose, promotion.isPending]);
-
   if (!finding) return null;
+  const handleClose = (): void => { if (!promotion.isPending) onClose(); };
   return (
-    <div className="finding-promotion__backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target && !promotion.isPending) onClose(); }}>
-      <section className="finding-promotion" role="dialog" aria-modal="true" aria-labelledby="finding-promotion-title">
-        <header><span aria-hidden="true"><Hexagon size={27} /></span><div><small>Decision preview</small><h2 id="finding-promotion-title">Promote correlated finding</h2><p>Create an incident from the attack story without losing alert, entity, or correlation provenance.</p></div><button ref={closeRef} type="button" onClick={onClose} disabled={promotion.isPending} aria-label="Close promotion preview"><X size={17} /></button></header>
+    <HaModal isOpen onClose={handleClose} title="Promote correlated finding" width={640}>
+      <div className="finding-promotion">
+        <header><span aria-hidden="true"><Hexagon size={27} /></span><div><small>Decision preview</small><p>Create an incident from the attack story without losing alert, entity, or correlation provenance.</p></div></header>
         {preview.isLoading ? <div className="finding-promotion__loading"><span /><span /><span /></div> : preview.isError || !preview.data ? <div className="finding-promotion__error"><AlertTriangle size={18} /><div><strong>Impact preview unavailable</strong><p>The finding cannot be promoted safely until the server returns its authorized scope and duplicate check.</p></div><button type="button" onClick={() => void preview.refetch()}>Retry</button></div> : <>
           <div className="finding-promotion__body">
             <section><span>Proposed incident</span><h3>{preview.data.proposedTitle}</h3><p>{finding.summary}</p></section>
@@ -55,7 +46,7 @@ export function FindingPromotionDialog({ finding, onClose }: FindingPromotionDia
           {promotion.isError && <p className="finding-promotion__mutation-error" role="alert">Incident promotion failed. No records were changed.</p>}
           <footer><span><ShieldAlert size={13} />Execution is tenant-scoped, version-checked, idempotent, and audited.</span><div><button type="button" onClick={onClose} disabled={promotion.isPending}>Cancel</button><button type="button" onClick={() => promotion.mutate()} disabled={promotion.isPending || !preview.data.previewToken}><CheckCircle2 size={14} />{promotion.isPending ? 'Creating…' : 'Create incident'}</button></div></footer>
         </>}
-      </section>
-    </div>
+      </div>
+    </HaModal>
   );
 }
