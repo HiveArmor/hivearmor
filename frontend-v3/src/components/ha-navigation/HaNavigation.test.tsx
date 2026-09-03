@@ -244,14 +244,20 @@ describe('HaNavigation', () => {
 
   it('shows the compact theme toggle only while expanded and changes mode', () => {
     renderNavigation();
-    expect(screen.queryByRole('button', { name: 'Switch to light mode' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Modern theme' })).not.toBeInTheDocument();
 
     fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Switch to light mode' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Modern theme' }));
 
+    expect(useThemeStore.getState().theme).toBe('modern');
+    expect(document.documentElement).toHaveAttribute('data-ha-theme', 'modern');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Light theme' }));
     expect(useThemeStore.getState().theme).toBe('light');
     expect(document.documentElement).toHaveAttribute('data-ha-theme', 'light');
-    expect(screen.getByRole('button', { name: 'Switch to dark mode' })).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dark theme' }));
+    expect(useThemeStore.getState().theme).toBe('dark');
   });
 
   it('keeps account access in the navigation footer without dead profile links', () => {

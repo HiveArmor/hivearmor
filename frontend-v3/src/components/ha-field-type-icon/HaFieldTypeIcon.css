@@ -1,0 +1,15 @@
+/* Field type glyph — structural metadata, so it wears foreground tokens only.
+   Type is NOT meaning (severity/status/verdict), so no severity/intel colour is
+   spent here; per-type differentiation is carried by the icon shape itself. */
+.ha-field-type-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ha-foreground-tertiary);
+  flex: none;
+}
+
+/* Date/time reads as the same tier as timestamps elsewhere in the shell. */
+.ha-field-type-icon[data-type='date'] {
+  color: var(--ha-foreground-secondary);
+}

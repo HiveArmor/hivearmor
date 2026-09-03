@@ -9,7 +9,7 @@ import type { Monaco } from '@monaco-editor/react';
 import { Editor } from '@monaco-editor/react';
 import type * as monacoEditor from 'monaco-editor';
 
-import { defineHiveArmorMonacoTheme } from '@/lib/monacoTheme';
+import { defineHiveArmorMonacoTheme, monacoThemeName } from '@/lib/monacoTheme';
 import { useThemeStore } from '@/store/theme.store';
 
 interface RuleCelEditorProps {
@@ -140,7 +140,7 @@ export function RuleCelEditor({
     (_editor: monacoEditor.editor.IStandaloneCodeEditor, monaco: Monaco): void => {
       registerCelLanguage(monaco);
       defineHiveArmorMonacoTheme(monaco);
-      monaco.editor.setTheme(`hivearmor-${theme}`);
+      monaco.editor.setTheme(monacoThemeName(theme));
 
       completionRef.current?.dispose();
       completionRef.current = registerCelCompletions(monaco);
@@ -160,7 +160,7 @@ export function RuleCelEditor({
           registerCelLanguage(monaco);
           defineHiveArmorMonacoTheme(monaco);
         }}
-        theme={`hivearmor-${theme}`}
+        theme={monacoThemeName(theme)}
         options={{
           automaticLayout: true,
           minimap: { enabled: false },

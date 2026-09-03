@@ -8,6 +8,8 @@ import {
 import { fetchHuntFieldValues } from '../searchHunt.service';
 import type { HuntFieldDefinition } from '../searchHunt.types';
 
+import { HaFieldTypeIcon } from '@/components/ha-field-type-icon';
+
 export interface FieldBrowserProps {
   fields: HuntFieldDefinition[];
   selectedFields: string[];
@@ -129,7 +131,7 @@ export function FieldBrowser({
                       aria-expanded={fieldIsExpanded}
                       aria-controls={valuesId}
                     >
-                      <span><strong>{field.name}</strong><small>{field.type}{field.cardinality != null ? ` · ~${field.cardinality.toLocaleString()} values` : ''}</small></span>
+                      <span><HaFieldTypeIcon type={field.type} className="hunt-field-row__type-icon" /><span className="hunt-field-row__text"><strong>{field.name}</strong><small>{field.type}{field.cardinality != null ? ` · ~${field.cardinality.toLocaleString()} values` : ''}</small></span></span>
                       <em>{field.coverage === null ? '—' : `${field.coverage}%`}</em>
                     </button>
                     <button type="button" className="hunt-field-row__add" onClick={() => onAddField(field.name)} disabled={selectedFields.includes(field.name)} aria-label={`Add ${field.name} as a result column`} title="Add result column">

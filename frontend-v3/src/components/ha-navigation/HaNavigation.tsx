@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 
-import { ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Moon, Shield, Sun } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 
@@ -128,7 +128,7 @@ export interface HaNavigationProps {
 
 export function HaNavigation(_props: HaNavigationProps): JSX.Element {
   const { collapsed, toggle } = useSidebarStore();
-  const { theme, toggleTheme } = useThemeStore();
+  const { theme, setTheme } = useThemeStore();
   const [hoverExpanded, setHoverExpanded] = useState(false);
   const { hasAnyRole } = useAuthStore();
   const { count: openAlertCount } = useOpenAlertCount();
@@ -284,15 +284,41 @@ export function HaNavigation(_props: HaNavigationProps): JSX.Element {
         <div className="ha-navigation__footer-tools">
           <UserAvatarMenu compact={!expanded} placement="top" />
           {expanded && (
-            <button
-              type="button"
-              className="ha-navigation__theme"
-              onClick={toggleTheme}
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
-            >
-              {theme === 'dark' ? <Sun size={14} aria-hidden="true" /> : <Moon size={14} aria-hidden="true" />}
-            </button>
+            <div className="ha-navigation__theme-select" role="group" aria-label="Theme">
+              <button
+                type="button"
+                className="ha-navigation__theme-opt"
+                data-active={theme === 'dark'}
+                onClick={() => setTheme('dark')}
+                aria-pressed={theme === 'dark'}
+                aria-label="Dark theme"
+                title="Dark"
+              >
+                <Moon size={14} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="ha-navigation__theme-opt"
+                data-active={theme === 'modern'}
+                onClick={() => setTheme('modern')}
+                aria-pressed={theme === 'modern'}
+                aria-label="Modern theme"
+                title="Modern"
+              >
+                <Shield size={14} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="ha-navigation__theme-opt"
+                data-active={theme === 'light'}
+                onClick={() => setTheme('light')}
+                aria-pressed={theme === 'light'}
+                aria-label="Light theme"
+                title="Light"
+              >
+                <Sun size={14} aria-hidden="true" />
+              </button>
+            </div>
           )}
         </div>
         <button

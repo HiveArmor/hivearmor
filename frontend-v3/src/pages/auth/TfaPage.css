@@ -13,65 +13,9 @@
   letter-spacing: -0.02em;
 }
 
-.tfa-step-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.tfa-stepper {
   margin-bottom: 24px;
   padding: 0 16px;
-}
-
-.step-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.step-marker {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--ha-text-sm);
-  font-weight: 600;
-  border: 2px solid var(--ha-border-default);
-  background: var(--ha-surface-elevated);
-  color: var(--ha-foreground-secondary);
-  transition: border-color var(--ha-transition-fast), background var(--ha-transition-fast), color var(--ha-transition-fast);
-}
-
-.step-item.completed .step-marker {
-  background: var(--ha-action-primary);
-  border-color: var(--ha-action-primary);
-  color: var(--ha-foreground-on-action);
-}
-
-.step-item.active .step-marker {
-  border-color: var(--ha-action-primary);
-  color: var(--ha-action-primary);
-}
-
-.step-label {
-  font-size: var(--ha-text-xs);
-  color: var(--ha-foreground-secondary);
-  text-align: center;
-  white-space: nowrap;
-}
-
-.step-item.active .step-label {
-  color: var(--ha-foreground-primary);
-  font-weight: 600;
-}
-
-.step-divider {
-  width: 48px;
-  height: 2px;
-  background: var(--ha-border-default);
-  margin: 0 8px;
-  margin-bottom: 24px;
 }
 
 .tfa-heading {
@@ -153,24 +97,6 @@
 
 .tfa-footer .auth-link:hover:not(:disabled) {
   text-decoration: underline;
-}
-
-@media (max-width: 400px) {
-  .step-label {
-    font-size: 10px;
-  }
-
-  .step-divider {
-    width: 32px;
-    margin: 0 4px;
-    margin-bottom: 24px;
-  }
-
-  .step-marker {
-    width: 28px;
-    height: 28px;
-    font-size: 11px;
-  }
 }
 
 .field-error {

@@ -1,0 +1,106 @@
+/* ============================================================================
+   Modern theme polish layer (Phase 3)
+   ----------------------------------------------------------------------------
+   EVERY rule here is scoped to :root[data-ha-theme='modern']. The Dark and
+   White themes must be byte-for-byte unaffected by this file.
+
+   Governance (product-owner approved 2026-09-03): glass `backdrop-filter: blur`
+   is permitted ONLY here, ONLY on transient overlay chrome (menus, dialogs,
+   sheets, toolbars, popovers, tooltips, toasts). It is NEVER applied to data
+   surfaces — tables (.ha-grid / .ag-*), cards, rows, or anything holding alert
+   data. See .kiro/steering/brand.md and skills-frontend.md.
+
+   All motion / transition here is disabled under prefers-reduced-motion.
+   ============================================================================ */
+
+/* --- Mesh background: chrome only, drawn behind the app canvas ------------- */
+/* A faint two-point radial wash on the app background. This is chrome, not a
+   data surface, and it sits under everything at very low intensity so text
+   contrast on panels (which paint their own opaque surface) is unaffected. */
+:root[data-ha-theme='modern'] body {
+  background-image:
+    radial-gradient(
+      1200px 800px at 12% -10%,
+      color-mix(in srgb, var(--ha-action-primary) 8%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      1000px 700px at 100% 0%,
+      color-mix(in srgb, var(--ha-intelligence-primary) 6%, transparent),
+      transparent 55%
+    );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+/* --- Glass overlay chrome --------------------------------------------------- */
+/* Applied to HiveArmor-owned transient overlay surfaces. A strong semi-opaque
+   base colour sits BEHIND the blur so foreground text keeps its contrast even
+   where the backdrop is busy — the blur is decoration, not the surface. */
+:root[data-ha-theme='modern'] .ha-popover,
+:root[data-ha-theme='modern'] .ha-menu__list,
+:root[data-ha-theme='modern'] .ha-tooltip,
+:root[data-ha-theme='modern'] .toast,
+:root[data-ha-theme='modern'] [role='menu'],
+:root[data-ha-theme='modern'] [role='tooltip'],
+:root[data-ha-theme='modern'] [role='listbox'] {
+  background-color: color-mix(in srgb, var(--ha-surface-elevated) 86%, transparent);
+  backdrop-filter: blur(12px) saturate(115%);
+  -webkit-backdrop-filter: blur(12px) saturate(115%);
+  border-color: color-mix(in srgb, var(--ha-border-strong) 60%, transparent);
+}
+
+/* Dialog panels (modal content) — same treatment, slightly stronger base so a
+   full-height sheet never washes out its own body text. Backdrop stays opaque
+   scrim (handled by the component); only the panel gets glass. */
+:root[data-ha-theme='modern'] [role='dialog'] {
+  background-color: color-mix(in srgb, var(--ha-surface-elevated) 90%, transparent);
+  backdrop-filter: blur(14px) saturate(115%);
+  -webkit-backdrop-filter: blur(14px) saturate(115%);
+}
+
+/* Hard guard: never let glass reach a data surface even if one is nested inside
+   an overlay (e.g. a grid rendered in a drawer). Data stays fully opaque. */
+:root[data-ha-theme='modern'] .ha-grid,
+:root[data-ha-theme='modern'] .ha-grid *,
+:root[data-ha-theme='modern'] [class*='ag-'],
+:root[data-ha-theme='modern'] .ha-card {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* --- Soft action glow ------------------------------------------------------- */
+/* A restrained focus/emphasis glow on the primary teal action — NOT neon: a
+   single low-opacity shadow in the action colour, on interactive chrome only.
+   HaButton wraps PatternFly, so the primary variant is .pf-m-primary. */
+:root[data-ha-theme='modern'] .pf-v6-c-button.pf-m-primary:not(:disabled):hover {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ha-action-primary) 50%, transparent),
+    0 4px 18px -6px color-mix(in srgb, var(--ha-action-primary) 45%, transparent);
+}
+
+:root[data-ha-theme='modern'] .pf-v6-c-button:focus-visible,
+:root[data-ha-theme='modern'] [role='menuitem']:focus-visible,
+:root[data-ha-theme='modern'] [role='option']:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ha-border-focus) 35%, transparent);
+}
+
+/* --- Overlay entrance motion (guarded) ------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-ha-theme='modern'] .ha-popover,
+  :root[data-ha-theme='modern'] .ha-menu__list,
+  :root[data-ha-theme='modern'] [role='menu'],
+  :root[data-ha-theme='modern'] [role='dialog'] {
+    animation: ha-modern-overlay-in 140ms ease-out;
+  }
+
+  @keyframes ha-modern-overlay-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.99);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

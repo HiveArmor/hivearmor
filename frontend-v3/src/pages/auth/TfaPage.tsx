@@ -13,6 +13,7 @@ import { HaBrandLockup } from '@/components/ha-brand-lockup';
 import { HaButton } from '@/components/ha-button';
 import { HaFormGroup } from '@/components/ha-form-group';
 import { HaInlineBanner } from '@/components/ha-inline-banner';
+import { HaStepper } from '@/components/ha-stepper';
 import { getAccount, verifyTfaCode } from '@/services/auth.service';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -146,17 +147,15 @@ export function TfaPage(): JSX.Element {
       </div>
 
       {/* Step indicator */}
-      <div className="tfa-step-indicator" aria-label="Step 2 of 2: Verify identity">
-        <div className="step-item completed">
-          <div className="step-marker">1</div>
-          <div className="step-label">Authentication</div>
-        </div>
-        <div className="step-divider"></div>
-        <div className="step-item active">
-          <div className="step-marker">2</div>
-          <div className="step-label">Verification</div>
-        </div>
-      </div>
+      <HaStepper
+        className="tfa-stepper"
+        ariaLabel="Sign in: step 2 of 2"
+        current={1}
+        steps={[
+          { id: 'auth', label: 'Authentication' },
+          { id: 'verify', label: 'Verification' },
+        ]}
+      />
 
       <h1 className="tfa-heading">Two-factor authentication</h1>
       <p className="tfa-subtext">Enter the 6-digit code from your authenticator app.</p>

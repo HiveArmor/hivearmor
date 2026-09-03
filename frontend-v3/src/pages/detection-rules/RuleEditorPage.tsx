@@ -29,7 +29,7 @@ import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect'
 import { HaModal } from '@/components/ha-modal/HaModal';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useEpsStream } from '@/hooks/useEpsStream';
-import { defineHiveArmorMonacoTheme } from '@/lib/monacoTheme';
+import { defineHiveArmorMonacoTheme, monacoThemeName } from '@/lib/monacoTheme';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore } from '@/store/theme.store';
 
@@ -324,7 +324,7 @@ export function RuleEditorPage(): JSX.Element {
   const handleEditorMount = (editor: monacoEditor.editor.IStandaloneCodeEditor, monaco: Monaco): void => {
     editorRef.current = editor;
     defineHiveArmorMonacoTheme(monaco);
-    monaco.editor.setTheme(`hivearmor-${theme}`);
+    monaco.editor.setTheme(monacoThemeName(theme));
     completionRef.current?.dispose();
     completionRef.current = monaco.languages.registerCompletionItemProvider('javascript', {
       triggerCharacters: ['.', '('],
@@ -443,7 +443,7 @@ export function RuleEditorPage(): JSX.Element {
         <section className="rule-editor-definition" aria-label="Detection definition editor">
           <header><div><Code2 size={15} /><span><strong>Detection definition</strong><small>HiveArmor CEL · normalized fields</small></span></div><div><span className="rule-editor-diagnostic-count" data-tone={errorCount ? 'error' : warningCount ? 'warning' : 'ready'}>{errorCount ? `${errorCount} errors` : warningCount ? `${warningCount} warnings` : 'Preflight ready'}</span><button type="button" onClick={() => void copyDefinition()}>{copyState === 'copied' ? <Check size={13} /> : <Copy size={13} />}{copyState === 'copied' ? 'Copied' : 'Copy'}</button></div></header>
           <div className="rule-editor-monaco">
-            <Editor height="100%" language="javascript" value={ruleDefinition} onChange={(value) => { setRuleDefinition(value ?? ''); setValidationResult(null); setPreviewResult(null); }} onMount={handleEditorMount} beforeMount={defineHiveArmorMonacoTheme} theme={`hivearmor-${theme}`} options={{ automaticLayout: true, minimap: { enabled: false }, fontSize: 12, lineHeight: 19, lineNumbersMinChars: 3, scrollBeyondLastLine: false, wordWrap: 'on', tabSize: 2, insertSpaces: true, renderLineHighlight: 'line', padding: { top: 9, bottom: 9 }, readOnly: !canManage, quickSuggestions: true, suggestOnTriggerCharacters: true, folding: true }} />
+            <Editor height="100%" language="javascript" value={ruleDefinition} onChange={(value) => { setRuleDefinition(value ?? ''); setValidationResult(null); setPreviewResult(null); }} onMount={handleEditorMount} beforeMount={defineHiveArmorMonacoTheme} theme={monacoThemeName(theme)} options={{ automaticLayout: true, minimap: { enabled: false }, fontSize: 12, lineHeight: 19, lineNumbersMinChars: 3, scrollBeyondLastLine: false, wordWrap: 'on', tabSize: 2, insertSpaces: true, renderLineHighlight: 'line', padding: { top: 9, bottom: 9 }, readOnly: !canManage, quickSuggestions: true, suggestOnTriggerCharacters: true, folding: true }} />
           </div>
           <footer><span><Braces size={13} /> Field assistant</span><button type="button" onClick={() => insertSnippet('\n&& celExists(process.name)\n&& equals(process.name, "powershell.exe")')}>process.name</button><button type="button" onClick={() => insertSnippet('\n&& celExists(user.name)\n&& equals(user.name, "svc-account")')}>user.name</button><button type="button" onClick={() => insertSnippet('\n&& celExists(source.ip)\n&& inCIDR(source.ip, "198.51.100.0/24")')}>source.ip</button><button type="button" onClick={() => insertSnippet('\n&& contains(process.command_line, "-enc")')}>contains()</button><span className="rule-editor-shortcut">Validate <kbd>⌘</kbd><kbd>Enter</kbd></span></footer>
         </section>
