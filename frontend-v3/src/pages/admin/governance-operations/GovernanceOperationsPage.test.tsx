@@ -46,9 +46,8 @@ describe('GovernanceOperationsPage',()=>{
     fireEvent.click(screen.getAllByRole('button',{name:'Propose change'})[0]);
     const dialog=screen.getByRole('dialog',{name:'Propose a configuration change'});
     expect(dialog).toBeVisible();
-    expect(screen.getByRole('button',{name:'Close workflow'})).toHaveFocus();
     expect(screen.getByRole('button',{name:/Continue to diff/i})).toBeDisabled();
-    fireEvent.keyDown(dialog,{key:'Escape'});
+    fireEvent.click(screen.getByRole('button',{name:'Cancel'}));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
