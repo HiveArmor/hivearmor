@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { X } from 'lucide-react';
 
+import { HaModal } from '@/components/ha-modal/HaModal';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import { ApiError, apiClient } from '@/lib/apiClient';
 
@@ -27,18 +28,6 @@ export function TagDialog({ alertId, currentTags, onSuccess, onCancel }: TagDial
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') handleCancel();
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleCancel]);
-
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>): void => {
-    if (e.target === e.currentTarget) handleCancel();
-  };
 
   const toggleRemoveTag = (tag: string): void => {
     setRemovedTags((prev) => {
@@ -112,28 +101,9 @@ export function TagDialog({ alertId, currentTags, onSuccess, onCancel }: TagDial
   const hasChanges = newTags.length > 0 || removedTags.size > 0;
 
   return (
-    <div className="ha-dialog-backdrop" role="presentation" onMouseDown={handleBackdropClick}>
-      <section
-        className="ha-dialog-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="tag-dialog-title"
-      >
-        <header className="ha-dialog-header">
-          <h2 id="tag-dialog-title">Manage tags</h2>
-          <button
-            type="button"
-            className="ha-dialog-close"
-            onClick={handleCancel}
-            disabled={submitting}
-            aria-label="Close dialog"
-          >
-            <X size={16} />
-          </button>
-        </header>
-
-        <div className="ha-dialog-body">
-          {currentTags.length > 0 && (
+    <HaModal isOpen onClose={handleCancel} title="Manage tags" width={480}>
+      <div className="ha-dialog-body">
+        {currentTags.length > 0 && (
             <div className="tag-dialog-current">
               <span className="ha-dialog-label">Current tags</span>
               <div className="tag-dialog-chips">
@@ -184,73 +154,29 @@ export function TagDialog({ alertId, currentTags, onSuccess, onCancel }: TagDial
           {error && (
             <div className="ha-dialog-error" role="alert">{error}</div>
           )}
-        </div>
+      </div>
 
-        <footer className="ha-dialog-footer">
-          <button
-            type="button"
-            className="ha-dialog-btn ha-dialog-btn--secondary"
-            onClick={handleCancel}
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="ha-dialog-btn ha-dialog-btn--primary"
-            onClick={() => void handleSubmit()}
-            disabled={!hasChanges || submitting}
-          >
-            {submitting ? 'Applying…' : 'Apply tags'}
-          </button>
-        </footer>
-      </section>
+      <footer className="ha-dialog-footer">
+        <button
+          type="button"
+          className="ha-dialog-btn ha-dialog-btn--secondary"
+          onClick={handleCancel}
+          disabled={submitting}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="ha-dialog-btn ha-dialog-btn--primary"
+          onClick={() => void handleSubmit()}
+          disabled={!hasChanges || submitting}
+        >
+          {submitting ? 'Applying…' : 'Apply tags'}
+        </button>
+      </footer>
 
       <style>{`
-        .ha-dialog-backdrop {
-          position: fixed;
-          inset: 0;
-          z-index: 1000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(0, 0, 0, 0.7);
-        }
-        .ha-dialog-panel {
-          width: 480px;
-          max-width: 90vw;
-          max-height: 85vh;
-          overflow-y: auto;
-          background: var(--ha-surface-panel);
-          border: 1px solid var(--ha-border-default);
-          border-radius: 8px;
-          display: flex;
-          flex-direction: column;
-        }
-        .ha-dialog-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 16px 20px;
-          border-bottom: 1px solid var(--ha-border-subtle);
-        }
-        .ha-dialog-header h2 {
-          font-size: 15px;
-          font-weight: 600;
-          color: var(--ha-foreground-primary);
-          margin: 0;
-        }
-        .ha-dialog-close {
-          background: transparent;
-          border: none;
-          color: var(--ha-foreground-secondary);
-          cursor: pointer;
-          padding: 4px;
-          border-radius: 4px;
-        }
-        .ha-dialog-close:hover { color: var(--ha-foreground-primary); }
         .ha-dialog-body {
-          padding: 20px;
           display: flex;
           flex-direction: column;
           gap: 16px;
@@ -282,8 +208,7 @@ export function TagDialog({ alertId, currentTags, onSuccess, onCancel }: TagDial
           display: flex;
           justify-content: flex-end;
           gap: 8px;
-          padding: 12px 20px 16px;
-          border-top: 1px solid var(--ha-border-subtle);
+          margin-top: 16px;
         }
         .ha-dialog-btn {
           padding: 8px 16px;
@@ -372,6 +297,6 @@ export function TagDialog({ alertId, currentTags, onSuccess, onCancel }: TagDial
           gap: 8px;
         }
       `}</style>
-    </div>
+    </HaModal>
   );
 }

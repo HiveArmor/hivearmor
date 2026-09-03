@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { X } from 'lucide-react';
-
+import { HaModal } from '@/components/ha-modal/HaModal';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import { ApiError, apiClient } from '@/lib/apiClient';
 
@@ -52,14 +51,6 @@ export function AssignmentDialog({ alertIds, onSuccess, onCancel }: AssignmentDi
   }, []);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') handleCancel();
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleCancel]);
-
-  useEffect(() => {
     let cancelled = false;
     void (async () => {
       setLoadingAssignees(true);
@@ -90,10 +81,6 @@ export function AssignmentDialog({ alertIds, onSuccess, onCancel }: AssignmentDi
       cancelled = true;
     };
   }, []);
-
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>): void => {
-    if (e.target === e.currentTarget) handleCancel();
-  };
 
   const handleSubmit = async (): Promise<void> => {
     if (submitting || !assigneeId || reason.trim().length < 6 || alertIds.length === 0) return;
@@ -143,29 +130,13 @@ export function AssignmentDialog({ alertIds, onSuccess, onCancel }: AssignmentDi
   const canSubmit = Boolean(assigneeId) && reason.trim().length >= 6 && !loadingAssignees && !submitting;
 
   return (
-    <div className="ha-dialog-backdrop" role="presentation" onMouseDown={handleBackdropClick}>
-      <section
-        className="ha-dialog-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="assignment-dialog-title"
-      >
-        <header className="ha-dialog-header">
-          <h2 id="assignment-dialog-title">
-            Assign {alertIds.length} alert{alertIds.length === 1 ? '' : 's'}
-          </h2>
-          <button
-            type="button"
-            className="ha-dialog-close"
-            onClick={handleCancel}
-            disabled={submitting}
-            aria-label="Close dialog"
-          >
-            <X size={16} />
-          </button>
-        </header>
-
-        <div className="ha-dialog-body">
+    <HaModal
+      isOpen
+      onClose={handleCancel}
+      title={`Assign ${alertIds.length} alert${alertIds.length === 1 ? '' : 's'}`}
+      width={440}
+    >
+      <div className="ha-dialog-body">
           <label className="ha-dialog-field">
             <span className="ha-dialog-label">Owner</span>
             <select
@@ -205,66 +176,29 @@ export function AssignmentDialog({ alertIds, onSuccess, onCancel }: AssignmentDi
           {error && (
             <div className="ha-dialog-error" role="alert">{error}</div>
           )}
-        </div>
+      </div>
 
-        <footer className="ha-dialog-footer">
-          <button
-            type="button"
-            className="ha-dialog-btn ha-dialog-btn--secondary"
-            onClick={handleCancel}
-            disabled={submitting}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="ha-dialog-btn ha-dialog-btn--primary"
-            onClick={() => void handleSubmit()}
-            disabled={!canSubmit}
-          >
-            {submitting ? 'Assigning…' : 'Assign'}
-          </button>
-        </footer>
-      </section>
+      <footer className="ha-dialog-footer">
+        <button
+          type="button"
+          className="ha-dialog-btn ha-dialog-btn--secondary"
+          onClick={handleCancel}
+          disabled={submitting}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="ha-dialog-btn ha-dialog-btn--primary"
+          onClick={() => void handleSubmit()}
+          disabled={!canSubmit}
+        >
+          {submitting ? 'Assigning…' : 'Assign'}
+        </button>
+      </footer>
 
       <style>{`
-        .ha-dialog-backdrop {
-          position: fixed;
-          inset: 0;
-          z-index: var(--ha-z-modal);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: color-mix(in srgb, var(--ha-background) 72%, transparent);
-        }
-        .ha-dialog-panel {
-          width: min(440px, calc(100vw - 32px));
-          background: var(--ha-surface-raised);
-          border: 1px solid var(--ha-border);
-          border-radius: var(--ha-radius-md);
-        }
-        .ha-dialog-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          padding: 14px 16px;
-          border-bottom: 1px solid var(--ha-border);
-        }
-        .ha-dialog-header h2 {
-          margin: 0;
-          font: var(--ha-type-drawer-title, 600 var(--ha-text-md)/1.3 var(--ha-font-ui));
-          color: var(--ha-text-primary);
-        }
-        .ha-dialog-close {
-          background: transparent;
-          border: none;
-          color: var(--ha-text-secondary);
-          cursor: pointer;
-          padding: 4px;
-        }
         .ha-dialog-body {
-          padding: 16px;
           display: flex;
           flex-direction: column;
           gap: 14px;
@@ -275,9 +209,9 @@ export function AssignmentDialog({ alertIds, onSuccess, onCancel }: AssignmentDi
           gap: 6px;
         }
         .ha-dialog-label {
-          font-size: var(--ha-text-sm);
+          font-size: var(--ha-text-sm, 12px);
           font-weight: 500;
-          color: var(--ha-text-secondary);
+          color: var(--ha-foreground-secondary);
         }
         .ha-dialog-label em {
           font-weight: 400;
@@ -288,11 +222,12 @@ export function AssignmentDialog({ alertIds, onSuccess, onCancel }: AssignmentDi
         .ha-dialog-textarea {
           width: 100%;
           padding: 8px 10px;
-          background: var(--ha-surface-primary);
-          border: 1px solid var(--ha-border);
-          border-radius: var(--ha-radius-base);
-          color: var(--ha-text-primary);
-          font: var(--ha-type-compact, 400 var(--ha-text-base)/1.4 var(--ha-font-ui));
+          background: var(--ha-surface-input);
+          border: 1px solid var(--ha-border-default);
+          border-radius: var(--ha-radius-control);
+          color: var(--ha-foreground-primary);
+          font-size: 13px;
+          font-family: inherit;
         }
         .ha-dialog-textarea {
           resize: vertical;
@@ -300,23 +235,22 @@ export function AssignmentDialog({ alertIds, onSuccess, onCancel }: AssignmentDi
         }
         .ha-dialog-error {
           padding: 8px 10px;
-          background: color-mix(in srgb, var(--ha-critical) 12%, transparent);
-          border: 1px solid color-mix(in srgb, var(--ha-critical) 28%, transparent);
-          border-radius: var(--ha-radius-base);
-          font-size: var(--ha-text-sm);
-          color: var(--ha-critical);
+          background: color-mix(in srgb, var(--ha-severity-critical) 12%, transparent);
+          border: 1px solid color-mix(in srgb, var(--ha-severity-critical) 28%, transparent);
+          border-radius: var(--ha-radius-control);
+          font-size: var(--ha-text-sm, 12px);
+          color: var(--ha-severity-critical);
         }
         .ha-dialog-footer {
           display: flex;
           justify-content: flex-end;
           gap: 8px;
-          padding: 12px 16px 14px;
-          border-top: 1px solid var(--ha-border);
+          margin-top: 14px;
         }
         .ha-dialog-btn {
           padding: 7px 14px;
-          border-radius: var(--ha-radius-base);
-          font-size: var(--ha-text-base);
+          border-radius: var(--ha-radius-control);
+          font-size: 13px;
           font-weight: 500;
           cursor: pointer;
         }
@@ -325,16 +259,16 @@ export function AssignmentDialog({ alertIds, onSuccess, onCancel }: AssignmentDi
           cursor: not-allowed;
         }
         .ha-dialog-btn--primary {
-          background: var(--ha-primary);
-          color: var(--ha-background);
+          background: var(--ha-action-primary);
+          color: var(--ha-foreground-on-action);
           border: none;
         }
         .ha-dialog-btn--secondary {
           background: transparent;
-          border: 1px solid var(--ha-border);
-          color: var(--ha-text-secondary);
+          border: 1px solid var(--ha-border-default);
+          color: var(--ha-foreground-secondary);
         }
       `}</style>
-    </div>
+    </HaModal>
   );
 }
