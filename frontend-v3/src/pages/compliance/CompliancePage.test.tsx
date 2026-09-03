@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { COMPLIANCE_ASSURANCE_JOB_SENTENCE, CompliancePage } from './CompliancePage';
 
+import { selectHaOption } from '@/test/haCompactSelect.testutil';
 import type { FrameworkControlResolution } from '@/types/compliance.types';
 import type { HiveFrameworkScoreDTO, HivePostureScoreDTO } from '@/types/posture.types';
 
@@ -242,9 +243,7 @@ describe('CompliancePage', () => {
 
   it('filters assessment state and never turns an unassessed framework into a zero score', () => {
     render(<CompliancePage />);
-    fireEvent.change(screen.getByLabelText('Filter by assessment state'), {
-      target: { value: 'not_assessed' },
-    });
+    selectHaOption('Filter by assessment state', 'Not yet assessed');
     expect(screen.getByRole('button', { name: 'HIPAA Security Rule' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'NIST Cybersecurity Framework' })).not.toBeInTheDocument();
     expect(screen.getByText(/1 of 2 records/i)).toBeInTheDocument();
@@ -434,11 +433,13 @@ describe('CompliancePage', () => {
     fireEvent.click(screen.getByTestId('cmp-schedule-add'));
     expect(screen.getByTestId('cmp-schedule-form')).toBeInTheDocument();
     expect(screen.queryByLabelText(/Report config ID/i)).not.toBeInTheDocument();
-    const picker = screen.getByLabelText('Select report config for schedule');
+    const picker = screen.getByRole('button', { name: 'Select report config for schedule' });
     expect(picker).toBeInTheDocument();
-    expect(within(picker).getByRole('option', { name: /NIST Access Control Report \(#1235\)/ })).toBeInTheDocument();
-    fireEvent.change(picker, { target: { value: '1236' } });
-    expect(picker).toHaveValue('1236');
+    fireEvent.click(picker);
+    const listbox = screen.getByRole('listbox', { name: 'Select report config for schedule' });
+    expect(within(listbox).getByRole('option', { name: /NIST Access Control Report \(#1235\)/ })).toBeInTheDocument();
+    fireEvent.click(within(listbox).getByRole('option', { name: /NIST Audit Report \(#1236\)/ }));
+    expect(screen.getByRole('button', { name: 'Select report config for schedule' })).toHaveTextContent(/NIST Audit Report/);
   });
 
   it('shows honest empty state when framework has no report configs for schedule create', () => {
@@ -489,7 +490,7 @@ describe('CompliancePage', () => {
     render(<CompliancePage />);
     fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
     fireEvent.click(screen.getByTestId('cmp-workspace-tab-actions'));
-    fireEvent.change(screen.getByLabelText('Select catalog control'), { target: { value: '43' } });
+    selectHaOption('Select catalog control', 'Account management');
     expect(screen.getByTestId('cmp-workspace-tab-controls')).toHaveAttribute('aria-selected', 'true');
   });
 
@@ -509,7 +510,7 @@ describe('CompliancePage', () => {
     });
     render(<CompliancePage />);
     fireEvent.click(screen.getByRole('button', { name: 'NIST Cybersecurity Framework' }));
-    fireEvent.change(screen.getByLabelText('Select catalog control'), { target: { value: '43' } });
+    selectHaOption('Select catalog control', 'Account management');
     const workspace = screen.getByTestId('cmp-control-workspace');
     expect(within(workspace).getByText('Account management')).toBeInTheDocument();
     expect(latestQueries.some((key) => key[0] === 'compliance-control-latest' && key[1] === 43)).toBe(

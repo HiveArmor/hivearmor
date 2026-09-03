@@ -7,6 +7,8 @@ import { describe, it, expect, vi } from 'vitest';
 
 import { AddFilterPopover } from './AddFilterPopover';
 
+import { selectHaOption } from '@/test/haCompactSelect.testutil';
+
 describe('AddFilterPopover', () => {
   it('should render the Add filter button', () => {
     const onAddFilter = vi.fn();
@@ -19,10 +21,9 @@ describe('AddFilterPopover', () => {
     const onAddFilter = vi.fn();
     render(<AddFilterPopover onAddFilter={onAddFilter} />);
 
-    const button = screen.getByLabelText('Add filter');
-    fireEvent.click(button);
+    fireEvent.click(screen.getByLabelText('Add filter'));
 
-    expect(screen.getByLabelText('Field')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Field' })).toBeDefined();
   });
 
   it('should show operator and value inputs after selecting field', async () => {
@@ -30,29 +31,28 @@ describe('AddFilterPopover', () => {
     render(<AddFilterPopover onAddFilter={onAddFilter} />);
 
     fireEvent.click(screen.getByLabelText('Add filter'));
-
-    const fieldSelect = screen.getByLabelText('Field');
-    fireEvent.change(fieldSelect, { target: { value: 'severity' } });
+    selectHaOption('Field', 'Severity');
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Operator')).toBeDefined();
-      expect(screen.getByLabelText('Value')).toBeDefined();
+      expect(screen.getByRole('button', { name: 'Operator' })).toBeDefined();
+      expect(screen.getByRole('button', { name: 'Value' })).toBeDefined();
     });
   });
 
-  it('should show enum dropdown for severity field', async () => {
+  it('should show an enum dropdown (listbox) for the severity field value', async () => {
     const onAddFilter = vi.fn();
     render(<AddFilterPopover onAddFilter={onAddFilter} />);
 
     fireEvent.click(screen.getByLabelText('Add filter'));
-
-    const fieldSelect = screen.getByLabelText('Field');
-    fireEvent.change(fieldSelect, { target: { value: 'severity' } });
+    selectHaOption('Field', 'Severity');
 
     await waitFor(() => {
-      const valueSelect = screen.getByLabelText('Value') as HTMLSelectElement;
-      expect(valueSelect.tagName).toBe('SELECT');
+      // Value is now a token-styled dropdown button, not a native <select>.
+      const valueTrigger = screen.getByRole('button', { name: 'Value' });
+      expect(valueTrigger).toBeDefined();
     });
+    fireEvent.click(screen.getByRole('button', { name: 'Value' }));
+    expect(screen.getByRole('listbox', { name: 'Value' })).toBeInTheDocument();
   });
 
   it('should show text input for text field', async () => {
@@ -60,9 +60,7 @@ describe('AddFilterPopover', () => {
     render(<AddFilterPopover onAddFilter={onAddFilter} />);
 
     fireEvent.click(screen.getByLabelText('Add filter'));
-
-    const fieldSelect = screen.getByLabelText('Field');
-    fireEvent.change(fieldSelect, { target: { value: 'title' } });
+    selectHaOption('Field', 'Alert Title');
 
     await waitFor(() => {
       const valueInput = screen.getByLabelText('Value') as HTMLInputElement;
@@ -76,20 +74,14 @@ describe('AddFilterPopover', () => {
     render(<AddFilterPopover onAddFilter={onAddFilter} />);
 
     fireEvent.click(screen.getByLabelText('Add filter'));
+    selectHaOption('Field', 'Severity');
 
-    // Select field
-    const fieldSelect = screen.getByLabelText('Field');
-    fireEvent.change(fieldSelect, { target: { value: 'severity' } });
-
-    // Wait for value field to appear and select value
     await waitFor(() => {
-      const valueSelect = screen.getByLabelText('Value');
-      fireEvent.change(valueSelect, { target: { value: 'critical' } });
+      expect(screen.getByRole('button', { name: 'Value' })).toBeDefined();
     });
+    selectHaOption('Value', 'Critical');
 
-    // Click Add button
-    const addButton = screen.getByRole('button', { name: 'Add condition' });
-    fireEvent.click(addButton);
+    fireEvent.click(screen.getByRole('button', { name: 'Add condition' }));
 
     expect(onAddFilter).toHaveBeenCalledWith({
       field: 'severity',
@@ -107,8 +99,11 @@ describe('AddFilterPopover', () => {
 
     fireEvent.click(screen.getByLabelText('Add filter'));
     fireEvent.click(screen.getByRole('button', { name: /OR Match either/ }));
-    fireEvent.change(screen.getByLabelText('Field'), { target: { value: 'status' } });
-    fireEvent.change(await screen.findByLabelText('Value'), { target: { value: 'in_review' } });
+    selectHaOption('Field', 'Status');
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Value' })).toBeDefined();
+    });
+    selectHaOption('Value', 'In review');
     fireEvent.click(screen.getByRole('button', { name: 'Add condition' }));
 
     expect(onAddFilter).toHaveBeenCalledWith(expect.objectContaining({
@@ -137,14 +132,13 @@ describe('AddFilterPopover', () => {
     fireEvent.click(screen.getByLabelText('Add filter'));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Field')).toBeDefined();
+      expect(screen.getByRole('button', { name: 'Field' })).toBeDefined();
     });
 
-    const cancelButton = screen.getByText('Cancel');
-    fireEvent.click(cancelButton);
+    fireEvent.click(screen.getByText('Cancel'));
 
     await waitFor(() => {
-      expect(screen.queryByLabelText('Field')).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Field' })).toBeNull();
     });
   });
 });

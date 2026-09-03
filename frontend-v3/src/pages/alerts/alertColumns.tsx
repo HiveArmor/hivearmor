@@ -221,8 +221,8 @@ export const ALERT_COLUMNS_DEFAULT: ColDef<AlertQueueRecord>[] = [
   {
     headerName: 'Detected',
     field: '@timestamp',
-    width: 98,
-    minWidth: 94,
+    width: 124,
+    minWidth: 118,
     cellRenderer: DetectedCell,
     sort: 'desc',
   },

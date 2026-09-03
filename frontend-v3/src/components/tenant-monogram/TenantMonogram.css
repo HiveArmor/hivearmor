@@ -1,0 +1,24 @@
+.tenant-monogram {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-family: var(--ha-font-mono);
+  font-weight: 700;
+  letter-spacing: .04em;
+  line-height: 1;
+  color: var(--tenant-monogram-fg, var(--ha-foreground-secondary));
+  background: color-mix(in srgb, var(--tenant-monogram-fg, var(--ha-foreground-secondary)) 14%, transparent);
+  border-color: color-mix(in srgb, var(--tenant-monogram-fg, var(--ha-foreground-secondary)) 30%, transparent);
+}
+
+.tenant-monogram[data-size='sm'] { min-width: 34px; height: 22px; padding: 0 6px; font-size: 11px; }
+.tenant-monogram[data-size='md'] { min-width: 40px; height: 26px; padding: 0 7px; font-size: 12px; }
+
+.tenant-monogram[data-tint='violet']  { --tenant-monogram-fg: var(--ha-intelligence-primary); }
+.tenant-monogram[data-tint='blue']    { --tenant-monogram-fg: var(--ha-state-info); }
+.tenant-monogram[data-tint='teal']    { --tenant-monogram-fg: var(--ha-action-secondary); }
+.tenant-monogram[data-tint='green']   { --tenant-monogram-fg: var(--ha-state-healthy); }
+.tenant-monogram[data-tint='neutral'] { --tenant-monogram-fg: var(--ha-foreground-secondary); }

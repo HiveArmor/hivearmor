@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Building2, Check, ChevronDown, Search } from 'lucide-react';
+import { Check, ChevronDown, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { DataHealthBadge } from './DataHealthBadge';
@@ -12,6 +12,7 @@ import { LiveEpsBadge } from './LiveEpsBadge';
 import { MastheadClock } from './MastheadClock';
 import { NotificationsBell } from './NotificationsBell';
 
+import { TenantMonogram } from '@/components/tenant-monogram';
 import { useMastheadTenants } from '@/hooks/useMastheadTenants';
 import { FRONTEND_V3_BOUNDARY } from '@/lib/deprecation.honesty';
 import { ALL_TENANTS_OPTION } from '@/services/mastheadTenants.service';
@@ -81,7 +82,7 @@ export function HaMasthead(_props: HaMastheadProps): JSX.Element {
             aria-expanded={tenantOpen}
             onClick={() => { setTenantOpen((open) => !open); setTenantSearch(''); }}
           >
-            <Building2 size={15} aria-hidden="true" />
+            <TenantMonogram tenantId={selectedTenant.id} prefix={selectedTenant.prefix} label={selectedTenant.label} size="sm" />
             <span>{tenantLabel}</span>
             <ChevronDown size={14} aria-hidden="true" />
           </button>
@@ -98,7 +99,7 @@ export function HaMasthead(_props: HaMastheadProps): JSX.Element {
                   autoFocus
                 />
               </div>
-              <span className="ha-context-popover__label">Select tenant scope</span>
+              <span className="ha-context-popover__label">Switch tenant</span>
               {notice && (
                 <p className="ha-context-popover__notice" role="status">{notice}</p>
               )}
@@ -117,12 +118,11 @@ export function HaMasthead(_props: HaMastheadProps): JSX.Element {
                     aria-checked={selectedTenantId === tenant.id}
                     onClick={() => handleSelectTenant(tenant.id)}
                     className="ha-context-popover__item"
+                    title={tenant.description}
                   >
-                    <div className="ha-context-popover__item-content">
-                      <strong>{tenant.label}</strong>
-                      <small>{tenant.description}</small>
-                    </div>
-                    {selectedTenantId === tenant.id && <Check size={15} aria-hidden="true" />}
+                    <TenantMonogram tenantId={tenant.id} prefix={tenant.prefix} label={tenant.label} size="sm" />
+                    <span className="ha-context-popover__item-name">{tenant.label}</span>
+                    {selectedTenantId === tenant.id && <Check size={16} aria-hidden="true" />}
                   </button>
                 ))}
               </div>

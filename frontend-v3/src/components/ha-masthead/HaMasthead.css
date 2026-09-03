@@ -144,11 +144,10 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 10px;
+  padding: 7px 10px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 7px;
   background: transparent;
   color: var(--ha-foreground-primary);
   text-align: left;
@@ -159,27 +158,14 @@
 .ha-context-popover__item:hover { background: var(--ha-surface-hover); }
 
 .ha-context-popover__item[aria-checked="true"] {
-  background: var(--ha-fill-primary-subtle, rgba(97, 196, 190, 0.08));
+  background: var(--ha-surface-selected);
 }
 
-.ha-context-popover__item-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.ha-context-popover__item-name {
+  flex: 1;
   min-width: 0;
-}
-
-.ha-context-popover__item-content strong {
-  font: var(--ha-type-compact, 12px/1.45 var(--ha-font-ui, Inter, sans-serif));
+  font: var(--ha-type-body);
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ha-context-popover__item-content small {
-  font: var(--ha-type-metadata, 11px/1.4 var(--ha-font-ui, Inter, sans-serif));
-  color: var(--ha-foreground-tertiary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

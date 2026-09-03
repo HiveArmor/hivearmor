@@ -12,15 +12,14 @@ import { describe, expect, it } from 'vitest';
 const dir = dirname(fileURLToPath(import.meta.url));
 
 describe('AlertsListPage inventory UX contracts', () => {
-  it('states inventory job and cross-links Queue / Mission Control / Incidents', () => {
+  it('uses the compact HaPageHeader band with the inventory scope (no cross-link strip)', () => {
     const source = readFileSync(join(dir, 'AlertsListPage.tsx'), 'utf8');
-    expect(source).toContain('ALERTS_INVENTORY_JOB_SENTENCE');
+    expect(source).toContain('HaPageHeader');
+    expect(source).toContain("title=\"Alerts\"");
     expect(source).toContain('full alert inventory');
-    expect(source).toContain('Analyst Queue');
-    expect(source).toContain('to="/queue"');
-    expect(source).toContain('to="/dashboard"');
-    expect(source).toContain('to="/incidents"');
-    expect(source).toContain('to="/alerts/board"');
+    // The old cross-page nav strip was removed — its links must be gone.
+    expect(source).not.toContain('alert-inventory-meta');
+    expect(source).not.toContain('to="/dashboard"');
   });
 
   it('defaults to All inventory scope — not Queue-style Needs triage', () => {

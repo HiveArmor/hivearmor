@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { POSTURE_VULNERABILITIES_JOB_SENTENCE, VulnerabilitiesPage } from './VulnerabilitiesPage';
 
+import { selectHaOption } from '@/test/haCompactSelect.testutil';
 import type { VulnFindingDTO } from '@/types/vuln.types';
 
 const mockUseQuery = vi.fn();
@@ -117,8 +118,8 @@ describe('VulnerabilitiesPage', () => {
 
   it('updates the server query key when severity and KEV filters change', () => {
     renderPage();
-    fireEvent.change(screen.getByLabelText('Filter by severity'), { target: { value: 'CRITICAL' } });
-    fireEvent.change(screen.getByLabelText('Filter by exploitation evidence'), { target: { value: 'kev' } });
+    selectHaOption('Filter by severity', 'Critical');
+    selectHaOption('Filter by exploitation evidence', 'CISA KEV only');
 
     const findingCalls = mockUseQuery.mock.calls.filter(([options]) => (options as { queryKey: unknown[] }).queryKey[0] === 'vulnerability-findings');
     const latest = findingCalls[findingCalls.length - 1]?.[0] as { queryKey: [string, { severity?: string; isKev?: boolean }] };
