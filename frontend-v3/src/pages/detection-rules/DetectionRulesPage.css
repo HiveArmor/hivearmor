@@ -321,8 +321,11 @@
 .detection-test-result > footer span { display: inline-flex; align-items: center; gap: 4px; color: var(--ha-state-healthy); font-size: 8px; }
 
 /* Staged detection-content import */
-.detection-import-scrim { position: absolute; z-index: 170; inset: 0; display: flex; justify-content: flex-end; background: color-mix(in srgb, var(--ha-surface-overlay) 60%, transparent); }
-.detection-import { display: flex; width: min(680px, calc(100vw - 78px)); height: 100%; flex-direction: column; overflow: hidden; border-left: 1px solid var(--ha-border-strong); background: var(--ha-surface-overlay); box-shadow: var(--ha-shadow-high); }
+.detection-import { display: flex; flex-direction: column; }
+.detection-import__intro { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.detection-import__intro > span { display: grid; place-items: center; color: var(--ha-action-secondary); }
+.detection-import__intro small { display: block; color: var(--ha-action-secondary); font-size: 9px; letter-spacing: .12em; }
+.detection-import__intro p { margin: 2px 0 0; color: var(--ha-foreground-secondary); font-size: 11px; }
 .detection-import > header { display: flex; min-height: 102px; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 13px 15px; border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); }
 .detection-import > header > div { display: flex; min-width: 0; align-items: flex-start; gap: 10px; }
 .detection-import > header > div > span { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 1px solid color-mix(in srgb, var(--ha-action-primary) 45%, var(--ha-border-default)); border-radius: 7px; background: var(--ha-fill-primary-subtle); color: var(--ha-action-secondary); }
