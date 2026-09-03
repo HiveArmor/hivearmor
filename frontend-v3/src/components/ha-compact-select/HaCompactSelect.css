@@ -13,7 +13,21 @@
 }
 
 .ha-compact-select[data-disabled] {
-  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--ha-surface-input);
+}
+
+/* Dim only the non-text affordances (the value/chevron), never the label — a
+   blanket opacity here composited the label text down to ~2.2:1 (WCAG fail).
+   The label stays at the AA-legible secondary foreground; the actual control
+   is <button disabled>, which is exempt and keeps its own not-allowed cursor. */
+.ha-compact-select[data-disabled] .ha-compact-select__label {
+  color: var(--ha-foreground-secondary);
+}
+
+.ha-compact-select[data-disabled] .ha-compact-select__value,
+.ha-compact-select[data-disabled] .ha-compact-select__control {
+  color: var(--ha-foreground-disabled);
 }
 
 .ha-compact-select:hover:not([data-disabled]) {
