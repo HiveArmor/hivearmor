@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import {
   AlertTriangle, CheckCircle2, ChevronRight, FileCode2, FileUp,
-  GitCompareArrows, Import, ShieldCheck, X, XCircle,
+  GitCompareArrows, Import, ShieldCheck, XCircle,
 } from 'lucide-react';
 
 import { detectionRulesFixtureMode } from './detectionRules.service';
 import type { DetectionRule } from './detectionRules.types';
+
+import { HaModal } from '@/components/ha-modal/HaModal';
 
 interface DetectionImportPanelProps {
   existingRules: DetectionRule[];
@@ -44,26 +46,10 @@ export default function DetectionImportPanel({ existingRules, onClose, onStaged 
   const [fileName, setFileName] = useState<string | null>(null);
   const [activateAfterReview, setActivateAfterReview] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const dialogRef = useRef<HTMLElement>(null);
   const candidates = useMemo(() => parseCandidates(content, existingRules), [content, existingRules]);
   const valid = candidates.filter((candidate) => candidate.valid);
   const duplicates = candidates.filter((candidate) => candidate.duplicate);
   const invalid = candidates.filter((candidate) => !candidate.valid);
-
-  useEffect(() => {
-    dialogRef.current?.querySelector<HTMLElement>('button')?.focus();
-  }, []);
-
-  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLElement>): void => {
-    if (event.key === 'Escape') { event.preventDefault(); onClose(); return; }
-    if (event.key !== 'Tab') return;
-    const focusable = [...(dialogRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), textarea, [tabindex]:not([tabindex="-1"])') ?? [])];
-    if (!focusable.length) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-  };
 
   const readFile = (file?: File): void => {
     if (!file) return;
@@ -80,9 +66,8 @@ export default function DetectionImportPanel({ existingRules, onClose, onStaged 
   };
 
   return (
-    <div className="detection-import-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <aside className="detection-import" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="detection-import-title" onKeyDown={handleDialogKeyDown}>
-        <header><div><span><Import size={17} /></span><div><small>DETECTION CONTENT</small><h2 id="detection-import-title">Import and stage rules</h2><p>Validate content, review conflicts, then stage an auditable change set.</p></div></div><button type="button" onClick={onClose} aria-label="Close rule import"><X size={17} /></button></header>
+    <HaModal isOpen onClose={onClose} title="Import and stage rules" width={720} className="detection-import">
+        <div className="detection-import__intro"><span><Import size={17} /></span><div><small>DETECTION CONTENT</small><p>Validate content, review conflicts, then stage an auditable change set.</p></div></div>
         <nav aria-label="Rule import progress"><button type="button" aria-current={step === 'select' ? 'step' : undefined} onClick={() => setStep('select')}><span>1</span><div><strong>Select</strong><small>format and content</small></div></button><button type="button" disabled={!content.trim()} aria-current={step === 'validate' ? 'step' : undefined} onClick={() => setStep('validate')}><span>2</span><div><strong>Validate</strong><small>syntax and conflicts</small></div></button><button type="button" disabled={!valid.length} aria-current={step === 'review' ? 'step' : undefined} onClick={() => setStep('review')}><span>3</span><div><strong>Review</strong><small>scope and activation</small></div></button></nav>
 
         <main>
@@ -92,7 +77,6 @@ export default function DetectionImportPanel({ existingRules, onClose, onStaged 
         </main>
 
         <footer><span>{step === 'select' ? 'Content remains in this browser until validation.' : step === 'validate' ? `${valid.length} eligible · ${invalid.length} blocked` : 'No active rules will be overwritten.'}</span><div><button type="button" onClick={onClose}>Cancel</button>{step !== 'select' && <button type="button" onClick={() => setStep(step === 'review' ? 'validate' : 'select')}>Back</button>}{step === 'select' && <button type="button" className="detection-primary-button" disabled={!content.trim()} onClick={() => setStep('validate')}>Validate content <ChevronRight size={14} /></button>}{step === 'validate' && <button type="button" className="detection-primary-button" disabled={!valid.length} onClick={() => setStep('review')}>Review change set <ChevronRight size={14} /></button>}{step === 'review' && <button type="button" className="detection-primary-button" disabled={!detectionRulesFixtureMode || !valid.length} title={detectionRulesFixtureMode ? 'Stage fictional content' : 'DET-012 import execute exists, but this panel does not yet submit structured sigmaFiles'} onClick={stage}>Stage {valid.length} rules</button>}</div></footer>
-      </aside>
-    </div>
+    </HaModal>
   );
 }
