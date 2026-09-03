@@ -71,6 +71,7 @@ import type {
   PlaybookRisk,
 } from './playbookNodes.types';
 
+import { HaIconButton } from '@/components/ha-icon-button';
 import { HaModal } from '@/components/ha-modal/HaModal';
 import { HaSwitch } from '@/components/ha-switch/HaSwitch';
 import { StatusDock } from '@/components/status-dock/StatusDock';
@@ -778,7 +779,7 @@ export function PlaybookBuilderPage(): JSX.Element {
     <section className={`soar-builder-page${isFocusMode ? ' soar-builder-page--focus' : ''}`} aria-label="SOAR playbook builder">
       <header className="soar-builder-header">
         <div className="soar-builder-header__identity">
-          <button type="button" className="soar-icon-button" onClick={() => isDirty ? setShowLeaveModal(true) : navigate('/response/playbooks')} aria-label="Back to playbooks"><ArrowLeft size={16} /></button>
+          <HaIconButton className="soar-icon-button" onClick={() => isDirty ? setShowLeaveModal(true) : navigate("/response/playbooks")} aria-label="Back to playbooks" icon={<ArrowLeft size={16} />} />
           <span className="soar-builder-header__mark"><Network size={18} /></span>
           <div><small>{isEditMode ? 'EDIT RESPONSE PLAYBOOK' : 'RESPONSE AUTOMATION'}</small><h1>{name.trim() || 'Untitled playbook'}</h1></div>
           <span className="soar-draft-chip">Draft</span>

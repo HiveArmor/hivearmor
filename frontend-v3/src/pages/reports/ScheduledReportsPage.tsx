@@ -31,6 +31,7 @@ import {
 import type { UtmReportDTO } from './reports.types';
 
 import { CronHumanLabel } from '@/components/cron-human-label';
+import { HaIconButton } from '@/components/ha-icon-button';
 import { StatusDock } from '@/components/status-dock';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import { ROUTES } from '@/constants/routes.constants';
@@ -228,14 +229,12 @@ export function ScheduledReportsPage(): JSX.Element {
           </div>
         </div>
         <div className="sched-header__actions">
-          <button
+          <HaIconButton
             className="sched-icon-button"
-            type="button"
             aria-label="Refresh scheduled reports"
             onClick={() => void schedulesQuery.refetch()}
-          >
-            <RefreshCw size={13} />
-          </button>
+            icon={<RefreshCw size={13} />}
+          />
         </div>
       </header>
 
@@ -446,9 +445,8 @@ function ScheduleRow({
       </td>
       <td>
         <div className="sched-row-actions">
-          <button
+          <HaIconButton
             className="sched-icon-button"
-            type="button"
             disabled={!canAdmin || busy}
             title={
               canAdmin
@@ -457,12 +455,10 @@ function ScheduleRow({
             }
             aria-label={`Stamp last execution for ${report.name}`}
             onClick={onStamp}
-          >
-            <Stamp size={13} />
-          </button>
-          <button
+            icon={<Stamp size={13} />}
+          />
+          <HaIconButton
             className="sched-icon-button"
-            type="button"
             disabled={!canAdmin || busy}
             title={
               canAdmin
@@ -473,9 +469,8 @@ function ScheduleRow({
             }
             aria-label={report.active ? `Pause ${report.name}` : `Resume ${report.name}`}
             onClick={report.active ? onPause : onResume}
-          >
-            {report.active ? <Pause size={13} /> : <Play size={13} />}
-          </button>
+            icon={report.active ? <Pause size={13} /> : <Play size={13} />}
+          />
         </div>
       </td>
     </tr>

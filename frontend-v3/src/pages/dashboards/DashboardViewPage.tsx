@@ -29,6 +29,7 @@ import type { DashboardPanel } from './dashboardOperations.types';
 import { DashboardPanelRenderer } from './DashboardPanelRenderer';
 
 import { HaDrawer } from '@/components/ha-drawer';
+import { HaIconButton } from '@/components/ha-icon-button';
 import { StatusDock } from '@/components/status-dock';
 import { ROUTES } from '@/constants/routes.constants';
 import { useEpsStream } from '@/hooks/useEpsStream';
@@ -105,14 +106,12 @@ export function DashboardViewPage(): JSX.Element {
     <section className="dsh-page" aria-label="Dashboard runtime" data-dashboard-runtime="panels">
       <header className="dsh-header">
         <div className="dsh-header__identity">
-          <button
+          <HaIconButton
             className="dsh-icon-button"
-            type="button"
             onClick={() => navigate(ROUTES.DASHBOARDS)}
             aria-label="Back to dashboards"
-          >
-            <ArrowLeft size={15} />
-          </button>
+            icon={<ArrowLeft size={15} />}
+          />
           <span className="dsh-header__mark">
             <LayoutDashboard size={18} aria-hidden="true" />
           </span>

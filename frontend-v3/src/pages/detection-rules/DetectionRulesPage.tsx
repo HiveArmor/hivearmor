@@ -17,6 +17,7 @@ import type { DetectionRule, DetectionRuleSummary, RuleListParams } from './dete
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
+import { HaIconButton } from '@/components/ha-icon-button';
 import { HaMenu } from '@/components/ha-menu';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { StatusDock } from '@/components/status-dock/StatusDock';
@@ -298,7 +299,7 @@ export function DetectionRulesPage(): JSX.Element {
         <HaCompactSelect ariaLabel="Rule state" value={activeFilter} onChange={(value) => setActiveFilter(value as typeof activeFilter)} options={STATUS_OPTIONS} />
         <HaCompactSelect ariaLabel="Rule severity" value={severityFilter} onChange={(value) => setSeverityFilter(value as typeof severityFilter)} options={SEVERITY_OPTIONS} />
         <HaCompactSelect ariaLabel="MITRE tactic" value={mitreFilter} onChange={(value) => setMitreFilter(value as typeof mitreFilter)} options={MITRE_OPTIONS} />
-        <button className="detection-icon-button" type="button" onClick={() => void rulesQuery.refetch()} disabled={rulesQuery.isFetching} aria-label="Refresh detection rules" title="Refresh"><RefreshCw size={15} className={rulesQuery.isFetching ? 'detection-spin' : ''} /></button>
+        <HaIconButton className="detection-icon-button" onClick={() => void rulesQuery.refetch()} disabled={rulesQuery.isFetching} aria-label="Refresh detection rules" title="Refresh" icon={<RefreshCw size={15} className={rulesQuery.isFetching ? 'detection-spin' : ''} />} />
       </div>
 
       {limitedContract && <div className="detection-contract-warning" role="status"><AlertTriangle size={14} /><span><strong>Limited execution projection.</strong> Last-run health, alert volume, and schedule telemetry require backend execution history — unknown values stay uncolored.</span></div>}

@@ -28,6 +28,7 @@ import {
   reportTemplatesService,
 } from './reportTemplates.service';
 
+import { HaIconButton } from '@/components/ha-icon-button';
 import { StatusDock } from '@/components/status-dock';
 import { ROUTES } from '@/constants/routes.constants';
 import { useEpsStream } from '@/hooks/useEpsStream';
@@ -261,14 +262,12 @@ export function ReportTemplatesPage(): JSX.Element {
             </option>
           ))}
         </select>
-        <button
+        <HaIconButton
           className="rpt-icon-button"
-          type="button"
           aria-label="Refresh template inventory"
           onClick={() => templatesQuery.refetch()}
-        >
-          <RefreshCw size={13} />
-        </button>
+          icon={<RefreshCw size={13} />}
+        />
         {templates.length > 0 && (
           <span className="rpt-inline-stats" aria-label="Template inventory counts">
             <span>{templates.length} loaded</span>
@@ -356,14 +355,12 @@ export function ReportTemplatesPage(): JSX.Element {
                   {typeLabels[selected.type]} · {selected.id}
                 </small>
               </div>
-              <button
+              <HaIconButton
                 className="rpt-icon-button"
-                type="button"
                 aria-label="Close template context"
                 onClick={() => setSelectedId(undefined)}
-              >
-                ×
-              </button>
+                icon={<>×</>}
+              />
             </header>
             <div className="rpt-drawer__scroll">
               <div className="rpt-drawer__meta">

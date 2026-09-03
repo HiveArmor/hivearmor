@@ -83,6 +83,7 @@ import { useInvestigationStream } from './hooks/useInvestigationStream';
 
 import { ErrorState } from '@/components/error-state/ErrorState';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
+import { HaIconButton } from '@/components/ha-icon-button';
 import { IntelligenceFindingCard } from '@/components/intelligence/IntelligenceFindingCard';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import { foundationAlertInvestigation } from '@/pages/alerts/alertInvestigation.fixtures';
@@ -811,9 +812,7 @@ export function AlertInvestigationPage(): JSX.Element {
 
       <header className="alert-investigation-header">
         <div className="alert-investigation-header__utility">
-          <button className="alert-icon-button" type="button" onClick={() => navigate('/alerts')} aria-label="Back to alerts" title="Back to alerts">
-            <ArrowLeft size={17} aria-hidden="true" />
-          </button>
+          <HaIconButton className="alert-icon-button" onClick={() => navigate('/alerts')} aria-label="Back to alerts" title="Back to alerts" icon={<ArrowLeft size={17} aria-hidden="true" />} />
           <div className="alert-investigation-header__breadcrumb">
             <span>Detections</span><ChevronRight size={12} aria-hidden="true" /><span>Alerts</span><ChevronRight size={12} aria-hidden="true" /><strong>Investigation</strong>
           </div>
@@ -900,7 +899,7 @@ export function AlertInvestigationPage(): JSX.Element {
               <div><strong>Ask Hive</strong><span>SOC AI enrichment</span></div>
             </div>
             <IntelligenceFindingCard finding={aiFinding} compact title="Alert enrichment" />
-            <button className="alert-icon-button" type="button" onClick={() => setAiFinding(null)} aria-label="Dismiss Ask Hive result"><X size={15} /></button>
+            <HaIconButton className="alert-icon-button" onClick={() => setAiFinding(null)} aria-label="Dismiss Ask Hive result" icon={<X size={15} />} />
           </section>
         )}
 
@@ -915,7 +914,7 @@ export function AlertInvestigationPage(): JSX.Element {
             ) : (guideQuery.data?.steps ?? investigation.rule.investigationGuide).length > 0 ? (
               <ol>{(guideQuery.data?.steps ?? investigation.rule.investigationGuide).map((step) => <li key={step}>{step}</li>)}</ol>
             ) : <DataUnavailable label="Investigation guide" contract="ALT-009" />}
-            <button className="alert-icon-button" type="button" onClick={() => setGuideOpen(false)} aria-label="Close investigation guide"><X size={15} /></button>
+            <HaIconButton className="alert-icon-button" onClick={() => setGuideOpen(false)} aria-label="Close investigation guide" icon={<X size={15} />} />
           </section>
         )}
       </header>
