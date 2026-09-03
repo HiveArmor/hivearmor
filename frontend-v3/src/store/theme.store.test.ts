@@ -18,7 +18,13 @@ describe('useThemeStore', () => {
     expect(document.documentElement).toHaveAttribute('data-ha-theme', 'dark');
   });
 
-  it('toggles between dark and light modes and updates the document root', () => {
+  it('cycles dark → modern → light → dark and updates the document root', () => {
+    useThemeStore.getState().setTheme('dark');
+
+    useThemeStore.getState().toggleTheme();
+    expect(useThemeStore.getState().theme).toBe('modern');
+    expect(document.documentElement).toHaveAttribute('data-ha-theme', 'modern');
+
     useThemeStore.getState().toggleTheme();
     expect(useThemeStore.getState().theme).toBe('light');
     expect(document.documentElement).toHaveAttribute('data-ha-theme', 'light');
@@ -26,5 +32,12 @@ describe('useThemeStore', () => {
     useThemeStore.getState().toggleTheme();
     expect(useThemeStore.getState().theme).toBe('dark');
     expect(document.documentElement).toHaveAttribute('data-ha-theme', 'dark');
+  });
+
+  it('setTheme applies the modern theme with a dark color-scheme', () => {
+    useThemeStore.getState().setTheme('modern');
+    expect(useThemeStore.getState().theme).toBe('modern');
+    expect(document.documentElement).toHaveAttribute('data-ha-theme', 'modern');
+    expect(document.documentElement.style.colorScheme).toBe('dark');
   });
 });

@@ -8,7 +8,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type HaTheme = 'dark' | 'light';
+export type HaTheme = 'dark' | 'light' | 'modern';
+
+/** Themes that render on a dark canvas (browser UA controls, scrollbars, form widgets). */
+function isDarkFamily(theme: HaTheme): boolean {
+  return theme === 'dark' || theme === 'modern';
+}
 
 interface ThemeState {
   theme: HaTheme;
@@ -26,7 +31,7 @@ function systemTheme(): HaTheme {
 function applyTheme(theme: HaTheme): void {
   if (typeof document === 'undefined') return;
   document.documentElement.dataset.haTheme = theme;
-  document.documentElement.style.colorScheme = theme;
+  document.documentElement.style.colorScheme = isDarkFamily(theme) ? 'dark' : 'light';
 }
 
 function readPersistedTheme(): HaTheme | null {
@@ -41,7 +46,7 @@ function readPersistedTheme(): HaTheme | null {
       typeof (parsed as { state?: { theme?: unknown } }).state?.theme === 'string'
     ) {
       const theme = (parsed as { state: { theme: string } }).state.theme;
-      if (theme === 'dark' || theme === 'light') return theme;
+      if (theme === 'dark' || theme === 'light' || theme === 'modern') return theme;
     }
   } catch {
     // ignore corrupt preference
@@ -60,7 +65,9 @@ export const useThemeStore = create<ThemeState>()(
         set({ theme });
       },
       toggleTheme: () => {
-        const theme: HaTheme = get().theme === 'dark' ? 'light' : 'dark';
+        const order: HaTheme[] = ['dark', 'modern', 'light'];
+        const idx = order.indexOf(get().theme);
+        const theme: HaTheme = order[(idx + 1) % order.length];
         applyTheme(theme);
         set({ theme });
       },

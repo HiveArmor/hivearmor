@@ -119,3 +119,12 @@ export function defineHiveArmorMonacoTheme(monaco: typeof import('monaco-editor'
   monaco.editor.defineTheme('hivearmor-dark', createTheme('dark'));
   monaco.editor.defineTheme('hivearmor-light', createTheme('light'));
 }
+
+/**
+ * Map an app theme to a registered Monaco theme name. Only 'dark' and 'light'
+ * themes are defined for Monaco; the 'modern' theme renders on a dark canvas,
+ * so it maps to the dark editor theme.
+ */
+export function monacoThemeName(theme: 'dark' | 'light' | 'modern'): string {
+  return theme === 'light' ? 'hivearmor-light' : 'hivearmor-dark';
+}

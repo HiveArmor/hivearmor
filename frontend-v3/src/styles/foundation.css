@@ -221,6 +221,43 @@
   --ha-shadow-overlay: var(--ha-shadow-medium);
 }
 
+/* Modern — Deep Navy Command. Dark-family theme: navy surfaces + brighter teal
+   accent. Only surface / border / foreground / accent tokens are overridden;
+   severity, intelligence, and brand tokens inherit from :root so meaning stays
+   identical across all three themes. */
+:root[data-ha-theme='modern'] {
+  color-scheme: dark;
+
+  --ha-surface-app: #080f1f;
+  --ha-surface-sidebar: #0d1528;
+  --ha-surface-masthead: #0d1528;
+  --ha-surface-panel: #101a30;
+  --ha-surface-elevated: #1a2740;
+  --ha-surface-input: #0b1122;
+  --ha-surface-hover: #1e2c48;
+  --ha-surface-selected: #123243;
+  --ha-surface-overlay: #060b16;
+
+  --ha-border-subtle: #202c46;
+  --ha-border-default: #2e3c5a;
+  --ha-border-strong: #485878;
+  --ha-border-focus: #5bd0c9;
+
+  --ha-foreground-primary: #e8ecf7;
+  --ha-foreground-secondary: #aab6cf;
+  --ha-foreground-tertiary: #7883a0;
+  --ha-foreground-disabled: #5a647e;
+  --ha-foreground-inverse: #05101a;
+  --ha-foreground-link: #7fe0da;
+  --ha-foreground-on-action: #05101a;
+
+  --ha-action-primary: #5bd0c9;
+  --ha-action-primary-hover: #7fe0da;
+  --ha-action-secondary: #7fe0da;
+  --ha-action-focus: #5bd0c9;
+  --ha-action-disabled: #2f5a57;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --ha-transition-fast: 0ms;
