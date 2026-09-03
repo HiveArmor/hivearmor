@@ -1,0 +1,102 @@
+/* HaStepper — read-only step progress indicator. Tokens only. Connector lines
+   are drawn between steps; state is carried on data-state (completed/active/
+   upcoming) and never by colour alone (a text suffix is read to AT). */
+.ha-stepper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ha-stepper__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+}
+
+/* Connector: a line from this step's marker to the previous step's marker. */
+.ha-stepper__step:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  right: 50%;
+  left: -50%;
+  height: 2px;
+  background: var(--ha-border-default);
+}
+
+.ha-stepper__step[data-state='completed']::before,
+.ha-stepper__step[data-state='active']::before {
+  background: var(--ha-action-primary);
+}
+
+.ha-stepper__marker {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ha-radius-pill);
+  border: 2px solid var(--ha-border-default);
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-secondary);
+  font-size: var(--ha-type-compact, 13px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition:
+    border-color var(--ha-transition-fast),
+    background var(--ha-transition-fast),
+    color var(--ha-transition-fast);
+}
+
+.ha-stepper__step[data-state='completed'] .ha-stepper__marker {
+  background: var(--ha-action-primary);
+  border-color: var(--ha-action-primary);
+  color: var(--ha-foreground-on-action);
+}
+
+.ha-stepper__step[data-state='active'] .ha-stepper__marker {
+  border-color: var(--ha-action-primary);
+  color: var(--ha-action-primary);
+}
+
+.ha-stepper__label {
+  max-width: 12ch;
+  color: var(--ha-foreground-secondary);
+  font-size: var(--ha-type-metadata, 11px);
+  line-height: 1.3;
+}
+
+.ha-stepper__step[data-state='active'] .ha-stepper__label {
+  color: var(--ha-foreground-primary);
+  font-weight: 600;
+}
+
+/* Screen-reader-only state suffix. */
+.ha-stepper__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-stepper__marker {
+    transition: none;
+  }
+}
