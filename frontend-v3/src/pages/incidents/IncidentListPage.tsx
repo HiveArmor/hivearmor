@@ -39,6 +39,7 @@ import { EmptyState } from '@/components/empty-state/EmptyState';
 import { ErrorState } from '@/components/error-state/ErrorState';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
+import { HaIconButton } from '@/components/ha-icon-button';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { SlaIndicator } from '@/components/sla-indicator/SlaIndicator';
 import { StatusDock } from '@/components/status-dock/StatusDock';
@@ -341,15 +342,13 @@ export function IncidentListPage(): JSX.Element {
         </div>
         <div className="incident-header__actions">
           <span className="incident-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> open</span>
-          <button
-            type="button"
+          <HaIconButton
             className="incident-icon-button"
             onClick={() => { void listQuery.refetch(); void summaryQuery.refetch(); void slaStatsQuery.refetch(); }}
             aria-label="Refresh incidents"
             title="Refresh incidents"
-          >
-            <RefreshCw size={15} className={listQuery.isFetching ? 'incident-spin' : undefined} />
-          </button>
+            icon={<RefreshCw size={15} className={listQuery.isFetching ? 'incident-spin' : undefined} />}
+          />
           <button
             type="button"
             className="incident-primary-button"

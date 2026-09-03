@@ -32,6 +32,7 @@ import './DashboardOperations.css';
 import { dashboardOperationsService } from './dashboardOperations.service';
 import type { DashboardPanel, DashboardPanelKind, DashboardRecord } from './dashboardOperations.types';
 
+import { HaIconButton } from '@/components/ha-icon-button';
 import { StatusDock } from '@/components/status-dock';
 import { ROUTES } from '@/constants/routes.constants';
 import { useEpsStream } from '@/hooks/useEpsStream';
@@ -242,14 +243,12 @@ export function DashboardStudioPage(): JSX.Element {
     >
       <header className="dsh-header">
         <div className="dsh-header__identity">
-          <button
+          <HaIconButton
             className="dsh-icon-button"
-            type="button"
             onClick={() => navigate(exitTarget)}
             aria-label="Exit Studio"
-          >
-            <ArrowLeft size={15} />
-          </button>
+            icon={<ArrowLeft size={15} />}
+          />
           <span className="dsh-header__mark">
             <Columns3 size={18} aria-hidden="true" />
           </span>

@@ -17,6 +17,7 @@ import { fetchRuleExecutions, triggerDetectionGapFill } from './detectionRules.s
 import type { DetectionExecution, DetectionExecutionStatus, DetectionRule } from './detectionRules.types';
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
+import { HaIconButton } from '@/components/ha-icon-button';
 import { useAuthStore } from '@/store/auth.store';
 
 interface DetectionMonitoringViewProps {
@@ -123,7 +124,7 @@ export function DetectionMonitoringView({ rules, onOpenRule }: DetectionMonitori
         <HaCompactSelect ariaLabel="Execution time range" value={range} onChange={setRange} options={RANGE_OPTIONS} />
         <HaCompactSelect ariaLabel="Execution status" value={status} onChange={(value) => setStatus(value as typeof status)} options={STATUS_OPTIONS} />
         <button type="button" className="detection-monitoring__gap-filter" aria-pressed={onlyGaps} onClick={() => setOnlyGaps((value) => !value)}><TimerReset size={14} /> Only rules with gaps</button>
-        <button type="button" className="detection-icon-button" aria-label="Refresh execution monitoring" onClick={() => void executionsQuery.refetch()}><RefreshCw size={15} className={executionsQuery.isFetching ? 'detection-spin' : ''} /></button>
+        <HaIconButton className="detection-icon-button" aria-label="Refresh execution monitoring" onClick={() => void executionsQuery.refetch()} icon={<RefreshCw size={15} className={executionsQuery.isFetching ? "detection-spin" : ""} />} />
       </div>
 
       {!DET_009_EXECUTIONS && (

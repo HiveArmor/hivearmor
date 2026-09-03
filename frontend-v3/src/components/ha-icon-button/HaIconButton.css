@@ -1,0 +1,47 @@
+/* HaIconButton — square icon-only button. Consolidates the .*-icon-button
+   families. Base matches the dominant hand-rolled form (elevated surface,
+   default border, secondary foreground, action-secondary hover). Tokens only. */
+.ha-icon-button {
+  display: grid;
+  place-items: center;
+  width: var(--ha-icon-button-size, 30px);
+  height: var(--ha-icon-button-size, 30px);
+  padding: 0;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-control);
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-secondary);
+  cursor: pointer;
+  transition:
+    color var(--ha-transition-fast),
+    border-color var(--ha-transition-fast),
+    background var(--ha-transition-fast);
+}
+
+.ha-icon-button:hover:not(:disabled) {
+  border-color: var(--ha-border-strong);
+  color: var(--ha-action-secondary);
+}
+
+.ha-icon-button:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: -2px;
+}
+
+/* Toggled / pressed state (e.g. an open popover trigger). */
+.ha-icon-button[data-active] {
+  border-color: var(--ha-border-focus);
+  background: var(--ha-fill-primary-subtle);
+  color: var(--ha-action-secondary);
+}
+
+.ha-icon-button:disabled {
+  color: var(--ha-foreground-disabled);
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-icon-button {
+    transition: none;
+  }
+}

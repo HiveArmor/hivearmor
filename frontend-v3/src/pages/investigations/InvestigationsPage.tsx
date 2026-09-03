@@ -30,6 +30,7 @@ import { EmptyState } from '@/components/empty-state/EmptyState';
 import { ErrorState } from '@/components/error-state/ErrorState';
 import { HaButton } from '@/components/ha-button/HaButton';
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
+import { HaIconButton } from '@/components/ha-icon-button';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useEpsStream } from '@/hooks/useEpsStream';
@@ -168,15 +169,13 @@ export function InvestigationsPage(): JSX.Element {
         </div>
         <div className="investigations-header__actions">
           <span className="investigations-shortcuts"><kbd>J</kbd>/<kbd>K</kbd> navigate <kbd>Enter</kbd> open</span>
-          <button
-            type="button"
+          <HaIconButton
             className="investigations-icon-button"
             onClick={() => void listQuery.refetch()}
             aria-label="Refresh investigations"
             title="Refresh investigations"
-          >
-            <RefreshCw size={15} />
-          </button>
+            icon={<RefreshCw size={15} />}
+          />
           <button
             type="button"
             className="investigations-primary-button"
