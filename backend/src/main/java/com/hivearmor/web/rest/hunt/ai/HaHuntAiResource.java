@@ -2,6 +2,8 @@ package com.hivearmor.web.rest.hunt.ai;
 
 import jakarta.validation.Valid;
 
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hivearmor.service.hunt.ai.HaHuntAiExplainService;
+import com.hivearmor.service.hunt.ai.HaAiCalibrationService;
+import com.hivearmor.web.rest.hunt.ai.dto.AiFeedbackRequestDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.ExplainClauseRequestDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.ExplainClauseResponseDTO;
 
@@ -35,9 +39,12 @@ public class HaHuntAiResource {
         + "or hasAuthority('ROLE_ANALYST') or hasAuthority('ROLE_ADMIN')";
 
     private final HaHuntAiExplainService explainService;
+    private final HaAiCalibrationService calibrationService;
 
-    public HaHuntAiResource(HaHuntAiExplainService explainService) {
+    public HaHuntAiResource(HaHuntAiExplainService explainService,
+                            HaAiCalibrationService calibrationService) {
         this.explainService = explainService;
+        this.calibrationService = calibrationService;
     }
 
     /**
@@ -49,5 +56,16 @@ public class HaHuntAiResource {
     public ResponseEntity<ExplainClauseResponseDTO> explain(@Valid @RequestBody ExplainClauseRequestDTO body) {
         log.debug("HaHuntAiResource: explain clause ({} chars)", body.clause().length());
         return ResponseEntity.ok(explainService.explain(body.clause(), body.languageOrDefault()));
+    }
+
+    /**
+     * Record analyst feedback (👍/👎 + optional correction) on an AI verdict/lead — the closed
+     * loop that feeds trust calibration (contract §6). Returns {@code {"recorded": true}}.
+     */
+    @PostMapping("/feedback")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    public ResponseEntity<Map<String, Boolean>> feedback(@Valid @RequestBody AiFeedbackRequestDTO body) {
+        calibrationService.record(body);
+        return ResponseEntity.ok(Map.of("recorded", true));
     }
 }

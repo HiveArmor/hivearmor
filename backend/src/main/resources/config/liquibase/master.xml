@@ -792,6 +792,7 @@
 
     <!-- B0-4 Forensic export — chain-of-custody manifest -->
     <include file="/config/liquibase/changelog/20260902001_ha_export_manifest.xml" relativeToChangelogFile="false"/>
+    <include file="/config/liquibase/changelog/20260904001_ha_ai_feedback.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>
 
