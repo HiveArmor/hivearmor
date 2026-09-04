@@ -57,7 +57,9 @@
   text-align: right;
   vertical-align: top;
   user-select: none;
-  opacity: .6;
+  /* No opacity dimming: --ha-foreground-tertiary (#908c96) is 5.54:1 on --ha-surface-input and
+     passes WCAG AA; a .6 opacity composited it to ~2.77:1 (the a11y gate flagged all line-number
+     cells). Line numbers stay visually secondary via colour + small size, not reduced opacity. */
 }
 .ha-json-viewer__content {
   padding: 0 16px 0 4px;
