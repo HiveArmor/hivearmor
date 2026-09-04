@@ -2,11 +2,13 @@ package com.hivearmor.web.rest.notification_channel;
 
 import com.hivearmor.domain.notification_channel.UtmNotificationChannel;
 import com.hivearmor.domain.notification_channel.UtmNotificationRoute;
+import com.hivearmor.security.AuthoritiesConstants;
 import com.hivearmor.service.notification_channel.NotificationChannelService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +18,10 @@ import java.util.Map;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 @Slf4j
+// SEC (B0-6 F-3 side-finding): notification channel/route management is admin-tier configuration
+// (create/update/delete channels, edit routing, trigger test dispatch). Class-level ADMIN gate,
+// matching the canonical HaNotificationRulesResource; previously these 11 endpoints had NO @PreAuthorize.
+@PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
 public class NotificationChannelResource {
 
     private final NotificationChannelService channelService;
