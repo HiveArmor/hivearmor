@@ -162,7 +162,34 @@
   --ha-positive: var(--ha-state-healthy);
   --ha-text-primary: var(--ha-foreground-primary);
   --ha-text-secondary: var(--ha-foreground-secondary);
+  --ha-text-tertiary: var(--ha-foreground-tertiary);
   --ha-shadow-overlay: var(--ha-shadow-medium);
+  --ha-shadow-high: var(--ha-shadow-lg);
+  --ha-shadow-xl: var(--ha-shadow-lg);
+
+  /* Legacy aliases (round 2) — tokens used bare in consumers but never defined,
+     mapped to their canonical foundation equivalents so they resolve correctly
+     across all three themes (targets are redefined per theme; these var() maps
+     are not). Found by the token audit 2026-09-04. */
+  --ha-state-danger: var(--ha-severity-critical);
+  --ha-state-success: var(--ha-state-healthy);
+  --ha-state-intelligence: var(--ha-intelligence-primary);
+  --ha-warning: var(--ha-state-warning);
+  --ha-foreground-on-accent: var(--ha-foreground-on-action);
+  --ha-text-on-action: var(--ha-foreground-on-action);
+  --ha-action-primary-text: var(--ha-foreground-on-action);
+  --ha-surface-disabled: var(--ha-surface-hover);
+  --ha-surface-base: var(--ha-surface-app);
+  --ha-border-accent: var(--ha-border-focus);
+  --ha-border-info: var(--ha-state-info);
+  --ha-border-intelligence: var(--ha-intelligence-primary);
+  --ha-border-positive: var(--ha-state-healthy);
+  --ha-fill-muted: var(--ha-fill-primary-muted);
+  --ha-fill-success-subtle: var(--ha-fill-low-subtle);
+  --ha-fill-positive-subtle: var(--ha-fill-low-subtle);
+  --ha-font-sans: var(--ha-font-ui);
+  --ha-type-code: var(--ha-type-mono);
+  --ha-type-kpi-value: var(--ha-type-metric);
 }
 
 :root[data-ha-theme='light'] {
