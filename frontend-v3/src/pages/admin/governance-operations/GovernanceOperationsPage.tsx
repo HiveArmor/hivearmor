@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import { Activity, AlertTriangle, Archive, Bot, Braces, ChevronRight, CircleSlash2, Clock3, Database, FileClock, FileKey2, Filter, History, LockKeyhole, Mail, RefreshCw, Search, Settings2, ShieldCheck, ShieldQuestion, X } from 'lucide-react';
@@ -10,6 +10,7 @@ import type { ApiLifecycleEntry, GovernanceAuditEvent, GovernanceChangeRequest, 
 import { ADMIN_AUDIT_PROPOSE_FAIL_CLOSED_TITLE } from '../audit/adminAudit.honesty';
 
 import { HaIconButton } from '@/components/ha-icon-button';
+import { HaModal } from '@/components/ha-modal/HaModal';
 import { HaStepper } from '@/components/ha-stepper';
 import { StatusDock } from '@/components/status-dock';
 import { ROUTES } from '@/constants/routes.constants';
@@ -78,21 +79,9 @@ function DetailHero({icon,title,subtitle,state}:{icon:JSX.Element;title:string;s
 function DetailCard({title,rows}:{title:string;rows:readonly (readonly [string,string])[]}):JSX.Element{return <section className="gov-card"><h3>{title}</h3><dl>{rows.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></section>}
 
 function GovernanceDialog({kind,fixture,onClose}:{kind:'retention'|'configuration'|'export';fixture:boolean;onClose:()=>void}):JSX.Element{
-  const dialogRef=useRef<HTMLElement>(null);
   const [exportBusy,setExportBusy]=useState(false);
   const [exportError,setExportError]=useState<string|null>(null);
   const content=kind==='retention'?{eyebrow:'DATA LIFECYCLE',title:'Propose a retention revision',description:'Stage a versioned policy change with impact, exception and rollback context.',steps:['Define','Impact','Holds','Approve','Schedule'],fields:[['Data class','Select a governed data class'],['Requested retention','365 days'],['Business reason','Regulatory or operational requirement'],['Effective scope','Authorized tenant or platform']] as const}:kind==='configuration'?{eyebrow:'PLATFORM CHANGE',title:'Propose a configuration change',description:'Create a reviewed change without exposing secret material or applying it directly.',steps:['Select','Diff','Validate','Approve','Roll out'],fields:[['Configuration group','Security policy'],['Setting','Select a setting'],['Requested value','Enter proposed value'],['Change reason','Operational justification']] as const}:{eyebrow:'AUDIT EVIDENCE',title:'Export audit evidence',description:'Download a bounded NDJSON projection via GET /api/ha-audit-log/export. Payload and secret fields are omitted.',steps:['Scope','Fields','Redact','Generate','Retrieve'],fields:[['Time range','Last 24 hours'],['Tenant scope','All authorized tenants'],['Evidence purpose','Audit or investigation reference'],['Output format','NDJSON (safe fields)']] as const};
-  useEffect(()=>{dialogRef.current?.querySelector<HTMLElement>('button, select, input')?.focus();},[]);
-  const containFocus=(event:React.KeyboardEvent<HTMLElement>):void=>{
-    if(event.key==='Escape'){event.preventDefault();onClose();return;}
-    if(event.key!=='Tab')return;
-    const focusable=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), select:not(:disabled), input:not(:disabled), [tabindex]:not([tabindex="-1"])'));
-    if(!focusable.length)return;
-    const first=focusable[0];
-    const last=focusable[focusable.length-1];
-    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
-    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
-  };
   const primaryLabel=kind==='export'?(exportBusy?'Downloading…':'Download NDJSON'):`Continue to ${content.steps[1].toLowerCase()}`;
   const primaryDisabled=kind==='export'?fixture||exportBusy:true;
   const onPrimary=async():Promise<void>=>{
@@ -114,16 +103,9 @@ function GovernanceDialog({kind,fixture,onClose}:{kind:'retention'|'configuratio
       ?'Live download uses GET /api/ha-audit-log/export (Platform Administrator). Payload is never included.'
       :'The authoritative version, preview, approval and job contract is incomplete; submission remains disabled.';
   return (
-    <div className="gov-dialog-backdrop" role="presentation">
-      <section ref={dialogRef} className="gov-dialog" role="dialog" aria-modal="true" aria-labelledby="gov-dialog-title" onKeyDown={containFocus}>
-        <header>
-          <div>
-            <span>{content.eyebrow}</span>
-            <h2 id="gov-dialog-title">{content.title}</h2>
-          </div>
-          <HaIconButton className="gov-icon-button" onClick={onClose} aria-label="Close workflow" icon={<X size={14}/>}/>
-        </header>
+    <HaModal isOpen onClose={onClose} title={content.title} width={700} className="gov-dialog">
         <div className="gov-dialog__body">
+          <p className="gov-dialog__eyebrow">{content.eyebrow}</p>
           <p>{content.description}</p>
           <HaStepper
             className="gov-stepper"
@@ -151,12 +133,11 @@ function GovernanceDialog({kind,fixture,onClose}:{kind:'retention'|'configuratio
           </section>
           {exportError ? <p className="gov-detail-copy" role="alert">{exportError}</p> : null}
         </div>
-        <footer>
+        <footer className="gov-dialog__footer">
           <button className="gov-button" type="button" onClick={onClose}>Cancel</button>
           <button className="gov-button gov-button--primary" type="button" disabled={primaryDisabled} onClick={()=>{void onPrimary();}}>{primaryLabel}</button>
         </footer>
-      </section>
-    </div>
+    </HaModal>
   );
 }
 function StateBadge({state}:{state:string}):JSX.Element{return <span className="gov-state" data-state={state}><i/>{words(state)}</span>}
