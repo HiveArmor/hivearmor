@@ -78,12 +78,12 @@ import type {
 import { EntityGraphPanel } from './components/EntityGraphPanel';
 import { LiveUpdateIndicator } from './components/LiveUpdateIndicator';
 import { ResponseActionsPanel } from './components/ResponseActionsPanel';
-import { SyntaxHighlightedJson } from './components/SyntaxHighlightedJson';
 import { useInvestigationStream } from './hooks/useInvestigationStream';
 
 import { ErrorState } from '@/components/error-state/ErrorState';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { HaIconButton } from '@/components/ha-icon-button';
+import { HaJsonViewer } from '@/components/ha-json-viewer';
 import { IntelligenceFindingCard } from '@/components/intelligence/IntelligenceFindingCard';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import { foundationAlertInvestigation } from '@/pages/alerts/alertInvestigation.fixtures';
@@ -1348,7 +1348,7 @@ export function AlertInvestigationPage(): JSX.Element {
                   <dl>{filteredFields.map(([field, value]) => <div key={field}><dt>{field}</dt><dd><code>{value}</code><CopyButton value={value} label={field} /></dd></div>)}</dl>
                 </div>
               )}
-              {evidenceTab === 'raw' && <SyntaxHighlightedJson data={investigation.rawEvent} />}
+              {evidenceTab === 'raw' && <HaJsonViewer data={investigation.rawEvent} />}
             </div>
           </section>
         </main>
@@ -1389,9 +1389,9 @@ export function AlertInvestigationPage(): JSX.Element {
               {eventRawQuery.isLoading && selectedEventId && evidenceTab === 'raw' ? (
                 <div className="alert-investigation-skeleton" style={{ height: '6rem' }} aria-busy="true" aria-label="Loading raw event" />
               ) : (eventRawQuery.data as AlertEventRawResponse | undefined)?.raw ? (
-                <SyntaxHighlightedJson data={(eventRawQuery.data as AlertEventRawResponse).raw} />
+                <HaJsonViewer data={(eventRawQuery.data as AlertEventRawResponse).raw} />
               ) : (
-                <SyntaxHighlightedJson data={investigation.rawEvent} />
+                <HaJsonViewer data={investigation.rawEvent} />
               )}
             </div>
           </section>

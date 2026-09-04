@@ -224,6 +224,12 @@ export interface HuntEventField {
   type: string;
   emphasis: 'critical' | 'warning' | 'neutral';
   order: number;
+  /** Coarse investigation section for the sectioned field grid (Detection/Network/Assets/…). */
+  group?: string;
+  /** Server-generated, escaped KQL fragment to filter FOR this field:value (empty when no value). */
+  includeQuery?: string;
+  /** Server-generated, escaped KQL fragment to filter OUT this field:value (empty when no value). */
+  excludeQuery?: string;
 }
 
 /** HNT-006: Investigation pivot descriptor */

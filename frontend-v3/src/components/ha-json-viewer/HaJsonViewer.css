@@ -1,0 +1,104 @@
+/* HaJsonViewer — tokens only. Type colours come from the dedicated --ha-json-* family
+   (raw-JSON view is the one sanctioned place for full type-colouring). */
+.ha-json-viewer {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 6px;
+  background: var(--ha-surface-input);
+}
+.ha-json-viewer__scroll {
+  max-height: 400px;
+  padding: 12px 0;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.ha-json-viewer__copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--ha-border-default);
+  border-radius: 4px;
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-secondary);
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease;
+}
+.ha-json-viewer__copy-btn:hover {
+  border-color: var(--ha-border-strong);
+  color: var(--ha-foreground-primary);
+}
+.ha-json-viewer__copy-btn:focus-visible {
+  outline: none;
+  border-color: var(--ha-border-focus);
+  box-shadow: inset 0 0 0 1px var(--ha-border-focus);
+}
+.ha-json-viewer__table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 12px/1.6 var(--ha-font-mono);
+}
+.ha-json-viewer__row:hover {
+  background: color-mix(in srgb, var(--ha-foreground-primary) 3%, transparent);
+}
+.ha-json-viewer__line-number {
+  width: 40px;
+  min-width: 40px;
+  padding: 0 10px 0 12px;
+  color: var(--ha-foreground-tertiary);
+  font-size: 11px;
+  text-align: right;
+  vertical-align: top;
+  user-select: none;
+  /* No opacity dimming: --ha-foreground-tertiary (#908c96) is 5.54:1 on --ha-surface-input and
+     passes WCAG AA; a .6 opacity composited it to ~2.77:1 (the a11y gate flagged all line-number
+     cells). Line numbers stay visually secondary via colour + small size, not reduced opacity. */
+}
+.ha-json-viewer__content {
+  padding: 0 16px 0 4px;
+  white-space: pre;
+}
+.ha-json-viewer__toggle {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  margin-right: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ha-foreground-tertiary);
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background-color .15s ease, color .15s ease;
+}
+.ha-json-viewer__toggle:hover {
+  background: color-mix(in srgb, var(--ha-foreground-primary) 8%, transparent);
+  color: var(--ha-foreground-primary);
+}
+.ha-json-viewer__toggle:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--ha-border-focus);
+}
+
+/* Token colours — dedicated JSON-syntax family (never severity / intelligence) */
+.ha-json-viewer__token--key { color: var(--ha-json-key); }
+.ha-json-viewer__token--string { color: var(--ha-json-string); }
+.ha-json-viewer__token--number { color: var(--ha-json-number); }
+.ha-json-viewer__token--boolean { color: var(--ha-json-boolean); }
+.ha-json-viewer__token--null { color: var(--ha-json-null); font-style: italic; }
+.ha-json-viewer__token--punctuation { color: var(--ha-json-punctuation); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-json-viewer__copy-btn,
+  .ha-json-viewer__toggle { transition: none; }
+}
