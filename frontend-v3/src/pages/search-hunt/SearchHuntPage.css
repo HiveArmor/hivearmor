@@ -205,15 +205,17 @@
 .hunt-query-workspace__spacer { flex: 1; }
 .hunt-control-divider { width: 1px; height: 20px; flex: 0 0 1px; background: var(--ha-border-subtle); }
 
-.hunt-language-picker { position: relative; flex: 0 0 auto; }
-.hunt-language-picker__menu { position: absolute; z-index: 95; top: 33px; left: 0; display: grid; width: 330px; padding: 5px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-panel); background: var(--ha-surface-elevated); box-shadow: var(--ha-shadow-medium); }
-.hunt-language-picker__menu > button { display: grid; width: 100%; min-height: 43px; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 5px 7px; border: 0; border-radius: 6px; background: transparent; color: var(--ha-foreground-primary); cursor: pointer; text-align: left; }
-.hunt-language-picker__menu > button:hover:not(:disabled) { background: var(--ha-surface-hover); }
-.hunt-language-picker__menu > button:disabled { cursor: not-allowed; color: var(--ha-foreground-disabled); }
-.hunt-language-picker__menu > button span, .hunt-language-picker__menu > button strong, .hunt-language-picker__menu > button small { display: block; }
-.hunt-language-picker__menu > button small { margin-top: 2px; color: var(--ha-foreground-tertiary); font-weight: 450; }
-.hunt-language-picker__menu > button em { color: var(--ha-foreground-tertiary); font: 9px/1 var(--ha-font-ui); font-style: normal; letter-spacing: .06em; text-transform: uppercase; }
-.hunt-language-picker__menu > p { margin: 4px 2px 1px; padding: 7px; border-top: 1px solid var(--ha-border-subtle); color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
+/* Static query-language chip — only KQL is live; re-promote to a picker when a 2nd parser ships */
+.hunt-language-chip { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 5px; min-height: 28px; padding: 4px 9px; border: 1px solid var(--ha-border-subtle); border-radius: var(--ha-radius-control, 6px); background: var(--ha-surface-input); color: var(--ha-foreground-secondary); font: var(--ha-type-compact); font-weight: 600; letter-spacing: .02em; }
+.hunt-language-chip svg { color: var(--ha-foreground-tertiary); }
+
+/* Overflow "⋯" — rare/mode controls (Help + AI assistance) folded off the primary control row */
+.hunt-overflow { position: relative; flex: 0 0 auto; }
+.hunt-overflow__menu { position: absolute; z-index: 95; top: calc(100% + 5px); left: 0; display: grid; gap: 2px; width: max-content; min-width: 230px; padding: 5px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-panel); background: var(--ha-surface-elevated); box-shadow: var(--ha-shadow-medium); }
+.hunt-overflow__menu > button { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 6px 9px; border: 0; border-radius: 6px; background: transparent; color: var(--ha-foreground-primary); cursor: pointer; text-align: left; font: var(--ha-type-body); }
+.hunt-overflow__menu > button:hover { background: var(--ha-surface-hover); }
+.hunt-overflow__menu > button svg { color: var(--ha-foreground-tertiary); }
+.hunt-overflow__section { margin-top: 3px; padding-top: 6px; border-top: 1px solid var(--ha-border-subtle); }
 
 /* Index scope — Splunk/Discover-style picker (replaces native <select>) */
 .hunt-index-picker { position: relative; flex: 0 0 auto; }
