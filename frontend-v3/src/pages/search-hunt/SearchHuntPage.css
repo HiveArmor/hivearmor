@@ -397,7 +397,7 @@
 .hunt-field-browser__search > svg { position: absolute; left: 8px; }
 .hunt-field-browser__search input { width: 100%; min-width: 0; height: 31px; padding: 5px 27px; border: 0; outline: 0; background: transparent; color: var(--ha-foreground-primary); }
 .hunt-field-browser__search kbd { position: absolute; right: 7px; padding: 1px 4px; border: 1px solid var(--ha-border-default); border-radius: 4px; background: var(--ha-surface-elevated); font: 10px var(--ha-font-mono); }
-.hunt-field-browser__legend { display: flex; padding: 2px 9px 5px; color: var(--ha-foreground-tertiary); font: 9px/1 var(--ha-font-ui); letter-spacing: .08em; }
+.hunt-field-browser__legend { display: flex; justify-content: space-between; padding: 2px 9px 5px; color: var(--ha-foreground-tertiary); font: 9px/1 var(--ha-font-ui); letter-spacing: .08em; }
 .hunt-field-browser__list { min-height: 0; flex: 1; overflow-y: auto; scrollbar-width: thin; }
 .hunt-rail-state { padding: 18px 12px; color: var(--ha-foreground-tertiary); text-align: center; }
 .hunt-field-group { border-top: 1px solid var(--ha-border-subtle); }
@@ -416,6 +416,7 @@
 .hunt-field-row strong { font: 10.5px/1.3 var(--ha-font-mono); font-weight: 560; }
 .hunt-field-row small { color: var(--ha-foreground-tertiary); font-size: 9px; }
 .hunt-field-row em { color: var(--ha-foreground-tertiary); font-size: 10px; font-style: normal; text-align: right; }
+.hunt-field-row__coverage { font-variant-numeric: tabular-nums; }
 .hunt-field-row__add { position: absolute; top: 8px; right: 5px; display: grid; width: 22px; height: 22px; place-items: center; border: 0; border-radius: 5px; background: transparent; color: var(--ha-action-secondary); cursor: pointer; }
 .hunt-field-row__add:hover { background: var(--ha-fill-primary-muted); }
 .hunt-field-row__add:disabled { color: var(--ha-foreground-disabled); cursor: default; }

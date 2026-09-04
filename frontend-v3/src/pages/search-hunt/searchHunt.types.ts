@@ -45,6 +45,22 @@ export interface HuntFieldValuesResponse {
   snapshotAt: string;
 }
 
+/** HNT-003: per-field coverage %/cardinality computed against the authorized search snapshot. */
+export interface HuntFieldStat {
+  name: string;
+  coverage: number | null;   // 0..100 (one decimal); null when the snapshot has no docs
+  cardinality: number;       // approximate distinct values in the snapshot
+}
+
+export interface HuntFieldStatsResponse {
+  searchId: string;
+  totalDocs: number;
+  totalIsExact: boolean;
+  fields: HuntFieldStat[];
+  state: 'available' | 'partial';
+  snapshotAt: string;
+}
+
 export interface HuntEvent {
   id: string;
   timestamp: string;
