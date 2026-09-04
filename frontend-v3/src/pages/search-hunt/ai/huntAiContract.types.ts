@@ -65,12 +65,16 @@ export interface HuntVerdictRequest {
 
 /** Extends the AiVerdictCard reasoning step with row citations (move 3: reasoning-cites-rows). */
 export interface HuntReasoningStep extends AiReasoningStep {
+  /** Stable id for keys/feedback. */
+  id: string;
   /** HuntEvent ids this step cites — the UI scrolls+flashes these grid rows. */
   rowRefs?: string[];
 }
 
 /** Extends the AiVerdictCard evidence item; the Evidence Locker travels into the case (move 8). */
 export interface HuntEvidenceItem extends AiEvidenceItem {
+  /** Stable id for keys. */
+  id: string;
   /** Originating HuntEvent id. */
   rowRef?: string;
   kind: 'field' | 'event' | 'enrichment' | 'correlation';

@@ -474,6 +474,18 @@
 .hunt-results-grid .ag-cell { font-size: 11px; }
 .hunt-results-grid .hunt-grid__mono { font-family: var(--ha-font-mono); font-variant-numeric: tabular-nums; }
 .hunt-results-grid .hunt-grid__entity { color: var(--ha-foreground-link); font-family: var(--ha-font-mono); }
+/* "Show AI's hand" provenance lens (move 2): violet thread on model/enrichment columns */
+.hunt-results-grid .hunt-grid__ai-derived {
+  box-shadow: inset 2px 0 0 var(--ha-intelligence-primary);
+  color: var(--ha-intelligence-strong);
+}
+.hunt-results-grid .hunt-grid__ai-derived-header {
+  box-shadow: inset 2px 0 0 var(--ha-intelligence-primary);
+}
+.hunt-results-grid .hunt-grid__ai-derived-header .ag-header-cell-text::after {
+  content: " ✦";
+  color: var(--ha-intelligence-primary);
+}
 .hunt-results-grid .hunt-grid__number { text-align: right; font-variant-numeric: tabular-nums; }
 .hunt-severity { display: inline-flex; align-items: center; gap: 5px; color: var(--ha-foreground-secondary); font-size: 10px; font-weight: 680; text-transform: capitalize; }
 .hunt-severity i { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 2px; background: var(--ha-severity-info); }

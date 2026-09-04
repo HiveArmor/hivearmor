@@ -9,9 +9,12 @@ import {
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 
+import { fetchHuntVerdict, fetchFieldProvenance } from './ai/huntAiService';
 import { EventDetailFlyout } from './components/EventDetailFlyout';
 import { FieldBrowser } from './components/FieldBrowser';
 import { HuntActionDrawer } from './components/HuntActionDrawer';
+import { HuntAiControls, type HuntAutonomy } from './components/HuntAiControls';
+import { HuntVerdictLead } from './components/HuntVerdictLead';
 import {
   huntIndexScopeLabel,
   IndexScopePicker,
@@ -433,6 +436,49 @@ export function SearchHuntPage(): JSX.Element {
 
   // B0-4: export the FULL committed hunt query/filters/timeRange (not the visible page).
   const hasResults = events.length > 0;
+
+  // ---- Phase B1: AI-native surface (contract-first, mocked until the agent backend ships) ----
+  const [showAiHand, setShowAiHand] = useState(false);
+  const [autonomy, setAutonomy] = useState<HuntAutonomy>('suggest');
+  const completedSearchId = !searchQuery.isFetching && hasResults ? (summary?.searchId ?? null) : null;
+
+  const verdictQuery = useQuery({
+    queryKey: ['hunt-verdict', completedSearchId],
+    queryFn: () => fetchHuntVerdict({ searchId: completedSearchId as string }),
+    enabled: Boolean(completedSearchId),
+    staleTime: 60_000,
+    retry: false,
+  });
+  const fieldProvenanceQuery = useQuery({
+    queryKey: ['hunt-field-provenance', completedSearchId],
+    queryFn: () => fetchFieldProvenance(completedSearchId as string),
+    enabled: Boolean(completedSearchId),
+    staleTime: 60_000,
+    retry: false,
+  });
+  // Columns the AI derived (model/enrichment) → the "show AI's hand" lens (move 2).
+  const aiDerivedColumns = useMemo(
+    () => (fieldProvenanceQuery.data ?? [])
+      .filter((p) => p.origin !== 'raw')
+      .map((p) => HUNT_FIELD_COLUMN_MAP[p.field] ?? p.field),
+    [fieldProvenanceQuery.data],
+  );
+  const verdict = verdictQuery.data && verdictQuery.data.state === 'ready' ? verdictQuery.data : null;
+
+  // Reasoning-cites-rows (move 3): open the first cited event's detail flyout.
+  const handleCiteRows = useCallback((rowRefs: string[]) => {
+    if (rowRefs.length > 0) setFlyoutEventId(rowRefs[0]);
+  }, []);
+
+  // Promote-to-case from the verdict (move 8, PROPOSE-ONLY): preselect the verdict's
+  // evidence rows and open the existing create_investigation propose flow.
+  const handlePromoteFromVerdict = useCallback(() => {
+    const evidenceRows = verdict?.evidence.map((e) => e.rowRef).filter((r): r is string => Boolean(r)) ?? [];
+    if (evidenceRows.length > 0) setSelectedIds(Array.from(new Set(evidenceRows)));
+    setPromotionAction('create_investigation');
+    setPromotionOpen(true);
+  }, [verdict]);
+
   const handleExport = useCallback(
     (format: ExportFormat, signal: AbortSignal): Promise<ExportResult> =>
       exportHuntResults(
@@ -553,6 +599,12 @@ export function SearchHuntPage(): JSX.Element {
           <button type="button" className="hunt-control-button" onClick={() => setManagerPanelOpen((open) => !open)} aria-expanded={managerPanelOpen} title="Search manager panel"><Database size={13} />Manager</button>
           <button type="button" className="hunt-control-button" onClick={() => setSaveOpen(true)} disabled={!query.trim() || !canSaveQuery} title={!canSaveQuery ? SAVE_DENIED : !query.trim() ? 'Enter a reusable query before saving' : 'Save query'}><Save size={13} />Save</button>
           <button type="button" className="hunt-control-button" onClick={() => setCapabilitiesOpen((open) => !open)} aria-expanded={capabilitiesOpen} title="Query language reference"><BookOpen size={13} />Help</button>
+          <HuntAiControls
+            showAiHand={showAiHand}
+            onToggleAiHand={setShowAiHand}
+            autonomy={autonomy}
+            onAutonomyChange={setAutonomy}
+          />
           <span className="hunt-query-workspace__spacer" />
           {searchQuery.isFetching ? <button type="button" className="hunt-button hunt-button--stop" onClick={stopSearch}><CircleStop size={14} />Cancel</button> : <button type="button" className="hunt-button hunt-button--primary" onClick={() => runSearch()} title={!query.trim() ? 'Load the newest 100 events in the selected scope' : 'Run KQL hunt'}><Play size={14} />Run search</button>}
         </div>
@@ -579,6 +631,13 @@ export function SearchHuntPage(): JSX.Element {
           {permissionDenied || schemaPermissionDenied ? <div className="hunt-full-state" role="alert"><ShieldAlert size={30} /><h2>Search access is restricted</h2><p>Your account does not have permission to search this tenant scope or view its schema. Choose an authorized tenant or ask an administrator for hunt access.</p></div> : searchQuery.isError && events.length === 0 ? <div className="hunt-full-state" role="alert"><ShieldAlert size={30} /><h2>Search could not be completed</h2><p>The query service did not return a usable snapshot. Widen the time range, choose Index: Alerts if you expected detections, then retry. Log events appear after an endpoint agent is enrolled from Posture → Sensors.</p><button type="button" className="hunt-button" onClick={() => void searchQuery.refetch()}>Retry search</button></div> : null}
 
           {!permissionDenied && !(searchQuery.isError && events.length === 0) && <>
+            {verdict && (
+              <HuntVerdictLead
+                verdict={verdict}
+                onCiteRows={handleCiteRows}
+                onPromote={handlePromoteFromVerdict}
+              />
+            )}
             <section className="hunt-histogram" aria-label="Event distribution over time">
               <header>
                 <div>
@@ -627,6 +686,8 @@ export function SearchHuntPage(): JSX.Element {
                   onSelectionChanged={setSelectedIds}
                   onActivateEvent={(event) => setFlyoutEventId(event.id)}
                   onSortChanged={handleSortChanged}
+                  aiDerivedColumns={aiDerivedColumns}
+                  showAiHand={showAiHand}
                 />
               ) : searchQuery.isFetching ? <div className="hunt-grid-loading" aria-label="Loading search results"><span /><span /><span /><span /><span /></div> : <div className="hunt-grid-empty"><ListFilter size={26} /><strong>No matching events</strong><span>The query completed. Choose Index: Alerts for detections, widen the 24h window, or enroll an agent from Posture → Sensors so endpoint logs are indexed.</span></div>}
             </div>
