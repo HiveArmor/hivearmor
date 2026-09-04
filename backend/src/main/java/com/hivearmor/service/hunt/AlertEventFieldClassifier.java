@@ -112,13 +112,62 @@ public class AlertEventFieldClassifier {
      * Builds a single field entry map.
      */
     private Map<String, Object> buildFieldEntry(String key, Object value, int order) {
-        Map<String, Object> entry = new LinkedHashMap<>(5);
+        Map<String, Object> entry = new LinkedHashMap<>(8);
+        String stringValue = valueToString(value);
         entry.put("key", key);
-        entry.put("value", valueToString(value));
+        entry.put("value", stringValue);
         entry.put("type", resolveType(key, value));
         entry.put("emphasis", resolveEmphasis(key, value));
         entry.put("order", order);
+        entry.put("group", resolveGroup(key));
+        // Server-generated, escaped KQL fragments for per-field "filter for / filter out" actions.
+        // Empty values yield empty fragments so the UI can hide the actions rather than build "field:\"\"".
+        if (stringValue.isEmpty()) {
+            entry.put("includeQuery", "");
+            entry.put("excludeQuery", "");
+        } else {
+            String fragment = key + ":\"" + escapeKqlValue(stringValue) + "\"";
+            entry.put("includeQuery", fragment);
+            entry.put("excludeQuery", "NOT " + fragment);
+        }
         return entry;
+    }
+
+    /**
+     * Groups a field into a coarse investigation section for the sectioned field grid
+     * (Detection / Network / Assets / Process / File / Other), derived from the ECS key prefix.
+     */
+    private String resolveGroup(String key) {
+        if (key == null) {
+            return "Other";
+        }
+        if (key.startsWith("source.") || key.startsWith("destination.") || key.startsWith("network.")
+            || key.startsWith("dns.") || key.startsWith("url.") || key.startsWith("http.")) {
+            return "Network";
+        }
+        if (key.startsWith("host.") || key.startsWith("user.") || key.startsWith("agent.")
+            || key.startsWith("cloud.") || key.startsWith("observer.")) {
+            return "Assets";
+        }
+        if (key.startsWith("process.")) {
+            return "Process";
+        }
+        if (key.startsWith("file.") || key.startsWith("registry.")) {
+            return "File";
+        }
+        if (key.startsWith("event.") || key.startsWith("rule.") || key.equals("severity")
+            || key.equals("category") || key.startsWith("threat.") || key.startsWith("mitre")) {
+            return "Detection";
+        }
+        return "Other";
+    }
+
+    /**
+     * Escapes a value for safe embedding inside a double-quoted KQL string literal.
+     * Only backslash and double-quote are structural inside a quoted term.
+     */
+    private String escapeKqlValue(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     /**

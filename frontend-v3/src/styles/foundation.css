@@ -67,6 +67,19 @@
      #c88ff0 clears it at ≥5.3:1. Fills/borders still use the primary; only text uses this. */
   --ha-intelligence-strong: #c88ff0;
 
+  /* ── Raw-JSON syntax family (product-owner approved 2026-09-04) ───────────────────────────────
+     A DEDICATED palette for the raw-event JSON viewer — full type-colouring is sanctioned in
+     raw-JSON view ONLY. These are their own tokens (NOT aliases of severity/intelligence) so the
+     JSON viewer no longer borrows semantic colour: severity stays severity, intelligence stays AI.
+     Hues match the approved siem-component-showcase Raw JSON block (key=info-blue, string=green,
+     number=orange, boolean=violet, null/punct=tertiary). All clear WCAG AA on --ha-surface-input. */
+  --ha-json-key: #8b90ff;      /* object keys */
+  --ha-json-string: #63c79a;   /* string literals */
+  --ha-json-number: #f2ad5b;   /* numeric literals */
+  --ha-json-boolean: #be7de8;  /* true / false */
+  --ha-json-null: #908c96;     /* null */
+  --ha-json-punctuation: #908c96; /* braces, brackets, commas, colons */
+
   /* Reusable translucent fills — never recreate raw colour on an element */
   --ha-fill-primary-subtle: color-mix(in srgb, var(--ha-action-primary) 10%, transparent);
   --ha-fill-primary-muted: color-mix(in srgb, var(--ha-action-primary) 16%, transparent);
@@ -242,6 +255,14 @@
   --ha-intelligence-primary: #7a3ca1;
   /* Light mode: the darker primary already clears AA as text on its light tints. */
   --ha-intelligence-strong: #7a3ca1;
+
+  /* Raw-JSON syntax family — light-mode hues (AA on the light --ha-surface-input). */
+  --ha-json-key: #4e55cc;
+  --ha-json-string: #16734e;
+  --ha-json-number: #a65300;
+  --ha-json-boolean: #7a3ca1;
+  --ha-json-null: #616870;
+  --ha-json-punctuation: #616870;
 
   --ha-shadow-low: 0 1px 2px color-mix(in srgb, var(--ha-foreground-primary) 10%, transparent);
   --ha-shadow-medium: 0 18px 48px color-mix(in srgb, var(--ha-foreground-primary) 16%, transparent);

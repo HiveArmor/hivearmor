@@ -14,13 +14,18 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import {
+  CircleMinus,
+  CirclePlus,
   Clock,
+  Copy,
   ExternalLink,
   FileJson,
   Globe,
   Hash,
+  Link2,
   ListTree,
   Monitor,
+  Network,
   Search,
   Server,
   Terminal,
@@ -28,8 +33,11 @@ import {
   X,
 } from 'lucide-react';
 
+
 import { fetchHuntEvent, fetchHuntEventDetail } from '../searchHunt.service';
 import type { HuntActionRequest, HuntEventDetail, HuntEventDetailResponse, HuntEventField, Pivot } from '../searchHunt.types';
+
+import { HaJsonViewer } from '@/components/ha-json-viewer';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -44,6 +52,10 @@ export interface EventDetailFlyoutProps {
   onClose: () => void;
   /** Called when a pivot is clicked — sets the search bar and auto-executes. */
   onPivot: (query: string) => void;
+  /** Per-field "filter for" — append field:value to the query (debounced auto-run upstream). */
+  onFilterFor?: (fragment: string) => void;
+  /** Per-field "filter out" — append NOT field:value to the query (debounced auto-run upstream). */
+  onFilterOut?: (fragment: string) => void;
   /** Single-event workflow actions (evidence / investigation). */
   onAction?: (type: HuntActionRequest['type'], eventIds: string[]) => void;
 }
@@ -55,12 +67,19 @@ type ViewTab = 'fields' | 'raw';
 // ---------------------------------------------------------------------------
 
 const TYPE_BADGE_ICONS: Record<string, typeof Globe> = {
-  ip: Globe,
+  ip: Network,
   hostname: Server,
   process: Terminal,
   hash: Hash,
   username: User,
+  port: Link2,
+  timestamp: Clock,
+  domain: Globe,
+  url: Link2,
 };
+
+// Section render order for the grouped field grid (mirrors the showcase's Detection→Network→Assets).
+const GROUP_ORDER = ['Detection', 'Network', 'Assets', 'Process', 'File', 'Other'];
 
 const PIVOT_ICONS: Record<string, typeof Search> = {
   search: Search,
@@ -100,6 +119,8 @@ export function EventDetailFlyout({
   searchId,
   onClose,
   onPivot,
+  onFilterFor,
+  onFilterOut,
   onAction,
 }: EventDetailFlyoutProps): JSX.Element | null {
   const [viewTab, setViewTab] = useState<ViewTab>('fields');
@@ -227,38 +248,92 @@ export function EventDetailFlyout({
           </div>
         )}
 
-        {/* Fields tab */}
-        {viewTab === 'fields' && data?.fields && (
-          <dl className="event-flyout__fields">
-            {data.fields
-              .slice()
-              .sort((a, b) => a.order - b.order)
-              .map((field) => {
-                const Icon = getFieldIcon(field.type);
-                return (
-                  <div
-                    key={field.key}
-                    className={`event-flyout__field ${emphasisClass(field.emphasis)}`}
-                  >
-                    <dt>
-                      <span className="event-flyout__type-badge" data-type={field.type}>
-                        <Icon size={10} />
-                        {field.type}
-                      </span>
-                      {field.key}
-                    </dt>
-                    <dd>{field.value}</dd>
-                  </div>
-                );
-              })}
-          </dl>
-        )}
+        {/* Fields tab — grouped by investigation section, each row with a hover/focus action rail */}
+        {viewTab === 'fields' && data?.fields && (() => {
+          const redacted = new Set(detailQuery.data?.redactedFields ?? []);
+          const sorted = data.fields.slice().sort((a, b) => a.order - b.order);
+          const groups = new Map<string, HuntEventField[]>();
+          for (const field of sorted) {
+            const g = field.group ?? 'Other';
+            const bucket = groups.get(g) ?? [];
+            bucket.push(field);
+            groups.set(g, bucket);
+          }
+          const orderedGroups = [...groups.entries()].sort(
+            ([a], [b]) => GROUP_ORDER.indexOf(a) - GROUP_ORDER.indexOf(b),
+          );
+          return (
+            <div className="event-flyout__field-groups">
+              {orderedGroups.map(([groupName, groupFields]) => (
+                <section key={groupName} className="event-flyout__group" aria-label={`${groupName} fields`}>
+                  <h3 className="event-flyout__group-title">{groupName}</h3>
+                  <dl className="event-flyout__fields">
+                    {groupFields.map((field) => {
+                      const Icon = getFieldIcon(field.type);
+                      const isRedacted = redacted.has(field.key);
+                      const canFilter = !isRedacted && Boolean(field.includeQuery);
+                      return (
+                        <div
+                          key={field.key}
+                          className={`event-flyout__field ${emphasisClass(field.emphasis)}`}
+                        >
+                          <dt>
+                            <span className="event-flyout__type-badge" data-type={field.type}>
+                              <Icon size={10} />
+                              {field.type}
+                            </span>
+                            {field.key}
+                          </dt>
+                          <dd>
+                            <span className="event-flyout__value">{field.value}</span>
+                            {canFilter && (
+                              <span className="event-flyout__field-actions">
+                                <button
+                                  type="button"
+                                  onClick={() => onFilterFor?.(field.includeQuery ?? '')}
+                                  aria-label={`Filter for ${field.key} is ${field.value}`}
+                                  title="Filter for"
+                                >
+                                  <CirclePlus size={13} aria-hidden="true" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => onFilterOut?.(field.excludeQuery ?? '')}
+                                  aria-label={`Filter out ${field.key} is ${field.value}`}
+                                  title="Filter out"
+                                >
+                                  <CircleMinus size={13} aria-hidden="true" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { void navigator.clipboard?.writeText(field.value); }}
+                                  aria-label={`Copy ${field.key} value`}
+                                  title="Copy value"
+                                >
+                                  <Copy size={13} aria-hidden="true" />
+                                </button>
+                              </span>
+                            )}
+                          </dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
+                </section>
+              ))}
+            </div>
+          );
+        })()}
 
-        {/* Raw JSON tab */}
+        {/* Raw JSON tab — safe tokenized viewer, gated on view-raw permission */}
         {viewTab === 'raw' && data?.raw && (
-          <pre className="event-flyout__raw" tabIndex={0}>
-            {JSON.stringify(data.raw, null, 2)}
-          </pre>
+          detailQuery.data && !detailQuery.data.permissions.viewRaw ? (
+            <p className="event-flyout__raw-denied" role="note">
+              You do not have permission to view the raw event source.
+            </p>
+          ) : (
+            <HaJsonViewer data={data.raw} ariaLabel="Raw event JSON" />
+          )
         )}
 
         {/* Pivot section */}

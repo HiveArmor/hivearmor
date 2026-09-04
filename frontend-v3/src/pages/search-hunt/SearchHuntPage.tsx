@@ -343,6 +343,23 @@ export function SearchHuntPage(): JSX.Element {
     setQuery((current) => `${current.trim()}${current.trim() ? ' AND ' : ''}${fragment}`);
   }, []);
 
+  // Locked decision: per-field / per-value filter clicks APPEND then AUTO-RUN, debounced, so an
+  // analyst can stack several filters in quick succession and the search fires once they pause.
+  const filterRunTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (filterRunTimer.current) clearTimeout(filterRunTimer.current); }, []);
+  const applyFieldFilter = useCallback((fragment: string): void => {
+    if (!fragment) return;
+    let nextQuery = '';
+    setQuery((current) => {
+      nextQuery = `${current.trim()}${current.trim() ? ' AND ' : ''}${fragment}`;
+      return nextQuery;
+    });
+    if (filterRunTimer.current) clearTimeout(filterRunTimer.current);
+    filterRunTimer.current = setTimeout(() => {
+      runSearch({ query: nextQuery });
+    }, 450);
+  }, [runSearch]);
+
   const toggleColumn = (column: string): void => {
     setVisibleColumns((current) => current.includes(column)
       ? current.length === 1 ? current : current.filter((item) => item !== column)
@@ -797,6 +814,8 @@ export function SearchHuntPage(): JSX.Element {
         searchId={summary?.searchId ?? ''}
         onClose={handleFlyoutClose}
         onPivot={handlePivot}
+        onFilterFor={applyFieldFilter}
+        onFilterOut={applyFieldFilter}
         onAction={openAction}
       />
     </section>
