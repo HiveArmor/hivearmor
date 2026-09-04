@@ -3,9 +3,8 @@
  * Sprint 18 — T04 · frontend-v3/src/hooks/usePlaybookExecution.ts
  *
  * Connects to the SSE endpoint for a live playbook execution view.
- * Authenticates via `?token=` query parameter — the only endpoint in the codebase
- * that uses this pattern, because native EventSource cannot set Authorization headers.
- * This pattern MUST NOT be replicated on any non-SSE endpoint.
+ * B0-5c: authenticates via the `Authorization: Bearer` header using a fetch-based SSE reader,
+ * so the JWT never travels in the URL query string.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -15,6 +14,9 @@ import type {
   StepExecutionState,
   StepExecutionStatus,
 } from '../types/playbook';
+
+import { fetchEventSource, type FetchEventSourceHandle } from '@/lib/fetchEventSource';
+
 
 // ---------------------------------------------------------------------------
 // Public state shape
@@ -61,9 +63,9 @@ export function usePlaybookExecution(
 ): PlaybookExecutionState {
   const [state, setState] = useState<PlaybookExecutionState>(INITIAL_STATE);
 
-  // Keep a ref to the EventSource so the cleanup callback can close it without
+  // Keep a ref to the stream so the cleanup callback can close it without
   // capturing a stale closure.
-  const esRef = useRef<EventSource | null>(null);
+  const esRef = useRef<FetchEventSourceHandle | null>(null);
 
   useEffect(() => {
     // Reset to initial state whenever executionId changes (including to null).
@@ -76,19 +78,21 @@ export function usePlaybookExecution(
     // Read the JWT from localStorage.  Never log the token value.
     const token = localStorage.getItem('hivearmor_auth_token') ?? '';
 
-    const url =
-      `/api/ha-playbooks/${encodeURIComponent(executionId)}/stream` +
-      `?token=${encodeURIComponent(token)}`;
+    // B0-5c: token in the Authorization header (fetch-based SSE), never the URL.
+    const url = `/api/ha-playbooks/${encodeURIComponent(executionId)}/stream`;
 
-    const es = new EventSource(url);
-    esRef.current = es;
+    // Registered per SSE event name; dispatched from onMessage below.
+    const handlers: Record<string, (raw: string) => void> = {};
+    const on = (event: string, handler: (raw: string) => void): void => {
+      handlers[event] = handler;
+    };
 
     // ------------------------------------------------------------------
     // step_started
     // ------------------------------------------------------------------
-    es.addEventListener('step_started', (e: MessageEvent) => {
+    on('step_started', (raw) => {
       try {
-        const data = JSON.parse(e.data) as {
+        const data = JSON.parse(raw) as {
           stepIndex: number;
           timestamp: string;
         };
@@ -128,9 +132,9 @@ export function usePlaybookExecution(
     // ------------------------------------------------------------------
     // step_completed
     // ------------------------------------------------------------------
-    es.addEventListener('step_completed', (e: MessageEvent) => {
+    on('step_completed', (raw) => {
       try {
-        const data = JSON.parse(e.data) as {
+        const data = JSON.parse(raw) as {
           stepIndex: number;
           output: unknown;
           timestamp: string;
@@ -172,9 +176,9 @@ export function usePlaybookExecution(
     // ------------------------------------------------------------------
     // step_failed
     // ------------------------------------------------------------------
-    es.addEventListener('step_failed', (e: MessageEvent) => {
+    on('step_failed', (raw) => {
       try {
-        const data = JSON.parse(e.data) as {
+        const data = JSON.parse(raw) as {
           stepIndex: number;
           errorMessage: string;
           timestamp: string;
@@ -216,9 +220,9 @@ export function usePlaybookExecution(
     // ------------------------------------------------------------------
     // playbook_completed
     // ------------------------------------------------------------------
-    es.addEventListener('playbook_completed', (e: MessageEvent) => {
+    on('playbook_completed', (raw) => {
       try {
-        const data = JSON.parse(e.data) as { timestamp: string };
+        const data = JSON.parse(raw) as { timestamp: string };
 
         const event: PlaybookExecutionEvent = {
           type: 'playbook_completed',
@@ -240,15 +244,15 @@ export function usePlaybookExecution(
       }
 
       // Terminal event — close the stream.
-      es.close();
+      esRef.current?.close();
     });
 
     // ------------------------------------------------------------------
     // playbook_failed
     // ------------------------------------------------------------------
-    es.addEventListener('playbook_failed', (e: MessageEvent) => {
+    on('playbook_failed', (raw) => {
       try {
-        const data = JSON.parse(e.data) as { timestamp: string };
+        const data = JSON.parse(raw) as { timestamp: string };
 
         const event: PlaybookExecutionEvent = {
           type: 'playbook_failed',
@@ -270,22 +274,30 @@ export function usePlaybookExecution(
       }
 
       // Terminal event — close the stream.
-      es.close();
+      esRef.current?.close();
     });
 
     // ------------------------------------------------------------------
     // Transport error
     // ------------------------------------------------------------------
-    es.onerror = () => {
-      setState((prev) => ({ ...prev, playbookState: 'failed' }));
-      es.close();
-    };
+    // ------------------------------------------------------------------
+    // Open the authenticated stream and dispatch to the registered handlers.
+    // ------------------------------------------------------------------
+    const stream = fetchEventSource(url, {
+      token,
+      onError: () => setState((prev) => ({ ...prev, playbookState: 'failed' })),
+      onMessage: (message) => {
+        const handler = handlers[message.event];
+        if (handler) handler(message.data);
+      },
+    });
+    esRef.current = stream;
 
     // ------------------------------------------------------------------
-    // Cleanup: close the EventSource when executionId changes or unmounts
+    // Cleanup: close the stream when executionId changes or unmounts
     // ------------------------------------------------------------------
     return () => {
-      es.close();
+      stream.close();
       esRef.current = null;
     };
   }, [executionId]);

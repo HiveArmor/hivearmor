@@ -1,7 +1,7 @@
 /**
  * PlaybookDetailPage — Phase 7 redesign
  * RESP-001/003/006: Tabbed workbench — Overview · Steps · History · Trigger · Settings · Audit
- * Live SSE execution stream via /api/ha-playbooks/{executionId}/stream?token=
+ * Live SSE execution stream via /api/ha-playbooks/{executionId}/stream (Authorization header; B0-5c)
  * Preview → Confirm → Execute pattern with blast-radius disclosure.
  * Approval-required gate for disruptive playbooks.
  */
@@ -54,6 +54,7 @@ import {
   rejectPlaybookExecution,
 } from './responsePlaybooks.service';
 
+
 import { HaButton } from '@/components/ha-button/HaButton';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
@@ -61,6 +62,7 @@ import { StatusDock } from '@/components/status-dock/StatusDock';
 import { useToastStore } from '@/components/toast-stack/toastStore';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
+import type { FetchEventSourceHandle } from '@/lib/fetchEventSource';
 import { formatAuthorityLabel } from '@/lib/roles';
 import {
   fetchPlaybook,
@@ -1018,7 +1020,7 @@ export function PlaybookDetailPage(): JSX.Element {
   const [rejectConfirmOpen, setRejectConfirmOpen] = useState(false);
   const [executionPreview, setExecutionPreview] = useState<PlaybookPreviewResponse | null>(null);
   const [stream, setStream] = useState<StreamState | null>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const eventSourceRef = useRef<FetchEventSourceHandle | null>(null);
   const autoPreviewRequested = useRef(false);
 
   useEffect(() => {
@@ -1103,9 +1105,6 @@ export function PlaybookDetailPage(): JSX.Element {
       errorMessage: null,
     });
 
-    const es = openExecutionStream(executionId);
-    eventSourceRef.current = es;
-
     const handleStreamMessage = (e: MessageEvent, eventName = '') => {
       try {
         const payload = JSON.parse(e.data) as PlaybookStreamEvent | LegacyPlaybookStreamPayload;
@@ -1162,17 +1161,12 @@ export function PlaybookDetailPage(): JSX.Element {
       }
     };
 
-    es.addEventListener('message', handleStreamMessage);
-    ['step_started', 'step_completed', 'step_failed', 'playbook_completed', 'playbook_failed', 'approval_required']
-      .forEach((eventName) => {
-        es.addEventListener(eventName, (event) => handleStreamMessage(event as MessageEvent, eventName));
-      });
-
-    es.onerror = () => {
-      setStream((prev) => prev ? { ...prev, status: 'failure', errorMessage: 'Stream disconnected' } : prev);
-      es.close();
-      eventSourceRef.current = null;
-    };
+    const es = openExecutionStream(executionId, (message) => {
+      // Named events carry legacy payloads; the default 'message' event carries the new shape.
+      const named = message.event !== 'message' ? message.event : '';
+      handleStreamMessage({ data: message.data } as MessageEvent, named);
+    });
+    eventSourceRef.current = es;
   }, [numericId, queryClient]);
 
   const handleCancelStream = useCallback(() => {

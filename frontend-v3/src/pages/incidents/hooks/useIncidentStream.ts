@@ -9,6 +9,9 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import type { IncidentSseEvent, SseEventType } from '../types/incident-workbench.types';
 
+import { fetchEventSource, type FetchEventSourceHandle } from '@/lib/fetchEventSource';
+
+
 /** Maps SSE event types to the query keys they should invalidate. */
 function getInvalidationKeys(incidentId: string, eventType: SseEventType): unknown[][] {
   switch (eventType) {
@@ -42,7 +45,7 @@ export function useIncidentStream(
 ): void {
   const { enabled = true, onEvent } = options;
   const queryClient = useQueryClient();
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const streamRef = useRef<FetchEventSourceHandle | null>(null);
   const onEventRef = useRef(onEvent);
   onEventRef.current = onEvent;
 
@@ -51,49 +54,39 @@ export function useIncidentStream(
     const activeIncidentId = incidentId;
 
     const token = localStorage.getItem('hivearmor_auth_token');
-    const url = `/api/ha-incidents/${encodeURIComponent(activeIncidentId)}/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+    if (!token) return;
+    // B0-5c: token in the Authorization header (fetch-based SSE), never the URL.
+    const url = `/api/ha-incidents/${encodeURIComponent(activeIncidentId)}/stream`;
 
-    const eventSource = new EventSource(url);
-    eventSourceRef.current = eventSource;
-
-    const EVENT_TYPES: SseEventType[] = [
+    const EVENT_TYPES = new Set<SseEventType>([
       'incident.updated',
       'task.updated',
       'activity.created',
       'evidence.created',
       'evidence.updated',
       'response_action.completed',
-    ];
+    ]);
 
-    function handleEvent(messageEvent: MessageEvent): void {
-      try {
-        const parsed = JSON.parse(messageEvent.data as string) as IncidentSseEvent;
-
-        // Invalidate relevant queries
-        const keys = getInvalidationKeys(activeIncidentId, parsed.type);
-        for (const key of keys) {
-          void queryClient.invalidateQueries({ queryKey: key });
+    const stream = fetchEventSource(url, {
+      token,
+      onMessage: (message) => {
+        if (!EVENT_TYPES.has(message.event as SseEventType)) return;
+        try {
+          const parsed = JSON.parse(message.data) as IncidentSseEvent;
+          for (const key of getInvalidationKeys(activeIncidentId, parsed.type)) {
+            void queryClient.invalidateQueries({ queryKey: key });
+          }
+          onEventRef.current?.(parsed);
+        } catch {
+          // Ignore malformed events
         }
-
-        // Notify listener if provided
-        onEventRef.current?.(parsed);
-      } catch {
-        // Ignore malformed events
-      }
-    }
-
-    for (const type of EVENT_TYPES) {
-      eventSource.addEventListener(type, handleEvent);
-    }
-
-    eventSource.onerror = () => {
-      // EventSource auto-reconnects; we just log
-      // No action needed — browser handles reconnection
-    };
+      },
+    });
+    streamRef.current = stream;
 
     return () => {
-      eventSource.close();
-      eventSourceRef.current = null;
+      stream.close();
+      streamRef.current = null;
     };
   }, [incidentId, enabled, queryClient]);
 }

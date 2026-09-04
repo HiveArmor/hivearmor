@@ -15,6 +15,9 @@ import type {
   ResponseJob,
 } from '../alertInvestigation.types';
 
+import { fetchEventSource, type FetchEventSourceHandle } from '@/lib/fetchEventSource';
+
+
 export type StreamConnectionStatus = 'connected' | 'reconnecting' | 'disconnected';
 
 export type PanelPulseTarget =
@@ -43,9 +46,8 @@ export function useInvestigationStream(alertId: string | undefined): Investigati
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<StreamConnectionStatus>('disconnected');
   const [panelPulse, setPanelPulse] = useState<PanelPulseTarget | null>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const streamRef = useRef<FetchEventSourceHandle | null>(null);
   const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hadErrorRef = useRef(false);
 
   const triggerPulse = useCallback((target: PanelPulseTarget) => {
     setPanelPulse(target);
@@ -65,117 +67,61 @@ export function useInvestigationStream(alertId: string | undefined): Investigati
       return;
     }
 
-    const url = `/api/ha-alerts/${encodeURIComponent(alertId)}/stream?access_token=${encodeURIComponent(token)}`;
-    const es = new EventSource(url);
-    eventSourceRef.current = es;
+    // B0-5c: token travels in the Authorization header (fetch-based SSE), never the URL.
+    const url = `/api/ha-alerts/${encodeURIComponent(alertId)}/stream`;
 
-    // --- Connection lifecycle ---
-    es.onopen = () => {
-      if (hadErrorRef.current) {
-        // Reconnected after an error — was "reconnecting", now "connected"
-        hadErrorRef.current = false;
-      }
-      setStatus('connected');
-    };
-
-    es.onerror = () => {
-      hadErrorRef.current = true;
-      // EventSource auto-reconnects — mark as reconnecting unless closed
-      if (es.readyState === EventSource.CLOSED) {
-        setStatus('disconnected');
-      } else {
-        setStatus('reconnecting');
-      }
-    };
-
-    // --- Event type handlers ---
-
-    es.addEventListener('alert.updated', (event: MessageEvent) => {
-      try {
-        JSON.parse(event.data) as InvestigationStreamEvent;
+    const handlers: Record<string, (data: string) => void> = {
+      'alert.updated': () => {
         void queryClient.invalidateQueries({ queryKey: ['alert-investigation', alertId] });
         triggerPulse('investigation');
-      } catch {
-        // Malformed event — skip
-      }
-    });
-
-    es.addEventListener('story.appended', (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data) as Extract<InvestigationStreamEvent, { type: 'story.appended' }>;
-        queryClient.setQueryData<AlertStoryResponse>(
-          ['alert-story', alertId],
-          (old) => {
-            if (!old) return old;
-            return { ...old, items: [...old.items, data.item] };
-          },
-        );
+      },
+      'story.appended': (raw) => {
+        const data = JSON.parse(raw) as Extract<InvestigationStreamEvent, { type: 'story.appended' }>;
+        queryClient.setQueryData<AlertStoryResponse>(['alert-story', alertId], (old) =>
+          old ? { ...old, items: [...old.items, data.item] } : old);
         triggerPulse('story');
-      } catch {
-        // Malformed event — skip
-      }
-    });
-
-    es.addEventListener('process.updated', (event: MessageEvent) => {
-      try {
-        JSON.parse(event.data) as InvestigationStreamEvent;
+      },
+      'process.updated': () => {
         void queryClient.invalidateQueries({ queryKey: ['alert-processes', alertId] });
         triggerPulse('processes');
-      } catch {
-        // Malformed event — skip
-      }
-    });
-
-    es.addEventListener('network.appended', (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data) as Extract<InvestigationStreamEvent, { type: 'network.appended' }>;
-        queryClient.setQueryData<NetworkActivityResponse>(
-          ['alert-network', alertId],
-          (old) => {
-            if (!old) return old;
-            return {
-              ...old,
-              connections: [...old.connections, data.connection],
-              totalConnections: old.totalConnections + 1,
-            };
-          },
-        );
+      },
+      'network.appended': (raw) => {
+        const data = JSON.parse(raw) as Extract<InvestigationStreamEvent, { type: 'network.appended' }>;
+        queryClient.setQueryData<NetworkActivityResponse>(['alert-network', alertId], (old) =>
+          old ? { ...old, connections: [...old.connections, data.connection], totalConnections: old.totalConnections + 1 } : old);
         triggerPulse('network');
-      } catch {
-        // Malformed event — skip
-      }
-    });
-
-    es.addEventListener('indicator.enriched', (event: MessageEvent) => {
-      try {
-        JSON.parse(event.data) as InvestigationStreamEvent;
+      },
+      'indicator.enriched': () => {
         void queryClient.invalidateQueries({ queryKey: ['alert-indicators', alertId] });
         triggerPulse('indicators');
-      } catch {
-        // Malformed event — skip
-      }
-    });
-
-    es.addEventListener('response.status', (event: MessageEvent) => {
-      try {
-        const data = JSON.parse(event.data) as Extract<InvestigationStreamEvent, { type: 'response.status' }>;
-        queryClient.setQueryData<ResponseJob>(
-          ['response-job', data.jobId],
-          (old) => {
-            if (!old) return old;
-            return { ...old, status: data.status, result: data.result };
-          },
-        );
+      },
+      'response.status': (raw) => {
+        const data = JSON.parse(raw) as Extract<InvestigationStreamEvent, { type: 'response.status' }>;
+        queryClient.setQueryData<ResponseJob>(['response-job', data.jobId], (old) =>
+          old ? { ...old, status: data.status, result: data.result } : old);
         triggerPulse('response');
-      } catch {
-        // Malformed event — skip
-      }
-    });
+      },
+    };
 
-    // --- Cleanup ---
+    const stream = fetchEventSource(url, {
+      token,
+      onOpen: () => setStatus('connected'),
+      onError: () => setStatus('reconnecting'),
+      onMessage: (message) => {
+        const handler = handlers[message.event];
+        if (!handler) return;
+        try {
+          handler(message.data);
+        } catch {
+          // Malformed event — skip
+        }
+      },
+    });
+    streamRef.current = stream;
+
     return () => {
-      es.close();
-      eventSourceRef.current = null;
+      stream.close();
+      streamRef.current = null;
       setStatus('disconnected');
       if (pulseTimerRef.current) clearTimeout(pulseTimerRef.current);
     };

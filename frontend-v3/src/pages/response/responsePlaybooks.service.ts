@@ -16,6 +16,7 @@
  * Action catalog: use GET /api/response/actions — not ha-action-catalog helpers
  */
 
+
 import {
   RESP_018_EXECUTION_INVENTORY,
   RESP_018_SOAR_AUDIT_PROJECTION,
@@ -50,6 +51,7 @@ import type {
 } from './response.types';
 
 import { apiClient } from '@/lib/apiClient';
+import { fetchEventSource, type FetchEventSourceHandle, type SseMessage } from '@/lib/fetchEventSource';
 import { useAuthStore } from '@/store/auth.store';
 
 const TOKEN_KEY = 'hivearmor_auth_token';
@@ -434,13 +436,17 @@ export async function cancelExecution(executionId: string): Promise<void> {
 // ─── RESP-006: SSE stream ──────────────────────────────────────────────────
 /**
  * Opens a server-sent-event stream for execution step updates.
- * EventSource cannot set Authorization headers; the backend accepts `?token=` as the auth method.
- * @returns EventSource instance — caller must close it when done.
+ * B0-5c: authenticates via the Authorization header (fetch-based SSE), never the URL query string.
+ * @param onMessage receives each parsed SSE message ({ event, data, id }).
+ * @returns a handle; caller must call close() when done.
  */
-export function openExecutionStream(executionId: string): EventSource {
+export function openExecutionStream(
+  executionId: string,
+  onMessage: (message: SseMessage) => void,
+): FetchEventSourceHandle {
   const token = localStorage.getItem(TOKEN_KEY) ?? '';
-  const url = `/api/ha-playbooks/${executionId}/stream?token=${encodeURIComponent(token)}`;
-  return new EventSource(url);
+  const url = `/api/ha-playbooks/${encodeURIComponent(executionId)}/stream`;
+  return fetchEventSource(url, { token, onMessage });
 }
 
 // ─── RESP-018: Response activity and progressive execution trace ─────────

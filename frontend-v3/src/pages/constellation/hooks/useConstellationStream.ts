@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 
+
 import { useConstellationStore } from './useConstellationStore';
 import type {
   EdgeStrengthChangedData,
@@ -15,12 +16,14 @@ import type {
   SseEventType,
 } from '../types/constellation.types';
 
+import { fetchEventSource, type FetchEventSourceHandle } from '@/lib/fetchEventSource';
+
 
 const SSE_BASE_PATH = '/api/ha-constellation/stream';
 const RECONNECT_DELAY_MS = 3000;
 
 export function useConstellationStream(snapshotId: string | null): void {
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const eventSourceRef = useRef<FetchEventSourceHandle | null>(null);
   const lastEventIdRef = useRef<string | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -124,42 +127,32 @@ export function useConstellationStream(snapshotId: string | null): void {
       eventSourceRef.current = null;
     }
 
-    const url = new URL(SSE_BASE_PATH, window.location.origin);
-    url.searchParams.set('snapshot', snapshotId);
-    if (lastEventIdRef.current) {
-      url.searchParams.set('lastEventId', lastEventIdRef.current);
-    }
+    const token = localStorage.getItem('hivearmor_auth_token');
+    if (!token) return;
 
-    const eventSource = new EventSource(url.toString());
-    eventSourceRef.current = eventSource;
-
-    const eventTypes: SseEventType[] = [
+    // B0-5c: token in the Authorization header (fetch-based SSE), never the URL. Only the
+    // non-secret snapshot id stays in the query string. The client replays Last-Event-ID and
+    // reconnects internally, so no manual reconnect timer is needed here.
+    const url = `${SSE_BASE_PATH}?snapshot=${encodeURIComponent(snapshotId)}`;
+    const knownEvents = new Set<SseEventType>([
       'node.risk_changed',
       'node.alert_added',
       'edge.strength_changed',
       'edge.discovered',
       'node.discovered',
       'snapshot.expired',
-    ];
+    ]);
 
-    eventTypes.forEach((eventType) => {
-      eventSource.addEventListener(eventType, (event: MessageEvent) => {
-        if (event.lastEventId) {
-          lastEventIdRef.current = event.lastEventId;
-        }
-        handleEvent(eventType, event.data as string);
-      });
+    const stream = fetchEventSource(url, {
+      token,
+      reconnectDelayMs: RECONNECT_DELAY_MS,
+      onMessage: (message) => {
+        if (!knownEvents.has(message.event as SseEventType)) return;
+        if (message.id) lastEventIdRef.current = message.id;
+        handleEvent(message.event as SseEventType, message.data);
+      },
     });
-
-    eventSource.onerror = () => {
-      eventSource.close();
-      eventSourceRef.current = null;
-
-      // Attempt reconnection after delay
-      reconnectTimerRef.current = setTimeout(() => {
-        connect();
-      }, RECONNECT_DELAY_MS);
-    };
+    eventSourceRef.current = stream;
   }, [snapshotId, handleEvent]);
 
   useEffect(() => {

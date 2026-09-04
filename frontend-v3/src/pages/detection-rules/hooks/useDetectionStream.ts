@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { fetchEventSource, type FetchEventSourceHandle } from '@/lib/fetchEventSource';
 import { DETECTION_STREAM_URL } from '@/pages/detection-rules/services/detection.service';
 import type { DetectionSseEvent, DetectionSseEventType } from '@/pages/detection-rules/types/detection.types';
 
@@ -30,7 +31,7 @@ export function useDetectionStream(options: UseDetectionStreamOptions = {}): Use
   const [lastEventId, setLastEventId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const eventSourceRef = useRef<FetchEventSourceHandle | null>(null);
   const onEventRef = useRef(onEvent);
   const eventTypesRef = useRef(eventTypes);
 
@@ -49,53 +50,27 @@ export function useDetectionStream(options: UseDetectionStreamOptions = {}): Use
       return;
     }
 
-    // Build SSE URL with auth token as query param (SSE does not support headers)
-    const url = new URL(DETECTION_STREAM_URL, window.location.origin);
-    url.searchParams.set('token', token);
-    if (lastEventId) {
-      url.searchParams.set('Last-Event-ID', lastEventId);
-    }
-
-    const eventSource = new EventSource(url.toString());
-    eventSourceRef.current = eventSource;
-
-    eventSource.onopen = () => {
-      setConnected(true);
-      setError(null);
-    };
-
-    eventSource.onmessage = (event: MessageEvent) => {
-      try {
-        const parsed = JSON.parse(event.data as string) as DetectionSseEvent;
-
-        // Filter by event type if specified
-        if (eventTypesRef.current && !eventTypesRef.current.includes(parsed.type)) {
-          return;
+    // B0-5c: token in the Authorization header (fetch-based SSE), never the URL query string.
+    const stream = fetchEventSource(DETECTION_STREAM_URL, {
+      token,
+      onOpen: () => { setConnected(true); setError(null); },
+      onError: () => { setConnected(false); setError('Connection lost, reconnecting…'); },
+      onMessage: (message) => {
+        try {
+          const parsed = JSON.parse(message.data) as DetectionSseEvent;
+          if (eventTypesRef.current && !eventTypesRef.current.includes(parsed.type)) {
+            return;
+          }
+          setLastEvent(parsed);
+          if (message.id) setLastEventId(message.id);
+          onEventRef.current?.(parsed);
+        } catch {
+          // Ignore malformed events (e.g., keepalive pings)
         }
-
-        setLastEvent(parsed);
-        if (event.lastEventId) {
-          setLastEventId(event.lastEventId);
-        }
-        onEventRef.current?.(parsed);
-      } catch {
-        // Ignore malformed events (e.g., keepalive pings)
-      }
-    };
-
-    eventSource.onerror = () => {
-      setConnected(false);
-      setError('Connection lost, reconnecting…');
-      // EventSource auto-reconnects; if it gives up, we manually retry
-      if (eventSource.readyState === EventSource.CLOSED) {
-        eventSourceRef.current = null;
-        // Retry after 5 seconds
-        window.setTimeout(() => {
-          if (enabled) connect();
-        }, 5000);
-      }
-    };
-  }, [enabled, lastEventId]);
+      },
+    });
+    eventSourceRef.current = stream;
+  }, []);
 
   useEffect(() => {
     if (!enabled) {
