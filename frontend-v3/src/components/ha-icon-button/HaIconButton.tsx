@@ -39,7 +39,6 @@ export function HaIconButton({
   const classes = className ? `ha-icon-button ${className}` : 'ha-icon-button';
   return (
     <button
-      // eslint-disable-next-line react/button-has-type
       type={type}
       className={classes}
       data-size={size}
