@@ -10,12 +10,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hivearmor.service.hunt.ai.HaHuntAiExplainService;
 import com.hivearmor.service.hunt.ai.HaAiCalibrationService;
+import com.hivearmor.service.hunt.ai.HaHuntProvenanceService;
 import com.hivearmor.service.hunt.ai.HaHuntVerdictService;
 import com.hivearmor.service.hunt.HaHuntService;
 import com.hivearmor.security.SecurityUtils;
@@ -24,6 +27,7 @@ import com.hivearmor.web.rest.hunt.ai.dto.AiFeedbackRequestDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.ExplainClauseRequestDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.ExplainClauseResponseDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.HuntEventSample;
+import com.hivearmor.web.rest.hunt.ai.dto.HuntFieldProvenanceDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.VerdictRequestDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.VerdictResponseDTO;
 
@@ -50,15 +54,18 @@ public class HaHuntAiResource {
     private final HaAiCalibrationService calibrationService;
     private final HaHuntVerdictService verdictService;
     private final HaHuntService huntService;
+    private final HaHuntProvenanceService provenanceService;
 
     public HaHuntAiResource(HaHuntAiExplainService explainService,
                             HaAiCalibrationService calibrationService,
                             HaHuntVerdictService verdictService,
-                            HaHuntService huntService) {
+                            HaHuntService huntService,
+                            HaHuntProvenanceService provenanceService) {
         this.explainService = explainService;
         this.calibrationService = calibrationService;
         this.verdictService = verdictService;
         this.huntService = huntService;
+        this.provenanceService = provenanceService;
     }
 
     /** Max events sampled from a completed search for verdict analysis. */
@@ -109,6 +116,17 @@ public class HaHuntAiResource {
             return ResponseEntity.ok(VerdictResponseDTO.nonReady("unavailable"));
         }
         return ResponseEntity.ok(verdictService.verdict(body.searchId(), sample));
+    }
+
+    /**
+     * Per-field provenance for the "show AI's hand" lens (contract §4). Deterministic, no LLM —
+     * classifies each projected field as raw / enrichment / model. The {@code searchId} param is
+     * accepted for contract symmetry; the map is schema-wide (same for any search).
+     */
+    @GetMapping("/provenance")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    public ResponseEntity<List<HuntFieldProvenanceDTO>> provenance(@RequestParam(required = false) String searchId) {
+        return ResponseEntity.ok(provenanceService.fieldProvenance());
     }
 
     private static String tenantKey() {
