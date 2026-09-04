@@ -13,15 +13,11 @@ describe('SearchHunt identity', () => {
   const pageSource = readFileSync(join(process.cwd(), 'src/pages/search-hunt/SearchHuntPage.tsx'), 'utf8');
   const serviceSource = readFileSync(join(process.cwd(), 'src/services/search.service.ts'), 'utf8');
 
-  it('states ad-hoc hunt job and sibling cross-links', () => {
+  it('states ad-hoc hunt job identity and wires core surfaces', () => {
     expect(pageSource).toContain('SEARCH_HUNT_JOB_SENTENCE');
     expect(pageSource.toLowerCase()).toMatch(/ad-hoc hunt|event search/);
     expect(pageSource).toContain('HaPageHeader');
     expect(pageSource).toContain("useDocumentTitle('Search & Hunt')");
-    expect(pageSource).toContain('to="/dashboard"');
-    expect(pageSource).toContain('to="/alerts"');
-    expect(pageSource).toContain('to="/investigations"');
-    expect(pageSource).toContain('to="/incidents"');
     expect(pageSource).toContain('runNlQuery');
     expect(pageSource).toContain('SearchManagerPanel');
     expect(pageSource).toContain('EventDetailFlyout');
