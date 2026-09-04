@@ -18,6 +18,7 @@
   --ha-surface-input: #13151c;
   --ha-surface-hover: #252832;
   --ha-surface-selected: #163033;
+  --ha-surface-zebra: #1d1e26;
   --ha-surface-overlay: #0d0d16;
 
   /* Borders */
@@ -204,6 +205,7 @@
   --ha-surface-input: #f5f6f8;
   --ha-surface-hover: #eceff2;
   --ha-surface-selected: #ddf2f0;
+  --ha-surface-zebra: #f7f9fb;
   --ha-surface-overlay: #ffffff;
 
   --ha-border-subtle: #e0e3e7;
@@ -266,6 +268,7 @@
   --ha-surface-input: #0b1122;
   --ha-surface-hover: #1e2c48;
   --ha-surface-selected: #123243;
+  --ha-surface-zebra: #131d35;
   --ha-surface-overlay: #060b16;
 
   --ha-border-subtle: #202c46;

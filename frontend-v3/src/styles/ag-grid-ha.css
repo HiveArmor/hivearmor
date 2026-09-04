@@ -15,7 +15,7 @@
   --ag-range-selection-border-color:  var(--ha-primary);
   --ag-cell-horizontal-border:     var(--ha-border);
   --ag-row-border-color:           var(--ha-border);
-  --ag-odd-row-background-color:   transparent;
+  --ag-odd-row-background-color:   var(--ha-surface-zebra);
   --ag-control-panel-background-color: var(--ha-surface-raised);
   --ag-subheader-background-color: var(--ha-surface-raised);
   --ag-input-focus-border-color:   var(--ha-primary);
@@ -23,8 +23,8 @@
   --ag-checkbox-unchecked-color:   var(--ha-border);
   --ag-font-size:                  13px;
   --ag-font-family:                'Inter', sans-serif;
-  --ag-header-height:              40px;
-  --ag-row-height:                 44px;
+  --ag-header-height:              32px;
+  --ag-row-height:                 36px;
   --ag-cell-horizontal-padding:    12px;
 }
 
@@ -40,7 +40,7 @@
   --ag-row-hover-color:            color-mix(in srgb, var(--ha-action-primary) 7%, transparent);
   --ag-selected-row-background-color: color-mix(in srgb, var(--ha-action-primary) 13%, transparent);
   --ag-row-border-color:           var(--ha-border);
-  --ag-odd-row-background-color:   transparent;
+  --ag-odd-row-background-color:   var(--ha-surface-zebra);
   --ag-checkbox-checked-color:     var(--ha-primary);
   --ag-checkbox-unchecked-color:   var(--ha-border);
   background: var(--ha-surface-primary);
@@ -57,7 +57,7 @@
 }
 
 .ha-grid .ag-row-odd {
-  background: color-mix(in srgb, var(--ha-surface-primary) 97%, var(--ha-action-primary));
+  background: var(--ha-surface-zebra);
 }
 
 .ha-grid .ag-row-hover {
