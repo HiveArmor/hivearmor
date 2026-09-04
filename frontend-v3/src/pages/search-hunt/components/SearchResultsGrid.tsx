@@ -16,6 +16,10 @@ export interface SearchResultsGridProps {
   onSelectionChanged: (selectedIds: string[]) => void;
   onActivateEvent: (event: HuntEvent) => void;
   onSortChanged?: (field: string, direction: 'asc' | 'desc') => void;
+  /** Column ids the AI derived (model/enrichment) — the "show AI's hand" lens (move 2). */
+  aiDerivedColumns?: string[];
+  /** When true, mark aiDerivedColumns with the intelligence-violet provenance thread. */
+  showAiHand?: boolean;
 }
 
 const severityOrder: Record<HuntEvent['severity'], number> = {
@@ -34,8 +38,11 @@ export function SearchResultsGrid({
   onSelectionChanged,
   onActivateEvent,
   onSortChanged,
+  aiDerivedColumns,
+  showAiHand = false,
 }: SearchResultsGridProps): JSX.Element {
   const gridRef = useRef<AgGridReact>(null);
+  const aiSet = useMemo(() => new Set(aiDerivedColumns ?? []), [aiDerivedColumns]);
 
   const allColumns = useMemo<Record<string, ColDef<HuntEvent>>>(() => ({
     timestamp: {
@@ -69,14 +76,23 @@ export function SearchResultsGrid({
       headerName: '', colId: 'selection', width: 38, pinned: 'left', lockPinned: true,
       checkboxSelection: true, headerCheckboxSelection: true, sortable: false, resizable: false, suppressMovable: true,
     },
-    ...visibleColumns.map((id) => allColumns[id] ?? {
-      headerName: id,
-      colId: id,
-      width: 150,
-      valueGetter: ({ data }: { data?: HuntEvent }) => data?.normalized[id],
-      cellClass: 'hunt-grid__mono',
+    ...visibleColumns.map((id) => {
+      const base = allColumns[id] ?? {
+        headerName: id,
+        colId: id,
+        width: 150,
+        valueGetter: ({ data }: { data?: HuntEvent }) => data?.normalized[id],
+        cellClass: 'hunt-grid__mono',
+      };
+      if (!(showAiHand && aiSet.has(id))) return base;
+      const existing = typeof base.cellClass === 'string' ? base.cellClass : '';
+      return {
+        ...base,
+        cellClass: `${existing} hunt-grid__ai-derived`.trim(),
+        headerClass: 'hunt-grid__ai-derived-header',
+      };
     }),
-  ], [allColumns, visibleColumns]);
+  ], [allColumns, visibleColumns, showAiHand, aiSet]);
 
   const handleSelection = useCallback((rows: unknown[]) => {
     onSelectionChanged((rows as HuntEvent[]).map((row) => row.id));

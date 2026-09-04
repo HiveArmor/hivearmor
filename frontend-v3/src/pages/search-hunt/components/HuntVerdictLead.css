@@ -1,0 +1,146 @@
+/* HuntVerdictLead — the AI verdict lead above the results grid.
+   Tokens only (var(--ha-*)); intelligence-violet marks AI provenance ONLY. */
+
+.hunt-verdict-lead {
+  margin-bottom: 12px;
+}
+
+/* Reasoning steps with clickable row citations (move 3) */
+.hunt-verdict-lead__reasoning {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.hunt-verdict-lead__rstep {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font: var(--ha-type-compact);
+}
+
+.hunt-verdict-lead__rnum {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: var(--ha-radius-pill);
+  background: var(--ha-fill-intelligence-muted);
+  color: var(--ha-intelligence-strong);
+  font-size: 10px;
+  display: grid;
+  place-items: center;
+}
+
+.hunt-verdict-lead__rtext {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hunt-verdict-lead__rlabel {
+  color: var(--ha-foreground-primary);
+  font-weight: 600;
+}
+
+.hunt-verdict-lead__rdetail {
+  color: var(--ha-foreground-secondary);
+}
+
+.hunt-verdict-lead__cite {
+  align-self: flex-start;
+  margin-top: 3px;
+  font: var(--ha-type-metadata);
+  color: var(--ha-action-primary);
+  background: none;
+  border: none;
+  border-bottom: 1px dashed color-mix(in srgb, var(--ha-action-primary) 45%, transparent);
+  padding: 0 0 1px;
+  cursor: pointer;
+}
+
+.hunt-verdict-lead__cite:hover {
+  color: var(--ha-action-primary-hover);
+}
+
+.hunt-verdict-lead__cite:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 2px;
+}
+
+.hunt-verdict-lead__summary {
+  display: block;
+}
+
+/* AI-derived evidence value: violet marker (value-color rule: violet = AI provenance only) */
+.hunt-verdict-lead__ai-val {
+  color: var(--ha-intelligence-strong);
+}
+
+.hunt-verdict-lead__ai-glyph {
+  font-size: 9px;
+  opacity: 0.85;
+}
+
+/* Trust calibration line — REDESIGN §6 */
+.hunt-verdict-lead__trust {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: var(--ha-fill-intelligence-subtle);
+  border: var(--ha-border-width) solid color-mix(in srgb, var(--ha-intelligence-primary) 26%, transparent);
+  border-left: 2px solid var(--ha-intelligence-primary);
+  border-radius: var(--ha-radius-panel);
+  font: var(--ha-type-metadata);
+  color: var(--ha-foreground-secondary);
+}
+
+.hunt-verdict-lead__trust-glyph {
+  color: var(--ha-intelligence-primary);
+  flex: 0 0 auto;
+}
+
+.hunt-verdict-lead__trust-text {
+  line-height: 1.45;
+}
+
+.hunt-verdict-lead__trust-text b {
+  color: var(--ha-intelligence-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.hunt-verdict-lead__trust-note {
+  color: var(--ha-foreground-tertiary);
+}
+
+.hunt-verdict-lead__promote {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font: var(--ha-type-compact);
+  color: var(--ha-intelligence-strong);
+  background: none;
+  border: var(--ha-border-width) solid color-mix(in srgb, var(--ha-intelligence-primary) 35%, transparent);
+  border-radius: var(--ha-radius-control);
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.hunt-verdict-lead__promote:hover {
+  background: var(--ha-fill-intelligence-subtle);
+}
+
+.hunt-verdict-lead__promote:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 2px;
+}
+
+.hunt-verdict-lead__fb-ack {
+  margin: 6px 0 0;
+  font: var(--ha-type-metadata);
+  color: var(--ha-intelligence-strong);
+}

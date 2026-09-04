@@ -1,0 +1,93 @@
+/* HuntAiControls — "Show AI's hand" toggle + propose-only autonomy dial.
+   Tokens only; intelligence-violet marks AI surfaces ONLY. */
+
+.hunt-ai-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Show AI's hand toggle */
+.hunt-ai-hand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: var(--ha-type-compact);
+  color: var(--ha-foreground-secondary);
+  background: var(--ha-surface-elevated);
+  border: var(--ha-border-width) solid var(--ha-border-default);
+  border-radius: var(--ha-radius-control);
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.hunt-ai-hand:hover {
+  border-color: var(--ha-border-strong);
+  color: var(--ha-foreground-primary);
+}
+
+.hunt-ai-hand__glyph {
+  color: var(--ha-intelligence-primary);
+}
+
+.hunt-ai-hand--on {
+  color: var(--ha-intelligence-strong);
+  border-color: color-mix(in srgb, var(--ha-intelligence-primary) 45%, transparent);
+  background: var(--ha-fill-intelligence-subtle);
+}
+
+.hunt-ai-hand:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 2px;
+}
+
+/* Autonomy dial */
+.hunt-autonomy {
+  display: inline-flex;
+  align-items: center;
+  background: var(--ha-surface-input);
+  border: var(--ha-border-width) solid color-mix(in srgb, var(--ha-intelligence-primary) 30%, transparent);
+  border-radius: var(--ha-radius-control);
+  overflow: hidden;
+}
+
+.hunt-autonomy__label {
+  font: var(--ha-type-metadata);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--ha-intelligence-strong);
+  padding: 0 9px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.hunt-autonomy__opt {
+  font: var(--ha-type-compact);
+  padding: 5px 11px;
+  color: var(--ha-foreground-tertiary);
+  background: none;
+  border: none;
+  border-left: var(--ha-border-width) solid var(--ha-border-subtle);
+  cursor: pointer;
+}
+
+.hunt-autonomy__opt:hover:not(:disabled):not(.hunt-autonomy__opt--on) {
+  background: var(--ha-surface-hover);
+  color: var(--ha-foreground-primary);
+}
+
+.hunt-autonomy__opt--on {
+  background: var(--ha-fill-intelligence-muted);
+  color: var(--ha-intelligence-strong);
+  font-weight: 600;
+}
+
+.hunt-autonomy__opt:disabled {
+  color: var(--ha-foreground-disabled);
+  cursor: not-allowed;
+}
+
+.hunt-autonomy__opt:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: -2px;
+}
