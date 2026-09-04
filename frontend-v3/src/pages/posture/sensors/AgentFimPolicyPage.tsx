@@ -30,7 +30,6 @@ import {
   useUpdateUtmAgentPolicy,
   useUtmAgentPolicies,
 } from '@/hooks/useAgentPoliciesPush';
-import { ApiError } from '@/lib/apiClient';
 import {
   COLLECTOR_KEYS,
   defaultAgentFimPolicyFormValues,
@@ -38,6 +37,7 @@ import {
   utmPolicyToFormValues,
   validateAgentFimPolicyForm,
 } from '@/lib/agentPolicySchema';
+import { ApiError } from '@/lib/apiClient';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import {
   AGENT_FIM_POLICY_DUAL_PLANE_NOTE,

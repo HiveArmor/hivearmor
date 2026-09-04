@@ -1,75 +1,15 @@
 /**
- * Search Service — Saved Hunts
- * CRUD functions for HiveArmor saved hunt entries.
- * All requests route via the Vite /api/* proxy — no absolute backend URLs.
+ * Search Service — Natural Language Search (Sprint 26)
+ *
+ * NL→DSL translation and AI-suggested searches, routed via the Vite /api/* proxy.
+ * The retired `/ha-saved-hunts` CRUD was removed in the Hunt Phase-A consolidation
+ * (saved queries are unified on `/ha-hunts/saved` in searchHunt.service.ts).
+ *
+ * All requests carry the JWT from localStorage in the Authorization header only —
+ * never in the URL path, query string, or fragment (NoJwtInUrlInvariant).
  */
 
-import { apiClient } from '@/lib/apiClient';
-import type { SavedHuntDTO } from '@/types/search';
 import type { NlToDslResponse, SuggestedSearch } from '@/types/search.types';
-
-const savedHuntFixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
-
-/**
- * Fetch all saved hunts visible to the current user
- * (own hunts + any marked isShared = true).
- * Issues GET /api/ha-saved-hunts.
- */
-export async function getSavedHunts(): Promise<SavedHuntDTO[]> {
-  if (savedHuntFixtureMode) {
-    const { foundationSavedHunts } = await import('@/pages/search-hunt/searchHunt.fixtures');
-    return foundationSavedHunts;
-  }
-  return apiClient.get<SavedHuntDTO[]>('/ha-saved-hunts');
-}
-
-/**
- * Create a new saved hunt.
- * Issues POST /api/ha-saved-hunts.
- * `id`, `createdBy`, and `createdAt` are assigned by the server.
- */
-export async function createSavedHunt(
-  data: Omit<SavedHuntDTO, 'id' | 'createdBy' | 'createdAt'>
-): Promise<SavedHuntDTO> {
-  if (savedHuntFixtureMode) {
-    return { ...data, id: Date.now(), createdBy: 'maya.chen', createdAt: new Date().toISOString() };
-  }
-  return apiClient.post<SavedHuntDTO>('/ha-saved-hunts', data);
-}
-
-/**
- * Update an existing saved hunt by id.
- * Issues PUT /api/ha-saved-hunts/{id}.
- * Returns 404 when the caller is not the owner and does not hold ADMIN.
- */
-export async function updateSavedHunt(
-  id: number,
-  data: Partial<SavedHuntDTO>
-): Promise<SavedHuntDTO> {
-  if (savedHuntFixtureMode) {
-    const { foundationSavedHunts } = await import('@/pages/search-hunt/searchHunt.fixtures');
-    const existing = foundationSavedHunts.find((hunt) => hunt.id === id);
-    if (!existing) throw new Error('Saved hunt not found');
-    return { ...existing, ...data };
-  }
-  return apiClient.put<SavedHuntDTO>(`/ha-saved-hunts/${id}`, data);
-}
-
-/**
- * Delete a saved hunt by id.
- * Issues DELETE /api/ha-saved-hunts/{id}.
- * Returns 404 when the caller is not the owner and does not hold ADMIN.
- */
-export async function deleteSavedHunt(id: number): Promise<void> {
-  if (savedHuntFixtureMode) return Promise.resolve();
-  return apiClient.delete<void>(`/ha-saved-hunts/${id}`);
-}
-
-// ---------------------------------------------------------------------------
-// Natural Language Search (Sprint 26)
-// All requests carry the JWT from localStorage in the Authorization header only —
-// never in the URL path, query string, or fragment (NoJwtInUrlInvariant).
-// ---------------------------------------------------------------------------
 
 const NL_SEARCH_JWT_KEY = 'hivearmor_auth_token';
 const HA_SEARCH_BASE = '/api/ha-search';
