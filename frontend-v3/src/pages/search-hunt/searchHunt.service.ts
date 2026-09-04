@@ -35,6 +35,20 @@ export function isHuntApprovalRequiredError(error: unknown): boolean {
   return code === 'APPROVAL_REQUIRED' || text.includes('APPROVAL_REQUIRED');
 }
 
+/**
+ * True when the hunt search snapshot (PIT session) has expired or is gone — the backend returns
+ * HTTP 410 HUNT_SEARCH_EXPIRED or 404 HUNT_SEARCH_NOT_FOUND (code carried as a ProblemDetail
+ * property). The UI must offer "run the hunt again" rather than a dead generic Retry.
+ */
+export function isHuntSessionExpiredError(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false;
+  if (error.status === 410 || error.status === 404) return true;
+  const body = error.body as { code?: string; error?: string; message?: string; detail?: string };
+  const code = body.code ?? body.error ?? '';
+  const text = `${code} ${body.message ?? ''} ${body.detail ?? ''} ${error.message}`;
+  return text.includes('HUNT_SEARCH_EXPIRED') || text.includes('HUNT_SEARCH_NOT_FOUND') || text.includes('HUNT_EVENT_NOT_FOUND');
+}
+
 export async function executeHunt(request: HuntSearchRequest, signal?: AbortSignal): Promise<HuntSearchResponse> {
   if (fixtureMode) {
     const { executeFoundationHunt } = await import('@/pages/search-hunt/searchHunt.fixtures');

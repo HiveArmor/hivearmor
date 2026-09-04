@@ -5,7 +5,7 @@ import {
   Braces, ChevronDown, ChevronLeft, ChevronRight, CircleMinus, CirclePlus, Plus, Search,
 } from 'lucide-react';
 
-import { fetchHuntFieldValues, fetchHuntFieldStats } from '../searchHunt.service';
+import { fetchHuntFieldValues, fetchHuntFieldStats, isHuntSessionExpiredError } from '../searchHunt.service';
 import type { HuntFieldDefinition } from '../searchHunt.types';
 
 import { HaFieldTypeIcon } from '@/components/ha-field-type-icon';
@@ -18,6 +18,8 @@ export interface FieldBrowserProps {
   onInsertCondition: (fieldName: string, operator?: string, value?: string) => void;
   /** R5: toggle a value filter on/off (appends or strips the fragment; debounced auto-run upstream). */
   onFilterToggle?: (fragment: string, active: boolean) => void;
+  /** Re-run the current hunt (snapshot-expired recovery CTA). */
+  onRerun?: () => void;
   loading?: boolean;
   unavailable?: boolean;
 }
@@ -33,6 +35,7 @@ export function FieldBrowser({
   onAddField,
   onInsertCondition,
   onFilterToggle,
+  onRerun,
   loading = false,
   unavailable = false,
 }: FieldBrowserProps): JSX.Element {
@@ -190,7 +193,11 @@ export function FieldBrowser({
                           <input value={valueFilter} onChange={(event) => setValueFilter(event.target.value)} placeholder="Find a value" />
                         </label>
                         {valuesQuery.isLoading && <div className="hunt-field-values-state">Loading values…</div>}
-                        {valuesQuery.isError && <div className="hunt-field-values-state" role="status">Values are unavailable for this field.</div>}
+                        {valuesQuery.isError && (isHuntSessionExpiredError(valuesQuery.error) ? (
+                          <div className="hunt-field-values-state" role="status">Snapshot expired. {onRerun ? <button type="button" className="hunt-field-values-rerun" onClick={onRerun}>Run search again</button> : 'Run the hunt again.'}</div>
+                        ) : (
+                          <div className="hunt-field-values-state" role="status">Values are unavailable for this field.</div>
+                        ))}
                         {!valuesQuery.isLoading && !valuesQuery.isError && valuesQuery.data?.state !== 'available' && <div className="hunt-field-values-state" role="status">Value statistics are {valuesQuery.data?.state.replace('_', ' ')}.</div>}
                         {!valuesQuery.isLoading && !valuesQuery.isError && valuesQuery.data?.state === 'available' && (() => {
                           const items = valuesQuery.data.items;

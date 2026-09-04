@@ -137,6 +137,9 @@ export function SearchHuntPage(): JSX.Element {
     ));
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [flyoutEventId, setFlyoutEventId] = useState<string | null>(null);
+  // Set when a downstream call (event flyout / field rail) reports the search snapshot has expired,
+  // so the execution strip stops claiming a green "Query complete" for a dead session.
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
     try { const saved = localStorage.getItem('ha_hunt_columns'); return saved ? JSON.parse(saved) : DEFAULT_COLUMNS; } catch { return DEFAULT_COLUMNS; }
   });
@@ -296,6 +299,7 @@ export function SearchHuntPage(): JSX.Element {
   }, []);
 
   const runSearch = useCallback((override?: { query?: string; timeRange?: TimeRange }): void => {
+    setSessionExpired(false);
     const displayedQuery = override?.query ?? query;
     const nextQuery = normalizeHuntQuery(displayedQuery);
     const nextTime = override?.timeRange ?? timeRange;
@@ -702,7 +706,7 @@ export function SearchHuntPage(): JSX.Element {
           {searchQuery.isFetching ? <button type="button" className="hunt-button hunt-button--stop" onClick={stopSearch}><CircleStop size={14} />Cancel</button> : <button type="button" className="hunt-button hunt-button--primary" onClick={() => runSearch()} title={!query.trim() ? 'Load the newest 100 events in the selected scope' : 'Run KQL hunt'}><Play size={14} />Run search</button>}
         </div>
         <div className="hunt-execution-strip" role="status" aria-live="polite">
-          <span data-state={searchQuery.isFetching ? 'running' : summary ? 'complete' : 'idle'}><i aria-hidden="true" />{searchQuery.isFetching ? 'Query running' : summary ? 'Query complete' : 'Ready'}</span>
+          <span data-state={searchQuery.isFetching ? 'running' : sessionExpired ? 'expired' : summary ? 'complete' : 'idle'}><i aria-hidden="true" />{searchQuery.isFetching ? 'Query running' : sessionExpired ? 'Snapshot expired · run again' : summary ? 'Query complete' : 'Ready'}</span>
           <span title="Active index scope for the next Run search"><Database size={12} />Index · {huntIndexScopeLabel(selectedIndex)}</span>
           <span><Database size={12} />{summary ? `${summary.totalIsExact ? '' : 'About '}${summary.totalApproximate.toLocaleString()} events` : 'No result snapshot'}</span>
           <span><Clock3 size={12} />{summary ? `${summary.tookMs.toLocaleString()} ms` : 'Duration —'}</span>
@@ -719,7 +723,7 @@ export function SearchHuntPage(): JSX.Element {
       </div>
 
       <div className="hunt-results-workspace" data-field-rail={fieldRailOpen || undefined}>
-        {fieldRailOpen && <FieldBrowser fields={schemaQuery.data ?? []} selectedFields={selectedSchemaFields} searchId={summary?.searchId} onAddField={addFieldColumn} onInsertCondition={insertCondition} onFilterToggle={toggleFieldFilter} loading={schemaQuery.isLoading} unavailable={schemaQuery.isError && !schemaPermissionDenied} />}
+        {fieldRailOpen && <FieldBrowser fields={schemaQuery.data ?? []} selectedFields={selectedSchemaFields} searchId={summary?.searchId} onAddField={addFieldColumn} onInsertCondition={insertCondition} onFilterToggle={toggleFieldFilter} onRerun={() => runSearch()} loading={schemaQuery.isLoading} unavailable={schemaQuery.isError && !schemaPermissionDenied} />}
         <main className="hunt-results" aria-label="Hunt results workspace">
           {permissionDenied || schemaPermissionDenied ? <div className="hunt-full-state" role="alert"><ShieldAlert size={30} /><h2>Search access is restricted</h2><p>Your account does not have permission to search this tenant scope or view its schema. Choose an authorized tenant or ask an administrator for hunt access.</p></div> : searchQuery.isError && events.length === 0 ? <div className="hunt-full-state" role="alert"><ShieldAlert size={30} /><h2>Search could not be completed</h2><p>The query service did not return a usable snapshot. Widen the time range, choose Index: Alerts if you expected detections, then retry. Log events appear after an endpoint agent is enrolled from Posture → Sensors.</p><button type="button" className="hunt-button" onClick={() => void searchQuery.refetch()}>Retry search</button></div> : null}
 
@@ -838,6 +842,8 @@ export function SearchHuntPage(): JSX.Element {
         searchId={summary?.searchId ?? ''}
         onClose={handleFlyoutClose}
         onPivot={handlePivot}
+        onRerun={() => runSearch()}
+        onSessionExpired={() => setSessionExpired(true)}
         onFilterFor={applyFieldFilter}
         onFilterOut={applyFieldFilter}
         onAction={openAction}
