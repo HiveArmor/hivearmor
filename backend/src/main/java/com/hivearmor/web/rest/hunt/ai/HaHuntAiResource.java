@@ -2,6 +2,7 @@ package com.hivearmor.web.rest.hunt.ai;
 
 import jakarta.validation.Valid;
 
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -15,9 +16,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hivearmor.service.hunt.ai.HaHuntAiExplainService;
 import com.hivearmor.service.hunt.ai.HaAiCalibrationService;
+import com.hivearmor.service.hunt.ai.HaHuntVerdictService;
+import com.hivearmor.service.hunt.HaHuntService;
+import com.hivearmor.security.SecurityUtils;
+import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.web.rest.hunt.ai.dto.AiFeedbackRequestDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.ExplainClauseRequestDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.ExplainClauseResponseDTO;
+import com.hivearmor.web.rest.hunt.ai.dto.HuntEventSample;
+import com.hivearmor.web.rest.hunt.ai.dto.VerdictRequestDTO;
+import com.hivearmor.web.rest.hunt.ai.dto.VerdictResponseDTO;
 
 /**
  * Hunt AI endpoints ({@code /api/ha-hunts/ai/*}) — the backend side of the frozen Hunt AI
@@ -40,12 +48,21 @@ public class HaHuntAiResource {
 
     private final HaHuntAiExplainService explainService;
     private final HaAiCalibrationService calibrationService;
+    private final HaHuntVerdictService verdictService;
+    private final HaHuntService huntService;
 
     public HaHuntAiResource(HaHuntAiExplainService explainService,
-                            HaAiCalibrationService calibrationService) {
+                            HaAiCalibrationService calibrationService,
+                            HaHuntVerdictService verdictService,
+                            HaHuntService huntService) {
         this.explainService = explainService;
         this.calibrationService = calibrationService;
+        this.verdictService = verdictService;
+        this.huntService = huntService;
     }
+
+    /** Max events sampled from a completed search for verdict analysis. */
+    private static final int VERDICT_SAMPLE_LIMIT = 120;
 
     /**
      * Explain a query clause in plain language (move 5). Always HTTP 200 — an unconfigured
@@ -67,5 +84,35 @@ public class HaHuntAiResource {
     public ResponseEntity<Map<String, Boolean>> feedback(@Valid @RequestBody AiFeedbackRequestDTO body) {
         calibrationService.record(body);
         return ResponseEntity.ok(Map.of("recorded", true));
+    }
+
+    /**
+     * Produce an AI verdict over a completed search's result set (contract §3, the keystone).
+     * Always HTTP 200: an expired/unknown session or too-few events yields a non-ready
+     * state ("insufficient_data"), and an unconfigured/failing LLM yields "unavailable" —
+     * never a fabricated verdict, never a 5xx.
+     */
+    @PostMapping("/verdict")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    public ResponseEntity<VerdictResponseDTO> verdict(@Valid @RequestBody VerdictRequestDTO body) {
+        final String owner = SecurityUtils.getCurrentUserLogin().orElse(null);
+        final String tenantKey = tenantKey();
+        List<HuntEventSample> sample;
+        try {
+            sample = huntService.sampleEvents(body.searchId(), owner, tenantKey, VERDICT_SAMPLE_LIMIT);
+        } catch (RuntimeException e) {
+            // Session expired / unknown / not owned by caller — honest non-ready, not an error.
+            log.debug("HaHuntAiResource: verdict sample unavailable for {} — insufficient_data", body.searchId());
+            return ResponseEntity.ok(VerdictResponseDTO.nonReady("insufficient_data"));
+        } catch (Exception e) {
+            log.warn("HaHuntAiResource: verdict sample fetch failed", e);
+            return ResponseEntity.ok(VerdictResponseDTO.nonReady("unavailable"));
+        }
+        return ResponseEntity.ok(verdictService.verdict(body.searchId(), sample));
+    }
+
+    private static String tenantKey() {
+        String prefix = TenantContext.getClientPrefix();
+        return (prefix == null || prefix.isBlank()) ? "authorized" : prefix;
     }
 }

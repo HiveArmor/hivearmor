@@ -252,6 +252,35 @@ public class HaHuntService {
         return sessionStore.require(searchId, owner, tenantKey);
     }
 
+    /**
+     * Fetch a bounded event sample for a completed search, for AI verdict analysis
+     * (HUNT-AI-CONTRACT §3). Reuses the retained session's compiled query + PIT + projection —
+     * it does NOT accept a fresh query, so it cannot widen scope beyond what the analyst ran.
+     * Returns the minimal {@link com.hivearmor.web.rest.hunt.ai.dto.HuntEventSample} projection.
+     */
+    public java.util.List<com.hivearmor.web.rest.hunt.ai.dto.HuntEventSample> sampleEvents(
+            String searchId, String owner, String tenantKey, int limit) throws Exception {
+        HuntSearchSessionStore.Session session = sessionStore.require(searchId, owner, tenantKey);
+        SearchRequest.Builder builder = new SearchRequest.Builder()
+            .query(session.query())
+            .size(Math.max(1, Math.min(limit, 500)))
+            .sort(session.sort())
+            .source(s -> s.filter(f -> f.includes(fieldRegistry.sourceIncludes(session.projection()))))
+            .allowPartialSearchResults(true)
+            .timeout("30s");
+        applySessionIndex(builder, session);
+        @SuppressWarnings("rawtypes")
+        SearchResponse<Map> response = osClient.execute(os -> os.search(builder.build(), Map.class));
+        java.util.List<com.hivearmor.web.rest.hunt.ai.dto.HuntEventSample> out = new java.util.ArrayList<>();
+        for (Hit<Map> hit : response.hits().hits()) {
+            HuntEventDTO e = mapHitToEvent(hit);
+            out.add(new com.hivearmor.web.rest.hunt.ai.dto.HuntEventSample(
+                e.getId(), e.getTimestamp(), e.getSeverity(), e.getCategory(),
+                e.getAction(), e.getUser(), e.getSourceIp(), e.getMessage()));
+        }
+        return out;
+    }
+
     private HuntSearchSessionStore.Session refreshPitId(HuntSearchSessionStore.Session session, String responsePitId) {
         if (responsePitId == null || responsePitId.isBlank() || responsePitId.equals(session.pitId())) {
             return session;
