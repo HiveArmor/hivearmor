@@ -328,10 +328,13 @@
 .alert-grid-risk strong { font: var(--ha-type-compact); font-weight: 750; font-variant-numeric: tabular-nums; }
 
 .alert-grid-title { align-items: flex-start; flex-direction: column; justify-content: center; width: 100%; }
-.alert-grid-title strong { width: 100%; overflow: hidden; color: var(--ha-foreground-primary); font: var(--ha-type-compact); font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
-.alert-grid-title small { display: flex; max-width: 100%; align-items: center; gap: 5px; overflow: hidden; color: var(--ha-foreground-tertiary); font: 10px/1.35 var(--ha-font-ui); }
+.alert-grid-title strong { width: 100%; overflow: hidden; color: var(--ha-foreground-primary); font: var(--ha-type-compact); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+/* Sub-line matches the showcase .tid: the whole ID · category line is small,
+   dim, and monospace (a rule ID is a machine identifier — mono, one neutral
+   colour, no accent spent on it per the value-colour rule). */
+.alert-grid-title small { display: flex; max-width: 100%; align-items: center; gap: 5px; overflow: hidden; color: var(--ha-foreground-tertiary); font: 10px/1.35 var(--ha-font-mono); }
 .alert-grid-title small span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.alert-grid-title small span:first-child { flex: 0 0 auto; color: var(--ha-action-secondary); font-family: var(--ha-font-mono); }
+.alert-grid-title small span:first-child { flex: 0 0 auto; }
 
 .alert-grid-entity { gap: 7px; color: var(--ha-foreground-tertiary); }
 .alert-grid-entity > span { min-width: 0; }
