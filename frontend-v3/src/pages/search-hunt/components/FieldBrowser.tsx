@@ -5,7 +5,7 @@ import {
   Braces, ChevronDown, ChevronLeft, ChevronRight, CircleMinus, CirclePlus, Plus, Search,
 } from 'lucide-react';
 
-import { fetchHuntFieldValues } from '../searchHunt.service';
+import { fetchHuntFieldValues, fetchHuntFieldStats } from '../searchHunt.service';
 import type { HuntFieldDefinition } from '../searchHunt.types';
 
 import { HaFieldTypeIcon } from '@/components/ha-field-type-icon';
@@ -75,6 +75,23 @@ export function FieldBrowser({
     })).filter((group) => group.fields.length > 0);
   }, [fields, filter]);
 
+  // R5 follow-up: real per-field coverage %/cardinality for the active search snapshot.
+  const statsQuery = useQuery({
+    queryKey: ['hunt-field-stats', searchId],
+    queryFn: ({ signal }) => fetchHuntFieldStats(searchId ?? '', signal),
+    enabled: Boolean(searchId),
+    staleTime: 30_000,
+    gcTime: 2 * 60_000,
+    retry: false,
+  });
+  const statByField = useMemo(() => {
+    const map = new Map<string, { coverage: number | null; cardinality: number }>();
+    for (const stat of statsQuery.data?.fields ?? []) {
+      map.set(stat.name, { coverage: stat.coverage, cardinality: stat.cardinality });
+    }
+    return map;
+  }, [statsQuery.data]);
+
   const valuesQuery = useQuery({
     queryKey: ['hunt-field-values', searchId, expandedField, deferredValueFilter, valueCursor],
     queryFn: ({ signal }) => fetchHuntFieldValues(
@@ -127,7 +144,7 @@ export function FieldBrowser({
         <input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Filter fields" />
         <kbd>/</kbd>
       </label>
-      <div className="hunt-field-browser__legend"><span>FIELD</span></div>
+      <div className="hunt-field-browser__legend"><span>FIELD</span>{searchId && <span>COVERAGE</span>}</div>
       <div className="hunt-field-browser__list">
         {loading && <div className="hunt-rail-state">Loading authorized fields…</div>}
         {unavailable && !loading && <div className="hunt-rail-state" role="status">Field metadata is unavailable. Query execution can continue with known fields.</div>}
@@ -141,6 +158,7 @@ export function FieldBrowser({
               </button>
               {isExpanded && <ul>{group.fields.map((field) => {
                 const fieldIsExpanded = expandedField === field.name;
+                const stat = statByField.get(field.name);
                 const valuesId = `hunt-field-values-${field.name.replace(/[^a-z0-9]/gi, '-')}`;
                 return (
                   <li key={field.name} data-expanded={fieldIsExpanded || undefined}>
@@ -152,7 +170,8 @@ export function FieldBrowser({
                       aria-expanded={fieldIsExpanded}
                       aria-controls={valuesId}
                     >
-                      <span><HaFieldTypeIcon type={field.type} className="hunt-field-row__type-icon" /><span className="hunt-field-row__text"><strong>{field.name}</strong><small>{field.type}</small></span></span>
+                      <span><HaFieldTypeIcon type={field.type} className="hunt-field-row__type-icon" /><span className="hunt-field-row__text"><strong>{field.name}</strong><small>{field.type}{stat && stat.cardinality > 0 ? ` · ~${stat.cardinality.toLocaleString()} values` : ''}</small></span></span>
+                      {stat?.coverage != null && <em className="hunt-field-row__coverage" title={`Present in ${stat.coverage}% of the ${statsQuery.data?.totalDocs?.toLocaleString() ?? ''} events in this search`}>{stat.coverage}%</em>}
                     </button>
                     <button type="button" className="hunt-field-row__add" onClick={() => onAddField(field.name)} disabled={selectedFields.includes(field.name)} aria-label={`Add ${field.name} as a result column`} title="Add result column">
                       <Plus size={12} aria-hidden="true" />

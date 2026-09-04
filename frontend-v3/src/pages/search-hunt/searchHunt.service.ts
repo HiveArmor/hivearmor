@@ -6,6 +6,7 @@ import type {
   HuntEventDetailResponse,
   HuntFieldDefinition,
   HuntFieldValuesResponse,
+  HuntFieldStatsResponse,
   HuntPromotionApproval,
   HuntSearchRequest,
   HuntSearchResponse,
@@ -69,6 +70,17 @@ export async function fetchHuntFieldValues(
   return apiClient.get<HuntFieldValuesResponse>(
     `/ha-hunts/search/${encodeURIComponent(searchId)}/fields/${encodeURIComponent(field)}/values`,
     { params: { cursor: cursor ?? undefined, limit: 10, q: query || undefined }, signal },
+  );
+}
+
+export async function fetchHuntFieldStats(searchId: string, signal?: AbortSignal): Promise<HuntFieldStatsResponse> {
+  if (fixtureMode) {
+    const { getFoundationHuntFieldStats } = await import('@/pages/search-hunt/searchHunt.fixtures');
+    return getFoundationHuntFieldStats(searchId);
+  }
+  return apiClient.get<HuntFieldStatsResponse>(
+    `/ha-hunts/search/${encodeURIComponent(searchId)}/field-stats`,
+    { signal },
   );
 }
 

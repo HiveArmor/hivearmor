@@ -233,6 +233,75 @@ public class HaHuntService {
         return result;
     }
 
+    /**
+     * HNT-003 (real population): per-field coverage %% and distinct-value cardinality computed
+     * against the authorized search snapshot. One size:0 search: track_total_hits gives the
+     * denominator, and each aggregatable field contributes a value_count (docs where the field is
+     * present) and a cardinality (approximate distinct values). Non-aggregatable fields are skipped.
+     */
+    public Map<String, Object> getFieldStats(String searchId, String owner, String tenantKey) throws Exception {
+        HuntSearchSessionStore.Session session = sessionStore.require(searchId, owner, tenantKey);
+
+        List<HuntFieldRegistry.FieldSpec> aggregatable = fieldRegistry.all().stream()
+            .filter(HuntFieldRegistry.FieldSpec::aggregatable)
+            .toList();
+
+        Map<String, Aggregation> aggs = new LinkedHashMap<>();
+        for (HuntFieldRegistry.FieldSpec field : aggregatable) {
+            String safe = aggKey(field.name());
+            aggs.put("cnt_" + safe, Aggregation.of(a -> a.valueCount(v -> v.field(field.name()))));
+            aggs.put("crd_" + safe, Aggregation.of(a -> a.cardinality(c -> c.field(field.name()))));
+        }
+
+        SearchRequest.Builder builder = new SearchRequest.Builder()
+            .size(0)
+            .query(session.query())
+            .trackTotalHits(t -> t.enabled(true))
+            .timeout("15s")
+            .allowPartialSearchResults(true)
+            .aggregations(aggs);
+        applySessionIndex(builder, session);
+        SearchRequest request = builder.build();
+
+        @SuppressWarnings("rawtypes")
+        SearchResponse<Map> response = osClient.execute(os -> os.search(request, Map.class));
+
+        long totalDocs = 0;
+        if (response.hits() != null && response.hits().total() != null) {
+            totalDocs = response.hits().total().value();
+        }
+        boolean exact = response.shards() == null || response.shards().failed().longValue() == 0;
+
+        List<Map<String, Object>> fields = new ArrayList<>();
+        for (HuntFieldRegistry.FieldSpec field : aggregatable) {
+            String safe = aggKey(field.name());
+            Aggregate cntAgg = response.aggregations().get("cnt_" + safe);
+            Aggregate crdAgg = response.aggregations().get("crd_" + safe);
+            long present = cntAgg != null && cntAgg.isValueCount() ? (long) cntAgg.valueCount().value() : 0L;
+            long cardinality = crdAgg != null && crdAgg.isCardinality() ? crdAgg.cardinality().value() : 0L;
+            Double coverage = totalDocs > 0 ? Math.round((present * 1000.0) / totalDocs) / 10.0 : null;
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("name", field.name());
+            entry.put("coverage", coverage);        // 0..100, one decimal; null when no docs
+            entry.put("cardinality", cardinality);  // approximate distinct values (HyperLogLog++)
+            fields.add(entry);
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("searchId", searchId);
+        result.put("totalDocs", totalDocs);
+        result.put("totalIsExact", exact);
+        result.put("fields", fields);
+        result.put("state", response.timedOut() ? "partial" : "available");
+        result.put("snapshotAt", session.snapshotAt().toString());
+        return result;
+    }
+
+    /** OpenSearch aggregation names allow a limited charset; map a dotted field to a safe key. */
+    private static String aggKey(String fieldName) {
+        return fieldName.replaceAll("[^a-zA-Z0-9]", "_");
+    }
+
     public Optional<HuntSearchSessionStore.Session> closeSearch(String searchId) {
         Optional<HuntSearchSessionStore.Session> session = sessionStore.remove(searchId);
         session.ifPresent(value -> {

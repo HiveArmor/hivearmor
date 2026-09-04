@@ -3,6 +3,7 @@ import type {
   HuntEventDetail,
   HuntFieldDefinition,
   HuntFieldValuesResponse,
+  HuntFieldStatsResponse,
   HuntHistogramBucket,
   HuntSearchRequest,
   HuntSearchResponse,
@@ -198,6 +199,34 @@ export async function getFoundationHuntFieldValues(
     hasMore: nextOffset < values.length,
     totalDistinctApproximate: values.length,
     totalIsExact: true,
+    state: 'available',
+    snapshotAt: '2026-08-03T07:44:18.000Z',
+  };
+}
+
+export function getFoundationHuntFieldStats(searchId: string): HuntFieldStatsResponse {
+  const snapshotEvents = foundationSearchSnapshots.get(searchId) ?? foundationHuntEvents;
+  const totalDocs = snapshotEvents.length;
+  const fields = foundationHuntFields.map((definition) => {
+    const distinct = new Set<string>();
+    let present = 0;
+    for (const event of snapshotEvents) {
+      const raw = event.normalized[definition.name];
+      if (raw === null || raw === undefined || raw === '') continue;
+      present += 1;
+      distinct.add(String(raw));
+    }
+    return {
+      name: definition.name,
+      coverage: totalDocs > 0 ? Math.round((present * 1000) / totalDocs) / 10 : null,
+      cardinality: distinct.size,
+    };
+  });
+  return {
+    searchId,
+    totalDocs,
+    totalIsExact: true,
+    fields,
     state: 'available',
     snapshotAt: '2026-08-03T07:44:18.000Z',
   };

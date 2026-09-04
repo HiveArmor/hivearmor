@@ -594,6 +594,28 @@ public class HaHuntResource {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // GET /api/ha-hunts/search/{searchId}/field-stats — HNT-003 (real coverage % + cardinality)
+    // -------------------------------------------------------------------------
+
+    @GetMapping("/search/{searchId}/field-stats")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    public ResponseEntity<Object> getFieldStats(@PathVariable String searchId) {
+        final String ctx = CLASSNAME + ".getFieldStats";
+        log.debug("{}: searchId={}", ctx, searchId);
+        try {
+            Object response = huntService.getFieldStats(searchId, currentOwner(), currentTenantKey());
+            return ResponseEntity.ok(response);
+        } catch (HuntQueryException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("{}: {}", ctx, e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
     private String currentOwner() {
         return SecurityUtils.getCurrentUserLogin()
             .orElseThrow(() -> new HuntQueryException("HUNT_PRINCIPAL_REQUIRED", "Authenticated principal is required", 0));
