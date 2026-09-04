@@ -16,7 +16,8 @@ export interface FieldBrowserProps {
   searchId?: string;
   onAddField: (fieldName: string) => void;
   onInsertCondition: (fieldName: string, operator?: string, value?: string) => void;
-  onInsertFragment: (fragment: string) => void;
+  /** R5: toggle a value filter on/off (appends or strips the fragment; debounced auto-run upstream). */
+  onFilterToggle?: (fragment: string, active: boolean) => void;
   loading?: boolean;
   unavailable?: boolean;
 }
@@ -31,11 +32,31 @@ export function FieldBrowser({
   searchId,
   onAddField,
   onInsertCondition,
-  onInsertFragment,
+  onFilterToggle,
   loading = false,
   unavailable = false,
 }: FieldBrowserProps): JSX.Element {
   const [filter, setFilter] = useState('');
+  // R5: which include/exclude fragments the analyst has toggled on, so the pills reflect applied state.
+  const [appliedFilters, setAppliedFilters] = useState<Set<string>>(new Set());
+  const applyToggle = (fragment: string, opposite: string): void => {
+    setAppliedFilters((current) => {
+      const next = new Set(current);
+      if (next.has(fragment)) {
+        next.delete(fragment);
+        onFilterToggle?.(fragment, false);
+      } else {
+        // Prevent contradictory include+exclude of the same value: drop the opposite first.
+        if (next.has(opposite)) {
+          next.delete(opposite);
+          onFilterToggle?.(opposite, false);
+        }
+        next.add(fragment);
+        onFilterToggle?.(fragment, true);
+      }
+      return next;
+    });
+  };
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['event', 'host', 'identity', 'network']));
   const [expandedField, setExpandedField] = useState<string | null>(null);
   const [valueFilter, setValueFilter] = useState('');
@@ -106,7 +127,7 @@ export function FieldBrowser({
         <input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Filter fields" />
         <kbd>/</kbd>
       </label>
-      <div className="hunt-field-browser__legend"><span>FIELD</span><span>COVERAGE</span></div>
+      <div className="hunt-field-browser__legend"><span>FIELD</span></div>
       <div className="hunt-field-browser__list">
         {loading && <div className="hunt-rail-state">Loading authorized fields…</div>}
         {unavailable && !loading && <div className="hunt-rail-state" role="status">Field metadata is unavailable. Query execution can continue with known fields.</div>}
@@ -131,8 +152,7 @@ export function FieldBrowser({
                       aria-expanded={fieldIsExpanded}
                       aria-controls={valuesId}
                     >
-                      <span><HaFieldTypeIcon type={field.type} className="hunt-field-row__type-icon" /><span className="hunt-field-row__text"><strong>{field.name}</strong><small>{field.type}{field.cardinality != null ? ` · ~${field.cardinality.toLocaleString()} values` : ''}</small></span></span>
-                      <em>{field.coverage === null ? '—' : `${field.coverage}%`}</em>
+                      <span><HaFieldTypeIcon type={field.type} className="hunt-field-row__type-icon" /><span className="hunt-field-row__text"><strong>{field.name}</strong><small>{field.type}</small></span></span>
                     </button>
                     <button type="button" className="hunt-field-row__add" onClick={() => onAddField(field.name)} disabled={selectedFields.includes(field.name)} aria-label={`Add ${field.name} as a result column`} title="Add result column">
                       <Plus size={12} aria-hidden="true" />
@@ -153,22 +173,31 @@ export function FieldBrowser({
                         {valuesQuery.isLoading && <div className="hunt-field-values-state">Loading values…</div>}
                         {valuesQuery.isError && <div className="hunt-field-values-state" role="status">Values are unavailable for this field.</div>}
                         {!valuesQuery.isLoading && !valuesQuery.isError && valuesQuery.data?.state !== 'available' && <div className="hunt-field-values-state" role="status">Value statistics are {valuesQuery.data?.state.replace('_', ' ')}.</div>}
-                        {!valuesQuery.isLoading && !valuesQuery.isError && valuesQuery.data?.state === 'available' && <>
+                        {!valuesQuery.isLoading && !valuesQuery.isError && valuesQuery.data?.state === 'available' && (() => {
+                          const items = valuesQuery.data.items;
+                          const maxCount = items.reduce((max, it) => Math.max(max, it.count), 0) || 1;
+                          return <>
                           <div className="hunt-field-value-list">
-                            {valuesQuery.data.items.length === 0 && <div className="hunt-field-values-state">No values match this filter.</div>}
-                            {valuesQuery.data.items.map((item) => <div key={item.value} className="hunt-field-value-row">
-                              <code title={item.value}>{item.value}</code>
-                              <span title={item.countIsExact ? 'Exact event count' : 'Approximate event count'}>{item.countIsExact ? '' : '~'}{item.count.toLocaleString()}</span>
-                              <button type="button" onClick={() => onInsertFragment(item.includeQuery)} aria-label={`Include ${item.value}`} title="Include value"><CirclePlus size={13} /></button>
-                              <button type="button" onClick={() => onInsertFragment(item.excludeQuery)} aria-label={`Exclude ${item.value}`} title="Exclude value"><CircleMinus size={13} /></button>
-                            </div>)}
+                            {items.length === 0 && <div className="hunt-field-values-state">No values match this filter.</div>}
+                            {items.map((item) => {
+                              const includeActive = appliedFilters.has(item.includeQuery);
+                              const excludeActive = appliedFilters.has(item.excludeQuery);
+                              const pct = Math.round((item.count / maxCount) * 100);
+                              return <div key={item.value} className="hunt-field-value-row" style={{ ['--hunt-value-bar' as string]: `${pct}%` }}>
+                                <code title={item.value}>{item.value}</code>
+                                <span className="hunt-field-value-count" title={item.countIsExact ? 'Exact event count' : 'Approximate event count'}>{item.countIsExact ? '' : '~'}{item.count.toLocaleString()}</span>
+                                <button type="button" className="hunt-field-value-pill" data-active={includeActive || undefined} aria-pressed={includeActive} onClick={() => applyToggle(item.includeQuery, item.excludeQuery)} aria-label={`${includeActive ? 'Remove include filter for' : 'Include'} ${item.value}`} title={includeActive ? 'Remove include filter' : 'Include value'}><CirclePlus size={13} /></button>
+                                <button type="button" className="hunt-field-value-pill" data-active={excludeActive || undefined} aria-pressed={excludeActive} onClick={() => applyToggle(item.excludeQuery, item.includeQuery)} aria-label={`${excludeActive ? 'Remove exclude filter for' : 'Exclude'} ${item.value}`} title={excludeActive ? 'Remove exclude filter' : 'Exclude value'}><CircleMinus size={13} /></button>
+                              </div>;
+                            })}
                           </div>
                           {(valuePageIndex > 0 || valuesQuery.data.hasMore) && <div className="hunt-field-value-pagination">
                             <button type="button" onClick={() => setValuePageIndex((current) => Math.max(0, current - 1))} disabled={valuePageIndex === 0 || valuesQuery.isFetching} aria-label="Previous field values"><ChevronLeft size={13} /></button>
                             <span>Page {valuePageIndex + 1}</span>
                             <button type="button" onClick={nextValuePage} disabled={!valuesQuery.data.nextCursor || valuesQuery.isFetching} aria-label="Next field values"><ChevronRight size={13} /></button>
                           </div>}
-                        </>}
+                        </>;
+                        })()}
                       </> : <div className="hunt-field-values-state">Run a hunt to calculate values for the authorized result snapshot.</div>}
                     </div>}
                   </li>

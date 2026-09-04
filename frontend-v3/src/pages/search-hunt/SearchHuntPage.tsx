@@ -88,6 +88,10 @@ const QUERY_LANGUAGES = [
 // history for the removed .hunt-language-picker markup) when a second parser advertises available:true.
 const AVAILABLE_QUERY_LANGUAGES = QUERY_LANGUAGES.filter((language) => language.available);
 const SINGLE_QUERY_LANGUAGE_LABEL = AVAILABLE_QUERY_LANGUAGES[0]?.label ?? 'KQL';
+// Escapes a string for safe literal use inside a RegExp (used when stripping a toggled filter fragment).
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 function makeRequest(
   query: string,
   timeRange: TimeRange,
@@ -339,10 +343,6 @@ export function SearchHuntPage(): JSX.Element {
     setQuery((current) => `${current.trim()}${current.trim() ? ' AND ' : ''}${field}${operator}${formattedValue}`);
   }, []);
 
-  const insertQueryFragment = useCallback((fragment: string): void => {
-    setQuery((current) => `${current.trim()}${current.trim() ? ' AND ' : ''}${fragment}`);
-  }, []);
-
   // Locked decision: per-field / per-value filter clicks APPEND then AUTO-RUN, debounced, so an
   // analyst can stack several filters in quick succession and the search fires once they pause.
   const filterRunTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -352,6 +352,30 @@ export function SearchHuntPage(): JSX.Element {
     let nextQuery = '';
     setQuery((current) => {
       nextQuery = `${current.trim()}${current.trim() ? ' AND ' : ''}${fragment}`;
+      return nextQuery;
+    });
+    if (filterRunTimer.current) clearTimeout(filterRunTimer.current);
+    filterRunTimer.current = setTimeout(() => {
+      runSearch({ query: nextQuery });
+    }, 450);
+  }, [runSearch]);
+
+  // R5 field-rail filter pills are TOGGLES: activating appends the fragment, deactivating strips that
+  // exact fragment (and a bordering ' AND ') back out of the query. Debounced auto-run either way.
+  const toggleFieldFilter = useCallback((fragment: string, active: boolean): void => {
+    if (!fragment) return;
+    let nextQuery = '';
+    setQuery((current) => {
+      if (active) {
+        nextQuery = `${current.trim()}${current.trim() ? ' AND ' : ''}${fragment}`;
+      } else {
+        // Remove the exact fragment, collapsing a neighbouring ' AND ' so the query stays valid.
+        nextQuery = current
+          .replace(new RegExp(`\\s*AND\\s*${escapeRegExp(fragment)}`), '')
+          .replace(new RegExp(`^\\s*${escapeRegExp(fragment)}\\s*AND\\s*`), '')
+          .replace(new RegExp(`^\\s*${escapeRegExp(fragment)}\\s*$`), '')
+          .trim();
+      }
       return nextQuery;
     });
     if (filterRunTimer.current) clearTimeout(filterRunTimer.current);
@@ -695,7 +719,7 @@ export function SearchHuntPage(): JSX.Element {
       </div>
 
       <div className="hunt-results-workspace" data-field-rail={fieldRailOpen || undefined}>
-        {fieldRailOpen && <FieldBrowser fields={schemaQuery.data ?? []} selectedFields={selectedSchemaFields} searchId={summary?.searchId} onAddField={addFieldColumn} onInsertCondition={insertCondition} onInsertFragment={insertQueryFragment} loading={schemaQuery.isLoading} unavailable={schemaQuery.isError && !schemaPermissionDenied} />}
+        {fieldRailOpen && <FieldBrowser fields={schemaQuery.data ?? []} selectedFields={selectedSchemaFields} searchId={summary?.searchId} onAddField={addFieldColumn} onInsertCondition={insertCondition} onFilterToggle={toggleFieldFilter} loading={schemaQuery.isLoading} unavailable={schemaQuery.isError && !schemaPermissionDenied} />}
         <main className="hunt-results" aria-label="Hunt results workspace">
           {permissionDenied || schemaPermissionDenied ? <div className="hunt-full-state" role="alert"><ShieldAlert size={30} /><h2>Search access is restricted</h2><p>Your account does not have permission to search this tenant scope or view its schema. Choose an authorized tenant or ask an administrator for hunt access.</p></div> : searchQuery.isError && events.length === 0 ? <div className="hunt-full-state" role="alert"><ShieldAlert size={30} /><h2>Search could not be completed</h2><p>The query service did not return a usable snapshot. Widen the time range, choose Index: Alerts if you expected detections, then retry. Log events appear after an endpoint agent is enrolled from Posture → Sensors.</p><button type="button" className="hunt-button" onClick={() => void searchQuery.refetch()}>Retry search</button></div> : null}
 
