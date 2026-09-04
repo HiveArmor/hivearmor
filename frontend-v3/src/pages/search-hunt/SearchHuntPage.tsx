@@ -7,7 +7,7 @@ import {
   BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleStop, Clock3, Code2, Columns3, Database, FileClock,
   FolderClock, History, Keyboard, ListFilter, Play, Save, ShieldAlert, Sparkles,
 } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 import { fetchHuntVerdict, fetchFieldProvenance } from './ai/huntAiService';
 import { EventDetailFlyout } from './components/EventDetailFlyout';
@@ -506,23 +506,11 @@ export function SearchHuntPage(): JSX.Element {
         }
       />
 
-      <p className="hunt-page__meta">
-        <Link to="/dashboard">Mission Control</Link>
-        <span aria-hidden="true">·</span>
-        <Link to="/alerts">Alerts</Link>
-        <span aria-hidden="true">·</span>
-        <Link to="/investigations">Investigations</Link>
-        <span aria-hidden="true">·</span>
-        <Link to="/incidents">Incidents</Link>
-        {!canPromote && (
-          <>
-            <span aria-hidden="true">·</span>
-            <span className="hunt-page__meta-warn" title={PROMOTE_DENIED}>Promote denied — {PROMOTE_DENIED}</span>
-          </>
-        )}
-      </p>
-
-      <p className="hunt-page__job-line">{SEARCH_HUNT_JOB_SENTENCE}</p>
+      {!canPromote && (
+        <p className="hunt-page__promote-warn" role="note">
+          <span className="hunt-page__meta-warn" title={PROMOTE_DENIED}>Promote denied — {PROMOTE_DENIED}</span>
+        </p>
+      )}
 
       {searchHuntFixtureMode && <div className="hunt-page__fixture" role="status"><span><strong>Design fixture:</strong> fictional normalized events are enabled for visual review.</span><span>Production never receives these records.</span></div>}
 
