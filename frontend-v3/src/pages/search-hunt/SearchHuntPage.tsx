@@ -139,6 +139,9 @@ export function SearchHuntPage(): JSX.Element {
   const [density, setDensity] = useRowDensity();
   const [selectedIndex, setSelectedIndex] = useState<HuntIndexScope>('all');
   const [fieldRailOpen, setFieldRailOpen] = useState(false);
+  // R3 one-row query/NL: focus is the toggle. Query pane is default-active; the other collapses to a chip.
+  const [activePane, setActivePane] = useState<'query' | 'nl'>('query');
+  const [queryExpandSignal, setQueryExpandSignal] = useState(0);
   const [managerPanelOpen, setManagerPanelOpen] = useState(false);
   const [managerInitialTab, setManagerInitialTab] = useState<'saved' | 'history'>('saved');
   const [columnsOpen, setColumnsOpen] = useState(false);
@@ -155,6 +158,7 @@ export function SearchHuntPage(): JSX.Element {
   const [actionEventIds, setActionEventIds] = useState<string[]>([]);
   const recordedSearchId = useRef<string | null>(null);
   const queryWorkspaceRef = useRef<HTMLDivElement | null>(null);
+  const nlInputRef = useRef<HTMLInputElement | null>(null);
   const [queryWorkspaceHeight, setQueryWorkspaceHeight] = useState(116);
   const epsStream = useEpsStream();
   const [promotionOpen, setPromotionOpen] = useState(false);
@@ -520,35 +524,92 @@ export function SearchHuntPage(): JSX.Element {
       {searchHuntFixtureMode && <div className="hunt-page__fixture" role="status"><span><strong>Design fixture:</strong> fictional normalized events are enabled for visual review.</span><span>Production never receives these records.</span></div>}
 
       <div className="hunt-query-workspace" ref={queryWorkspaceRef}>
-        <div className="hunt-query-workspace__editor">
-          <Suspense fallback={<div className="hunt-query-editor__loading">Loading query workspace…</div>}>
-            <QueryEditor value={query} onChange={setQuery} onExecute={() => runSearch()} fields={schemaQuery.data ?? []} disabled={searchQuery.isFetching && events.length === 0} />
-          </Suspense>
-        </div>
-        <div className="hunt-nl-strip" aria-label="Natural language assist">
-          <Sparkles size={13} aria-hidden="true" />
-          <input
-            type="text"
-            value={nlQuestion}
-            onChange={(event) => setNlQuestion(event.target.value)}
-            placeholder="Ask in plain language — e.g. failed logons from admin accounts in the last hour"
-            aria-label="Natural language hunt question"
-            disabled={nlMutation.isPending}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && nlQuestion.trim()) {
-                event.preventDefault();
-                nlMutation.mutate(nlQuestion.trim());
-              }
-            }}
-          />
-          <button
-            type="button"
-            className="hunt-control-button"
-            disabled={!nlQuestion.trim() || nlMutation.isPending}
-            onClick={() => nlMutation.mutate(nlQuestion.trim())}
+        <div className="hunt-query-lane" data-active-pane={activePane}>
+          <div
+            className="hunt-query-lane__pane hunt-query-lane__pane--query"
+            data-collapsed={activePane !== 'query' || undefined}
           >
-            {nlMutation.isPending ? 'Translating…' : 'Translate NL'}
-          </button>
+            {/* Monaco stays MOUNTED across collapse (preserves cursor/undo, avoids re-paying the lazy
+                load). When collapsed the editor is clipped and a chip button overlays it as the click
+                target that re-expands + re-layouts. */}
+            <div className="hunt-query-workspace__editor" aria-hidden={activePane !== 'query' || undefined}>
+              <Suspense fallback={<div className="hunt-query-editor__loading">Loading query workspace…</div>}>
+                <QueryEditor
+                  value={query}
+                  onChange={setQuery}
+                  onExecute={() => runSearch()}
+                  fields={schemaQuery.data ?? []}
+                  disabled={searchQuery.isFetching && events.length === 0}
+                  expandSignal={queryExpandSignal}
+                  onFocusChange={(focused) => { if (focused) setActivePane('query'); }}
+                />
+              </Suspense>
+            </div>
+            {activePane !== 'query' && (
+              <button
+                type="button"
+                className="hunt-query-lane__chip"
+                aria-expanded={false}
+                aria-label={query.trim() ? `KQL query editor, collapsed. Current query: ${query.trim()}. Activate to edit.` : 'KQL query editor, collapsed. Activate to edit.'}
+                title="KQL query editor"
+                onClick={() => { setActivePane('query'); setQueryExpandSignal((n) => n + 1); }}
+              >
+                <Code2 size={13} aria-hidden="true" />
+                <span className="hunt-query-lane__chip-label">KQL</span>
+                <span className="hunt-query-lane__chip-preview">{query.trim() || 'Edit query'}</span>
+              </button>
+            )}
+          </div>
+          <div
+            className="hunt-query-lane__pane hunt-query-lane__pane--nl"
+            data-collapsed={activePane !== 'nl' || undefined}
+          >
+            {/* The NL input is lightweight (no Monaco); conditional render is fine here. */}
+            {activePane === 'nl' ? (
+              <div className="hunt-nl-strip" aria-label="Natural language assist">
+                <Sparkles size={13} aria-hidden="true" />
+                <input
+                  ref={nlInputRef}
+                  type="text"
+                  value={nlQuestion}
+                  onChange={(event) => setNlQuestion(event.target.value)}
+                  placeholder="Ask in plain language — e.g. failed logons from admin accounts in the last hour"
+                  aria-label="Natural language hunt question"
+                  disabled={nlMutation.isPending}
+                  onFocus={() => setActivePane('nl')}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && nlQuestion.trim()) {
+                      event.preventDefault();
+                      nlMutation.mutate(nlQuestion.trim());
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="hunt-control-button"
+                  disabled={!nlQuestion.trim() || nlMutation.isPending}
+                  onClick={() => nlMutation.mutate(nlQuestion.trim())}
+                >
+                  {nlMutation.isPending ? 'Translating…' : 'Translate NL'}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="hunt-query-lane__chip hunt-query-lane__chip--nl"
+                aria-expanded={false}
+                aria-label="Natural language assist, collapsed. Activate to ask in plain language."
+                title="Ask in plain language"
+                onClick={() => {
+                  setActivePane('nl');
+                  window.requestAnimationFrame(() => nlInputRef.current?.focus());
+                }}
+              >
+                <Sparkles size={13} aria-hidden="true" />
+                <span className="hunt-query-lane__chip-label">Ask</span>
+              </button>
+            )}
+          </div>
         </div>
         {(nlError || nlProvenance) && (
           <div className="hunt-nl-provenance" role="status">
