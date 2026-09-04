@@ -15,6 +15,14 @@ export interface QueryBarProps {
   language?: 'kql';
   disabled?: boolean;
   placeholder?: string;
+  /** Notifies the parent when the editor gains/loses focus (drives the one-row active-pane state). */
+  onFocusChange?: (focused: boolean) => void;
+  /**
+   * Monotonic counter the parent bumps when the query pane transitions from collapsed to expanded.
+   * On change we re-measure Monaco (editor.layout()) and focus it — Monaco cannot size itself while
+   * clipped, so this is the explicit re-layout the collapse/expand model requires.
+   */
+  expandSignal?: number;
 }
 
 type MountedEditor = Parameters<NonNullable<React.ComponentProps<typeof Editor>['onMount']>>[0];
@@ -50,6 +58,8 @@ export function QueryBar({
   language = 'kql',
   disabled = false,
   placeholder = 'Search normalized events…',
+  onFocusChange,
+  expandSignal = 0,
 }: QueryBarProps): JSX.Element {
   const suggestionListId = useId();
   const shellRef = useRef<HTMLDivElement | null>(null);
@@ -64,6 +74,8 @@ export function QueryBar({
   const executeRef = useRef(onExecute);
   const changeRef = useRef(onChange);
   const disabledRef = useRef(disabled);
+  const focusChangeRef = useRef(onFocusChange);
+  focusChangeRef.current = onFocusChange;
   const [editorHeight, setEditorHeight] = useState(38);
   const [focused, setFocused] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
@@ -100,6 +112,22 @@ export function QueryBar({
     document.addEventListener('pointerdown', closeOnOutsidePointer);
     return () => document.removeEventListener('pointerdown', closeOnOutsidePointer);
   }, []);
+
+  // When the parent expands this pane from its collapsed (clipped) state, Monaco must be told to
+  // re-measure — it cannot compute its own layout while width-clipped. Skip the initial mount (0).
+  useEffect(() => {
+    if (expandSignal === 0) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+    // Two rAFs: let the flex row settle to the expanded width before Monaco measures it.
+    const raf1 = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        editor.layout();
+        editor.focus();
+      });
+    });
+    return () => window.cancelAnimationFrame(raf1);
+  }, [expandSignal]);
 
   const applySuggestion = useCallback((suggestion: HuntQuerySuggestion): void => {
     changeRef.current(suggestion.nextValue);
@@ -190,9 +218,9 @@ export function QueryBar({
       if (!disabledRef.current) executeRef.current();
     });
     focusDisposable.current?.dispose();
-    focusDisposable.current = editor.onDidFocusEditorText(() => setFocused(true));
+    focusDisposable.current = editor.onDidFocusEditorText(() => { setFocused(true); focusChangeRef.current?.(true); });
     blurDisposable.current?.dispose();
-    blurDisposable.current = editor.onDidBlurEditorText(() => window.setTimeout(() => setFocused(false), 100));
+    blurDisposable.current = editor.onDidBlurEditorText(() => window.setTimeout(() => { setFocused(false); focusChangeRef.current?.(false); }, 100));
 
     themeObserver.current?.disconnect();
     themeObserver.current = new MutationObserver(() => applyTheme(monaco));
