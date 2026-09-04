@@ -19,7 +19,6 @@ import {
   Scale,
   Search,
   Shield,
-  X,
 } from 'lucide-react';
 
 import {
@@ -30,6 +29,7 @@ import {
 } from '../searchHunt.service';
 import type { HuntPromotionApproval, PromotionPreview, PromotionResult } from '../searchHunt.types';
 
+import { HaModal } from '@/components/ha-modal/HaModal';
 import { ROLE_LABELS, ROLES } from '@/lib/roles';
 
 const PROMOTE_DENIED = `Required permission: ${ROLE_LABELS[ROLES.ANALYST]}, ${ROLE_LABELS[ROLES.SOC_MANAGER]}, or ${ROLE_LABELS[ROLES.ADMIN]}`;
@@ -289,21 +289,11 @@ export function PromotionModal({
   const isBusy = executeMutation.isPending || approvalMutation.isPending;
 
   return (
-    <div className="hunt-promotion-overlay" role="dialog" aria-modal="true" aria-labelledby="promotion-modal-title">
-      <div className="hunt-promotion-backdrop" onClick={handleClose} />
-      <div className="hunt-promotion-modal">
-        <header className="hunt-promotion-modal__header">
-          <div>
-            <span className="hunt-promotion-modal__label">PROMOTION</span>
-            <h2 id="promotion-modal-title">
-              <ActionIcon size={16} />
-              {actionMeta.title}
-            </h2>
-          </div>
-          <button type="button" onClick={handleClose} aria-label="Close promotion modal">
-            <X size={17} />
-          </button>
-        </header>
+    <HaModal isOpen onClose={handleClose} title={actionMeta.title} width={640} className="hunt-promotion-modal">
+        <div className="hunt-promotion-modal__intro">
+          <span className="hunt-promotion-modal__label">PROMOTION</span>
+          <span className="hunt-promotion-modal__intro-icon"><ActionIcon size={16} /></span>
+        </div>
 
         <div className="hunt-promotion-modal__body">
           {isLoading && (
@@ -483,7 +473,6 @@ export function PromotionModal({
             </button>
           </footer>
         )}
-      </div>
-    </div>
+    </HaModal>
   );
 }
