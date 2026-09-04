@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { EChartsOption } from 'echarts';
 import {
   BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleStop, Clock3, Code2, Columns3, Database, FileClock,
-  FolderClock, History, Keyboard, ListFilter, Play, Save, ShieldAlert, Sparkles,
+  Keyboard, Library, ListFilter, MoreHorizontal, Play, Save, ShieldAlert, Sparkles,
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -83,6 +83,11 @@ const QUERY_LANGUAGES = [
   { id: 'esql', label: 'ES|QL', detail: 'Tabular aggregation contract required', available: false },
   { id: 'opensearch_dsl', label: 'OpenSearch DSL', detail: 'Restricted server-side validation required', available: false },
 ] as const;
+// Live languages gate the control shape: with a single available language the control row renders a
+// static chip labelled with that language instead of a picker. Re-introduce a picker dropdown (see git
+// history for the removed .hunt-language-picker markup) when a second parser advertises available:true.
+const AVAILABLE_QUERY_LANGUAGES = QUERY_LANGUAGES.filter((language) => language.available);
+const SINGLE_QUERY_LANGUAGE_LABEL = AVAILABLE_QUERY_LANGUAGES[0]?.label ?? 'KQL';
 function makeRequest(
   query: string,
   timeRange: TimeRange,
@@ -141,7 +146,7 @@ export function SearchHuntPage(): JSX.Element {
     { field: '@timestamp', direction: 'desc' },
     { field: '_id', direction: 'asc' },
   ]);
-  const [languageOpen, setLanguageOpen] = useState(false);
+  const [overflowOpen, setOverflowOpen] = useState(false);
   const [pageCursors, setPageCursors] = useState<Array<string | null>>([null]);
   const [pageIndex, setPageIndex] = useState(0);
   const [firstPageSummary, setFirstPageSummary] = useState<HuntSearchResponse | null>(null);
@@ -374,7 +379,7 @@ export function SearchHuntPage(): JSX.Element {
   const openManager = useCallback((tab: 'saved' | 'history'): void => {
     setManagerInitialTab(tab);
     setManagerPanelOpen(true);
-    setLanguageOpen(false);
+    setOverflowOpen(false);
   }, []);
 
   const handleManagerLoadQuery = useCallback((q: string): void => {
@@ -404,7 +409,7 @@ export function SearchHuntPage(): JSX.Element {
         setFlyoutEventId(events[nextIndex]?.id ?? null);
       }
       if (event.key === 'Escape') {
-        setColumnsOpen(false); setLanguageOpen(false); setFlyoutEventId(null); setManagerPanelOpen(false);
+        setColumnsOpen(false); setOverflowOpen(false); setFlyoutEventId(null); setManagerPanelOpen(false);
       }
     };
     document.addEventListener('keydown', handleShortcuts);
@@ -564,35 +569,33 @@ export function SearchHuntPage(): JSX.Element {
         )}
         <div className="hunt-query-workspace__controls" aria-label="Search controls">
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setFieldRailOpen((open) => !open)} aria-pressed={fieldRailOpen} aria-label="Toggle filters and field values" title="Filters and field values"><ListFilter size={14} /></button>
-          <div className="hunt-language-picker">
-            <button type="button" className="hunt-control-button" onClick={() => setLanguageOpen((open) => !open)} aria-expanded={languageOpen} aria-haspopup="menu" title="Query language"><Code2 size={13} />KQL<ChevronDown size={11} /></button>
-            {languageOpen && <div className="hunt-language-picker__menu" role="menu" aria-label="Query language">
-              {QUERY_LANGUAGES.map((language) => <button key={language.id} type="button" role="menuitem" disabled={!language.available} onClick={() => setLanguageOpen(false)}>
-                <span><strong>{language.label}</strong><small>{language.detail}</small></span>{language.available ? <Check size={13} /> : <em>Unavailable</em>}
-              </button>)}
-              <p>Only server-advertised languages are enabled. This deployment currently supports KQL.</p>
-            </div>}
-          </div>
+          <span className="hunt-language-chip" title={`Query language — only ${SINGLE_QUERY_LANGUAGE_LABEL} is available in this deployment`}><Code2 size={13} aria-hidden="true" />{SINGLE_QUERY_LANGUAGE_LABEL}</span>
           <TimeRangeSelector value={timeRange} onChange={setTimeRange} disabled={searchQuery.isFetching && events.length === 0} />
           <IndexScopePicker
             value={selectedIndex}
             onChange={(next) => {
               setSelectedIndex(next);
-              setLanguageOpen(false);
             }}
             disabled={searchQuery.isFetching && events.length === 0}
           />
-          <button type="button" className="hunt-control-button" onClick={() => openManager('history')} aria-expanded={managerPanelOpen && managerInitialTab === 'history'}><History size={13} />History</button>
-          <button type="button" className="hunt-control-button" onClick={() => openManager('saved')} aria-expanded={managerPanelOpen && managerInitialTab === 'saved'}><FolderClock size={13} />Saved</button>
-          <button type="button" className="hunt-control-button" onClick={() => setManagerPanelOpen((open) => !open)} aria-expanded={managerPanelOpen} title="Search manager panel"><Database size={13} />Manager</button>
+          <button type="button" className="hunt-control-button" onClick={() => openManager('saved')} aria-expanded={managerPanelOpen} aria-haspopup="dialog" title="Saved hunts and search history"><Library size={13} />Library<ChevronDown size={11} /></button>
           <button type="button" className="hunt-control-button" onClick={() => setSaveOpen(true)} disabled={!query.trim() || !canSaveQuery} title={!canSaveQuery ? SAVE_DENIED : !query.trim() ? 'Enter a reusable query before saving' : 'Save query'}><Save size={13} />Save</button>
-          <button type="button" className="hunt-control-button" onClick={() => setCapabilitiesOpen((open) => !open)} aria-expanded={capabilitiesOpen} title="Query language reference"><BookOpen size={13} />Help</button>
-          <HuntAiControls
-            showAiHand={showAiHand}
-            onToggleAiHand={setShowAiHand}
-            autonomy={autonomy}
-            onAutonomyChange={setAutonomy}
-          />
+          <div className="hunt-overflow">
+            <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setOverflowOpen((open) => !open)} aria-expanded={overflowOpen} aria-haspopup="menu" aria-label="More search controls" title="More controls"><MoreHorizontal size={15} /></button>
+            {overflowOpen && (
+              <div className="hunt-overflow__menu" role="menu" aria-label="More search controls">
+                <button type="button" role="menuitem" onClick={() => { setCapabilitiesOpen((open) => !open); setOverflowOpen(false); }}><BookOpen size={14} aria-hidden="true" />Query language reference</button>
+                <div className="hunt-overflow__section" role="group" aria-label="AI assistance modes">
+                  <HuntAiControls
+                    showAiHand={showAiHand}
+                    onToggleAiHand={setShowAiHand}
+                    autonomy={autonomy}
+                    onAutonomyChange={setAutonomy}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
           <span className="hunt-query-workspace__spacer" />
           {searchQuery.isFetching ? <button type="button" className="hunt-button hunt-button--stop" onClick={stopSearch}><CircleStop size={14} />Cancel</button> : <button type="button" className="hunt-button hunt-button--primary" onClick={() => runSearch()} title={!query.trim() ? 'Load the newest 100 events in the selected scope' : 'Run KQL hunt'}><Play size={14} />Run search</button>}
         </div>
