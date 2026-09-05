@@ -1,5 +1,11 @@
 .hunt-page {
-  --hunt-sticky-query-height: 116px;
+  /* Sticky offset for the results toolbar + field rail INSIDE the scroll region. The query workspace
+     is a fixed sibling ABOVE the scroll region, so the only thing that scrolls past the toolbar is the
+     histogram — the offset must equal the histogram height (--hunt-histogram-height), not the whole
+     header stack. A stale 116px here left a ~20px gap above the toolbar and hid the grid's first header
+     row beneath it. Keep this in lockstep with .hunt-histogram height. */
+  --hunt-histogram-height: 96px;
+  --hunt-sticky-query-height: var(--hunt-histogram-height);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -65,6 +71,10 @@
 .hunt-page__shortcut { gap: 6px; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); white-space: nowrap; }
 /* Time-range + index scope pickers relocated to the page-header actions (right of the title). */
 .hunt-page__scope-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+/* Match the two scope-control triggers to a single height (28px) so the title row reads level —
+   scoped to the hunt page, leaving the shared TimeRangeSelector untouched for other consumers. */
+.hunt-page__scope-controls .ha-time-range__trigger,
+.hunt-page__scope-controls .hunt-index-picker__trigger { min-height: 28px; }
 
 .hunt-page__promote-warn {
   margin: 0;
@@ -189,7 +199,12 @@
 .hunt-button--primary:hover { border-color: var(--ha-action-primary-hover); background: var(--ha-action-primary-hover); color: var(--ha-foreground-on-action); }
 .hunt-button--stop { border-color: color-mix(in srgb, var(--ha-severity-critical) 55%, var(--ha-border-default)); color: var(--ha-severity-critical); }
 
-.hunt-query-workspace { position: relative; z-index: 40; flex: 0 0 auto; max-width: 100%; overflow-x: hidden; border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 8px 18px color-mix(in srgb, var(--ha-surface-app) 34%, transparent); }
+/* overflow MUST stay visible: the workspace hosts absolutely-positioned popovers (autocomplete
+   suggestions, Library, capabilities, index menu) that drop DOWN past its bottom edge and must float
+   over the results region below. overflow-x:hidden here would force overflow-y:auto (CSS spec) and clip
+   the dropdown inside the box — the #216/#219 horizontal-overflow guard now lives on the control row
+   (.hunt-query-workspace__controls), the only child that can grow horizontally. */
+.hunt-query-workspace { position: relative; z-index: 40; flex: 0 0 auto; max-width: 100%; overflow: visible; border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 8px 18px color-mix(in srgb, var(--ha-surface-app) 34%, transparent); }
 .hunt-query-workspace__editor { padding: 7px 10px 0; }
 .hunt-query-editor-shell { position: relative; z-index: 2; }
 .hunt-query-editor { min-height: 38px; max-height: 124px; overflow: hidden; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control) var(--ha-radius-control) 0 0; background: var(--ha-surface-input); }
@@ -447,7 +462,7 @@
 .hunt-field-value-pagination button:disabled { color: var(--ha-foreground-disabled); cursor: default; }
 
 .hunt-results { position: relative; display: flex; min-width: 0; min-height: 100%; flex-direction: column; overflow: visible; background: var(--ha-surface-app); }
-.hunt-histogram { position: relative; z-index: 1; height: 96px; flex: 0 0 96px; overflow: hidden; border-bottom: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
+.hunt-histogram { position: relative; z-index: 1; height: var(--hunt-histogram-height); flex: 0 0 var(--hunt-histogram-height); overflow: hidden; border-bottom: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
 /* Compact AI-verdict banner — opens the full verdict in a right-side panel (HuntVerdictPanel) instead
    of an inline scrolling card, keeping the results grid unobstructed. */
 .hunt-verdict-banner {
@@ -509,7 +524,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-height: 26px;
+  min-height: 28px;
   padding: 3px 10px;
   border: 0;
   background: var(--ha-surface-input);
