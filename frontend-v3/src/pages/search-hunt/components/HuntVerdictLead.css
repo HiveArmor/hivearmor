@@ -25,6 +25,17 @@
 .hunt-verdict-lead__toggle-peek { color: var(--ha-foreground-secondary); font-weight: 500; }
 .hunt-verdict-lead[data-collapsed] { margin-bottom: 8px; }
 
+/* Cap the expanded verdict so it LEADS without pushing the events grid off-screen (audit F-1):
+   the headline + first reasoning stay visible; overflow scrolls inside the card, grid stays in view. */
+.hunt-verdict-lead__scroll {
+  max-height: 42vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.hunt-verdict-lead__scroll::-webkit-scrollbar { width: var(--ha-scrollbar-size, 4px); }
+.hunt-verdict-lead__scroll::-webkit-scrollbar-thumb { background: var(--ha-border-strong); border-radius: 4px; }
+
 /* Reasoning steps with clickable row citations (move 3) */
 .hunt-verdict-lead__reasoning {
   list-style: none;
