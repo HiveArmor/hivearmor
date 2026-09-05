@@ -197,31 +197,23 @@
 .hunt-query-editor[data-disabled] { opacity: .7; }
 
 /* R3 — Query + NL in one focus-driven row. Active pane grows; the other collapses to a chip. */
-.hunt-query-lane { display: flex; align-items: flex-start; gap: 8px; padding: 7px 10px 4px; }
-.hunt-query-lane__pane { position: relative; min-width: 0; }
-.hunt-query-lane__pane[data-collapsed] { flex: 0 0 auto; }
-/* The collapsed QUERY pane holds a full-query preview chip — let it take the leftover width and
-   shrink below its content so the preview ellipsizes instead of pushing the page into overflow. */
-.hunt-query-lane__pane--query[data-collapsed] { flex: 1 1 auto; min-width: 0; }
-.hunt-query-lane__pane:not([data-collapsed]) { flex: 1 1 auto; }
-/* Neutralize the panes' own outer padding — the lane owns spacing now. */
-.hunt-query-lane .hunt-query-workspace__editor { padding: 0; }
-.hunt-query-lane .hunt-nl-strip { padding: 0; }
-/* Collapsed query pane: keep Monaco MOUNTED but clip it to zero footprint (no width transition on the
-   Monaco container — that breaks its measurement) and let the chip overlay stand in as the control. */
-.hunt-query-lane__pane--query[data-collapsed] .hunt-query-workspace__editor { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
-.hunt-query-lane__chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; min-height: 38px; padding: 4px 10px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-input); color: var(--ha-foreground-secondary); cursor: pointer; font: var(--ha-type-compact); transition: opacity .12s ease, border-color .12s ease; }
-/* The query preview chip must stretch to fill its (shrinkable) collapsed pane so the preview ellipsizes. */
-.hunt-query-lane__pane--query[data-collapsed] .hunt-query-lane__chip { display: flex; width: 100%; }
-.hunt-query-lane__chip:hover { border-color: var(--ha-border-strong); color: var(--ha-foreground-primary); }
-.hunt-query-lane__chip:focus-visible { outline: none; border-color: var(--ha-border-focus); box-shadow: inset 0 0 0 1px var(--ha-border-focus); }
-.hunt-query-lane__chip svg { flex: 0 0 auto; color: var(--ha-foreground-tertiary); }
-.hunt-query-lane__chip-label { flex: 0 0 auto; font-weight: 600; letter-spacing: .02em; }
-.hunt-query-lane__chip-preview { flex: 1 1 auto; min-width: 0; overflow: hidden; color: var(--ha-foreground-tertiary); font-family: var(--ha-font-mono); text-overflow: ellipsis; white-space: nowrap; }
-/* NL chip & pane wear intelligence-violet (sanctioned AI-provenance use). */
-.hunt-query-lane__chip--nl { color: var(--ha-intelligence-primary, var(--ha-action-secondary)); }
-.hunt-query-lane__chip--nl svg { color: var(--ha-intelligence-primary, var(--ha-action-secondary)); }
-@media (prefers-reduced-motion: reduce) { .hunt-query-lane__chip { transition: none; } }
+/* R4 — full-width KQL editor + NL assist BELOW it (no query/NL width-swap, no collapse chip). */
+.hunt-query-workspace__editor { padding: 7px 10px 0; }
+/* NL assist row: downward reveal (grid-rows 0fr→1fr), so it can never contend for the editor's width. */
+.hunt-nl-assist { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .16s ease; background: color-mix(in srgb, var(--ha-intelligence-primary, var(--ha-action-secondary)) 6%, var(--ha-surface-panel)); }
+.hunt-nl-assist[data-open] { grid-template-rows: 1fr; border-top: 1px solid color-mix(in srgb, var(--ha-intelligence-primary, var(--ha-action-secondary)) 34%, var(--ha-border-subtle)); }
+.hunt-nl-assist__inner { overflow: hidden; }
+.hunt-nl-assist[data-open] .hunt-nl-assist__inner { padding: 8px 10px 2px; }
+.hunt-nl-assist .hunt-nl-strip { padding: 0; }
+.hunt-nl-assist__hint { margin: 6px 2px 0; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
+.hunt-nl-assist__hint code { padding: 0 4px; border-radius: var(--ha-radius-sm); background: var(--ha-surface-elevated); font-family: var(--ha-font-mono); }
+@media (prefers-reduced-motion: reduce) { .hunt-nl-assist { transition: none; } }
+/* Ask + Run pair as one action group on the right of the control row. */
+.hunt-query-workspace__actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+/* AI-assist control button wears intelligence-violet (sanctioned AI-provenance use). */
+.hunt-control-button--ai { color: var(--ha-intelligence-primary, var(--ha-action-secondary)); border-color: color-mix(in srgb, var(--ha-intelligence-primary, var(--ha-action-secondary)) 40%, var(--ha-border-default)); }
+.hunt-control-button--ai svg { color: var(--ha-intelligence-primary, var(--ha-action-secondary)); }
+.hunt-control-button--ai[aria-pressed='true'] { background: color-mix(in srgb, var(--ha-intelligence-primary, var(--ha-action-secondary)) 16%, transparent); color: var(--ha-intelligence-primary, var(--ha-action-secondary)); }
 .hunt-query-editor__loading { display: flex; height: 38px; align-items: center; padding: 7px 12px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-input); color: var(--ha-foreground-tertiary); font-family: var(--ha-font-mono); }
 .hunt-query-editor__placeholder { position: absolute; top: 11px; left: 10px; overflow: hidden; max-width: calc(100% - 24px); color: var(--ha-foreground-tertiary); font: 10.5px/1.35 var(--ha-font-mono); pointer-events: none; text-overflow: ellipsis; white-space: nowrap; }
 .hunt-query-suggestions { position: absolute; z-index: 100; top: calc(100% + 4px); right: 0; left: 0; display: grid; max-height: 310px; overflow-y: auto; padding: 4px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-panel); background: var(--ha-surface-overlay); box-shadow: var(--ha-shadow-medium); scrollbar-width: thin; }
