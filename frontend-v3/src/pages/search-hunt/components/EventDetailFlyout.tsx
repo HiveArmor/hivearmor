@@ -99,6 +99,24 @@ function getFieldIcon(type: string): typeof Globe {
   return TYPE_BADGE_ICONS[type] ?? Hash;
 }
 
+/**
+ * Semantic icon for a field's VALUE, derived from the field key (user→User, host→Server,
+ * ip→Network, hash→Hash, process→Terminal, port→Link2, timestamp→Clock, domain/url→Globe).
+ * Returns null when no meaningful icon applies, so plain fields stay uncluttered.
+ */
+function getValueIcon(fieldKey: string, type: string): typeof Globe | null {
+  const k = fieldKey.toLowerCase();
+  if (k.includes('user') || k.endsWith('.username') || k === 'user') return User;
+  if (k.includes('host') || k.includes('computer') || k.includes('hostname')) return Server;
+  if (k.endsWith('.ip') || k.includes('ipaddress') || type === 'ip') return Network;
+  if (k.includes('hash') || k.includes('sha') || k.includes('md5')) return Hash;
+  if (k.includes('process') || k.includes('command') || k.includes('executable')) return Terminal;
+  if (k.includes('port')) return Link2;
+  if (k.includes('domain') || k.includes('url') || k.includes('dns')) return Globe;
+  if (type === 'timestamp' || k.includes('timestamp') || k.endsWith('at')) return Clock;
+  return null;
+}
+
 function getPivotIcon(icon: string): typeof Search {
   return PIVOT_ICONS[icon] ?? Search;
 }
@@ -296,6 +314,7 @@ export function EventDetailFlyout({
                   <dl className="event-flyout__fields">
                     {groupFields.map((field) => {
                       const Icon = getFieldIcon(field.type);
+                      const ValueIcon = getValueIcon(field.key, field.type);
                       const isRedacted = redacted.has(field.key);
                       const canFilter = !isRedacted && Boolean(field.includeQuery);
                       return (
@@ -304,14 +323,16 @@ export function EventDetailFlyout({
                           className={`event-flyout__field ${emphasisClass(field.emphasis)}`}
                         >
                           <dt>
-                            <span className="event-flyout__type-badge" data-type={field.type}>
-                              <Icon size={10} />
-                              {field.type}
+                            <span className="event-flyout__type-badge" data-type={field.type} title={field.type} aria-label={`Type: ${field.type}`}>
+                              <Icon size={12} aria-hidden="true" />
                             </span>
-                            {field.key}
+                            <span className="event-flyout__field-key" title={field.key}>{field.key}</span>
                           </dt>
                           <dd>
-                            <span className="event-flyout__value">{field.value}</span>
+                            <span className="event-flyout__value">
+                              {ValueIcon && field.value ? <ValueIcon size={12} className="event-flyout__value-icon" aria-hidden="true" /> : null}
+                              <span className="event-flyout__value-text">{field.value}</span>
+                            </span>
                             {canFilter && (
                               <span className="event-flyout__field-actions">
                                 <button

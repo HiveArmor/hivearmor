@@ -76,4 +76,17 @@ describe('HuntVerdictLead', () => {
     );
     expect(await screen.findByRole('status')).toHaveTextContent(/track record/i);
   });
+
+  it('collapses and expands the verdict body via the toggle', () => {
+    render(<HuntVerdictLead verdict={VERDICT} onCiteRows={vi.fn()} onPromote={vi.fn()} />);
+    // Expanded by default — the trust-calibration line is present.
+    expect(screen.getByText(/agreed with analysts/i)).toBeInTheDocument();
+    const toggle = screen.getByRole('button', { name: /ai verdict/i });
+    fireEvent.click(toggle);
+    // Collapsed — body (and its trust line) is unmounted.
+    expect(screen.queryByText(/agreed with analysts/i)).not.toBeInTheDocument();
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggle);
+    expect(screen.getByText(/agreed with analysts/i)).toBeInTheDocument();
+  });
 });
