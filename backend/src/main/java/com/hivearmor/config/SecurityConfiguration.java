@@ -2,7 +2,6 @@ package com.hivearmor.config;
 
 import com.hivearmor.repository.UserRepository;
 import com.hivearmor.security.AuthoritiesConstants;
-import com.hivearmor.security.PlaybookSseTokenFilter;
 import com.hivearmor.security.api_key.ApiKeyConfigurer;
 import com.hivearmor.security.api_key.ApiKeyFilter;
 import com.hivearmor.security.internalApiKey.InternalApiKeyConfigurer;
@@ -192,7 +191,6 @@ public class SecurityConfiguration {
                         .failureHandler(new Saml2LoginFailureHandler())
                 )
                 .with(new JWTConfigurer(tokenProvider), c -> {})
-                .addFilterBefore(new PlaybookSseTokenFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
                 .with(new InternalApiKeyConfigurer(internalApiKeyProvider, telemetryAgentIdentityFilter), c -> {})
                 .with(new ApiKeyConfigurer(apiKeyFilter), c -> {})
                 .addFilterAfter(haDeprecationFilter, org.springframework.security.web.access.intercept.AuthorizationFilter.class);

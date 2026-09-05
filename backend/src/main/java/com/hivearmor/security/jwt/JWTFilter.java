@@ -21,8 +21,6 @@ public class JWTFilter extends OncePerRequestFilter {
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
 
-    public static final String AUTHORIZATION_TOKEN = "access_token";
-
     private final TokenProvider tokenProvider;
 
     public JWTFilter(TokenProvider tokenProvider) {
@@ -43,14 +41,16 @@ public class JWTFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Resolves the JWT from the Authorization header ONLY. The legacy {@code ?access_token=} query
+     * fallback was removed in B0-5c: a bearer credential in a URL leaks into access logs, browser
+     * history, and Referer headers. All live SSE consumers now send the header via a fetch-based
+     * reader (see frontend-v3 lib/fetchEventSource.ts).
+     */
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
-        }
-        String jwt = request.getParameter(AUTHORIZATION_TOKEN);
-        if (StringUtils.hasText(jwt)) {
-            return jwt;
         }
         return null;
     }
