@@ -507,13 +507,21 @@ export function SearchHuntPage(): JSX.Element {
   // ---- Phase B1: AI-native surface (contract-first, mocked until the agent backend ships) ----
   const [showAiHand, setShowAiHand] = useState(false);
   const [autonomy, setAutonomy] = useState<HuntAutonomy>('suggest');
-  const completedSearchId = !searchQuery.isFetching && hasResults ? (summary?.searchId ?? null) : null;
+  // The search id the AI surfaces are scoped to. Prefer the completed search; while a NEW search is
+  // fetching but PREVIOUS results are still on screen (staleVisible), retain the last id so the
+  // verdict/provenance don't unmount and flash away on every Run search — they show as stale until
+  // the new verdict arrives, matching the keep-previous behaviour of the results grid.
+  const lastCompletedSearchId = useRef<string | null>(null);
+  const liveCompletedSearchId = !searchQuery.isFetching && hasResults ? (summary?.searchId ?? null) : null;
+  if (liveCompletedSearchId) lastCompletedSearchId.current = liveCompletedSearchId;
+  const completedSearchId = liveCompletedSearchId ?? (staleVisible ? lastCompletedSearchId.current : null);
 
   const verdictQuery = useQuery({
     queryKey: ['hunt-verdict', completedSearchId],
     queryFn: () => fetchHuntVerdict({ searchId: completedSearchId as string }),
     enabled: Boolean(completedSearchId),
     staleTime: 60_000,
+    placeholderData: (previous) => previous,
     retry: false,
   });
   const fieldProvenanceQuery = useQuery({
@@ -521,6 +529,7 @@ export function SearchHuntPage(): JSX.Element {
     queryFn: () => fetchFieldProvenance(completedSearchId as string),
     enabled: Boolean(completedSearchId),
     staleTime: 60_000,
+    placeholderData: (previous) => previous,
     retry: false,
   });
   // FINDING-03: the AI surfaces must be HONEST. They engage only when the AI is genuinely available

@@ -243,6 +243,10 @@ export async function fetchHuntEvent(
   view: 'highlighted' | 'raw',
   searchId: string,
 ): Promise<HuntEventDetailResponse> {
+  if (fixtureMode) {
+    const { getFoundationHuntEventResponse } = await import('@/pages/search-hunt/searchHunt.fixtures');
+    return getFoundationHuntEventResponse(eventId, view);
+  }
   return apiClient.get<HuntEventDetailResponse>(`/ha-hunts/events/${encodeURIComponent(eventId)}`, {
     params: { view, searchId },
   });
