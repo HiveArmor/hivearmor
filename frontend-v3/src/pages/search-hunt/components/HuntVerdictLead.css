@@ -28,7 +28,7 @@
 /* Cap the expanded verdict so it LEADS without pushing the events grid off-screen (audit F-1):
    the headline + first reasoning stay visible; overflow scrolls inside the card, grid stays in view. */
 .hunt-verdict-lead__scroll {
-  max-height: 42vh;
+  max-height: 26vh;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
