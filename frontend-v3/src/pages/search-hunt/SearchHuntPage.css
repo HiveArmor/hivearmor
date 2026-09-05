@@ -448,6 +448,48 @@
 
 .hunt-results { position: relative; display: flex; min-width: 0; min-height: calc(100dvh - var(--ha-masthead-height) - 28px); flex-direction: column; overflow: visible; background: var(--ha-surface-app); }
 .hunt-histogram { position: relative; z-index: 1; height: 96px; flex: 0 0 96px; overflow: hidden; border-bottom: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
+/* Compact AI-verdict banner — opens the full verdict in a right-side panel (HuntVerdictPanel) instead
+   of an inline scrolling card, keeping the results grid unobstructed. */
+.hunt-verdict-banner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: calc(100% - 20px);
+  margin: 10px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--ha-intelligence-primary) 40%, var(--ha-border-default));
+  border-radius: var(--ha-radius-panel, 8px);
+  background: var(--ha-fill-intelligence-subtle);
+  color: var(--ha-foreground-secondary);
+  cursor: pointer;
+  font: var(--ha-type-compact);
+  text-align: left;
+}
+.hunt-verdict-banner:hover { border-color: var(--ha-intelligence-primary); }
+.hunt-verdict-banner:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ha-border-focus); }
+.hunt-verdict-banner__glyph { color: var(--ha-intelligence-strong, var(--ha-intelligence-primary)); }
+.hunt-verdict-banner__label { color: var(--ha-intelligence-strong, var(--ha-intelligence-primary)); font-weight: 680; }
+.hunt-verdict-banner__chip {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-primary);
+  font-weight: 640;
+  text-transform: capitalize;
+}
+.hunt-verdict-banner__chip--suspicious, .hunt-verdict-banner__chip--malicious { color: var(--ha-severity-high); }
+.hunt-verdict-banner__conf { flex: 0 0 auto; color: var(--ha-intelligence-strong, var(--ha-intelligence-primary)); font-weight: 620; }
+.hunt-verdict-banner__peek {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ha-foreground-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hunt-verdict-banner__cta { flex: 0 0 auto; color: var(--ha-action-secondary); font-weight: 620; }
+
 /* Honest AI-verdict-unavailable strip — shown instead of a fabricated verdict when the AI service
    is not configured or autonomy is Off. Intelligence-violet marks the AI provenance context. */
 .hunt-verdict-unavailable { display: flex; align-items: center; gap: 6px; margin: 10px; padding: 8px 12px; border: 1px dashed var(--ha-border-default); border-radius: var(--ha-radius-panel, 8px); background: var(--ha-fill-intelligence-subtle); color: var(--ha-foreground-secondary); font: var(--ha-type-compact); }

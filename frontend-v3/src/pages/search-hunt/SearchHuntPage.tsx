@@ -14,7 +14,7 @@ import { EventDetailFlyout } from './components/EventDetailFlyout';
 import { FieldBrowser } from './components/FieldBrowser';
 import { HuntActionDrawer } from './components/HuntActionDrawer';
 import { HuntAiControls, type HuntAutonomy } from './components/HuntAiControls';
-import { HuntVerdictLead } from './components/HuntVerdictLead';
+import { HuntVerdictPanel } from './components/HuntVerdictPanel';
 import {
   huntIndexScopeLabel,
   IndexScopePicker,
@@ -126,6 +126,7 @@ export function SearchHuntPage(): JSX.Element {
     ));
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [flyoutEventId, setFlyoutEventId] = useState<string | null>(null);
+  const [verdictPanelOpen, setVerdictPanelOpen] = useState(false);
   // Set when a downstream call (event flyout / field rail) reports the search snapshot has expired,
   // so the execution strip stops claiming a green "Query complete" for a dead session.
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -759,11 +760,20 @@ export function SearchHuntPage(): JSX.Element {
 
           {!permissionDenied && !(searchQuery.isError && events.length === 0) && <>
             {verdict ? (
-              <HuntVerdictLead
-                verdict={verdict}
-                onCiteRows={handleCiteRows}
-                onPromote={handlePromoteFromVerdict}
-              />
+              <button
+                type="button"
+                className="hunt-verdict-banner"
+                onClick={() => setVerdictPanelOpen(true)}
+                aria-haspopup="dialog"
+                aria-expanded={verdictPanelOpen}
+              >
+                <span className="hunt-verdict-banner__glyph" aria-hidden="true">✦</span>
+                <span className="hunt-verdict-banner__label">AI Verdict</span>
+                <span className={`hunt-verdict-banner__chip hunt-verdict-banner__chip--${verdict.verdict}`}>{verdict.verdict}</span>
+                <span className="hunt-verdict-banner__conf">{Math.round((verdict.confidence <= 1 ? verdict.confidence * 100 : verdict.confidence))}% confidence</span>
+                <span className="hunt-verdict-banner__peek">{verdict.summary}</span>
+                <span className="hunt-verdict-banner__cta">View analysis →</span>
+              </button>
             ) : hasResults && !aiActive ? (
               <p className="hunt-verdict-unavailable" role="note">
                 <span aria-hidden="true">✦</span>{' '}
@@ -886,6 +896,14 @@ export function SearchHuntPage(): JSX.Element {
         onFilterOut={applyFieldFilter}
         onAction={openAction}
       />
+      {verdict && verdictPanelOpen && (
+        <HuntVerdictPanel
+          verdict={verdict}
+          onCiteRows={(refs) => { setVerdictPanelOpen(false); handleCiteRows(refs); }}
+          onPromote={handlePromoteFromVerdict}
+          onClose={() => setVerdictPanelOpen(false)}
+        />
+      )}
     </section>
   );
 }
