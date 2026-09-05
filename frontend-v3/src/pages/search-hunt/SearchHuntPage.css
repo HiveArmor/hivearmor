@@ -189,7 +189,7 @@
 .hunt-button--primary:hover { border-color: var(--ha-action-primary-hover); background: var(--ha-action-primary-hover); color: var(--ha-foreground-on-action); }
 .hunt-button--stop { border-color: color-mix(in srgb, var(--ha-severity-critical) 55%, var(--ha-border-default)); color: var(--ha-severity-critical); }
 
-.hunt-query-workspace { position: relative; z-index: 40; flex: 0 0 auto; border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 8px 18px color-mix(in srgb, var(--ha-surface-app) 34%, transparent); }
+.hunt-query-workspace { position: relative; z-index: 40; flex: 0 0 auto; max-width: 100%; overflow-x: hidden; border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 8px 18px color-mix(in srgb, var(--ha-surface-app) 34%, transparent); }
 .hunt-query-workspace__editor { padding: 7px 10px 0; }
 .hunt-query-editor-shell { position: relative; z-index: 2; }
 .hunt-query-editor { min-height: 38px; max-height: 124px; overflow: hidden; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control) var(--ha-radius-control) 0 0; background: var(--ha-surface-input); }
@@ -200,6 +200,9 @@
 .hunt-query-lane { display: flex; align-items: flex-start; gap: 8px; padding: 7px 10px 4px; }
 .hunt-query-lane__pane { position: relative; min-width: 0; }
 .hunt-query-lane__pane[data-collapsed] { flex: 0 0 auto; }
+/* The collapsed QUERY pane holds a full-query preview chip — let it take the leftover width and
+   shrink below its content so the preview ellipsizes instead of pushing the page into overflow. */
+.hunt-query-lane__pane--query[data-collapsed] { flex: 1 1 auto; min-width: 0; }
 .hunt-query-lane__pane:not([data-collapsed]) { flex: 1 1 auto; }
 /* Neutralize the panes' own outer padding — the lane owns spacing now. */
 .hunt-query-lane .hunt-query-workspace__editor { padding: 0; }
@@ -207,12 +210,14 @@
 /* Collapsed query pane: keep Monaco MOUNTED but clip it to zero footprint (no width transition on the
    Monaco container — that breaks its measurement) and let the chip overlay stand in as the control. */
 .hunt-query-lane__pane--query[data-collapsed] .hunt-query-workspace__editor { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; pointer-events: none; }
-.hunt-query-lane__chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 38px; padding: 4px 10px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-input); color: var(--ha-foreground-secondary); cursor: pointer; font: var(--ha-type-compact); transition: opacity .12s ease, border-color .12s ease; }
+.hunt-query-lane__chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-width: 0; min-height: 38px; padding: 4px 10px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-input); color: var(--ha-foreground-secondary); cursor: pointer; font: var(--ha-type-compact); transition: opacity .12s ease, border-color .12s ease; }
+/* The query preview chip must stretch to fill its (shrinkable) collapsed pane so the preview ellipsizes. */
+.hunt-query-lane__pane--query[data-collapsed] .hunt-query-lane__chip { display: flex; width: 100%; }
 .hunt-query-lane__chip:hover { border-color: var(--ha-border-strong); color: var(--ha-foreground-primary); }
 .hunt-query-lane__chip:focus-visible { outline: none; border-color: var(--ha-border-focus); box-shadow: inset 0 0 0 1px var(--ha-border-focus); }
 .hunt-query-lane__chip svg { flex: 0 0 auto; color: var(--ha-foreground-tertiary); }
 .hunt-query-lane__chip-label { flex: 0 0 auto; font-weight: 600; letter-spacing: .02em; }
-.hunt-query-lane__chip-preview { overflow: hidden; color: var(--ha-foreground-tertiary); font-family: var(--ha-font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.hunt-query-lane__chip-preview { flex: 1 1 auto; min-width: 0; overflow: hidden; color: var(--ha-foreground-tertiary); font-family: var(--ha-font-mono); text-overflow: ellipsis; white-space: nowrap; }
 /* NL chip & pane wear intelligence-violet (sanctioned AI-provenance use). */
 .hunt-query-lane__chip--nl { color: var(--ha-intelligence-primary, var(--ha-action-secondary)); }
 .hunt-query-lane__chip--nl svg { color: var(--ha-intelligence-primary, var(--ha-action-secondary)); }
