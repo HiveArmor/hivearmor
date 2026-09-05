@@ -10,6 +10,7 @@
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scroll-padding-top: calc(var(--hunt-sticky-query-height) + 40px);
+  padding-bottom: 28px; /* reserve room for the fixed .hunt-status-dock footer */
   background: var(--ha-surface-app);
   color: var(--ha-foreground-primary);
   font: var(--ha-type-compact);
@@ -562,10 +563,19 @@
 
 /* Pin the status dock to the bottom of the scrolling hunt page so the sticky pagination
    (bottom: 28px) lands directly above it instead of floating up between table rows. */
+/* Status dock as a FIXED page footer: pinned to the viewport bottom (spanning from the collapsed
+   sidebar edge to the right), so it never travels with the scrolling hunt content. position:sticky
+   released at scroll-end and let the dock ride up — fixed keeps it nailed to the footer. The hunt
+   page reserves space for it via padding-bottom so the last rows/pagination aren't hidden behind it. */
 .hunt-status-dock {
-  position: sticky;
-  z-index: 36;
+  position: fixed;
+  right: 0;
   bottom: 0;
+  left: var(--ha-sidebar-collapsed);
+  z-index: 70;
+  min-height: 28px;
+  border-top: 1px solid var(--ha-border-subtle);
+  background: var(--ha-surface-sidebar);
 }
 
 .hunt-save-modal.pf-v6-c-modal-box { --pf-v6-c-modal-box--Width: min(480px, calc(100vw - 32px)); --pf-v6-c-modal-box--MaxWidth: calc(100vw - 32px); width: min(480px, calc(100vw - 32px)); max-width: calc(100vw - 32px); overflow: hidden; border-color: var(--ha-border-default); border-radius: var(--ha-radius-panel); background: var(--ha-surface-elevated); box-shadow: var(--ha-shadow-medium); }
@@ -578,8 +588,6 @@
 .hunt-save-query-preview > span { color: var(--ha-foreground-secondary); font-weight: 650; }
 .hunt-save-query-preview code { max-height: 92px; overflow: auto; padding: 8px 10px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-input); color: var(--ha-foreground-primary); font: 11px/1.45 var(--ha-font-mono); overflow-wrap: anywhere; scrollbar-width: thin; }
 .hunt-save-sharing-note { display: block; margin-top: 5px; color: var(--ha-foreground-tertiary); font-weight: 450; }
-
-.hunt-page > .status-dock { position: sticky; z-index: 70; bottom: 0; min-height: 28px; flex: 0 0 28px; }
 
 .hunt-selection-bar { position: fixed; z-index: 120; right: 20px; bottom: 72px; left: calc(var(--ha-sidebar-collapsed) + 20px); display: flex; min-height: 45px; align-items: center; gap: 8px; padding: 7px 9px 7px 13px; border: 1px solid color-mix(in srgb, var(--ha-action-primary) 55%, var(--ha-border-default)); border-radius: 10px; background: var(--ha-surface-elevated); box-shadow: var(--ha-shadow-medium); }
 .hunt-selection-bar > span { margin-right: auto; color: var(--ha-foreground-tertiary); }
