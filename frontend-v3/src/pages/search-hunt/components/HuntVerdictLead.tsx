@@ -108,7 +108,7 @@ export function HuntVerdictLead({ verdict, onCiteRows, onPromote }: HuntVerdictL
         </button>
       </div>
 
-      {!collapsed && <>
+      {!collapsed && <div className="hunt-verdict-lead__scroll">
       <AiVerdictCard
         verdict={verdict.verdict}
         confidence={verdict.confidence}
@@ -137,7 +137,7 @@ export function HuntVerdictLead({ verdict, onCiteRows, onPromote }: HuntVerdictL
           Thanks — {feedbackSent === 'up' ? 'reinforced' : 'flagged'}. This feeds the agent&apos;s track record.
         </p>
       )}
-      </>}
+      </div>}
     </section>
   );
 }

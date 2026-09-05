@@ -89,4 +89,15 @@ describe('HuntVerdictLead', () => {
     fireEvent.click(toggle);
     expect(screen.getByText(/agreed with analysts/i)).toBeInTheDocument();
   });
+
+  it('caps the expanded verdict in a height-limited scroll container so the grid stays visible (F-1)', () => {
+    const { container } = render(<HuntVerdictLead verdict={VERDICT} onCiteRows={vi.fn()} onPromote={vi.fn()} />);
+    // Expanded: the scroll wrapper is present and actually wraps the verdict body.
+    const scroll = container.querySelector('.hunt-verdict-lead__scroll');
+    expect(scroll).not.toBeNull();
+    expect(scroll).toContainElement(screen.getByText(/agreed with analysts/i));
+    // Collapsed: the scroll wrapper (and its capped body) is gone entirely.
+    fireEvent.click(screen.getByRole('button', { name: /ai verdict/i }));
+    expect(container.querySelector('.hunt-verdict-lead__scroll')).toBeNull();
+  });
 });
