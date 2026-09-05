@@ -587,7 +587,15 @@ export function SearchHuntPage(): JSX.Element {
         title="Search & Hunt"
         description={<span className="hunt-page__scope">Hunt console · ad-hoc event search</span>}
         actions={
-          <span className="hunt-page__shortcut"><Keyboard size={13} />⌘/Ctrl + Enter · J/K navigate</span>
+          <div className="hunt-page__scope-controls">
+            <TimeRangeSelector value={timeRange} onChange={setTimeRange} disabled={searchQuery.isFetching && events.length === 0} />
+            <IndexScopePicker
+              value={selectedIndex}
+              onChange={(next) => { setSelectedIndex(next); }}
+              disabled={searchQuery.isFetching && events.length === 0}
+            />
+            <span className="hunt-page__shortcut"><Keyboard size={13} />⌘/Ctrl + Enter · J/K navigate</span>
+          </div>
         }
       />
 
@@ -706,14 +714,6 @@ export function SearchHuntPage(): JSX.Element {
         )}
         <div className="hunt-query-workspace__controls" aria-label="Search controls">
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setFieldRailOpen((open) => !open)} aria-pressed={fieldRailOpen} aria-label="Toggle filters and field values" title="Filters and field values"><ListFilter size={14} /></button>
-          <TimeRangeSelector value={timeRange} onChange={setTimeRange} disabled={searchQuery.isFetching && events.length === 0} />
-          <IndexScopePicker
-            value={selectedIndex}
-            onChange={(next) => {
-              setSelectedIndex(next);
-            }}
-            disabled={searchQuery.isFetching && events.length === 0}
-          />
           <button type="button" className="hunt-control-button" onClick={() => openManager('saved')} aria-expanded={managerPanelOpen} aria-haspopup="dialog" title="Saved hunts and search history"><Library size={13} />Library<ChevronDown size={11} /></button>
           <button type="button" className="hunt-control-button" onClick={() => setSaveOpen(true)} disabled={!query.trim() || !canSaveQuery} title={!canSaveQuery ? SAVE_DENIED : !query.trim() ? 'Enter a reusable query before saving' : 'Save query'}><Save size={13} />Save</button>
           <div className="hunt-overflow" ref={overflowRef}>

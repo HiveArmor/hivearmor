@@ -63,6 +63,8 @@
 .hunt-page__icon { display: grid; width: var(--ha-page-header-icon-size); height: 38px; place-items: center; border: 1px solid color-mix(in srgb, var(--ha-action-primary) 45%, var(--ha-border-default)); border-radius: 9px; background: var(--ha-fill-primary-subtle); color: var(--ha-action-secondary); }
 .hunt-page__identity-actions { gap: 7px; }
 .hunt-page__shortcut { gap: 6px; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); white-space: nowrap; }
+/* Time-range + index scope pickers relocated to the page-header actions (right of the title). */
+.hunt-page__scope-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 
 .hunt-page__promote-warn {
   margin: 0;
