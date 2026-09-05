@@ -5,16 +5,17 @@
   flex-direction: column;
   height: calc(100dvh - var(--ha-masthead-height));
   min-height: 640px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scroll-padding-top: calc(var(--hunt-sticky-query-height) + 40px);
-  padding-bottom: 28px; /* reserve room for the fixed .hunt-status-dock footer */
+  overflow: hidden;
+  min-width: 0;
   background: var(--ha-surface-app);
   color: var(--ha-foreground-primary);
   font: var(--ha-type-compact);
 }
+/* Direct header children of the non-scrolling shell stay fixed; only the results workspace scrolls. */
+.hunt-page > .ha-page-header,
+.hunt-page > .hunt-page__promote-warn,
+.hunt-page > .hunt-page__fixture,
+.hunt-page > .hunt-query-workspace { flex: 0 0 auto; }
 
 .hunt-page *, .hunt-page *::before, .hunt-page *::after { box-sizing: border-box; }
 .hunt-page button, .hunt-page input, .hunt-page select, .hunt-page textarea { font: inherit; }
@@ -186,7 +187,7 @@
 .hunt-button--primary:hover { border-color: var(--ha-action-primary-hover); background: var(--ha-action-primary-hover); color: var(--ha-foreground-on-action); }
 .hunt-button--stop { border-color: color-mix(in srgb, var(--ha-severity-critical) 55%, var(--ha-border-default)); color: var(--ha-severity-critical); }
 
-.hunt-query-workspace { position: sticky; z-index: 40; top: 0; flex: 0 0 auto; border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 8px 18px color-mix(in srgb, var(--ha-surface-app) 34%, transparent); }
+.hunt-query-workspace { position: relative; z-index: 40; flex: 0 0 auto; border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 8px 18px color-mix(in srgb, var(--ha-surface-app) 34%, transparent); }
 .hunt-query-workspace__editor { padding: 7px 10px 0; }
 .hunt-query-editor-shell { position: relative; z-index: 2; }
 .hunt-query-editor { min-height: 38px; max-height: 124px; overflow: hidden; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control) var(--ha-radius-control) 0 0; background: var(--ha-surface-input); }
@@ -388,7 +389,7 @@
 .hunt-execution-strip strong[data-tone='warning'] { color: var(--ha-state-warning); }
 @keyframes hunt-pulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--ha-state-info) 0%, transparent); } }
 
-.hunt-results-workspace { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 50%; flex: 1 1 auto; align-items: start; overflow: visible; }
+.hunt-results-workspace { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1 1 auto; min-height: 0; align-items: start; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 .hunt-results-workspace[data-field-rail='true'] { grid-template-columns: 242px minmax(0, 1fr); }
 .hunt-field-browser { position: sticky; z-index: 20; top: var(--hunt-sticky-query-height); display: flex; min-width: 0; height: calc(100dvh - var(--ha-masthead-height) - var(--hunt-sticky-query-height) - 28px); flex-direction: column; align-self: start; overflow: hidden; border-right: 1px solid var(--ha-border-default); border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); }
 .hunt-field-browser__header, .hunt-field-browser__header > div { display: flex; align-items: center; }
@@ -446,7 +447,7 @@
 .hunt-field-value-pagination { display: grid; min-height: 28px; grid-template-columns: 24px 1fr 24px; align-items: center; justify-items: center; margin-top: 4px; border-top: 1px solid var(--ha-border-subtle); color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
 .hunt-field-value-pagination button:disabled { color: var(--ha-foreground-disabled); cursor: default; }
 
-.hunt-results { position: relative; display: flex; min-width: 0; min-height: calc(100dvh - var(--ha-masthead-height) - 28px); flex-direction: column; overflow: visible; background: var(--ha-surface-app); }
+.hunt-results { position: relative; display: flex; min-width: 0; min-height: 100%; flex-direction: column; overflow: visible; background: var(--ha-surface-app); }
 .hunt-histogram { position: relative; z-index: 1; height: 96px; flex: 0 0 96px; overflow: hidden; border-bottom: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
 /* Compact AI-verdict banner — opens the full verdict in a right-side panel (HuntVerdictPanel) instead
    of an inline scrolling card, keeping the results grid unobstructed. */
@@ -521,7 +522,7 @@
 .hunt-column-picker__menu input { accent-color: var(--ha-action-primary); }
 .hunt-column-picker__reset { display: block; width: 100%; margin-top: 4px; padding: 6px 8px; border: none; border-top: 1px solid var(--ha-border-subtle); border-radius: 0 0 4px 4px; background: transparent; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); cursor: pointer; text-align: center; }
 .hunt-column-picker__reset:hover { color: var(--ha-action-primary); background: var(--ha-surface-hover); }
-.hunt-grid-shell { position: relative; height: clamp(360px, calc(100dvh - 360px), 640px); min-height: 50%; flex: 1 0 auto; overflow: hidden; }
+.hunt-grid-shell { position: relative; height: clamp(320px, calc(100dvh - 420px), 600px); min-height: 50%; flex: 1 0 auto; overflow: hidden; }
 .hunt-results-grid.ha-grid { --ag-header-height: 32px; --ag-cell-horizontal-padding: 8px; --ag-row-hover-color: var(--ha-surface-hover); --ag-selected-row-background-color: var(--ha-surface-selected); }
 .hunt-results-grid .ag-row { cursor: pointer; }
 .hunt-results-grid .ag-cell { font-size: 11px; }
@@ -554,9 +555,8 @@
 .hunt-grid-loading span { height: 32px; background: linear-gradient(90deg, var(--ha-surface-panel), var(--ha-surface-elevated), var(--ha-surface-panel)); background-size: 200% 100%; animation: hunt-shimmer 1.4s linear infinite; }
 @keyframes hunt-shimmer { to { background-position: -200% 0; } }
 .hunt-pagination {
-  position: sticky;
+  position: static;
   z-index: 35;
-  bottom: 0;
   display: flex;
   min-height: 28px;
   flex: 0 0 28px;
@@ -605,16 +605,13 @@
 
 /* Pin the status dock to the bottom of the scrolling hunt page so the sticky pagination
    (bottom: 28px) lands directly above it instead of floating up between table rows. */
-/* Status dock as a FIXED page footer: pinned to the viewport bottom (spanning from the collapsed
-   sidebar edge to the right), so it never travels with the scrolling hunt content. position:sticky
-   released at scroll-end and let the dock ride up — fixed keeps it nailed to the footer. The hunt
-   page reserves space for it via padding-bottom so the last rows/pagination aren't hidden behind it. */
+/* Status dock as the shell's own footer row (non-scrolling shell): a normal flex child pinned at the
+   bottom of the column. No position:fixed — the results workspace above it is the only scroll region,
+   so nothing overlaps and the dock can never be scrolled away or scrolled over. */
 .hunt-status-dock {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: var(--ha-sidebar-collapsed);
-  z-index: 70;
+  position: relative;
+  z-index: 20;
+  flex: 0 0 auto;
   min-height: 28px;
   border-top: 1px solid var(--ha-border-subtle);
   background: var(--ha-surface-sidebar);
