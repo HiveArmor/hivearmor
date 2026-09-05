@@ -523,19 +523,21 @@ export function SearchHuntPage(): JSX.Element {
     staleTime: 60_000,
     retry: false,
   });
-  // Columns the AI derived (model/enrichment) → the "show AI's hand" lens (move 2).
-  const aiDerivedColumns = useMemo(
-    () => (fieldProvenanceQuery.data ?? [])
-      .filter((p) => p.origin !== 'raw')
-      .map((p) => HUNT_FIELD_COLUMN_MAP[p.field] ?? p.field),
-    [fieldProvenanceQuery.data],
-  );
-  // FINDING-03: the verdict lead must be HONEST. It renders only when the AI is genuinely available
-  // (live mode) AND the analyst has autonomy engaged (not Off). In mock mode the fixture reports a
-  // fabricated "ready" verdict (Suspicious·79%) — gating here stops that from ever showing, matching
-  // the same honesty as the NL "AI service not configured" banner.
+  // FINDING-03: the AI surfaces must be HONEST. They engage only when the AI is genuinely available
+  // (live mode) AND the analyst has autonomy engaged (not Off). In mock mode the fixtures fabricate a
+  // "ready" verdict (Suspicious·79%) and model/enrichment provenance — gating on aiActive stops both
+  // the verdict lead AND the "show AI's hand" column lens from ever showing invented AI output,
+  // matching the honesty of the NL "AI service not configured" banner.
   const aiConfigured = HUNT_AI_MODE === 'live';
   const aiActive = aiConfigured && autonomy !== 'off';
+  // Columns the AI derived (model/enrichment) → the "show AI's hand" lens (move 2). Empty unless the
+  // AI is genuinely active, so the lens never highlights columns from mock provenance.
+  const aiDerivedColumns = useMemo(
+    () => (aiActive ? (fieldProvenanceQuery.data ?? []) : [])
+      .filter((p) => p.origin !== 'raw')
+      .map((p) => HUNT_FIELD_COLUMN_MAP[p.field] ?? p.field),
+    [fieldProvenanceQuery.data, aiActive],
+  );
   const verdict = aiActive && verdictQuery.data && verdictQuery.data.state === 'ready' ? verdictQuery.data : null;
 
   // Reasoning-cites-rows (move 3): open the first cited event's detail flyout.
@@ -713,6 +715,7 @@ export function SearchHuntPage(): JSX.Element {
                   <HuntAiControls
                     showAiHand={showAiHand}
                     onToggleAiHand={setShowAiHand}
+                    handAvailable={aiConfigured}
                     autonomy={autonomy}
                     onAutonomyChange={setAutonomy}
                   />
