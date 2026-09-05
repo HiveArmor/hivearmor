@@ -6,6 +6,9 @@ export interface HuntAiControlsProps {
   /** "Show AI's hand" — paints the provenance lens on model/enrichment fields (move 2). */
   showAiHand: boolean;
   onToggleAiHand: (next: boolean) => void;
+  /** Whether the AI is configured for this deployment. When false the lens has no real provenance to
+   *  show, so the "Show AI's hand" toggle is disabled (FINDING-03 consistency). */
+  handAvailable: boolean;
   /** Autonomy level (move 4). Auto-approve/Autopilot are DISABLED until the response
    *  backend ships (propose-only, REDESIGN §5.2). */
   autonomy: HuntAutonomy;
@@ -26,17 +29,22 @@ const AUTONOMY_OPTIONS: { value: HuntAutonomy; label: string; enabled: boolean }
 export function HuntAiControls({
   showAiHand,
   onToggleAiHand,
+  handAvailable,
   autonomy,
   onAutonomyChange,
 }: HuntAiControlsProps): JSX.Element {
+  const handOn = handAvailable && showAiHand;
   return (
     <div className="hunt-ai-controls">
       <button
         type="button"
-        className={`hunt-ai-hand${showAiHand ? ' hunt-ai-hand--on' : ''}`}
-        onClick={() => onToggleAiHand(!showAiHand)}
-        aria-pressed={showAiHand}
-        title="Highlight which result values the AI derived vs raw log"
+        className={`hunt-ai-hand${handOn ? ' hunt-ai-hand--on' : ''}`}
+        onClick={() => handAvailable && onToggleAiHand(!showAiHand)}
+        disabled={!handAvailable}
+        aria-pressed={handOn}
+        title={handAvailable
+          ? "Highlight which result values the AI derived vs raw log"
+          : "Unavailable — the AI service is not configured for this deployment"}
       >
         <span className="hunt-ai-hand__glyph" aria-hidden="true">✦</span>
         Show AI&apos;s hand

@@ -26,6 +26,12 @@
   color: var(--ha-foreground-primary);
 }
 
+.hunt-ai-hand:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: var(--ha-foreground-tertiary);
+}
+
 .hunt-ai-hand__glyph {
   color: var(--ha-intelligence-primary);
 }
