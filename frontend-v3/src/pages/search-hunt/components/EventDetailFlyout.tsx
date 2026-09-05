@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 
 
-import { fetchHuntEvent, fetchHuntEventDetail } from '../searchHunt.service';
+import { fetchHuntEvent, fetchHuntEventDetail, isHuntSessionExpiredError } from '../searchHunt.service';
 import type { HuntActionRequest, HuntEventDetail, HuntEventDetailResponse, HuntEventField, Pivot } from '../searchHunt.types';
 
 import { HaJsonViewer } from '@/components/ha-json-viewer';
@@ -52,6 +52,10 @@ export interface EventDetailFlyoutProps {
   onClose: () => void;
   /** Called when a pivot is clicked — sets the search bar and auto-executes. */
   onPivot: (query: string) => void;
+  /** Re-run the current hunt (used by the snapshot-expired recovery CTA). */
+  onRerun?: () => void;
+  /** Notifies the page that the search snapshot has expired (so the status strip can reflect it). */
+  onSessionExpired?: () => void;
   /** Per-field "filter for" — append field:value to the query (debounced auto-run upstream). */
   onFilterFor?: (fragment: string) => void;
   /** Per-field "filter out" — append NOT field:value to the query (debounced auto-run upstream). */
@@ -119,6 +123,8 @@ export function EventDetailFlyout({
   searchId,
   onClose,
   onPivot,
+  onRerun,
+  onSessionExpired,
   onFilterFor,
   onFilterOut,
   onAction,
@@ -176,6 +182,13 @@ export function EventDetailFlyout({
   useEffect(() => {
     if (eventId) setViewTab('fields');
   }, [eventId]);
+
+  // Surface snapshot expiry to the page so its status strip stops claiming "Query complete".
+  useEffect(() => {
+    if (activeQuery.isError && isHuntSessionExpiredError(activeQuery.error)) {
+      onSessionExpired?.();
+    }
+  }, [activeQuery.isError, activeQuery.error, onSessionExpired]);
 
   const handlePivotClick = (pivot: Pivot): void => {
     onClose();
@@ -238,14 +251,27 @@ export function EventDetailFlyout({
           </div>
         )}
 
-        {/* Error state */}
+        {/* Error state — snapshot expiry gets a recovery CTA, everything else a generic retry. */}
         {activeQuery.isError && (
-          <div className="event-flyout__error" role="alert">
-            <p>Failed to load event details.</p>
-            <button type="button" onClick={() => activeQuery.refetch()}>
-              Retry
-            </button>
-          </div>
+          isHuntSessionExpiredError(activeQuery.error) ? (
+            <div className="event-flyout__error event-flyout__error--expired" role="alert">
+              <p>This search snapshot has expired, so its events can no longer be opened.</p>
+              {onRerun ? (
+                <button type="button" onClick={() => { onClose(); onRerun(); }}>
+                  Run search again
+                </button>
+              ) : (
+                <button type="button" onClick={onClose}>Close</button>
+              )}
+            </div>
+          ) : (
+            <div className="event-flyout__error" role="alert">
+              <p>Failed to load event details.</p>
+              <button type="button" onClick={() => activeQuery.refetch()}>
+                Retry
+              </button>
+            </div>
+          )
         )}
 
         {/* Fields tab — grouped by investigation section, each row with a hover/focus action rail */}

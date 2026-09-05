@@ -382,6 +382,8 @@
 .hunt-execution-strip i { width: 7px; height: 7px; border-radius: 50%; background: var(--ha-state-disconnected); }
 .hunt-execution-strip span[data-state='running'] i { background: var(--ha-state-info); animation: hunt-pulse 1.5s ease infinite; }
 .hunt-execution-strip span[data-state='complete'] i { background: var(--ha-state-healthy); }
+.hunt-execution-strip span[data-state='expired'] i { background: var(--ha-state-warning); }
+.hunt-execution-strip span[data-state='expired'] { color: var(--ha-state-warning); }
 .hunt-execution-strip strong { color: var(--ha-state-stale); margin-left: auto; }
 .hunt-execution-strip strong[data-tone='warning'] { color: var(--ha-state-warning); }
 @keyframes hunt-pulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--ha-state-info) 0%, transparent); } }
@@ -439,6 +441,8 @@
 .hunt-field-value-pill[data-active] { background: var(--ha-surface-selected); color: var(--ha-action-primary); }
 .hunt-field-value-pill:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--ha-border-focus); }
 .hunt-field-values-state { padding: 11px 5px; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); text-align: center; }
+.hunt-field-values-rerun { margin-left: 4px; padding: 0; border: 0; background: transparent; color: var(--ha-action-secondary); cursor: pointer; font: inherit; text-decoration: underline; }
+.hunt-field-values-rerun:hover { color: var(--ha-action-primary); }
 .hunt-field-value-pagination { display: grid; min-height: 28px; grid-template-columns: 24px 1fr 24px; align-items: center; justify-items: center; margin-top: 4px; border-top: 1px solid var(--ha-border-subtle); color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
 .hunt-field-value-pagination button:disabled { color: var(--ha-foreground-disabled); cursor: default; }
 
@@ -1358,6 +1362,9 @@
   color: var(--ha-foreground-secondary);
   cursor: pointer;
 }
+.event-flyout__error button:hover { border-color: var(--ha-border-strong); color: var(--ha-foreground-primary); }
+.event-flyout__error button:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--ha-border-focus); }
+.event-flyout__error--expired { color: var(--ha-state-warning); }
 
 /* Fields tab */
 .event-flyout__fields {
