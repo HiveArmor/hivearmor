@@ -32,7 +32,7 @@ import { exportHuntResults } from './forensicExport.service';
 import type { ExportFormat, ExportResult } from './forensicExport.types';
 import { addToHuntHistory } from './history';
 import { useSearchStream } from './hooks/useSearchStream';
-import { DEFAULT_HUNT_QUERY, normalizeHuntQuery } from './huntQuerySuggestions';
+import { normalizeHuntQuery } from './huntQuerySuggestions';
 import { HUNT_FIELD_COLUMN_MAP, huntColumnToSortField, huntColumnsToProjection } from './searchHunt.projection';
 import {
   cancelHunt, executeHunt, fetchHuntSchema, fetchQueryCapabilities, searchHuntFixtureMode,
@@ -113,7 +113,9 @@ export function SearchHuntPage(): JSX.Element {
   const hasAnyRole = useAuthStore((state) => state.hasAnyRole);
   const canPromote = hasAnyRole([ROLES.ANALYST, ROLES.SOC_MANAGER, ROLES.ADMIN, 'ROLE_SOC_ANALYST']);
   const canSaveQuery = hasAnyRole([ROLES.USER, ROLES.ANALYST, ROLES.SOC_MANAGER, ROLES.ADMIN]);
-  const [query, setQuery] = useState(() => routedQuery || DEFAULT_HUNT_QUERY);
+  // Editor starts empty so the plain-language placeholder guides first-time analysts; an empty query
+  // still runs match-all — normalizeHuntQuery('') resolves to DEFAULT_HUNT_QUERY at execution time.
+  const [query, setQuery] = useState(() => routedQuery ?? '');
   const [nlQuestion, setNlQuestion] = useState('');
   const [nlProvenance, setNlProvenance] = useState<HaNlQueryResult | null>(null);
   const [nlError, setNlError] = useState<string | null>(null);

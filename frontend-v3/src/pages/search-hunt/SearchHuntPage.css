@@ -127,7 +127,7 @@
   display: grid;
   place-items: center;
   height: 100%;
-  min-height: 64px;
+  min-height: 54px;
   padding: 8px 12px;
   color: var(--ha-foreground-tertiary);
   font: var(--ha-type-metadata);
@@ -497,7 +497,7 @@
 .hunt-histogram > header { display: flex; height: 34px; align-items: center; justify-content: space-between; padding: 5px 10px; }
 .hunt-histogram > header > div { display: flex; align-items: baseline; gap: 9px; }
 .hunt-histogram > header span { color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
-.hunt-histogram__chart { height: 102px; padding-bottom: 4px; }
+.hunt-histogram__chart { height: 58px; padding-bottom: 4px; }
 .hunt-chart-skeleton { height: 100%; margin: 0 10px 7px; background: repeating-linear-gradient(90deg, var(--ha-surface-elevated) 0, var(--ha-surface-elevated) 12px, transparent 12px, transparent 22px); opacity: .45; }
 .hunt-results-toolbar { position: sticky; z-index: 30; top: var(--hunt-sticky-query-height); display: flex; min-height: 40px; flex: 0 0 40px; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 8px 4px 10px; border-top: 1px solid var(--ha-border-subtle); border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 5px 12px color-mix(in srgb, var(--ha-surface-app) 24%, transparent); }
 .hunt-results-toolbar > div:first-child { display: flex; align-items: baseline; gap: 8px; }

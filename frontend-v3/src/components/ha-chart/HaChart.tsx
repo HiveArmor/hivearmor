@@ -48,6 +48,10 @@ export function HaChart({
       role="img"
       aria-label={ariaLabel ?? 'Chart'}
       aria-describedby={ariaDescription ? descId : undefined}
+      style={{
+        height: typeof height === 'number' ? `${height}px` : height,
+        width: typeof width === 'number' ? `${width}px` : width,
+      }}
     >
       {ariaDescription && (
         <span id={descId} style={{ display: 'none' }}>
