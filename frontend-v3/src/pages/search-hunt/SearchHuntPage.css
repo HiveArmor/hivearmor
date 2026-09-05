@@ -447,7 +447,7 @@
 .hunt-field-value-pagination button:disabled { color: var(--ha-foreground-disabled); cursor: default; }
 
 .hunt-results { position: relative; display: flex; min-width: 0; min-height: calc(100dvh - var(--ha-masthead-height) - 28px); flex-direction: column; overflow: visible; background: var(--ha-surface-app); }
-.hunt-histogram { position: relative; z-index: 1; height: 140px; flex: 0 0 140px; overflow: hidden; border-bottom: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
+.hunt-histogram { position: relative; z-index: 1; height: 96px; flex: 0 0 96px; overflow: hidden; border-bottom: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
 /* Honest AI-verdict-unavailable strip — shown instead of a fabricated verdict when the AI service
    is not configured or autonomy is Off. Intelligence-violet marks the AI provenance context. */
 .hunt-verdict-unavailable { display: flex; align-items: center; gap: 6px; margin: 10px; padding: 8px 12px; border: 1px dashed var(--ha-border-default); border-radius: var(--ha-radius-panel, 8px); background: var(--ha-fill-intelligence-subtle); color: var(--ha-foreground-secondary); font: var(--ha-type-compact); }
@@ -512,9 +512,8 @@
 .hunt-grid-loading span { height: 32px; background: linear-gradient(90deg, var(--ha-surface-panel), var(--ha-surface-elevated), var(--ha-surface-panel)); background-size: 200% 100%; animation: hunt-shimmer 1.4s linear infinite; }
 @keyframes hunt-shimmer { to { background-position: -200% 0; } }
 .hunt-pagination {
-  position: sticky;
+  position: relative;
   z-index: 35;
-  bottom: 28px;
   display: flex;
   min-height: 28px;
   flex: 0 0 28px;
