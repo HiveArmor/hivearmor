@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { EChartsOption } from 'echarts';
 import {
-  BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleStop, Clock3, Code2, Columns3, Database, FileClock,
+  BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleStop, Clock3, Columns3, Database, FileClock,
   Keyboard, Library, ListFilter, MoreHorizontal, Play, Save, ShieldAlert, Sparkles,
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
@@ -138,9 +138,8 @@ export function SearchHuntPage(): JSX.Element {
   const [density, setDensity] = useRowDensity();
   const [selectedIndex, setSelectedIndex] = useState<HuntIndexScope>('all');
   const [fieldRailOpen, setFieldRailOpen] = useState(false);
-  // R3 one-row query/NL: focus is the toggle. Query pane is default-active; the other collapses to a chip.
-  const [activePane, setActivePane] = useState<'query' | 'nl'>('query');
-  const [queryExpandSignal, setQueryExpandSignal] = useState(0);
+  // NL assist opens BELOW the full-width editor (no query/NL width-swap).
+  const [nlOpen, setNlOpen] = useState(false);
   const [managerPanelOpen, setManagerPanelOpen] = useState(false);
   const [managerInitialTab, setManagerInitialTab] = useState<'saved' | 'history'>('saved');
   const [columnsOpen, setColumnsOpen] = useState(false);
@@ -610,110 +609,72 @@ export function SearchHuntPage(): JSX.Element {
       {searchHuntFixtureMode && <div className="hunt-page__fixture" role="status"><span><strong>Design fixture:</strong> fictional normalized events are enabled for visual review.</span><span>Production never receives these records.</span></div>}
 
       <div className="hunt-query-workspace" ref={queryWorkspaceRef}>
-        <div className="hunt-query-lane" data-active-pane={activePane}>
-          <div
-            className="hunt-query-lane__pane hunt-query-lane__pane--query"
-            data-collapsed={activePane !== 'query' || undefined}
-          >
-            {/* Monaco stays MOUNTED across collapse (preserves cursor/undo, avoids re-paying the lazy
-                load). When collapsed the editor is clipped and a chip button overlays it as the click
-                target that re-expands + re-layouts. */}
-            <div className="hunt-query-workspace__editor" aria-hidden={activePane !== 'query' || undefined}>
-              <Suspense fallback={<div className="hunt-query-editor__loading">Loading query workspace…</div>}>
-                <QueryEditor
-                  value={query}
-                  onChange={setQuery}
-                  onExecute={() => runSearch()}
-                  fields={schemaQuery.data ?? []}
-                  disabled={searchQuery.isFetching && events.length === 0}
-                  expandSignal={queryExpandSignal}
-                  onFocusChange={(focused) => { if (focused) { setActivePane('query'); setOverflowOpen(false); } }}
-                />
-              </Suspense>
-            </div>
-            {activePane !== 'query' && (
-              <button
-                type="button"
-                className="hunt-query-lane__chip"
-                aria-expanded={false}
-                aria-label={query.trim() ? `KQL query editor, collapsed. Current query: ${query.trim()}. Activate to edit.` : 'KQL query editor, collapsed. Activate to edit.'}
-                title="KQL query editor"
-                onClick={() => { setActivePane('query'); setQueryExpandSignal((n) => n + 1); }}
-              >
-                <Code2 size={13} aria-hidden="true" />
-                <span className="hunt-query-lane__chip-label">KQL</span>
-                <span className="hunt-query-lane__chip-preview">{query.trim() || 'Edit query'}</span>
-              </button>
-            )}
-          </div>
-          <div
-            className="hunt-query-lane__pane hunt-query-lane__pane--nl"
-            data-collapsed={activePane !== 'nl' || undefined}
-          >
-            {/* The NL input is lightweight (no Monaco); conditional render is fine here. */}
-            {activePane === 'nl' ? (
-              <div className="hunt-nl-strip" aria-label="Natural language assist">
-                <Sparkles size={13} aria-hidden="true" />
-                <input
-                  ref={nlInputRef}
-                  type="text"
-                  value={nlQuestion}
-                  onChange={(event) => setNlQuestion(event.target.value)}
-                  placeholder="Ask in plain language — e.g. failed logons from admin accounts in the last hour"
-                  aria-label="Natural language hunt question"
-                  disabled={nlMutation.isPending}
-                  onFocus={() => { setActivePane('nl'); setOverflowOpen(false); }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && nlQuestion.trim()) {
-                      event.preventDefault();
-                      nlMutation.mutate(nlQuestion.trim());
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  className="hunt-control-button"
-                  disabled={!nlQuestion.trim() || nlMutation.isPending}
-                  onClick={() => nlMutation.mutate(nlQuestion.trim())}
-                >
-                  {nlMutation.isPending ? 'Translating…' : 'Translate NL'}
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="hunt-query-lane__chip hunt-query-lane__chip--nl"
-                aria-expanded={false}
-                aria-label="Natural language assist, collapsed. Activate to ask in plain language."
-                title="Ask in plain language"
-                onClick={() => {
-                  setActivePane('nl');
-                  window.requestAnimationFrame(() => nlInputRef.current?.focus());
+        {/* Full-width KQL editor — always visible, always mounted. No pane-swap, no collapse chip. */}
+        <div className="hunt-query-workspace__editor">
+          <Suspense fallback={<div className="hunt-query-editor__loading">Loading query workspace…</div>}>
+            <QueryEditor
+              value={query}
+              onChange={setQuery}
+              onExecute={() => runSearch()}
+              fields={schemaQuery.data ?? []}
+              disabled={searchQuery.isFetching && events.length === 0}
+              onFocusChange={(focused) => { if (focused) setOverflowOpen(false); }}
+            />
+          </Suspense>
+        </div>
+        {/* Natural-language assist — expands BELOW the editor (downward reveal, never contends for the
+            editor's width). It AUGMENTS the KQL: Translate appends the generated filters to the query
+            with AND; it does not run a separate search. */}
+        <div className="hunt-nl-assist" data-open={nlOpen || undefined} aria-hidden={!nlOpen || undefined}>
+          <div className="hunt-nl-assist__inner">
+            <div className="hunt-nl-strip" aria-label="Natural language assist">
+              <Sparkles size={13} aria-hidden="true" />
+              <input
+                ref={nlInputRef}
+                type="text"
+                value={nlQuestion}
+                onChange={(event) => setNlQuestion(event.target.value)}
+                placeholder="Ask in plain language — e.g. failed logons from admin accounts in the last hour"
+                aria-label="Natural language hunt question"
+                disabled={nlMutation.isPending}
+                onFocus={() => setOverflowOpen(false)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && nlQuestion.trim()) {
+                    event.preventDefault();
+                    nlMutation.mutate(nlQuestion.trim());
+                  }
                 }}
+              />
+              <button
+                type="button"
+                className="hunt-control-button hunt-control-button--ai"
+                disabled={!nlQuestion.trim() || nlMutation.isPending}
+                onClick={() => nlMutation.mutate(nlQuestion.trim())}
               >
-                <Sparkles size={13} aria-hidden="true" />
-                <span className="hunt-query-lane__chip-label">Ask</span>
+                {nlMutation.isPending ? 'Translating…' : 'Translate → KQL'}
               </button>
+              <button type="button" className="hunt-control-button" onClick={() => setNlOpen(false)}>Close</button>
+            </div>
+            <p className="hunt-nl-assist__hint">The translation is appended to your KQL with <code>AND</code>; it does not run on its own. Review, then Run search.</p>
+            {(nlError || nlProvenance) && (
+              <div className="hunt-nl-provenance" role="status" aria-live="polite">
+                {nlError && <p className="hunt-nl-provenance__error">{nlError}</p>}
+                {nlProvenance?.explanation && (
+                  <p><strong>NL explanation:</strong> {nlProvenance.explanation}</p>
+                )}
+                {nlProvenance?.query != null && (
+                  <details>
+                    <summary>Generated DSL provenance (not auto-executed — run KQL hunt separately)</summary>
+                    <pre>{typeof nlProvenance.query === 'string' ? nlProvenance.query : JSON.stringify(nlProvenance.query, null, 2)}</pre>
+                  </details>
+                )}
+                {nlProvenance && !nlProvenance.explanation && nlProvenance.query == null && !nlError && (
+                  <p>NL endpoint returned an empty translation. Continue with KQL.</p>
+                )}
+              </div>
             )}
           </div>
         </div>
-        {(nlError || nlProvenance) && (
-          <div className="hunt-nl-provenance" role="status">
-            {nlError && <p className="hunt-nl-provenance__error">{nlError}</p>}
-            {nlProvenance?.explanation && (
-              <p><strong>NL explanation:</strong> {nlProvenance.explanation}</p>
-            )}
-            {nlProvenance?.query != null && (
-              <details>
-                <summary>Generated DSL provenance (not auto-executed — run KQL hunt separately)</summary>
-                <pre>{typeof nlProvenance.query === 'string' ? nlProvenance.query : JSON.stringify(nlProvenance.query, null, 2)}</pre>
-              </details>
-            )}
-            {nlProvenance && !nlProvenance.explanation && nlProvenance.query == null && !nlError && (
-              <p>NL endpoint returned an empty translation. Continue with KQL.</p>
-            )}
-          </div>
-        )}
         <div className="hunt-query-workspace__controls" aria-label="Search controls">
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setFieldRailOpen((open) => !open)} aria-pressed={fieldRailOpen} aria-label="Toggle filters and field values" title="Filters and field values"><ListFilter size={14} /></button>
           <button type="button" className="hunt-control-button" onClick={() => openManager('saved')} aria-expanded={managerPanelOpen} aria-haspopup="dialog" title="Saved hunts and search history"><Library size={13} />Library<ChevronDown size={11} /></button>
@@ -736,7 +697,25 @@ export function SearchHuntPage(): JSX.Element {
             )}
           </div>
           <span className="hunt-query-workspace__spacer" />
-          {searchQuery.isFetching ? <button type="button" className="hunt-button hunt-button--stop" onClick={stopSearch}><CircleStop size={14} />Cancel</button> : <button type="button" className="hunt-button hunt-button--primary" onClick={() => runSearch()} title={!query.trim() ? 'Load the newest 100 events in the selected scope' : 'Run KQL hunt'}><Play size={14} />Run search</button>}
+          <div className="hunt-query-workspace__actions">
+            <button
+              type="button"
+              className="hunt-control-button hunt-control-button--ai"
+              aria-pressed={nlOpen}
+              title="Ask in plain language"
+              onClick={() => {
+                setOverflowOpen(false);
+                setNlOpen((open) => {
+                  const next = !open;
+                  if (next) window.requestAnimationFrame(() => nlInputRef.current?.focus());
+                  return next;
+                });
+              }}
+            >
+              <Sparkles size={13} />Ask
+            </button>
+            {searchQuery.isFetching ? <button type="button" className="hunt-button hunt-button--stop" onClick={stopSearch}><CircleStop size={14} />Cancel</button> : <button type="button" className="hunt-button hunt-button--primary" onClick={() => runSearch()} title={!query.trim() ? 'Load the newest 100 events in the selected scope' : 'Run KQL hunt'}><Play size={14} />Run search</button>}
+          </div>
         </div>
         <div className="hunt-execution-strip" role="status" aria-live="polite">
           <span data-state={searchQuery.isFetching ? 'running' : sessionExpired ? 'expired' : summary ? 'complete' : 'idle'}><i aria-hidden="true" />{searchQuery.isFetching ? 'Query running' : sessionExpired ? 'Snapshot expired · run again' : summary ? 'Query complete' : 'Ready'}</span>
