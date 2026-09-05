@@ -1,0 +1,96 @@
+/* HuntVerdictPanel — reuses the .event-flyout shell (position/width/header/close) for the AI verdict.
+   Tokens only (var(--ha-*)); intelligence-violet marks AI provenance ONLY. */
+
+.hunt-verdict-panel__glyph { color: var(--ha-intelligence-strong, var(--ha-intelligence-primary)); }
+
+.hunt-verdict-panel__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 14px;
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hunt-verdict-panel__summary { display: block; }
+
+.hunt-verdict-panel__reasoning {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hunt-verdict-panel__rstep { display: flex; gap: 9px; align-items: flex-start; }
+.hunt-verdict-panel__rnum {
+  display: grid;
+  place-items: center;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ha-fill-intelligence-subtle);
+  color: var(--ha-intelligence-strong, var(--ha-intelligence-primary));
+  font: var(--ha-type-metadata);
+  font-weight: 680;
+}
+.hunt-verdict-panel__rtext { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hunt-verdict-panel__rlabel { color: var(--ha-foreground-primary); font-weight: 640; }
+.hunt-verdict-panel__rdetail { color: var(--ha-foreground-secondary); }
+.hunt-verdict-panel__cite {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ha-action-secondary);
+  cursor: pointer;
+  font: var(--ha-type-compact);
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+.hunt-verdict-panel__cite:hover { color: var(--ha-action-primary-hover); }
+
+.hunt-verdict-panel__ai-val { color: var(--ha-intelligence-strong, var(--ha-intelligence-primary)); }
+.hunt-verdict-panel__ai-glyph { color: var(--ha-intelligence-strong, var(--ha-intelligence-primary)); }
+
+.hunt-verdict-panel__trust {
+  display: flex;
+  gap: 7px;
+  align-items: flex-start;
+  padding: 9px 11px;
+  border: 1px solid var(--ha-border-subtle);
+  border-radius: var(--ha-radius-panel, 8px);
+  background: var(--ha-fill-intelligence-subtle);
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+}
+.hunt-verdict-panel__trust-glyph { color: var(--ha-intelligence-strong, var(--ha-intelligence-primary)); }
+.hunt-verdict-panel__trust-text b { color: var(--ha-foreground-primary); }
+.hunt-verdict-panel__trust-note { color: var(--ha-foreground-tertiary); }
+
+.hunt-verdict-panel__fb-ack { margin: 0; color: var(--ha-foreground-tertiary); font: var(--ha-type-compact); }
+
+.hunt-verdict-panel__footer {
+  display: flex;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  border-top: 1px solid var(--ha-border-default);
+  background: var(--ha-surface-panel);
+}
+.hunt-verdict-panel__promote {
+  min-height: 32px;
+  padding: 6px 14px;
+  border: 1px solid color-mix(in srgb, var(--ha-intelligence-primary) 55%, var(--ha-border-default));
+  border-radius: var(--ha-radius-control, 6px);
+  background: var(--ha-fill-intelligence-subtle);
+  color: var(--ha-intelligence-strong, var(--ha-intelligence-primary));
+  cursor: pointer;
+  font: var(--ha-type-compact);
+  font-weight: 640;
+}
+.hunt-verdict-panel__promote:hover { border-color: var(--ha-intelligence-primary); }
+.hunt-verdict-panel__promote:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ha-border-focus); }

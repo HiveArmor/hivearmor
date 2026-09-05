@@ -1,0 +1,32 @@
+/* HuntMetricsView — aggregation/metric view over the loaded result set. Tokens only (var(--ha-*)). */
+
+.hunt-metrics { display: flex; flex-direction: column; gap: 12px; padding: 12px; overflow-y: auto; height: 100%; scrollbar-width: thin; }
+.hunt-metrics--empty { align-items: center; justify-content: center; color: var(--ha-foreground-tertiary); font: var(--ha-type-compact); }
+
+.hunt-metrics__scope { margin: 0; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
+
+.hunt-metrics__kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.hunt-metrics__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--ha-border-subtle);
+  border-radius: var(--ha-radius-panel, 8px);
+  background: var(--ha-surface-panel);
+}
+.hunt-metrics__kpi-value { color: var(--ha-foreground-primary); font: var(--ha-type-metric); font-variant-numeric: tabular-nums; }
+.hunt-metrics__kpi-value[data-tone='alert'] { color: var(--ha-severity-high); }
+.hunt-metrics__kpi-label { color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); text-transform: uppercase; letter-spacing: .04em; }
+
+.hunt-metrics__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; }
+.hunt-metrics__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--ha-border-subtle);
+  border-radius: var(--ha-radius-panel, 8px);
+  background: var(--ha-surface-panel);
+}
+.hunt-metrics__panel h3 { margin: 0; color: var(--ha-foreground-secondary); font: var(--ha-type-compact); font-weight: 640; }

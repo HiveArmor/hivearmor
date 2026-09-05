@@ -14,7 +14,8 @@ import { EventDetailFlyout } from './components/EventDetailFlyout';
 import { FieldBrowser } from './components/FieldBrowser';
 import { HuntActionDrawer } from './components/HuntActionDrawer';
 import { HuntAiControls, type HuntAutonomy } from './components/HuntAiControls';
-import { HuntVerdictLead } from './components/HuntVerdictLead';
+import { HuntMetricsView } from './components/HuntMetricsView';
+import { HuntVerdictPanel } from './components/HuntVerdictPanel';
 import {
   huntIndexScopeLabel,
   IndexScopePicker,
@@ -126,6 +127,8 @@ export function SearchHuntPage(): JSX.Element {
     ));
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [flyoutEventId, setFlyoutEventId] = useState<string | null>(null);
+  const [verdictPanelOpen, setVerdictPanelOpen] = useState(false);
+  const [resultView, setResultView] = useState<'table' | 'metrics'>('table');
   // Set when a downstream call (event flyout / field rail) reports the search snapshot has expired,
   // so the execution strip stops claiming a green "Query complete" for a dead session.
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -586,7 +589,15 @@ export function SearchHuntPage(): JSX.Element {
         title="Search & Hunt"
         description={<span className="hunt-page__scope">Hunt console · ad-hoc event search</span>}
         actions={
-          <span className="hunt-page__shortcut"><Keyboard size={13} />⌘/Ctrl + Enter · J/K navigate</span>
+          <div className="hunt-page__scope-controls">
+            <TimeRangeSelector value={timeRange} onChange={setTimeRange} disabled={searchQuery.isFetching && events.length === 0} />
+            <IndexScopePicker
+              value={selectedIndex}
+              onChange={(next) => { setSelectedIndex(next); }}
+              disabled={searchQuery.isFetching && events.length === 0}
+            />
+            <span className="hunt-page__shortcut"><Keyboard size={13} />⌘/Ctrl + Enter · J/K navigate</span>
+          </div>
         }
       />
 
@@ -705,14 +716,6 @@ export function SearchHuntPage(): JSX.Element {
         )}
         <div className="hunt-query-workspace__controls" aria-label="Search controls">
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setFieldRailOpen((open) => !open)} aria-pressed={fieldRailOpen} aria-label="Toggle filters and field values" title="Filters and field values"><ListFilter size={14} /></button>
-          <TimeRangeSelector value={timeRange} onChange={setTimeRange} disabled={searchQuery.isFetching && events.length === 0} />
-          <IndexScopePicker
-            value={selectedIndex}
-            onChange={(next) => {
-              setSelectedIndex(next);
-            }}
-            disabled={searchQuery.isFetching && events.length === 0}
-          />
           <button type="button" className="hunt-control-button" onClick={() => openManager('saved')} aria-expanded={managerPanelOpen} aria-haspopup="dialog" title="Saved hunts and search history"><Library size={13} />Library<ChevronDown size={11} /></button>
           <button type="button" className="hunt-control-button" onClick={() => setSaveOpen(true)} disabled={!query.trim() || !canSaveQuery} title={!canSaveQuery ? SAVE_DENIED : !query.trim() ? 'Enter a reusable query before saving' : 'Save query'}><Save size={13} />Save</button>
           <div className="hunt-overflow" ref={overflowRef}>
@@ -759,11 +762,20 @@ export function SearchHuntPage(): JSX.Element {
 
           {!permissionDenied && !(searchQuery.isError && events.length === 0) && <>
             {verdict ? (
-              <HuntVerdictLead
-                verdict={verdict}
-                onCiteRows={handleCiteRows}
-                onPromote={handlePromoteFromVerdict}
-              />
+              <button
+                type="button"
+                className="hunt-verdict-banner"
+                onClick={() => setVerdictPanelOpen(true)}
+                aria-haspopup="dialog"
+                aria-expanded={verdictPanelOpen}
+              >
+                <span className="hunt-verdict-banner__glyph" aria-hidden="true">✦</span>
+                <span className="hunt-verdict-banner__label">AI Verdict</span>
+                <span className={`hunt-verdict-banner__chip hunt-verdict-banner__chip--${verdict.verdict}`}>{verdict.verdict}</span>
+                <span className="hunt-verdict-banner__conf">{Math.round((verdict.confidence <= 1 ? verdict.confidence * 100 : verdict.confidence))}% confidence</span>
+                <span className="hunt-verdict-banner__peek">{verdict.summary}</span>
+                <span className="hunt-verdict-banner__cta">View analysis →</span>
+              </button>
             ) : hasResults && !aiActive ? (
               <p className="hunt-verdict-unavailable" role="note">
                 <span aria-hidden="true">✦</span>{' '}
@@ -799,6 +811,10 @@ export function SearchHuntPage(): JSX.Element {
             <div className="hunt-results-toolbar">
               <div><strong>Events</strong><span>{events.length > 0 ? `${firstVisibleRow.toLocaleString()}–${lastVisibleRow.toLocaleString()} loaded` : 'No rows loaded'}{searchQuery.data?.hasMore ? ' · more available' : ''}</span></div>
               <div className="hunt-results-toolbar__actions">
+                <div className="hunt-view-toggle" role="group" aria-label="Result view">
+                  <button type="button" onClick={() => setResultView('table')} aria-pressed={resultView === 'table'} title="Table view"><ListFilter size={13} aria-hidden="true" />Table</button>
+                  <button type="button" onClick={() => setResultView('metrics')} aria-pressed={resultView === 'metrics'} title="Metrics view — summarise these results"><Sparkles size={13} aria-hidden="true" />Metrics</button>
+                </div>
                 <div className="hunt-density-control">
                   <span>Rows</span>
                   <div role="group" aria-label="Result row density">
@@ -811,6 +827,14 @@ export function SearchHuntPage(): JSX.Element {
             </div>
             <div className="hunt-grid-shell">
               {events.length > 0 ? (
+                resultView === 'metrics' ? (
+                  <HuntMetricsView
+                    events={events}
+                    totalApproximate={summary?.totalApproximate}
+                    totalIsExact={summary?.totalIsExact}
+                    onDrill={(field, value) => applyFieldFilter(`${field}:"${value.replace(/"/g, '\\"')}"`)}
+                  />
+                ) : (
                 <SearchResultsGrid
                   key={`${summary?.searchId ?? 'pending'}-${pageIndex}`}
                   events={events}
@@ -823,6 +847,7 @@ export function SearchHuntPage(): JSX.Element {
                   aiDerivedColumns={aiDerivedColumns}
                   showAiHand={showAiHand}
                 />
+                )
               ) : searchQuery.isFetching ? <div className="hunt-grid-loading" aria-label="Loading search results"><span /><span /><span /><span /><span /></div> : <div className="hunt-grid-empty"><ListFilter size={26} /><strong>No matching events</strong><span>The query completed. Choose Index: Alerts for detections, widen the 24h window, or enroll an agent from Posture → Sensors so endpoint logs are indexed.</span></div>}
             </div>
             <nav className="hunt-pagination" aria-label="Hunt result pages">
@@ -886,6 +911,14 @@ export function SearchHuntPage(): JSX.Element {
         onFilterOut={applyFieldFilter}
         onAction={openAction}
       />
+      {verdict && verdictPanelOpen && (
+        <HuntVerdictPanel
+          verdict={verdict}
+          onCiteRows={(refs) => { setVerdictPanelOpen(false); handleCiteRows(refs); }}
+          onPromote={handlePromoteFromVerdict}
+          onClose={() => setVerdictPanelOpen(false)}
+        />
+      )}
     </section>
   );
 }
