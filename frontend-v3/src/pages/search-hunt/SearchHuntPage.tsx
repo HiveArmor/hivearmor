@@ -14,6 +14,7 @@ import { EventDetailFlyout } from './components/EventDetailFlyout';
 import { FieldBrowser } from './components/FieldBrowser';
 import { HuntActionDrawer } from './components/HuntActionDrawer';
 import { HuntAiControls, type HuntAutonomy } from './components/HuntAiControls';
+import { HuntMetricsView } from './components/HuntMetricsView';
 import { HuntVerdictPanel } from './components/HuntVerdictPanel';
 import {
   huntIndexScopeLabel,
@@ -127,6 +128,7 @@ export function SearchHuntPage(): JSX.Element {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [flyoutEventId, setFlyoutEventId] = useState<string | null>(null);
   const [verdictPanelOpen, setVerdictPanelOpen] = useState(false);
+  const [resultView, setResultView] = useState<'table' | 'metrics'>('table');
   // Set when a downstream call (event flyout / field rail) reports the search snapshot has expired,
   // so the execution strip stops claiming a green "Query complete" for a dead session.
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -809,6 +811,10 @@ export function SearchHuntPage(): JSX.Element {
             <div className="hunt-results-toolbar">
               <div><strong>Events</strong><span>{events.length > 0 ? `${firstVisibleRow.toLocaleString()}–${lastVisibleRow.toLocaleString()} loaded` : 'No rows loaded'}{searchQuery.data?.hasMore ? ' · more available' : ''}</span></div>
               <div className="hunt-results-toolbar__actions">
+                <div className="hunt-view-toggle" role="group" aria-label="Result view">
+                  <button type="button" onClick={() => setResultView('table')} aria-pressed={resultView === 'table'} title="Table view"><ListFilter size={13} aria-hidden="true" />Table</button>
+                  <button type="button" onClick={() => setResultView('metrics')} aria-pressed={resultView === 'metrics'} title="Metrics view — summarise these results"><Sparkles size={13} aria-hidden="true" />Metrics</button>
+                </div>
                 <div className="hunt-density-control">
                   <span>Rows</span>
                   <div role="group" aria-label="Result row density">
@@ -821,6 +827,14 @@ export function SearchHuntPage(): JSX.Element {
             </div>
             <div className="hunt-grid-shell">
               {events.length > 0 ? (
+                resultView === 'metrics' ? (
+                  <HuntMetricsView
+                    events={events}
+                    totalApproximate={summary?.totalApproximate}
+                    totalIsExact={summary?.totalIsExact}
+                    onDrill={(field, value) => applyFieldFilter(`${field}:"${value.replace(/"/g, '\\"')}"`)}
+                  />
+                ) : (
                 <SearchResultsGrid
                   key={`${summary?.searchId ?? 'pending'}-${pageIndex}`}
                   events={events}
@@ -833,6 +847,7 @@ export function SearchHuntPage(): JSX.Element {
                   aiDerivedColumns={aiDerivedColumns}
                   showAiHand={showAiHand}
                 />
+                )
               ) : searchQuery.isFetching ? <div className="hunt-grid-loading" aria-label="Loading search results"><span /><span /><span /><span /><span /></div> : <div className="hunt-grid-empty"><ListFilter size={26} /><strong>No matching events</strong><span>The query completed. Choose Index: Alerts for detections, widen the 24h window, or enroll an agent from Posture → Sensors so endpoint logs are indexed.</span></div>}
             </div>
             <nav className="hunt-pagination" aria-label="Hunt result pages">
