@@ -77,17 +77,6 @@ const DENSITY_OPTIONS: Array<{ value: 'compact' | 'standard' | 'comfortable'; la
   { value: 'standard', label: 'Standard rows' },
   { value: 'comfortable', label: 'Comfortable rows' },
 ];
-const QUERY_LANGUAGES = [
-  { id: 'kql', label: 'KQL', detail: 'Keyword, field, range, wildcard, and Boolean filters', available: true },
-  { id: 'lucene', label: 'Lucene', detail: 'Backend parser capability required', available: false },
-  { id: 'esql', label: 'ES|QL', detail: 'Tabular aggregation contract required', available: false },
-  { id: 'opensearch_dsl', label: 'OpenSearch DSL', detail: 'Restricted server-side validation required', available: false },
-] as const;
-// Live languages gate the control shape: with a single available language the control row renders a
-// static chip labelled with that language instead of a picker. Re-introduce a picker dropdown (see git
-// history for the removed .hunt-language-picker markup) when a second parser advertises available:true.
-const AVAILABLE_QUERY_LANGUAGES = QUERY_LANGUAGES.filter((language) => language.available);
-const SINGLE_QUERY_LANGUAGE_LABEL = AVAILABLE_QUERY_LANGUAGES[0]?.label ?? 'KQL';
 // Escapes a string for safe literal use inside a RegExp (used when stripping a toggled filter fragment).
 function escapeRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -182,6 +171,7 @@ export function SearchHuntPage(): JSX.Element {
   useEffect(() => { localStorage.setItem('ha_hunt_columns', JSON.stringify(visibleColumns)); }, [visibleColumns]);
 
   const columnsPickerRef = useRef<HTMLDivElement | null>(null);
+  const overflowRef = useRef<HTMLDivElement | null>(null);
   // Close columns picker on outside click
   useEffect(() => {
     if (!columnsOpen) return undefined;
@@ -191,6 +181,17 @@ export function SearchHuntPage(): JSX.Element {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [columnsOpen]);
+
+  // Close the overflow (⋯) menu on outside click (FINDING-06) — includes clicks into the KQL/NL
+  // editors, which live outside the overflow container, so opening Ask/Query dismisses it.
+  useEffect(() => {
+    if (!overflowOpen) return undefined;
+    const handler = (e: MouseEvent) => {
+      if (overflowRef.current && !overflowRef.current.contains(e.target as Node)) setOverflowOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [overflowOpen]);
 
   const schemaQuery = useQuery({
     queryKey: ['hunt-schema', selectedTenantId],
@@ -582,7 +583,7 @@ export function SearchHuntPage(): JSX.Element {
                   fields={schemaQuery.data ?? []}
                   disabled={searchQuery.isFetching && events.length === 0}
                   expandSignal={queryExpandSignal}
-                  onFocusChange={(focused) => { if (focused) setActivePane('query'); }}
+                  onFocusChange={(focused) => { if (focused) { setActivePane('query'); setOverflowOpen(false); } }}
                 />
               </Suspense>
             </div>
@@ -617,7 +618,7 @@ export function SearchHuntPage(): JSX.Element {
                   placeholder="Ask in plain language — e.g. failed logons from admin accounts in the last hour"
                   aria-label="Natural language hunt question"
                   disabled={nlMutation.isPending}
-                  onFocus={() => setActivePane('nl')}
+                  onFocus={() => { setActivePane('nl'); setOverflowOpen(false); }}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' && nlQuestion.trim()) {
                       event.preventDefault();
@@ -671,7 +672,6 @@ export function SearchHuntPage(): JSX.Element {
         )}
         <div className="hunt-query-workspace__controls" aria-label="Search controls">
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setFieldRailOpen((open) => !open)} aria-pressed={fieldRailOpen} aria-label="Toggle filters and field values" title="Filters and field values"><ListFilter size={14} /></button>
-          <span className="hunt-language-chip" title={`Query language — only ${SINGLE_QUERY_LANGUAGE_LABEL} is available in this deployment`}><Code2 size={13} aria-hidden="true" />{SINGLE_QUERY_LANGUAGE_LABEL}</span>
           <TimeRangeSelector value={timeRange} onChange={setTimeRange} disabled={searchQuery.isFetching && events.length === 0} />
           <IndexScopePicker
             value={selectedIndex}
@@ -682,7 +682,7 @@ export function SearchHuntPage(): JSX.Element {
           />
           <button type="button" className="hunt-control-button" onClick={() => openManager('saved')} aria-expanded={managerPanelOpen} aria-haspopup="dialog" title="Saved hunts and search history"><Library size={13} />Library<ChevronDown size={11} /></button>
           <button type="button" className="hunt-control-button" onClick={() => setSaveOpen(true)} disabled={!query.trim() || !canSaveQuery} title={!canSaveQuery ? SAVE_DENIED : !query.trim() ? 'Enter a reusable query before saving' : 'Save query'}><Save size={13} />Save</button>
-          <div className="hunt-overflow">
+          <div className="hunt-overflow" ref={overflowRef}>
             <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setOverflowOpen((open) => !open)} aria-expanded={overflowOpen} aria-haspopup="menu" aria-label="More search controls" title="More controls"><MoreHorizontal size={15} /></button>
             {overflowOpen && (
               <div className="hunt-overflow__menu" role="menu" aria-label="More search controls">
