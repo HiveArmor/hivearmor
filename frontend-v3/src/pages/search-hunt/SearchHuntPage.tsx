@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
-import { fetchHuntVerdict, fetchFieldProvenance } from './ai/huntAiService';
+import { fetchHuntVerdict, fetchFieldProvenance, HUNT_AI_MODE } from './ai/huntAiService';
 import { EventDetailFlyout } from './components/EventDetailFlyout';
 import { FieldBrowser } from './components/FieldBrowser';
 import { HuntActionDrawer } from './components/HuntActionDrawer';
@@ -513,7 +513,13 @@ export function SearchHuntPage(): JSX.Element {
       .map((p) => HUNT_FIELD_COLUMN_MAP[p.field] ?? p.field),
     [fieldProvenanceQuery.data],
   );
-  const verdict = verdictQuery.data && verdictQuery.data.state === 'ready' ? verdictQuery.data : null;
+  // FINDING-03: the verdict lead must be HONEST. It renders only when the AI is genuinely available
+  // (live mode) AND the analyst has autonomy engaged (not Off). In mock mode the fixture reports a
+  // fabricated "ready" verdict (Suspicious·79%) — gating here stops that from ever showing, matching
+  // the same honesty as the NL "AI service not configured" banner.
+  const aiConfigured = HUNT_AI_MODE === 'live';
+  const aiActive = aiConfigured && autonomy !== 'off';
+  const verdict = aiActive && verdictQuery.data && verdictQuery.data.state === 'ready' ? verdictQuery.data : null;
 
   // Reasoning-cites-rows (move 3): open the first cited event's detail flyout.
   const handleCiteRows = useCallback((rowRefs: string[]) => {
@@ -724,13 +730,20 @@ export function SearchHuntPage(): JSX.Element {
           {permissionDenied || schemaPermissionDenied ? <div className="hunt-full-state" role="alert"><ShieldAlert size={30} /><h2>Search access is restricted</h2><p>Your account does not have permission to search this tenant scope or view its schema. Choose an authorized tenant or ask an administrator for hunt access.</p></div> : searchQuery.isError && events.length === 0 ? <div className="hunt-full-state" role="alert"><ShieldAlert size={30} /><h2>Search could not be completed</h2><p>The query service did not return a usable snapshot. Widen the time range, choose Index: Alerts if you expected detections, then retry. Log events appear after an endpoint agent is enrolled from Posture → Sensors.</p><button type="button" className="hunt-button" onClick={() => void searchQuery.refetch()}>Retry search</button></div> : null}
 
           {!permissionDenied && !(searchQuery.isError && events.length === 0) && <>
-            {verdict && (
+            {verdict ? (
               <HuntVerdictLead
                 verdict={verdict}
                 onCiteRows={handleCiteRows}
                 onPromote={handlePromoteFromVerdict}
               />
-            )}
+            ) : hasResults && !aiActive ? (
+              <p className="hunt-verdict-unavailable" role="note">
+                <span aria-hidden="true">✦</span>{' '}
+                {!aiConfigured
+                  ? 'AI verdict unavailable — the AI service is not configured for this deployment.'
+                  : 'AI verdict off — set Autonomy to Suggest (⋯ menu) to have the agent assess these results.'}
+              </p>
+            ) : null}
             <section className="hunt-histogram" aria-label="Event distribution over time">
               <header>
                 <div>
