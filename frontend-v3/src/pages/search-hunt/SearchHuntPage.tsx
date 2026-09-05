@@ -131,6 +131,19 @@ export function SearchHuntPage(): JSX.Element {
   const [flyoutEventId, setFlyoutEventId] = useState<string | null>(null);
   const [verdictPanelOpen, setVerdictPanelOpen] = useState(false);
   const [resultView, setResultView] = useState<'table' | 'metrics'>('table');
+  // Histogram collapse — persisted, so an analyst who reclaims the 96px for row-scanning keeps it
+  // collapsed across visits. The histogram stays in the table view (it is the time-scoping control);
+  // this only hides its body on demand.
+  const [histogramCollapsed, setHistogramCollapsed] = useState<boolean>(() => {
+    try { return localStorage.getItem('ha_hunt_histogram_collapsed') === 'true'; } catch { return false; }
+  });
+  const toggleHistogram = useCallback(() => {
+    setHistogramCollapsed((collapsed) => {
+      const next = !collapsed;
+      try { localStorage.setItem('ha_hunt_histogram_collapsed', String(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
   // Set when a downstream call (event flyout / field rail) reports the search snapshot has expired,
   // so the execution strip stops claiming a green "Query complete" for a dead session.
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -719,15 +732,18 @@ export function SearchHuntPage(): JSX.Element {
             {searchQuery.isFetching ? <button type="button" className="hunt-button hunt-button--stop" onClick={stopSearch}><CircleStop size={14} />Cancel</button> : <button type="button" className="hunt-button hunt-button--primary" onClick={() => runSearch()} title={!query.trim() ? 'Load the newest 100 events in the selected scope' : 'Run KQL hunt'}><Play size={14} />Run search</button>}
           </div>
         </div>
-        <div className="hunt-execution-strip" role="status" aria-live="polite">
-          <span data-state={searchQuery.isFetching ? 'running' : sessionExpired ? 'expired' : summary ? 'complete' : 'idle'}><i aria-hidden="true" />{searchQuery.isFetching ? 'Query running' : sessionExpired ? 'Snapshot expired · run again' : summary ? 'Query complete' : 'Ready'}</span>
-          <span title="Active index scope for the next Run search"><Database size={12} />Index · {huntIndexScopeLabel(selectedIndex)}</span>
-          <span><Database size={12} />{summary ? `${summary.totalIsExact ? '' : 'About '}${summary.totalApproximate.toLocaleString()} events` : 'No result snapshot'}</span>
-          <span><Clock3 size={12} />{summary ? `${summary.tookMs.toLocaleString()} ms` : 'Duration —'}</span>
-          <span><FileClock size={12} />{summary ? `Snapshot ${new Date(summary.snapshotAt).toLocaleTimeString()}` : 'Freshness —'}</span>
-          {staleVisible && <strong>Updating · previous results preserved</strong>}
-          {summary?.partialFailures.length ? <strong data-tone="warning">Partial results · {summary.partialFailures.length} source unavailable</strong> : null}
-        </div>
+        {/* Transient status line — renders ONLY while there is something time-sensitive to announce
+            (running / expired snapshot / stale-updating / partial failures). The durable result facts
+            (index · events · took · snapshot freshness) now live on the results toolbar, so a clean
+            "complete" state shows NO strip and the reclaimed row goes to the table. aria-live keeps the
+            query-complete announcement for screen readers via the toolbar summary below. */}
+        {(searchQuery.isFetching || sessionExpired || staleVisible || !!summary?.partialFailures.length) && (
+          <div className="hunt-execution-strip" role="status" aria-live="polite">
+            <span data-state={searchQuery.isFetching ? 'running' : sessionExpired ? 'expired' : 'complete'}><i aria-hidden="true" />{searchQuery.isFetching ? 'Query running' : sessionExpired ? 'Snapshot expired · run again' : 'Query complete'}</span>
+            {staleVisible && <strong>Updating · previous results preserved</strong>}
+            {summary?.partialFailures.length ? <strong data-tone="warning">Partial results · {summary.partialFailures.length} source unavailable</strong> : null}
+          </div>
+        )}
         {searchQuery.isFetching && summary?.searchId && (
           <SearchProgressBar searchId={summary.searchId} stream={searchStream} onCancelled={stopSearch} />
         )}
@@ -765,32 +781,57 @@ export function SearchHuntPage(): JSX.Element {
                   : 'AI verdict off — set Autonomy to Suggest (⋯ menu) to have the agent assess these results.'}
               </p>
             ) : null}
-            <section className="hunt-histogram" aria-label="Event distribution over time">
+            <section className="hunt-histogram" data-collapsed={histogramCollapsed || undefined} aria-label="Event distribution over time">
               <header>
-                <div>
+                <button
+                  type="button"
+                  className="hunt-histogram__toggle"
+                  onClick={toggleHistogram}
+                  aria-expanded={!histogramCollapsed}
+                  aria-controls="hunt-histogram-body"
+                  title={histogramCollapsed ? 'Show the event distribution histogram' : 'Collapse the histogram to give the results more room'}
+                >
+                  {histogramCollapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronDown size={14} aria-hidden="true" />}
                   <strong>Event distribution</strong>
                   <span>
-                    {hasLiveHistogram
-                      ? 'Click a bucket to narrow the active time range'
-                      : 'Histogram unavailable until the search response includes time buckets — counts are not invented'}
+                    {histogramCollapsed
+                      ? 'Collapsed — click to show'
+                      : hasLiveHistogram
+                        ? 'Click a bucket to narrow the active time range'
+                        : 'Histogram unavailable until the search response includes time buckets — counts are not invented'}
                   </span>
-                </div>
+                </button>
                 <span>{hasLiveHistogram ? `${histogram.length} buckets` : 'No buckets'}</span>
               </header>
-              <div className="hunt-histogram__chart">
-                {hasLiveHistogram ? (
-                  <Suspense fallback={<div className="hunt-chart-skeleton" />}>
-                    <LazyHaChart option={histogramOption} height="100%" onChartClick={handleHistogramClick} ariaLabel="Event histogram" ariaDescription="Event counts over the current query time range. Activate a bucket to narrow the search." />
-                  </Suspense>
-                ) : (
-                  <div className="hunt-histogram__empty" role="status">
-                    No live histogram for this snapshot. Results below reflect the query response only.
-                  </div>
-                )}
-              </div>
+              {!histogramCollapsed && (
+                <div className="hunt-histogram__chart" id="hunt-histogram-body">
+                  {hasLiveHistogram ? (
+                    <Suspense fallback={<div className="hunt-chart-skeleton" />}>
+                      <LazyHaChart option={histogramOption} height="100%" onChartClick={handleHistogramClick} ariaLabel="Event histogram" ariaDescription="Event counts over the current query time range. Activate a bucket to narrow the search." />
+                    </Suspense>
+                  ) : (
+                    <div className="hunt-histogram__empty" role="status">
+                      No live histogram for this snapshot. Results below reflect the query response only.
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
             <div className="hunt-results-toolbar">
-              <div><strong>Events</strong><span>{events.length > 0 ? `${firstVisibleRow.toLocaleString()}–${lastVisibleRow.toLocaleString()} loaded` : 'No rows loaded'}{searchQuery.data?.hasMore ? ' · more available' : ''}</span></div>
+              <div className="hunt-results-toolbar__summary" role="status" aria-live="polite">
+                <strong>Events</strong>
+                <span>{events.length > 0 ? `${firstVisibleRow.toLocaleString()}–${lastVisibleRow.toLocaleString()} loaded` : 'No rows loaded'}{searchQuery.data?.hasMore ? ' · more available' : ''}</span>
+                {summary && <>
+                  <span className="hunt-results-toolbar__sep" aria-hidden="true">·</span>
+                  <span title="Active index scope for the next Run search"><Database size={11} aria-hidden="true" />{huntIndexScopeLabel(selectedIndex)}</span>
+                  <span className="hunt-results-toolbar__sep" aria-hidden="true">·</span>
+                  <span>{`${summary.totalIsExact ? '' : '~'}${summary.totalApproximate.toLocaleString()} matched`}</span>
+                  <span className="hunt-results-toolbar__sep" aria-hidden="true">·</span>
+                  <span><Clock3 size={11} aria-hidden="true" />{summary.tookMs.toLocaleString()} ms</span>
+                  <span className="hunt-results-toolbar__sep" aria-hidden="true">·</span>
+                  <span title="When this result snapshot was taken"><FileClock size={11} aria-hidden="true" />{new Date(summary.snapshotAt).toLocaleTimeString()}</span>
+                </>}
+              </div>
               <div className="hunt-results-toolbar__actions">
                 <div className="hunt-view-toggle" role="group" aria-label="Result view">
                   <button type="button" onClick={() => setResultView('table')} aria-pressed={resultView === 'table'} title="Table view"><ListFilter size={13} aria-hidden="true" />Table</button>

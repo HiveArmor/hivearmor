@@ -463,6 +463,16 @@
 
 .hunt-results { position: relative; display: flex; min-width: 0; min-height: 100%; flex-direction: column; overflow: visible; background: var(--ha-surface-app); }
 .hunt-histogram { position: relative; z-index: 1; height: var(--hunt-histogram-height); flex: 0 0 var(--hunt-histogram-height); overflow: hidden; border-bottom: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
+/* Collapsed: the section shrinks to just its 34px header. The sticky offset for the toolbar + field
+   rail is retargeted to that header height via :has() below, so the toolbar stays pinned flush. */
+.hunt-histogram[data-collapsed] { height: auto; flex: 0 0 auto; }
+.hunt-results:has(.hunt-histogram[data-collapsed]),
+.hunt-results-workspace:has(.hunt-histogram[data-collapsed]) { --hunt-histogram-height: 34px; }
+/* Header doubles as the collapse toggle. */
+.hunt-histogram__toggle { display: flex; min-width: 0; align-items: baseline; gap: 6px; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; text-align: left; }
+.hunt-histogram__toggle > svg { align-self: center; flex: 0 0 auto; color: var(--ha-foreground-tertiary); }
+.hunt-histogram__toggle:hover > svg { color: var(--ha-foreground-primary); }
+.hunt-histogram__toggle:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ha-border-focus); border-radius: var(--ha-radius-sm); }
 /* Compact AI-verdict banner — opens the full verdict in a right-side panel (HuntVerdictPanel) instead
    of an inline scrolling card, keeping the results grid unobstructed. */
 .hunt-verdict-banner {
@@ -510,13 +520,19 @@
 .hunt-verdict-unavailable { display: flex; align-items: center; gap: 6px; margin: 10px; padding: 8px 12px; border: 1px dashed var(--ha-border-default); border-radius: var(--ha-radius-panel, 8px); background: var(--ha-fill-intelligence-subtle); color: var(--ha-foreground-secondary); font: var(--ha-type-compact); }
 .hunt-verdict-unavailable > span { color: var(--ha-intelligence-strong, var(--ha-intelligence-primary)); }
 .hunt-histogram > header { display: flex; height: 34px; align-items: center; justify-content: space-between; padding: 5px 10px; }
-.hunt-histogram > header > div { display: flex; align-items: baseline; gap: 9px; }
-.hunt-histogram > header span { color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
+.hunt-histogram > header > div, .hunt-histogram > header > .hunt-histogram__toggle { display: flex; align-items: baseline; gap: 9px; }
+.hunt-histogram > header span { color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hunt-histogram__chart { height: 58px; padding-bottom: 4px; }
 .hunt-chart-skeleton { height: 100%; margin: 0 10px 7px; background: repeating-linear-gradient(90deg, var(--ha-surface-elevated) 0, var(--ha-surface-elevated) 12px, transparent 12px, transparent 22px); opacity: .45; }
 .hunt-results-toolbar { position: sticky; z-index: 30; top: var(--hunt-sticky-query-height); display: flex; min-height: 40px; flex: 0 0 40px; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 8px 4px 10px; border-top: 1px solid var(--ha-border-subtle); border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 5px 12px color-mix(in srgb, var(--ha-surface-app) 24%, transparent); }
-.hunt-results-toolbar > div:first-child { display: flex; align-items: baseline; gap: 8px; }
-.hunt-results-toolbar > div:first-child span { color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
+.hunt-results-toolbar > div:first-child,
+.hunt-results-toolbar__summary { display: flex; min-width: 0; align-items: baseline; gap: 8px; overflow: hidden; }
+.hunt-results-toolbar > div:first-child span,
+.hunt-results-toolbar__summary span { display: inline-flex; align-items: baseline; gap: 4px; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); white-space: nowrap; }
+.hunt-results-toolbar__summary > strong { flex: 0 0 auto; }
+.hunt-results-toolbar__summary span svg { align-self: center; flex: 0 0 auto; }
+.hunt-results-toolbar__summary span[title]:not(:has(svg)) { font-variant-numeric: tabular-nums; }
+.hunt-results-toolbar__sep { color: var(--ha-border-strong); }
 .hunt-results-toolbar__actions { display: flex; align-items: center; gap: 6px; }
 /* Table | Metrics segmented view toggle on the results toolbar. */
 .hunt-view-toggle { display: inline-flex; align-items: center; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control, 6px); overflow: hidden; }
