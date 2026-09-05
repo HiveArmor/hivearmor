@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { ChevronDown, ChevronRight } from 'lucide-react';
+
 
 import type { HuntVerdictResponse } from '../ai/huntAiContract.types';
 import { submitAiFeedback } from '../ai/huntAiService';
@@ -33,6 +35,7 @@ function fmtPct(v: number): string {
  */
 export function HuntVerdictLead({ verdict, onCiteRows, onPromote }: HuntVerdictLeadProps): JSX.Element {
   const [feedbackSent, setFeedbackSent] = useState<'up' | 'down' | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
   const { calibration, reasoning } = verdict;
 
   const handleFeedback = (vote: 'up' | 'down'): void => {
@@ -86,7 +89,26 @@ export function HuntVerdictLead({ verdict, onCiteRows, onPromote }: HuntVerdictL
   }));
 
   return (
-    <section className="hunt-verdict-lead" aria-label="AI verdict for these results">
+    <section className="hunt-verdict-lead" data-collapsed={collapsed || undefined} aria-label="AI verdict for these results">
+      <div className="hunt-verdict-lead__bar">
+        <button
+          type="button"
+          className="hunt-verdict-lead__toggle"
+          aria-expanded={!collapsed}
+          onClick={() => setCollapsed((c) => !c)}
+        >
+          {collapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronDown size={14} aria-hidden="true" />}
+          <span className="hunt-verdict-lead__toggle-glyph" aria-hidden="true">✦</span>
+          <span className="hunt-verdict-lead__toggle-label">AI verdict</span>
+          {collapsed && (
+            <span className="hunt-verdict-lead__toggle-peek">
+              {verdict.verdict} · {fmtPct(verdict.confidence)}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {!collapsed && <>
       <AiVerdictCard
         verdict={verdict.verdict}
         confidence={verdict.confidence}
@@ -115,6 +137,7 @@ export function HuntVerdictLead({ verdict, onCiteRows, onPromote }: HuntVerdictL
           Thanks — {feedbackSent === 'up' ? 'reinforced' : 'flagged'}. This feeds the agent&apos;s track record.
         </p>
       )}
+      </>}
     </section>
   );
 }

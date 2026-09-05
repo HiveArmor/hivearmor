@@ -553,6 +553,14 @@
   opacity: .45;
 }
 
+/* Pin the status dock to the bottom of the scrolling hunt page so the sticky pagination
+   (bottom: 28px) lands directly above it instead of floating up between table rows. */
+.hunt-status-dock {
+  position: sticky;
+  z-index: 36;
+  bottom: 0;
+}
+
 .hunt-save-modal.pf-v6-c-modal-box { --pf-v6-c-modal-box--Width: min(480px, calc(100vw - 32px)); --pf-v6-c-modal-box--MaxWidth: calc(100vw - 32px); width: min(480px, calc(100vw - 32px)); max-width: calc(100vw - 32px); overflow: hidden; border-color: var(--ha-border-default); border-radius: var(--ha-radius-panel); background: var(--ha-surface-elevated); box-shadow: var(--ha-shadow-medium); }
 .hunt-save-modal .pf-v6-c-modal-box__header { padding: 15px 17px 12px; background: var(--ha-surface-panel); }
 .hunt-save-modal .pf-v6-c-modal-box__close button { color: var(--ha-foreground-secondary); }
@@ -1367,7 +1375,7 @@
 .event-flyout__field {
   display: grid;
   min-height: 38px;
-  grid-template-columns: minmax(120px, 0.7fr) minmax(0, 1.3fr);
+  grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.2fr);
   align-items: center;
   border-bottom: 1px solid var(--ha-border-subtle);
 }
@@ -1376,10 +1384,16 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;                 /* allow the key to truncate instead of overrunning the value */
   margin: 0;
   padding: 6px 9px;
   color: var(--ha-foreground-tertiary);
   font: 10.5px var(--ha-font-mono);
+}
+.event-flyout__field-key {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .event-flyout__field dd {
@@ -1393,7 +1407,9 @@
   font: 11px var(--ha-font-mono);
   overflow-wrap: anywhere;
 }
-.event-flyout__value { min-width: 0; overflow-wrap: anywhere; }
+.event-flyout__value { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.event-flyout__value-icon { flex: 0 0 auto; color: var(--ha-foreground-tertiary); }
+.event-flyout__value-text { min-width: 0; overflow-wrap: anywhere; }
 
 /* Sectioned field grid — group headers mirror the showcase (Detection / Network / Assets / …) */
 .event-flyout__group + .event-flyout__group { margin-top: 10px; }
@@ -1460,16 +1476,14 @@
 
 .event-flyout__type-badge {
   display: inline-flex;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
   align-items: center;
-  gap: 3px;
-  padding: 1px 5px;
-  border-radius: 3px;
+  justify-content: center;
+  border-radius: 4px;
   background: var(--ha-surface-elevated);
   color: var(--ha-foreground-tertiary);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
 }
 
 .event-flyout__type-badge[data-type='ip'] {

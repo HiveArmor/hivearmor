@@ -4,6 +4,26 @@
 .hunt-verdict-lead {
   margin-bottom: 12px;
 }
+/* Collapse/expand control — lets analysts fold the verdict to reclaim grid space. */
+.hunt-verdict-lead__bar { display: flex; align-items: center; }
+.hunt-verdict-lead__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 3px 8px 3px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ha-intelligence-strong, var(--ha-intelligence-primary));
+  cursor: pointer;
+  font: var(--ha-type-compact);
+  font-weight: 600;
+}
+.hunt-verdict-lead__toggle:hover { background: var(--ha-fill-intelligence-subtle); }
+.hunt-verdict-lead__toggle:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--ha-border-focus); }
+.hunt-verdict-lead__toggle-peek { color: var(--ha-foreground-secondary); font-weight: 500; }
+.hunt-verdict-lead[data-collapsed] { margin-bottom: 8px; }
 
 /* Reasoning steps with clickable row citations (move 3) */
 .hunt-verdict-lead__reasoning {

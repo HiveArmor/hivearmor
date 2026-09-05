@@ -463,12 +463,24 @@ export function SearchHuntPage(): JSX.Element {
 
   const histogramOption = useMemo<EChartsOption>(() => {
     const buckets = histogram;
+    // Volume-intensity ramp (NOT severity): taller spikes get an escalated colour so bursts pop.
+    // Uses action/state tokens — never severity/brand — since this encodes count, not threat level.
+    const rampLow = chartToken('--ha-action-primary');    // teal — quiet buckets
+    const rampMid = chartToken('--ha-state-info');        // blue — busier
+    const rampHigh = chartToken('--ha-state-warning');    // amber — the spikes
+    const maxCount = buckets.reduce((m, b) => Math.max(m, b.count), 0) || 1;
+    const barColor = (count: number): string => {
+      const r = count / maxCount;              // 0..1 relative to the tallest bar
+      if (r >= 0.66) return rampHigh;
+      if (r >= 0.33) return rampMid;
+      return rampLow;
+    };
     return {
       animation: false,
       grid: { left: 42, right: 10, top: 10, bottom: 24 },
       xAxis: { type: 'category', data: buckets.map((bucket) => new Date(bucket.from).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })), axisLabel: { color: chartToken('--ha-foreground-tertiary'), fontSize: 10 }, axisLine: { lineStyle: { color: chartToken('--ha-border-subtle') } }, axisTick: { show: false } },
       yAxis: { type: 'value', minInterval: 1, axisLabel: { color: chartToken('--ha-foreground-tertiary'), fontSize: 10 }, splitLine: { lineStyle: { color: chartToken('--ha-border-subtle') } } },
-      series: [{ type: 'bar', data: buckets.map((bucket) => bucket.count), barMaxWidth: 20, itemStyle: { color: chartToken('--ha-action-primary') }, emphasis: { itemStyle: { color: chartToken('--ha-action-primary-hover') } } }],
+      series: [{ type: 'bar', data: buckets.map((bucket) => ({ value: bucket.count, itemStyle: { color: barColor(bucket.count) } })), barMaxWidth: 20, emphasis: { itemStyle: { color: chartToken('--ha-action-primary-hover') } } }],
       tooltip: { trigger: 'axis', backgroundColor: chartToken('--ha-surface-elevated'), borderColor: chartToken('--ha-border-default'), textStyle: { color: chartToken('--ha-foreground-primary'), fontSize: 11 } },
     };
   }, [histogram]);
@@ -801,6 +813,7 @@ export function SearchHuntPage(): JSX.Element {
       </div>
 
       <StatusDock
+        className="hunt-status-dock"
         sseConnected={epsStream.connected}
         eps={epsStream.eps}
         mode={epsStream.connected ? 'live' : 'historical'}
