@@ -1,12 +1,15 @@
 import type {
   HuntEvent,
   HuntEventDetail,
+  HuntEventDetailResponse,
+  HuntEventField,
   HuntFieldDefinition,
   HuntFieldValuesResponse,
   HuntFieldStatsResponse,
   HuntHistogramBucket,
   HuntSearchRequest,
   HuntSearchResponse,
+  Pivot,
 } from './searchHunt.types';
 
 import type { SavedHuntDTO } from '@/types/search';
@@ -257,5 +260,58 @@ export function getFoundationHuntEventDetail(eventId: string): HuntEventDetail {
       ...(event.sourceIp ? [{ id: 'source', label: `Hunt source ${event.sourceIp}`, query: `source.ip:${event.sourceIp}` }] : []),
     ],
     permissions: { viewRaw: true, addEvidence: true, createInvestigation: true, createIncident: true },
+  };
+}
+
+/** Fixture event-detail RESPONSE (fields + raw + pivots) for the EventDetailFlyout's fetchHuntEvent
+ *  path. Kept separate from getFoundationHuntEventDetail (a different shape) so the flyout renders in
+ *  fixture mode. Fixture-only — never shipped to production. */
+export function getFoundationHuntEventResponse(
+  eventId: string,
+  view: 'highlighted' | 'raw',
+): HuntEventDetailResponse {
+  const event = foundationHuntEvents.find((candidate) => candidate.id === eventId);
+  if (!event) throw new Error('Event is no longer available in this snapshot.');
+
+  const groupFor = (key: string): string => {
+    if (key.startsWith('event.')) return 'Detection';
+    if (key.startsWith('source.') || key.startsWith('destination.')) return 'Network';
+    if (key.startsWith('host.') || key.startsWith('user.') || key.startsWith('process.')) return 'Assets';
+    return 'Context';
+  };
+  const emphasisFor = (key: string): HuntEventField['emphasis'] =>
+    key === 'event.severity' ? 'critical' : key === 'event.action' ? 'warning' : 'neutral';
+
+  const fields: HuntEventField[] = Object.entries(event.normalized).map(([key, raw], order) => {
+    const value = String(raw ?? '');
+    const escaped = value.replace(/"/g, '\\"');
+    return {
+      key,
+      value,
+      type: key.endsWith('.ip') ? 'ip' : key === '@timestamp' ? 'date' : 'keyword',
+      emphasis: emphasisFor(key),
+      order,
+      group: groupFor(key),
+      includeQuery: value ? `${key}:"${escaped}"` : '',
+      excludeQuery: value ? `NOT ${key}:"${escaped}"` : '',
+    };
+  });
+
+  const pivots: Pivot[] = [
+    ...(event.host ? [{ id: 'host', label: `Hunt host ${event.host}`, description: 'All activity for this host', field: 'host.name', value: event.host, query: `host.name:"${event.host}"`, signature: 'host', icon: 'server', category: 'Assets' }] : []),
+    ...(event.user ? [{ id: 'user', label: `Hunt user ${event.user}`, description: 'All activity for this user', field: 'user.name', value: event.user, query: `user.name:"${event.user}"`, signature: 'user', icon: 'user', category: 'Assets' }] : []),
+    ...(event.sourceIp ? [{ id: 'source', label: `Hunt source ${event.sourceIp}`, description: 'All activity from this source IP', field: 'source.ip', value: event.sourceIp, query: `source.ip:${event.sourceIp}`, signature: 'source', icon: 'network', category: 'Network' }] : []),
+  ];
+
+  return {
+    fields: view === 'raw' ? undefined : fields,
+    raw: {
+      event_id: event.id,
+      '@timestamp': event.timestamp,
+      ...event.normalized,
+      message: event.message,
+      tenant: event.tenantName,
+    },
+    pivots,
   };
 }
