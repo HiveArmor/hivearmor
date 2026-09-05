@@ -512,8 +512,9 @@
 .hunt-grid-loading span { height: 32px; background: linear-gradient(90deg, var(--ha-surface-panel), var(--ha-surface-elevated), var(--ha-surface-panel)); background-size: 200% 100%; animation: hunt-shimmer 1.4s linear infinite; }
 @keyframes hunt-shimmer { to { background-position: -200% 0; } }
 .hunt-pagination {
-  position: relative;
+  position: sticky;
   z-index: 35;
+  bottom: 0;
   display: flex;
   min-height: 28px;
   flex: 0 0 28px;
