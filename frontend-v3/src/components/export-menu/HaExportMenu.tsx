@@ -28,6 +28,8 @@ export interface HaExportMenuProps {
   disabled?: boolean;
   /** Run the export for the chosen format. The handler owns the committed query/filters. */
   onExport: (format: ExportFormat, signal: AbortSignal) => Promise<ExportResult>;
+  /** Icon-only trigger (no "Export" label / chevron) for dense control strips. */
+  compact?: boolean;
 }
 
 type Phase = 'idle' | 'exporting' | 'done' | 'error';
@@ -38,7 +40,7 @@ function shortHash(sha256: string): string {
   return sha256.length > SHORT_HASH_LENGTH ? `${sha256.slice(0, SHORT_HASH_LENGTH)}…` : sha256;
 }
 
-export function HaExportMenu({ surface, disabled = false, onExport }: HaExportMenuProps): JSX.Element {
+export function HaExportMenu({ surface, disabled = false, onExport, compact = false }: HaExportMenuProps): JSX.Element {
   const [menuOpen, setMenuOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>('idle');
   const [result, setResult] = useState<ExportResult | null>(null);
@@ -107,14 +109,14 @@ export function HaExportMenu({ surface, disabled = false, onExport }: HaExportMe
         trigger={
           <button
             type="button"
-            className="ha-export__trigger"
+            className={compact ? 'ha-export__trigger ha-export__trigger--compact' : 'ha-export__trigger'}
             disabled={disabled || busy}
             aria-label="Export results"
             title={disabled ? 'No results to export' : 'Export results'}
           >
-            <Download size={13} aria-hidden="true" />
-            <span>Export</span>
-            <ChevronDown size={12} aria-hidden="true" />
+            <Download size={compact ? 14 : 13} aria-hidden="true" />
+            {!compact && <span>Export</span>}
+            {!compact && <ChevronDown size={12} aria-hidden="true" />}
           </button>
         }
       >

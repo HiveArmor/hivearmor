@@ -693,8 +693,15 @@ export function SearchHuntPage(): JSX.Element {
         <div className="hunt-query-workspace__controls" aria-label="Search controls">
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setFieldRailOpen((open) => !open)} aria-pressed={fieldRailOpen} aria-label="Toggle filters and field values" title="Filters and field values"><ListFilter size={14} /></button>
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={toggleHistogram} aria-pressed={!histogramCollapsed} aria-controls="hunt-histogram-body" aria-label={histogramCollapsed ? 'Show event distribution histogram' : 'Hide event distribution histogram'} title={histogramCollapsed ? 'Show event distribution' : 'Hide event distribution'}><BarChart3 size={14} /></button>
+          <div className="hunt-view-toggle" role="group" aria-label="Result view">
+            <button type="button" onClick={() => setResultView('table')} aria-pressed={resultView === 'table'} title="Table view"><ListFilter size={13} aria-hidden="true" />Table</button>
+            <button type="button" onClick={() => setResultView('metrics')} aria-pressed={resultView === 'metrics'} title="Metrics view — summarise these results"><Sparkles size={13} aria-hidden="true" />Metrics</button>
+          </div>
+          <span className="hunt-control-divider" aria-hidden="true" />
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => openManager('saved')} aria-expanded={managerPanelOpen} aria-haspopup="dialog" aria-label="Saved hunts and search history" title="Saved hunts &amp; history"><Library size={14} /></button>
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setSaveOpen(true)} disabled={!query.trim() || !canSaveQuery} aria-label="Save this hunt query" title={!canSaveQuery ? SAVE_DENIED : !query.trim() ? 'Enter a reusable query before saving' : 'Save query'}><Save size={14} /></button>
+          <div className="hunt-column-picker" ref={columnsPickerRef}><button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setColumnsOpen((open) => !open)} aria-expanded={columnsOpen} aria-label="Choose columns" title="Columns"><Columns3 size={14} /></button>{columnsOpen && <div className="hunt-column-picker__menu">{COLUMN_OPTIONS.map(([id, label]) => <label key={id}><input type="checkbox" checked={visibleColumns.includes(id)} onChange={() => toggleColumn(id)} /><span>{label}</span>{visibleColumns.includes(id) && <Check size={12} />}</label>)}<button type="button" className="hunt-column-picker__reset" onClick={() => { setVisibleColumns(DEFAULT_COLUMNS); setColumnsOpen(false); }}>Reset to default</button></div>}</div>
+          <HaExportMenu surface="hunt-search" disabled={!hasResults} onExport={handleExport} compact />
           <div className="hunt-overflow" ref={overflowRef}>
             <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setOverflowOpen((open) => !open)} aria-expanded={overflowOpen} aria-haspopup="menu" aria-label="More search controls" title="More controls"><MoreHorizontal size={15} /></button>
             {overflowOpen && (
@@ -808,26 +815,6 @@ export function SearchHuntPage(): JSX.Element {
                 </div>
               </section>
             )}
-            <div className="hunt-results-toolbar">
-              <div className="hunt-results-toolbar__summary" role="status" aria-live="polite">
-                <strong>Events</strong>
-                <span>{events.length > 0 ? `${firstVisibleRow.toLocaleString()}–${lastVisibleRow.toLocaleString()} loaded` : 'No rows loaded'}{searchQuery.data?.hasMore ? ' · more available' : ''}</span>
-              </div>
-              <div className="hunt-results-toolbar__actions">
-                <div className="hunt-view-toggle" role="group" aria-label="Result view">
-                  <button type="button" onClick={() => setResultView('table')} aria-pressed={resultView === 'table'} title="Table view"><ListFilter size={13} aria-hidden="true" />Table</button>
-                  <button type="button" onClick={() => setResultView('metrics')} aria-pressed={resultView === 'metrics'} title="Metrics view — summarise these results"><Sparkles size={13} aria-hidden="true" />Metrics</button>
-                </div>
-                <div className="hunt-density-control">
-                  <span>Rows</span>
-                  <div role="group" aria-label="Result row density">
-                    {DENSITY_OPTIONS.map((option) => <button key={option.value} type="button" onClick={() => setDensity(option.value)} aria-pressed={density === option.value} title={option.label}><span className="hunt-density-glyph" data-density={option.value} aria-hidden="true"><i /><i /><i /></span><span className="hunt-sr-only">{option.label}</span></button>)}
-                  </div>
-                </div>
-                <div className="hunt-column-picker" ref={columnsPickerRef}><button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setColumnsOpen((open) => !open)} aria-expanded={columnsOpen} aria-label="Choose columns" title="Columns"><Columns3 size={14} /></button>{columnsOpen && <div className="hunt-column-picker__menu">{COLUMN_OPTIONS.map(([id, label]) => <label key={id}><input type="checkbox" checked={visibleColumns.includes(id)} onChange={() => toggleColumn(id)} /><span>{label}</span>{visibleColumns.includes(id) && <Check size={12} />}</label>)}<button type="button" className="hunt-column-picker__reset" onClick={() => { setVisibleColumns(DEFAULT_COLUMNS); setColumnsOpen(false); }}>Reset to default</button></div>}</div>
-                <HaExportMenu surface="hunt-search" disabled={!hasResults} onExport={handleExport} />
-              </div>
-            </div>
             <div className="hunt-grid-shell">
               {events.length > 0 ? (
                 resultView === 'metrics' ? (
@@ -868,6 +855,12 @@ export function SearchHuntPage(): JSX.Element {
                 </>}
               </div>
               <div className="hunt-pagination__actions">
+                <div className="hunt-density-control">
+                  <span>Rows</span>
+                  <div role="group" aria-label="Result row density">
+                    {DENSITY_OPTIONS.map((option) => <button key={option.value} type="button" onClick={() => setDensity(option.value)} aria-pressed={density === option.value} title={option.label}><span className="hunt-density-glyph" data-density={option.value} aria-hidden="true"><i /><i /><i /></span><span className="hunt-sr-only">{option.label}</span></button>)}
+                  </div>
+                </div>
                 <button type="button" className="hunt-button hunt-pagination__nav" onClick={goToPreviousPage} disabled={pageIndex === 0 || searchQuery.isFetching} aria-label="Previous page"><ChevronLeft size={13} /><span>Prev</span></button>
                 <button type="button" className="hunt-button hunt-pagination__nav" onClick={goToNextPage} disabled={!searchQuery.data?.nextCursor || searchQuery.isFetching} aria-label="Next page"><span>Next</span><ChevronRight size={13} /></button>
               </div>

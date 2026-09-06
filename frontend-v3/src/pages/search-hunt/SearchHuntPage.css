@@ -598,8 +598,8 @@
   position: static;
   z-index: 35;
   display: flex;
-  min-height: 28px;
-  flex: 0 0 28px;
+  min-height: 36px;
+  flex: 0 0 36px;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
@@ -636,7 +636,7 @@
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 3px;
+  gap: 8px;
 }
 .hunt-pagination__nav {
   min-height: 22px;
