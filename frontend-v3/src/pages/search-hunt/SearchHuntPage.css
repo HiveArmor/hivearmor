@@ -1,11 +1,11 @@
 .hunt-page {
-  /* Sticky offset for the results toolbar + field rail INSIDE the scroll region. The query workspace
-     is a fixed sibling ABOVE the scroll region, so the only thing that scrolls past the toolbar is the
-     histogram — the offset must equal the histogram height (--hunt-histogram-height), not the whole
-     header stack. A stale 116px here left a ~20px gap above the toolbar and hid the grid's first header
-     row beneath it. Keep this in lockstep with .hunt-histogram height. */
-  --hunt-histogram-height: 96px;
-  --hunt-sticky-query-height: var(--hunt-histogram-height);
+  /* The results toolbar + field rail pin at the TOP of the scroll region (top: 0). The histogram, when
+     expanded, is a normal-flow block that scrolls ABOVE the pinned toolbar; when the analyst toggles it
+     off it is not rendered at all. Pinning at 0 (rather than a histogram-height offset) means the toolbar
+     can never mismatch the histogram's presence/height and overlap the grid header — the bug that a
+     magic offset kept reintroducing. Histogram is taller now so its buckets + axis read clearly. */
+  --hunt-histogram-height: 168px;
+  --hunt-sticky-top: 0px;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -405,7 +405,7 @@
 
 .hunt-results-workspace { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1 1 auto; min-height: 0; align-items: start; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 .hunt-results-workspace[data-field-rail='true'] { grid-template-columns: 242px minmax(0, 1fr); }
-.hunt-field-browser { position: sticky; z-index: 20; top: var(--hunt-sticky-query-height); display: flex; min-width: 0; height: calc(100dvh - var(--ha-masthead-height) - var(--hunt-sticky-query-height) - 28px); flex-direction: column; align-self: start; overflow: hidden; border-right: 1px solid var(--ha-border-default); border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); }
+.hunt-field-browser { position: sticky; z-index: 20; top: var(--hunt-sticky-top); display: flex; min-width: 0; height: calc(100dvh - var(--ha-masthead-height) - 28px); flex-direction: column; align-self: start; overflow: hidden; border-right: 1px solid var(--ha-border-default); border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); }
 .hunt-field-browser__header, .hunt-field-browser__header > div { display: flex; align-items: center; }
 .hunt-field-browser__header { min-height: 37px; justify-content: space-between; padding: 6px 9px; border-bottom: 1px solid var(--ha-border-subtle); }
 .hunt-field-browser__header > div { gap: 6px; }
@@ -463,16 +463,6 @@
 
 .hunt-results { position: relative; display: flex; min-width: 0; min-height: 100%; flex-direction: column; overflow: visible; background: var(--ha-surface-app); }
 .hunt-histogram { position: relative; z-index: 1; height: var(--hunt-histogram-height); flex: 0 0 var(--hunt-histogram-height); overflow: hidden; border-bottom: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
-/* Collapsed: the section shrinks to just its 34px header. The sticky offset for the toolbar + field
-   rail is retargeted to that header height via :has() below, so the toolbar stays pinned flush. */
-.hunt-histogram[data-collapsed] { height: auto; flex: 0 0 auto; }
-.hunt-results:has(.hunt-histogram[data-collapsed]),
-.hunt-results-workspace:has(.hunt-histogram[data-collapsed]) { --hunt-histogram-height: 34px; }
-/* Header doubles as the collapse toggle. */
-.hunt-histogram__toggle { display: flex; min-width: 0; align-items: baseline; gap: 6px; padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; text-align: left; }
-.hunt-histogram__toggle > svg { align-self: center; flex: 0 0 auto; color: var(--ha-foreground-tertiary); }
-.hunt-histogram__toggle:hover > svg { color: var(--ha-foreground-primary); }
-.hunt-histogram__toggle:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ha-border-focus); border-radius: var(--ha-radius-sm); }
 /* Compact AI-verdict banner — opens the full verdict in a right-side panel (HuntVerdictPanel) instead
    of an inline scrolling card, keeping the results grid unobstructed. */
 .hunt-verdict-banner {
@@ -522,9 +512,9 @@
 .hunt-histogram > header { display: flex; height: 34px; align-items: center; justify-content: space-between; padding: 5px 10px; }
 .hunt-histogram > header > div, .hunt-histogram > header > .hunt-histogram__toggle { display: flex; align-items: baseline; gap: 9px; }
 .hunt-histogram > header span { color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hunt-histogram__chart { height: 58px; padding-bottom: 4px; }
+.hunt-histogram__chart { height: 126px; padding-bottom: 4px; }
 .hunt-chart-skeleton { height: 100%; margin: 0 10px 7px; background: repeating-linear-gradient(90deg, var(--ha-surface-elevated) 0, var(--ha-surface-elevated) 12px, transparent 12px, transparent 22px); opacity: .45; }
-.hunt-results-toolbar { position: sticky; z-index: 30; top: var(--hunt-sticky-query-height); display: flex; min-height: 40px; flex: 0 0 40px; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 8px 4px 10px; border-top: 1px solid var(--ha-border-subtle); border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 5px 12px color-mix(in srgb, var(--ha-surface-app) 24%, transparent); }
+.hunt-results-toolbar { position: sticky; z-index: 30; top: var(--hunt-sticky-top); display: flex; min-height: 40px; flex: 0 0 40px; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 8px 4px 10px; border-top: 1px solid var(--ha-border-subtle); border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 5px 12px color-mix(in srgb, var(--ha-surface-app) 24%, transparent); }
 .hunt-results-toolbar > div:first-child,
 .hunt-results-toolbar__summary { display: flex; min-width: 0; align-items: baseline; gap: 8px; overflow: hidden; }
 .hunt-results-toolbar > div:first-child span,
@@ -625,11 +615,18 @@
   overflow: hidden;
   white-space: nowrap;
 }
-.hunt-pagination__meta > span:first-child {
+.hunt-pagination__meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
 }
+.hunt-pagination__meta > span svg { flex: 0 0 auto; color: var(--ha-foreground-tertiary); }
+.hunt-pagination__sep { color: var(--ha-border-strong); }
 .hunt-pagination__meta > strong {
+  flex: 0 0 auto;
   color: var(--ha-foreground-secondary);
   font-weight: 650;
 }
@@ -667,9 +664,15 @@
 
 .hunt-save-modal.pf-v6-c-modal-box { --pf-v6-c-modal-box--Width: min(480px, calc(100vw - 32px)); --pf-v6-c-modal-box--MaxWidth: calc(100vw - 32px); width: min(480px, calc(100vw - 32px)); max-width: calc(100vw - 32px); overflow: hidden; border-color: var(--ha-border-default); border-radius: var(--ha-radius-panel); background: var(--ha-surface-elevated); box-shadow: var(--ha-shadow-medium); }
 .hunt-save-modal .pf-v6-c-modal-box__header { padding: 15px 17px 12px; background: var(--ha-surface-panel); }
-.hunt-save-modal .pf-v6-c-modal-box__close button { color: var(--ha-foreground-secondary); }
+.hunt-save-modal .pf-v6-c-modal-box__close { top: 12px; right: 12px; }
+.hunt-save-modal .pf-v6-c-modal-box__close button { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); }
+.hunt-save-modal .pf-v6-c-modal-box__close button:hover { border-color: var(--ha-border-strong); background: var(--ha-surface-hover); color: var(--ha-foreground-primary); }
 .hunt-save-modal .pf-v6-c-modal-box__body { padding: 15px 17px; }
 .hunt-save-modal .pf-v6-c-modal-box__footer { padding: 11px 17px; background: var(--ha-surface-panel); }
+/* Ensure the Hunt-name input sits on the dark input surface even if a PF default leaks through. */
+.hunt-save-modal .pf-v6-c-form-control,
+.hunt-save-modal .pf-v6-c-form-control input,
+.hunt-save-modal input.pf-v6-c-form-control { background: var(--ha-surface-input); color: var(--ha-foreground-primary); border-color: var(--ha-border-default); }
 .hunt-save-form { gap: 15px; }
 .hunt-save-query-preview { display: grid; gap: 6px; }
 .hunt-save-query-preview > span { color: var(--ha-foreground-secondary); font-weight: 650; }
