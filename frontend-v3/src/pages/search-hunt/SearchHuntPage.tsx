@@ -66,7 +66,7 @@ const SAVE_DENIED = `Required permission: ${ROLE_LABELS[ROLES.USER]}, ${ROLE_LAB
 const QueryEditor = lazy(() => import('./components/QueryBar').then((module) => ({ default: module.QueryBar })));
 const LazyHaChart = lazy(() => import('@/components/ha-chart/HaChart').then((module) => ({ default: module.HaChart })));
 
-const DEFAULT_COLUMNS = ['timestamp', 'severity', 'dataSource', 'action', 'host', 'user', 'sourceIp', 'message', 'alertCount'];
+const DEFAULT_COLUMNS = ['timestamp', 'severity', 'dataSource', 'action', 'host', 'user', 'message'];
 const COLUMN_OPTIONS = [
   ['timestamp', 'Event time'], ['severity', 'Severity'], ['dataSource', 'Source'], ['dataset', 'Dataset'],
   ['category', 'Category'], ['action', 'Action'], ['host', 'Host'], ['user', 'User'],
@@ -129,6 +129,7 @@ export function SearchHuntPage(): JSX.Element {
     ));
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [flyoutEventId, setFlyoutEventId] = useState<string | null>(null);
+  const [flyoutInitialTab, setFlyoutInitialTab] = useState<'fields' | 'raw'>('fields');
   const [verdictPanelOpen, setVerdictPanelOpen] = useState(false);
   const [resultView, setResultView] = useState<'table' | 'metrics'>('table');
   // Histogram collapse — persisted, so an analyst who reclaims the 96px for row-scanning keeps it
@@ -832,7 +833,8 @@ export function SearchHuntPage(): JSX.Element {
                   visibleColumns={visibleColumns}
                   density={density}
                   onSelectionChanged={setSelectedIds}
-                  onActivateEvent={(event) => setFlyoutEventId(event.id)}
+                  onActivateEvent={(event) => { setFlyoutInitialTab('fields'); setFlyoutEventId(event.id); }}
+                  onOpenRaw={(event) => { setFlyoutInitialTab('raw'); setFlyoutEventId(event.id); }}
                   onSortChanged={handleSortChanged}
                   aiDerivedColumns={aiDerivedColumns}
                   showAiHand={showAiHand}
@@ -905,9 +907,12 @@ export function SearchHuntPage(): JSX.Element {
       />
       <EventDetailFlyout
         eventId={flyoutEventId}
+        initialTab={flyoutInitialTab}
+        event={flyoutEventId ? events.find((e) => e.id === flyoutEventId) ?? null : null}
         searchId={summary?.searchId ?? ''}
         onClose={handleFlyoutClose}
         onPivot={handlePivot}
+        onAddColumn={addFieldColumn}
         onRerun={() => runSearch()}
         onSessionExpired={() => setSessionExpired(true)}
         onFilterFor={applyFieldFilter}

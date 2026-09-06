@@ -565,6 +565,8 @@
 .hunt-results-grid .ag-header-cell { font-size: 10px; }
 .hunt-results-grid .ag-header-cell-text { line-height: 1; letter-spacing: .04em; }
 .hunt-results-grid .ag-row { cursor: pointer; }
+.hunt-results-grid .hunt-grid__raw-btn { display: grid; width: 24px; height: 24px; place-items: center; margin: 0 auto; border: 0; border-radius: 5px; background: transparent; color: var(--ha-foreground-tertiary); cursor: pointer; }
+.hunt-results-grid .hunt-grid__raw-btn:hover { background: var(--ha-surface-hover); color: var(--ha-action-secondary); }
 .hunt-results-grid .ag-cell { font-size: 11px; }
 .hunt-results-grid .hunt-grid__mono { font-family: var(--ha-font-mono); font-variant-numeric: tabular-nums; }
 .hunt-results-grid .hunt-grid__entity { color: var(--ha-foreground-link); font-family: var(--ha-font-mono); }
@@ -1390,6 +1392,30 @@
   background: var(--ha-surface-hover);
   color: var(--ha-foreground-primary);
 }
+
+/* Summary strip (item 1) — instant gist above the tabs */
+.event-flyout__summary { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 8px 10px; padding: 9px 14px; border-bottom: 1px solid var(--ha-border-subtle); background: var(--ha-surface-panel); }
+.event-flyout__summary-line { grid-column: 2; margin: 0; overflow: hidden; color: var(--ha-foreground-primary); font: var(--ha-type-compact); text-overflow: ellipsis; white-space: nowrap; }
+.event-flyout__summary .hunt-severity { grid-row: 1 / span 2; align-self: start; }
+.event-flyout__summary-meta { grid-column: 2; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
+.event-flyout__summary-meta time, .event-flyout__integrity { display: inline-flex; align-items: center; gap: 4px; }
+.event-flyout__summary-meta time { font-variant-numeric: tabular-nums; }
+.event-flyout__integrity--verified { color: var(--ha-state-healthy); }
+.event-flyout__integrity--unverified { color: var(--ha-state-warning); }
+.event-flyout__copyas { position: relative; margin-left: auto; }
+.event-flyout__copyas-trigger { display: inline-flex; align-items: center; gap: 4px; min-height: 22px; padding: 2px 8px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); cursor: pointer; font: var(--ha-type-metadata); font-weight: 600; }
+.event-flyout__copyas-trigger:hover { border-color: var(--ha-border-strong); color: var(--ha-foreground-primary); }
+.event-flyout__copyas-menu { position: absolute; z-index: 10; top: calc(100% + 4px); right: 0; display: grid; min-width: 180px; padding: 4px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-panel); background: var(--ha-surface-elevated); box-shadow: var(--ha-shadow-medium); }
+.event-flyout__copyas-menu > button { display: block; width: 100%; padding: 6px 9px; border: 0; border-radius: 5px; background: transparent; color: var(--ha-foreground-primary); cursor: pointer; text-align: left; font: var(--ha-type-compact); }
+.event-flyout__copyas-menu > button:hover { background: var(--ha-surface-hover); }
+
+/* Entity quick-pivots (item 2) */
+.event-flyout__entities { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 14px; border-bottom: 1px solid var(--ha-border-subtle); }
+.event-flyout__entity { display: inline-flex; align-items: center; gap: 5px; padding: 2px 4px 2px 8px; border: 1px solid var(--ha-border-default); border-radius: 6px; background: var(--ha-surface-elevated); color: var(--ha-foreground-tertiary); }
+.event-flyout__entity-label { border: 0; background: transparent; color: var(--ha-foreground-link); cursor: pointer; font: 11px/1.2 var(--ha-font-mono); }
+.event-flyout__entity-label:hover { color: var(--ha-action-primary); text-decoration: underline; }
+.event-flyout__entity-add { display: grid; width: 20px; height: 20px; place-items: center; border: 0; border-radius: 4px; background: transparent; color: var(--ha-foreground-tertiary); cursor: pointer; }
+.event-flyout__entity-add:hover { background: var(--ha-surface-hover); color: var(--ha-action-secondary); }
 
 .event-flyout__tabs {
   display: flex;

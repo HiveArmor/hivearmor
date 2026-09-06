@@ -17,6 +17,7 @@ import {
   CircleMinus,
   CirclePlus,
   Clock,
+  Columns3,
   Copy,
   ExternalLink,
   FileJson,
@@ -28,14 +29,16 @@ import {
   Network,
   Search,
   Server,
+  ShieldCheck,
   Terminal,
   User,
   X,
 } from 'lucide-react';
 
 
+import { formatRelativeTime, formatAbsoluteUtc } from '../huntTime';
 import { fetchHuntEvent, fetchHuntEventDetail, isHuntSessionExpiredError } from '../searchHunt.service';
-import type { HuntActionRequest, HuntEventDetail, HuntEventDetailResponse, HuntEventField, Pivot } from '../searchHunt.types';
+import type { HuntActionRequest, HuntEvent, HuntEventDetail, HuntEventDetailResponse, HuntEventField, Pivot } from '../searchHunt.types';
 
 import { HaJsonViewer } from '@/components/ha-json-viewer';
 
@@ -43,15 +46,24 @@ import { HaJsonViewer } from '@/components/ha-json-viewer';
 // Types
 // ---------------------------------------------------------------------------
 
+type ViewTab = 'fields' | 'raw';
+
 export interface EventDetailFlyoutProps {
   /** The event ID to display detail for. Null closes the flyout. */
   eventId: string | null;
+  /** Which tab to open on. Defaults to 'fields'; a per-row "raw" action opens 'raw'. */
+  initialTab?: ViewTab;
+  /** The row's already-loaded normalized event, used for the instant summary header,
+   *  entity quick-pivots, and copy-as (no extra fetch needed). */
+  event?: HuntEvent | null;
   /** Search snapshot that authorized this event. */
   searchId: string;
   /** Close the flyout. */
   onClose: () => void;
   /** Called when a pivot is clicked — sets the search bar and auto-executes. */
   onPivot: (query: string) => void;
+  /** Add a field as a result-grid column (entity quick-pivot "add column"). */
+  onAddColumn?: (field: string) => void;
   /** Re-run the current hunt (used by the snapshot-expired recovery CTA). */
   onRerun?: () => void;
   /** Notifies the page that the search snapshot has expired (so the status strip can reflect it). */
@@ -63,8 +75,6 @@ export interface EventDetailFlyoutProps {
   /** Single-event workflow actions (evidence / investigation). */
   onAction?: (type: HuntActionRequest['type'], eventIds: string[]) => void;
 }
-
-type ViewTab = 'fields' | 'raw';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -132,23 +142,72 @@ function emphasisClass(emphasis: HuntEventField['emphasis']): string {
   }
 }
 
+/** KQL-quote a value for a field:"value" fragment (escape embedded quotes). */
+function kqlFragment(field: string, value: string): string {
+  return `${field}:"${value.replace(/"/g, '\\"')}"`;
+}
+
+/** The key entities on a normalized event, for the quick-pivot chips (item 2). */
+function entityPivots(evt: HuntEvent): Array<{ label: string; field: string; value: string; Icon: typeof Server }> {
+  const out: Array<{ label: string; field: string; value: string; Icon: typeof Server }> = [];
+  if (evt.host) out.push({ label: evt.host, field: 'host', value: evt.host, Icon: Server });
+  if (evt.user) out.push({ label: evt.user, field: 'user', value: evt.user, Icon: User });
+  if (evt.sourceIp) out.push({ label: evt.sourceIp, field: 'source_ip', value: evt.sourceIp, Icon: Network });
+  if (evt.destinationIp) out.push({ label: evt.destinationIp, field: 'destination_ip', value: evt.destinationIp, Icon: Network });
+  return out;
+}
+
+/** Pull IOCs (IPs, and any hash/domain-looking values) from the normalized record for copy-as. */
+function extractIocs(evt: HuntEvent): string[] {
+  const iocs = new Set<string>();
+  if (evt.sourceIp) iocs.add(evt.sourceIp);
+  if (evt.destinationIp) iocs.add(evt.destinationIp);
+  const ipRe = /\b\d{1,3}(?:\.\d{1,3}){3}\b/g;
+  const hashRe = /\b[a-f0-9]{32,64}\b/gi;
+  const walk = (v: unknown): void => {
+    if (typeof v === 'string') {
+      (v.match(ipRe) ?? []).forEach((m) => iocs.add(m));
+      (v.match(hashRe) ?? []).forEach((m) => iocs.add(m));
+    } else if (v && typeof v === 'object') {
+      Object.values(v as Record<string, unknown>).forEach(walk);
+    }
+  };
+  walk(evt.normalized);
+  return [...iocs];
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export function EventDetailFlyout({
   eventId,
+  initialTab = 'fields',
+  event,
   searchId,
   onClose,
   onPivot,
+  onAddColumn,
   onRerun,
   onSessionExpired,
   onFilterFor,
   onFilterOut,
   onAction,
 }: EventDetailFlyoutProps): JSX.Element | null {
-  const [viewTab, setViewTab] = useState<ViewTab>('fields');
+  const [viewTab, setViewTab] = useState<ViewTab>(initialTab);
+  const [copyMenuOpen, setCopyMenuOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const copyMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close the Copy-as menu on outside click.
+  useEffect(() => {
+    if (!copyMenuOpen) return undefined;
+    const onDown = (e: MouseEvent): void => {
+      if (copyMenuRef.current && !copyMenuRef.current.contains(e.target as Node)) setCopyMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [copyMenuOpen]);
 
   // Fetch highlighted view
   const highlightedQuery = useQuery<HuntEventDetailResponse>({
@@ -198,8 +257,8 @@ export function EventDetailFlyout({
 
   // Reset tab when opening a new event
   useEffect(() => {
-    if (eventId) setViewTab('fields');
-  }, [eventId]);
+    if (eventId) { setViewTab(initialTab); setCopyMenuOpen(false); }
+  }, [eventId, initialTab]);
 
   // Surface snapshot expiry to the page so its status strip stops claiming "Query complete".
   useEffect(() => {
@@ -238,6 +297,48 @@ export function EventDetailFlyout({
           <X size={17} />
         </button>
       </header>
+
+      {/* ------ Summary strip (item 1): instant gist from the row's normalized event ------ */}
+      {event && (
+        <div className="event-flyout__summary">
+          <span className="hunt-severity" data-severity={event.severity}><i aria-hidden="true" />{event.severity}</span>
+          <p className="event-flyout__summary-line" title={event.message}>{event.message}</p>
+          <div className="event-flyout__summary-meta">
+            <time title={formatAbsoluteUtc(event.timestamp)}><Clock size={11} aria-hidden="true" />{formatRelativeTime(event.timestamp)}</time>
+            <span className={`event-flyout__integrity event-flyout__integrity--${detailQuery.data?.integrityStatus ?? 'unknown'}`}>
+              <ShieldCheck size={11} aria-hidden="true" />
+              {detailQuery.data?.integrityStatus === 'verified' ? 'Integrity verified' : detailQuery.data?.integrityStatus === 'unverified' ? 'Unverified' : 'Integrity —'}
+            </span>
+            <div className="event-flyout__copyas" ref={copyMenuRef}>
+              <button type="button" className="event-flyout__copyas-trigger" onClick={() => setCopyMenuOpen((o) => !o)} aria-expanded={copyMenuOpen} aria-haspopup="menu" title="Copy this event as…">
+                <Copy size={11} aria-hidden="true" />Copy as
+              </button>
+              {copyMenuOpen && (
+                <div className="event-flyout__copyas-menu" role="menu">
+                  <button type="button" role="menuitem" onClick={() => { void navigator.clipboard?.writeText(JSON.stringify(event.normalized, null, 2)); setCopyMenuOpen(false); }}>JSON</button>
+                  <button type="button" role="menuitem" onClick={() => { void navigator.clipboard?.writeText([event.host && kqlFragment('host', event.host), event.user && kqlFragment('user', event.user)].filter(Boolean).join(' AND ')); setCopyMenuOpen(false); }}>KQL filter (host + user)</button>
+                  <button type="button" role="menuitem" onClick={() => { void navigator.clipboard?.writeText(extractIocs(event).join('\n')); setCopyMenuOpen(false); }}>IOC list</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ------ Entity quick-pivots (item 2): host/user/IP — pivot search or add as column ------ */}
+      {event && entityPivots(event).length > 0 && (
+        <div className="event-flyout__entities" aria-label="Entity pivots">
+          {entityPivots(event).map(({ label, field, value, Icon }) => (
+            <span key={`${field}:${value}`} className="event-flyout__entity">
+              <Icon size={12} aria-hidden="true" />
+              <button type="button" className="event-flyout__entity-label" onClick={() => { onClose(); onPivot(kqlFragment(field, value)); }} title={`Pivot to events where ${field} is ${value}`}>{label}</button>
+              {onAddColumn && (
+                <button type="button" className="event-flyout__entity-add" onClick={() => onAddColumn(field)} aria-label={`Add ${field} as a column`} title="Add as column"><Columns3 size={11} aria-hidden="true" /></button>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* ------ Tabs ------ */}
       <nav className="event-flyout__tabs" aria-label="Event detail views">

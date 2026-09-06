@@ -2,7 +2,9 @@ import { useCallback, useMemo, useRef } from 'react';
 
 import type { ColDef, RowClickedEvent } from 'ag-grid-community';
 import type { AgGridReact } from 'ag-grid-react';
+import { FileJson } from 'lucide-react';
 
+import { formatRelativeTime } from '../huntTime';
 import type { HuntEvent, HuntRowDensity } from '../searchHunt.types';
 
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
@@ -15,6 +17,8 @@ export interface SearchResultsGridProps {
   density: HuntRowDensity;
   onSelectionChanged: (selectedIds: string[]) => void;
   onActivateEvent: (event: HuntEvent) => void;
+  /** Open the event's raw record directly (per-row raw expand → flyout Raw JSON tab). */
+  onOpenRaw?: (event: HuntEvent) => void;
   onSortChanged?: (field: string, direction: 'asc' | 'desc') => void;
   /** Column ids the AI derived (model/enrichment) — the "show AI's hand" lens (move 2). */
   aiDerivedColumns?: string[];
@@ -37,6 +41,7 @@ export function SearchResultsGrid({
   density,
   onSelectionChanged,
   onActivateEvent,
+  onOpenRaw,
   onSortChanged,
   aiDerivedColumns,
   showAiHand = false,
@@ -46,9 +51,10 @@ export function SearchResultsGrid({
 
   const allColumns = useMemo<Record<string, ColDef<HuntEvent>>>(() => ({
     timestamp: {
-      headerName: 'Event time', field: 'timestamp', width: 188, pinned: 'left', lockPinned: true,
+      headerName: 'Event time', field: 'timestamp', width: 150, pinned: 'left', lockPinned: true,
       cellClass: 'hunt-grid__mono',
-      valueFormatter: ({ value }) => value ? new Date(String(value)).toISOString().replace('T', ' ').replace('Z', ' Z') : '—',
+      valueFormatter: ({ value }) => value ? formatRelativeTime(String(value)) : '—',
+      tooltipValueGetter: ({ value }) => value ? new Date(String(value)).toISOString().replace('T', ' ').replace('Z', ' UTC') : '',
     },
     severity: {
       headerName: 'Severity', field: 'severity', width: 104,
@@ -92,7 +98,22 @@ export function SearchResultsGrid({
         headerClass: 'hunt-grid__ai-derived-header',
       };
     }),
-  ], [allColumns, visibleColumns, showAiHand, aiSet]);
+    ...(onOpenRaw ? [{
+      headerName: '', colId: 'rawAction', width: 40, pinned: 'right' as const, lockPinned: true,
+      sortable: false, resizable: false, suppressMovable: true,
+      cellRenderer: ({ data }: { data?: HuntEvent }) => data ? (
+        <button
+          type="button"
+          className="hunt-grid__raw-btn"
+          title="View raw record"
+          aria-label="View raw record"
+          onClick={(e) => { e.stopPropagation(); onOpenRaw(data); }}
+        >
+          <FileJson size={13} aria-hidden="true" />
+        </button>
+      ) : null,
+    }] : []),
+  ], [allColumns, visibleColumns, showAiHand, aiSet, onOpenRaw]);
 
   const handleSelection = useCallback((rows: unknown[]) => {
     onSelectionChanged((rows as HuntEvent[]).map((row) => row.id));
