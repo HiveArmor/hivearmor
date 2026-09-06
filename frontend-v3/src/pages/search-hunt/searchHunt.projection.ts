@@ -13,13 +13,18 @@ export const HUNT_FIELD_COLUMN_MAP: Readonly<Record<string, string>> = {
 
 /** Convert visible grid columns into the bounded canonical projection accepted by Search & Hunt. */
 export function huntColumnsToProjection(columnIds: readonly string[]): string[] {
-  return Object.entries(HUNT_FIELD_COLUMN_MAP)
+  const fields = Object.entries(HUNT_FIELD_COLUMN_MAP)
     .filter(([, columnId]) => columnIds.includes(columnId))
     .map(([fieldName]) => fieldName);
+  // The opt-in "Relative time" column renders from @timestamp — guarantee it is projected even if
+  // the absolute "Event time" column is hidden.
+  if (columnIds.includes('relativeTime') && !fields.includes('@timestamp')) fields.push('@timestamp');
+  return fields;
 }
 
 const COLUMN_TO_SORT_FIELD: Readonly<Record<string, string>> = {
   timestamp: '@timestamp',
+  relativeTime: '@timestamp',
   severity: 'event.severity',
   category: 'event.category',
   action: 'event.action',

@@ -1,4 +1,5 @@
 import type {
+  HistoryEntry,
   HuntEvent,
   HuntEventDetail,
   HuntEventDetailResponse,
@@ -10,6 +11,7 @@ import type {
   HuntSearchRequest,
   HuntSearchResponse,
   Pivot,
+  SavedHunt,
 } from './searchHunt.types';
 
 import type { SavedHuntDTO } from '@/types/search';
@@ -314,4 +316,61 @@ export function getFoundationHuntEventResponse(
     },
     pivots,
   };
+}
+
+
+/** Fixture saved hunts (maps the SavedHuntDTO seed → the SavedHunt UI type). Fixture-only. */
+export function getFoundationSavedHunts(params?: { search?: string; tags?: string }): { items: SavedHunt[]; total: number } {
+  const tagsFor = (dto: SavedHuntDTO): string[] => {
+    // Derive a couple of readable tags from the query so tag-filtering has something to show.
+    const t: string[] = [];
+    if (/authentication|logon/.test(dto.queryDsl ?? '')) t.push('authentication');
+    if (/process_start|powershell/.test(dto.queryDsl ?? '')) t.push('execution');
+    if (/dns_query|destination\.ip/.test(dto.queryDsl ?? '')) t.push('network');
+    if (dto.isShared) t.push('shared');
+    return t;
+  };
+  const items: SavedHunt[] = foundationSavedHunts.map((dto, index) => ({
+    id: String(dto.id),
+    name: dto.huntName,
+    description: '',
+    query: dto.queryDsl ?? '',
+    filters: {},
+    tags: tagsFor(dto),
+    createdBy: dto.createdBy,
+    createdAt: dto.createdAt,
+    updatedAt: dto.lastUsedAt ?? dto.createdAt,
+    lastRunAt: dto.lastUsedAt ?? undefined,
+    runCount: [12, 34, 3][index] ?? 1,
+    shared: dto.isShared,
+  }));
+  const needle = params?.search?.trim().toLowerCase();
+  const filtered = items.filter((hunt) => {
+    if (needle && !hunt.name.toLowerCase().includes(needle)) return false;
+    if (params?.tags && !hunt.tags.includes(params.tags)) return false;
+    return true;
+  });
+  return { items: filtered, total: filtered.length };
+}
+
+/** Fixture hunt history — synthesized from the first events so the Recent list is populated. */
+export function getFoundationHuntHistory(): { items: HistoryEntry[]; total: number } {
+  const distinctQueries = [
+    'event.category:authentication AND event.action:logon_failed',
+    'event.severity:critical',
+    'event.action:process_start AND process.name:powershell.exe',
+    'host.name:IDM-DC-02',
+    'event.action:dns_query',
+    'source.ip:172.22.4.7',
+  ];
+  const items: HistoryEntry[] = distinctQueries.map((query, index) => ({
+    id: `hist-${index}`,
+    query,
+    filters: {},
+    executedAt: new Date(Date.now() - (index + 1) * 11 * 60_000).toISOString(),
+    duration: 120 + index * 37,
+    resultCount: [239, 48, 16, 41, 51, 9][index] ?? 100,
+    status: 'completed',
+  }));
+  return { items, total: items.length };
 }

@@ -18,6 +18,9 @@ export interface HaJsonViewerProps {
   data: Record<string, unknown>;
   /** Accessible label for the copy button region; defaults to a generic label. */
   ariaLabel?: string;
+  /** When true, the viewer stretches to fill its flex parent's height instead of the fixed
+   *  400px scroll cap. Additive — omitted/false keeps the existing bounded behaviour. */
+  fill?: boolean;
 }
 
 type TokenType = 'key' | 'string' | 'number' | 'boolean' | 'null' | 'punctuation';
@@ -29,7 +32,7 @@ interface Token {
 
 type CollapsedPaths = Set<string>;
 
-export function HaJsonViewer({ data, ariaLabel = 'Raw JSON' }: HaJsonViewerProps): JSX.Element {
+export function HaJsonViewer({ data, ariaLabel = 'Raw JSON', fill = false }: HaJsonViewerProps): JSX.Element {
   const [copied, setCopied] = useState(false);
   const [collapsed, setCollapsed] = useState<CollapsedPaths>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -67,7 +70,7 @@ export function HaJsonViewer({ data, ariaLabel = 'Raw JSON' }: HaJsonViewerProps
   const lines = useMemo(() => renderJson(data, collapsed), [data, collapsed]);
 
   return (
-    <div className="ha-json-viewer" ref={containerRef} aria-label={ariaLabel}>
+    <div className={`ha-json-viewer${fill ? ' ha-json-viewer--fill' : ''}`} ref={containerRef} aria-label={ariaLabel}>
       <button
         type="button"
         className="ha-json-viewer__copy-btn"

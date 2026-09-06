@@ -256,6 +256,10 @@ export async function fetchHuntEvent(
 export async function fetchSavedHunts(
   params?: { search?: string; tags?: string },
 ): Promise<{ items: SavedHunt[]; total: number }> {
+  if (fixtureMode) {
+    const { getFoundationSavedHunts } = await import('@/pages/search-hunt/searchHunt.fixtures');
+    return getFoundationSavedHunts(params);
+  }
   return apiClient.get<{ items: SavedHunt[]; total: number }>('/ha-hunts/saved', { params });
 }
 
@@ -284,6 +288,10 @@ export async function deleteSavedHunt(huntId: string): Promise<void> {
 export async function fetchHuntHistory(
   params?: { from?: string; to?: string },
 ): Promise<{ items: HistoryEntry[]; total: number }> {
+  if (fixtureMode) {
+    const { getFoundationHuntHistory } = await import('@/pages/search-hunt/searchHunt.fixtures');
+    return getFoundationHuntHistory();
+  }
   return apiClient.get<{ items: HistoryEntry[]; total: number }>('/ha-hunts/history', { params });
 }
 
