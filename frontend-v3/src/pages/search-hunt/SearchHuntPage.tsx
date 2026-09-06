@@ -4,8 +4,8 @@ import type { CSSProperties } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { EChartsOption } from 'echarts';
 import {
-  BarChart3, BookOpen, Check, ChevronLeft, ChevronRight, CircleStop, Clock3, Columns3, Database, FileClock,
-  Keyboard, Library, ListFilter, MoreHorizontal, Play, Save, ShieldAlert, Sparkles,
+  BarChart3, BarChartBig, BookOpen, Check, ChevronLeft, ChevronRight, CircleStop, Clock3, Columns3, Database, FileClock,
+  Keyboard, Library, ListFilter, MoreHorizontal, Play, Save, ShieldAlert, Sparkles, Table2,
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -24,6 +24,7 @@ import {
 } from './components/IndexScopePicker';
 import { PromotionActionBar, PromotionModal } from './components/PromotionModal';
 import { QueryCapabilitiesPanel } from './components/QueryCapabilitiesPanel';
+import { SavedRecentDropdown } from './components/SavedRecentDropdown';
 import { SaveSearchModal } from './components/SaveSearchModal';
 import { SearchManagerPanel } from './components/SearchManagerPanel';
 import { SearchProgressBar } from './components/SearchProgressBar';
@@ -43,12 +44,10 @@ import type {
 
 import { HaExportMenu } from '@/components/export-menu';
 import { HaPageHeader } from '@/components/ha-page-header';
-import { StatusDock } from '@/components/status-dock/StatusDock';
 import { TimeRangeSelector } from '@/components/time-range-selector/TimeRangeSelector';
 import { resolveTimeRange } from '@/components/time-range-selector/timeRangeUtils';
 import type { TimeRange } from '@/components/time-range-selector/timeRangeUtils';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity } from '@/hooks/useRowDensity';
 import { ApiError } from '@/lib/apiClient';
 import { ROLE_LABELS, ROLES } from '@/lib/roles';
@@ -66,12 +65,12 @@ const SAVE_DENIED = `Required permission: ${ROLE_LABELS[ROLES.USER]}, ${ROLE_LAB
 const QueryEditor = lazy(() => import('./components/QueryBar').then((module) => ({ default: module.QueryBar })));
 const LazyHaChart = lazy(() => import('@/components/ha-chart/HaChart').then((module) => ({ default: module.HaChart })));
 
-const DEFAULT_COLUMNS = ['timestamp', 'severity', 'dataSource', 'action', 'host', 'user', 'sourceIp', 'message', 'alertCount'];
+const DEFAULT_COLUMNS = ['timestamp', 'severity', 'dataSource', 'action', 'host', 'user', 'message'];
 const COLUMN_OPTIONS = [
-  ['timestamp', 'Event time'], ['severity', 'Severity'], ['dataSource', 'Source'], ['dataset', 'Dataset'],
-  ['category', 'Category'], ['action', 'Action'], ['host', 'Host'], ['user', 'User'],
-  ['sourceIp', 'Source IP'], ['destinationIp', 'Destination IP'], ['tenantName', 'Tenant'],
-  ['message', 'Event summary'], ['alertCount', 'Alerts'],
+  ['timestamp', 'Event time'], ['relativeTime', 'Relative time'], ['severity', 'Severity'],
+  ['dataSource', 'Source'], ['dataset', 'Dataset'], ['category', 'Category'], ['action', 'Action'],
+  ['host', 'Host'], ['user', 'User'], ['sourceIp', 'Source IP'], ['destinationIp', 'Destination IP'],
+  ['tenantName', 'Tenant'], ['message', 'Event summary'], ['alertCount', 'Alerts'],
 ] as const;
 const DENSITY_OPTIONS: Array<{ value: 'compact' | 'standard' | 'comfortable'; label: string }> = [
   { value: 'compact', label: 'Compact rows' },
@@ -157,6 +156,7 @@ export function SearchHuntPage(): JSX.Element {
   const [nlOpen, setNlOpen] = useState(false);
   const [managerPanelOpen, setManagerPanelOpen] = useState(false);
   const [managerInitialTab, setManagerInitialTab] = useState<'saved' | 'history'>('saved');
+  const [savedRecentOpen, setSavedRecentOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [sortState, setSortState] = useState<Array<{ field: string; direction: 'asc' | 'desc' }>>([
     { field: '@timestamp', direction: 'desc' },
@@ -173,7 +173,6 @@ export function SearchHuntPage(): JSX.Element {
   const queryWorkspaceRef = useRef<HTMLDivElement | null>(null);
   const nlInputRef = useRef<HTMLInputElement | null>(null);
   const [queryWorkspaceHeight, setQueryWorkspaceHeight] = useState(116);
-  const epsStream = useEpsStream();
   const [promotionOpen, setPromotionOpen] = useState(false);
   const [promotionAction, setPromotionAction] = useState<'create_evidence' | 'create_investigation' | 'escalate_incident' | null>(null);
   const [capabilitiesOpen, setCapabilitiesOpen] = useState(false);
@@ -694,16 +693,25 @@ export function SearchHuntPage(): JSX.Element {
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setFieldRailOpen((open) => !open)} aria-pressed={fieldRailOpen} aria-label="Toggle filters and field values" title="Filters and field values"><ListFilter size={14} /></button>
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={toggleHistogram} aria-pressed={!histogramCollapsed} aria-controls="hunt-histogram-body" aria-label={histogramCollapsed ? 'Show event distribution histogram' : 'Hide event distribution histogram'} title={histogramCollapsed ? 'Show event distribution' : 'Hide event distribution'}><BarChart3 size={14} /></button>
           <div className="hunt-view-toggle" role="group" aria-label="Result view">
-            <button type="button" onClick={() => setResultView('table')} aria-pressed={resultView === 'table'} title="Table view"><ListFilter size={13} aria-hidden="true" />Table</button>
-            <button type="button" onClick={() => setResultView('metrics')} aria-pressed={resultView === 'metrics'} title="Metrics view — summarise these results"><Sparkles size={13} aria-hidden="true" />Metrics</button>
+            <button type="button" onClick={() => setResultView('table')} aria-pressed={resultView === 'table'} title="Table view"><Table2 size={13} aria-hidden="true" />Table</button>
+            <button type="button" onClick={() => setResultView('metrics')} aria-pressed={resultView === 'metrics'} title="Metrics view — summarise these results"><BarChartBig size={13} aria-hidden="true" />Metrics</button>
           </div>
           <span className="hunt-control-divider" aria-hidden="true" />
-          <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => openManager('saved')} aria-expanded={managerPanelOpen} aria-haspopup="dialog" aria-label="Saved hunts and search history" title="Saved hunts &amp; history"><Library size={14} /></button>
+          <div className="hunt-saved-recent-anchor">
+            <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setSavedRecentOpen((open) => { if (!open) { setColumnsOpen(false); setOverflowOpen(false); } return !open; })} aria-expanded={savedRecentOpen} aria-haspopup="listbox" aria-label="Saved hunts and recent searches" title="Saved &amp; recent"><Library size={14} /></button>
+            <SavedRecentDropdown
+              open={savedRecentOpen}
+              onClose={() => setSavedRecentOpen(false)}
+              onLoadQuery={handleManagerLoadQuery}
+              onExecuteQuery={handleManagerExecuteQuery}
+              onManageAll={() => openManager('saved')}
+            />
+          </div>
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setSaveOpen(true)} disabled={!query.trim() || !canSaveQuery} aria-label="Save this hunt query" title={!canSaveQuery ? SAVE_DENIED : !query.trim() ? 'Enter a reusable query before saving' : 'Save query'}><Save size={14} /></button>
-          <div className="hunt-column-picker" ref={columnsPickerRef}><button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setColumnsOpen((open) => !open)} aria-expanded={columnsOpen} aria-label="Choose columns" title="Columns"><Columns3 size={14} /></button>{columnsOpen && <div className="hunt-column-picker__menu">{COLUMN_OPTIONS.map(([id, label]) => <label key={id}><input type="checkbox" checked={visibleColumns.includes(id)} onChange={() => toggleColumn(id)} /><span>{label}</span>{visibleColumns.includes(id) && <Check size={12} />}</label>)}<button type="button" className="hunt-column-picker__reset" onClick={() => { setVisibleColumns(DEFAULT_COLUMNS); setColumnsOpen(false); }}>Reset to default</button></div>}</div>
+          <div className="hunt-column-picker" ref={columnsPickerRef}><button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setColumnsOpen((open) => { if (!open) { setOverflowOpen(false); setSavedRecentOpen(false); } return !open; })} aria-expanded={columnsOpen} aria-label="Choose columns" title="Columns"><Columns3 size={14} /></button>{columnsOpen && <div className="hunt-column-picker__menu">{COLUMN_OPTIONS.map(([id, label]) => <label key={id}><input type="checkbox" checked={visibleColumns.includes(id)} onChange={() => toggleColumn(id)} /><span>{label}</span>{visibleColumns.includes(id) && <Check size={12} />}</label>)}<button type="button" className="hunt-column-picker__reset" onClick={() => { setVisibleColumns(DEFAULT_COLUMNS); setColumnsOpen(false); }}>Reset to default</button></div>}</div>
           <HaExportMenu surface="hunt-search" disabled={!hasResults} onExport={handleExport} compact />
           <div className="hunt-overflow" ref={overflowRef}>
-            <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setOverflowOpen((open) => !open)} aria-expanded={overflowOpen} aria-haspopup="menu" aria-label="More search controls" title="More controls"><MoreHorizontal size={15} /></button>
+            <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setOverflowOpen((open) => { if (!open) { setColumnsOpen(false); setSavedRecentOpen(false); } return !open; })} aria-expanded={overflowOpen} aria-haspopup="menu" aria-label="More search controls" title="More controls"><MoreHorizontal size={15} /></button>
             {overflowOpen && (
               <div className="hunt-overflow__menu" role="menu" aria-label="More search controls">
                 <button type="button" role="menuitem" onClick={() => { setCapabilitiesOpen((open) => !open); setOverflowOpen(false); }}><BookOpen size={14} aria-hidden="true" />Query language reference</button>
@@ -728,6 +736,8 @@ export function SearchHuntPage(): JSX.Element {
               title="Ask in plain language"
               onClick={() => {
                 setOverflowOpen(false);
+                setColumnsOpen(false);
+                setSavedRecentOpen(false);
                 setNlOpen((open) => {
                   const next = !open;
                   if (next) window.requestAnimationFrame(() => nlInputRef.current?.focus());
@@ -868,13 +878,6 @@ export function SearchHuntPage(): JSX.Element {
           </>}
         </main>
       </div>
-
-      <StatusDock
-        className="hunt-status-dock"
-        sseConnected={epsStream.connected}
-        eps={epsStream.eps}
-        mode={epsStream.connected ? 'live' : 'historical'}
-      />
 
       {selectedIds.length > 0 && (
         <PromotionActionBar

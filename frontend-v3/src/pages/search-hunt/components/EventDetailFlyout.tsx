@@ -3,7 +3,6 @@
  *
  * Two tabs: "Fields" (highlighted view with type badges and emphasis coloring)
  * and "Raw JSON" (formatted JSON with token-based syntax highlighting).
- * Pivot section at the bottom renders pivot buttons as clickable chips.
  * Loading state while fetching; close button in header.
  *
  * Uses TanStack Query v5 for data fetching.
@@ -11,6 +10,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -18,24 +18,23 @@ import {
   CirclePlus,
   Clock,
   Copy,
-  ExternalLink,
   FileJson,
   Globe,
   Hash,
   Link2,
   ListTree,
-  Monitor,
   Network,
-  Search,
   Server,
+  ShieldCheck,
   Terminal,
   User,
   X,
 } from 'lucide-react';
 
 
+import { formatHuntRelativeTime, formatHuntTimestampUtc } from '../huntTime';
 import { fetchHuntEvent, fetchHuntEventDetail, isHuntSessionExpiredError } from '../searchHunt.service';
-import type { HuntActionRequest, HuntEventDetail, HuntEventDetailResponse, HuntEventField, Pivot } from '../searchHunt.types';
+import type { HuntActionRequest, HuntEventDetail, HuntEventDetailResponse, HuntEventField } from '../searchHunt.types';
 
 import { HaJsonViewer } from '@/components/ha-json-viewer';
 
@@ -50,8 +49,8 @@ export interface EventDetailFlyoutProps {
   searchId: string;
   /** Close the flyout. */
   onClose: () => void;
-  /** Called when a pivot is clicked — sets the search bar and auto-executes. */
-  onPivot: (query: string) => void;
+  /** Called when a pivot is clicked — sets the search bar and auto-executes. Reserved (pivots UI removed). */
+  onPivot?: (query: string) => void;
   /** Re-run the current hunt (used by the snapshot-expired recovery CTA). */
   onRerun?: () => void;
   /** Notifies the page that the search snapshot has expired (so the status strip can reflect it). */
@@ -85,16 +84,6 @@ const TYPE_BADGE_ICONS: Record<string, typeof Globe> = {
 // Section render order for the grouped field grid (mirrors the showcase's Detection→Network→Assets).
 const GROUP_ORDER = ['Detection', 'Network', 'Assets', 'Process', 'File', 'Other'];
 
-const PIVOT_ICONS: Record<string, typeof Search> = {
-  search: Search,
-  terminal: Terminal,
-  user: User,
-  server: Monitor,
-  file: FileJson,
-  shield: Globe,
-  clock: Clock,
-};
-
 function getFieldIcon(type: string): typeof Globe {
   return TYPE_BADGE_ICONS[type] ?? Hash;
 }
@@ -117,10 +106,6 @@ function getValueIcon(fieldKey: string, type: string): typeof Globe | null {
   return null;
 }
 
-function getPivotIcon(icon: string): typeof Search {
-  return PIVOT_ICONS[icon] ?? Search;
-}
-
 function emphasisClass(emphasis: HuntEventField['emphasis']): string {
   switch (emphasis) {
     case 'critical':
@@ -140,7 +125,6 @@ export function EventDetailFlyout({
   eventId,
   searchId,
   onClose,
-  onPivot,
   onRerun,
   onSessionExpired,
   onFilterFor,
@@ -149,6 +133,60 @@ export function EventDetailFlyout({
 }: EventDetailFlyoutProps): JSX.Element | null {
   const [viewTab, setViewTab] = useState<ViewTab>('fields');
   const closeRef = useRef<HTMLButtonElement>(null);
+
+  // Drag-to-expand: the analyst can widen the panel by dragging its left edge. Persisted so the
+  // chosen width survives across events and visits, and clamped so it never collapses or overruns.
+  const MIN_WIDTH = 420;
+  const MAX_WIDTH = 1120;
+  const [panelWidth, setPanelWidth] = useState<number>(() => {
+    try {
+      const saved = Number(localStorage.getItem('ha_hunt_flyout_width'));
+      if (saved >= MIN_WIDTH && saved <= MAX_WIDTH) return saved;
+    } catch { /* ignore */ }
+    return 560;
+  });
+  const draggingRef = useRef(false);
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent): void => {
+      if (!draggingRef.current) return;
+      // Panel is docked right — width grows as the pointer moves left of the right edge.
+      const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, window.innerWidth - e.clientX));
+      setPanelWidth(next);
+    };
+    const onUp = (): void => {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      try { localStorage.setItem('ha_hunt_flyout_width', String(panelWidth)); } catch { /* ignore */ }
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }, [panelWidth]);
+
+  const startResize = (e: React.PointerEvent): void => {
+    e.preventDefault();
+    draggingRef.current = true;
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+  };
+
+  // Keyboard-accessible resize: arrow keys nudge the width in 24px steps.
+  const nudgeWidth = (e: React.KeyboardEvent): void => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    setPanelWidth((current) => {
+      const delta = e.key === 'ArrowLeft' ? 24 : -24; // left widens (panel is right-docked)
+      const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, current + delta));
+      try { localStorage.setItem('ha_hunt_flyout_width', String(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   // Fetch highlighted view
   const highlightedQuery = useQuery<HuntEventDetailResponse>({
@@ -179,7 +217,6 @@ export function EventDetailFlyout({
 
   const activeQuery = viewTab === 'fields' ? highlightedQuery : rawQuery;
   const data = activeQuery.data;
-  const pivots: Pivot[] = data?.pivots ?? highlightedQuery.data?.pivots ?? [];
 
   // Focus management: focus close on open, trap Escape
   useEffect(() => {
@@ -208,11 +245,6 @@ export function EventDetailFlyout({
     }
   }, [activeQuery.isError, activeQuery.error, onSessionExpired]);
 
-  const handlePivotClick = (pivot: Pivot): void => {
-    onClose();
-    onPivot(pivot.query);
-  };
-
   if (!eventId) return null;
 
   return (
@@ -221,7 +253,21 @@ export function EventDetailFlyout({
       role="dialog"
       aria-modal="false"
       aria-labelledby="event-flyout-title"
+      style={{ width: `min(${panelWidth}px, calc(100vw - var(--ha-sidebar-collapsed)))` } as CSSProperties}
     >
+      {/* Drag-to-expand handle on the left edge — pointer-drag or arrow keys resize the panel. */}
+      <div
+        className="event-flyout__resize"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize event detail panel"
+        tabIndex={0}
+        onPointerDown={startResize}
+        onKeyDown={nudgeWidth}
+      >
+        <span aria-hidden="true" />
+      </div>
+
       {/* ------ Header ------ */}
       <header className="event-flyout__header">
         <div>
@@ -238,6 +284,38 @@ export function EventDetailFlyout({
           <X size={17} />
         </button>
       </header>
+
+      {/* ------ Summary strip — severity + message + relative time + integrity, straight from the
+          resolved event so the analyst gets the gist before the field grid loads. ------ */}
+      {detailQuery.data && (
+        <div className="event-flyout__summary" aria-label="Event summary">
+          <div className="event-flyout__summary-top">
+            <span className="hunt-severity" data-severity={detailQuery.data.severity}>
+              <i aria-hidden="true" />{detailQuery.data.severity}
+            </span>
+            <span
+              className="event-flyout__summary-time"
+              title={formatHuntTimestampUtc(detailQuery.data.timestamp)}
+            >
+              <Clock size={12} aria-hidden="true" />
+              {formatHuntRelativeTime(detailQuery.data.timestamp)}
+            </span>
+            <span
+              className="event-flyout__integrity"
+              data-status={detailQuery.data.integrityStatus}
+              title={detailQuery.data.integrityStatus === 'verified'
+                ? 'Event record integrity verified'
+                : 'Event record integrity not verified'}
+            >
+              <ShieldCheck size={12} aria-hidden="true" />
+              {detailQuery.data.integrityStatus === 'verified' ? 'Integrity verified' : 'Integrity unverified'}
+            </span>
+          </div>
+          {detailQuery.data.message && (
+            <p className="event-flyout__summary-message">{detailQuery.data.message}</p>
+          )}
+        </div>
+      )}
 
       {/* ------ Tabs ------ */}
       <nav className="event-flyout__tabs" aria-label="Event detail views">
@@ -260,7 +338,7 @@ export function EventDetailFlyout({
       </nav>
 
       {/* ------ Body ------ */}
-      <div className="event-flyout__body">
+      <div className="event-flyout__body" data-view={viewTab}>
         {/* Loading state */}
         {activeQuery.isLoading && (
           <div className="event-flyout__loading" aria-label="Loading event details">
@@ -379,33 +457,8 @@ export function EventDetailFlyout({
               You do not have permission to view the raw event source.
             </p>
           ) : (
-            <HaJsonViewer data={data.raw} ariaLabel="Raw event JSON" />
+            <HaJsonViewer data={data.raw} ariaLabel="Raw event JSON" fill />
           )
-        )}
-
-        {/* Pivot section */}
-        {pivots.length > 0 && (
-          <section className="event-flyout__pivots" aria-label="Investigation pivots">
-            <h3>Pivots</h3>
-            <div className="event-flyout__pivot-chips">
-              {pivots.map((pivot) => {
-                const PIcon = getPivotIcon(pivot.icon);
-                return (
-                  <button
-                    key={pivot.id}
-                    type="button"
-                    className="event-flyout__pivot-chip"
-                    onClick={() => handlePivotClick(pivot)}
-                    title={pivot.description}
-                  >
-                    <PIcon size={12} />
-                    <span>{pivot.label}</span>
-                    <ExternalLink size={10} />
-                  </button>
-                );
-              })}
-            </div>
-          </section>
         )}
       </div>
 

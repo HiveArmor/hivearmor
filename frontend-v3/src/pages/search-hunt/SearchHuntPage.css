@@ -74,7 +74,7 @@
 /* Match the two scope-control triggers to a single height (28px) so the title row reads level —
    scoped to the hunt page, leaving the shared TimeRangeSelector untouched for other consumers. */
 .hunt-page__scope-controls .ha-time-range__trigger,
-.hunt-page__scope-controls .hunt-index-picker__trigger { min-height: 28px; }
+.hunt-page__scope-controls .hunt-index-picker__trigger { min-height: 30px; height: 30px; box-sizing: border-box; }
 
 .hunt-page__promote-warn {
   margin: 0;
@@ -110,6 +110,11 @@
   border-radius: var(--ha-radius-control);
   background: var(--ha-surface-input);
   color: var(--ha-foreground-primary);
+}
+.hunt-nl-strip input:focus,
+.hunt-nl-strip input:focus-visible {
+  outline: none;
+  border-color: var(--ha-border-strong);
 }
 .hunt-nl-provenance {
   margin: 4px 10px 0;
@@ -193,6 +198,13 @@
 .hunt-button { padding: 5px 10px; }
 .hunt-control-button { min-height: 28px; padding: 4px 8px; font-size: 11px; }
 .hunt-control-button--icon { width: 29px; padding: 4px; }
+/* Toggle "on" state — icon toggles (filter rail, histogram, library, columns, overflow) tint only the
+   ICON teal so an engaged control is obvious without a heavy fill. The --ai (Ask) button keeps its own
+   violet pressed state and is excluded; Run search is a primary button, not an icon toggle. */
+.hunt-control-button--icon[aria-pressed='true']:not(.hunt-control-button--ai) svg,
+.hunt-control-button--icon[aria-expanded='true']:not(.hunt-control-button--ai) svg {
+  color: var(--ha-action-primary);
+}
 .hunt-button:hover, .hunt-control-button:hover { border-color: var(--ha-border-strong); background: var(--ha-surface-hover); color: var(--ha-foreground-primary); }
 .hunt-button:disabled, .hunt-control-button:disabled { cursor: not-allowed; color: var(--ha-foreground-disabled); opacity: .72; }
 .hunt-button--primary { border-color: var(--ha-action-primary); background: var(--ha-action-primary); color: var(--ha-foreground-on-action); }
@@ -225,6 +237,9 @@
 @media (prefers-reduced-motion: reduce) { .hunt-nl-assist { transition: none; } }
 /* Ask + Run pair as one action group on the right of the control row. */
 .hunt-query-workspace__actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+/* The Ask button sits beside Run search — match Run's height/padding so the pair is level (the base
+   .hunt-control-button is 28px/compact for the icon strip; the action-group Ask needs Run's 30px). */
+.hunt-query-workspace__actions .hunt-control-button { min-height: 30px; padding: 5px 10px; }
 /* AI-assist control button wears intelligence-violet (sanctioned AI-provenance use). */
 .hunt-control-button--ai { color: var(--ha-intelligence-primary, var(--ha-action-secondary)); border-color: color-mix(in srgb, var(--ha-intelligence-primary, var(--ha-action-secondary)) 40%, var(--ha-border-default)); }
 .hunt-control-button--ai svg { color: var(--ha-intelligence-primary, var(--ha-action-secondary)); }
@@ -232,7 +247,7 @@
 .hunt-query-editor__loading { display: flex; height: 38px; align-items: center; padding: 7px 12px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-input); color: var(--ha-foreground-tertiary); font-family: var(--ha-font-mono); }
 .hunt-query-editor__placeholder { position: absolute; top: 11px; left: 10px; overflow: hidden; max-width: calc(100% - 24px); color: var(--ha-foreground-tertiary); font: 10.5px/1.35 var(--ha-font-mono); pointer-events: none; text-overflow: ellipsis; white-space: nowrap; }
 .hunt-query-suggestions { position: absolute; z-index: 100; top: calc(100% + 4px); right: 0; left: 0; display: grid; max-height: 310px; overflow-y: auto; padding: 4px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-panel); background: var(--ha-surface-overlay); box-shadow: var(--ha-shadow-medium); scrollbar-width: thin; }
-.hunt-query-suggestions > button { display: grid; min-height: 34px; grid-template-columns: 48px minmax(120px, .7fr) minmax(160px, 1fr); align-items: center; gap: 8px; padding: 5px 8px; border: 0; border-radius: 6px; background: transparent; color: var(--ha-foreground-secondary); cursor: pointer; text-align: left; }
+.hunt-query-suggestions > button { display: grid; min-height: 34px; grid-template-columns: 44px auto minmax(0, 1fr); align-items: baseline; gap: 12px; padding: 5px 8px; border: 0; border-radius: 6px; background: transparent; color: var(--ha-foreground-secondary); cursor: pointer; text-align: left; }
 .hunt-query-suggestions > button:hover, .hunt-query-suggestions > button[data-active='true'] { background: var(--ha-surface-selected); color: var(--ha-foreground-primary); }
 .hunt-query-suggestions > button > span { color: var(--ha-action-secondary); font: 9px/1.2 var(--ha-font-ui); font-weight: 720; letter-spacing: .08em; text-transform: uppercase; }
 .hunt-query-suggestions > button[data-kind='operator'] > span { color: var(--ha-intelligence-primary); }
@@ -245,6 +260,92 @@
 
 /* Static query-language chip — only KQL is live; re-promote to a picker when a 2nd parser ships */
 
+
+/* Saved & Recent quick dropdown (Option A) — compact query-bar access to recent + saved hunts */
+.hunt-saved-recent-anchor { position: relative; flex: 0 0 auto; }
+.hunt-saved-recent {
+  position: absolute;
+  z-index: 96;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 460px;
+  max-width: min(460px, calc(100vw - 40px));
+  max-height: 440px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-panel);
+  background: var(--ha-surface-overlay, var(--ha-surface-elevated));
+  box-shadow: var(--ha-shadow-medium);
+  scrollbar-width: thin;
+}
+.hunt-saved-recent__state { margin: 0; padding: 14px 12px; color: var(--ha-foreground-tertiary); font: var(--ha-type-compact); }
+.hunt-saved-recent__section + .hunt-saved-recent__section { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--ha-border-subtle); }
+.hunt-saved-recent__section h4 {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 7px 9px 4px;
+  color: var(--ha-foreground-tertiary);
+  font: 9px/1.2 var(--ha-font-ui);
+  font-weight: 720;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.hunt-saved-recent__row {
+  display: grid;
+  grid-template-columns: 16px minmax(0, auto) 1fr auto;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ha-foreground-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+.hunt-saved-recent__row:hover,
+.hunt-saved-recent__row[data-active='true'] { background: var(--ha-surface-selected); color: var(--ha-foreground-primary); }
+.hunt-saved-recent__glyph { align-self: center; color: var(--ha-foreground-tertiary); }
+.hunt-saved-recent__label {
+  overflow: hidden;
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-compact);
+  font-weight: 640;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hunt-saved-recent__label--mono { font-family: var(--ha-font-mono); font-weight: 600; }
+.hunt-saved-recent__sub {
+  overflow: hidden;
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hunt-saved-recent__sub--mono { font-family: var(--ha-font-mono); }
+.hunt-saved-recent__meta { display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); font-variant-numeric: tabular-nums; }
+.hunt-saved-recent__footer { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--ha-border-subtle); }
+.hunt-saved-recent__footer button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ha-action-secondary);
+  cursor: pointer;
+  text-align: left;
+  font: var(--ha-type-compact);
+}
+.hunt-saved-recent__footer button:hover { background: var(--ha-surface-hover); }
 
 /* Overflow "⋯" — rare/mode controls (Help + AI assistance) folded off the primary control row */
 .hunt-overflow { position: relative; flex: 0 0 auto; }
@@ -568,6 +669,7 @@
 .hunt-results-grid .ag-cell { font-size: 11px; }
 .hunt-results-grid .hunt-grid__mono { font-family: var(--ha-font-mono); font-variant-numeric: tabular-nums; }
 .hunt-results-grid .hunt-grid__entity { color: var(--ha-foreground-link); font-family: var(--ha-font-mono); }
+.hunt-results-grid .hunt-grid__relative { color: var(--ha-foreground-secondary); font-variant-numeric: tabular-nums; }
 /* "Show AI's hand" provenance lens (move 2): violet thread on model/enrichment columns */
 .hunt-results-grid .hunt-grid__ai-derived {
   box-shadow: inset 2px 0 0 var(--ha-intelligence-primary);
@@ -655,15 +757,6 @@
 /* Status dock as the shell's own footer row (non-scrolling shell): a normal flex child pinned at the
    bottom of the column. No position:fixed — the results workspace above it is the only scroll region,
    so nothing overlaps and the dock can never be scrolled away or scrolled over. */
-.hunt-status-dock {
-  position: relative;
-  z-index: 20;
-  flex: 0 0 auto;
-  min-height: 28px;
-  border-top: 1px solid var(--ha-border-subtle);
-  background: var(--ha-surface-sidebar);
-}
-
 .hunt-save-modal.pf-v6-c-modal-box { --pf-v6-c-modal-box--Width: min(480px, calc(100vw - 32px)); --pf-v6-c-modal-box--MaxWidth: calc(100vw - 32px); width: min(480px, calc(100vw - 32px)); max-width: calc(100vw - 32px); overflow: hidden; border-color: var(--ha-border-default); border-radius: var(--ha-radius-panel); background: var(--ha-surface-elevated); box-shadow: var(--ha-shadow-medium); }
 .hunt-save-modal .pf-v6-c-modal-box__header { padding: 15px 17px 12px; background: var(--ha-surface-panel); }
 .hunt-save-modal .pf-v6-c-modal-box__close { top: 12px; right: 12px; }
@@ -1348,6 +1441,40 @@
   box-shadow: var(--ha-shadow-drawer);
 }
 
+/* Drag-to-expand handle — sits on the panel's left edge, widens the flyout on drag. */
+.event-flyout__resize {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 8px;
+  margin-left: -4px;
+  display: grid;
+  place-items: center;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 1;
+}
+.event-flyout__resize span {
+  width: 2px;
+  height: 34px;
+  border-radius: 2px;
+  background: var(--ha-border-default);
+  transition: background 120ms ease, height 120ms ease;
+}
+.event-flyout__resize:hover span,
+.event-flyout__resize:focus-visible span {
+  height: 56px;
+  background: var(--ha-action-primary);
+}
+.event-flyout__resize:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: -2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-flyout__resize span { transition: none; }
+}
+
 .event-flyout__header {
   display: flex;
   min-height: 52px;
@@ -1391,6 +1518,57 @@
   color: var(--ha-foreground-primary);
 }
 
+.event-flyout__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--ha-border-subtle);
+  background: var(--ha-surface-panel);
+}
+
+.event-flyout__summary-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.event-flyout__summary-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ha-foreground-secondary);
+  font: 11px/1.2 var(--ha-font-ui);
+  font-variant-numeric: tabular-nums;
+}
+
+.event-flyout__integrity {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: var(--ha-foreground-tertiary);
+  font: 10px/1.2 var(--ha-font-ui);
+  font-weight: 640;
+}
+
+.event-flyout__integrity[data-status='verified'] {
+  color: var(--ha-state-healthy);
+}
+
+.event-flyout__integrity[data-status='unverified'] {
+  color: var(--ha-state-warning);
+}
+
+.event-flyout__summary-message {
+  margin: 0;
+  color: var(--ha-foreground-primary);
+  font: 12px/1.45 var(--ha-font-ui);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .event-flyout__tabs {
   display: flex;
   min-height: 38px;
@@ -1428,6 +1606,14 @@
   flex: 1;
   overflow-y: auto;
   scrollbar-width: thin;
+}
+/* Raw JSON view — the body itself does not scroll; the HaJsonViewer (rendered with fill) owns the
+   scroll and stretches to the full available height, eliminating the empty space below it. */
+.event-flyout__body[data-view='raw'] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 10px 12px 12px;
 }
 
 /* Loading */
@@ -1484,9 +1670,9 @@
 
 .event-flyout__field {
   display: grid;
-  min-height: 38px;
-  grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.2fr);
-  align-items: center;
+  min-height: 28px;
+  grid-template-columns: minmax(140px, 0.8fr) minmax(0, 1.2fr);
+  align-items: start;
   border-bottom: 1px solid var(--ha-border-subtle);
 }
 
@@ -1496,7 +1682,7 @@
   gap: 6px;
   min-width: 0;                 /* allow the key to truncate instead of overrunning the value */
   margin: 0;
-  padding: 6px 9px;
+  padding: 4px 9px;
   color: var(--ha-foreground-tertiary);
   font: 10.5px var(--ha-font-mono);
 }
@@ -1508,18 +1694,18 @@
 
 .event-flyout__field dd {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
   margin: 0;
-  padding: 6px 9px;
+  padding: 4px 9px;
   color: var(--ha-foreground-primary);
-  font: 11px var(--ha-font-mono);
+  font: 11px/1.4 var(--ha-font-mono);
   overflow-wrap: anywhere;
 }
-.event-flyout__value { display: inline-flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
-.event-flyout__value-icon { flex: 0 0 auto; color: var(--ha-foreground-tertiary); }
-.event-flyout__value-text { min-width: 0; overflow-wrap: anywhere; }
+.event-flyout__value { display: inline-flex; align-items: flex-start; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.event-flyout__value-icon { flex: 0 0 auto; margin-top: 2px; color: var(--ha-foreground-tertiary); }
+.event-flyout__value-text { min-width: 0; overflow-wrap: anywhere; white-space: normal; }
 
 /* Sectioned field grid — group headers mirror the showcase (Detection / Network / Assets / …) */
 .event-flyout__group + .event-flyout__group { margin-top: 10px; }

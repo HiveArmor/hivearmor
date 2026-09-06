@@ -3,6 +3,7 @@ import { useCallback, useMemo, useRef } from 'react';
 import type { ColDef, RowClickedEvent } from 'ag-grid-community';
 import type { AgGridReact } from 'ag-grid-react';
 
+import { formatHuntRelativeTime, formatHuntTimestampUtc } from '../huntTime';
 import type { HuntEvent, HuntRowDensity } from '../searchHunt.types';
 
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
@@ -48,7 +49,16 @@ export function SearchResultsGrid({
     timestamp: {
       headerName: 'Event time', field: 'timestamp', width: 188, pinned: 'left', lockPinned: true,
       cellClass: 'hunt-grid__mono',
-      valueFormatter: ({ value }) => value ? new Date(String(value)).toISOString().replace('T', ' ').replace('Z', ' Z') : '—',
+      valueFormatter: ({ value }) => formatHuntTimestampUtc(value ? String(value) : null),
+      tooltipValueGetter: ({ value }) => (value ? formatHuntTimestampUtc(String(value)) : ''),
+    },
+    relativeTime: {
+      // Opt-in relative-time column (NOT default). Displays "6m ago / 2h ago", tooltips the full
+      // UTC, and — because it reads the same `timestamp` field — sorts on the real timestamp.
+      headerName: 'Relative time', colId: 'relativeTime', field: 'timestamp', width: 132,
+      cellClass: 'hunt-grid__relative',
+      valueFormatter: ({ value }) => formatHuntRelativeTime(value ? String(value) : null),
+      tooltipValueGetter: ({ value }) => (value ? formatHuntTimestampUtc(String(value)) : ''),
     },
     severity: {
       headerName: 'Severity', field: 'severity', width: 104,

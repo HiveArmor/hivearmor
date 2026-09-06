@@ -13,6 +13,19 @@
   overflow: auto;
   scrollbar-width: thin;
 }
+/* Fill variant — used inside a flex container (e.g. the event flyout) so the JSON uses the full
+   available height instead of the fixed 400px cap, removing the dead space below. */
+.ha-json-viewer--fill {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+.ha-json-viewer--fill .ha-json-viewer__scroll {
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+}
 .ha-json-viewer__copy-btn {
   position: absolute;
   top: 8px;
