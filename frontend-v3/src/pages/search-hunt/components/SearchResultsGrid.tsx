@@ -111,6 +111,7 @@ export function SearchResultsGrid({
       rowData={events}
       loading={loading}
       rowHeight={ROW_HEIGHTS[density]}
+      headerHeight={24}
       rowSelection="multiple"
       suppressRowClickSelection
       onSelectionChanged={handleSelection}

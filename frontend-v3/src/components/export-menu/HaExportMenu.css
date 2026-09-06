@@ -22,6 +22,7 @@
   font: var(--ha-type-compact);
   cursor: pointer;
 }
+.ha-export__trigger--compact { width: 29px; padding: 0; justify-content: center; }
 
 .ha-export__trigger:hover:not(:disabled) {
   border-color: var(--ha-border-strong);

@@ -32,4 +32,14 @@ describe('HaChart', () => {
     expect(src).toContain('aria-label={ariaLabel');
     expect(src).toContain('aria-describedby');
   });
+
+  it('applies height/width to the outer wrapper so height:100% resolves against the real container', () => {
+    // Regression guard: if only the inner ReactECharts div carries the size, the untethered wrapper
+    // collapses and ECharts falls back to its default 100px, clipping sized containers (e.g. the hunt
+    // histogram). The wrapper (role="img") must carry the dimensions.
+    const src = readFileSync(join(__dirname, 'HaChart.tsx'), 'utf-8');
+    const wrapper = src.slice(src.indexOf('role="img"'), src.indexOf('<ReactECharts'));
+    expect(wrapper).toContain('height:');
+    expect(wrapper).toContain('width:');
+  });
 });

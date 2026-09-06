@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { EChartsOption } from 'echarts';
 import {
-  BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleStop, Clock3, Columns3, Database, FileClock,
+  BarChart3, BookOpen, Check, ChevronLeft, ChevronRight, CircleStop, Clock3, Columns3, Database, FileClock,
   Keyboard, Library, ListFilter, MoreHorizontal, Play, Save, ShieldAlert, Sparkles,
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
@@ -32,7 +32,7 @@ import { exportHuntResults } from './forensicExport.service';
 import type { ExportFormat, ExportResult } from './forensicExport.types';
 import { addToHuntHistory } from './history';
 import { useSearchStream } from './hooks/useSearchStream';
-import { DEFAULT_HUNT_QUERY, normalizeHuntQuery } from './huntQuerySuggestions';
+import { normalizeHuntQuery } from './huntQuerySuggestions';
 import { HUNT_FIELD_COLUMN_MAP, huntColumnToSortField, huntColumnsToProjection } from './searchHunt.projection';
 import {
   cancelHunt, executeHunt, fetchHuntSchema, fetchQueryCapabilities, searchHuntFixtureMode,
@@ -113,7 +113,9 @@ export function SearchHuntPage(): JSX.Element {
   const hasAnyRole = useAuthStore((state) => state.hasAnyRole);
   const canPromote = hasAnyRole([ROLES.ANALYST, ROLES.SOC_MANAGER, ROLES.ADMIN, 'ROLE_SOC_ANALYST']);
   const canSaveQuery = hasAnyRole([ROLES.USER, ROLES.ANALYST, ROLES.SOC_MANAGER, ROLES.ADMIN]);
-  const [query, setQuery] = useState(() => routedQuery || DEFAULT_HUNT_QUERY);
+  // Editor starts empty so the plain-language placeholder guides first-time analysts; an empty query
+  // still runs match-all — normalizeHuntQuery('') resolves to DEFAULT_HUNT_QUERY at execution time.
+  const [query, setQuery] = useState(() => routedQuery ?? '');
   const [nlQuestion, setNlQuestion] = useState('');
   const [nlProvenance, setNlProvenance] = useState<HaNlQueryResult | null>(null);
   const [nlError, setNlError] = useState<string | null>(null);
@@ -129,6 +131,19 @@ export function SearchHuntPage(): JSX.Element {
   const [flyoutEventId, setFlyoutEventId] = useState<string | null>(null);
   const [verdictPanelOpen, setVerdictPanelOpen] = useState(false);
   const [resultView, setResultView] = useState<'table' | 'metrics'>('table');
+  // Histogram collapse — persisted, so an analyst who reclaims the 96px for row-scanning keeps it
+  // collapsed across visits. The histogram stays in the table view (it is the time-scoping control);
+  // this only hides its body on demand.
+  const [histogramCollapsed, setHistogramCollapsed] = useState<boolean>(() => {
+    try { return localStorage.getItem('ha_hunt_histogram_collapsed') === 'true'; } catch { return false; }
+  });
+  const toggleHistogram = useCallback(() => {
+    setHistogramCollapsed((collapsed) => {
+      const next = !collapsed;
+      try { localStorage.setItem('ha_hunt_histogram_collapsed', String(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
   // Set when a downstream call (event flyout / field rail) reports the search snapshot has expired,
   // so the execution strip stops claiming a green "Query complete" for a dead session.
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -677,8 +692,16 @@ export function SearchHuntPage(): JSX.Element {
         </div>
         <div className="hunt-query-workspace__controls" aria-label="Search controls">
           <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setFieldRailOpen((open) => !open)} aria-pressed={fieldRailOpen} aria-label="Toggle filters and field values" title="Filters and field values"><ListFilter size={14} /></button>
-          <button type="button" className="hunt-control-button" onClick={() => openManager('saved')} aria-expanded={managerPanelOpen} aria-haspopup="dialog" title="Saved hunts and search history"><Library size={13} />Library<ChevronDown size={11} /></button>
-          <button type="button" className="hunt-control-button" onClick={() => setSaveOpen(true)} disabled={!query.trim() || !canSaveQuery} title={!canSaveQuery ? SAVE_DENIED : !query.trim() ? 'Enter a reusable query before saving' : 'Save query'}><Save size={13} />Save</button>
+          <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={toggleHistogram} aria-pressed={!histogramCollapsed} aria-controls="hunt-histogram-body" aria-label={histogramCollapsed ? 'Show event distribution histogram' : 'Hide event distribution histogram'} title={histogramCollapsed ? 'Show event distribution' : 'Hide event distribution'}><BarChart3 size={14} /></button>
+          <div className="hunt-view-toggle" role="group" aria-label="Result view">
+            <button type="button" onClick={() => setResultView('table')} aria-pressed={resultView === 'table'} title="Table view"><ListFilter size={13} aria-hidden="true" />Table</button>
+            <button type="button" onClick={() => setResultView('metrics')} aria-pressed={resultView === 'metrics'} title="Metrics view — summarise these results"><Sparkles size={13} aria-hidden="true" />Metrics</button>
+          </div>
+          <span className="hunt-control-divider" aria-hidden="true" />
+          <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => openManager('saved')} aria-expanded={managerPanelOpen} aria-haspopup="dialog" aria-label="Saved hunts and search history" title="Saved hunts &amp; history"><Library size={14} /></button>
+          <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setSaveOpen(true)} disabled={!query.trim() || !canSaveQuery} aria-label="Save this hunt query" title={!canSaveQuery ? SAVE_DENIED : !query.trim() ? 'Enter a reusable query before saving' : 'Save query'}><Save size={14} /></button>
+          <div className="hunt-column-picker" ref={columnsPickerRef}><button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setColumnsOpen((open) => !open)} aria-expanded={columnsOpen} aria-label="Choose columns" title="Columns"><Columns3 size={14} /></button>{columnsOpen && <div className="hunt-column-picker__menu">{COLUMN_OPTIONS.map(([id, label]) => <label key={id}><input type="checkbox" checked={visibleColumns.includes(id)} onChange={() => toggleColumn(id)} /><span>{label}</span>{visibleColumns.includes(id) && <Check size={12} />}</label>)}<button type="button" className="hunt-column-picker__reset" onClick={() => { setVisibleColumns(DEFAULT_COLUMNS); setColumnsOpen(false); }}>Reset to default</button></div>}</div>
+          <HaExportMenu surface="hunt-search" disabled={!hasResults} onExport={handleExport} compact />
           <div className="hunt-overflow" ref={overflowRef}>
             <button type="button" className="hunt-control-button hunt-control-button--icon" onClick={() => setOverflowOpen((open) => !open)} aria-expanded={overflowOpen} aria-haspopup="menu" aria-label="More search controls" title="More controls"><MoreHorizontal size={15} /></button>
             {overflowOpen && (
@@ -717,15 +740,18 @@ export function SearchHuntPage(): JSX.Element {
             {searchQuery.isFetching ? <button type="button" className="hunt-button hunt-button--stop" onClick={stopSearch}><CircleStop size={14} />Cancel</button> : <button type="button" className="hunt-button hunt-button--primary" onClick={() => runSearch()} title={!query.trim() ? 'Load the newest 100 events in the selected scope' : 'Run KQL hunt'}><Play size={14} />Run search</button>}
           </div>
         </div>
-        <div className="hunt-execution-strip" role="status" aria-live="polite">
-          <span data-state={searchQuery.isFetching ? 'running' : sessionExpired ? 'expired' : summary ? 'complete' : 'idle'}><i aria-hidden="true" />{searchQuery.isFetching ? 'Query running' : sessionExpired ? 'Snapshot expired · run again' : summary ? 'Query complete' : 'Ready'}</span>
-          <span title="Active index scope for the next Run search"><Database size={12} />Index · {huntIndexScopeLabel(selectedIndex)}</span>
-          <span><Database size={12} />{summary ? `${summary.totalIsExact ? '' : 'About '}${summary.totalApproximate.toLocaleString()} events` : 'No result snapshot'}</span>
-          <span><Clock3 size={12} />{summary ? `${summary.tookMs.toLocaleString()} ms` : 'Duration —'}</span>
-          <span><FileClock size={12} />{summary ? `Snapshot ${new Date(summary.snapshotAt).toLocaleTimeString()}` : 'Freshness —'}</span>
-          {staleVisible && <strong>Updating · previous results preserved</strong>}
-          {summary?.partialFailures.length ? <strong data-tone="warning">Partial results · {summary.partialFailures.length} source unavailable</strong> : null}
-        </div>
+        {/* Transient status line — renders ONLY while there is something time-sensitive to announce
+            (running / expired snapshot / stale-updating / partial failures). The durable result facts
+            (index · events · took · snapshot freshness) now live on the results toolbar, so a clean
+            "complete" state shows NO strip and the reclaimed row goes to the table. aria-live keeps the
+            query-complete announcement for screen readers via the toolbar summary below. */}
+        {(searchQuery.isFetching || sessionExpired || staleVisible || !!summary?.partialFailures.length) && (
+          <div className="hunt-execution-strip" role="status" aria-live="polite">
+            <span data-state={searchQuery.isFetching ? 'running' : sessionExpired ? 'expired' : 'complete'}><i aria-hidden="true" />{searchQuery.isFetching ? 'Query running' : sessionExpired ? 'Snapshot expired · run again' : 'Query complete'}</span>
+            {staleVisible && <strong>Updating · previous results preserved</strong>}
+            {summary?.partialFailures.length ? <strong data-tone="warning">Partial results · {summary.partialFailures.length} source unavailable</strong> : null}
+          </div>
+        )}
         {searchQuery.isFetching && summary?.searchId && (
           <SearchProgressBar searchId={summary.searchId} stream={searchStream} onCancelled={stopSearch} />
         )}
@@ -763,47 +789,32 @@ export function SearchHuntPage(): JSX.Element {
                   : 'AI verdict off — set Autonomy to Suggest (⋯ menu) to have the agent assess these results.'}
               </p>
             ) : null}
-            <section className="hunt-histogram" aria-label="Event distribution over time">
-              <header>
-                <div>
-                  <strong>Event distribution</strong>
-                  <span>
-                    {hasLiveHistogram
-                      ? 'Click a bucket to narrow the active time range'
-                      : 'Histogram unavailable until the search response includes time buckets — counts are not invented'}
-                  </span>
-                </div>
-                <span>{hasLiveHistogram ? `${histogram.length} buckets` : 'No buckets'}</span>
-              </header>
-              <div className="hunt-histogram__chart">
-                {hasLiveHistogram ? (
-                  <Suspense fallback={<div className="hunt-chart-skeleton" />}>
-                    <LazyHaChart option={histogramOption} height="100%" onChartClick={handleHistogramClick} ariaLabel="Event histogram" ariaDescription="Event counts over the current query time range. Activate a bucket to narrow the search." />
-                  </Suspense>
-                ) : (
-                  <div className="hunt-histogram__empty" role="status">
-                    No live histogram for this snapshot. Results below reflect the query response only.
+            {!histogramCollapsed && (
+              <section className="hunt-histogram" id="hunt-histogram-body" aria-label="Event distribution over time">
+                <header>
+                  <div>
+                    <strong>Event distribution</strong>
+                    <span>
+                      {hasLiveHistogram
+                        ? 'Click a bucket to narrow the active time range'
+                        : 'Histogram unavailable until the search response includes time buckets — counts are not invented'}
+                    </span>
                   </div>
-                )}
-              </div>
-            </section>
-            <div className="hunt-results-toolbar">
-              <div><strong>Events</strong><span>{events.length > 0 ? `${firstVisibleRow.toLocaleString()}–${lastVisibleRow.toLocaleString()} loaded` : 'No rows loaded'}{searchQuery.data?.hasMore ? ' · more available' : ''}</span></div>
-              <div className="hunt-results-toolbar__actions">
-                <div className="hunt-view-toggle" role="group" aria-label="Result view">
-                  <button type="button" onClick={() => setResultView('table')} aria-pressed={resultView === 'table'} title="Table view"><ListFilter size={13} aria-hidden="true" />Table</button>
-                  <button type="button" onClick={() => setResultView('metrics')} aria-pressed={resultView === 'metrics'} title="Metrics view — summarise these results"><Sparkles size={13} aria-hidden="true" />Metrics</button>
+                  <span>{hasLiveHistogram ? `${histogram.length} buckets` : 'No buckets'}</span>
+                </header>
+                <div className="hunt-histogram__chart">
+                  {hasLiveHistogram ? (
+                    <Suspense fallback={<div className="hunt-chart-skeleton" />}>
+                      <LazyHaChart option={histogramOption} height="100%" onChartClick={handleHistogramClick} ariaLabel="Event histogram" ariaDescription="Event counts over the current query time range. Activate a bucket to narrow the search." />
+                    </Suspense>
+                  ) : (
+                    <div className="hunt-histogram__empty" role="status">
+                      No live histogram for this snapshot. Results below reflect the query response only.
+                    </div>
+                  )}
                 </div>
-                <div className="hunt-density-control">
-                  <span>Rows</span>
-                  <div role="group" aria-label="Result row density">
-                    {DENSITY_OPTIONS.map((option) => <button key={option.value} type="button" onClick={() => setDensity(option.value)} aria-pressed={density === option.value} title={option.label}><span className="hunt-density-glyph" data-density={option.value} aria-hidden="true"><i /><i /><i /></span><span className="hunt-sr-only">{option.label}</span></button>)}
-                  </div>
-                </div>
-                <div className="hunt-column-picker" ref={columnsPickerRef}><button type="button" className="hunt-control-button" onClick={() => setColumnsOpen((open) => !open)} aria-expanded={columnsOpen}><Columns3 size={13} />Columns <ChevronDown size={12} /></button>{columnsOpen && <div className="hunt-column-picker__menu">{COLUMN_OPTIONS.map(([id, label]) => <label key={id}><input type="checkbox" checked={visibleColumns.includes(id)} onChange={() => toggleColumn(id)} /><span>{label}</span>{visibleColumns.includes(id) && <Check size={12} />}</label>)}<button type="button" className="hunt-column-picker__reset" onClick={() => { setVisibleColumns(DEFAULT_COLUMNS); setColumnsOpen(false); }}>Reset to default</button></div>}</div>
-                <HaExportMenu surface="hunt-search" disabled={!hasResults} onExport={handleExport} />
-              </div>
-            </div>
+              </section>
+            )}
             <div className="hunt-grid-shell">
               {events.length > 0 ? (
                 resultView === 'metrics' ? (
@@ -830,13 +841,26 @@ export function SearchHuntPage(): JSX.Element {
               ) : searchQuery.isFetching ? <div className="hunt-grid-loading" aria-label="Loading search results"><span /><span /><span /><span /><span /></div> : <div className="hunt-grid-empty"><ListFilter size={26} /><strong>No matching events</strong><span>The query completed. Choose Index: Alerts for detections, widen the 24h window, or enroll an agent from Posture → Sensors so endpoint logs are indexed.</span></div>}
             </div>
             <nav className="hunt-pagination" aria-label="Hunt result pages">
-              <div className="hunt-pagination__meta">
-                <span>{summary ? `${summary.totalIsExact ? '' : '~'}${summary.totalApproximate.toLocaleString()} events` : 'Count —'}</span>
-                <span aria-hidden="true">·</span>
+              <div className="hunt-pagination__meta" role="status" aria-live="polite">
                 <strong>Page {pageIndex + 1}</strong>
-                <span>{firstVisibleRow.toLocaleString()}–{lastVisibleRow.toLocaleString()}</span>
+                <span className="hunt-pagination__sep" aria-hidden="true">·</span>
+                <span>{firstVisibleRow.toLocaleString()}–{lastVisibleRow.toLocaleString()} of {summary ? `${summary.totalIsExact ? '' : '~'}${summary.totalApproximate.toLocaleString()}` : '—'}</span>
+                {summary && <>
+                  <span className="hunt-pagination__sep" aria-hidden="true">·</span>
+                  <span title="Active index scope for the next Run search"><Database size={11} aria-hidden="true" />{huntIndexScopeLabel(selectedIndex)}</span>
+                  <span className="hunt-pagination__sep" aria-hidden="true">·</span>
+                  <span title="Query execution time"><Clock3 size={11} aria-hidden="true" />{summary.tookMs.toLocaleString()} ms</span>
+                  <span className="hunt-pagination__sep" aria-hidden="true">·</span>
+                  <span title="When this result snapshot was taken"><FileClock size={11} aria-hidden="true" />{new Date(summary.snapshotAt).toLocaleTimeString()}</span>
+                </>}
               </div>
               <div className="hunt-pagination__actions">
+                <div className="hunt-density-control">
+                  <span>Rows</span>
+                  <div role="group" aria-label="Result row density">
+                    {DENSITY_OPTIONS.map((option) => <button key={option.value} type="button" onClick={() => setDensity(option.value)} aria-pressed={density === option.value} title={option.label}><span className="hunt-density-glyph" data-density={option.value} aria-hidden="true"><i /><i /><i /></span><span className="hunt-sr-only">{option.label}</span></button>)}
+                  </div>
+                </div>
                 <button type="button" className="hunt-button hunt-pagination__nav" onClick={goToPreviousPage} disabled={pageIndex === 0 || searchQuery.isFetching} aria-label="Previous page"><ChevronLeft size={13} /><span>Prev</span></button>
                 <button type="button" className="hunt-button hunt-pagination__nav" onClick={goToNextPage} disabled={!searchQuery.data?.nextCursor || searchQuery.isFetching} aria-label="Next page"><span>Next</span><ChevronRight size={13} /></button>
               </div>

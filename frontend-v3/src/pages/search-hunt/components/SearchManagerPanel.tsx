@@ -104,10 +104,31 @@ export function SearchManagerPanel({
   const [saveTags, setSaveTags] = useState('');
   const [saveShared, setSaveShared] = useState(false);
   const contextRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (isOpen) setTab(initialTab);
   }, [initialTab, isOpen]);
+
+  // Dismiss on outside click (mousedown outside the drawer) and on Escape, so the Library behaves like
+  // the other popovers. The trigger button lives outside the drawer, so re-clicking it still toggles
+  // via the parent — the mousedown handler runs first and closes, then the click toggles open again is
+  // avoided because the parent's open state is already false; a single outside click simply closes.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const onDown = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) onClose();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [isOpen, onClose]);
 
   // ------ Data fetching ------
 
@@ -276,7 +297,7 @@ export function SearchManagerPanel({
   if (!isOpen) return null;
 
   return (
-    <aside className="search-manager-panel" role="complementary" aria-label="Search manager">
+    <aside className="search-manager-panel" role="complementary" aria-label="Search manager" ref={panelRef}>
       <header className="search-manager-panel__header">
         <nav className="search-manager-panel__tabs" aria-label="Manager tabs">
           <button
