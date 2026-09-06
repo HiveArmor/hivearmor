@@ -53,6 +53,8 @@ export interface SiemDataGridProps {
   onSortChanged?: (event: SortChangedEvent) => void;
   height?: string | number;
   rowHeight?: number;
+  /** Explicit header row height in px. Omit to use the AG Grid theme default. */
+  headerHeight?: number;
   rowSelection?: GridOptions['rowSelection'];
   suppressRowClickSelection?: boolean;
   components?: Record<string, React.ComponentType<unknown>>;
@@ -85,6 +87,7 @@ export const SiemDataGrid = forwardRef<AgGridReact, SiemDataGridProps>(
       onSortChanged,
       height = '100%',
       rowHeight,
+      headerHeight,
       rowSelection,
       suppressRowClickSelection,
       components,
@@ -123,6 +126,7 @@ export const SiemDataGrid = forwardRef<AgGridReact, SiemDataGridProps>(
       suppressRowClickSelection,
       getRowId,
       rowHeight,
+      headerHeight,
       defaultColDef: {
         sortable: true,
         filter: true,
