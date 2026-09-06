@@ -24,7 +24,7 @@ White).
 |-------|-----------------|--------|-----------|
 | **Dark** (default) | *(unqualified `:root`)* | dark | Hive Carbon — deep carbon surfaces for long SOC shifts |
 | **White** | `light` | light | Tuned light companion, WCAG-AA verified |
-| **Modern** | `modern` | dark | Deep Navy Command — navy surfaces, brighter teal, glass overlay chrome |
+| **Modern** | `modern` | dark | Deep Navy Command — navy surfaces, brighter teal, opaque elevated overlay chrome |
 
 `isDarkFamily(theme)` returns true for `dark` and `modern`; the document
 `color-scheme` follows that. Downstream consumers that only knew `dark|light`
@@ -39,26 +39,26 @@ clears WCAG AA on the Modern navy surfaces (6.0–11.2:1).
 
 ---
 
-## 2. Glass / `backdrop-filter: blur` — scoped exception (product-owner approved 2026-09-03)
+## 2. Glass / `backdrop-filter: blur` — exception RETIRED (2026-09-06)
 
-The design system's long-standing anti-pattern list forbids glassmorphism. That
-rule is **amended**, not removed, to a narrowly scoped exception:
+A scoped glass exception was briefly in force (product-owner approved
+2026-09-03): `backdrop-filter: blur` was permitted only under
+`:root[data-ha-theme='modern']` on transient overlay chrome. **That exception is
+now retired.** Glassmorphism (`backdrop-filter: blur`) is once again **forbidden
+in every theme, including Modern** — the anti-pattern list stands unqualified.
 
-> `backdrop-filter: blur` is permitted **only** under `:root[data-ha-theme='modern']`,
-> **only** on transient overlay chrome — menus, dialogs, sheets, toolbars,
-> popovers, tooltips, toasts. It is **never** applied to data-bearing surfaces
-> (tables `.ha-grid` / `.ag-*`, cards `.ha-card`, rows, or anything holding alert
-> data), and **never** in the Dark or White themes.
+What replaced it: Modern overlay chrome (menus, dialogs, sheets, popovers,
+tooltips, toasts) now paints a **fully opaque elevated surface**
+(`var(--ha-surface-elevated)`) separated from the mesh background by a **crisp
+elevation shadow** and a stronger border — no blur, no translucency. This keeps
+the lifted, layered Modern feel, guarantees text contrast unconditionally, and
+removes the GPU cost of `backdrop-filter`.
 
-Implementation: all of it lives in one file, `src/styles/modern-polish.css`,
-with every rule prefixed by the `[data-ha-theme='modern']` scope, plus a hard
-guard that forces `backdrop-filter: none` on any data surface nested inside an
-overlay. A strong semi-opaque base colour sits behind every blur so foreground
-text keeps its contrast. Verified in Storybook: the Modern dialog shows glass;
-the Dark dialog is solid carbon with no bleed-through.
-
-The same amendment is mirrored in `.kiro/steering/brand.md` and
-`.kiro/steering/skills-frontend.md` (git-ignored — see note above).
+Implementation still lives in one file, `src/styles/modern-polish.css`, every
+rule prefixed by the `[data-ha-theme='modern']` scope. Data surfaces
+(`.ha-grid` / `.ag-*` / `.ha-card`) retain an explicit `backdrop-filter: none`
+guard as belt-and-suspenders. The Modern mesh background, teal action glow, and
+guarded overlay entrance motion are unchanged.
 
 ---
 

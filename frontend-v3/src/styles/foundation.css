@@ -285,9 +285,9 @@
   --ha-surface-sidebar: #0d1528;
   --ha-surface-masthead: #0d1528;
   --ha-surface-panel: #101a30;
-  --ha-surface-elevated: #1a2740;
+  --ha-surface-elevated: #141e33;
   --ha-surface-input: #0b1122;
-  --ha-surface-hover: #1e2c48;
+  --ha-surface-hover: #1c2a44;
   --ha-surface-selected: #123243;
   --ha-surface-zebra: #131d35;
   --ha-surface-overlay: #060b16;
@@ -297,7 +297,7 @@
   --ha-border-strong: #485878;
   --ha-border-focus: #5bd0c9;
 
-  --ha-foreground-primary: #e8ecf7;
+  --ha-foreground-primary: #ccd3e6;
   --ha-foreground-secondary: #aab6cf;
   --ha-foreground-tertiary: #7883a0;
   --ha-foreground-disabled: #5a647e;
