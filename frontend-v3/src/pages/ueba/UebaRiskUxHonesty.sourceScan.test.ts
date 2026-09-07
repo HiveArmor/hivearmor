@@ -26,6 +26,7 @@ describe('Prompt 14 UEBA Risk UX honesty', () => {
     expect(riskPage).toContain('to="/intelligence"');
     expect(riskPage).toContain('to="/investigations"');
     expect(riskPage).toContain('to="/incidents"');
+    expect(riskPage).toContain('to="/detection-rules"');
   });
 
   it('uses table-primary layout with min-height 50vh', () => {
@@ -38,7 +39,10 @@ describe('Prompt 14 UEBA Risk UX honesty', () => {
     expect(uebaService).toContain('/ha-ueba/risk-scores');
     expect(uebaService).toContain('/ha-ueba/risk-trend');
     expect(uebaService).toContain('/ha-ueba/anomaly-counts');
-    expect(uebaService).toContain('/ha-ueba/entity-timeline');
+    expect(uebaService).toContain('/ha-ueba/deviations');
+    expect(uebaService).toContain('/ha-ueba/peer-groups');
+    expect(uebaService).not.toContain('/uba/');
+    expect(riskPage).toContain('ueba-risk-model-honesty');
     expect(riskPage).not.toContain('window.dispatchEvent');
     expect(riskPage).toContain('ueba-create-incident-guidance');
     expect(riskPage).toContain('/search?q=');

@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 
 import { useQuery } from '@tanstack/react-query';
-import {
-  AlertTriangle, BarChart3, CheckCircle2, ChevronRight, Database,
+import { AlertTriangle, BarChart3, CheckCircle2, ChevronRight, Database,
   Layers3, Search, ShieldCheck, Target, X,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { DET_014_DISABLED_TITLE } from './detectionRules.capabilities';
 import { detectionRulesFixtureMode } from './detectionRules.service';
@@ -12,6 +12,7 @@ import { DETECTION_ENGINE_LABELS, type DetectionRule } from './detectionRules.ty
 import { fetchCoverage } from './services/detection.service';
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
+import { ROUTES } from '@/constants/routes.constants';
 
 interface DetectionCoverageViewProps {
   rules: DetectionRule[];
@@ -119,6 +120,9 @@ export default function DetectionCoverageView({ rules, onOpenRule }: DetectionCo
         <HaCompactSelect ariaLabel="Coverage mode" value={mode} onChange={(value) => setMode(value as typeof mode)} options={MODE_OPTIONS} />
         <HaCompactSelect ariaLabel="Telemetry platform" value={platform} onChange={setPlatform} options={PLATFORM_OPTIONS} />
         <div className="detection-coverage__framework"><Target size={14} /><span>Enterprise ATT&amp;CK</span><strong>v16</strong></div>
+        <Link className="detection-coverage__ueba-link" to={ROUTES.UEBA_RISK} data-testid="coverage-ueba-link">
+          UEBA baselines
+        </Link>
       </div>
 
       {coverageQuery.isLoading && <div className="detection-section-loading" role="status">Loading authoritative ATT&amp;CK coverage…</div>}
