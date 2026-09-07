@@ -140,6 +140,8 @@ describe('detection rules foundation fixtures', () => {
     expect(new Set(foundationDetectionExecutions.map((run) => run.id)).size).toBe(foundationDetectionExecutions.length);
     expect(foundationDetectionExecutions.every((run) => ruleIds.has(run.ruleId))).toBe(true);
     expect(foundationDetectionSampleEvents.every((sample) => Boolean(JSON.parse(sample.json)))).toBe(true);
+    expect(foundationDetectionSampleEvents.some((sample) => sample.id === 'sample-excepted-scanner-001')).toBe(true);
+    expect(foundationDetectionSampleEvents.some((sample) => sample.id === 'sample-baseline-excepted-001')).toBe(true);
   });
 
   it('are excluded by both production build paths', async () => {

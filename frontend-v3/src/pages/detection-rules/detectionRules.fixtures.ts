@@ -115,6 +115,19 @@ export const foundationDetectionSampleEvents: DetectionSampleEvent[] = [
       origin: { host: 'approved-scanner', user: 'svc-scan' },
     }, null, 2),
   },
+  {
+    id: 'sample-baseline-excepted-001',
+    label: 'Baseline anomaly on approved scanner (active exception)',
+    dataType: 'Endpoint',
+    json: JSON.stringify({
+      '@timestamp': '2026-09-07T10:22:00Z',
+      event: { action: 'anomaly' },
+      dataSource: 'windows-security',
+      host: { name: 'lab-baseline-host' },
+      user: { name: 'svc-scan' },
+      origin: { host: 'lab-baseline-host', user: 'svc-scan' },
+    }, null, 2),
+  },
 ];
 
 export const foundationDetectionRuleVersions: DetectionRuleVersion[] = [

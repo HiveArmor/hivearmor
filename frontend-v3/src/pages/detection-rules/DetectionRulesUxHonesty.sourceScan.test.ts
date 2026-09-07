@@ -40,4 +40,11 @@ describe('detection rules UX honesty (Prompt 16)', () => {
     expect(styles).toContain('.detection-inventory');
     expect(styles).not.toContain('.detection-kpis');
   });
+
+  it('wires match-but-suppressed dry-run outcome copy', () => {
+    const consoleSource = readFileSync(join(process.cwd(), 'src/pages/detection-rules/DetectionTestConsole.tsx'), 'utf8');
+    expect(consoleSource).toContain('Matched — suppressed by exception');
+    expect(consoleSource).toContain('STAGING CANDIDATE');
+    expect(consoleSource).toContain('exceptionsApplied');
+  });
 });

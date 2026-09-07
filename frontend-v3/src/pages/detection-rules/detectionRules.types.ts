@@ -111,6 +111,12 @@ export interface DetectionSandboxResult {
   evaluationMode?: 'inject_dry_run' | 'sigma_sandbox' | 'fixture' | 'fixture_exception_suppressed' | 'unavailable';
   openSearchQueried?: boolean;
   engineParity?: 'approximate' | 'sigma' | 'fixture';
+  suppressed?: boolean;
+  wouldAlert?: boolean;
+  exceptionsApplied?: boolean;
+  exceptionsSuppressedCount?: number;
+  matchingExceptionId?: number | string | null;
+  matchingExceptionTitle?: string | null;
 }
 
 export interface DetectionSampleEvent {
@@ -166,9 +172,10 @@ export interface RulePreviewResult {
   honesty?: string | null;
   simulated?: boolean;
   openSearchQueried?: boolean;
-  /** DET-FP — false when Java dry-run does not honor engine exception packs. */
+  /** DET-FP — true when active exceptions were loaded and considered. */
   exceptionsApplied?: boolean;
   exceptionsSuppressedCount?: number;
+  suppressedMatches?: Array<{ id: string; timestamp: string; summary: string; entity: string }>;
 }
 
 export interface DetectionRuleVersion {

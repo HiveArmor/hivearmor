@@ -309,6 +309,9 @@
 .detection-test-result__empty p, .detection-test-result__outcome p { margin: 0; line-height: 1.4; }
 .detection-test-result__outcome[data-matched='true'] > svg, .detection-test-result__outcome[data-matched='true'] > strong { color: var(--ha-state-healthy); }
 .detection-test-result__outcome[data-matched='false'] > svg { color: var(--ha-foreground-tertiary); }
+.detection-test-result__outcome[data-matched='suppressed'] > svg,
+.detection-test-result__outcome[data-matched='suppressed'] > strong { color: var(--ha-severity-high); }
+.detection-test-result__fields--suppressed code { color: var(--ha-severity-high); }
 .detection-test-result__outcome dl { display: grid; width: 100%; grid-template-columns: 1fr 1fr; margin: 6px 0 0; border: 1px solid var(--ha-border-subtle); }
 .detection-test-result__outcome dl > div { padding: 6px; border-right: 1px solid var(--ha-border-subtle); }
 .detection-test-result__outcome dt { color: var(--ha-foreground-tertiary); font-size: 8px; }

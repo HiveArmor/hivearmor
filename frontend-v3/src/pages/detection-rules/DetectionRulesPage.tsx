@@ -12,8 +12,8 @@ import { useNavigate, Link } from 'react-router-dom';
 
 import { createColumnDefs } from './columnDefs';
 import { BaselineExceptionPanel } from './components/BaselineExceptionPanel';
-import { RuleTuningPanel } from './components/RuleTuningPanel';
 import { DetectionPipelineHealthStrip } from './components/DetectionPipelineHealthStrip';
+import { RuleTuningPanel } from './components/RuleTuningPanel';
 import { DetectionMonitoringView } from './DetectionMonitoringView';
 import {
   DET_EXCEPTION_ACTIVATE_DENIED_TITLE,
