@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- AGT-OBS-01 — persist applied policy meta from agent vitals samples -->
+    <changeSet id="20260907001-vitals-policy" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="ha_agent_vitals"/>
+            <not>
+                <columnExists tableName="ha_agent_vitals" columnName="applied_policy_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="ha_agent_vitals">
+            <column name="applied_policy_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="applied_policy_version" type="int">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

@@ -21,18 +21,6 @@ import (
 // DataTypeFIMRegistry is the log dataType for Windows registry FIM events.
 const DataTypeFIMRegistry = "fim-registry"
 
-// defaultRegistryKeys lists high-value HKLM keys to monitor for integrity.
-var defaultRegistryKeys = []string{
-	`SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon`,
-	`SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options`,
-	`SYSTEM\CurrentControlSet\Services`,
-	`SOFTWARE\Microsoft\Windows\CurrentVersion\Run`,
-	`SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce`,
-	`SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Run`,
-	`SYSTEM\CurrentControlSet\Control\Lsa`,
-	`SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\InstalledSDB`,
-}
-
 // RegistryFIMEvent is the JSON payload for dataType "fim-registry".
 type RegistryFIMEvent struct {
 	Action    string `json:"action"`
@@ -51,10 +39,10 @@ type RegistryWatcher struct {
 	hostname string
 }
 
-// NewRegistryWatcher creates a watcher for the default high-value HKLM keys.
+// NewRegistryWatcher creates a watcher for the effective HKLM keys (policy or defaults).
 func NewRegistryWatcher(queue chan<- *plugins.Log, hostname string) *RegistryWatcher {
 	return &RegistryWatcher{
-		keys:     defaultRegistryKeys,
+		keys:     currentRegistryKeys(),
 		queue:    queue,
 		hostname: hostname,
 	}

@@ -24,8 +24,8 @@ public class AgentPolicySchemaV1 {
 
     /** Wire major version emitted in {@code schema_version} (agent accepts 0 or 1). */
     public static final int SCHEMA_VERSION = 1;
-    /** Feature level documenting additive telemetry schedule fields. */
-    public static final String SCHEMA_FEATURE = "1.1";
+    /** Feature level documenting additive telemetry + optional fim.registry. */
+    public static final String SCHEMA_FEATURE = "1.2";
     public static final String FIM_MODE_MERGE = "merge";
     public static final String FIM_MODE_REPLACE = "replace";
     public static final int DEFAULT_TELEMETRY_INTERVAL_HOURS = 6;
@@ -89,6 +89,8 @@ public class AgentPolicySchemaV1 {
     public static class FimSection {
         private String mode;
         private List<FimRule> rules = new ArrayList<>();
+        /** Optional Windows registry FIM (agent ignores on non-Windows). */
+        private FimRegistrySection registry;
 
         public String getMode() {
             return mode;
@@ -104,6 +106,37 @@ public class AgentPolicySchemaV1 {
 
         public void setRules(List<FimRule> rules) {
             this.rules = rules;
+        }
+
+        public FimRegistrySection getRegistry() {
+            return registry;
+        }
+
+        public void setRegistry(FimRegistrySection registry) {
+            this.registry = registry;
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class FimRegistrySection {
+        private String mode;
+        private List<String> keys = new ArrayList<>();
+
+        public String getMode() {
+            return mode;
+        }
+
+        public void setMode(String mode) {
+            this.mode = mode;
+        }
+
+        public List<String> getKeys() {
+            return keys;
+        }
+
+        public void setKeys(List<String> keys) {
+            this.keys = keys;
         }
     }
 

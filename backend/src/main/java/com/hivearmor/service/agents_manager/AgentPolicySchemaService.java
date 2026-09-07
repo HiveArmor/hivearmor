@@ -68,11 +68,20 @@ public class AgentPolicySchemaService {
     }
 
     /**
-     * Projects legacy Ha EDR columns into schema v1 (FIM paths + collector hints).
+     * Projects legacy Ha EDR columns into schema v1 (FIM paths + optional registry + collector hints).
      * Does not push APPLY_POLICY — caller must write into Utm agent-policies.
-     * Registry paths are omitted (not in agent schema v1).
      */
     public String fromHaColumns(List<String> filePaths,
+                                Boolean networkMonitor,
+                                Boolean processMonitor) {
+        return fromHaColumns(filePaths, null, networkMonitor, processMonitor);
+    }
+
+    /**
+     * Projects Ha {@code filePaths} / {@code registryPaths} into schema v1(+registry).
+     */
+    public String fromHaColumns(List<String> filePaths,
+                                List<String> registryPaths,
                                 Boolean networkMonitor,
                                 Boolean processMonitor) {
         AgentPolicySchemaV1 doc = emptyDefaults();
@@ -88,10 +97,24 @@ public class AgentPolicySchemaService {
                 rules.add(rule);
             }
         }
-        if (!rules.isEmpty()) {
-            AgentPolicySchemaV1.FimSection fim = new AgentPolicySchemaV1.FimSection();
-            fim.setMode(AgentPolicySchemaV1.FIM_MODE_MERGE);
-            fim.setRules(rules);
+        AgentPolicySchemaV1.FimSection fim = new AgentPolicySchemaV1.FimSection();
+        fim.setMode(AgentPolicySchemaV1.FIM_MODE_MERGE);
+        fim.setRules(rules);
+        if (registryPaths != null) {
+            List<String> keys = new ArrayList<>();
+            for (String key : registryPaths) {
+                if (StringUtils.hasText(key)) {
+                    keys.add(key.trim());
+                }
+            }
+            if (!keys.isEmpty()) {
+                AgentPolicySchemaV1.FimRegistrySection registry = new AgentPolicySchemaV1.FimRegistrySection();
+                registry.setMode(AgentPolicySchemaV1.FIM_MODE_MERGE);
+                registry.setKeys(keys);
+                fim.setRegistry(registry);
+            }
+        }
+        if (!rules.isEmpty() || fim.getRegistry() != null) {
             doc.setFim(fim);
         }
         Map<String, Boolean> collectors = AgentPolicySchemaV1.defaultCollectors();
@@ -166,6 +189,28 @@ public class AgentPolicySchemaService {
                     AgentPolicySchemaV1.FimRule rule = rules.get(i);
                     if (rule == null || !StringUtils.hasText(rule.getPath())) {
                         throw new IllegalArgumentException("fim.rules[" + i + "]: path is required");
+                    }
+                }
+            }
+            AgentPolicySchemaV1.FimRegistrySection registry = doc.getFim().getRegistry();
+            if (registry != null) {
+                String rmode = registry.getMode();
+                if (rmode != null) {
+                    rmode = rmode.trim().toLowerCase(Locale.ROOT);
+                    registry.setMode(rmode);
+                    if (!AgentPolicySchemaV1.FIM_MODE_MERGE.equals(rmode)
+                        && !AgentPolicySchemaV1.FIM_MODE_REPLACE.equals(rmode)) {
+                        throw new IllegalArgumentException(
+                            "fim.registry.mode must be \"" + AgentPolicySchemaV1.FIM_MODE_MERGE
+                                + "\" or \"" + AgentPolicySchemaV1.FIM_MODE_REPLACE + "\"");
+                    }
+                }
+                List<String> keys = registry.getKeys();
+                if (keys != null) {
+                    for (int i = 0; i < keys.size(); i++) {
+                        if (!StringUtils.hasText(keys.get(i))) {
+                            throw new IllegalArgumentException("fim.registry.keys[" + i + "]: key is required");
+                        }
                     }
                 }
             }

@@ -39,6 +39,15 @@ type FIMPolicySection struct {
 	// Mode is "merge" (default) or "replace".
 	Mode  string         `json:"mode,omitempty"`
 	Rules []FIMWatchRule `json:"rules,omitempty"`
+	// Registry is optional Windows registry FIM (ignored on non-Windows).
+	Registry *FIMRegistrySection `json:"registry,omitempty"`
+}
+
+// FIMRegistrySection configures Windows HKLM registry key watches.
+// Keys are relative to HKLM (e.g. SOFTWARE\Microsoft\Windows\CurrentVersion\Run).
+type FIMRegistrySection struct {
+	Mode string   `json:"mode,omitempty"` // merge (default) | replace
+	Keys []string `json:"keys,omitempty"`
 }
 
 // FIMWatchRule is the agent-local FIM path entry (mirrors collector/fim.WatchRule JSON).
@@ -92,6 +101,21 @@ func ParseAgentPolicyDocument(raw string) (*AgentPolicyDocument, error) {
 		for i, r := range doc.FIM.Rules {
 			if strings.TrimSpace(r.Path) == "" {
 				return nil, fmt.Errorf("fim.rules[%d]: path is required", i)
+			}
+		}
+		if doc.FIM.Registry != nil {
+			rmode := strings.ToLower(strings.TrimSpace(doc.FIM.Registry.Mode))
+			if rmode == "" {
+				rmode = FIMModeMerge
+			}
+			if rmode != FIMModeMerge && rmode != FIMModeReplace {
+				return nil, fmt.Errorf("fim.registry.mode must be %q or %q", FIMModeMerge, FIMModeReplace)
+			}
+			doc.FIM.Registry.Mode = rmode
+			for i, k := range doc.FIM.Registry.Keys {
+				if strings.TrimSpace(k) == "" {
+					return nil, fmt.Errorf("fim.registry.keys[%d]: key is required", i)
+				}
 			}
 		}
 	}

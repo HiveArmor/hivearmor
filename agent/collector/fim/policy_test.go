@@ -52,6 +52,20 @@ func TestDefaultRulesNonEmptyOnSupportedOS(t *testing.T) {
 	}
 }
 
+func TestResolveRegistryKeys_ReplaceAndStripHive(t *testing.T) {
+	got := ResolveRegistryKeys([]string{`HKLM\SOFTWARE\Custom\Key`}, agent.FIMModeReplace)
+	if len(got) != 1 || got[0] != `SOFTWARE\Custom\Key` {
+		t.Fatalf("got %+v", got)
+	}
+}
+
+func TestResolveRegistryKeys_EmptyUsesDefaults(t *testing.T) {
+	got := ResolveRegistryKeys(nil, agent.FIMModeReplace)
+	if len(got) != len(defaultRegistryKeys) {
+		t.Fatalf("got %d want %d", len(got), len(defaultRegistryKeys))
+	}
+}
+
 func TestApplyPolicyRules_WithoutLiveCollector(t *testing.T) {
 	runtimeRulesMu.Lock()
 	liveCollector = nil

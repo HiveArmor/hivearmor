@@ -119,7 +119,41 @@ class AgentPolicySchemaServiceTest {
         assertThat(root.get("schema_version").asInt()).isEqualTo(1);
         assertThat(root.get("telemetry").get("sca_interval_hours").asInt()).isEqualTo(12);
         assertThat(root.get("telemetry").get("sbom_interval_hours").asInt()).isEqualTo(24);
-        assertThat(AgentPolicySchemaV1.SCHEMA_FEATURE).isEqualTo("1.1");
+        assertThat(AgentPolicySchemaV1.SCHEMA_FEATURE).isEqualTo("1.2");
+    }
+
+    @Test
+    void roundTripsOptionalRegistryKeys() throws Exception {
+        String input = """
+            {
+              "schema_version": 1,
+              "fim": {
+                "mode": "merge",
+                "rules": [],
+                "registry": {
+                  "mode": "replace",
+                  "keys": ["SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run"]
+                }
+              }
+            }
+            """;
+        String normalized = service.normalizePolicyConfig(input);
+        JsonNode root = mapper.readTree(normalized);
+        assertThat(root.get("fim").get("registry").get("mode").asText()).isEqualTo("replace");
+        assertThat(root.get("fim").get("registry").get("keys").get(0).asText())
+            .contains("CurrentVersion");
+    }
+
+    @Test
+    void fromHaColumnsMapsRegistryPaths() throws Exception {
+        String json = service.fromHaColumns(
+            List.of("/etc"),
+            List.of("SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run"),
+            true,
+            true
+        );
+        JsonNode root = mapper.readTree(json);
+        assertThat(root.get("fim").get("registry").get("keys")).hasSize(1);
     }
 
     @Test
