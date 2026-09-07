@@ -8,7 +8,7 @@ import {
 
 import { DET_014_DISABLED_TITLE } from './detectionRules.capabilities';
 import { detectionRulesFixtureMode } from './detectionRules.service';
-import type { DetectionRule } from './detectionRules.types';
+import { DETECTION_ENGINE_LABELS, type DetectionRule } from './detectionRules.types';
 import { fetchCoverage } from './services/detection.service';
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
@@ -151,7 +151,7 @@ export default function DetectionCoverageView({ rules, onOpenRule }: DetectionCo
           <header><div><small>TECHNIQUE COVERAGE</small><h2>{selected.id} · {selected.name}</h2><span>{selected.tactic}</span></div><button type="button" onClick={() => setSelected(null)} aria-label="Close technique detail"><X size={15} /></button></header>
           <section className="detection-coverage-detail__summary"><div><small>READINESS</small><strong data-readiness={selected.readiness}>{selected.readiness}</strong></div><div><small>MAPPED RULES</small><strong>{selected.mappedCount}</strong></div></section>
           <section><h3>Required telemetry</h3>{selected.dataTypes.length ? <div className="detection-drawer__chips">{selected.dataTypes.map((dataType) => <span key={dataType}>{dataType}</span>)}</div> : <p>Telemetry requirements are not reported by the current coverage projection.</p>}<p>Coverage and recent detection activity are separate from source readiness. Source completeness remains visible only when the backend reports it.</p></section>
-          <section><h3>Mapped rules</h3><div className="detection-coverage-detail__rules">{selected.rules.length ? selected.rules.map((rule) => <button key={rule.id} type="button" onClick={() => onOpenRule(rule)}><span data-active={rule.ruleActive}>{rule.ruleActive ? 'Active' : 'Inactive'}</span><div><strong>{rule.ruleName}</strong><small>{rule.health ?? 'unknown'}{rule.dataTypes.length ? ` · ${rule.dataTypes.join(', ')}` : ''}</small></div><ChevronRight size={14} /></button>) : <p>Mapped rule detail is outside the loaded inventory page.</p>}</div></section>
+          <section><h3>Mapped rules</h3><div className="detection-coverage-detail__rules">{selected.rules.length ? selected.rules.map((rule) => <button key={rule.id} type="button" onClick={() => onOpenRule(rule)}><span data-active={rule.ruleActive}>{rule.ruleActive ? 'Active' : 'Inactive'}</span><div><strong>{rule.ruleName}</strong><small>{DETECTION_ENGINE_LABELS[rule.engine ?? 'cel']} · {rule.health ?? 'unknown'}{rule.dataTypes.length ? ` · ${rule.dataTypes.join(', ')}` : ''}</small></div><ChevronRight size={14} /></button>) : <p>Mapped rule detail is outside the loaded inventory page.</p>}</div></section>
           <footer><button type="button" disabled title={DET_014_DISABLED_TITLE}>Find available content</button><button type="button" onClick={() => selected.rules[0] && onOpenRule(selected.rules[0])}>Open mapped rule <ChevronRight size={14} /></button></footer>
         </aside>}
       </div>

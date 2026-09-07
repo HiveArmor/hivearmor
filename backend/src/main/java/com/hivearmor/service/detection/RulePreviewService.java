@@ -43,13 +43,12 @@ public class RulePreviewService {
 
     private static final String HONESTY_INJECT =
         "Inject dry-run only — does not query OpenSearch historical indices. "
-            + "engineParity=approximate (not full Go CEL). exceptionsApplied=false "
-            + "(Java dry-run does not load engine exception packs).";
+            + "engineParity=approximate (not full Go CEL). ";
 
     private static final String HONESTY_OPENSEARCH =
         "STAGING CANDIDATE — bounded OpenSearch historical fetch from v3-hive-log-* "
             + "then approximate Java CEL dry-run (not full Go event-processor parity). "
-            + "exceptionsApplied=false. No alerts were created.";
+            + "No alerts were created. ";
 
     private static final String HONESTY_UNAVAILABLE =
         "Preview unavailable: provide dryRunEvents for inject mode, or choose opensearch "
@@ -58,15 +57,18 @@ public class RulePreviewService {
 
     private final RuleValidationService validationService;
     private final DetectionRuleDryRunService dryRunService;
+    private final DetectionExceptionService exceptionService;
     private final OpensearchClientBuilder osClient;
     private final MsspIndexResolver indexResolver;
 
     public RulePreviewService(RuleValidationService validationService,
                               DetectionRuleDryRunService dryRunService,
+                              DetectionExceptionService exceptionService,
                               OpensearchClientBuilder osClient,
                               MsspIndexResolver indexResolver) {
         this.validationService = validationService;
         this.dryRunService = dryRunService;
+        this.exceptionService = exceptionService;
         this.osClient = osClient;
         this.indexResolver = indexResolver;
     }
@@ -146,7 +148,10 @@ public class RulePreviewService {
         }
 
         String expression = dryRunService.extractExpressionFromMap(ruleDefinition);
+        String ruleId = DetectionExceptionService.extractRuleId(ruleDefinition, null);
+        DetectionExceptionConsideration lastConsideration = exceptionService.consider(ruleId, Map.of());
         List<Map<String, Object>> matches = new ArrayList<>();
+        List<Map<String, Object>> suppressedMatches = new ArrayList<>();
         int scanned = 0;
         for (Map<String, Object> event : fetched) {
             if (matches.size() >= limit) {
@@ -154,13 +159,22 @@ public class RulePreviewService {
             }
             scanned++;
             DryRunResult result = dryRunService.evaluateExpression(expression, event);
-            if (result.matched()) {
-                Map<String, Object> match = new LinkedHashMap<>();
-                match.put("event", event);
-                match.put("matchedFields", result.matchedFields());
-                match.put("explanation", result.explanation());
-                match.put("evaluationMode", result.evaluationMode());
-                match.put("engineParity", result.engineParity());
+            if (!result.matched()) {
+                continue;
+            }
+            DetectionExceptionConsideration consideration = exceptionService.consider(ruleId, event);
+            lastConsideration = consideration;
+            Map<String, Object> match = new LinkedHashMap<>();
+            match.put("event", event);
+            match.put("matchedFields", result.matchedFields());
+            match.put("explanation", result.explanation());
+            match.put("evaluationMode", result.evaluationMode());
+            match.put("engineParity", result.engineParity());
+            match.put("suppressed", consideration.suppressed());
+            match.put("matchingExceptionId", consideration.matchingExceptionId());
+            if (consideration.suppressed()) {
+                suppressedMatches.add(match);
+            } else {
                 matches.add(match);
             }
         }
@@ -172,6 +186,7 @@ public class RulePreviewService {
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("matches", matches);
+        response.put("suppressedMatches", suppressedMatches);
         response.put("matchCount", matches.size());
         response.put("eventsScanned", scanned);
         response.put("eventsFetched", fetched.size());
@@ -182,16 +197,17 @@ public class RulePreviewService {
         response.put("timeRange", Map.of("from", from.toString(), "to", to.toString()));
         response.put("validation", validation);
         response.put("mode", "opensearch");
-        response.put("honesty", HONESTY_OPENSEARCH);
+        response.put("honesty", HONESTY_OPENSEARCH + lastConsideration.honesty());
         response.put("simulated", false);
         response.put("evaluationMode", "opensearch_historical_approx");
         response.put("openSearchQueried", true);
         response.put("engineParity", CelDryRunEvaluator.ENGINE_PARITY);
-        response.put("exceptionsApplied", false);
+        response.put("exceptionsApplied", lastConsideration.exceptionsApplied());
+        response.put("exceptionsSuppressedCount", suppressedMatches.size());
         response.put("indexPattern", indexPattern);
 
-        log.info("{}.preview: mode=opensearch matches={} scanned={} fetched={} duration={}ms index={}",
-            CLASSNAME, matches.size(), scanned, fetched.size(), scanDuration, indexPattern);
+        log.info("{}.preview: mode=opensearch matches={} suppressed={} scanned={} fetched={} duration={}ms index={}",
+            CLASSNAME, matches.size(), suppressedMatches.size(), scanned, fetched.size(), scanDuration, indexPattern);
         return response;
     }
 
@@ -234,8 +250,11 @@ public class RulePreviewService {
                                                     Map<String, Object> validation) {
         long startTime = System.currentTimeMillis();
         String expression = dryRunService.extractExpressionFromMap(ruleDefinition);
+        String ruleId = DetectionExceptionService.extractRuleId(ruleDefinition, null);
+        DetectionExceptionConsideration lastConsideration = exceptionService.consider(ruleId, Map.of());
 
         List<Map<String, Object>> matches = new ArrayList<>();
+        List<Map<String, Object>> suppressedMatches = new ArrayList<>();
         int scanned = 0;
         for (Map<String, Object> event : events) {
             if (matches.size() >= limit) {
@@ -243,13 +262,23 @@ public class RulePreviewService {
             }
             scanned++;
             DryRunResult result = dryRunService.evaluateExpression(expression, event);
-            if (result.matched()) {
-                Map<String, Object> match = new LinkedHashMap<>();
-                match.put("event", event);
-                match.put("matchedFields", result.matchedFields());
-                match.put("explanation", result.explanation());
-                match.put("evaluationMode", result.evaluationMode());
-                match.put("engineParity", result.engineParity());
+            DetectionExceptionConsideration consideration = exceptionService.consider(ruleId, event);
+            lastConsideration = consideration;
+            if (!result.matched()) {
+                continue;
+            }
+            Map<String, Object> match = new LinkedHashMap<>();
+            match.put("event", event);
+            match.put("matchedFields", result.matchedFields());
+            match.put("explanation", result.explanation());
+            match.put("evaluationMode", result.evaluationMode());
+            match.put("engineParity", result.engineParity());
+            match.put("suppressed", consideration.suppressed());
+            match.put("matchingExceptionId", consideration.matchingExceptionId());
+            match.put("matchingExceptionTitle", consideration.matchingExceptionTitle());
+            if (consideration.suppressed()) {
+                suppressedMatches.add(match);
+            } else {
                 matches.add(match);
             }
         }
@@ -263,6 +292,7 @@ public class RulePreviewService {
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("matches", matches);
+        response.put("suppressedMatches", suppressedMatches);
         response.put("matchCount", matches.size());
         response.put("eventsScanned", scanned);
         response.put("scanDuration", scanDuration);
@@ -274,15 +304,16 @@ public class RulePreviewService {
         }
         response.put("validation", validation);
         response.put("mode", "inject");
-        response.put("honesty", HONESTY_INJECT);
+        response.put("honesty", HONESTY_INJECT + lastConsideration.honesty());
         response.put("simulated", false);
         response.put("evaluationMode", CelDryRunEvaluator.EVALUATION_MODE);
         response.put("openSearchQueried", false);
         response.put("engineParity", CelDryRunEvaluator.ENGINE_PARITY);
-        response.put("exceptionsApplied", false);
+        response.put("exceptionsApplied", lastConsideration.exceptionsApplied());
+        response.put("exceptionsSuppressedCount", suppressedMatches.size());
 
-        log.info("{}.preview: mode=inject matches={} scanned={} duration={}ms",
-            CLASSNAME, matches.size(), scanned, scanDuration);
+        log.info("{}.preview: mode=inject matches={} suppressed={} scanned={} duration={}ms",
+            CLASSNAME, matches.size(), suppressedMatches.size(), scanned, scanDuration);
         return response;
     }
 

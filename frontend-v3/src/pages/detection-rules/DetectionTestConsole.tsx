@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Editor } from '@monaco-editor/react';
 import {
-  AlertTriangle, CheckCircle2, CircleSlash2, Clock3, Code2,
+  AlertTriangle, Ban, CheckCircle2, CircleSlash2, Clock3, Code2,
   FileJson, FlaskConical, Play, Square, TestTube2, XCircle,
 } from 'lucide-react';
 
 import { DET_011_VALIDATE_PREVIEW } from './detectionRules.capabilities';
 import { detectionRulesFixtureMode, previewRuleDraft, testDetectionSandbox } from './detectionRules.service';
-import type { DetectionRule, DetectionSandboxResult, RulePreviewResult } from './detectionRules.types';
+import { DETECTION_ENGINE_LABELS, type DetectionEngine, type DetectionRule, type DetectionSandboxResult, type RulePreviewResult } from './detectionRules.types';
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { defineHiveArmorMonacoTheme, monacoThemeName } from '@/lib/monacoTheme';
@@ -21,6 +21,14 @@ interface DetectionTestConsoleProps {
 }
 
 const BLANK_EVENT = '{\n  \n}';
+
+function inferEngine(rule: DetectionRule | undefined, yaml: string): DetectionEngine {
+  if (rule?.engine) return rule.engine;
+  if (/^\s*type:\s*graph_offense\b/m.test(yaml) || /\btype:\s*graph_offense\b/.test(yaml)) return 'graph';
+  if (/^sequence:\s*$/m.test(yaml)) return 'sequence';
+  if (/\briskScore:\s*\d+/.test(yaml)) return 'risk';
+  return 'cel';
+}
 
 export default function DetectionTestConsole({ rules, initialRuleId }: DetectionTestConsoleProps): JSX.Element {
   const theme = useThemeStore((state) => state.theme);
@@ -63,14 +71,26 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
     setError(null);
   };
 
+  const selectedRule = rules.find((item) => String(item.id) === ruleId);
+  const engine = inferEngine(selectedRule, ruleYaml);
+
   const validation = useMemo(() => {
     const diagnostics: Array<{ tone: 'ok' | 'warning' | 'error'; text: string }> = [];
     if (!ruleYaml.trim()) diagnostics.push({ tone: 'error', text: 'Rule definition is required.' });
-    else if (isSigma) {
+    else if (engine === 'sequence') {
+      diagnostics.push({ tone: /^sequence:\s*$/m.test(ruleYaml) ? 'ok' : 'error', text: /^sequence:\s*$/m.test(ruleYaml) ? 'Sequence steps found' : 'Missing sequence block' });
+      diagnostics.push({ tone: /\bwhere:/.test(ruleYaml) ? 'ok' : 'error', text: /\bwhere:/.test(ruleYaml) ? 'Sequence step where expressions found' : 'Sequence steps need where expressions' });
+    } else if (engine === 'risk') {
+      diagnostics.push({ tone: /\briskScore:\s*\d+/.test(ruleYaml) ? 'ok' : 'error', text: /\briskScore:\s*\d+/.test(ruleYaml) ? 'Risk score found' : 'Missing riskScore' });
+      diagnostics.push({ tone: /\bwhere:/.test(ruleYaml) ? 'ok' : 'error', text: /\bwhere:/.test(ruleYaml) ? 'Risk CEL where found' : 'Missing CEL where' });
+    } else if (engine === 'graph') {
+      diagnostics.push({ tone: /\btype:\s*graph_offense\b/.test(ruleYaml) ? 'ok' : 'error', text: /\btype:\s*graph_offense\b/.test(ruleYaml) ? 'graph_offense type found' : 'Missing type: graph_offense' });
+      diagnostics.push({ tone: /\bcypherQuery:/.test(ruleYaml) ? 'ok' : 'error', text: /\bcypherQuery:/.test(ruleYaml) ? 'Cypher query found' : 'Missing cypherQuery' });
+    } else if (isSigma) {
       diagnostics.push({ tone: ruleYaml.includes('detection:') ? 'ok' : 'error', text: ruleYaml.includes('detection:') ? 'Sigma detection block found' : 'Missing detection block' });
       diagnostics.push({ tone: ruleYaml.includes('condition:') ? 'ok' : 'error', text: ruleYaml.includes('condition:') ? 'Sigma condition path found' : 'Missing condition path' });
     } else {
-      diagnostics.push({ tone: /\b(?:celExists|equals|oneOf|contains|regexMatch|inCIDR)\s*\(/.test(ruleYaml) ? 'ok' : 'error', text: /\b(?:celExists|equals|oneOf|contains|regexMatch|inCIDR)\s*\(/.test(ruleYaml) ? 'Native CEL helper found' : 'No supported CEL helper found' });
+      diagnostics.push({ tone: /\b(?:celExists|equals|oneOf|contains|regexMatch|inCIDR|safe)\s*\(/.test(ruleYaml) ? 'ok' : 'error', text: /\b(?:celExists|equals|oneOf|contains|regexMatch|inCIDR|safe)\s*\(/.test(ruleYaml) ? 'Native CEL helper found' : 'No supported CEL helper found' });
       diagnostics.push({ tone: ruleYaml.split('(').length === ruleYaml.split(')').length ? 'ok' : 'error', text: ruleYaml.split('(').length === ruleYaml.split(')').length ? 'CEL grouping is balanced' : 'CEL grouping is not balanced' });
     }
     try {
@@ -80,9 +100,7 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
       diagnostics.push({ tone: 'error', text: 'Event JSON is invalid' });
     }
     return diagnostics;
-  }, [eventJson, isSigma, ruleYaml]);
-
-  const selectedRule = rules.find((item) => String(item.id) === ruleId);
+  }, [engine, eventJson, isSigma, ruleYaml]);
 
   const runTest = async (): Promise<void> => {
     if (validation.some((diagnostic) => diagnostic.tone === 'error')) {
@@ -190,10 +208,16 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
         {running ? <button type="button" className="detection-test-console__cancel" onClick={() => controllerRef.current?.abort()}><Square size={13} /> Cancel</button> : <button type="button" className="detection-primary-button" onClick={() => void runTest()} disabled={previewing}><Play size={14} /> Run test</button>}
       </div>
 
-      <div className="detection-test-console__boundary" role="status"><TestTube2 size={14} /><strong>Safe test boundary.</strong><span>{detectionRulesFixtureMode ? 'Fictional event samples are isolated from production metrics.' : isSigma ? 'The authoritative Sigma evaluator creates no alerts, incidents, notifications, or response actions.' : 'CEL inject dry-run (DET-TEST-001) evaluates the expression against the sample event without writing alerts. Preview modes: inject | opensearch | unavailable — OpenSearch never fakes empty success.'}</span></div>
+      <div className="detection-test-console__boundary" role="status"><TestTube2 size={14} /><strong>Safe test boundary.</strong><span>{engine !== 'cel'
+        ? `STAGING CANDIDATE — ${DETECTION_ENGINE_LABELS[engine]} rules run in the event-processor. This console does not execute the sequence, risk, or graph engines; Java CEL dry-run is not engine-parity.`
+        : detectionRulesFixtureMode
+          ? 'STAGING CANDIDATE — fictional event samples are isolated from production metrics. Approved scanner and baseline samples demonstrate match-but-suppressed dry-run.'
+          : isSigma
+            ? 'The authoritative Sigma evaluator creates no alerts, incidents, notifications, or response actions.'
+            : 'STAGING CANDIDATE — CEL inject dry-run (DET-TEST-001) evaluates the expression against the sample event without writing alerts. Active exceptions are considered when the store is reachable (exceptionsApplied). Preview modes: inject | opensearch | unavailable — OpenSearch never fakes empty success.'}</span></div>
 
       <div className="detection-test-console__workspace">
-        <section className="detection-test-editor"><header><div><Code2 size={14} /><strong>Detection definition</strong></div><span>{isSigma ? 'YAML · Sigma-compatible' : 'HiveArmor CEL · normalized fields'}</span></header><div><Editor height="100%" language={isSigma ? 'yaml' : 'javascript'} value={ruleYaml} onChange={(value) => { setRuleYaml(value ?? ''); setResult(null); setPreviewResult(null); }} beforeMount={defineHiveArmorMonacoTheme} theme={monacoThemeName(theme)} options={{ automaticLayout: true, minimap: { enabled: false }, fontSize: 12, lineHeight: 18, lineNumbersMinChars: 3, renderLineHighlight: 'none', scrollBeyondLastLine: false, wordWrap: 'on', tabSize: 2, padding: { top: 8, bottom: 8 } }} /></div></section>
+        <section className="detection-test-editor"><header><div><Code2 size={14} /><strong>Detection definition</strong></div><span>{engine === 'graph' ? 'YAML · graph_offense Cypher' : engine === 'sequence' ? 'YAML · sequence engine' : engine === 'risk' ? 'YAML · riskScore engine' : isSigma ? 'YAML · Sigma-compatible' : 'HiveArmor CEL · normalized fields'}</span></header><div><Editor height="100%" language={isSigma || engine !== 'cel' ? 'yaml' : 'javascript'} value={ruleYaml} onChange={(value) => { setRuleYaml(value ?? ''); setResult(null); setPreviewResult(null); }} beforeMount={defineHiveArmorMonacoTheme} theme={monacoThemeName(theme)} options={{ automaticLayout: true, minimap: { enabled: false }, fontSize: 12, lineHeight: 18, lineNumbersMinChars: 3, renderLineHighlight: 'none', scrollBeyondLastLine: false, wordWrap: 'on', tabSize: 2, padding: { top: 8, bottom: 8 } }} /></div></section>
         <section className="detection-test-editor"><header><div><FileJson size={14} /><strong>Test event</strong></div><span>JSON · bounded single record</span></header><div><Editor height="100%" language="json" value={eventJson} onChange={(value) => { setEventJson(value ?? ''); setResult(null); }} beforeMount={defineHiveArmorMonacoTheme} theme={monacoThemeName(theme)} options={{ automaticLayout: true, minimap: { enabled: false }, fontSize: 12, lineHeight: 18, lineNumbersMinChars: 3, renderLineHighlight: 'none', scrollBeyondLastLine: false, wordWrap: 'on', tabSize: 2, padding: { top: 8, bottom: 8 } }} /></div></section>
         <aside className="detection-test-result" aria-live="polite">
           <header><div><strong>Evaluation</strong><span>validation and match trace</span></div>{(running || previewing) && <span className="detection-test-result__running">{previewing ? 'Previewing' : 'Running'}</span>}</header>
@@ -201,11 +225,63 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
           {error && <section className="detection-test-result__error"><AlertTriangle size={16} /><p>{error}</p></section>}
           {(running || previewing) && <section className="detection-test-result__progress"><span /><span /><span /><p>{previewing ? 'Scanning the bounded historical window…' : 'Evaluating normalized fields and condition paths…'}</p></section>}
           {!running && !previewing && !result && !previewResult && !error && <section className="detection-test-result__empty"><CircleSlash2 size={28} /><strong>No test has run</strong><p>Review preflight diagnostics, then run this definition against the selected event or historical window.</p></section>}
-          {result && <section className="detection-test-result__outcome" data-matched={result.matched}>{result.matched ? <CheckCircle2 size={28} /> : <CircleSlash2 size={28} />}<strong>{result.matched ? 'Event matched' : 'No match'}</strong><p>{result.explanation}</p><dl><div><dt>Duration</dt><dd>{result.durationMs || '<1'} ms</dd></div><div><dt>Fields evaluated</dt><dd>{result.evaluatedFields || 'Unavailable'}</dd></div><div><dt>Mode</dt><dd>{result.evaluationMode ?? 'unknown'}</dd></div><div><dt>OpenSearch</dt><dd>{result.openSearchQueried ? 'queried' : 'not queried'}</dd></div></dl>{result.matchedFields.length > 0 && <div className="detection-test-result__fields"><span>Matched fields</span>{result.matchedFields.map((field) => <code key={field}>{field}</code>)}</div>}{result.warnings.map((warning) => <div key={warning} className="detection-test-result__warning"><AlertTriangle size={12} /> {warning}</div>)}</section>}
+          {result && (
+            <section
+              className="detection-test-result__outcome"
+              data-matched={result.suppressed ? 'suppressed' : result.matched}
+            >
+              {result.suppressed ? <Ban size={28} /> : result.matched ? <CheckCircle2 size={28} /> : <CircleSlash2 size={28} />}
+              <strong>
+                {result.suppressed
+                  ? 'Matched — suppressed by exception'
+                  : result.matched
+                    ? 'Event matched'
+                    : 'No match'}
+              </strong>
+              <p>{result.explanation}</p>
+              <dl>
+                <div><dt>Duration</dt><dd>{result.durationMs || '<1'} ms</dd></div>
+                <div><dt>Fields evaluated</dt><dd>{result.evaluatedFields || 'Unavailable'}</dd></div>
+                <div><dt>Mode</dt><dd>{result.evaluationMode ?? 'unknown'}</dd></div>
+                <div><dt>OpenSearch</dt><dd>{result.openSearchQueried ? 'queried' : 'not queried'}</dd></div>
+                <div><dt>Would alert</dt><dd>{result.wouldAlert ? 'yes' : 'no'}</dd></div>
+                <div><dt>Exceptions applied</dt><dd>{result.exceptionsApplied ? 'yes' : 'no'}</dd></div>
+                {result.suppressed && (
+                  <div>
+                    <dt>Exception</dt>
+                    <dd>
+                      {result.matchingExceptionTitle ?? 'active exception'}
+                      {result.matchingExceptionId != null ? ` #${result.matchingExceptionId}` : ''}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+              {result.matchedFields.length > 0 && (
+                <div className="detection-test-result__fields">
+                  <span>Matched fields</span>
+                  {result.matchedFields.map((field) => <code key={field}>{field}</code>)}
+                </div>
+              )}
+              {result.warnings.map((warning) => (
+                <div key={warning} className="detection-test-result__warning"><AlertTriangle size={12} /> {warning}</div>
+              ))}
+            </section>
+          )}
           {previewResult?.available && (
-            <section className="detection-test-result__outcome" data-matched={(previewResult.matchCount ?? 0) > 0}>
-              <FlaskConical size={28} />
-              <strong>Historical preview</strong>
+            <section
+              className="detection-test-result__outcome"
+              data-matched={(previewResult.exceptionsSuppressedCount ?? 0) > 0 && (previewResult.matchCount ?? 0) === 0
+                ? 'suppressed'
+                : (previewResult.matchCount ?? 0) > 0}
+            >
+              {(previewResult.exceptionsSuppressedCount ?? 0) > 0 && (previewResult.matchCount ?? 0) === 0
+                ? <Ban size={28} />
+                : <FlaskConical size={28} />}
+              <strong>
+                {(previewResult.exceptionsSuppressedCount ?? 0) > 0 && (previewResult.matchCount ?? 0) === 0
+                  ? 'Preview — match suppressed by exception'
+                  : 'Historical preview'}
+              </strong>
               <p>{previewResult.honesty ?? previewResult.warning ?? 'Bounded DET-011 dry-run completed. No alerts were created.'}</p>
               <dl>
                 <div><dt>Matches</dt><dd>{previewResult.matchCount}</dd></div>
@@ -221,6 +297,12 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
                 <div className="detection-test-result__fields">
                   <span>Sample matches</span>
                   {previewResult.samples.slice(0, 5).map((sample) => <code key={sample.id}>{sample.summary}</code>)}
+                </div>
+              )}
+              {(previewResult.suppressedMatches?.length ?? 0) > 0 && (
+                <div className="detection-test-result__fields detection-test-result__fields--suppressed">
+                  <span>Suppressed matches</span>
+                  {previewResult.suppressedMatches?.slice(0, 5).map((sample) => <code key={sample.id}>{sample.summary}</code>)}
                 </div>
               )}
             </section>

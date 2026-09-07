@@ -1,0 +1,22 @@
+id: 9101
+name: SEQ-BRUTE-FORCE-THEN-SUCCESS
+dataTypes:
+  - windows
+  - linux
+category: Credential Access
+technique: "T1110 - Brute Force"
+adversary: origin
+description: >
+  Staging sequence pack (DET-SEQ-001). Detects failed authentication followed by
+  a successful logon from the same origin IP and user within 30 minutes.
+references:
+  - https://attack.mitre.org/techniques/T1110/
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+sequence:
+  - where: 'action == "failed_auth"'
+    within: 15m
+  - where: 'action == "authentication_success"'
+    within: 30m

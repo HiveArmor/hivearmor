@@ -1,0 +1,24 @@
+id: 9102
+name: SEQ-RECON-THEN-LATERAL
+dataTypes:
+  - windows
+  - linux
+  - network
+category: Lateral Movement
+technique: "T1021 - Remote Services"
+adversary: origin
+description: >
+  Staging sequence pack (DET-SEQ-001). Detects a network scan followed by a remote
+  service logon from the same origin IP within 30 minutes.
+references:
+  - https://attack.mitre.org/techniques/T1046/
+  - https://attack.mitre.org/techniques/T1021/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+sequence:
+  - where: 'action == "port_scan"'
+    within: 10m
+  - where: 'action == "remote_logon"'
+    within: 30m

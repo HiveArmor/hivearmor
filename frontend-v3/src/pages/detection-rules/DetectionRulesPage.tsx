@@ -12,15 +12,15 @@ import { useNavigate, Link } from 'react-router-dom';
 
 import { createColumnDefs } from './columnDefs';
 import { BaselineExceptionPanel } from './components/BaselineExceptionPanel';
-import { RuleTuningPanel } from './components/RuleTuningPanel';
 import { DetectionPipelineHealthStrip } from './components/DetectionPipelineHealthStrip';
+import { RuleTuningPanel } from './components/RuleTuningPanel';
 import { DetectionMonitoringView } from './DetectionMonitoringView';
 import {
   DET_EXCEPTION_ACTIVATE_DENIED_TITLE,
   DET_EXCEPTION_DRAFT_DENIED_TITLE,
 } from './detectionRules.capabilities';
 import { deleteRule, detectionRulesFixtureMode, fetchRules, syncSigmaRules, toggleRuleActive } from './detectionRules.service';
-import type { DetectionRule, DetectionRuleSummary, RuleListParams } from './detectionRules.types';
+import { DETECTION_ENGINE_LABELS, type DetectionEngine, type DetectionRule, type DetectionRuleSummary, type RuleListParams } from './detectionRules.types';
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
@@ -49,10 +49,10 @@ const DetectionCoverageView = lazy(() => import('./DetectionCoverageView'));
 const DetectionImportPanel = lazy(() => import('./DetectionImportPanel'));
 const DetectionTestConsole = lazy(() => import('./DetectionTestConsole'));
 const PAGE_SIZE = 100;
-const DEFAULT_COLUMNS = ['ruleName', 'ruleActive', 'health', 'origin', 'techniqueId', 'alerts24h', 'schedule', 'lastRunAt', 'lastModified', 'actions'];
+const DEFAULT_COLUMNS = ['ruleName', 'ruleActive', 'health', 'origin', 'engine', 'techniqueId', 'alerts24h', 'schedule', 'lastRunAt', 'lastModified', 'actions'];
 const COLUMN_OPTIONS = [
   ['ruleName', 'Detection'], ['ruleActive', 'Status'], ['health', 'Last response'], ['origin', 'Source'],
-  ['techniqueId', 'MITRE ATT&CK'], ['alerts24h', 'Alerts · 24h'], ['schedule', 'Schedule'],
+  ['engine', 'Engine'], ['techniqueId', 'MITRE ATT&CK'], ['alerts24h', 'Alerts · 24h'], ['schedule', 'Schedule'],
   ['lastRunAt', 'Last run'], ['lastModified', 'Modified'], ['actions', 'Actions'],
 ] as const;
 
@@ -76,6 +76,13 @@ const SOURCE_OPTIONS = [
   { value: 'all', label: 'All sources' },
   { value: 'sigma', label: 'Sigma' },
   { value: 'native', label: 'Native CEL' },
+];
+const ENGINE_OPTIONS = [
+  { value: 'all', label: 'All engines' },
+  { value: 'cel', label: DETECTION_ENGINE_LABELS.cel },
+  { value: 'sequence', label: DETECTION_ENGINE_LABELS.sequence },
+  { value: 'risk', label: DETECTION_ENGINE_LABELS.risk },
+  { value: 'graph', label: DETECTION_ENGINE_LABELS.graph },
 ];
 
 function DensityGlyph({ density }: { density: RowDensity }): JSX.Element {
@@ -105,6 +112,7 @@ export function DetectionRulesPage(): JSX.Element {
   const [mitreFilter, setMitreFilter] = useState<'all' | typeof RULE_TACTIC_OPTIONS[number]>('all');
   const [severityFilter, setSeverityFilter] = useState<'all' | NonNullable<DetectionRule['severity']>>('all');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'sigma' | 'native'>('all');
+  const [engineFilter, setEngineFilter] = useState<'all' | DetectionEngine>('all');
   const [pageIndex, setPageIndex] = useState(0);
   const [density, setDensity] = useRowDensity();
   const [importOpen, setImportOpen] = useState(false);
@@ -136,7 +144,8 @@ export function DetectionRulesPage(): JSX.Element {
     technique: mitreFilter === 'all' ? undefined : mitreFilter,
     severity: severityFilter,
     source: sourceFilter,
-  }), [activeFilter, mitreFilter, pageIndex, search, severityFilter, sourceFilter]);
+    engine: engineFilter,
+  }), [activeFilter, engineFilter, mitreFilter, pageIndex, search, severityFilter, sourceFilter]);
 
   const rulesQuery = useQuery({
     queryKey: ['detection-rules', filters],
@@ -155,7 +164,7 @@ export function DetectionRulesPage(): JSX.Element {
 
   const total = Math.max(0, (rulesQuery.data?.total ?? 0) - hiddenFixtureIds.size);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const hasFilters = Boolean(search || activeFilter !== 'all' || mitreFilter !== 'all' || severityFilter !== 'all' || sourceFilter !== 'all');
+  const hasFilters = Boolean(search || activeFilter !== 'all' || mitreFilter !== 'all' || severityFilter !== 'all' || sourceFilter !== 'all' || engineFilter !== 'all');
   const limitedContract = !detectionRulesFixtureMode && rules.some((rule) => rule.health === 'unknown' && rule.lastRunAt == null);
   const inventoryEmpty = !rulesQuery.isLoading && !rulesQuery.isError && total === 0 && !hasFilters;
 
@@ -177,7 +186,7 @@ export function DetectionRulesPage(): JSX.Element {
     setPageIndex(0);
     setSelectedRules([]);
     setActiveRule(null);
-  }, [activeFilter, mitreFilter, search, severityFilter, sourceFilter, view]);
+  }, [activeFilter, engineFilter, mitreFilter, search, severityFilter, sourceFilter, view]);
 
   useEffect(() => {
     if (!activeRule) return undefined;
@@ -192,6 +201,7 @@ export function DetectionRulesPage(): JSX.Element {
     setMitreFilter('all');
     setSeverityFilter('all');
     setSourceFilter('all');
+    setEngineFilter('all');
   }, []);
 
   const handleToggleActive = useCallback(async (rule: DetectionRule) => {
@@ -319,11 +329,13 @@ export function DetectionRulesPage(): JSX.Element {
         <HaCompactSelect ariaLabel="Rule state" value={activeFilter} onChange={(value) => setActiveFilter(value as typeof activeFilter)} options={STATUS_OPTIONS} />
         <HaCompactSelect ariaLabel="Rule severity" value={severityFilter} onChange={(value) => setSeverityFilter(value as typeof severityFilter)} options={SEVERITY_OPTIONS} />
         <HaCompactSelect ariaLabel="Rule source" value={sourceFilter} onChange={(value) => setSourceFilter(value as typeof sourceFilter)} options={SOURCE_OPTIONS} />
+        <HaCompactSelect ariaLabel="Detection engine" value={engineFilter} onChange={(value) => setEngineFilter(value as typeof engineFilter)} options={ENGINE_OPTIONS} />
         <HaCompactSelect ariaLabel="MITRE tactic" value={mitreFilter} onChange={(value) => setMitreFilter(value as typeof mitreFilter)} options={MITRE_OPTIONS} />
         <HaIconButton className="detection-icon-button" onClick={() => void rulesQuery.refetch()} disabled={rulesQuery.isFetching} aria-label="Refresh detection rules" title="Refresh" icon={<RefreshCw size={15} className={rulesQuery.isFetching ? 'detection-spin' : ''} />} />
       </div>
 
       {limitedContract && <div className="detection-contract-warning" role="status"><AlertTriangle size={14} /><span><strong>Limited execution projection.</strong> Last-run health, alert volume, and schedule telemetry require backend execution history — unknown values stay uncolored.</span></div>}
+      {detectionRulesFixtureMode && <div className="detection-contract-warning" role="status" data-testid="detection-enterprise-pack-honesty"><AlertTriangle size={14} /><span><strong>STAGING CANDIDATE — enterprise pack.</strong> Sequence, risk-score, and graph-offense rules use event-processor engines. Java CEL dry-run does not execute those engines. Graph rules need Neo4j (<code>NEO4J_ENABLED</code>).</span></div>}
 
       <main className="detection-inventory">
         <div className="detection-results__toolbar">
@@ -394,7 +406,7 @@ export function DetectionRulesPage(): JSX.Element {
       {activeRule && <div className="detection-drawer-scrim" onMouseDown={(event) => { if (event.target === event.currentTarget) setActiveRule(null); }}><aside className="detection-drawer" ref={drawerRef} role="dialog" aria-modal="true" aria-labelledby="detection-drawer-title" onKeyDown={handleDrawerKeyboard}>
         <header><div><span data-severity={activeRule.severity ?? 'unknown'}>{activeRule.severity ?? 'Unrated'}</span><h2 id="detection-drawer-title">{activeRule.ruleName}</h2><code>{activeRule.sigmaRuleId ?? `HA-${activeRule.id}`} · version {activeRule.version ?? 'unavailable'}</code></div><button type="button" onClick={() => setActiveRule(null)} aria-label="Close rule details"><X size={16} /></button></header>
         <section className="detection-drawer__status"><div><small>STATUS</small><strong>{activeRule.ruleActive ? 'Enabled' : 'Disabled'}</strong></div><div><small>LAST RESPONSE</small><strong data-health={activeRule.health ?? 'unknown'}>{activeRule.health ?? 'Unknown'}</strong></div><div><small>ALERTS · 24H</small><strong>{activeRule.alerts24h ?? '—'}</strong></div></section>
-        <section><h3>Detection intent</h3><p>{activeRule.description ?? 'No analyst-facing description is available.'}</p><dl><div><dt>Source</dt><dd>{activeRule.origin ?? 'Unknown'}</dd></div><div><dt>Schedule</dt><dd>{activeRule.schedule ?? 'Unavailable'}</dd></div><div><dt>Lookback</dt><dd>{activeRule.lookback ?? 'Unavailable'}</dd></div><div><dt>Last run</dt><dd>{formatDateTime(activeRule.lastRunAt)}</dd></div><div><dt>Duration</dt><dd>{activeRule.lastRunDurationMs == null ? 'Unavailable' : `${activeRule.lastRunDurationMs.toLocaleString()} ms`}</dd></div></dl></section>
+        <section><h3>Detection intent</h3><p>{activeRule.description ?? 'No analyst-facing description is available.'}</p><dl><div><dt>Source</dt><dd>{activeRule.origin ?? 'Unknown'}</dd></div><div><dt>Engine</dt><dd>{DETECTION_ENGINE_LABELS[activeRule.engine ?? 'cel']}{activeRule.contentPack ? ` · ${activeRule.contentPack}` : ''}</dd></div><div><dt>Schedule</dt><dd>{activeRule.schedule ?? 'Unavailable'}</dd></div><div><dt>Lookback</dt><dd>{activeRule.lookback ?? 'Unavailable'}</dd></div><div><dt>Last run</dt><dd>{formatDateTime(activeRule.lastRunAt)}</dd></div><div><dt>Duration</dt><dd>{activeRule.lastRunDurationMs == null ? 'Unavailable' : `${activeRule.lastRunDurationMs.toLocaleString()} ms`}</dd></div></dl></section>
         <section><h3>ATT&amp;CK and telemetry</h3>{activeRule.techniqueId ? <button className="detection-drawer__pivot" type="button" onClick={() => { setActiveRule(null); setView('coverage'); }}><BarChart3 size={16} /><span><strong>{activeRule.techniqueId} · {activeRule.techniqueName ?? 'Technique'}</strong><small>{activeRule.tactic ?? 'Tactic unavailable'}</small></span><ChevronRight size={14} /></button> : <p>Rule has no ATT&amp;CK mapping.</p>}{activeRule.dataTypes.length ? <div className="detection-drawer__chips">{activeRule.dataTypes.map((type) => <span key={type}>{type}</span>)}</div> : <p>Telemetry requirements are not reported by this rule projection.</p>}{activeRule.tags?.length ? <div className="detection-drawer__chips" aria-label="Rule tags">{activeRule.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}</section>
         <section><h3>Change provenance</h3><dl><div><dt>Modified</dt><dd>{formatDateTime(activeRule.lastModified)}</dd></div><div><dt>Updated by</dt><dd>{activeRule.updatedBy ?? activeRule.createdBy ?? 'Unavailable'}</dd></div></dl><p>Version comparison and rollback are available after opening the editor.</p></section>
         <RuleTuningPanel

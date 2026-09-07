@@ -108,6 +108,10 @@
 .detection-rule-health em { padding: 1px 4px; border: 1px solid color-mix(in srgb, var(--ha-state-warning) 45%, var(--ha-border-default)); border-radius: 4px; color: var(--ha-state-warning); font: 8px var(--ha-font-ui); font-style: normal; text-transform: uppercase; }
 .detection-rule-origin { display: inline-flex; height: 22px; align-items: center; box-sizing: border-box; padding: 0 6px; border: 1px solid var(--ha-border-default); border-radius: 5px; background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); font-size: 9px; line-height: 1; vertical-align: middle; }
 .detection-rule-origin[data-origin='managed'] { border-color: color-mix(in srgb, var(--ha-action-primary) 35%, var(--ha-border-default)); color: var(--ha-action-secondary); }
+.detection-rule-engine { display: inline-flex; height: 22px; align-items: center; box-sizing: border-box; padding: 0 6px; border: 1px solid var(--ha-border-default); border-radius: 5px; background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); font-size: 9px; line-height: 1; vertical-align: middle; }
+.detection-rule-engine[data-engine='sequence'] { border-color: color-mix(in srgb, var(--ha-action-primary) 40%, var(--ha-border-default)); color: var(--ha-action-secondary); }
+.detection-rule-engine[data-engine='risk'] { border-color: color-mix(in srgb, var(--ha-severity-high) 40%, var(--ha-border-default)); color: var(--ha-severity-high); }
+.detection-rule-engine[data-engine='graph'] { border-color: color-mix(in srgb, var(--ha-state-healthy) 35%, var(--ha-border-default)); color: var(--ha-state-healthy); }
 .detection-rule-mitre code { color: var(--ha-action-secondary); font: 10px var(--ha-font-mono); }
 .detection-rule-mitre small { color: var(--ha-foreground-tertiary); font-size: 9px; }
 .detection-rule-alerts { color: var(--ha-foreground-primary); font: 11px var(--ha-font-mono); }
@@ -309,6 +313,9 @@
 .detection-test-result__empty p, .detection-test-result__outcome p { margin: 0; line-height: 1.4; }
 .detection-test-result__outcome[data-matched='true'] > svg, .detection-test-result__outcome[data-matched='true'] > strong { color: var(--ha-state-healthy); }
 .detection-test-result__outcome[data-matched='false'] > svg { color: var(--ha-foreground-tertiary); }
+.detection-test-result__outcome[data-matched='suppressed'] > svg,
+.detection-test-result__outcome[data-matched='suppressed'] > strong { color: var(--ha-severity-high); }
+.detection-test-result__fields--suppressed code { color: var(--ha-severity-high); }
 .detection-test-result__outcome dl { display: grid; width: 100%; grid-template-columns: 1fr 1fr; margin: 6px 0 0; border: 1px solid var(--ha-border-subtle); }
 .detection-test-result__outcome dl > div { padding: 6px; border-right: 1px solid var(--ha-border-subtle); }
 .detection-test-result__outcome dt { color: var(--ha-foreground-tertiary); font-size: 8px; }

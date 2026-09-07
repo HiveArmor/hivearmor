@@ -42,7 +42,9 @@ public class DetectionExceptionService {
             + "event-processor suppresses matching alerts pre-buildAlert (sync lag typically ≤60s). "
             + "Covers CEL, sequence, graph-offense, and baseline anomaly "
             + "(synthetic ruleId baseline:anomaly + entity/metric conditions). "
-            + "Java dry-run / OpenSearch preview still report exceptionsApplied=false.";
+            + "Java inject dry-run / OpenSearch preview load active rows and consider EP operators "
+            + "(is/is_not/contains/starts_with/ends_with/in); exceptionsApplied=true when the store "
+            + "was reachable. engineParity remains approximate vs Go CEL.";
 
     /** Operators enforced by event-processor {@code exceptionCondMatch}. Unknown ops fail closed. */
     static final Set<String> ALLOWED_OPERATORS = Set.of(
@@ -63,6 +65,58 @@ public class DetectionExceptionService {
         return repository.findByRuleIdOrderByUpdatedAtDesc(ruleId).stream()
             .map(this::toDto)
             .toList();
+    }
+
+    /**
+     * Loads active exceptions for {@code ruleId} and evaluates them against an inject event.
+     * Store failures stay honest ({@code exceptionsApplied=false}).
+     */
+    @Transactional(readOnly = true)
+    public DetectionExceptionConsideration consider(String ruleId, Map<String, Object> event) {
+        if (ruleId == null || ruleId.isBlank()) {
+            return DetectionExceptionConsideration.notApplied(
+                "No ruleId; active exceptions were not loaded.");
+        }
+        try {
+            List<HaDetectionException> active = repository.findByRuleIdAndActiveTrue(ruleId.trim());
+            for (HaDetectionException entity : active) {
+                List<Map<String, String>> conditions = deserializeConditions(entity.getConditionsJson());
+                if (DetectionExceptionMatcher.matches(conditions, event)) {
+                    return DetectionExceptionConsideration.suppressed(
+                        active.size(), entity.getId(), entity.getTitle());
+                }
+            }
+            return DetectionExceptionConsideration.considered(active.size());
+        } catch (RuntimeException e) {
+            log.warn("{}.consider: exception store unavailable ruleId={} error={}",
+                CLASSNAME, ruleId, e.getMessage());
+            return DetectionExceptionConsideration.notApplied(
+                "Exception store unavailable: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Resolves a dry-run rule id from a detection-rule map or request body.
+     */
+    public static String extractRuleId(Map<String, Object> ruleDefinition, Map<String, Object> body) {
+        if (ruleDefinition != null) {
+            for (String key : List.of("id", "ruleId", "rule_id")) {
+                Object value = ruleDefinition.get(key);
+                if (value != null && !String.valueOf(value).isBlank()) {
+                    return String.valueOf(value).trim();
+                }
+            }
+        }
+        if (body != null) {
+            Object value = body.get("ruleId");
+            if (value == null) {
+                value = body.get("id");
+            }
+            if (value != null && !String.valueOf(value).isBlank()) {
+                return String.valueOf(value).trim();
+            }
+        }
+        return null;
     }
 
     public DetectionExceptionDTO create(String ruleId, CreateExceptionRequest request, String actor) {

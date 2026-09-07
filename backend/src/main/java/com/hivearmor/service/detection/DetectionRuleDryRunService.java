@@ -137,19 +137,50 @@ public class DetectionRuleDryRunService {
      * Builds a response map with honesty flags for API surfaces that return Map payloads.
      */
     public Map<String, Object> toHonestyPayload(DryRunResult result) {
+        return toHonestyPayload(result, DetectionExceptionConsideration.notApplied(
+            "Active exceptions were not considered."));
+    }
+
+    /**
+     * Honesty payload including exception consideration (DET-FP dry-run).
+     *
+     * <p>{@code matched} remains the CEL expression result so the UI can show
+     * match-but-suppressed. {@code wouldAlert} is the engine-equivalent fire signal.
+     */
+    public Map<String, Object> toHonestyPayload(DryRunResult result,
+                                                DetectionExceptionConsideration consideration) {
+        DetectionExceptionConsideration applied = consideration != null
+            ? consideration
+            : DetectionExceptionConsideration.notApplied("Active exceptions were not considered.");
+        boolean suppressed = result.matched() && applied.suppressed();
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("matched", result.matched());
+        payload.put("wouldAlert", result.matched() && !suppressed);
+        payload.put("suppressed", suppressed);
         payload.put("matchedFields", result.matchedFields());
-        payload.put("explanation", result.explanation());
+        String explanation = result.explanation();
+        if (suppressed) {
+            String title = applied.matchingExceptionTitle() != null
+                ? applied.matchingExceptionTitle() : "active exception";
+            explanation = explanation + " Suppressed by exception #"
+                + applied.matchingExceptionId() + " (" + title + "). No alert would be created.";
+        }
+        payload.put("explanation", explanation);
         payload.put("durationMs", result.durationMs());
         payload.put("syntaxOk", result.syntaxOk());
         payload.put("evaluationMode", result.evaluationMode());
         payload.put("openSearchQueried", result.openSearchQueried());
         payload.put("engineParity", result.engineParity());
         payload.put("mode", result.evaluationMode());
+        payload.put("exceptionsApplied", applied.exceptionsApplied());
+        payload.put("exceptionsConsideredCount", applied.consideredCount());
+        payload.put("exceptionsSuppressedCount", suppressed ? 1 : 0);
+        payload.put("matchingExceptionId", applied.matchingExceptionId());
+        payload.put("matchingExceptionTitle", applied.matchingExceptionTitle());
         payload.put("honesty",
             "Inject dry-run only — does not query OpenSearch historical indices. "
-                + "engineParity=approximate (not full Go CEL).");
+                + "engineParity=approximate (not full Go CEL). "
+                + applied.honesty());
         payload.put("simulated", false);
         return payload;
     }

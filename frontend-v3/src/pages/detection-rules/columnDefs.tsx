@@ -3,7 +3,7 @@
 import type { ColDef } from 'ag-grid-community';
 import { CircleAlert, CircleCheck, CircleHelp, Ellipsis, Pencil, TestTube, Trash2 } from 'lucide-react';
 
-import type { DetectionRule } from './detectionRules.types';
+import { DETECTION_ENGINE_LABELS, type DetectionEngine, type DetectionRule } from './detectionRules.types';
 
 function relativeTime(value?: string | null): string {
   if (!value) return 'Not available';
@@ -51,6 +51,11 @@ function HealthCell({ data }: { data?: DetectionRule }): JSX.Element {
 
 function OriginCell({ data }: { data?: DetectionRule }): JSX.Element {
   return <span className="detection-rule-origin" data-origin={data?.origin ?? 'unknown'}>{data?.origin === 'managed' ? 'Managed' : data?.origin === 'custom' ? 'Custom' : 'Unknown'}</span>;
+}
+
+function EngineCell({ data }: { data?: DetectionRule }): JSX.Element {
+  const engine: DetectionEngine = data?.engine ?? 'cel';
+  return <span className="detection-rule-engine" data-engine={engine}>{DETECTION_ENGINE_LABELS[engine]}</span>;
 }
 
 function MitreCell({ data }: { data?: DetectionRule }): JSX.Element {
@@ -103,6 +108,7 @@ export function createColumnDefs(
     { colId: 'ruleActive', field: 'ruleActive', headerName: 'Status', width: 126, cellRenderer: ({ data }: { data?: DetectionRule }) => <StatusCell data={data} disabled={!canManage} loading={Boolean(data && toggleLoadingIds.has(data.id))} onToggle={onToggleActive} /> },
     { colId: 'health', field: 'health', headerName: 'Last response', width: 130, cellRenderer: HealthCell },
     { colId: 'origin', field: 'origin', headerName: 'Source', width: 102, cellRenderer: OriginCell },
+    { colId: 'engine', field: 'engine', headerName: 'Engine', width: 118, cellRenderer: EngineCell },
     { colId: 'techniqueId', field: 'techniqueId', headerName: 'MITRE ATT&CK', width: 180, cellRenderer: MitreCell },
     { colId: 'alerts24h', field: 'alerts24h', headerName: 'Alerts 24h', width: 104, cellRenderer: AlertsCell, cellClass: 'detection-grid__numeric' },
     { colId: 'schedule', field: 'schedule', headerName: 'Schedule', width: 110, valueFormatter: ({ value }) => value ? String(value) : 'Unavailable' },

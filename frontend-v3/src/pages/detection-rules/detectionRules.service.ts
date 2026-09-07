@@ -114,6 +114,7 @@ function mapModernPreview(item: ModernRulePreview): DetectionRule {
     category: tactics[0],
     techniqueId: techniques[0],
     origin: item.scope,
+    engine: 'cel',
     health: mapHealth(item.health?.status),
     healthMessage: item.health?.status === 'degraded' ? 'Recent executions are degraded.' : item.health?.status === 'critical' ? 'Recent executions are failing.' : undefined,
     lastRunAt: item.health?.lastRun ?? item.lastExecution?.timestamp ?? null,
@@ -152,6 +153,7 @@ function mapModernDetail(item: ModernRuleDetail): DetectionRule {
 
 function draftPayload(rule: Partial<DetectionRule>): Record<string, unknown> {
   return {
+    id: rule.id,
     name: rule.ruleName?.trim(),
     description: rule.description?.trim() || undefined,
     expression: rule.ruleDefinition ?? '',
@@ -173,10 +175,10 @@ function readNestedString(root: Record<string, unknown>, path: string[]): string
   return typeof cursor === 'string' ? cursor : null;
 }
 
-function eventMatchesApprovedScannerException(event: Record<string, unknown>): boolean {
+function eventMatchesFixtureException(event: Record<string, unknown>): boolean {
   const host = readNestedString(event, ['host', 'name'])
     ?? readNestedString(event, ['origin', 'host']);
-  return host === 'approved-scanner';
+  return host === 'approved-scanner' || host === 'lab-baseline-host';
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -438,6 +440,7 @@ export async function previewRuleDraft(
       available?: boolean;
       exceptionsApplied?: boolean;
       exceptionsSuppressedCount?: number;
+      suppressedMatches?: Array<{ event?: Record<string, unknown>; matchingExceptionTitle?: string }>;
     }>(response);
     const mode = result.mode
       ?? (result.openSearchQueried ? 'opensearch' : dryRunEvents?.length ? 'inject' : 'unavailable');
@@ -474,6 +477,14 @@ export async function previewRuleDraft(
       summary: sample.name ?? rule.ruleName ?? 'Preview match',
       entity: typeof sample.source?.['host.name'] === 'string' ? sample.source['host.name'] : 'Normalized event',
     }));
+    const suppressedMatches = (result.suppressedMatches ?? []).map((row, index) => ({
+      id: `suppressed-${index}`,
+      timestamp: to.toISOString(),
+      summary: row.matchingExceptionTitle
+        ? `Matched — suppressed by ${row.matchingExceptionTitle}`
+        : 'Matched — suppressed by an active exception',
+      entity: typeof row.event?.['host.name'] === 'string' ? String(row.event['host.name']) : 'Normalized event',
+    }));
     return {
       available: true,
       executionId: null,
@@ -485,13 +496,14 @@ export async function previewRuleDraft(
       truncated: (result.matches?.length ?? 0) >= 100,
       histogram: [],
       samples,
+      suppressedMatches,
       warning: honesty,
       mode,
       honesty,
       simulated: Boolean(result.simulated),
       openSearchQueried: Boolean(result.openSearchQueried),
       exceptionsApplied: Boolean(result.exceptionsApplied),
-      exceptionsSuppressedCount: result.exceptionsSuppressedCount ?? 0,
+      exceptionsSuppressedCount: result.exceptionsSuppressedCount ?? suppressedMatches.length,
     };
   }
   await new Promise<void>((resolve, reject) => {
@@ -547,7 +559,11 @@ export async function previewRuleDraft(
   }
 
   const injectEvent = dryRunEvents?.[0];
-  if (injectEvent && eventMatchesApprovedScannerException(injectEvent)) {
+  if (injectEvent && eventMatchesFixtureException(injectEvent)) {
+    const host = readNestedString(injectEvent, ['host', 'name'])
+      ?? readNestedString(injectEvent, ['origin', 'host'])
+      ?? 'approved-scanner';
+    const baseline = host === 'lab-baseline-host';
     return {
       available: true,
       executionId: `preview-suppressed-${rule.id ?? 'draft'}`,
@@ -559,11 +575,22 @@ export async function previewRuleDraft(
       truncated: false,
       histogram: [],
       samples: [],
-      warning: 'Match suppressed by active fixture exception #9001 (host.name is approved-scanner).',
+      suppressedMatches: [{
+        id: baseline ? 'preview-baseline-suppressed' : 'preview-scanner-suppressed',
+        timestamp: '2026-09-07T10:15:00Z',
+        summary: baseline
+          ? 'Matched CEL, suppressed by fixture baseline:anomaly exception #9002'
+          : 'Matched CEL, suppressed by fixture exception #9001 (host.name is approved-scanner)',
+        entity: host,
+      }],
+      warning: baseline
+        ? 'Match suppressed by active fixture exception #9002 (ruleId=baseline:anomaly, host.name is lab-baseline-host).'
+        : 'Match suppressed by active fixture exception #9001 (host.name is approved-scanner).',
       mode: previewMode === 'inject' ? 'inject' : 'fixture',
       honesty:
-        'Design fixture: active exception enforced for demo inject event (exceptionsApplied=true). '
-        + 'Live Java dry-run still reports exceptionsApplied=false until it shares the EP matcher.',
+        'STAGING CANDIDATE design fixture: active exception considered for demo inject event '
+        + '(exceptionsApplied=true, match but suppressed). Live Java dry-run loads PostgreSQL active rows '
+        + 'and uses EP operators (is/is_not/contains/starts_with/ends_with/in).',
       simulated: true,
       openSearchQueried: false,
       exceptionsApplied: true,
@@ -719,22 +746,29 @@ export async function testDetectionSandbox(
     const event = JSON.parse(eventJson) as Record<string, unknown>;
     const hostName = readNestedString(event, ['host', 'name'])
       ?? readNestedString(event, ['origin', 'host']);
-    if (hostName === 'approved-scanner') {
+    if (hostName === 'approved-scanner' || hostName === 'lab-baseline-host') {
+      const baseline = hostName === 'lab-baseline-host';
       return {
-        matched: false,
-        matchedFields: [],
-        explanation:
-          'Suppressed by active fixture exception #9001 (host.name is approved-scanner). '
-          + 'Engine path: pre-alert ExceptionMatches — no alert would be created.',
+        matched: true,
+        matchedFields: ['event.action', 'host.name'],
+        explanation: baseline
+          ? 'CEL matched. Suppressed by fixture exception #9002 (ruleId=baseline:anomaly, host.name is lab-baseline-host). No alert would be created.'
+          : 'CEL matched. Suppressed by fixture exception #9001 (host.name is approved-scanner). No alert would be created.',
         durationMs: 29,
         evaluatedFields: Object.keys(event).length,
         warnings: [
-          'Design fixture: demonstrates DET-FP engine enforcement for an active exception.',
-          'exceptionsApplied=true (fixture only).',
+          'STAGING CANDIDATE design fixture: match but suppressed by an active exception.',
+          'exceptionsApplied=true. Live Java dry-run loads PostgreSQL active rows with EP operators.',
         ],
         evaluationMode: 'fixture_exception_suppressed',
         openSearchQueried: false,
         engineParity: 'fixture',
+        suppressed: true,
+        wouldAlert: false,
+        exceptionsApplied: true,
+        exceptionsSuppressedCount: 1,
+        matchingExceptionId: baseline ? 9002 : 9001,
+        matchingExceptionTitle: baseline ? 'Baseline approved scanner' : 'Approved scanner host',
       };
     }
     const normalizedRule = ruleYaml.toLowerCase();
@@ -753,10 +787,14 @@ export async function testDetectionSandbox(
       explanation: matched ? 'The fictional event satisfied the selection and condition path.' : 'The event did not satisfy the active selection path.',
       durationMs: 37,
       evaluatedFields: Object.keys(event).length,
-      warnings: ['Design fixture evaluation — production evaluators were not called.', 'exceptionsApplied=false unless host matches an active fixture exception.'],
+      warnings: ['Design fixture evaluation — production evaluators were not called.', 'exceptionsApplied=false unless the sample host matches an active fixture exception.'],
       evaluationMode: 'fixture',
       openSearchQueried: false,
       engineParity: 'fixture',
+      suppressed: false,
+      wouldAlert: matched,
+      exceptionsApplied: false,
+      exceptionsSuppressedCount: 0,
     };
   }
 
@@ -844,7 +882,14 @@ export async function testDetectionSandbox(
     openSearchQueried?: boolean;
     engineParity?: DetectionSandboxResult['engineParity'];
     simulatedMatchCount?: number;
+    suppressed?: boolean;
+    wouldAlert?: boolean;
+    exceptionsApplied?: boolean;
+    exceptionsSuppressedCount?: number;
+    matchingExceptionId?: number | string | null;
+    matchingExceptionTitle?: string | null;
   };
+  const suppressed = Boolean(result.suppressed);
   return {
     matched: Boolean(result.matched),
     matchedFields: result.matchedFields ?? [],
@@ -853,10 +898,19 @@ export async function testDetectionSandbox(
     evaluatedFields: result.matchedFields?.length ?? result.simulatedMatchCount ?? 0,
     warnings: [
       'CEL inject dry-run (DET-TEST-001) via /api/ha-detection-rules/test — approximate parity with the Go event-processor evaluator; OpenSearch was not queried.',
+      result.exceptionsApplied
+        ? 'exceptionsApplied=true — active PostgreSQL exceptions were considered with EP operators.'
+        : 'exceptionsApplied=false — exception store unavailable or no ruleId.',
     ],
     evaluationMode: result.evaluationMode ?? 'inject_dry_run',
     openSearchQueried: Boolean(result.openSearchQueried),
     engineParity: result.engineParity ?? 'approximate',
+    suppressed,
+    wouldAlert: result.wouldAlert ?? (Boolean(result.matched) && !suppressed),
+    exceptionsApplied: Boolean(result.exceptionsApplied),
+    exceptionsSuppressedCount: result.exceptionsSuppressedCount ?? (suppressed ? 1 : 0),
+    matchingExceptionId: result.matchingExceptionId ?? null,
+    matchingExceptionTitle: result.matchingExceptionTitle ?? null,
   };
 }
 

@@ -12,6 +12,8 @@ public interface HaDetectionExceptionRepository extends JpaRepository<HaDetectio
 
     List<HaDetectionException> findByRuleIdOrderByUpdatedAtDesc(String ruleId);
 
+    List<HaDetectionException> findByRuleIdAndActiveTrue(String ruleId);
+
     Optional<HaDetectionException> findByIdAndRuleId(Long id, String ruleId);
 
     long countByRuleIdAndActiveTrue(String ruleId);

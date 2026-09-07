@@ -12,6 +12,7 @@ import com.hivearmor.domain.shared_types.alert.UtmAlert;
 import com.hivearmor.repository.incident.UtmIncidentAlertRepository;
 import com.hivearmor.repository.incident.UtmIncidentHistoryRepository;
 import com.hivearmor.service.UtmAlertService;
+import com.hivearmor.service.detection.GroundedCitationExtractor;
 import com.hivearmor.service.dto.incident.*;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -276,13 +277,13 @@ public class IncidentInvestigationService {
         }
 
         if (!StringUtils.hasText(socAiBaseUrl)) {
-            return buildFallbackSummary(incident, links.size());
+            return attachCitations(buildFallbackSummary(incident, links.size()), incident, links);
         }
 
         try {
             String internalKey = System.getenv(Constants.ENV_INTERNAL_KEY);
             if (!StringUtils.hasText(internalKey)) {
-                return buildFallbackSummary(incident, links.size());
+                return attachCitations(buildFallbackSummary(incident, links.size()), incident, links);
             }
 
             Map<String, Object> payload = new LinkedHashMap<>();
@@ -303,17 +304,35 @@ public class IncidentInvestigationService {
                 if (resp.isSuccessful() && resp.body() != null) {
                     String responseBody = resp.body().string();
                     AiSummaryDTO dto = objectMapper.readValue(responseBody, AiSummaryDTO.class);
-                    if (dto != null && StringUtils.hasText(dto.getSummary())) return dto;
+                    if (dto != null && StringUtils.hasText(dto.getSummary())) {
+                        return attachCitations(dto, incident, links);
+                    }
                 }
             }
         } catch (Exception e) {
             log.warn("SOC-AI summarize-incident call failed for incident {}: {}", incidentId, e.getMessage());
         }
 
-        return buildFallbackSummary(incident, links.size());
+        return attachCitations(buildFallbackSummary(incident, links.size()), incident, links);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private AiSummaryDTO attachCitations(AiSummaryDTO dto, UtmIncident incident, List<UtmIncidentAlert> links) {
+        List<String> alertIds = links.stream()
+            .map(UtmIncidentAlert::getAlertId)
+            .filter(StringUtils::hasText)
+            .limit(20)
+            .toList();
+        dto.setCitations(GroundedCitationExtractor.fromAlertIds(
+            alertIds,
+            incident.getIncidentDescription(),
+            dto.getSummary()));
+        dto.setHonesty(
+            "STAGING CANDIDATE — citations are grounded in linked incident alert IDs and MITRE tokens "
+                + "present in the summary. Advisory only; not a trained detection model.");
+        return dto;
+    }
 
     private AiSummaryDTO buildFallbackSummary(UtmIncident incident, int alertCount) {
         AiSummaryDTO dto = new AiSummaryDTO();

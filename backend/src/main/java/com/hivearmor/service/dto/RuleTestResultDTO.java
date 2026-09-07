@@ -65,6 +65,24 @@ public class RuleTestResultDTO {
     @Schema(description = "Engine parity vs event-processor Go CEL", example = "approximate")
     private String engineParity;
 
+    @Schema(description = "Whether the CEL expression matched the sample event")
+    private Boolean expressionMatched;
+
+    @Schema(description = "Whether an active exception would suppress the alert")
+    private Boolean suppressed;
+
+    @Schema(description = "Whether the engine would create an alert (matched and not suppressed)")
+    private Boolean wouldAlert;
+
+    @Schema(description = "True when active exceptions were loaded and considered")
+    private Boolean exceptionsApplied;
+
+    @Schema(description = "Matching exception id when suppressed")
+    private Long matchingExceptionId;
+
+    @Schema(description = "Matching exception title when suppressed")
+    private String matchingExceptionTitle;
+
     /**
      * Full constructor for legacy admin usage (7 primary fields).
      */

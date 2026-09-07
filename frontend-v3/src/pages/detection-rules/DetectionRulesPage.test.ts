@@ -95,6 +95,7 @@ describe('columnDefs', () => {
     expect(columnDefs.length > 0).toBe(true);
     expect(columnDefs.some((col) => col.field === 'ruleName')).toBe(true);
     expect(columnDefs.some((col) => col.field === 'health')).toBe(true);
+    expect(columnDefs.some((col) => col.field === 'engine')).toBe(true);
     expect(columnDefs.some((col) => col.field === 'techniqueId')).toBe(true);
     expect(columnDefs.some((col) => col.field === 'ruleActive')).toBe(true);
   });
@@ -130,16 +131,24 @@ describe('detection rules foundation fixtures', () => {
     expect(new Set(foundationDetectionRules.map((rule) => rule.id)).size).toBe(foundationDetectionRules.length);
     expect(foundationDetectionRules.length).toBeGreaterThanOrEqual(40);
     expect(foundationDetectionRules.every((rule) => rule.techniqueId && rule.health && rule.schedule)).toBe(true);
-    expect(foundationDetectionRules.every((rule) => rule.ruleDefinition?.includes('celExists(') && rule.ruleDefinition.includes('equals('))).toBe(true);
+    expect(foundationDetectionRules.filter((rule) => (rule.engine ?? 'cel') === 'cel').every((rule) => rule.ruleDefinition?.includes('celExists(') && rule.ruleDefinition.includes('equals('))).toBe(true);
+    expect(foundationDetectionRules.filter((rule) => rule.engine === 'sequence').every((rule) => rule.ruleDefinition?.includes('sequence:'))).toBe(true);
   });
 
   it('provide bounded execution and test records only for fixture review', async () => {
-    const { foundationDetectionExecutions, foundationDetectionRules, foundationDetectionSampleEvents } = await import('./detectionRules.fixtures');
+    const { foundationDetectionExecutions, foundationDetectionRules, foundationDetectionSampleEvents, filterFoundationDetectionRules } = await import('./detectionRules.fixtures');
     const ruleIds = new Set(foundationDetectionRules.map((rule) => rule.id));
     expect(foundationDetectionExecutions.length).toBeLessThanOrEqual(100);
     expect(new Set(foundationDetectionExecutions.map((run) => run.id)).size).toBe(foundationDetectionExecutions.length);
     expect(foundationDetectionExecutions.every((run) => ruleIds.has(run.ruleId))).toBe(true);
     expect(foundationDetectionSampleEvents.every((sample) => Boolean(JSON.parse(sample.json)))).toBe(true);
+    expect(foundationDetectionSampleEvents.some((sample) => sample.id === 'sample-excepted-scanner-001')).toBe(true);
+    expect(foundationDetectionSampleEvents.some((sample) => sample.id === 'sample-baseline-excepted-001')).toBe(true);
+    expect(foundationDetectionSampleEvents.some((sample) => sample.id === 'sample-sequence-auth-001')).toBe(true);
+    expect(foundationDetectionRules.filter((rule) => rule.engine === 'sequence').length).toBe(2);
+    expect(foundationDetectionRules.filter((rule) => rule.engine === 'risk').length).toBe(2);
+    expect(foundationDetectionRules.filter((rule) => rule.engine === 'graph').length).toBe(1);
+    expect(filterFoundationDetectionRules({ engine: 'graph', size: 100 }).items[0]?.ruleName).toBe('GRAPH-PRIVILEGED-PIVOT-THEN-C2');
   });
 
   it('are excluded by both production build paths', async () => {

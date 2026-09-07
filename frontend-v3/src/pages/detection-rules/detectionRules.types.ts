@@ -5,10 +5,24 @@
 
 import type { SeverityLevel } from '@/constants/severity.constants';
 
+/** Event-processor engine that evaluates the rule. CEL is the default inventory path. */
+export type DetectionEngine = 'cel' | 'sequence' | 'risk' | 'graph';
+
+export const DETECTION_ENGINE_LABELS: Record<DetectionEngine, string> = {
+  cel: 'CEL',
+  sequence: 'Sequence',
+  risk: 'Risk score',
+  graph: 'Graph offense',
+};
+
 export interface DetectionRule {
   /** Canonical backend IDs are UUID strings; fixture IDs remain numeric. */
   id: string | number;
   ruleName: string;
+  /** Correlation engine. Live inventory defaults to CEL until the API projects this field. */
+  engine?: DetectionEngine;
+  /** Staging content pack id when the rule is not generic CEL inventory. */
+  contentPack?: string;
   /** Normalized telemetry requirements. Never substitute content tags here. */
   dataTypes: string[];
   /** Search and classification labels returned independently by the backend. */
@@ -58,6 +72,7 @@ export interface RuleListParams {
   health?: DetectionRule['health'] | 'all';
   severity?: SeverityLevel | 'all';
   technique?: string;
+  engine?: DetectionEngine | 'all';
 }
 
 export interface SigmaSyncResponse {
@@ -111,6 +126,12 @@ export interface DetectionSandboxResult {
   evaluationMode?: 'inject_dry_run' | 'sigma_sandbox' | 'fixture' | 'fixture_exception_suppressed' | 'unavailable';
   openSearchQueried?: boolean;
   engineParity?: 'approximate' | 'sigma' | 'fixture';
+  suppressed?: boolean;
+  wouldAlert?: boolean;
+  exceptionsApplied?: boolean;
+  exceptionsSuppressedCount?: number;
+  matchingExceptionId?: number | string | null;
+  matchingExceptionTitle?: string | null;
 }
 
 export interface DetectionSampleEvent {
@@ -166,9 +187,10 @@ export interface RulePreviewResult {
   honesty?: string | null;
   simulated?: boolean;
   openSearchQueried?: boolean;
-  /** DET-FP — false when Java dry-run does not honor engine exception packs. */
+  /** DET-FP — true when active exceptions were loaded and considered. */
   exceptionsApplied?: boolean;
   exceptionsSuppressedCount?: number;
+  suppressedMatches?: Array<{ id: string; timestamp: string; summary: string; entity: string }>;
 }
 
 export interface DetectionRuleVersion {
