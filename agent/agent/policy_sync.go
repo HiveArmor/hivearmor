@@ -241,7 +241,17 @@ type SyncOnConnectResponse struct {
 type SyncOnConnectPolicy struct {
 	PolicyID     int64  `json:"policyId"`
 	Version      int    `json:"version"`
+	VersionNum   int    `json:"versionNum"` // backend AgentPolicySyncOnConnectDTO field
 	PolicyConfig string `json:"policyConfig"`
+	Pushed       bool   `json:"pushed"`
+	AlreadyCurrent bool `json:"alreadyCurrent"`
+}
+
+func (p SyncOnConnectPolicy) effectiveVersion() int {
+	if p.VersionNum != 0 {
+		return p.VersionNum
+	}
+	return p.Version
 }
 
 // SyncPoliciesOnConnect calls backend sync-on-connect after AgentStream is up.
@@ -292,7 +302,12 @@ func syncPoliciesOnConnect(cnf *config.Config) error {
 			dto.Policies = list
 		}
 		for _, p := range dto.Policies {
-			if err := applyFetchedPolicy(cnf, p.PolicyID, p.Version, p.PolicyConfig); err != nil {
+			if p.Pushed || p.AlreadyCurrent {
+				// Backend already queued APPLY_POLICY or agent is current — still
+				// apply local config when provided so telemetry/FIM update immediately.
+			}
+			ver := p.effectiveVersion()
+			if err := applyFetchedPolicy(cnf, p.PolicyID, ver, p.PolicyConfig); err != nil {
 				utils.Logger.ErrorF("policy_sync: sync-on-connect apply policy %d: %v", p.PolicyID, err)
 			}
 		}

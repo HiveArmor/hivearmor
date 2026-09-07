@@ -51,13 +51,16 @@ func TestNotifyRuleSyncAck_URLAndHeaders(t *testing.T) {
 }
 
 func TestSyncOnConnectResponse_JSON(t *testing.T) {
-	raw := `{"policies":[{"policyId":1,"version":2,"policyConfig":"{\"schema_version\":1}"}]}`
+	raw := `{"policies":[{"policyId":1,"versionNum":2,"policyConfig":"{\"schema_version\":1}","pushed":true}]}`
 	var dto SyncOnConnectResponse
 	if err := json.Unmarshal([]byte(raw), &dto); err != nil {
 		t.Fatal(err)
 	}
-	if len(dto.Policies) != 1 || dto.Policies[0].PolicyID != 1 || dto.Policies[0].Version != 2 {
+	if len(dto.Policies) != 1 || dto.Policies[0].PolicyID != 1 || dto.Policies[0].effectiveVersion() != 2 {
 		t.Fatalf("%+v", dto)
+	}
+	if !dto.Policies[0].Pushed {
+		t.Fatal("expected pushed")
 	}
 }
 
