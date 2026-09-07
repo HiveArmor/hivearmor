@@ -8,13 +8,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * REST controller for User/Entity Behavior Analytics.
+ * Legacy User/Entity Behavior Analytics controller ({@code /api/uba}).
+ *
+ * <p>DET-ML-001a — every endpoint is gated like {@code HaUebaResource}
+ * ({@code ROLE_ANALYST} | {@code ROLE_SOC_MANAGER} | {@code ROLE_ADMIN}).
+ * Operator UI must use {@code /api/ha-ueba/*}; this prefix is not wired in frontend-v3.
  *
  * GET  /api/uba/summary          → KPI stats (counts by risk level, anomalies)
  * GET  /api/uba/entities         → paginated entity risk leaderboard
@@ -39,6 +44,7 @@ public class UbaResource {
     }
 
     @GetMapping("/summary")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     public ResponseEntity<Map<String, Object>> getSummary() {
         final String ctx = CLASSNAME + ".getSummary";
         try {
@@ -52,6 +58,7 @@ public class UbaResource {
     }
 
     @GetMapping("/entities")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     public ResponseEntity<Map<String, Object>> listEntities(
         @RequestParam(required = false) String entityType,
         @RequestParam(required = false) String riskLevel,
@@ -70,6 +77,7 @@ public class UbaResource {
     }
 
     @GetMapping("/anomalies")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     public ResponseEntity<List<Map<String, Object>>> listAnomalies(
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "50") int size
@@ -86,6 +94,7 @@ public class UbaResource {
     }
 
     @GetMapping("/entities/{entityId}/anomalies")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     public ResponseEntity<List<Map<String, Object>>> getEntityAnomalies(
         @PathVariable String entityId,
         @RequestParam(defaultValue = "user") String entityType
@@ -102,6 +111,7 @@ public class UbaResource {
     }
 
     @PutMapping("/entities/{id}/watchlist")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     public ResponseEntity<Map<String, Object>> setWatchlist(
         @PathVariable Long id,
         @RequestBody Map<String, Object> body
@@ -121,6 +131,7 @@ public class UbaResource {
     }
 
     @PutMapping("/anomalies/{id}/status")
+    @PreAuthorize("hasAnyAuthority('ROLE_ANALYST','ROLE_SOC_MANAGER','ROLE_ADMIN')")
     public ResponseEntity<Map<String, Object>> updateAnomalyStatus(
         @PathVariable Long id,
         @RequestBody Map<String, Object> body

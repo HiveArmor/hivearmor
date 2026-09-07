@@ -90,6 +90,81 @@ export function filterBaselineExceptions(items: DetectionException[]): Detection
 
 const ALLOWED_OPERATORS = new Set<string>(EXCEPTION_OPERATOR_OPTIONS.map((item) => item.value));
 
+const UNUSABLE_PREFILL = new Set(['', '—', '-', 'n/a', 'na', 'unavailable', 'unknown', 'none']);
+
+export function usableExceptionPrefillValue(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed || UNUSABLE_PREFILL.has(trimmed.toLowerCase())) return null;
+  return trimmed;
+}
+
+export interface ExceptionDraftAlertSource {
+  id?: string | null;
+  ruleId?: string | null;
+  ruleName?: string | null;
+  rawFields?: Record<string, string>;
+  adversary?: { hostname?: string | null; username?: string | null } | null;
+  target?: { hostname?: string | null; username?: string | null } | null;
+  primaryEntity?: { type?: string; label?: string } | null;
+  assetId?: string | null;
+}
+
+export interface ExceptionDraftPrefill {
+  ruleId: string | null;
+  title: string;
+  reason: string;
+  hostName: string | null;
+  userName: string | null;
+  conditions: ExceptionCondition[];
+}
+
+export function extractHostNameFromAlert(alert: ExceptionDraftAlertSource): string | null {
+  const fromFields = usableExceptionPrefillValue(alert.rawFields?.['host.name']);
+  if (fromFields) return fromFields;
+  if (alert.primaryEntity?.type === 'host') {
+    const label = usableExceptionPrefillValue(alert.primaryEntity.label);
+    if (label) return label;
+  }
+  return usableExceptionPrefillValue(alert.target?.hostname)
+    ?? usableExceptionPrefillValue(alert.adversary?.hostname)
+    ?? usableExceptionPrefillValue(alert.assetId);
+}
+
+export function extractUserNameFromAlert(alert: ExceptionDraftAlertSource): string | null {
+  const fromFields = usableExceptionPrefillValue(alert.rawFields?.['user.name']);
+  if (fromFields) return fromFields;
+  if (alert.primaryEntity?.type === 'user') {
+    const label = usableExceptionPrefillValue(alert.primaryEntity.label);
+    if (label) return label;
+  }
+  return usableExceptionPrefillValue(alert.target?.username)
+    ?? usableExceptionPrefillValue(alert.adversary?.username);
+}
+
+/** DET-FP-002 — prefill a detection exception draft from triage host / user / ruleId. */
+export function prefillExceptionDraftFromAlert(alert: ExceptionDraftAlertSource): ExceptionDraftPrefill {
+  const ruleId = usableExceptionPrefillValue(alert.ruleId);
+  const ruleName = usableExceptionPrefillValue(alert.ruleName);
+  const hostName = extractHostNameFromAlert(alert);
+  const userName = extractUserNameFromAlert(alert);
+  const conditions: ExceptionCondition[] = [];
+  if (hostName) conditions.push({ field: 'host.name', operator: 'is', value: hostName });
+  if (userName) conditions.push({ field: 'user.name', operator: 'is', value: userName });
+  if (!conditions.length) {
+    conditions.push({ field: 'host.name', operator: 'is', value: '' });
+  }
+  const subject = ruleName ?? ruleId ?? 'this detection';
+  return {
+    ruleId,
+    title: `Exception · ${subject}`,
+    reason: alert.id ? `Prefill from alert ${alert.id}` : '',
+    hostName,
+    userName,
+    conditions,
+  };
+}
+
 export function validateExceptionConditions(conditions: ExceptionCondition[]): string | null {
   const valid = conditions.filter((item) => item.field.trim() && item.operator.trim() && item.value.trim());
   if (!valid.length) {
@@ -116,7 +191,24 @@ let fixtureExceptions: DetectionException[] = [
     activatedAt: '2026-09-06T14:20:00Z',
     createdAt: '2026-09-05T09:00:00Z',
     updatedAt: '2026-09-06T14:20:00Z',
-    honesty: 'STAGING CANDIDATE fixture: active exceptions are treated as engine-enforced on CEL/sequence/graph/baseline (sync lag fictional).',
+    honesty: 'STAGING CANDIDATE fixture: platform exceptions are treated as engine-enforced on CEL/sequence/graph/baseline (sync lag fictional). Tenant-pack exceptions stay REST-visible and are not written to shared exceptions.yaml.',
+  },
+  {
+    id: 9003,
+    ruleId: 'RULE-ENDPOINT-184',
+    title: 'Finance workstation encoded-script draft',
+    reason: 'Prefill from Analyst Queue alert ALT-7F3A91',
+    conditions: [
+      { field: 'host.name', operator: 'is', value: 'FIN-WKS-044' },
+    ],
+    active: false,
+    status: 'draft',
+    createdBy: 'analyst',
+    activatedBy: null,
+    activatedAt: null,
+    createdAt: '2026-09-07T16:00:00Z',
+    updatedAt: '2026-09-07T16:00:00Z',
+    honesty: 'Design fixture: Analyst Queue prefill draft is never enforced until SOC Manager activation.',
   },
   {
     id: 9002,
@@ -149,7 +241,7 @@ let fixtureExceptions: DetectionException[] = [
     activatedAt: '2026-09-07T11:00:00Z',
     createdAt: '2026-09-07T10:30:00Z',
     updatedAt: '2026-09-07T11:00:00Z',
-    honesty: 'STAGING CANDIDATE fixture: baseline:anomaly exception treated as engine-enforced (sync lag fictional).',
+    honesty: 'STAGING CANDIDATE fixture: platform baseline:anomaly exception treated as engine-enforced (sync lag fictional). Tenant-pack exceptions stay REST-visible until $WORK_DIR/tenants/{id}/rules exists.',
   },
   {
     id: 9011,
