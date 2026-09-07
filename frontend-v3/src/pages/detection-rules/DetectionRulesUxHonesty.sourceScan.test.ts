@@ -47,4 +47,16 @@ describe('detection rules UX honesty (Prompt 16)', () => {
     expect(consoleSource).toContain('STAGING CANDIDATE');
     expect(consoleSource).toContain('exceptionsApplied');
   });
+
+  it('surfaces sequence/risk/graph enterprise pack inventory', () => {
+    expect(page).toContain('detection-enterprise-pack-honesty');
+    expect(page).toContain('ENGINE_OPTIONS');
+    expect(page).toContain('engineFilter');
+    expect(columns).toContain('EngineCell');
+    const fixtures = readFileSync(join(process.cwd(), 'src/pages/detection-rules/detectionRules.fixtures.ts'), 'utf8');
+    expect(fixtures).toContain("engine: 'sequence'");
+    expect(fixtures).toContain("engine: 'risk'");
+    expect(fixtures).toContain("engine: 'graph'");
+    expect(fixtures).toContain('SEQ-BRUTE-FORCE-THEN-SUCCESS');
+  });
 });

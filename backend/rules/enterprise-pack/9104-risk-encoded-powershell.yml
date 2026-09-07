@@ -1,0 +1,20 @@
+id: 9104
+name: RISK-ENCODED-POWERSHELL
+dataTypes:
+  - windows
+  - powershell
+  - process
+category: Execution
+technique: "T1059.001 - Command and Scripting Interpreter: PowerShell"
+adversary: origin
+description: >
+  Staging risk pack (DET-SEQ-001). Accumulates risk when encoded PowerShell is
+  observed, feeding the risk engine rather than a one-shot CEL alert.
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+riskScore: 40
+where: 'safe("origin.process", "") == "powershell.exe" && raw.matches("(?i).*(-EncodedCommand|-enc)([ =]|$).*")'

@@ -1,0 +1,43 @@
+id: 9105
+name: GRAPH-PRIVILEGED-PIVOT-THEN-C2
+type: graph_offense
+dataTypes:
+  - windows
+  - linux
+category: Lateral Movement
+technique: "T1078 - Valid Accounts"
+adversary: origin
+description: >
+  Staging graph pack (DET-SEQ-001). A privileged user logged into two distinct
+  hosts and at least one of those hosts communicated with an external IP within
+  four hours. Requires Neo4j (NEO4J_ENABLED) — STAGING CANDIDATE.
+references:
+  - https://attack.mitre.org/techniques/T1078/
+  - https://attack.mitre.org/techniques/T1021/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+cypherQuery: |
+  MATCH (u:User)-[r1:LOGGED_INTO]->(h1:Host)-[c:COMMUNICATED_WITH]->(extIP:IpAddress),
+        (u)-[r2:LOGGED_INTO]->(h2:Host)
+  WHERE h1.hostname <> h2.hostname
+    AND coalesce(u.privileged, false) = true
+    AND NOT extIP.address STARTS WITH '10.'
+    AND NOT extIP.address STARTS WITH '192.168.'
+    AND NOT extIP.address STARTS WITH '172.'
+    AND r1.lastSeen > datetime() - duration('PT4H')
+    AND r2.lastSeen > datetime() - duration('PT4H')
+  RETURN u.username     AS user,
+         h1.hostname    AS pivotHost,
+         h2.hostname    AS targetHost,
+         extIP.address  AS externalIP,
+         u.riskScore    AS riskScore
+  LIMIT 20
+alertFields:
+  - user
+  - pivotHost
+  - targetHost
+  - externalIP
+  - riskScore
+checkIntervalSeconds: 120

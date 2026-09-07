@@ -114,6 +114,7 @@ function mapModernPreview(item: ModernRulePreview): DetectionRule {
     category: tactics[0],
     techniqueId: techniques[0],
     origin: item.scope,
+    engine: 'cel',
     health: mapHealth(item.health?.status),
     healthMessage: item.health?.status === 'degraded' ? 'Recent executions are degraded.' : item.health?.status === 'critical' ? 'Recent executions are failing.' : undefined,
     lastRunAt: item.health?.lastRun ?? item.lastExecution?.timestamp ?? null,

@@ -1,0 +1,19 @@
+id: 9103
+name: RISK-FAILED-AUTH-ACCUMULATION
+dataTypes:
+  - windows
+  - linux
+category: Credential Access
+technique: "T1110 - Brute Force"
+adversary: origin
+description: >
+  Staging risk pack (DET-SEQ-001). Accumulates risk for repeated failed
+  authentication from the same origin instead of emitting a direct CEL alert.
+references:
+  - https://attack.mitre.org/techniques/T1110/
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 1
+riskScore: 25
+where: 'safe("log.action", "") == "failed_auth" && safe("origin.ip", "") != ""'
