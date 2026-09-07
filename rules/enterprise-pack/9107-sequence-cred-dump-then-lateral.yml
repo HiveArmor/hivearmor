@@ -1,0 +1,44 @@
+id: 9107
+name: SEQ-CRED-DUMP-THEN-LATERAL
+dataTypes:
+  - windows
+  - process
+  - wineventlog
+category: Lateral Movement
+technique: "T1003.001 - OS Credential Dumping: LSASS Memory"
+mitre:
+  tactics: ["TA0006", "TA0008"]
+  attacks: ["T1003.001", "T1021"]
+adversary: origin
+description: >
+  Staging sequence pack (DET-SEQ). Detects LSASS or credential-dump activity
+  followed by a remote service logon from the same origin host within 30 minutes.
+references:
+  - https://attack.mitre.org/techniques/T1003/001/
+  - https://attack.mitre.org/techniques/T1021/
+  - https://attack.mitre.org/tactics/TA0006/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.user
+groupBy:
+  - origin.host
+sequence:
+  - where: 'action == "credential_dump" || safe("log.action", "") == "credential_dump" || raw.matches("(?i).*(lsass(.exe)?).*(procdump|comsvcs|MiniDump|sekurlsa).*")'
+    within: 10m
+  - where: 'action == "remote_logon" || safe("log.action", "") == "remote_logon"'
+    within: 30m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.host
+        operator: filter_term
+        value: "{{.origin.host}}"
+      - field: log.action
+        operator: filter_term
+        value: credential_dump
+    within: 30m
+    count: 1

@@ -1,0 +1,44 @@
+id: 9108
+name: SEQ-PERSIST-THEN-C2
+dataTypes:
+  - windows
+  - linux
+  - process
+  - netconn
+category: Command and Control
+technique: "T1071 - Application Layer Protocol"
+mitre:
+  tactics: ["TA0003", "TA0011"]
+  attacks: ["T1053.005", "T1071"]
+adversary: origin
+description: >
+  Staging sequence pack (DET-SEQ). Detects scheduled-task or cron persistence
+  followed by outbound C2-style communication from the same host within 1 hour.
+references:
+  - https://attack.mitre.org/techniques/T1053/005/
+  - https://attack.mitre.org/techniques/T1071/
+  - https://attack.mitre.org/tactics/TA0011/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+deduplicateBy:
+  - origin.host
+groupBy:
+  - origin.host
+sequence:
+  - where: 'action == "persistence_create" || safe("log.action", "") == "persistence_create" || raw.matches("(?i).*(schtasks(.exe)?[^\\n]*/create|crontab|systemd).*")'
+    within: 15m
+  - where: 'action == "c2_beacon" || safe("log.action", "") == "c2_beacon" || raw.matches("(?i).*(beacon|c2|command.?and.?control).*")'
+    within: 1h
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.host
+        operator: filter_term
+        value: "{{.origin.host}}"
+      - field: log.action
+        operator: filter_term
+        value: persistence_create
+    within: 1h
+    count: 1

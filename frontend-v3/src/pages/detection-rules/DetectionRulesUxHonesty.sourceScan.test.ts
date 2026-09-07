@@ -58,5 +58,14 @@ describe('detection rules UX honesty (Prompt 16)', () => {
     expect(fixtures).toContain("engine: 'risk'");
     expect(fixtures).toContain("engine: 'graph'");
     expect(fixtures).toContain('SEQ-BRUTE-FORCE-THEN-SUCCESS');
+    expect(fixtures).toContain('ENTERPRISE_PACK_RULE_IDS');
+    for (const id of [9101, 9102, 9103, 9104, 9105, 9106, 9107, 9108, 9109, 9110, 9111, 9112, 9113, 9114, 9115, 9116, 9117, 9118]) {
+      expect(fixtures).toContain(`id: ${id}`);
+    }
+    expect(fixtures).toContain('SEQ-PHISH-THEN-MACRO-EXEC');
+    expect(fixtures).toContain('RISK-LSASS-MEMORY-ACCESS');
+    expect(fixtures).toContain('GRAPH-PASSWORD-SPRAY-MULTI-ACCOUNT');
+    expect(fixtures).toContain('v3-hive-log-*');
+    expect(fixtures).not.toContain('v11-log-*');
   });
 });

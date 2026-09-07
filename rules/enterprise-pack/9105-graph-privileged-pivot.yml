@@ -6,14 +6,18 @@ dataTypes:
   - linux
 category: Lateral Movement
 technique: "T1078 - Valid Accounts"
+mitre:
+  tactics: ["TA0008", "TA0011"]
+  attacks: ["T1078", "T1021"]
 adversary: origin
 description: >
-  Staging graph pack (DET-SEQ-001). A privileged user logged into two distinct
+  Staging graph pack (DET-SEQ). A privileged user logged into two distinct
   hosts and at least one of those hosts communicated with an external IP within
   four hours. Requires Neo4j (NEO4J_ENABLED) — STAGING CANDIDATE.
 references:
   - https://attack.mitre.org/techniques/T1078/
   - https://attack.mitre.org/techniques/T1021/
+  - https://attack.mitre.org/tactics/TA0008/
 impact:
   confidentiality: 3
   integrity: 3

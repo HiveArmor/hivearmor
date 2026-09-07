@@ -3,20 +3,42 @@ name: SEQ-BRUTE-FORCE-THEN-SUCCESS
 dataTypes:
   - windows
   - linux
+  - wineventlog
 category: Credential Access
 technique: "T1110 - Brute Force"
+mitre:
+  tactics: ["TA0006"]
+  attacks: ["T1110", "T1110.001"]
 adversary: origin
 description: >
-  Staging sequence pack (DET-SEQ-001). Detects failed authentication followed by
+  Staging sequence pack (DET-SEQ). Detects failed authentication followed by
   a successful logon from the same origin IP and user within 30 minutes.
 references:
   - https://attack.mitre.org/techniques/T1110/
+  - https://attack.mitre.org/tactics/TA0006/
 impact:
   confidentiality: 3
   integrity: 2
   availability: 1
+deduplicateBy:
+  - origin.ip
+  - origin.user
+groupBy:
+  - origin.ip
+  - origin.user
 sequence:
-  - where: 'action == "failed_auth"'
+  - where: 'action == "failed_auth" || safe("log.action", "") == "failed_auth"'
     within: 15m
-  - where: 'action == "authentication_success"'
+  - where: 'action == "authentication_success" || safe("log.action", "") == "authentication_success"'
     within: 30m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: "{{.origin.ip}}"
+      - field: log.action
+        operator: filter_term
+        value: failed_auth
+    within: 15m
+    count: 3

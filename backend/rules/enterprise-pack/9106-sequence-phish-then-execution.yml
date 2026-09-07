@@ -1,0 +1,46 @@
+id: 9106
+name: SEQ-PHISH-THEN-MACRO-EXEC
+dataTypes:
+  - windows
+  - email
+  - process
+category: Execution
+technique: "T1204.002 - User Execution: Malicious File"
+mitre:
+  tactics: ["TA0001", "TA0002"]
+  attacks: ["T1566.001", "T1204.002"]
+adversary: origin
+description: >
+  Staging sequence pack (DET-SEQ). Detects a phishing attachment delivery
+  followed by Office/macro or script execution from the same user and host
+  within 45 minutes.
+references:
+  - https://attack.mitre.org/techniques/T1566/001/
+  - https://attack.mitre.org/techniques/T1204/002/
+  - https://attack.mitre.org/tactics/TA0001/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.user
+  - origin.host
+groupBy:
+  - origin.user
+  - origin.host
+sequence:
+  - where: 'action == "phishing_delivery" || safe("log.action", "") == "phishing_delivery"'
+    within: 20m
+  - where: 'action == "macro_execution" || safe("log.action", "") == "macro_execution" || raw.matches("(?i).*(winword|excel|powerpnt|wscript|cscript).*(vba|macro|EnableContent).*")'
+    within: 45m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.user
+        operator: filter_term
+        value: "{{.origin.user}}"
+      - field: log.action
+        operator: filter_term
+        value: phishing_delivery
+    within: 45m
+    count: 1
