@@ -50,6 +50,7 @@ public class HaDetectionRuleResource {
     private final DetectionSseService sseService;
     private final DetectionCoverageService coverageService;
     private final RuleAuthoringService authoringService;
+    private final DetectionRuleDryRunService dryRunService;
 
     public HaDetectionRuleResource(DetectionRuleInventoryService inventoryService,
                                    RuleExecutionService executionService,
@@ -59,7 +60,8 @@ public class HaDetectionRuleResource {
                                    SigmaImportService sigmaService,
                                    DetectionSseService sseService,
                                    DetectionCoverageService coverageService,
-                                   RuleAuthoringService authoringService) {
+                                   RuleAuthoringService authoringService,
+                                   DetectionRuleDryRunService dryRunService) {
         this.inventoryService = inventoryService;
         this.executionService = executionService;
         this.bulkService = bulkService;
@@ -69,6 +71,7 @@ public class HaDetectionRuleResource {
         this.sseService = sseService;
         this.coverageService = coverageService;
         this.authoringService = authoringService;
+        this.dryRunService = dryRunService;
     }
 
     // =========================================================================
@@ -394,11 +397,12 @@ public class HaDetectionRuleResource {
     @PreAuthorize(ALERT_QUEUE_AUTH)
     @Operation(
         summary = "Preview rule matches",
-        description = "Executes a detection rule definition against historical data and returns matching events "
-            + "without creating alerts. Used for rule tuning. (DET-004)"
+        description = "Evaluates a detection rule against injectable sample events (inject dry-run) "
+            + "or reports honest unavailability when OpenSearch historical preview is not wired. "
+            + "Always returns mode/honesty/simulated flags. (DET-004 / DET-PREV-001)"
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Preview results with matching events"),
+        @ApiResponse(responseCode = "200", description = "Preview results with matching events and honesty flags"),
         @ApiResponse(responseCode = "400", description = "Validation error in rule definition"),
         @ApiResponse(responseCode = "401", description = "Authentication required"),
         @ApiResponse(responseCode = "403", description = "Insufficient privileges")
@@ -419,13 +423,73 @@ public class HaDetectionRuleResource {
                 to = toStr != null ? Instant.parse(toStr) : null;
             }
             Integer limit = body.get("limit") != null ? Integer.parseInt(body.get("limit").toString()) : null;
+            List<Map<String, Object>> dryRunEvents = extractDryRunEvents(body);
             String indexPattern = "v3-hive-log-*";
-            Map<String, Object> result = previewService.preview(ruleDefinition, from, to, limit, indexPattern);
+            Map<String, Object> result = previewService.preview(
+                ruleDefinition, from, to, limit, indexPattern, dryRunEvents);
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return badRequest("VALIDATION_ERROR", e.getMessage());
         } catch (Exception e) {
             log.error("{}.previewRule: {}", CLASSNAME, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    /**
+     * DET-TEST-001 — inject dry-run for a draft rule definition + sample event.
+     */
+    @PostMapping("/ha-detection-rules/test")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    @Operation(
+        summary = "Inject dry-run test for a rule definition",
+        description = "Evaluates the rule expression against a provided sample event in-process. "
+            + "Does not query OpenSearch. Returns honesty metadata. (DET-TEST-001)"
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Dry-run evaluation result"),
+        @ApiResponse(responseCode = "400", description = "Missing sample event or invalid rule"),
+        @ApiResponse(responseCode = "401", description = "Authentication required"),
+        @ApiResponse(responseCode = "403", description = "Insufficient privileges")
+    })
+    public ResponseEntity<Map<String, Object>> testRule(@RequestBody Map<String, Object> body) {
+        try {
+            Long tenantId = resolveTenantId();
+            @SuppressWarnings("unchecked")
+            Map<String, Object> ruleDefinition = (Map<String, Object>) body.getOrDefault("rule", body);
+
+            Map<String, Object> sampleEvent = null;
+            Object eventObj = body.get("sampleEvent");
+            if (eventObj == null) {
+                eventObj = body.get("event");
+            }
+            if (eventObj == null) {
+                eventObj = body.get("eventJson");
+            }
+            if (eventObj instanceof Map<?, ?> map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> cast = (Map<String, Object>) map;
+                sampleEvent = cast;
+            } else if (eventObj instanceof String json && !json.isBlank()) {
+                sampleEvent = dryRunService.parseEvent(json);
+            }
+
+            if (sampleEvent == null) {
+                return badRequest("MISSING_SAMPLE_EVENT",
+                    "Sample event is required (sampleEvent, event, or eventJson). "
+                        + "Inject dry-run will not fake success without an event.");
+            }
+
+            var dryRun = dryRunService.evaluateRuleMap(ruleDefinition, sampleEvent);
+            Map<String, Object> result = dryRunService.toHonestyPayload(dryRun);
+            result.put("ruleName", ruleDefinition.get("name"));
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return badRequest("VALIDATION_ERROR", e.getMessage());
+        } catch (Exception e) {
+            log.error("{}.testRule: {}", CLASSNAME, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         } finally {
             TenantContext.clear();
@@ -905,5 +969,39 @@ public class HaDetectionRuleResource {
         if (map == null) return null;
         Object val = map.get(key);
         return val != null ? val.toString() : null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> extractDryRunEvents(Map<String, Object> body) {
+        if (body == null) {
+            return List.of();
+        }
+        Object raw = body.get("dryRunEvents");
+        if (raw == null) {
+            raw = body.get("sampleEvents");
+        }
+        if (raw == null) {
+            raw = body.get("events");
+        }
+        if (!(raw instanceof List<?> list) || list.isEmpty()) {
+            // Single sampleEvent / event map
+            Object single = body.get("sampleEvent");
+            if (single == null) {
+                single = body.get("event");
+            }
+            if (single instanceof Map<?, ?> map) {
+                return List.of((Map<String, Object>) map);
+            }
+            return List.of();
+        }
+        List<Map<String, Object>> events = new ArrayList<>();
+        for (Object item : list) {
+            if (item instanceof Map<?, ?> map) {
+                events.add((Map<String, Object>) map);
+            } else if (item instanceof String json && !json.isBlank()) {
+                events.add(dryRunService.parseEvent(json));
+            }
+        }
+        return events;
     }
 }

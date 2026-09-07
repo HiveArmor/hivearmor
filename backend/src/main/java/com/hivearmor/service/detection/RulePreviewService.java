@@ -1,5 +1,6 @@
 package com.hivearmor.service.detection;
 
+import com.hivearmor.service.detection.CelDryRunEvaluator.DryRunResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -9,14 +10,22 @@ import java.time.Instant;
 import java.util.*;
 
 /**
- * Service for detection rule preview execution (DET-011).
+ * Service for detection rule preview execution (DET-011 / DET-PREV-001).
  *
- * <p>Executes a rule definition against historical data (read-only)
- * to show what alerts would be generated without actually creating them.
+ * <p>Honesty contract:
+ * <ul>
+ *   <li>{@code inject_dry_run} — evaluate injectable sample events in-process
+ *       via {@link CelDryRunEvaluator}; {@code simulated=false}.</li>
+ *   <li>{@code unavailable} — no injectable events and no OpenSearch historical
+ *       path wired; never pretends OpenSearch returned empty matches.</li>
+ * </ul>
  *
- * <p>Preview limits: max 7-day time range, max 100 matches, 30-second timeout.
+ * <p>OpenSearch historical preview ({@code opensearch_historical}) is deferred:
+ * translating arbitrary CEL-like expressions into safe bounded queries is
+ * non-trivial; when added it must set {@code mode}, {@code honesty}, and
+ * {@code simulated} accurately.
  *
- * <p>Sprint 47 — Detection Rules.
+ * <p>Sprint 47 — Detection Rules. DET-PREV-001 STAGING CANDIDATE.
  */
 @Service
 public class RulePreviewService {
@@ -30,32 +39,42 @@ public class RulePreviewService {
     /** Maximum matches returned from preview. */
     private static final int MAX_MATCHES = 100;
 
-    /** Preview timeout in seconds. */
-    private static final int PREVIEW_TIMEOUT_SECONDS = 30;
-
     /** Maximum sample alerts to build. */
     private static final int MAX_SAMPLE_ALERTS = 5;
 
-    private final RuleValidationService validationService;
+    private static final String HONESTY_INJECT =
+        "Inject dry-run only — does not query OpenSearch historical indices. "
+            + "engineParity=approximate (not full Go CEL).";
 
-    public RulePreviewService(RuleValidationService validationService) {
+    private static final String HONESTY_UNAVAILABLE =
+        "Preview unavailable: provide dryRunEvents (or sampleEvents) for inject dry-run. "
+            + "OpenSearch historical preview is not wired; empty results are not simulated.";
+
+    private final RuleValidationService validationService;
+    private final DetectionRuleDryRunService dryRunService;
+
+    public RulePreviewService(RuleValidationService validationService,
+                              DetectionRuleDryRunService dryRunService) {
         this.validationService = validationService;
+        this.dryRunService = dryRunService;
     }
 
     /**
-     * Executes a preview of the rule definition against historical data.
+     * Executes a preview of the rule definition.
      *
      * @param ruleDefinition   the rule definition to preview
-     * @param from             start of time range
-     * @param to               end of time range
+     * @param from             start of time range (optional for inject dry-run)
+     * @param to               end of time range (optional for inject dry-run)
      * @param limit            max matches to return
-     * @param tenantIndexPattern tenant index pattern for OpenSearch query
-     * @return preview results including matches, alert rate, and sample alerts
+     * @param tenantIndexPattern tenant index pattern (reserved for future OS path)
+     * @param dryRunEvents     injectable sample events (preferred honest path)
+     * @return preview results including matches and honesty metadata
      * @throws IllegalArgumentException if validation fails
      */
     public Map<String, Object> preview(Map<String, Object> ruleDefinition,
                                        Instant from, Instant to,
-                                       Integer limit, String tenantIndexPattern) {
+                                       Integer limit, String tenantIndexPattern,
+                                       List<Map<String, Object>> dryRunEvents) {
         // Step 1: Validate the rule first
         Map<String, Object> validation = validationService.validate(ruleDefinition);
         boolean valid = (boolean) validation.get("valid");
@@ -65,82 +84,122 @@ public class RulePreviewService {
                 + validation.get("errors"));
         }
 
-        // Step 2: Validate time range
-        if (from == null || to == null) {
-            throw new IllegalArgumentException("Both 'from' and 'to' timestamps are required for preview");
-        }
-        if (to.isBefore(from)) {
-            throw new IllegalArgumentException("End time must be after start time");
-        }
-
-        long daysBetween = Duration.between(from, to).toDays();
-        if (daysBetween > MAX_PREVIEW_DAYS) {
-            throw new IllegalArgumentException("Preview time range cannot exceed 7 days. Requested: " + daysBetween + " days");
-        }
-
         int effectiveLimit = (limit != null && limit > 0) ? Math.min(limit, MAX_MATCHES) : MAX_MATCHES;
+        List<Map<String, Object>> events = dryRunEvents != null ? dryRunEvents : List.of();
 
-        // Step 3: Execute preview (simulated — actual OpenSearch query would go here)
+        // Preferred path: inject dry-run against provided sample events
+        if (!events.isEmpty()) {
+            return previewInjectDryRun(ruleDefinition, events, effectiveLimit, from, to, validation);
+        }
+
+        // Historical OpenSearch path is not implemented — refuse silent empty simulation
+        if (from != null && to != null) {
+            validateTimeRange(from, to);
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("matches", List.of());
+        response.put("matchCount", 0);
+        response.put("scanDuration", 0L);
+        response.put("estimatedAlertRate", 0.0);
+        response.put("hoursScanned", from != null && to != null
+            ? (double) Duration.between(from, to).toHours() : 0.0);
+        response.put("sampleAlerts", List.of());
+        if (from != null && to != null) {
+            response.put("timeRange", Map.of("from", from.toString(), "to", to.toString()));
+        }
+        response.put("validation", validation);
+        response.put("mode", "unavailable");
+        response.put("honesty", HONESTY_UNAVAILABLE);
+        response.put("simulated", false);
+        response.put("evaluationMode", "unavailable");
+        response.put("openSearchQueried", false);
+        response.put("engineParity", "n/a");
+        response.put("indexPattern", tenantIndexPattern);
+
+        log.info("{}.preview: mode=unavailable (no dryRunEvents; OpenSearch historical not wired)",
+            CLASSNAME);
+        return response;
+    }
+
+    /**
+     * Backward-compatible overload without dry-run events (returns unavailable honesty).
+     */
+    public Map<String, Object> preview(Map<String, Object> ruleDefinition,
+                                       Instant from, Instant to,
+                                       Integer limit, String tenantIndexPattern) {
+        return preview(ruleDefinition, from, to, limit, tenantIndexPattern, List.of());
+    }
+
+    private Map<String, Object> previewInjectDryRun(Map<String, Object> ruleDefinition,
+                                                    List<Map<String, Object>> events,
+                                                    int limit,
+                                                    Instant from, Instant to,
+                                                    Map<String, Object> validation) {
         long startTime = System.currentTimeMillis();
-        Map<String, Object> previewResult = executePreviewQuery(ruleDefinition, from, to, effectiveLimit, tenantIndexPattern);
+        String expression = dryRunService.extractExpressionFromMap(ruleDefinition);
+
+        List<Map<String, Object>> matches = new ArrayList<>();
+        int scanned = 0;
+        for (Map<String, Object> event : events) {
+            if (matches.size() >= limit) {
+                break;
+            }
+            scanned++;
+            DryRunResult result = dryRunService.evaluateExpression(expression, event);
+            if (result.matched()) {
+                Map<String, Object> match = new LinkedHashMap<>();
+                match.put("event", event);
+                match.put("matchedFields", result.matchedFields());
+                match.put("explanation", result.explanation());
+                match.put("evaluationMode", result.evaluationMode());
+                match.put("engineParity", result.engineParity());
+                matches.add(match);
+            }
+        }
         long scanDuration = System.currentTimeMillis() - startTime;
 
-        // Step 4: Calculate alert rate
-        int matchCount = (int) previewResult.getOrDefault("matchCount", 0);
-        double hoursScanned = Duration.between(from, to).toHours();
-        double estimatedAlertRate = hoursScanned > 0 ? (double) matchCount / hoursScanned : 0.0;
-        estimatedAlertRate = Math.round(estimatedAlertRate * 100.0) / 100.0;
+        double hoursScanned = (from != null && to != null)
+            ? (double) Duration.between(from, to).toHours() : 0.0;
+        double estimatedAlertRate = hoursScanned > 0
+            ? Math.round(((double) matches.size() / hoursScanned) * 100.0) / 100.0
+            : 0.0;
 
-        // Step 5: Build sample alerts
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> matches = (List<Map<String, Object>>) previewResult.getOrDefault("matches", Collections.emptyList());
         List<Map<String, Object>> sampleAlerts = buildSampleAlerts(ruleDefinition, matches);
 
-        // Assemble response
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("matches", matches);
-        response.put("matchCount", matchCount);
+        response.put("matchCount", matches.size());
+        response.put("eventsScanned", scanned);
         response.put("scanDuration", scanDuration);
         response.put("estimatedAlertRate", estimatedAlertRate);
         response.put("hoursScanned", hoursScanned);
         response.put("sampleAlerts", sampleAlerts);
-        response.put("timeRange", Map.of("from", from.toString(), "to", to.toString()));
+        if (from != null && to != null) {
+            response.put("timeRange", Map.of("from", from.toString(), "to", to.toString()));
+        }
         response.put("validation", validation);
+        response.put("mode", "inject_dry_run");
+        response.put("honesty", HONESTY_INJECT);
+        response.put("simulated", false);
+        response.put("evaluationMode", CelDryRunEvaluator.EVALUATION_MODE);
+        response.put("openSearchQueried", false);
+        response.put("engineParity", CelDryRunEvaluator.ENGINE_PARITY);
 
-        log.info("{}.preview: matches={} alertRate={}/hr scanDuration={}ms hours={}",
-            CLASSNAME, matchCount, estimatedAlertRate, scanDuration, hoursScanned);
-
+        log.info("{}.preview: mode=inject_dry_run matches={} scanned={} duration={}ms",
+            CLASSNAME, matches.size(), scanned, scanDuration);
         return response;
     }
 
-    // =========================================================================
-    // Internal: Preview execution
-    // =========================================================================
-
-    /**
-     * Executes the preview query. In production this would query OpenSearch
-     * using the rule expression and filters. For the compilation phase, returns
-     * simulated results demonstrating the response shape.
-     */
-    private Map<String, Object> executePreviewQuery(Map<String, Object> ruleDefinition,
-                                                    Instant from, Instant to,
-                                                    int limit, String tenantIndexPattern) {
-        // Build simulated preview data to demonstrate response shape
-        // In production: build OpenSearch query from CEL expression + execute
-        String expression = ruleDefinition.get("expression") != null
-            ? ruleDefinition.get("expression").toString() : "";
-
-        List<Map<String, Object>> matches = new ArrayList<>();
-        int simulatedMatchCount = 0;
-
-        // Return empty results since this is a compile-time implementation
-        // The actual OpenSearch query execution would go here when integrated
-        // with the event-processor CEL engine
-
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put("matches", matches);
-        result.put("matchCount", simulatedMatchCount);
-        return result;
+    private void validateTimeRange(Instant from, Instant to) {
+        if (to.isBefore(from)) {
+            throw new IllegalArgumentException("End time must be after start time");
+        }
+        long daysBetween = Duration.between(from, to).toDays();
+        if (daysBetween > MAX_PREVIEW_DAYS) {
+            throw new IllegalArgumentException(
+                "Preview time range cannot exceed 7 days. Requested: " + daysBetween + " days");
+        }
     }
 
     /**
@@ -163,8 +222,9 @@ public class RulePreviewService {
             alert.put("name", ruleName);
             alert.put("severity", severity);
             alert.put("timestamp", Instant.now().toString());
-            alert.put("source", match);
+            alert.put("source", match.getOrDefault("event", match));
             alert.put("preview", true);
+            alert.put("simulated", false);
             sampleAlerts.add(alert);
         }
 

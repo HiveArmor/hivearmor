@@ -7,16 +7,19 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 /**
- * Result DTO for Sigma rule testing.
+ * Result DTO for rule testing (Sigma sandbox and correlation inject dry-run).
  *
  * <p>Supports two usage patterns:
  * <ol>
- *   <li>Full 7-field construction via {@code @AllArgsConstructor} (older API).</li>
+ *   <li>Full construction via the 7-field constructor (legacy admin).</li>
  *   <li>Compact 3-field construction via {@code RuleTestResultDTO(boolean, List, String)}
  *       used by {@code HaRuleTestService}.</li>
  * </ol>
+ *
+ * <p>Honesty fields ({@code evaluationMode}, {@code openSearchQueried},
+ * {@code engineParity}) are set by DET-TEST-001 inject dry-run paths.
  */
-@Schema(description = "Result of testing a Sigma detection rule against a sample event")
+@Schema(description = "Result of testing a detection rule against a sample event")
 @Data
 @NoArgsConstructor
 public class RuleTestResultDTO {
@@ -27,7 +30,7 @@ public class RuleTestResultDTO {
     @Schema(description = "Rule display name (legacy admin field)", example = "Brute Force Detection")
     private String ruleName;
 
-    @Schema(description = "Whether the rule YAML syntax is valid", example = "true")
+    @Schema(description = "Whether the rule expression/YAML syntax is valid", example = "true")
     private boolean syntaxOk;
 
     @Schema(description = "Number of named variables (selections) in the rule", example = "3")
@@ -51,6 +54,16 @@ public class RuleTestResultDTO {
 
     @Schema(description = "List of field paths that contributed to the match", example = "[\"selection1.EventID\", \"selection1.LogonType\"]")
     private List<String> matchedFields;
+
+    // --- honesty metadata (DET-TEST-001) ---
+    @Schema(description = "Evaluation mode", example = "inject_dry_run")
+    private String evaluationMode;
+
+    @Schema(description = "Whether OpenSearch was queried", example = "false")
+    private boolean openSearchQueried;
+
+    @Schema(description = "Engine parity vs event-processor Go CEL", example = "approximate")
+    private String engineParity;
 
     /**
      * Full constructor for legacy admin usage (7 primary fields).

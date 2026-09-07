@@ -45,7 +45,18 @@ public class HaRuleTestResource {
     @PreAuthorize("hasAuthority('" + AuthoritiesConstants.ANALYST + "') or hasAuthority('" + AuthoritiesConstants.ADMIN + "')")
     public ResponseEntity<RuleTestResultDTO> testRule(@Valid @RequestBody RuleTestRequestDTO req) {
         log.debug("REST request to test Sigma rule against event");
-        RuleTestResultDTO result = haRuleTestService.testRule(req.getRuleYaml(), req.getEventJson());
+        if (req.getRuleYaml() == null || req.getRuleYaml().isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        String eventJson = req.resolveEventJson();
+        if (eventJson == null || eventJson.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        RuleTestResultDTO result = haRuleTestService.testRule(req.getRuleYaml(), eventJson);
+        // Sigma sandbox is also inject-only; surface honesty metadata consistently.
+        result.setEvaluationMode("inject_dry_run");
+        result.setOpenSearchQueried(false);
+        result.setEngineParity("sigma_in_memory");
         return ResponseEntity.ok(result);
     }
 }

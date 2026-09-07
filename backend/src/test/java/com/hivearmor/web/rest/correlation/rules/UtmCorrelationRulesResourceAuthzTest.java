@@ -5,8 +5,10 @@ import com.hivearmor.service.UtmStackService;
 import com.hivearmor.service.application_events.ApplicationEventService;
 import com.hivearmor.service.correlation.rules.UtmCorrelationRuleVersionService;
 import com.hivearmor.service.correlation.rules.UtmCorrelationRulesService;
+import com.hivearmor.service.detection.DetectionRuleDryRunService;
 import com.hivearmor.service.dto.correlation.UtmCorrelationRulesMapper;
 import com.hivearmor.service.dto.correlation.validators.CorrelationRuleValidator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -149,6 +151,11 @@ class UtmCorrelationRulesResourceAuthzTest {
         }
 
         @Bean
+        DetectionRuleDryRunService dryRunService() {
+            return new DetectionRuleDryRunService(new ObjectMapper());
+        }
+
+        @Bean
         UtmCorrelationRulesResource utmCorrelationRulesResource(
                 ApplicationEventService applicationEventService,
                 UtmCorrelationRulesService rulesService,
@@ -156,7 +163,8 @@ class UtmCorrelationRulesResourceAuthzTest {
                 UtmStackService utmStackService,
                 CorrelationRuleValidator correlationRuleValidator,
                 UtmCorrelationRuleVersionService versionService,
-                UtmDataTypesRepository dataTypesRepository) {
+                UtmDataTypesRepository dataTypesRepository,
+                DetectionRuleDryRunService dryRunService) {
             return new UtmCorrelationRulesResource(
                     applicationEventService,
                     rulesService,
@@ -164,7 +172,8 @@ class UtmCorrelationRulesResourceAuthzTest {
                     utmStackService,
                     correlationRuleValidator,
                     versionService,
-                    dataTypesRepository);
+                    dataTypesRepository,
+                    dryRunService);
         }
     }
 }
