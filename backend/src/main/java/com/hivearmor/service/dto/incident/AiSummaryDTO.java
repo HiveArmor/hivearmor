@@ -12,6 +12,8 @@ public class AiSummaryDTO {
     private List<String> recommendedActions;
     private String severity;
     private Double confidence;
+    private List<String> citations;
+    private String honesty;
 
     public String getSummary() { return summary; }
     public void setSummary(String summary) { this.summary = summary; }
@@ -27,4 +29,10 @@ public class AiSummaryDTO {
 
     public Double getConfidence() { return confidence; }
     public void setConfidence(Double confidence) { this.confidence = confidence; }
+
+    public List<String> getCitations() { return citations; }
+    public void setCitations(List<String> citations) { this.citations = citations; }
+
+    public String getHonesty() { return honesty; }
+    public void setHonesty(String honesty) { this.honesty = honesty; }
 }

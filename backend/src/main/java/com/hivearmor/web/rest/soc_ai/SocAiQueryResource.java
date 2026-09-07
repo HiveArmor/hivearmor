@@ -2,6 +2,7 @@ package com.hivearmor.web.rest.soc_ai;
 
 import com.hivearmor.security.SecurityUtils;
 import com.hivearmor.service.dto.intelligence.IntelligenceFindingDTO;
+import com.hivearmor.service.detection.GroundedCitationExtractor;
 import com.hivearmor.service.intelligence.IntelligenceFindingService;
 import com.hivearmor.service.soc_ai.SocAiChatService;
 import com.hivearmor.service.dto.soc_ai.ChatRequest;
@@ -76,26 +77,29 @@ public class SocAiQueryResource {
         if (!isAiConfigured()) {
             String answer =
                 "AI service not configured. Set SOC_AI_BASE_URL to enable Hive Intelligence.";
+            List<String> citations = GroundedCitationExtractor.extract(null, req.prompt(), req.context(), answer);
             IntelligenceFindingDTO finding = intelligenceFindingService.buildFromSocAiAnswer(
-                answer, 0.0, List.of(), "soc-ai-query", req.prompt(), false);
+                answer, 0.0, citations, "soc-ai-query", req.prompt(), false);
             finding = maybePersist(finding, req.persist());
-            return ResponseEntity.ok(new SocAiResponseDTO(answer, 0.0, List.of(), 0, finding));
+            return ResponseEntity.ok(new SocAiResponseDTO(answer, 0.0, citations, 0, finding));
         }
 
         try {
             ChatRequest chatReq = buildChatRequest(req.prompt(), req.context());
             String answer = socAiChatService.querySynchronous(chatReq);
             long durationMs = System.currentTimeMillis() - start;
+            List<String> citations = GroundedCitationExtractor.extract(null, req.prompt(), req.context(), answer);
             IntelligenceFindingDTO finding = intelligenceFindingService.buildFromSocAiAnswer(
-                answer, 1.0, List.of(), "soc-ai-query", req.prompt(), true);
+                answer, 1.0, citations, "soc-ai-query", req.prompt(), true);
             finding = maybePersist(finding, req.persist());
-            return ResponseEntity.ok(new SocAiResponseDTO(answer, 1.0, List.of(), durationMs, finding));
+            return ResponseEntity.ok(new SocAiResponseDTO(answer, 1.0, citations, durationMs, finding));
         } catch (Exception e) {
             log.warn("{}.query failed: {}", CLASSNAME, e.getMessage());
             String answer = "AI service unavailable: " + e.getMessage();
+            List<String> citations = GroundedCitationExtractor.extract(null, req.prompt(), req.context(), answer);
             IntelligenceFindingDTO finding = intelligenceFindingService.buildFromSocAiAnswer(
-                answer, 0.0, List.of(), "soc-ai-query", req.prompt(), false);
-            return ResponseEntity.ok(new SocAiResponseDTO(answer, 0.0, List.of(), 0, finding));
+                answer, 0.0, citations, "soc-ai-query", req.prompt(), false);
+            return ResponseEntity.ok(new SocAiResponseDTO(answer, 0.0, citations, 0, finding));
         }
     }
 
@@ -110,8 +114,9 @@ public class SocAiQueryResource {
 
         if (!isAiConfigured()) {
             String summary = "AI enrichment unavailable — set SOC_AI_BASE_URL to enable.";
+            List<String> citations = GroundedCitationExtractor.extract(req.alertId(), null, null, summary);
             IntelligenceFindingDTO finding = intelligenceFindingService.buildFromSocAiAnswer(
-                summary, 0.0, List.of(), "alert-enrichment", req.alertId(), false);
+                summary, 0.0, citations, "alert-enrichment", req.alertId(), false);
             return ResponseEntity.ok(new AlertEnrichmentDTO(summary, List.of(), List.of(), finding));
         }
 
@@ -121,14 +126,16 @@ public class SocAiQueryResource {
                 + "3) recommended SOC actions (bullet points).";
             ChatRequest chatReq = buildChatRequest(prompt, null);
             String raw = socAiChatService.querySynchronous(chatReq);
+            List<String> citations = GroundedCitationExtractor.extract(req.alertId(), prompt, null, raw);
             IntelligenceFindingDTO finding = intelligenceFindingService.buildFromSocAiAnswer(
-                raw, 1.0, List.of(), "alert-enrichment", req.alertId(), true);
+                raw, 1.0, citations, "alert-enrichment", req.alertId(), true);
             return ResponseEntity.ok(new AlertEnrichmentDTO(raw, List.of(), List.of(), finding));
         } catch (Exception e) {
             log.warn("{}.enrichAlert failed: {}", CLASSNAME, e.getMessage());
             String summary = "Enrichment failed: " + e.getMessage();
+            List<String> citations = GroundedCitationExtractor.extract(req.alertId(), null, null, summary);
             IntelligenceFindingDTO finding = intelligenceFindingService.buildFromSocAiAnswer(
-                summary, 0.0, List.of(), "alert-enrichment", req.alertId(), false);
+                summary, 0.0, citations, "alert-enrichment", req.alertId(), false);
             return ResponseEntity.ok(new AlertEnrichmentDTO(summary, List.of(), List.of(), finding));
         }
     }
