@@ -2,6 +2,29 @@
 
 Use a one-time enrollment token created for the correct tenant, policy and operating system. Do not place an enrollment token or device credential in a command argument, script variable, service definition, log or ticket.
 
+## Package flavors (size / build tags)
+
+Published Sensors downloads should use the **slim** endpoint build (DEP-SIZE-01):
+
+| Flavor label | Recommended `go build` tags | When to use |
+|---|---|---|
+| **log** (default download) | `-tags agent_slim,nonetflow` | Log / light endpoint agents |
+| **edr** | `-tags agent_slim,nonetflow` | Endpoint EDR (`--mode edr`); same binary tags as log today — collectors gated at runtime |
+| **netflow** | `-tags agent_slim` | Network-sensor hosts that need the netflow collector linked in |
+
+Do **not** set `agent_slim` on event-processor or `sdk` plugin builds.
+
+```bash
+# Preferred local build
+make -C agent build-slim FLAVOR=log GOOS=linux GOARCH=amd64
+
+# Or publish helper (builds then copies)
+BUILD_SLIM=1 SOURCE_DIR=./dist/agents VERSION=11.0.0-staging \
+  bash deploy/staging/publish-agent-packages.sh
+```
+
+CI / release jobs that still run plain `go build .` without tags ship the kitchen-sink ~53 MiB binary — update those pipelines to pass `-tags agent_slim,nonetflow` for endpoint packages.
+
 ## Linux
 
 ```bash

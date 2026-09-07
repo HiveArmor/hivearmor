@@ -19,11 +19,19 @@ type ingestAuth struct {
 }
 
 func postJSON(url string, auth ingestAuth, body any, skipTLS bool) error {
+	return doJSON(http.MethodPost, url, auth, body, skipTLS)
+}
+
+func putJSON(url string, auth ingestAuth, body any, skipTLS bool) error {
+	return doJSON(http.MethodPut, url, auth, body, skipTLS)
+}
+
+func doJSON(method, url string, auth ingestAuth, body any, skipTLS bool) error {
 	raw, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(raw))
+	req, err := http.NewRequest(method, url, bytes.NewReader(raw))
 	if err != nil {
 		return err
 	}
@@ -48,7 +56,7 @@ func postJSON(url string, auth ingestAuth, body any, skipTLS bool) error {
 	defer func() { _ = resp.Body.Close() }()
 	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
 	if resp.StatusCode != http.StatusAccepted && resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("telemetry POST %s status %d", url, resp.StatusCode)
+		return fmt.Errorf("telemetry %s %s status %d", method, url, resp.StatusCode)
 	}
 	return nil
 }

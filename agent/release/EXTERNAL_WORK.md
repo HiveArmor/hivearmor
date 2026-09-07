@@ -31,12 +31,14 @@ Agent-side Now tickets (AGT-POL-01, AGT-SEC-01, AGT-SIZE-01, AGT-DOC-01) may lan
 | **BE-POL-03** | **DONE (STAGING CANDIDATE)** | Per-agent push + sync-on-connect (2026-09-07) |
 | **BE-POL-04** | **DONE (STAGING CANDIDATE)** | Schema v1.1 telemetry intervals (2026-09-07) |
 | **AM-POL-01** | Open (optional) | Agent-manager stream-open auto APPLY_POLICY — not required if agent calls `POST /api/agent-policies/sync-on-connect` after AgentStream up |
-| **BE-SEC-01** | **PARTIAL** | Schema + FE toggle landed; IR path still needs docs / prefer `EDR_*` over raw shell |
+| **BE-SEC-01** | **DONE (STAGING CANDIDATE)** docs + opt-in reject 2026-09-07 | IR prefers `EDR_*`; warn on unstructured shell; optional `HIVEARMOR_REJECT_UNSTRUCTURED_SHELL`; agent deny-by-default remains SoT. OPS-SEC-01 tenant check still open. |
 | **BE-EDR-01** / **FE-EDR-01** / **OPS-EDR-01** | Open | Isolate live-verify; **do not** flip `REMOTE_SENSOR_ISOLATE_LIVE_VERIFIED` |
 | **OPS-SEC-01** | Open | Confirm tenants do not rely on default remote shell |
-| **DEP-SIZE-01** | Open | Publish/CI must pass `-tags agent_slim` (+ `nonetflow` as needed) |
-| **AM-DOC-01** | Open | Proto SoT / CI drift check |
+| **DEP-SIZE-01** | **DONE (STAGING CANDIDATE)** 2026-09-07 | `publish-agent-packages.sh` + `agent/scripts/build-slim.sh` / `make build-slim`; CI deployment-pipeline still needs `-tags` (note in INSTALL) |
+| **AGT-OBS-01** | **DONE (STAGING CANDIDATE)** 2026-09-07 | Agent PUT vitals: queueDepth, drops, appliedPolicyId/Version; BE persists new columns |
+| **AM-DOC-01** | **DONE (STAGING CANDIDATE)** stub 2026-09-07 | Strengthened `agent/protos/README.md` + `agent/scripts/check-proto-subset.sh` (name-level); full AST CI deferred |
 | **DEP-SIZE-02** / **AM-HA-01** | Deferred | Larger sdk split; multi-replica AgentStream |
+| **FE registry FIM editor** | Deferred | Schema supports `fim.registry`; FE console editor later |
 
 ---
 
@@ -94,10 +96,11 @@ Agent-side Now tickets (AGT-POL-01, AGT-SEC-01, AGT-SIZE-01, AGT-DOC-01) may lan
 
 - `fim.mode`: `merge` (default) appends to platform defaults; `replace` uses only policy rules (falls back to defaults if rules empty).
 - `fim.rules[].exclude`: glob patterns (relative to rule path **or** basename). Agent enforces via `isExcluded` on watch seed + `handleEvent` drop (STAGING CANDIDATE).
+- `fim.registry` (**schema feature 1.2**, wire still `schema_version: 1`): optional Windows HKLM keys `{ "mode": "merge"|"replace", "keys": ["SOFTWARE\\..."] }`. FE editor deferred.
 - `collectors.*`: desired enablement. Hot-apply today: FIM rules (new roots + excludes; best-effort unwatch of removed roots; recursive subdir cleanup may need restart) + shell gate. Other collectors recorded for next process start (see agent docs).
 - `telemetry` (**schema feature 1.1**, wire still `schema_version: 1`): optional. When present, intervals clamped to 1–168 hours; missing fields default to 6. When omitted, agent keeps local hardcoded cadence until it reads the field.
 - Unknown fields ignored (forward-compatible).
-- **Dual-plane:** `/api/agent-policies` is SoT for APPLY_POLICY. `/api/ha-edr/policies` does not push; `AgentPolicySchemaService.fromHaColumns` maps Ha `filePaths` → `fim.rules` when bridging.
+- **Dual-plane:** `/api/agent-policies` is SoT for APPLY_POLICY. `/api/ha-edr/policies` does not push; `AgentPolicySchemaService.fromHaColumns` maps Ha `filePaths` → `fim.rules` and optional `registryPaths` → `fim.registry.keys` when bridging.
 
 ### BE-POL-02 — Agent-auth for policy report-state + rule-sync ACK
 
@@ -161,12 +164,12 @@ TLS: honors `config.insecure` (`SkipCertValidation`) like telemetry. Do **not** 
 
 | Field | Value |
 |---|---|
-| **Status** | **PARTIAL (STAGING CANDIDATE)** — schema field + FE toggle landed 2026-09-03; IR command-path docs still open |
+| **Status** | **DONE (STAGING CANDIDATE)** — schema + FE toggle 2026-09-03; IR path docs + opt-in reject 2026-09-07 |
 | **Problem** | Agent denies unstructured remote shell unless local config, env, or applied policy enables it. Operators need a control-plane way to set `response.allow_shell`; IR may still send raw shell expecting success. |
-| **Done** | BE-POL-01 emits `response.allow_shell`; FE-SEC-01 toggle on Agent FIM Policies console. |
-| **Remaining** | `IncidentResponseCommandService` prefer `EDR_*`; docs that shell is deny-by-default on agent ≥ this build; OPS-SEC-01 tenant check |
-| **Touchpoints** | Agent policy DTO/service; `IncidentResponseCommandService`; optional shell allowlist in command metadata |
-| **Acceptance** | Policy editor can set `response.allow_shell` ✅; documentation that shell is deny-by-default ⏳ |
+| **Done** | BE-POL-01 emits `response.allow_shell`; FE-SEC-01 toggle; agent deny-by-default. |
+| **IR path (2026-09-07)** | Prefer structured `EDR_*` / `APPLY_POLICY*` / `SYNC_RULES*` via `IncidentResponseCommandService`. Unstructured shell (non-empty `shell` field or command without structured prefix) logs WARN. Staging opt-in hard reject: env `HIVEARMOR_REJECT_UNSTRUCTURED_SHELL=true` (no per-agent policy lookup yet — agent gate remains authoritative). |
+| **Remaining** | OPS-SEC-01 tenant check; optional future: resolve agent group policy `allow_shell` before reject (replaces env flag). |
+| **Acceptance** | Policy editor can set `response.allow_shell` ✅; documentation that shell is deny-by-default ✅; IR prefers EDR_* ✅ |
 | **Needed for** | AGT-SEC-01 productization |
 
 ### BE-EDR-01 — Isolate live-verify evidence (do not flip UI yet)
@@ -226,11 +229,10 @@ TLS: honors `config.insecure` (`SkipCertValidation`) like telemetry. Do **not** 
 
 | Field | Value |
 |---|---|
-| **Status** | Open |
+| **Status** | **DONE (STAGING CANDIDATE)** — README + name-level check 2026-09-07 |
 | **Problem** | Agent checked-in `agent/protos/agent.proto` is a **subset**; enrollment RPCs live in agent-manager proto. |
-| **Why agent can't finish alone** | Two trees; CI should fail on incompatible drift. |
-| **Touchpoints** | `agent-manager/protos/agent.proto` (canonical for enrollment), `agent/protos/README.md`, optional CI wire-compat check |
-| **Acceptance** | Documented SoT + CI note; no silent RPC drift |
+| **Done** | Strengthened `agent/protos/README.md` (SoT table + sync rule); `bash agent/scripts/check-proto-subset.sh` verifies required symbol names in manager SoT. |
+| **Residual** | Full protobuf AST / field-number wire-compat CI deferred. |
 | **Needed for** | AGT-DOC-01 |
 
 ### AM-POL-01 — Push-on-connect at AgentStream open (optional)
@@ -257,12 +259,12 @@ TLS: honors `config.insecure` (`SkipCertValidation`) like telemetry. Do **not** 
 
 | Field | Value |
 |---|---|
-| **Status** | Open (ops/CI) |
-| **Problem** | Size cull uses `-tags agent_slim` (exclude CEL/OpenSearch from `sdk/plugins` and gin from `sdk/catcher.GinError`) and `-tags nonetflow` to omit netflow from endpoint flavors. |
-| **Why agent can't finish alone** | Publish scripts / Docker / CI must pass tags; default `go build .` without tags still ships kitchen-sink size. |
-| **Touchpoints** | `deploy/staging/build-windows-agent-*.sh`, `publish-agent-packages.sh`, agent Dockerfiles / reusable-golang |
+| **Status** | **DONE (STAGING CANDIDATE)** — publish/build helpers 2026-09-07 |
+| **Problem** | Size cull uses `-tags agent_slim` and `-tags nonetflow`. Default `go build .` still ships kitchen-sink size. |
+| **Done** | `agent/scripts/build-slim.sh` + `make -C agent build-slim`; `deploy/staging/publish-agent-packages.sh` documents tags + optional `BUILD_SLIM=1`; `agent/release/INSTALL.md` flavor table (log/edr/netflow). |
+| **Residual** | `.github/workflows/deployment-pipeline.yml` still builds without tags — update in CI follow-up; re-measure release notes when CI flips. |
 | **Recommended flags** | Endpoint log/EDR: `-tags agent_slim,nonetflow`. Network sensor needing netflow: `-tags agent_slim` only. Event-processor / plugins: **do not** set `agent_slim`. |
-| **Acceptance** | Default published endpoint agent builds with `agent_slim` (+ `nonetflow` unless product requires netflow); size re-measured in release notes |
+| **Acceptance** | Staging publish path can build/publish slim ✅; CI default still open ⏳ |
 | **Needed for** | AGT-SIZE-01 / AGT-SIZE-02 |
 
 ### DEP-SIZE-02 — Larger sdk package split (shared)
@@ -312,7 +314,27 @@ Agent-side culls landed:
 2. `-tags agent_slim` excludes `sdk/plugins` CEL + OpenSearch rules + `sdk/catcher.GinError` (gin).
 3. `-tags nonetflow` omits netflow collector + goflow2/tehmaze from the binary.
 
-**Deploy must pass `-tags agent_slim` (recommended) and optionally `nonetflow` for log/EDR endpoint flavors** — see DEP-SIZE-01.
+**Deploy must pass `-tags agent_slim` (recommended) and optionally `nonetflow` for log/EDR endpoint flavors** — see DEP-SIZE-01. Helpers: `make -C agent build-slim`, `BUILD_SLIM=1` on `publish-agent-packages.sh`.
+
+---
+
+## Later residuals landed 2026-09-07 (`feat/agent-policy-later`)
+
+### AGT-OBS-01 — Agent self-metrics (vitals)
+
+| Field | Value |
+|---|---|
+| **Status** | **DONE (STAGING CANDIDATE)** |
+| **Done** | Agent `telemetry.StartVitalsLoop` PUT `/api/ha-telemetry/vitals/{agentId}` every 30s with device headers: `queueDepth`, `droppedTotal`, `ramMb`, `appliedPolicyId`, `appliedPolicyVersion`. Backend persists new columns (`20260907001_ha_agent_vitals_policy.xml`). |
+| **Residual** | Host CPU % sampling; Sensors UI sparkline wiring for policy meta; LIVE VERIFIED staging. |
+
+### Schema — Windows registry FIM (optional)
+
+| Field | Value |
+|---|---|
+| **Status** | **DONE (STAGING CANDIDATE)** agent + BE schema; **FE deferred** |
+| **Contract** | Optional `fim.registry.{mode,keys[]}` under schema_version 1 (feature level **1.2**). Keys are HKLM-relative; `HKLM\` prefix stripped. merge/replace vs platform defaults. Applied on Windows at registry watcher start; hot-restart of live watchers deferred (next collector start). |
+| **FE** | Do not block on Agent FIM Policies registry editor — document for FE follow-up. |
 
 ---
 
@@ -328,4 +350,6 @@ Agent-side culls landed:
 | 2026-09-03 | **Now-phase reconcile (docs only):** FE-POL-01/FE-SEC-01 → **DONE**; BE-POL-01 → **DONE**; BE-POL-02 → **PARTIAL** (rule `/ack` open); BE-SEC-01 → **PARTIAL**. Schema/ACK contract spot-check: aligned, no code fix. Copies synced (`agent/release` ↔ `.plan/audits`). Next (groups UX/scheduler) not started. |
 | 2026-09-07 | **Agent Policy Next (backend):** BE-POL-02 complete (rule `/ack` + filter); SOC Manager `GET /api/agent-groups`; `POST …/push-agent/{agentId}`; `POST …/sync-on-connect`; schema v1.1 telemetry intervals; EXTERNAL_WORK updated. Optional AM-POL-01 stream-open push deferred in favor of agent-callable sync. |
 | 2026-09-07 | **FE-POL Next (STAGING CANDIDATE):** frontend-v3 wires SOC Manager group picker + 403 fallback; per-agent push + sensor picker; telemetry interval editor (`sca_interval_hours` / `sbom_interval_hours`); push-on-connect honesty. Isolate gate untouched. Apply/ack not LIVE VERIFIED. |
-| 2026-09-07 | **Consolidate:** Synced `.plan/audits/AGENT_PLATFORM_EXTERNAL_WORK.md` to `agent/release`; BE-POL-04 agent/FE follow-ups marked done; isolate gate unchanged.
+| 2026-09-07 | **Consolidate:** Synced `.plan/audits/AGENT_PLATFORM_EXTERNAL_WORK.md` to `agent/release`; BE-POL-04 agent/FE follow-ups marked done; isolate gate unchanged. |
+| 2026-09-07 | **Later / residual (`feat/agent-policy-later`):** DEP-SIZE-01 slim build/publish helpers; AGT-OBS-01 vitals loop + BE columns; optional `fim.registry` schema v1.2 (FE editor deferred); BE-SEC-01 IR docs + opt-in reject; AM-DOC-01 proto README + subset check stub. Skipped: isolate LIVE_VERIFIED flip, eBPF/ESF/ETW, multi-manager HA. |
+

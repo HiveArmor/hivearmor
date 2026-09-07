@@ -35,7 +35,13 @@ var (
 	fimApplierMu sync.RWMutex
 	fimApplier   func(rules []FIMWatchRule, mode string) error
 
+	registryApplierMu sync.RWMutex
+	registryApplier   func(keys []string, mode string) error
+
 	shellPolicyEnabled atomic.Bool
+
+	appliedPolicyID      atomic.Int64
+	appliedPolicyVersion atomic.Int64
 )
 
 // SetFIMPolicyApplier registers the callback used when policy FIM sections apply.
@@ -43,6 +49,13 @@ func SetFIMPolicyApplier(fn func(rules []FIMWatchRule, mode string) error) {
 	fimApplierMu.Lock()
 	defer fimApplierMu.Unlock()
 	fimApplier = fn
+}
+
+// SetRegistryPolicyApplier registers the callback for Windows registry FIM keys.
+func SetRegistryPolicyApplier(fn func(keys []string, mode string) error) {
+	registryApplierMu.Lock()
+	defer registryApplierMu.Unlock()
+	registryApplier = fn
 }
 
 // GetAppliedPolicy returns the last successfully applied document (may be nil).
@@ -72,6 +85,17 @@ func PolicyAllowsShell() bool {
 	return shellPolicyEnabled.Load()
 }
 
+// RecordAppliedPolicyMeta stores the last successfully applied policy id/version for vitals.
+func RecordAppliedPolicyMeta(policyID int64, version int) {
+	appliedPolicyID.Store(policyID)
+	appliedPolicyVersion.Store(int64(version))
+}
+
+// AppliedPolicyMeta returns the last recorded applied policy id and version (0 if none).
+func AppliedPolicyMeta() (policyID int64, version int) {
+	return appliedPolicyID.Load(), int(appliedPolicyVersion.Load())
+}
+
 // ApplyPolicyConfig parses and applies a policy JSON document to runtime subsystems.
 func ApplyPolicyConfig(policyConfig string) error {
 	doc, err := ParseAgentPolicyDocument(policyConfig)
@@ -96,6 +120,25 @@ func applyParsedPolicy(doc *AgentPolicyDocument) error {
 			}
 		} else {
 			stashFIMPolicy(doc.FIM.Rules, doc.FIM.Mode)
+		}
+
+		var regKeys []string
+		regMode := FIMModeMerge
+		if doc.FIM.Registry != nil {
+			regKeys = doc.FIM.Registry.Keys
+			if doc.FIM.Registry.Mode != "" {
+				regMode = doc.FIM.Registry.Mode
+			}
+		}
+		registryApplierMu.RLock()
+		regApplier := registryApplier
+		registryApplierMu.RUnlock()
+		if regApplier != nil {
+			if err := regApplier(regKeys, regMode); err != nil {
+				return fmt.Errorf("fim registry apply: %w", err)
+			}
+		} else {
+			stashRegistryPolicy(regKeys, regMode)
 		}
 	}
 
@@ -149,6 +192,7 @@ func LoadAndApplyLatestPolicy() error {
 	if err := ApplyPolicyConfig(latest.PolicyConfig); err != nil {
 		return err
 	}
+	RecordAppliedPolicyMeta(latest.PolicyID, latest.AppliedVersion)
 	utils.Logger.LogF(100, "policy_apply: loaded stored policy_id=%d version=%d",
 		latest.PolicyID, latest.AppliedVersion)
 	return nil
@@ -186,6 +230,11 @@ var (
 	pendingFIMRules []FIMWatchRule
 	pendingFIMMode  string
 	pendingFIMSet   bool
+
+	pendingRegMu   sync.Mutex
+	pendingRegKeys []string
+	pendingRegMode string
+	pendingRegSet  bool
 )
 
 func stashFIMPolicy(rules []FIMWatchRule, mode string) {
@@ -204,4 +253,22 @@ func PeekPendingFIMPolicy() (rules []FIMWatchRule, mode string, ok bool) {
 		return nil, "", false
 	}
 	return append([]FIMWatchRule(nil), pendingFIMRules...), pendingFIMMode, true
+}
+
+func stashRegistryPolicy(keys []string, mode string) {
+	pendingRegMu.Lock()
+	defer pendingRegMu.Unlock()
+	pendingRegKeys = append([]string(nil), keys...)
+	pendingRegMode = mode
+	pendingRegSet = true
+}
+
+// PeekPendingRegistryPolicy returns stashed registry FIM keys (Windows).
+func PeekPendingRegistryPolicy() (keys []string, mode string, ok bool) {
+	pendingRegMu.Lock()
+	defer pendingRegMu.Unlock()
+	if !pendingRegSet {
+		return nil, "", false
+	}
+	return append([]string(nil), pendingRegKeys...), pendingRegMode, true
 }
