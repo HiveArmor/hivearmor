@@ -16,10 +16,11 @@ public final class DetectionPackScope {
     public static final long PLATFORM_TENANT_ID = 0L;
 
     public static final String HONESTY =
-        "STAGING CANDIDATE — detection rules and exception packs are tenant-scoped. "
-            + "Platform pack (tenant_id null/0) is shared. Tenant-owned rows never leak to another tenant. "
-            + "The config plugin syncs only platform (null tenant_id) YAML into the shared event-processor workdir; "
-            + "per-tenant engine partitions remain deferred. OpenSearch index pattern is unchanged.";
+        "STAGING CANDIDATE — tenant packs are REST-visible. Shared engine YAML "
+            + "(rules + exceptions.yaml) includes only platform rows (tenant_id IS NULL). "
+            + "Per-tenant trees are written to $WORK_DIR/tenants/{id}/rules and loaded by BindTenant "
+            + "when that workdir exists; they are not engine-enforced until then. "
+            + "OpenSearch index pattern remains v3-hive-<type>-YYYY.MM.DD.";
 
     private DetectionPackScope() {}
 

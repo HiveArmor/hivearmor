@@ -116,7 +116,7 @@ let fixtureExceptions: DetectionException[] = [
     activatedAt: '2026-09-06T14:20:00Z',
     createdAt: '2026-09-05T09:00:00Z',
     updatedAt: '2026-09-06T14:20:00Z',
-    honesty: 'STAGING CANDIDATE fixture: active exceptions are treated as engine-enforced on CEL/sequence/graph/baseline (sync lag fictional).',
+    honesty: 'STAGING CANDIDATE fixture: platform exceptions are treated as engine-enforced on CEL/sequence/graph/baseline (sync lag fictional). Tenant-pack exceptions stay REST-visible and are not written to shared exceptions.yaml.',
   },
   {
     id: 9002,
@@ -149,7 +149,7 @@ let fixtureExceptions: DetectionException[] = [
     activatedAt: '2026-09-07T11:00:00Z',
     createdAt: '2026-09-07T10:30:00Z',
     updatedAt: '2026-09-07T11:00:00Z',
-    honesty: 'STAGING CANDIDATE fixture: baseline:anomaly exception treated as engine-enforced (sync lag fictional).',
+    honesty: 'STAGING CANDIDATE fixture: platform baseline:anomaly exception treated as engine-enforced (sync lag fictional). Tenant-pack exceptions stay REST-visible until $WORK_DIR/tenants/{id}/rules exists.',
   },
   {
     id: 9011,

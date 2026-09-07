@@ -313,7 +313,7 @@ function tenantCustomRule(seed: {
     engine: 'cel',
     contentPack: seed.pack,
     health: 'healthy',
-    healthMessage: `Tenant ${seed.pack} custom pack — not visible to other tenants.`,
+    healthMessage: `Tenant ${seed.pack} custom pack — REST-visible, not engine-enforced until $WORK_DIR/tenants/${seed.tenantId}/rules exists.`,
     lastRunAt: '2026-09-07T17:40:00Z',
     lastRunDurationMs: 120,
     schedule: 'Every 10m',

@@ -99,7 +99,7 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 	eventStr := string(eventJSON)
 
 	var alerts []*plugins.Alert
-	for _, rule := range GetRules(event.DataType) {
+	for _, rule := range GetRulesForEvent(event) {
 		// Risk-score rules feed the accumulator instead of producing direct alerts.
 		if rule.HasRiskScore() {
 			ok, evalErr := getCEL().Evaluate(&eventStr, rule.Where)
