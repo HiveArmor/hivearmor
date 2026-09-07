@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hivearmor/event-processor/enterprise/sequence"
 	"github.com/hivearmor/event-processor/sigma"
 	"gopkg.in/yaml.v3"
 )
@@ -88,33 +87,6 @@ func GraphOffenseRules() []*Rule {
 	out := make([]*Rule, len(graphOffenseList))
 	copy(out, graphOffenseList)
 	return out
-}
-
-// SequenceRules returns all loaded rules with sequence steps,
-// converted to the sequence.SequenceRule format.
-func SequenceRules() []sequence.SequenceRule {
-	var result []sequence.SequenceRule
-	for _, r := range AllRules() {
-		if !r.HasSequence() {
-			continue
-		}
-		sr := sequence.SequenceRule{
-			ID:   fmt.Sprintf("%d", r.ID),
-			Name: r.Name,
-		}
-		for _, step := range r.Sequence {
-			d, _ := time.ParseDuration(step.Within)
-			if d == 0 {
-				d = 5 * time.Minute
-			}
-			sr.Steps = append(sr.Steps, sequence.StepDef{
-				Where:  step.Where,
-				Within: d,
-			})
-		}
-		result = append(result, sr)
-	}
-	return result
 }
 
 func watchLoop() {

@@ -52,6 +52,8 @@ describe('DET-FP engine enforcement honesty', () => {
       'utf8',
     );
     expect(source).toContain('enforced by the correlation engine');
+    expect(source).toContain('sequence, and graph-offense');
+    expect(source).not.toContain('sequence/graph paths not covered');
     expect(source).not.toContain('not yet end-to-end guaranteed');
   });
 

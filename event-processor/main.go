@@ -103,7 +103,7 @@ func main() {
 	rules.SetAddScoreFn(risk.AddScore)
 
 	// Sequence detection engine
-	seqRules := rules.SequenceRules()
+	seqRules := sequence.FromRules(rules.AllRules())
 	if len(seqRules) > 0 {
 		sequence.Init(seqRules, func(alert *plugins.Alert) {
 			writer.WriteAlert(alert)

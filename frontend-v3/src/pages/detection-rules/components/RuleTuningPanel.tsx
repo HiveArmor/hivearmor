@@ -150,7 +150,9 @@ export function RuleTuningPanel({
         <span>
           STAGING CANDIDATE — <strong>active</strong> exceptions are enforced by the correlation engine
           (pre-alert suppress via config sync → <code>rules/exceptions/exceptions.yaml</code>).
-          Draft/inactive rows never suppress. Typical sync lag {'<='}60s; sequence/graph paths not covered.
+          Covers CEL single-rule, sequence, and graph-offense paths; shared <code>exceptionsSuppressed</code> counter.
+          Draft/inactive rows never suppress. Typical sync lag {'<='}60s.
+          Baseline anomaly alerts are not rule-keyed (still uncovered). Risk scoring is suppressed before score add.
           Pipeline health shows last exception load and suppressed counts when EP is reachable.
         </span>
       </p>

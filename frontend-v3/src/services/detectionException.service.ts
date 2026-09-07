@@ -61,7 +61,7 @@ let fixtureExceptions: DetectionException[] = [
     activatedAt: '2026-09-06T14:20:00Z',
     createdAt: '2026-09-05T09:00:00Z',
     updatedAt: '2026-09-06T14:20:00Z',
-    honesty: 'STAGING CANDIDATE fixture: active exceptions are treated as engine-enforced (sync lag fictional).',
+    honesty: 'STAGING CANDIDATE fixture: active exceptions are treated as engine-enforced on CEL/sequence/graph (sync lag fictional).',
   },
   {
     id: 9002,
@@ -121,7 +121,7 @@ function mapException(body: Record<string, unknown>, fallbackRuleId: string): De
     updatedAt: typeof body.updatedAt === 'string' ? body.updatedAt : null,
     honesty: typeof body.honesty === 'string'
       ? body.honesty
-      : 'STAGING CANDIDATE — active exceptions sync via config plugin and are enforced pre-alert by the event-processor (lag <=60s).',
+      : 'STAGING CANDIDATE — active exceptions sync via config plugin and are enforced pre-alert by the event-processor for CEL, sequence, and graph-offense (lag <=60s). Baseline anomaly path not rule-keyed.',
   };
 }
 

@@ -109,8 +109,7 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 						rule.ID, rule.Name, rule.Where, evalErr)
 				}
 			} else if ok {
-				if ExceptionMatches(ruleIDKey(rule.ID), event) {
-					exceptionsSuppressed.Add(1)
+				if SuppressIfMatchedID(rule.ID, event) {
 					continue
 				}
 				if addScoreFn != nil {
@@ -154,8 +153,7 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 			}
 		}
 		// DET-FP-001 — active exceptions suppress before alert creation (pre-alert).
-		if ExceptionMatches(ruleIDKey(rule.ID), event) {
-			exceptionsSuppressed.Add(1)
+		if SuppressIfMatchedID(rule.ID, event) {
 			continue
 		}
 		alert := buildAlert(event, rule)

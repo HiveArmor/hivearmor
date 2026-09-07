@@ -15,7 +15,7 @@ import (
 )
 
 // DetectionException is an active FP suppression loaded from config-plugin YAML (DET-FP-001).
-// Enforcement is pre-alert: matching events never call buildAlert.
+// Enforcement is pre-alert: matching events never call buildAlert / sequence alertFn / graph emit.
 type DetectionException struct {
 	ID         int64                `yaml:"id" json:"id"`
 	RuleID     string               `yaml:"ruleId" json:"ruleId"`
@@ -119,6 +119,31 @@ func ExceptionMatches(ruleID string, event *plugins.Event) bool {
 		}
 	}
 	return false
+}
+
+// SuppressIfMatched returns true when an active exception matches, and increments
+// exceptionsSuppressed (shared OBS counter for CEL / sequence / graph paths).
+func SuppressIfMatched(ruleID string, event *plugins.Event) bool {
+	if !ExceptionMatches(ruleID, event) {
+		return false
+	}
+	exceptionsSuppressed.Add(1)
+	return true
+}
+
+// SuppressIfMatchedID is SuppressIfMatched for numeric rule IDs.
+func SuppressIfMatchedID(id int64, event *plugins.Event) bool {
+	return SuppressIfMatched(ruleIDKey(id), event)
+}
+
+// RuleIDKey formats a numeric rule ID the same way exception packs and sequence rules do.
+func RuleIDKey(id int64) string {
+	return ruleIDKey(id)
+}
+
+// ReplaceExceptionsForTest replaces the in-memory active-exception index (unit tests only).
+func ReplaceExceptionsForTest(list []DetectionException) {
+	setExceptions(list)
 }
 
 func exceptionAllMatch(conds []ExceptionCondition, fields map[string]string) bool {
