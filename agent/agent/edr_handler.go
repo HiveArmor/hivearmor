@@ -36,11 +36,12 @@ type EdrEvent struct {
 }
 
 // HandleEdrCommand dispatches EDR_* commands received via the gRPC command channel.
+// cmdId is the backend command / quarantine id when present (used to remember restore path).
 // Returns (handled bool, result string).
-func HandleEdrCommand(cnf *config.Config, command string) (bool, string) {
+func HandleEdrCommand(cnf *config.Config, command, cmdId string) (bool, string) {
 	switch {
 	case strings.HasPrefix(command, "EDR_QUARANTINE:"):
-		return true, handleEdrQuarantine(cnf, command)
+		return true, handleEdrQuarantine(cnf, command, cmdId)
 	case strings.HasPrefix(command, "EDR_RESTORE:"):
 		return true, handleEdrRestore(cnf, command)
 	case strings.HasPrefix(command, "EDR_KILL:"):
@@ -81,13 +82,13 @@ func IngestEdrEvent(cnf *config.Config, evt EdrEvent) error {
 	return nil
 }
 
-func handleEdrQuarantine(cnf *config.Config, command string) string {
+func handleEdrQuarantine(_ *config.Config, command, cmdId string) string {
 	// format: EDR_QUARANTINE:<filePath>
 	filePath := strings.TrimPrefix(command, "EDR_QUARANTINE:")
 	if filePath == "" {
 		return "EDR_QUARANTINE error: missing filePath"
 	}
-	quarPath, err := quarantineFile(filePath)
+	quarPath, err := quarantineFile(filePath, cmdId)
 	if err != nil {
 		return fmt.Sprintf("EDR_QUARANTINE error: %v", err)
 	}

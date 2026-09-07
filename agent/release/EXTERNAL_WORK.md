@@ -18,7 +18,7 @@ Agent-side Now tickets (AGT-POL-01, AGT-SEC-01, AGT-SIZE-01, AGT-DOC-01) may lan
 
 **Contract spot-check (2026-09-03):** Agent `policy_schema.go` ↔ backend `AgentPolicySchemaV1` ↔ FE `agentPolicySchema.ts` / `agentPolicies.ts` field names **aligned** (`schema_version`, `fim.mode|rules[].path|recursive|exclude`, `collectors.*`, `response.allow_shell`). ACK headers **match** `TelemetryAgentIdentityFilter` (`X-HiveArmor-Agent-Id`, `X-Agent-Key`). No schema code fix required.
 
-**Next phase (not started):** groups UX (SOC Manager `GET /api/agent-groups` list) / push scheduler polish — see FE-POL-01 blockers. Do not flip isolate gate.
+**Next phase (in progress 2026-09-07):** telemetry schedule (schema v1.1 fields), push-on-connect / sync-on-connect, FIM WatchList rebuild, rule `/ack`, AGT-EDR-02 quarantine meta — see changelog. Do not flip isolate gate.
 
 ---
 
@@ -26,8 +26,11 @@ Agent-side Now tickets (AGT-POL-01, AGT-SEC-01, AGT-SIZE-01, AGT-DOC-01) may lan
 
 | ID | Status | Blocker |
 |---|---|---|
-| **BE-POL-02** | **PARTIAL** | `POST /api/alert-response-rules/push-status/{ruleId}/ack` missing (agent calls it; only `GET …/push-status/{ruleId}` exists). Filter does not cover this path yet. |
-| **FE-POL-01** residual | Open (Next) | (1) `GET /api/agent-groups` ROLE_ADMIN-only → SOC Manager manual group id; (2) group-only push (no per-agent); (3) apply/ack not LIVE VERIFIED |
+| **BE-POL-02** | **PARTIAL** | `POST /api/alert-response-rules/push-status/{ruleId}/ack` still backend-open; **agent client ready** (device headers + JSON body + status check). Filter must cover this path. |
+| **BE-POL-03** | Open (Next) | `POST /api/agent-policies/sync-on-connect` — agent client landed with 404→local fallback; backend must emit policies and/or push APPLY_POLICY. |
+| **BE-POL-04** | Open (Next) | Schema telemetry intervals (`telemetry.sca_interval_hours` / `sbom_interval_hours`) — **agent applies**; BE normalize on create/update still open. |
+| **FE-POL-01** residual | Open (Next) | (1) `GET /api/agent-groups` ROLE_ADMIN-only → SOC Manager manual group id; (2) group-only push (no per-agent); (3) apply/ack not LIVE VERIFIED; (4) telemetry interval editor |
+| **AGT-EDR-02** | **PARTIAL (STAGING CANDIDATE)** | Quarantine writes `.ha-meta.json` + id-prefixed dest using cmdId; restore reverses to `original_path`. Ambiguous multi-file restore without id → error (not silent chmod-only). Backend path fetch deferred. |
 | **BE-SEC-01** | **PARTIAL** | Schema + FE toggle landed; IR path still needs docs / prefer `EDR_*` over raw shell |
 | **BE-EDR-01** / **FE-EDR-01** / **OPS-EDR-01** | Open | Isolate live-verify; **do not** flip `REMOTE_SENSOR_ISOLATE_LIVE_VERIFIED` |
 | **OPS-SEC-01** | Open | Confirm tenants do not rely on default remote shell |
@@ -81,13 +84,18 @@ Agent-side Now tickets (AGT-POL-01, AGT-SEC-01, AGT-SIZE-01, AGT-DOC-01) may lan
   },
   "response": {
     "allow_shell": false
+  },
+  "telemetry": {
+    "sca_interval_hours": 6,
+    "sbom_interval_hours": 6
   }
 }
 ```
 
 - `fim.mode`: `merge` (default) appends to platform defaults; `replace` uses only policy rules (falls back to defaults if rules empty).
 - `fim.rules[].exclude`: glob patterns (relative to rule path **or** basename). Agent enforces via `isExcluded` on watch seed + `handleEvent` drop (STAGING CANDIDATE).
-- `collectors.*`: desired enablement. Hot-apply today: FIM rules (new roots + excludes; best-effort unwatch of removed roots; recursive subdir cleanup may need restart) + shell gate. Other collectors recorded for next process start (see agent docs).
+- `collectors.*`: desired enablement. Hot-apply today: FIM rules (full WatchList rebuild on replace) + shell gate + telemetry intervals. Other collectors recorded for next process start (see agent docs).
+- `telemetry.sca_interval_hours` / `sbom_interval_hours` (v1.1 fields on schema_version 1): optional; agent default **6h**, clamp **1–168h**; hot-applied on APPLY_POLICY / startup. Missing → keep default.
 - Unknown fields ignored (forward-compatible).
 - **Dual-plane:** `/api/agent-policies` is SoT for APPLY_POLICY. `/api/ha-edr/policies` does not push; `AgentPolicySchemaService.fromHaColumns` maps Ha `filePaths` → `fim.rules` when bridging.
 
@@ -95,9 +103,9 @@ Agent-side Now tickets (AGT-POL-01, AGT-SEC-01, AGT-SIZE-01, AGT-DOC-01) may lan
 
 | Field | Value |
 |---|---|
-| **Status** | **PARTIAL (STAGING CANDIDATE)** — report-state + GET `/{id}` done 2026-09-03; rule-sync `/ack` still open |
+| **Status** | **PARTIAL (STAGING CANDIDATE)** — report-state + GET `/{id}` done 2026-09-03; rule-sync `/ack` still open on backend; **agent ACK client ready 2026-09-07** |
 | **Problem** | Agent ACK client sends telemetry-style device headers (`X-HiveArmor-Agent-Id` + `X-Agent-Key`). Rule ACK path missing (`GET push-status` exists; **no** `POST …/ack` on `RuleDistributionResource`). |
-| **Done** | `TelemetryAgentIdentityFilter` covers GET `/api/agent-policies/{id}` + POST `/report-state`; grants `ROLE_AGENT_DEVICE`; binds connector id (body agentId spoof ignored). Admin\|SOC Manager JWT still allowed. |
+| **Done** | `TelemetryAgentIdentityFilter` covers GET `/api/agent-policies/{id}` + POST `/report-state`; grants `ROLE_AGENT_DEVICE`; binds connector id (body agentId spoof ignored). Admin\|SOC Manager JWT still allowed. Agent `notifyRuleSyncAck` POSTs JSON `{agentId,ruleId,state}` with device headers and checks 2xx. |
 | **Remaining** | `POST /api/alert-response-rules/push-status/{ruleId}/ack` agent-auth endpoint + filter path allowlist |
 | **Acceptance** | Enrolled agent can GET policy + POST report-state with id+key → 2xx; rule sync ACK (open); no Bearer agent-key required. |
 | **Needed for** | AGT-POL-01 LIVE VERIFIED apply/ack evidence |
@@ -111,6 +119,10 @@ Agent-side Now tickets (AGT-POL-01, AGT-SEC-01, AGT-SIZE-01, AGT-DOC-01) may lan
 | `Content-Type` | `application/json` |
 
 TLS: honors `config.insecure` (`SkipCertValidation`) like telemetry. Do **not** require `Authorization: Bearer <agentKey>`.
+
+**Rule ACK URL:** `POST /api/alert-response-rules/push-status/{ruleId}/ack?agentId={id}`
+
+**Sync-on-connect URL (agent client ready; BE open):** `POST /api/agent-policies/sync-on-connect` body `{agentId}` → 200 `{policies:[{policyId,version,policyConfig}]}` or 202/204 (backend pushes APPLY_POLICY). Agent on 404 falls back to local `LoadAndApplyLatestPolicy` + report-state.
 
 > Note: Some backend comments still say “BE-POL-01 ACK” for report-state/GET policy device auth; ticket ownership is **BE-POL-02** (doc-only drift, no code change this reconcile).
 
@@ -167,12 +179,13 @@ TLS: honors `config.insecure` (`SkipCertValidation`) like telemetry. Do **not** 
 
 | Field | Value |
 |---|---|
-| **Status** | **DONE (STAGING CANDIDATE)** — 2026-09-03 |
+| **Status** | **DONE (STAGING CANDIDATE)** — console 2026-09-03; **Next residuals PARTIAL** 2026-09-07 |
 | **Problem** | UI should edit FIM watch paths and collector enablement as schema v1, not only legacy Ha columns. |
 | **Touchpoints** | `agentPoliciesApi.service.ts`; `AgentFimPolicyPage` at `/posture/sensors/fim-policies` |
 | **Acceptance** | Saved policy round-trips schema v1; console edits FIM include/exclude, merge/replace, collectors, push/assign-group ✅ (agent APPLY + LIVE VERIFIED still STAGING) |
 | **Needed for** | AGT-POL-01 |
-| **Next blockers (not started)** | (1) **`GET /api/agent-groups` is ROLE_ADMIN-only** while policy assign/push allows SOC Manager — SOC Manager must enter group id manually when list 403s. (2) No per-agent push endpoint (group-only). (3) Apply/ack evidence not LIVE VERIFIED (BE-POL-02 partial). Ha `/edr/policies` dual-plane remains. |
+| **Next (FE landed 2026-09-07)** | (1) SOC Manager uses group picker when `GET /api/agent-groups` succeeds; 403 → manual group id fallback. (2) Per-agent push UI → `POST /api/agent-policies/{id}/push-agent/{agentId}` (+ sensor picker). (3) Schema v1.1 editor fields `telemetry.sca_interval_hours` / `sbom_interval_hours` (still under `schema_version: 1`). (4) Push-on-connect / enroll→policy honesty note. |
+| **Still blocked on BE/agent** | Agent-groups list still class `@PreAuthorize(ROLE_ADMIN)`; no `push-agent` endpoint; agent ignores telemetry schedule; apply/ack not LIVE VERIFIED; Ha `/edr/policies` dual-plane remains. |
 
 ---
 
@@ -273,3 +286,5 @@ Agent-side culls landed:
 | 2026-09-03 | FIM exclude enforcement (`isExcluded` in seed/handleEvent); policy ACK client uses `X-HiveArmor-Agent-Id` + `X-Agent-Key` (telemetry pattern). Added **BE-POL-02** for backend agent-auth on report-state + rule ACK. Hot-reload: excludes immediate; removed roots best-effort; recursive cleanup may need restart. |
 | 2026-09-03 | FE-POL-01 / FE-SEC-01 STAGING CANDIDATE: frontend-v3 Agent FIM Policies console (`/posture/sensors/fim-policies`) + `/api/agent-policies` client; dual-plane note vs Ha `/edr/policies`. Blockers: agent-groups ADMIN-only list, group-only push; BE-POL-01 schema emit resolved. |
 | 2026-09-03 | **Now-phase reconcile (docs only):** FE-POL-01/FE-SEC-01 → **DONE**; BE-POL-01 → **DONE**; BE-POL-02 → **PARTIAL** (rule `/ack` open); BE-SEC-01 → **PARTIAL**. Schema/ACK contract spot-check: aligned, no code fix. Copies synced (`agent/release` ↔ `.plan/audits`). Next (groups UX/scheduler) not started. |
+| 2026-09-07 | **FE-POL Next (STAGING CANDIDATE):** frontend-v3 Agent FIM Policies — SOC Manager group list attempt + 403 fallback; per-agent push client (`push-agent/{agentId}` + sensor picker); schema v1.1 `telemetry.sca_interval_hours` / `sbom_interval_hours` in editor (emit under schema_version 1); push-on-connect honesty. **BE blockers remain:** agent-groups ADMIN-only class auth; no push-agent endpoint; agent does not consume telemetry intervals. Isolate gate untouched. |
+| 2026-09-07 | **Agent Policy Next (agent STAGING CANDIDATE):** schema telemetry `sca_interval_hours` / `sbom_interval_hours` (clamp 1–168h, default 6h) applied on APPLY + startup; SCA/SBOM loop dual-interval scheduler; `SyncPoliciesOnConnect` after AgentStream (`POST …/sync-on-connect` + 404 fallback); FIM full `WatchList` rebuild on replace; rule ACK client status-checked + JSON body; AGT-EDR-02 light quarantine `.ha-meta.json` + restore to original path via cmdId. Isolate gate untouched. |

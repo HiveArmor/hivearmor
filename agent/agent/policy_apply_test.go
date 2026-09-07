@@ -3,6 +3,9 @@ package agent
 import (
 	"os"
 	"testing"
+	"time"
+
+	"github.com/hivearmor/agent/telemetry"
 )
 
 func TestParseAgentPolicyDocument_Empty(t *testing.T) {
@@ -116,6 +119,80 @@ func TestShellDeniedMessage_NoSecrets(t *testing.T) {
 		}
 	}
 }
+
+func TestParseAgentPolicyDocument_TelemetryIntervals(t *testing.T) {
+	raw := `{
+		"schema_version": 1,
+		"telemetry": {
+			"sca_interval_hours": 3,
+			"sbom_interval_hours": 12
+		}
+	}`
+	doc, err := ParseAgentPolicyDocument(raw)
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if doc.Telemetry == nil || doc.Telemetry.SCAIntervalHours == nil || *doc.Telemetry.SCAIntervalHours != 3 {
+		t.Fatalf("sca hours: %+v", doc.Telemetry)
+	}
+	if doc.Telemetry.SBOMIntervalHours == nil || *doc.Telemetry.SBOMIntervalHours != 12 {
+		t.Fatalf("sbom hours: %+v", doc.Telemetry)
+	}
+}
+
+func TestClampTelemetryIntervalHours(t *testing.T) {
+	if got := ClampTelemetryIntervalHours(nil); got != DefaultTelemetryIntervalHours {
+		t.Fatalf("nil: %d", got)
+	}
+	zero := 0
+	if got := ClampTelemetryIntervalHours(&zero); got != DefaultTelemetryIntervalHours {
+		t.Fatalf("zero: %d", got)
+	}
+	low := MinTelemetryIntervalHours - 1
+	if low < 1 {
+		low = 0
+	}
+	// 0 already tested; value 1 should stay 1
+	one := 1
+	if got := ClampTelemetryIntervalHours(&one); got != 1 {
+		t.Fatalf("one: %d", got)
+	}
+	high := MaxTelemetryIntervalHours + 50
+	if got := ClampTelemetryIntervalHours(&high); got != MaxTelemetryIntervalHours {
+		t.Fatalf("high: %d", got)
+	}
+}
+
+func TestApplyPolicyConfig_TelemetryIntervals(t *testing.T) {
+	shellPolicyEnabled.Store(false)
+	appliedPolicyMu.Lock()
+	appliedPolicy = nil
+	appliedPolicyMu.Unlock()
+
+	err := ApplyPolicyConfig(`{
+		"schema_version": 1,
+		"telemetry": {"sca_interval_hours": 2, "sbom_interval_hours": 4}
+	}`)
+	if err != nil {
+		t.Fatalf("apply: %v", err)
+	}
+	if telemetry.EffectiveSCAInterval() != 2*time.Hour {
+		t.Fatalf("sca: %v", telemetry.EffectiveSCAInterval())
+	}
+	if telemetry.EffectiveSBOMInterval() != 4*time.Hour {
+		t.Fatalf("sbom: %v", telemetry.EffectiveSBOMInterval())
+	}
+	// restore defaults
+	telemetry.SetScanIntervals(6*time.Hour, 6*time.Hour)
+}
+
+func TestParseAgentPolicyDocument_NegativeTelemetryRejected(t *testing.T) {
+	_, err := ParseAgentPolicyDocument(`{"schema_version":1,"telemetry":{"sca_interval_hours":-1}}`)
+	if err == nil {
+		t.Fatal("expected error for negative hours")
+	}
+}
+
 
 func containsFold(s, sub string) bool {
 	return len(sub) > 0 && (len(s) >= len(sub)) &&

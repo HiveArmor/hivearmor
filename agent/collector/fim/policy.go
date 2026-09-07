@@ -64,9 +64,7 @@ func RegisterPolicyApplier() {
 }
 
 // ApplyPolicyRules updates the runtime rule set and, if a collector is running,
-// refreshes fsnotify watches (STAGING CANDIDATE).
-// Excludes and new roots hot-apply; removed recursive trees may need restart
-// (see Collector.replaceWatchRules).
+// refreshes fsnotify watches via full WatchList rebuild (STAGING CANDIDATE).
 func ApplyPolicyRules(policyRules []WatchRule, mode string) error {
 	resolved := ResolveWatchRules(policyRules, mode)
 

@@ -6,22 +6,20 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/hivearmor/agent/database"
+	"github.com/hivearmor/agent/telemetry"
 	"github.com/hivearmor/agent/utils"
 )
 
 // Collector hot-toggle capability (STAGING CANDIDATE).
 //
 // Hot-apply on APPLY_POLICY / startup without process restart:
-//   - fim watch rules (via FIM applier callback) — new roots + exclude filters
+//   - fim watch rules (via FIM applier callback) — new roots + exclude filters;
+//     replace uses best-effort full WatchList rebuild (fewer restarts)
 //   - response.allow_shell (runtime gate)
-//
-// FIM hot-reload notes:
-//   - New exclude patterns drop events immediately; excluded paths are not seeded.
-//   - New watch roots are added immediately; old roots get best-effort Remove.
-//   - Recursive subdir watches under a removed root may linger until process
-//     restart (fsnotify has no portable remove-all); stale events are filtered.
+//   - telemetry.sca_interval_hours / sbom_interval_hours (SCA/SBOM loop)
 //
 // Desired-state recorded; takes effect on next agent process start
 // (service wiring consults CollectorDesiredEnabled):
@@ -102,14 +100,27 @@ func applyParsedPolicy(doc *AgentPolicyDocument) error {
 	}
 
 	shellPolicyEnabled.Store(AllowShellFromPolicy(doc))
+	applyTelemetryIntervals(doc.Telemetry)
 
 	appliedPolicyMu.Lock()
 	appliedPolicy = doc
 	appliedPolicyMu.Unlock()
 
-	utils.Logger.LogF(100, "policy_apply: applied schema_version=%d allow_shell=%v collectors=%d",
-		doc.SchemaVersion, shellPolicyEnabled.Load(), len(doc.Collectors))
+	utils.Logger.LogF(100, "policy_apply: applied schema_version=%d allow_shell=%v collectors=%d sca=%s sbom=%s",
+		doc.SchemaVersion, shellPolicyEnabled.Load(), len(doc.Collectors),
+		telemetry.EffectiveSCAInterval(), telemetry.EffectiveSBOMInterval())
 	return nil
+}
+
+func applyTelemetryIntervals(section *TelemetryPolicySection) {
+	var scaH, sbomH *int
+	if section != nil {
+		scaH = section.SCAIntervalHours
+		sbomH = section.SBOMIntervalHours
+	}
+	sca := time.Duration(ClampTelemetryIntervalHours(scaH)) * time.Hour
+	sbom := time.Duration(ClampTelemetryIntervalHours(sbomH)) * time.Hour
+	telemetry.SetScanIntervals(sca, sbom)
 }
 
 // LoadAndApplyLatestPolicy loads the newest PolicyState row and applies it.
