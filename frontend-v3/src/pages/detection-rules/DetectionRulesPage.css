@@ -429,7 +429,7 @@
 .detection-drawer__chips span { padding: 3px 6px; border: 1px solid var(--ha-border-default); border-radius: 5px; background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); font-size: 10px; }
 .detection-drawer > footer { position: sticky; z-index: 4; bottom: 0; display: flex; min-height: 56px; align-items: center; justify-content: flex-end; gap: 7px; margin-top: auto; padding: 10px 14px; border-top: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 -6px 14px color-mix(in srgb, var(--ha-surface-overlay) 38%, transparent); }
 
-.detection-tuning { padding: 13px 15px; border-bottom: 1px solid var(--ha-border-subtle); }
+.detection-tuning { padding: 13px 15px 72px; border-bottom: 1px solid var(--ha-border-subtle); }
 .detection-tuning__header { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; color: var(--ha-foreground-secondary); }
 .detection-tuning__header strong { display: block; color: var(--ha-foreground-primary); font: 12px/1.2 var(--ha-font-ui); font-weight: 680; }
 .detection-tuning__header small { display: block; margin-top: 3px; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); line-height: 1.4; }
