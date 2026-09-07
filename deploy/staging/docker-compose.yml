@@ -212,6 +212,12 @@ services:
       - KAFKA_BROKER=redpanda:9092
       - KAFKA_ENABLED=true
       - KAFKA_WORKERS=1
+      # DET-GRAPH-001 — Neo4j was not in staging compose (local-dev had the
+      # service but never flipped NEO4J_ENABLED). HTTP Cypher URI, not bolt.
+      - NEO4J_ENABLED=true
+      - NEO4J_URI=http://neo4j:7474
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:?set NEO4J_PASSWORD}
     volumes:
       - ep_pipeline:/workdir/pipeline
       - ../../filters:/workdir/pipeline/filters:ro
@@ -228,6 +234,8 @@ services:
       backend:
         condition: service_started
       redpanda:
+        condition: service_healthy
+      neo4j:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
@@ -283,6 +291,29 @@ services:
       start_period: 60s
     restart: unless-stopped
 
+  # DET-GRAPH-001 — Neo4j was already in local-dev compose but never added here.
+  # Graph pack queries this store; entity-graph ingest is not in staging, so
+  # Cypher rules run against an empty graph until something upserts entities.
+  neo4j:
+    image: neo4j:5.20-community
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:?set NEO4J_PASSWORD}
+      - 'NEO4J_PLUGINS=["apoc"]'
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*
+      - NEO4J_server_memory_heap_initial__size=512m
+      - NEO4J_server_memory_heap_max__size=1G
+    volumes:
+      - neo4j_data:/data
+      - ../../local-dev/neo4j/init:/docker-entrypoint-initdb.d:ro
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
   frontend-v3:
     image: hivearmor/frontend-v3:local
     build:
@@ -325,3 +356,4 @@ volumes:
   ep_pipeline:
   ep_logs:
   ep_sockets:
+  neo4j_data:

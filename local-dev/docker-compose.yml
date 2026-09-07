@@ -230,6 +230,13 @@ services:
       - OPENSEARCH_CA_CERT=/cert/ca.crt
       - OTLP_PORT=4317
       - GEOIP_DB_PATH=/opt/hivearmor/geo/GeoLite2-City.mmdb
+      # DET-GRAPH-001 — Neo4j was already in this compose file; NEO4J_ENABLED
+      # was never flipped, so the graph pack stayed idle. HTTP Cypher URI is
+      # required (evaluator is not the bolt driver used by entity-graph).
+      - NEO4J_ENABLED=true
+      - NEO4J_URI=http://neo4j:7474
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-localdev123!}
     volumes:
       - ep_pipeline:/workdir/pipeline
       # Local acceptance tests must exercise the same raw telemetry filters as
@@ -256,6 +263,8 @@ services:
       backend:
         condition: service_started
       redpanda:
+        condition: service_healthy
+      neo4j:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
