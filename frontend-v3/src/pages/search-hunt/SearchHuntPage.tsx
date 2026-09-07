@@ -36,7 +36,7 @@ import { useSearchStream } from './hooks/useSearchStream';
 import { normalizeHuntQuery } from './huntQuerySuggestions';
 import { HUNT_FIELD_COLUMN_MAP, huntColumnToSortField, huntColumnsToProjection } from './searchHunt.projection';
 import {
-  cancelHunt, executeHunt, fetchHuntSchema, fetchQueryCapabilities, searchHuntFixtureMode,
+  cancelHunt, executeHunt, fetchHuntSchema, fetchQueryCapabilities, fetchHuntAggregates, searchHuntFixtureMode,
 } from './searchHunt.service';
 import type {
   HuntActionRequest, HuntSearchRequest, HuntSearchResponse,
@@ -243,6 +243,35 @@ export function SearchHuntPage(): JSX.Element {
   const permissionDenied = searchQuery.error instanceof ApiError && searchQuery.error.status === 403;
   const schemaPermissionDenied = schemaQuery.error instanceof ApiError && schemaQuery.error.status === 403;
   const staleVisible = searchQuery.isFetching && events.length > 0;
+
+  // HNT-METRIC: server-side full-set aggregation for the Metric view. Only runs when the Metric
+  // view is active and there is a committed query, so the Table view pays nothing for it.
+  const aggregatesQuery = useQuery({
+    queryKey: ['hunt-aggregate', committed],
+    queryFn: ({ signal }) =>
+      fetchHuntAggregates(
+        {
+          query: committed.query,
+          language: 'kql',
+          timeRange: committed.timeRange,
+          tenantScope: committed.tenantScope,
+          indexPattern: committed.indexPattern,
+          breakdowns: [
+            { field: 'event.severity', size: 5 },
+            { field: 'dataSource', size: 8 },
+            { field: 'event.action', size: 8 },
+            { field: 'host.name', size: 8 },
+            { field: 'user.name', size: 8 },
+          ],
+        },
+        signal,
+      ),
+    enabled: resultView === 'metrics' && committed.query.length > 0,
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+    placeholderData: (previous) => previous,
+    retry: false,
+  });
 
   const nlMutation = useMutation({
     mutationFn: (question: string) =>
@@ -832,6 +861,7 @@ export function SearchHuntPage(): JSX.Element {
                     events={events}
                     totalApproximate={summary?.totalApproximate}
                     totalIsExact={summary?.totalIsExact}
+                    aggregates={aggregatesQuery.data ?? null}
                     onDrill={(field, value) => applyFieldFilter(`${field}:"${value.replace(/"/g, '\\"')}"`)}
                   />
                 ) : (

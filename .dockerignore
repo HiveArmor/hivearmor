@@ -1,0 +1,20 @@
+# Keep the Docker build context small. The backend image build uses the repo root as context
+# (dockerfile: backend/Dockerfile, context: ..), so without this it ships .git, node_modules,
+# and build artifacts (6GB+) to the daemon on every build.
+.git
+**/node_modules
+**/target
+**/dist
+**/build
+**/.gradle
+frontend-v3/storybook-static
+frontend-v3/playwright-report
+frontend-v3/e2e-storybook/__snapshots__
+frontend/
+frontend-v2/
+**/*.log
+**/.DS_Store
+local-dev/certs
+local-dev/*.png
+.kiro
+.plan

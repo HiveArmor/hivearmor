@@ -4,6 +4,8 @@ import com.hivearmor.multitenancy.MsspIndexResolver;
 import com.hivearmor.service.elasticsearch.OpensearchClientBuilder;
 import com.hivearmor.web.rest.hunt.dto.HuntEventDTO;
 import com.hivearmor.web.rest.hunt.dto.HuntFieldDefinitionDTO;
+import com.hivearmor.web.rest.hunt.dto.HuntAggregateRequestDTO;
+import com.hivearmor.web.rest.hunt.dto.HuntAggregateResponseDTO;
 import com.hivearmor.web.rest.hunt.dto.HuntSearchRequestDTO;
 import com.hivearmor.web.rest.hunt.dto.HuntSearchRequestDTO.SortFieldDTO;
 import com.hivearmor.web.rest.hunt.dto.HuntSearchResponseDTO;
@@ -20,6 +22,7 @@ import org.opensearch.client.opensearch._types.aggregations.CompositeBucket;
 import org.opensearch.client.opensearch._types.aggregations.DateHistogramAggregate;
 import org.opensearch.client.opensearch._types.aggregations.DateHistogramBucket;
 import org.opensearch.client.opensearch._types.aggregations.FieldDateMath;
+import org.opensearch.client.opensearch._types.aggregations.StringTermsBucket;
 import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.RangeQuery;
@@ -46,6 +49,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 /** Production-bounded Search &amp; Hunt execution backed by typed OpenSearch DSL. */
 @Service
@@ -297,9 +301,175 @@ public class HaHuntService {
         return result;
     }
 
+    /**
+     * HNT-METRIC (Metric view): aggregate over the ENTIRE matched result set — not just a loaded
+     * page. Reuses the exact query-build path as {@link #executeSearch} (parse KQL, bound by the
+     * time range, resolve authorized indices), then runs a single size:0 search with:
+     *   - track_total_hits for the honest full-set total,
+     *   - a filtered value_count for "events with alerts",
+     *   - cardinality aggs for distinct hosts / users,
+     *   - one terms agg per requested breakdown (top-N + sum_other_doc_count).
+     * No hits are returned, so it cannot widen scope beyond what the analyst's query matches.
+     */
+    public HuntAggregateResponseDTO aggregate(HuntAggregateRequestDTO request,
+                                              String owner,
+                                              String tenantKey) throws Exception {
+        validateAggregateRequest(request);
+
+        Query userQuery = queryParser.parse(request.getQuery());
+        HuntSearchRequestDTO.TimeRangeDTO range = request.getTimeRange();
+        Query boundedQuery = withTimeRange(userQuery, range);
+        List<String> indices = resolveIndices(request.getIndexPattern());
+        Instant snapshotAt = Instant.now();
+
+        // Resolve requested breakdown fields against the registry (rejects non-aggregatable/unknown).
+        List<HuntFieldRegistry.FieldSpec> breakdownFields = new ArrayList<>();
+        List<Integer> breakdownSizes = new ArrayList<>();
+        for (HuntAggregateRequestDTO.BreakdownSpecDTO spec : request.getBreakdowns()) {
+            breakdownFields.add(fieldRegistry.requireAggregatable(spec.getField()));
+            breakdownSizes.add(Math.max(1, Math.min(spec.getSize(), 50)));
+        }
+
+        Map<String, Aggregation> aggs = new LinkedHashMap<>();
+        // KPI aggregations. alertCount is a HiveArmor physical field on log/event docs.
+        aggs.put("kpi_with_alerts", Aggregation.of(a -> a.filter(f -> f.range(r -> r
+            .field("alertCount").gt(JsonData.of(0))))));
+        aggs.put("kpi_distinct_hosts", Aggregation.of(a -> a.cardinality(c -> c.field(aggFieldPath("host.name")))));
+        aggs.put("kpi_distinct_users", Aggregation.of(a -> a.cardinality(c -> c.field(aggFieldPath("user.name")))));
+        // One terms agg per breakdown. Keyword/IP fields aggregate on their .keyword sub-field
+        // because HiveArmor maps them as text-with-keyword; numeric/date fields aggregate directly.
+        for (int i = 0; i < breakdownFields.size(); i++) {
+            HuntFieldRegistry.FieldSpec field = breakdownFields.get(i);
+            int size = breakdownSizes.get(i);
+            String path = aggFieldPathFor(field);
+            aggs.put("brk_" + aggKey(field.name()), Aggregation.of(a -> a.terms(t -> t
+                .field(path).size(size))));
+        }
+
+        SearchRequest.Builder builder = new SearchRequest.Builder()
+            .size(0)
+            .query(boundedQuery)
+            .trackTotalHits(t -> t.enabled(true))
+            .index(indices).ignoreUnavailable(true).allowNoIndices(true)
+            .timeout("30s")
+            .allowPartialSearchResults(true)
+            .aggregations(aggs);
+
+        @SuppressWarnings("rawtypes")
+        SearchResponse<Map> response = osClient.execute(os -> os.search(builder.build(), Map.class));
+
+        long totalDocs = 0;
+        boolean totalExact = false;
+        if (response.hits() != null && response.hits().total() != null) {
+            totalDocs = response.hits().total().value();
+            totalExact = "eq".equals(response.hits().total().relation().jsonValue());
+        }
+        boolean shardsClean = response.shards() == null || response.shards().failed().longValue() == 0;
+
+        long withAlerts = 0;
+        Aggregate withAlertsAgg = response.aggregations().get("kpi_with_alerts");
+        if (withAlertsAgg != null && withAlertsAgg.isFilter()) {
+            withAlerts = withAlertsAgg.filter().docCount();
+        }
+        long distinctHosts = cardinalityValue(response, "kpi_distinct_hosts");
+        long distinctUsers = cardinalityValue(response, "kpi_distinct_users");
+
+        List<HuntAggregateResponseDTO.BreakdownDTO> breakdowns = new ArrayList<>();
+        for (HuntFieldRegistry.FieldSpec field : breakdownFields) {
+            Aggregate agg = response.aggregations().get("brk_" + aggKey(field.name()));
+            List<HuntAggregateResponseDTO.BucketDTO> buckets = new ArrayList<>();
+            long otherCount = 0;
+            String state = "available";
+            if (agg != null && agg.isSterms()) {
+                otherCount = agg.sterms().sumOtherDocCount();
+                for (StringTermsBucket bucket : agg.sterms().buckets().array()) {
+                    String value = bucket.key();
+                    buckets.add(new HuntAggregateResponseDTO.BucketDTO(
+                        value, bucket.docCount(), shardsClean,
+                        field.name() + ":\"" + escapeQueryValue(value) + "\"",
+                        "NOT " + field.name() + ":\"" + escapeQueryValue(value) + "\""));
+                }
+            } else if (agg != null && agg.isLterms()) {
+                otherCount = agg.lterms().sumOtherDocCount();
+                for (var bucket : agg.lterms().buckets().array()) {
+                    String value = bucket.key();
+                    buckets.add(new HuntAggregateResponseDTO.BucketDTO(
+                        value, bucket.docCount(), shardsClean,
+                        field.name() + ":\"" + escapeQueryValue(value) + "\"",
+                        "NOT " + field.name() + ":\"" + escapeQueryValue(value) + "\""));
+                }
+            } else {
+                state = "unavailable";
+            }
+            breakdowns.add(new HuntAggregateResponseDTO.BreakdownDTO(field.name(), state, otherCount, buckets));
+        }
+
+        HuntAggregateResponseDTO dto = new HuntAggregateResponseDTO();
+        dto.setSearchId("HUNT-AGG-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        dto.setTotalApproximate(totalDocs);
+        dto.setTotalIsExact(totalExact);
+        dto.setSnapshotAt(snapshotAt.toString());
+        dto.setKpis(new HuntAggregateResponseDTO.KpisDTO(totalDocs, withAlerts, distinctHosts, distinctUsers));
+        dto.setBreakdowns(breakdowns);
+        dto.setPartialFailures(partialFailures(response));
+        return dto;
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static long cardinalityValue(SearchResponse<Map> response, String key) {
+        Aggregate agg = response.aggregations().get(key);
+        return agg != null && agg.isCardinality() ? agg.cardinality().value() : 0L;
+    }
+
+    private void validateAggregateRequest(HuntAggregateRequestDTO request) {
+        if (!"kql".equalsIgnoreCase(request.getLanguage())) {
+            throw new HuntQueryException("HUNT_LANGUAGE_UNSUPPORTED", "Only the kql query language is currently supported", 0);
+        }
+        if (request.getTenantScope() == null || request.getTenantScope().isBlank()) {
+            throw new HuntQueryException("HUNT_TENANT_SCOPE_INVALID", "Tenant scope is required", 0);
+        }
+        Instant from;
+        Instant to;
+        try {
+            from = Instant.parse(request.getTimeRange().getFrom());
+            to = Instant.parse(request.getTimeRange().getTo());
+        } catch (Exception ex) {
+            throw new HuntQueryException("HUNT_TIME_RANGE_INVALID", "Time range must use ISO-8601 UTC instants", 0);
+        }
+        if (!from.isBefore(to)) {
+            throw new HuntQueryException("HUNT_TIME_RANGE_INVALID", "Time range start must precede its end", 0);
+        }
+        if (Duration.between(from, to).compareTo(MAX_TIME_RANGE) > 0) {
+            throw new HuntQueryException("HUNT_TIME_RANGE_TOO_WIDE", "Time range cannot exceed 90 days", 0);
+        }
+        if (request.getBreakdowns() == null || request.getBreakdowns().isEmpty()) {
+            throw new HuntQueryException("HUNT_AGG_NO_BREAKDOWNS", "At least one breakdown field is required", 0);
+        }
+        if (request.getBreakdowns().size() > 8) {
+            throw new HuntQueryException("HUNT_AGG_TOO_MANY_BREAKDOWNS", "At most eight breakdowns may be requested", 0);
+        }
+    }
+
     /** OpenSearch aggregation names allow a limited charset; map a dotted field to a safe key. */
     private static String aggKey(String fieldName) {
         return fieldName.replaceAll("[^a-zA-Z0-9]", "_");
+    }
+
+    /**
+     * Aggregation field path for a keyword-style field. HiveArmor maps string fields as text with a
+     * {@code .keyword} sub-field; terms/cardinality aggregations must target the keyword sub-field.
+     * Known always-keyword-backed hunt fields are routed here.
+     */
+    private static String aggFieldPath(String fieldName) {
+        return fieldName.endsWith(".keyword") ? fieldName : fieldName + ".keyword";
+    }
+
+    /** Resolve the correct aggregation path per field kind: keyword/IP → .keyword, else the field. */
+    private static String aggFieldPathFor(HuntFieldRegistry.FieldSpec field) {
+        return switch (field.kind()) {
+            case KEYWORD, IP, TEXT -> aggFieldPath(field.name());
+            case NUMBER, DATE, BOOLEAN -> field.name();
+        };
     }
 
     public Optional<HuntSearchSessionStore.Session> closeSearch(String searchId) {

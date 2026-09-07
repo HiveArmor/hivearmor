@@ -432,3 +432,52 @@ export interface SearchCompletedEvent {
     timeoutReached: boolean;
   };
 }
+
+/** HNT-METRIC: one requested top-N breakdown over an aggregatable field. */
+export interface HuntAggregateBreakdownSpec {
+  field: string;
+  size?: number;
+}
+
+/** HNT-METRIC: request for the full-matched-set Metric aggregation. */
+export interface HuntAggregateRequest {
+  query: string;
+  language: 'kql';
+  timeRange: HuntTimeRange;
+  tenantScope: 'authorized' | string;
+  indexPattern?: string;
+  breakdowns: HuntAggregateBreakdownSpec[];
+}
+
+/** HNT-METRIC: one term bucket with server-generated escaped KQL fragments. */
+export interface HuntAggregateBucket {
+  value: string;
+  count: number;
+  countIsExact: boolean;
+  includeQuery: string;
+  excludeQuery: string;
+}
+
+/** HNT-METRIC: one breakdown result, in the same order as the request. */
+export interface HuntAggregateBreakdown {
+  field: string;
+  state: 'available' | 'high_cardinality' | 'unavailable' | 'redacted';
+  otherCount: number;
+  buckets: HuntAggregateBucket[];
+}
+
+/** HNT-METRIC: full-matched-set aggregation response. */
+export interface HuntAggregateResponse {
+  searchId: string;
+  totalApproximate: number;
+  totalIsExact: boolean;
+  snapshotAt: string;
+  kpis: {
+    events: number;
+    withAlerts: number;
+    distinctHosts: number;
+    distinctUsers: number;
+  };
+  breakdowns: HuntAggregateBreakdown[];
+  partialFailures: Array<{ source: string; code: string; message: string }>;
+}

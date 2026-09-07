@@ -2,6 +2,8 @@ import type {
   HistoryEntry,
   HuntActionRequest,
   HuntActionResponse,
+  HuntAggregateRequest,
+  HuntAggregateResponse,
   HuntEventDetail,
   HuntEventDetailResponse,
   HuntFieldDefinition,
@@ -60,6 +62,21 @@ export async function executeHunt(request: HuntSearchRequest, signal?: AbortSign
 export async function cancelHunt(searchId: string): Promise<void> {
   if (fixtureMode) return Promise.resolve();
   return apiClient.delete<void>(`/ha-hunts/search/${encodeURIComponent(searchId)}`);
+}
+
+/**
+ * HNT-METRIC: aggregate over the ENTIRE matched result set for the Metric view.
+ * Fixture mode derives the same shape from the loaded fixture events so the UI still renders.
+ */
+export async function fetchHuntAggregates(
+  request: HuntAggregateRequest,
+  signal?: AbortSignal,
+): Promise<HuntAggregateResponse> {
+  if (fixtureMode) {
+    const { getFoundationHuntAggregates } = await import('@/pages/search-hunt/searchHunt.fixtures');
+    return getFoundationHuntAggregates(request);
+  }
+  return apiClient.post<HuntAggregateResponse>('/ha-hunts/search/aggregate', request, { signal });
 }
 
 export async function fetchHuntSchema(signal?: AbortSignal): Promise<HuntFieldDefinition[]> {
