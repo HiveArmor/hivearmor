@@ -19,6 +19,18 @@ export const DET_009_ALERT_PIVOT = false;
 /** DET-011: POST /ha-detection-rules/validate and /preview — authorized (ALERT_QUEUE_AUTH). */
 export const DET_011_VALIDATE_PREVIEW = true;
 
+/** DET-TEST-001: POST /correlation-rule/test inject dry-run + POST /ha-rules/test Sigma sandbox. */
+export const DET_TEST_CEL_DRY_RUN = true;
+
+/**
+ * Exception impact preview — POST /ha-detection-rules/{id}/exceptions/preview.
+ * Activate/persist exceptions remain DET-FP-001 (Next).
+ */
+export const DET_EXCEPTION_PREVIEW = true;
+
+export const DET_EXCEPTION_PREVIEW_DENIED_TITLE =
+  'Required permission: SOC Manager or Platform Administrator';
+
 /**
  * DET-014 available-content recommendations — no dedicated backend mapping.
  * DET-015 coverage includes inline recommendations; that is not DET-014.

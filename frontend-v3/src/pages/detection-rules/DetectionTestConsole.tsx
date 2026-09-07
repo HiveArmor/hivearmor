@@ -96,7 +96,9 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
     setPreviewResult(null);
     setError(null);
     try {
-      setResult(await testDetectionSandbox(ruleYaml, eventJson, controller.signal));
+      setResult(await testDetectionSandbox(ruleYaml, eventJson, controller.signal, {
+        ruleId: selectedRule?.id,
+      }));
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === 'AbortError') setError('Test cancelled. No alerts or actions were created.');
       else setError(caught instanceof Error ? caught.message : 'The sandbox test failed.');
@@ -131,7 +133,16 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
         severity: selectedRule?.severity ?? 'medium',
         ruleActive: false,
       };
-      setPreviewResult(await previewRuleDraft(draft, previewRange, controller.signal));
+      let dryRunEvents: Array<Record<string, unknown>> | undefined;
+      try {
+        const parsed = JSON.parse(eventJson) as unknown;
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          dryRunEvents = [parsed as Record<string, unknown>];
+        }
+      } catch {
+        dryRunEvents = undefined;
+      }
+      setPreviewResult(await previewRuleDraft(draft, previewRange, controller.signal, dryRunEvents));
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === 'AbortError') setError('Historical preview cancelled. No alerts or actions were created.');
       else setError(caught instanceof Error ? caught.message : 'Historical preview failed.');
@@ -168,7 +179,7 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
         {running ? <button type="button" className="detection-test-console__cancel" onClick={() => controllerRef.current?.abort()}><Square size={13} /> Cancel</button> : <button type="button" className="detection-primary-button" onClick={() => void runTest()} disabled={previewing}><Play size={14} /> Run test</button>}
       </div>
 
-      <div className="detection-test-console__boundary" role="status"><TestTube2 size={14} /><strong>Safe test boundary.</strong><span>{detectionRulesFixtureMode ? 'Fictional event samples are isolated from production metrics.' : isSigma ? 'The authoritative Sigma evaluator creates no alerts, incidents, notifications, or response actions.' : DET_011_VALIDATE_PREVIEW ? 'Native CEL single-event sandbox is limited; use Historical preview for authoritative DET-011 dry-run against indexed events.' : 'Native CEL single-event execution requires the event-processor sandbox contract.'}</span></div>
+      <div className="detection-test-console__boundary" role="status"><TestTube2 size={14} /><strong>Safe test boundary.</strong><span>{detectionRulesFixtureMode ? 'Fictional event samples are isolated from production metrics.' : isSigma ? 'The authoritative Sigma evaluator creates no alerts, incidents, notifications, or response actions.' : 'CEL inject dry-run (DET-TEST-001) evaluates the expression against the sample event without writing alerts. Historical preview may query OpenSearch when the backend reports openSearchQueried=true.'}</span></div>
 
       <div className="detection-test-console__workspace">
         <section className="detection-test-editor"><header><div><Code2 size={14} /><strong>Detection definition</strong></div><span>{isSigma ? 'YAML · Sigma-compatible' : 'HiveArmor CEL · normalized fields'}</span></header><div><Editor height="100%" language={isSigma ? 'yaml' : 'javascript'} value={ruleYaml} onChange={(value) => { setRuleYaml(value ?? ''); setResult(null); setPreviewResult(null); }} beforeMount={defineHiveArmorMonacoTheme} theme={monacoThemeName(theme)} options={{ automaticLayout: true, minimap: { enabled: false }, fontSize: 12, lineHeight: 18, lineNumbersMinChars: 3, renderLineHighlight: 'none', scrollBeyondLastLine: false, wordWrap: 'on', tabSize: 2, padding: { top: 8, bottom: 8 } }} /></div></section>
@@ -179,17 +190,17 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
           {error && <section className="detection-test-result__error"><AlertTriangle size={16} /><p>{error}</p></section>}
           {(running || previewing) && <section className="detection-test-result__progress"><span /><span /><span /><p>{previewing ? 'Scanning the bounded historical window…' : 'Evaluating normalized fields and condition paths…'}</p></section>}
           {!running && !previewing && !result && !previewResult && !error && <section className="detection-test-result__empty"><CircleSlash2 size={28} /><strong>No test has run</strong><p>Review preflight diagnostics, then run this definition against the selected event or historical window.</p></section>}
-          {result && <section className="detection-test-result__outcome" data-matched={result.matched}>{result.matched ? <CheckCircle2 size={28} /> : <CircleSlash2 size={28} />}<strong>{result.matched ? 'Event matched' : 'No match'}</strong><p>{result.explanation}</p><dl><div><dt>Duration</dt><dd>{result.durationMs || '<1'} ms</dd></div><div><dt>Fields evaluated</dt><dd>{result.evaluatedFields || 'Unavailable'}</dd></div></dl>{result.matchedFields.length > 0 && <div className="detection-test-result__fields"><span>Matched fields</span>{result.matchedFields.map((field) => <code key={field}>{field}</code>)}</div>}{result.warnings.map((warning) => <div key={warning} className="detection-test-result__warning"><AlertTriangle size={12} /> {warning}</div>)}</section>}
+          {result && <section className="detection-test-result__outcome" data-matched={result.matched}>{result.matched ? <CheckCircle2 size={28} /> : <CircleSlash2 size={28} />}<strong>{result.matched ? 'Event matched' : 'No match'}</strong><p>{result.explanation}</p><dl><div><dt>Duration</dt><dd>{result.durationMs || '<1'} ms</dd></div><div><dt>Fields evaluated</dt><dd>{result.evaluatedFields || 'Unavailable'}</dd></div><div><dt>Mode</dt><dd>{result.evaluationMode ?? 'unknown'}</dd></div><div><dt>OpenSearch</dt><dd>{result.openSearchQueried ? 'queried' : 'not queried'}</dd></div></dl>{result.matchedFields.length > 0 && <div className="detection-test-result__fields"><span>Matched fields</span>{result.matchedFields.map((field) => <code key={field}>{field}</code>)}</div>}{result.warnings.map((warning) => <div key={warning} className="detection-test-result__warning"><AlertTriangle size={12} /> {warning}</div>)}</section>}
           {previewResult?.available && (
             <section className="detection-test-result__outcome" data-matched={(previewResult.matchCount ?? 0) > 0}>
               <FlaskConical size={28} />
               <strong>Historical preview</strong>
-              <p>{previewResult.warning ?? 'Bounded DET-011 dry-run completed. No alerts were created.'}</p>
+              <p>{previewResult.honesty ?? previewResult.warning ?? 'Bounded DET-011 dry-run completed. No alerts were created.'}</p>
               <dl>
                 <div><dt>Matches</dt><dd>{previewResult.matchCount}</dd></div>
                 <div><dt>Duration</dt><dd>{previewResult.durationMs} ms</dd></div>
                 <div><dt>Events scanned</dt><dd>{previewResult.eventsScanned?.toLocaleString() ?? 'Unavailable'}</dd></div>
-                <div><dt>Source coverage</dt><dd>{previewResult.sourceCompleteness == null ? 'Unavailable' : `${previewResult.sourceCompleteness}%`}</dd></div>
+                <div><dt>Mode</dt><dd>{previewResult.mode ?? 'unknown'}</dd></div>
               </dl>
               {previewResult.samples.length > 0 && (
                 <div className="detection-test-result__fields">

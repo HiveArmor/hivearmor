@@ -118,6 +118,8 @@ export function filterFoundationDetectionRules(params: RuleListParams): { items:
       .some((value) => value?.toLowerCase().includes(query))) return false;
     if (params.active !== undefined && params.active !== 'all' && rule.ruleActive !== params.active) return false;
     if (params.origin && params.origin !== 'all' && rule.origin !== params.origin) return false;
+    if (params.source === 'sigma' && !rule.sigmaRuleId) return false;
+    if (params.source === 'native' && rule.sigmaRuleId) return false;
     if (params.health && params.health !== 'all' && rule.health !== params.health) return false;
     if (params.severity && params.severity !== 'all' && rule.severity !== params.severity) return false;
     if (params.dataType?.length && !params.dataType.some((type) => rule.dataTypes.includes(type))) return false;
