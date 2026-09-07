@@ -11,7 +11,8 @@ import java.time.Instant;
  * Persisted detection rule exception / suppression (DET-FP-001).
  *
  * <p>STAGING CANDIDATE — exceptions are stored for analyst tuning loops.
- * Runtime engine consumption of active exceptions is a follow-on glue item.
+ * Active rows sync via config plugin YAML and are enforced by the
+ * event-processor before alert creation.
  */
 @Entity
 @Table(name = "ha_detection_exception")

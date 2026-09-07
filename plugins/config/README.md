@@ -7,15 +7,17 @@ It periodically checks the database for updates and, when changes are detected, 
 ## What it does
 - Connects to PostgreSQL using settings under the `com.hivearmor` configuration group.
 - Detects changes in these tables (by their last-update timestamps):
-  - `hive_tenant_config` (assets/tenants)
-  - `hive_correlation_rules` (rules)
-  - `hive_logstash_filter` (pipeline filters)
-  - `hive_regex_pattern` (Grok/regex patterns)
+    - `hive_tenant_config` (assets/tenants)
+    - `hive_correlation_rules` (rules)
+    - `hive_logstash_filter` (pipeline filters)
+    - `hive_regex_pattern` (Grok/regex patterns)
+    - `ha_detection_exception` (active detection exceptions / FP suppressions — DET-FP-001)
 - Writes files into the plugin work directory (`plugins.WorkDir`):
   - `pipeline/tenants.yaml` — tenant and assets configuration
   - `pipeline/patterns.yaml` — regex/grok patterns
   - `pipeline/filters/<id>.yaml` — log pipeline snippets, one file per active filter
   - `rules/hivearmor/<id>.yaml` — correlation rules, one file per active rule
+  - `rules/exceptions/exceptions.yaml` — active exceptions only (`active = true`)
 - Removes files that no longer exist in the database (safe cleanup per folder).
 - Uses an inter-process lock so only one writer runs at a time.
 
@@ -84,6 +86,8 @@ To temporarily disable processing (e.g., during local development), set the plug
 ./rules/
   /hivearmor/
     <rule-id>.yaml
+  /exceptions/
+    exceptions.yaml   # active DET-FP exceptions for event-processor enforce
 ```
 
 ## Error handling & logging
@@ -92,9 +96,9 @@ To temporarily disable processing (e.g., during local development), set the plug
 
 ## Development notes
 Key functions are implemented in `main.go`:
-- Database access: `connect`, `getFilters`, `getRules`, `getPatterns`, `getAssets`, `getRuleDataTypes`.
-- Change detection: `hasChanges` (uses `MAX(updated_at)`/`MAX(last_update)` timestamps).
-- Writers: `writeFilters`, `writeRules`, `writePatterns`, `writeTenant`.
+- Database access: `connect`, `getFilters`, `getRules`, `getPatterns`, `getAssets`, `getRuleDataTypes`, `getActiveExceptions`.
+- Change detection: `hasChanges` (uses `MAX(updated_at)`/`MAX(last_update)` timestamps; soft-fails if `ha_detection_exception` is not migrated yet).
+- Writers: `writeFilters`, `writeRules`, `writePatterns`, `writeTenant`, `writeExceptions`.
 - Cleanup: `cleanUpFilters`, `cleanUpRules`.
 
 ## Troubleshooting

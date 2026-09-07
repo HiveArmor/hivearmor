@@ -136,6 +136,9 @@ func reload() {
 	mu.Lock()
 	lastReport = report
 	mu.Unlock()
+	if rulesDir != "" {
+		loadExceptionsAlongsideRules(rulesDir)
+	}
 	if !report.PilotPackOK && requiresPilotPack(rulesDir) {
 		fmt.Fprintf(os.Stderr, "rules: pilot pack incomplete missing=%v invalid=%v\n", report.PilotMissing, report.Invalid)
 	}
@@ -175,7 +178,14 @@ func LoadFromDir(dir string) LoadReport {
 	}
 
 	_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info == nil || info.IsDir() {
+		if err != nil || info == nil {
+			return nil
+		}
+		// DET-FP-001 — exceptions.yaml is loaded separately; do not treat as CEL rules.
+		if info.IsDir() {
+			if info.Name() == "exceptions" {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 		ext := filepath.Ext(path)

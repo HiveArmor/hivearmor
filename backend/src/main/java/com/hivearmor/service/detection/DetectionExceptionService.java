@@ -23,8 +23,9 @@ import java.util.Map;
  * Persisted detection exceptions (DET-FP-001).
  *
  * <p>STAGING CANDIDATE — stores drafts and active/inactive flags for the
- * analyst FP → exception loop. Runtime engine enforcement of active
- * exceptions is not claimed by this service.
+ * analyst FP → exception loop. Active exceptions sync via config plugin to
+ * the event-processor and are enforced pre-alert during CEL evaluate
+ * (sync lag up to ~60s).
  */
 @Service
 @Transactional
@@ -34,8 +35,10 @@ public class DetectionExceptionService {
     private static final String CLASSNAME = "DetectionExceptionService";
 
     private static final String HONESTY =
-        "STAGING CANDIDATE — exception is persisted in PostgreSQL for tuning/audit. "
-            + "Runtime engine suppression of active exceptions is not yet wired end-to-end.";
+        "STAGING CANDIDATE — exception is persisted in PostgreSQL. "
+            + "When active, the config plugin writes rules/exceptions/exceptions.yaml and the "
+            + "event-processor suppresses matching alerts pre-buildAlert (sync lag typically ≤60s). "
+            + "Sequence/graph/baseline paths are not covered.";
 
     private final HaDetectionExceptionRepository repository;
     private final ObjectMapper objectMapper;

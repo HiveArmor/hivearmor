@@ -43,16 +43,18 @@ public class RulePreviewService {
 
     private static final String HONESTY_INJECT =
         "Inject dry-run only — does not query OpenSearch historical indices. "
-            + "engineParity=approximate (not full Go CEL).";
+            + "engineParity=approximate (not full Go CEL). exceptionsApplied=false "
+            + "(Java dry-run does not load engine exception packs).";
 
     private static final String HONESTY_OPENSEARCH =
         "STAGING CANDIDATE — bounded OpenSearch historical fetch from v3-hive-log-* "
             + "then approximate Java CEL dry-run (not full Go event-processor parity). "
-            + "No alerts were created.";
+            + "exceptionsApplied=false. No alerts were created.";
 
     private static final String HONESTY_UNAVAILABLE =
         "Preview unavailable: provide dryRunEvents for inject mode, or choose opensearch "
-            + "when OpenSearch is reachable. Empty results are never simulated as success.";
+            + "when OpenSearch is reachable. Empty results are never simulated as success. "
+            + "exceptionsApplied=false.";
 
     private final RuleValidationService validationService;
     private final DetectionRuleDryRunService dryRunService;
@@ -185,6 +187,7 @@ public class RulePreviewService {
         response.put("evaluationMode", "opensearch_historical_approx");
         response.put("openSearchQueried", true);
         response.put("engineParity", CelDryRunEvaluator.ENGINE_PARITY);
+        response.put("exceptionsApplied", false);
         response.put("indexPattern", indexPattern);
 
         log.info("{}.preview: mode=opensearch matches={} scanned={} fetched={} duration={}ms index={}",
@@ -276,6 +279,7 @@ public class RulePreviewService {
         response.put("evaluationMode", CelDryRunEvaluator.EVALUATION_MODE);
         response.put("openSearchQueried", false);
         response.put("engineParity", CelDryRunEvaluator.ENGINE_PARITY);
+        response.put("exceptionsApplied", false);
 
         log.info("{}.preview: mode=inject matches={} scanned={} duration={}ms",
             CLASSNAME, matches.size(), scanned, scanDuration);
@@ -304,6 +308,7 @@ public class RulePreviewService {
         response.put("evaluationMode", "unavailable");
         response.put("openSearchQueried", false);
         response.put("engineParity", "n/a");
+        response.put("exceptionsApplied", false);
         response.put("indexPattern", indexPattern);
         response.put("available", false);
         return response;

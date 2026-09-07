@@ -24,7 +24,7 @@ public class DetectionPipelineObservabilityService {
 
     private static final String HONESTY =
         "STAGING CANDIDATE — pipeline health proxies event-processor /health and /api/rules/status "
-            + "via INTERNAL_KEY. afterEvents miss counters require a live EP process.";
+            + "via INTERNAL_KEY. Includes exceptionsSuppressed / activeExceptions when EP is reachable.";
 
     private final EventProcessorManagerService eventProcessorManagerService;
 
@@ -69,6 +69,9 @@ public class DetectionPipelineObservabilityService {
                 response.put("afterEventsMisses", status.getOrDefault("afterEventsMisses", 0));
                 response.put("afterEventsErrors", status.getOrDefault("afterEventsErrors", 0));
                 response.put("correlationChecks", status.getOrDefault("correlationChecks", 0));
+                response.put("exceptionsSuppressed", status.getOrDefault("exceptionsSuppressed", 0));
+                response.put("activeExceptions", status.getOrDefault("activeExceptions", 0));
+                response.put("exceptionsLastLoad", status.get("exceptionsLastLoad"));
             }
 
             return response;
@@ -83,6 +86,9 @@ public class DetectionPipelineObservabilityService {
             response.put("afterEventsMisses", null);
             response.put("afterEventsErrors", null);
             response.put("correlationChecks", null);
+            response.put("exceptionsSuppressed", null);
+            response.put("activeExceptions", null);
+            response.put("exceptionsLastLoad", null);
             response.put("plugins", List.of());
             return response;
         }

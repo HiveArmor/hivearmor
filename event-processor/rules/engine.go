@@ -108,8 +108,14 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 					log.Printf("[rules.Evaluate] CEL error rule.id=%d rule.name=%q expression=%q error=%v (suppressing duplicates for 60s)",
 						rule.ID, rule.Name, rule.Where, evalErr)
 				}
-			} else if ok && addScoreFn != nil {
-				addScoreFn(event, rule.RiskScore)
+			} else if ok {
+				if ExceptionMatches(ruleIDKey(rule.ID), event) {
+					exceptionsSuppressed.Add(1)
+					continue
+				}
+				if addScoreFn != nil {
+					addScoreFn(event, rule.RiskScore)
+				}
 			}
 			continue
 		}
@@ -146,6 +152,11 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 				afterEventsMisses.Add(1)
 				continue
 			}
+		}
+		// DET-FP-001 — active exceptions suppress before alert creation (pre-alert).
+		if ExceptionMatches(ruleIDKey(rule.ID), event) {
+			exceptionsSuppressed.Add(1)
+			continue
 		}
 		alert := buildAlert(event, rule)
 		if alert != nil {
