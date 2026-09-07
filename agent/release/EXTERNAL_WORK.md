@@ -28,8 +28,8 @@ Agent-side Now tickets (AGT-POL-01, AGT-SEC-01, AGT-SIZE-01, AGT-DOC-01) may lan
 |---|---|---|
 | **BE-POL-02** | **DONE (STAGING CANDIDATE)** | Rule `/ack` + filter allowlist landed 2026-09-07 |
 | **FE-POL-01** residual | **DONE (STAGING CANDIDATE)** FE Next 2026-09-07 | Group picker (Admin\|SOC Manager) + 403 fallback; per-agent push UI; telemetry interval editor; push-on-connect honesty. Apply/ack still not LIVE VERIFIED. |
-| **BE-POL-03** | **DONE (STAGING CANDIDATE)** | Per-agent push + sync-on-connect (this session) |
-| **BE-POL-04** | **DONE (STAGING CANDIDATE)** | Schema v1.1 telemetry intervals (this session) |
+| **BE-POL-03** | **DONE (STAGING CANDIDATE)** | Per-agent push + sync-on-connect (2026-09-07) |
+| **BE-POL-04** | **DONE (STAGING CANDIDATE)** | Schema v1.1 telemetry intervals (2026-09-07) |
 | **AM-POL-01** | Open (optional) | Agent-manager stream-open auto APPLY_POLICY — not required if agent calls `POST /api/agent-policies/sync-on-connect` after AgentStream up |
 | **BE-SEC-01** | **PARTIAL** | Schema + FE toggle landed; IR path still needs docs / prefer `EDR_*` over raw shell |
 | **BE-EDR-01** / **FE-EDR-01** / **OPS-EDR-01** | Open | Isolate live-verify; **do not** flip `REMOTE_SENSOR_ISOLATE_LIVE_VERIFIED` |
@@ -154,8 +154,8 @@ TLS: honors `config.insecure` (`SkipCertValidation`) like telemetry. Do **not** 
 |---|---|
 | **Status** | **DONE (STAGING CANDIDATE)** — 2026-09-07 |
 | **Contract** | Optional `telemetry.sca_interval_hours` / `telemetry.sbom_interval_hours` (1–168). Wire `schema_version` stays `1`. Feature constant `AgentPolicySchemaV1.SCHEMA_FEATURE = "1.1"`. |
-| **Agent follow-up** | Replace hardcoded 6h ticker with policy intervals when present. |
-| **FE follow-up** | Expose interval editors on Agent FIM Policies console. |
+| **Agent** | **DONE (STAGING CANDIDATE)** — SCA/SBOM cadence follows policy intervals when present (`7903c1d`). |
+| **FE** | **DONE (STAGING CANDIDATE)** — interval editors on Agent FIM Policies (`8b3a53f`). |
 
 ### BE-SEC-01 — Policy field + IR command path for shell governance
 
@@ -328,3 +328,4 @@ Agent-side culls landed:
 | 2026-09-03 | **Now-phase reconcile (docs only):** FE-POL-01/FE-SEC-01 → **DONE**; BE-POL-01 → **DONE**; BE-POL-02 → **PARTIAL** (rule `/ack` open); BE-SEC-01 → **PARTIAL**. Schema/ACK contract spot-check: aligned, no code fix. Copies synced (`agent/release` ↔ `.plan/audits`). Next (groups UX/scheduler) not started. |
 | 2026-09-07 | **Agent Policy Next (backend):** BE-POL-02 complete (rule `/ack` + filter); SOC Manager `GET /api/agent-groups`; `POST …/push-agent/{agentId}`; `POST …/sync-on-connect`; schema v1.1 telemetry intervals; EXTERNAL_WORK updated. Optional AM-POL-01 stream-open push deferred in favor of agent-callable sync. |
 | 2026-09-07 | **FE-POL Next (STAGING CANDIDATE):** frontend-v3 wires SOC Manager group picker + 403 fallback; per-agent push + sensor picker; telemetry interval editor (`sca_interval_hours` / `sbom_interval_hours`); push-on-connect honesty. Isolate gate untouched. Apply/ack not LIVE VERIFIED. |
+| 2026-09-07 | **Consolidate:** Synced `.plan/audits/AGENT_PLATFORM_EXTERNAL_WORK.md` to `agent/release`; BE-POL-04 agent/FE follow-ups marked done; isolate gate unchanged.
