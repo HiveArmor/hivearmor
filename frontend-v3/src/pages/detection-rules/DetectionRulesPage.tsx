@@ -12,8 +12,12 @@ import { useNavigate, Link } from 'react-router-dom';
 
 import { createColumnDefs } from './columnDefs';
 import { RuleTuningPanel } from './components/RuleTuningPanel';
+import { DetectionPipelineHealthStrip } from './components/DetectionPipelineHealthStrip';
 import { DetectionMonitoringView } from './DetectionMonitoringView';
-import { DET_EXCEPTION_PREVIEW_DENIED_TITLE } from './detectionRules.capabilities';
+import {
+  DET_EXCEPTION_ACTIVATE_DENIED_TITLE,
+  DET_EXCEPTION_DRAFT_DENIED_TITLE,
+} from './detectionRules.capabilities';
 import { deleteRule, detectionRulesFixtureMode, fetchRules, syncSigmaRules, toggleRuleActive } from './detectionRules.service';
 import type { DetectionRule, DetectionRuleSummary, RuleListParams } from './detectionRules.types';
 
@@ -115,9 +119,11 @@ export function DetectionRulesPage(): JSX.Element {
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   const roles = user?.roles ?? [];
-  const hasAccess = roles.some((role) => ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'].includes(role));
+  const hasAccess = roles.some((role) => ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN', 'ROLE_SOC_ANALYST'].includes(role));
   const userRole: 'ROLE_ANALYST' | 'ROLE_SOC_MANAGER' | 'ROLE_ADMIN' = roles.includes('ROLE_ADMIN') ? 'ROLE_ADMIN' : roles.includes('ROLE_SOC_MANAGER') ? 'ROLE_SOC_MANAGER' : 'ROLE_ANALYST';
   const canManage = userRole === 'ROLE_ADMIN' || userRole === 'ROLE_SOC_MANAGER';
+  const canDraftException = hasAccess;
+  const canActivateException = canManage;
   const canSync = userRole === 'ROLE_ADMIN';
 
   const filters = useMemo<RuleListParams>(() => ({
@@ -292,6 +298,8 @@ export function DetectionRulesPage(): JSX.Element {
 
       {detectionRulesFixtureMode && <div className="detection-page__fixture"><span><strong>Design fixture:</strong> fictional detection content and execution telemetry are enabled.</span><span>Production never receives these records.</span></div>}
 
+      <DetectionPipelineHealthStrip />
+
       {inventoryEmpty && <div className="detection-page__honesty" role="status" data-testid="detection-empty-honesty"><strong>No detection rules installed yet.</strong><span>The tenant inventory may be empty — import managed content or create a custom rule. Coverage and health metrics are not implied when the inventory is blank.</span></div>}
 
       <nav className="detection-views" aria-label="Detection engineering views">
@@ -377,7 +385,14 @@ export function DetectionRulesPage(): JSX.Element {
         <section><h3>Detection intent</h3><p>{activeRule.description ?? 'No analyst-facing description is available.'}</p><dl><div><dt>Source</dt><dd>{activeRule.origin ?? 'Unknown'}</dd></div><div><dt>Schedule</dt><dd>{activeRule.schedule ?? 'Unavailable'}</dd></div><div><dt>Lookback</dt><dd>{activeRule.lookback ?? 'Unavailable'}</dd></div><div><dt>Last run</dt><dd>{formatDateTime(activeRule.lastRunAt)}</dd></div><div><dt>Duration</dt><dd>{activeRule.lastRunDurationMs == null ? 'Unavailable' : `${activeRule.lastRunDurationMs.toLocaleString()} ms`}</dd></div></dl></section>
         <section><h3>ATT&amp;CK and telemetry</h3>{activeRule.techniqueId ? <button className="detection-drawer__pivot" type="button" onClick={() => { setActiveRule(null); setView('coverage'); }}><BarChart3 size={16} /><span><strong>{activeRule.techniqueId} · {activeRule.techniqueName ?? 'Technique'}</strong><small>{activeRule.tactic ?? 'Tactic unavailable'}</small></span><ChevronRight size={14} /></button> : <p>Rule has no ATT&amp;CK mapping.</p>}{activeRule.dataTypes.length ? <div className="detection-drawer__chips">{activeRule.dataTypes.map((type) => <span key={type}>{type}</span>)}</div> : <p>Telemetry requirements are not reported by this rule projection.</p>}{activeRule.tags?.length ? <div className="detection-drawer__chips" aria-label="Rule tags">{activeRule.tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : null}</section>
         <section><h3>Change provenance</h3><dl><div><dt>Modified</dt><dd>{formatDateTime(activeRule.lastModified)}</dd></div><div><dt>Updated by</dt><dd>{activeRule.updatedBy ?? activeRule.createdBy ?? 'Unavailable'}</dd></div></dl><p>Version comparison and rollback are available after opening the editor.</p></section>
-        <RuleTuningPanel ruleId={activeRule.id} ruleName={activeRule.ruleName} canManage={canManage} manageDeniedTitle={DET_EXCEPTION_PREVIEW_DENIED_TITLE} />
+        <RuleTuningPanel
+          ruleId={activeRule.id}
+          ruleName={activeRule.ruleName}
+          canDraft={canDraftException}
+          canActivate={canActivateException}
+          draftDeniedTitle={DET_EXCEPTION_DRAFT_DENIED_TITLE}
+          activateDeniedTitle={DET_EXCEPTION_ACTIVATE_DENIED_TITLE}
+        />
         <footer><button type="button" disabled={!canManage} title={canManage ? 'Test rule in sandbox' : DETECTION_MANAGE_DENIED_TITLE} onClick={() => { setTestRuleId(activeRule.id); setActiveRule(null); setView('test'); }}><TestTube2 size={14} /> Test rule</button><button type="button" className="detection-primary-button" disabled={!canManage} title={canManage ? 'Open rule editor' : DETECTION_MANAGE_DENIED_TITLE} onClick={() => navigate(`/detection-rules/${activeRule.id}/edit`)}>Open editor <ChevronRight size={14} /></button></footer>
       </aside></div>}
 

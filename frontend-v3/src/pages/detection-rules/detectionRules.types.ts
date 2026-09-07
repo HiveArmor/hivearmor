@@ -161,8 +161,8 @@ export interface RulePreviewResult {
   histogram: RulePreviewBucket[];
   samples: Array<{ id: string; timestamp: string; summary: string; entity: string }>;
   warning: string | null;
-  /** Honesty flags from DET-PREV-001 — never pretend OpenSearch when inject-only. */
-  mode?: 'inject_dry_run' | 'opensearch_historical' | 'fixture' | 'unavailable';
+  /** Honesty flags from DET-PREV — inject | opensearch | unavailable | fixture. */
+  mode?: 'inject' | 'inject_dry_run' | 'opensearch' | 'opensearch_historical' | 'fixture' | 'unavailable';
   honesty?: string | null;
   simulated?: boolean;
   openSearchQueried?: boolean;

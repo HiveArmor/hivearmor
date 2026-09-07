@@ -35,6 +35,7 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
   const [running, setRunning] = useState(false);
   const [previewing, setPreviewing] = useState(false);
   const [previewRange, setPreviewRange] = useState('4h');
+  const [previewMode, setPreviewMode] = useState<'inject' | 'opensearch' | 'auto'>('auto');
   const controllerRef = useRef<AbortController | null>(null);
   const isSigma = /^\s*(?:#.*\n)*title:/m.test(ruleYaml) && /^detection:\s*$/m.test(ruleYaml);
 
@@ -142,7 +143,7 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
       } catch {
         dryRunEvents = undefined;
       }
-      setPreviewResult(await previewRuleDraft(draft, previewRange, controller.signal, dryRunEvents));
+      setPreviewResult(await previewRuleDraft(draft, previewRange, controller.signal, dryRunEvents, previewMode));
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === 'AbortError') setError('Historical preview cancelled. No alerts or actions were created.');
       else setError(caught instanceof Error ? caught.message : 'Historical preview failed.');
@@ -167,19 +168,29 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
             { value: '7d', label: 'Preview · 7d' },
           ]}
         />
+        <HaCompactSelect
+          ariaLabel="Preview mode"
+          value={previewMode}
+          onChange={(value) => setPreviewMode(value as 'inject' | 'opensearch' | 'auto')}
+          options={[
+            { value: 'auto', label: 'Mode · auto' },
+            { value: 'inject', label: 'Mode · inject' },
+            { value: 'opensearch', label: 'Mode · OpenSearch' },
+          ]}
+        />
         <button
           type="button"
           className="detection-test-console__history"
           disabled={!DET_011_VALIDATE_PREVIEW || running}
-          title={DET_011_VALIDATE_PREVIEW ? 'Run DET-011 historical preview against indexed events' : 'DET-011 historical preview is not exposed by the backend'}
+          title={DET_011_VALIDATE_PREVIEW ? 'Run DET-011 preview (inject or OpenSearch)' : 'DET-011 historical preview is not exposed by the backend'}
           onClick={() => void runHistoricalPreview()}
         >
-          <Clock3 size={14} /> {previewing ? 'Cancel preview' : 'Historical preview'}
+          <Clock3 size={14} /> {previewing ? 'Cancel preview' : 'Run preview'}
         </button>
         {running ? <button type="button" className="detection-test-console__cancel" onClick={() => controllerRef.current?.abort()}><Square size={13} /> Cancel</button> : <button type="button" className="detection-primary-button" onClick={() => void runTest()} disabled={previewing}><Play size={14} /> Run test</button>}
       </div>
 
-      <div className="detection-test-console__boundary" role="status"><TestTube2 size={14} /><strong>Safe test boundary.</strong><span>{detectionRulesFixtureMode ? 'Fictional event samples are isolated from production metrics.' : isSigma ? 'The authoritative Sigma evaluator creates no alerts, incidents, notifications, or response actions.' : 'CEL inject dry-run (DET-TEST-001) evaluates the expression against the sample event without writing alerts. Historical preview may query OpenSearch when the backend reports openSearchQueried=true.'}</span></div>
+      <div className="detection-test-console__boundary" role="status"><TestTube2 size={14} /><strong>Safe test boundary.</strong><span>{detectionRulesFixtureMode ? 'Fictional event samples are isolated from production metrics.' : isSigma ? 'The authoritative Sigma evaluator creates no alerts, incidents, notifications, or response actions.' : 'CEL inject dry-run (DET-TEST-001) evaluates the expression against the sample event without writing alerts. Preview modes: inject | opensearch | unavailable — OpenSearch never fakes empty success.'}</span></div>
 
       <div className="detection-test-console__workspace">
         <section className="detection-test-editor"><header><div><Code2 size={14} /><strong>Detection definition</strong></div><span>{isSigma ? 'YAML · Sigma-compatible' : 'HiveArmor CEL · normalized fields'}</span></header><div><Editor height="100%" language={isSigma ? 'yaml' : 'javascript'} value={ruleYaml} onChange={(value) => { setRuleYaml(value ?? ''); setResult(null); setPreviewResult(null); }} beforeMount={defineHiveArmorMonacoTheme} theme={monacoThemeName(theme)} options={{ automaticLayout: true, minimap: { enabled: false }, fontSize: 12, lineHeight: 18, lineNumbersMinChars: 3, renderLineHighlight: 'none', scrollBeyondLastLine: false, wordWrap: 'on', tabSize: 2, padding: { top: 8, bottom: 8 } }} /></div></section>

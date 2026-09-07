@@ -274,7 +274,7 @@ export async function deleteRule(id: DetectionRule['id']): Promise<void> {
 
 // FIX-04: /api/ha-sigma/sync → /api/ha-sigma-sync/trigger
 export async function syncSigmaRules(): Promise<SigmaSyncResponse> {
-  if (fixtureMode) return { synced: 7, errors: 0, staged: 7, skipped: 41, message: '7 fictional Sigma updates staged for review.' };
+  if (fixtureMode) return { synced: 7, errors: 0, staged: 7, skipped: 41, message: '7 fictional Sigma updates staged for review. Activate will request engine reload (fixture).' };
   const token = getToken();
   const response = await fetch('/api/ha-sigma-sync/trigger', {
     method: 'POST',
@@ -386,7 +386,13 @@ export async function validateRuleDraft(rule: Partial<DetectionRule>, signal?: A
   };
 }
 
-export async function previewRuleDraft(rule: Partial<DetectionRule>, range: string, signal?: AbortSignal, dryRunEvents?: Array<Record<string, unknown>>): Promise<RulePreviewResult> {
+export async function previewRuleDraft(
+  rule: Partial<DetectionRule>,
+  range: string,
+  signal?: AbortSignal,
+  dryRunEvents?: Array<Record<string, unknown>>,
+  previewMode: 'inject' | 'opensearch' | 'auto' = 'auto',
+): Promise<RulePreviewResult> {
   signal?.throwIfAborted();
   if (!fixtureMode) {
     const hours = range === '7d' ? 168 : range === '24h' ? 24 : 4;
@@ -400,12 +406,14 @@ export async function previewRuleDraft(rule: Partial<DetectionRule>, range: stri
         timeRange: { from: from.toISOString(), to: to.toISOString() },
         limit: 100,
         dryRunEvents: dryRunEvents ?? undefined,
+        previewMode,
       }),
     });
     const result = await handleResponse<{
       matches?: Array<Record<string, unknown>>;
       matchCount?: number;
       scanDuration?: number;
+      eventsScanned?: number;
       estimatedAlertRate?: number;
       sampleAlerts?: Array<{ id?: string; timestamp?: string; name?: string; source?: Record<string, unknown> }>;
       mode?: RulePreviewResult['mode'];
@@ -414,13 +422,14 @@ export async function previewRuleDraft(rule: Partial<DetectionRule>, range: stri
       openSearchQueried?: boolean;
       available?: boolean;
     }>(response);
-    const mode = result.mode ?? (result.openSearchQueried ? 'opensearch_historical' : dryRunEvents?.length ? 'inject_dry_run' : 'unavailable');
+    const mode = result.mode
+      ?? (result.openSearchQueried ? 'opensearch' : dryRunEvents?.length ? 'inject' : 'unavailable');
     const honesty = result.honesty
-      ?? (mode === 'opensearch_historical'
+      ?? (mode === 'opensearch' || mode === 'opensearch_historical'
         ? 'Bounded historical OpenSearch preview — no alerts were created.'
-        : mode === 'inject_dry_run'
+        : mode === 'inject' || mode === 'inject_dry_run'
           ? 'Inject dry-run preview — OpenSearch historical indices were not queried.'
-          : 'Preview unavailable — provide injectable sample events for inject dry-run. OpenSearch historical preview is not wired.');
+          : 'Preview unavailable — provide injectable sample events or choose OpenSearch mode when reachable.');
     if (mode === 'unavailable' || result.available === false) {
       return {
         available: false,
@@ -449,9 +458,9 @@ export async function previewRuleDraft(rule: Partial<DetectionRule>, range: stri
     return {
       available: true,
       executionId: null,
-      approximate: mode !== 'opensearch_historical',
+      approximate: mode === 'inject' || mode === 'inject_dry_run',
       matchCount: result.matchCount ?? 0,
-      eventsScanned: null,
+      eventsScanned: result.eventsScanned ?? null,
       durationMs: result.scanDuration ?? 0,
       sourceCompleteness: null,
       truncated: (result.matches?.length ?? 0) >= 100,
@@ -471,11 +480,51 @@ export async function previewRuleDraft(rule: Partial<DetectionRule>, range: stri
       reject(new DOMException('Preview cancelled', 'AbortError'));
     }, { once: true });
   });
+  if (previewMode === 'opensearch') {
+    return {
+      available: true,
+      executionId: `preview-os-${rule.id ?? 'draft'}`,
+      approximate: true,
+      matchCount: 6,
+      eventsScanned: 48,
+      durationMs: 312,
+      sourceCompleteness: 94,
+      truncated: false,
+      histogram: [],
+      samples: [
+        { id: 'os-1', timestamp: '2026-09-07T12:01:00Z', summary: 'OpenSearch historical match (fixture)', entity: 'FIN-WKS-044' },
+      ],
+      warning: 'Design fixture: OpenSearch mode returns fictional historical matches.',
+      mode: 'opensearch',
+      honesty: 'Design fixture: OpenSearch historical preview is fictional.',
+      simulated: true,
+      openSearchQueried: true,
+    };
+  }
+  if (previewMode === 'inject' && !dryRunEvents?.length) {
+    return {
+      available: false,
+      executionId: null,
+      approximate: true,
+      matchCount: null,
+      eventsScanned: null,
+      durationMs: 0,
+      sourceCompleteness: null,
+      truncated: false,
+      histogram: [],
+      samples: [],
+      warning: 'Inject mode requires a sample event JSON object.',
+      mode: 'unavailable',
+      honesty: 'Inject mode unavailable without dryRunEvents.',
+      simulated: false,
+      openSearchQueried: false,
+    };
+  }
   const base = Math.max(4, (rule.ruleName?.length ?? 12) % 17);
   return {
     available: true,
     executionId: `preview-${rule.id ?? 'draft'}-20260803`,
-    approximate: false,
+    approximate: true,
     matchCount: base + 8,
     eventsScanned: range === '7d' ? 1_842_991 : range === '24h' ? 284_721 : 47_228,
     durationMs: range === '7d' ? 1842 : range === '24h' ? 642 : 218,
@@ -488,7 +537,7 @@ export async function previewRuleDraft(rule: Partial<DetectionRule>, range: stri
       { id: 'preview-event-003', timestamp: '2026-08-03T08:05:44Z', summary: 'Normalized network event satisfied the selection', entity: 'OPS-JMP-03' },
     ],
     warning: 'Fictional preview results are isolated from production alerts and rule metrics.',
-    mode: 'fixture',
+    mode: previewMode === 'inject' ? 'inject' : 'fixture',
     honesty: 'Design fixture: preview matches are fictional and isolated from production.',
     simulated: true,
     openSearchQueried: false,

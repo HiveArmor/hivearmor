@@ -24,12 +24,22 @@ export const DET_TEST_CEL_DRY_RUN = true;
 
 /**
  * Exception impact preview — POST /ha-detection-rules/{id}/exceptions/preview.
- * Activate/persist exceptions remain DET-FP-001 (Next).
+ * Persist/activate — DET-FP-001 (Analyst+ draft, SOC Manager activate).
  */
 export const DET_EXCEPTION_PREVIEW = true;
+export const DET_EXCEPTION_PERSIST = true;
 
-export const DET_EXCEPTION_PREVIEW_DENIED_TITLE =
+export const DET_EXCEPTION_DRAFT_DENIED_TITLE =
+  'Required permission: Analyst or higher';
+
+export const DET_EXCEPTION_ACTIVATE_DENIED_TITLE =
   'Required permission: SOC Manager or Platform Administrator';
+
+/** @deprecated use DET_EXCEPTION_ACTIVATE_DENIED_TITLE */
+export const DET_EXCEPTION_PREVIEW_DENIED_TITLE = DET_EXCEPTION_ACTIVATE_DENIED_TITLE;
+
+/** DET-OBS-001: GET /ha-detection-rules/pipeline-health */
+export const DET_OBS_PIPELINE_HEALTH = true;
 
 /**
  * DET-014 available-content recommendations — no dedicated backend mapping.
