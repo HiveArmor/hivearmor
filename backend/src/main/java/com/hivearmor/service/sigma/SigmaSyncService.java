@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivearmor.domain.correlation.rules.UtmCorrelationRules;
 import com.hivearmor.domain.sigma.SigmaSyncConfig;
+import com.hivearmor.event_processor.EventProcessorManagerService;
 import com.hivearmor.repository.correlation.rules.UtmCorrelationRulesRepository;
 import com.hivearmor.repository.sigma.SigmaSyncConfigRepository;
 import com.hivearmor.service.dto.correlation.AdversaryType;
@@ -23,7 +24,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class SigmaSyncService {
@@ -35,13 +38,16 @@ public class SigmaSyncService {
 
     private final SigmaSyncConfigRepository syncConfigRepository;
     private final UtmCorrelationRulesRepository rulesRepository;
+    private final EventProcessorManagerService eventProcessorManagerService;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     public SigmaSyncService(SigmaSyncConfigRepository syncConfigRepository,
-                            UtmCorrelationRulesRepository rulesRepository) {
+                            UtmCorrelationRulesRepository rulesRepository,
+                            EventProcessorManagerService eventProcessorManagerService) {
         this.syncConfigRepository = syncConfigRepository;
         this.rulesRepository = rulesRepository;
+        this.eventProcessorManagerService = eventProcessorManagerService;
     }
 
     // Checks every hour; skips if the configured frequency has not elapsed.
@@ -248,11 +254,20 @@ public class SigmaSyncService {
     // ── Activate / Dismiss ─────────────────────────────────────────────────────
 
     @Transactional
-    public void activateStagedRule(Long id) {
+    public Map<String, Object> activateStagedRule(Long id) {
         if (!rulesRepository.existsById(id)) {
             throw new jakarta.persistence.EntityNotFoundException("Rule " + id + " not found");
         }
         rulesRepository.activateStagedRule(id);
+        Map<String, Object> reload = eventProcessorManagerService.requestRuleReload();
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("ruleId", id);
+        result.put("activated", true);
+        result.put("engineReload", reload);
+        result.put("honesty",
+            "STAGING CANDIDATE — staged Sigma rule marked active in DB; engine reload requested. "
+                + "Config plugin YAML write + watchLoop may take up to ~30s.");
+        return result;
     }
 
     @Transactional

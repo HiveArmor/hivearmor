@@ -13,7 +13,7 @@ Next Steps:
 || regexMatch("log.message", "(?i)(mac.*flap|duplicate.*mac|mac.*move.*between.*port)")
 || regexMatch("log.message", "(?i)(Host [0-9a-fA-F:.]+.*is flapping between port)")
 || (lessOrEqual("log.severity", 4) && regexMatch("log.message", "(?i)(mac.*address.*conflict|duplicate.*address.*detected)"))
-', '2026-03-02 16:31:52.224411', true, true, 'origin', null, '[{"indexPattern":"v11-log-cisco-switch-*","with":[{"field":"origin.mac","operator":"filter_term","value":"{{.origin.mac}}"}],"or":null,"within":"now-10m","count":3}]', '["adversary.mac"]');
+', '2026-03-02 16:31:52.224411', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.mac","operator":"filter_term","value":"{{.origin.mac}}"}],"or":null,"within":"now-10m","count":3}]', '["adversary.mac"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1172, 'ARP Poisoning Attack Detection', 3, 3, 2, 'Credential Access, Collection', 'T1557.002 - Adversary-in-the-Middle: ARP Cache Poisoning', e'Detects potential ARP poisoning attacks by monitoring for invalid ARP packets, DHCP snooping violations, and gratuitous ARP abuse. These attacks can enable man-in-the-middle attacks by corrupting the ARP cache of network devices and redirecting network traffic through an attacker-controlled system.
 
 Next Steps:
@@ -29,7 +29,7 @@ Next Steps:
 || (equals("log.facility", "IP") && oneOf("log.facilityMnemonic", ["DUPADDR", "SOURCEGUARD"]))
 || contains("log.message", ["invalid arp", "arp inspection drop", "dhcp snooping deny", "gratuitous arp", "arp reply not request", "duplicate ip address", "IP source guard deny", "arp packet validation failed"])
 || (lessOrEqual("log.severity", 3) && contains("log.message", ["arp spoofing", "arp poison", "man in the middle"]))
-', '2026-03-02 16:31:53.525673', true, true, 'origin', null, '[{"indexPattern":"v11-log-cisco-switch-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-10m","count":5}]', '["adversary.ip","adversary.mac"]');
+', '2026-03-02 16:31:53.525673', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-10m","count":5}]', '["adversary.ip","adversary.mac"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1173, 'VLAN Hopping Attack Detection', 3, 3, 2, 'Defense Evasion', 'T1599 - Network Boundary Bridging', e'Detects potential VLAN hopping attacks through switch spoofing or double tagging. Monitors for DTP negotiation attempts, trunk port changes, or multiple VLAN tags that could indicate an attacker trying to gain unauthorized access to other VLANs.
 
 Next Steps:

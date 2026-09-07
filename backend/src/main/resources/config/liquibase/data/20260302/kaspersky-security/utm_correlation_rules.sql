@@ -18,7 +18,7 @@ Next Steps:
 exists("log.dst") &&
 exists("log.src") &&
 safe(log.src, "") != safe(log.dst, "")
-', '2026-03-02 16:10:26.625080', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-kaspersky-*","with":[{"field":"log.src","operator":"filter_term","value":"{{.log.src}}"}],"or":null,"within":"now-2h","count":3}]', null);
+', '2026-03-02 16:10:26.625080', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.src","operator":"filter_term","value":"{{.log.src}}"}],"or":null,"within":"now-2h","count":3}]', null);
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1161, 'Kaspersky Rootkit Detection', 3, 3, 3, 'Defense Evasion', 'T1014 - Rootkit', e'Detects rootkit activity identified by Kaspersky security, including hidden processes, kernel-level modifications, and rootkit-specific malware classifications that indicate a deeply compromised system.
 
 Next Steps:
@@ -49,7 +49,7 @@ Next Steps:
  contains("log.cs2", "Trojan-Ransom") || contains("log.cs4", "Trojan-Ransom") ||
  (contains("log.msg", "encrypt") && contains("log.msg", "mass")) ||
  (contains("log.msg", "System Watcher") && contains("log.msg", "rollback")))
-', '2026-03-02 16:10:29.339649', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-kaspersky-*","with":[{"field":"log.src","operator":"filter_term","value":"{{.log.src}}"}],"or":null,"within":"now-10m","count":3}]', null);
+', '2026-03-02 16:10:29.339649', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.src","operator":"filter_term","value":"{{.log.src}}"}],"or":null,"within":"now-10m","count":3}]', null);
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1163, 'Kaspersky Agent Disabled or Tampered', 3, 3, 3, 'Defense Evasion', 'T1562.001 - Impair Defenses: Disable or Modify Tools', e'Detects when the Kaspersky security agent is disabled, stopped, or tampered with. This is a critical indicator of defense evasion as attackers disable endpoint protection to execute malware undetected.
 
 Next Steps:
@@ -86,7 +86,7 @@ Next Steps:
  regexMatch("log.msg", "(?i).*(data.*exfiltration|suspicious.*upload|unauthorized.*transfer).*")) &&
 exists("target.ip") &&
 greaterOrEqual("log.cefDeviceSeverity", "3")
-', '2026-03-02 16:10:32.000991', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-kaspersky-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"},{"field":"log.cat","operator":"filter_term","value":"NetworkThreat"}],"or":null,"within":"now-30m","count":5}]', '["origin.ip","target.ip"]');
+', '2026-03-02 16:10:32.000991', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"},{"field":"log.cat","operator":"filter_term","value":"NetworkThreat"}],"or":null,"within":"now-30m","count":5}]', '["origin.ip","target.ip"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1165, 'Kaspersky Command and Control Communication Detection', 3, 3, 2, 'Command and Control', 'T1071 - Application Layer Protocol', e'Detects potential command and control (C2) communication attempts identified by Kaspersky, including suspicious outbound connections, malware callbacks, and botnet communication patterns. This rule triggers when Kaspersky identifies network threats related to botnet activity, C2 communications, or malware beaconing that was not successfully blocked.
 
 Next Steps:
@@ -278,7 +278,7 @@ Next Steps:
  contains("log.cs4", "Net-Worm") ||
  (exists("log.target.ip") && exists("log.dpt"))) &&
 equals("action", "Blocked")
-', '2026-03-02 16:10:19.847840', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-kaspersky-*","with":[{"field":"log.src","operator":"filter_term","value":"{{.log.src}}"},{"field":"log.dstIP","operator":"filter_term","value":"{{.log.dstIP}}"}],"or":null,"within":"now-30m","count":5}]', '["target.ip"]');
+', '2026-03-02 16:10:19.847840', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.src","operator":"filter_term","value":"{{.log.src}}"},{"field":"log.dstIP","operator":"filter_term","value":"{{.log.dstIP}}"}],"or":null,"within":"now-30m","count":5}]', '["target.ip"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1156, 'Kaspersky Sandbox Evasion Attempts Detection', 3, 3, 2, 'Defense Evasion, Discovery', 'T1497 - Virtualization/Sandbox Evasion', e'Identifies malware attempting to detect and evade sandbox environments. This includes time-based evasion, environment checks, anti-VM techniques, and other behaviors designed to avoid analysis in controlled environments.
 
 Next Steps:

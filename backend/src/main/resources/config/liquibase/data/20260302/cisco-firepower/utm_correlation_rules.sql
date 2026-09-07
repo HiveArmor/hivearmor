@@ -14,7 +14,7 @@ exists("target.ip") &&
  (contains("log.appProto", "SSL") && !oneOf("target.port", [443, 8443, 993, 995, 465, 636])) ||
  equals("log.appProto", "unknown-tcp")) &&
 equals("log.initiatorPackets", true)
-', '2026-03-02 16:38:33.554409', true, true, 'origin', null, '[{"indexPattern":"v11-log-firewall-cisco-firepower-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"},{"field":"target.ip","operator":"filter_term","value":"{{.target.ip}}"}],"or":null,"within":"now-1h","count":5}]', '["adversary.ip","target.ip","target.port"]');
+', '2026-03-02 16:38:33.554409', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"},{"field":"target.ip","operator":"filter_term","value":"{{.target.ip}}"}],"or":null,"within":"now-1h","count":5}]', '["adversary.ip","target.ip","target.port"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1175, 'Firepower IOC (Indicator of Compromise) Detection', 3, 3, 2, 'Initial Access', 'T1566 - Phishing', e'Detects when Firepower identifies an Indicator of Compromise (IOC), indicating a host may be infected with malware or compromised. IOCs can include file hashes, malware signatures, or behavioral patterns that suggest malicious activity.
 
 Next Steps:

@@ -13,6 +13,8 @@ import com.hivearmor.service.UtmStackService;
 import com.hivearmor.service.application_events.ApplicationEventService;
 import com.hivearmor.service.correlation.rules.UtmCorrelationRuleVersionService;
 import com.hivearmor.service.correlation.rules.UtmCorrelationRulesService;
+import com.hivearmor.service.detection.CelDryRunEvaluator.DryRunResult;
+import com.hivearmor.service.detection.DetectionRuleDryRunService;
 import com.hivearmor.service.dto.RuleTestRequestDTO;
 import com.hivearmor.service.dto.RuleTestResultDTO;
 import com.hivearmor.service.dto.SigmaImportRequestDTO;
@@ -80,13 +82,16 @@ public class UtmCorrelationRulesResource {
 
     private final UtmDataTypesRepository dataTypesRepository;
 
+    private final DetectionRuleDryRunService dryRunService;
+
     public UtmCorrelationRulesResource(ApplicationEventService applicationEventService,
                                        UtmCorrelationRulesService rulesService,
                                        UtmCorrelationRulesMapper utmCorrelationRulesMapper,
                                        UtmStackService utmStackService,
                                        CorrelationRuleValidator correlationRuleValidator,
                                        UtmCorrelationRuleVersionService versionService,
-                                       UtmDataTypesRepository dataTypesRepository) {
+                                       UtmDataTypesRepository dataTypesRepository,
+                                       DetectionRuleDryRunService dryRunService) {
         this.applicationEventService = applicationEventService;
         this.rulesService = rulesService;
         this.utmCorrelationRulesMapper = utmCorrelationRulesMapper;
@@ -94,6 +99,7 @@ public class UtmCorrelationRulesResource {
         this.correlationRuleValidator = correlationRuleValidator;
         this.versionService = versionService;
         this.dataTypesRepository = dataTypesRepository;
+        this.dryRunService = dryRunService;
     }
     @InitBinder("utmCorrelationRulesDTO")
     protected void initBinder(WebDataBinder binder) {
@@ -353,12 +359,21 @@ public class UtmCorrelationRulesResource {
     public ResponseEntity<RuleTestResultDTO> testRule(@RequestBody RuleTestRequestDTO request) {
         final String ctx = CLASSNAME + ".testRule";
         try {
+            if (request == null || request.getRuleId() == null) {
+                return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST,
+                    ctx + ": ruleId is required");
+            }
+            String eventJson = request.resolveEventJson();
+            if (eventJson == null || eventJson.isBlank()) {
+                return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST,
+                    ctx + ": Sample event JSON is required (eventJson, sampleEvent, or testEventJson). "
+                        + "Inject dry-run will not fake success without an event.");
+            }
             Optional<UtmCorrelationRules> opt = rulesService.findOne(request.getRuleId());
             if (opt.isEmpty()) {
                 return ResponseUtil.buildErrorResponse(HttpStatus.NOT_FOUND, ctx + ": Rule not found");
             }
             UtmCorrelationRules rule = opt.get();
-            long start = System.currentTimeMillis();
             int varCount = 0;
             try {
                 String defJson = rule.getRuleDefinition();
@@ -368,15 +383,31 @@ public class UtmCorrelationRulesResource {
                         varCount = def.get("ruleVariables").getAsJsonArray().size();
                     }
                 }
-            } catch (Exception ignored) {}
-            long durationMs = System.currentTimeMillis() - start;
+            } catch (Exception ignored) {
+                // variable count is informational only
+            }
+
+            DryRunResult dryRun = dryRunService.evaluateRuleDefinition(
+                rule.getRuleDefinition(), eventJson);
+
             RuleTestResultDTO result = new RuleTestResultDTO(
-                rule.getId(), rule.getRuleName(), true, varCount,
-                varCount * 3,
-                "Dry-run: " + varCount + " variable(s) evaluated against in-memory evaluator",
-                durationMs
+                rule.getId(),
+                rule.getRuleName(),
+                dryRun.syntaxOk(),
+                varCount,
+                dryRun.matched() ? 1 : 0,
+                dryRun.explanation(),
+                dryRun.durationMs()
             );
+            result.setMatched(dryRun.matched());
+            result.setMatchedFields(dryRun.matchedFields());
+            result.setExplanation(dryRun.explanation());
+            result.setEvaluationMode(dryRun.evaluationMode());
+            result.setOpenSearchQueried(dryRun.openSearchQueried());
+            result.setEngineParity(dryRun.engineParity());
             return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST, ctx + ": " + e.getMessage());
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);

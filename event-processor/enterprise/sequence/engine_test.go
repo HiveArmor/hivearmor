@@ -4,8 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	ha_rules "github.com/hivearmor/event-processor/rules"
 	"github.com/hivearmor/sdk/plugins"
+	"github.com/stretchr/testify/assert"
 )
 
 // newTestEngine resets all package-level state and registers the given rules with a
@@ -146,4 +147,61 @@ func TestExpiryLoopStartedByInit(t *testing.T) {
 		}
 	}()
 	Init([]SequenceRule{reconExploitRule()}, func(_ *plugins.Alert) {})
+}
+
+func TestSequenceExceptionSuppressesBeforeAlert(t *testing.T) {
+	const ruleID = "42"
+	fired := newTestEngine([]SequenceRule{{
+		ID:   ruleID,
+		Name: "[TEST] Exception-gated sequence",
+		Steps: []StepDef{
+			{Where: `action == "port_scan"`, Within: 10 * time.Minute},
+			{Where: `action == "exploit_attempt"`, Within: 30 * time.Minute},
+		},
+	}})
+
+	ha_rules.ReplaceExceptionsForTest([]ha_rules.DetectionException{{
+		ID:     1,
+		RuleID: ruleID,
+		Active: true,
+		Conditions: []ha_rules.ExceptionCondition{
+			{Field: "host.name", Operator: "is", Value: "approved-scanner"},
+		},
+	}})
+	t.Cleanup(func() { ha_rules.ReplaceExceptionsForTest(nil) })
+
+	suppressedBefore, _, _ := ha_rules.ExceptionCounters()
+
+	Process(&plugins.Event{
+		Action: "port_scan",
+		Origin: &plugins.Side{Ip: "192.0.2.10", Host: "approved-scanner", User: "svc"},
+	})
+	Process(&plugins.Event{
+		Action: "exploit_attempt",
+		Origin: &plugins.Side{Ip: "192.0.2.10", Host: "approved-scanner", User: "svc"},
+	})
+	select {
+	case a := <-fired:
+		t.Fatalf("active exception must suppress sequence alert, got: %v", a)
+	default:
+	}
+
+	suppressedAfter, _, _ := ha_rules.ExceptionCounters()
+	assert.Equal(t, suppressedBefore+1, suppressedAfter)
+
+	// Non-matching host still alerts.
+	Process(&plugins.Event{
+		Action: "port_scan",
+		Origin: &plugins.Side{Ip: "192.0.2.20", Host: "FIN-WKS-044", User: "alice"},
+	})
+	Process(&plugins.Event{
+		Action: "exploit_attempt",
+		Origin: &plugins.Side{Ip: "192.0.2.20", Host: "FIN-WKS-044", User: "alice"},
+	})
+	select {
+	case a := <-fired:
+		assert.Equal(t, "[TEST] Exception-gated sequence", a.Name)
+	case <-time.After(time.Second):
+		t.Fatal("non-excepted host must still fire sequence alert")
+	}
 }

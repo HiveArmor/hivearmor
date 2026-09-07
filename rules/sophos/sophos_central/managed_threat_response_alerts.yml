@@ -27,7 +27,7 @@ where: |
   oneOf("log.type", ["mtr_alert", "threat_detection"]) &&
   oneOf("log.severity", ["critical", "high"])
 afterEvents:
-  - indexPattern: v11-log-sophos-central-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: log.endpointId
         operator: filter_term

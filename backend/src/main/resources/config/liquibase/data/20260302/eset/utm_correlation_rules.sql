@@ -12,7 +12,7 @@ Next Steps:
   contains("log.message", "unable") || contains("log.message", "denied"))) ||
 (contains("log.message", "clean") && contains("log.message", "failed") &&
  contains("log.message", "threat"))
-', '2026-03-02 16:02:21.835806', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-esmc-eset-*","with":[{"field":"log.headHostname","operator":"filter_term","value":"{{.log.headHostname}}"}],"or":null,"within":"now-1h","count":5}]', '["lastEvent.log.headHostname","target.host"]');
+', '2026-03-02 16:02:21.835806', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.headHostname","operator":"filter_term","value":"{{.log.headHostname}}"}],"or":null,"within":"now-1h","count":5}]', '["lastEvent.log.headHostname","target.host"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1137, 'ESET ERA/ESMC Console Suspicious Activity', 3, 3, 2, 'Lateral Movement', 'T1072 - Software Deployment Tools', e'Detects suspicious activity on the ESET ERA/ESMC management console including unauthorized policy changes, mass task deployments, or admin account modifications that could indicate console compromise.
 
 Next Steps:
@@ -30,7 +30,7 @@ Next Steps:
 (contains("log.message", "administrator") &&
  ((contains("log.message", "created") || contains("log.message", "modified")) ||
   (contains("log.message", "login") && contains("log.message", "failed"))))
-', '2026-03-02 16:02:23.011021', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-esmc-eset-*","with":[{"field":"log.headHostname","operator":"filter_term","value":"{{.log.headHostname}}"}],"or":null,"within":"now-30m","count":10}]', '["lastEvent.log.headHostname","target.host"]');
+', '2026-03-02 16:02:23.011021', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.headHostname","operator":"filter_term","value":"{{.log.headHostname}}"}],"or":null,"within":"now-30m","count":10}]', '["lastEvent.log.headHostname","target.host"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1138, 'Advanced Heuristic Detection Triggers', 3, 3, 2, 'Defense Evasion, Privilege Escalation', 'T1055 - Process Injection', e'Detects when ESET\'s advanced heuristic engine identifies suspicious behavior patterns that may indicate novel malware or zero-day threats. These detections use DNA signatures and behavioral analysis.
 
 Next Steps:
@@ -48,7 +48,7 @@ Next Steps:
 ', '["https://help.eset.com/eea/8/en-US/idh_config_threat_sense.html","https://attack.mitre.org/techniques/T1055/"]', e'oneOf("log.msgType", ["EnterpriseInspectorAlert_Event", "threat_event", "FirewallAggregatedAlert_Event"]) &&
 contains("log.jsonMessage", ["heuristic", "NewHeur", "suspicious behavior"]) &&
 contains("log.jsonMessage", ["cleaned", "deleted", "quarantined", "blocked"])
-', '2026-03-02 16:02:24.326768', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-esmc-eset-*","with":[{"field":"log.headHostname","operator":"filter_term","value":"{{.log.headHostname}}"}],"or":null,"within":"now-30m","count":3}]', '["lastEvent.log.headHostname","lastEvent.log.msgType"]');
+', '2026-03-02 16:02:24.326768', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.headHostname","operator":"filter_term","value":"{{.log.headHostname}}"}],"or":null,"within":"now-30m","count":3}]', '["lastEvent.log.headHostname","lastEvent.log.msgType"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1139, 'Suspicious Process Behavior Detection', 3, 3, 2, 'Defense Evasion, Privilege Escalation', 'T1055 - Process Injection', e'Detects suspicious process behaviors including injection attempts, privilege escalation, and abnormal process creation patterns identified by ESET\'s behavioral monitoring. This alert indicates potential malware activity or exploitation attempts on the affected system.
 
 Next Steps:

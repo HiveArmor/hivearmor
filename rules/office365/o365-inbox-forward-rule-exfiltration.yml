@@ -20,7 +20,7 @@ impact:
   availability: 0
 where: oneOf("action", ["New-InboxRule", "Set-InboxRule", "UpdateInboxRules"])
 correlation:
-  - indexPattern: "v11-log-o365-*"
+  - indexPattern: "v3-hive-log-*"
     within: 1h
     count: 5
     with:

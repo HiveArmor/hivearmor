@@ -29,7 +29,7 @@ where: |
   (oneOf("log.detectionMethod", ["Behavioral", "HIPS"]) && oneOf("log.severity", ["medium", "high", "critical"])) ||
   (contains("log.name", "Behavioral") && oneOf("log.severity", ["high", "critical"]))
 afterEvents:
-  - indexPattern: v11-log-sophos-central-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

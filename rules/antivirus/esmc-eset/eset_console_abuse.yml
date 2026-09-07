@@ -33,7 +33,7 @@ where: |
    ((contains("log.message", "created") || contains("log.message", "modified")) ||
     (contains("log.message", "login") && contains("log.message", "failed"))))
 afterEvents:
-  - indexPattern: v11-log-antivirus-esmc-eset-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: log.headHostname
         operator: filter_term

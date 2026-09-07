@@ -179,8 +179,8 @@ updated `go.mod` / `go.sum`, push.
 Matrix with one job per `.md` under `.github/ai-prompts/` (except
 `README.md`). Each job:
 
-1. Fetches the diff via `gh pr diff` (same unified diff the GitHub UI
-   shows — no need for `fetch-depth: 0`).
+1. Fetches the diff via `git diff <base.sha> HEAD` (GitHub's `gh pr
+   diff` API returns HTTP 406 when a PR exceeds 300 files).
 2. Calls the **ThreatWinds AI** `/chat/completions` endpoint with the
    prompt and the diff.
 3. Validates the response against the `{tier, summary, findings}` schema.

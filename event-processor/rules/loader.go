@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hivearmor/event-processor/enterprise/sequence"
 	"github.com/hivearmor/event-processor/sigma"
 	"gopkg.in/yaml.v3"
 )
@@ -90,33 +89,6 @@ func GraphOffenseRules() []*Rule {
 	return out
 }
 
-// SequenceRules returns all loaded rules with sequence steps,
-// converted to the sequence.SequenceRule format.
-func SequenceRules() []sequence.SequenceRule {
-	var result []sequence.SequenceRule
-	for _, r := range AllRules() {
-		if !r.HasSequence() {
-			continue
-		}
-		sr := sequence.SequenceRule{
-			ID:   fmt.Sprintf("%d", r.ID),
-			Name: r.Name,
-		}
-		for _, step := range r.Sequence {
-			d, _ := time.ParseDuration(step.Within)
-			if d == 0 {
-				d = 5 * time.Minute
-			}
-			sr.Steps = append(sr.Steps, sequence.StepDef{
-				Where:  step.Where,
-				Within: d,
-			})
-		}
-		result = append(result, sr)
-	}
-	return result
-}
-
 func watchLoop() {
 	tick := time.NewTicker(30 * time.Second)
 	defer tick.Stop()
@@ -136,6 +108,9 @@ func reload() {
 	mu.Lock()
 	lastReport = report
 	mu.Unlock()
+	if rulesDir != "" {
+		loadExceptionsAlongsideRules(rulesDir)
+	}
 	if !report.PilotPackOK && requiresPilotPack(rulesDir) {
 		fmt.Fprintf(os.Stderr, "rules: pilot pack incomplete missing=%v invalid=%v\n", report.PilotMissing, report.Invalid)
 	}
@@ -175,7 +150,14 @@ func LoadFromDir(dir string) LoadReport {
 	}
 
 	_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info == nil || info.IsDir() {
+		if err != nil || info == nil {
+			return nil
+		}
+		// DET-FP-001 — exceptions.yaml is loaded separately; do not treat as CEL rules.
+		if info.IsDir() {
+			if info.Name() == "exceptions" {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 		ext := filepath.Ext(path)

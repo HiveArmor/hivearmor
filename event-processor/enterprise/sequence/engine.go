@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	ha_rules "github.com/hivearmor/event-processor/rules"
 	"github.com/hivearmor/sdk/plugins"
 )
 
@@ -88,8 +89,8 @@ func Process(event *plugins.Event) {
 		ips.matchedStep++
 		ips.stepTimes = append(ips.stepTimes, time.Now())
 		if ips.matchedStep >= len(rule.Steps) {
-			// Sequence complete — fire alert
-			if alertFn != nil {
+			// Sequence complete — fire alert unless an active exception matches.
+			if alertFn != nil && !ha_rules.SuppressIfMatched(rule.ID, event) {
 				alertFn(buildSeqAlert(event, rule))
 			}
 			// Don't keep this sequence
@@ -119,7 +120,7 @@ func Process(event *plugins.Event) {
 			stepTimes:   []time.Time{time.Now()},
 		}
 		if len(rule.Steps) == 1 {
-			if alertFn != nil {
+			if alertFn != nil && !ha_rules.SuppressIfMatched(rule.ID, event) {
 				alertFn(buildSeqAlert(event, &rule))
 			}
 			continue

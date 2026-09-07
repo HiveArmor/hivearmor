@@ -41,7 +41,7 @@ where: |
     (contains("log.message", "Power Systems") && contains("log.message", "remote access"))
   )
 afterEvents:
-  - indexPattern: v11-log-ibm-aix-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.host
         operator: filter_term

@@ -29,7 +29,7 @@ where: |
   regexMatch("log.eventType", "(?i)(snort|suricata)") &&
   regexMatch("log.raw", "(?i)(priority\\s*:\\s*1|classification\\s*:\\s*(trojan|exploit|malware|backdoor|shellcode|rootkit))")
 afterEvents:
-  - indexPattern: v11-log-firewall-pfsense-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

@@ -15,7 +15,7 @@ references:
   - "https://attack.mitre.org/techniques/T1110/"
 where: equals("log.eventCode", 4625)
 afterEvents:
-    - indexPattern: v11-log-wineventlog-*
+    - indexPattern: v3-hive-log-*
       with:
         - field: log.eventCode
           operator: filter_term

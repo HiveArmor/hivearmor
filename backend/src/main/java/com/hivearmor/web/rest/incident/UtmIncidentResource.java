@@ -864,10 +864,11 @@ public class UtmIncidentResource {
     }
 
     @PostMapping("/ha-incidents/{id}/ai-summary")
-    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN','ROLE_USER')")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
     @Operation(
         summary = "Generate AI summary for incident",
-        description = "Triggers AI-based summarization of the incident including key findings, affected entities, and recommended actions. (INC-001)"
+        description = "Triggers AI-based summarization of the incident including key findings, affected entities, and recommended actions. "
+            + "Requires Analyst or above (DET-AI-001)."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "AI-generated incident summary"),

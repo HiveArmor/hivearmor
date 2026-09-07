@@ -32,7 +32,7 @@ where: |
   (regexMatch("log.reason", "(?i)(invalid|failed|rejected|authentication)") ||
    regexMatch("log.message", "(?i)(authentication.*failed|invalid.*password)"))
 afterEvents:
-  - indexPattern: v11-log-firewall-cisco-asa-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term
@@ -43,7 +43,7 @@ afterEvents:
     within: 15m
     count: 10
     or:
-      - indexPattern: v11-log-firewall-cisco-asa-*
+      - indexPattern: v3-hive-log-*
         with:
           - field: origin.ip
             operator: filter_term
@@ -53,7 +53,7 @@ afterEvents:
             value: '113021'
         within: 15m
         count: 10
-      - indexPattern: v11-log-firewall-cisco-asa-*
+      - indexPattern: v3-hive-log-*
         with:
           - field: origin.ip
             operator: filter_term
@@ -63,7 +63,7 @@ afterEvents:
             value: '109034'
         within: 15m
         count: 10
-      - indexPattern: v11-log-firewall-cisco-asa-*
+      - indexPattern: v3-hive-log-*
         with:
           - field: origin.ip
             operator: filter_term

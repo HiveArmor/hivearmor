@@ -13,7 +13,7 @@ Next Steps:
   oneOf("log.severity", ["high", "critical", "4", "5"]))) ||
 (contains("log.requested", ["usb", "removable", "autorun"]) &&
  contains("log.restData", ["malware", "threat", "infection"]))
-', '2026-03-02 15:08:08.501917', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-bitdefender-gz-*","with":[{"field":"log.hostId","operator":"filter_term","value":"{{.log.hostId}}"}],"or":null,"within":"now-30m","count":5}]', '["lastEvent.log.eventType","lastEvent.log.hostId"]');
+', '2026-03-02 15:08:08.501917', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.hostId","operator":"filter_term","value":"{{.log.hostId}}"}],"or":null,"within":"now-30m","count":5}]', '["lastEvent.log.eventType","lastEvent.log.hostId"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1101, 'Ransomware Behavior Detection', 3, 3, 3, 'Impact', 'T1486 - Data Encrypted for Impact', e'Detects ransomware behavior patterns including file encryption attempts, mass file modifications, and ransomware-specific malware types detected by Bitdefender GravityZone.
 
 Next Steps:
@@ -30,7 +30,7 @@ Next Steps:
  contains("log.signatureID", "ransomware") ||
  (equals("log.severity", "10") && contains("log.eventType", "malware"))) &&
 exists("log.severity")
-', '2026-03-02 15:08:10.423627', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-bitdefender-gz-*","with":[{"field":"log.hostId","operator":"filter_term","value":"{{.log.hostId}}"}],"or":null,"within":"now-10m","count":5}]', '["lastEvent.log.hostId","lastEvent.log.signatureID"]');
+', '2026-03-02 15:08:10.423627', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.hostId","operator":"filter_term","value":"{{.log.hostId}}"}],"or":null,"within":"now-10m","count":5}]', '["lastEvent.log.hostId","lastEvent.log.signatureID"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1102, 'Network-Based Threat Detection', 3, 2, 3, 'Command and Control', 'T1071 - Application Layer Protocol: Command and Control', e'Detects network-based threats including C2 communications, malicious network activity, and suspicious network connections identified by Bitdefender GravityZone.
 
 Next Steps:
@@ -49,7 +49,7 @@ Next Steps:
 (exists("origin.ip") && contains("log.eventType", "network") &&
  contains("log.restData", ["malware", "threat", "blocked", "c2", "botnet"])) ||
 (equals("log.severity", "critical") && contains("log.product", "network"))
-', '2026-03-02 15:08:11.725118', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-bitdefender-gz-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":[{"indexPattern":"v11-log-antivirus-bitdefender-gz-*","with":[{"field":"log.hostId","operator":"filter_term","value":"{{.log.hostId}}"},{"field":"log.eventType","operator":"filter_term","value":"network-sandboxing"}],"or":null,"within":"now-4h","count":3}],"within":"now-2h","count":5}]', '["lastEvent.log.hostId","adversary.ip"]');
+', '2026-03-02 15:08:11.725118', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.hostId","operator":"filter_term","value":"{{.log.hostId}}"},{"field":"log.eventType","operator":"filter_term","value":"network-sandboxing"}],"or":null,"within":"now-4h","count":3}],"within":"now-2h","count":5}]', '["lastEvent.log.hostId","adversary.ip"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1103, 'Multiple Malware Detections from Single Source', 3, 3, 2, 'Command and Control', 'T1105 - Ingress Tool Transfer', e'Detects when multiple malware threats are detected on a single host within a short time period. This could indicate a compromised system actively spreading malware or an attacker launching multiple malware variants.
 
 Next Steps:
@@ -73,7 +73,7 @@ Next Steps:
 ', '["https://www.bitdefender.com/business/support/en/77212-237089-event-types.html","https://attack.mitre.org/techniques/T1105/"]', e'equals("log.eventType", "AntiMalware") &&
 oneOf("log.severity", ["4", "5"]) &&
 exists("log.hostId")
-', '2026-03-02 15:08:12.946636', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-bitdefender-gz-*","with":[{"field":"log.hostId","operator":"filter_term","value":"{{.log.hostId}}"},{"field":"log.eventType","operator":"filter_term","value":"AntiMalware"}],"or":null,"within":"now-1h","count":5}]', '["lastEvent.log.hostId","lastEvent.log.signatureID"]');
+', '2026-03-02 15:08:12.946636', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.hostId","operator":"filter_term","value":"{{.log.hostId}}"},{"field":"log.eventType","operator":"filter_term","value":"AntiMalware"}],"or":null,"within":"now-1h","count":5}]', '["lastEvent.log.hostId","lastEvent.log.signatureID"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1104, 'Malware Outbreak Detection - Multiple Hosts Infected', 3, 3, 3, 'Command and Control', 'T1105 - Ingress Tool Transfer', e'Detects when the same malware signature or threat is detected on multiple endpoints within a short time window. This pattern indicates a potential malware outbreak spreading across the network environment.
 
 Next Steps:
@@ -91,7 +91,7 @@ Next Steps:
 oneOf("log.severity", ["4", "5"]) &&
 exists("log.signatureID") &&
 exists("log.syslogHostIP")
-', '2026-03-02 15:08:14.258459', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-bitdefender-gz-*","with":[{"field":"log.signatureID","operator":"filter_term","value":"{{.log.signatureID}}"},{"field":"log.eventType","operator":"filter_term","value":"AntiMalware"}],"or":null,"within":"now-2h","count":10}]', '["lastEvent.log.signatureID","lastEvent.log.syslogHostIP"]');
+', '2026-03-02 15:08:14.258459', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.signatureID","operator":"filter_term","value":"{{.log.signatureID}}"},{"field":"log.eventType","operator":"filter_term","value":"AntiMalware"}],"or":null,"within":"now-2h","count":10}]', '["lastEvent.log.signatureID","lastEvent.log.syslogHostIP"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1105, 'Bitdefender AV Policy Weakened', 3, 3, 2, 'Defense Evasion', 'T1562.001 - Impair Defenses: Disable or Modify Tools', e'Detects when Bitdefender GravityZone antivirus policies are weakened by administrators, such as disabling real-time protection, reducing scan aggressiveness, or adding broad exclusions. This could indicate a compromised admin account or insider threat.
 
 Next Steps:
@@ -107,7 +107,7 @@ Next Steps:
   (contains("log.message", "exclusion") && contains("log.message", "added")) ||
   (contains("log.message", "protection") && contains("log.message", "disabled")))) &&
 exists("log.severity")
-', '2026-03-02 15:08:15.561087', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-bitdefender-gz-*","with":[{"field":"log.hostId","operator":"filter_term","value":"{{.log.hostId}}"}],"or":null,"within":"now-1h","count":3}]', '["lastEvent.log.eventType","lastEvent.log.hostId"]');
+', '2026-03-02 15:08:15.561087', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.hostId","operator":"filter_term","value":"{{.log.hostId}}"}],"or":null,"within":"now-1h","count":3}]', '["lastEvent.log.eventType","lastEvent.log.hostId"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1106, 'Bitdefender Console Used for Lateral Movement', 3, 3, 3, 'Lateral Movement', 'T1072 - Software Deployment Tools', e'Detects when the Bitdefender GravityZone management console is potentially being used to push malicious policies, scripts, or tasks to managed endpoints, indicating a compromised admin account being leveraged for lateral movement.
 
 Next Steps:
@@ -122,7 +122,7 @@ Next Steps:
   (contains("log.message", "scan") || contains("log.message", "install") ||
    contains("log.message", "uninstall") || contains("log.message", "execute")))) &&
 exists("log.severity")
-', '2026-03-02 15:08:16.926735', true, true, 'origin', null, '[{"indexPattern":"v11-log-antivirus-bitdefender-gz-*","with":[{"field":"log.hostId","operator":"filter_term","value":"{{.log.hostId}}"}],"or":null,"within":"now-30m","count":10}]', '["lastEvent.log.eventType","lastEvent.log.hostId"]');
+', '2026-03-02 15:08:16.926735', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"log.hostId","operator":"filter_term","value":"{{.log.hostId}}"}],"or":null,"within":"now-30m","count":10}]', '["lastEvent.log.eventType","lastEvent.log.hostId"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1107, 'Bitdefender GravityZone Zero-Day Malware Detection', 3, 3, 2, 'Execution', 'T1203 - Exploitation for Client Execution', e'Detects potential zero-day malware identified by Bitdefender\'s advanced threat detection capabilities including HyperDetect and Sandbox Analyzer. These detection methods use behavioral analysis and machine learning to identify previously unknown threats.
 
 Next Steps:

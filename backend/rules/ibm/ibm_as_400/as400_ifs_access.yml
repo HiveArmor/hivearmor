@@ -42,7 +42,7 @@ where: |
     (contains("log.message", "FTP") && contains("log.message", "GET") && contains("log.message", "/QSYS"))
   )
 afterEvents:
-  - indexPattern: v11-log-ibm-as400-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: log.message
         operator: filter_match

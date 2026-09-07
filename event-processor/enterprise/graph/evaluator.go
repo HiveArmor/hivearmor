@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -165,15 +166,63 @@ func (e *Evaluator) evaluateRule(ctx context.Context, rule *rules.Rule) {
 	result := cr.Results[0]
 	for _, row := range result.Data {
 		fields := zipFields(result.Columns, row.Row)
-		dedupKey := buildDedupKey(rule, fields)
-		if !e.isNew(dedupKey, 4*time.Hour) {
-			continue
+		e.emitMatch(rule, fields)
+	}
+}
+
+// emitMatch applies dedup + DET-FP exception suppress before indexing/emitting an alert.
+func (e *Evaluator) emitMatch(rule *rules.Rule, fields map[string]string) {
+	dedupKey := buildDedupKey(rule, fields)
+	if !e.isNew(dedupKey, 4*time.Hour) {
+		return
+	}
+	matchEvent := eventForExceptionMatch(rule, fields)
+	if rules.SuppressIfMatchedID(rule.ID, matchEvent) {
+		return
+	}
+	alert := e.buildAlert(rule, fields)
+	if e.alertFn != nil {
+		e.alertFn(alert)
+	}
+}
+
+// eventForExceptionMatch builds a synthetic event so shared ExceptionMatches can
+// evaluate host/user/IP conditions against Cypher result columns.
+func eventForExceptionMatch(rule *rules.Rule, fields map[string]string) *plugins.Event {
+	ev := buildGraphEvent(rule, fields)
+	// Promote common Cypher / ECS-ish columns onto Origin/Target for alias lookup.
+	origin := &plugins.Side{}
+	target := &plugins.Side{}
+	for k, v := range fields {
+		switch strings.ToLower(strings.TrimSpace(k)) {
+		case "sourceip", "source.ip", "origin.ip", "ip":
+			origin.Ip = v
+		case "user", "user.name", "origin.user", "username":
+			origin.User = v
+		case "host", "host.name", "hostname", "origin.host", "source.host":
+			origin.Host = v
+		case "targethost", "destination.host", "target.host":
+			target.Host = v
+		case "destination.ip", "target.ip":
+			target.Ip = v
+		case "target.user", "destination.user":
+			target.User = v
 		}
-		alert := e.buildAlert(rule, fields)
-		if e.alertFn != nil {
-			e.alertFn(alert)
+		// Also expose raw column as log.<col> for explicit exception fields.
+		if ev.Log == nil {
+			ev.Log = map[string]*structpb.Value{}
+		}
+		if _, exists := ev.Log[k]; !exists {
+			ev.Log[k] = structpb.NewStringValue(v)
 		}
 	}
+	if origin.Ip != "" || origin.Host != "" || origin.User != "" {
+		ev.Origin = origin
+	}
+	if target.Ip != "" || target.Host != "" || target.User != "" {
+		ev.Target = target
+	}
+	return ev
 }
 
 // zipFields pairs column names with row values into a string map.

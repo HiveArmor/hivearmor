@@ -53,6 +53,8 @@ export interface RuleListParams {
   dataType?: string[];
   active?: boolean | 'all';
   origin?: 'managed' | 'custom' | 'all';
+  /** Sigma-sourced (sigmaRuleId present) vs native CEL / custom. */
+  source?: 'sigma' | 'native' | 'all';
   health?: DetectionRule['health'] | 'all';
   severity?: SeverityLevel | 'all';
   technique?: string;
@@ -105,6 +107,10 @@ export interface DetectionSandboxResult {
   durationMs: number;
   evaluatedFields: number;
   warnings: string[];
+  /** Honest evaluation contract — inject dry-run vs Sigma sandbox vs fixture. */
+  evaluationMode?: 'inject_dry_run' | 'sigma_sandbox' | 'fixture' | 'fixture_exception_suppressed' | 'unavailable';
+  openSearchQueried?: boolean;
+  engineParity?: 'approximate' | 'sigma' | 'fixture';
 }
 
 export interface DetectionSampleEvent {
@@ -155,6 +161,14 @@ export interface RulePreviewResult {
   histogram: RulePreviewBucket[];
   samples: Array<{ id: string; timestamp: string; summary: string; entity: string }>;
   warning: string | null;
+  /** Honesty flags from DET-PREV — inject | opensearch | unavailable | fixture. */
+  mode?: 'inject' | 'inject_dry_run' | 'opensearch' | 'opensearch_historical' | 'fixture' | 'unavailable';
+  honesty?: string | null;
+  simulated?: boolean;
+  openSearchQueried?: boolean;
+  /** DET-FP — false when Java dry-run does not honor engine exception packs. */
+  exceptionsApplied?: boolean;
+  exceptionsSuppressedCount?: number;
 }
 
 export interface DetectionRuleVersion {

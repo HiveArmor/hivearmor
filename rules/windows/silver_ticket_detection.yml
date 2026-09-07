@@ -39,7 +39,7 @@ where: |
     exists("origin.ip")
   )
 afterEvents:
-  - indexPattern: v11-log-wineventlog-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip.keyword
         operator: filter_term

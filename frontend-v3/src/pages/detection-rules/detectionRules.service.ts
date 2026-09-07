@@ -3,7 +3,7 @@
  * API calls per DEF-01 spec §3
  */
 
-import { DET_011_VALIDATE_PREVIEW } from './detectionRules.capabilities';
+import { DET_011_VALIDATE_PREVIEW, DET_TEST_CEL_DRY_RUN } from './detectionRules.capabilities';
 import type {
   DetectionExecution,
   RuleAuthoringDiagnostic,
@@ -164,6 +164,21 @@ function draftPayload(rule: Partial<DetectionRule>): Record<string, unknown> {
   };
 }
 
+function readNestedString(root: Record<string, unknown>, path: string[]): string | null {
+  let cursor: unknown = root;
+  for (const key of path) {
+    if (!cursor || typeof cursor !== 'object' || Array.isArray(cursor)) return null;
+    cursor = (cursor as Record<string, unknown>)[key];
+  }
+  return typeof cursor === 'string' ? cursor : null;
+}
+
+function eventMatchesApprovedScannerException(event: Record<string, unknown>): boolean {
+  const host = readNestedString(event, ['host', 'name'])
+    ?? readNestedString(event, ['origin', 'host']);
+  return host === 'approved-scanner';
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (response.status === 401) {
     localStorage.removeItem(TOKEN_KEY);
@@ -274,7 +289,7 @@ export async function deleteRule(id: DetectionRule['id']): Promise<void> {
 
 // FIX-04: /api/ha-sigma/sync → /api/ha-sigma-sync/trigger
 export async function syncSigmaRules(): Promise<SigmaSyncResponse> {
-  if (fixtureMode) return { synced: 7, errors: 0, staged: 7, skipped: 41, message: '7 fictional Sigma updates staged for review.' };
+  if (fixtureMode) return { synced: 7, errors: 0, staged: 7, skipped: 41, message: '7 fictional Sigma updates staged for review. Activate will request engine reload (fixture).' };
   const token = getToken();
   const response = await fetch('/api/ha-sigma-sync/trigger', {
     method: 'POST',
@@ -386,7 +401,13 @@ export async function validateRuleDraft(rule: Partial<DetectionRule>, signal?: A
   };
 }
 
-export async function previewRuleDraft(rule: Partial<DetectionRule>, range: string, signal?: AbortSignal): Promise<RulePreviewResult> {
+export async function previewRuleDraft(
+  rule: Partial<DetectionRule>,
+  range: string,
+  signal?: AbortSignal,
+  dryRunEvents?: Array<Record<string, unknown>>,
+  previewMode: 'inject' | 'opensearch' | 'auto' = 'auto',
+): Promise<RulePreviewResult> {
   signal?.throwIfAborted();
   if (!fixtureMode) {
     const hours = range === '7d' ? 168 : range === '24h' ? 24 : 4;
@@ -395,15 +416,58 @@ export async function previewRuleDraft(rule: Partial<DetectionRule>, range: stri
     const response = await fetch(`${DETECTION_BASE}/preview`, {
       method: 'POST', signal,
       headers: { Authorization: `Bearer ${getToken()}`, 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ rule: draftPayload(rule), timeRange: { from: from.toISOString(), to: to.toISOString() }, limit: 100 }),
+      body: JSON.stringify({
+        rule: draftPayload(rule),
+        timeRange: { from: from.toISOString(), to: to.toISOString() },
+        limit: 100,
+        dryRunEvents: dryRunEvents ?? undefined,
+        previewMode,
+      }),
     });
     const result = await handleResponse<{
       matches?: Array<Record<string, unknown>>;
       matchCount?: number;
       scanDuration?: number;
+      eventsScanned?: number;
       estimatedAlertRate?: number;
       sampleAlerts?: Array<{ id?: string; timestamp?: string; name?: string; source?: Record<string, unknown> }>;
+      mode?: RulePreviewResult['mode'];
+      honesty?: string;
+      simulated?: boolean;
+      openSearchQueried?: boolean;
+      available?: boolean;
+      exceptionsApplied?: boolean;
+      exceptionsSuppressedCount?: number;
     }>(response);
+    const mode = result.mode
+      ?? (result.openSearchQueried ? 'opensearch' : dryRunEvents?.length ? 'inject' : 'unavailable');
+    const honesty = result.honesty
+      ?? (mode === 'opensearch' || mode === 'opensearch_historical'
+        ? 'Bounded historical OpenSearch preview — no alerts were created.'
+        : mode === 'inject' || mode === 'inject_dry_run'
+          ? 'Inject dry-run preview — OpenSearch historical indices were not queried.'
+          : 'Preview unavailable — provide injectable sample events or choose OpenSearch mode when reachable.');
+    if (mode === 'unavailable' || result.available === false) {
+      return {
+        available: false,
+        executionId: null,
+        approximate: true,
+        matchCount: null,
+        eventsScanned: null,
+        durationMs: result.scanDuration ?? 0,
+        sourceCompleteness: null,
+        truncated: false,
+        histogram: [],
+        samples: [],
+        warning: honesty,
+        mode: 'unavailable',
+        honesty,
+        simulated: false,
+        openSearchQueried: false,
+        exceptionsApplied: Boolean(result.exceptionsApplied),
+        exceptionsSuppressedCount: result.exceptionsSuppressedCount ?? 0,
+      };
+    }
     const samples = (result.sampleAlerts ?? []).map((sample, index) => ({
       id: sample.id ?? `preview-${index}`,
       timestamp: sample.timestamp ?? to.toISOString(),
@@ -413,15 +477,21 @@ export async function previewRuleDraft(rule: Partial<DetectionRule>, range: stri
     return {
       available: true,
       executionId: null,
-      approximate: true,
+      approximate: mode === 'inject' || mode === 'inject_dry_run',
       matchCount: result.matchCount ?? 0,
-      eventsScanned: null,
+      eventsScanned: result.eventsScanned ?? null,
       durationMs: result.scanDuration ?? 0,
       sourceCompleteness: null,
       truncated: (result.matches?.length ?? 0) >= 100,
       histogram: [],
       samples,
-      warning: 'Preview is non-persistent. Scan-volume and completeness telemetry are not yet returned by the backend.',
+      warning: honesty,
+      mode,
+      honesty,
+      simulated: Boolean(result.simulated),
+      openSearchQueried: Boolean(result.openSearchQueried),
+      exceptionsApplied: Boolean(result.exceptionsApplied),
+      exceptionsSuppressedCount: result.exceptionsSuppressedCount ?? 0,
     };
   }
   await new Promise<void>((resolve, reject) => {
@@ -431,11 +501,81 @@ export async function previewRuleDraft(rule: Partial<DetectionRule>, range: stri
       reject(new DOMException('Preview cancelled', 'AbortError'));
     }, { once: true });
   });
+  if (previewMode === 'opensearch') {
+    return {
+      available: true,
+      executionId: `preview-os-${rule.id ?? 'draft'}`,
+      approximate: true,
+      matchCount: 6,
+      eventsScanned: 48,
+      durationMs: 312,
+      sourceCompleteness: 94,
+      truncated: false,
+      histogram: [],
+      samples: [
+        { id: 'os-1', timestamp: '2026-09-07T12:01:00Z', summary: 'OpenSearch historical match (fixture)', entity: 'FIN-WKS-044' },
+      ],
+      warning: 'Design fixture: OpenSearch mode returns fictional historical matches.',
+      mode: 'opensearch',
+      honesty: 'Design fixture: OpenSearch historical preview is fictional. exceptionsApplied=false (Java/OS path does not load EP exception packs).',
+      simulated: true,
+      openSearchQueried: true,
+      exceptionsApplied: false,
+      exceptionsSuppressedCount: 0,
+    };
+  }
+  if (previewMode === 'inject' && !dryRunEvents?.length) {
+    return {
+      available: false,
+      executionId: null,
+      approximate: true,
+      matchCount: null,
+      eventsScanned: null,
+      durationMs: 0,
+      sourceCompleteness: null,
+      truncated: false,
+      histogram: [],
+      samples: [],
+      warning: 'Inject mode requires a sample event JSON object.',
+      mode: 'unavailable',
+      honesty: 'Inject mode unavailable without dryRunEvents. exceptionsApplied=false.',
+      simulated: false,
+      openSearchQueried: false,
+      exceptionsApplied: false,
+      exceptionsSuppressedCount: 0,
+    };
+  }
+
+  const injectEvent = dryRunEvents?.[0];
+  if (injectEvent && eventMatchesApprovedScannerException(injectEvent)) {
+    return {
+      available: true,
+      executionId: `preview-suppressed-${rule.id ?? 'draft'}`,
+      approximate: true,
+      matchCount: 0,
+      eventsScanned: 1,
+      durationMs: 44,
+      sourceCompleteness: 100,
+      truncated: false,
+      histogram: [],
+      samples: [],
+      warning: 'Match suppressed by active fixture exception #9001 (host.name is approved-scanner).',
+      mode: previewMode === 'inject' ? 'inject' : 'fixture',
+      honesty:
+        'Design fixture: active exception enforced for demo inject event (exceptionsApplied=true). '
+        + 'Live Java dry-run still reports exceptionsApplied=false until it shares the EP matcher.',
+      simulated: true,
+      openSearchQueried: false,
+      exceptionsApplied: true,
+      exceptionsSuppressedCount: 1,
+    };
+  }
+
   const base = Math.max(4, (rule.ruleName?.length ?? 12) % 17);
   return {
     available: true,
     executionId: `preview-${rule.id ?? 'draft'}-20260803`,
-    approximate: false,
+    approximate: true,
     matchCount: base + 8,
     eventsScanned: range === '7d' ? 1_842_991 : range === '24h' ? 284_721 : 47_228,
     durationMs: range === '7d' ? 1842 : range === '24h' ? 642 : 218,
@@ -448,6 +588,12 @@ export async function previewRuleDraft(rule: Partial<DetectionRule>, range: stri
       { id: 'preview-event-003', timestamp: '2026-08-03T08:05:44Z', summary: 'Normalized network event satisfied the selection', entity: 'OPS-JMP-03' },
     ],
     warning: 'Fictional preview results are isolated from production alerts and rule metrics.',
+    mode: previewMode === 'inject' ? 'inject' : 'fixture',
+    honesty: 'Design fixture: preview matches are fictional and isolated from production. exceptionsApplied=false unless inject host matches an active fixture exception.',
+    simulated: true,
+    openSearchQueried: false,
+    exceptionsApplied: false,
+    exceptionsSuppressedCount: 0,
   };
 }
 
@@ -560,6 +706,7 @@ export async function testDetectionSandbox(
   ruleYaml: string,
   eventJson: string,
   signal?: AbortSignal,
+  options?: { ruleId?: DetectionRule['id'] },
 ): Promise<DetectionSandboxResult> {
   if (fixtureMode) {
     await new Promise<void>((resolve, reject) => {
@@ -570,6 +717,26 @@ export async function testDetectionSandbox(
       }, { once: true });
     });
     const event = JSON.parse(eventJson) as Record<string, unknown>;
+    const hostName = readNestedString(event, ['host', 'name'])
+      ?? readNestedString(event, ['origin', 'host']);
+    if (hostName === 'approved-scanner') {
+      return {
+        matched: false,
+        matchedFields: [],
+        explanation:
+          'Suppressed by active fixture exception #9001 (host.name is approved-scanner). '
+          + 'Engine path: pre-alert ExceptionMatches — no alert would be created.',
+        durationMs: 29,
+        evaluatedFields: Object.keys(event).length,
+        warnings: [
+          'Design fixture: demonstrates DET-FP engine enforcement for an active exception.',
+          'exceptionsApplied=true (fixture only).',
+        ],
+        evaluationMode: 'fixture_exception_suppressed',
+        openSearchQueried: false,
+        engineParity: 'fixture',
+      };
+    }
     const normalizedRule = ruleYaml.toLowerCase();
     const flattened: Array<{ path: string; value: unknown }> = [];
     const visit = (value: unknown, path: string): void => {
@@ -586,15 +753,49 @@ export async function testDetectionSandbox(
       explanation: matched ? 'The fictional event satisfied the selection and condition path.' : 'The event did not satisfy the active selection path.',
       durationMs: 37,
       evaluatedFields: Object.keys(event).length,
-      warnings: [],
+      warnings: ['Design fixture evaluation — production evaluators were not called.', 'exceptionsApplied=false unless host matches an active fixture exception.'],
+      evaluationMode: 'fixture',
+      openSearchQueried: false,
+      engineParity: 'fixture',
     };
   }
 
-  if (!/^detection:\s*$/m.test(ruleYaml)) {
-    throw new Error('Native CEL single-event evaluation is not available from the backend yet. Run the bounded historical preview instead.');
+  const isSigma = /^detection:\s*$/m.test(ruleYaml) || /detection:\s*\n/.test(ruleYaml);
+
+  if (isSigma) {
+    const response = await fetch('/api/ha-rules/test', {
+      method: 'POST',
+      signal,
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ ruleYaml, eventJson }),
+    });
+    if (!response.ok) throw new Error(await response.text() || `HTTP ${response.status}`);
+    const result = await response.json() as { matched: boolean; matchedFields?: string[]; explanation?: string; durationMs?: number };
+    return {
+      matched: result.matched,
+      matchedFields: result.matchedFields ?? [],
+      explanation: result.explanation ?? 'The in-memory Sigma evaluator completed.',
+      durationMs: result.durationMs ?? 0,
+      evaluatedFields: 0,
+      warnings: DET_011_VALIDATE_PREVIEW
+        ? ['Sigma sandbox completed. Use Historical preview for bounded DET-011 dry-run against indexed events.']
+        : ['Historical preview is not available from the detection rules API.'],
+      evaluationMode: 'sigma_sandbox',
+      openSearchQueried: false,
+      engineParity: 'sigma',
+    };
   }
 
-  const response = await fetch('/api/ha-rules/test', {
+  if (!DET_TEST_CEL_DRY_RUN) {
+    throw new Error('Native CEL single-event evaluation is not enabled. Run the bounded historical preview instead.');
+  }
+
+  // Prefer modern DET-TEST-001 path; fall back to deprecated correlation-rule/test when a persisted ruleId is available.
+  const modernResponse = await fetch(`${DETECTION_BASE}/test`, {
     method: 'POST',
     signal,
     headers: {
@@ -602,19 +803,60 @@ export async function testDetectionSandbox(
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    body: JSON.stringify({ ruleYaml, eventJson }),
+    body: JSON.stringify({
+      rule: {
+        id: options?.ruleId,
+        name: 'Detection sandbox dry-run',
+        expression: ruleYaml,
+      },
+      sampleEvent: eventJson,
+      eventJson,
+    }),
   });
+
+  let response = modernResponse;
+  if (!modernResponse.ok && options?.ruleId != null && modernResponse.status !== 401 && modernResponse.status !== 403) {
+    response = await fetch('/api/correlation-rule/test', {
+      method: 'POST',
+      signal,
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        ruleId: options.ruleId,
+        eventJson,
+        testEventJson: eventJson,
+        sampleEvent: eventJson,
+      }),
+    });
+  }
+
   if (!response.ok) throw new Error(await response.text() || `HTTP ${response.status}`);
-  const result = await response.json() as { matched: boolean; matchedFields?: string[]; explanation?: string };
+  const result = await response.json() as {
+    matched?: boolean;
+    matchedFields?: string[];
+    explanation?: string;
+    evaluationNote?: string;
+    durationMs?: number;
+    evaluationMode?: DetectionSandboxResult['evaluationMode'];
+    openSearchQueried?: boolean;
+    engineParity?: DetectionSandboxResult['engineParity'];
+    simulatedMatchCount?: number;
+  };
   return {
-    matched: result.matched,
+    matched: Boolean(result.matched),
     matchedFields: result.matchedFields ?? [],
-    explanation: result.explanation ?? 'The in-memory evaluator completed.',
-    durationMs: 0,
-    evaluatedFields: 0,
-    warnings: DET_011_VALIDATE_PREVIEW
-      ? ['Single-event sandbox completed. Use Historical preview for bounded DET-011 dry-run against indexed events.']
-      : ['Historical preview is not available from the detection rules API.'],
+    explanation: result.explanation ?? result.evaluationNote ?? 'Inject dry-run completed.',
+    durationMs: result.durationMs ?? 0,
+    evaluatedFields: result.matchedFields?.length ?? result.simulatedMatchCount ?? 0,
+    warnings: [
+      'CEL inject dry-run (DET-TEST-001) via /api/ha-detection-rules/test — approximate parity with the Go event-processor evaluator; OpenSearch was not queried.',
+    ],
+    evaluationMode: result.evaluationMode ?? 'inject_dry_run',
+    openSearchQueried: Boolean(result.openSearchQueried),
+    engineParity: result.engineParity ?? 'approximate',
   };
 }
 

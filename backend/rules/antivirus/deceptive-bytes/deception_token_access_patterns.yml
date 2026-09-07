@@ -32,7 +32,7 @@ where: |
   exists("origin.ip") &&
   oneOf("log.severity", ["high", "critical"])
 afterEvents:
-  - indexPattern: v11-log-deceptive-bytes-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

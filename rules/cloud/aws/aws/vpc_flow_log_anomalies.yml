@@ -35,7 +35,7 @@ where: |
     (equals("log.eventName", "ModifyFlowLogsAttribute") && equals("log.requestParameters.deliverLogsStatus", "INACTIVE"))
   )
 afterEvents:
-  - indexPattern: v11-log-aws-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: log.sourceIPAddress
         operator: filter_term

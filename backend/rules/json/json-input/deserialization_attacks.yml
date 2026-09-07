@@ -37,7 +37,7 @@ where: |
    contains("raw", "ysoserial") ||
    contains("raw", "java.net.URLClassLoader"))
 afterEvents:
-  - indexPattern: v11-log-json-input-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

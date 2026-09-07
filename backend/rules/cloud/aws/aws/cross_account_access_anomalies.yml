@@ -32,7 +32,7 @@ where: |
   equals("log.errorCode", "") &&
   !contains(safe(log.responseElementsAssumedRoleUserArn, ""), safe(log.userIdentityAccountId, ""))
 afterEvents:
-  - indexPattern: v11-log-aws-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: log.sourceIPAddress
         operator: filter_term

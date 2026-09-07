@@ -30,7 +30,7 @@ where: |
    contains("log.category", "Authentication Access")) &&
   exists("origin.ip")
 afterEvents:
-  - indexPattern: v11-log-firewall-sonicwall-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

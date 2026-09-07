@@ -27,7 +27,7 @@ where: |
   exists("log.k8s.podName") &&
   oneOf("log.k8s.logLevel", ["ERROR", "error", "FATAL", "fatal", "CRITICAL", "critical"])
 afterEvents:
-  - indexPattern: v3-hive-log-otlp-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: log.k8s.podName
         operator: filter_term

@@ -797,6 +797,10 @@
     <!-- AGT-OBS-01 — agent vitals applied policy id/version -->
     <include file="/config/liquibase/changelog/20260907001_ha_agent_vitals_policy.xml" relativeToChangelogFile="false"/>
 
+    <!-- DET-INDEX-001 — afterEvents indexPattern v11-log-* → v3-hive-log-* -->
+    <include file="/config/liquibase/changelog/20260907002_afterevents_v11_to_v3hive_log.xml" relativeToChangelogFile="false"/>
+    <include file="/config/liquibase/changelog/20260907003_ha_detection_exception.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
 

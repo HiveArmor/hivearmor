@@ -102,6 +102,19 @@ export const foundationDetectionSampleEvents: DetectionSampleEvent[] = [
     dataType: 'DNS',
     json: JSON.stringify({ '@timestamp': '2026-08-03T11:38:26Z', event: { action: 'dns_query' }, dns: { question: { name: 'a9d3c7f2.telemetry.example', type: 'A' } }, source: { ip: '10.44.8.19' } }, null, 2),
   },
+  {
+    id: 'sample-excepted-scanner-001',
+    label: 'Approved scanner host (active exception)',
+    dataType: 'Endpoint',
+    json: JSON.stringify({
+      '@timestamp': '2026-09-07T10:15:00Z',
+      event: { action: 'powershell' },
+      process: { name: 'powershell.exe', command_line: 'powershell.exe -enc RmljdGlvbmFsU2Nhbg==' },
+      host: { name: 'approved-scanner' },
+      user: { name: 'svc-scan' },
+      origin: { host: 'approved-scanner', user: 'svc-scan' },
+    }, null, 2),
+  },
 ];
 
 export const foundationDetectionRuleVersions: DetectionRuleVersion[] = [
@@ -118,6 +131,8 @@ export function filterFoundationDetectionRules(params: RuleListParams): { items:
       .some((value) => value?.toLowerCase().includes(query))) return false;
     if (params.active !== undefined && params.active !== 'all' && rule.ruleActive !== params.active) return false;
     if (params.origin && params.origin !== 'all' && rule.origin !== params.origin) return false;
+    if (params.source === 'sigma' && !rule.sigmaRuleId) return false;
+    if (params.source === 'native' && rule.sigmaRuleId) return false;
     if (params.health && params.health !== 'all' && rule.health !== params.health) return false;
     if (params.severity && params.severity !== 'all' && rule.severity !== params.severity) return false;
     if (params.dataType?.length && !params.dataType.some((type) => rule.dataTypes.includes(type))) return false;

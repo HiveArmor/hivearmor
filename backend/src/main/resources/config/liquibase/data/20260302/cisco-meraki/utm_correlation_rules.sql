@@ -10,7 +10,7 @@ Next Steps:
 ', '["https://documentation.meraki.com/MX/Client_VPN/Client_VPN_Overview","https://attack.mitre.org/techniques/T1110/"]', e'(oneOf("log.eventType", ["vpn_auth_failure", "client_vpn_auth_failure"]) ||
  (contains("log.message", "VPN") && contains("log.message", ["auth fail", "authentication failed", "invalid credentials"]))) &&
 exists("origin.ip")
-', '2026-03-02 16:46:57.549445', true, true, 'origin', null, '[{"indexPattern":"v11-log-firewall-meraki-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-15m","count":10}]', '["adversary.ip","adversary.user"]');
+', '2026-03-02 16:46:57.549445', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-15m","count":10}]', '["adversary.ip","adversary.user"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1180, 'Wireless Intrusion Attempts', 3, 3, 2, 'Reconnaissance', 'T1595.002 - Active Scanning: Vulnerability Scanning', e'Detects wireless intrusion attempts including deauthentication attacks, association floods, and other wireless-specific attack patterns that could compromise the wireless network integrity.
 
 Next Steps:
