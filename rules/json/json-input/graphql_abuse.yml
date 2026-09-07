@@ -32,7 +32,7 @@ where: |
     regexMatch("raw", "(?i)(query|mutation)\\s*\\{.*\\{.*\\{.*\\{.*\\{.*\\{.*\\{")
   )
 afterEvents:
-  - indexPattern: v11-log-json-input-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

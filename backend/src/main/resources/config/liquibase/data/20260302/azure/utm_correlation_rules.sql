@@ -13,7 +13,7 @@ Next Steps:
  contains("log.operationName", "Add eligible member to role in PIM completed") ||
  contains("log.operationName", "Activate PIM role")) &&
 equals("log.categoryValue", "Administrative")
-', '2026-03-02 22:35:56.083827', true, true, 'origin', null, '[{"indexPattern":"v11-log-azure-*","with":[{"field":"origin.user","operator":"filter_term","value":"{{.origin.user}}"},{"field":"log.categoryValue","operator":"filter_term","value":"Administrative"}],"or":null,"within":"now-4h","count":3}]', '["lastEvent.log.operationName","adversary.user"]');
+', '2026-03-02 22:35:56.083827', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.user","operator":"filter_term","value":"{{.origin.user}}"},{"field":"log.categoryValue","operator":"filter_term","value":"Administrative"}],"or":null,"within":"now-4h","count":3}]', '["lastEvent.log.operationName","adversary.user"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1260, 'Azure Managed Identity Token Abuse', 3, 3, 1, 'Credential Access', 'T1078.004 - Valid Accounts: Cloud Accounts', e'Detects suspicious token acquisition from Azure Instance Metadata Service (IMDS) by managed identities. Attackers who compromise an Azure VM can abuse managed identities to obtain access tokens for Azure resources without credentials, enabling lateral movement across the cloud environment.
 
 Next Steps:
@@ -29,7 +29,7 @@ Next Steps:
 equals("log.categoryValue", "Administrative") &&
 (contains("log.properties.message", "token") ||
  contains("log.operationName", "tokens"))
-', '2026-03-02 22:35:57.698411', true, true, 'origin', null, '[{"indexPattern":"v11-log-azure-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-1h","count":5}]', '["lastEvent.log.operationName","adversary.ip"]');
+', '2026-03-02 22:35:57.698411', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-1h","count":5}]', '["lastEvent.log.operationName","adversary.ip"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1261, 'Azure Key Vault Excessive Access Detected', 3, 2, 1, 'Collection', 'T1530 - Data from Cloud Storage Object', e'Detects unusual spikes in Azure Key Vault access patterns. Monitors for multiple secret retrieval operations from the same source, which could indicate credential harvesting or data exfiltration attempts.
 
 Next Steps:
@@ -41,7 +41,7 @@ Next Steps:
 6. Consider implementing additional access controls or monitoring if suspicious activity is confirmed
 ', '["https://learn.microsoft.com/en-us/azure/key-vault/general/logging","https://attack.mitre.org/techniques/T1530/"]', e'equals("log.category", "AuditEvent") &&
 oneOf("log.operationName", ["SecretGet", "SecretList", "KeyGet"])
-', '2026-03-02 22:35:59.272256', true, true, 'origin', null, '[{"indexPattern":"v11-log-azure-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"},{"field":"log.category","operator":"filter_term","value":"AuditEvent"}],"or":null,"within":"now-10m","count":20}]', '["lastEvent.log.resourceId","adversary.ip"]');
+', '2026-03-02 22:35:59.272256', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"},{"field":"log.category","operator":"filter_term","value":"AuditEvent"}],"or":null,"within":"now-10m","count":20}]', '["lastEvent.log.resourceId","adversary.ip"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1262, 'Azure AD Resource Owner Password Credentials Flow Detected', 2, 2, 1, 'Credential Access', 'T1078 - Valid Accounts', e'Detects use of the Resource Owner Password Credentials (ROPC) OAuth flow in Azure AD. ROPC sends plain-text credentials directly to the token endpoint, bypassing MFA and conditional access. It is commonly abused by attackers for credential stuffing and automated account compromise.
 
 Next Steps:
@@ -53,7 +53,7 @@ Next Steps:
 6. If unauthorized, block the application and reset affected user passwords
 ', '["https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth-ropc","https://attack.mitre.org/techniques/T1078/"]', e'contains("log.properties", "urn:ietf:params:oauth:grant-type:password") ||
 (contains("log.operationName", "Sign-in") && contains("log.properties", "ropc"))
-', '2026-03-02 22:36:00.844215', true, true, 'origin', null, '[{"indexPattern":"v11-log-azure-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-1h","count":5}]', '["adversary.ip","adversary.user"]');
+', '2026-03-02 22:36:00.844215', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-1h","count":5}]', '["adversary.ip","adversary.user"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1263, 'Azure AD LAPS Password Recovery', 3, 2, 1, 'Credential Access', 'T1003 - OS Credential Dumping', e'Detects Local Administrator Password Solution (LAPS) password recovery from Entra ID. While LAPS recovery is a legitimate admin operation, excessive or unauthorized recovery attempts indicate credential dumping for lateral movement.
 
 Next Steps:
@@ -65,7 +65,7 @@ Next Steps:
 6. Review RBAC for LAPS password read permissions
 ', '["https://learn.microsoft.com/en-us/entra/identity/devices/howto-manage-local-admin-passwords","https://attack.mitre.org/techniques/T1003/"]', e'contains("log.operationName", "Recover device local administrator password") ||
 (contains("log.operationName", "Read device local administrator password") && exists("log.properties"))
-', '2026-03-02 22:36:02.459874', true, true, 'origin', null, '[{"indexPattern":"v11-log-azure-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-1h","count":3}]', '["adversary.ip","adversary.user"]');
+', '2026-03-02 22:36:02.459874', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-1h","count":3}]', '["adversary.ip","adversary.user"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1264, 'Azure Kubernetes Secret Write or Delete', 3, 3, 2, 'Credential Access', 'T1552.007 - Unsecured Credentials: Container API', e'Detects write or delete operations on Kubernetes Secrets in Azure Kubernetes Service. Secrets contain sensitive data like service account tokens, TLS certificates, and database credentials. Unauthorized access indicates potential credential theft or data tampering.
 
 Next Steps:
@@ -78,7 +78,7 @@ Next Steps:
 ', '["https://kubernetes.io/docs/concepts/configuration/secret/","https://attack.mitre.org/techniques/T1552/007/"]', e'contains("log.operationName", "MICROSOFT.CONTAINERSERVICE") &&
 contains("log.properties", "secrets") &&
 (contains("log.properties", "create") || contains("log.properties", "update") || contains("log.properties", "delete") || contains("log.properties", "patch"))
-', '2026-03-02 22:36:04.036942', true, true, 'origin', null, '[{"indexPattern":"v11-log-azure-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-30m","count":5}]', '["lastEvent.log.resourceId","adversary.user"]');
+', '2026-03-02 22:36:04.036942', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-30m","count":5}]', '["lastEvent.log.resourceId","adversary.user"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1265, 'Azure AD Bulk Privileged Role Assignment Changes', 3, 3, 2, 'Privilege Escalation', 'T1098 - Account Manipulation', e'Detects mass privileged role assignment changes in Azure AD. Multiple role assignments in a short time window indicate an attacker rapidly escalating privileges across multiple accounts for persistence and lateral movement.
 
 Next Steps:
@@ -90,7 +90,7 @@ Next Steps:
 6. Enable Azure PIM for just-in-time role activation
 ', '["https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/pim-resource-roles-assign-roles","https://attack.mitre.org/techniques/T1098/"]', e'contains("log.operationName", "Add member to role") ||
 contains("log.operationName", "Add eligible member to role")
-', '2026-03-02 22:36:05.649800', true, true, 'origin', null, '[{"indexPattern":"v11-log-azure-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-30m","count":10}]', '["adversary.ip","adversary.user"]');
+', '2026-03-02 22:36:05.649800', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-30m","count":10}]', '["adversary.ip","adversary.user"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1266, 'Azure AD Password Spray Attack Detection', 3, 2, 1, 'Credential Access', 'T1110 - Brute Force', e'Detects password spray attacks against Azure AD by correlating failed sign-in attempts across multiple usernames from the same source IP within a short time window. Password spraying tries common passwords against many accounts to avoid account lockout thresholds.
 
 Next Steps:
@@ -107,7 +107,7 @@ Next Steps:
  equals("log.properties.status.errorCode", "50053") ||
  equals("log.properties.status.errorCode", "50057")) &&
 exists("origin.ip")
-', '2026-03-02 22:36:07.222474', true, true, 'origin', null, '[{"indexPattern":"v11-log-azure-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"},{"field":"log.properties.status.errorCode","operator":"filter_match","value":"5005"}],"or":null,"within":"now-15m","count":15}]', '["lastEvent.log.operationName","adversary.ip"]');
+', '2026-03-02 22:36:07.222474', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"},{"field":"log.properties.status.errorCode","operator":"filter_match","value":"5005"}],"or":null,"within":"now-15m","count":15}]', '["lastEvent.log.operationName","adversary.ip"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1267, 'Azure AD App Registration with High-Privilege API Permissions', 3, 3, 1, 'Persistence', 'T1098.001 - Account Manipulation: Additional Cloud Credentials', e'Detects creation of new Azure AD application registrations which may be used to establish persistence with high-privilege API permissions. Attackers create app registrations with permissions like Mail.ReadWrite, Directory.ReadWrite.All, or RoleManagement.ReadWrite.Directory to maintain access.
 
 Next Steps:
@@ -123,7 +123,7 @@ Next Steps:
  contains("log.operationName", "Add service principal") ||
  contains("log.operationName", "Consent to application")) &&
 equals("log.categoryValue", "Administrative")
-', '2026-03-02 22:36:08.795179', true, true, 'origin', null, '[{"indexPattern":"v11-log-azure-*","with":[{"field":"origin.user","operator":"filter_term","value":"{{.origin.user}}"},{"field":"log.categoryValue","operator":"filter_term","value":"Administrative"}],"or":null,"within":"now-1h","count":3}]', '["lastEvent.log.operationName","adversary.user"]');
+', '2026-03-02 22:36:08.795179', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.user","operator":"filter_term","value":"{{.origin.user}}"},{"field":"log.categoryValue","operator":"filter_term","value":"Administrative"}],"or":null,"within":"now-1h","count":3}]', '["lastEvent.log.operationName","adversary.user"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1268, 'Application Gateway WAF Security Alerts', 3, 3, 2, 'Initial Access', 'T1190 - Exploit Public-Facing Application', e'Detects Web Application Firewall alerts from Azure Application Gateway indicating potential web attacks or malicious activity. This rule triggers when WAF blocks or detects suspicious requests that match security rules.
 
 **Next Steps:**
@@ -137,7 +137,7 @@ INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, r
 ', '["https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/web-application-firewall-logs","https://attack.mitre.org/techniques/T1190/"]', e'(equals("log.operationName", "ApplicationGatewayFirewallLog") || equals("log.type", "ApplicationGatewayFirewallLog")) &&
 equals("log.action", "Blocked") &&
 exists("log.ruleId")
-', '2026-03-02 22:36:10.423092', true, true, 'origin', null, '[{"indexPattern":"v11-log-azure-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-10m","count":5}]', '["lastEvent.log.ruleId","adversary.ip"]');
+', '2026-03-02 22:36:10.423092', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"}],"or":null,"within":"now-10m","count":5}]', '["lastEvent.log.ruleId","adversary.ip"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1269, 'Azure AKS Container Security Threat Detection', 3, 3, 2, 'Execution', 'T1610 - Deploy Container', e'Detects suspicious container operations in Azure Kubernetes Service (AKS) including privileged pod creation, container exec commands, and potential container escape attempts. These activities may indicate an attacker attempting to deploy malicious workloads or escape container isolation.
 
 Next Steps:
@@ -155,7 +155,7 @@ Next Steps:
  contains("log.operationName", "create") ||
  contains("log.operationName", "exec")) &&
 equals("log.resultType", "Success")
-', '2026-03-02 22:36:12.096678', true, true, 'origin', null, '[{"indexPattern":"v11-log-azure-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"},{"field":"log.operationName","operator":"filter_match","value":"Container"}],"or":null,"within":"now-30m","count":10}]', '["lastEvent.log.operationName","adversary.ip"]');
+', '2026-03-02 22:36:12.096678', true, true, 'origin', null, '[{"indexPattern":"v3-hive-log-*","with":[{"field":"origin.ip","operator":"filter_term","value":"{{.origin.ip}}"},{"field":"log.operationName","operator":"filter_match","value":"Container"}],"or":null,"within":"now-30m","count":10}]', '["lastEvent.log.operationName","adversary.ip"]');
 INSERT INTO public.utm_correlation_rules (id, rule_name, rule_confidentiality, rule_integrity, rule_availability, rule_category, rule_technique, rule_description, rule_references_def, rule_definition_def, rule_last_update, rule_active, system_owner, rule_adversary, rule_deduplicate_by_def, rule_after_events_def, rule_group_by_def) VALUES (1270, 'Azure Subscription Ownership Transfer Detected', 3, 3, 2, 'Identity and Access Management', 'T1078 - Valid Accounts', e'Detects when ownership of an Azure subscription is transferred by monitoring role assignment changes at the subscription level. This could indicate unauthorized access or insider threat activity.
 
 Next Steps:

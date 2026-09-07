@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        DET-INDEX-001 — correlation afterEvents indexPattern must query version-locked
+        OpenSearch indices (EventIndex: v3-hive-log-YYYY.MM.DD → pattern v3-hive-log-*).
+
+        Legacy rules still embed source-specific patterns such as:
+          "indexPattern":"v11-log-aws-*"
+          "indexPattern":"v11-log-wineventlog-*"
+        Some environments may still have the incorrect underscore form from 20260713003:
+          "indexPattern":"_v3_hive_log-aws-*"
+        Environments that already ran 20260713003 + 20260717001 may have source-specific
+        v3-hive-log-* variants (e.g. v3-hive-log-aws-*) which we normalize for consistency.
+
+        IMPORTANT: Do not edit this changeset after it is applied to any environment.
+    -->
+
+    <changeSet id="20260907002" author="hivearmor">
+        <sql dbms="postgresql" splitStatements="true" stripComments="true">
+        <![CDATA[
+            -- Remaining legacy v11-log-* afterEvents patterns → v3-hive-log-*
+            UPDATE hive_correlation_rules
+            SET rule_after_events_def = regexp_replace(
+                rule_after_events_def,
+                '"indexPattern":"v11-log-[^"]*"',
+                '"indexPattern":"v3-hive-log-*"',
+                'g'
+            )
+            WHERE rule_after_events_def ~ '"indexPattern":"v11-log-';
+
+            -- Leftover underscore form from 20260713003 → v3-hive-log-*
+            UPDATE hive_correlation_rules
+            SET rule_after_events_def = regexp_replace(
+                rule_after_events_def,
+                '"indexPattern":"_v3_hive_log[^"]*"',
+                '"indexPattern":"v3-hive-log-*"',
+                'g'
+            )
+            WHERE rule_after_events_def ~ '"indexPattern":"_v3_hive_log';
+
+            -- Normalize source-specific v3-hive-log-<source>-* (not already v3-hive-log-*)
+            UPDATE hive_correlation_rules
+            SET rule_after_events_def = regexp_replace(
+                rule_after_events_def,
+                '"indexPattern":"v3-hive-log-[^*"][^"]*"',
+                '"indexPattern":"v3-hive-log-*"',
+                'g'
+            )
+            WHERE rule_after_events_def ~ '"indexPattern":"v3-hive-log-[^*"]';
+        ]]>
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

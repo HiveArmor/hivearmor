@@ -30,7 +30,7 @@ where: |
      contains("log.message", "uninstall") || contains("log.message", "execute")))) &&
   exists("log.severity")
 afterEvents:
-  - indexPattern: v11-log-antivirus-bitdefender-gz-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: log.hostId
         operator: filter_term

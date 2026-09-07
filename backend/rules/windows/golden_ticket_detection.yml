@@ -52,7 +52,7 @@ where: |
     !regexMatch("log.eventDataSubjectUserName", "(?i)\\$$")
   )
 afterEvents:
-  - indexPattern: v11-log-wineventlog-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.host
         operator: filter_term

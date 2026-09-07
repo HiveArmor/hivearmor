@@ -26,7 +26,7 @@ description: |
   7. Correlate with other authentication events across the domain
 where: equals("log.providerName", "AD FS") && (equals("log.eventId", "411") || equals("log.eventId", "342") || equals("log.eventId", "516")) && contains("log.message", "token validation failed")
 afterEvents:
-  - indexPattern: v11-log-wineventlog-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip.keyword
         operator: filter_term

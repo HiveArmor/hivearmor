@@ -39,7 +39,7 @@ where: |
   !oneOf("log.eventDataTicketOptions", ["1082195968", "1082130432", "1082130432"]) &&
   exists("log.eventDataServiceName")
 afterEvents:
-  - indexPattern: v11-log-wineventlog-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip.keyword
         operator: filter_term

@@ -31,7 +31,7 @@ where: |
   equals("log.errorCode", "") &&
   (contains("log.requestParameters.policyArn", "AdministratorAccess") || contains("log.requestParameters.policyArn", "IAMFullAccess"))
 afterEvents:
-  - indexPattern: v11-log-aws-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: log.userIdentity.arn
         operator: filter_term

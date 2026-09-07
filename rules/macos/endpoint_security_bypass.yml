@@ -36,7 +36,7 @@ where: |
    equals("log.eventType", "error") ||
    contains("log.message", "memory leak detected"))
 afterEvents:
-  - indexPattern: v11-log-macos-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: system.hostname
         operator: filter_term

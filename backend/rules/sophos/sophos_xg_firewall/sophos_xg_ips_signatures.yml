@@ -30,7 +30,7 @@ where: |
   exists("origin.ip") &&
   exists("target.ip")
 afterEvents:
-  - indexPattern: v11-log-firewall-sophos-xg-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

@@ -26,7 +26,7 @@ description: |
   7. If confirmed malicious, isolate the affected system and conduct a full forensic investigation
 where: exists("origin.ip") && exists("target.ip") && greaterThan("origin.bytesSent", 10000000) && safe(origin.geolocation.country, "") != safe(target.geolocation.country, "") && greaterThan("origin.port", 1024)
 afterEvents:
-  - indexPattern: v11-log-netflow-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

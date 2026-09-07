@@ -37,7 +37,7 @@ where: |
   exists("target.ip") &&
   greaterOrEqual("log.cefDeviceSeverity", "3")
 afterEvents:
-  - indexPattern: v11-log-antivirus-kaspersky-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

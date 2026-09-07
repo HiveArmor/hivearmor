@@ -31,7 +31,7 @@ where: |
   greaterThan("target.port", 0) &&
   equals("protocol", "TCP")
 afterEvents:
-  - indexPattern: v11-log-netflow-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

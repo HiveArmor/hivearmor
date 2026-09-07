@@ -16,7 +16,7 @@ where: >
   equals("log.eventSuccess", false) && 
   exists("origin.ip")
 afterEvents:
-  - indexPattern: v11-log-crowdstrike-*
+  - indexPattern: v3-hive-log-*
     within: 15m
     count: 5
     with:

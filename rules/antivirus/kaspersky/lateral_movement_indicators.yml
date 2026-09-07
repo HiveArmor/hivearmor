@@ -36,7 +36,7 @@ where: |
   exists("log.src") &&
   safe(log.src, "") != safe(log.dst, "")
 afterEvents:
-  - indexPattern: v11-log-antivirus-kaspersky-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: log.src
         operator: filter_term

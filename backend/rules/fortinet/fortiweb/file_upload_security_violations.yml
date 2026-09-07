@@ -38,7 +38,7 @@ where: |
     contains("log.msg", "upload blocked")
   )
 afterEvents:
-  - indexPattern: v11-log-firewall-fortiweb-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

@@ -15,7 +15,7 @@ references:
   - "https://suricata.readthedocs.io/en/latest/"
 where: equals("log.eventType", "alert") && equals("severity", "medium")
 afterEvents:
-  - indexPattern: v11-log-suricata-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: target.ip
         operator: filter_term

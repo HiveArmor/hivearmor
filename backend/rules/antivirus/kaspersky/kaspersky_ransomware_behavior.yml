@@ -31,7 +31,7 @@ where: |
    (contains("log.msg", "encrypt") && contains("log.msg", "mass")) ||
    (contains("log.msg", "System Watcher") && contains("log.msg", "rollback")))
 afterEvents:
-  - indexPattern: v11-log-antivirus-kaspersky-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: log.src
         operator: filter_term

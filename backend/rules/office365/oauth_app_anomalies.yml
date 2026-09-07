@@ -27,7 +27,7 @@ description: |
 where: |
   equals("action", "Consent to application") && equals("actionResult", "Success") && (contains("log.Scope", "Mail.") || contains("log.Scope", "Files.") || contains("log.Scope", "User.ReadWrite") || contains("log.Scope", ".All"))
 afterEvents:
-  - indexPattern: v11-log-o365-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

@@ -33,7 +33,7 @@ where: |
   (regexMatch("log.message", "(?i)rejected password for user")) ||
   (regexMatch("log.message", "(?i)vmtoolsd") && regexMatch("log.message", "(?i)exploit"))
 afterEvents:
-  - indexPattern: v11-log-vmware-esxi-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.hostname
         operator: filter_term

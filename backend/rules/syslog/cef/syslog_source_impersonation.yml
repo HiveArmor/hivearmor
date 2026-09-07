@@ -35,7 +35,7 @@ where: |
     (regexMatch("log.deviceProduct", ".*[|\\n\\r].*"))
   )
 afterEvents:
-  - indexPattern: v11-log-syslog-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip
         operator: filter_term

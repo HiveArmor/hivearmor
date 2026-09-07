@@ -33,7 +33,7 @@ where: |
   contains("log.jsonMessage", ["heuristic", "NewHeur", "suspicious behavior"]) &&
   contains("log.jsonMessage", ["cleaned", "deleted", "quarantined", "blocked"])
 afterEvents:
-  - indexPattern: v11-log-antivirus-esmc-eset-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: log.headHostname
         operator: filter_term

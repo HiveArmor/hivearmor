@@ -35,7 +35,7 @@ where: |
   !regexMatch("target.user", "(?i)\\$$") &&
   exists("target.user")
 afterEvents:
-  - indexPattern: v11-log-wineventlog-*
+  - indexPattern: v3-hive-log-*
     with:
       - field: origin.ip.keyword
         operator: filter_term
