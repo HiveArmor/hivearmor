@@ -120,6 +120,20 @@ describe('DetectionPipelineHealthStrip', () => {
     const module = await import('./components/DetectionPipelineHealthStrip');
     expect(typeof module.DetectionPipelineHealthStrip).toBe('function');
   });
+
+  it('renders SLO p50/p95 and afterEvents miss rate with honest unavailable labels', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'src/pages/detection-rules/components/DetectionPipelineHealthStrip.tsx'),
+      'utf8',
+    );
+    expect(source).toContain('slo-p50');
+    expect(source).toContain('slo-p95');
+    expect(source).toContain('afterevents-miss-rate');
+    expect(source).toContain('afterevents-errors');
+    expect(source).toContain('formatLatencyMs');
+    expect(source).toContain('formatMissRate');
+    expect(source).toContain('indexPatternConstraint');
+  });
 });
 
 describe('detectionRules.capabilities next flags', () => {
@@ -154,12 +168,17 @@ describe('DET-FP engine enforcement honesty', () => {
     expect(source).toContain("'baseline'");
   });
 
-  it('pipeline health service exposes exception counters', () => {
+  it('pipeline health service exposes exception, SLO, and afterEvents miss counters', () => {
     const source = readFileSync(
       join(process.cwd(), 'src/services/detectionPipeline.service.ts'),
       'utf8',
     );
     expect(source).toContain('exceptionsSuppressed');
     expect(source).toContain('activeExceptions');
+    expect(source).toContain('ingestAlertSlo');
+    expect(source).toContain('afterEventsMissRate');
+    expect(source).toContain('p50Ms');
+    expect(source).toContain('p95Ms');
+    expect(source).toContain('v3-hive-<type>-YYYY.MM.DD');
   });
 });

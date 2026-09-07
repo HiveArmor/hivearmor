@@ -1,5 +1,5 @@
 /**
- * DET-OBS-001 — pipeline health strip for Detection Engineering.
+ * DET-OBS-001 / DET-SLO-001 / DET-INDEX-001b — pipeline health strip.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -7,7 +7,11 @@ import { Activity, AlertTriangle, Gauge, RefreshCw, ShieldAlert } from 'lucide-r
 
 import { DET_OBS_PIPELINE_HEALTH } from '../detectionRules.capabilities';
 
-import { fetchDetectionPipelineHealth } from '@/services/detectionPipeline.service';
+import {
+  fetchDetectionPipelineHealth,
+  formatLatencyMs,
+  formatMissRate,
+} from '@/services/detectionPipeline.service';
 
 export function DetectionPipelineHealthStrip(): JSX.Element | null {
   const query = useQuery({
@@ -21,7 +25,11 @@ export function DetectionPipelineHealthStrip(): JSX.Element | null {
   if (!DET_OBS_PIPELINE_HEALTH) return null;
 
   const health = query.data;
-  const status = health?.status ?? (query.isError ? 'error' : 'loading');
+  const slo = health?.ingestAlertSlo;
+  const sloBreached = slo?.breached === true;
+  const status = sloBreached
+    ? 'degraded'
+    : health?.status ?? (query.isError ? 'error' : 'loading');
 
   return (
     <section className="detection-pipeline" aria-label="Detection pipeline health" data-status={status}>
@@ -66,8 +74,33 @@ export function DetectionPipelineHealthStrip(): JSX.Element | null {
               <dd>{health.activeRuleCount ?? '—'}</dd>
             </div>
             <div>
+              <dt>Ingest→alert p50</dt>
+              <dd data-testid="slo-p50">{formatLatencyMs(slo?.p50Ms ?? null)}</dd>
+            </div>
+            <div>
+              <dt>Ingest→alert p95</dt>
+              <dd data-testid="slo-p95">{formatLatencyMs(slo?.p95Ms ?? null)}</dd>
+            </div>
+            <div>
+              <dt>SLO p95 target</dt>
+              <dd data-testid="slo-target">
+                {sloBreached ? 'breached · ' : ''}
+                {formatLatencyMs(slo?.targetP95Ms ?? null)}
+              </dd>
+            </div>
+            <div>
               <dt>afterEvents misses</dt>
-              <dd>{health.afterEventsMisses ?? '—'}</dd>
+              <dd data-testid="afterevents-misses">{health.afterEventsMisses ?? '—'}</dd>
+            </div>
+            <div>
+              <dt>afterEvents errors</dt>
+              <dd data-testid="afterevents-errors">{health.afterEventsErrors ?? '—'}</dd>
+            </div>
+            <div>
+              <dt>afterEvents miss rate</dt>
+              <dd data-testid="afterevents-miss-rate">
+                {formatMissRate(health.afterEventsMissRate, health.afterEventsMissRateAvailable)}
+              </dd>
             </div>
             <div>
               <dt>Correlation checks</dt>
@@ -86,6 +119,12 @@ export function DetectionPipelineHealthStrip(): JSX.Element | null {
               <dd>{health.exceptionsLastLoad ?? health.lastReload ?? '—'}</dd>
             </div>
           </dl>
+          {slo?.honesty && (
+            <p className="detection-pipeline__honesty" role="status" data-testid="slo-honesty">
+              <ShieldAlert size={12} />
+              <span>{slo.honesty}</span>
+            </p>
+          )}
           <p className="detection-pipeline__honesty" role="status">
             <ShieldAlert size={12} />
             <span>{health.honesty}</span>
