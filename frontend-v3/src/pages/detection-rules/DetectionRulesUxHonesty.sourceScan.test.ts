@@ -48,6 +48,19 @@ describe('detection rules UX honesty (Prompt 16)', () => {
     expect(consoleSource).toContain('exceptionsApplied');
   });
 
+  it('wires ATT&CK coverage to canonical /mitre APIs instead of inventory-only grouping', () => {
+    const coverage = readFileSync(join(process.cwd(), 'src/pages/detection-rules/DetectionCoverageView.tsx'), 'utf8');
+    const service = readFileSync(join(process.cwd(), 'src/services/mitre.service.ts'), 'utf8');
+    expect(service).toContain('/mitre/coverage');
+    expect(service).toContain('/mitre/rules');
+    expect(coverage).toContain('mitreService.getCoverage');
+    expect(coverage).toContain('mitreService.getRulesByTechnique');
+    expect(coverage).toContain('detection-mitre-api-unused');
+    expect(coverage).toContain('not proof of full ATT&amp;CK coverage');
+    expect(coverage).not.toContain('fetchCoverage');
+    expect(coverage).not.toContain('/ha-detection-rules/coverage');
+  });
+
   it('surfaces sequence/risk/graph enterprise pack inventory', () => {
     expect(page).toContain('detection-enterprise-pack-honesty');
     expect(page).toContain('ENGINE_OPTIONS');
