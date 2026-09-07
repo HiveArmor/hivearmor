@@ -38,7 +38,9 @@ public class DetectionExceptionService {
         "STAGING CANDIDATE — exception is persisted in PostgreSQL. "
             + "When active, the config plugin writes rules/exceptions/exceptions.yaml and the "
             + "event-processor suppresses matching alerts pre-buildAlert (sync lag typically ≤60s). "
-            + "Sequence/graph/baseline paths are not covered.";
+            + "Covers CEL, sequence, graph-offense, and baseline anomaly "
+            + "(synthetic ruleId baseline:anomaly + entity/metric conditions). "
+            + "Java dry-run / OpenSearch preview still report exceptionsApplied=false.";
 
     private final HaDetectionExceptionRepository repository;
     private final ObjectMapper objectMapper;

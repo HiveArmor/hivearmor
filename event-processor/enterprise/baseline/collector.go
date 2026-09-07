@@ -193,6 +193,24 @@ func GetBaseline(dataSource, action string) (AnomalyState, bool) {
 	return state, ok
 }
 
+// ReplaceBaselinesForTest replaces the in-memory baseline cache (unit tests only).
+func ReplaceBaselinesForTest(next map[string]AnomalyState) {
+	bMu.Lock()
+	defer bMu.Unlock()
+	if next == nil {
+		bCache = map[string]AnomalyState{}
+		return
+	}
+	bCache = next
+}
+
+// ResetDedupForTest clears hourly anomaly-alert dedup state (unit tests only).
+func ResetDedupForTest() {
+	dedupMu.Lock()
+	defer dedupMu.Unlock()
+	dedupMap = map[string]time.Time{}
+}
+
 // IsAnomaly returns true when count exceeds mean + (sigma * stdDev).
 func IsAnomaly(dataSource, action string, count float64) bool {
 	bMu.RLock()

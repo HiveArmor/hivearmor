@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	ha_rules "github.com/hivearmor/event-processor/rules"
 	"github.com/hivearmor/sdk/plugins"
 )
 
@@ -55,6 +56,12 @@ func Evaluate(event *plugins.Event, tracker *Tracker, alertFn func(*plugins.Aler
 	}
 
 	if isDeduplicated(event.DataSource, event.Action) {
+		return
+	}
+
+	// DET-FP-001 — active exceptions keyed to BaselineAnomalyRuleID suppress before emit.
+	if ha_rules.SuppressBaselineIfMatched(event) {
+		markDeduplicated(event.DataSource, event.Action)
 		return
 	}
 

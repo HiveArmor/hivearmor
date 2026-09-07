@@ -14,8 +14,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// BaselineAnomalyRuleID is the synthetic exception ruleId for statistical baseline
+// anomaly alerts (enterprise/baseline). Baseline has no correlation-rule row; FP packs
+// bind to this stable key and use existing condition fields (host/user/dataSource/action).
+// Example YAML: ruleId: "baseline:anomaly" with host.name / dataSource conditions.
+const BaselineAnomalyRuleID = "baseline:anomaly"
+
 // DetectionException is an active FP suppression loaded from config-plugin YAML (DET-FP-001).
-// Enforcement is pre-alert: matching events never call buildAlert / sequence alertFn / graph emit.
+// Enforcement is pre-alert: matching events never call buildAlert / sequence alertFn /
+// graph emit / baseline alertFn.
 type DetectionException struct {
 	ID         int64                `yaml:"id" json:"id"`
 	RuleID     string               `yaml:"ruleId" json:"ruleId"`
@@ -122,13 +129,18 @@ func ExceptionMatches(ruleID string, event *plugins.Event) bool {
 }
 
 // SuppressIfMatched returns true when an active exception matches, and increments
-// exceptionsSuppressed (shared OBS counter for CEL / sequence / graph paths).
+// exceptionsSuppressed (shared OBS counter for CEL / sequence / graph / baseline paths).
 func SuppressIfMatched(ruleID string, event *plugins.Event) bool {
 	if !ExceptionMatches(ruleID, event) {
 		return false
 	}
 	exceptionsSuppressed.Add(1)
 	return true
+}
+
+// SuppressBaselineIfMatched is SuppressIfMatched for the synthetic baseline anomaly key.
+func SuppressBaselineIfMatched(event *plugins.Event) bool {
+	return SuppressIfMatched(BaselineAnomalyRuleID, event)
 }
 
 // SuppressIfMatchedID is SuppressIfMatched for numeric rule IDs.

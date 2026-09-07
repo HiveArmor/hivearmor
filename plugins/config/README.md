@@ -88,9 +88,15 @@ To temporarily disable processing (e.g., during local development), set the plug
     <rule-id>.yaml
   /exceptions/
     exceptions.yaml   # active DET-FP exceptions for event-processor enforce
+                      # (CEL/sequence/graph use numeric ruleId; baseline anomaly
+                      # uses synthetic ruleId "baseline:anomaly")
 ```
 
-## Error handling & logging
+## DET-FP exception keying (STAGING CANDIDATE)
+- Active rows from `ha_detection_exception` are written as `exceptions.yaml`.
+- Event-processor matches on `ruleId` + AND conditions (`host.name`, `user.name`, `dataSource`, `action`, …).
+- Statistical baseline anomaly has no correlation-rule id; bind exceptions to `ruleId: "baseline:anomaly"`.
+- Sync lag is typically one watchLoop (~30s) plus EP load; draft/inactive rows are never written.
 - Database, I/O, and serialization errors are wrapped with context via the `catcher` package.
 - Locking is handled by the SDK (`plugins.AcquireLock`/`plugins.ReleaseLock`).
 
