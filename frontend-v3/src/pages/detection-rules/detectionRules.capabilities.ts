@@ -19,7 +19,7 @@ export const DET_009_ALERT_PIVOT = false;
 /** DET-011: POST /ha-detection-rules/validate and /preview — authorized (ALERT_QUEUE_AUTH). */
 export const DET_011_VALIDATE_PREVIEW = true;
 
-/** DET-TEST-001: POST /correlation-rule/test inject dry-run + POST /ha-rules/test Sigma sandbox. */
+/** DET-TEST-001: POST /ha-detection-rules/test inject dry-run (+ legacy /correlation-rule/test) and /ha-rules/test Sigma sandbox. */
 export const DET_TEST_CEL_DRY_RUN = true;
 
 /**

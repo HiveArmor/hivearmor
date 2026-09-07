@@ -672,7 +672,8 @@ export async function testDetectionSandbox(
     throw new Error('Native CEL single-event evaluation is not enabled. Run the bounded historical preview instead.');
   }
 
-  const response = await fetch('/api/correlation-rule/test', {
+  // Prefer modern DET-TEST-001 path; fall back to deprecated correlation-rule/test when a persisted ruleId is available.
+  const modernResponse = await fetch(`${DETECTION_BASE}/test`, {
     method: 'POST',
     signal,
     headers: {
@@ -681,13 +682,35 @@ export async function testDetectionSandbox(
       Accept: 'application/json',
     },
     body: JSON.stringify({
-      ruleId: options?.ruleId ?? undefined,
+      rule: {
+        id: options?.ruleId,
+        name: 'Detection sandbox dry-run',
+        expression: ruleYaml,
+      },
+      sampleEvent: eventJson,
       eventJson,
-      testEventJson: eventJson,
-      ruleYaml: ruleYaml || 'where: true',
-      expression: ruleYaml,
     }),
   });
+
+  let response = modernResponse;
+  if (!modernResponse.ok && options?.ruleId != null && modernResponse.status !== 401 && modernResponse.status !== 403) {
+    response = await fetch('/api/correlation-rule/test', {
+      method: 'POST',
+      signal,
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        ruleId: options.ruleId,
+        eventJson,
+        testEventJson: eventJson,
+        sampleEvent: eventJson,
+      }),
+    });
+  }
+
   if (!response.ok) throw new Error(await response.text() || `HTTP ${response.status}`);
   const result = await response.json() as {
     matched?: boolean;
@@ -707,7 +730,7 @@ export async function testDetectionSandbox(
     durationMs: result.durationMs ?? 0,
     evaluatedFields: result.matchedFields?.length ?? result.simulatedMatchCount ?? 0,
     warnings: [
-      'CEL inject dry-run (DET-TEST-001) — approximate parity with the Go event-processor evaluator; OpenSearch was not queried.',
+      'CEL inject dry-run (DET-TEST-001) via /api/ha-detection-rules/test — approximate parity with the Go event-processor evaluator; OpenSearch was not queried.',
     ],
     evaluationMode: result.evaluationMode ?? 'inject_dry_run',
     openSearchQueried: Boolean(result.openSearchQueried),
