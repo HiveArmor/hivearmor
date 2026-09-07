@@ -17,7 +17,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Persisted detection exceptions (DET-FP-001).
@@ -42,6 +44,11 @@ public class DetectionExceptionService {
             + "(synthetic ruleId baseline:anomaly + entity/metric conditions). "
             + "Java dry-run / OpenSearch preview still report exceptionsApplied=false.";
 
+    /** Operators enforced by event-processor {@code exceptionCondMatch}. Unknown ops fail closed. */
+    static final Set<String> ALLOWED_OPERATORS = Set.of(
+        "is", "is_not", "contains", "starts_with", "ends_with", "in"
+    );
+
     private final HaDetectionExceptionRepository repository;
     private final ObjectMapper objectMapper;
 
@@ -61,6 +68,7 @@ public class DetectionExceptionService {
     public DetectionExceptionDTO create(String ruleId, CreateExceptionRequest request, String actor) {
         // ruleId may be a numeric correlation-rule id or the synthetic baseline key
         // "baseline:anomaly" (no FK to correlation_rule — EP BaselineAnomalyRuleID).
+        String normalizedRuleId = requireValidRuleId(ruleId);
         if (request == null || request.conditions() == null || request.conditions().isEmpty()) {
             throw new IllegalArgumentException("At least one exception condition is required");
         }
@@ -71,6 +79,11 @@ public class DetectionExceptionService {
                 || isBlank(condition.value())) {
                 throw new IllegalArgumentException("Each condition requires field, operator, and value");
             }
+            if (!isAllowedOperator(condition.operator())) {
+                throw new IllegalArgumentException(
+                    "Unsupported exception operator '" + condition.operator().trim()
+                        + "'. Allowed: is, is_not, contains, starts_with, ends_with, in");
+            }
         }
 
         String title = request.title() != null && !request.title().isBlank()
@@ -78,7 +91,7 @@ public class DetectionExceptionService {
             : "Exception for rule " + ruleId;
 
         HaDetectionException entity = new HaDetectionException();
-        entity.setRuleId(ruleId);
+        entity.setRuleId(normalizedRuleId);
         entity.setTitle(title);
         entity.setReason(trimOrNull(request.reason()));
         entity.setConditionsJson(serializeConditions(request.conditions()));
@@ -138,7 +151,7 @@ public class DetectionExceptionService {
             for (ExceptionCondition condition : conditions) {
                 Map<String, String> row = new LinkedHashMap<>();
                 row.put("field", condition.field().trim());
-                row.put("operator", condition.operator().trim());
+                row.put("operator", condition.operator().trim().toLowerCase(Locale.ROOT));
                 row.put("value", condition.value().trim());
                 rows.add(row);
             }
@@ -158,6 +171,32 @@ public class DetectionExceptionService {
             log.warn("{}.deserializeConditions: {}", CLASSNAME, e.getMessage());
             return List.of();
         }
+    }
+
+    static boolean isAllowedOperator(String operator) {
+        if (operator == null || operator.isBlank()) {
+            return false;
+        }
+        return ALLOWED_OPERATORS.contains(operator.trim().toLowerCase(Locale.ROOT));
+    }
+
+    static String requireValidRuleId(String ruleId) {
+        if (isBlank(ruleId)) {
+            throw new IllegalArgumentException("ruleId is required");
+        }
+        String trimmed = ruleId.trim();
+        if (trimmed.length() > 64) {
+            throw new IllegalArgumentException("ruleId must be 64 characters or fewer");
+        }
+        for (int i = 0; i < trimmed.length(); i++) {
+            char c = trimmed.charAt(i);
+            if (Character.isLetterOrDigit(c) || c == ':' || c == '-' || c == '_' || c == '.') {
+                continue;
+            }
+            throw new IllegalArgumentException(
+                "ruleId may contain only letters, digits, colon, dash, underscore, or dot");
+        }
+        return trimmed;
     }
 
     private static boolean isBlank(String value) {

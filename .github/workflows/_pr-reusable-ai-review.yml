@@ -61,13 +61,16 @@ jobs:
 
       - name: Fetch PR diff
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          # gh pr diff gives the same unified diff the GitHub UI shows.
-          # Simpler than `git diff base..head` and doesn't require fetch-depth: 0.
-          gh pr diff "$PR_NUMBER" > /tmp/pr.diff
+          # GitHub's `gh pr diff` / pulls API returns HTTP 406 when a PR
+          # exceeds 300 files (content-ops PRs regularly do). Two-dot git
+          # diff of the trees has no file-count cap. The next step still
+          # drops rules/filters/definitions before the model sees the diff.
+          git fetch --no-tags origin "$BASE_SHA"
+          git diff "$BASE_SHA" HEAD > /tmp/pr.diff
           echo "Diff size: $(wc -c < /tmp/pr.diff) bytes"
+          echo "Changed files: $(git diff --name-only "$BASE_SHA" HEAD | wc -l)"
 
       - name: Exclude rules/filters/definitions from the review diff
         # Changes under any "rules", "filters" or "definitions" folder are

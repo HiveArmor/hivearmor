@@ -81,10 +81,16 @@ export function filterBaselineExceptions(items: DetectionException[]): Detection
   return items.filter((item) => isBaselineAnomalyRuleId(item.ruleId));
 }
 
+const ALLOWED_OPERATORS = new Set<string>(EXCEPTION_OPERATOR_OPTIONS.map((item) => item.value));
+
 export function validateExceptionConditions(conditions: ExceptionCondition[]): string | null {
   const valid = conditions.filter((item) => item.field.trim() && item.operator.trim() && item.value.trim());
   if (!valid.length) {
     return 'Add at least one field/operator/value condition.';
+  }
+  const unsupported = valid.find((item) => !ALLOWED_OPERATORS.has(item.operator.trim()));
+  if (unsupported) {
+    return `Unsupported operator '${unsupported.operator}'. Use is, is_not, contains, starts_with, ends_with, or in.`;
   }
   return null;
 }

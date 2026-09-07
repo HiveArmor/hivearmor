@@ -76,6 +76,9 @@ describe('detectionException.service', () => {
     expect(filterBaselineExceptions(rows)[0]?.id).toBe(1);
     expect(validateExceptionConditions([{ field: '', operator: 'is', value: '' }])).toMatch(/condition/i);
     expect(validateExceptionConditions([{ field: 'host.name', operator: 'is', value: 'x' }])).toBeNull();
+    expect(
+      validateExceptionConditions([{ field: 'host.name', operator: 'equals', value: 'x' }]),
+    ).toMatch(/operator/i);
   });
 });
 
