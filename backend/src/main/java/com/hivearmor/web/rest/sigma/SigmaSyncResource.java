@@ -40,10 +40,9 @@ public class SigmaSyncResource {
 
     @PostMapping("/ha-sigma-sync/{id}/activate")
     @PreAuthorize("hasAuthority('" + AuthoritiesConstants.ADMIN + "')")
-    public ResponseEntity<Void> activateRule(@PathVariable Long id) {
+    public ResponseEntity<?> activateRule(@PathVariable Long id) {
         try {
-            sigmaSyncService.activateStagedRule(id);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(sigmaSyncService.activateStagedRule(id));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (Exception e) {

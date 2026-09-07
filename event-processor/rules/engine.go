@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,7 +30,17 @@ var (
 	// addScoreFn is called for rules with riskScore > 0. Injected by main.go via SetAddScoreFn
 	// to avoid a hard import cycle between the rules and enterprise/risk packages.
 	addScoreFn func(event *plugins.Event, score int)
+
+	// DET-OBS-001 — afterEvents / correlation observability counters.
+	correlationChecks atomic.Uint64
+	afterEventsMisses atomic.Uint64
+	afterEventsErrors atomic.Uint64
 )
+
+// CorrelationCounters returns DET-OBS-001 afterEvents observability counters.
+func CorrelationCounters() (checks, misses, errors uint64) {
+	return correlationChecks.Load(), afterEventsMisses.Load(), afterEventsErrors.Load()
+}
 
 // SetAddScoreFn registers the callback used to forward risk-score events.
 func SetAddScoreFn(fn func(event *plugins.Event, score int)) {
@@ -122,10 +133,17 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 			flatJSON, marshalErr := json.Marshal(eventToMap(event))
 			if marshalErr != nil {
 				log.Printf("[rules.Evaluate] failed to marshal event for correlation check rule.id=%d: %v", rule.ID, marshalErr)
+				afterEventsErrors.Add(1)
 				continue
 			}
+			correlationChecks.Add(1)
 			matched, _, err := executeSearchRequest(rule.Correlation[0], string(flatJSON))
-			if err != nil || !matched {
+			if err != nil {
+				afterEventsErrors.Add(1)
+				continue
+			}
+			if !matched {
+				afterEventsMisses.Add(1)
 				continue
 			}
 		}

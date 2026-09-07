@@ -1,5 +1,6 @@
 package com.hivearmor.web.rest.detection;
 
+import com.hivearmor.multitenancy.MsspIndexResolver;
 import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.service.detection.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,6 +52,8 @@ public class HaDetectionRuleResource {
     private final DetectionCoverageService coverageService;
     private final RuleAuthoringService authoringService;
     private final DetectionRuleDryRunService dryRunService;
+    private final DetectionPipelineObservabilityService pipelineObservabilityService;
+    private final MsspIndexResolver indexResolver;
 
     public HaDetectionRuleResource(DetectionRuleInventoryService inventoryService,
                                    RuleExecutionService executionService,
@@ -61,7 +64,9 @@ public class HaDetectionRuleResource {
                                    DetectionSseService sseService,
                                    DetectionCoverageService coverageService,
                                    RuleAuthoringService authoringService,
-                                   DetectionRuleDryRunService dryRunService) {
+                                   DetectionRuleDryRunService dryRunService,
+                                   DetectionPipelineObservabilityService pipelineObservabilityService,
+                                   MsspIndexResolver indexResolver) {
         this.inventoryService = inventoryService;
         this.executionService = executionService;
         this.bulkService = bulkService;
@@ -72,6 +77,8 @@ public class HaDetectionRuleResource {
         this.coverageService = coverageService;
         this.authoringService = authoringService;
         this.dryRunService = dryRunService;
+        this.pipelineObservabilityService = pipelineObservabilityService;
+        this.indexResolver = indexResolver;
     }
 
     // =========================================================================
@@ -397,9 +404,9 @@ public class HaDetectionRuleResource {
     @PreAuthorize(ALERT_QUEUE_AUTH)
     @Operation(
         summary = "Preview rule matches",
-        description = "Evaluates a detection rule against injectable sample events (inject dry-run) "
-            + "or reports honest unavailability when OpenSearch historical preview is not wired. "
-            + "Always returns mode/honesty/simulated flags. (DET-004 / DET-PREV-001)"
+        description = "Modes: inject (sample events), opensearch (bounded v3-hive-log-* fetch + approx CEL), "
+            + "or unavailable with honesty when neither path can run. Never fakes empty OpenSearch success. "
+            + "(DET-004 / DET-PREV-001)"
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Preview results with matching events and honesty flags"),
@@ -424,9 +431,12 @@ public class HaDetectionRuleResource {
             }
             Integer limit = body.get("limit") != null ? Integer.parseInt(body.get("limit").toString()) : null;
             List<Map<String, Object>> dryRunEvents = extractDryRunEvents(body);
-            String indexPattern = "v3-hive-log-*";
+            String previewMode = body.get("previewMode") != null
+                ? body.get("previewMode").toString()
+                : (body.get("mode") != null ? body.get("mode").toString() : "auto");
+            String indexPattern = indexResolver.resolveIndexPattern("log");
             Map<String, Object> result = previewService.preview(
-                ruleDefinition, from, to, limit, indexPattern, dryRunEvents);
+                ruleDefinition, from, to, limit, indexPattern, dryRunEvents, previewMode);
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return badRequest("VALIDATION_ERROR", e.getMessage());
@@ -678,6 +688,24 @@ public class HaDetectionRuleResource {
     // =========================================================================
     // DET-015: ATT&CK coverage matrix
     // =========================================================================
+
+    @GetMapping("/ha-detection-rules/pipeline-health")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    @Operation(
+        summary = "Detection pipeline observability",
+        description = "DET-OBS-001 — LoadReport, active rule count, afterEvents miss counters from "
+            + "event-processor when reachable. Honest unavailable when EP is down."
+    )
+    public ResponseEntity<Map<String, Object>> pipelineHealth() {
+        try {
+            return ResponseEntity.ok(pipelineObservabilityService.pipelineHealth());
+        } catch (Exception e) {
+            log.error("{}.pipelineHealth: {}", CLASSNAME, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        } finally {
+            TenantContext.clear();
+        }
+    }
 
     @GetMapping("/ha-detection-rules/coverage")
     @PreAuthorize(ALERT_QUEUE_AUTH)

@@ -74,9 +74,15 @@ func handleRulesStatus(c *gin.Context) {
 		summaries = append(summaries, ruleSummary{ID: r.ID, Name: r.Name})
 	}
 
+	checks, misses, errs := rulesengine.CorrelationCounters()
+	report := rulesengine.LastLoadReport()
 	c.JSON(http.StatusOK, gin.H{
-		"activeRules": summaries,
-		"count":       len(summaries),
-		"lastReload":  time.Now().UTC().Format(time.RFC3339),
+		"activeRules":       summaries,
+		"count":             len(summaries),
+		"lastReload":        time.Now().UTC().Format(time.RFC3339),
+		"loadReport":        report,
+		"correlationChecks": checks,
+		"afterEventsMisses": misses,
+		"afterEventsErrors": errs,
 	})
 }
