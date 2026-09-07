@@ -11,6 +11,12 @@
  * {@link BASELINE_ANOMALY_RULE_ID} (`baseline:anomaly`) with host/user/dataSource/action.
  */
 
+import {
+  detectionPackAuthHeaders,
+  isDetectionContentVisible,
+  readDetectionPackTenantId,
+} from '@/services/detectionPack.service';
+
 const TOKEN_KEY = 'hivearmor_auth_token';
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
 
@@ -60,6 +66,7 @@ export interface ExceptionPreviewResult {
 export interface DetectionException {
   id: number | string;
   ruleId: string;
+  tenantId?: number | null;
   title: string;
   reason: string | null;
   conditions: ExceptionCondition[];
@@ -162,17 +169,50 @@ let fixtureExceptions: DetectionException[] = [
     updatedAt: '2026-09-07T12:00:00Z',
     honesty: 'Design fixture: draft baseline exceptions are never enforced.',
   },
+  {
+    id: 9201,
+    ruleId: 'fixture',
+    tenantId: 1,
+    title: 'Acme payroll file-share suppression',
+    reason: 'Acme-only approved payroll ETL host',
+    conditions: [{ field: 'host.name', operator: 'is', value: 'acme-payroll-etl' }],
+    active: true,
+    status: 'active',
+    createdBy: 'acme-analyst',
+    activatedBy: 'acme-soc-manager',
+    activatedAt: '2026-09-07T15:00:00Z',
+    createdAt: '2026-09-07T14:00:00Z',
+    updatedAt: '2026-09-07T15:00:00Z',
+    honesty: 'STAGING CANDIDATE fixture: Acme custom exception is invisible to CWM.',
+  },
+  {
+    id: 9301,
+    ruleId: 'fixture',
+    tenantId: 2,
+    title: 'CWM OT historian suppression',
+    reason: 'CWM-only approved historian polling',
+    conditions: [{ field: 'host.name', operator: 'is', value: 'cwm-ot-historian' }],
+    active: true,
+    status: 'active',
+    createdBy: 'cwm-analyst',
+    activatedBy: 'cwm-soc-manager',
+    activatedAt: '2026-09-07T15:10:00Z',
+    createdAt: '2026-09-07T14:10:00Z',
+    updatedAt: '2026-09-07T15:10:00Z',
+    honesty: 'STAGING CANDIDATE fixture: CWM custom exception is invisible to Acme.',
+  },
 ];
 
 function fixtureRowsForRule(ruleId: string | number): DetectionException[] {
   const key = String(ruleId);
+  const packTenantId = readDetectionPackTenantId();
+  const visible = fixtureExceptions.filter((item) => isDetectionContentVisible(item.tenantId, packTenantId));
   if (isBaselineAnomalyRuleId(key)) {
-    return fixtureExceptions
+    return visible
       .filter((item) => isBaselineAnomalyRuleId(item.ruleId))
       .map((item) => ({ ...item }));
   }
-  // CEL / numeric rule drawers: remapped generic fixtures (exclude baseline-scoped rows).
-  return fixtureExceptions
+  return visible
     .filter((item) => !isBaselineAnomalyRuleId(item.ruleId))
     .map((item) => ({ ...item, ruleId: key }));
 }
@@ -206,6 +246,7 @@ function mapException(body: Record<string, unknown>, fallbackRuleId: string): De
   return {
     id: (body.id as number | string) ?? 'unknown',
     ruleId: typeof body.ruleId === 'string' ? body.ruleId : fallbackRuleId,
+    tenantId: typeof body.tenantId === 'number' ? body.tenantId : null,
     title: typeof body.title === 'string' ? body.title : 'Untitled exception',
     reason: typeof body.reason === 'string' ? body.reason : null,
     conditions,
@@ -272,6 +313,7 @@ export async function previewExceptionImpact(
         Authorization: `Bearer ${getToken()}`,
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        ...detectionPackAuthHeaders(),
       },
       body: JSON.stringify({ conditions }),
     },
@@ -336,7 +378,7 @@ export async function listExceptions(
     `/api/ha-detection-rules/${encodeURIComponent(String(ruleId))}/exceptions`,
     {
       signal,
-      headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json' },
+      headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json', ...detectionPackAuthHeaders() },
     },
   );
   await handleAuth(response);
@@ -363,6 +405,7 @@ export async function saveException(
     const created: DetectionException = {
       id: 9100 + fixtureExceptions.length,
       ruleId: String(ruleId),
+      tenantId: readDetectionPackTenantId() || null,
       title: title.trim() || `Exception for ${ruleId}`,
       reason: reason.trim() || null,
       conditions,
@@ -388,6 +431,7 @@ export async function saveException(
         Authorization: `Bearer ${getToken()}`,
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        ...detectionPackAuthHeaders(),
       },
       body: JSON.stringify({ title, reason, conditions }),
     },
@@ -433,7 +477,7 @@ export async function setExceptionActive(
     {
       method: 'POST',
       signal,
-      headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json' },
+      headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json', ...detectionPackAuthHeaders() },
     },
   );
   await handleAuth(response);

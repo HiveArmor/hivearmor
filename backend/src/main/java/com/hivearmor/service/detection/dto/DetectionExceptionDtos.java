@@ -22,6 +22,7 @@ public final class DetectionExceptionDtos {
     public record DetectionExceptionDTO(
         Long id,
         String ruleId,
+        Long tenantId,
         String title,
         String reason,
         List<Map<String, String>> conditions,

@@ -81,4 +81,14 @@ describe('detection rules UX honesty (Prompt 16)', () => {
     expect(fixtures).toContain('v3-hive-log-*');
     expect(fixtures).not.toContain('v11-log-*');
   });
+
+  it('isolates MSSP tenant detection packs with two-tenant fixtures', () => {
+    expect(page).toContain('detection-mssp-pack-honesty');
+    expect(page).toContain('Detection pack tenant');
+    expect(page).toContain('DETECTION_PACK_HONESTY');
+    const fixtures = readFileSync(join(process.cwd(), 'src/pages/detection-rules/detectionRules.fixtures.ts'), 'utf8');
+    expect(fixtures).toContain('ACME-CUSTOM-VPN-GEO-ANOMALY');
+    expect(fixtures).toContain('CWM-CUSTOM-OT-PROTOCOL-ANOMALY');
+    expect(fixtures).not.toContain('v11-log-*');
+  });
 });

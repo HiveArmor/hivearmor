@@ -180,6 +180,10 @@ public class UtmCorrelationRules implements Serializable {
     @Column(name = "staged")
     private Boolean staged = false;
 
+    /** Null = platform shared pack. Non-null isolates the rule to that MSSP tenant. */
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     public List<String> getRuleReferences() throws UtmSerializationException {
         if (StringUtils.hasText(ruleReferencesDef))
             ruleReferences = UtilSerializer.jsonDeserializeList(String.class, ruleReferencesDef);

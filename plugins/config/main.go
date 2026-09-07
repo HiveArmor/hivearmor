@@ -479,7 +479,7 @@ func hasChanges(db *sql.DB, state *ConfigState) (bool, ConfigState, error) {
 		oldCount       int
 	}{
 		{"SELECT MAX(last_update) FROM hive_tenant_config", "SELECT COUNT(*) FROM hive_tenant_config", &newState.AssetsLastUpdate, &newState.AssetsCount, state.AssetsLastUpdate, state.AssetsCount},
-		{"SELECT MAX(rule_last_update) FROM hive_correlation_rules", "SELECT COUNT(*) FROM hive_correlation_rules WHERE rule_active = true", &newState.RulesLastUpdate, &newState.RulesCount, state.RulesLastUpdate, state.RulesCount},
+		{"SELECT MAX(rule_last_update) FROM hive_correlation_rules WHERE tenant_id IS NULL", "SELECT COUNT(*) FROM hive_correlation_rules WHERE rule_active = true AND tenant_id IS NULL", &newState.RulesLastUpdate, &newState.RulesCount, state.RulesLastUpdate, state.RulesCount},
 		{"SELECT MAX(updated_at) FROM hive_logstash_filter", "SELECT COUNT(*) FROM hive_logstash_filter WHERE is_active = true", &newState.FiltersLastUpdate, &newState.FiltersCount, state.FiltersLastUpdate, state.FiltersCount},
 		{"SELECT MAX(last_update) FROM hive_regex_pattern", "SELECT COUNT(*) FROM hive_regex_pattern", &newState.PatternsLastUpdate, &newState.PatternsCount, state.PatternsLastUpdate, state.PatternsCount},
 		{"SELECT MAX(updated_at) FROM ha_detection_exception", "SELECT COUNT(*) FROM ha_detection_exception WHERE active = true", &newState.ExceptionsLastUpdate, &newState.ExceptionsCount, state.ExceptionsLastUpdate, state.ExceptionsCount},
@@ -641,7 +641,7 @@ func getAssets(db *sql.DB) ([]Asset, error) {
 }
 
 func getRules(db *sql.DB) ([]Rule, error) {
-	rows, err := db.Query("SELECT id,rule_name,rule_confidentiality,rule_integrity,rule_availability,rule_category,rule_technique,rule_description,rule_references_def,rule_definition_def,rule_adversary,rule_deduplicate_by_def,rule_after_events_def,rule_group_by_def FROM hive_correlation_rules WHERE rule_active = true")
+	rows, err := db.Query("SELECT id,rule_name,rule_confidentiality,rule_integrity,rule_availability,rule_category,rule_technique,rule_description,rule_references_def,rule_definition_def,rule_adversary,rule_deduplicate_by_def,rule_after_events_def,rule_group_by_def FROM hive_correlation_rules WHERE rule_active = true AND tenant_id IS NULL")
 	if err != nil {
 		return nil, catcher.Error("failed to get rules", err, map[string]any{"process": "plugin_com.hivearmor.config"})
 	}

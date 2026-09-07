@@ -156,6 +156,20 @@ describe('detection rules foundation fixtures', () => {
     expect(foundationDetectionRules.filter((rule) => ENTERPRISE_PACK_RULE_IDS.includes(rule.id as typeof ENTERPRISE_PACK_RULE_IDS[number])).every((rule) => Boolean(rule.techniqueId))).toBe(true);
   });
 
+  it('never leaks Acme custom rules into the CWM pack', async () => {
+    const { filterFoundationDetectionRules } = await import('./detectionRules.fixtures');
+    const acme = filterFoundationDetectionRules({ tenantId: 1, size: 200 });
+    const cwm = filterFoundationDetectionRules({ tenantId: 2, size: 200 });
+    const platform = filterFoundationDetectionRules({ tenantId: 0, size: 200 });
+    expect(acme.items.some((rule) => rule.ruleName === 'ACME-CUSTOM-VPN-GEO-ANOMALY')).toBe(true);
+    expect(acme.items.some((rule) => rule.ruleName === 'CWM-CUSTOM-OT-PROTOCOL-ANOMALY')).toBe(false);
+    expect(cwm.items.some((rule) => rule.ruleName === 'CWM-CUSTOM-CONTRACTOR-RDP')).toBe(true);
+    expect(cwm.items.some((rule) => rule.ruleName === 'ACME-CUSTOM-PAYROLL-EXFIL')).toBe(false);
+    expect(platform.items.some((rule) => rule.ruleName?.startsWith('ACME-CUSTOM-'))).toBe(false);
+    expect(platform.items.some((rule) => rule.ruleName?.startsWith('CWM-CUSTOM-'))).toBe(false);
+    expect(platform.items.some((rule) => rule.ruleName === 'SEQ-BRUTE-FORCE-THEN-SUCCESS')).toBe(true);
+  });
+
   it('are excluded by both production build paths', async () => {
     const fs = await import('node:fs');
     const viteConfig = fs.readFileSync(`${process.cwd()}/vite.config.ts`, 'utf8');

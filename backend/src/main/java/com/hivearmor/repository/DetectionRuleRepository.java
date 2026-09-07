@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -43,4 +44,14 @@ public interface DetectionRuleRepository extends JpaRepository<DetectionRule, St
      * Counts detection rules by tenant and scope.
      */
     long countByTenantIdAndScope(Long tenantId, String scope);
+
+    /**
+     * Counts detection rules for a tenant (platform uses {@code 0}).
+     */
+    long countByTenantId(Long tenantId);
+
+    /**
+     * Platform pack ({@code 0}) plus the requested tenant pack.
+     */
+    List<DetectionRule> findByTenantIdIn(Collection<Long> tenantIds);
 }

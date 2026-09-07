@@ -8,6 +8,7 @@ import com.hivearmor.domain.network_scan.Property;
 import com.hivearmor.repository.correlation.config.UtmDataTypesRepository;
 import com.hivearmor.repository.correlation.rules.UtmCorrelationRulesRepository;
 import com.hivearmor.service.UtmStackService;
+import com.hivearmor.service.detection.DetectionPackScope;
 import com.hivearmor.service.dto.correlation.UtmCorrelationRulesDTO;
 import com.hivearmor.service.dto.correlation.UtmCorrelationRulesMapper;
 import com.hivearmor.service.network_scan.UtmNetworkScanService;
@@ -83,6 +84,7 @@ public class UtmCorrelationRulesService {
         }
 
         rule.setId(null);
+        rule.setTenantId(DetectionPackScope.stampNullable(DetectionPackScope.requestTenantId()));
         rule.setDataTypes(this.saveDataTypes(rule));
         rule.setRuleLastUpdate(Instant.now(Clock.systemUTC()));
         return utmCorrelationRulesRepository.save(rule);
@@ -112,6 +114,9 @@ public class UtmCorrelationRulesService {
         if (optionalCorrelationRule.isEmpty()) {
             throw new EntityNotFoundException("Rule with ID " + id + " not found");
         }
+        UtmCorrelationRules existing = optionalCorrelationRule.get();
+        DetectionPackScope.requireVisible(existing.getTenantId(), DetectionPackScope.requestTenantId());
+        correlationRule.setTenantId(existing.getTenantId());
         if (correlationRule.getDataTypes() == null || correlationRule.getDataTypes().isEmpty()) {
             correlationRule.setDataTypes(optionalCorrelationRule.get().getDataTypes());
         }
@@ -157,6 +162,7 @@ public class UtmCorrelationRulesService {
 
         UtmCorrelationRules rule = utmCorrelationRulesRepository.findById(ruleId)
                 .orElseThrow(() -> new RuntimeException(ctx + ": The rule you're trying to activate or deactivate is not present in database."));
+        DetectionPackScope.requireVisible(rule.getTenantId(), DetectionPackScope.requestTenantId());
         try {
             rule.setRuleActive(setActive);
             rule.setRuleLastUpdate(Instant.now());
@@ -184,6 +190,7 @@ public class UtmCorrelationRulesService {
         if (find.isEmpty()) {
             throw new BadRequestException(ctx + ": The rule you're trying to delete is not present in database.");
         }
+        DetectionPackScope.requireVisible(find.get().getTenantId(), DetectionPackScope.requestTenantId());
         if(find.get().getSystemOwner() && !forcedSystemMode) {
             throw new BadRequestException(ctx + ": System's rules can't be removed.");
         }
@@ -219,8 +226,12 @@ public class UtmCorrelationRulesService {
                     f.getInitDate(),f.getEndDate(), f.getSearch() == null ? null :"%" + f.getSearch() + "%",
                     f.getTechniqueSearch() == null ? null : f.getTechniqueSearch() + "%", p );
 
-            List<UtmCorrelationRulesDTO> rulesList = this.utmCorrelationRulesMapper.toListDTO(page.getContent());
-            return new PageImpl<>(rulesList, p, page.getTotalElements());
+            Long requestTenantId = DetectionPackScope.requestTenantId();
+            List<UtmCorrelationRules> visible = page.getContent().stream()
+                .filter(rule -> DetectionPackScope.isVisible(rule.getTenantId(), requestTenantId))
+                .toList();
+            List<UtmCorrelationRulesDTO> rulesList = this.utmCorrelationRulesMapper.toListDTO(visible);
+            return new PageImpl<>(rulesList, p, visible.size());
         } catch (InvalidDataAccessResourceUsageException e) {
             String msg = ctx + ": " + e.getMostSpecificCause().getMessage().replaceAll("\n", "");
             throw new Exception(msg);
@@ -254,7 +265,8 @@ public class UtmCorrelationRulesService {
      */
     @Transactional(readOnly = true)
     public Optional<UtmCorrelationRules> findOne(Long id) {
-        return this.utmCorrelationRulesRepository.findById(id);
+        return this.utmCorrelationRulesRepository.findById(id)
+            .filter(rule -> DetectionPackScope.isVisible(rule.getTenantId(), DetectionPackScope.requestTenantId()));
     }
 
     private Set<UtmDataTypes> saveDataTypes(UtmCorrelationRules rule) {

@@ -62,7 +62,9 @@ public class DetectionExceptionService {
 
     @Transactional(readOnly = true)
     public List<DetectionExceptionDTO> listByRuleId(String ruleId) {
+        Long requestTenantId = DetectionPackScope.requestTenantId();
         return repository.findByRuleIdOrderByUpdatedAtDesc(ruleId).stream()
+            .filter(entity -> DetectionPackScope.isVisible(entity.getTenantId(), requestTenantId))
             .map(this::toDto)
             .toList();
     }
@@ -78,7 +80,10 @@ public class DetectionExceptionService {
                 "No ruleId; active exceptions were not loaded.");
         }
         try {
-            List<HaDetectionException> active = repository.findByRuleIdAndActiveTrue(ruleId.trim());
+            Long requestTenantId = DetectionPackScope.requestTenantId();
+            List<HaDetectionException> active = repository.findByRuleIdAndActiveTrue(ruleId.trim()).stream()
+                .filter(entity -> DetectionPackScope.isVisible(entity.getTenantId(), requestTenantId))
+                .toList();
             for (HaDetectionException entity : active) {
                 List<Map<String, String>> conditions = deserializeConditions(entity.getConditionsJson());
                 if (DetectionExceptionMatcher.matches(conditions, event)) {
@@ -146,6 +151,7 @@ public class DetectionExceptionService {
 
         HaDetectionException entity = new HaDetectionException();
         entity.setRuleId(normalizedRuleId);
+        entity.setTenantId(DetectionPackScope.stampNullable(DetectionPackScope.requestTenantId()));
         entity.setTitle(title);
         entity.setReason(trimOrNull(request.reason()));
         entity.setConditionsJson(serializeConditions(request.conditions()));
@@ -176,15 +182,21 @@ public class DetectionExceptionService {
     }
 
     private HaDetectionException requireOwned(String ruleId, Long id) {
-        return repository.findByIdAndRuleId(id, ruleId)
+        HaDetectionException entity = repository.findByIdAndRuleId(id, ruleId)
             .orElseThrow(() -> new EntityNotFoundException(
                 "Detection exception not found for rule " + ruleId + ": " + id));
+        if (!DetectionPackScope.isVisible(entity.getTenantId(), DetectionPackScope.requestTenantId())) {
+            throw new EntityNotFoundException(
+                "Detection exception not found for rule " + ruleId + ": " + id);
+        }
+        return entity;
     }
 
     private DetectionExceptionDTO toDto(HaDetectionException entity) {
         return new DetectionExceptionDTO(
             entity.getId(),
             entity.getRuleId(),
+            entity.getTenantId(),
             entity.getTitle(),
             entity.getReason(),
             deserializeConditions(entity.getConditionsJson()),
