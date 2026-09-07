@@ -183,7 +183,7 @@
 
 .hunt-button, .hunt-control-button {
   display: inline-flex;
-  min-height: 30px;
+  min-height: 28px;
   align-items: center;
   justify-content: center;
   gap: 6px;
@@ -195,9 +195,9 @@
   font-weight: 650;
   white-space: nowrap;
 }
-.hunt-button { padding: 5px 10px; }
-.hunt-control-button { min-height: 28px; padding: 4px 8px; font-size: 11px; }
-.hunt-control-button--icon { width: 29px; padding: 4px; }
+.hunt-button { padding: 4px 10px; }
+.hunt-control-button { min-height: 26px; padding: 3px 8px; font-size: 11px; }
+.hunt-control-button--icon { width: 26px; padding: 3px; }
 /* Toggle "on" state — icon toggles (filter rail, histogram, library, columns, overflow) tint only the
    ICON teal so an engaged control is obvious without a heavy fill. The --ai (Ask) button keeps its own
    violet pressed state and is excluded; Run search is a primary button, not an icon toggle. */
@@ -239,7 +239,7 @@
 .hunt-query-workspace__actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 /* The Ask button sits beside Run search — match Run's height/padding so the pair is level (the base
    .hunt-control-button is 28px/compact for the icon strip; the action-group Ask needs Run's 30px). */
-.hunt-query-workspace__actions .hunt-control-button { min-height: 30px; padding: 5px 10px; }
+.hunt-query-workspace__actions .hunt-control-button { min-height: 28px; padding: 4px 10px; }
 /* AI-assist control button wears intelligence-violet (sanctioned AI-provenance use). */
 .hunt-control-button--ai { color: var(--ha-intelligence-primary, var(--ha-action-secondary)); border-color: color-mix(in srgb, var(--ha-intelligence-primary, var(--ha-action-secondary)) 40%, var(--ha-border-default)); }
 .hunt-control-button--ai svg { color: var(--ha-intelligence-primary, var(--ha-action-secondary)); }
@@ -254,9 +254,12 @@
 .hunt-query-suggestions strong { overflow: hidden; font: var(--ha-type-compact); font-family: var(--ha-font-mono); font-weight: 680; text-overflow: ellipsis; white-space: nowrap; }
 .hunt-query-suggestions small { overflow: hidden; color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); text-overflow: ellipsis; white-space: nowrap; }
 .hunt-query-suggestions footer { display: flex; min-height: 27px; align-items: center; justify-content: flex-end; gap: 13px; padding: 5px 7px 1px; border-top: 1px solid var(--ha-border-subtle); color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
-.hunt-query-workspace__controls { display: flex; min-height: 39px; align-items: center; gap: 6px; padding: 5px 10px; overflow: visible; scrollbar-width: thin; }
+.hunt-query-workspace__controls { display: flex; min-height: 33px; align-items: center; gap: 5px; padding: 3px 10px; overflow: visible; scrollbar-width: thin; }
+/* Match the shared export compact trigger to the strip's 26px icon buttons (page-scoped; the
+   component default stays 28×29 elsewhere). */
+.hunt-query-workspace__controls .ha-export__trigger--compact { width: 26px; height: 26px; }
 .hunt-query-workspace__spacer { flex: 1; }
-.hunt-control-divider { width: 1px; height: 20px; flex: 0 0 1px; background: var(--ha-border-subtle); }
+.hunt-control-divider { width: 1px; height: 18px; flex: 0 0 1px; background: var(--ha-border-subtle); }
 
 /* Static query-language chip — only KQL is live; re-promote to a picker when a 2nd parser ships */
 
@@ -631,7 +634,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-height: 28px;
+  min-height: 26px;
   padding: 3px 10px;
   border: 0;
   background: var(--ha-surface-input);
