@@ -1,0 +1,29 @@
+id: 9111
+name: RISK-LSASS-MEMORY-ACCESS
+dataTypes:
+  - windows
+  - process
+  - wineventlog
+category: Credential Access
+technique: "T1003.001 - OS Credential Dumping: LSASS Memory"
+mitre:
+  tactics: ["TA0006"]
+  attacks: ["T1003.001"]
+adversary: origin
+description: >
+  Staging risk pack (DET-SEQ). Accumulates risk when process access or dump
+  tooling targets lsass.exe rather than emitting a one-shot CEL alert.
+references:
+  - https://attack.mitre.org/techniques/T1003/001/
+  - https://attack.mitre.org/tactics/TA0006/
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.command
+groupBy:
+  - origin.host
+riskScore: 45
+where: 'raw.matches("(?i).*(lsass(.exe)?|TargetImage.*lsass).*") && raw.matches("(?i).*(procdump|comsvcs|MiniDump|sekurlsa|ProcessAccess|GrantedAccess).*")'

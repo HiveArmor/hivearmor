@@ -1,0 +1,44 @@
+id: 9109
+name: SEQ-DEFENSE-EVASION-THEN-EXFIL
+dataTypes:
+  - windows
+  - linux
+  - process
+  - netconn
+category: Exfiltration
+technique: "T1041 - Exfiltration Over C2 Channel"
+mitre:
+  tactics: ["TA0005", "TA0010"]
+  attacks: ["T1070", "T1041"]
+adversary: origin
+description: >
+  Staging sequence pack (DET-SEQ). Detects log-clearing or defense-evasion
+  activity followed by outbound data transfer from the same host within 45 minutes.
+references:
+  - https://attack.mitre.org/techniques/T1070/
+  - https://attack.mitre.org/techniques/T1041/
+  - https://attack.mitre.org/tactics/TA0010/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+deduplicateBy:
+  - origin.host
+groupBy:
+  - origin.host
+sequence:
+  - where: 'action == "defense_evasion" || safe("log.action", "") == "defense_evasion" || raw.matches("(?i).*(wevtutil.*(cl|clear)|Clear-EventLog|auditpol.*/disable).*")'
+    within: 15m
+  - where: 'action == "data_exfil" || safe("log.action", "") == "data_exfil" || raw.matches("(?i).*(exfil|rclone|mega\.nz|transfer.sh).*")'
+    within: 45m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.host
+        operator: filter_term
+        value: "{{.origin.host}}"
+      - field: log.action
+        operator: filter_term
+        value: defense_evasion
+    within: 45m
+    count: 1

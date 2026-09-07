@@ -45,7 +45,7 @@ export async function fetchDetectionPipelineHealth(signal?: AbortSignal): Promis
       available: true,
       mode: 'fixture',
       status: 'ok',
-      honesty: 'Design fixture: LoadReport, afterEvents, and exception-suppression counters are fictional. DET-SEQ-001 staging pack: 2 sequence, 2 risk, 1 graph-offense (Java dry-run does not execute those engines).',
+      honesty: 'Design fixture: LoadReport, afterEvents, and exception-suppression counters are fictional. DET-SEQ staging pack: 7 sequence, 6 risk, 5 graph-offense (Java CEL dry-run does not execute sequence/risk/graph engines). Graph rules need Neo4j (NEO4J_ENABLED).',
       checkedAt: new Date().toISOString(),
       activeRuleCount: 642,
       afterEventsMisses: 18,

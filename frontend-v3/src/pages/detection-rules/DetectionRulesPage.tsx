@@ -335,7 +335,7 @@ export function DetectionRulesPage(): JSX.Element {
       </div>
 
       {limitedContract && <div className="detection-contract-warning" role="status"><AlertTriangle size={14} /><span><strong>Limited execution projection.</strong> Last-run health, alert volume, and schedule telemetry require backend execution history — unknown values stay uncolored.</span></div>}
-      {detectionRulesFixtureMode && <div className="detection-contract-warning" role="status" data-testid="detection-enterprise-pack-honesty"><AlertTriangle size={14} /><span><strong>STAGING CANDIDATE — enterprise pack.</strong> Sequence, risk-score, and graph-offense rules use event-processor engines. Java CEL dry-run does not execute those engines. Graph rules need Neo4j (<code>NEO4J_ENABLED</code>).</span></div>}
+      {detectionRulesFixtureMode && <div className="detection-contract-warning" role="status" data-testid="detection-enterprise-pack-honesty"><AlertTriangle size={14} /><span><strong>STAGING CANDIDATE — enterprise pack (18 rules: 7 sequence, 6 risk, 5 graph).</strong> Sequence, risk-score, and graph-offense rules use event-processor engines. Java CEL dry-run does not execute those engines. Graph rules need Neo4j (<code>NEO4J_ENABLED</code>).</span></div>}
 
       <main className="detection-inventory">
         <div className="detection-results__toolbar">

@@ -6,19 +6,38 @@ dataTypes:
   - network
 category: Lateral Movement
 technique: "T1021 - Remote Services"
+mitre:
+  tactics: ["TA0007", "TA0008"]
+  attacks: ["T1046", "T1021"]
 adversary: origin
 description: >
-  Staging sequence pack (DET-SEQ-001). Detects a network scan followed by a remote
+  Staging sequence pack (DET-SEQ). Detects a network scan followed by a remote
   service logon from the same origin IP within 30 minutes.
 references:
   - https://attack.mitre.org/techniques/T1046/
   - https://attack.mitre.org/techniques/T1021/
+  - https://attack.mitre.org/tactics/TA0008/
 impact:
   confidentiality: 3
   integrity: 3
   availability: 1
+deduplicateBy:
+  - origin.ip
+groupBy:
+  - origin.ip
 sequence:
-  - where: 'action == "port_scan"'
+  - where: 'action == "port_scan" || safe("log.action", "") == "port_scan"'
     within: 10m
-  - where: 'action == "remote_logon"'
+  - where: 'action == "remote_logon" || safe("log.action", "") == "remote_logon"'
     within: 30m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: "{{.origin.ip}}"
+      - field: log.action
+        operator: filter_term
+        value: port_scan
+    within: 10m
+    count: 1
