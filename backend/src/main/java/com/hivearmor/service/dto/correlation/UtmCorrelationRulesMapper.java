@@ -33,6 +33,7 @@ public class UtmCorrelationRulesMapper {
             dto.setSystemOwner(entity.getSystemOwner());
             dto.setAdversary(entity.getRuleAdversary());
             dto.setRuleActive(entity.getRuleActive());
+            dto.setTenantId(entity.getTenantId());
             dto.setAfterEvents(entity.getAfterEvents());
             dto.setDeduplicateBy(entity.getDeduplicateBy());
             dto.setGroupBy(entity.getGroupBy());
@@ -64,6 +65,7 @@ public class UtmCorrelationRulesMapper {
             entity.setAfterEvents(dto.getAfterEvents());
             entity.setDeduplicateBy(dto.getDeduplicateBy());
             entity.setGroupBy(dto.getGroupBy());
+            // Tenant is stamped from TenantContext in the service, never from the client DTO.
 
             return entity;
         } catch (UtmSerializationException e) {

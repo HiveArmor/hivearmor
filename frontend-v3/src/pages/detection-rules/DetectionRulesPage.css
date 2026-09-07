@@ -40,6 +40,7 @@
 
 .detection-command-bar { position: relative; z-index: 35; display: flex; min-height: 43px; flex: 0 0 43px; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 5px 12px color-mix(in srgb, var(--ha-surface-app) 24%, transparent); }
 .detection-command-bar .ha-compact-select { min-width: 134px; min-height: 29px; }
+.detection-pack-select { min-width: 220px; }
 .detection-search { position: relative; display: flex; width: min(390px, 34vw); min-width: 240px; height: 30px; align-items: center; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-input); color: var(--ha-foreground-tertiary); }
 .detection-search > svg { position: absolute; left: 8px; }
 .detection-search input { width: 100%; height: 28px; min-width: 0; padding: 4px 30px; border: 0; outline: 0; background: transparent; color: var(--ha-foreground-primary); }

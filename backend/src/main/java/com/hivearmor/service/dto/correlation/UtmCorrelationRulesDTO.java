@@ -59,6 +59,8 @@ public class UtmCorrelationRulesDTO implements Serializable, AuditableDTO {
 
     private Boolean ruleActive;
 
+    private Long tenantId;
+
     private List<SearchRequest> afterEvents;
 
     private List<String> deduplicateBy;

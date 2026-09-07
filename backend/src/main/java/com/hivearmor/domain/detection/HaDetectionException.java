@@ -27,6 +27,10 @@ public class HaDetectionException implements Serializable {
     @Column(name = "rule_id", nullable = false, length = 64)
     private String ruleId;
 
+    /** Null = platform shared exception pack. Non-null isolates suppressions to that tenant. */
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @Column(name = "title", nullable = false, length = 500)
     private String title;
 
@@ -73,6 +77,14 @@ public class HaDetectionException implements Serializable {
 
     public void setRuleId(String ruleId) {
         this.ruleId = ruleId;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 
     public String getTitle() {

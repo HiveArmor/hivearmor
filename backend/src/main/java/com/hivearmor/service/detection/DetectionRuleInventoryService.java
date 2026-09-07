@@ -118,11 +118,10 @@ public class DetectionRuleInventoryService {
     // =========================================================================
 
     private List<DetectionRule> fetchAllRulesForTenant(Long tenantId) {
-        if (tenantId == null || tenantId == 0L) {
-            // Admin / non-MSSP: fetch all rules
-            return ruleRepository.findAll();
+        if (DetectionPackScope.isPlatform(tenantId)) {
+            return ruleRepository.findByTenantId(DetectionPackScope.PLATFORM_TENANT_ID, Pageable.unpaged()).getContent();
         }
-        return ruleRepository.findByTenantId(tenantId, Pageable.unpaged()).getContent();
+        return ruleRepository.findByTenantIdIn(List.of(DetectionPackScope.PLATFORM_TENANT_ID, tenantId));
     }
 
     // =========================================================================
@@ -496,6 +495,7 @@ public class DetectionRuleInventoryService {
         preview.put("schedule", rule.getSchedule());
         preview.put("tags", parseCsv(rule.getTags()));
         preview.put("author", rule.getAuthor());
+        preview.put("tenantId", rule.getTenantId());
         preview.put("createdAt", rule.getCreatedAt() != null ? rule.getCreatedAt().toString() : null);
         preview.put("updatedAt", rule.getUpdatedAt() != null ? rule.getUpdatedAt().toString() : null);
         preview.put("version", rule.getVersion());

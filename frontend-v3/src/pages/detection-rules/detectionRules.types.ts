@@ -73,6 +73,8 @@ export interface RuleListParams {
   severity?: SeverityLevel | 'all';
   technique?: string;
   engine?: DetectionEngine | 'all';
+  /** MSSP pack selector. 0 = platform shared pack only; N = platform + tenant N. */
+  tenantId?: number | null;
 }
 
 export interface SigmaSyncResponse {

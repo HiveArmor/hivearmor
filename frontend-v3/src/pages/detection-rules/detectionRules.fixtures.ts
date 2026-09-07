@@ -2,6 +2,8 @@
 
 import type { DetectionExecution, DetectionRule, DetectionRuleSummary, DetectionRuleVersion, DetectionSampleEvent, RuleListParams } from './detectionRules.types';
 
+import { isDetectionContentVisible } from '@/services/detectionPack.service';
+
 const ENTERPRISE_PACK = 'enterprise-pack';
 
 const enterprisePackRules: DetectionRule[] = [
@@ -280,7 +282,98 @@ const generatedDetectionRules: DetectionRule[] = Array.from({ length: 48 }, (_, 
   };
 });
 
-export const foundationDetectionRules: DetectionRule[] = [...enterprisePackRules, ...generatedDetectionRules];
+function tenantCustomRule(seed: {
+  id: number;
+  tenantId: number;
+  pack: string;
+  ruleName: string;
+  description: string;
+  dataTypes: string[];
+  techniqueId: string;
+  techniqueName: string;
+  tactic: string;
+  severity: DetectionRule['severity'];
+}): DetectionRule {
+  return {
+    id: seed.id,
+    tenantId: seed.tenantId,
+    ruleName: seed.ruleName,
+    description: seed.description,
+    dataTypes: seed.dataTypes,
+    tags: [seed.pack, 'tenant-custom'],
+    ruleActive: true,
+    lastModified: '2026-09-07T18:00:00Z',
+    sigmaRuleId: null,
+    category: seed.tactic,
+    severity: seed.severity,
+    techniqueId: seed.techniqueId,
+    techniqueName: seed.techniqueName,
+    tactic: seed.tactic,
+    origin: 'custom',
+    engine: 'cel',
+    contentPack: seed.pack,
+    health: 'healthy',
+    healthMessage: `Tenant ${seed.pack} custom pack — not visible to other tenants.`,
+    lastRunAt: '2026-09-07T17:40:00Z',
+    lastRunDurationMs: 120,
+    schedule: 'Every 10m',
+    lookback: '30m',
+    alerts24h: 1,
+    matchCount: 1,
+    version: 1,
+    createdBy: 'Tenant detection engineer',
+    updatedBy: 'Tenant detection engineer',
+    hasGap: false,
+    threshold: 1,
+    suppressionDuration: 'Off',
+    groupBy: ['host.name'],
+    deduplicateBy: ['event.id'],
+    references: [`https://attack.mitre.org/techniques/${seed.techniqueId.replace('.', '/')}/`],
+    responseMode: 'alert-only',
+    ruleDefinition: `celExists(event.action) &&\nequals(event.action, "${seed.ruleName.toLowerCase().replace(/-/g, '_')}") &&\n!equals(user.name, "approved-automation")`,
+  };
+}
+
+const acmeCustomRules: DetectionRule[] = [
+  tenantCustomRule({
+    id: 9201, tenantId: 1, pack: 'acme-custom',
+    ruleName: 'ACME-CUSTOM-VPN-GEO-ANOMALY',
+    description: 'Acme-only VPN authentication from an unexpected country for finance users.',
+    dataTypes: ['vpn', 'identity'], techniqueId: 'T1133', techniqueName: 'External Remote Services',
+    tactic: 'Initial Access', severity: 'high',
+  }),
+  tenantCustomRule({
+    id: 9202, tenantId: 1, pack: 'acme-custom',
+    ruleName: 'ACME-CUSTOM-PAYROLL-EXFIL',
+    description: 'Acme-only large outbound transfer from the payroll file share after hours.',
+    dataTypes: ['windows', 'file'], techniqueId: 'T1048', techniqueName: 'Exfiltration Over Alternative Protocol',
+    tactic: 'Exfiltration', severity: 'critical',
+  }),
+];
+
+const cwmCustomRules: DetectionRule[] = [
+  tenantCustomRule({
+    id: 9301, tenantId: 2, pack: 'cwm-custom',
+    ruleName: 'CWM-CUSTOM-OT-PROTOCOL-ANOMALY',
+    description: 'CWM-only unexpected Modbus write from an IT jump host into the OT VLAN.',
+    dataTypes: ['network', 'ot'], techniqueId: 'T0861', techniqueName: 'Point & Tag Identification',
+    tactic: 'Discovery', severity: 'high',
+  }),
+  tenantCustomRule({
+    id: 9302, tenantId: 2, pack: 'cwm-custom',
+    ruleName: 'CWM-CUSTOM-CONTRACTOR-RDP',
+    description: 'CWM-only contractor account opening RDP to a domain controller.',
+    dataTypes: ['windows', 'identity'], techniqueId: 'T1021.001', techniqueName: 'Remote Desktop Protocol',
+    tactic: 'Lateral Movement', severity: 'high',
+  }),
+];
+
+export const foundationDetectionRules: DetectionRule[] = [
+  ...enterprisePackRules,
+  ...generatedDetectionRules,
+  ...acmeCustomRules,
+  ...cwmCustomRules,
+];
 
 export const foundationDetectionExecutions: DetectionExecution[] = foundationDetectionRules
   .filter((rule) => rule.ruleActive)
@@ -372,6 +465,7 @@ export const foundationDetectionRuleVersions: DetectionRuleVersion[] = [
 export function filterFoundationDetectionRules(params: RuleListParams): { items: DetectionRule[]; total: number } {
   const query = params.search?.trim().toLowerCase();
   const filtered = foundationDetectionRules.filter((rule) => {
+    if (!isDetectionContentVisible(rule.tenantId, params.tenantId)) return false;
     if (query && ![rule.ruleName, rule.description, rule.techniqueId, rule.techniqueName, rule.tactic, rule.sigmaRuleId, rule.engine, rule.contentPack]
       .some((value) => value?.toLowerCase().includes(query))) return false;
     if (params.active !== undefined && params.active !== 'all' && rule.ruleActive !== params.active) return false;

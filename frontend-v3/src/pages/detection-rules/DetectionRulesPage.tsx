@@ -34,6 +34,14 @@ import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity, ROW_HEIGHTS, type RowDensity } from '@/hooks/useRowDensity';
 import { RULE_TACTIC_OPTIONS } from '@/pages/detection-rules/detectionRules.constants';
 import { foundationDetectionRuleSummary } from '@/pages/detection-rules/detectionRules.fixtures';
+import {
+  DETECTION_PACK_HONESTY,
+  FIXTURE_DETECTION_PACKS,
+  fetchDetectionPacks,
+  readDetectionPackTenantId,
+  writeDetectionPackTenantId,
+  type DetectionPackOption,
+} from '@/services/detectionPack.service';
 import { useAuthStore } from '@/store/auth.store';
 
 import './DetectionRulesPage.css';
@@ -126,6 +134,8 @@ export function DetectionRulesPage(): JSX.Element {
   const [syncOpen, setSyncOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [packTenantId, setPackTenantId] = useState<number>(() => readDetectionPackTenantId());
+  const [detectionPacks, setDetectionPacks] = useState<DetectionPackOption[]>(FIXTURE_DETECTION_PACKS);
 
   const roles = user?.roles ?? [];
   const hasAccess = roles.some((role) => ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN', 'ROLE_SOC_ANALYST'].includes(role));
@@ -134,6 +144,11 @@ export function DetectionRulesPage(): JSX.Element {
   const canDraftException = hasAccess;
   const canActivateException = canManage;
   const canSync = userRole === 'ROLE_ADMIN';
+  const packOptions = useMemo(
+    () => detectionPacks.map((pack) => ({ value: String(pack.tenantId), label: pack.label })),
+    [detectionPacks],
+  );
+  const selectedPack = detectionPacks.find((pack) => pack.tenantId === packTenantId) ?? detectionPacks[0];
 
   const filters = useMemo<RuleListParams>(() => ({
     page: pageIndex,
@@ -145,7 +160,8 @@ export function DetectionRulesPage(): JSX.Element {
     severity: severityFilter,
     source: sourceFilter,
     engine: engineFilter,
-  }), [activeFilter, engineFilter, mitreFilter, pageIndex, search, severityFilter, sourceFilter]);
+    tenantId: packTenantId,
+  }), [activeFilter, engineFilter, mitreFilter, packTenantId, pageIndex, search, severityFilter, sourceFilter]);
 
   const rulesQuery = useQuery({
     queryKey: ['detection-rules', filters],
@@ -168,25 +184,34 @@ export function DetectionRulesPage(): JSX.Element {
   const limitedContract = !detectionRulesFixtureMode && rules.some((rule) => rule.health === 'unknown' && rule.lastRunAt == null);
   const inventoryEmpty = !rulesQuery.isLoading && !rulesQuery.isError && total === 0 && !hasFilters;
 
-  const summary = useMemo<DetectionRuleSummary>(() => {
-    if (detectionRulesFixtureMode) return foundationDetectionRuleSummary;
-    return {
-      total,
-      enabled: rules.filter((rule) => rule.ruleActive).length,
-      healthy: 0,
-      degraded: 0,
-      alerts24h: rules.reduce((count, rule) => count + (rule.alerts24h ?? 0), 0),
-      coverageTechniques: new Set(rules.map((rule) => rule.techniqueId).filter(Boolean)).size,
-      coverageTechniquesTotal: 0,
-      snapshotAt: new Date().toISOString(),
-    };
-  }, [rules, total]);
+  const summary = useMemo<DetectionRuleSummary>(() => ({
+    total,
+    enabled: rules.filter((rule) => rule.ruleActive).length,
+    healthy: rules.filter((rule) => rule.health === 'healthy').length,
+    degraded: rules.filter((rule) => rule.health === 'warning' || rule.health === 'failed').length,
+    alerts24h: rules.reduce((count, rule) => count + (rule.alerts24h ?? 0), 0),
+    coverageTechniques: new Set(rules.map((rule) => rule.techniqueId).filter(Boolean)).size,
+    coverageTechniquesTotal: detectionRulesFixtureMode ? foundationDetectionRuleSummary.coverageTechniquesTotal : 0,
+    snapshotAt: new Date().toISOString(),
+  }), [rules, total]);
 
   useEffect(() => {
     setPageIndex(0);
     setSelectedRules([]);
     setActiveRule(null);
-  }, [activeFilter, engineFilter, mitreFilter, search, severityFilter, sourceFilter, view]);
+  }, [activeFilter, engineFilter, mitreFilter, packTenantId, search, severityFilter, sourceFilter, view]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetchDetectionPacks(controller.signal)
+      .then((result) => {
+        if (result.packs.length > 0) setDetectionPacks(result.packs);
+      })
+      .catch(() => {
+        setDetectionPacks(FIXTURE_DETECTION_PACKS);
+      });
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     if (!activeRule) return undefined;
@@ -308,6 +333,10 @@ export function DetectionRulesPage(): JSX.Element {
       </p>
 
       {detectionRulesFixtureMode && <div className="detection-page__fixture"><span><strong>Design fixture:</strong> fictional detection content and execution telemetry are enabled.</span><span>Production never receives these records.</span></div>}
+      <div className="detection-page__honesty" role="status" data-testid="detection-mssp-pack-honesty">
+        <strong>MSSP pack isolation.</strong>
+        <span>{DETECTION_PACK_HONESTY} Selected: {selectedPack?.label ?? 'Platform pack (shared)'}.</span>
+      </div>
 
       <DetectionPipelineHealthStrip />
 
@@ -325,6 +354,19 @@ export function DetectionRulesPage(): JSX.Element {
 
       {view === 'rules' && <>
       <div className="detection-command-bar" role="search" aria-label="Detection rule filters">
+        <div className="detection-pack-select" data-testid="detection-pack-selector">
+        <HaCompactSelect
+          ariaLabel="Detection pack tenant"
+          value={String(packTenantId)}
+          onChange={(value) => {
+            const next = Number.parseInt(value, 10);
+            const tenantId = Number.isInteger(next) ? next : 0;
+            writeDetectionPackTenantId(tenantId);
+            setPackTenantId(tenantId);
+          }}
+          options={packOptions}
+        />
+        </div>
         <label className="detection-search"><Search size={15} /><input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Search rule, Sigma ID, tactic, or technique…" aria-label="Search detection rules" />{searchText && <button type="button" onClick={() => setSearchText('')} aria-label="Clear search"><X size={13} /></button>}</label>
         <HaCompactSelect ariaLabel="Rule state" value={activeFilter} onChange={(value) => setActiveFilter(value as typeof activeFilter)} options={STATUS_OPTIONS} />
         <HaCompactSelect ariaLabel="Rule severity" value={severityFilter} onChange={(value) => setSeverityFilter(value as typeof severityFilter)} options={SEVERITY_OPTIONS} />
