@@ -108,6 +108,7 @@ func handleApplyPolicy(cnf *config.Config, command string) string {
 		return fmt.Sprintf("APPLY_POLICY error: apply: %v", err)
 	}
 
+	RecordAppliedPolicyMeta(policyID, version)
 	reportPolicyStateToBackend(cnf, policyID, version, "APPLIED", "")
 	utils.Logger.LogF(100, "policy_sync: applied policy %d version %d", policyID, version)
 	return fmt.Sprintf("APPLY_POLICY OK: policy=%d version=%d", policyID, version)
@@ -377,6 +378,7 @@ func applyFetchedPolicy(cnf *config.Config, policyID int64, version int, policyC
 		reportPolicyStateToBackend(cnf, policyID, version, "FAILED", fmt.Sprintf("apply error: %v", err))
 		return err
 	}
+	RecordAppliedPolicyMeta(policyID, version)
 	reportPolicyStateToBackend(cnf, policyID, version, "APPLIED", "")
 	return nil
 }

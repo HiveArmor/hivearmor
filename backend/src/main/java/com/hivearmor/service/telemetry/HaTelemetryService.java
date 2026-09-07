@@ -279,13 +279,17 @@ public class HaTelemetryService {
             double eps          = doubleOrZero(payload, "eventsPerSec");
             long droppedTotal   = longOrZero(payload, "droppedTotal");
             String lastError    = textOrNull(payload, "lastError");
+            Long appliedPolicyId = longOrNull(payload, "appliedPolicyId");
+            Integer appliedPolicyVersion = intOrNull(payload, "appliedPolicyVersion");
             Timestamp sampledAt = Timestamp.from(Instant.now());
 
             jdbc.update(
                     "INSERT INTO ha_agent_vitals "
-                            + "(agent_id, cpu_pct, ram_mb, queue_depth, events_per_sec, dropped_total, last_error, sampled_at) "
-                            + "VALUES (?,?,?,?,?,?,?,?)",
-                    agentId, cpuPct, ramMb, queueDepth, eps, droppedTotal, lastError, sampledAt);
+                            + "(agent_id, cpu_pct, ram_mb, queue_depth, events_per_sec, dropped_total, last_error, "
+                            + "applied_policy_id, applied_policy_version, sampled_at) "
+                            + "VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    agentId, cpuPct, ramMb, queueDepth, eps, droppedTotal, lastError,
+                    appliedPolicyId, appliedPolicyVersion, sampledAt);
 
         } catch (Exception e) {
             log.error("{}: failed to persist vitals for agent {}: {}", ctx, agentId, e.getMessage());
@@ -301,7 +305,8 @@ public class HaTelemetryService {
         final String ctx = CLASSNAME + ".getRecentVitals";
         try {
             return jdbc.queryForList(
-                    "SELECT cpu_pct, ram_mb, queue_depth, events_per_sec, dropped_total, last_error, sampled_at "
+                    "SELECT cpu_pct, ram_mb, queue_depth, events_per_sec, dropped_total, last_error, "
+                            + "applied_policy_id, applied_policy_version, sampled_at "
                             + "FROM ha_agent_vitals WHERE agent_id = ? "
                             + "ORDER BY sampled_at DESC LIMIT 144",
                     agentId);
@@ -364,5 +369,21 @@ public class HaTelemetryService {
     private int intOrZero(JsonNode node, String field) {
         JsonNode n = node.path(field);
         return n.isNumber() ? n.asInt(0) : 0;
+    }
+
+    private Long longOrNull(JsonNode node, String field) {
+        JsonNode n = node.path(field);
+        if (!n.isNumber() || n.asLong(0L) == 0L) {
+            return null;
+        }
+        return n.asLong();
+    }
+
+    private Integer intOrNull(JsonNode node, String field) {
+        JsonNode n = node.path(field);
+        if (!n.isNumber()) {
+            return null;
+        }
+        return n.asInt();
     }
 }

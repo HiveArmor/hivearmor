@@ -160,6 +160,14 @@ func (p *program) run() {
 		telemetry.StartLoop(ctx, cnf)
 	})
 
+	telemetry.QueueDepthFn = func() int { return len(pb.LogQueue) }
+	telemetry.DroppedTotalFn = func() int64 { return pb.LogsDropped.Load() }
+	telemetry.PolicyMetaFn = pb.AppliedPolicyMeta
+
+	p.goSafe("AgentVitals", func() {
+		telemetry.StartVitalsLoop(ctx, cnf)
+	})
+
 	// Sync collector config with current version's ProtoPorts
 	if err := collector.SyncCollectorConfig(); err != nil {
 		utils.Logger.ErrorF("error syncing collector config: %v", err)

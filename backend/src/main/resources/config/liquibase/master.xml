@@ -794,6 +794,9 @@
     <include file="/config/liquibase/changelog/20260902001_ha_export_manifest.xml" relativeToChangelogFile="false"/>
     <include file="/config/liquibase/changelog/20260904001_ha_ai_feedback.xml" relativeToChangelogFile="false"/>
 
+    <!-- AGT-OBS-01 — agent vitals applied policy id/version -->
+    <include file="/config/liquibase/changelog/20260907001_ha_agent_vitals_policy.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
 

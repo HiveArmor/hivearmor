@@ -3,6 +3,7 @@ package fim
 import (
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 
 	"github.com/hivearmor/agent/agent"
@@ -24,6 +25,9 @@ var (
 	runtimeRulesMu sync.RWMutex
 	runtimeRules   []WatchRule
 	liveCollector  *Collector
+
+	runtimeRegMu   sync.RWMutex
+	runtimeRegKeys []string
 )
 
 // ResolveWatchRules builds the effective watch list from defaults + policy.
@@ -61,6 +65,71 @@ func RegisterPolicyApplier() {
 	agent.SetFIMPolicyApplier(func(rules []agent.FIMWatchRule, mode string) error {
 		return ApplyPolicyRules(RulesFromAgentPolicy(rules), mode)
 	})
+	agent.SetRegistryPolicyApplier(func(keys []string, mode string) error {
+		return ApplyRegistryPolicyKeys(keys, mode)
+	})
+}
+
+// ResolveRegistryKeys builds effective HKLM subkeys from defaults + policy.
+func ResolveRegistryKeys(policyKeys []string, mode string) []string {
+	defaults := defaultRegistryKeysCopy()
+	cleaned := cleanRegistryKeys(policyKeys)
+	if len(cleaned) == 0 {
+		return defaults
+	}
+	switch mode {
+	case agent.FIMModeReplace:
+		return cleaned
+	default:
+		return append(append([]string(nil), defaults...), cleaned...)
+	}
+}
+
+func cleanRegistryKeys(in []string) []string {
+	out := make([]string, 0, len(in))
+	for _, k := range in {
+		k = strings.TrimSpace(k)
+		if k == "" {
+			continue
+		}
+		// Accept optional HKLM\ prefix from operators.
+		upper := strings.ToUpper(k)
+		if strings.HasPrefix(upper, `HKLM\`) {
+			k = k[5:]
+		} else if strings.HasPrefix(upper, `HKEY_LOCAL_MACHINE\`) {
+			k = k[len(`HKEY_LOCAL_MACHINE\`):]
+		}
+		out = append(out, k)
+	}
+	return out
+}
+
+func defaultRegistryKeysCopy() []string {
+	return append([]string(nil), defaultRegistryKeys...)
+}
+
+// ApplyRegistryPolicyKeys updates runtime registry watch keys.
+// Live watcher restart is best-effort at next FIM collector start (STAGING CANDIDATE);
+// keys take effect for new RegistryWatcher instances immediately.
+func ApplyRegistryPolicyKeys(policyKeys []string, mode string) error {
+	resolved := ResolveRegistryKeys(policyKeys, mode)
+	runtimeRegMu.Lock()
+	runtimeRegKeys = resolved
+	runtimeRegMu.Unlock()
+	return nil
+}
+
+// currentRegistryKeys returns keys for a newly constructed registry watcher.
+func currentRegistryKeys() []string {
+	if keys, mode, ok := agent.PeekPendingRegistryPolicy(); ok {
+		return ResolveRegistryKeys(keys, mode)
+	}
+	runtimeRegMu.RLock()
+	defer runtimeRegMu.RUnlock()
+	if len(runtimeRegKeys) > 0 {
+		return append([]string(nil), runtimeRegKeys...)
+	}
+	return defaultRegistryKeysCopy()
 }
 
 // ApplyPolicyRules updates the runtime rule set and, if a collector is running,
