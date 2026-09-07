@@ -453,6 +453,17 @@ export const foundationDetectionSampleEvents: DetectionSampleEvent[] = [
       origin: { ip: '203.0.113.40', user: 'j.ortiz', host: 'FIN-WKS-018' },
     }, null, 2),
   },
+  {
+    id: 'sample-sequence-fail-001',
+    label: 'Failed authentication (sequence step 0 only)',
+    dataType: 'Identity',
+    json: JSON.stringify({
+      '@timestamp': '2026-09-07T16:17:40Z',
+      action: 'failed_auth',
+      log: { action: 'failed_auth' },
+      origin: { ip: '203.0.113.40', user: 'j.ortiz', host: 'FIN-WKS-018' },
+    }, null, 2),
+  },
 ];
 
 const versionedRule = foundationDetectionRules.find((rule) => rule.id === 4103);

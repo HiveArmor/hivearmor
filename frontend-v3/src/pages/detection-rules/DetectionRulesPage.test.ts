@@ -60,6 +60,8 @@ describe('detectionRules.service', () => {
     const module = await import('./detectionRules.service');
     expect(typeof module.fetchRuleExecutions).toBe('function');
     expect(typeof module.testDetectionSandbox).toBe('function');
+    expect(typeof module.activateSigmaRule).toBe('function');
+    expect(typeof module.inferDetectionEngine).toBe('function');
     expect(typeof module.validateRuleDraft).toBe('function');
     expect(typeof module.previewRuleDraft).toBe('function');
     expect(typeof module.fetchRuleVersions).toBe('function');

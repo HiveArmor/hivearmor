@@ -255,17 +255,24 @@ public class SigmaSyncService {
 
     @Transactional
     public Map<String, Object> activateStagedRule(Long id) {
-        if (!rulesRepository.existsById(id)) {
-            throw new jakarta.persistence.EntityNotFoundException("Rule " + id + " not found");
-        }
+        UtmCorrelationRules rule = rulesRepository.findById(id)
+            .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Rule " + id + " not found"));
         rulesRepository.activateStagedRule(id);
         Map<String, Object> reload = eventProcessorManagerService.requestRuleReload();
+        String ruleName = rule.getRuleName();
+        boolean engineLoaded = eventProcessorManagerService.loadReportLists(ruleName);
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("ruleId", id);
+        result.put("ruleName", ruleName);
         result.put("activated", true);
         result.put("engineReload", reload);
+        result.put("engineLoaded", engineLoaded);
+        result.put("reloadHttpAccepted", Boolean.TRUE.equals(reload.get("requested")));
         result.put("honesty",
-            "STAGING CANDIDATE — staged Sigma rule marked active in DB; engine reload requested. "
+            "STAGING CANDIDATE — staged Sigma rule marked active in DB. "
+                + "engineLoaded=true only when event-processor LoadReport.loadedNames lists \""
+                + (ruleName != null ? ruleName : "")
+                + "\". Reload HTTP 200/202 is not proof of load. "
                 + "Config plugin YAML write + watchLoop may take up to ~30s.");
         return result;
     }

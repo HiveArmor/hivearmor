@@ -30,10 +30,26 @@ type LoadReport struct {
 	Loaded         int       `json:"loaded"`
 	Skipped        int       `json:"skipped"`
 	Invalid        []string  `json:"invalid,omitempty"`
+	LoadedNames    []string  `json:"loadedNames,omitempty"`
 	PilotPackOK    bool      `json:"pilotPackOk"`
 	PilotMissing   []string  `json:"pilotMissing,omitempty"`
 	PilotRuleNames []string  `json:"pilotRuleNames,omitempty"`
 	LastLoad       time.Time `json:"lastLoad"`
+}
+
+// Lists reports whether this LoadReport inventory includes ruleName.
+// DET-SIGMA-001b — engineLoaded must use this, not reload HTTP status.
+func (r LoadReport) Lists(ruleName string) bool {
+	name := strings.TrimSpace(ruleName)
+	if name == "" {
+		return false
+	}
+	for _, n := range r.LoadedNames {
+		if n == name {
+			return true
+		}
+	}
+	return false
 }
 
 var requiredPilotRules = []string{
@@ -135,6 +151,7 @@ func LoadFromDir(dir string) LoadReport {
 			newGraphOffense = append(newGraphOffense, r)
 			report.Loaded++
 			loadedNames[r.Name] = struct{}{}
+			report.LoadedNames = append(report.LoadedNames, r.Name)
 			return
 		}
 		if len(r.DataTypes) == 0 {
@@ -147,6 +164,7 @@ func LoadFromDir(dir string) LoadReport {
 		}
 		report.Loaded++
 		loadedNames[r.Name] = struct{}{}
+		report.LoadedNames = append(report.LoadedNames, r.Name)
 	}
 
 	_ = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {

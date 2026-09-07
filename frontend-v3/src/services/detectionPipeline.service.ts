@@ -10,6 +10,7 @@ export interface DetectionLoadReport {
   loaded: number | null;
   skipped: number | null;
   invalid: string[] | null;
+  loadedNames: string[] | null;
   pilotPackOk: boolean | null;
   pilotMissing: string[] | null;
   lastLoad: string | null;
@@ -155,6 +156,7 @@ export function parseDetectionPipelineHealth(body: Record<string, unknown>): Det
           loaded: asFiniteNumber(report.loaded),
           skipped: asFiniteNumber(report.skipped),
           invalid: Array.isArray(report.invalid) ? report.invalid.map(String) : null,
+          loadedNames: Array.isArray(report.loadedNames) ? report.loadedNames.map(String) : null,
           pilotPackOk: typeof report.pilotPackOk === 'boolean' ? report.pilotPackOk : null,
           pilotMissing: Array.isArray(report.pilotMissing) ? report.pilotMissing.map(String) : null,
           lastLoad: typeof report.lastLoad === 'string' ? report.lastLoad : null,
@@ -174,7 +176,7 @@ function fixtureHealth(): DetectionPipelineHealth {
     mode: 'fixture',
     status: 'ok',
     honesty:
-      'Design fixture: LoadReport, ingest→alert SLO, afterEvents miss counters, and exception-suppression counters are fictional. DET-SEQ staging pack: 7 sequence, 6 risk, 5 graph-offense (Java CEL dry-run does not execute sequence/risk/graph engines). Risk scoring honors afterEvents before addScoreFn. Graph pack starts when NEO4J_ENABLED=true on local-dev/staging event-processor (Neo4j was already in local-dev compose; the flag was never flipped). Staging Neo4j is new and stays empty without entity ingest.',
+      'Design fixture: LoadReport, ingest→alert SLO, afterEvents miss counters, and exception-suppression counters are fictional. DET-TEST-002: sequence/risk/graph test console uses engineParity=go or unavailable — never fake CEL hits. engineLoaded=true only when LoadReport.loadedNames lists the rule (~30s watchLoop). DET-SEQ staging pack: 7 sequence, 6 risk, 5 graph-offense (Java CEL dry-run does not execute sequence/risk/graph engines). Risk scoring honors afterEvents before addScoreFn. Graph pack starts when NEO4J_ENABLED=true on local-dev/staging event-processor (Neo4j was already in local-dev compose; the flag was never flipped). Staging Neo4j is new and stays empty without entity ingest.',
     checkedAt: new Date().toISOString(),
     activeRuleCount: 642,
     afterEventsMisses: 18,
@@ -190,6 +192,7 @@ function fixtureHealth(): DetectionPipelineHealth {
       loaded: 648,
       skipped: 4,
       invalid: ['legacy-broken-sample.yml'],
+      loadedNames: ['PILOT-WIN-FAILED-LOGON', 'SEQ-BRUTE-FORCE-THEN-SUCCESS'],
       pilotPackOk: true,
       pilotMissing: [],
       lastLoad: '2026-09-07T10:42:00Z',

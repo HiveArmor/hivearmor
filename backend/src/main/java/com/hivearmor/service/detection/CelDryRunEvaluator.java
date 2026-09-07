@@ -22,7 +22,11 @@ import java.util.Objects;
 public final class CelDryRunEvaluator {
 
     public static final String EVALUATION_MODE = "inject_dry_run";
+    public static final String EVALUATION_MODE_EP = "ep_evaluate";
+    public static final String EVALUATION_MODE_UNAVAILABLE = "unavailable";
     public static final String ENGINE_PARITY = "approximate";
+    public static final String ENGINE_PARITY_GO = "go";
+    public static final String ENGINE_PARITY_UNAVAILABLE = "unavailable";
 
     private CelDryRunEvaluator() {}
 

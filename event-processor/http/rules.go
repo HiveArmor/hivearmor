@@ -16,6 +16,7 @@ func registerRulesRoutes(r *gin.Engine) {
 	r.GET("/api/ha-rules", handleListRules)
 	internalKey := os.Getenv("INTERNAL_KEY")
 	r.GET("/api/rules/status", internalKeyAuth(internalKey), handleRulesStatus)
+	r.POST("/api/rules/evaluate", internalKeyAuth(internalKey), handleRuleEvaluate)
 }
 
 // handleListRules returns all loaded rules.
