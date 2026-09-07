@@ -253,8 +253,13 @@ public class HaHuntService {
         Map<String, Aggregation> aggs = new LinkedHashMap<>();
         for (HuntFieldRegistry.FieldSpec field : aggregatable) {
             String safe = aggKey(field.name());
-            aggs.put("cnt_" + safe, Aggregation.of(a -> a.valueCount(v -> v.field(field.name()))));
-            aggs.put("crd_" + safe, Aggregation.of(a -> a.cardinality(c -> c.field(field.name()))));
+            // Both value_count and cardinality require doc-values: for keyword/IP fields (text-mapped
+            // in HiveArmor) that means the .keyword sub-field. A value_count/cardinality on a bare
+            // text field throws illegal_argument and — because it fails the shard holding the docs —
+            // zeroes track_total_hits and blanks every field. Numeric/date fields aggregate directly.
+            String path = aggFieldPathFor(field);
+            aggs.put("cnt_" + safe, Aggregation.of(a -> a.valueCount(v -> v.field(path))));
+            aggs.put("crd_" + safe, Aggregation.of(a -> a.cardinality(c -> c.field(path))));
         }
 
         SearchRequest.Builder builder = new SearchRequest.Builder()
@@ -464,11 +469,11 @@ public class HaHuntService {
         return fieldName.endsWith(".keyword") ? fieldName : fieldName + ".keyword";
     }
 
-    /** Resolve the correct aggregation path per field kind: keyword/IP → .keyword, else the field. */
+    /** Resolve the correct aggregation path per field kind: keyword/text → .keyword; ip/number/date/boolean aggregate directly. */
     private static String aggFieldPathFor(HuntFieldRegistry.FieldSpec field) {
         return switch (field.kind()) {
-            case KEYWORD, IP, TEXT -> aggFieldPath(field.name());
-            case NUMBER, DATE, BOOLEAN -> field.name();
+            case KEYWORD, TEXT -> aggFieldPath(field.name());
+            case IP, NUMBER, DATE, BOOLEAN -> field.name();
         };
     }
 
