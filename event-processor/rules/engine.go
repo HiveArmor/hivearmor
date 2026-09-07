@@ -163,6 +163,10 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 				if SuppressIfMatchedID(rule.ID, event) {
 					continue
 				}
+				// DET-SEQ-002 — afterEvents/correlation must pass before scoring.
+				if !afterEventsSatisfied(rule, event) {
+					continue
+				}
 				if addScoreFn != nil {
 					addScoreFn(event, rule.RiskScore)
 				}
@@ -184,19 +188,8 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 		if !ok {
 			continue
 		}
-		// afterEvents / correlation check — use flat map for template resolution
-		if len(rule.Correlation) > 0 {
-			flatJSON, marshalErr := json.Marshal(eventToMap(event))
-			if marshalErr != nil {
-				log.Printf("[rules.Evaluate] failed to marshal event for correlation check rule.id=%d: %v", rule.ID, marshalErr)
-				afterEventsErrors.Add(1)
-				continue
-			}
-			matched, _, err := executeSearchRequest(rule.Correlation[0], string(flatJSON))
-			ObserveCorrelation(matched, err)
-			if err != nil || !matched {
-				continue
-			}
+		if !afterEventsSatisfied(rule, event) {
+			continue
 		}
 		// DET-FP-001 — active exceptions suppress before alert creation (pre-alert).
 		if SuppressIfMatchedID(rule.ID, event) {
@@ -208,6 +201,26 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 		}
 	}
 	return alerts
+}
+
+// afterEventsSatisfied reports whether a rule's afterEvents/correlation lookback
+// is absent or matched in OpenSearch. Risk rules call this before addScoreFn.
+func afterEventsSatisfied(rule *Rule, event *plugins.Event) bool {
+	if rule == nil || len(rule.Correlation) == 0 {
+		return true
+	}
+	flatJSON, marshalErr := json.Marshal(eventToMap(event))
+	if marshalErr != nil {
+		log.Printf("[rules.Evaluate] failed to marshal event for correlation check rule.id=%d: %v", rule.ID, marshalErr)
+		afterEventsErrors.Add(1)
+		return false
+	}
+	matched, _, err := executeSearchRequest(rule.Correlation[0], string(flatJSON))
+	ObserveCorrelation(matched, err)
+	if err != nil || !matched {
+		return false
+	}
+	return true
 }
 
 func buildAlert(event *plugins.Event, rule *Rule) *plugins.Alert {

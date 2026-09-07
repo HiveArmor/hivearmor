@@ -174,7 +174,7 @@ function fixtureHealth(): DetectionPipelineHealth {
     mode: 'fixture',
     status: 'ok',
     honesty:
-      'Design fixture: LoadReport, ingest→alert SLO, afterEvents miss counters, and exception-suppression counters are fictional. DET-SEQ staging pack: 7 sequence, 6 risk, 5 graph-offense (Java CEL dry-run does not execute sequence/risk/graph engines). Graph rules need Neo4j (NEO4J_ENABLED).',
+      'Design fixture: LoadReport, ingest→alert SLO, afterEvents miss counters, and exception-suppression counters are fictional. DET-SEQ staging pack: 7 sequence, 6 risk, 5 graph-offense (Java CEL dry-run does not execute sequence/risk/graph engines). Risk scoring honors afterEvents before addScoreFn. Graph pack starts when NEO4J_ENABLED=true on local-dev/staging event-processor (Neo4j was already in local-dev compose; the flag was never flipped). Staging Neo4j is new and stays empty without entity ingest.',
     checkedAt: new Date().toISOString(),
     activeRuleCount: 642,
     afterEventsMisses: 18,

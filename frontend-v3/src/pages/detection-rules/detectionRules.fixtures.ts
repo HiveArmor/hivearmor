@@ -49,8 +49,10 @@ function packRule(seed: PackSeed, index: number): DetectionRule {
     contentPack: ENTERPRISE_PACK,
     health: isGraph ? 'warning' : 'healthy',
     healthMessage: isGraph
-      ? 'Graph-offense rules require Neo4j (NEO4J_ENABLED). Staging may be idle if Neo4j is off.'
-      : `${seed.engine === 'sequence' ? 'Sequence' : 'Risk'} engine loaded this staging pack rule.`,
+      ? 'Graph-offense evaluator starts with NEO4J_ENABLED=true on local-dev/staging event-processor. Neo4j was already in local-dev compose; the flag was never flipped. Staging Neo4j is new; graph stays empty without entity-graph ingest.'
+      : seed.engine === 'sequence'
+        ? 'Sequence engine loaded this staging pack rule.'
+        : 'Risk engine scores a where match only after afterEvents lookback succeeds (or if the rule has no afterEvents).',
     lastRunAt: isGraph ? null : `2026-09-07T16:${String(12 + index).padStart(2, '0')}:00Z`,
     lastRunDurationMs: isGraph ? null : 90 + index * 20,
     schedule: isGraph ? 'Every 2m' : 'Streaming',

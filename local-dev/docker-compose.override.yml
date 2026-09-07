@@ -28,6 +28,11 @@ services:
       - BASELINE_MIN_SAMPLES=0
       # compliance-orchestrator config
       - BACKEND_URL=http://backend:8080
+      # DET-GRAPH-001 — same as docker-compose.yml; Neo4j already existed, flag was off.
+      - NEO4J_ENABLED=true
+      - NEO4J_URI=http://neo4j:7474
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:-localdev123!}
     volumes:
       - ep_pipeline:/workdir/pipeline
       - ep_logs:/workdir/logs
@@ -45,6 +50,8 @@ services:
       opensearch:
         condition: service_healthy
       postgres:
+        condition: service_healthy
+      neo4j:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
