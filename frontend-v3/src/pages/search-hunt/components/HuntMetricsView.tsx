@@ -2,7 +2,7 @@ import { lazy, Suspense, useMemo } from 'react';
 
 import type { EChartsOption } from 'echarts';
 
-import type { HuntEvent, HuntSeverity } from '../searchHunt.types';
+import type { HuntAggregateResponse, HuntEvent, HuntSeverity } from '../searchHunt.types';
 
 import './HuntMetricsView.css';
 
@@ -14,6 +14,12 @@ export interface HuntMetricsViewProps {
   /** Total matched (may exceed loaded rows) — surfaced honestly so the summary scope is clear. */
   totalApproximate?: number;
   totalIsExact?: boolean;
+  /**
+   * Server-computed aggregation over the FULL matched set. When present, the view reports the whole
+   * result set (not just loaded rows) and drops the "loaded rows only" caveat. When absent, it
+   * falls back to client-side aggregation of the loaded rows so nothing regresses.
+   */
+  aggregates?: HuntAggregateResponse | null;
   /** Narrow the search to a field:value (segmented breakdown click → drill down). */
   onDrill?: (field: string, value: string) => void;
 }
@@ -46,8 +52,8 @@ function topN(events: HuntEvent[], pick: (e: HuntEvent) => string | null, n = 8)
  * top-N breakdowns by severity / source / action / host / user. Every number is derived from the
  * rows in hand — nothing is fabricated, and the scope ("summarising N loaded rows") is stated.
  */
-export function HuntMetricsView({ events, totalApproximate, totalIsExact, onDrill }: HuntMetricsViewProps): JSX.Element {
-  const stats = useMemo(() => {
+export function HuntMetricsView({ events, totalApproximate, totalIsExact, aggregates, onDrill }: HuntMetricsViewProps): JSX.Element {
+  const clientStats = useMemo(() => {
     const loaded = events.length;
     const bySeverity = new Map<HuntSeverity, number>();
     let alerting = 0;
@@ -71,6 +77,42 @@ export function HuntMetricsView({ events, totalApproximate, totalIsExact, onDril
       byUser: topN(events, (e) => e.user),
     };
   }, [events]);
+
+  /** Map a server breakdown (keyed by registry field name) to {name,value} rows for the chart. */
+  const serverRows = useMemo(() => {
+    if (!aggregates) return null;
+    const byField = new Map(aggregates.breakdowns.map((b) => [b.field, b.buckets.map((k) => ({ name: k.value, value: k.count }))]));
+    const pick = (...fields: string[]) => {
+      for (const f of fields) {
+        const rows = byField.get(f);
+        if (rows) return rows;
+      }
+      return [] as { name: string; value: number }[];
+    };
+    // Keep severity in canonical order.
+    const sevRaw = pick('event.severity', 'severity');
+    const severity = SEVERITY_ORDER
+      .map((s) => ({ name: s, value: sevRaw.find((r) => r.name === s)?.value ?? 0 }))
+      .filter((r) => r.value > 0);
+    return {
+      severity,
+      bySource: pick('dataSource'),
+      byAction: pick('event.action', 'action'),
+      byHost: pick('host.name', 'host'),
+      byUser: pick('user.name', 'user'),
+    };
+  }, [aggregates]);
+
+  const usingServer = Boolean(aggregates && serverRows);
+  const stats = aggregates && serverRows
+    ? {
+        loaded: aggregates.kpis.events,
+        alerting: aggregates.kpis.withAlerts,
+        distinctHosts: aggregates.kpis.distinctHosts,
+        distinctUsers: aggregates.kpis.distinctUsers,
+        ...serverRows,
+      }
+    : clientStats;
 
   const barColor = token('--ha-action-primary', '#61C4BE');
   const axisColor = token('--ha-foreground-tertiary', '#908C96');
@@ -103,18 +145,23 @@ export function HuntMetricsView({ events, totalApproximate, totalIsExact, onDril
     tooltip: { trigger: 'item' },
   });
 
+  // When using server aggregates the click must narrow on the SERVER field name; client mode uses
+  // the fixture/event field name. Map each chart panel to the correct field key for drill-down.
+  const drillField = (clientField: string, serverField: string) => (usingServer ? serverField : clientField);
   const onBarClick = (field: string) => (params: unknown) => {
     const name = (params as { name?: string })?.name;
     if (name && onDrill) onDrill(field, name);
   };
 
-  if (events.length === 0) {
+  if (!usingServer && events.length === 0) {
     return <div className="hunt-metrics hunt-metrics--empty" role="status">No rows loaded to summarise. Run a search to see metrics.</div>;
   }
 
-  const scopeNote = totalApproximate && totalApproximate > stats.loaded
-    ? `Summarising the ${stats.loaded.toLocaleString()} loaded rows of ${totalIsExact ? '' : '~'}${totalApproximate.toLocaleString()} matched — narrow the query for a full-set summary.`
-    : `Summarising all ${stats.loaded.toLocaleString()} matched rows.`;
+  const scopeNote = usingServer
+    ? `Summarising all ${stats.loaded.toLocaleString()}${aggregates?.totalIsExact ? '' : '~'} matched rows.`
+    : totalApproximate && totalApproximate > stats.loaded
+      ? `Summarising the ${stats.loaded.toLocaleString()} loaded rows of ${totalIsExact ? '' : '~'}${totalApproximate.toLocaleString()} matched — narrow the query for a full-set summary.`
+      : `Summarising all ${stats.loaded.toLocaleString()} matched rows.`;
 
   return (
     <div className="hunt-metrics" aria-label="Result metrics">
@@ -131,7 +178,7 @@ export function HuntMetricsView({ events, totalApproximate, totalIsExact, onDril
         <section className="hunt-metrics__panel">
           <h3>By severity</h3>
           <Suspense fallback={<div className="hunt-chart-skeleton" />}>
-            <LazyHaChart option={horizontalBar(stats.severity, barColor, true)} height={Math.max(90, stats.severity.length * 26)} onChartClick={onBarClick('severity')} ariaLabel="Events by severity" />
+            <LazyHaChart option={horizontalBar(stats.severity, barColor, true)} height={Math.max(90, stats.severity.length * 26)} onChartClick={onBarClick(drillField('severity', 'event.severity'))} ariaLabel="Events by severity" />
           </Suspense>
         </section>
         <section className="hunt-metrics__panel">
@@ -143,19 +190,19 @@ export function HuntMetricsView({ events, totalApproximate, totalIsExact, onDril
         <section className="hunt-metrics__panel">
           <h3>Top actions</h3>
           <Suspense fallback={<div className="hunt-chart-skeleton" />}>
-            <LazyHaChart option={horizontalBar(stats.byAction, barColor)} height={Math.max(90, stats.byAction.length * 26)} onChartClick={onBarClick('action')} ariaLabel="Events by action" />
+            <LazyHaChart option={horizontalBar(stats.byAction, barColor)} height={Math.max(90, stats.byAction.length * 26)} onChartClick={onBarClick(drillField('action', 'event.action'))} ariaLabel="Events by action" />
           </Suspense>
         </section>
         <section className="hunt-metrics__panel">
           <h3>Top hosts</h3>
           <Suspense fallback={<div className="hunt-chart-skeleton" />}>
-            <LazyHaChart option={horizontalBar(stats.byHost, barColor)} height={Math.max(90, stats.byHost.length * 26)} onChartClick={onBarClick('host')} ariaLabel="Events by host" />
+            <LazyHaChart option={horizontalBar(stats.byHost, barColor)} height={Math.max(90, stats.byHost.length * 26)} onChartClick={onBarClick(drillField('host', 'host.name'))} ariaLabel="Events by host" />
           </Suspense>
         </section>
         <section className="hunt-metrics__panel">
           <h3>Top users</h3>
           <Suspense fallback={<div className="hunt-chart-skeleton" />}>
-            <LazyHaChart option={horizontalBar(stats.byUser, barColor)} height={Math.max(90, stats.byUser.length * 26)} onChartClick={onBarClick('user')} ariaLabel="Events by user" />
+            <LazyHaChart option={horizontalBar(stats.byUser, barColor)} height={Math.max(90, stats.byUser.length * 26)} onChartClick={onBarClick(drillField('user', 'user.name'))} ariaLabel="Events by user" />
           </Suspense>
         </section>
       </div>

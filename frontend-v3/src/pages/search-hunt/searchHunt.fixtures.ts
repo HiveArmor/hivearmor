@@ -1,5 +1,7 @@
 import type {
   HistoryEntry,
+  HuntAggregateRequest,
+  HuntAggregateResponse,
   HuntEvent,
   HuntEventDetail,
   HuntEventDetailResponse,
@@ -373,4 +375,78 @@ export function getFoundationHuntHistory(): { items: HistoryEntry[]; total: numb
     status: 'completed',
   }));
   return { items, total: items.length };
+}
+
+/**
+ * Fixture Metric aggregation — derived from the full fixture event set so the Metric view can show
+ * "full matched set" numbers in fixture mode (not just a loaded page). Maps the backend registry
+ * field names the UI requests to the fixture HuntEvent shape.
+ */
+export function getFoundationHuntAggregates(request: HuntAggregateRequest): HuntAggregateResponse {
+  const events = foundationHuntEvents;
+  const pick = (field: string) => (e: HuntEvent): string | null => {
+    switch (field) {
+      case 'event.severity':
+      case 'severity':
+        return e.severity;
+      case 'dataSource':
+        return e.dataSource;
+      case 'event.action':
+      case 'action':
+        return e.action;
+      case 'host.name':
+      case 'host':
+        return e.host;
+      case 'user.name':
+      case 'user':
+        return e.user;
+      case 'event.category':
+      case 'category':
+        return e.category;
+      default:
+        return null;
+    }
+  };
+
+  const breakdowns = request.breakdowns.map((spec) => {
+    const size = spec.size ?? 8;
+    const counts = new Map<string, number>();
+    let other = 0;
+    for (const e of events) {
+      const v = pick(spec.field)(e);
+      if (!v) continue;
+      counts.set(v, (counts.get(v) ?? 0) + 1);
+    }
+    const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    const top = sorted.slice(0, size);
+    other = sorted.slice(size).reduce((sum, [, c]) => sum + c, 0);
+    const esc = (val: string) => val.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    return {
+      field: spec.field,
+      state: 'available' as const,
+      otherCount: other,
+      buckets: top.map(([value, count]) => ({
+        value,
+        count,
+        countIsExact: true,
+        includeQuery: `${spec.field}:"${esc(value)}"`,
+        excludeQuery: `NOT ${spec.field}:"${esc(value)}"`,
+      })),
+    };
+  });
+
+  return {
+    searchId: `HUNT-AGG-FIXTURE`,
+    totalApproximate: events.length,
+    totalIsExact: true,
+    snapshotAt: new Date().toISOString(),
+    kpis: {
+      events: events.length,
+      withAlerts: events.filter((e) => e.alertCount > 0).length,
+      distinctHosts: new Set(events.map((e) => e.host).filter(Boolean)).size,
+      distinctUsers: new Set(events.map((e) => e.user).filter(Boolean)).size,
+    },
+    breakdowns,
+    partialFailures: [],
+  };
 }

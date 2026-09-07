@@ -240,6 +240,37 @@ public class HaHuntResource {
     }
 
     // -------------------------------------------------------------------------
+    // POST /api/ha-hunts/search/aggregate — HNT-METRIC (Metric view full-set aggregation)
+    // -------------------------------------------------------------------------
+    /**
+     * Aggregates over the ENTIRE matched result set (KPIs + top-N breakdowns), so the Metric view
+     * reflects all matches rather than just the loaded page. Read-only: returns no hits and reuses
+     * the same query-build path as {@link #executeSearch}, so it cannot widen scope.
+     */
+    @PostMapping("/search/aggregate")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    public ResponseEntity<com.hivearmor.web.rest.hunt.dto.HuntAggregateResponseDTO> aggregate(
+            @Valid @RequestBody com.hivearmor.web.rest.hunt.dto.HuntAggregateRequestDTO request) {
+
+        final String ctx = CLASSNAME + ".aggregate";
+        log.debug("{}: query='{}', breakdowns={}", ctx, request.getQuery(),
+            request.getBreakdowns() == null ? 0 : request.getBreakdowns().size());
+
+        String owner = currentOwner();
+        String tenantKey = currentTenantKey();
+        try {
+            return ResponseEntity.ok(huntService.aggregate(request, owner, tenantKey));
+        } catch (HuntQueryException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("{}: aggregation failed", ctx, e);
+            throw new IllegalStateException("Aggregation failed", e);
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // DELETE /api/ha-hunts/search/{searchId} — HNT-002
     // -------------------------------------------------------------------------
 
