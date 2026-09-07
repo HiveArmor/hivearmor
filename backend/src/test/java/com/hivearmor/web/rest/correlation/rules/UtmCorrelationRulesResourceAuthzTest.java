@@ -5,6 +5,7 @@ import com.hivearmor.service.UtmStackService;
 import com.hivearmor.service.application_events.ApplicationEventService;
 import com.hivearmor.service.correlation.rules.UtmCorrelationRuleVersionService;
 import com.hivearmor.service.correlation.rules.UtmCorrelationRulesService;
+import com.hivearmor.service.detection.DetectionExceptionService;
 import com.hivearmor.service.detection.DetectionRuleDryRunService;
 import com.hivearmor.service.dto.correlation.UtmCorrelationRulesMapper;
 import com.hivearmor.service.dto.correlation.validators.CorrelationRuleValidator;
@@ -156,6 +157,11 @@ class UtmCorrelationRulesResourceAuthzTest {
         }
 
         @Bean
+        DetectionExceptionService exceptionService() {
+            return mock(DetectionExceptionService.class);
+        }
+
+        @Bean
         UtmCorrelationRulesResource utmCorrelationRulesResource(
                 ApplicationEventService applicationEventService,
                 UtmCorrelationRulesService rulesService,
@@ -164,7 +170,8 @@ class UtmCorrelationRulesResourceAuthzTest {
                 CorrelationRuleValidator correlationRuleValidator,
                 UtmCorrelationRuleVersionService versionService,
                 UtmDataTypesRepository dataTypesRepository,
-                DetectionRuleDryRunService dryRunService) {
+                DetectionRuleDryRunService dryRunService,
+                DetectionExceptionService exceptionService) {
             return new UtmCorrelationRulesResource(
                     applicationEventService,
                     rulesService,
@@ -173,7 +180,8 @@ class UtmCorrelationRulesResourceAuthzTest {
                     correlationRuleValidator,
                     versionService,
                     dataTypesRepository,
-                    dryRunService);
+                    dryRunService,
+                    exceptionService);
         }
     }
 }

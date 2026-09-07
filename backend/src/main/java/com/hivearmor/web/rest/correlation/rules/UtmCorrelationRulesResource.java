@@ -14,6 +14,8 @@ import com.hivearmor.service.application_events.ApplicationEventService;
 import com.hivearmor.service.correlation.rules.UtmCorrelationRuleVersionService;
 import com.hivearmor.service.correlation.rules.UtmCorrelationRulesService;
 import com.hivearmor.service.detection.CelDryRunEvaluator.DryRunResult;
+import com.hivearmor.service.detection.DetectionExceptionConsideration;
+import com.hivearmor.service.detection.DetectionExceptionService;
 import com.hivearmor.service.detection.DetectionRuleDryRunService;
 import com.hivearmor.service.dto.RuleTestRequestDTO;
 import com.hivearmor.service.dto.RuleTestResultDTO;
@@ -84,6 +86,8 @@ public class UtmCorrelationRulesResource {
 
     private final DetectionRuleDryRunService dryRunService;
 
+    private final DetectionExceptionService exceptionService;
+
     public UtmCorrelationRulesResource(ApplicationEventService applicationEventService,
                                        UtmCorrelationRulesService rulesService,
                                        UtmCorrelationRulesMapper utmCorrelationRulesMapper,
@@ -91,7 +95,8 @@ public class UtmCorrelationRulesResource {
                                        CorrelationRuleValidator correlationRuleValidator,
                                        UtmCorrelationRuleVersionService versionService,
                                        UtmDataTypesRepository dataTypesRepository,
-                                       DetectionRuleDryRunService dryRunService) {
+                                       DetectionRuleDryRunService dryRunService,
+                                       DetectionExceptionService exceptionService) {
         this.applicationEventService = applicationEventService;
         this.rulesService = rulesService;
         this.utmCorrelationRulesMapper = utmCorrelationRulesMapper;
@@ -100,6 +105,7 @@ public class UtmCorrelationRulesResource {
         this.versionService = versionService;
         this.dataTypesRepository = dataTypesRepository;
         this.dryRunService = dryRunService;
+        this.exceptionService = exceptionService;
     }
     @InitBinder("utmCorrelationRulesDTO")
     protected void initBinder(WebDataBinder binder) {
@@ -389,22 +395,39 @@ public class UtmCorrelationRulesResource {
 
             DryRunResult dryRun = dryRunService.evaluateRuleDefinition(
                 rule.getRuleDefinition(), eventJson);
+            Map<String, Object> eventMap = dryRunService.parseEvent(eventJson);
+            DetectionExceptionConsideration consideration = exceptionService.consider(
+                String.valueOf(rule.getId()), eventMap);
+            boolean suppressed = dryRun.matched() && consideration.suppressed();
 
             RuleTestResultDTO result = new RuleTestResultDTO(
                 rule.getId(),
                 rule.getRuleName(),
                 dryRun.syntaxOk(),
                 varCount,
-                dryRun.matched() ? 1 : 0,
+                suppressed ? 0 : (dryRun.matched() ? 1 : 0),
                 dryRun.explanation(),
                 dryRun.durationMs()
             );
             result.setMatched(dryRun.matched());
             result.setMatchedFields(dryRun.matchedFields());
-            result.setExplanation(dryRun.explanation());
+            String explanation = dryRun.explanation();
+            if (suppressed) {
+                explanation = explanation + " Suppressed by exception #"
+                    + consideration.matchingExceptionId()
+                    + " (" + consideration.matchingExceptionTitle() + "). No alert would be created.";
+            }
+            result.setExplanation(explanation);
+            result.setEvaluationNote(explanation);
             result.setEvaluationMode(dryRun.evaluationMode());
             result.setOpenSearchQueried(dryRun.openSearchQueried());
             result.setEngineParity(dryRun.engineParity());
+            result.setExpressionMatched(dryRun.matched());
+            result.setSuppressed(suppressed);
+            result.setWouldAlert(dryRun.matched() && !suppressed);
+            result.setExceptionsApplied(consideration.exceptionsApplied());
+            result.setMatchingExceptionId(consideration.matchingExceptionId());
+            result.setMatchingExceptionTitle(consideration.matchingExceptionTitle());
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST, ctx + ": " + e.getMessage());

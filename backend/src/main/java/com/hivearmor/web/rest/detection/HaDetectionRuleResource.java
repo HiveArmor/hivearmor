@@ -52,6 +52,7 @@ public class HaDetectionRuleResource {
     private final DetectionCoverageService coverageService;
     private final RuleAuthoringService authoringService;
     private final DetectionRuleDryRunService dryRunService;
+    private final DetectionExceptionService exceptionService;
     private final DetectionPipelineObservabilityService pipelineObservabilityService;
     private final MsspIndexResolver indexResolver;
 
@@ -65,6 +66,7 @@ public class HaDetectionRuleResource {
                                    DetectionCoverageService coverageService,
                                    RuleAuthoringService authoringService,
                                    DetectionRuleDryRunService dryRunService,
+                                   DetectionExceptionService exceptionService,
                                    DetectionPipelineObservabilityService pipelineObservabilityService,
                                    MsspIndexResolver indexResolver) {
         this.inventoryService = inventoryService;
@@ -77,6 +79,7 @@ public class HaDetectionRuleResource {
         this.coverageService = coverageService;
         this.authoringService = authoringService;
         this.dryRunService = dryRunService;
+        this.exceptionService = exceptionService;
         this.pipelineObservabilityService = pipelineObservabilityService;
         this.indexResolver = indexResolver;
     }
@@ -419,6 +422,9 @@ public class HaDetectionRuleResource {
             Long tenantId = resolveTenantId();
             @SuppressWarnings("unchecked")
             Map<String, Object> ruleDefinition = (Map<String, Object>) body.getOrDefault("rule", body);
+            if (ruleDefinition.get("id") == null && body.get("ruleId") != null) {
+                ruleDefinition.put("id", body.get("ruleId"));
+            }
             @SuppressWarnings("unchecked")
             Map<String, Object> timeRange = (Map<String, Object>) body.get("timeRange");
             Instant from = null;
@@ -493,7 +499,9 @@ public class HaDetectionRuleResource {
             }
 
             var dryRun = dryRunService.evaluateRuleMap(ruleDefinition, sampleEvent);
-            Map<String, Object> result = dryRunService.toHonestyPayload(dryRun);
+            String ruleId = DetectionExceptionService.extractRuleId(ruleDefinition, body);
+            var consideration = exceptionService.consider(ruleId, sampleEvent);
+            Map<String, Object> result = dryRunService.toHonestyPayload(dryRun, consideration);
             result.put("ruleName", ruleDefinition.get("name"));
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
