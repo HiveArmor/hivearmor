@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      DET-MSSP-001 STAGING CANDIDATE — per-tenant detection packs / exception isolation.
+      NULL tenant_id = platform shared pack (legacy rows stay visible to every tenant).
+      Tenant-owned rows are never returned across tenants by REST.
+      OpenSearch pattern v3-hive-<type>-YYYY.MM.DD is unchanged.
+    -->
+    <changeSet id="20260907020-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="hive_correlation_rules" columnName="tenant_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="hive_correlation_rules">
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="hive_correlation_rules" indexName="idx_hive_correlation_rules_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260907020-2" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ha_detection_exception" columnName="tenant_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="ha_detection_exception">
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="ha_detection_exception" indexName="idx_ha_detection_exception_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="ha_detection_exception" indexName="idx_ha_detection_exception_tenant_rule">
+            <column name="tenant_id"/>
+            <column name="rule_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

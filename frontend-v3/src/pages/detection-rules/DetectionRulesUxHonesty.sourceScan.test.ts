@@ -51,6 +51,19 @@ describe('detection rules UX honesty (Prompt 16)', () => {
     expect(consoleSource).toContain('exceptionsApplied');
   });
 
+  it('wires ATT&CK coverage to canonical /mitre APIs instead of inventory-only grouping', () => {
+    const coverage = readFileSync(join(process.cwd(), 'src/pages/detection-rules/DetectionCoverageView.tsx'), 'utf8');
+    const service = readFileSync(join(process.cwd(), 'src/services/mitre.service.ts'), 'utf8');
+    expect(service).toContain('/mitre/coverage');
+    expect(service).toContain('/mitre/rules');
+    expect(coverage).toContain('mitreService.getCoverage');
+    expect(coverage).toContain('mitreService.getRulesByTechnique');
+    expect(coverage).toContain('detection-mitre-api-unused');
+    expect(coverage).toContain('not proof of full ATT&amp;CK coverage');
+    expect(coverage).not.toContain('fetchCoverage');
+    expect(coverage).not.toContain('/ha-detection-rules/coverage');
+  });
+
   it('surfaces sequence/risk/graph enterprise pack inventory', () => {
     expect(page).toContain('detection-enterprise-pack-honesty');
     expect(page).toContain('ENGINE_OPTIONS');
@@ -61,5 +74,24 @@ describe('detection rules UX honesty (Prompt 16)', () => {
     expect(fixtures).toContain("engine: 'risk'");
     expect(fixtures).toContain("engine: 'graph'");
     expect(fixtures).toContain('SEQ-BRUTE-FORCE-THEN-SUCCESS');
+    expect(fixtures).toContain('ENTERPRISE_PACK_RULE_IDS');
+    for (const id of [9101, 9102, 9103, 9104, 9105, 9106, 9107, 9108, 9109, 9110, 9111, 9112, 9113, 9114, 9115, 9116, 9117, 9118]) {
+      expect(fixtures).toContain(`id: ${id}`);
+    }
+    expect(fixtures).toContain('SEQ-PHISH-THEN-MACRO-EXEC');
+    expect(fixtures).toContain('RISK-LSASS-MEMORY-ACCESS');
+    expect(fixtures).toContain('GRAPH-PASSWORD-SPRAY-MULTI-ACCOUNT');
+    expect(fixtures).toContain('v3-hive-log-*');
+    expect(fixtures).not.toContain('v11-log-*');
+  });
+
+  it('isolates MSSP tenant detection packs with two-tenant fixtures', () => {
+    expect(page).toContain('detection-mssp-pack-honesty');
+    expect(page).toContain('Detection pack tenant');
+    expect(page).toContain('DETECTION_PACK_HONESTY');
+    const fixtures = readFileSync(join(process.cwd(), 'src/pages/detection-rules/detectionRules.fixtures.ts'), 'utf8');
+    expect(fixtures).toContain('ACME-CUSTOM-VPN-GEO-ANOMALY');
+    expect(fixtures).toContain('CWM-CUSTOM-OT-PROTOCOL-ANOMALY');
+    expect(fixtures).not.toContain('v11-log-*');
   });
 });

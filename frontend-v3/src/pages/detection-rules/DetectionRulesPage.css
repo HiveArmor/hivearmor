@@ -40,6 +40,7 @@
 
 .detection-command-bar { position: relative; z-index: 35; display: flex; min-height: 43px; flex: 0 0 43px; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); box-shadow: 0 5px 12px color-mix(in srgb, var(--ha-surface-app) 24%, transparent); }
 .detection-command-bar .ha-compact-select { min-width: 134px; min-height: 29px; }
+.detection-pack-select { min-width: 220px; }
 .detection-search { position: relative; display: flex; width: min(390px, 34vw); min-width: 240px; height: 30px; align-items: center; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-input); color: var(--ha-foreground-tertiary); }
 .detection-search > svg { position: absolute; left: 8px; }
 .detection-search input { width: 100%; height: 28px; min-width: 0; padding: 4px 30px; border: 0; outline: 0; background: transparent; color: var(--ha-foreground-primary); }
@@ -165,8 +166,10 @@
 .detection-monitoring__legend, .detection-coverage__legend { display: flex; gap: 10px; }
 .detection-monitoring__legend span, .detection-coverage__legend span { display: inline-flex; align-items: center; gap: 5px; }
 .detection-monitoring__legend span::before, .detection-coverage__legend span::before { width: 7px; height: 7px; border-radius: 2px; background: var(--ha-foreground-disabled); content: ''; }
-.detection-monitoring__legend span[data-status='succeeded']::before, .detection-coverage__legend span[data-readiness='ready']::before { background: var(--ha-state-healthy); }
-.detection-monitoring__legend span[data-status='warning']::before, .detection-coverage__legend span[data-readiness='degraded']::before { background: var(--ha-state-warning); }
+.detection-monitoring__legend span[data-status='succeeded']::before, .detection-coverage__legend span[data-readiness='ready']::before, .detection-coverage__legend span[data-band='high']::before { background: var(--ha-state-healthy); }
+.detection-monitoring__legend span[data-status='warning']::before, .detection-coverage__legend span[data-readiness='degraded']::before, .detection-coverage__legend span[data-band='low']::before { background: var(--ha-medium); }
+.detection-coverage__legend span[data-band='none']::before { background: var(--ha-foreground-disabled); }
+.detection-coverage__legend span[data-band='medium']::before { background: var(--ha-positive); }
 .detection-monitoring__legend span[data-status='failed']::before { background: var(--ha-severity-critical); }
 .detection-monitoring__trend > div { display: flex; height: 50px; align-items: flex-end; gap: 3px; margin-top: 4px; padding: 0 5px; border-bottom: 1px solid var(--ha-border-subtle); background-image: linear-gradient(to bottom, transparent 49%, var(--ha-border-subtle) 50%, transparent 51%); }
 .detection-monitoring__trend > div button { display: flex; height: 100%; min-width: 5px; flex: 1; align-items: flex-end; padding: 0; border: 0; background: transparent; cursor: pointer; }
@@ -232,6 +235,11 @@
 .detection-coverage__matrix-wrap { display: flex; min-width: 0; min-height: 0; flex-direction: column; overflow: hidden; }
 .detection-coverage__matrix-title { min-height: 38px; flex: 0 0 38px; padding: 5px 10px; border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); }
 .detection-coverage__matrix { display: grid; min-height: 0; flex: 1; grid-template-columns: repeat(14, minmax(142px, 1fr)); align-items: stretch; overflow: auto; background: var(--ha-surface-app); scrollbar-width: thin; }
+.detection-coverage__matrix[data-unmapped='true'] { grid-template-columns: repeat(15, minmax(142px, 1fr)); }
+.detection-coverage__export, .detection-coverage__refresh { display: inline-flex; min-height: 30px; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); cursor: pointer; }
+.detection-coverage__export:hover:not(:disabled), .detection-coverage__refresh:hover:not(:disabled) { border-color: var(--ha-border-strong); background: var(--ha-surface-hover); color: var(--ha-foreground-primary); }
+.detection-coverage__export:disabled, .detection-coverage__refresh:disabled { cursor: not-allowed; color: var(--ha-foreground-disabled); }
+.detection-coverage__refresh { width: 30px; justify-content: center; padding: 4px; }
 .detection-coverage__tactic { min-width: 142px; border-right: 1px solid var(--ha-border-default); }
 .detection-coverage__tactic > header { position: sticky; z-index: 3; top: 0; display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 6px; padding: 6px 7px; border-bottom: 1px solid var(--ha-border-default); background: var(--ha-surface-panel); }
 .detection-coverage__tactic > header span { color: var(--ha-foreground-secondary); font-size: 9px; font-weight: 680; line-height: 1.2; }
@@ -240,8 +248,11 @@
 .detection-coverage__tactic > div > p { margin: 4px; color: var(--ha-foreground-disabled); font-size: 9px; }
 .detection-coverage__tactic button { display: flex; min-height: 68px; align-items: flex-start; flex-direction: column; gap: 2px; padding: 7px; overflow: hidden; border: 1px solid var(--ha-border-default); border-left: 3px solid var(--ha-foreground-disabled); border-radius: 5px; background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); cursor: pointer; text-align: left; }
 .detection-coverage__tactic button:hover, .detection-coverage__tactic button:focus-visible { border-color: var(--ha-border-focus); background: var(--ha-surface-hover); }
-.detection-coverage__tactic button[data-readiness='ready'] { border-left-color: var(--ha-state-healthy); }
-.detection-coverage__tactic button[data-readiness='degraded'] { border-left-color: var(--ha-state-warning); }
+.detection-coverage__tactic button[data-readiness='ready'], .detection-coverage__tactic button[data-band='high'] { border-left-color: var(--ha-primary); background: color-mix(in srgb, var(--ha-primary) 18%, var(--ha-surface-elevated)); }
+.detection-coverage__tactic button[data-readiness='degraded'], .detection-coverage__tactic button[data-band='low'] { border-left-color: var(--ha-medium); background: color-mix(in srgb, var(--ha-medium) 18%, var(--ha-surface-elevated)); }
+.detection-coverage__tactic button[data-band='none'] { border-left-color: var(--ha-foreground-disabled); background: color-mix(in srgb, var(--ha-foreground-disabled) 14%, var(--ha-surface-elevated)); }
+.detection-coverage__tactic button[data-band='medium'] { border-left-color: var(--ha-positive); background: color-mix(in srgb, var(--ha-positive) 18%, var(--ha-surface-elevated)); }
+.detection-coverage__tactic button[data-selected='true'] { border-color: var(--ha-border-focus); }
 .detection-coverage__tactic button code { color: var(--ha-action-secondary); font: 9px var(--ha-font-mono); }
 .detection-coverage__tactic button strong { width: 100%; overflow: hidden; color: var(--ha-foreground-primary); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .detection-coverage__tactic button span { color: var(--ha-foreground-tertiary); font-size: 8px; }
@@ -264,12 +275,14 @@
 .detection-coverage-detail__summary > div { display: flex; justify-content: center; flex-direction: column; gap: 4px; padding: 8px 11px; border-right: 1px solid var(--ha-border-subtle); }
 .detection-coverage-detail__summary small { color: var(--ha-foreground-tertiary); font: 8px var(--ha-font-ui); letter-spacing: .07em; }
 .detection-coverage-detail__summary strong { text-transform: capitalize; }
-.detection-coverage-detail__summary strong[data-readiness='ready'] { color: var(--ha-state-healthy); }
-.detection-coverage-detail__summary strong[data-readiness='degraded'] { color: var(--ha-state-warning); }
-.detection-coverage-detail__rules { display: grid; gap: 4px; }
-.detection-coverage-detail__rules button { display: grid; min-height: 50px; grid-template-columns: 46px minmax(0, 1fr) 14px; align-items: center; gap: 6px; padding: 5px 6px; border: 1px solid var(--ha-border-subtle); border-radius: 5px; background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); cursor: pointer; text-align: left; }
-.detection-coverage-detail__rules button > span { color: var(--ha-foreground-disabled); font-size: 8px; text-transform: uppercase; }
-.detection-coverage-detail__rules button > span[data-active='true'] { color: var(--ha-state-healthy); }
+.detection-coverage-detail__summary strong[data-readiness='ready'], .detection-coverage-detail__summary strong[data-band='high'], .detection-coverage-detail__summary strong[data-band='medium'] { color: var(--ha-state-healthy); }
+.detection-coverage-detail__summary strong[data-readiness='degraded'], .detection-coverage-detail__summary strong[data-band='low'] { color: var(--ha-medium); }
+.detection-coverage-detail__summary strong[data-band='none'] { color: var(--ha-foreground-tertiary); }
+.detection-coverage-detail__rules { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.detection-coverage-detail__rules button, .detection-coverage-detail__rules li { display: grid; min-height: 50px; grid-template-columns: 46px minmax(0, 1fr) 14px; align-items: center; gap: 6px; padding: 5px 6px; border: 1px solid var(--ha-border-subtle); border-radius: 5px; background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); cursor: pointer; text-align: left; }
+.detection-coverage-detail__rules li { cursor: default; }
+.detection-coverage-detail__rules button > span, .detection-coverage-detail__rules li > span { color: var(--ha-foreground-disabled); font-size: 8px; text-transform: uppercase; }
+.detection-coverage-detail__rules button > span[data-active='true'], .detection-coverage-detail__rules li > span[data-active='true'] { color: var(--ha-state-healthy); }
 .detection-coverage-detail__rules strong, .detection-coverage-detail__rules small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .detection-coverage-detail__rules strong { color: var(--ha-foreground-primary); font-size: 9px; }
 .detection-coverage-detail__rules small { margin-top: 2px; color: var(--ha-foreground-tertiary); font-size: 8px; }

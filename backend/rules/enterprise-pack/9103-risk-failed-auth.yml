@@ -3,17 +3,37 @@ name: RISK-FAILED-AUTH-ACCUMULATION
 dataTypes:
   - windows
   - linux
+  - wineventlog
 category: Credential Access
 technique: "T1110 - Brute Force"
+mitre:
+  tactics: ["TA0006"]
+  attacks: ["T1110"]
 adversary: origin
 description: >
-  Staging risk pack (DET-SEQ-001). Accumulates risk for repeated failed
+  Staging risk pack (DET-SEQ). Accumulates risk for repeated failed
   authentication from the same origin instead of emitting a direct CEL alert.
 references:
   - https://attack.mitre.org/techniques/T1110/
+  - https://attack.mitre.org/tactics/TA0006/
 impact:
   confidentiality: 2
   integrity: 2
   availability: 1
+deduplicateBy:
+  - origin.ip
+groupBy:
+  - origin.ip
 riskScore: 25
 where: 'safe("log.action", "") == "failed_auth" && safe("origin.ip", "") != ""'
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: "{{.origin.ip}}"
+      - field: log.action
+        operator: filter_term
+        value: failed_auth
+    within: 1h
+    count: 5

@@ -1,0 +1,45 @@
+id: 9115
+name: GRAPH-DORMANT-ACCOUNT-EXTERNAL
+type: graph_offense
+dataTypes:
+  - windows
+  - linux
+category: Initial Access
+technique: "T1078 - Valid Accounts"
+mitre:
+  tactics: ["TA0001"]
+  attacks: ["T1078"]
+adversary: origin
+description: >
+  Staging graph pack (DET-SEQ). A previously dormant account (no activity for
+  30 days) logged into a host that then communicated with an external IP.
+  Requires Neo4j (NEO4J_ENABLED) — STAGING CANDIDATE.
+references:
+  - https://attack.mitre.org/techniques/T1078/
+  - https://attack.mitre.org/tactics/TA0001/
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+cypherQuery: |
+  MATCH (u:User)-[login:LOGGED_INTO]->(h:Host)-[comm:COMMUNICATED_WITH]->(extIP:IpAddress)
+  WHERE login.lastSeen > datetime() - duration('PT24H')
+    AND u.firstSeen < datetime() - duration('P30D')
+    AND (u.lastSeen IS NULL OR u.lastSeen < datetime() - duration('P30D') OR u.firstSeen = u.lastSeen)
+    AND NOT extIP.address STARTS WITH '10.'
+    AND NOT extIP.address STARTS WITH '192.168.'
+    AND NOT extIP.address STARTS WITH '172.'
+    AND comm.lastSeen > datetime() - duration('PT24H')
+  RETURN u.username    AS user,
+         h.hostname    AS host,
+         extIP.address AS externalIP,
+         u.firstSeen   AS accountFirstSeen,
+         u.riskScore   AS riskScore
+  LIMIT 20
+alertFields:
+  - user
+  - host
+  - externalIP
+  - accountFirstSeen
+  - riskScore
+checkIntervalSeconds: 300

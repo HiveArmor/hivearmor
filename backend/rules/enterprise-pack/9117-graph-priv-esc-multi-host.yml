@@ -1,0 +1,41 @@
+id: 9117
+name: GRAPH-PRIV-ESC-MULTI-HOST
+type: graph_offense
+dataTypes:
+  - windows
+  - linux
+category: Privilege Escalation
+technique: "T1548 - Abuse Elevation Control Mechanism"
+mitre:
+  tactics: ["TA0004"]
+  attacks: ["T1548", "T1078.003"]
+adversary: origin
+description: >
+  Staging graph pack (DET-SEQ). A high-risk user logged into three or more
+  hosts within two hours — consistent with post-escalation lateral spread.
+  Requires Neo4j (NEO4J_ENABLED) — STAGING CANDIDATE.
+references:
+  - https://attack.mitre.org/techniques/T1548/
+  - https://attack.mitre.org/techniques/T1078/003/
+  - https://attack.mitre.org/tactics/TA0004/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+cypherQuery: |
+  MATCH (u:User)-[r:LOGGED_INTO]->(h:Host)
+  WHERE r.lastSeen > datetime() - duration('PT2H')
+    AND u.riskScore >= 70
+  WITH u, count(DISTINCT h) AS hostCount, collect(DISTINCT h.hostname)[0..10] AS hosts
+  WHERE hostCount >= 3
+  RETURN u.username   AS escalatingUser,
+         hostCount,
+         hosts,
+         u.riskScore  AS riskScore
+  LIMIT 20
+alertFields:
+  - escalatingUser
+  - hostCount
+  - hosts
+  - riskScore
+checkIntervalSeconds: 60

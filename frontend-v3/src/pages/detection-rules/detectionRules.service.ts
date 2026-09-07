@@ -18,6 +18,7 @@ import type {
 import { buildRuleClientValidation } from './detectionRules.validation';
 
 import type { PaginatedResponse } from '@/lib/apiClient';
+import { detectionPackAuthHeaders } from '@/services/detectionPack.service';
 
 const TOKEN_KEY = 'hivearmor_auth_token';
 const DETECTION_BASE = '/api/ha-detection-rules';
@@ -40,6 +41,7 @@ interface ModernRulePreview {
   schedule?: string | null;
   tags?: string[];
   author?: string;
+  tenantId?: number | null;
   createdAt?: string | null;
   updatedAt?: string | null;
   version?: number;
@@ -115,6 +117,7 @@ function mapModernPreview(item: ModernRulePreview): DetectionRule {
     techniqueId: techniques[0],
     origin: item.scope,
     engine: 'cel',
+    tenantId: item.tenantId ?? undefined,
     health: mapHealth(item.health?.status),
     healthMessage: item.health?.status === 'degraded' ? 'Recent executions are degraded.' : item.health?.status === 'critical' ? 'Recent executions are failing.' : undefined,
     lastRunAt: item.health?.lastRun ?? item.lastExecution?.timestamp ?? null,
@@ -227,6 +230,7 @@ export async function fetchRules(params: RuleListParams, signal?: AbortSignal): 
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: 'application/json',
+      ...detectionPackAuthHeaders(),
     },
   });
 
@@ -268,6 +272,7 @@ export async function toggleRuleActive(id: DetectionRule['id'], ruleActive: bool
       Authorization: `Bearer ${getToken()}`,
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      ...detectionPackAuthHeaders(),
     },
     body: JSON.stringify({ ruleIds: [String(id)], targetStatus: ruleActive ? 'active' : 'disabled', reason: 'Detection Engineering inventory toggle' }),
   });
@@ -283,6 +288,7 @@ export async function deleteRule(id: DetectionRule['id']): Promise<void> {
       Authorization: `Bearer ${getToken()}`,
       Accept: 'application/json',
       'Content-Type': 'application/json',
+      ...detectionPackAuthHeaders(),
     },
     body: JSON.stringify({ ruleIds: [String(id)], confirm: true }),
   });

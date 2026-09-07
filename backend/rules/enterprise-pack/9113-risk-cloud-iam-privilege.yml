@@ -1,0 +1,31 @@
+id: 9113
+name: RISK-CLOUD-IAM-PRIVILEGE
+dataTypes:
+  - aws
+  - azure
+  - cloudtrail
+category: Persistence
+technique: "T1098 - Account Manipulation"
+mitre:
+  tactics: ["TA0003", "TA0004"]
+  attacks: ["T1098"]
+adversary: origin
+description: >
+  Staging risk pack (DET-SEQ). Accumulates risk for IAM/role assignments that
+  grant AdministratorAccess or privileged directory roles.
+references:
+  - https://attack.mitre.org/techniques/T1098/
+  - https://attack.mitre.org/tactics/TA0004/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+deduplicateBy:
+  - origin.user
+  - origin.ip
+groupBy:
+  - origin.user
+riskScore: 35
+where: >
+  raw.matches("(?i).*(Attach(User|Role|Group)Policy|Put(User|Role)Policy|RoleAssignment).*")
+  && raw.matches("(?i).*(AdministratorAccess|PowerUserAccess|Global Administrator|Privileged Role Administrator).*")

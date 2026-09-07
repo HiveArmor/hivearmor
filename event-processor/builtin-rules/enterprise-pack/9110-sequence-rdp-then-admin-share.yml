@@ -1,0 +1,44 @@
+id: 9110
+name: SEQ-RDP-THEN-ADMIN-SHARE
+dataTypes:
+  - windows
+  - wineventlog
+  - network
+category: Lateral Movement
+technique: "T1021.002 - Remote Services: SMB/Windows Admin Shares"
+mitre:
+  tactics: ["TA0008"]
+  attacks: ["T1021.001", "T1021.002"]
+adversary: origin
+description: >
+  Staging sequence pack (DET-SEQ). Detects a successful RDP logon followed by
+  admin-share (C$/ADMIN$) access from the same origin IP within 20 minutes.
+references:
+  - https://attack.mitre.org/techniques/T1021/001/
+  - https://attack.mitre.org/techniques/T1021/002/
+  - https://attack.mitre.org/tactics/TA0008/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.ip
+  - origin.user
+groupBy:
+  - origin.ip
+sequence:
+  - where: 'action == "rdp_logon" || safe("log.action", "") == "rdp_logon" || raw.matches("(?i).*(LogonType[^0-9]{0,12}10|logon.?type[^0-9]{0,12}10).*")'
+    within: 10m
+  - where: 'action == "admin_share_access" || safe("log.action", "") == "admin_share_access" || raw.matches("(?i).*(\\\\\\\\.*\\\\(C|ADMIN)\\$|IPC\\$).*")'
+    within: 20m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: "{{.origin.ip}}"
+      - field: log.action
+        operator: filter_term
+        value: rdp_logon
+    within: 20m
+    count: 1

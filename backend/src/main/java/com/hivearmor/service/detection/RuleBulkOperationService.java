@@ -73,7 +73,7 @@ public class RuleBulkOperationService {
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("ruleId", ruleId);
 
-            Optional<DetectionRule> ruleOpt = ruleRepository.findById(ruleId);
+            Optional<DetectionRule> ruleOpt = findVisibleRule(ruleId, tenantId);
             if (ruleOpt.isEmpty()) {
                 result.put("success", false);
                 result.put("error", "Rule not found");
@@ -133,7 +133,7 @@ public class RuleBulkOperationService {
 
         // Fetch rules
         List<DetectionRule> rules = ruleIds.stream()
-            .map(ruleRepository::findById)
+            .map(id -> findVisibleRule(id, tenantId))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .collect(Collectors.toList());
@@ -193,7 +193,7 @@ public class RuleBulkOperationService {
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("originalRuleId", ruleId);
 
-            Optional<DetectionRule> ruleOpt = ruleRepository.findById(ruleId);
+            Optional<DetectionRule> ruleOpt = findVisibleRule(ruleId, tenantId);
             if (ruleOpt.isEmpty()) {
                 result.put("success", false);
                 result.put("error", "Rule not found");
@@ -219,7 +219,7 @@ public class RuleBulkOperationService {
                 copy.setMitreTechniques(original.getMitreTechniques());
                 copy.setTags(original.getTags());
                 copy.setAuthor(original.getAuthor());
-                copy.setTenantId(tenantId);
+                copy.setTenantId(DetectionPackScope.stampNotNull(tenantId));
                 copy.setVersion(1);
 
                 ruleRepository.save(copy);
@@ -276,7 +276,7 @@ public class RuleBulkOperationService {
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("ruleId", ruleId);
 
-            Optional<DetectionRule> ruleOpt = ruleRepository.findById(ruleId);
+            Optional<DetectionRule> ruleOpt = findVisibleRule(ruleId, tenantId);
             if (ruleOpt.isEmpty()) {
                 result.put("success", false);
                 result.put("error", "Rule not found");
@@ -399,6 +399,11 @@ public class RuleBulkOperationService {
         }
 
         return sb.toString();
+    }
+
+    private Optional<DetectionRule> findVisibleRule(String ruleId, Long tenantId) {
+        return ruleRepository.findById(ruleId)
+            .filter(rule -> DetectionPackScope.isVisible(rule.getTenantId(), tenantId));
     }
 
     private String escapeJson(String value) {

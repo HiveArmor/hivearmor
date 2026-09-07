@@ -94,7 +94,7 @@ public class RuleAuthoringService {
         rule.setMitreTechniques(getStr(body, "mitreTechniques"));
         rule.setTags(getStr(body, "tags"));
         rule.setAuthor(userId);
-        rule.setTenantId(tenantId);
+        rule.setTenantId(DetectionPackScope.stampNotNull(tenantId));
         rule.setVersion(1);
 
         ruleRepository.save(rule);
@@ -131,8 +131,7 @@ public class RuleAuthoringService {
     @Transactional
     public Map<String, Object> updateRule(String ruleId, Map<String, Object> body,
                                           String userId, Long tenantId) {
-        DetectionRule rule = ruleRepository.findById(ruleId)
-            .orElseThrow(() -> new NoSuchElementException("Rule not found: " + ruleId));
+        DetectionRule rule = requireVisibleRule(ruleId, tenantId);
 
         // Validate status — only drafts can be edited
         if (!"draft".equals(rule.getStatus())) {
@@ -183,8 +182,7 @@ public class RuleAuthoringService {
      * @throws NoSuchElementException if rule not found
      */
     public Map<String, Object> getFullRule(String ruleId, Long tenantId) {
-        DetectionRule rule = ruleRepository.findById(ruleId)
-            .orElseThrow(() -> new NoSuchElementException("Rule not found: " + ruleId));
+        DetectionRule rule = requireVisibleRule(ruleId, tenantId);
 
         return buildFullRuleResponse(rule);
     }
@@ -201,8 +199,7 @@ public class RuleAuthoringService {
      */
     @Transactional
     public Map<String, Object> submitForReview(String ruleId, String userId, Long tenantId) {
-        DetectionRule rule = ruleRepository.findById(ruleId)
-            .orElseThrow(() -> new NoSuchElementException("Rule not found: " + ruleId));
+        DetectionRule rule = requireVisibleRule(ruleId, tenantId);
 
         if (!"draft".equals(rule.getStatus())) {
             throw new IllegalArgumentException("Only draft rules can be submitted for review. Current status: " + rule.getStatus());
@@ -233,8 +230,7 @@ public class RuleAuthoringService {
      */
     @Transactional
     public Map<String, Object> approveRule(String ruleId, String comment, String userId, Long tenantId) {
-        DetectionRule rule = ruleRepository.findById(ruleId)
-            .orElseThrow(() -> new NoSuchElementException("Rule not found: " + ruleId));
+        DetectionRule rule = requireVisibleRule(ruleId, tenantId);
 
         if (!"review".equals(rule.getStatus())) {
             throw new IllegalArgumentException("Only rules in review status can be approved. Current status: " + rule.getStatus());
@@ -276,8 +272,7 @@ public class RuleAuthoringService {
      */
     @Transactional
     public Map<String, Object> rejectRule(String ruleId, String comment, String userId, Long tenantId) {
-        DetectionRule rule = ruleRepository.findById(ruleId)
-            .orElseThrow(() -> new NoSuchElementException("Rule not found: " + ruleId));
+        DetectionRule rule = requireVisibleRule(ruleId, tenantId);
 
         if (!"review".equals(rule.getStatus())) {
             throw new IllegalArgumentException("Only rules in review status can be rejected. Current status: " + rule.getStatus());
@@ -321,8 +316,7 @@ public class RuleAuthoringService {
     @Transactional
     public Map<String, Object> revertRule(String ruleId, Integer targetVersion,
                                           String userId, Long tenantId) {
-        DetectionRule rule = ruleRepository.findById(ruleId)
-            .orElseThrow(() -> new NoSuchElementException("Rule not found: " + ruleId));
+        DetectionRule rule = requireVisibleRule(ruleId, tenantId);
 
         if (targetVersion == null || targetVersion < 1) {
             throw new IllegalArgumentException("Target version must be a positive integer");
@@ -365,6 +359,15 @@ public class RuleAuthoringService {
     // =========================================================================
     // Internal helpers
     // =========================================================================
+
+    private DetectionRule requireVisibleRule(String ruleId, Long tenantId) {
+        DetectionRule rule = ruleRepository.findById(ruleId)
+            .orElseThrow(() -> new NoSuchElementException("Rule not found: " + ruleId));
+        if (!DetectionPackScope.isVisible(rule.getTenantId(), tenantId)) {
+            throw new NoSuchElementException("Rule not found: " + ruleId);
+        }
+        return rule;
+    }
 
     private Map<String, Object> buildFullRuleResponse(DetectionRule rule) {
         Map<String, Object> response = new LinkedHashMap<>();

@@ -1,0 +1,29 @@
+id: 9112
+name: RISK-SCHEDULED-TASK-CREATE
+dataTypes:
+  - windows
+  - process
+  - wineventlog
+category: Persistence
+technique: "T1053.005 - Scheduled Task/Job: Scheduled Task"
+mitre:
+  tactics: ["TA0003"]
+  attacks: ["T1053.005"]
+adversary: origin
+description: >
+  Staging risk pack (DET-SEQ). Accumulates risk when schtasks.exe creates a
+  scheduled task, feeding the risk engine instead of a one-shot CEL alert.
+references:
+  - https://attack.mitre.org/techniques/T1053/005/
+  - https://attack.mitre.org/tactics/TA0003/
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.command
+groupBy:
+  - origin.host
+riskScore: 30
+where: 'raw.matches("(?i).*schtasks(.exe)?[^\\n]*/create.*")'

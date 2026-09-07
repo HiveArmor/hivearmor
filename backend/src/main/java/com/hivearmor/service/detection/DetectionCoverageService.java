@@ -79,21 +79,17 @@ public class DetectionCoverageService {
      * @return coverage matrix with overall score, gaps, and recommendations
      */
     public Map<String, Object> getCoverage(String scope, Long tenantId) {
-        // Fetch all rules for tenant (admin/tenantId=0 sees all)
         List<DetectionRule> rules;
-        if (tenantId == null || tenantId == 0L) {
-            // Admin: fetch all rules across all tenants
-            if (scope != null && !scope.isBlank()) {
-                rules = ruleRepository.findAll().stream()
-                    .filter(r -> scope.equalsIgnoreCase(r.getScope()))
-                    .collect(java.util.stream.Collectors.toList());
-            } else {
-                rules = ruleRepository.findAll();
-            }
-        } else if (scope != null && !scope.isBlank()) {
-            rules = ruleRepository.findByTenantIdAndScope(tenantId, scope);
+        if (DetectionPackScope.isPlatform(tenantId)) {
+            rules = ruleRepository.findByTenantId(DetectionPackScope.PLATFORM_TENANT_ID,
+                org.springframework.data.domain.Pageable.unpaged()).getContent();
         } else {
-            rules = ruleRepository.findByTenantId(tenantId, org.springframework.data.domain.Pageable.unpaged()).getContent();
+            rules = ruleRepository.findByTenantIdIn(List.of(DetectionPackScope.PLATFORM_TENANT_ID, tenantId));
+        }
+        if (scope != null && !scope.isBlank()) {
+            rules = rules.stream()
+                .filter(r -> scope.equalsIgnoreCase(r.getScope()))
+                .collect(java.util.stream.Collectors.toList());
         }
 
         // Build technique→rules mapping

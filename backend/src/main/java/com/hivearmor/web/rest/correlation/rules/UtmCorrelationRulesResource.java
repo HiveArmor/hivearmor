@@ -162,6 +162,11 @@ public class UtmCorrelationRulesResource {
         try {
             rulesService.setRuleActivation(id, active);
             return ResponseEntity.noContent().build();
+        } catch (NoSuchElementException e) {
+            String msg = ctx + ": " + e.getLocalizedMessage();
+            log.error(msg);
+            applicationEventService.createEvent(msg, ApplicationEventType.ERROR);
+            return ResponseUtil.buildErrorResponse(HttpStatus.NOT_FOUND, msg);
         } catch (BadRequestException e) {
             String msg = ctx + ": " + e.getLocalizedMessage();
             log.error(msg);

@@ -801,6 +801,9 @@
     <include file="/config/liquibase/changelog/20260907002_afterevents_v11_to_v3hive_log.xml" relativeToChangelogFile="false"/>
     <include file="/config/liquibase/changelog/20260907003_ha_detection_exception.xml" relativeToChangelogFile="false"/>
 
+    <!-- DET-MSSP-001 STAGING CANDIDATE — tenant_id on correlation rules + exceptions -->
+    <include file="/config/liquibase/changelog/20260907020_mssp_detection_pack_isolation.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
 

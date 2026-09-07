@@ -6,15 +6,24 @@ dataTypes:
   - process
 category: Execution
 technique: "T1059.001 - Command and Scripting Interpreter: PowerShell"
+mitre:
+  tactics: ["TA0002"]
+  attacks: ["T1059.001"]
 adversary: origin
 description: >
-  Staging risk pack (DET-SEQ-001). Accumulates risk when encoded PowerShell is
+  Staging risk pack (DET-SEQ). Accumulates risk when encoded PowerShell is
   observed, feeding the risk engine rather than a one-shot CEL alert.
 references:
   - https://attack.mitre.org/techniques/T1059/001/
+  - https://attack.mitre.org/tactics/TA0002/
 impact:
   confidentiality: 3
   integrity: 3
   availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.command
+groupBy:
+  - origin.host
 riskScore: 40
 where: 'safe("origin.process", "") == "powershell.exe" && raw.matches("(?i).*(-EncodedCommand|-enc)([ =]|$).*")'

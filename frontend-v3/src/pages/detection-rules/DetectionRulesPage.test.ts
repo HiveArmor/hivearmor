@@ -145,10 +145,29 @@ describe('detection rules foundation fixtures', () => {
     expect(foundationDetectionSampleEvents.some((sample) => sample.id === 'sample-excepted-scanner-001')).toBe(true);
     expect(foundationDetectionSampleEvents.some((sample) => sample.id === 'sample-baseline-excepted-001')).toBe(true);
     expect(foundationDetectionSampleEvents.some((sample) => sample.id === 'sample-sequence-auth-001')).toBe(true);
-    expect(foundationDetectionRules.filter((rule) => rule.engine === 'sequence').length).toBe(2);
-    expect(foundationDetectionRules.filter((rule) => rule.engine === 'risk').length).toBe(2);
-    expect(foundationDetectionRules.filter((rule) => rule.engine === 'graph').length).toBe(1);
-    expect(filterFoundationDetectionRules({ engine: 'graph', size: 100 }).items[0]?.ruleName).toBe('GRAPH-PRIVILEGED-PIVOT-THEN-C2');
+    const { ENTERPRISE_PACK_RULE_IDS } = await import('./detectionRules.fixtures');
+    expect(ENTERPRISE_PACK_RULE_IDS).toEqual([9101, 9102, 9103, 9104, 9105, 9106, 9107, 9108, 9109, 9110, 9111, 9112, 9113, 9114, 9115, 9116, 9117, 9118]);
+    expect(foundationDetectionRules.filter((rule) => rule.engine === 'sequence').length).toBe(7);
+    expect(foundationDetectionRules.filter((rule) => rule.engine === 'risk').length).toBe(6);
+    expect(foundationDetectionRules.filter((rule) => rule.engine === 'graph').length).toBe(5);
+    expect(filterFoundationDetectionRules({ engine: 'graph', size: 100 }).items.map((rule) => rule.id)).toEqual([9105, 9115, 9116, 9117, 9118]);
+    expect(filterFoundationDetectionRules({ engine: 'sequence', size: 100 }).total).toBe(7);
+    expect(filterFoundationDetectionRules({ engine: 'risk', size: 100 }).total).toBe(6);
+    expect(foundationDetectionRules.filter((rule) => ENTERPRISE_PACK_RULE_IDS.includes(rule.id as typeof ENTERPRISE_PACK_RULE_IDS[number])).every((rule) => Boolean(rule.techniqueId))).toBe(true);
+  });
+
+  it('never leaks Acme custom rules into the CWM pack', async () => {
+    const { filterFoundationDetectionRules } = await import('./detectionRules.fixtures');
+    const acme = filterFoundationDetectionRules({ tenantId: 1, size: 200 });
+    const cwm = filterFoundationDetectionRules({ tenantId: 2, size: 200 });
+    const platform = filterFoundationDetectionRules({ tenantId: 0, size: 200 });
+    expect(acme.items.some((rule) => rule.ruleName === 'ACME-CUSTOM-VPN-GEO-ANOMALY')).toBe(true);
+    expect(acme.items.some((rule) => rule.ruleName === 'CWM-CUSTOM-OT-PROTOCOL-ANOMALY')).toBe(false);
+    expect(cwm.items.some((rule) => rule.ruleName === 'CWM-CUSTOM-CONTRACTOR-RDP')).toBe(true);
+    expect(cwm.items.some((rule) => rule.ruleName === 'ACME-CUSTOM-PAYROLL-EXFIL')).toBe(false);
+    expect(platform.items.some((rule) => rule.ruleName?.startsWith('ACME-CUSTOM-'))).toBe(false);
+    expect(platform.items.some((rule) => rule.ruleName?.startsWith('CWM-CUSTOM-'))).toBe(false);
+    expect(platform.items.some((rule) => rule.ruleName === 'SEQ-BRUTE-FORCE-THEN-SUCCESS')).toBe(true);
   });
 
   it('are excluded by both production build paths', async () => {

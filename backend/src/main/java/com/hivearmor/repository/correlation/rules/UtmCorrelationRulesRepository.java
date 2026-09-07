@@ -56,6 +56,10 @@ public interface UtmCorrelationRulesRepository extends JpaRepository<UtmCorrelat
                                               @Param("techniqueSearch") String techniqueSearch,
                                               Pageable pageable);
 
+    long countByTenantIdIsNull();
+
+    long countByTenantId(Long tenantId);
+
     Optional<UtmCorrelationRules> findOneByRuleName(String ruleName);
 
     List<UtmCorrelationRules> findAllBySystemOwnerIsTrue();
