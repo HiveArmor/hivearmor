@@ -11,6 +11,7 @@ import {
   AlertTriangle, BarChart3, CheckCircle2, ChevronRight, Download,
   Layers3, RefreshCw, Search, ShieldCheck, Target, X,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { DET_014_DISABLED_TITLE } from './detectionRules.capabilities';
 import { detectionRulesFixtureMode } from './detectionRules.service';
@@ -26,6 +27,7 @@ import {
 } from './mitreHeatmap';
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
+import { ROUTES } from '@/constants/routes.constants';
 import { mitreService } from '@/services/mitre.service';
 import type { RuleRefDTO } from '@/types/mitre.types';
 
@@ -244,6 +246,9 @@ export default function DetectionCoverageView({ rules, onOpenRule }: DetectionCo
           <span>Enterprise ATT&amp;CK</span>
           <strong>mapped rules</strong>
         </div>
+        <Link className="detection-coverage__ueba-link" to={ROUTES.UEBA_RISK} data-testid="coverage-ueba-link">
+          UEBA baselines
+        </Link>
       </div>
 
       {exportFailed && (

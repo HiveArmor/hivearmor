@@ -78,7 +78,9 @@ vi.mock('@/services/ueba.service', () => ({
   getRiskScores: vi.fn().mockResolvedValue(MOCK_RISK_SCORES),
   getRiskTrend: vi.fn().mockResolvedValue(MOCK_RISK_TREND),
   getAnomalyCounts: vi.fn().mockResolvedValue(MOCK_ANOMALY_COUNTS),
+  getDeviations: vi.fn().mockResolvedValue([]),
   getEntityTimeline: vi.fn().mockResolvedValue({ points: [], baselines: [] }),
+  uebaFixtureMode: false,
 }));
 
 // Capture the chart option passed to HaChart
@@ -107,22 +109,25 @@ vi.mock('@/components/siem-data-grid/SiemDataGrid', () => ({
     }>;
     rowData: UserRiskDTO[];
     loading?: boolean;
-    height?: number;
+    height?: number | string;
     rowHeight?: number;
     defaultColDef?: unknown;
-    getRowId?: unknown;
+    getRowId?: (params: { data: UserRiskDTO }) => string;
   }) => {
     const actionsCol = props.columnDefs.find((col) => col.headerName === 'Actions');
     return (
       <div data-testid="siem-data-grid">
-        {props.rowData.map((row) => (
-          <div key={row.userId} data-testid={`grid-row-${row.userId}`}>
-            <span>{row.userId}</span>
-            <span>{row.totalScore}</span>
-            {actionsCol?.cellRenderer &&
-              actionsCol.cellRenderer({ data: row })}
-          </div>
-        ))}
+        {props.rowData.map((row) => {
+          const rowId = props.getRowId?.({ data: row }) ?? row.userId;
+          return (
+            <div key={rowId} data-testid={`grid-row-${rowId}`}>
+              <span>{row.userId}</span>
+              <span>{row.totalScore}</span>
+              {actionsCol?.cellRenderer &&
+                actionsCol.cellRenderer({ data: row })}
+            </div>
+          );
+        })}
       </div>
     );
   },
@@ -267,7 +272,7 @@ describe('RiskDashboardPage', () => {
     it('renders user risk table rows for all users', async () => {
       renderPage();
       await waitFor(() => {
-        expect(screen.getByTestId('siem-data-grid')).toBeInTheDocument();
+        expect(screen.getAllByTestId('siem-data-grid').length).toBeGreaterThan(0);
         expect(screen.getByTestId('grid-row-user-alpha')).toBeInTheDocument();
         expect(screen.getByTestId('grid-row-user-beta')).toBeInTheDocument();
         expect(screen.getByTestId('grid-row-user-gamma')).toBeInTheDocument();
@@ -489,11 +494,13 @@ describe('RiskDashboardPage', () => {
       });
 
       expect(screen.getByRole('link', { name: /mission control/i })).toHaveAttribute('href', '/dashboard');
-      expect(screen.getByRole('link', { name: /search & hunt/i })).toHaveAttribute('href', '/search');
+      expect(screen.getAllByRole('link', { name: /search & hunt/i })[0]).toHaveAttribute('href', '/search');
       expect(screen.getByRole('link', { name: /^entities$/i })).toHaveAttribute('href', '/entities');
       expect(screen.getByRole('link', { name: /hive intelligence/i })).toHaveAttribute('href', '/intelligence');
       expect(screen.getByRole('link', { name: /investigations/i })).toHaveAttribute('href', '/investigations');
       expect(screen.getByRole('link', { name: /incidents/i })).toHaveAttribute('href', '/incidents');
+      expect(screen.getByRole('link', { name: /detection engineering/i })).toHaveAttribute('href', '/detection-rules');
+      expect(screen.getByTestId('ueba-risk-model-honesty')).toHaveTextContent(/not a trained ML model/i);
     });
   });
 });

@@ -24,6 +24,9 @@ describe('detection rules UX honesty (Prompt 16)', () => {
     expect(page).toContain('ROUTES.ALERTS');
     expect(page).toContain('ROUTES.CORRELATED_FINDINGS');
     expect(page).toContain('ROUTES.RESPONSE_PLAYBOOKS');
+    expect(page).toContain('ROUTES.UEBA_RISK');
+    expect(page).toContain("setView('ueba')");
+    expect(page).toContain('DetectionUebaPanel');
     expect(page).toContain('Platform Administrator');
     expect(page).not.toContain('detection-kpis');
   });

@@ -12,6 +12,11 @@ import { Link } from 'react-router-dom';
 
 import { SiemDataGrid } from '@/components/siem-data-grid/SiemDataGrid';
 import { ROW_HEIGHTS, useRowDensity } from '@/hooks/useRowDensity';
+import {
+  uebaEntityDossierPath,
+  uebaHuntPath,
+  uebaTimelinePath,
+} from '@/services/ueba.capabilities';
 import type { UserRiskDTO } from '@/types/ueba.types';
 
 export interface UserRiskTableProps {
@@ -84,7 +89,7 @@ export function UserRiskTable({
       },
       {
         headerName: 'Actions',
-        flex: 2,
+        flex: 2.4,
         sortable: false,
         filter: false,
         cellRenderer: (params: ICellRendererParams<UserRiskDTO>) => {
@@ -92,14 +97,14 @@ export function UserRiskTable({
           return (
             <RowActions
               userId={params.data.userId}
-              onViewTimeline={handleViewTimeline}
-              onCreateIncident={handleCreateIncident}
+              onViewTimeline={onViewTimeline ? handleViewTimeline : undefined}
+              onCreateIncident={onCreateIncident ? handleCreateIncident : undefined}
             />
           );
         },
       },
     ],
-    [handleCreateIncident, handleViewTimeline],
+    [handleCreateIncident, handleViewTimeline, onCreateIncident, onViewTimeline],
   );
 
   const rowCount = data?.length ?? 0;
@@ -151,27 +156,27 @@ export function UserRiskTable({
 
 interface RowActionsProps {
   userId: string;
-  onViewTimeline: (userId: string) => void;
-  onCreateIncident: (userId: string) => void;
+  onViewTimeline?: (userId: string) => void;
+  onCreateIncident?: (userId: string) => void;
 }
 
 function RowActions({ userId, onViewTimeline, onCreateIncident }: RowActionsProps): JSX.Element {
   return (
-    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', height: '100%' }}>
-      <button
-        type="button"
-        className="ha-btn ha-btn--tertiary ha-btn--sm"
-        onClick={() => onViewTimeline(userId)}
-      >
-        View Timeline
-      </button>
-      <button
-        type="button"
-        className="ha-btn ha-btn--tertiary ha-btn--sm"
-        onClick={() => onCreateIncident(userId)}
-      >
-        Create Incident
-      </button>
+    <div className="ueba-risk-table__actions">
+      <Link to={uebaHuntPath(userId)}>Hunt</Link>
+      <Link to={uebaEntityDossierPath(userId)}>Entity</Link>
+      {onViewTimeline ? (
+        <button type="button" onClick={() => onViewTimeline(userId)}>
+          View Timeline
+        </button>
+      ) : (
+        <Link to={uebaTimelinePath(userId)}>View Timeline</Link>
+      )}
+      {onCreateIncident && (
+        <button type="button" onClick={() => onCreateIncident(userId)}>
+          Create Incident
+        </button>
+      )}
     </div>
   );
 }

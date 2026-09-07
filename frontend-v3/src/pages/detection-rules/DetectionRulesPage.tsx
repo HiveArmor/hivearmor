@@ -6,13 +6,14 @@ import type { AgGridReact } from 'ag-grid-react';
 import {
   Activity, AlertTriangle, BarChart3, CheckCircle2, ChevronLeft, ChevronRight,
   CircleSlash2, Clock3, Columns3, Filter, GitBranch, Import, Library,
-  Plus, RefreshCw, Search, ShieldAlert, SlidersHorizontal, TestTube2, X, Zap,
+  Plus, RefreshCw, Search, ShieldAlert, SlidersHorizontal, TestTube2, UserSearch, X, Zap,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
 import { createColumnDefs } from './columnDefs';
 import { BaselineExceptionPanel } from './components/BaselineExceptionPanel';
 import { DetectionPipelineHealthStrip } from './components/DetectionPipelineHealthStrip';
+import { DetectionUebaPanel } from './components/DetectionUebaPanel';
 import { RuleTuningPanel } from './components/RuleTuningPanel';
 import { DetectionMonitoringView } from './DetectionMonitoringView';
 import {
@@ -52,7 +53,7 @@ export const DETECTION_RULES_JOB_SENTENCE =
 
 export const DETECTION_MANAGE_DENIED_TITLE = 'Required permission: SOC Manager or Platform Administrator';
 
-type RuleView = 'rules' | 'monitoring' | 'coverage' | 'test' | 'baseline';
+type RuleView = 'rules' | 'monitoring' | 'coverage' | 'test' | 'baseline' | 'ueba';
 const DetectionCoverageView = lazy(() => import('./DetectionCoverageView'));
 const DetectionImportPanel = lazy(() => import('./DetectionImportPanel'));
 const DetectionTestConsole = lazy(() => import('./DetectionTestConsole'));
@@ -329,6 +330,8 @@ export function DetectionRulesPage(): JSX.Element {
         <span aria-hidden="true">·</span>
         <Link to={ROUTES.RESPONSE_PLAYBOOKS}>Playbooks</Link>
         <span aria-hidden="true">·</span>
+        <Link to={ROUTES.UEBA_RISK}>UEBA Risk</Link>
+        <span aria-hidden="true">·</span>
         <span className="detection-page__access" title="Requires Analyst, SOC Manager, or Platform Administrator">Analyst · SOC Manager · Platform Administrator</span>
       </p>
 
@@ -348,6 +351,7 @@ export function DetectionRulesPage(): JSX.Element {
         <button type="button" aria-current={view === 'coverage' ? 'page' : undefined} onClick={() => { resetFilters(); setView('coverage'); }}><BarChart3 size={14} /> ATT&amp;CK coverage <span>{summary.coverageTechniques}</span></button>
         <button type="button" aria-current={view === 'test' ? 'page' : undefined} disabled={!canManage} title={canManage ? 'Open secure test console' : DETECTION_MANAGE_DENIED_TITLE} onClick={() => { if (!canManage) return; resetFilters(); setTestRuleId(undefined); setView('test'); }}><TestTube2 size={14} /> Test console</button>
         <button type="button" aria-current={view === 'baseline' ? 'page' : undefined} onClick={() => { resetFilters(); setView('baseline'); }} title="Author baseline anomaly exceptions (ruleId baseline:anomaly)"><SlidersHorizontal size={14} /> Baseline exceptions</button>
+        <button type="button" aria-current={view === 'ueba' ? 'page' : undefined} onClick={() => { resetFilters(); setView('ueba'); }} title="Peer-group z-score deviations — not a trained ML model"><UserSearch size={14} /> UEBA</button>
       </nav>
 
       {actionMessage && <div className="detection-action-message" role="status"><CheckCircle2 size={14} /><span>{actionMessage}</span><button type="button" onClick={() => setActionMessage(null)} aria-label="Dismiss message"><X size={13} /></button></div>}
@@ -440,6 +444,11 @@ export function DetectionRulesPage(): JSX.Element {
             draftDeniedTitle={DET_EXCEPTION_DRAFT_DENIED_TITLE}
             activateDeniedTitle={DET_EXCEPTION_ACTIVATE_DENIED_TITLE}
           />
+        </main>
+      )}
+      {view === 'ueba' && (
+        <main className="detection-baseline-workspace" data-testid="detection-ueba-workspace">
+          <DetectionUebaPanel />
         </main>
       )}
 

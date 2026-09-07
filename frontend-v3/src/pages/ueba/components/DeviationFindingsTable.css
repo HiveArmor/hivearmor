@@ -1,0 +1,73 @@
+.ueba-deviation-table {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.ueba-deviation-table__header {
+  display: flex;
+  flex: none;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.ueba-deviation-table__header h2 {
+  margin: 0;
+  font-size: var(--ha-text-md);
+  font-weight: 600;
+}
+
+.ueba-deviation-table__count {
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-xs);
+}
+
+.ueba-deviation-table__inline-state {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-base);
+  background: var(--ha-surface-raised);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+}
+
+.ueba-deviation-table__inline-state strong {
+  color: var(--ha-text-primary);
+}
+
+.ueba-deviation-table__inline-state a {
+  color: var(--ha-primary);
+}
+
+.ueba-deviation-table__grid {
+  min-height: 280px;
+  flex: 1;
+}
+
+.ueba-deviation-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: 100%;
+  font-size: var(--ha-text-xs);
+}
+
+.ueba-deviation-actions a,
+.ueba-deviation-actions button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ha-primary);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: none;
+}

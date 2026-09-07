@@ -22,9 +22,15 @@ import { UserRiskTable } from './UserRiskTable';
 import { HaChart } from '@/components/ha-chart/HaChart';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { useHaThemeTokens } from '@/hooks/useHaThemeTokens';
+import { DeviationFindingsTable } from '@/pages/ueba/components/DeviationFindingsTable';
 import { EntityTimelinePage } from '@/pages/ueba/entity-timeline/EntityTimelinePage';
-import { getAnomalyCounts, getRiskScores, getRiskTrend } from '@/services/ueba.service';
-import type { AnomalyCountsDTO, RiskTrendPointDTO, UserRiskDTO } from '@/types/ueba.types';
+import {
+  UEBA_ALERT_PIVOT_NOTE,
+  UEBA_API_SCOPE_NOTE,
+  UEBA_MODEL_HONESTY,
+} from '@/services/ueba.capabilities';
+import { getAnomalyCounts, getDeviations, getRiskScores, getRiskTrend, uebaFixtureMode } from '@/services/ueba.service';
+import type { AnomalyCountsDTO, HaUebaDeviationDTO, RiskTrendPointDTO, UserRiskDTO } from '@/types/ueba.types';
 
 import './RiskDashboardPage.css';
 
@@ -52,6 +58,14 @@ function useRiskTrend() {
   return useQuery<RiskTrendPointDTO[], Error>({
     queryKey: ['ueba', 'risk-trend'],
     queryFn: getRiskTrend,
+    staleTime: 30_000,
+  });
+}
+
+function useDeviations() {
+  return useQuery<HaUebaDeviationDTO[], Error>({
+    queryKey: ['ueba', 'deviations'],
+    queryFn: getDeviations,
     staleTime: 30_000,
   });
 }
@@ -85,6 +99,12 @@ export function RiskDashboardPage(): JSX.Element {
     isError: countsError,
     refetch: refetchCounts,
   } = useAnomalyCounts();
+  const {
+    data: deviations,
+    isLoading: deviationsLoading,
+    isError: deviationsError,
+    refetch: refetchDeviations,
+  } = useDeviations();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerUserId, setDrawerUserId] = useState('');
@@ -118,26 +138,39 @@ export function RiskDashboardPage(): JSX.Element {
     void refetchScores();
     void refetchTrend();
     void refetchCounts();
-  }, [refetchCounts, refetchScores, refetchTrend]);
+    void refetchDeviations();
+  }, [refetchCounts, refetchDeviations, refetchScores, refetchTrend]);
 
   const retryFailed = useCallback(() => {
     if (scoresError) void refetchScores();
     if (trendError) void refetchTrend();
     if (countsError) void refetchCounts();
-  }, [countsError, refetchCounts, refetchScores, refetchTrend, scoresError, trendError]);
+    if (deviationsError) void refetchDeviations();
+  }, [
+    countsError,
+    deviationsError,
+    refetchCounts,
+    refetchDeviations,
+    refetchScores,
+    refetchTrend,
+    scoresError,
+    trendError,
+  ]);
 
   const scoreRows = riskScores ?? [];
   const trendRows = riskTrend ?? [];
-  const hasPartialError = scoresError || trendError || countsError;
+  const hasPartialError = scoresError || trendError || countsError || deviationsError;
 
   const allPanelsEmpty = useMemo(() => {
-    if (scoresLoading || trendLoading || countsLoading) return false;
+    if (scoresLoading || trendLoading || countsLoading || deviationsLoading) return false;
     if (hasPartialError) return false;
     const anomalyTotal = (anomalyCounts?.tier10 ?? 0) + (anomalyCounts?.tier25 ?? 0) + (anomalyCounts?.tier50 ?? 0);
-    return scoreRows.length === 0 && trendRows.length === 0 && anomalyTotal === 0;
+    return scoreRows.length === 0 && trendRows.length === 0 && anomalyTotal === 0 && (deviations ?? []).length === 0;
   }, [
     anomalyCounts,
     countsLoading,
+    deviations,
+    deviationsLoading,
     hasPartialError,
     scoreRows.length,
     scoresLoading,
@@ -196,7 +229,23 @@ export function RiskDashboardPage(): JSX.Element {
         <Link to="/investigations">Investigations</Link>
         <span aria-hidden="true">·</span>
         <Link to="/incidents">Incidents</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/detection-rules">Detection Engineering</Link>
       </p>
+
+      {uebaFixtureMode && (
+        <div className="ueba-risk-page__fixture" role="status" data-testid="ueba-risk-fixture">
+          <strong>Design fixture:</strong>
+          <span>Fictional z-score rows are enabled for visual review. Production never receives these records.</span>
+        </div>
+      )}
+
+      <div className="ueba-risk-page__model" role="status" data-testid="ueba-risk-model-honesty">
+        <strong>Not a trained model.</strong>
+        <span>{UEBA_MODEL_HONESTY}</span>
+        <span>{UEBA_API_SCOPE_NOTE}</span>
+        <span>{UEBA_ALERT_PIVOT_NOTE}</span>
+      </div>
 
       {allPanelsEmpty && (
         <div className="ueba-risk-page__honesty" role="status" data-testid="ueba-risk-empty-honesty">
@@ -233,6 +282,14 @@ export function RiskDashboardPage(): JSX.Element {
             onViewTimeline={openTimelineDrawer}
             onCreateIncident={handleCreateIncident}
           />
+          <div className="ueba-risk-page__deviations" data-testid="ueba-deviation-panel">
+            <DeviationFindingsTable
+              data={deviations}
+              isLoading={deviationsLoading}
+              isError={deviationsError}
+              onViewTimeline={openTimelineDrawer}
+            />
+          </div>
         </div>
 
         <aside className="ueba-risk-page__secondary" aria-label="UEBA risk summary charts">

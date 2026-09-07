@@ -228,6 +228,7 @@
 /* ATT&CK coverage */
 .detection-coverage__framework { display: inline-flex; min-height: 30px; align-items: center; gap: 6px; margin-left: auto; padding: 4px 8px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-elevated); color: var(--ha-foreground-secondary); }
 .detection-coverage__framework strong { padding-left: 6px; border-left: 1px solid var(--ha-border-default); color: var(--ha-action-secondary); font: 9px var(--ha-font-mono); }
+.detection-coverage__ueba-link { display: inline-flex; min-height: 30px; align-items: center; padding: 4px 8px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control); background: var(--ha-surface-elevated); color: var(--ha-action-secondary); font: var(--ha-type-metadata); text-decoration: none; }
 .detection-coverage__workspace { position: relative; display: grid; min-height: 0; flex: 1; grid-template-columns: minmax(0, 1fr) 274px; overflow: hidden; }
 .detection-coverage__workspace[data-detail-open='true'] { grid-template-columns: minmax(0, 1fr) 340px; }
 .detection-coverage__workspace[data-detail-open='true'] .detection-coverage__priorities { display: none; }

@@ -190,7 +190,7 @@
   min-height: 50vh;
   flex: 1;
   flex-direction: column;
-  overflow: hidden;
+  overflow: auto;
   border-right: 1px solid var(--ha-border);
 }
 
@@ -310,6 +310,71 @@
   min-height: 0;
   flex: 1;
   min-height: 50vh;
+}
+
+.ueba-risk-table__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  height: 100%;
+  font-size: var(--ha-text-xs);
+}
+
+.ueba-risk-table__actions a,
+.ueba-risk-table__actions button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ha-primary);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: none;
+}
+
+.ueba-risk-page__model {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ha-border);
+  background: color-mix(in srgb, var(--ha-high) 10%, transparent);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+}
+
+.ueba-risk-page__model strong {
+  color: var(--ha-text-primary);
+}
+
+.ueba-risk-page__fixture {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ha-border);
+  background: color-mix(in srgb, var(--ha-intelligence) 10%, transparent);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+}
+
+.ueba-risk-page__fixture strong {
+  color: var(--ha-text-primary);
+}
+
+.ueba-risk-page__deviations {
+  display: flex;
+  min-height: 240px;
+  flex: none;
+  flex-direction: column;
+  border-top: 1px solid var(--ha-border);
+}
+
+.ueba-risk-page__deviations .ueba-deviation-table {
+  border-right: 0;
 }
 
 @media (max-width: 1100px) {
