@@ -170,9 +170,12 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.POST, "/api/ha-telemetry/**").authenticated()
                         .requestMatchers(HttpMethod.PUT,  "/api/ha-telemetry/**").authenticated()
                         .requestMatchers(HttpMethod.GET,  "/api/ha-telemetry/**").authenticated()
-                        // Agent policy fetch + ACK (BE-POL-01) — device identity or operator JWT.
+                        // Agent policy fetch + ACK (BE-POL-01/02) — device identity or operator JWT.
                         .requestMatchers(HttpMethod.POST, "/api/agent-policies/report-state").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/agent-policies/sync-on-connect").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/agent-policies/*").authenticated()
+                        // Rule push ACK (BE-POL-02) — device identity or Admin|SOC Manager JWT.
+                        .requestMatchers(HttpMethod.POST, "/api/alert-response-rules/push-status/*/ack").authenticated()
                         // Enrollment administration is intentionally narrower than the
                         // legacy catch-all API rule and must remain reachable to the
                         // dedicated SOC Manager authority as well as administrators.
