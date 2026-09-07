@@ -14,11 +14,14 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Normalizes and validates agent policy {@code policyConfig} as schema v1.
+ * Normalizes and validates agent policy {@code policyConfig} as schema v1 / v1.1.
  *
  * <p>SoT for APPLY_POLICY is {@code /api/agent-policies} ({@code UtmAgentPolicy.policyConfig}).
  * Ha EDR policies ({@code /api/ha-edr/policies}) remain a separate UI plane; use
  * {@link #fromHaColumns} to project Ha {@code filePaths} into schema v1 when bridging.
+ *
+ * <p>Schema v1.1 adds optional {@code telemetry.sca_interval_hours} /
+ * {@code telemetry.sbom_interval_hours} while keeping wire {@code schema_version: 1}.
  *
  * <p>STAGING CANDIDATE — not PRODUCTION READY.
  */
@@ -34,15 +37,16 @@ public class AgentPolicySchemaService {
     }
 
     /**
-     * Ensures stored/served {@code policyConfig} is valid schema v1 JSON.
+     * Ensures stored/served {@code policyConfig} is valid schema v1(+telemetry) JSON.
      * Empty / blank / {@code {}} yields a minimal defaults document (agent-safe).
      *
-     * @throws IllegalArgumentException when JSON is malformed or violates schema v1 rules
+     * @throws IllegalArgumentException when JSON is malformed or violates schema rules
      */
     public String normalizePolicyConfig(String raw) {
         try {
             AgentPolicySchemaV1 doc = parseOrDefault(raw);
             validate(doc);
+            normalizeTelemetry(doc);
             return objectMapper.writeValueAsString(doc);
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("policyConfig must be valid JSON: " + e.getOriginalMessage());
@@ -98,7 +102,7 @@ public class AgentPolicySchemaService {
         }
         if (processMonitor != null) {
             // Process monitor maps to no dedicated schema key; keep collectors as-is.
-            // Documented Ha→Utm gap: processMonitor is Ha-only until schema v1.1.
+            // Documented Ha→Utm gap: processMonitor is Ha-only until a future schema key.
         }
         doc.setCollectors(collectors);
         try {
@@ -141,7 +145,8 @@ public class AgentPolicySchemaService {
         if (doc.getSchemaVersion() != AgentPolicySchemaV1.SCHEMA_VERSION) {
             throw new IllegalArgumentException(
                 "unsupported policy schema_version " + doc.getSchemaVersion()
-                    + " (backend emits " + AgentPolicySchemaV1.SCHEMA_VERSION + ")");
+                    + " (backend emits " + AgentPolicySchemaV1.SCHEMA_VERSION
+                    + "; feature level " + AgentPolicySchemaV1.SCHEMA_FEATURE + ")");
         }
         if (doc.getFim() != null) {
             String mode = doc.getFim().getMode();
@@ -165,6 +170,51 @@ public class AgentPolicySchemaService {
                 }
             }
         }
+        if (doc.getTelemetry() != null) {
+            validateInterval("telemetry.sca_interval_hours", doc.getTelemetry().getScaIntervalHours());
+            validateInterval("telemetry.sbom_interval_hours", doc.getTelemetry().getSbomIntervalHours());
+        }
+    }
+
+    /**
+     * When telemetry is present, fill missing interval fields with the 6h default.
+     * Absent telemetry stays omitted (agent keeps local hardcoded cadence).
+     */
+    void normalizeTelemetry(AgentPolicySchemaV1 doc) {
+        AgentPolicySchemaV1.TelemetrySection telemetry = doc.getTelemetry();
+        if (telemetry == null) {
+            return;
+        }
+        if (telemetry.getScaIntervalHours() == null) {
+            telemetry.setScaIntervalHours(AgentPolicySchemaV1.DEFAULT_TELEMETRY_INTERVAL_HOURS);
+        }
+        if (telemetry.getSbomIntervalHours() == null) {
+            telemetry.setSbomIntervalHours(AgentPolicySchemaV1.DEFAULT_TELEMETRY_INTERVAL_HOURS);
+        }
+        telemetry.setScaIntervalHours(clampInterval(telemetry.getScaIntervalHours()));
+        telemetry.setSbomIntervalHours(clampInterval(telemetry.getSbomIntervalHours()));
+    }
+
+    private static void validateInterval(String field, Integer hours) {
+        if (hours == null) {
+            return;
+        }
+        if (hours < AgentPolicySchemaV1.MIN_TELEMETRY_INTERVAL_HOURS
+            || hours > AgentPolicySchemaV1.MAX_TELEMETRY_INTERVAL_HOURS) {
+            throw new IllegalArgumentException(
+                field + " must be between " + AgentPolicySchemaV1.MIN_TELEMETRY_INTERVAL_HOURS
+                    + " and " + AgentPolicySchemaV1.MAX_TELEMETRY_INTERVAL_HOURS);
+        }
+    }
+
+    private static int clampInterval(int hours) {
+        if (hours < AgentPolicySchemaV1.MIN_TELEMETRY_INTERVAL_HOURS) {
+            return AgentPolicySchemaV1.MIN_TELEMETRY_INTERVAL_HOURS;
+        }
+        if (hours > AgentPolicySchemaV1.MAX_TELEMETRY_INTERVAL_HOURS) {
+            return AgentPolicySchemaV1.MAX_TELEMETRY_INTERVAL_HOURS;
+        }
+        return hours;
     }
 
     static AgentPolicySchemaV1 emptyDefaults() {
