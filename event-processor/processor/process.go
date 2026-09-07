@@ -39,12 +39,17 @@ func Analyze(logMsg *plugins.Log) ProcessingOutcome {
 
 // BindTenant resolves event.TenantPrefix from TenantId before detection and persist.
 // Empty TenantId stays unscoped (global daily index). Lookup errors fail closed.
+// DET-MSSP-002 — when $WORK_DIR/tenants/{id}/rules exists, load that overlay tree.
+// OpenSearch index pattern v3-hive-<type>-YYYY.MM.DD is unchanged.
 func BindTenant(event *plugins.Event) error {
 	if event == nil {
 		return nil
 	}
 	if err := plugins.ResolveAndSetTenantPrefix(context.Background(), event); err != nil {
 		return fmt.Errorf("tenant prefix resolve failed")
+	}
+	if err := rulesengine.BindTenantTree(config.WorkDir, event.TenantId); err != nil {
+		return fmt.Errorf("tenant detection tree load failed")
 	}
 	return nil
 }

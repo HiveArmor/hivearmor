@@ -36,6 +36,16 @@ class DetectionPackScopeTest {
     }
 
     @Test
+    void honestyStatesRestVisibleUntilTenantWorkdirsExist() {
+        assertThat(DetectionPackScope.HONESTY)
+            .contains("REST-visible")
+            .contains("tenant_id IS NULL")
+            .contains("$WORK_DIR/tenants/{id}/rules")
+            .contains("not engine-enforced until then")
+            .contains("v3-hive-<type>-YYYY.MM.DD");
+    }
+
+    @Test
     void createStampsPlatformOrOwningTenant() {
         assertThat(DetectionPackScope.stampNotNull(null)).isEqualTo(0L);
         assertThat(DetectionPackScope.stampNotNull(0L)).isEqualTo(0L);

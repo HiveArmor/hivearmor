@@ -10,7 +10,7 @@ const PACK_TENANT_KEY = 'ha_detection_pack_tenant_id';
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
 
 export const DETECTION_PACK_HONESTY =
-  'STAGING CANDIDATE — MSSP detection packs are tenant-scoped. Switching tenants never lists another tenant’s custom rules or exceptions. The platform pack stays shared. Event-processor YAML sync still writes only platform (null tenant_id) rules into the shared workdir.';
+  'STAGING CANDIDATE — tenant packs are REST-visible. Shared engine YAML (rules + exceptions.yaml) includes only platform rows (tenant_id IS NULL). Per-tenant trees are written to $WORK_DIR/tenants/{id}/rules and loaded by BindTenant when that workdir exists; they are not engine-enforced until then. OpenSearch index pattern remains v3-hive-<type>-YYYY.MM.DD.';
 
 export interface DetectionPackOption {
   tenantId: number;

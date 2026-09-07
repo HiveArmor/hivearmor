@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  DETECTION_PACK_HONESTY,
   FIXTURE_DETECTION_PACKS,
   isDetectionContentVisible,
   PLATFORM_DETECTION_PACK_ID,
@@ -11,6 +12,14 @@ describe('detectionPack.service isolation', () => {
     expect(FIXTURE_DETECTION_PACKS.map((pack) => pack.prefix)).toEqual(['platform', 'acme', 'cwm']);
     expect(FIXTURE_DETECTION_PACKS[1]?.customRuleNames).toContain('ACME-CUSTOM-VPN-GEO-ANOMALY');
     expect(FIXTURE_DETECTION_PACKS[2]?.customRuleNames).toContain('CWM-CUSTOM-OT-PROTOCOL-ANOMALY');
+  });
+
+  it('states tenant packs are REST-visible and not engine-enforced until workdirs exist', () => {
+    expect(DETECTION_PACK_HONESTY).toMatch(/REST-visible/i);
+    expect(DETECTION_PACK_HONESTY).toMatch(/tenant_id IS NULL/);
+    expect(DETECTION_PACK_HONESTY).toMatch(/\$WORK_DIR\/tenants\/\{id\}\/rules/);
+    expect(DETECTION_PACK_HONESTY).toMatch(/not engine-enforced until then/i);
+    expect(DETECTION_PACK_HONESTY).toMatch(/v3-hive-<type>-YYYY\.MM\.DD/);
   });
 
   it('never leaks tenant A custom content to tenant B or the platform selector', () => {

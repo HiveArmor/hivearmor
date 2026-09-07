@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/threatwinds/go-sdk/catcher"
@@ -75,16 +74,20 @@ type ExpressionBackend struct {
 }
 
 type ConfigState struct {
-	AssetsLastUpdate      time.Time
-	AssetsCount           int
-	RulesLastUpdate       time.Time
-	RulesCount            int
-	FiltersLastUpdate     time.Time
-	FiltersCount          int
-	PatternsLastUpdate    time.Time
-	PatternsCount         int
-	ExceptionsLastUpdate  time.Time
-	ExceptionsCount       int
+	AssetsLastUpdate             time.Time
+	AssetsCount                  int
+	RulesLastUpdate              time.Time
+	RulesCount                   int
+	FiltersLastUpdate            time.Time
+	FiltersCount                 int
+	PatternsLastUpdate           time.Time
+	PatternsCount                int
+	ExceptionsLastUpdate         time.Time
+	ExceptionsCount              int
+	TenantRulesLastUpdate        time.Time
+	TenantRulesCount             int
+	TenantExceptionsLastUpdate   time.Time
+	TenantExceptionsCount        int
 }
 
 // DetectionException is an active FP suppression synced to the event-processor (DET-FP-001).
@@ -443,6 +446,13 @@ func main() {
 				return
 			}
 
+			err = syncTenantWorkdirs(db)
+			if err != nil {
+				_ = catcher.Error("failed to sync tenant detection workdirs", err, map[string]any{"process": "plugin_com.hivearmor.config"})
+				time.Sleep(30 * time.Second)
+				return
+			}
+
 			err = writeTenant(tenant)
 			if err != nil {
 				_ = catcher.Error("failed to write tenant", err, map[string]any{"process": "plugin_com.hivearmor.config"})
@@ -482,7 +492,9 @@ func hasChanges(db *sql.DB, state *ConfigState) (bool, ConfigState, error) {
 		{"SELECT MAX(rule_last_update) FROM hive_correlation_rules WHERE tenant_id IS NULL", "SELECT COUNT(*) FROM hive_correlation_rules WHERE rule_active = true AND tenant_id IS NULL", &newState.RulesLastUpdate, &newState.RulesCount, state.RulesLastUpdate, state.RulesCount},
 		{"SELECT MAX(updated_at) FROM hive_logstash_filter", "SELECT COUNT(*) FROM hive_logstash_filter WHERE is_active = true", &newState.FiltersLastUpdate, &newState.FiltersCount, state.FiltersLastUpdate, state.FiltersCount},
 		{"SELECT MAX(last_update) FROM hive_regex_pattern", "SELECT COUNT(*) FROM hive_regex_pattern", &newState.PatternsLastUpdate, &newState.PatternsCount, state.PatternsLastUpdate, state.PatternsCount},
-		{"SELECT MAX(updated_at) FROM ha_detection_exception", "SELECT COUNT(*) FROM ha_detection_exception WHERE active = true", &newState.ExceptionsLastUpdate, &newState.ExceptionsCount, state.ExceptionsLastUpdate, state.ExceptionsCount},
+		{platformExceptionMaxSQL, platformExceptionCountSQL, &newState.ExceptionsLastUpdate, &newState.ExceptionsCount, state.ExceptionsLastUpdate, state.ExceptionsCount},
+		{tenantRulesMaxSQL, tenantRulesCountSQL, &newState.TenantRulesLastUpdate, &newState.TenantRulesCount, state.TenantRulesLastUpdate, state.TenantRulesCount},
+		{tenantExceptionMaxSQL, tenantExceptionCountSQL, &newState.TenantExceptionsLastUpdate, &newState.TenantExceptionsCount, state.TenantExceptionsLastUpdate, state.TenantExceptionsCount},
 	}
 
 	for _, q := range queries {
@@ -490,7 +502,7 @@ func hasChanges(db *sql.DB, state *ConfigState) (bool, ConfigState, error) {
 		err := db.QueryRow(q.timestampQuery).Scan(&lastUpdate)
 		if err != nil {
 			// Soft-fail when DET-FP exception table is not yet migrated.
-			if strings.Contains(err.Error(), "ha_detection_exception") {
+			if isSoftSchemaErr(err) {
 				continue
 			}
 			return false, newState, err
@@ -501,7 +513,7 @@ func hasChanges(db *sql.DB, state *ConfigState) (bool, ConfigState, error) {
 
 		err = db.QueryRow(q.countQuery).Scan(q.targetCount)
 		if err != nil {
-			if strings.Contains(err.Error(), "ha_detection_exception") {
+			if isSoftSchemaErr(err) {
 				continue
 			}
 			return false, newState, err
@@ -641,8 +653,19 @@ func getAssets(db *sql.DB) ([]Asset, error) {
 }
 
 func getRules(db *sql.DB) ([]Rule, error) {
-	rows, err := db.Query("SELECT id,rule_name,rule_confidentiality,rule_integrity,rule_availability,rule_category,rule_technique,rule_description,rule_references_def,rule_definition_def,rule_adversary,rule_deduplicate_by_def,rule_after_events_def,rule_group_by_def FROM hive_correlation_rules WHERE rule_active = true AND tenant_id IS NULL")
+	return queryRules(db, "SELECT id,rule_name,rule_confidentiality,rule_integrity,rule_availability,rule_category,rule_technique,rule_description,rule_references_def,rule_definition_def,rule_adversary,rule_deduplicate_by_def,rule_after_events_def,rule_group_by_def FROM hive_correlation_rules WHERE rule_active = true AND tenant_id IS NULL")
+}
+
+func getRulesForTenant(db *sql.DB, tenantID int64) ([]Rule, error) {
+	return queryRules(db, tenantRulesSQL, tenantID)
+}
+
+func queryRules(db *sql.DB, query string, args ...any) ([]Rule, error) {
+	rows, err := db.Query(query, args...)
 	if err != nil {
+		if isSoftSchemaErr(err) {
+			return []Rule{}, nil
+		}
 		return nil, catcher.Error("failed to get rules", err, map[string]any{"process": "plugin_com.hivearmor.config"})
 	}
 
@@ -961,73 +984,9 @@ func writePatterns(patterns map[string]string) error {
 }
 
 func getActiveExceptions(db *sql.DB) ([]DetectionException, error) {
-	rows, err := db.Query(`SELECT id, rule_id, title, conditions_json FROM ha_detection_exception WHERE active = true ORDER BY id`)
-	if err != nil {
-		if strings.Contains(err.Error(), "ha_detection_exception") {
-			return []DetectionException{}, nil
-		}
-		return nil, catcher.Error("failed to get active detection exceptions", err, map[string]any{"process": "plugin_com.hivearmor.config"})
-	}
-	defer func() { _ = rows.Close() }()
-
-	out := make([]DetectionException, 0)
-	for rows.Next() {
-		var (
-			id              int64
-			ruleID          string
-			title           sql.NullString
-			conditionsJSON  string
-		)
-		if err := rows.Scan(&id, &ruleID, &title, &conditionsJSON); err != nil {
-			return nil, catcher.Error("failed to scan detection exception", err, map[string]any{"process": "plugin_com.hivearmor.config"})
-		}
-		conds := make([]DetectionExceptionCond, 0)
-		if strings.TrimSpace(conditionsJSON) != "" {
-			if err := json.Unmarshal([]byte(conditionsJSON), &conds); err != nil {
-				_ = catcher.Error("failed to unmarshal exception conditions", err, map[string]any{"id": id, "process": "plugin_com.hivearmor.config"})
-				continue
-			}
-		}
-		ex := DetectionException{
-			ID:         id,
-			RuleID:     ruleID,
-			Active:     true,
-			Conditions: conds,
-		}
-		if title.Valid {
-			ex.Title = title.String
-		}
-		out = append(out, ex)
-	}
-	return out, nil
+	return scanActiveExceptions(db, platformActiveExceptionsSQL)
 }
 
 func writeExceptions(exceptions []DetectionException) error {
-	folder, err := utils.MkdirJoin(plugins.WorkDir, "rules", "exceptions")
-	if err != nil {
-		return catcher.Error("cannot create exceptions directory", err, nil)
-	}
-
-	file, err := os.Create(folder.FileJoin("exceptions.yaml"))
-	if err != nil {
-		return catcher.Error("failed to create exceptions.yaml", err, map[string]any{"process": "plugin_com.hivearmor.config"})
-	}
-	defer func() {
-		if cerr := file.Close(); cerr != nil {
-			_ = catcher.Error("failed to close exceptions.yaml", cerr, map[string]any{"process": "plugin_com.hivearmor.config"})
-		}
-	}()
-
-	payload := exceptionsFile{Exceptions: exceptions}
-	if payload.Exceptions == nil {
-		payload.Exceptions = []DetectionException{}
-	}
-	b, err := yaml.Marshal(payload)
-	if err != nil {
-		return catcher.Error("failed to marshal exceptions", err, map[string]any{"process": "plugin_com.hivearmor.config"})
-	}
-	if _, err := file.Write(b); err != nil {
-		return catcher.Error("failed to write exceptions.yaml", err, map[string]any{"process": "plugin_com.hivearmor.config"})
-	}
-	return nil
+	return writeExceptionsTo(filepath.Join(plugins.WorkDir, "rules"), exceptions)
 }
