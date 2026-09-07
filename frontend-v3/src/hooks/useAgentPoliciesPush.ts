@@ -12,6 +12,7 @@ import {
   getPolicyStates,
   listAgentGroups,
   listUtmAgentPolicies,
+  pushPolicyToAgent,
   pushPolicyToGroup,
   unassignPolicyGroup,
   updateUtmAgentPolicy,
@@ -109,18 +110,35 @@ export function useUnassignPolicyGroup() {
   });
 }
 
+function invalidatePushEvidence(
+  queryClient: ReturnType<typeof useQueryClient>,
+  policyId: number,
+): void {
+  invalidatePolicies(queryClient);
+  void queryClient.invalidateQueries({
+    queryKey: [...UTM_AGENT_POLICIES_KEY, 'push-log', policyId],
+  });
+  void queryClient.invalidateQueries({
+    queryKey: [...UTM_AGENT_POLICIES_KEY, 'states', policyId],
+  });
+}
+
 export function usePushPolicyToGroup() {
   const queryClient = useQueryClient();
   return useMutation<void, Error, { policyId: number; groupId: number }>({
     mutationFn: ({ policyId, groupId }) => pushPolicyToGroup(policyId, groupId),
     onSuccess: (_data, variables) => {
-      invalidatePolicies(queryClient);
-      void queryClient.invalidateQueries({
-        queryKey: [...UTM_AGENT_POLICIES_KEY, 'push-log', variables.policyId],
-      });
-      void queryClient.invalidateQueries({
-        queryKey: [...UTM_AGENT_POLICIES_KEY, 'states', variables.policyId],
-      });
+      invalidatePushEvidence(queryClient, variables.policyId);
+    },
+  });
+}
+
+export function usePushPolicyToAgent() {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, { policyId: number; agentId: number }>({
+    mutationFn: ({ policyId, agentId }) => pushPolicyToAgent(policyId, agentId),
+    onSuccess: (_data, variables) => {
+      invalidatePushEvidence(queryClient, variables.policyId);
     },
   });
 }

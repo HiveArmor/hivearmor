@@ -1,14 +1,16 @@
 /**
- * Agent FIM Policy Console — Sensors / posture (FE-POL-01 / FE-SEC-01).
+ * Agent FIM Policy Console — Sensors / posture (FE-POL-01 / FE-SEC-01 / Next).
  *
- * Authors agent schema v1 into `/api/agent-policies` policyConfig and pushes
- * APPLY_POLICY via group assign + push. STAGING CANDIDATE — dual-plane note
- * vs Ha `/edr/policies` (legacy columns, no push).
+ * Authors agent schema v1 (+ v1.1 telemetry schedule fields) into
+ * `/api/agent-policies` policyConfig and pushes APPLY_POLICY via group assign,
+ * group push, or per-agent push. STAGING CANDIDATE — dual-plane note vs Ha
+ * `/edr/policies` (legacy columns, no push).
  */
 
 import { useCallback, useMemo, useState } from 'react';
 
 import { EmptyState, EmptyStateBody, Spinner } from '@patternfly/react-core';
+import { useQuery } from '@tanstack/react-query';
 import { FileSearch } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -25,6 +27,7 @@ import {
   useDeleteUtmAgentPolicy,
   usePolicyPushLog,
   usePolicyStates,
+  usePushPolicyToAgent,
   usePushPolicyToGroup,
   useUnassignPolicyGroup,
   useUpdateUtmAgentPolicy,
@@ -32,8 +35,10 @@ import {
 } from '@/hooks/useAgentPoliciesPush';
 import {
   COLLECTOR_KEYS,
+  DEFAULT_TELEMETRY_INTERVAL_HOURS,
   defaultAgentFimPolicyFormValues,
   formValuesToUtmPolicyDto,
+  MAX_TELEMETRY_INTERVAL_HOURS,
   utmPolicyToFormValues,
   validateAgentFimPolicyForm,
 } from '@/lib/agentPolicySchema';
@@ -43,13 +48,18 @@ import {
   AGENT_FIM_POLICY_DUAL_PLANE_NOTE,
   AGENT_FIM_POLICY_HONESTY_BANNER,
   AGENT_FIM_POLICY_JOB_SENTENCE,
-  AGENT_GROUPS_ADMIN_ONLY_NOTE,
+  AGENT_GROUPS_LIST_FALLBACK_NOTE,
   AGENT_POLICY_MUTATE_DENIED_TITLE,
+  AGENT_POLICY_PUSH_ON_CONNECT_NOTE,
   AGENT_POLICY_READ_DENIED_MESSAGE,
   ALLOW_SHELL_MUTATE_HINT,
+  canListAgentGroups,
   canMutateAgentPolicies,
   canReadAgentPolicies,
+  PER_AGENT_PUSH_HINT,
+  TELEMETRY_SCHEDULE_HINT,
 } from '@/services/agentPoliciesPush.capabilities';
+import { fetchSensors } from '@/services/sensorsService';
 import { useAuthStore } from '@/store/auth.store';
 import type {
   AgentFimPolicyFormValues,
@@ -84,6 +94,19 @@ function parseExcludeLine(raw: string): string[] {
 
 function excludeToLine(exclude: string[] | undefined): string {
   return (exclude ?? []).join(', ');
+}
+
+function pushErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) {
+    if (err.status === 404) {
+      return `${fallback} — endpoint not available yet (STAGING; backend may lag).`;
+    }
+    if (err.status === 403) {
+      return `${fallback} — access denied.`;
+    }
+    return err.message || fallback;
+  }
+  return err instanceof Error ? err.message : fallback;
 }
 
 // ---------------------------------------------------------------------------
@@ -270,6 +293,41 @@ function PolicyEditorForm({
         </div>
       </fieldset>
 
+      <fieldset className="agent-fim-policy-page__fieldset" disabled={!canMutate}>
+        <legend>Telemetry schedule (schema v1.1)</legend>
+        <p className="agent-fim-policy-page__hint">{TELEMETRY_SCHEDULE_HINT}</p>
+        <div className="agent-fim-policy-page__row">
+          <div className="agent-fim-policy-page__field">
+            <label htmlFor="fim-sca-interval">SCA interval (hours)</label>
+            <input
+              id="fim-sca-interval"
+              type="number"
+              min={1}
+              max={MAX_TELEMETRY_INTERVAL_HOURS}
+              step={1}
+              disabled={!canMutate}
+              value={values.scaIntervalHours}
+              placeholder={`Default ${DEFAULT_TELEMETRY_INTERVAL_HOURS}`}
+              onChange={(e) => update('scaIntervalHours', e.target.value)}
+            />
+          </div>
+          <div className="agent-fim-policy-page__field">
+            <label htmlFor="fim-sbom-interval">SBOM interval (hours)</label>
+            <input
+              id="fim-sbom-interval"
+              type="number"
+              min={1}
+              max={MAX_TELEMETRY_INTERVAL_HOURS}
+              step={1}
+              disabled={!canMutate}
+              value={values.sbomIntervalHours}
+              placeholder={`Default ${DEFAULT_TELEMETRY_INTERVAL_HOURS}`}
+              onChange={(e) => update('sbomIntervalHours', e.target.value)}
+            />
+          </div>
+        </div>
+      </fieldset>
+
       <div className="agent-fim-policy-page__shell">
         <HaSwitch
           id="fim-allow-shell"
@@ -325,13 +383,32 @@ function AssignPushDrawer({
   const assignMutation = useAssignPolicyGroup();
   const unassignMutation = useUnassignPolicyGroup();
   const pushMutation = usePushPolicyToGroup();
+  const pushAgentMutation = usePushPolicyToAgent();
   const [manualGroupId, setManualGroupId] = useState('');
+  const [manualAgentId, setManualAgentId] = useState('');
+
+  const sensorsQuery = useQuery({
+    queryKey: ['sensors', 'fim-policy-push'],
+    queryFn: async () => {
+      const { sensors } = await fetchSensors({ size: 1000 });
+      return sensors;
+    },
+    enabled: canMutate,
+    staleTime: 60_000,
+  });
 
   const assigned = policy.assignedGroupIds ?? [];
   const groups = groupsQuery.data ?? [];
+  const sensors = sensorsQuery.data ?? [];
 
   const resolveGroupId = (): number | null => {
     const n = Number.parseInt(manualGroupId.trim(), 10);
+    if (!Number.isFinite(n) || n <= 0) return null;
+    return n;
+  };
+
+  const resolveAgentId = (): number | null => {
+    const n = Number.parseInt(manualAgentId.trim(), 10);
     if (!Number.isFinite(n) || n <= 0) return null;
     return n;
   };
@@ -361,7 +438,29 @@ function AssignPushDrawer({
       await pushMutation.mutateAsync({ policyId, groupId });
       showSuccessToast(`Push accepted for group ${groupId}`);
     } catch (err) {
-      showErrorToast(err instanceof Error ? err.message : 'Push failed');
+      showErrorToast(pushErrorMessage(err, 'Push failed'));
+    }
+  };
+
+  const onPushAgent = async (): Promise<void> => {
+    if (policyId == null) return;
+    const agentId = resolveAgentId();
+    if (agentId == null) {
+      showErrorToast('Enter a valid agent id');
+      return;
+    }
+    if (
+      !window.confirm(
+        `Push policy v${policy.versionNum ?? '?'} to agent ${agentId}?`,
+      )
+    ) {
+      return;
+    }
+    try {
+      await pushAgentMutation.mutateAsync({ policyId, agentId });
+      showSuccessToast(`Push accepted for agent ${agentId}`);
+    } catch (err) {
+      showErrorToast(pushErrorMessage(err, 'Per-agent push failed'));
     }
   };
 
@@ -380,19 +479,22 @@ function AssignPushDrawer({
     groupsQuery.error instanceof ApiError &&
     groupsQuery.error.status === 403;
 
+  const showGroupPicker =
+    canListGroups && !groupsQuery.isError && groups.length > 0;
+
   return (
     <HaDrawer
       isOpen
       onClose={onClose}
       title={`Assign & push — ${policy.policyName}`}
     >
-      <p className="agent-fim-policy-page__hint">
-        Push uses group membership. There is no per-agent push endpoint on this API.
+      <p className="agent-fim-policy-page__hint" role="note">
+        {AGENT_POLICY_PUSH_ON_CONNECT_NOTE}
       </p>
 
       {(groupsForbidden || (!canListGroups && canMutate)) && (
         <p className="agent-fim-policy-page__hint" role="status">
-          {AGENT_GROUPS_ADMIN_ONLY_NOTE}
+          {AGENT_GROUPS_LIST_FALLBACK_NOTE}
         </p>
       )}
 
@@ -400,7 +502,7 @@ function AssignPushDrawer({
         <Spinner size="md" aria-label="Loading agent groups" />
       )}
 
-      {canListGroups && !groupsQuery.isError && groups.length > 0 && (
+      {showGroupPicker && (
         <div className="agent-fim-policy-page__field">
           <label htmlFor="fim-group-select">Agent group</label>
           <select
@@ -420,18 +522,22 @@ function AssignPushDrawer({
         </div>
       )}
 
-      <div className="agent-fim-policy-page__field">
-        <label htmlFor="fim-group-id">Group id</label>
-        <input
-          id="fim-group-id"
-          type="number"
-          min={1}
-          disabled={!canMutate}
-          value={manualGroupId}
-          onChange={(e) => setManualGroupId(e.target.value)}
-          placeholder="Numeric group id"
-        />
-      </div>
+      {(!showGroupPicker || canMutate) && (
+        <div className="agent-fim-policy-page__field">
+          <label htmlFor="fim-group-id">
+            {showGroupPicker ? 'Or enter group id' : 'Group id'}
+          </label>
+          <input
+            id="fim-group-id"
+            type="number"
+            min={1}
+            disabled={!canMutate}
+            value={manualGroupId}
+            onChange={(e) => setManualGroupId(e.target.value)}
+            placeholder="Numeric group id"
+          />
+        </div>
+      )}
 
       {canMutate && (
         <div className="agent-fim-policy-page__drawer-actions">
@@ -452,6 +558,59 @@ function AssignPushDrawer({
             isDisabled={pushMutation.isPending}
           >
             Push to group
+          </HaButton>
+        </div>
+      )}
+
+      <h3 className="agent-fim-policy-page__section-title">Push to agent</h3>
+      <p className="agent-fim-policy-page__hint">{PER_AGENT_PUSH_HINT}</p>
+
+      {canMutate && sensorsQuery.isLoading && (
+        <Spinner size="sm" aria-label="Loading sensors" />
+      )}
+
+      {canMutate && sensors.length > 0 && (
+        <div className="agent-fim-policy-page__field">
+          <label htmlFor="fim-sensor-select">Sensor</label>
+          <select
+            id="fim-sensor-select"
+            value={manualAgentId}
+            onChange={(e) => setManualAgentId(e.target.value)}
+          >
+            <option value="">Select a sensor…</option>
+            {sensors.map((s) => (
+              <option key={s.agentId} value={s.agentId}>
+                {s.hostname || s.agentId} (id {s.agentId}
+                {s.connectionStatus ? `, ${s.connectionStatus}` : ''})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="agent-fim-policy-page__field">
+        <label htmlFor="fim-agent-id">
+          {sensors.length > 0 ? 'Or enter agent id' : 'Agent id'}
+        </label>
+        <input
+          id="fim-agent-id"
+          type="number"
+          min={1}
+          disabled={!canMutate}
+          value={manualAgentId}
+          onChange={(e) => setManualAgentId(e.target.value)}
+          placeholder="Numeric agent id"
+        />
+      </div>
+
+      {canMutate && (
+        <div className="agent-fim-policy-page__drawer-actions">
+          <HaButton
+            variant="primary"
+            onClick={() => void onPushAgent()}
+            isDisabled={pushAgentMutation.isPending}
+          >
+            Push to agent
           </HaButton>
         </div>
       )}
@@ -538,7 +697,7 @@ export function AgentFimPolicyPage(): JSX.Element {
   const roles = useAuthStore((s) => s.user?.roles ?? []);
   const canRead = canReadAgentPolicies(roles);
   const canMutate = canMutateAgentPolicies(roles);
-  const canListGroups = roles.includes('ROLE_ADMIN');
+  const canListGroups = canListAgentGroups(roles);
 
   if (!canRead) {
     return (
