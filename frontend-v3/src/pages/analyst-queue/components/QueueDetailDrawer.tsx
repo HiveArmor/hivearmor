@@ -11,14 +11,22 @@ import { Link } from 'react-router-dom';
 
 
 import { alertToVerdict, hasVerdictSignals } from './alertVerdict';
-import { QUEUE_TRIAGE_DENIED } from '../analystQueue.capabilities';
+import {
+  QUEUE_EXCEPTION_ACTIVATE_DENIED,
+  QUEUE_EXCEPTION_DRAFT_DENIED,
+  QUEUE_TRIAGE_DENIED,
+} from '../analystQueue.capabilities';
 
 import { AiVerdictCard } from '@/components/ai-verdict-card';
 import type { AlertDetailDTO, AlertSideDTO, RelatedAlertDTO } from '@/components/alert-context-drawer/alertContextDrawer.types';
+import { AlertExceptionDraftPanel } from '@/components/alert-exception-draft/AlertExceptionDraftPanel';
 import { HaDefinitionList } from '@/components/ha-definition-list';
 import { ALERT_STATUS } from '@/constants/status.constants';
 import type { AlertStatus } from '@/constants/status.constants';
 import { apiClient } from '@/lib/apiClient';
+import { getFoundationAlertDetail } from '@/pages/alerts/alertTriage.fixtures';
+
+const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
 
 
 export interface QueueDetailDrawerProps {
@@ -26,11 +34,14 @@ export interface QueueDetailDrawerProps {
   onClose: () => void;
   onOpenAlert?: (alertId: string) => void;
   canTriage?: boolean;
+  canActivateException?: boolean;
   onEscalate?: (alertId: string) => void;
 }
 
-// Fetch alert detail
 async function fetchAlertDetail(alertId: string): Promise<AlertDetailDTO> {
+  if (fixtureMode) {
+    return getFoundationAlertDetail(alertId);
+  }
   return apiClient.get<AlertDetailDTO>(`/ha-alerts/${alertId}`);
 }
 
@@ -230,6 +241,7 @@ export function QueueDetailDrawer({
   onClose,
   onOpenAlert,
   canTriage = false,
+  canActivateException = false,
   onEscalate,
 }: QueueDetailDrawerProps): JSX.Element | null {
   const queryClient = useQueryClient();
@@ -397,6 +409,14 @@ export function QueueDetailDrawer({
                 )}
               </div>
             </div>
+
+            <AlertExceptionDraftPanel
+              alert={alert}
+              canDraft={canTriage}
+              canActivate={canActivateException}
+              draftDeniedTitle={QUEUE_EXCEPTION_DRAFT_DENIED}
+              activateDeniedTitle={QUEUE_EXCEPTION_ACTIVATE_DENIED}
+            />
 
             {/* Section 1.5 — AI Verdict (derived from the alert's own enrichment signals) */}
             {hasVerdictSignals(alert) && (

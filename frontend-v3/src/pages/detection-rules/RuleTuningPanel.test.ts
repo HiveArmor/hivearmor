@@ -17,6 +17,12 @@ import {
 } from '@/services/detectionException.service';
 
 describe('detectionException.service', () => {
+  it('exports prefill helpers for Analyst Queue exception drafts', async () => {
+    const module = await import('@/services/detectionException.service');
+    expect(typeof module.prefillExceptionDraftFromAlert).toBe('function');
+    expect(typeof module.extractHostNameFromAlert).toBe('function');
+  });
+
   it('exports preview, list, save, and activate helpers', async () => {
     const module = await import('@/services/detectionException.service');
     expect(typeof module.previewExceptionImpact).toBe('function');
