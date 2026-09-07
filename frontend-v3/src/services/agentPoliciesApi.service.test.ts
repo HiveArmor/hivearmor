@@ -27,6 +27,7 @@ import {
   getUtmAgentPolicy,
   listAgentGroups,
   listUtmAgentPolicies,
+  pushPolicyToAgent,
   pushPolicyToGroup,
   unassignPolicyGroup,
   updateUtmAgentPolicy,
@@ -82,6 +83,12 @@ describe('agentPoliciesApi.service', () => {
     expect(post).toHaveBeenCalledWith('/agent-policies/3/assign-group/9');
     expect(del).toHaveBeenCalledWith('/agent-policies/3/unassign-group/9');
     expect(post).toHaveBeenCalledWith('/agent-policies/3/push/9');
+  });
+
+  it('maps per-agent push path', async () => {
+    post.mockResolvedValue(undefined);
+    await pushPolicyToAgent(3, 42);
+    expect(post).toHaveBeenCalledWith('/agent-policies/3/push-agent/42');
   });
 
   it('maps push-log, states, and agent-groups', async () => {

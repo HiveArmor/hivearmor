@@ -1,5 +1,5 @@
 /**
- * Vitest — agent schema v1 builders / parsers (FE-POL-01).
+ * Vitest — agent schema v1 / v1.1 builders / parsers (FE-POL-01 / Next).
  */
 
 import { describe, expect, it } from 'vitest';
@@ -7,8 +7,10 @@ import { describe, expect, it } from 'vitest';
 import {
   buildAgentPolicyDocument,
   defaultAgentFimPolicyFormValues,
+  formHoursOrInvalid,
   formValuesToUtmPolicyDto,
   parseAgentPolicyDocument,
+  parseIntervalHours,
   serializeAgentPolicyDocument,
   utmPolicyToFormValues,
   validateAgentFimPolicyForm,
@@ -42,6 +44,20 @@ describe('parseAgentPolicyDocument', () => {
     expect(doc.response?.allow_shell).toBe(true);
   });
 
+  it('parses schema v1.1 telemetry interval hours', () => {
+    const doc = parseAgentPolicyDocument(
+      JSON.stringify({
+        schema_version: 1,
+        telemetry: {
+          sca_interval_hours: 12,
+          sbom_interval_hours: 24,
+        },
+      }),
+    );
+    expect(doc.telemetry?.sca_interval_hours).toBe(12);
+    expect(doc.telemetry?.sbom_interval_hours).toBe(24);
+  });
+
   it('defaults fim mode to merge when omitted', () => {
     const doc = parseAgentPolicyDocument(
       JSON.stringify({
@@ -60,6 +76,24 @@ describe('parseAgentPolicyDocument', () => {
 
   it('rejects invalid JSON', () => {
     expect(() => parseAgentPolicyDocument('{not-json')).toThrow(/not valid JSON/);
+  });
+});
+
+describe('parseIntervalHours / formHoursOrInvalid', () => {
+  it('accepts positive integers', () => {
+    expect(parseIntervalHours(6)).toBe(6);
+    expect(parseIntervalHours('12')).toBe(12);
+    expect(formHoursOrInvalid('6')).toBe(6);
+    expect(formHoursOrInvalid('')).toBeNull();
+  });
+
+  it('rejects zero, non-integer, and out-of-range', () => {
+    expect(parseIntervalHours(0)).toBeUndefined();
+    expect(parseIntervalHours(-1)).toBeUndefined();
+    expect(formHoursOrInvalid('0')).toBe('invalid');
+    expect(formHoursOrInvalid('6.5')).toBe('invalid');
+    expect(formHoursOrInvalid('abc')).toBe('invalid');
+    expect(formHoursOrInvalid('999')).toBe('invalid');
   });
 });
 
@@ -86,9 +120,26 @@ describe('buildAgentPolicyDocument / form mapping', () => {
     ]);
     expect(doc.response?.allow_shell).toBe(false);
     expect(doc.collectors?.dns).toBe(false);
+    expect(doc.telemetry).toBeUndefined();
   });
 
-  it('round-trips through serialize + utm DTO', () => {
+  it('includes telemetry.sca_interval_hours and sbom_interval_hours when set', () => {
+    const form: AgentFimPolicyFormValues = {
+      ...defaultAgentFimPolicyFormValues(),
+      policyName: 'Telemetry',
+      rules: [{ path: '/etc', recursive: true }],
+      scaIntervalHours: '12',
+      sbomIntervalHours: '24',
+    };
+    const doc = buildAgentPolicyDocument(form);
+    expect(doc.schema_version).toBe(1);
+    expect(doc.telemetry).toEqual({
+      sca_interval_hours: 12,
+      sbom_interval_hours: 24,
+    });
+  });
+
+  it('round-trips through serialize + utm DTO including telemetry', () => {
     const form = {
       ...defaultAgentFimPolicyFormValues(),
       policyName: 'Win FIM',
@@ -96,6 +147,8 @@ describe('buildAgentPolicyDocument / form mapping', () => {
       fimMode: 'replace' as const,
       rules: [{ path: 'C:\\Windows\\System32', recursive: false, exclude: ['*.log'] }],
       allowShell: true,
+      scaIntervalHours: '8',
+      sbomIntervalHours: '8',
     };
     const dto = formValuesToUtmPolicyDto(form);
     expect(dto.policyName).toBe('Win FIM');
@@ -103,9 +156,12 @@ describe('buildAgentPolicyDocument / form mapping', () => {
     const parsed = JSON.parse(dto.policyConfig ?? '{}') as {
       schema_version: number;
       response: { allow_shell: boolean };
+      telemetry: { sca_interval_hours: number; sbom_interval_hours: number };
     };
     expect(parsed.schema_version).toBe(1);
     expect(parsed.response.allow_shell).toBe(true);
+    expect(parsed.telemetry.sca_interval_hours).toBe(8);
+    expect(parsed.telemetry.sbom_interval_hours).toBe(8);
 
     const back = utmPolicyToFormValues({
       policyName: dto.policyName,
@@ -116,6 +172,8 @@ describe('buildAgentPolicyDocument / form mapping', () => {
     expect(back.fimMode).toBe('replace');
     expect(back.allowShell).toBe(true);
     expect(back.rules[0]?.path).toContain('System32');
+    expect(back.scaIntervalHours).toBe('8');
+    expect(back.sbomIntervalHours).toBe('8');
   });
 
   it('serializeAgentPolicyDocument produces parseable JSON', () => {
@@ -144,5 +202,17 @@ describe('validateAgentFimPolicyForm', () => {
       rules: [{ path: '/etc', recursive: true }],
     });
     expect(errors).toEqual([]);
+  });
+
+  it('rejects invalid telemetry intervals', () => {
+    const errors = validateAgentFimPolicyForm({
+      ...defaultAgentFimPolicyFormValues(),
+      policyName: 'ok',
+      rules: [{ path: '/etc', recursive: true }],
+      scaIntervalHours: '0',
+      sbomIntervalHours: 'nope',
+    });
+    expect(errors.some((e) => e.includes('SCA interval'))).toBe(true);
+    expect(errors.some((e) => e.includes('SBOM interval'))).toBe(true);
   });
 });

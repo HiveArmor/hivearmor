@@ -67,4 +67,31 @@ public class UtmRulePushService {
     public List<UtmRulePushLog> getPushStatus(Long ruleId) {
         return pushLogRepository.findByRuleIdOrderByPushedAtDesc(ruleId);
     }
+
+    /**
+     * Agent ACK for a rule push (BE-POL-02). Marks the latest open push log for
+     * {@code ruleId}+{@code agentId} as {@code ACKNOWLEDGED}. Never logs agent keys.
+     *
+     * @return true when a matching push log was updated
+     */
+    public boolean acknowledgePush(Long ruleId, String agentId) {
+        if (ruleId == null || agentId == null || agentId.isBlank()) {
+            throw new IllegalArgumentException("ruleId and agentId are required");
+        }
+        List<UtmRulePushLog> logs = pushLogRepository.findByRuleIdAndAgentIdOrderByPushedAtDesc(ruleId, agentId.trim());
+        if (logs.isEmpty()) {
+            return false;
+        }
+        UtmRulePushLog latest = logs.get(0);
+        String status = latest.getPushStatus();
+        if ("ACKNOWLEDGED".equals(status)) {
+            return true;
+        }
+        latest.setPushStatus("ACKNOWLEDGED");
+        latest.setAckAt(Instant.now());
+        latest.setErrorMsg(null);
+        pushLogRepository.save(latest);
+        log.debug("Rule push ACK recorded for ruleId={} agentId={}", ruleId, agentId);
+        return true;
+    }
 }

@@ -4,6 +4,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -24,6 +25,30 @@ vi.mock('@/hooks/useAgentPoliciesPush', () => ({
   useAssignPolicyGroup: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useUnassignPolicyGroup: () => ({ mutateAsync: vi.fn(), isPending: false }),
   usePushPolicyToGroup: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  usePushPolicyToAgent: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
+
+vi.mock('@/services/sensorsService', () => ({
+  fetchSensors: vi.fn(async () => ({
+    sensors: [
+      {
+        agentId: '42',
+        hostname: 'host-a',
+        platform: 'linux',
+        osVersion: null,
+        agentVersion: '1.0.0',
+        connectionStatus: 'ONLINE' as const,
+        lastSeen: null,
+        cpuUsage: null,
+        memUsage: null,
+        diskUsage: null,
+        collectorType: null,
+        mode: null,
+        bundleVersion: null,
+      },
+    ],
+    total: 1,
+  })),
 }));
 
 vi.mock('@/store/auth.store', () => ({
@@ -52,7 +77,7 @@ describe('AgentFimPolicyPage', () => {
   beforeEach(() => {
     mockAuthRoles.mockReturnValue(['ROLE_ADMIN']);
     mockUseAgentGroups.mockReturnValue({
-      data: [],
+      data: [{ id: 10, groupName: 'Linux fleet', memberCount: 3 }],
       isLoading: false,
       isError: false,
     });
@@ -118,5 +143,40 @@ describe('AgentFimPolicyPage', () => {
     expect(screen.getByText('Linux defaults')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Create policy' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Assign / Push' })).toBeVisible();
+  });
+
+  it('SOC Manager can open Assign / Push with group picker (no manual-only hack)', async () => {
+    const user = userEvent.setup();
+    mockAuthRoles.mockReturnValue(['ROLE_SOC_MANAGER']);
+    mockUseUtmAgentPolicies.mockReturnValue({
+      data: [
+        {
+          id: 1,
+          policyName: 'SOC policy',
+          platform: 'linux',
+          versionNum: 1,
+          assignedGroupIds: [],
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    renderPage();
+    await user.click(screen.getByRole('button', { name: 'Assign / Push' }));
+    expect(screen.getByLabelText('Agent group')).toBeVisible();
+    expect(screen.getByRole('option', { name: /Linux fleet/ })).toBeInTheDocument();
+    expect(screen.getByText(/push-on-connect/i)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Push to agent' })).toBeVisible();
+    expect(await screen.findByLabelText('Sensor')).toBeVisible();
+  });
+
+  it('shows telemetry schedule fields in create modal', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(screen.getByRole('button', { name: 'Create policy' }));
+    expect(screen.getByLabelText(/SCA interval/)).toBeVisible();
+    expect(screen.getByLabelText(/SBOM interval/)).toBeVisible();
+    expect(screen.getByText('Telemetry schedule (schema v1.1)')).toBeVisible();
   });
 });

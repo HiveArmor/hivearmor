@@ -11,5 +11,7 @@ public interface UtmRulePushLogRepository extends JpaRepository<UtmRulePushLog, 
 
     List<UtmRulePushLog> findByRuleIdOrderByPushedAtDesc(Long ruleId);
 
+    List<UtmRulePushLog> findByRuleIdAndAgentIdOrderByPushedAtDesc(Long ruleId, String agentId);
+
     List<UtmRulePushLog> findByAgentIdAndPushStatusOrderByPushedAtDesc(String agentId, String pushStatus);
 }

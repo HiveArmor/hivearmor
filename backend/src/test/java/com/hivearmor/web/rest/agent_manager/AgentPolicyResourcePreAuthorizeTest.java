@@ -55,7 +55,7 @@ class AgentPolicyResourcePreAuthorizeTest {
     void mutationsAllowAdminAndSocManager() {
         for (String name : List.of(
             "createPolicy", "updatePolicy", "deletePolicy",
-            "assignGroup", "unassignGroup", "pushToGroup"
+            "assignGroup", "unassignGroup", "pushToGroup", "pushToAgent"
         )) {
             Method m = methodNamed(name);
             PreAuthorize pre = m.getAnnotation(PreAuthorize.class);
@@ -69,6 +69,17 @@ class AgentPolicyResourcePreAuthorizeTest {
     @Test
     void reportStateAllowsAdminSocManagerAndAgentDevice() {
         Method m = methodNamed("reportState");
+        PreAuthorize pre = m.getAnnotation(PreAuthorize.class);
+        assertThat(pre).isNotNull();
+        assertThat(pre.value()).contains("ROLE_ADMIN");
+        assertThat(pre.value()).contains("ROLE_SOC_MANAGER");
+        assertThat(pre.value()).contains("ROLE_AGENT_DEVICE");
+        assertThat(pre.value()).doesNotContain("ROLE_ANALYST");
+    }
+
+    @Test
+    void syncOnConnectAllowsAdminSocManagerAndAgentDevice() {
+        Method m = methodNamed("syncOnConnect");
         PreAuthorize pre = m.getAnnotation(PreAuthorize.class);
         assertThat(pre).isNotNull();
         assertThat(pre.value()).contains("ROLE_ADMIN");

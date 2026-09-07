@@ -1,6 +1,8 @@
 /**
  * Agent policy schema v1 builders/parsers for the Utm push plane.
  * Contract mirrors `agent/agent/policy_schema.go` (agent is parse SoT).
+ * Schema v1.1 additive: `telemetry.sca_interval_hours` / `sbom_interval_hours`
+ * (still emitted under schema_version 1 — agent ignores unknown until wired).
  */
 
 import {
@@ -10,6 +12,7 @@ import {
   type CollectorKey,
   type FimApplyMode,
   type FimWatchRule,
+  type TelemetryPolicySection,
   type UtmAgentPolicyDTO,
 } from '@/types/agentPolicies';
 
@@ -22,6 +25,12 @@ const COLLECTOR_KEYS: readonly CollectorKey[] = [
   'syslog',
   'file',
 ] as const;
+
+/** Agent hardcoded default (telemetry/loop.go) — UI hint only until agent reads policy. */
+export const DEFAULT_TELEMETRY_INTERVAL_HOURS = 6;
+
+/** Inclusive max hours operators may set in the console (1 week). */
+export const MAX_TELEMETRY_INTERVAL_HOURS = 168;
 
 export function defaultAgentFimPolicyFormValues(): AgentFimPolicyFormValues {
   return {
@@ -41,6 +50,8 @@ export function defaultAgentFimPolicyFormValues(): AgentFimPolicyFormValues {
       syslog: true,
       file: true,
     },
+    scaIntervalHours: '',
+    sbomIntervalHours: '',
   };
 }
 
@@ -87,6 +98,47 @@ function parseCollectors(raw: unknown): Partial<Record<CollectorKey, boolean>> {
     }
   }
   return out;
+}
+
+/**
+ * Parse a positive integer hour value from JSON (number or numeric string).
+ * Returns undefined when missing / invalid.
+ */
+export function parseIntervalHours(raw: unknown): number | undefined {
+  if (typeof raw === 'number' && Number.isFinite(raw)) {
+    const n = Math.trunc(raw);
+    return n > 0 ? n : undefined;
+  }
+  if (typeof raw === 'string' && raw.trim() !== '') {
+    const n = Number.parseInt(raw.trim(), 10);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return undefined;
+}
+
+function parseTelemetry(raw: unknown): TelemetryPolicySection | undefined {
+  if (!isRecord(raw)) return undefined;
+  const sca = parseIntervalHours(raw.sca_interval_hours);
+  const sbom = parseIntervalHours(raw.sbom_interval_hours);
+  if (sca == null && sbom == null) return undefined;
+  const out: TelemetryPolicySection = {};
+  if (sca != null) out.sca_interval_hours = sca;
+  if (sbom != null) out.sbom_interval_hours = sbom;
+  return out;
+}
+
+/**
+ * Parse form hour string → positive int, null when blank, or `'invalid'`.
+ */
+export function formHoursOrInvalid(raw: string): number | null | 'invalid' {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  if (!/^\d+$/.test(trimmed)) return 'invalid';
+  const n = Number.parseInt(trimmed, 10);
+  if (!Number.isFinite(n) || n <= 0 || n > MAX_TELEMETRY_INTERVAL_HOURS) {
+    return 'invalid';
+  }
+  return n;
 }
 
 /**
@@ -141,6 +193,11 @@ export function parseAgentPolicyDocument(raw: string | null | undefined): AgentP
     };
   }
 
+  const telemetry = parseTelemetry(parsed.telemetry);
+  if (telemetry) {
+    doc.telemetry = telemetry;
+  }
+
   return doc;
 }
 
@@ -166,7 +223,13 @@ export function buildAgentPolicyDocument(form: AgentFimPolicyFormValues): AgentP
     }
   }
 
-  return {
+  const telemetry: TelemetryPolicySection = {};
+  const sca = formHoursOrInvalid(form.scaIntervalHours);
+  const sbom = formHoursOrInvalid(form.sbomIntervalHours);
+  if (typeof sca === 'number') telemetry.sca_interval_hours = sca;
+  if (typeof sbom === 'number') telemetry.sbom_interval_hours = sbom;
+
+  const doc: AgentPolicyDocument = {
     schema_version: AGENT_POLICY_SCHEMA_VERSION,
     fim: {
       mode: form.fimMode === 'replace' ? 'replace' : 'merge',
@@ -177,6 +240,12 @@ export function buildAgentPolicyDocument(form: AgentFimPolicyFormValues): AgentP
       allow_shell: form.allowShell === true,
     },
   };
+
+  if (Object.keys(telemetry).length > 0) {
+    doc.telemetry = telemetry;
+  }
+
+  return doc;
 }
 
 export function serializeAgentPolicyDocument(doc: AgentPolicyDocument): string {
@@ -201,6 +270,20 @@ export function validateAgentFimPolicyForm(form: AgentFimPolicyFormValues): stri
       errors.push(`Rule ${i + 1}: path is required when exclude patterns are set`);
     }
   });
+
+  const sca = formHoursOrInvalid(form.scaIntervalHours);
+  if (sca === 'invalid') {
+    errors.push(
+      `SCA interval must be an integer from 1 to ${MAX_TELEMETRY_INTERVAL_HOURS} hours`,
+    );
+  }
+  const sbom = formHoursOrInvalid(form.sbomIntervalHours);
+  if (sbom === 'invalid') {
+    errors.push(
+      `SBOM interval must be an integer from 1 to ${MAX_TELEMETRY_INTERVAL_HOURS} hours`,
+    );
+  }
+
   return errors;
 }
 
@@ -235,6 +318,14 @@ export function utmPolicyToFormValues(policy: UtmAgentPolicyDTO): AgentFimPolicy
       ...base.collectors,
       ...(doc.collectors ?? {}),
     },
+    scaIntervalHours:
+      doc.telemetry?.sca_interval_hours != null
+        ? String(doc.telemetry.sca_interval_hours)
+        : '',
+    sbomIntervalHours:
+      doc.telemetry?.sbom_interval_hours != null
+        ? String(doc.telemetry.sbom_interval_hours)
+        : '',
   };
 }
 

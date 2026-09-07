@@ -34,6 +34,16 @@ export interface ResponsePolicySection {
 }
 
 /**
+ * Schema v1.1 additive telemetry schedule (still emitted under schema_version 1).
+ * Agent ignore-unknown until it consumes these fields — STAGING CANDIDATE.
+ * Field names: `sca_interval_hours`, `sbom_interval_hours` (positive integers).
+ */
+export interface TelemetryPolicySection {
+  sca_interval_hours?: number;
+  sbom_interval_hours?: number;
+}
+
+/**
  * Forward-compatible agent policy JSON stored in `policyConfig`.
  * Unknown fields are ignored by the agent.
  */
@@ -42,6 +52,8 @@ export interface AgentPolicyDocument {
   fim?: FimPolicySection;
   collectors?: Partial<Record<CollectorKey, boolean>>;
   response?: ResponsePolicySection;
+  /** Schema v1.1 telemetry schedule — additive under schema_version 1. */
+  telemetry?: TelemetryPolicySection;
 }
 
 /** REST DTO from GET/POST/PUT `/api/agent-policies`. */
@@ -60,7 +72,7 @@ export interface UtmAgentPolicyDTO {
   assignedGroupIds?: number[] | null;
 }
 
-/** REST DTO from GET `/api/agent-groups` (Platform Administrator only today). */
+/** REST DTO from GET `/api/agent-groups` (Admin; SOC Manager when BE allows). */
 export interface UtmAgentGroupDTO {
   id?: number;
   groupName: string;
@@ -108,4 +120,14 @@ export interface AgentFimPolicyFormValues {
   rules: FimWatchRule[];
   allowShell: boolean;
   collectors: Partial<Record<CollectorKey, boolean>>;
+  /**
+   * SCA scan interval in hours (schema v1.1 `telemetry.sca_interval_hours`).
+   * Empty string = omit (agent default).
+   */
+  scaIntervalHours: string;
+  /**
+   * SBOM scan interval in hours (schema v1.1 `telemetry.sbom_interval_hours`).
+   * Empty string = omit (agent default).
+   */
+  sbomIntervalHours: string;
 }

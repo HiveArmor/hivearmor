@@ -35,6 +35,10 @@ func IncidentResponseStream(cnf *config.Config, ctx context.Context) {
 
 		connErrLogged = false
 
+		// Push-on-connect / drift reconcile (STAGING CANDIDATE).
+		// Prefer backend POST /api/agent-policies/sync-on-connect; falls back to local apply+report.
+		go SyncPoliciesOnConnect(cnf)
+
 	recvLoop:
 		for {
 			in, err := stream.Recv()
@@ -87,7 +91,7 @@ func commandProcessor(path string, stream AgentService_AgentStreamClient, cnf *c
 	}
 
 	// Intercept EDR_* response-action commands before shell dispatch
-	if handled, edrResult := HandleEdrCommand(cnf, command); handled {
+	if handled, edrResult := HandleEdrCommand(cnf, command, cmdId); handled {
 		if err := stream.Send(&BidirectionalStream{
 			StreamMessage: &BidirectionalStream_Result{
 				Result: &CommandResult{

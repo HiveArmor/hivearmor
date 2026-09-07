@@ -6,19 +6,26 @@ import com.hivearmor.service.dto.agent_manager.*;
 import com.hivearmor.service.incident_response.grpc_impl.IncidentResponseCommandService;
 import io.grpc.stub.StreamObserver;
 import com.hivearmor.service.grpc.CommandResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class UtmAgentPolicyService {
+
+    private static final Logger log = LoggerFactory.getLogger(UtmAgentPolicyService.class);
 
     private final UtmAgentPolicyRepository policyRepo;
     private final UtmPolicyGroupAssignmentRepository assignmentRepo;
@@ -122,38 +129,124 @@ public class UtmAgentPolicyService {
             .map(UtmAgentGroupMember::getAgentId).collect(Collectors.toList());
 
         for (Integer agentId : agentIds) {
-            String agentIdStr = String.valueOf(agentId);
-            UtmPolicyPushLog log = new UtmPolicyPushLog();
-            log.setPolicyId(policyId);
-            log.setPolicyName(policy.getPolicyName());
-            log.setAgentId(agentIdStr);
-            log.setPushedAt(Instant.now());
-            log.setPushStatus("PENDING");
-            UtmPolicyPushLog savedLog = pushLogRepo.save(log);
-
-            commandService.sendCommand(
-                agentIdStr,
-                "APPLY_POLICY:" + policyId + ":" + policy.getVersionNum(),
-                "POLICY_DISTRIBUTION",
-                policyId.toString(),
-                "Push policy " + policy.getPolicyName() + " v" + policy.getVersionNum(),
-                "system",
-                "",
-                new StreamObserver<CommandResult>() {
-                    @Override public void onNext(CommandResult r) {
-                        savedLog.setPushStatus("DELIVERED");
-                        savedLog.setAckAt(Instant.now());
-                        pushLogRepo.save(savedLog);
-                    }
-                    @Override public void onError(Throwable t) {
-                        savedLog.setPushStatus("FAILED");
-                        savedLog.setErrorMsg(t.getMessage());
-                        pushLogRepo.save(savedLog);
-                    }
-                    @Override public void onCompleted() {}
-                }
-            );
+            deliverApplyPolicy(policy, String.valueOf(agentId));
         }
+    }
+
+    /**
+     * Push APPLY_POLICY to a single agent (same delivery path as group push).
+     */
+    public void pushPolicyToAgent(Long policyId, Integer agentId) {
+        if (agentId == null || agentId <= 0) {
+            throw new IllegalArgumentException("agentId must be a positive connector id");
+        }
+        UtmAgentPolicy policy = policyRepo.findById(policyId)
+            .orElseThrow(() -> new IllegalArgumentException("Policy not found: " + policyId));
+        log.info("Pushing policy id={} version={} to agentId={}",
+            policyId, policy.getVersionNum(), agentId);
+        deliverApplyPolicy(policy, String.valueOf(agentId));
+    }
+
+    /**
+     * Best-effort push-on-connect: resolve agent → groups → assigned active policies,
+     * return configs, and queue APPLY_POLICY via gRPC when version drifts or no APPLIED state.
+     * Does not require agent-manager stream-open hooks (document AM follow-up in EXTERNAL_WORK).
+     */
+    public AgentPolicySyncOnConnectDTO syncOnConnect(String agentId) {
+        if (agentId == null || agentId.isBlank()) {
+            throw new IllegalArgumentException("agentId required");
+        }
+        int connectorId;
+        try {
+            connectorId = Integer.parseInt(agentId.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("agentId must be numeric connector id");
+        }
+        if (connectorId <= 0) {
+            throw new IllegalArgumentException("agentId must be a positive connector id");
+        }
+
+        AgentPolicySyncOnConnectDTO result = new AgentPolicySyncOnConnectDTO();
+        result.setAgentId(String.valueOf(connectorId));
+
+        List<UtmAgentGroupMember> memberships = memberRepo.findByAgentId(connectorId);
+        // Deduplicate policies across groups (LinkedHashMap preserves first-seen order).
+        Map<Long, UtmAgentPolicy> policiesById = new LinkedHashMap<>();
+        for (UtmAgentGroupMember membership : memberships) {
+            for (UtmPolicyGroupAssignment assignment : assignmentRepo.findByGroupId(membership.getGroupId())) {
+                if (policiesById.containsKey(assignment.getPolicyId())) {
+                    continue;
+                }
+                policyRepo.findById(assignment.getPolicyId()).ifPresent(policy -> {
+                    if (Boolean.TRUE.equals(policy.getIsActive())) {
+                        policiesById.put(policy.getId(), policy);
+                    }
+                });
+            }
+        }
+
+        List<AgentPolicySyncOnConnectDTO.AssignedPolicy> assigned = new ArrayList<>();
+        for (UtmAgentPolicy policy : policiesById.values()) {
+            AgentPolicySyncOnConnectDTO.AssignedPolicy item = new AgentPolicySyncOnConnectDTO.AssignedPolicy();
+            item.setPolicyId(policy.getId());
+            item.setPolicyName(policy.getPolicyName());
+            item.setVersionNum(policy.getVersionNum());
+            item.setPolicyConfig(schemaService.normalizePolicyConfigForServe(policy.getPolicyConfig()));
+
+            Optional<UtmAgentPolicyState> stateOpt =
+                stateRepo.findByAgentIdAndPolicyId(String.valueOf(connectorId), policy.getId());
+            boolean current = stateOpt
+                .filter(s -> "APPLIED".equals(s.getState()))
+                .filter(s -> policy.getVersionNum().equals(s.getAppliedVersion()))
+                .isPresent();
+            item.setAlreadyCurrent(current);
+            if (!current) {
+                deliverApplyPolicy(policy, String.valueOf(connectorId));
+                item.setPushed(true);
+            } else {
+                item.setPushed(false);
+            }
+            assigned.add(item);
+        }
+        result.setPolicies(assigned);
+        log.info("sync-on-connect agentId={} policies={} pushed={}",
+            connectorId, assigned.size(),
+            assigned.stream().filter(AgentPolicySyncOnConnectDTO.AssignedPolicy::isPushed).count());
+        return result;
+    }
+
+    private void deliverApplyPolicy(UtmAgentPolicy policy, String agentIdStr) {
+        Long policyId = policy.getId();
+        UtmPolicyPushLog pushLog = new UtmPolicyPushLog();
+        pushLog.setPolicyId(policyId);
+        pushLog.setPolicyName(policy.getPolicyName());
+        pushLog.setAgentId(agentIdStr);
+        pushLog.setPushedAt(Instant.now());
+        pushLog.setPushStatus("PENDING");
+        UtmPolicyPushLog savedLog = pushLogRepo.save(pushLog);
+
+        commandService.sendCommand(
+            agentIdStr,
+            "APPLY_POLICY:" + policyId + ":" + policy.getVersionNum(),
+            "POLICY_DISTRIBUTION",
+            policyId.toString(),
+            "Push policy " + policy.getPolicyName() + " v" + policy.getVersionNum(),
+            "system",
+            "",
+            new StreamObserver<CommandResult>() {
+                @Override public void onNext(CommandResult r) {
+                    savedLog.setPushStatus("DELIVERED");
+                    savedLog.setAckAt(Instant.now());
+                    pushLogRepo.save(savedLog);
+                }
+                @Override public void onError(Throwable t) {
+                    savedLog.setPushStatus("FAILED");
+                    savedLog.setErrorMsg(t.getMessage());
+                    pushLogRepo.save(savedLog);
+                }
+                @Override public void onCompleted() {}
+            }
+        );
     }
 
     public List<PolicyPushLogDTO> getPushLog(Long policyId) {

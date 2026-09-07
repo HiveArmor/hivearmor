@@ -10,17 +10,27 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Agent policy document schema v1 — must match {@code agent/agent/policy_schema.go}.
+ * Agent policy document schema v1 / v1.1 — must match {@code agent/agent/policy_schema.go}.
  *
- * <p>STAGING CANDIDATE — not PRODUCTION READY. Unknown fields ignored by the agent.
+ * <p>Wire {@code schema_version} remains {@code 1} for agent compatibility.
+ * Optional {@link TelemetrySection} is the additive <strong>v1.1</strong> extension
+ * ({@code sca_interval_hours}, {@code sbom_interval_hours}). Unknown fields ignored by the agent.
+ *
+ * <p>STAGING CANDIDATE — not PRODUCTION READY.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AgentPolicySchemaV1 {
 
+    /** Wire major version emitted in {@code schema_version} (agent accepts 0 or 1). */
     public static final int SCHEMA_VERSION = 1;
+    /** Feature level documenting additive telemetry schedule fields. */
+    public static final String SCHEMA_FEATURE = "1.1";
     public static final String FIM_MODE_MERGE = "merge";
     public static final String FIM_MODE_REPLACE = "replace";
+    public static final int DEFAULT_TELEMETRY_INTERVAL_HOURS = 6;
+    public static final int MIN_TELEMETRY_INTERVAL_HOURS = 1;
+    public static final int MAX_TELEMETRY_INTERVAL_HOURS = 168;
 
     @JsonProperty("schema_version")
     private int schemaVersion = SCHEMA_VERSION;
@@ -30,6 +40,9 @@ public class AgentPolicySchemaV1 {
     private Map<String, Boolean> collectors;
 
     private ResponseSection response;
+
+    /** Optional v1.1 SCA/SBOM schedule (hours). Omitted when unset. */
+    private TelemetrySection telemetry;
 
     public int getSchemaVersion() {
         return schemaVersion;
@@ -61,6 +74,14 @@ public class AgentPolicySchemaV1 {
 
     public void setResponse(ResponseSection response) {
         this.response = response;
+    }
+
+    public TelemetrySection getTelemetry() {
+        return telemetry;
+    }
+
+    public void setTelemetry(TelemetrySection telemetry) {
+        this.telemetry = telemetry;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -130,6 +151,36 @@ public class AgentPolicySchemaV1 {
 
         public void setAllowShell(boolean allowShell) {
             this.allowShell = allowShell;
+        }
+    }
+
+    /**
+     * Host telemetry schedule (schema v1.1 additive). Agent may ignore until it
+     * reads these fields; defaults match today's hardcoded 6h loop.
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class TelemetrySection {
+        @JsonProperty("sca_interval_hours")
+        private Integer scaIntervalHours;
+
+        @JsonProperty("sbom_interval_hours")
+        private Integer sbomIntervalHours;
+
+        public Integer getScaIntervalHours() {
+            return scaIntervalHours;
+        }
+
+        public void setScaIntervalHours(Integer scaIntervalHours) {
+            this.scaIntervalHours = scaIntervalHours;
+        }
+
+        public Integer getSbomIntervalHours() {
+            return sbomIntervalHours;
+        }
+
+        public void setSbomIntervalHours(Integer sbomIntervalHours) {
+            this.sbomIntervalHours = sbomIntervalHours;
         }
     }
 

@@ -102,4 +102,52 @@ class AgentPolicySchemaServiceTest {
         assertThat(root.get("collectors").get("netconn").asBoolean()).isFalse();
         assertThat(root.get("response").get("allow_shell").asBoolean()).isFalse();
     }
+
+    @Test
+    void telemetryIntervalsNormalizeAsSchemaV11Additive() throws Exception {
+        String input = """
+            {
+              "schema_version": 1,
+              "telemetry": {
+                "sca_interval_hours": 12,
+                "sbom_interval_hours": 24
+              }
+            }
+            """;
+        String normalized = service.normalizePolicyConfig(input);
+        JsonNode root = mapper.readTree(normalized);
+        assertThat(root.get("schema_version").asInt()).isEqualTo(1);
+        assertThat(root.get("telemetry").get("sca_interval_hours").asInt()).isEqualTo(12);
+        assertThat(root.get("telemetry").get("sbom_interval_hours").asInt()).isEqualTo(24);
+        assertThat(AgentPolicySchemaV1.SCHEMA_FEATURE).isEqualTo("1.1");
+    }
+
+    @Test
+    void telemetryMissingIntervalsDefaultToSixHours() throws Exception {
+        String normalized = service.normalizePolicyConfig(
+            "{\"schema_version\":1,\"telemetry\":{}}");
+        JsonNode root = mapper.readTree(normalized);
+        assertThat(root.get("telemetry").get("sca_interval_hours").asInt()).isEqualTo(6);
+        assertThat(root.get("telemetry").get("sbom_interval_hours").asInt()).isEqualTo(6);
+    }
+
+    @Test
+    void emptyConfigOmitsTelemetryForBackwardCompat() throws Exception {
+        String json = service.normalizePolicyConfig("{}");
+        JsonNode root = mapper.readTree(json);
+        assertThat(root.has("telemetry")).isFalse();
+    }
+
+    @Test
+    void rejectsTelemetryIntervalOutOfRange() {
+        assertThatThrownBy(() -> service.normalizePolicyConfig(
+            "{\"schema_version\":1,\"telemetry\":{\"sca_interval_hours\":0}}"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("sca_interval_hours");
+
+        assertThatThrownBy(() -> service.normalizePolicyConfig(
+            "{\"schema_version\":1,\"telemetry\":{\"sbom_interval_hours\":200}}"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("sbom_interval_hours");
+    }
 }

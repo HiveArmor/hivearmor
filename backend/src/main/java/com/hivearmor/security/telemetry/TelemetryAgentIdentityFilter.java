@@ -28,8 +28,9 @@ import java.util.regex.Pattern;
  * Authenticates enrolled agents with device identity ({@code X-HiveArmor-Agent-Id} +
  * {@code X-Agent-Key}), not {@code INTERNAL_KEY}.
  *
- * <p>Covers ha-telemetry ingest and agent policy fetch / report-state (BE-POL-01 ACK).
- * STAGING CANDIDATE — not PRODUCTION READY. Never logs presented keys.
+ * <p>Covers ha-telemetry ingest, agent policy fetch / report-state / sync-on-connect,
+ * and rule push ACK (BE-POL-02). STAGING CANDIDATE — not PRODUCTION READY. Never logs
+ * presented keys.
  */
 @Component
 public class TelemetryAgentIdentityFilter extends OncePerRequestFilter {
@@ -43,6 +44,8 @@ public class TelemetryAgentIdentityFilter extends OncePerRequestFilter {
     private static final String CLASSNAME = "TelemetryAgentIdentityFilter";
     private static final Pattern AGENT_POLICY_GET =
         Pattern.compile("^/api/agent-policies/\\d+$");
+    private static final Pattern RULE_PUSH_ACK =
+        Pattern.compile("^/api/alert-response-rules/push-status/\\d+/ack$");
 
     private final AgentGrpcService agentGrpcService;
 
@@ -67,8 +70,8 @@ public class TelemetryAgentIdentityFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
-            // Operator JWT / INTERNAL_KEY may still authenticate later for policy ops.
-            if (isAgentPolicyPath(request)) {
+            // Operator JWT / INTERNAL_KEY may still authenticate later for policy/rule ops.
+            if (isAgentPolicyPath(request) || isRulePushAckPath(request)) {
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -126,7 +129,9 @@ public class TelemetryAgentIdentityFilter extends OncePerRequestFilter {
      * Paths that accept enrolled agent device credentials.
      */
     static boolean isAgentDeviceAuthPath(HttpServletRequest request) {
-        return isTelemetryIngest(request) || isAgentPolicyPath(request);
+        return isTelemetryIngest(request)
+            || isAgentPolicyPath(request)
+            || isRulePushAckPath(request);
     }
 
     static boolean isAgentPolicyPath(HttpServletRequest request) {
@@ -138,10 +143,22 @@ public class TelemetryAgentIdentityFilter extends OncePerRequestFilter {
         if ("POST".equalsIgnoreCase(method) && "/api/agent-policies/report-state".equals(path)) {
             return true;
         }
+        if ("POST".equalsIgnoreCase(method) && "/api/agent-policies/sync-on-connect".equals(path)) {
+            return true;
+        }
         if ("GET".equalsIgnoreCase(method) && AGENT_POLICY_GET.matcher(path).matches()) {
             return true;
         }
         return false;
+    }
+
+    /** BE-POL-02 — agent rule-sync ACK. */
+    static boolean isRulePushAckPath(HttpServletRequest request) {
+        String path = servletPath(request);
+        if (path == null) {
+            return false;
+        }
+        return "POST".equalsIgnoreCase(request.getMethod()) && RULE_PUSH_ACK.matcher(path).matches();
     }
 
     static boolean isTelemetryIngest(HttpServletRequest request) {

@@ -160,32 +160,21 @@ func (c *Collector) Start(ctx context.Context, queue chan<- *plugins.Log) {
 // replaceWatchRules swaps the active rule set and refreshes watches.
 //
 // Hot-apply (STAGING CANDIDATE):
+//   - Full rebuild via WatchList(): remove every currently watched path, then
+//     re-add from the new rule set (covers recursive subdir watches that the
+//     prior root-only Remove missed). Fewer process restarts on replace.
 //   - New exclude patterns take effect immediately (event filter + skip seed/watch).
-//   - New watch roots are registered immediately.
-//   - Best-effort Remove of old root paths no longer in the rule set.
-//
-// Restart still required for a fully clean watch set: recursive subdir watches
-// added under a removed root are not enumerated for bulk Remove (fsnotify has
-// no portable remove-all). Stale events from leftover watches are dropped when
-// no covering rule remains or the path matches exclude.
+//   - Stale events from any leftover watches are dropped when no covering rule remains.
 func (c *Collector) replaceWatchRules(rules []WatchRule) error {
-	old := c.rules
 	c.rules = append([]WatchRule(nil), rules...)
 	if c.watcher == nil {
 		return nil
 	}
 
-	newRoots := make(map[string]struct{}, len(rules))
-	for _, r := range rules {
-		newRoots[filepath.Clean(r.Path)] = struct{}{}
-	}
-	for _, r := range old {
-		root := filepath.Clean(r.Path)
-		if _, keep := newRoots[root]; keep {
-			continue
-		}
-		if err := c.watcher.Remove(root); err != nil {
-			utils.Logger.LogF(100, "fim: best-effort unwatch %s: %v (subdir watches may linger until restart)", root, err)
+	// Best-effort full rebuild: drop all known watches, then re-register.
+	for _, p := range c.watcher.WatchList() {
+		if err := c.watcher.Remove(p); err != nil {
+			utils.Logger.LogF(100, "fim: rebuild unwatch %s: %v", p, err)
 		}
 	}
 
@@ -204,7 +193,7 @@ func (c *Collector) replaceWatchRules(rules []WatchRule) error {
 			_ = c.seedBaseline(rule.Path, rule)
 		}
 	}
-	utils.Logger.Info("fim: applied policy watch rules (%d)", len(rules))
+	utils.Logger.Info("fim: applied policy watch rules (%d) via full WatchList rebuild", len(rules))
 	return nil
 }
 

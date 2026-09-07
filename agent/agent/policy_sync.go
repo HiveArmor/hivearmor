@@ -209,14 +209,175 @@ func reportPolicyStateToBackend(cnf *config.Config, policyID int64, appliedVersi
 }
 
 // notifyRuleSyncAck tells the backend this agent has acknowledged a rule push.
+// Contract (BE-POL-02): POST /api/alert-response-rules/push-status/{ruleId}/ack
+// with X-HiveArmor-Agent-Id + X-Agent-Key (optional agentId query for legacy).
 func notifyRuleSyncAck(cnf *config.Config, ruleID int64) error {
 	url := fmt.Sprintf("https://%s/api/alert-response-rules/push-status/%d/ack?agentId=%d",
 		cnf.Server, ruleID, cnf.AgentID)
-	resp, err := doBackendRequest(cnf, "POST", url, nil)
+	payload, _ := json.Marshal(map[string]interface{}{
+		"agentId": strconv.Itoa(int(cnf.AgentID)),
+		"ruleId":  ruleID,
+		"state":   "ACKNOWLEDGED",
+	})
+	resp, err := doBackendRequest(cnf, "POST", url, payload)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("backend returned %d: %s", resp.StatusCode, string(body))
+	}
+	return nil
+}
+
+// SyncOnConnectResponse is the documented contract for POST /api/agent-policies/sync-on-connect.
+// Backend Next may return policies to apply locally and/or push APPLY_POLICY via gRPC.
+type SyncOnConnectResponse struct {
+	Policies []SyncOnConnectPolicy `json:"policies"`
+}
+
+// SyncOnConnectPolicy is one desired policy document from sync-on-connect.
+type SyncOnConnectPolicy struct {
+	PolicyID     int64  `json:"policyId"`
+	Version      int    `json:"version"`
+	VersionNum   int    `json:"versionNum"` // backend AgentPolicySyncOnConnectDTO field
+	PolicyConfig string `json:"policyConfig"`
+	Pushed       bool   `json:"pushed"`
+	AlreadyCurrent bool `json:"alreadyCurrent"`
+}
+
+func (p SyncOnConnectPolicy) effectiveVersion() int {
+	if p.VersionNum != 0 {
+		return p.VersionNum
+	}
+	return p.Version
+}
+
+// SyncPoliciesOnConnect calls backend sync-on-connect after AgentStream is up.
+// If the endpoint is missing (404) or not ready, falls back to re-applying the
+// latest local PolicyState and REPORT_POLICY_STATE (STAGING CANDIDATE).
+func SyncPoliciesOnConnect(cnf *config.Config) {
+	if cnf == nil || cnf.AgentID == 0 || strings.TrimSpace(cnf.AgentKey) == "" {
+		return
+	}
+	if err := syncPoliciesOnConnect(cnf); err != nil {
+		utils.Logger.ErrorF("policy_sync: sync-on-connect: %v", err)
+	}
+}
+
+func syncPoliciesOnConnect(cnf *config.Config) error {
+	url := fmt.Sprintf("https://%s/api/agent-policies/sync-on-connect", cnf.Server)
+	payload, _ := json.Marshal(map[string]interface{}{
+		"agentId": strconv.Itoa(int(cnf.AgentID)),
+	})
+	resp, err := doBackendRequest(cnf, "POST", url, payload)
+	if err != nil {
+		// Network failure — still report local state so drift jobs see us.
+		_ = reportAllLocalPolicyStates(cnf)
+		return fmt.Errorf("request: %w", err)
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+
+	switch {
+	case resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusMethodNotAllowed:
+		utils.Logger.LogF(100, "policy_sync: sync-on-connect not available (%d); fallback local apply+report", resp.StatusCode)
+		return fallbackSyncOnConnect(cnf)
+	case resp.StatusCode == http.StatusNoContent || resp.StatusCode == http.StatusAccepted:
+		// Backend will push APPLY_POLICY via AgentStream; still ACK local state.
+		return reportAllLocalPolicyStates(cnf)
+	case resp.StatusCode >= 200 && resp.StatusCode < 300:
+		if len(bytes.TrimSpace(body)) == 0 {
+			return reportAllLocalPolicyStates(cnf)
+		}
+		var dto SyncOnConnectResponse
+		if err := json.Unmarshal(body, &dto); err != nil {
+			// Some backends may return a bare list.
+			var list []SyncOnConnectPolicy
+			if err2 := json.Unmarshal(body, &list); err2 != nil {
+				utils.Logger.ErrorF("policy_sync: sync-on-connect decode: %v", err)
+				return fallbackSyncOnConnect(cnf)
+			}
+			dto.Policies = list
+		}
+		for _, p := range dto.Policies {
+			if p.Pushed || p.AlreadyCurrent {
+				// Backend already queued APPLY_POLICY or agent is current — still
+				// apply local config when provided so telemetry/FIM update immediately.
+			}
+			ver := p.effectiveVersion()
+			if err := applyFetchedPolicy(cnf, p.PolicyID, ver, p.PolicyConfig); err != nil {
+				utils.Logger.ErrorF("policy_sync: sync-on-connect apply policy %d: %v", p.PolicyID, err)
+			}
+		}
+		return reportAllLocalPolicyStates(cnf)
+	default:
+		utils.Logger.ErrorF("policy_sync: sync-on-connect status %d: %s", resp.StatusCode, string(body))
+		return fallbackSyncOnConnect(cnf)
+	}
+}
+
+func fallbackSyncOnConnect(cnf *config.Config) error {
+	if err := LoadAndApplyLatestPolicy(); err != nil {
+		utils.Logger.ErrorF("policy_sync: fallback apply: %v", err)
+	}
+	return reportAllLocalPolicyStates(cnf)
+}
+
+func reportAllLocalPolicyStates(cnf *config.Config) error {
+	db, err := database.GetDB()
+	if err != nil {
+		return err
+	}
+	if err := db.Migrate(&PolicyState{}); err != nil {
+		return err
+	}
+	var states []PolicyState
+	if err := db.GetAll(&states); err != nil {
+		return err
+	}
+	for _, s := range states {
+		reportPolicyStateToBackend(cnf, s.PolicyID, s.AppliedVersion, "APPLIED", "")
+	}
+	utils.Logger.LogF(100, "policy_sync: reported %d local policy states", len(states))
+	return nil
+}
+
+func applyFetchedPolicy(cnf *config.Config, policyID int64, version int, policyConfig string) error {
+	cfg := strings.TrimSpace(policyConfig)
+	if cfg == "" && policyID > 0 {
+		var err error
+		cfg, err = fetchPolicyConfig(cnf, policyID)
+		if err != nil {
+			reportPolicyStateToBackend(cnf, policyID, version, "FAILED", fmt.Sprintf("fetch error: %v", err))
+			return err
+		}
+	}
+	if cfg == "" {
+		return fmt.Errorf("empty policyConfig for policy %d", policyID)
+	}
+	db, err := database.GetDB()
+	if err != nil {
+		return err
+	}
+	_ = db.Migrate(&PolicyState{})
+	_ = db.Delete(&PolicyState{}, "policy_id", strconv.FormatInt(policyID, 10))
+	state := &PolicyState{
+		PolicyID:       policyID,
+		AppliedVersion: version,
+		PolicyConfig:   cfg,
+		AppliedAt:      time.Now().Unix(),
+	}
+	if err := db.Create(state); err != nil {
+		reportPolicyStateToBackend(cnf, policyID, version, "FAILED", fmt.Sprintf("store error: %v", err))
+		return err
+	}
+	if err := ApplyPolicyConfig(cfg); err != nil {
+		reportPolicyStateToBackend(cnf, policyID, version, "FAILED", fmt.Sprintf("apply error: %v", err))
+		return err
+	}
+	reportPolicyStateToBackend(cnf, policyID, version, "APPLIED", "")
 	return nil
 }
 
@@ -228,7 +389,8 @@ const (
 
 // setAgentAuthHeaders attaches device identity headers used by agent→backend calls.
 // Matches agent/telemetry/client.go: X-HiveArmor-Agent-Id + X-Agent-Key (not Bearer).
-// Backend must accept these on GET /api/agent-policies/{id} and POST report-state (BE-POL-01).
+// Backend must accept these on GET /api/agent-policies/{id}, POST report-state,
+// POST sync-on-connect, and POST rule push-status ack (BE-POL-02).
 func setAgentAuthHeaders(req *http.Request, cnf *config.Config) {
 	if req == nil || cnf == nil {
 		return

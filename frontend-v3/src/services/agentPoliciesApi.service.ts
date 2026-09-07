@@ -7,9 +7,10 @@
  *   POST        /api/agent-policies/{id}/assign-group/{groupId}
  *   DELETE      /api/agent-policies/{id}/unassign-group/{groupId}
  *   POST        /api/agent-policies/{id}/push/{groupId}  → 202 Accepted
+ *   POST        /api/agent-policies/{id}/push-agent/{agentId} → 202 (FE Next; BE may lag)
  *   GET         /api/agent-policies/{id}/push-log
  *   GET         /api/agent-policies/{id}/states
- *   GET         /api/agent-groups   (Platform Administrator only today)
+ *   GET         /api/agent-groups   (Admin; SOC Manager when BE allows — 403 fallback)
  *
  * Distinct from Ha `/api/ha-edr/policies` (legacy columns; no APPLY_POLICY push).
  */
@@ -60,6 +61,14 @@ export async function pushPolicyToGroup(policyId: number, groupId: number): Prom
   return apiClient.post<void>(`/agent-policies/${policyId}/push/${groupId}`);
 }
 
+/**
+ * Dispatches APPLY_POLICY to a single agent.
+ * STAGING CANDIDATE — requires BE `POST …/push-agent/{agentId}` (may 404 until landed).
+ */
+export async function pushPolicyToAgent(policyId: number, agentId: number): Promise<void> {
+  return apiClient.post<void>(`/agent-policies/${policyId}/push-agent/${agentId}`);
+}
+
 export async function getPolicyPushLog(policyId: number): Promise<PolicyPushLogDTO[]> {
   return apiClient.get<PolicyPushLogDTO[]>(`/agent-policies/${policyId}/push-log`);
 }
@@ -69,8 +78,8 @@ export async function getPolicyStates(policyId: number): Promise<UtmAgentPolicyS
 }
 
 /**
- * Lists agent groups. Backend is ROLE_ADMIN-only today — SOC Manager callers
- * may receive 403 (documented blocker in EXTERNAL_WORK).
+ * Lists agent groups. Prefer Admin | SOC Manager when BE allows list;
+ * callers must treat 403 as graceful fallback to manual group id.
  */
 export async function listAgentGroups(): Promise<UtmAgentGroupDTO[]> {
   return apiClient.get<UtmAgentGroupDTO[]>('/agent-groups');
