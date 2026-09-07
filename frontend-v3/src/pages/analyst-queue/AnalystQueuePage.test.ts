@@ -69,6 +69,8 @@ describe('AnalystQueuePage UX contracts', () => {
     expect(source).toContain('updateAlertStatus');
     expect(source).toContain('AssignmentDialog');
     expect(source).toContain('aq-page__meta');
+    expect(source).toContain('canActivateException');
+    expect(source).toContain('VITE_USE_FOUNDATION_FIXTURES');
   });
 
   it('toolbar uses chip filters and bulk honesty flag', () => {

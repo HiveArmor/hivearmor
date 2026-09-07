@@ -16,6 +16,7 @@ import { RefreshCw, ShieldAlert } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import {
+  canActivateQueueException,
   canAssignQueueAlerts,
   canTriageQueueAlerts,
   QUEUE_JOB_SENTENCE,
@@ -43,6 +44,11 @@ import type { TimeRange } from '@/components/time-range-selector/timeRangeUtils'
 import { useAlertStream } from '@/hooks/useAlertStream';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity, ROW_HEIGHTS } from '@/hooks/useRowDensity';
+import { numericToSeverityLevel } from '@/lib/severity';
+import {
+  filterFoundationAlertQueue,
+  foundationAlertQueue,
+} from '@/pages/alerts/alertTriage.fixtures';
 import { AssignmentDialog } from '@/pages/alerts/components/AssignmentDialog';
 import { convertToIncident, getAlerts, updateAlertStatus } from '@/services/alerts.service';
 import { useAlertStreamStore } from '@/store/alertStream.store';
@@ -52,6 +58,33 @@ import type { QueueItem } from '@/types/alert.types';
 import './AnalystQueuePage.css';
 
 const JOB_SENTENCE = QUEUE_JOB_SENTENCE;
+const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
+function mapFoundationQueueItem(alert: (typeof foundationAlertQueue)[number]): QueueItem {
+  const status =
+    alert.status === 3 ? 'in_progress'
+      : alert.status === 7 ? 'false_positive'
+        : alert.status >= 5 ? 'resolved'
+          : 'open';
+  return {
+    id: alert.id,
+    severity: numericToSeverityLevel(alert.severity),
+    type: 'alert',
+    title: alert.name,
+    tenant: { id: 1, name: alert.tenantName ?? 'Default' },
+    status,
+    assignee: null,
+    alertCount: 1,
+    createdAt: alert.timestamp,
+    lastActivity: alert.updatedAt ?? alert.timestamp,
+    slaStatus: alert.slaStatus === 'at_risk' || alert.slaStatus === 'breached'
+      ? { status: alert.slaStatus, dueAt: alert.slaDeadline ?? alert.timestamp }
+      : null,
+    mitreTactic: alert.mitreTacticName,
+    mitreTechnique: alert.mitreTechniqueName,
+    tags: alert.tags,
+  };
+}
 
 /** Defender/Sentinel default: New + In progress (open work, not resolved). */
 const DEFAULT_FILTERS: QueueFilters = { status: ['open', 'in_progress'] };
@@ -88,6 +121,7 @@ export function AnalystQueuePage(): JSX.Element {
   const roles = user?.roles;
   const canTriage = canTriageQueueAlerts(roles);
   const canAssign = canAssignQueueAlerts(roles);
+  const canActivateException = canActivateQueueException(roles);
 
   useAlertStream();
   const { connected: sseConnected, newAlertCount, clearNewAlertCount } = useAlertStreamStore();
@@ -265,18 +299,30 @@ export function AnalystQueuePage(): JSX.Element {
       getRows: (params) => {
         const page = Math.floor((params.request.startRow ?? 0) / 50);
         const size = 50;
-        const range = resolveTimeRange(timeRange);
+        const range = fixtureMode ? null : resolveTimeRange(timeRange);
 
-        getAlerts({
-          page,
-          size,
-          sort: '@timestamp,desc',
-          severity: filters.severity,
-          status: filters.status,
-          search: filters.q,
-          dateFrom: range.from,
-          dateTo: range.to,
-        })
+        const load = fixtureMode
+          ? Promise.resolve((() => {
+              const statusFilter = filters.status?.length ? filters.status.join(',') : undefined;
+              const records = filterFoundationAlertQueue({
+                status: statusFilter,
+                q: filters.q,
+              });
+              const items = records.map(mapFoundationQueueItem);
+              return { items, total: items.length };
+            })())
+          : getAlerts({
+              page,
+              size,
+              sort: '@timestamp,desc',
+              severity: filters.severity,
+              status: filters.status,
+              search: filters.q,
+              dateFrom: range?.from,
+              dateTo: range?.to,
+            });
+
+        load
           .then((response) => {
             const lastRow =
               response.total <= (params.request.endRow ?? 0) ? response.total : -1;
@@ -405,6 +451,7 @@ export function AnalystQueuePage(): JSX.Element {
         onClose={() => setSelectedAlertId(null)}
         onOpenAlert={(id) => setSelectedAlertId(id)}
         canTriage={canTriage}
+        canActivateException={canActivateException}
         onEscalate={(id) => openEscalate([id])}
       />
 

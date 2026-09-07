@@ -10,6 +10,10 @@
  */
 
 import { ROLE_LABELS, ROLES } from '@/lib/roles';
+import {
+  DET_EXCEPTION_ACTIVATE_DENIED_TITLE,
+  DET_EXCEPTION_DRAFT_DENIED_TITLE,
+} from '@/pages/detection-rules/detectionRules.capabilities';
 import { ALERT_QUEUE_ROLES } from '@/services/findingStatus.capabilities';
 
 export const QUEUE_TRIAGE_ROLES = ALERT_QUEUE_ROLES;
@@ -30,6 +34,20 @@ export const QUEUE_TRIAGE_DENIED =
   `Required permission: ${ROLE_LABELS.ROLE_ANALYST}, ${ROLE_LABELS.ROLE_SOC_MANAGER}, or ${ROLE_LABELS.ROLE_ADMIN}`;
 
 export const QUEUE_ASSIGN_DENIED = `Required permission: ${ROLE_LABELS.ROLE_SOC_MANAGER}`;
+
+/** DET-FP-002 — Analyst+ may save a detection exception draft from triage. */
+export function canDraftQueueException(roles: readonly string[] | undefined | null): boolean {
+  return canTriageQueueAlerts(roles);
+}
+
+/** DET-FP-002 — SOC Manager+ may activate a drafted exception. */
+export function canActivateQueueException(roles: readonly string[] | undefined | null): boolean {
+  return canAssignQueueAlerts(roles);
+}
+
+export const QUEUE_EXCEPTION_DRAFT_DENIED = DET_EXCEPTION_DRAFT_DENIED_TITLE;
+
+export const QUEUE_EXCEPTION_ACTIVATE_DENIED = DET_EXCEPTION_ACTIVATE_DENIED_TITLE;
 
 /** Bulk status via POST /api/ha-alerts/status (alertIds[]) — real backend contract. */
 export const QUEUE_BULK_STATUS_SUPPORTED = true;
