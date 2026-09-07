@@ -212,6 +212,10 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
                 <div><dt>Duration</dt><dd>{previewResult.durationMs} ms</dd></div>
                 <div><dt>Events scanned</dt><dd>{previewResult.eventsScanned?.toLocaleString() ?? 'Unavailable'}</dd></div>
                 <div><dt>Mode</dt><dd>{previewResult.mode ?? 'unknown'}</dd></div>
+                <div><dt>Exceptions applied</dt><dd>{previewResult.exceptionsApplied ? 'yes' : 'no'}</dd></div>
+                {typeof previewResult.exceptionsSuppressedCount === 'number' && previewResult.exceptionsSuppressedCount > 0 && (
+                  <div><dt>Suppressed</dt><dd>{previewResult.exceptionsSuppressedCount}</dd></div>
+                )}
               </dl>
               {previewResult.samples.length > 0 && (
                 <div className="detection-test-result__fields">

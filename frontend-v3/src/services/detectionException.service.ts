@@ -61,7 +61,7 @@ let fixtureExceptions: DetectionException[] = [
     activatedAt: '2026-09-06T14:20:00Z',
     createdAt: '2026-09-05T09:00:00Z',
     updatedAt: '2026-09-06T14:20:00Z',
-    honesty: 'Design fixture: persisted exception list is fictional.',
+    honesty: 'STAGING CANDIDATE fixture: active exceptions are treated as engine-enforced (sync lag fictional).',
   },
   {
     id: 9002,
@@ -76,7 +76,7 @@ let fixtureExceptions: DetectionException[] = [
     activatedAt: null,
     createdAt: '2026-09-07T08:15:00Z',
     updatedAt: '2026-09-07T08:15:00Z',
-    honesty: 'Design fixture: persisted exception list is fictional.',
+    honesty: 'Design fixture: draft exceptions are never enforced.',
   },
 ];
 
@@ -121,7 +121,7 @@ function mapException(body: Record<string, unknown>, fallbackRuleId: string): De
     updatedAt: typeof body.updatedAt === 'string' ? body.updatedAt : null,
     honesty: typeof body.honesty === 'string'
       ? body.honesty
-      : 'STAGING CANDIDATE — exception persisted for tuning; runtime engine enforcement may lag.',
+      : 'STAGING CANDIDATE — active exceptions sync via config plugin and are enforced pre-alert by the event-processor (lag <=60s).',
   };
 }
 

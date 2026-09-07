@@ -73,6 +73,18 @@ export function DetectionPipelineHealthStrip(): JSX.Element | null {
               <dt>Correlation checks</dt>
               <dd>{health.correlationChecks ?? '—'}</dd>
             </div>
+            <div>
+              <dt>Exceptions suppressed</dt>
+              <dd>{health.exceptionsSuppressed ?? '—'}</dd>
+            </div>
+            <div>
+              <dt>Active exceptions</dt>
+              <dd>{health.activeExceptions ?? '—'}</dd>
+            </div>
+            <div>
+              <dt>Exceptions last load</dt>
+              <dd>{health.exceptionsLastLoad ?? health.lastReload ?? '—'}</dd>
+            </div>
           </dl>
           <p className="detection-pipeline__honesty" role="status">
             <ShieldAlert size={12} />

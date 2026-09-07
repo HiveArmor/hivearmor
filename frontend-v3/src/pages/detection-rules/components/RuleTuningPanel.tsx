@@ -148,8 +148,10 @@ export function RuleTuningPanel({
       <p className="detection-tuning__honesty" role="status">
         <ShieldAlert size={13} aria-hidden="true" />
         <span>
-          STAGING CANDIDATE — exceptions persist in PostgreSQL for the FP feedback loop.
-          Runtime engine consumption of active exceptions is not yet end-to-end guaranteed.
+          STAGING CANDIDATE — <strong>active</strong> exceptions are enforced by the correlation engine
+          (pre-alert suppress via config sync → <code>rules/exceptions/exceptions.yaml</code>).
+          Draft/inactive rows never suppress. Typical sync lag {'<='}60s; sequence/graph paths not covered.
+          Pipeline health shows last exception load and suppressed counts when EP is reachable.
         </span>
       </p>
 

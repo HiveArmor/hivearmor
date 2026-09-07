@@ -164,6 +164,21 @@ function draftPayload(rule: Partial<DetectionRule>): Record<string, unknown> {
   };
 }
 
+function readNestedString(root: Record<string, unknown>, path: string[]): string | null {
+  let cursor: unknown = root;
+  for (const key of path) {
+    if (!cursor || typeof cursor !== 'object' || Array.isArray(cursor)) return null;
+    cursor = (cursor as Record<string, unknown>)[key];
+  }
+  return typeof cursor === 'string' ? cursor : null;
+}
+
+function eventMatchesApprovedScannerException(event: Record<string, unknown>): boolean {
+  const host = readNestedString(event, ['host', 'name'])
+    ?? readNestedString(event, ['origin', 'host']);
+  return host === 'approved-scanner';
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (response.status === 401) {
     localStorage.removeItem(TOKEN_KEY);
@@ -421,6 +436,8 @@ export async function previewRuleDraft(
       simulated?: boolean;
       openSearchQueried?: boolean;
       available?: boolean;
+      exceptionsApplied?: boolean;
+      exceptionsSuppressedCount?: number;
     }>(response);
     const mode = result.mode
       ?? (result.openSearchQueried ? 'opensearch' : dryRunEvents?.length ? 'inject' : 'unavailable');
@@ -447,6 +464,8 @@ export async function previewRuleDraft(
         honesty,
         simulated: false,
         openSearchQueried: false,
+        exceptionsApplied: Boolean(result.exceptionsApplied),
+        exceptionsSuppressedCount: result.exceptionsSuppressedCount ?? 0,
       };
     }
     const samples = (result.sampleAlerts ?? []).map((sample, index) => ({
@@ -471,6 +490,8 @@ export async function previewRuleDraft(
       honesty,
       simulated: Boolean(result.simulated),
       openSearchQueried: Boolean(result.openSearchQueried),
+      exceptionsApplied: Boolean(result.exceptionsApplied),
+      exceptionsSuppressedCount: result.exceptionsSuppressedCount ?? 0,
     };
   }
   await new Promise<void>((resolve, reject) => {
@@ -496,9 +517,11 @@ export async function previewRuleDraft(
       ],
       warning: 'Design fixture: OpenSearch mode returns fictional historical matches.',
       mode: 'opensearch',
-      honesty: 'Design fixture: OpenSearch historical preview is fictional.',
+      honesty: 'Design fixture: OpenSearch historical preview is fictional. exceptionsApplied=false (Java/OS path does not load EP exception packs).',
       simulated: true,
       openSearchQueried: true,
+      exceptionsApplied: false,
+      exceptionsSuppressedCount: 0,
     };
   }
   if (previewMode === 'inject' && !dryRunEvents?.length) {
@@ -515,11 +538,39 @@ export async function previewRuleDraft(
       samples: [],
       warning: 'Inject mode requires a sample event JSON object.',
       mode: 'unavailable',
-      honesty: 'Inject mode unavailable without dryRunEvents.',
+      honesty: 'Inject mode unavailable without dryRunEvents. exceptionsApplied=false.',
       simulated: false,
       openSearchQueried: false,
+      exceptionsApplied: false,
+      exceptionsSuppressedCount: 0,
     };
   }
+
+  const injectEvent = dryRunEvents?.[0];
+  if (injectEvent && eventMatchesApprovedScannerException(injectEvent)) {
+    return {
+      available: true,
+      executionId: `preview-suppressed-${rule.id ?? 'draft'}`,
+      approximate: true,
+      matchCount: 0,
+      eventsScanned: 1,
+      durationMs: 44,
+      sourceCompleteness: 100,
+      truncated: false,
+      histogram: [],
+      samples: [],
+      warning: 'Match suppressed by active fixture exception #9001 (host.name is approved-scanner).',
+      mode: previewMode === 'inject' ? 'inject' : 'fixture',
+      honesty:
+        'Design fixture: active exception enforced for demo inject event (exceptionsApplied=true). '
+        + 'Live Java dry-run still reports exceptionsApplied=false until it shares the EP matcher.',
+      simulated: true,
+      openSearchQueried: false,
+      exceptionsApplied: true,
+      exceptionsSuppressedCount: 1,
+    };
+  }
+
   const base = Math.max(4, (rule.ruleName?.length ?? 12) % 17);
   return {
     available: true,
@@ -538,9 +589,11 @@ export async function previewRuleDraft(
     ],
     warning: 'Fictional preview results are isolated from production alerts and rule metrics.',
     mode: previewMode === 'inject' ? 'inject' : 'fixture',
-    honesty: 'Design fixture: preview matches are fictional and isolated from production.',
+    honesty: 'Design fixture: preview matches are fictional and isolated from production. exceptionsApplied=false unless inject host matches an active fixture exception.',
     simulated: true,
     openSearchQueried: false,
+    exceptionsApplied: false,
+    exceptionsSuppressedCount: 0,
   };
 }
 
@@ -664,6 +717,26 @@ export async function testDetectionSandbox(
       }, { once: true });
     });
     const event = JSON.parse(eventJson) as Record<string, unknown>;
+    const hostName = readNestedString(event, ['host', 'name'])
+      ?? readNestedString(event, ['origin', 'host']);
+    if (hostName === 'approved-scanner') {
+      return {
+        matched: false,
+        matchedFields: [],
+        explanation:
+          'Suppressed by active fixture exception #9001 (host.name is approved-scanner). '
+          + 'Engine path: pre-alert ExceptionMatches — no alert would be created.',
+        durationMs: 29,
+        evaluatedFields: Object.keys(event).length,
+        warnings: [
+          'Design fixture: demonstrates DET-FP engine enforcement for an active exception.',
+          'exceptionsApplied=true (fixture only).',
+        ],
+        evaluationMode: 'fixture_exception_suppressed',
+        openSearchQueried: false,
+        engineParity: 'fixture',
+      };
+    }
     const normalizedRule = ruleYaml.toLowerCase();
     const flattened: Array<{ path: string; value: unknown }> = [];
     const visit = (value: unknown, path: string): void => {
@@ -680,7 +753,7 @@ export async function testDetectionSandbox(
       explanation: matched ? 'The fictional event satisfied the selection and condition path.' : 'The event did not satisfy the active selection path.',
       durationMs: 37,
       evaluatedFields: Object.keys(event).length,
-      warnings: ['Design fixture evaluation — production evaluators were not called.'],
+      warnings: ['Design fixture evaluation — production evaluators were not called.', 'exceptionsApplied=false unless host matches an active fixture exception.'],
       evaluationMode: 'fixture',
       openSearchQueried: false,
       engineParity: 'fixture',

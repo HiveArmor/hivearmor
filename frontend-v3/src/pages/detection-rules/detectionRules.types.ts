@@ -108,7 +108,7 @@ export interface DetectionSandboxResult {
   evaluatedFields: number;
   warnings: string[];
   /** Honest evaluation contract — inject dry-run vs Sigma sandbox vs fixture. */
-  evaluationMode?: 'inject_dry_run' | 'sigma_sandbox' | 'fixture' | 'unavailable';
+  evaluationMode?: 'inject_dry_run' | 'sigma_sandbox' | 'fixture' | 'fixture_exception_suppressed' | 'unavailable';
   openSearchQueried?: boolean;
   engineParity?: 'approximate' | 'sigma' | 'fixture';
 }
@@ -166,6 +166,9 @@ export interface RulePreviewResult {
   honesty?: string | null;
   simulated?: boolean;
   openSearchQueried?: boolean;
+  /** DET-FP — false when Java dry-run does not honor engine exception packs. */
+  exceptionsApplied?: boolean;
+  exceptionsSuppressedCount?: number;
 }
 
 export interface DetectionRuleVersion {

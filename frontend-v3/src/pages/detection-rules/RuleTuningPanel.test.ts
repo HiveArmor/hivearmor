@@ -1,6 +1,9 @@
 /**
  * Detection Next-items service + component smoke tests.
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { describe, it, expect } from 'vitest';
 
 describe('detectionException.service', () => {
@@ -39,5 +42,25 @@ describe('detectionRules.capabilities next flags', () => {
     const module = await import('./detectionRules.capabilities');
     expect(module.DET_EXCEPTION_PERSIST).toBe(true);
     expect(module.DET_OBS_PIPELINE_HEALTH).toBe(true);
+  });
+});
+
+describe('DET-FP engine enforcement honesty', () => {
+  it('RuleTuningPanel copy claims active exceptions are enforced', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'src/pages/detection-rules/components/RuleTuningPanel.tsx'),
+      'utf8',
+    );
+    expect(source).toContain('enforced by the correlation engine');
+    expect(source).not.toContain('not yet end-to-end guaranteed');
+  });
+
+  it('pipeline health service exposes exception counters', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'src/services/detectionPipeline.service.ts'),
+      'utf8',
+    );
+    expect(source).toContain('exceptionsSuppressed');
+    expect(source).toContain('activeExceptions');
   });
 });

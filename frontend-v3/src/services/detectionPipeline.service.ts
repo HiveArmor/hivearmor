@@ -25,6 +25,9 @@ export interface DetectionPipelineHealth {
   afterEventsMisses: number | null;
   afterEventsErrors: number | null;
   correlationChecks: number | null;
+  exceptionsSuppressed: number | null;
+  activeExceptions: number | null;
+  exceptionsLastLoad: string | null;
   lastReload: string | null;
   loadReport: DetectionLoadReport | null;
   injectEnabled: boolean | null;
@@ -42,12 +45,15 @@ export async function fetchDetectionPipelineHealth(signal?: AbortSignal): Promis
       available: true,
       mode: 'fixture',
       status: 'ok',
-      honesty: 'Design fixture: LoadReport and afterEvents counters are fictional.',
+      honesty: 'Design fixture: LoadReport, afterEvents, and exception-suppression counters are fictional.',
       checkedAt: new Date().toISOString(),
       activeRuleCount: 642,
       afterEventsMisses: 18,
       afterEventsErrors: 2,
       correlationChecks: 1284,
+      exceptionsSuppressed: 37,
+      activeExceptions: 1,
+      exceptionsLastLoad: '2026-09-07T10:41:45Z',
       lastReload: '2026-09-07T10:42:00Z',
       loadReport: {
         loaded: 648,
@@ -94,6 +100,9 @@ export async function fetchDetectionPipelineHealth(signal?: AbortSignal): Promis
     afterEventsMisses: typeof body.afterEventsMisses === 'number' ? body.afterEventsMisses : null,
     afterEventsErrors: typeof body.afterEventsErrors === 'number' ? body.afterEventsErrors : null,
     correlationChecks: typeof body.correlationChecks === 'number' ? body.correlationChecks : null,
+    exceptionsSuppressed: typeof body.exceptionsSuppressed === 'number' ? body.exceptionsSuppressed : null,
+    activeExceptions: typeof body.activeExceptions === 'number' ? body.activeExceptions : null,
+    exceptionsLastLoad: typeof body.exceptionsLastLoad === 'string' ? body.exceptionsLastLoad : null,
     lastReload: typeof body.lastReload === 'string' ? body.lastReload : null,
     loadReport: report
       ? {
