@@ -116,16 +116,10 @@ func ExceptionMatches(ruleID string, event *plugins.Event) bool {
 	exceptionsMu.RLock()
 	candidates := exceptionsByRule[ruleID]
 	exceptionsMu.RUnlock()
-	if len(candidates) == 0 {
-		return false
+	if exceptionListMatches(candidates, event) {
+		return true
 	}
-	fields := exceptionFieldMap(event)
-	for _, ex := range candidates {
-		if exceptionAllMatch(ex.Conditions, fields) {
-			return true
-		}
-	}
-	return false
+	return tenantExceptionMatches(ruleID, event)
 }
 
 // SuppressIfMatched returns true when an active exception matches, and increments

@@ -5,10 +5,14 @@
 import { describe, it, expect } from 'vitest';
 
 import {
+  canActivateQueueException,
   canAssignQueueAlerts,
+  canDraftQueueException,
   canTriageQueueAlerts,
   QUEUE_ASSIGN_DENIED,
   QUEUE_BULK_STATUS_SUPPORTED,
+  QUEUE_EXCEPTION_ACTIVATE_DENIED,
+  QUEUE_EXCEPTION_DRAFT_DENIED,
   QUEUE_TRIAGE_DENIED,
 } from './analystQueue.capabilities';
 
@@ -37,5 +41,18 @@ describe('analystQueue.capabilities', () => {
 
   it('marks bulk status as backend-supported', () => {
     expect(QUEUE_BULK_STATUS_SUPPORTED).toBe(true);
+  });
+
+  it('gates exception draft to Analyst+ and activate to SOC Manager+', () => {
+    expect(canDraftQueueException(['ROLE_ANALYST'])).toBe(true);
+    expect(canDraftQueueException(['ROLE_SOC_ANALYST'])).toBe(true);
+    expect(canDraftQueueException(['ROLE_USER'])).toBe(false);
+    expect(canActivateQueueException(['ROLE_ANALYST'])).toBe(false);
+    expect(canActivateQueueException(['ROLE_SOC_MANAGER'])).toBe(true);
+    expect(canActivateQueueException(['ROLE_ADMIN'])).toBe(true);
+    expect(QUEUE_EXCEPTION_DRAFT_DENIED).toBe('Required permission: Analyst or higher');
+    expect(QUEUE_EXCEPTION_ACTIVATE_DENIED).toBe('Required permission: SOC Manager or Platform Administrator');
+    expect(QUEUE_EXCEPTION_DRAFT_DENIED).not.toMatch(/ROLE_/);
+    expect(QUEUE_EXCEPTION_ACTIVATE_DENIED).not.toMatch(/ROLE_/);
   });
 });

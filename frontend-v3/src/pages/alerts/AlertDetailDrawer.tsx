@@ -30,7 +30,14 @@ import { Link } from 'react-router-dom';
 import { alertTriageFixtureMode, fetchAlertTriageDetail } from './alertTriage.service';
 import type { AlertTriageAction, AlertTriageDetail } from './alertTriage.types';
 
+import { AlertExceptionDraftPanel } from '@/components/alert-exception-draft/AlertExceptionDraftPanel';
 import { getSeverityLabel, numericToSeverityLevel } from '@/lib/severity';
+import {
+  QUEUE_EXCEPTION_ACTIVATE_DENIED,
+  QUEUE_EXCEPTION_DRAFT_DENIED,
+  canActivateQueueException,
+  canDraftQueueException,
+} from '@/pages/analyst-queue/analystQueue.capabilities';
 import { useAuthStore } from '@/store/auth.store';
 
 export interface AlertDetailDrawerProps {
@@ -211,11 +218,19 @@ function HistoryView({ alert }: { alert: AlertTriageDetail }): JSX.Element {
 }
 
 function ResponseView({ alert, onRequestAction }: { alert: AlertTriageDetail; onRequestAction?: AlertDetailDrawerProps['onRequestAction'] }): JSX.Element {
+  const roles = useAuthStore((state) => state.user?.roles);
   const canAssign = useAuthStore((state) => state.hasAnyRole(['ROLE_SOC_MANAGER', 'ROLE_ADMIN']));
   const assignEnabled = Boolean(onRequestAction) && (alertTriageFixtureMode || canAssign);
   const request = (action: AlertTriageAction): void => onRequestAction?.(action, [alert.id]);
   return (
     <div className="alert-drawer-view">
+      <AlertExceptionDraftPanel
+        alert={alert}
+        canDraft={canDraftQueueException(roles)}
+        canActivate={canActivateQueueException(roles)}
+        draftDeniedTitle={QUEUE_EXCEPTION_DRAFT_DENIED}
+        activateDeniedTitle={QUEUE_EXCEPTION_ACTIVATE_DENIED}
+      />
       <section className="alert-drawer-card alert-drawer-card--response" aria-labelledby="drawer-response-heading">
         <div className="alert-drawer-card__heading"><ShieldCheck size={15} aria-hidden="true" /><h3 id="drawer-response-heading">Triage decisions</h3></div>
         <p className="alert-drawer-response-note">Lifecycle changes require an analyst reason and explicit confirmation. Response actions remain in the full investigation workspace.</p>

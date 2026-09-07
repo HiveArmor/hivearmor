@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -31,15 +32,65 @@ var (
 	// to avoid a hard import cycle between the rules and enterprise/risk packages.
 	addScoreFn func(event *plugins.Event, score int)
 
-	// DET-OBS-001 — afterEvents / correlation observability counters.
+	// DET-OBS-001 / DET-INDEX-001b — afterEvents / correlation observability counters.
 	correlationChecks atomic.Uint64
 	afterEventsMisses atomic.Uint64
 	afterEventsErrors atomic.Uint64
 )
 
-// CorrelationCounters returns DET-OBS-001 afterEvents observability counters.
+var errAfterEventsUnconfigured = errors.New("afterEvents OpenSearch unconfigured")
+
+// CorrelationCounters returns DET-INDEX-001b afterEvents observability counters.
 func CorrelationCounters() (checks, misses, errors uint64) {
 	return correlationChecks.Load(), afterEventsMisses.Load(), afterEventsErrors.Load()
+}
+
+// AfterEventsMissRate is misses/checks. measurable is false when no searches have run.
+func AfterEventsMissRate() (rate float64, measurable bool) {
+	checks := correlationChecks.Load()
+	if checks == 0 {
+		return 0, false
+	}
+	return float64(afterEventsMisses.Load()) / float64(checks), true
+}
+
+// ObserveCorrelation records one afterEvents / correlation search outcome.
+// Unconfigured OpenSearch is an error, never a miss (honest unavailable vs empty index).
+func ObserveCorrelation(matched bool, err error) {
+	correlationChecks.Add(1)
+	if err != nil {
+		afterEventsErrors.Add(1)
+		return
+	}
+	if !matched {
+		afterEventsMisses.Add(1)
+	}
+}
+
+// ResetCorrelationCountersForTest clears DET-INDEX-001b counters. Tests only.
+func ResetCorrelationCountersForTest() {
+	correlationChecks.Store(0)
+	afterEventsMisses.Store(0)
+	afterEventsErrors.Store(0)
+}
+
+// CorrelationSnapshot is the JSON object surfaced on /api/rules/status and /health.
+func CorrelationSnapshot() map[string]any {
+	checks, misses, errs := CorrelationCounters()
+	out := map[string]any{
+		"correlationChecks":      checks,
+		"afterEventsMisses":      misses,
+		"afterEventsErrors":      errs,
+		"indexPatternConstraint": "v3-hive-<type>-YYYY.MM.DD",
+	}
+	if rate, ok := AfterEventsMissRate(); ok {
+		out["afterEventsMissRate"] = rate
+		out["afterEventsMissRateAvailable"] = true
+	} else {
+		out["afterEventsMissRate"] = nil
+		out["afterEventsMissRateAvailable"] = false
+	}
+	return out
 }
 
 // SetAddScoreFn registers the callback used to forward risk-score events.
@@ -99,7 +150,7 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 	eventStr := string(eventJSON)
 
 	var alerts []*plugins.Alert
-	for _, rule := range GetRules(event.DataType) {
+	for _, rule := range GetRulesForEvent(event) {
 		// Risk-score rules feed the accumulator instead of producing direct alerts.
 		if rule.HasRiskScore() {
 			ok, evalErr := getCEL().Evaluate(&eventStr, rule.Where)
@@ -110,6 +161,10 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 				}
 			} else if ok {
 				if SuppressIfMatchedID(rule.ID, event) {
+					continue
+				}
+				// DET-SEQ-002 — afterEvents/correlation must pass before scoring.
+				if !afterEventsSatisfied(rule, event) {
 					continue
 				}
 				if addScoreFn != nil {
@@ -133,24 +188,8 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 		if !ok {
 			continue
 		}
-		// afterEvents / correlation check — use flat map for template resolution
-		if len(rule.Correlation) > 0 {
-			flatJSON, marshalErr := json.Marshal(eventToMap(event))
-			if marshalErr != nil {
-				log.Printf("[rules.Evaluate] failed to marshal event for correlation check rule.id=%d: %v", rule.ID, marshalErr)
-				afterEventsErrors.Add(1)
-				continue
-			}
-			correlationChecks.Add(1)
-			matched, _, err := executeSearchRequest(rule.Correlation[0], string(flatJSON))
-			if err != nil {
-				afterEventsErrors.Add(1)
-				continue
-			}
-			if !matched {
-				afterEventsMisses.Add(1)
-				continue
-			}
+		if !afterEventsSatisfied(rule, event) {
+			continue
 		}
 		// DET-FP-001 — active exceptions suppress before alert creation (pre-alert).
 		if SuppressIfMatchedID(rule.ID, event) {
@@ -162,6 +201,26 @@ func Evaluate(event *plugins.Event) []*plugins.Alert {
 		}
 	}
 	return alerts
+}
+
+// afterEventsSatisfied reports whether a rule's afterEvents/correlation lookback
+// is absent or matched in OpenSearch. Risk rules call this before addScoreFn.
+func afterEventsSatisfied(rule *Rule, event *plugins.Event) bool {
+	if rule == nil || len(rule.Correlation) == 0 {
+		return true
+	}
+	flatJSON, marshalErr := json.Marshal(eventToMap(event))
+	if marshalErr != nil {
+		log.Printf("[rules.Evaluate] failed to marshal event for correlation check rule.id=%d: %v", rule.ID, marshalErr)
+		afterEventsErrors.Add(1)
+		return false
+	}
+	matched, _, err := executeSearchRequest(rule.Correlation[0], string(flatJSON))
+	ObserveCorrelation(matched, err)
+	if err != nil || !matched {
+		return false
+	}
+	return true
 }
 
 func buildAlert(event *plugins.Event, rule *Rule) *plugins.Alert {
@@ -260,7 +319,7 @@ func buildBoolQuery(exprs []Expression, eventJSON string) map[string]any {
 // Returns (matched, hits, error).
 func executeSearchRequest(sr SearchRequest, eventJSON string) (bool, []map[string]any, error) {
 	if searchBase == "" {
-		return false, nil, nil
+		return false, nil, errAfterEventsUnconfigured
 	}
 	within, err := time.ParseDuration(sr.Within)
 	if err != nil {

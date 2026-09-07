@@ -41,3 +41,12 @@ describe('AlertsListPage inventory UX contracts', () => {
     expect(source).toContain('LiveModeToggle');
   });
 });
+
+describe('DET-FP-002 alerts triage exception draft', () => {
+  it('keeps the exception panel on the triage drawer and uses human role labels', () => {
+    const drawer = readFileSync(join(dir, 'AlertDetailDrawer.tsx'), 'utf8');
+    expect(drawer).toContain('AlertExceptionDraftPanel');
+    expect(drawer).toContain('QUEUE_EXCEPTION_DRAFT_DENIED');
+    expect(drawer).not.toMatch(/ROLE_ANALYST/);
+  });
+});

@@ -112,7 +112,9 @@ func main() {
 		log.Printf("Sequence detection initialized with %d rules", len(seqRules))
 	}
 
-	// Graph offense evaluator — runs Cypher kill-chain queries against Neo4j
+	// Graph offense evaluator — runs Cypher kill-chain queries against Neo4j.
+	// DET-GRAPH-001: compose must set NEO4J_ENABLED=true and an HTTP Cypher URI
+	// (http://neo4j:7474). bolt:// is for entity-graph, not this evaluator.
 	if config.Neo4jEnabled == "true" {
 		graphRules := rules.GraphOffenseRules()
 		if len(graphRules) > 0 {
@@ -127,9 +129,12 @@ func main() {
 				graphRules,
 			)
 			go graphEval.Start(ctx)
+			log.Printf("Graph offense evaluator enabled NEO4J_URI=%s rules=%d", config.Neo4jURI, len(graphRules))
 		} else {
 			log.Printf("NEO4J_ENABLED=true but no graph_offense rules found in %s", filepath.Join(config.WorkDir, "rules"))
 		}
+	} else {
+		log.Printf("NEO4J_ENABLED=%s; graph offense pack not started", config.Neo4jEnabled)
 	}
 
 	// Always start the engine socket — companion plugins need it regardless of input source.

@@ -66,10 +66,16 @@ describe('detection rules UX honesty (Prompt 16)', () => {
 
   it('surfaces sequence/risk/graph enterprise pack inventory', () => {
     expect(page).toContain('detection-enterprise-pack-honesty');
+    expect(page).toContain('afterEvents');
+    expect(page).toContain('addScoreFn');
+    expect(page).toContain('NEO4J_ENABLED=true');
+    expect(page).toContain('flag was never flipped');
     expect(page).toContain('ENGINE_OPTIONS');
     expect(page).toContain('engineFilter');
     expect(columns).toContain('EngineCell');
     const fixtures = readFileSync(join(process.cwd(), 'src/pages/detection-rules/detectionRules.fixtures.ts'), 'utf8');
+    expect(fixtures).toContain('afterEvents lookback');
+    expect(fixtures).not.toContain('Staging may be idle if Neo4j is off');
     expect(fixtures).toContain("engine: 'sequence'");
     expect(fixtures).toContain("engine: 'risk'");
     expect(fixtures).toContain("engine: 'graph'");
@@ -92,6 +98,11 @@ describe('detection rules UX honesty (Prompt 16)', () => {
     const fixtures = readFileSync(join(process.cwd(), 'src/pages/detection-rules/detectionRules.fixtures.ts'), 'utf8');
     expect(fixtures).toContain('ACME-CUSTOM-VPN-GEO-ANOMALY');
     expect(fixtures).toContain('CWM-CUSTOM-OT-PROTOCOL-ANOMALY');
+    expect(fixtures).toContain('REST-visible, not engine-enforced until $WORK_DIR/tenants/');
     expect(fixtures).not.toContain('v11-log-*');
+    const packService = readFileSync(join(process.cwd(), 'src/services/detectionPack.service.ts'), 'utf8');
+    expect(packService).toContain('tenant packs are REST-visible');
+    expect(packService).toContain('not engine-enforced until then');
+    expect(packService).toContain('v3-hive-<type>-YYYY.MM.DD');
   });
 });

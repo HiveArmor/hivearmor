@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/hivearmor/event-processor/config"
+	"github.com/hivearmor/event-processor/processor"
 	rulesengine "github.com/hivearmor/event-processor/rules"
 )
 
@@ -21,12 +22,19 @@ func handleHealth(c *gin.Context) {
 	if !report.PilotPackOK {
 		status = "degraded"
 	}
+	correlation := rulesengine.CorrelationSnapshot()
 	c.JSON(http.StatusOK, gin.H{
-		"status":  status,
-		"service": "hivearmor-event-processor",
-		"plugins": getSupervisordStatus(),
-		"rules":   report,
-		"inject":  config.InjectEnabled(),
+		"status":                       status,
+		"service":                      "hivearmor-event-processor",
+		"plugins":                      getSupervisordStatus(),
+		"rules":                        report,
+		"inject":                       config.InjectEnabled(),
+		"ingestAlertSlo":               processor.SnapshotIngestAlertSLO(),
+		"correlationChecks":            correlation["correlationChecks"],
+		"afterEventsMisses":            correlation["afterEventsMisses"],
+		"afterEventsErrors":            correlation["afterEventsErrors"],
+		"afterEventsMissRate":          correlation["afterEventsMissRate"],
+		"afterEventsMissRateAvailable": correlation["afterEventsMissRateAvailable"],
 	})
 }
 
