@@ -86,6 +86,16 @@ export interface SigmaSyncResponse {
   errorDetails?: { index: number; message: string }[];
 }
 
+/** DET-SIGMA-001b — activate is not loaded until LoadReport lists the rule. */
+export interface SigmaActivateResult {
+  ruleId: number;
+  ruleName?: string;
+  activated: boolean;
+  engineLoaded: boolean;
+  reloadHttpAccepted?: boolean;
+  honesty: string;
+}
+
 export interface DetectionRuleSummary {
   total: number;
   enabled: number;
@@ -125,9 +135,11 @@ export interface DetectionSandboxResult {
   evaluatedFields: number;
   warnings: string[];
   /** Honest evaluation contract — inject dry-run vs Sigma sandbox vs fixture. */
-  evaluationMode?: 'inject_dry_run' | 'sigma_sandbox' | 'fixture' | 'fixture_exception_suppressed' | 'unavailable';
+  evaluationMode?: 'inject_dry_run' | 'ep_evaluate' | 'sigma_sandbox' | 'fixture' | 'fixture_exception_suppressed' | 'unavailable';
   openSearchQueried?: boolean;
-  engineParity?: 'approximate' | 'sigma' | 'fixture';
+  engineParity?: 'approximate' | 'go' | 'unavailable' | 'sigma' | 'fixture';
+  engine?: DetectionEngine;
+  sequenceComplete?: boolean;
   suppressed?: boolean;
   wouldAlert?: boolean;
   exceptionsApplied?: boolean;

@@ -125,6 +125,70 @@ public class EventProcessorManagerService {
         }
     }
 
+    /**
+     * DET-TEST-002 — POST /api/rules/evaluate (INTERNAL_KEY). Go engine dry-run; no persist.
+     */
+    public Map<String, Object> evaluateRule(String ruleYaml, Map<String, Object> event, String engineHint) {
+        String url = EVENT_PROCESSOR_BASE_URL + "/api/rules/evaluate";
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("ruleYaml", ruleYaml);
+        body.put("event", event != null ? event : Map.of());
+        if (engineHint != null && !engineHint.isBlank()) {
+            body.put("engine", engineHint);
+        }
+        try {
+            ResponseEntity<String> response = restTemplateService.post(
+                url,
+                body,
+                String.class,
+                buildEventProcessorHeaders()
+            );
+            if (response.getBody() == null || response.getBody().isBlank()) {
+                throw new IllegalStateException("Empty evaluate response from event-processor");
+            }
+            return objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        } catch (Exception e) {
+            throw new IllegalStateException("event-processor evaluate unavailable: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * DET-SIGMA-001b — true only when LoadReport.loadedNames lists the rule.
+     * Reload HTTP 200/202 is not sufficient.
+     */
+    public boolean loadReportLists(String ruleName) {
+        if (ruleName == null || ruleName.isBlank()) {
+            return false;
+        }
+        Map<String, Object> status = fetchRulesStatus();
+        if (loadedNamesContain(status.get("loadReport"), ruleName)) {
+            return true;
+        }
+        try {
+            Map<String, Object> health = fetchHealth();
+            return loadedNamesContain(health.get("rules"), ruleName);
+        } catch (Exception e) {
+            log.debug("{}.loadReportLists: health unavailable: {}", CLASSNAME, e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean loadedNamesContain(Object report, String ruleName) {
+        if (!(report instanceof Map<?, ?> map)) {
+            return false;
+        }
+        Object names = map.get("loadedNames");
+        if (!(names instanceof List<?> list)) {
+            return false;
+        }
+        for (Object name : list) {
+            if (ruleName.equals(String.valueOf(name))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private HttpHeaders buildEventProcessorHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

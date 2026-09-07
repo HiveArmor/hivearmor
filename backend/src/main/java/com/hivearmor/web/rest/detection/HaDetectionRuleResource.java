@@ -503,6 +503,7 @@ public class HaDetectionRuleResource {
             var consideration = exceptionService.consider(ruleId, sampleEvent);
             Map<String, Object> result = dryRunService.toHonestyPayload(dryRun, consideration);
             result.put("ruleName", ruleDefinition.get("name"));
+            result.put("engine", DetectionRuleDryRunService.classifyEngine(ruleDefinition));
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return badRequest("VALIDATION_ERROR", e.getMessage());

@@ -57,6 +57,7 @@ public class DetectionPipelineObservabilityService {
                 loadReport.put("invalid", report.get("invalid"));
                 loadReport.put("pilotPackOk", report.get("pilotPackOk"));
                 loadReport.put("pilotMissing", report.get("pilotMissing"));
+                loadReport.put("loadedNames", report.get("loadedNames"));
                 loadReport.put("lastLoad", report.get("lastLoad"));
                 response.put("loadReport", loadReport);
             } else {

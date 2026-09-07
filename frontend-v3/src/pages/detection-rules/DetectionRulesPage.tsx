@@ -381,7 +381,7 @@ export function DetectionRulesPage(): JSX.Element {
       </div>
 
       {limitedContract && <div className="detection-contract-warning" role="status"><AlertTriangle size={14} /><span><strong>Limited execution projection.</strong> Last-run health, alert volume, and schedule telemetry require backend execution history — unknown values stay uncolored.</span></div>}
-      {detectionRulesFixtureMode && <div className="detection-contract-warning" role="status" data-testid="detection-enterprise-pack-honesty"><AlertTriangle size={14} /><span><strong>STAGING CANDIDATE — enterprise pack (18 rules: 7 sequence, 6 risk, 5 graph).</strong> Sequence, risk-score, and graph-offense rules use event-processor engines. Java CEL dry-run does not execute those engines. Graph rules need Neo4j (<code>NEO4J_ENABLED</code>).</span></div>}
+      {detectionRulesFixtureMode && <div className="detection-contract-warning" role="status" data-testid="detection-enterprise-pack-honesty"><AlertTriangle size={14} /><span><strong>STAGING CANDIDATE — enterprise pack (18 rules: 7 sequence, 6 risk, 5 graph).</strong> Test console uses event-processor evaluate: <code>engineParity=go</code> or <code>unavailable</code>. Java CEL dry-run never fakes sequence/risk/graph hits. Sigma activate sets <code>engineLoaded=true</code> only when LoadReport lists the rule (~30s watchLoop). Graph rules need Neo4j (<code>NEO4J_ENABLED</code>).</span></div>}
 
       <main className="detection-inventory">
         <div className="detection-results__toolbar">

@@ -208,8 +208,8 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
         {running ? <button type="button" className="detection-test-console__cancel" onClick={() => controllerRef.current?.abort()}><Square size={13} /> Cancel</button> : <button type="button" className="detection-primary-button" onClick={() => void runTest()} disabled={previewing}><Play size={14} /> Run test</button>}
       </div>
 
-      <div className="detection-test-console__boundary" role="status"><TestTube2 size={14} /><strong>Safe test boundary.</strong><span>{engine !== 'cel'
-        ? `STAGING CANDIDATE — ${DETECTION_ENGINE_LABELS[engine]} rules run in the event-processor. This console does not execute the sequence, risk, or graph engines; Java CEL dry-run is not engine-parity.`
+      <div className="detection-test-console__boundary" role="status" data-testid="detection-parity-honesty"><TestTube2 size={14} /><strong>Safe test boundary.</strong><span>{engine !== 'cel'
+        ? `STAGING CANDIDATE — ${DETECTION_ENGINE_LABELS[engine]} rules use event-processor INTERNAL_KEY evaluate (engineParity=go) or engineParity=unavailable. Java CEL dry-run never fakes sequence/risk/graph hits.`
         : detectionRulesFixtureMode
           ? 'STAGING CANDIDATE — fictional event samples are isolated from production metrics. Approved scanner and baseline samples demonstrate match-but-suppressed dry-run.'
           : isSigma
@@ -243,6 +243,9 @@ export default function DetectionTestConsole({ rules, initialRuleId }: Detection
                 <div><dt>Duration</dt><dd>{result.durationMs || '<1'} ms</dd></div>
                 <div><dt>Fields evaluated</dt><dd>{result.evaluatedFields || 'Unavailable'}</dd></div>
                 <div><dt>Mode</dt><dd>{result.evaluationMode ?? 'unknown'}</dd></div>
+                <div><dt>Engine parity</dt><dd data-testid="detection-engine-parity">{result.engineParity ?? 'unknown'}</dd></div>
+                {result.engine && <div><dt>Engine</dt><dd>{DETECTION_ENGINE_LABELS[result.engine]}</dd></div>}
+                {typeof result.sequenceComplete === 'boolean' && <div><dt>Sequence complete</dt><dd>{result.sequenceComplete ? 'yes' : 'no'}</dd></div>}
                 <div><dt>OpenSearch</dt><dd>{result.openSearchQueried ? 'queried' : 'not queried'}</dd></div>
                 <div><dt>Would alert</dt><dd>{result.wouldAlert ? 'yes' : 'no'}</dd></div>
                 <div><dt>Exceptions applied</dt><dd>{result.exceptionsApplied ? 'yes' : 'no'}</dd></div>

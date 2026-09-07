@@ -10,6 +10,7 @@ export interface DetectionLoadReport {
   loaded: number | null;
   skipped: number | null;
   invalid: string[] | null;
+  loadedNames: string[] | null;
   pilotPackOk: boolean | null;
   pilotMissing: string[] | null;
   lastLoad: string | null;
@@ -45,7 +46,7 @@ export async function fetchDetectionPipelineHealth(signal?: AbortSignal): Promis
       available: true,
       mode: 'fixture',
       status: 'ok',
-      honesty: 'Design fixture: LoadReport, afterEvents, and exception-suppression counters are fictional. DET-SEQ staging pack: 7 sequence, 6 risk, 5 graph-offense (Java CEL dry-run does not execute sequence/risk/graph engines). Graph rules need Neo4j (NEO4J_ENABLED).',
+      honesty: 'Design fixture: LoadReport, afterEvents, and exception-suppression counters are fictional. DET-TEST-002: sequence/risk/graph test console uses engineParity=go or unavailable — never fake CEL hits. engineLoaded=true only when LoadReport.loadedNames lists the rule (~30s watchLoop). Graph rules need Neo4j (NEO4J_ENABLED).',
       checkedAt: new Date().toISOString(),
       activeRuleCount: 642,
       afterEventsMisses: 18,
@@ -59,6 +60,7 @@ export async function fetchDetectionPipelineHealth(signal?: AbortSignal): Promis
         loaded: 648,
         skipped: 4,
         invalid: ['legacy-broken-sample.yml'],
+        loadedNames: ['PILOT-WIN-FAILED-LOGON', 'SEQ-BRUTE-FORCE-THEN-SUCCESS'],
         pilotPackOk: true,
         pilotMissing: [],
         lastLoad: '2026-09-07T10:42:00Z',
@@ -109,6 +111,7 @@ export async function fetchDetectionPipelineHealth(signal?: AbortSignal): Promis
           loaded: typeof report.loaded === 'number' ? report.loaded : null,
           skipped: typeof report.skipped === 'number' ? report.skipped : null,
           invalid: Array.isArray(report.invalid) ? report.invalid.map(String) : null,
+          loadedNames: Array.isArray(report.loadedNames) ? report.loadedNames.map(String) : null,
           pilotPackOk: typeof report.pilotPackOk === 'boolean' ? report.pilotPackOk : null,
           pilotMissing: Array.isArray(report.pilotMissing) ? report.pilotMissing.map(String) : null,
           lastLoad: typeof report.lastLoad === 'string' ? report.lastLoad : null,

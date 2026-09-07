@@ -13,6 +13,7 @@ import type {
   RulePreviewResult,
   RuleValidationResult,
   RuleListParams,
+  SigmaActivateResult,
   SigmaSyncResponse,
 } from './detectionRules.types';
 import { buildRuleClientValidation } from './detectionRules.validation';
@@ -325,6 +326,51 @@ export async function syncSigmaRules(): Promise<SigmaSyncResponse> {
     staged: result.staged ?? 0,
     skipped: result.skipped ?? 0,
     message: result.message ?? 'Sigma synchronization completed.',
+  };
+}
+
+export function inferDetectionEngine(ruleYaml: string, engine?: DetectionRule['engine']): NonNullable<DetectionRule['engine']> {
+  if (engine) return engine;
+  if (/type:\s*graph_offense\b/.test(ruleYaml)) return 'graph';
+  if (/^sequence:\s*$/m.test(ruleYaml) || /\nsequence:\s*$/m.test(ruleYaml)) return 'sequence';
+  if (/\briskScore:\s*\d+/.test(ruleYaml)) return 'risk';
+  return 'cel';
+}
+
+/** DET-SIGMA-001b — activate then honor LoadReport, not reload HTTP. */
+export async function activateSigmaRule(ruleId: DetectionRule['id']): Promise<SigmaActivateResult> {
+  if (fixtureMode) {
+    return {
+      ruleId: Number(ruleId) || 0,
+      ruleName: 'Fixture staged Sigma rule',
+      activated: true,
+      engineLoaded: false,
+      reloadHttpAccepted: true,
+      honesty: 'STAGING CANDIDATE design fixture: activate marked the DB row active and requested reload (HTTP 202). engineLoaded=false because LoadReport.loadedNames does not list this rule. Config plugin YAML write + watchLoop may take up to ~30s. Reload HTTP 200/202 is not proof of load.',
+    };
+  }
+  const response = await fetch(`/api/ha-sigma-sync/${encodeURIComponent(String(ruleId))}/activate`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+      Accept: 'application/json',
+    },
+  });
+  if (response.status === 401) {
+    localStorage.removeItem(TOKEN_KEY);
+    window.location.href = `/login?returnTo=${encodeURIComponent(window.location.pathname)}`;
+    throw new Error('Session expired');
+  }
+  if (!response.ok) throw new Error(await response.text() || `HTTP ${response.status}`);
+  const result = await response.json() as Partial<SigmaActivateResult>;
+  return {
+    ruleId: Number(result.ruleId ?? ruleId) || 0,
+    ruleName: result.ruleName,
+    activated: Boolean(result.activated),
+    engineLoaded: Boolean(result.engineLoaded),
+    reloadHttpAccepted: Boolean(result.reloadHttpAccepted),
+    honesty: result.honesty
+      ?? 'engineLoaded=true only when LoadReport lists the rule. Reload HTTP is not proof of load. watchLoop may take ~30s.',
   };
 }
 
@@ -777,6 +823,73 @@ export async function testDetectionSandbox(
         matchingExceptionTitle: baseline ? 'Baseline approved scanner' : 'Approved scanner host',
       };
     }
+    const engine = inferDetectionEngine(ruleYaml);
+    if (engine === 'sequence' || engine === 'risk' || engine === 'graph') {
+      const action = typeof event.action === 'string' ? event.action : '';
+      if (engine === 'sequence') {
+        const step0 = /action == "([^"]+)"/.exec(ruleYaml)?.[1];
+        const step0Matched = Boolean(step0 && action === step0);
+        return {
+          matched: false,
+          matchedFields: step0Matched ? ['sequence.step0'] : [],
+          explanation: step0Matched
+            ? 'Go sequence fixture: step 0 CEL matched this single event; sequenceComplete=false. A step match is not a sequence hit.'
+            : 'Go sequence fixture: no step matched this single event; sequenceComplete=false.',
+          durationMs: 18,
+          evaluatedFields: Object.keys(event).length,
+          warnings: [
+            'DET-TEST-002 fixture: event-processor sequence evaluate (engineParity=go).',
+            'Never treat a sequence step CEL match as a full sequence hit.',
+          ],
+          evaluationMode: 'ep_evaluate',
+          openSearchQueried: false,
+          engineParity: 'go',
+          engine,
+          sequenceComplete: false,
+          suppressed: false,
+          wouldAlert: false,
+          exceptionsApplied: false,
+          exceptionsSuppressedCount: 0,
+        };
+      }
+      if (engine === 'risk') {
+        const whereMatched = action === 'failed_auth' || action === 'powershell';
+        return {
+          matched: whereMatched,
+          matchedFields: whereMatched ? ['where'] : [],
+          explanation: whereMatched
+            ? 'Go risk fixture: where matched; riskScoreDelta applied. wouldAlert=false (threshold is stateful).'
+            : 'Go risk fixture: where did not match; no score increment.',
+          durationMs: 16,
+          evaluatedFields: Object.keys(event).length,
+          warnings: ['DET-TEST-002 fixture: event-processor risk evaluate (engineParity=go).'],
+          evaluationMode: 'ep_evaluate',
+          openSearchQueried: false,
+          engineParity: 'go',
+          engine,
+          suppressed: false,
+          wouldAlert: false,
+          exceptionsApplied: false,
+          exceptionsSuppressedCount: 0,
+        };
+      }
+      return {
+        matched: false,
+        matchedFields: [],
+        explanation: 'engineParity=unavailable — graph_offense single-event evaluate does not run Cypher. Graph rules require Neo4j (NEO4J_ENABLED). Hits were not faked as Java CEL matches.',
+        durationMs: 9,
+        evaluatedFields: Object.keys(event).length,
+        warnings: ['DET-TEST-002 fixture: graph evaluate is unavailable without Neo4j.'],
+        evaluationMode: 'unavailable',
+        openSearchQueried: false,
+        engineParity: 'unavailable',
+        engine,
+        suppressed: false,
+        wouldAlert: false,
+        exceptionsApplied: false,
+        exceptionsSuppressedCount: 0,
+      };
+    }
     const normalizedRule = ruleYaml.toLowerCase();
     const flattened: Array<{ path: string; value: unknown }> = [];
     const visit = (value: unknown, path: string): void => {
@@ -852,6 +965,9 @@ export async function testDetectionSandbox(
         id: options?.ruleId,
         name: 'Detection sandbox dry-run',
         expression: ruleYaml,
+        ruleDefinition: ruleYaml,
+        ruleYaml,
+        engine: inferDetectionEngine(ruleYaml),
       },
       sampleEvent: eventJson,
       eventJson,
@@ -887,6 +1003,8 @@ export async function testDetectionSandbox(
     evaluationMode?: DetectionSandboxResult['evaluationMode'];
     openSearchQueried?: boolean;
     engineParity?: DetectionSandboxResult['engineParity'];
+    engine?: DetectionSandboxResult['engine'];
+    sequenceComplete?: boolean;
     simulatedMatchCount?: number;
     suppressed?: boolean;
     wouldAlert?: boolean;
@@ -903,7 +1021,11 @@ export async function testDetectionSandbox(
     durationMs: result.durationMs ?? 0,
     evaluatedFields: result.matchedFields?.length ?? result.simulatedMatchCount ?? 0,
     warnings: [
-      'CEL inject dry-run (DET-TEST-001) via /api/ha-detection-rules/test — approximate parity with the Go event-processor evaluator; OpenSearch was not queried.',
+      result.engineParity === 'go'
+        ? 'DET-TEST-002 — event-processor INTERNAL_KEY evaluate (engineParity=go). Sequence hits are never faked from Java CEL.'
+        : result.engineParity === 'unavailable'
+          ? 'DET-TEST-002 — engineParity=unavailable. Sequence/risk/graph hits were not faked as Java CEL matches.'
+          : 'CEL inject dry-run (DET-TEST-001) via /api/ha-detection-rules/test — approximate parity with the Go event-processor evaluator; OpenSearch was not queried.',
       result.exceptionsApplied
         ? 'exceptionsApplied=true — active PostgreSQL exceptions were considered with EP operators.'
         : 'exceptionsApplied=false — exception store unavailable or no ruleId.',
@@ -911,6 +1033,8 @@ export async function testDetectionSandbox(
     evaluationMode: result.evaluationMode ?? 'inject_dry_run',
     openSearchQueried: Boolean(result.openSearchQueried),
     engineParity: result.engineParity ?? 'approximate',
+    engine: result.engine,
+    sequenceComplete: result.sequenceComplete,
     suppressed,
     wouldAlert: result.wouldAlert ?? (Boolean(result.matched) && !suppressed),
     exceptionsApplied: Boolean(result.exceptionsApplied),
