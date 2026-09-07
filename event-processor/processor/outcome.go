@@ -2,6 +2,7 @@ package processor
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hivearmor/sdk/plugins"
 )
@@ -40,6 +41,7 @@ func PersistRequired(outcome ProcessingOutcome, store RequiredStore) error {
 	if err := store.WriteEvent(outcome.Event); err != nil {
 		return fmt.Errorf("required event write: %w", err)
 	}
+	persistedAlerts := 0
 	for _, alert := range outcome.Alerts {
 		if alert == nil {
 			continue
@@ -47,6 +49,12 @@ func PersistRequired(outcome ProcessingOutcome, store RequiredStore) error {
 		if err := store.WriteAlert(alert); err != nil {
 			return fmt.Errorf("required alert write: %w", err)
 		}
+		persistedAlerts++
+	}
+	// DET-SLO-001 — record ingest @timestamp → required alert persist.
+	// Failed alert writes must not count; events without alerts are not ingest→alert.
+	if persistedAlerts > 0 {
+		recordIngestAlertLatency(outcome.Event, time.Now().UTC())
 	}
 	return nil
 }

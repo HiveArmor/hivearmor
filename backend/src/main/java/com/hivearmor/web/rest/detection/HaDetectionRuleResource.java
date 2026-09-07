@@ -701,8 +701,9 @@ public class HaDetectionRuleResource {
     @PreAuthorize(ALERT_QUEUE_AUTH)
     @Operation(
         summary = "Detection pipeline observability",
-        description = "DET-OBS-001 — LoadReport, active rule count, afterEvents miss counters from "
-            + "event-processor when reachable. Honest unavailable when EP is down."
+        description = "DET-OBS-001 / DET-SLO-001 / DET-INDEX-001b — LoadReport, ingest→alert p50/p95, "
+            + "and afterEvents miss counters from event-processor when reachable. Honest unavailable "
+            + "when EP is down or latency is not measurable."
     )
     public ResponseEntity<Map<String, Object>> pipelineHealth() {
         try {

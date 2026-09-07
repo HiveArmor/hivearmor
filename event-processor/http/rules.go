@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/hivearmor/event-processor/processor"
 	rulesengine "github.com/hivearmor/event-processor/rules"
 )
 
@@ -25,14 +26,14 @@ func handleListRules(c *gin.Context) {
 	all := rulesengine.AllRules()
 
 	type ruleResp struct {
-		ID          int64    `json:"id"`
-		Name        string   `json:"name"`
-		DataTypes   []string `json:"dataTypes"`
-		Category    string   `json:"category"`
-		Technique   string   `json:"technique"`
-		HasRiskScore bool    `json:"hasRiskScore"`
-		HasSequence  bool    `json:"hasSequence"`
-		SequenceSteps int    `json:"sequenceSteps,omitempty"`
+		ID            int64    `json:"id"`
+		Name          string   `json:"name"`
+		DataTypes     []string `json:"dataTypes"`
+		Category      string   `json:"category"`
+		Technique     string   `json:"technique"`
+		HasRiskScore  bool     `json:"hasRiskScore"`
+		HasSequence   bool     `json:"hasSequence"`
+		SequenceSteps int      `json:"sequenceSteps,omitempty"`
 	}
 
 	var out []ruleResp
@@ -74,19 +75,22 @@ func handleRulesStatus(c *gin.Context) {
 		summaries = append(summaries, ruleSummary{ID: r.ID, Name: r.Name})
 	}
 
-	checks, misses, errs := rulesengine.CorrelationCounters()
+	correlation := rulesengine.CorrelationSnapshot()
 	suppressed, activeExceptions, exceptionsLastLoad := rulesengine.ExceptionCounters()
 	report := rulesengine.LastLoadReport()
 	payload := gin.H{
-		"activeRules":          summaries,
-		"count":                len(summaries),
-		"lastReload":           time.Now().UTC().Format(time.RFC3339),
-		"loadReport":           report,
-		"correlationChecks":    checks,
-		"afterEventsMisses":    misses,
-		"afterEventsErrors":    errs,
-		"exceptionsSuppressed": suppressed,
-		"activeExceptions":     activeExceptions,
+		"activeRules":                  summaries,
+		"count":                        len(summaries),
+		"lastReload":                   time.Now().UTC().Format(time.RFC3339),
+		"loadReport":                   report,
+		"correlationChecks":            correlation["correlationChecks"],
+		"afterEventsMisses":            correlation["afterEventsMisses"],
+		"afterEventsErrors":            correlation["afterEventsErrors"],
+		"afterEventsMissRate":          correlation["afterEventsMissRate"],
+		"afterEventsMissRateAvailable": correlation["afterEventsMissRateAvailable"],
+		"ingestAlertSlo":               processor.SnapshotIngestAlertSLO(),
+		"exceptionsSuppressed":         suppressed,
+		"activeExceptions":             activeExceptions,
 	}
 	if !exceptionsLastLoad.IsZero() {
 		payload["exceptionsLastLoad"] = exceptionsLastLoad.Format(time.RFC3339)
