@@ -6,10 +6,36 @@
  * POST /api/ha-detection-rules/{ruleId}/exceptions
  * POST /api/ha-detection-rules/{ruleId}/exceptions/{id}/activate
  * POST /api/ha-detection-rules/{ruleId}/exceptions/{id}/deactivate
+ *
+ * Baseline anomaly has no correlation-rule row; bind exceptions to the synthetic
+ * {@link BASELINE_ANOMALY_RULE_ID} (`baseline:anomaly`) with host/user/dataSource/action.
  */
 
 const TOKEN_KEY = 'hivearmor_auth_token';
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
+/** Synthetic EP key for statistical baseline anomaly (rules.BaselineAnomalyRuleID). */
+export const BASELINE_ANOMALY_RULE_ID = 'baseline:anomaly';
+
+export const EXCEPTION_OPERATOR_OPTIONS = [
+  { value: 'is', label: 'is' },
+  { value: 'is_not', label: 'is not' },
+  { value: 'contains', label: 'contains' },
+  { value: 'starts_with', label: 'starts with' },
+  { value: 'ends_with', label: 'ends with' },
+  { value: 'in', label: 'in' },
+] as const;
+
+/** Engine-aligned fields recommended for baseline:anomaly exception packs. */
+export const BASELINE_CONDITION_FIELD_OPTIONS = [
+  { value: 'host.name', label: 'host.name' },
+  { value: 'user.name', label: 'user.name' },
+  { value: 'dataSource', label: 'dataSource' },
+  { value: 'action', label: 'action' },
+] as const;
+
+export type BaselineConditionField = (typeof BASELINE_CONDITION_FIELD_OPTIONS)[number]['value'];
+export type ExceptionOperator = (typeof EXCEPTION_OPERATOR_OPTIONS)[number]['value'];
 
 export interface ExceptionCondition {
   field: string;
@@ -47,6 +73,22 @@ export interface DetectionException {
   honesty: string;
 }
 
+export function isBaselineAnomalyRuleId(ruleId: string | number): boolean {
+  return String(ruleId) === BASELINE_ANOMALY_RULE_ID;
+}
+
+export function filterBaselineExceptions(items: DetectionException[]): DetectionException[] {
+  return items.filter((item) => isBaselineAnomalyRuleId(item.ruleId));
+}
+
+export function validateExceptionConditions(conditions: ExceptionCondition[]): string | null {
+  const valid = conditions.filter((item) => item.field.trim() && item.operator.trim() && item.value.trim());
+  if (!valid.length) {
+    return 'Add at least one field/operator/value condition.';
+  }
+  return null;
+}
+
 let fixtureExceptions: DetectionException[] = [
   {
     id: 9001,
@@ -78,7 +120,56 @@ let fixtureExceptions: DetectionException[] = [
     updatedAt: '2026-09-07T08:15:00Z',
     honesty: 'Design fixture: draft exceptions are never enforced.',
   },
+  {
+    id: 9010,
+    ruleId: BASELINE_ANOMALY_RULE_ID,
+    title: 'Baseline · approved scanner host',
+    reason: 'Weekly vulnerability scans inflate host volume baselines',
+    conditions: [
+      { field: 'host.name', operator: 'is', value: 'approved-scanner' },
+      { field: 'dataSource', operator: 'is', value: 'sysmon' },
+    ],
+    active: true,
+    status: 'active',
+    createdBy: 'analyst',
+    activatedBy: 'soc-manager',
+    activatedAt: '2026-09-07T11:00:00Z',
+    createdAt: '2026-09-07T10:30:00Z',
+    updatedAt: '2026-09-07T11:00:00Z',
+    honesty: 'STAGING CANDIDATE fixture: baseline:anomaly exception treated as engine-enforced (sync lag fictional).',
+  },
+  {
+    id: 9011,
+    ruleId: BASELINE_ANOMALY_RULE_ID,
+    title: 'Baseline · service account draft',
+    reason: 'Pending SOC Manager activation for batch job user',
+    conditions: [
+      { field: 'user.name', operator: 'is', value: 'svc_backup' },
+      { field: 'action', operator: 'is', value: 'file_access' },
+    ],
+    active: false,
+    status: 'draft',
+    createdBy: 'analyst',
+    activatedBy: null,
+    activatedAt: null,
+    createdAt: '2026-09-07T12:00:00Z',
+    updatedAt: '2026-09-07T12:00:00Z',
+    honesty: 'Design fixture: draft baseline exceptions are never enforced.',
+  },
 ];
+
+function fixtureRowsForRule(ruleId: string | number): DetectionException[] {
+  const key = String(ruleId);
+  if (isBaselineAnomalyRuleId(key)) {
+    return fixtureExceptions
+      .filter((item) => isBaselineAnomalyRuleId(item.ruleId))
+      .map((item) => ({ ...item }));
+  }
+  // CEL / numeric rule drawers: remapped generic fixtures (exclude baseline-scoped rows).
+  return fixtureExceptions
+    .filter((item) => !isBaselineAnomalyRuleId(item.ruleId))
+    .map((item) => ({ ...item, ruleId: key }));
+}
 
 function getToken(): string {
   return localStorage.getItem(TOKEN_KEY) ?? '';
@@ -139,22 +230,29 @@ export async function previewExceptionImpact(
       }, { once: true });
     });
     const volume = Math.min(42, Math.max(4, conditions.length * 11));
+    const baseline = isBaselineAnomalyRuleId(ruleId);
     return {
       ruleId: String(ruleId),
-      ruleName: 'Fixture detection rule',
+      ruleName: baseline ? 'Baseline anomaly (synthetic)' : 'Fixture detection rule',
       matchingHistoricalAlerts: volume,
       projectedVolumeReduction: Math.round((volume / 128) * 1000) / 10,
-      affectedTechniques: [{ techniqueId: 'T1110', techniqueName: 'Brute Force', alertCount: volume }],
-      exceptionOverlapWithExisting: fixtureExceptions
+      affectedTechniques: baseline
+        ? [{ techniqueId: 'T1499', techniqueName: 'Endpoint Denial of Service', alertCount: volume }]
+        : [{ techniqueId: 'T1110', techniqueName: 'Brute Force', alertCount: volume }],
+      exceptionOverlapWithExisting: fixtureRowsForRule(ruleId)
         .filter((item) => item.active)
         .map((item) => ({ exceptionId: String(item.id), overlapRatio: 0.12, summary: item.title })),
       falseNegativeRiskPrompts: [
         'Fictional preview only — no historical OpenSearch query was executed.',
-        'Broad host or user exceptions can create coverage blind spots.',
+        baseline
+          ? 'Broad host or user baseline exceptions can hide genuine volume anomalies.'
+          : 'Broad host or user exceptions can create coverage blind spots.',
       ],
       highImpactWarning: volume > 30,
       approvalRequired: true,
-      honesty: 'Design fixture: exception impact is fictional and isolated from production alerts.',
+      honesty: baseline
+        ? 'Design fixture: baseline:anomaly impact is fictional; production uses OpenSearch historical projection when fixtures are off.'
+        : 'Design fixture: exception impact is fictional and isolated from production alerts.',
       mode: 'fixture',
     };
   }
@@ -225,7 +323,7 @@ export async function listExceptions(
 ): Promise<DetectionException[]> {
   if (fixtureMode) {
     signal?.throwIfAborted();
-    return fixtureExceptions.map((item) => ({ ...item, ruleId: String(ruleId) }));
+    return fixtureRowsForRule(ruleId);
   }
 
   const response = await fetch(

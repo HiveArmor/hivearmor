@@ -59,6 +59,8 @@ public class DetectionExceptionService {
     }
 
     public DetectionExceptionDTO create(String ruleId, CreateExceptionRequest request, String actor) {
+        // ruleId may be a numeric correlation-rule id or the synthetic baseline key
+        // "baseline:anomaly" (no FK to correlation_rule — EP BaselineAnomalyRuleID).
         if (request == null || request.conditions() == null || request.conditions().isEmpty()) {
             throw new IllegalArgumentException("At least one exception condition is required");
         }

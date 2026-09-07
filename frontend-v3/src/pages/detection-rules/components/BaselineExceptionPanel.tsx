@@ -1,5 +1,5 @@
 /**
- * Rule tuning panel — exception preview + persist/activate (DET-FP-001).
+ * Baseline anomaly exception authoring — binds ruleId to baseline:anomaly (DET-FP).
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -10,27 +10,36 @@ import {
 
 import { HaCompactSelect } from '@/components/ha-compact-select/HaCompactSelect';
 import {
+  BASELINE_ANOMALY_RULE_ID,
+  BASELINE_CONDITION_FIELD_OPTIONS,
   EXCEPTION_OPERATOR_OPTIONS,
-  isBaselineAnomalyRuleId,
   listExceptions,
   previewExceptionImpact,
   saveException,
   setExceptionActive,
+  validateExceptionConditions,
   type DetectionException,
   type ExceptionCondition,
   type ExceptionPreviewResult,
 } from '@/services/detectionException.service';
+
+const EMPTY_CONDITION: ExceptionCondition = {
+  field: 'host.name',
+  operator: 'is',
+  value: '',
+};
+
+const FIELD_OPTIONS = BASELINE_CONDITION_FIELD_OPTIONS.map((item) => ({
+  value: item.value,
+  label: item.label,
+}));
 
 const OPERATOR_OPTIONS = EXCEPTION_OPERATOR_OPTIONS.map((item) => ({
   value: item.value,
   label: item.label,
 }));
 
-const EMPTY_CONDITION: ExceptionCondition = { field: 'host.name', operator: 'is', value: '' };
-
-export interface RuleTuningPanelProps {
-  ruleId: string | number;
-  ruleName: string;
+export interface BaselineExceptionPanelProps {
   /** Analyst+ may preview/save drafts */
   canDraft: boolean;
   /** SOC Manager+ may activate/deactivate */
@@ -39,16 +48,14 @@ export interface RuleTuningPanelProps {
   activateDeniedTitle: string;
 }
 
-export function RuleTuningPanel({
-  ruleId,
-  ruleName,
+export function BaselineExceptionPanel({
   canDraft,
   canActivate,
   draftDeniedTitle,
   activateDeniedTitle,
-}: RuleTuningPanelProps): JSX.Element {
+}: BaselineExceptionPanelProps): JSX.Element {
   const [conditions, setConditions] = useState<ExceptionCondition[]>([{ ...EMPTY_CONDITION }]);
-  const [title, setTitle] = useState(`Exception · ${ruleName}`);
+  const [title, setTitle] = useState('Baseline anomaly exception');
   const [reason, setReason] = useState('');
   const [preview, setPreview] = useState<ExceptionPreviewResult | null>(null);
   const [exceptions, setExceptions] = useState<DetectionException[]>([]);
@@ -60,11 +67,11 @@ export function RuleTuningPanel({
 
   const refreshList = useCallback(async () => {
     try {
-      setExceptions(await listExceptions(ruleId));
+      setExceptions(await listExceptions(BASELINE_ANOMALY_RULE_ID));
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Failed to load exceptions.');
+      setError(caught instanceof Error ? caught.message : 'Failed to load baseline exceptions.');
     }
-  }, [ruleId]);
+  }, []);
 
   useEffect(() => {
     void refreshList();
@@ -77,43 +84,47 @@ export function RuleTuningPanel({
 
   const runPreview = useCallback(async () => {
     if (!canDraft) return;
-    const valid = conditions.filter((item) => item.field.trim() && item.value.trim());
-    if (!valid.length) {
-      setError('Add at least one field/operator/value condition before previewing impact.');
+    const validationError = validateExceptionConditions(conditions);
+    if (validationError) {
+      setError(validationError);
       return;
     }
+    const valid = conditions.filter((item) => item.field.trim() && item.value.trim());
     setLoading(true);
     setError(null);
     try {
-      setPreview(await previewExceptionImpact(ruleId, valid));
+      setPreview(await previewExceptionImpact(BASELINE_ANOMALY_RULE_ID, valid));
     } catch (caught) {
       setPreview(null);
       setError(caught instanceof Error ? caught.message : 'Exception preview failed.');
     } finally {
       setLoading(false);
     }
-  }, [canDraft, conditions, ruleId]);
+  }, [canDraft, conditions]);
 
   const runSave = useCallback(async () => {
     if (!canDraft) return;
-    const valid = conditions.filter((item) => item.field.trim() && item.value.trim());
-    if (!valid.length) {
-      setError('Add at least one condition before saving.');
+    const validationError = validateExceptionConditions(conditions);
+    if (validationError) {
+      setError(validationError);
       return;
     }
+    const valid = conditions.filter((item) => item.field.trim() && item.value.trim());
     setSaving(true);
     setError(null);
     setMessage(null);
     try {
-      const created = await saveException(ruleId, title, reason, valid);
-      setMessage(`Saved draft exception #${created.id}. Activate requires SOC Manager.`);
+      const created = await saveException(BASELINE_ANOMALY_RULE_ID, title, reason, valid);
+      setMessage(`Saved draft baseline exception #${created.id}. Activate requires SOC Manager.`);
+      setConditions([{ ...EMPTY_CONDITION }]);
+      setReason('');
       await refreshList();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Failed to save exception.');
+      setError(caught instanceof Error ? caught.message : 'Failed to save baseline exception.');
     } finally {
       setSaving(false);
     }
-  }, [canDraft, conditions, reason, refreshList, ruleId, title]);
+  }, [canDraft, conditions, reason, refreshList, title]);
 
   const toggleActive = useCallback(async (exception: DetectionException) => {
     if (!canActivate) return;
@@ -121,50 +132,65 @@ export function RuleTuningPanel({
     setError(null);
     setMessage(null);
     try {
-      const updated = await setExceptionActive(ruleId, exception.id, !exception.active);
+      const updated = await setExceptionActive(BASELINE_ANOMALY_RULE_ID, exception.id, !exception.active);
       setMessage(updated.active
-        ? `Exception #${updated.id} activated (STAGING — runtime enforcement may lag).`
-        : `Exception #${updated.id} deactivated.`);
+        ? `Baseline exception #${updated.id} activated (STAGING — sync lag typically ≤60s).`
+        : `Baseline exception #${updated.id} deactivated.`);
       await refreshList();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Failed to update exception.');
+      setError(caught instanceof Error ? caught.message : 'Failed to update baseline exception.');
     } finally {
       setTogglingId(null);
     }
-  }, [canActivate, refreshList, ruleId]);
+  }, [canActivate, refreshList]);
 
   return (
-    <section className="detection-tuning" aria-label="Rule tuning">
+    <section className="detection-tuning detection-baseline-tuning" aria-label="Baseline anomaly exception authoring">
       <header className="detection-tuning__header">
         <SlidersHorizontal size={14} aria-hidden="true" />
         <div>
-          <strong>Exception tuning</strong>
-          <small>Preview FP impact, save drafts, and activate suppressions for {ruleName}.</small>
+          <strong>Baseline anomaly exceptions</strong>
+          <small>
+            Author suppressions for statistical baseline anomalies without editing YAML.
+            Bound to synthetic <code>{BASELINE_ANOMALY_RULE_ID}</code>.
+          </small>
         </div>
+        <span className="detection-baseline-tuning__badge" title="Synthetic engine ruleId">
+          {BASELINE_ANOMALY_RULE_ID}
+        </span>
       </header>
 
       <p className="detection-tuning__honesty" role="status">
         <ShieldAlert size={13} aria-hidden="true" />
         <span>
-          STAGING CANDIDATE — <strong>active</strong> exceptions are enforced by the correlation engine
-          (pre-alert suppress via config sync → <code>rules/exceptions/exceptions.yaml</code>).
-          Covers CEL single-rule, sequence, graph-offense, and baseline anomaly
-          (synthetic <code>ruleId=baseline:anomaly</code> + host/user/dataSource/action conditions);
-          shared <code>exceptionsSuppressed</code> counter.
-          Draft/inactive rows never suppress. Typical sync lag {'<='}60s.
-          Risk scoring is suppressed before score add.
-          Pipeline health shows last exception load and suppressed counts when EP is reachable.
+          STAGING CANDIDATE — <strong>active</strong> exceptions sync via config plugin to
+          {' '}<code>rules/exceptions/exceptions.yaml</code> and suppress baseline anomaly alerts
+          pre-emit (engine key <code>{BASELINE_ANOMALY_RULE_ID}</code>).
+          Recommended condition fields: <code>host.name</code>, <code>user.name</code>,
+          {' '}<code>dataSource</code>, <code>action</code> with operators
+          {' '}<code>is</code> / <code>is_not</code> / <code>contains</code> / <code>starts_with</code> /
+          {' '}<code>ends_with</code> / <code>in</code>.
+          Draft/inactive rows never suppress. Typical sync lag {'≤'}60s.
         </span>
       </p>
 
       <div className="detection-tuning__meta">
+        <label>
+          <span>Bound ruleId</span>
+          <input
+            value={BASELINE_ANOMALY_RULE_ID}
+            readOnly
+            aria-label="Baseline exception ruleId"
+            className="detection-baseline-tuning__bound"
+          />
+        </label>
         <label>
           <span>Title</span>
           <input
             value={title}
             disabled={!canDraft || loading || saving}
             onChange={(event) => setTitle(event.target.value)}
-            aria-label="Exception title"
+            aria-label="Baseline exception title"
           />
         </label>
         <label>
@@ -173,29 +199,28 @@ export function RuleTuningPanel({
             value={reason}
             disabled={!canDraft || loading || saving}
             onChange={(event) => setReason(event.target.value)}
-            placeholder="Why is this false positive suppressed?"
-            aria-label="Exception reason"
+            placeholder="Why is this baseline FP suppressed?"
+            aria-label="Baseline exception reason"
           />
         </label>
       </div>
 
-      <div className="detection-tuning__conditions">
+      <div className="detection-tuning__conditions" data-testid="baseline-exception-conditions">
         {conditions.map((condition, index) => (
-          <div key={`cond-${index}`} className="detection-tuning__row">
-            <label>
-              <span>Field</span>
-              <input
-                value={condition.field}
-                disabled={!canDraft || loading || saving}
-                onChange={(event) => updateCondition(index, { field: event.target.value })}
-                placeholder="host.name"
-                aria-label={`Exception field ${index + 1}`}
-              />
-            </label>
+          <div key={`baseline-cond-${index}`} className="detection-tuning__row">
+            <HaCompactSelect
+              layout="stacked"
+              label="Field"
+              ariaLabel={`Baseline exception field ${index + 1}`}
+              value={condition.field}
+              disabled={!canDraft || loading || saving}
+              onChange={(value) => updateCondition(index, { field: value })}
+              options={FIELD_OPTIONS}
+            />
             <HaCompactSelect
               layout="stacked"
               label="Operator"
-              ariaLabel={`Exception operator ${index + 1}`}
+              ariaLabel={`Baseline exception operator ${index + 1}`}
               value={condition.operator}
               disabled={!canDraft || loading || saving}
               onChange={(value) => updateCondition(index, { operator: value })}
@@ -208,14 +233,14 @@ export function RuleTuningPanel({
                 disabled={!canDraft || loading || saving}
                 onChange={(event) => updateCondition(index, { value: event.target.value })}
                 placeholder="approved-scanner"
-                aria-label={`Exception value ${index + 1}`}
+                aria-label={`Baseline exception value ${index + 1}`}
               />
             </label>
             <button
               type="button"
               className="detection-tuning__remove"
               disabled={!canDraft || loading || saving || conditions.length === 1}
-              aria-label={`Remove condition ${index + 1}`}
+              aria-label={`Remove baseline condition ${index + 1}`}
               onClick={() => {
                 setConditions((current) => current.filter((_, i) => i !== index));
                 setPreview(null);
@@ -231,7 +256,7 @@ export function RuleTuningPanel({
         <button
           type="button"
           disabled={!canDraft || loading || saving}
-          title={canDraft ? 'Add exception condition' : draftDeniedTitle}
+          title={canDraft ? 'Add baseline exception condition' : draftDeniedTitle}
           onClick={() => setConditions((current) => [...current, { ...EMPTY_CONDITION }])}
         >
           <Plus size={13} /> Add condition
@@ -239,7 +264,7 @@ export function RuleTuningPanel({
         <button
           type="button"
           disabled={!canDraft || loading || saving}
-          title={canDraft ? 'Preview exception impact' : draftDeniedTitle}
+          title={canDraft ? 'Preview baseline exception impact' : draftDeniedTitle}
           onClick={() => void runPreview()}
         >
           {loading ? <LoaderCircle size={14} className="detection-spin" /> : <SlidersHorizontal size={14} />}
@@ -249,8 +274,9 @@ export function RuleTuningPanel({
           type="button"
           className="detection-primary-button"
           disabled={!canDraft || loading || saving}
-          title={canDraft ? 'Save exception draft' : draftDeniedTitle}
+          title={canDraft ? 'Save baseline exception draft' : draftDeniedTitle}
           onClick={() => void runSave()}
+          data-testid="baseline-exception-save"
         >
           {saving ? <LoaderCircle size={14} className="detection-spin" /> : <Save size={14} />}
           {saving ? 'Saving…' : 'Save draft'}
@@ -299,7 +325,7 @@ export function RuleTuningPanel({
           </dl>
           {preview.highImpactWarning && (
             <p className="detection-tuning__warn">
-              <AlertTriangle size={13} /> High-impact exception — elevated approval recommended.
+              <AlertTriangle size={13} /> High-impact baseline exception — elevated approval recommended.
             </p>
           )}
           {preview.falseNegativeRiskPrompts.length > 0 && (
@@ -312,13 +338,13 @@ export function RuleTuningPanel({
         </div>
       )}
 
-      <div className="detection-tuning__list" aria-label="Saved exceptions">
+      <div className="detection-tuning__list" aria-label="Baseline-scoped exceptions" data-testid="baseline-exception-list">
         <header>
-          <strong>Saved exceptions</strong>
-          <small>{exceptions.length} for this rule</small>
+          <strong>Baseline-scoped exceptions</strong>
+          <small>{exceptions.length} with ruleId {BASELINE_ANOMALY_RULE_ID}</small>
         </header>
         {exceptions.length === 0 ? (
-          <p className="detection-tuning__empty">No persisted exceptions yet.</p>
+          <p className="detection-tuning__empty">No baseline exceptions yet.</p>
         ) : (
           <ul>
             {exceptions.map((exception) => (
@@ -326,9 +352,7 @@ export function RuleTuningPanel({
                 <div>
                   <strong>
                     {exception.title}
-                    {isBaselineAnomalyRuleId(exception.ruleId) && (
-                      <span className="detection-baseline-tuning__chip">baseline</span>
-                    )}
+                    <span className="detection-baseline-tuning__chip">baseline</span>
                   </strong>
                   <small>
                     #{exception.id} · {exception.status}
@@ -341,7 +365,7 @@ export function RuleTuningPanel({
                   type="button"
                   disabled={!canActivate || togglingId === exception.id}
                   title={canActivate
-                    ? (exception.active ? 'Deactivate exception' : 'Activate exception')
+                    ? (exception.active ? 'Deactivate baseline exception' : 'Activate baseline exception')
                     : activateDeniedTitle}
                   onClick={() => void toggleActive(exception)}
                 >

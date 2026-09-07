@@ -6,11 +6,12 @@ import type { AgGridReact } from 'ag-grid-react';
 import {
   Activity, AlertTriangle, BarChart3, CheckCircle2, ChevronLeft, ChevronRight,
   CircleSlash2, Clock3, Columns3, Filter, GitBranch, Import, Library,
-  Plus, RefreshCw, Search, ShieldAlert, TestTube2, X, Zap,
+  Plus, RefreshCw, Search, ShieldAlert, SlidersHorizontal, TestTube2, X, Zap,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
 import { createColumnDefs } from './columnDefs';
+import { BaselineExceptionPanel } from './components/BaselineExceptionPanel';
 import { RuleTuningPanel } from './components/RuleTuningPanel';
 import { DetectionPipelineHealthStrip } from './components/DetectionPipelineHealthStrip';
 import { DetectionMonitoringView } from './DetectionMonitoringView';
@@ -43,7 +44,7 @@ export const DETECTION_RULES_JOB_SENTENCE =
 
 export const DETECTION_MANAGE_DENIED_TITLE = 'Required permission: SOC Manager or Platform Administrator';
 
-type RuleView = 'rules' | 'monitoring' | 'coverage' | 'test';
+type RuleView = 'rules' | 'monitoring' | 'coverage' | 'test' | 'baseline';
 const DetectionCoverageView = lazy(() => import('./DetectionCoverageView'));
 const DetectionImportPanel = lazy(() => import('./DetectionImportPanel'));
 const DetectionTestConsole = lazy(() => import('./DetectionTestConsole'));
@@ -307,6 +308,7 @@ export function DetectionRulesPage(): JSX.Element {
         <button type="button" aria-current={view === 'monitoring' ? 'page' : undefined} onClick={() => { resetFilters(); setView('monitoring'); }}><Activity size={14} /> Rule monitoring <span>{summary.enabled}</span></button>
         <button type="button" aria-current={view === 'coverage' ? 'page' : undefined} onClick={() => { resetFilters(); setView('coverage'); }}><BarChart3 size={14} /> ATT&amp;CK coverage <span>{summary.coverageTechniques}</span></button>
         <button type="button" aria-current={view === 'test' ? 'page' : undefined} disabled={!canManage} title={canManage ? 'Open secure test console' : DETECTION_MANAGE_DENIED_TITLE} onClick={() => { if (!canManage) return; resetFilters(); setTestRuleId(undefined); setView('test'); }}><TestTube2 size={14} /> Test console</button>
+        <button type="button" aria-current={view === 'baseline' ? 'page' : undefined} onClick={() => { resetFilters(); setView('baseline'); }} title="Author baseline anomaly exceptions (ruleId baseline:anomaly)"><SlidersHorizontal size={14} /> Baseline exceptions</button>
       </nav>
 
       {actionMessage && <div className="detection-action-message" role="status"><CheckCircle2 size={14} /><span>{actionMessage}</span><button type="button" onClick={() => setActionMessage(null)} aria-label="Dismiss message"><X size={13} /></button></div>}
@@ -376,6 +378,16 @@ export function DetectionRulesPage(): JSX.Element {
       {view === 'monitoring' && <DetectionMonitoringView rules={rules} onOpenRule={setActiveRule} />}
       {view === 'coverage' && <Suspense fallback={<div className="detection-section-loading"><RefreshCw size={20} className="detection-spin" /><span>Loading ATT&amp;CK coverage…</span></div>}><DetectionCoverageView rules={rules} onOpenRule={setActiveRule} /></Suspense>}
       {view === 'test' && <Suspense fallback={<div className="detection-section-loading"><RefreshCw size={20} className="detection-spin" /><span>Loading secure test console…</span></div>}><DetectionTestConsole rules={rules} initialRuleId={testRuleId} /></Suspense>}
+      {view === 'baseline' && (
+        <main className="detection-baseline-workspace" data-testid="baseline-exception-workspace">
+          <BaselineExceptionPanel
+            canDraft={canDraftException}
+            canActivate={canActivateException}
+            draftDeniedTitle={DET_EXCEPTION_DRAFT_DENIED_TITLE}
+            activateDeniedTitle={DET_EXCEPTION_ACTIVATE_DENIED_TITLE}
+          />
+        </main>
+      )}
 
       <div className="detection-status"><StatusDock sseConnected={detectionRulesFixtureMode || epsStream.connected} eps={detectionRulesFixtureMode ? 12840 : epsStream.eps} mode={detectionRulesFixtureMode ? 'historical' : 'live'} lastUpdated={new Date(summary.snapshotAt)} /><span><Clock3 size={12} /> Rule snapshot {new Date(summary.snapshotAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
 
