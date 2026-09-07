@@ -23,7 +23,7 @@ import java.util.Map;
  *
  * <p>Reads: Admin | SOC Manager | Analyst. Mutations: Admin | SOC Manager.
  * Agent device identity ({@code X-HiveArmor-Agent-Id} + {@code X-Agent-Key}) may
- * {@code GET /{id}} and {@code POST /report-state} (BE-POL-01 ACK).
+ * {@code GET /{id}}, {@code POST /report-state}, and {@code POST /sync-on-connect} (BE-POL-02).
  * STAGING CANDIDATE — not PRODUCTION READY.
  */
 @RestController
@@ -39,6 +39,8 @@ public class AgentPolicyResource {
     private static final String AGENT_FETCH_AUTH =
         "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST','ROLE_AGENT_DEVICE')";
     private static final String REPORT_STATE_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_AGENT_DEVICE')";
+    private static final String SYNC_ON_CONNECT_AUTH =
         "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_AGENT_DEVICE')";
 
     private final Logger log = LoggerFactory.getLogger(AgentPolicyResource.class);
@@ -169,6 +171,66 @@ public class AgentPolicyResource {
         try {
             policyService.pushPolicyToGroup(id, groupId);
             return ResponseEntity.accepted().build();
+        } catch (Exception e) {
+            String msg = ctx + ": " + e.getMessage();
+            log.error(msg);
+            eventService.createEvent(msg, ApplicationEventType.ERROR);
+            return ResponseUtil.buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, msg);
+        }
+    }
+
+    /**
+     * Push APPLY_POLICY to a single agent (FE-POL-01 residual — per-agent push).
+     */
+    @PostMapping("/{id}/push-agent/{agentId}")
+    @PreAuthorize(MUTATE_AUTH)
+    public ResponseEntity<Void> pushToAgent(@PathVariable Long id, @PathVariable Integer agentId) {
+        final String ctx = CLASSNAME + ".pushToAgent";
+        try {
+            policyService.pushPolicyToAgent(id, agentId);
+            return ResponseEntity.accepted().build();
+        } catch (IllegalArgumentException e) {
+            String msg = ctx + ": " + e.getMessage();
+            log.warn(msg);
+            return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST, msg);
+        } catch (Exception e) {
+            String msg = ctx + ": " + e.getMessage();
+            log.error(msg);
+            eventService.createEvent(msg, ApplicationEventType.ERROR);
+            return ResponseUtil.buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, msg);
+        }
+    }
+
+    /**
+     * Agent-callable push-on-connect (best effort). Prefer device headers; Admin|SOC Manager
+     * JWT also allowed. When device-authenticated, agent id is bound to the verified
+     * connector (body spoofing ignored). Returns assigned policies and queues APPLY_POLICY
+     * on drift. Never logs agent keys.
+     */
+    @PostMapping("/sync-on-connect")
+    @PreAuthorize(SYNC_ON_CONNECT_AUTH)
+    public ResponseEntity<AgentPolicySyncOnConnectDTO> syncOnConnect(
+            @RequestBody(required = false) Map<String, Object> body,
+            HttpServletRequest request) {
+        final String ctx = CLASSNAME + ".syncOnConnect";
+        try {
+            Object attr = request.getAttribute(TelemetryAgentIdentityFilter.ATTR_AGENT_CONNECTOR_ID);
+            String agentId;
+            if (attr instanceof Integer connectorId) {
+                agentId = String.valueOf(connectorId);
+            } else if (body != null && body.get("agentId") != null) {
+                agentId = body.get("agentId").toString();
+            } else {
+                agentId = null;
+            }
+            if (agentId == null || agentId.isBlank()) {
+                return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST, ctx + ": agentId required");
+            }
+            return ResponseEntity.ok(policyService.syncOnConnect(agentId));
+        } catch (IllegalArgumentException e) {
+            String msg = ctx + ": " + e.getMessage();
+            log.warn(msg);
+            return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST, msg);
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);

@@ -9,18 +9,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
+/**
+ * Agent groups CRUD and membership.
+ *
+ * <p>List/get: Admin | SOC Manager (FE-POL-01 residual — SOC Manager can pick groups for policy assign).
+ * Mutations: Admin only. STAGING CANDIDATE — not PRODUCTION READY.
+ */
 @RestController
 @RequestMapping("/api/agent-groups")
-@org.springframework.security.access.prepost.PreAuthorize("hasAuthority('ROLE_ADMIN')")
 public class AgentGroupResource {
 
     private static final String CLASSNAME = "AgentGroupResource";
+    private static final String READ_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER')";
+    private static final String MUTATE_AUTH =
+        "hasAuthority('ROLE_ADMIN')";
+
     private final Logger log = LoggerFactory.getLogger(AgentGroupResource.class);
     private final UtmAgentGroupService groupService;
     private final ApplicationEventService eventService;
@@ -31,6 +41,7 @@ public class AgentGroupResource {
     }
 
     @GetMapping
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<AgentGroupDTO>> listGroups() {
         final String ctx = CLASSNAME + ".listGroups";
         try {
@@ -44,6 +55,7 @@ public class AgentGroupResource {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<AgentGroupDTO> getGroup(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".getGroup";
         try {
@@ -59,6 +71,7 @@ public class AgentGroupResource {
     }
 
     @PostMapping
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<AgentGroupDTO> createGroup(@RequestBody AgentGroupDTO dto) {
         final String ctx = CLASSNAME + ".createGroup";
         try {
@@ -73,6 +86,7 @@ public class AgentGroupResource {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<AgentGroupDTO> updateGroup(@PathVariable Long id, @RequestBody AgentGroupDTO dto) {
         final String ctx = CLASSNAME + ".updateGroup";
         try {
@@ -86,6 +100,7 @@ public class AgentGroupResource {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> deleteGroup(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".deleteGroup";
         try {
@@ -100,6 +115,7 @@ public class AgentGroupResource {
     }
 
     @PostMapping("/{id}/members/{agentId}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> addMember(@PathVariable Long id, @PathVariable Integer agentId) {
         final String ctx = CLASSNAME + ".addMember";
         try {
@@ -114,6 +130,7 @@ public class AgentGroupResource {
     }
 
     @DeleteMapping("/{id}/members/{agentId}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> removeMember(@PathVariable Long id, @PathVariable Integer agentId) {
         final String ctx = CLASSNAME + ".removeMember";
         try {
@@ -128,6 +145,7 @@ public class AgentGroupResource {
     }
 
     @PutMapping("/{id}/members")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> setMembers(@PathVariable Long id, @RequestBody List<Integer> agentIds) {
         final String ctx = CLASSNAME + ".setMembers";
         try {
