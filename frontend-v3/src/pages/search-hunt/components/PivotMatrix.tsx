@@ -33,6 +33,13 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
     return m;
   }, [data.cells]);
 
+  // P2 comparison: full cell (value + delta) by key, so cells can show the previous-period delta.
+  const cellByKey = useMemo(() => {
+    const m = new Map<string, HuntCrosstabResponse['cells'][number]>();
+    for (const c of data.cells) m.set(`${c.row}\u0000${c.col}`, c);
+    return m;
+  }, [data.cells]);
+
   const rowTotal = useMemo(() => {
     const m = new Map<string, number>();
     data.rowKeys.forEach((k, i) => m.set(k, data.rowTotals[i] ?? 0));
@@ -162,6 +169,10 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
               <th scope="row" className="pivot-matrix__rowhead">{fmtRow(r)}</th>
               {data.colKeys.map((c, ci) => {
                 const value = cellMap.get(`${r}\u0000${c}`) ?? 0;
+                const cell = cellByKey.get(`${r}\u0000${c}`);
+                const hasDelta = cell?.delta != null;
+                const up = (cell?.delta ?? 0) > 0;
+                const down = (cell?.delta ?? 0) < 0;
                 return (
                   <td
                     key={c}
@@ -171,9 +182,17 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
                     style={heatStyle(value)}
                     onClick={(e) => value > 0 && openMenu(r, c, value, e.currentTarget)}
                     onKeyDown={(e) => onCellKeyDown(e, ri, ci)}
-                    aria-label={`${fmtRow(r)}, ${fmtCol(c)}: ${value}`}
+                    aria-label={`${fmtRow(r)}, ${fmtCol(c)}: ${value}${hasDelta ? `, ${up ? 'up' : down ? 'down' : 'no change'} ${cell?.deltaPercent != null ? `${Math.abs(Math.round(cell.deltaPercent))}%` : `${Math.abs(cell?.delta ?? 0)}`} vs previous period` : ''}`}
                   >
                     {value > 0 ? value.toLocaleString() : ''}
+                    {hasDelta && (value > 0 || (cell?.comparisonValue ?? 0) > 0) && (
+                      <span className={`pivot-matrix__delta${up ? ' pivot-matrix__delta--up' : down ? ' pivot-matrix__delta--down' : ''}`}>
+                        {up ? '▲' : down ? '▼' : '•'}{' '}
+                        {cell?.deltaPercent != null
+                          ? `${up ? '+' : ''}${Math.round(cell.deltaPercent)}%`
+                          : `${up ? '+' : ''}${cell?.delta ?? 0}`}
+                      </span>
+                    )}
                   </td>
                 );
               })}

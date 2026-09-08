@@ -33,6 +33,15 @@ describe('PivotMatrix', () => {
     expect(screen.getByText('8')).toBeInTheDocument();
   });
 
+  it('renders the previous-period delta on a cell when comparison values are present', () => {
+    const withDelta = data({
+      cells: [{ row: 'alice', col: 'RU', value: 120, comparisonValue: 100, delta: 20, deltaPercent: 20 }],
+    });
+    render(<PivotMatrix data={withDelta} rowField="host.name" colField="event.action" heat={false} onCellAction={vi.fn()} />);
+    expect(screen.getByText(/\+20%/)).toBeInTheDocument();   // delta marker
+    expect(screen.getByText('120')).toBeInTheDocument();      // raw value still shown
+  });
+
   it('opens the cell menu and fires the chosen action for a non-zero cell', () => {
     const onCellAction = vi.fn();
     render(<PivotMatrix data={data()} rowField="host.name" colField="event.action" heat onCellAction={onCellAction} />);

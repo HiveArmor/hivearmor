@@ -508,6 +508,8 @@ export interface HuntCrosstabRequest {
   /** How events missing an axis field are handled (P1.1): 'omit' (default) | 'include' ((missing) bucket). */
   rowMissing?: 'omit' | 'include';
   colMissing?: 'omit' | 'include';
+  /** P2: optional previous-period comparison. Omit for no comparison. */
+  comparison?: { mode: 'previous_period' | 'previous_window'; offset?: string };
 }
 
 /** Fixed-interval date-histogram bucket spec for an axis (matches backend BucketDTO). */
@@ -521,6 +523,10 @@ export interface HuntCrosstabCell {
   row: string;
   col: string;
   value: number;
+  /** P2 comparison: previous-period value + deltas. Undefined when no comparison requested; deltaPercent null when prior value is 0. */
+  comparisonValue?: number;
+  delta?: number;
+  deltaPercent?: number | null;
 }
 
 /** The measure and whether its values are approximate (false for count, true for distinct). */
@@ -579,6 +585,8 @@ export interface HuntCrosstabResponse {
   rowCardinalityEstimate: number;
   colCardinalityEstimate: number;
   cardinalityApproximate: boolean;
+  /** P2: present when a previous-period comparison ran — the mode + the shifted window used. */
+  comparison?: { mode: string; from: string; to: string };
   /** P1.1: whether each axis is a date_histogram + its interval (drives time-label rendering). */
   rowBucketed?: boolean;
   colBucketed?: boolean;
