@@ -1996,6 +1996,12 @@
  * Investigation Pivot (Crosstab) — PR-B P1                            *
  * ------------------------------------------------------------------ */
 .pivot-view { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.pivot-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 5px 10px; font: var(--ha-type-compact); }
+.pivot-breadcrumb__item { display: inline-flex; align-items: center; gap: 2px; }
+.pivot-breadcrumb__sep { color: var(--ha-foreground-tertiary); }
+.pivot-breadcrumb__crumb { border: 0; background: transparent; cursor: pointer; padding: 1px 4px; border-radius: var(--ha-radius-control, 6px); color: var(--ha-action-secondary); font: var(--ha-type-compact); }
+.pivot-breadcrumb__crumb:hover { background: var(--ha-surface-hover); color: var(--ha-action-primary); }
+.pivot-breadcrumb__current { padding: 1px 4px; color: var(--ha-foreground-primary); font-weight: 600; }
 
 .pivot-shelves {
   display: flex;
