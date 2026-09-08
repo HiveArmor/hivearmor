@@ -516,8 +516,27 @@ export function getFoundationHuntCrosstab(
     }
   };
 
-  const rowOf = fieldOf(request.rowField);
-  const colOf = fieldOf(request.colField);
+  // Bucket an ISO/parseable timestamp down to the fixed interval's start (fixture approximation of a
+  // date_histogram). Supports the allow-listed m/h/d intervals; unknown intervals fall back to 1h.
+  const intervalMs = (interval: string): number => {
+    const match = /^(\d+)([mhd])$/.exec(interval.trim());
+    if (!match) return 3_600_000;
+    const n = Number(match[1]);
+    const unit = match[2] === 'm' ? 60_000 : match[2] === 'h' ? 3_600_000 : 86_400_000;
+    return n * unit;
+  };
+  const bucketStartIso = (e: HuntEvent, interval: string): string | null => {
+    const ts = (e.normalized?.['@timestamp'] as string) ?? e.timestamp;
+    const ms = ts ? Date.parse(ts) : NaN;
+    if (Number.isNaN(ms)) return null;
+    const step = intervalMs(interval);
+    return new Date(Math.floor(ms / step) * step).toISOString();
+  };
+  const withBucket = (base: (e: HuntEvent) => string | null, bucket?: { interval: string }) =>
+    (bucket ? (e: HuntEvent) => bucketStartIso(e, bucket.interval) : base);
+
+  const rowOf = withBucket(fieldOf(request.rowField), request.rowBucket);
+  const colOf = withBucket(fieldOf(request.colField), request.colBucket);
   const distinctOf = request.valueFn === 'distinct' && request.distinctField
     ? fieldOf(request.distinctField)
     : null;
@@ -618,6 +637,10 @@ export function getFoundationHuntCrosstab(
     rowCardinalityEstimate,
     colCardinalityEstimate,
     cardinalityApproximate: true,
+    rowBucketed: request.rowBucket != null,
+    colBucketed: request.colBucket != null,
+    rowBucketInterval: request.rowBucket?.interval ?? null,
+    colBucketInterval: request.colBucket?.interval ?? null,
     axisSelection: {
       strategy: 'distributed_terms',
       approximate: true,

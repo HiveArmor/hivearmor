@@ -10,17 +10,30 @@ export interface PivotShelvesProps {
   colField: string | null;
   valueFn: 'count' | 'distinct';
   distinctField: string | null;
+  /** P1.1: per-axis date-histogram interval (null = TERM axis). */
+  rowBucketInterval: string | null;
+  colBucketInterval: string | null;
   onSetRow: (field: string | null) => void;
   onSetCol: (field: string | null) => void;
   onSetValueFn: (fn: 'count' | 'distinct') => void;
   onSetDistinctField: (field: string) => void;
+  onSetRowBucketInterval: (interval: string | null) => void;
+  onSetColBucketInterval: (interval: string | null) => void;
   onSwap: () => void;
 }
 
 type ShelfTarget = 'row' | 'col' | 'distinct';
 
-/** Client mirror of the backend capability: date disabled, text-without-keyword disabled. */
-function isAxisEligible(f: HuntFieldDefinition): boolean {
+/** Allowed date-histogram intervals (mirrors the backend allow-list; server re-validates). */
+const BUCKET_INTERVALS = ['1m', '5m', '15m', '30m', '1h', '3h', '12h', '1d', '7d'];
+
+/** A date field may be an axis ONLY when bucketed (P1.1). Distinct-of never accepts a date. */
+function isDateField(f: HuntFieldDefinition): boolean {
+  return f.type === 'date';
+}
+
+/** Client mirror of the backend capability for a NON-date axis: text-without-keyword disabled. */
+function isTermAxisEligible(f: HuntFieldDefinition): boolean {
   if (f.type === 'date') return false;
   if (f.type === 'text' && !f.operators.includes(':')) return false;
   // text WITH ':' operator is keyword-backed and aggregatable in this schema.
@@ -36,10 +49,19 @@ function isAxisEligible(f: HuntFieldDefinition): boolean {
  * from the menus, mirroring the backend field capability.
  */
 export function PivotShelves(props: PivotShelvesProps): JSX.Element {
-  const { fields, rowField, colField, valueFn, distinctField, onSetRow, onSetCol, onSetValueFn, onSetDistinctField, onSwap } = props;
+  const {
+    fields, rowField, colField, valueFn, distinctField,
+    rowBucketInterval, colBucketInterval,
+    onSetRow, onSetCol, onSetValueFn, onSetDistinctField,
+    onSetRowBucketInterval, onSetColBucketInterval, onSwap,
+  } = props;
   const [openMenu, setOpenMenu] = useState<ShelfTarget | null>(null);
 
-  const axisFields = useMemo(() => fields.filter(isAxisEligible), [fields]);
+  // Axis menus offer term-eligible fields AND date fields (a date needs an interval, prompted below).
+  const axisFields = useMemo(() => fields.filter((f) => isTermAxisEligible(f) || isDateField(f)), [fields]);
+  // Distinct-of never accepts a date field.
+  const distinctFields = useMemo(() => fields.filter(isTermAxisEligible), [fields]);
+  const dateFieldNames = useMemo(() => new Set(fields.filter(isDateField).map((f) => f.name)), [fields]);
 
   const assign = (target: ShelfTarget, field: string) => {
     if (target === 'row') onSetRow(field);
@@ -51,23 +73,47 @@ export function PivotShelves(props: PivotShelvesProps): JSX.Element {
   const onDrop = (target: ShelfTarget) => (e: React.DragEvent) => {
     e.preventDefault();
     const field = e.dataTransfer.getData('text/hunt-field') || e.dataTransfer.getData('text/plain');
-    if (field && axisFields.some((f) => f.name === field)) assign(target, field);
+    const pool = target === 'distinct' ? distinctFields : axisFields;
+    if (field && pool.some((f) => f.name === field)) assign(target, field);
   };
   const allowDrop = (e: React.DragEvent) => e.preventDefault();
 
-  const renderMenu = (target: ShelfTarget) => (
-    <ul className="pivot-shelf__menu" role="menu" aria-label="Choose a field">
-      {axisFields.map((f) => (
-        <li key={f.name}>
-          <button type="button" role="menuitem" onClick={() => assign(target, f.name)}>
-            <strong>{f.name}</strong><small>{f.type}</small>
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
+  const renderMenu = (target: ShelfTarget) => {
+    const pool = target === 'distinct' ? distinctFields : axisFields;
+    return (
+      <ul className="pivot-shelf__menu" role="menu" aria-label="Choose a field">
+        {pool.map((f) => (
+          <li key={f.name}>
+            <button type="button" role="menuitem" onClick={() => assign(target, f.name)}>
+              <strong>{f.name}</strong><small>{f.type}{isDateField(f) ? ' · needs interval' : ''}</small>
+            </button>
+          </li>
+        ))}
+      </ul>
+    );
+  };
 
-  const shelf = (target: ShelfTarget, label: string, value: string | null, onClear?: () => void) => (
+  /** The interval picker shown when a date field occupies an axis. */
+  const intervalPicker = (value: string, interval: string | null, onSet: (i: string | null) => void) =>
+    dateFieldNames.has(value) ? (
+      <label className="pivot-shelf__interval">
+        <span>every</span>
+        <select
+          value={interval ?? ''}
+          onChange={(e) => onSet(e.target.value || null)}
+          aria-label={`Time interval for ${value}`}
+        >
+          <option value="" disabled>interval…</option>
+          {BUCKET_INTERVALS.map((iv) => <option key={iv} value={iv}>{iv}</option>)}
+        </select>
+      </label>
+    ) : null;
+
+  const shelf = (
+    target: ShelfTarget, label: string, value: string | null,
+    onClear?: () => void,
+    interval?: string | null, onSetInterval?: (i: string | null) => void,
+  ) => (
     <div className="pivot-shelf" onDrop={onDrop(target)} onDragOver={allowDrop}>
       <span className="pivot-shelf__label">{label}</span>
       {value ? (
@@ -82,6 +128,7 @@ export function PivotShelves(props: PivotShelvesProps): JSX.Element {
       ) : (
         <span className="pivot-shelf__placeholder">Drop a field</span>
       )}
+      {value && onSetInterval && intervalPicker(value, interval ?? null, onSetInterval)}
       <div className="pivot-shelf__add-wrap">
         <button
           type="button"
@@ -101,11 +148,11 @@ export function PivotShelves(props: PivotShelvesProps): JSX.Element {
 
   return (
     <div className="pivot-shelves" role="group" aria-label="Pivot builder">
-      {shelf('row', 'Rows', rowField, rowField ? () => onSetRow(null) : undefined)}
+      {shelf('row', 'Rows', rowField, rowField ? () => onSetRow(null) : undefined, rowBucketInterval, onSetRowBucketInterval)}
       <button type="button" className="pivot-shelves__swap" onClick={onSwap} title="Swap rows and columns" aria-label="Swap rows and columns">
         <ArrowLeftRight size={13} aria-hidden="true" />
       </button>
-      {shelf('col', 'Columns', colField, colField ? () => onSetCol(null) : undefined)}
+      {shelf('col', 'Columns', colField, colField ? () => onSetCol(null) : undefined, colBucketInterval, onSetColBucketInterval)}
       <div className="pivot-shelf pivot-shelf--value">
         <span className="pivot-shelf__label">Value</span>
         <div className="pivot-value-toggle" role="group" aria-label="Measure">
@@ -121,7 +168,7 @@ export function PivotShelves(props: PivotShelvesProps): JSX.Element {
               aria-label="Distinct count field"
             >
               <option value="" disabled>choose field…</option>
-              {axisFields.map((f) => (
+              {distinctFields.map((f) => (
                 <option key={f.name} value={f.name}>{f.name}</option>
               ))}
             </select>

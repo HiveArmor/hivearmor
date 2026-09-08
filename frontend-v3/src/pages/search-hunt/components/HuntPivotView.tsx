@@ -111,9 +111,20 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch { /* ignore */ }
   }, [config]);
 
+  // Which axis fields are dates — a date axis requires a bucket interval before it can run.
+  const dateFieldNames = useMemo(
+    () => new Set(fields.filter((f) => f.type === 'date').map((f) => f.name)),
+    [fields],
+  );
+  const rowIsDate = config.rowField != null && dateFieldNames.has(config.rowField);
+  const colIsDate = config.colField != null && dateFieldNames.has(config.colField);
+
   const ready = Boolean(
     config.rowField && config.colField &&
-    (config.valueFn === 'count' || (config.valueFn === 'distinct' && config.distinctField)),
+    (config.valueFn === 'count' || (config.valueFn === 'distinct' && config.distinctField)) &&
+    // A date axis is only runnable once an interval is chosen (server rejects an unbucketed date axis).
+    (!rowIsDate || config.rowBucketInterval) &&
+    (!colIsDate || config.colBucketInterval),
   );
 
   const request: HuntCrosstabRequest | null = useMemo(() => {
@@ -130,11 +141,13 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
       distinctField: config.valueFn === 'distinct' ? (config.distinctField ?? undefined) : undefined,
       rowSize: 20,
       colSize: 20,
+      rowBucket: rowIsDate && config.rowBucketInterval ? { interval: config.rowBucketInterval } : undefined,
+      colBucket: colIsDate && config.colBucketInterval ? { interval: config.colBucketInterval } : undefined,
     };
-  }, [ready, committed, config, pivotFilters]);
+  }, [ready, committed, config, pivotFilters, rowIsDate, colIsDate]);
 
   const crosstabQuery = useQuery({
-    queryKey: ['hunt-pivot', committed, config.rowField, config.colField, config.valueFn, config.distinctField, pivotFilters],
+    queryKey: ['hunt-pivot', committed, config.rowField, config.colField, config.valueFn, config.distinctField, config.rowBucketInterval, config.colBucketInterval, pivotFilters],
     queryFn: ({ signal }) => fetchHuntCrosstab(request as HuntCrosstabRequest, signal),
     enabled: ready && committed.query.length > 0,
     staleTime: 30_000,
@@ -158,7 +171,11 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
   }, [data, config]);
 
   const swap = useCallback(() => {
-    setConfig((c) => ({ ...c, rowField: c.colField, colField: c.rowField }));
+    setConfig((c) => ({
+      ...c,
+      rowField: c.colField, colField: c.rowField,
+      rowBucketInterval: c.colBucketInterval ?? null, colBucketInterval: c.rowBucketInterval ?? null,
+    }));
   }, []);
 
   // Intercept the pivot-local "Filter this Pivot" action here (state lives in this view); forward
@@ -188,10 +205,14 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
         colField={config.colField}
         valueFn={config.valueFn}
         distinctField={config.distinctField}
-        onSetRow={(f) => setConfig((c) => ({ ...c, rowField: f }))}
-        onSetCol={(f) => setConfig((c) => ({ ...c, colField: f }))}
+        rowBucketInterval={config.rowBucketInterval ?? null}
+        colBucketInterval={config.colBucketInterval ?? null}
+        onSetRow={(f) => setConfig((c) => ({ ...c, rowField: f, rowBucketInterval: null }))}
+        onSetCol={(f) => setConfig((c) => ({ ...c, colField: f, colBucketInterval: null }))}
         onSetValueFn={(fn) => setConfig((c) => ({ ...c, valueFn: fn }))}
         onSetDistinctField={(f) => setConfig((c) => ({ ...c, distinctField: f }))}
+        onSetRowBucketInterval={(i) => setConfig((c) => ({ ...c, rowBucketInterval: i }))}
+        onSetColBucketInterval={(i) => setConfig((c) => ({ ...c, colBucketInterval: i }))}
         onSwap={swap}
       />
 

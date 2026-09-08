@@ -502,6 +502,15 @@ export interface HuntCrosstabRequest {
   distinctField?: string;
   rowSize: number;
   colSize: number;
+  /** Optional date-histogram bucketing per axis (P1.1). Omit for a TERM axis. */
+  rowBucket?: HuntCrosstabBucket;
+  colBucket?: HuntCrosstabBucket;
+}
+
+/** Fixed-interval date-histogram bucket spec for an axis (matches backend BucketDTO). */
+export interface HuntCrosstabBucket {
+  interval: string;      // e.g. "1m", "5m", "1h", "1d"
+  timezone?: string;     // optional IANA tz; omit for UTC
 }
 
 /** A single non-zero crosstab cell. */
@@ -567,6 +576,11 @@ export interface HuntCrosstabResponse {
   rowCardinalityEstimate: number;
   colCardinalityEstimate: number;
   cardinalityApproximate: boolean;
+  /** P1.1: whether each axis is a date_histogram + its interval (drives time-label rendering). */
+  rowBucketed?: boolean;
+  colBucketed?: boolean;
+  rowBucketInterval?: string | null;
+  colBucketInterval?: string | null;
   axisSelection: HuntCrosstabAxisSelection;
   execution: HuntCrosstabExecution;
   status: 'COMPLETE' | 'PARTIAL' | string;
@@ -581,4 +595,7 @@ export interface HuntPivotConfig {
   colField: string | null;
   valueFn: 'count' | 'distinct';
   distinctField: string | null;
+  /** P1.1: per-axis date-histogram interval (null = TERM axis). */
+  rowBucketInterval?: string | null;
+  colBucketInterval?: string | null;
 }
