@@ -6,6 +6,7 @@ import com.hivearmor.event_processor.EventProcessorManagerService;
 import com.hivearmor.service.detection.CelDryRunEvaluator.DryRunResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
@@ -40,6 +41,7 @@ public class DetectionRuleDryRunService {
         this(objectMapper, null);
     }
 
+    @Autowired
     public DetectionRuleDryRunService(ObjectMapper objectMapper,
                                       EventProcessorManagerService eventProcessorManagerService) {
         this.objectMapper = objectMapper;
