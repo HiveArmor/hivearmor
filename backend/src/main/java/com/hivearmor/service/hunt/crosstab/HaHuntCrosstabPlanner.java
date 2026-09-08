@@ -68,6 +68,8 @@ public class HaHuntCrosstabPlanner {
     private static final String AGG_COL_CARD = "col_card";
     private static final String AGG_GRAND_DISTINCT = "grand_distinct";
     private static final String SUB_DISTINCT = "d";
+    /** Synthetic key for the (missing) bucket under MissingMode.INCLUDE — the FE renders it as "(no value)". */
+    private static final String MISSING_SENTINEL = "\u0000(missing)";
     private static final String AGG_MATRIX = "matrix";
     private static final String AGG_MATRIX_COL = "matrix_col";
     private static final String AGG_ROW_TOTALS = "row_totals";
@@ -115,7 +117,7 @@ public class HaHuntCrosstabPlanner {
         String distinctPath = distinct ? aggFieldPathFor(fieldRegistry.require(measure.field())) : null;
 
         Query baseQuery = withTimeRange(queryParser.parse(def.query()), def.timeRange());
-        Query eligibleFilter = eligibleFilter(baseQuery, def.row().field(), def.column().field());
+        Query eligibleFilter = eligibleFilter(baseQuery, def.row(), def.column());
         List<String> indices = resolveIndices(def.indexType());
 
         int rowSize = def.rowSize();
@@ -145,6 +147,9 @@ public class HaHuntCrosstabPlanner {
         dto.setColBucketed(colPlan.histogram());
         dto.setRowBucketInterval(rowPlan.histogram() ? rowPlan.interval() : null);
         dto.setColBucketInterval(colPlan.histogram() ? colPlan.interval() : null);
+        dto.setRowHasMissingBucket(rowPlan.includeMissing());
+        dto.setColHasMissingBucket(colPlan.includeMissing());
+        dto.setMissingKey(rowPlan.includeMissing() || colPlan.includeMissing() ? MISSING_SENTINEL : null);
 
         AxisSelectionDTO axis = new AxisSelectionDTO();
         axis.setStrategy("distributed_terms");
@@ -266,15 +271,16 @@ public class HaHuntCrosstabPlanner {
         String rowPath = rowPlan.path();
         String colPath = colPlan.path();
 
-        // Matrix scope: restrict ONLY the TERM axes to their selected members. A date_histogram axis is
-        // deterministic over the fixed interval + time range, so discovery and matrix produce the same
-        // buckets and no member-IN filter is needed (nor possible) for it.
+        // Matrix scope: restrict ONLY a plain TERM axis (not histogram, not INCLUDE-missing) to its
+        // selected members. A date_histogram OR an INCLUDE axis produces deterministic buckets (via
+        // fixed interval / the terms `missing` parameter), so a member-IN filter is neither needed nor
+        // possible for it (the (missing) bucket has no field value to match).
         List<Query> scopeFilters = new ArrayList<>();
-        if (!rowPlan.histogram()) {
+        if (!rowPlan.histogram() && !rowPlan.includeMissing()) {
             List<FieldValue> rowVals = toFieldValues(rowSpec, rowKeys);
             scopeFilters.add(Query.of(f -> f.terms(t -> t.field(rowPath).terms(tt -> tt.value(rowVals)))));
         }
-        if (!colPlan.histogram()) {
+        if (!colPlan.histogram() && !colPlan.includeMissing()) {
             List<FieldValue> colVals = toFieldValues(colSpec, colKeys);
             scopeFilters.add(Query.of(f -> f.terms(t -> t.field(colPath).terms(tt -> tt.value(colVals)))));
         }
@@ -334,10 +340,17 @@ public class HaHuntCrosstabPlanner {
             return dateHistoAgg(plan, distinct, distinctPath);
         }
         if (distinct) {
-            return Aggregation.of(a -> a.terms(t -> t.field(plan.path()).size(size))
-                .aggregations(SUB_DISTINCT, cardinalityAgg(distinctPath)));
+            return Aggregation.of(a -> a.terms(t -> {
+                t.field(plan.path()).size(size);
+                if (plan.includeMissing()) t.missing(FieldValue.of(MISSING_SENTINEL));
+                return t;
+            }).aggregations(SUB_DISTINCT, cardinalityAgg(distinctPath)));
         }
-        return Aggregation.of(a -> a.terms(t -> t.field(plan.path()).size(size)));
+        return Aggregation.of(a -> a.terms(t -> {
+            t.field(plan.path()).size(size);
+            if (plan.includeMissing()) t.missing(FieldValue.of(MISSING_SENTINEL));
+            return t;
+        }));
     }
 
     /** The outer matrix agg for the row axis, carrying the inner column agg as a sub-aggregation. */
@@ -349,8 +362,11 @@ public class HaHuntCrosstabPlanner {
                 return d;
             }).aggregations(AGG_MATRIX_COL, sub));
         }
-        return Aggregation.of(a -> a.terms(t -> t.field(plan.path()).size(size))
-            .aggregations(AGG_MATRIX_COL, sub));
+        return Aggregation.of(a -> a.terms(t -> {
+            t.field(plan.path()).size(size);
+            if (plan.includeMissing()) t.missing(FieldValue.of(MISSING_SENTINEL));
+            return t;
+        }).aggregations(AGG_MATRIX_COL, sub));
     }
 
     /** Per-member totals agg for an axis: keyed filters (TERM) or a date_histogram (bucket doc_counts). */
@@ -359,7 +375,7 @@ public class HaHuntCrosstabPlanner {
         if (plan.histogram()) {
             return dateHistoAgg(plan, distinct, distinctPath);
         }
-        return keyedMemberTotals(plan.path(), spec, keys, distinct, distinctPath);
+        return keyedMemberTotals(plan.path(), spec.name(), spec, keys, distinct, distinctPath);
     }
 
     /** Read per-member totals for an axis: from a keyed-filters agg (TERM) or a date_histogram (by key). */
@@ -379,13 +395,19 @@ public class HaHuntCrosstabPlanner {
         return readKeyedTotals(agg, keys, distinct);
     }
 
-    /** A keyed {@code filters} agg: one bucket per selected member, scoped to that member only. */
-    private Aggregation keyedMemberTotals(String path, FieldSpec spec, List<String> keys,
+    /** A keyed {@code filters} agg: one bucket per selected member, scoped to that member only.
+     *  The (missing) sentinel key is scoped by a must_not exists on the raw field, not a term. */
+    private Aggregation keyedMemberTotals(String path, String rawField, FieldSpec spec, List<String> keys,
                                           boolean distinct, String distinctPath) {
         Map<String, Query> keyed = new LinkedHashMap<>();
         for (String key : keys) {
-            FieldValue fv = toFieldValue(spec, key);
-            keyed.put(key, Query.of(q -> q.term(t -> t.field(path).value(fv))));
+            if (MISSING_SENTINEL.equals(key)) {
+                keyed.put(key, Query.of(q -> q.bool(BoolQuery.of(b -> b
+                    .mustNot(Query.of(mn -> mn.exists(ExistsQuery.of(e -> e.field(rawField)))))))));
+            } else {
+                FieldValue fv = toFieldValue(spec, key);
+                keyed.put(key, Query.of(q -> q.term(t -> t.field(path).value(fv))));
+            }
         }
         if (distinct) {
             return Aggregation.of(a -> a
@@ -465,11 +487,20 @@ public class HaHuntCrosstabPlanner {
 
     // ------------------------------------------------------------------ helpers
 
-    private Query eligibleFilter(Query baseQuery, String rowField, String colField) {
-        Query rowExists = Query.of(q -> q.exists(ExistsQuery.of(e -> e.field(rowField))));
-        Query colExists = Query.of(q -> q.exists(ExistsQuery.of(e -> e.field(colField))));
-        return Query.of(q -> q.bool(BoolQuery.of(b -> b
-            .must(baseQuery).filter(rowExists).filter(colExists))));
+    private Query eligibleFilter(Query baseQuery, Dimension row, Dimension col) {
+        // Only OMIT axes contribute an exists() guard; an INCLUDE axis keeps its field-absent docs in
+        // scope so they land in the (missing) bucket. The denominator therefore reflects the ACTUAL
+        // per-axis filter, not a fixed "both fields present".
+        return Query.of(q -> q.bool(BoolQuery.of(b -> {
+            b.must(baseQuery);
+            if (row.missing() != CrosstabDefinition.MissingMode.INCLUDE) {
+                b.filter(Query.of(f -> f.exists(ExistsQuery.of(e -> e.field(row.field())))));
+            }
+            if (col.missing() != CrosstabDefinition.MissingMode.INCLUDE) {
+                b.filter(Query.of(f -> f.exists(ExistsQuery.of(e -> e.field(col.field())))));
+            }
+            return b;
+        })));
     }
 
     private Query withTimeRange(Query userQuery, HuntSearchRequestDTO.TimeRangeDTO timeRange) {
@@ -503,16 +534,17 @@ public class HaHuntCrosstabPlanner {
     }
 
     /** Per-axis plan: the physical path, whether it is a date_histogram, and its interval/timezone. */
-    private record AxisPlan(String path, boolean histogram, String interval, String timezone) {}
+    private record AxisPlan(String path, boolean histogram, String interval, String timezone, boolean includeMissing) {}
 
     private AxisPlan axisPlan(Dimension dim, FieldSpec spec) {
+        boolean includeMissing = dim.missing() == CrosstabDefinition.MissingMode.INCLUDE;
         if (dim.isDateHistogram()) {
-            // Date histograms bucket the raw date field (never .keyword).
+            // Date histograms bucket the raw date field (never .keyword). INCLUDE is rejected upstream.
             String tz = dim.bucket() == null ? null : dim.bucket().timezone();
             String interval = dim.bucket() == null ? null : dim.bucket().interval();
-            return new AxisPlan(spec.name(), true, interval, tz);
+            return new AxisPlan(spec.name(), true, interval, tz, false);
         }
-        return new AxisPlan(aggFieldPathFor(spec), false, null, null);
+        return new AxisPlan(aggFieldPathFor(spec), false, null, null, includeMissing);
     }
 
     /** Build the discovery/agg for one axis: terms (with optional distinct order) or a date_histogram. */
@@ -524,11 +556,17 @@ public class HaHuntCrosstabPlanner {
             return dateHistoAgg(plan, distinct, distinctPath);
         }
         if (distinct) {
-            return Aggregation.of(a -> a.terms(t -> t.field(plan.path()).size(size).shardSize(shardSize)
-                .order(Map.of(SUB_DISTINCT, SortOrder.Desc)))
-                .aggregations(SUB_DISTINCT, cardinalityAgg(distinctPath)));
+            return Aggregation.of(a -> a.terms(t -> {
+                t.field(plan.path()).size(size).shardSize(shardSize).order(Map.of(SUB_DISTINCT, SortOrder.Desc));
+                if (plan.includeMissing()) t.missing(FieldValue.of(MISSING_SENTINEL));
+                return t;
+            }).aggregations(SUB_DISTINCT, cardinalityAgg(distinctPath)));
         }
-        return Aggregation.of(a -> a.terms(t -> t.field(plan.path()).size(size).shardSize(shardSize)));
+        return Aggregation.of(a -> a.terms(t -> {
+            t.field(plan.path()).size(size).shardSize(shardSize);
+            if (plan.includeMissing()) t.missing(FieldValue.of(MISSING_SENTINEL));
+            return t;
+        }));
     }
 
     /** A date_histogram agg (fixed interval, optional tz), with an inner distinct sub-agg when needed. */

@@ -74,4 +74,23 @@ describe('PivotMatrix', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: /Keep in Hunt/ }));
     expect(onCellAction).toHaveBeenCalledWith('keep', 'alice', iso, 5);
   });
+
+  it('renders the (missing) sentinel row key as "(no value)"', () => {
+    const sentinel = '\u0000(missing)';
+    render(
+      <PivotMatrix
+        data={data({
+          rowKeys: [sentinel], colKeys: ['RU'],
+          cells: [{ row: sentinel, col: 'RU', value: 4 }],
+          rowTotals: [4], colTotals: [4],
+          rowHasMissingBucket: true, missingKey: sentinel,
+        })}
+        rowField="user.name"
+        colField="event.action"
+        heat={false}
+        onCellAction={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole('rowheader', { name: '(no value)' })).toBeInTheDocument();
+  });
 });

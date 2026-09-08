@@ -535,8 +535,15 @@ export function getFoundationHuntCrosstab(
   const withBucket = (base: (e: HuntEvent) => string | null, bucket?: { interval: string }) =>
     (bucket ? (e: HuntEvent) => bucketStartIso(e, bucket.interval) : base);
 
-  const rowOf = withBucket(fieldOf(request.rowField), request.rowBucket);
-  const colOf = withBucket(fieldOf(request.colField), request.colBucket);
+  // (missing) sentinel: mirrors the backend MISSING_SENTINEL so the FE renders it as "(no value)".
+  const MISSING_SENTINEL = '\u0000(missing)';
+  const withMissing = (accessor: (e: HuntEvent) => string | null, include: boolean) =>
+    (include ? (e: HuntEvent) => accessor(e) ?? MISSING_SENTINEL : accessor);
+
+  const rowInclude = request.rowMissing === 'include';
+  const colInclude = request.colMissing === 'include';
+  const rowOf = withMissing(withBucket(fieldOf(request.rowField), request.rowBucket), rowInclude);
+  const colOf = withMissing(withBucket(fieldOf(request.colField), request.colBucket), colInclude);
   const distinctOf = request.valueFn === 'distinct' && request.distinctField
     ? fieldOf(request.distinctField)
     : null;
@@ -641,6 +648,9 @@ export function getFoundationHuntCrosstab(
     colBucketed: request.colBucket != null,
     rowBucketInterval: request.rowBucket?.interval ?? null,
     colBucketInterval: request.colBucket?.interval ?? null,
+    rowHasMissingBucket: rowInclude,
+    colHasMissingBucket: colInclude,
+    missingKey: rowInclude || colInclude ? MISSING_SENTINEL : null,
     axisSelection: {
       strategy: 'distributed_terms',
       approximate: true,

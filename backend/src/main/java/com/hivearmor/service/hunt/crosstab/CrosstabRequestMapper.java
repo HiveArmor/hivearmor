@@ -34,8 +34,8 @@ public class CrosstabRequestMapper {
         MeasureFn fn = parseMeasureFn(request.getValueFn());
         String distinctField = fn == MeasureFn.DISTINCT ? request.getDistinctField() : null;
 
-        Dimension row = toDimension(request.getRowField(), request.getRowBucket());
-        Dimension col = toDimension(request.getColField(), request.getColBucket());
+        Dimension row = toDimension(request.getRowField(), request.getRowBucket(), request.getRowMissing());
+        Dimension col = toDimension(request.getColField(), request.getColBucket(), request.getColMissing());
         Dimensions dimensions = new Dimensions(List.of(row), List.of(col));
         Measure measure = new Measure(fn, distinctField);
 
@@ -54,12 +54,14 @@ public class CrosstabRequestMapper {
             colSize);
     }
 
-    private static Dimension toDimension(String field, HuntCrosstabRequestDTO.BucketDTO bucket) {
+    private static Dimension toDimension(String field, HuntCrosstabRequestDTO.BucketDTO bucket, String missing) {
+        MissingMode mode = "include".equalsIgnoreCase(missing == null ? "" : missing.trim())
+            ? MissingMode.INCLUDE : MissingMode.OMIT;
         if (bucket != null && bucket.getInterval() != null && !bucket.getInterval().isBlank()) {
-            return new Dimension(field, DimKind.DATE_HISTOGRAM, MissingMode.OMIT,
+            return new Dimension(field, DimKind.DATE_HISTOGRAM, mode,
                 new BucketSpec(bucket.getInterval().trim(), bucket.getTimezone()));
         }
-        return new Dimension(field, DimKind.TERM, MissingMode.OMIT);
+        return new Dimension(field, DimKind.TERM, mode);
     }
 
     private static MeasureFn parseMeasureFn(String valueFn) {

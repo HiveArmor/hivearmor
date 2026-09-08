@@ -77,6 +77,11 @@ public class CrosstabDefinitionValidator {
     private void validateAxis(String which, Dimension dim) {
         String field = dim.field();
         if (dim.isDateHistogram()) {
+            // INCLUDE (missing) on a date axis needs a sentinel date — deferred.
+            if (dim.missing() == CrosstabDefinition.MissingMode.INCLUDE) {
+                throw new HuntQueryException("CROSSTAB_MISSING_NOT_ON_DATE",
+                    "A (missing) bucket is not supported on a date (time) " + which + " axis", 0);
+            }
             // A bucketed date axis: the field must be a DATE, and the interval must be allow-listed.
             FieldSpec spec;
             try {

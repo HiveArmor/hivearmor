@@ -505,6 +505,9 @@ export interface HuntCrosstabRequest {
   /** Optional date-histogram bucketing per axis (P1.1). Omit for a TERM axis. */
   rowBucket?: HuntCrosstabBucket;
   colBucket?: HuntCrosstabBucket;
+  /** How events missing an axis field are handled (P1.1): 'omit' (default) | 'include' ((missing) bucket). */
+  rowMissing?: 'omit' | 'include';
+  colMissing?: 'omit' | 'include';
 }
 
 /** Fixed-interval date-histogram bucket spec for an axis (matches backend BucketDTO). */
@@ -581,6 +584,10 @@ export interface HuntCrosstabResponse {
   colBucketed?: boolean;
   rowBucketInterval?: string | null;
   colBucketInterval?: string | null;
+  /** P1.1: whether each axis includes a (missing) bucket + the sentinel key to render as "(no value)". */
+  rowHasMissingBucket?: boolean;
+  colHasMissingBucket?: boolean;
+  missingKey?: string | null;
   axisSelection: HuntCrosstabAxisSelection;
   execution: HuntCrosstabExecution;
   status: 'COMPLETE' | 'PARTIAL' | string;
@@ -598,4 +605,7 @@ export interface HuntPivotConfig {
   /** P1.1: per-axis date-histogram interval (null = TERM axis). */
   rowBucketInterval?: string | null;
   colBucketInterval?: string | null;
+  /** P1.1: per-axis missing-value mode ('include' shows a (missing) bucket; default omit). */
+  rowMissing?: 'omit' | 'include';
+  colMissing?: 'omit' | 'include';
 }

@@ -13,12 +13,17 @@ export interface PivotShelvesProps {
   /** P1.1: per-axis date-histogram interval (null = TERM axis). */
   rowBucketInterval: string | null;
   colBucketInterval: string | null;
+  /** P1.1: per-axis missing-value mode. */
+  rowMissing: 'omit' | 'include';
+  colMissing: 'omit' | 'include';
   onSetRow: (field: string | null) => void;
   onSetCol: (field: string | null) => void;
   onSetValueFn: (fn: 'count' | 'distinct') => void;
   onSetDistinctField: (field: string) => void;
   onSetRowBucketInterval: (interval: string | null) => void;
   onSetColBucketInterval: (interval: string | null) => void;
+  onSetRowMissing: (mode: 'omit' | 'include') => void;
+  onSetColMissing: (mode: 'omit' | 'include') => void;
   onSwap: () => void;
 }
 
@@ -51,9 +56,9 @@ function isTermAxisEligible(f: HuntFieldDefinition): boolean {
 export function PivotShelves(props: PivotShelvesProps): JSX.Element {
   const {
     fields, rowField, colField, valueFn, distinctField,
-    rowBucketInterval, colBucketInterval,
+    rowBucketInterval, colBucketInterval, rowMissing, colMissing,
     onSetRow, onSetCol, onSetValueFn, onSetDistinctField,
-    onSetRowBucketInterval, onSetColBucketInterval, onSwap,
+    onSetRowBucketInterval, onSetColBucketInterval, onSetRowMissing, onSetColMissing, onSwap,
   } = props;
   const [openMenu, setOpenMenu] = useState<ShelfTarget | null>(null);
 
@@ -113,6 +118,7 @@ export function PivotShelves(props: PivotShelvesProps): JSX.Element {
     target: ShelfTarget, label: string, value: string | null,
     onClear?: () => void,
     interval?: string | null, onSetInterval?: (i: string | null) => void,
+    missing?: 'omit' | 'include', onSetMissing?: (m: 'omit' | 'include') => void,
   ) => (
     <div className="pivot-shelf" onDrop={onDrop(target)} onDragOver={allowDrop}>
       <span className="pivot-shelf__label">{label}</span>
@@ -129,6 +135,17 @@ export function PivotShelves(props: PivotShelvesProps): JSX.Element {
         <span className="pivot-shelf__placeholder">Drop a field</span>
       )}
       {value && onSetInterval && intervalPicker(value, interval ?? null, onSetInterval)}
+      {value && onSetMissing && !dateFieldNames.has(value) && (
+        <label className="pivot-shelf__missing">
+          <input
+            type="checkbox"
+            checked={missing === 'include'}
+            onChange={(e) => onSetMissing(e.target.checked ? 'include' : 'omit')}
+            aria-label={`Include a (missing) bucket for ${value}`}
+          />
+          <span>(missing)</span>
+        </label>
+      )}
       <div className="pivot-shelf__add-wrap">
         <button
           type="button"
@@ -148,11 +165,11 @@ export function PivotShelves(props: PivotShelvesProps): JSX.Element {
 
   return (
     <div className="pivot-shelves" role="group" aria-label="Pivot builder">
-      {shelf('row', 'Rows', rowField, rowField ? () => onSetRow(null) : undefined, rowBucketInterval, onSetRowBucketInterval)}
+      {shelf('row', 'Rows', rowField, rowField ? () => onSetRow(null) : undefined, rowBucketInterval, onSetRowBucketInterval, rowMissing, onSetRowMissing)}
       <button type="button" className="pivot-shelves__swap" onClick={onSwap} title="Swap rows and columns" aria-label="Swap rows and columns">
         <ArrowLeftRight size={13} aria-hidden="true" />
       </button>
-      {shelf('col', 'Columns', colField, colField ? () => onSetCol(null) : undefined, colBucketInterval, onSetColBucketInterval)}
+      {shelf('col', 'Columns', colField, colField ? () => onSetCol(null) : undefined, colBucketInterval, onSetColBucketInterval, colMissing, onSetColMissing)}
       <div className="pivot-shelf pivot-shelf--value">
         <span className="pivot-shelf__label">Value</span>
         <div className="pivot-value-toggle" role="group" aria-label="Measure">

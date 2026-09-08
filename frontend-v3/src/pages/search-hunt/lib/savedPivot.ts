@@ -20,6 +20,8 @@ export interface SavedPivotPayload {
     distinctField: string | null;
     rowBucketInterval?: string | null;
     colBucketInterval?: string | null;
+    rowMissing?: 'omit' | 'include';
+    colMissing?: 'omit' | 'include';
   };
 }
 
@@ -36,6 +38,8 @@ export function buildSavedPivotFilters(config: HuntPivotConfig): SavedPivotPaylo
       distinctField: config.distinctField,
       rowBucketInterval: config.rowBucketInterval ?? null,
       colBucketInterval: config.colBucketInterval ?? null,
+      rowMissing: config.rowMissing ?? 'omit',
+      colMissing: config.colMissing ?? 'omit',
     },
   };
 }
@@ -66,5 +70,7 @@ export function parseSavedPivot(
     distinctField: typeof pivot.distinctField === 'string' ? pivot.distinctField : null,
     rowBucketInterval: typeof pivot.rowBucketInterval === 'string' ? pivot.rowBucketInterval : null,
     colBucketInterval: typeof pivot.colBucketInterval === 'string' ? pivot.colBucketInterval : null,
+    rowMissing: pivot.rowMissing === 'include' ? 'include' : 'omit',
+    colMissing: pivot.colMissing === 'include' ? 'include' : 'omit',
   };
 }

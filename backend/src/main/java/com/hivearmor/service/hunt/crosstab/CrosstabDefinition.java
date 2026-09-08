@@ -22,8 +22,8 @@ public final class CrosstabDefinition {
     /** Dimension kind. P1 supports TERM; P1.1 adds DATE_HISTOGRAM for a bucketed date axis. */
     public enum DimKind { TERM, DATE_HISTOGRAM }
 
-    /** How events missing the dimension field are handled. P1 is OMIT only (INCLUDE is a P1.1 hook). */
-    public enum MissingMode { OMIT }
+    /** How events missing the dimension field are handled. OMIT drops them; INCLUDE adds a (missing) bucket. */
+    public enum MissingMode { OMIT, INCLUDE }
 
     /** Bucketing spec for a DATE_HISTOGRAM dimension (null for a TERM dimension). */
     public static final class BucketSpec {

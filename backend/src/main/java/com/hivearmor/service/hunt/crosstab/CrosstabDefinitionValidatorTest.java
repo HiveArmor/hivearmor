@@ -196,4 +196,41 @@ class CrosstabDefinitionValidatorTest {
             .isInstanceOf(HuntQueryException.class)
             .extracting("code").isEqualTo("CROSSTAB_ONE_DATE_AXIS");
     }
+
+    // --- P1.1 missing-value modes ---
+
+    private HuntCrosstabRequestDTO withMissing(String row, String rowMissing, String col, String colMissing) {
+        HuntCrosstabRequestDTO r = request(row, col, "count", null);
+        r.setRowMissing(rowMissing);
+        r.setColMissing(colMissing);
+        return r;
+    }
+
+    @Test
+    @DisplayName("INCLUDE missing mode on a term axis validates and maps to MissingMode.INCLUDE")
+    void includeMissingOnTermAllowed() {
+        CrosstabDefinition def = mapper.toDefinition(withMissing("host.name", "include", "event.action", "omit"));
+        assertThat(def.row().missing()).isEqualTo(CrosstabDefinition.MissingMode.INCLUDE);
+        assertThat(def.column().missing()).isEqualTo(CrosstabDefinition.MissingMode.OMIT);
+        validator.validate(def); // no throw
+    }
+
+    @Test
+    @DisplayName("INCLUDE missing mode on a bucketed date axis is rejected (deferred)")
+    void includeMissingOnDateRejected() {
+        HuntCrosstabRequestDTO r = bucketed("host.name", null, "@timestamp", "1h");
+        r.setColMissing("include");
+        CrosstabDefinition def = mapper.toDefinition(r);
+        assertThatThrownBy(() -> validator.validate(def))
+            .isInstanceOf(HuntQueryException.class)
+            .extracting("code").isEqualTo("CROSSTAB_MISSING_NOT_ON_DATE");
+    }
+
+    @Test
+    @DisplayName("default missing mode is OMIT")
+    void defaultMissingIsOmit() {
+        CrosstabDefinition def = mapper.toDefinition(request("host.name", "event.action", "count", null));
+        assertThat(def.row().missing()).isEqualTo(CrosstabDefinition.MissingMode.OMIT);
+        assertThat(def.column().missing()).isEqualTo(CrosstabDefinition.MissingMode.OMIT);
+    }
 }
