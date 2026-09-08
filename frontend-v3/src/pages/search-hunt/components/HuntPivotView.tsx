@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useQuery } from '@tanstack/react-query';
-import { Download } from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Download, Save } from 'lucide-react';
 
 import type { PivotCellAction } from './PivotCellMenu';
 import { PivotMatrix } from './PivotMatrix';
 import { PivotShelves } from './PivotShelves';
+import { buildSavedPivotFilters } from '../lib/savedPivot';
 import { buildCrosstabCsv, crosstabCsvFilename } from '../pivotCsv';
-import { fetchHuntCrosstab } from '../searchHunt.service';
+import { createSavedHunt, fetchHuntCrosstab } from '../searchHunt.service';
 import type {
   HuntCrosstabRequest,
   HuntFieldDefinition,
@@ -25,6 +26,10 @@ export interface HuntPivotViewProps {
   fields: HuntFieldDefinition[];
   /** Current tenant id — guards the remembered config across tenant switches. */
   tenantId: number | null;
+  /** Optional config to seed the shelves from — e.g. a loaded Saved Pivot. Overrides localStorage. */
+  initialConfig?: HuntPivotConfig | null;
+  /** Whether the current user may save (create) a Saved Pivot. */
+  canSave?: boolean;
   /** Cell action: Keep/Exclude modify the hunt query; Drill switches to Table; Copy is clipboard. */
   onCellAction: (action: PivotCellAction, rowField: string, colField: string, rowValue: string, colValue: string, value: number) => void;
 }
@@ -53,9 +58,33 @@ function loadConfig(tenantId: number | null): HuntPivotConfig {
  * matched set, and renders shelves + toolbar + honest scope note + matrix + every state. The matrix
  * never sums cells to totals (totalSemantics.additive is false).
  */
-export function HuntPivotView({ committed, fields, tenantId, onCellAction }: HuntPivotViewProps): JSX.Element {
-  const [config, setConfig] = useState<HuntPivotConfig>(() => loadConfig(tenantId));
+export function HuntPivotView({ committed, fields, tenantId, initialConfig, canSave = true, onCellAction }: HuntPivotViewProps): JSX.Element {
+  const [config, setConfig] = useState<HuntPivotConfig>(() => initialConfig ?? loadConfig(tenantId));
   const [heat, setHeat] = useState(true);
+
+  // Save-pivot dialog state.
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [saveShared, setSaveShared] = useState(false);
+  const saveMutation = useMutation({
+    mutationFn: () => createSavedHunt({
+      name: saveName.trim(),
+      query: committed.query,
+      tags: [],
+      shared: saveShared,
+      filters: buildSavedPivotFilters(config) as unknown as Record<string, unknown>,
+    }),
+    onSuccess: () => {
+      setSaveOpen(false);
+      setSaveName('');
+      setSaveShared(false);
+    },
+  });
+
+  // Adopt a newly-supplied initialConfig (e.g. loading a different Saved Pivot).
+  useEffect(() => {
+    if (initialConfig) setConfig(initialConfig);
+  }, [initialConfig]);
 
   // Re-seed when the tenant changes (cache is flushed elsewhere; local config must not leak across tenants).
   useEffect(() => {
@@ -140,10 +169,39 @@ export function HuntPivotView({ committed, fields, tenantId, onCellAction }: Hun
         <label className="pivot-toolbar__heat">
           <input type="checkbox" checked={heat} onChange={(e) => setHeat(e.target.checked)} /> Heat
         </label>
+        {canSave && (
+          <button type="button" className="pivot-toolbar__save" onClick={() => setSaveOpen(true)} disabled={!ready} title="Save this pivot for later">
+            <Save size={13} aria-hidden="true" /> Save pivot
+          </button>
+        )}
         <button type="button" className="pivot-toolbar__export" onClick={onExport} disabled={!data} title="Export the crosstab as CSV">
           <Download size={13} aria-hidden="true" /> Export CSV
         </button>
       </div>
+
+      {saveOpen && (
+        <div className="pivot-save" role="dialog" aria-modal="true" aria-label="Save pivot">
+          <input
+            type="text"
+            className="pivot-save__name"
+            placeholder="Name this pivot…"
+            value={saveName}
+            onChange={(e) => setSaveName(e.target.value)}
+            aria-label="Pivot name"
+            autoFocus
+          />
+          <label className="pivot-save__shared">
+            <input type="checkbox" checked={saveShared} onChange={(e) => setSaveShared(e.target.checked)} /> Share with my team
+          </label>
+          <div className="pivot-save__actions">
+            <button type="button" onClick={() => saveMutation.mutate()} disabled={!saveName.trim() || saveMutation.isPending}>
+              {saveMutation.isPending ? 'Saving…' : 'Save'}
+            </button>
+            <button type="button" onClick={() => setSaveOpen(false)}>Cancel</button>
+          </div>
+          {saveMutation.isError && <p className="pivot-save__error" role="alert">Could not save the pivot.</p>}
+        </div>
+      )}
 
       {data && (
         <div className="pivot-scope-note" aria-live="polite">

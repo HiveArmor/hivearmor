@@ -365,7 +365,25 @@ export function getFoundationSavedHunts(params?: { search?: string; tags?: strin
     if (params?.tags && !hunt.tags.includes(params.tags)) return false;
     return true;
   });
-  return { items: filtered, total: filtered.length };
+  // A synthetic Saved Pivot so fixture mode exercises the load-into-Pivot path.
+  const pivotItem: SavedHunt = {
+    id: 'saved-pivot-1',
+    name: 'Failed logons by host × action',
+    description: '',
+    query: 'event.category:authentication',
+    filters: { kind: 'pivot', pivot: { v: 1, rowField: 'host.name', colField: 'event.action', valueFn: 'count', distinctField: null } },
+    tags: ['authentication', 'pivot'],
+    createdBy: 'analyst1',
+    createdAt: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+    updatedAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+    lastRunAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+    runCount: 7,
+    shared: false,
+  };
+  const withPivot = (!needle || pivotItem.name.toLowerCase().includes(needle)) && (!params?.tags || pivotItem.tags.includes(params.tags))
+    ? [pivotItem, ...filtered]
+    : filtered;
+  return { items: withPivot, total: withPivot.length };
 }
 
 /** Fixture hunt history — synthesized from the first events so the Recent list is populated. */
