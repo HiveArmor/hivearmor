@@ -40,6 +40,14 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
     return m;
   }, [data.cells]);
 
+  // P2 Strand B: UEBA z-score per row key (only present when the row axis is user.name + a real score exists).
+  const deviationByRow = useMemo(() => {
+    const m = new Map<string, { metric: string; zScore: number }>();
+    const devs = data.rowDeviations;
+    if (devs) data.rowKeys.forEach((k, i) => { const d = devs[i]; if (d) m.set(k, d); });
+    return m;
+  }, [data.rowDeviations, data.rowKeys]);
+
   const rowTotal = useMemo(() => {
     const m = new Map<string, number>();
     data.rowKeys.forEach((k, i) => m.set(k, data.rowTotals[i] ?? 0));
@@ -166,7 +174,23 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
         <tbody>
           {orderedRowKeys.map((r, ri) => (
             <tr key={r}>
-              <th scope="row" className="pivot-matrix__rowhead">{fmtRow(r)}</th>
+              <th scope="row" className="pivot-matrix__rowhead">
+                {fmtRow(r)}
+                {(() => {
+                  const d = deviationByRow.get(r);
+                  if (!d) return null;
+                  const sign = d.zScore > 0 ? '+' : '';
+                  return (
+                    <span
+                      className="pivot-matrix__deviation"
+                      title={`UEBA: ${d.metric} is ${sign}${d.zScore.toFixed(1)}σ vs peer baseline`}
+                      aria-label={`UEBA deviation ${sign}${d.zScore.toFixed(1)} sigma on ${d.metric}`}
+                    >
+                      {sign}{d.zScore.toFixed(1)}σ
+                    </span>
+                  );
+                })()}
+              </th>
               {data.colKeys.map((c, ci) => {
                 const value = cellMap.get(`${r}\u0000${c}`) ?? 0;
                 const cell = cellByKey.get(`${r}\u0000${c}`);

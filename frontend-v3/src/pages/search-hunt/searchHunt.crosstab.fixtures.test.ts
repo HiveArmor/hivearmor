@@ -100,4 +100,14 @@ describe('getFoundationHuntCrosstab', () => {
     expect(r.comparison).toBeUndefined();
     expect(r.cells.every((c) => c.comparisonValue === undefined)).toBe(true);
   });
+
+  it('attaches rowDeviations only for a user.name row axis when deviation is requested', () => {
+    const onUser = getFoundationHuntCrosstab(req({ rowField: 'user.name', deviation: true }));
+    expect(onUser.rowDeviations).toBeDefined();
+    expect(onUser.rowDeviations?.length).toBe(onUser.rowKeys.length);
+    expect(onUser.rowDeviations?.some((d) => d && typeof d.zScore === 'number')).toBe(true);
+    // Not a user axis → no deviation even when requested.
+    const onHost = getFoundationHuntCrosstab(req({ rowField: 'host.name', deviation: true }));
+    expect(onHost.rowDeviations).toBeUndefined();
+  });
 });

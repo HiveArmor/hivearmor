@@ -510,6 +510,8 @@ export interface HuntCrosstabRequest {
   colMissing?: 'omit' | 'include';
   /** P2: optional previous-period comparison. Omit for no comparison. */
   comparison?: { mode: 'previous_period' | 'previous_window'; offset?: string };
+  /** P2 Strand B: attach the existing per-user UEBA z-score to rows (only when the row axis is user.name). */
+  deviation?: boolean;
 }
 
 /** Fixed-interval date-histogram bucket spec for an axis (matches backend BucketDTO). */
@@ -587,6 +589,8 @@ export interface HuntCrosstabResponse {
   cardinalityApproximate: boolean;
   /** P2: present when a previous-period comparison ran — the mode + the shifted window used. */
   comparison?: { mode: string; from: string; to: string };
+  /** P2 Strand B: per-row UEBA deviation, aligned with rowKeys. Entry is null for a user with no real z-score; whole field absent unless requested + row axis is user.name. */
+  rowDeviations?: ({ metric: string; zScore: number } | null)[];
   /** P1.1: whether each axis is a date_histogram + its interval (drives time-label rendering). */
   rowBucketed?: boolean;
   colBucketed?: boolean;

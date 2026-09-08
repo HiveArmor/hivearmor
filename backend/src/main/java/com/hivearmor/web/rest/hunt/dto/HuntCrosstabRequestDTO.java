@@ -75,6 +75,12 @@ public class HuntCrosstabRequestDTO {
     /** P2: optional previous-period comparison. Null = no comparison (response is unchanged). */
     private ComparisonDTO comparison;
 
+    /**
+     * P2 Strand B: when true AND the row axis is a UEBA-scored entity (user.name), attach the existing
+     * per-user z-score to each row. Ignored (no-op) for any other row field — never fabricates a score.
+     */
+    private boolean deviation = false;
+
     /** P2 comparison request: which prior window to compare against. */
     public static class ComparisonDTO {
         /**
@@ -151,4 +157,7 @@ public class HuntCrosstabRequestDTO {
 
     public ComparisonDTO getComparison() { return comparison; }
     public void setComparison(ComparisonDTO comparison) { this.comparison = comparison; }
+
+    public boolean isDeviation() { return deviation; }
+    public void setDeviation(boolean deviation) { this.deviation = deviation; }
 }

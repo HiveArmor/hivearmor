@@ -42,6 +42,15 @@ describe('PivotMatrix', () => {
     expect(screen.getByText('120')).toBeInTheDocument();      // raw value still shown
   });
 
+  it('renders a UEBA deviation marker on a row with a real z-score, none on a null row', () => {
+    const withDev = data({ rowDeviations: [{ metric: 'failed_logon_ratio', zScore: 3.2 }, null] });
+    render(<PivotMatrix data={withDev} rowField="user.name" colField="event.action" heat={false} onCellAction={vi.fn()} />);
+    expect(screen.getByText(/\+3\.2σ/)).toBeInTheDocument();
+    // the second row (aligned to the null deviation) shows no sigma marker
+    const secondRowKey = withDev.rowKeys[1];
+    expect(screen.getByRole('rowheader', { name: new RegExp(secondRowKey) }).textContent).not.toMatch(/σ/);
+  });
+
   it('opens the cell menu and fires the chosen action for a non-zero cell', () => {
     const onCellAction = vi.fn();
     render(<PivotMatrix data={data()} rowField="host.name" colField="event.action" heat onCellAction={onCellAction} />);

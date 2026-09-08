@@ -81,6 +81,8 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
   const [heat, setHeat] = useState(true);
   // P2: compare each cell against the previous period (same width, immediately prior window).
   const [compare, setCompare] = useState(false);
+  // P2 Strand B: mark user.name rows with their existing UEBA z-score (no-op for other row axes).
+  const [deviate, setDeviate] = useState(false);
   // Pivot-local scratch filters: extra KQL clauses AND-ed into the crosstab request query only.
   // They narrow the crosstab without touching the committed hunt query. Ephemeral (not persisted).
   const [pivotFilters, setPivotFilters] = useState<string[]>([]);
@@ -186,11 +188,12 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
       rowMissing: config.rowMissing ?? 'omit',
       colMissing: config.colMissing ?? 'omit',
       comparison: compare ? { mode: 'previous_period' } : undefined,
+      deviation: deviate ? true : undefined,
     };
-  }, [ready, committed, config, pivotFilters, rowIsDate, colIsDate, compare]);
+  }, [ready, committed, config, pivotFilters, rowIsDate, colIsDate, compare, deviate]);
 
   const crosstabQuery = useQuery({
-    queryKey: ['hunt-pivot', committed, config.rowField, config.colField, config.valueFn, config.distinctField, config.rowBucketInterval, config.colBucketInterval, config.rowMissing, config.colMissing, pivotFilters, compare],
+    queryKey: ['hunt-pivot', committed, config.rowField, config.colField, config.valueFn, config.distinctField, config.rowBucketInterval, config.colBucketInterval, config.rowMissing, config.colMissing, pivotFilters, compare, deviate],
     queryFn: ({ signal }) => fetchHuntCrosstab(request as HuntCrosstabRequest, signal),
     enabled: ready && committed.query.length > 0,
     staleTime: 30_000,
@@ -311,6 +314,11 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
         <label className="pivot-toolbar__heat">
           <input type="checkbox" checked={compare} onChange={(e) => setCompare(e.target.checked)} /> Compare to previous period
         </label>
+        {config.rowField === 'user.name' && (
+          <label className="pivot-toolbar__heat" title="Mark each user row with its existing UEBA peer-baseline z-score">
+            <input type="checkbox" checked={deviate} onChange={(e) => setDeviate(e.target.checked)} /> UEBA deviation
+          </label>
+        )}
         <PivotTemplatesMenu fields={fields} onApply={applyTemplate} />
         {canSave && (
           <button type="button" className="pivot-toolbar__save" onClick={() => setSaveOpen(true)} disabled={!ready} title="Save this pivot for later">
