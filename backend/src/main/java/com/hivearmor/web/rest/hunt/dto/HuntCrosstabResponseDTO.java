@@ -71,6 +71,12 @@ public class HuntCrosstabResponseDTO {
     /** Axis cardinality is always approximate (HyperLogLog++). */
     private boolean cardinalityApproximate = true;
 
+    /** P1.1: whether each axis is a date_histogram, and its interval (so the FE renders time labels). */
+    private boolean rowBucketed;
+    private boolean colBucketed;
+    private String rowBucketInterval;
+    private String colBucketInterval;
+
     private AxisSelectionDTO axisSelection;
 
     private ExecutionDTO execution;
@@ -103,6 +109,18 @@ public class HuntCrosstabResponseDTO {
 
     public List<String> getColKeys() { return colKeys; }
     public void setColKeys(List<String> colKeys) { this.colKeys = colKeys; }
+
+    public boolean isRowBucketed() { return rowBucketed; }
+    public void setRowBucketed(boolean rowBucketed) { this.rowBucketed = rowBucketed; }
+
+    public boolean isColBucketed() { return colBucketed; }
+    public void setColBucketed(boolean colBucketed) { this.colBucketed = colBucketed; }
+
+    public String getRowBucketInterval() { return rowBucketInterval; }
+    public void setRowBucketInterval(String rowBucketInterval) { this.rowBucketInterval = rowBucketInterval; }
+
+    public String getColBucketInterval() { return colBucketInterval; }
+    public void setColBucketInterval(String colBucketInterval) { this.colBucketInterval = colBucketInterval; }
 
     public List<CellDTO> getCells() { return cells; }
     public void setCells(List<CellDTO> cells) { this.cells = cells; }

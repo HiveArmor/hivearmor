@@ -105,8 +105,10 @@ public class HaHuntCrosstabPlanner {
 
         FieldSpec rowSpec = fieldRegistry.require(def.row().field());
         FieldSpec colSpec = fieldRegistry.require(def.column().field());
-        String rowPath = aggFieldPathFor(rowSpec);
-        String colPath = aggFieldPathFor(colSpec);
+        AxisPlan rowPlan = axisPlan(def.row(), rowSpec);
+        AxisPlan colPlan = axisPlan(def.column(), colSpec);
+        String rowPath = rowPlan.path();
+        String colPath = colPlan.path();
 
         Measure measure = def.measure();
         boolean distinct = measure.fn() == MeasureFn.DISTINCT;
@@ -122,7 +124,7 @@ public class HaHuntCrosstabPlanner {
         int colShardSize = costPolicy.shardSizeFor(colSize);
 
         // ---- Stage A: eligible scope + approximate axis discovery (one size:0 search) ----
-        AxisDiscovery disc = discoverAxes(baseQuery, eligibleFilter, indices, rowPath, colPath,
+        AxisDiscovery disc = discoverAxes(baseQuery, eligibleFilter, indices, rowPlan, colPlan,
             rowSize, colSize, rowShardSize, colShardSize, distinct, distinctPath);
 
         List<String> rowKeys = disc.rowKeys();
@@ -137,8 +139,12 @@ public class HaHuntCrosstabPlanner {
         dto.setRowCardinalityEstimate(disc.rowCardinality());
         dto.setColCardinalityEstimate(disc.colCardinality());
         dto.setCardinalityApproximate(true);
-        dto.setRowTruncated(disc.rowCardinality() > rowKeys.size());
-        dto.setColTruncated(disc.colCardinality() > colKeys.size());
+        dto.setRowTruncated(!rowPlan.histogram() && disc.rowCardinality() > rowKeys.size());
+        dto.setColTruncated(!colPlan.histogram() && disc.colCardinality() > colKeys.size());
+        dto.setRowBucketed(rowPlan.histogram());
+        dto.setColBucketed(colPlan.histogram());
+        dto.setRowBucketInterval(rowPlan.histogram() ? rowPlan.interval() : null);
+        dto.setColBucketInterval(colPlan.histogram() ? colPlan.interval() : null);
 
         AxisSelectionDTO axis = new AxisSelectionDTO();
         axis.setStrategy("distributed_terms");
@@ -167,7 +173,7 @@ public class HaHuntCrosstabPlanner {
         }
 
         // ---- Stage B: bounded matrix + branch-isolated selected-member totals (one size:0 search) ----
-        MatrixResult mx = computeMatrix(eligibleFilter, indices, rowSpec, colSpec, rowPath, colPath,
+        MatrixResult mx = computeMatrix(eligibleFilter, indices, rowSpec, colSpec, rowPlan, colPlan,
             rowKeys, colKeys, distinct, distinctPath);
 
         timedOut = timedOut || mx.timedOut();
@@ -188,27 +194,20 @@ public class HaHuntCrosstabPlanner {
 
     @SuppressWarnings("rawtypes")
     private AxisDiscovery discoverAxes(Query baseQuery, Query eligibleFilter, List<String> indices,
-                                       String rowPath, String colPath,
+                                       AxisPlan rowPlan, AxisPlan colPlan,
                                        int rowSize, int colSize, int rowShardSize, int colShardSize,
                                        boolean distinct, String distinctPath) throws Exception {
         // Axis-discovery sub-aggs, computed inside a filter agg scoped to pivot-eligible docs.
         Map<String, Aggregation> eligibleSubs = new LinkedHashMap<>();
 
-        Aggregation rowDisc = distinct
-            ? Aggregation.of(a -> a.terms(t -> t.field(rowPath).size(rowSize).shardSize(rowShardSize)
-                .order(Map.of(SUB_DISTINCT, SortOrder.Desc)))
-                .aggregations(SUB_DISTINCT, cardinalityAgg(distinctPath)))
-            : Aggregation.of(a -> a.terms(t -> t.field(rowPath).size(rowSize).shardSize(rowShardSize)));
-        Aggregation colDisc = distinct
-            ? Aggregation.of(a -> a.terms(t -> t.field(colPath).size(colSize).shardSize(colShardSize)
-                .order(Map.of(SUB_DISTINCT, SortOrder.Desc)))
-                .aggregations(SUB_DISTINCT, cardinalityAgg(distinctPath)))
-            : Aggregation.of(a -> a.terms(t -> t.field(colPath).size(colSize).shardSize(colShardSize)));
+        Aggregation rowDisc = axisDiscoveryAgg(rowPlan, rowSize, rowShardSize, distinct, distinctPath);
+        Aggregation colDisc = axisDiscoveryAgg(colPlan, colSize, colShardSize, distinct, distinctPath);
 
         eligibleSubs.put(AGG_ROW_DISCOVERY, rowDisc);
         eligibleSubs.put(AGG_COL_DISCOVERY, colDisc);
-        eligibleSubs.put(AGG_ROW_CARD, cardinalityAgg(rowPath));
-        eligibleSubs.put(AGG_COL_CARD, cardinalityAgg(colPath));
+        // Cardinality estimates + truncation only apply to a TERM axis; a histogram is complete.
+        if (!rowPlan.histogram()) eligibleSubs.put(AGG_ROW_CARD, cardinalityAgg(rowPlan.path()));
+        if (!colPlan.histogram()) eligibleSubs.put(AGG_COL_CARD, cardinalityAgg(colPlan.path()));
         if (distinct) {
             eligibleSubs.put(AGG_GRAND_DISTINCT, cardinalityAgg(distinctPath));
         }
@@ -240,10 +239,11 @@ public class HaHuntCrosstabPlanner {
         Map<String, Aggregate> subs = eligible != null && eligible.isFilter()
             ? eligible.filter().aggregations() : Map.of();
 
-        RowKeys rows = readTerms(subs.get(AGG_ROW_DISCOVERY));
-        RowKeys cols = readTerms(subs.get(AGG_COL_DISCOVERY));
-        long rowCard = cardinalityValue(subs.get(AGG_ROW_CARD));
-        long colCard = cardinalityValue(subs.get(AGG_COL_CARD));
+        RowKeys rows = readAxisKeys(subs.get(AGG_ROW_DISCOVERY), rowPlan.histogram());
+        RowKeys cols = readAxisKeys(subs.get(AGG_COL_DISCOVERY), colPlan.histogram());
+        // A histogram axis reports its bucket count as "cardinality" (complete, not an estimate).
+        long rowCard = rowPlan.histogram() ? rows.keys().size() : cardinalityValue(subs.get(AGG_ROW_CARD));
+        long colCard = colPlan.histogram() ? cols.keys().size() : cardinalityValue(subs.get(AGG_COL_CARD));
         long grandDistinct = distinct ? cardinalityValue(subs.get(AGG_GRAND_DISTINCT)) : 0L;
 
         return new AxisDiscovery(rows.keys(), cols.keys(), rowCard, colCard,
@@ -259,34 +259,38 @@ public class HaHuntCrosstabPlanner {
 
     @SuppressWarnings("rawtypes")
     private MatrixResult computeMatrix(Query eligibleFilter, List<String> indices,
-                                       FieldSpec rowSpec, FieldSpec colSpec, String rowPath, String colPath,
+                                       FieldSpec rowSpec, FieldSpec colSpec, AxisPlan rowPlan, AxisPlan colPlan,
                                        List<String> rowKeys, List<String> colKeys,
                                        boolean distinct, String distinctPath) throws Exception {
         Map<String, Aggregation> aggs = new LinkedHashMap<>();
+        String rowPath = rowPlan.path();
+        String colPath = colPlan.path();
 
-        // Matrix branch — restricted to the selected members ONLY within this branch.
-        List<FieldValue> rowVals = toFieldValues(rowSpec, rowKeys);
-        List<FieldValue> colVals = toFieldValues(colSpec, colKeys);
-        Query matrixScope = Query.of(q -> q.bool(BoolQuery.of(b -> b
-            .filter(Query.of(f -> f.terms(t -> t.field(rowPath).terms(tt -> tt.value(rowVals)))))
-            .filter(Query.of(f -> f.terms(t -> t.field(colPath).terms(tt -> tt.value(colVals))))))));
+        // Matrix scope: restrict ONLY the TERM axes to their selected members. A date_histogram axis is
+        // deterministic over the fixed interval + time range, so discovery and matrix produce the same
+        // buckets and no member-IN filter is needed (nor possible) for it.
+        List<Query> scopeFilters = new ArrayList<>();
+        if (!rowPlan.histogram()) {
+            List<FieldValue> rowVals = toFieldValues(rowSpec, rowKeys);
+            scopeFilters.add(Query.of(f -> f.terms(t -> t.field(rowPath).terms(tt -> tt.value(rowVals)))));
+        }
+        if (!colPlan.histogram()) {
+            List<FieldValue> colVals = toFieldValues(colSpec, colKeys);
+            scopeFilters.add(Query.of(f -> f.terms(t -> t.field(colPath).terms(tt -> tt.value(colVals)))));
+        }
+        Query matrixScope = Query.of(q -> q.bool(BoolQuery.of(b -> b.filter(scopeFilters))));
 
-        Aggregation innerCol = distinct
-            ? Aggregation.of(a -> a.terms(t -> t.field(colPath).size(colKeys.size()))
-                .aggregations(SUB_DISTINCT, cardinalityAgg(distinctPath)))
-            : Aggregation.of(a -> a.terms(t -> t.field(colPath).size(colKeys.size())));
+        Aggregation innerCol = axisMatrixAgg(colPlan, colKeys.size(), distinct, distinctPath);
+        Aggregation outerRow = axisMatrixAggWithSub(rowPlan, rowKeys.size(), innerCol);
         Aggregation matrix = Aggregation.of(a -> a
             .filter(matrixScope)
-            .aggregations(AGG_MATRIX_COL, Aggregation.of(inner -> inner
-                .terms(t -> t.field(rowPath).size(rowKeys.size()))
-                .aggregations(AGG_MATRIX_COL, innerCol))));
+            .aggregations(AGG_MATRIX_COL, outerRow));
         aggs.put(AGG_MATRIX, matrix);
 
-        // Row-totals branch — keyed filters, one bucket per selected row member. Independent scope:
-        // NO column restriction, so rowTotal = all eligible docs for that row member.
-        aggs.put(AGG_ROW_TOTALS, keyedMemberTotals(rowPath, rowSpec, rowKeys, distinct, distinctPath));
-        // Column-totals branch — same, per selected column member.
-        aggs.put(AGG_COL_TOTALS, keyedMemberTotals(colPath, colSpec, colKeys, distinct, distinctPath));
+        // Per-axis totals: TERM axis -> keyed filters (member scope); date_histogram axis -> the
+        // histogram bucket doc_counts (each bucket is its own scope). additive:false holds either way.
+        aggs.put(AGG_ROW_TOTALS, axisMemberTotals(rowPlan, rowSpec, rowKeys, distinct, distinctPath));
+        aggs.put(AGG_COL_TOTALS, axisMemberTotals(colPlan, colSpec, colKeys, distinct, distinctPath));
 
         SearchRequest.Builder builder = new SearchRequest.Builder()
             .size(0)
@@ -299,15 +303,15 @@ public class HaHuntCrosstabPlanner {
         SearchResponse<Map> resp = osClient.execute(os -> os.search(builder.build(), Map.class));
         Map<String, Aggregate> top = resp.aggregations();
 
-        // Cells from the matrix branch.
+        // Cells from the matrix branch (axis-aware bucket iteration).
         List<CellDTO> cells = new ArrayList<>();
         Aggregate matrixAgg = top.get(AGG_MATRIX);
         if (matrixAgg != null && matrixAgg.isFilter()) {
             Aggregate outerRows = matrixAgg.filter().aggregations().get(AGG_MATRIX_COL);
-            for (var rowBucket : termsBuckets(outerRows)) {
+            for (var rowBucket : axisBuckets(outerRows, rowPlan.histogram())) {
                 String rowKey = rowBucket.key();
                 Aggregate innerCols = rowBucket.aggregations().get(AGG_MATRIX_COL);
-                for (var colBucket : termsBuckets(innerCols)) {
+                for (var colBucket : axisBuckets(innerCols, colPlan.histogram())) {
                     long value = distinct
                         ? cardinalityValue(colBucket.aggregations().get(SUB_DISTINCT))
                         : colBucket.docCount();
@@ -318,10 +322,61 @@ public class HaHuntCrosstabPlanner {
             }
         }
 
-        List<Long> rowTotals = readKeyedTotals(top.get(AGG_ROW_TOTALS), rowKeys, distinct);
-        List<Long> colTotals = readKeyedTotals(top.get(AGG_COL_TOTALS), colKeys, distinct);
+        List<Long> rowTotals = readAxisTotals(top.get(AGG_ROW_TOTALS), rowKeys, rowPlan.histogram(), distinct);
+        List<Long> colTotals = readAxisTotals(top.get(AGG_COL_TOTALS), colKeys, colPlan.histogram(), distinct);
 
         return new MatrixResult(cells, rowTotals, colTotals, resp.timedOut(), partialFailures(resp));
+    }
+
+    /** The inner (leaf) matrix agg for an axis: terms(size) or date_histogram, with a distinct sub-agg when needed. */
+    private Aggregation axisMatrixAgg(AxisPlan plan, int size, boolean distinct, String distinctPath) {
+        if (plan.histogram()) {
+            return dateHistoAgg(plan, distinct, distinctPath);
+        }
+        if (distinct) {
+            return Aggregation.of(a -> a.terms(t -> t.field(plan.path()).size(size))
+                .aggregations(SUB_DISTINCT, cardinalityAgg(distinctPath)));
+        }
+        return Aggregation.of(a -> a.terms(t -> t.field(plan.path()).size(size)));
+    }
+
+    /** The outer matrix agg for the row axis, carrying the inner column agg as a sub-aggregation. */
+    private Aggregation axisMatrixAggWithSub(AxisPlan plan, int size, Aggregation sub) {
+        if (plan.histogram()) {
+            return Aggregation.of(a -> a.dateHistogram(d -> {
+                d.field(plan.path()).fixedInterval(i -> i.time(plan.interval()));
+                if (plan.timezone() != null && !plan.timezone().isBlank()) d.timeZone(plan.timezone());
+                return d;
+            }).aggregations(AGG_MATRIX_COL, sub));
+        }
+        return Aggregation.of(a -> a.terms(t -> t.field(plan.path()).size(size))
+            .aggregations(AGG_MATRIX_COL, sub));
+    }
+
+    /** Per-member totals agg for an axis: keyed filters (TERM) or a date_histogram (bucket doc_counts). */
+    private Aggregation axisMemberTotals(AxisPlan plan, FieldSpec spec, List<String> keys,
+                                         boolean distinct, String distinctPath) {
+        if (plan.histogram()) {
+            return dateHistoAgg(plan, distinct, distinctPath);
+        }
+        return keyedMemberTotals(plan.path(), spec, keys, distinct, distinctPath);
+    }
+
+    /** Read per-member totals for an axis: from a keyed-filters agg (TERM) or a date_histogram (by key). */
+    private List<Long> readAxisTotals(Aggregate agg, List<String> keys, boolean histogram, boolean distinct) {
+        if (histogram) {
+            Map<String, Long> byKey = new LinkedHashMap<>();
+            if (agg != null && agg.isDateHistogram()) {
+                for (var b : agg.dateHistogram().buckets().array()) {
+                    long value = distinct ? cardinalityValue(b.aggregations().get(SUB_DISTINCT)) : b.docCount();
+                    byKey.put(b.keyAsString(), value);
+                }
+            }
+            List<Long> totals = new ArrayList<>(keys.size());
+            for (String key : keys) totals.add(byKey.getOrDefault(key, 0L));
+            return totals;
+        }
+        return readKeyedTotals(agg, keys, distinct);
     }
 
     /** A keyed {@code filters} agg: one bucket per selected member, scoped to that member only. */
@@ -338,6 +393,24 @@ public class HaHuntCrosstabPlanner {
                 .aggregations(SUB_DISTINCT, cardinalityAgg(distinctPath)));
         }
         return Aggregation.of(a -> a.filters(f -> f.filters(b -> b.keyed(keyed))));
+    }
+
+    /** Axis-aware bucket iteration: terms buckets or date_histogram buckets, unified as TermBucketView. */
+    private static List<TermBucketView> axisBuckets(Aggregate agg, boolean histogram) {
+        if (!histogram) {
+            return termsBuckets(agg);
+        }
+        List<TermBucketView> out = new ArrayList<>();
+        if (agg != null && agg.isDateHistogram()) {
+            for (var b : agg.dateHistogram().buckets().array()) {
+                out.add(new TermBucketView() {
+                    public String key() { return b.keyAsString(); }
+                    public long docCount() { return b.docCount(); }
+                    public Map<String, Aggregate> aggregations() { return b.aggregations(); }
+                });
+            }
+        }
+        return out;
     }
 
     @SuppressWarnings("unchecked")
@@ -427,6 +500,68 @@ public class HaHuntCrosstabPlanner {
             return Aggregation.of(a -> a.cardinality(c -> c.field(path).precisionThreshold(precision)));
         }
         return Aggregation.of(a -> a.cardinality(c -> c.field(path)));
+    }
+
+    /** Per-axis plan: the physical path, whether it is a date_histogram, and its interval/timezone. */
+    private record AxisPlan(String path, boolean histogram, String interval, String timezone) {}
+
+    private AxisPlan axisPlan(Dimension dim, FieldSpec spec) {
+        if (dim.isDateHistogram()) {
+            // Date histograms bucket the raw date field (never .keyword).
+            String tz = dim.bucket() == null ? null : dim.bucket().timezone();
+            String interval = dim.bucket() == null ? null : dim.bucket().interval();
+            return new AxisPlan(spec.name(), true, interval, tz);
+        }
+        return new AxisPlan(aggFieldPathFor(spec), false, null, null);
+    }
+
+    /** Build the discovery/agg for one axis: terms (with optional distinct order) or a date_histogram. */
+    private Aggregation axisDiscoveryAgg(AxisPlan plan, int size, int shardSize,
+                                         boolean distinct, String distinctPath) {
+        if (plan.histogram()) {
+            // A date_histogram over a fixed interval + bounded time range is deterministic and complete
+            // (no top-N truncation, no doc-count error). Distinct ordering does not apply.
+            return dateHistoAgg(plan, distinct, distinctPath);
+        }
+        if (distinct) {
+            return Aggregation.of(a -> a.terms(t -> t.field(plan.path()).size(size).shardSize(shardSize)
+                .order(Map.of(SUB_DISTINCT, SortOrder.Desc)))
+                .aggregations(SUB_DISTINCT, cardinalityAgg(distinctPath)));
+        }
+        return Aggregation.of(a -> a.terms(t -> t.field(plan.path()).size(size).shardSize(shardSize)));
+    }
+
+    /** A date_histogram agg (fixed interval, optional tz), with an inner distinct sub-agg when needed. */
+    private Aggregation dateHistoAgg(AxisPlan plan, boolean distinct, String distinctPath) {
+        if (distinct) {
+            return Aggregation.of(a -> a.dateHistogram(d -> {
+                d.field(plan.path()).fixedInterval(i -> i.time(plan.interval()));
+                if (plan.timezone() != null && !plan.timezone().isBlank()) d.timeZone(plan.timezone());
+                return d;
+            }).aggregations(SUB_DISTINCT, cardinalityAgg(distinctPath)));
+        }
+        return Aggregation.of(a -> a.dateHistogram(d -> {
+            d.field(plan.path()).fixedInterval(i -> i.time(plan.interval()));
+            if (plan.timezone() != null && !plan.timezone().isBlank()) d.timeZone(plan.timezone());
+            return d;
+        }));
+    }
+
+    /** Ordered ISO bucket-start keys of a date_histogram aggregate. */
+    private static List<String> readHistoKeys(Aggregate agg) {
+        List<String> keys = new ArrayList<>();
+        if (agg != null && agg.isDateHistogram()) {
+            agg.dateHistogram().buckets().array().forEach(b -> keys.add(b.keyAsString()));
+        }
+        return keys;
+    }
+
+    /** Read axis keys from either a terms or a date_histogram discovery aggregate. */
+    private static RowKeys readAxisKeys(Aggregate agg, boolean histogram) {
+        if (histogram) {
+            return new RowKeys(readHistoKeys(agg), null);
+        }
+        return readTerms(agg);
     }
 
     private static String aggFieldPath(String fieldName) {

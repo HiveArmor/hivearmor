@@ -30,8 +30,8 @@ class CrosstabDefinitionValidatorTest {
     void setUp() {
         registry = new HuntFieldRegistry();
         capabilities = new CrosstabFieldCapabilityResolver(registry);
-        validator = new CrosstabDefinitionValidator(capabilities);
         policy = new CrosstabCostPolicy();
+        validator = new CrosstabDefinitionValidator(capabilities, registry, policy);
         mapper = new CrosstabRequestMapper(policy);
     }
 
@@ -133,5 +133,67 @@ class CrosstabDefinitionValidatorTest {
         assertThat(capabilities.isAxisAllowed("source.ip")).isTrue();   // ip
         assertThat(capabilities.isAxisAllowed("source.port")).isTrue(); // number
         assertThat(capabilities.isAxisAllowed("event.severity")).isTrue(); // number
+    }
+
+    // --- P1.1 time bucketing ---
+
+    private HuntCrosstabRequestDTO bucketed(String row, String rowInterval, String col, String colInterval) {
+        HuntCrosstabRequestDTO r = request(row, col, "count", null);
+        if (rowInterval != null) {
+            HuntCrosstabRequestDTO.BucketDTO b = new HuntCrosstabRequestDTO.BucketDTO();
+            b.setInterval(rowInterval);
+            r.setRowBucket(b);
+        }
+        if (colInterval != null) {
+            HuntCrosstabRequestDTO.BucketDTO b = new HuntCrosstabRequestDTO.BucketDTO();
+            b.setInterval(colInterval);
+            r.setColBucket(b);
+        }
+        return r;
+    }
+
+    @Test
+    @DisplayName("a bucketed date column axis with an allowed interval validates")
+    void bucketedDateAxisAllowed() {
+        CrosstabDefinition def = mapper.toDefinition(bucketed("host.name", null, "@timestamp", "1h"));
+        assertThat(def.column().isDateHistogram()).isTrue();
+        assertThat(def.column().bucket().interval()).isEqualTo("1h");
+        validator.validate(def); // no throw
+    }
+
+    @Test
+    @DisplayName("an unbucketed date axis is still rejected")
+    void unbucketedDateStillRejected() {
+        CrosstabDefinition def = mapper.toDefinition(bucketed("host.name", null, "@timestamp", null));
+        assertThatThrownBy(() -> validator.validate(def))
+            .isInstanceOf(HuntQueryException.class)
+            .extracting("code").isEqualTo("CROSSTAB_AXIS_FIELD_UNSUPPORTED");
+    }
+
+    @Test
+    @DisplayName("a disallowed bucket interval is rejected")
+    void badIntervalRejected() {
+        CrosstabDefinition def = mapper.toDefinition(bucketed("host.name", null, "@timestamp", "2s"));
+        assertThatThrownBy(() -> validator.validate(def))
+            .isInstanceOf(HuntQueryException.class)
+            .extracting("code").isEqualTo("CROSSTAB_BUCKET_INTERVAL_UNSUPPORTED");
+    }
+
+    @Test
+    @DisplayName("bucketing a non-date field is rejected")
+    void bucketOnNonDateRejected() {
+        CrosstabDefinition def = mapper.toDefinition(bucketed("host.name", "1h", "event.action", null));
+        assertThatThrownBy(() -> validator.validate(def))
+            .isInstanceOf(HuntQueryException.class)
+            .extracting("code").isEqualTo("CROSSTAB_BUCKET_NOT_DATE");
+    }
+
+    @Test
+    @DisplayName("two date axes are rejected (at most one time axis in P1.1)")
+    void twoDateAxesRejected() {
+        CrosstabDefinition def = mapper.toDefinition(bucketed("@timestamp", "1h", "@timestamp", "1d"));
+        assertThatThrownBy(() -> validator.validate(def))
+            .isInstanceOf(HuntQueryException.class)
+            .extracting("code").isEqualTo("CROSSTAB_ONE_DATE_AXIS");
     }
 }

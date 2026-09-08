@@ -19,27 +19,49 @@ public final class CrosstabDefinition {
     /** Measure function. P1 supports COUNT and DISTINCT only. */
     public enum MeasureFn { COUNT, DISTINCT }
 
-    /** Dimension kind. P1 supports TERM only (DATE_HISTOGRAM is a P1.1 hook). */
-    public enum DimKind { TERM }
+    /** Dimension kind. P1 supports TERM; P1.1 adds DATE_HISTOGRAM for a bucketed date axis. */
+    public enum DimKind { TERM, DATE_HISTOGRAM }
 
     /** How events missing the dimension field are handled. P1 is OMIT only (INCLUDE is a P1.1 hook). */
     public enum MissingMode { OMIT }
+
+    /** Bucketing spec for a DATE_HISTOGRAM dimension (null for a TERM dimension). */
+    public static final class BucketSpec {
+        private final String interval;   // fixed interval, e.g. "1h", "1d"
+        private final String timezone;   // optional IANA tz; null = UTC
+
+        public BucketSpec(String interval, String timezone) {
+            this.interval = interval;
+            this.timezone = timezone;
+        }
+
+        public String interval() { return interval; }
+        public String timezone() { return timezone; }
+    }
 
     /** A single crosstab dimension. */
     public static final class Dimension {
         private final String field;
         private final DimKind kind;
         private final MissingMode missing;
+        private final BucketSpec bucket;   // non-null iff kind == DATE_HISTOGRAM
 
         public Dimension(String field, DimKind kind, MissingMode missing) {
+            this(field, kind, missing, null);
+        }
+
+        public Dimension(String field, DimKind kind, MissingMode missing, BucketSpec bucket) {
             this.field = field;
             this.kind = kind;
             this.missing = missing;
+            this.bucket = bucket;
         }
 
         public String field() { return field; }
         public DimKind kind() { return kind; }
         public MissingMode missing() { return missing; }
+        public BucketSpec bucket() { return bucket; }
+        public boolean isDateHistogram() { return kind == DimKind.DATE_HISTOGRAM; }
     }
 
     /** The crosstab measure. {@code field} is only set for DISTINCT. */
