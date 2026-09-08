@@ -651,6 +651,8 @@ export function getFoundationHuntCrosstab(
     rowHasMissingBucket: rowInclude,
     colHasMissingBucket: colInclude,
     missingKey: rowInclude || colInclude ? MISSING_SENTINEL : null,
+    rowMultiValued: request.rowField === 'event.category',
+    colMultiValued: request.colField === 'event.category',
     axisSelection: {
       strategy: 'distributed_terms',
       approximate: true,

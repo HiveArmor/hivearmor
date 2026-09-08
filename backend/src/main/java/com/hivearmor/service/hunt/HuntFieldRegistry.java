@@ -35,7 +35,8 @@ public class HuntFieldRegistry {
         String description,
         boolean sortable,
         boolean aggregatable,
-        boolean projectedByDefault
+        boolean projectedByDefault,
+        boolean multiValued
     ) {
         public List<String> operators() {
             return switch (kind) {
@@ -53,7 +54,7 @@ public class HuntFieldRegistry {
         add(registry, "@timestamp", "Timestamp", FieldKind.DATE, "event", "Event occurrence time in UTC", true, true, true);
         add(registry, "ingestedAt", "Ingested at", FieldKind.DATE, "event", "Time the platform accepted the record", true, true, true);
         add(registry, "event.severity", "Severity", FieldKind.NUMBER, "event", "Normalized numeric event severity", true, true, true);
-        add(registry, "event.category", "Category", FieldKind.KEYWORD, "event", "Normalized event category", true, true, true);
+        add(registry, "event.category", "Category", FieldKind.KEYWORD, "event", "Normalized event category", true, true, true, true);
         add(registry, "event.action", "Action", FieldKind.KEYWORD, "event", "Normalized action performed", true, true, true);
         add(registry, "event.outcome", "Outcome", FieldKind.KEYWORD, "event", "Normalized action outcome", true, true, true);
         add(registry, "host.name", "Host", FieldKind.KEYWORD, "host", "Hostname of the observed system", true, true, true);
@@ -84,8 +85,14 @@ public class HuntFieldRegistry {
     private static void add(Map<String, FieldSpec> registry, String name, String label, FieldKind kind,
                             String category, String description, boolean sortable,
                             boolean aggregatable, boolean projectedByDefault) {
+        add(registry, name, label, kind, category, description, sortable, aggregatable, projectedByDefault, false);
+    }
+
+    private static void add(Map<String, FieldSpec> registry, String name, String label, FieldKind kind,
+                            String category, String description, boolean sortable,
+                            boolean aggregatable, boolean projectedByDefault, boolean multiValued) {
         registry.put(name.toLowerCase(Locale.ROOT), new FieldSpec(
-            name, label, kind, category, description, sortable, aggregatable, projectedByDefault));
+            name, label, kind, category, description, sortable, aggregatable, projectedByDefault, multiValued));
     }
 
     public FieldSpec require(String name) {

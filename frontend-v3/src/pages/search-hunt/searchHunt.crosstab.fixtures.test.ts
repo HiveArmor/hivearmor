@@ -77,4 +77,10 @@ describe('getFoundationHuntCrosstab', () => {
     expect(r.missingKey).toBe('\u0000(missing)');
     expect(r.rowKeys).toContain('\u0000(missing)');
   });
+
+  it('flags a multi-valued axis (event.category) and not a single-valued one', () => {
+    const r = getFoundationHuntCrosstab(req({ rowField: 'event.category', colField: 'event.action' }));
+    expect(r.rowMultiValued).toBe(true);
+    expect(r.colMultiValued).toBe(false);
+  });
 });

@@ -118,8 +118,22 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
     ? `distinct ${data.measure.field ?? ''}`.trim()
     : 'count';
 
+  // Multi-valued disclosure: name the array axis/axes so the analyst understands why cells can
+  // exceed a total (an event with several values lands in several buckets). Display-only.
+  const multiValuedFields = [
+    data.rowMultiValued ? rowField : null,
+    data.colMultiValued ? colField : null,
+  ].filter((f): f is string => f !== null);
+
   return (
     <div className="pivot-matrix-scroll">
+      {multiValuedFields.length > 0 && (
+        <p className="pivot-matrix__multivalued" role="note">
+          {multiValuedFields.join(' and ')} {multiValuedFields.length > 1 ? 'are' : 'is'} multi-valued —
+          an event can carry several values, so a row or column can list an event more than once and
+          cells may exceed the total.
+        </p>
+      )}
       <table className="pivot-matrix" aria-label={`Crosstab of ${rowField} by ${colField}, ${valueLabel}`}>
         <caption className="pivot-matrix__caption">
           {`Crosstab of ${rowField} by ${colField} — ${valueLabel} over ${data.pivotEligibleMatched.toLocaleString()} pivot-eligible events`}

@@ -82,6 +82,10 @@ public class HuntCrosstabResponseDTO {
     private boolean colHasMissingBucket;
     private String missingKey;
 
+    /** P1.1: whether each axis field is multi-valued (array) — cells may exceed the total legitimately. */
+    private boolean rowMultiValued;
+    private boolean colMultiValued;
+
     private AxisSelectionDTO axisSelection;
 
     private ExecutionDTO execution;
@@ -135,6 +139,12 @@ public class HuntCrosstabResponseDTO {
 
     public String getMissingKey() { return missingKey; }
     public void setMissingKey(String missingKey) { this.missingKey = missingKey; }
+
+    public boolean isRowMultiValued() { return rowMultiValued; }
+    public void setRowMultiValued(boolean rowMultiValued) { this.rowMultiValued = rowMultiValued; }
+
+    public boolean isColMultiValued() { return colMultiValued; }
+    public void setColMultiValued(boolean colMultiValued) { this.colMultiValued = colMultiValued; }
 
     public List<CellDTO> getCells() { return cells; }
     public void setCells(List<CellDTO> cells) { this.cells = cells; }

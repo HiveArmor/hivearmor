@@ -2169,6 +2169,7 @@
 
 /* Matrix — semantic table, sticky header + first column */
 .pivot-matrix-scroll { flex: 1 1 0; min-height: 0; overflow: auto; position: relative; }
+.pivot-matrix__multivalued { margin: 0 0 6px; padding: 5px 8px; border-radius: var(--ha-radius-control, 6px); font: var(--ha-type-metadata); color: var(--ha-foreground-secondary); background: var(--ha-fill-primary-subtle); }
 .pivot-matrix { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; }
 .pivot-matrix__caption { text-align: left; padding: 4px 10px; font: var(--ha-type-metadata); color: var(--ha-foreground-tertiary); caption-side: top; }
 .pivot-matrix th, .pivot-matrix td {

@@ -150,6 +150,8 @@ public class HaHuntCrosstabPlanner {
         dto.setRowHasMissingBucket(rowPlan.includeMissing());
         dto.setColHasMissingBucket(colPlan.includeMissing());
         dto.setMissingKey(rowPlan.includeMissing() || colPlan.includeMissing() ? MISSING_SENTINEL : null);
+        dto.setRowMultiValued(rowSpec.multiValued());
+        dto.setColMultiValued(colSpec.multiValued());
 
         AxisSelectionDTO axis = new AxisSelectionDTO();
         axis.setStrategy("distributed_terms");

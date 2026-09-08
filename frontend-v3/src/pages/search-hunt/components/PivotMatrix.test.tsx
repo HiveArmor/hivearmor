@@ -93,4 +93,16 @@ describe('PivotMatrix', () => {
     );
     expect(screen.getByRole('rowheader', { name: '(no value)' })).toBeInTheDocument();
   });
+
+  it('shows a multi-valued disclosure note only when an axis is multi-valued', () => {
+    const { rerender } = render(
+      <PivotMatrix data={data()} rowField="host.name" colField="event.action" heat={false} onCellAction={vi.fn()} />,
+    );
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+    rerender(
+      <PivotMatrix data={data({ colMultiValued: true })} rowField="host.name" colField="event.category" heat={false} onCellAction={vi.fn()} />,
+    );
+    const note = screen.getByRole('note');
+    expect(note).toHaveTextContent(/event\.category is multi-valued/i);
+  });
 });
