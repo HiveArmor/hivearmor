@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { EChartsOption } from 'echarts';
 import {
   BarChart3, BarChartBig, BookOpen, Check, ChevronLeft, ChevronRight, CircleStop, Clock3, Columns3, Database, FileClock,
-  Grid3x3, Keyboard, Library, ListFilter, MoreHorizontal, Play, Save, ShieldAlert, Sparkles, Table2,
+  Grid3x3, Keyboard, Library, ListFilter, MoreHorizontal, Play, Save, ShieldAlert, Sparkles, Table2, X,
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -134,6 +134,8 @@ export function SearchHuntPage(): JSX.Element {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [flyoutEventId, setFlyoutEventId] = useState<string | null>(null);
   const [verdictPanelOpen, setVerdictPanelOpen] = useState(false);
+  // The "AI verdict unavailable" note is a persistent hint; let the analyst dismiss it for the session.
+  const [verdictNoteDismissed, setVerdictNoteDismissed] = useState(false);
   const [resultView, setResultView] = useState<'table' | 'metrics' | 'pivot'>('table');
   // Histogram collapse — persisted, so an analyst who reclaims the 96px for row-scanning keeps it
   // collapsed across visits. The histogram stays in the table view (it is the time-scoping control);
@@ -899,12 +901,21 @@ export function SearchHuntPage(): JSX.Element {
                 <span className="hunt-verdict-banner__peek">{verdict.summary}</span>
                 <span className="hunt-verdict-banner__cta">View analysis →</span>
               </button>
-            ) : hasResults && !aiActive ? (
+            ) : hasResults && !aiActive && !verdictNoteDismissed ? (
               <p className="hunt-verdict-unavailable" role="note">
                 <span aria-hidden="true">✦</span>{' '}
-                {!aiConfigured
+                <span className="hunt-verdict-unavailable__text">{!aiConfigured
                   ? 'AI verdict unavailable — the AI service is not configured for this deployment.'
-                  : 'AI verdict off — set Autonomy to Suggest (⋯ menu) to have the agent assess these results.'}
+                  : 'AI verdict off — set Autonomy to Suggest (⋯ menu) to have the agent assess these results.'}</span>
+                <button
+                  type="button"
+                  className="hunt-verdict-unavailable__dismiss"
+                  aria-label="Dismiss AI verdict notice"
+                  title="Dismiss"
+                  onClick={() => setVerdictNoteDismissed(true)}
+                >
+                  <X size={13} aria-hidden="true" />
+                </button>
               </p>
             ) : null}
             {!histogramCollapsed && (
