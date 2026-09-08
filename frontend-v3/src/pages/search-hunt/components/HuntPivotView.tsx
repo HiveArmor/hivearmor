@@ -7,6 +7,8 @@ import type { PivotCellAction } from './PivotCellMenu';
 import { PivotFiltersShelf } from './PivotFiltersShelf';
 import { PivotMatrix } from './PivotMatrix';
 import { PivotShelves } from './PivotShelves';
+import { PivotTemplatesMenu } from './PivotTemplatesMenu';
+import { validatePivotTemplate, type PivotTemplate } from '../lib/pivotTemplates';
 import { buildSavedPivotFilters } from '../lib/savedPivot';
 import { buildCrosstabCsv, crosstabCsvFilename } from '../pivotCsv';
 import { createSavedHunt, fetchHuntCrosstab, fetchHuntFieldStats } from '../searchHunt.service';
@@ -98,6 +100,16 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
     }
     return map;
   }, [fieldStatsQuery.data]);
+
+  // P1.1 templates: applying a curated template validates its fields against the live schema, drops any
+  // ineligible axis (never applies a broken pivot), sets the config, and surfaces dropped-field warnings.
+  // A template only sets axes/measure — it never touches the committed hunt query.
+  const [templateWarnings, setTemplateWarnings] = useState<string[]>([]);
+  const applyTemplate = useCallback((template: PivotTemplate) => {
+    const { config: applied, warnings } = validatePivotTemplate(template, fields, tenantId);
+    setConfig(applied);
+    setTemplateWarnings(warnings);
+  }, [fields, tenantId]);
 
   // Save-pivot dialog state.
   const [saveOpen, setSaveOpen] = useState(false);
@@ -255,6 +267,7 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
         <label className="pivot-toolbar__heat">
           <input type="checkbox" checked={heat} onChange={(e) => setHeat(e.target.checked)} /> Heat
         </label>
+        <PivotTemplatesMenu fields={fields} onApply={applyTemplate} />
         {canSave && (
           <button type="button" className="pivot-toolbar__save" onClick={() => setSaveOpen(true)} disabled={!ready} title="Save this pivot for later">
             <Save size={13} aria-hidden="true" /> Save pivot
@@ -264,6 +277,12 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
           <Download size={13} aria-hidden="true" /> Export CSV
         </button>
       </div>
+
+      {templateWarnings.length > 0 && (
+        <p className="pivot-template-warning" role="note">
+          {templateWarnings.join(' ')}
+        </p>
+      )}
 
       {saveOpen && (
         <div className="pivot-save" role="dialog" aria-modal="true" aria-label="Save pivot">

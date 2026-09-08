@@ -2098,6 +2098,35 @@
 .pivot-toolbar__save:hover:not(:disabled) { color: var(--ha-action-primary); border-color: var(--ha-border-strong); }
 .pivot-toolbar__save:disabled { opacity: 0.5; cursor: default; }
 
+.pivot-templates { position: relative; display: inline-flex; }
+.pivot-toolbar__templates {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control, 6px);
+  background: var(--ha-surface-input); color: var(--ha-foreground-secondary);
+  padding: 3px 10px; min-height: 26px; cursor: pointer; font: var(--ha-type-compact);
+}
+.pivot-toolbar__templates:hover { color: var(--ha-action-primary); border-color: var(--ha-border-strong); }
+.pivot-templates__menu {
+  position: absolute; z-index: 20; top: calc(100% + 4px); left: 0;
+  min-width: 280px; max-height: 360px; overflow-y: auto;
+  margin: 0; padding: 4px; list-style: none;
+  background: var(--ha-surface-elevated);
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-control, 6px);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--ha-surface-overlay) 60%, transparent);
+}
+.pivot-templates__menu ul { margin: 0; padding: 0; list-style: none; }
+.pivot-templates__group-label { display: block; padding: 6px 8px 2px; font: var(--ha-type-metadata); text-transform: uppercase; letter-spacing: 0.04em; color: var(--ha-foreground-tertiary); }
+.pivot-templates__menu button {
+  display: flex; flex-direction: column; gap: 1px; width: 100%;
+  padding: 5px 8px; border: 0; background: transparent; cursor: pointer; text-align: left;
+  color: var(--ha-foreground-primary); font: var(--ha-type-compact); border-radius: var(--ha-radius-control, 6px);
+}
+.pivot-templates__menu button small { color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
+.pivot-templates__menu button:hover:not(:disabled) { background: var(--ha-surface-hover); }
+.pivot-templates__menu button:disabled { opacity: 0.45; cursor: default; }
+.pivot-template-warning { margin: 0 10px 6px; padding: 5px 8px; border-radius: var(--ha-radius-control, 6px); font: var(--ha-type-metadata); color: var(--ha-severity-medium); background: var(--ha-fill-primary-subtle); }
+
 .pivot-save {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 10px 8px;
   padding: 8px 10px; border: 1px solid var(--ha-border-default);

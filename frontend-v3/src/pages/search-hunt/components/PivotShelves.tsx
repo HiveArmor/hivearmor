@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 
 import { AlertTriangle, ArrowLeftRight, Plus, X } from 'lucide-react';
 
+import { isDateField, isTermAxisEligible } from '../lib/pivotAxisEligibility';
 import type { HuntFieldDefinition } from '../searchHunt.types';
 
 export interface PivotShelvesProps {
@@ -35,19 +36,6 @@ type ShelfTarget = 'row' | 'col' | 'distinct';
 
 /** Allowed date-histogram intervals (mirrors the backend allow-list; server re-validates). */
 const BUCKET_INTERVALS = ['1m', '5m', '15m', '30m', '1h', '3h', '12h', '1d', '7d'];
-
-/** A date field may be an axis ONLY when bucketed (P1.1). Distinct-of never accepts a date. */
-function isDateField(f: HuntFieldDefinition): boolean {
-  return f.type === 'date';
-}
-
-/** Client mirror of the backend capability for a NON-date axis: text-without-keyword disabled. */
-function isTermAxisEligible(f: HuntFieldDefinition): boolean {
-  if (f.type === 'date') return false;
-  if (f.type === 'text' && !f.operators.includes(':')) return false;
-  // text WITH ':' operator is keyword-backed and aggregatable in this schema.
-  return true;
-}
 
 /**
  * Pivot builder shelves (PR-B P1): Rows / Columns / Value drop zones.
