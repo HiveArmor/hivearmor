@@ -1,0 +1,46 @@
+id: 9414
+name: RISK-PASS-THE-HASH
+dataTypes:
+  - windows
+  - wineventlog
+  - identity
+category: Credential Access
+technique: "T1550.002 - Use Alternate Authentication Material: Pass the Hash"
+mitre:
+  tactics: ["TA0006", "TA0008"]
+  attacks: ["T1550.002", "T1550"]
+adversary: origin
+description: >
+  Skill content pack. Accumulates risk for pass-the-hash / over-pass-the-hash:
+  Logon Type 9 (NewCredentials / RunAs /netonly), mimikatz sekurlsa::pth,
+  or NTLM network logon without a prior Kerberos TGT from the same origin.
+  Isolated type-9 is used by some backup agents; risk waits for afterEvents
+  (≥2 hits / 1h). False positives: Task Scheduler RunAs, SQL Agent proxies,
+  and backup service accounts. Exclude those identities after baseline.
+references:
+  - https://attack.mitre.org/techniques/T1550/002/
+  - https://attack.mitre.org/tactics/TA0006/
+  - https://blog.stealthbits.com/how-to-detect-pass-the-hash-attacks/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.user
+groupBy:
+  - origin.host
+  - origin.user
+riskScore: 40
+where: >
+  raw.matches("(?i).*(sekurlsa::pth|pass.?the.?hash|LogonType.{0,4}9|/netonly).*")
+  || (safe("log.eventID", "") == "4624" && raw.matches("(?i).*LogonType.{0,6}9.*")
+      && raw.matches("(?i).*NtLmSsp.*"))
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.user
+        operator: filter_term
+        value: "{{.origin.user}}"
+    within: 1h
+    count: 2

@@ -1,0 +1,42 @@
+id: 9412
+name: RISK-ASREPROAST
+dataTypes:
+  - windows
+  - wineventlog
+  - identity
+category: Credential Access
+technique: "T1558.004 - Steal or Forge Kerberos Tickets: AS-REP Roasting"
+mitre:
+  tactics: ["TA0006"]
+  attacks: ["T1558.004"]
+adversary: origin
+description: >
+  Skill content pack. Accumulates risk for AS-REP roasting: Event 4768 with
+  pre-authentication not required, GetNPUsers, or TicketEncryptionType 0x17
+  on an AS-REQ. Isolated 4768 is too noisy for a CEL alert; risk scoring
+  waits for afterEvents lookback (≥3 hits / 1h per origin). False positives:
+  legacy service accounts with DONT_REQ_PREAUTH that authenticators poll.
+  Disable pre-auth on those accounts or exclude them.
+references:
+  - https://attack.mitre.org/techniques/T1558/004/
+  - https://www.harmj0y.net/blog/activedirectory/roasting-as-reps/
+  - https://attack.mitre.org/tactics/TA0006/
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+deduplicateBy:
+  - origin.ip
+  - origin.user
+groupBy:
+  - origin.ip
+riskScore: 35
+where: 'raw.matches("(?i).*(GetNPUsers(\\.py)?|AS-?REP|DONT_REQ_PREAUTH|PreAuthType.{0,6}0).*") || (safe("log.eventID", "") == "4768" && raw.matches("(?i).*(PreAuth.{0,12}(false|0|disabled)|TicketEncryptionType.{0,8}0x17).*"))'
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: "{{.origin.ip}}"
+    within: 1h
+    count: 3

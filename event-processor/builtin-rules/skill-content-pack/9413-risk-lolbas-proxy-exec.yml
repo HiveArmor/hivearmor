@@ -1,0 +1,44 @@
+id: 9413
+name: RISK-LOLBAS-PROXY-EXEC
+dataTypes:
+  - windows
+  - process
+  - wineventlog
+category: Defense Evasion
+technique: "T1218 - System Binary Proxy Execution"
+mitre:
+  tactics: ["TA0005"]
+  attacks: ["T1218", "T1218.005", "T1218.010", "T1218.011"]
+adversary: origin
+description: >
+  Skill content pack. Accumulates risk when signed Microsoft proxies
+  (mshta, rundll32, regsvr32, cmstp, InstallUtil, msiexec remote) launch
+  script or HTTP content. Point-in-time CEL already exists per binary;
+  this rule scores the living-off-the-land cluster after afterEvents
+  (≥2 hits / 30m per host) so a single admin rundll32 does not page.
+  False positives: software deployment, printer drivers, and App-V.
+references:
+  - https://attack.mitre.org/techniques/T1218/
+  - https://attack.mitre.org/techniques/T1218/005/
+  - https://lolbas-project.github.io/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.process
+groupBy:
+  - origin.host
+riskScore: 30
+where: >
+  raw.matches("(?i).*(mshta\\.exe|rundll32\\.exe|regsvr32\\.exe|cmstp\\.exe|InstallUtil\\.exe).*")
+  && raw.matches("(?i).*(https?://|javascript:|vbscript:|scrobj\\.dll|/i http|\\\\[A-Za-z].*\\.(hta|js|vbs|sct)).*")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.host
+        operator: filter_term
+        value: "{{.origin.host}}"
+    within: 30m
+    count: 2

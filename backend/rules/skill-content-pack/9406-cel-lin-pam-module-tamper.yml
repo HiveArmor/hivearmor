@@ -1,0 +1,46 @@
+id: 9406
+name: CEL-LIN-PAM-MODULE-TAMPER
+dataTypes:
+  - linux
+  - syslog
+  - process
+  - file
+category: Persistence
+technique: "T1556.003 - Modify Authentication Process: Pluggable Authentication Modules"
+mitre:
+  tactics: ["TA0006", "TA0003"]
+  attacks: ["T1556.003", "T1556"]
+adversary: origin
+description: >
+  Skill content pack. Detects unauthorized writes to /etc/pam.d, pam_unix.so
+  replacement, or a new pam_*.so dropped under /lib or /usr/lib. Attackers
+  harvest credentials or plant a backdoor auth path. False positives: package
+  manager upgrades (apt/yum/dnf/zypper), authselect, and configuration
+  management (ansible/puppet) applying known PAM policies. Exclude package
+  managers and config-management users after baseline.
+references:
+  - https://attack.mitre.org/techniques/T1556/003/
+  - https://www.trendmicro.com/en_us/research/22/j/linux-threats.html
+  - https://attack.mitre.org/tactics/TA0006/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+deduplicateBy:
+  - origin.host
+  - origin.command
+groupBy:
+  - origin.host
+where: >
+  (raw.matches("(?i).*(/etc/pam\\.d/|pam_unix\\.so|pam_sss\\.so|pam_ldap\\.so).*")
+   && raw.matches("(?i).*(cp |mv |install |tee |echo |>|chmod |chown |sed -i).*")
+   && !raw.matches("(?i).*(/usr/bin/(apt|apt-get|yum|dnf|zypper)|rpm |dpkg ).*"))
+  || raw.matches("(?i).*(/lib.*/security/pam_[A-Za-z0-9_-]+\\.so).*(touch|cp |mv |install ).*")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.host
+        operator: filter_term
+        value: "{{.origin.host}}"
+    within: 20m
+    count: 1
