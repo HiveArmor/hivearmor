@@ -588,6 +588,9 @@ export interface HuntCrosstabResponse {
   rowHasMissingBucket?: boolean;
   colHasMissingBucket?: boolean;
   missingKey?: string | null;
+  /** P1.1: whether each axis field is multi-valued (array) — cells may exceed the total legitimately. */
+  rowMultiValued?: boolean;
+  colMultiValued?: boolean;
   axisSelection: HuntCrosstabAxisSelection;
   execution: HuntCrosstabExecution;
   status: 'COMPLETE' | 'PARTIAL' | string;

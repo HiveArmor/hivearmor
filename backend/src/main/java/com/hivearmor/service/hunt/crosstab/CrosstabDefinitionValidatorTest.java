@@ -233,4 +233,11 @@ class CrosstabDefinitionValidatorTest {
         assertThat(def.row().missing()).isEqualTo(CrosstabDefinition.MissingMode.OMIT);
         assertThat(def.column().missing()).isEqualTo(CrosstabDefinition.MissingMode.OMIT);
     }
+
+    @Test
+    @DisplayName("registry flags event.category multi-valued and host.name single-valued")
+    void multiValuedFlag() {
+        assertThat(registry.require("event.category").multiValued()).isTrue();
+        assertThat(registry.require("host.name").multiValued()).isFalse();
+    }
 }
