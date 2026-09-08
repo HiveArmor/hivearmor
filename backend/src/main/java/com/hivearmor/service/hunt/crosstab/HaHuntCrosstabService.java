@@ -22,17 +22,20 @@ public class HaHuntCrosstabService {
     private final CrosstabDefinitionValidator validator;
     private final HaHuntCrosstabPlanner planner;
     private final CrosstabMetrics metrics;
+    private final CrosstabDeviationResolver deviationResolver;
 
     public HaHuntCrosstabService(CrosstabCostPolicy costPolicy,
                                  CrosstabRequestMapper mapper,
                                  CrosstabDefinitionValidator validator,
                                  HaHuntCrosstabPlanner planner,
-                                 CrosstabMetrics metrics) {
+                                 CrosstabMetrics metrics,
+                                 CrosstabDeviationResolver deviationResolver) {
         this.costPolicy = costPolicy;
         this.mapper = mapper;
         this.validator = validator;
         this.planner = planner;
         this.metrics = metrics;
+        this.deviationResolver = deviationResolver;
     }
 
     public boolean isEnabled() {
@@ -52,6 +55,7 @@ public class HaHuntCrosstabService {
             validator.validate(definition);
             HuntCrosstabResponseDTO response = planner.plan(definition);
             applyComparison(request, definition, response);
+            applyDeviation(request, response);
             if ("PARTIAL".equals(response.getStatus())) {
                 metrics.recordPartial();
             }
@@ -101,5 +105,17 @@ public class HaHuntCrosstabService {
         response.setComparison(new HuntCrosstabResponseDTO.ComparisonDTO(
             cmp.getMode() == null ? "previous_period" : cmp.getMode(), shifted.getFrom(), shifted.getTo()));
         metrics.recordComparison();
+    }
+
+    /**
+     * P2 Strand B: when requested AND the row axis is a UEBA-scored entity (user.name), attach the EXISTING
+     * per-user z-score to each row (most-anomalous metric from the latest run). A no-op for any other row
+     * field — never fabricates a score. Read-only; tenant-scoped identically to the UEBA timeline endpoint.
+     */
+    private void applyDeviation(HuntCrosstabRequestDTO request, HuntCrosstabResponseDTO response) {
+        if (!request.isDeviation()) return;
+        if (response.getRowKeys() == null || response.getRowKeys().isEmpty()) return;
+        var deviations = deviationResolver.resolve(request.getRowField(), response.getRowKeys());
+        if (deviations != null) response.setRowDeviations(deviations);
     }
 }

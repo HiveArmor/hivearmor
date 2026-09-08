@@ -668,6 +668,9 @@ export function getFoundationHuntCrosstab(
     comparison: request.comparison
       ? { mode: request.comparison.mode ?? 'previous_period', from: '(fixture)', to: '(fixture)' }
       : undefined,
+    rowDeviations: request.deviation && request.rowField === 'user.name'
+      ? rowKeys.map((k, i) => (i % 2 === 0 ? { metric: 'failed_logon_ratio', zScore: Number((2 + (k.length % 4) + i * 0.3).toFixed(1)) } : null))
+      : undefined,
     axisSelection: {
       strategy: 'distributed_terms',
       approximate: true,

@@ -89,6 +89,25 @@ public class HuntCrosstabResponseDTO {
     /** P2: describes the previous-period comparison when requested (null otherwise). */
     private ComparisonDTO comparison;
 
+    /**
+     * P2 Strand B: per-row UEBA deviation, aligned index-for-index with {@code rowKeys}. Only populated
+     * when the ROW axis is a UEBA-scored entity (user.name) AND that user has a real deviation; every
+     * other entry is null. NEVER an invented score — this mirrors the existing z-score, or is absent.
+     */
+    private List<DeviationDTO> rowDeviations;
+
+    /** P2 Strand B deviation marker: the user's most-anomalous UEBA metric + its z-score (real, from HaUebaDeviationEngine). */
+    public static class DeviationDTO {
+        private String metric;
+        private double zScore;
+        public DeviationDTO() {}
+        public DeviationDTO(String metric, double zScore) { this.metric = metric; this.zScore = zScore; }
+        public String getMetric() { return metric; }
+        public void setMetric(String metric) { this.metric = metric; }
+        public double getZScore() { return zScore; }
+        public void setZScore(double zScore) { this.zScore = zScore; }
+    }
+
     /** P2 comparison descriptor: the mode applied and the shifted window the comparison values came from. */
     public static class ComparisonDTO {
         private String mode;         // previous_period | previous_window
@@ -166,6 +185,9 @@ public class HuntCrosstabResponseDTO {
 
     public ComparisonDTO getComparison() { return comparison; }
     public void setComparison(ComparisonDTO comparison) { this.comparison = comparison; }
+
+    public List<DeviationDTO> getRowDeviations() { return rowDeviations; }
+    public void setRowDeviations(List<DeviationDTO> rowDeviations) { this.rowDeviations = rowDeviations; }
 
     public List<CellDTO> getCells() { return cells; }
     public void setCells(List<CellDTO> cells) { this.cells = cells; }
