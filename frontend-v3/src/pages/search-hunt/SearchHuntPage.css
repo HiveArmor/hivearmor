@@ -2006,6 +2006,11 @@
 .pivot-breadcrumb__crumb { border: 0; background: transparent; cursor: pointer; padding: 1px 4px; border-radius: var(--ha-radius-control, 6px); color: var(--ha-action-secondary); font: var(--ha-type-compact); }
 .pivot-breadcrumb__crumb:hover { background: var(--ha-surface-hover); color: var(--ha-action-primary); }
 .pivot-breadcrumb__current { padding: 1px 4px; color: var(--ha-foreground-primary); font-weight: 600; }
+.pivot-suggestions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 4px 10px; font: var(--ha-type-compact); }
+.pivot-suggestions__label { display: inline-flex; align-items: center; gap: 4px; color: var(--ha-intelligence-primary); font: var(--ha-type-metadata); text-transform: uppercase; letter-spacing: 0.04em; }
+.pivot-suggestions__chip { display: inline-flex; align-items: center; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control, 6px); background: var(--ha-surface-input); color: var(--ha-foreground-secondary); padding: 2px 9px; min-height: 24px; cursor: pointer; font: var(--ha-type-compact); font-family: var(--ha-font-mono); }
+.pivot-suggestions__chip:hover { color: var(--ha-action-primary); border-color: var(--ha-border-strong); }
+.pivot-suggestions__chip:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ha-border-focus); }
 
 .pivot-shelves {
   display: flex;
