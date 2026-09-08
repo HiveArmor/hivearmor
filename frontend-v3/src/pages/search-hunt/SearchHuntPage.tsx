@@ -37,12 +37,13 @@ import { addToHuntHistory } from './history';
 import { useSearchStream } from './hooks/useSearchStream';
 import { normalizeHuntQuery } from './huntQuerySuggestions';
 import { buildEntityId, resolveEntityType, timelineAvailable } from './lib/entityType';
+import { parseSavedPivot } from './lib/savedPivot';
 import { HUNT_FIELD_COLUMN_MAP, huntColumnToSortField, huntColumnsToProjection } from './searchHunt.projection';
 import {
   cancelHunt, executeHunt, fetchHuntSchema, fetchQueryCapabilities, fetchHuntAggregates, searchHuntFixtureMode,
 } from './searchHunt.service';
 import type {
-  HuntActionRequest, HuntSearchRequest, HuntSearchResponse,
+  HuntActionRequest, HuntPivotConfig, HuntSearchRequest, HuntSearchResponse, SavedHunt,
 } from './searchHunt.types';
 
 import { HaExportMenu } from '@/components/export-menu';
@@ -180,6 +181,8 @@ export function SearchHuntPage(): JSX.Element {
   const [promotionOpen, setPromotionOpen] = useState(false);
   const [promotionAction, setPromotionAction] = useState<'create_evidence' | 'create_investigation' | 'escalate_incident' | null>(null);
   const [capabilitiesOpen, setCapabilitiesOpen] = useState(false);
+  // A loaded Saved Pivot's config, seeded into HuntPivotView (overrides its localStorage config).
+  const [pivotInitialConfig, setPivotInitialConfig] = useState<HuntPivotConfig | null>(null);
 
   // Query capabilities: fetch on mount, never refetch (staleTime: Infinity)
   const capabilitiesQuery = useQuery({
@@ -550,6 +553,17 @@ export function SearchHuntPage(): JSX.Element {
     setManagerPanelOpen(false);
     runSearch({ query: q });
   }, [runSearch]);
+
+  // Load a Saved Pivot: apply its query + run it, switch to the Pivot view, and seed the shelves from
+  // its stored config. If the saved fields no longer exist in the schema, HuntPivotView falls back to
+  // its default config (schema-drift guard), so a stale save never renders a broken shelf.
+  const handleManagerLoadPivot = useCallback((hunt: SavedHunt): void => {
+    const cfg = parseSavedPivot(hunt.filters, selectedTenantId);
+    setManagerPanelOpen(false);
+    setPivotInitialConfig(cfg);
+    setResultView('pivot');
+    runSearch({ query: hunt.query });
+  }, [runSearch, selectedTenantId]);
 
   const handleFlyoutClose = useCallback((): void => {
     setFlyoutEventId(null);
@@ -934,6 +948,8 @@ export function SearchHuntPage(): JSX.Element {
                     committed={committed}
                     fields={schemaQuery.data ?? []}
                     tenantId={selectedTenantId}
+                    initialConfig={pivotInitialConfig}
+                    canSave={canSaveQuery}
                     onCellAction={(action, rowField, colField, rowValue, colValue) =>
                       handlePivotCellAction(action, rowField, colField, rowValue, colValue)}
                   />
@@ -1007,6 +1023,7 @@ export function SearchHuntPage(): JSX.Element {
         onClose={() => setManagerPanelOpen(false)}
         onLoadQuery={handleManagerLoadQuery}
         onExecuteQuery={handleManagerExecuteQuery}
+        onLoadPivot={handleManagerLoadPivot}
         currentQuery={query}
       />
       <EventDetailFlyout

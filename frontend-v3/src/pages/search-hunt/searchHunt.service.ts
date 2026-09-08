@@ -304,6 +304,8 @@ export async function createSavedHunt(body: {
   query: string;
   tags: string[];
   shared: boolean;
+  /** Freeform JSON payload persisted on the SavedHunt. Carries the Saved Pivot config ({kind:'pivot', pivot}). */
+  filters?: Record<string, unknown>;
 }): Promise<SavedHunt> {
   return apiClient.post<SavedHunt>('/ha-hunts/saved', body);
 }

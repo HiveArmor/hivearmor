@@ -26,6 +26,7 @@ import {
   X,
 } from 'lucide-react';
 
+import { isSavedPivot } from '../lib/savedPivot';
 import {
   clearHuntHistory,
   createSavedHunt,
@@ -49,6 +50,8 @@ export interface SearchManagerPanelProps {
   onLoadQuery: (query: string) => void;
   /** Called when the loaded query should auto-execute. */
   onExecuteQuery: (query: string) => void;
+  /** Called when a Saved Pivot row is selected — loads the query AND its pivot config. */
+  onLoadPivot?: (hunt: SavedHunt) => void;
   /** The current query value (for the "Save Current" modal). */
   currentQuery: string;
   /** Tab to show when the panel opens. */
@@ -86,6 +89,7 @@ export function SearchManagerPanel({
   onClose,
   onLoadQuery,
   onExecuteQuery,
+  onLoadPivot,
   currentQuery,
   initialTab = 'saved',
 }: SearchManagerPanelProps): JSX.Element | null {
@@ -216,9 +220,13 @@ export function SearchManagerPanel({
 
   const handleSavedHuntClick = useCallback(
     (hunt: SavedHunt) => {
+      if (isSavedPivot(hunt.filters) && onLoadPivot) {
+        onLoadPivot(hunt);
+        return;
+      }
       onLoadQuery(hunt.query);
     },
-    [onLoadQuery],
+    [onLoadQuery, onLoadPivot],
   );
 
   const handleHistoryClick = useCallback(
@@ -411,6 +419,9 @@ export function SearchManagerPanel({
                 >
                   <div className="search-manager-panel__item-header">
                     <strong>{hunt.name}</strong>
+                    {isSavedPivot(hunt.filters) && (
+                      <span className="search-manager-panel__pivot-badge" aria-label="Saved pivot">Pivot</span>
+                    )}
                     <button
                       type="button"
                       className="search-manager-panel__context-trigger"
