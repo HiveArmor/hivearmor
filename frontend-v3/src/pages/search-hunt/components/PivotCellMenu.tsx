@@ -1,19 +1,21 @@
 import { useEffect, useRef } from 'react';
 
-import { Copy, FileText, MinusCircle, PlusCircle, Search, Shield, User as UserIcon, Activity } from 'lucide-react';
+import { Copy, FileText, Filter, MinusCircle, PlusCircle, Search, Shield, User as UserIcon, Activity } from 'lucide-react';
 
 import { resolveEntityType, timelineAvailable } from '../lib/entityType';
 
 /**
  * Cell actions. P1: Drill/Keep/Exclude modify the hunt (Copy is clipboard). P1.1 adds the
  * investigation group — View entity / Open timeline (row-entity), Add evidence / Create incident
- * (drill-then-promote). Investigation items are offered only when the field/selection supports them.
+ * (drill-then-promote) — and Filter this Pivot (a pivot-local scratch filter that narrows only the
+ * crosstab, never the hunt query). Investigation items are offered only when the field supports them.
  */
 export type PivotCellAction =
   | 'drill'
   | 'keep'
   | 'exclude'
   | 'copy'
+  | 'filter_pivot'
   | 'view_entity'
   | 'open_timeline'
   | 'add_evidence'
@@ -97,6 +99,9 @@ export function PivotCellMenu(props: PivotCellMenuProps): JSX.Element {
       </button>
       <button type="button" role="menuitem" onClick={() => onAction('exclude')}>
         <MinusCircle size={13} aria-hidden="true" /> Exclude from Hunt
+      </button>
+      <button type="button" role="menuitem" onClick={() => onAction('filter_pivot')}>
+        <Filter size={13} aria-hidden="true" /> Filter this Pivot
       </button>
       <button type="button" role="menuitem" onClick={() => onAction('copy')}>
         <Copy size={13} aria-hidden="true" /> Copy filter
