@@ -140,6 +140,18 @@ jhipster:
 app:
   security:
     trusted-proxy-cidrs: []  # Empty = never trust X-Forwarded-For (safe default)
+  hunt:
+    crosstab:
+      # Investigation Pivot (Crosstab) P1 — server-side crosstab over the full pivot-eligible set.
+      enabled: ${HA_HUNT_CROSSTAB_ENABLED:false}   # P1 ships behind this flag, off by default
+      max-row-members: 50
+      max-col-members: 50
+      max-cells: 2500
+      high-cardinality-warn: 10000
+      request-timeout: 30s
+      shard-size-factor: 4
+      shard-size-floor: 200
+      precision-threshold: 3000   # HyperLogLog++ for distinct-count; tune from the benchmark track
 
 ha:
   pivot:

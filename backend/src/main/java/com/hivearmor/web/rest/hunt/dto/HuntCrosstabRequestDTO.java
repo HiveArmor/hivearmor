@@ -1,0 +1,95 @@
+package com.hivearmor.web.rest.hunt.dto;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+
+/**
+ * Request DTO for {@code POST /api/ha-hunts/search/crosstab} (Pivot view — server-side crosstab
+ * over the full pivot-eligible matched set).
+ *
+ * <p>PR-A P1. Flat by design: exactly one Rows field, one Columns field, one measure (count or
+ * distinct). The query / language / timeRange / tenantScope carry the SAME meaning as
+ * {@link HuntSearchRequestDTO}, so the crosstab reuses the identical query-build path.
+ *
+ * <p><b>Index scope is a LOGICAL type</b> ({@code all|log|event|alert}), never a raw index
+ * wildcard: the server resolves physical indices via {@code resolveIndices} + {@code MsspIndexResolver}
+ * under {@code TenantContext}, so tenant isolation is identical to Search and the client cannot
+ * inject an index string.
+ *
+ * <p>POJO (getters/setters) to match the existing hunt DTO style — not a record.
+ */
+public class HuntCrosstabRequestDTO {
+
+    @NotNull
+    private String query;
+
+    @NotNull
+    private String language = "kql";
+
+    @NotNull
+    @Valid
+    private HuntSearchRequestDTO.TimeRangeDTO timeRange;
+
+    @NotNull
+    private String tenantScope = "authorized";
+
+    /** Logical index type: all | log | event | alert. NOT a raw index wildcard. */
+    @NotNull
+    private String indexType = "all";
+
+    @NotNull
+    private String rowField;
+
+    @NotNull
+    private String colField;
+
+    /** "count" | "distinct". */
+    @NotNull
+    private String valueFn = "count";
+
+    /** Required iff valueFn == "distinct". */
+    private String distinctField;
+
+    @Min(1)
+    @Max(50)
+    private int rowSize = 20;
+
+    @Min(1)
+    @Max(50)
+    private int colSize = 20;
+
+    public String getQuery() { return query; }
+    public void setQuery(String query) { this.query = query; }
+
+    public String getLanguage() { return language; }
+    public void setLanguage(String language) { this.language = language; }
+
+    public HuntSearchRequestDTO.TimeRangeDTO getTimeRange() { return timeRange; }
+    public void setTimeRange(HuntSearchRequestDTO.TimeRangeDTO timeRange) { this.timeRange = timeRange; }
+
+    public String getTenantScope() { return tenantScope; }
+    public void setTenantScope(String tenantScope) { this.tenantScope = tenantScope; }
+
+    public String getIndexType() { return indexType; }
+    public void setIndexType(String indexType) { this.indexType = indexType; }
+
+    public String getRowField() { return rowField; }
+    public void setRowField(String rowField) { this.rowField = rowField; }
+
+    public String getColField() { return colField; }
+    public void setColField(String colField) { this.colField = colField; }
+
+    public String getValueFn() { return valueFn; }
+    public void setValueFn(String valueFn) { this.valueFn = valueFn; }
+
+    public String getDistinctField() { return distinctField; }
+    public void setDistinctField(String distinctField) { this.distinctField = distinctField; }
+
+    public int getRowSize() { return rowSize; }
+    public void setRowSize(int rowSize) { this.rowSize = rowSize; }
+
+    public int getColSize() { return colSize; }
+    public void setColSize(int colSize) { this.colSize = colSize; }
+}
