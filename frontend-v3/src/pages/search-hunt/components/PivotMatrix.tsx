@@ -86,8 +86,8 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
       ? d.toLocaleDateString(undefined, { month: 'short', day: '2-digit' })
       : d.toLocaleString(undefined, { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
   };
-  const fmtRow = (k: string): string => (data.rowBucketed ? fmtTime(k, data.rowBucketInterval) : k);
-  const fmtCol = (k: string): string => (data.colBucketed ? fmtTime(k, data.colBucketInterval) : k);
+  const fmtRow = (k: string): string => (k === data.missingKey ? '(no value)' : data.rowBucketed ? fmtTime(k, data.rowBucketInterval) : k);
+  const fmtCol = (k: string): string => (k === data.missingKey ? '(no value)' : data.colBucketed ? fmtTime(k, data.colBucketInterval) : k);
 
   const openMenu = (row: string, col: string, value: number, target: HTMLElement) => {
     const rect = target.getBoundingClientRect();

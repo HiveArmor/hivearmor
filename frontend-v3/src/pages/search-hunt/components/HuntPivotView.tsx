@@ -143,11 +143,13 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
       colSize: 20,
       rowBucket: rowIsDate && config.rowBucketInterval ? { interval: config.rowBucketInterval } : undefined,
       colBucket: colIsDate && config.colBucketInterval ? { interval: config.colBucketInterval } : undefined,
+      rowMissing: config.rowMissing ?? 'omit',
+      colMissing: config.colMissing ?? 'omit',
     };
   }, [ready, committed, config, pivotFilters, rowIsDate, colIsDate]);
 
   const crosstabQuery = useQuery({
-    queryKey: ['hunt-pivot', committed, config.rowField, config.colField, config.valueFn, config.distinctField, config.rowBucketInterval, config.colBucketInterval, pivotFilters],
+    queryKey: ['hunt-pivot', committed, config.rowField, config.colField, config.valueFn, config.distinctField, config.rowBucketInterval, config.colBucketInterval, config.rowMissing, config.colMissing, pivotFilters],
     queryFn: ({ signal }) => fetchHuntCrosstab(request as HuntCrosstabRequest, signal),
     enabled: ready && committed.query.length > 0,
     staleTime: 30_000,
@@ -175,6 +177,7 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
       ...c,
       rowField: c.colField, colField: c.rowField,
       rowBucketInterval: c.colBucketInterval ?? null, colBucketInterval: c.rowBucketInterval ?? null,
+      rowMissing: c.colMissing ?? 'omit', colMissing: c.rowMissing ?? 'omit',
     }));
   }, []);
 
@@ -207,12 +210,16 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
         distinctField={config.distinctField}
         rowBucketInterval={config.rowBucketInterval ?? null}
         colBucketInterval={config.colBucketInterval ?? null}
-        onSetRow={(f) => setConfig((c) => ({ ...c, rowField: f, rowBucketInterval: null }))}
-        onSetCol={(f) => setConfig((c) => ({ ...c, colField: f, colBucketInterval: null }))}
+        rowMissing={config.rowMissing ?? 'omit'}
+        colMissing={config.colMissing ?? 'omit'}
+        onSetRow={(f) => setConfig((c) => ({ ...c, rowField: f, rowBucketInterval: null, rowMissing: 'omit' }))}
+        onSetCol={(f) => setConfig((c) => ({ ...c, colField: f, colBucketInterval: null, colMissing: 'omit' }))}
         onSetValueFn={(fn) => setConfig((c) => ({ ...c, valueFn: fn }))}
         onSetDistinctField={(f) => setConfig((c) => ({ ...c, distinctField: f }))}
         onSetRowBucketInterval={(i) => setConfig((c) => ({ ...c, rowBucketInterval: i }))}
         onSetColBucketInterval={(i) => setConfig((c) => ({ ...c, colBucketInterval: i }))}
+        onSetRowMissing={(m) => setConfig((c) => ({ ...c, rowMissing: m }))}
+        onSetColMissing={(m) => setConfig((c) => ({ ...c, colMissing: m }))}
         onSwap={swap}
       />
 

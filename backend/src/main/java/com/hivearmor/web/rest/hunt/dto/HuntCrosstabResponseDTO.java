@@ -77,6 +77,11 @@ public class HuntCrosstabResponseDTO {
     private String rowBucketInterval;
     private String colBucketInterval;
 
+    /** P1.1: whether each axis includes a (missing) bucket, and the sentinel key the FE renders as "(no value)". */
+    private boolean rowHasMissingBucket;
+    private boolean colHasMissingBucket;
+    private String missingKey;
+
     private AxisSelectionDTO axisSelection;
 
     private ExecutionDTO execution;
@@ -121,6 +126,15 @@ public class HuntCrosstabResponseDTO {
 
     public String getColBucketInterval() { return colBucketInterval; }
     public void setColBucketInterval(String colBucketInterval) { this.colBucketInterval = colBucketInterval; }
+
+    public boolean isRowHasMissingBucket() { return rowHasMissingBucket; }
+    public void setRowHasMissingBucket(boolean rowHasMissingBucket) { this.rowHasMissingBucket = rowHasMissingBucket; }
+
+    public boolean isColHasMissingBucket() { return colHasMissingBucket; }
+    public void setColHasMissingBucket(boolean colHasMissingBucket) { this.colHasMissingBucket = colHasMissingBucket; }
+
+    public String getMissingKey() { return missingKey; }
+    public void setMissingKey(String missingKey) { this.missingKey = missingKey; }
 
     public List<CellDTO> getCells() { return cells; }
     public void setCells(List<CellDTO> cells) { this.cells = cells; }

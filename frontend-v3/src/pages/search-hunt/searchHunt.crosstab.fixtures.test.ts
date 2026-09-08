@@ -68,4 +68,13 @@ describe('getFoundationHuntCrosstab', () => {
       expect(d.getUTCSeconds()).toBe(0);
     });
   });
+
+  it('an INCLUDE-missing row axis surfaces the (missing) sentinel key and sets the flags', () => {
+    // A field the fixture never populates → every event is field-absent → all land in (missing).
+    const r = getFoundationHuntCrosstab(req({ rowField: 'nonexistent.field', rowMissing: 'include' }));
+    expect(r.rowHasMissingBucket).toBe(true);
+    expect(r.colHasMissingBucket).toBe(false);
+    expect(r.missingKey).toBe('\u0000(missing)');
+    expect(r.rowKeys).toContain('\u0000(missing)');
+  });
 });

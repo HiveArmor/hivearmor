@@ -66,6 +66,12 @@ public class HuntCrosstabRequestDTO {
     /** Optional date-histogram bucketing for the Columns axis (P1.1). Null = TERM axis. */
     private BucketDTO colBucket;
 
+    /** How events missing the Rows field are handled: "omit" (default) | "include" ((missing) bucket). */
+    private String rowMissing = "omit";
+
+    /** How events missing the Columns field are handled: "omit" (default) | "include". */
+    private String colMissing = "omit";
+
     /** Fixed-interval date-histogram bucket spec for an axis. */
     public static class BucketDTO {
         /** Fixed interval, e.g. "1m", "5m", "1h", "1d". Validated against the allow-list. */
@@ -118,4 +124,10 @@ public class HuntCrosstabRequestDTO {
 
     public BucketDTO getColBucket() { return colBucket; }
     public void setColBucket(BucketDTO colBucket) { this.colBucket = colBucket; }
+
+    public String getRowMissing() { return rowMissing; }
+    public void setRowMissing(String rowMissing) { this.rowMissing = rowMissing; }
+
+    public String getColMissing() { return colMissing; }
+    public void setColMissing(String colMissing) { this.colMissing = colMissing; }
 }

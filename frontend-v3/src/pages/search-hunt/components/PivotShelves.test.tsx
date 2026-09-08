@@ -15,9 +15,10 @@ const fields: HuntFieldDefinition[] = [
 function setup(over: Partial<React.ComponentProps<typeof PivotShelves>> = {}) {
   const props = {
     fields, rowField: 'host.name', colField: 'event.action', valueFn: 'count' as const, distinctField: null,
-    rowBucketInterval: null, colBucketInterval: null,
+    rowBucketInterval: null, colBucketInterval: null, rowMissing: 'omit' as const, colMissing: 'omit' as const,
     onSetRow: vi.fn(), onSetCol: vi.fn(), onSetValueFn: vi.fn(), onSetDistinctField: vi.fn(),
-    onSetRowBucketInterval: vi.fn(), onSetColBucketInterval: vi.fn(), onSwap: vi.fn(),
+    onSetRowBucketInterval: vi.fn(), onSetColBucketInterval: vi.fn(),
+    onSetRowMissing: vi.fn(), onSetColMissing: vi.fn(), onSwap: vi.fn(),
     ...over,
   };
   render(<PivotShelves {...props} />);
@@ -40,6 +41,19 @@ describe('PivotShelves', () => {
     expect(screen.getByRole('combobox', { name: /time interval for @timestamp/i })).toBeInTheDocument();
     fireEvent.change(screen.getByRole('combobox', { name: /time interval for @timestamp/i }), { target: { value: '1h' } });
     expect(p.onSetRowBucketInterval).toHaveBeenCalledWith('1h');
+  });
+
+  it('a term axis offers a (missing) toggle that sets the missing mode', () => {
+    const p = setup({ rowField: 'host.name' });
+    const toggle = screen.getByRole('checkbox', { name: /include a \(missing\) bucket for host\.name/i });
+    fireEvent.click(toggle);
+    expect(p.onSetRowMissing).toHaveBeenCalledWith('include');
+  });
+
+  it('a date axis does NOT offer the (missing) toggle (deferred)', () => {
+    // Both axes are the date field, so no term axis remains to offer a (missing) toggle.
+    setup({ rowField: '@timestamp', colField: '@timestamp' });
+    expect(screen.queryByRole('checkbox', { name: /include a \(missing\) bucket/i })).not.toBeInTheDocument();
   });
 
   it('assigning from the menu calls onSetRow', () => {
