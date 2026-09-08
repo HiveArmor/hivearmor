@@ -2153,3 +2153,4 @@
   color: var(--ha-foreground-primary); font: var(--ha-type-compact);
 }
 .pivot-cell-menu button:hover, .pivot-cell-menu button:focus-visible { background: var(--ha-surface-hover); outline: none; }
+.pivot-cell-menu__divider { height: 1px; margin: 4px 8px; background: var(--ha-border-subtle); }

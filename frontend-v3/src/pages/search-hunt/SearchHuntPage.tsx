@@ -7,7 +7,7 @@ import {
   BarChart3, BarChartBig, BookOpen, Check, ChevronLeft, ChevronRight, CircleStop, Clock3, Columns3, Database, FileClock,
   Grid3x3, Keyboard, Library, ListFilter, MoreHorizontal, Play, Save, ShieldAlert, Sparkles, Table2,
 } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { fetchHuntVerdict, fetchFieldProvenance, HUNT_AI_MODE } from './ai/huntAiService';
 import { EventDetailFlyout } from './components/EventDetailFlyout';
@@ -23,6 +23,7 @@ import {
   toHuntIndexPattern,
   type HuntIndexScope,
 } from './components/IndexScopePicker';
+import type { PivotCellAction } from './components/PivotCellMenu';
 import { PromotionActionBar, PromotionModal } from './components/PromotionModal';
 import { QueryCapabilitiesPanel } from './components/QueryCapabilitiesPanel';
 import { SavedRecentDropdown } from './components/SavedRecentDropdown';
@@ -35,6 +36,7 @@ import type { ExportFormat, ExportResult } from './forensicExport.types';
 import { addToHuntHistory } from './history';
 import { useSearchStream } from './hooks/useSearchStream';
 import { normalizeHuntQuery } from './huntQuerySuggestions';
+import { buildEntityId, resolveEntityType, timelineAvailable } from './lib/entityType';
 import { HUNT_FIELD_COLUMN_MAP, huntColumnToSortField, huntColumnsToProjection } from './searchHunt.projection';
 import {
   cancelHunt, executeHunt, fetchHuntSchema, fetchQueryCapabilities, fetchHuntAggregates, searchHuntFixtureMode,
@@ -107,6 +109,7 @@ function chartToken(name: string): string {
 export function SearchHuntPage(): JSX.Element {
   useDocumentTitle('Search & Hunt');
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [routeSearchParams] = useSearchParams();
   const routedQuery = (routeSearchParams.get('q') ?? routeSearchParams.get('query') ?? '').trim();
   const selectedTenantId = useAuthStore((state) => state.selectedTenantId);
@@ -411,31 +414,64 @@ export function SearchHuntPage(): JSX.Element {
     }, 450);
   }, [runSearch]);
 
-  // Pivot cell actions (PR-B P1). The selected cell is the INTERSECTION A AND B where
+  // Pivot cell actions. The selected cell is the INTERSECTION A AND B where
   // A = rowField:rowValue, B = colField:colValue.
+  //  P1:
   //  - Drill: append (A AND B), switch to the Table view, debounced auto-run.
   //  - Keep in Hunt: append (A AND B) to the committed query, stay in Pivot, auto-run.
   //  - Exclude from Hunt: append NOT (A AND B) — the intersection ONLY, never A!=x AND B!=y.
   //  - Copy: copy the safely-quoted (A AND B) to the clipboard.
+  //  P1.1 (integration — no new backend):
+  //  - View entity: navigate to the row entity's dossier (row field must resolve to an entity type).
+  //  - Open timeline: navigate to the UEBA entity-timeline (user rows only — endpoint is userId-scoped).
+  //  - Add evidence / Create incident: drill the cell's events into Table (Option A: drill-then-promote),
+  //    then open the EXISTING promotion drawer so the analyst confirms the concrete event set.
   const handlePivotCellAction = useCallback(
-    (action: 'drill' | 'keep' | 'exclude' | 'copy',
+    (action: PivotCellAction,
      rowField: string, colField: string, rowValue: string, colValue: string): void => {
       const q = (v: string): string => {
         const escaped = v.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
         return /[\s:()]/.test(v) ? `"${escaped}"` : escaped;
       };
       const intersection = `(${rowField}:${q(rowValue)} AND ${colField}:${q(colValue)})`;
-      if (action === 'copy') {
-        navigator.clipboard?.writeText(intersection).catch(() => { /* ignore */ });
-        return;
+
+      switch (action) {
+        case 'copy':
+          navigator.clipboard?.writeText(intersection).catch(() => { /* ignore */ });
+          return;
+        case 'keep':
+          applyFieldFilter(intersection);
+          return;
+        case 'exclude':
+          applyFieldFilter(`NOT ${intersection}`);
+          return;
+        case 'drill':
+          setResultView('table');
+          applyFieldFilter(intersection);
+          return;
+        case 'view_entity': {
+          const type = resolveEntityType(rowField);
+          if (!type) return; // menu hides this when unresolved; guard defensively.
+          navigate(`/entities/${encodeURIComponent(buildEntityId(type, rowValue))}/dossier`);
+          return;
+        }
+        case 'open_timeline':
+          if (!timelineAvailable(rowField)) return;
+          navigate(`/ueba/entity-timeline?userId=${encodeURIComponent(rowValue)}`);
+          return;
+        case 'add_evidence':
+        case 'create_incident':
+          // Drill-then-promote: narrow the Table to the cell's events, then open the promotion drawer
+          // so the analyst selects and confirms the concrete events being promoted.
+          setResultView('table');
+          applyFieldFilter(intersection);
+          setActionMode(action === 'add_evidence' ? 'add_evidence' : 'create_incident');
+          return;
+        default:
+          return;
       }
-      const fragment = action === 'exclude' ? `NOT ${intersection}` : intersection;
-      if (action === 'drill') {
-        setResultView('table');
-      }
-      applyFieldFilter(fragment);
     },
-    [applyFieldFilter],
+    [applyFieldFilter, navigate],
   );
 
   // R5 field-rail filter pills are TOGGLES: activating appends the fragment, deactivating strips that
