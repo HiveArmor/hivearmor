@@ -14,6 +14,7 @@ import type {
   HuntFieldProvenance,
   HuntClauseExplanation,
   HuntAiFeedback,
+  PivotSuggestResponse,
 } from './huntAiContract.types';
 
 import { apiClient } from '@/lib/apiClient';
@@ -61,4 +62,33 @@ export async function submitAiFeedback(feedback: HuntAiFeedback): Promise<{ reco
     return { recorded: true };
   }
   return apiClient.post<{ recorded: true }>(`${AI_BASE}/feedback`, feedback);
+}
+
+/**
+ * P3 Ask Hive Intelligence — turn a question into a candidate pivot the analyst inspects + edits.
+ * mock: a deterministic keyword-driven candidate (works with no AI provider, for the contract-first UI).
+ * live: POST /ha-hunts/ai/pivot-suggest, which validates the model's fields server-side.
+ */
+export async function suggestPivotFromNl(question: string): Promise<PivotSuggestResponse> {
+  if (HUNT_AI_MODE === 'mock') {
+    const q = question.toLowerCase();
+    const pick = (kw: string[], field: string) => kw.some((k) => q.includes(k)) ? field : null;
+    const row = pick(['user', 'account', 'who'], 'user.name')
+      ?? pick(['host', 'machine', 'endpoint'], 'host.name')
+      ?? 'host.name';
+    const col = pick(['process', 'binary', 'exe'], 'process.name')
+      ?? pick(['action', 'activity'], 'event.action')
+      ?? pick(['host'], 'host.name')
+      ?? 'event.action';
+    const rowField = row === col ? 'host.name' : row;
+    return {
+      state: 'ready',
+      rowField, colField: col === rowField ? 'event.action' : col,
+      valueFn: 'count', distinctField: null,
+      explanation: `Break the matched events down by ${rowField} and ${col} to answer: "${question}".`,
+      warnings: [],
+      provenance: { provider: 'mock', generatedAt: new Date().toISOString(), agentVersion: 'mock@1.0', caveat: 'Mock suggestion — edit before running.' },
+    };
+  }
+  return apiClient.post<PivotSuggestResponse>(`${AI_BASE}/pivot-suggest`, { question });
 }
