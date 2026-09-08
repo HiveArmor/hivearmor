@@ -15,7 +15,9 @@ const fields: HuntFieldDefinition[] = [
 function setup(over: Partial<React.ComponentProps<typeof PivotShelves>> = {}) {
   const props = {
     fields, rowField: 'host.name', colField: 'event.action', valueFn: 'count' as const, distinctField: null,
-    onSetRow: vi.fn(), onSetCol: vi.fn(), onSetValueFn: vi.fn(), onSetDistinctField: vi.fn(), onSwap: vi.fn(),
+    rowBucketInterval: null, colBucketInterval: null,
+    onSetRow: vi.fn(), onSetCol: vi.fn(), onSetValueFn: vi.fn(), onSetDistinctField: vi.fn(),
+    onSetRowBucketInterval: vi.fn(), onSetColBucketInterval: vi.fn(), onSwap: vi.fn(),
     ...over,
   };
   render(<PivotShelves {...props} />);
@@ -23,14 +25,21 @@ function setup(over: Partial<React.ComponentProps<typeof PivotShelves>> = {}) {
 }
 
 describe('PivotShelves', () => {
-  it('the keyboard Add menu excludes date and non-aggregatable text fields', () => {
+  it('the keyboard Add menu includes date fields (bucketable) but excludes non-aggregatable text', () => {
     setup();
     fireEvent.click(screen.getByRole('button', { name: 'Add a field to Rows' }));
     const menu = screen.getByRole('menu', { name: 'Choose a field' });
     expect(menu).toHaveTextContent('host.name');
     expect(menu).toHaveTextContent('source.ip');
-    expect(menu).not.toHaveTextContent('@timestamp'); // date excluded
-    expect(menu).not.toHaveTextContent('message');    // non-aggregatable text excluded
+    expect(menu).toHaveTextContent('@timestamp');  // date allowed on an axis (needs an interval)
+    expect(menu).not.toHaveTextContent('message'); // non-aggregatable text excluded
+  });
+
+  it('assigning a date field to an axis reveals the interval picker', () => {
+    const p = setup({ rowField: '@timestamp' });
+    expect(screen.getByRole('combobox', { name: /time interval for @timestamp/i })).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('combobox', { name: /time interval for @timestamp/i }), { target: { value: '1h' } });
+    expect(p.onSetRowBucketInterval).toHaveBeenCalledWith('1h');
   });
 
   it('assigning from the menu calls onSetRow', () => {

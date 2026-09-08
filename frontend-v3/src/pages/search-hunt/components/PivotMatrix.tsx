@@ -75,6 +75,20 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
     return { background: `color-mix(in srgb, var(--ha-action-primary) ${pct}%, transparent)` };
   };
 
+  // Bucketed axes carry ISO bucket-start keys; render them as readable time labels (the underlying
+  // key stays the ISO string for cell actions + sort). A parse failure falls back to the raw key.
+  const fmtTime = (iso: string, interval?: string | null): string => {
+    const ms = Date.parse(iso);
+    if (Number.isNaN(ms)) return iso;
+    const d = new Date(ms);
+    const dayGranularity = interval != null && /d$/.test(interval);
+    return dayGranularity
+      ? d.toLocaleDateString(undefined, { month: 'short', day: '2-digit' })
+      : d.toLocaleString(undefined, { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  };
+  const fmtRow = (k: string): string => (data.rowBucketed ? fmtTime(k, data.rowBucketInterval) : k);
+  const fmtCol = (k: string): string => (data.colBucketed ? fmtTime(k, data.colBucketInterval) : k);
+
   const openMenu = (row: string, col: string, value: number, target: HTMLElement) => {
     const rect = target.getBoundingClientRect();
     setMenu({ row, col, value, x: Math.min(rect.left, window.innerWidth - 220), y: rect.bottom + 2 });
@@ -120,7 +134,7 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
                 aria-sort={ariaSortFor(c)}
                 className="pivot-matrix__colhead"
               >
-                <button type="button" onClick={() => onHeaderSort(c)} title={`Sort rows by ${c}`}>{c}</button>
+                <button type="button" onClick={() => onHeaderSort(c)} title={`Sort rows by ${fmtCol(c)}`}>{fmtCol(c)}</button>
               </th>
             ))}
             <th scope="col" aria-sort={ariaSortFor('__total__')} className="pivot-matrix__colhead pivot-matrix__total-col">
@@ -131,7 +145,7 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
         <tbody>
           {orderedRowKeys.map((r, ri) => (
             <tr key={r}>
-              <th scope="row" className="pivot-matrix__rowhead">{r}</th>
+              <th scope="row" className="pivot-matrix__rowhead">{fmtRow(r)}</th>
               {data.colKeys.map((c, ci) => {
                 const value = cellMap.get(`${r}\u0000${c}`) ?? 0;
                 return (
@@ -143,7 +157,7 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
                     style={heatStyle(value)}
                     onClick={(e) => value > 0 && openMenu(r, c, value, e.currentTarget)}
                     onKeyDown={(e) => onCellKeyDown(e, ri, ci)}
-                    aria-label={`${r}, ${c}: ${value}`}
+                    aria-label={`${fmtRow(r)}, ${fmtCol(c)}: ${value}`}
                   >
                     {value > 0 ? value.toLocaleString() : ''}
                   </td>

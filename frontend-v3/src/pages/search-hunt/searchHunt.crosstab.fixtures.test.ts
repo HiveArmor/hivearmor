@@ -53,4 +53,19 @@ describe('getFoundationHuntCrosstab', () => {
     controller.abort();
     expect(() => getFoundationHuntCrosstab(req(), controller.signal)).toThrow();
   });
+
+  it('a bucketed column axis returns ISO bucket-start keys and sets the bucketed flags', () => {
+    const r = getFoundationHuntCrosstab(req({ colField: '@timestamp', colBucket: { interval: '1h' } }));
+    expect(r.colBucketed).toBe(true);
+    expect(r.colBucketInterval).toBe('1h');
+    expect(r.rowBucketed).toBe(false);
+    // Column keys are ISO timestamps aligned to the hour (minutes/seconds zeroed).
+    expect(r.colKeys.length).toBeGreaterThan(0);
+    r.colKeys.forEach((k) => {
+      const d = new Date(k);
+      expect(Number.isNaN(d.getTime())).toBe(false);
+      expect(d.getUTCMinutes()).toBe(0);
+      expect(d.getUTCSeconds()).toBe(0);
+    });
+  });
 });

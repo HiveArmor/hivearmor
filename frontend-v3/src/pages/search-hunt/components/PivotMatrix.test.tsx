@@ -48,4 +48,30 @@ describe('PivotMatrix', () => {
     const rowHeaders = screen.getAllByRole('rowheader').map((el) => el.textContent);
     expect(rowHeaders.indexOf('bob')).toBeLessThan(rowHeaders.indexOf('alice'));
   });
+
+  it('renders a bucketed column axis as a time label, not a raw ISO string', () => {
+    const iso = '2026-09-08T05:00:00.000Z';
+    const onCellAction = vi.fn();
+    render(
+      <PivotMatrix
+        data={data({
+          colKeys: [iso], rowKeys: ['alice'],
+          cells: [{ row: 'alice', col: iso, value: 5 }],
+          colTotals: [5], rowTotals: [5],
+          colBucketed: true, colBucketInterval: '1h',
+        })}
+        rowField="host.name"
+        colField="@timestamp"
+        heat={false}
+        onCellAction={onCellAction}
+      />,
+    );
+    // The column header shows a formatted time label, not the raw ISO key.
+    const headers = screen.getAllByRole('columnheader').map((el) => el.textContent ?? '');
+    expect(headers.some((h) => h.includes(iso))).toBe(false);
+    // But the cell action still carries the raw ISO key (for drill/keep/exclude fidelity).
+    fireEvent.click(screen.getByLabelText((l) => l.endsWith(': 5')));
+    fireEvent.click(screen.getByRole('menuitem', { name: /Keep in Hunt/ }));
+    expect(onCellAction).toHaveBeenCalledWith('keep', 'alice', iso, 5);
+  });
 });

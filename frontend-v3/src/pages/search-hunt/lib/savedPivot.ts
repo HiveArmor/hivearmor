@@ -18,6 +18,8 @@ export interface SavedPivotPayload {
     colField: string | null;
     valueFn: 'count' | 'distinct';
     distinctField: string | null;
+    rowBucketInterval?: string | null;
+    colBucketInterval?: string | null;
   };
 }
 
@@ -32,6 +34,8 @@ export function buildSavedPivotFilters(config: HuntPivotConfig): SavedPivotPaylo
       colField: config.colField,
       valueFn: config.valueFn,
       distinctField: config.distinctField,
+      rowBucketInterval: config.rowBucketInterval ?? null,
+      colBucketInterval: config.colBucketInterval ?? null,
     },
   };
 }
@@ -60,5 +64,7 @@ export function parseSavedPivot(
     colField: typeof pivot.colField === 'string' ? pivot.colField : null,
     valueFn,
     distinctField: typeof pivot.distinctField === 'string' ? pivot.distinctField : null,
+    rowBucketInterval: typeof pivot.rowBucketInterval === 'string' ? pivot.rowBucketInterval : null,
+    colBucketInterval: typeof pivot.colBucketInterval === 'string' ? pivot.colBucketInterval : null,
   };
 }
