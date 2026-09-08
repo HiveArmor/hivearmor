@@ -4,6 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Download, Save } from 'lucide-react';
 
 import type { PivotCellAction } from './PivotCellMenu';
+import { PivotFiltersShelf } from './PivotFiltersShelf';
 import { PivotMatrix } from './PivotMatrix';
 import { PivotShelves } from './PivotShelves';
 import { buildSavedPivotFilters } from '../lib/savedPivot';
@@ -38,6 +39,18 @@ function defaultConfig(tenantId: number | null): HuntPivotConfig {
   return { v: CONFIG_VERSION, tenantId, rowField: 'host.name', colField: 'event.action', valueFn: 'count', distinctField: null };
 }
 
+/** Safely quote a KQL value (mirrors the hunt page's cell-quoting). */
+function quoteKql(value: string): string {
+  const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return /[\s:()]/.test(value) ? `"${escaped}"` : escaped;
+}
+
+/** Compose the committed query with the pivot-local filter clauses (all AND-ed). */
+function composePivotQuery(baseQuery: string, filters: string[]): string {
+  const parts = [baseQuery.trim(), ...filters].filter((p) => p.length > 0);
+  return parts.join(' AND ');
+}
+
 function loadConfig(tenantId: number | null): HuntPivotConfig {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -61,6 +74,9 @@ function loadConfig(tenantId: number | null): HuntPivotConfig {
 export function HuntPivotView({ committed, fields, tenantId, initialConfig, canSave = true, onCellAction }: HuntPivotViewProps): JSX.Element {
   const [config, setConfig] = useState<HuntPivotConfig>(() => initialConfig ?? loadConfig(tenantId));
   const [heat, setHeat] = useState(true);
+  // Pivot-local scratch filters: extra KQL clauses AND-ed into the crosstab request query only.
+  // They narrow the crosstab without touching the committed hunt query. Ephemeral (not persisted).
+  const [pivotFilters, setPivotFilters] = useState<string[]>([]);
 
   // Save-pivot dialog state.
   const [saveOpen, setSaveOpen] = useState(false);
@@ -103,7 +119,7 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
   const request: HuntCrosstabRequest | null = useMemo(() => {
     if (!ready) return null;
     return {
-      query: committed.query,
+      query: composePivotQuery(committed.query, pivotFilters),
       language: 'kql',
       timeRange: committed.timeRange,
       tenantScope: committed.tenantScope,
@@ -115,10 +131,10 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
       rowSize: 20,
       colSize: 20,
     };
-  }, [ready, committed, config]);
+  }, [ready, committed, config, pivotFilters]);
 
   const crosstabQuery = useQuery({
-    queryKey: ['hunt-pivot', committed, config.rowField, config.colField, config.valueFn, config.distinctField],
+    queryKey: ['hunt-pivot', committed, config.rowField, config.colField, config.valueFn, config.distinctField, pivotFilters],
     queryFn: ({ signal }) => fetchHuntCrosstab(request as HuntCrosstabRequest, signal),
     enabled: ready && committed.query.length > 0,
     staleTime: 30_000,
@@ -145,6 +161,20 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
     setConfig((c) => ({ ...c, rowField: c.colField, colField: c.rowField }));
   }, []);
 
+  // Intercept the pivot-local "Filter this Pivot" action here (state lives in this view); forward
+  // every other action (drill/keep/exclude/copy/entity/timeline/evidence/incident) up to the page.
+  const handleCell = useCallback(
+    (action: PivotCellAction, rowField: string, colField: string, rowValue: string, colValue: string, value: number) => {
+      if (action === 'filter_pivot') {
+        const clause = `(${rowField}:${quoteKql(rowValue)} AND ${colField}:${quoteKql(colValue)})`;
+        setPivotFilters((cur) => (cur.includes(clause) ? cur : [...cur, clause]));
+        return;
+      }
+      onCellAction(action, rowField, colField, rowValue, colValue, value);
+    },
+    [onCellAction],
+  );
+
   // ---- states ----
   if (committed.query.length === 0) {
     return <div className="pivot-state">Run a hunt first, then break the results down by two fields.</div>;
@@ -163,6 +193,12 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
         onSetValueFn={(fn) => setConfig((c) => ({ ...c, valueFn: fn }))}
         onSetDistinctField={(f) => setConfig((c) => ({ ...c, distinctField: f }))}
         onSwap={swap}
+      />
+
+      <PivotFiltersShelf
+        filters={pivotFilters}
+        onRemove={(index) => setPivotFilters((cur) => cur.filter((_, i) => i !== index))}
+        onClear={() => setPivotFilters([])}
       />
 
       <div className="pivot-toolbar">
@@ -243,7 +279,7 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
           colField={config.colField as string}
           heat={heat}
           onCellAction={(action, rowValue, colValue, value) =>
-            onCellAction(action, config.rowField as string, config.colField as string, rowValue, colValue, value)}
+            handleCell(action, config.rowField as string, config.colField as string, rowValue, colValue, value)}
         />
       ) : null}
     </div>

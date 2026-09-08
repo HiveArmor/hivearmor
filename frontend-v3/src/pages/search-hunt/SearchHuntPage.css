@@ -2114,6 +2114,28 @@
   color: var(--ha-action-secondary); border: 1px solid var(--ha-border-subtle);
 }
 
+.pivot-filters {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 4px 10px 6px;
+}
+.pivot-filters__label { display: inline-flex; align-items: center; gap: 4px; font: var(--ha-type-metadata); color: var(--ha-foreground-tertiary); }
+.pivot-filters__chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.pivot-filters__chip {
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 4px 2px 8px;
+  border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control, 6px);
+  background: var(--ha-surface-input);
+}
+.pivot-filters__chip code { font: var(--ha-type-metadata); color: var(--ha-foreground-secondary); }
+.pivot-filters__chip button {
+  display: inline-flex; align-items: center; justify-content: center; padding: 2px;
+  border: 0; background: transparent; cursor: pointer; color: var(--ha-foreground-tertiary);
+}
+.pivot-filters__chip button:hover, .pivot-filters__chip button:focus-visible { color: var(--ha-action-primary); outline: none; }
+.pivot-filters__clear {
+  border: 0; background: transparent; cursor: pointer; padding: 2px 4px;
+  font: var(--ha-type-metadata); color: var(--ha-action-secondary);
+}
+.pivot-filters__clear:hover { color: var(--ha-action-primary); }
+
 .pivot-scope-note { padding: 2px 10px 6px; font: var(--ha-type-metadata); color: var(--ha-foreground-tertiary); }
 .pivot-truncation, .pivot-partial { margin: 0 10px 6px; padding: 5px 8px; border-radius: var(--ha-radius-control, 6px); font: var(--ha-type-compact); }
 .pivot-truncation { background: var(--ha-fill-primary-subtle); color: var(--ha-foreground-secondary); }

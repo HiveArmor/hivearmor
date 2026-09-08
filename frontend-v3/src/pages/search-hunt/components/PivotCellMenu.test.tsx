@@ -69,6 +69,12 @@ describe('PivotCellMenu', () => {
     expect(fired).toContain('create_incident');
   });
 
+  it('offers Filter this Pivot (pivot-local scratch filter)', () => {
+    const { onAction } = renderMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: /filter this pivot/i }));
+    expect(onAction.mock.calls.map((c) => c[0] as PivotCellAction)).toContain('filter_pivot');
+  });
+
   it('navigates entity actions on click', () => {
     const { onAction } = renderMenu({ rowField: 'user.name', rowValue: 'alice' });
     fireEvent.click(screen.getByRole('menuitem', { name: /view entity/i }));
