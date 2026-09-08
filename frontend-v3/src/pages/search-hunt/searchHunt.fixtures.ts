@@ -143,7 +143,18 @@ export async function executeFoundationHunt(request: HuntSearchRequest, signal?:
   });
   const from = new Date(request.timeRange.from);
   const to = new Date(request.timeRange.to);
-  const filtered = foundationHuntEvents.filter((event) => {
+  // Fixture events are authored at a fixed base date (Aug 2026). Re-base them onto the requested
+  // window so the default "Last 24 hours" filter does not drop everything in fixture mode. We shift
+  // by a whole-window delta computed from the newest fixture event to the window end, preserving the
+  // relative spacing (and therefore the histogram shape) of the sample set.
+  const windowEnd = to.getTime();
+  const newestFixture = foundationHuntEvents.reduce((mx, e) => Math.max(mx, Date.parse(e.timestamp)), 0);
+  const rebaseDelta = windowEnd - newestFixture;
+  const rebased = foundationHuntEvents.map((event) => {
+    const shifted = new Date(Date.parse(event.timestamp) + rebaseDelta).toISOString();
+    return { ...event, timestamp: shifted, normalized: { ...event.normalized, '@timestamp': shifted } };
+  });
+  const filtered = rebased.filter((event) => {
     const time = Date.parse(event.timestamp);
     return time >= from.getTime() && time <= to.getTime() && matchesQuery(event, request.query);
   });
