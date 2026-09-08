@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { Copy, FileText, Filter, Layers, MinusCircle, PlusCircle, Search, Shield, User as UserIcon, Activity } from 'lucide-react';
 
@@ -56,6 +56,21 @@ export function PivotCellMenu(props: PivotCellMenuProps): JSX.Element {
   const canViewEntity = rowEntityType !== null;
   const canOpenTimeline = timelineAvailable(rowField);
 
+  // Clamp the popover into the viewport: a cell near the bottom/right edge would otherwise render the
+  // (tall) menu off-screen — clipped by the page footer. Measure after mount and flip/nudge as needed.
+  const [pos, setPos] = useState<{ top: number; left: number }>({ top: y, left: x });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const { width, height } = el.getBoundingClientRect();
+    const margin = 8;
+    let top = y;
+    let left = x;
+    if (top + height > window.innerHeight - margin) top = Math.max(margin, window.innerHeight - height - margin);
+    if (left + width > window.innerWidth - margin) left = Math.max(margin, window.innerWidth - width - margin);
+    setPos({ top, left });
+  }, [x, y]);
+
   useEffect(() => {
     const first = ref.current?.querySelector<HTMLButtonElement>('button');
     first?.focus();
@@ -85,7 +100,7 @@ export function PivotCellMenu(props: PivotCellMenuProps): JSX.Element {
       className="pivot-cell-menu"
       role="menu"
       aria-label="Cell actions"
-      style={{ top: y, left: x }}
+      style={{ top: pos.top, left: pos.left }}
     >
       <div className="pivot-cell-menu__header">
         <code>{rowField}: {rowValue}</code>

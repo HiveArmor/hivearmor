@@ -81,6 +81,24 @@ describe('PivotCellMenu', () => {
     expect(onAction.mock.calls.map((c) => c[0] as PivotCellAction)).toContain('pivot_further');
   });
 
+  it('clamps its position up when a cell near the bottom would push the menu off-screen', () => {
+    // Stub layout: a 320px-tall menu opened at y=700 in a 760px-tall viewport must move up so it fits.
+    const rectSpy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+      width: 240, height: 320, top: 0, left: 0, right: 240, bottom: 320, x: 0, y: 0, toJSON: () => ({}),
+    } as DOMRect);
+    const origH = window.innerHeight;
+    Object.defineProperty(window, 'innerHeight', { value: 760, configurable: true });
+    try {
+      renderMenu({ x: 100, y: 700 });
+      const menu = screen.getByRole('menu', { name: /cell actions/i });
+      // 760 - 320 - 8 = 432 → clamped up from the requested 700.
+      expect(menu.style.top).toBe('432px');
+    } finally {
+      rectSpy.mockRestore();
+      Object.defineProperty(window, 'innerHeight', { value: origH, configurable: true });
+    }
+  });
+
   it('navigates entity actions on click', () => {
     const { onAction } = renderMenu({ rowField: 'user.name', rowValue: 'alice' });
     fireEvent.click(screen.getByRole('menuitem', { name: /view entity/i }));
