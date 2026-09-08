@@ -9,8 +9,10 @@ import { PivotFiltersShelf } from './PivotFiltersShelf';
 import { PivotMatrix } from './PivotMatrix';
 import { PivotShelves } from './PivotShelves';
 import { PivotTemplatesMenu } from './PivotTemplatesMenu';
+import { SuggestedPivots } from './SuggestedPivots';
 import { validatePivotTemplate, type PivotTemplate } from '../lib/pivotTemplates';
 import { buildSavedPivotFilters } from '../lib/savedPivot';
+import { suggestPivots, type SuggestedPivot } from '../lib/suggestedPivots';
 import { buildCrosstabCsv, crosstabCsvFilename } from '../pivotCsv';
 import { createSavedHunt, fetchHuntCrosstab, fetchHuntFieldStats } from '../searchHunt.service';
 import type {
@@ -119,6 +121,17 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
     setConfig(applied);
     setTemplateWarnings(warnings);
   }, [fields, tenantId]);
+
+  // P3 PR 1: deterministic Suggested Pivots — ranked from the field stats + template catalogue (no LLM).
+  // Applying a suggestion fills the shelves via the same path as a template; it never auto-runs.
+  const suggestions = useMemo(
+    () => suggestPivots(fields, statByField, tenantId, 3),
+    [fields, statByField, tenantId],
+  );
+  const applySuggestion = useCallback((s: SuggestedPivot) => {
+    setConfig(s.config);
+    setTemplateWarnings([]);
+  }, []);
 
   // Save-pivot dialog state.
   const [saveOpen, setSaveOpen] = useState(false);
@@ -279,6 +292,7 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
   return (
     <div className="pivot-view">
       <PivotBreadcrumb steps={steps} onNavigate={navigateToStep} />
+      <SuggestedPivots suggestions={suggestions} onApply={applySuggestion} />
       <PivotShelves
         fields={fields}
         rowField={config.rowField}
