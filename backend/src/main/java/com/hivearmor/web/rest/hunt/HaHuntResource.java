@@ -82,6 +82,7 @@ public class HaHuntResource {
     private final HuntHistoryService huntHistoryService;
     private final HuntEventDetailService huntEventDetailService;
     private final ForensicExportService forensicExportService;
+    private final com.hivearmor.service.hunt.crosstab.HaHuntCrosstabService crosstabService;
 
     /** Scheduler for SSE progress polling loops. */
     private final ScheduledExecutorService progressPoller =
@@ -96,13 +97,15 @@ public class HaHuntResource {
                           QueryCapabilityRegistry queryCapabilityRegistry,
                           HuntHistoryService huntHistoryService,
                           HuntEventDetailService huntEventDetailService,
-                          ForensicExportService forensicExportService) {
+                          ForensicExportService forensicExportService,
+                          com.hivearmor.service.hunt.crosstab.HaHuntCrosstabService crosstabService) {
         this.huntService = huntService;
         this.searchProgressTracker = searchProgressTracker;
         this.queryCapabilityRegistry = queryCapabilityRegistry;
         this.huntHistoryService = huntHistoryService;
         this.huntEventDetailService = huntEventDetailService;
         this.forensicExportService = forensicExportService;
+        this.crosstabService = crosstabService;
     }
 
     // -------------------------------------------------------------------------
@@ -265,6 +268,38 @@ public class HaHuntResource {
         } catch (Exception e) {
             log.error("{}: aggregation failed", ctx, e);
             throw new IllegalStateException("Aggregation failed", e);
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /api/ha-hunts/search/crosstab — Investigation Pivot (Crosstab) P1
+    // -------------------------------------------------------------------------
+    /**
+     * Server-side crosstab (Pivot view) over the full pivot-eligible matched set: one Rows field,
+     * one Columns field, count or distinct measure. Read-only, size:0 aggregations only, so it
+     * cannot widen scope. Tenant/owner scope and index resolution are identical to
+     * {@link #aggregate} and {@link #executeSearch}. Gated by {@code app.hunt.crosstab.enabled}.
+     */
+    @PostMapping("/search/crosstab")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    public ResponseEntity<com.hivearmor.web.rest.hunt.dto.HuntCrosstabResponseDTO> crosstab(
+            @Valid @RequestBody com.hivearmor.web.rest.hunt.dto.HuntCrosstabRequestDTO request) {
+
+        final String ctx = CLASSNAME + ".crosstab";
+        log.debug("{}: query='{}', row='{}', col='{}', valueFn='{}'", ctx,
+            request.getQuery(), request.getRowField(), request.getColField(), request.getValueFn());
+
+        String owner = currentOwner();
+        String tenantKey = currentTenantKey();
+        try {
+            return ResponseEntity.ok(crosstabService.crosstab(request, owner, tenantKey));
+        } catch (HuntQueryException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("{}: crosstab failed", ctx, e);
+            throw new IllegalStateException("Crosstab failed", e);
         } finally {
             TenantContext.clear();
         }
