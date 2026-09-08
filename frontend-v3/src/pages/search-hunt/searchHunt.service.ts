@@ -4,6 +4,8 @@ import type {
   HuntActionResponse,
   HuntAggregateRequest,
   HuntAggregateResponse,
+  HuntCrosstabRequest,
+  HuntCrosstabResponse,
   HuntEventDetail,
   HuntEventDetailResponse,
   HuntFieldDefinition,
@@ -77,6 +79,21 @@ export async function fetchHuntAggregates(
     return getFoundationHuntAggregates(request);
   }
   return apiClient.post<HuntAggregateResponse>('/ha-hunts/search/aggregate', request, { signal });
+}
+
+/**
+ * Investigation Pivot (Crosstab): server-side crosstab over the full pivot-eligible matched set.
+ * Fixture mode derives the same shape from the loaded fixture events so the Pivot view still renders.
+ */
+export async function fetchHuntCrosstab(
+  request: HuntCrosstabRequest,
+  signal?: AbortSignal,
+): Promise<HuntCrosstabResponse> {
+  if (fixtureMode) {
+    const { getFoundationHuntCrosstab } = await import('@/pages/search-hunt/searchHunt.fixtures');
+    return getFoundationHuntCrosstab(request, signal);
+  }
+  return apiClient.post<HuntCrosstabResponse>('/ha-hunts/search/crosstab', request, { signal });
 }
 
 export async function fetchHuntSchema(signal?: AbortSignal): Promise<HuntFieldDefinition[]> {
