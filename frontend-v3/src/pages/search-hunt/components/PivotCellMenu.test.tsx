@@ -81,6 +81,12 @@ describe('PivotCellMenu', () => {
     expect(onAction.mock.calls.map((c) => c[0] as PivotCellAction)).toContain('pivot_further');
   });
 
+  it('offers Explain this cell', () => {
+    const { onAction } = renderMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: /explain this cell/i }));
+    expect(onAction.mock.calls.map((c) => c[0] as PivotCellAction)).toContain('explain_cell');
+  });
+
   it('clamps its position up when a cell near the bottom would push the menu off-screen', () => {
     // Stub layout: a 320px-tall menu opened at y=700 in a 760px-tall viewport must move up so it fits.
     const rectSpy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({

@@ -2141,6 +2141,10 @@
 .pivot-templates__menu button:hover:not(:disabled) { background: var(--ha-surface-hover); }
 .pivot-templates__menu button:disabled { opacity: 0.45; cursor: default; }
 .pivot-template-warning { margin: 0 10px 6px; padding: 5px 8px; border-radius: var(--ha-radius-control, 6px); font: var(--ha-type-metadata); color: var(--ha-severity-medium); background: var(--ha-fill-primary-subtle); }
+.pivot-explain { margin: 0 10px 8px; padding: 8px 12px; border-radius: var(--ha-radius-panel, 8px); border: 1px solid var(--ha-border-subtle); background: var(--ha-fill-intelligence-subtle); }
+.pivot-explain ul { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; }
+.pivot-explain li { font: var(--ha-type-compact); color: var(--ha-foreground-secondary); }
+.pivot-explain__cell { color: var(--ha-foreground-primary); font-weight: 600; list-style: none; margin-left: -16px; }
 
 .pivot-save {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 10px 8px;

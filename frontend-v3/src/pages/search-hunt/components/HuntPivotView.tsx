@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Download, Save } from 'lucide-react';
+import { Download, Info, Save } from 'lucide-react';
 
 import { PivotBreadcrumb, type PivotStep } from './PivotBreadcrumb';
 import type { PivotCellAction } from './PivotCellMenu';
@@ -10,6 +10,7 @@ import { PivotMatrix } from './PivotMatrix';
 import { PivotShelves } from './PivotShelves';
 import { PivotTemplatesMenu } from './PivotTemplatesMenu';
 import { SuggestedPivots } from './SuggestedPivots';
+import { explainPivot, explainCell } from '../lib/explainPivot';
 import { validatePivotTemplate, type PivotTemplate } from '../lib/pivotTemplates';
 import { buildSavedPivotFilters } from '../lib/savedPivot';
 import { suggestPivots, type SuggestedPivot } from '../lib/suggestedPivots';
@@ -85,6 +86,10 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
   const [compare, setCompare] = useState(false);
   // P2 Strand B: mark user.name rows with their existing UEBA z-score (no-op for other row axes).
   const [deviate, setDeviate] = useState(false);
+  // P3 PR 2: show a deterministic plain-language explanation of the current pivot.
+  const [explainOpen, setExplainOpen] = useState(false);
+  // P3 PR 2: a one-line explanation of a specific cell, shown when the analyst picks "Explain this cell".
+  const [cellExplanation, setCellExplanation] = useState<string | null>(null);
   // Pivot-local scratch filters: extra KQL clauses AND-ed into the crosstab request query only.
   // They narrow the crosstab without touching the committed hunt query. Ephemeral (not persisted).
   const [pivotFilters, setPivotFilters] = useState<string[]>([]);
@@ -217,6 +222,12 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
 
   const data = crosstabQuery.data ?? null;
 
+  // P3 PR 2: deterministic plain-language explanation of the current pivot (no AI provider needed).
+  const explanation = useMemo(
+    () => (data && config.rowField && config.colField ? explainPivot(data, config.rowField, config.colField) : []),
+    [data, config.rowField, config.colField],
+  );
+
   const onExport = useCallback(() => {
     if (!data || !config.rowField || !config.colField) return;
     const csv = buildCrosstabCsv(data, config.rowField, config.colField);
@@ -247,6 +258,14 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
         setPivotFilters((cur) => (cur.includes(clause) ? cur : [...cur, clause]));
         return;
       }
+      if (action === 'explain_cell') {
+        if (data) {
+          const cell = data.cells.find((c) => c.row === rowValue && c.col === colValue);
+          setCellExplanation(explainCell(data, rowField, colField, rowValue, colValue, value, cell));
+          setExplainOpen(true);
+        }
+        return;
+      }
       if (action === 'pivot_further') {
         // Pin the cell as a pivot-local scope, record the step being LEFT, then reset the axes so the
         // analyst picks a new breakdown WITHIN the scoped subset. Never touches the committed hunt query.
@@ -264,7 +283,7 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
       }
       onCellAction(action, rowField, colField, rowValue, colValue, value);
     },
-    [onCellAction, pivotFilters, config],
+    [onCellAction, pivotFilters, config, data],
   );
 
   // Restore an earlier breadcrumb step: reinstate its scope + config and truncate the deeper trail.
@@ -334,6 +353,16 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
           </label>
         )}
         <PivotTemplatesMenu fields={fields} onApply={applyTemplate} />
+        <button
+          type="button"
+          className="pivot-toolbar__templates"
+          aria-pressed={explainOpen}
+          onClick={() => setExplainOpen((o) => { if (o) setCellExplanation(null); return !o; })}
+          disabled={!data}
+          title="Explain this pivot in plain language"
+        >
+          <Info size={13} aria-hidden="true" /> Explain
+        </button>
         {canSave && (
           <button type="button" className="pivot-toolbar__save" onClick={() => setSaveOpen(true)} disabled={!ready} title="Save this pivot for later">
             <Save size={13} aria-hidden="true" /> Save pivot
@@ -348,6 +377,15 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
         <p className="pivot-template-warning" role="note">
           {templateWarnings.join(' ')}
         </p>
+      )}
+
+      {explainOpen && explanation.length > 0 && (
+        <div className="pivot-explain" role="note" aria-label="Pivot explanation">
+          <ul>
+            {cellExplanation && <li className="pivot-explain__cell">{cellExplanation}</li>}
+            {explanation.map((line, i) => <li key={i}>{line}</li>)}
+          </ul>
+        </div>
       )}
 
       {saveOpen && (
