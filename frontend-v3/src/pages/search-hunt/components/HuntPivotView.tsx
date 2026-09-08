@@ -4,6 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Download, Info, Save } from 'lucide-react';
 
 import { AskHivePivot } from './AskHivePivot';
+import { DetectionCandidatePreview } from './DetectionCandidatePreview';
 import { PivotBreadcrumb, type PivotStep } from './PivotBreadcrumb';
 import type { PivotCellAction } from './PivotCellMenu';
 import { PivotFiltersShelf } from './PivotFiltersShelf';
@@ -12,6 +13,7 @@ import { PivotShelves } from './PivotShelves';
 import { PivotTemplatesMenu } from './PivotTemplatesMenu';
 import { SuggestedPivots } from './SuggestedPivots';
 import { explainPivot, explainCell } from '../lib/explainPivot';
+import { buildDetectionContext, type PivotDetectionContext } from '../lib/pivotDetectionContext';
 import { validatePivotTemplate, type PivotTemplate } from '../lib/pivotTemplates';
 import { buildSavedPivotFilters } from '../lib/savedPivot';
 import { suggestPivots, type SuggestedPivot } from '../lib/suggestedPivots';
@@ -89,6 +91,8 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
   const [deviate, setDeviate] = useState(false);
   // P4: flag surprising row×col combinations (chi-square residual over the shown matrix).
   const [significant, setSignificant] = useState(false);
+  // P5 PR 1: captured reproduction context for a detection candidate (no rule drafted here).
+  const [detectionContext, setDetectionContext] = useState<PivotDetectionContext | null>(null);
   // P3 PR 2: show a deterministic plain-language explanation of the current pivot.
   const [explainOpen, setExplainOpen] = useState(false);
   // P3 PR 2: a one-line explanation of a specific cell, shown when the analyst picks "Explain this cell".
@@ -285,9 +289,16 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
         setConfig((c) => ({ ...c, rowField: null, colField: null, rowBucketInterval: null, colBucketInterval: null, rowMissing: 'omit', colMissing: 'omit' }));
         return;
       }
+      if (action === 'create_detection') {
+        // P5 PR 1 (safe half): capture the reproduction context only — no rule drafted, nothing written,
+        // no deploy path. Turning this into a rule is a separate, SOC-manager-governed step (§29).
+        const ctx = buildDetectionContext(data, config, committed.query, pivotFilters, rowValue, colValue, value);
+        if (ctx) setDetectionContext(ctx);
+        return;
+      }
       onCellAction(action, rowField, colField, rowValue, colValue, value);
     },
-    [onCellAction, pivotFilters, config, data],
+    [onCellAction, pivotFilters, config, data, committed.query],
   );
 
   // Restore an earlier breadcrumb step: reinstate its scope + config and truncate the deeper trail.
@@ -467,6 +478,9 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
             handleCell(action, config.rowField as string, config.colField as string, rowValue, colValue, value)}
         />
       ) : null}
+      {detectionContext && (
+        <DetectionCandidatePreview context={detectionContext} onClose={() => setDetectionContext(null)} />
+      )}
     </div>
   );
 }
