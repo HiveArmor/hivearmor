@@ -2298,6 +2298,12 @@
 .detection-candidate__grid dd { margin: 0; color: var(--ha-foreground-primary); }
 .detection-candidate__grid code { font-family: var(--ha-font-mono); margin-right: 4px; }
 .detection-candidate__gov { margin: 0; font: var(--ha-type-metadata); color: var(--ha-foreground-secondary); }
+.detection-candidate__actions { margin: 0 0 8px; }
+.detection-candidate__draft { min-height: 28px; padding: 4px 12px; border: 1px solid var(--ha-action-primary); border-radius: var(--ha-radius-control, 6px); background: var(--ha-action-primary); color: var(--ha-foreground-on-action); cursor: pointer; font: var(--ha-type-compact); }
+.detection-candidate__draft:disabled { opacity: 0.5; cursor: default; }
+.detection-candidate__drafted { margin: 0 0 8px; font: var(--ha-type-compact); color: var(--ha-foreground-primary); }
+.detection-candidate__drafted a { color: var(--ha-action-secondary); }
+.detection-candidate__draft-err { margin: 0 0 8px; font: var(--ha-type-metadata); color: var(--ha-severity-high); }
 .pivot-matrix__total-col, .pivot-matrix__total-row td, .pivot-matrix__grand {
   background: var(--ha-surface-zebra); font-weight: 620; color: var(--ha-foreground-primary);
 }
