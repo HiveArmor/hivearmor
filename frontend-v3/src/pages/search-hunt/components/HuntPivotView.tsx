@@ -312,8 +312,10 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
   return (
     <div className="pivot-view">
       <PivotBreadcrumb steps={steps} onNavigate={navigateToStep} />
-      <SuggestedPivots suggestions={suggestions} onApply={applySuggestion} />
-      <AskHivePivot tenantId={tenantId} onApply={(c) => { setConfig(c); setTemplateWarnings([]); }} />
+      <div className="pivot-assist-row">
+        <SuggestedPivots suggestions={suggestions} onApply={applySuggestion} />
+        <AskHivePivot tenantId={tenantId} onApply={(c) => { setConfig(c); setTemplateWarnings([]); }} />
+      </div>
       <PivotShelves
         fields={fields}
         rowField={config.rowField}

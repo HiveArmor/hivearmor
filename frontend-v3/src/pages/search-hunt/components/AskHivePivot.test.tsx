@@ -13,9 +13,15 @@ vi.mock('../ai/huntAiService', () => ({
 }));
 
 describe('AskHivePivot', () => {
-  it('asks a question, shows the proposed pivot, and applies it to the shelves (never auto-runs)', async () => {
+  it('is collapsed to an icon trigger, expands on click, then asks / proposes / applies (never auto-runs)', async () => {
     const onApply = vi.fn();
     render(<AskHivePivot tenantId={7} onApply={onApply} />);
+
+    // Collapsed by default: only the compact trigger, no input yet.
+    expect(screen.queryByRole('textbox', { name: /ask hive intelligence a pivot question/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /ask hive intelligence — suggest a pivot/i }));
+
+    // Expanded: the input row appears.
     fireEvent.change(screen.getByRole('textbox', { name: /ask hive intelligence a pivot question/i }), {
       target: { value: 'which users touched which hosts?' },
     });

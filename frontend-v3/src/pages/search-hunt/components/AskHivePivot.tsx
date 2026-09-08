@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import { Sparkles } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 
 import type { PivotSuggestResponse } from '../ai/huntAiContract.types';
 import { suggestPivotFromNl } from '../ai/huntAiService';
@@ -18,9 +18,13 @@ export interface AskHivePivotProps {
  * then the analyst runs it. Degrades to an "AI not configured" note when no provider is available.
  */
 export function AskHivePivot({ tenantId, onApply }: AskHivePivotProps): JSX.Element {
+  const [expanded, setExpanded] = useState(false);
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PivotSuggestResponse | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { if (expanded) inputRef.current?.focus(); }, [expanded]);
 
   const ask = async () => {
     const q = question.trim();
@@ -45,6 +49,24 @@ export function AskHivePivot({ tenantId, onApply }: AskHivePivotProps): JSX.Elem
     });
   };
 
+  // Collapsed: a single compact icon trigger, so the pivot controls stay dense.
+  if (!expanded) {
+    return (
+      <div className="ask-hive ask-hive--collapsed">
+        <button
+          type="button"
+          className="ask-hive__trigger"
+          onClick={() => setExpanded(true)}
+          aria-expanded={false}
+          aria-label="Ask Hive Intelligence — suggest a pivot from a question"
+        >
+          <span className="ask-hive__glyph" aria-hidden="true"><Sparkles size={13} /></span>
+          Ask Hive
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="ask-hive" role="group" aria-label="Ask Hive Intelligence">
       <div className="ask-hive__row">
@@ -57,10 +79,19 @@ export function AskHivePivot({ tenantId, onApply }: AskHivePivotProps): JSX.Elem
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') void ask(); }}
+          ref={inputRef}
           disabled={loading}
         />
         <button type="button" className="ask-hive__ask" onClick={() => void ask()} disabled={loading || !question.trim()}>
           {loading ? 'Thinking…' : 'Ask'}
+        </button>
+        <button
+          type="button"
+          className="ask-hive__collapse"
+          onClick={() => { setExpanded(false); setResult(null); }}
+          aria-label="Collapse Ask Hive"
+        >
+          <X size={13} />
         </button>
       </div>
 
