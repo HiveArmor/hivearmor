@@ -152,6 +152,9 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
       <table className="pivot-matrix" aria-label={`Crosstab of ${rowField} by ${colField}, ${valueLabel}`}>
         <caption className="pivot-matrix__caption">
           {`Crosstab of ${rowField} by ${colField} — ${valueLabel} over ${data.pivotEligibleMatched.toLocaleString()} pivot-eligible events`}
+          {data.significanceScopedToShownMatrix && (
+            <span className="pivot-matrix__sig-note"> · significant combinations measured within this result set (shown axes)</span>
+          )}
         </caption>
         <thead>
           <tr>
@@ -197,6 +200,8 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
                 const hasDelta = cell?.delta != null;
                 const up = (cell?.delta ?? 0) > 0;
                 const down = (cell?.delta ?? 0) < 0;
+                const sig = cell?.significance;
+                const sigOver = sig?.direction === 'over';
                 return (
                   <td
                     key={c}
@@ -206,7 +211,7 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
                     style={heatStyle(value)}
                     onClick={(e) => value > 0 && openMenu(r, c, value, e.currentTarget)}
                     onKeyDown={(e) => onCellKeyDown(e, ri, ci)}
-                    aria-label={`${fmtRow(r)}, ${fmtCol(c)}: ${value}${hasDelta ? `, ${up ? 'up' : down ? 'down' : 'no change'} ${cell?.deltaPercent != null ? `${Math.abs(Math.round(cell.deltaPercent))}%` : `${Math.abs(cell?.delta ?? 0)}`} vs previous period` : ''}`}
+                    aria-label={`${fmtRow(r)}, ${fmtCol(c)}: ${value}${hasDelta ? `, ${up ? 'up' : down ? 'down' : 'no change'} ${cell?.deltaPercent != null ? `${Math.abs(Math.round(cell.deltaPercent))}%` : `${Math.abs(cell?.delta ?? 0)}`} vs previous period` : ''}${sig ? `, significant combination: ${sigOver ? 'over' : 'under'}-represented, ${sig.ratio}x the expected ${sig.expected}` : ''}`}
                   >
                     {value > 0 ? value.toLocaleString() : ''}
                     {hasDelta && (value > 0 || (cell?.comparisonValue ?? 0) > 0) && (
@@ -215,6 +220,14 @@ export function PivotMatrix({ data, rowField, colField, heat, onCellAction }: Pi
                         {cell?.deltaPercent != null
                           ? `${up ? '+' : ''}${Math.round(cell.deltaPercent)}%`
                           : `${up ? '+' : ''}${cell?.delta ?? 0}`}
+                      </span>
+                    )}
+                    {sig && (
+                      <span
+                        className="pivot-matrix__significance"
+                        title={`${sigOver ? 'Over' : 'Under'}-represented: ~${sig.ratio}× the expected ${sig.expected} if ${rowField} and ${colField} were independent (within this result set)`}
+                      >
+                        {sigOver ? `⇈ ${sig.ratio}× exp` : '⇊ rare'}
                       </span>
                     )}
                   </td>

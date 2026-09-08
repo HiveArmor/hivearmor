@@ -512,6 +512,8 @@ export interface HuntCrosstabRequest {
   comparison?: { mode: 'previous_period' | 'previous_window'; offset?: string };
   /** P2 Strand B: attach the existing per-user UEBA z-score to rows (only when the row axis is user.name). */
   deviation?: boolean;
+  /** P4: flag cells whose observed count is surprising given the row/col totals (chi-square residual). */
+  significance?: boolean;
 }
 
 /** Fixed-interval date-histogram bucket spec for an axis (matches backend BucketDTO). */
@@ -529,6 +531,8 @@ export interface HuntCrosstabCell {
   comparisonValue?: number;
   delta?: number;
   deltaPercent?: number | null;
+  /** P4: present only when significance was requested AND the cell is flagged. direction 'over'|'under'. */
+  significance?: { residual: number; expected: number; ratio: number; direction: 'over' | 'under' };
 }
 
 /** The measure and whether its values are approximate (false for count, true for distinct). */
@@ -591,6 +595,8 @@ export interface HuntCrosstabResponse {
   comparison?: { mode: string; from: string; to: string };
   /** P2 Strand B: per-row UEBA deviation, aligned with rowKeys. Entry is null for a user with no real z-score; whole field absent unless requested + row axis is user.name. */
   rowDeviations?: ({ metric: string; zScore: number } | null)[];
+  /** P4: true when significance residuals were computed — scoped to the SHOWN (possibly truncated) matrix. */
+  significanceScopedToShownMatrix?: boolean;
   /** P1.1: whether each axis is a date_histogram + its interval (drives time-label rendering). */
   rowBucketed?: boolean;
   colBucketed?: boolean;

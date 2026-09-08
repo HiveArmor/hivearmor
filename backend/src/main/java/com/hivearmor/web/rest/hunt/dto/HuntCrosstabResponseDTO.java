@@ -58,6 +58,8 @@ public class HuntCrosstabResponseDTO {
 
     /** Grand total: COUNT = pivotEligibleMatched; DISTINCT = eligible-scope cardinality (approx). */
     private long grandTotal;
+    /** P4: true when significance residuals were computed — they are scoped to the SHOWN (possibly truncated) matrix. */
+    private Boolean significanceScopedToShownMatrix;
 
     private TotalSemanticsDTO totalSemantics;
 
@@ -200,6 +202,8 @@ public class HuntCrosstabResponseDTO {
 
     public long getGrandTotal() { return grandTotal; }
     public void setGrandTotal(long grandTotal) { this.grandTotal = grandTotal; }
+    public Boolean getSignificanceScopedToShownMatrix() { return significanceScopedToShownMatrix; }
+    public void setSignificanceScopedToShownMatrix(Boolean v) { this.significanceScopedToShownMatrix = v; }
 
     public TotalSemanticsDTO getTotalSemantics() { return totalSemantics; }
     public void setTotalSemantics(TotalSemanticsDTO totalSemantics) { this.totalSemantics = totalSemantics; }
@@ -240,6 +244,8 @@ public class HuntCrosstabResponseDTO {
         private Long comparisonValue;
         private Long delta;
         private Double deltaPercent;
+        /** P4 significance: populated only when requested AND the cell is flagged (past the residual threshold). */
+        private SignificanceDTO significance;
 
         public CellDTO() {}
 
@@ -261,6 +267,39 @@ public class HuntCrosstabResponseDTO {
         public void setDelta(Long delta) { this.delta = delta; }
         public Double getDeltaPercent() { return deltaPercent; }
         public void setDeltaPercent(Double deltaPercent) { this.deltaPercent = deltaPercent; }
+        public SignificanceDTO getSignificance() { return significance; }
+        public void setSignificance(SignificanceDTO significance) { this.significance = significance; }
+    }
+
+    /**
+     * P4: why a cell is flagged as a significant combination. All fields are real, derived statistics —
+     * {@code expected} is the count under row/col independence, {@code residual} is the standardized
+     * residual {@code (observed - expected) / sqrt(expected)}, {@code ratio} is {@code observed / expected}.
+     * {@code direction} is "over" (surprisingly frequent) or "under" (surprisingly rare). No fabricated score.
+     */
+    public static class SignificanceDTO {
+        private double residual;
+        private double expected;
+        private double ratio;
+        private String direction;   // "over" | "under"
+
+        public SignificanceDTO() {}
+
+        public SignificanceDTO(double residual, double expected, double ratio, String direction) {
+            this.residual = residual;
+            this.expected = expected;
+            this.ratio = ratio;
+            this.direction = direction;
+        }
+
+        public double getResidual() { return residual; }
+        public void setResidual(double residual) { this.residual = residual; }
+        public double getExpected() { return expected; }
+        public void setExpected(double expected) { this.expected = expected; }
+        public double getRatio() { return ratio; }
+        public void setRatio(double ratio) { this.ratio = ratio; }
+        public String getDirection() { return direction; }
+        public void setDirection(String direction) { this.direction = direction; }
     }
 
     /** The measure and whether its values are approximate. */

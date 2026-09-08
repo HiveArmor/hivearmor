@@ -2285,6 +2285,8 @@
 .pivot-matrix__delta--up { color: var(--ha-action-secondary); }
 .pivot-matrix__delta--down { color: var(--ha-foreground-secondary); }
 .pivot-matrix__deviation { margin-left: 6px; font: var(--ha-type-metadata); font-variant-numeric: tabular-nums; color: var(--ha-intelligence-primary); }
+.pivot-matrix__significance { display: block; font: var(--ha-type-metadata); font-variant-numeric: tabular-nums; color: var(--ha-intelligence-primary); }
+.pivot-matrix__sig-note { color: var(--ha-foreground-tertiary); font: var(--ha-type-metadata); }
 .pivot-matrix__total-col, .pivot-matrix__total-row td, .pivot-matrix__grand {
   background: var(--ha-surface-zebra); font-weight: 620; color: var(--ha-foreground-primary);
 }

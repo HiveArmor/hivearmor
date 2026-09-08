@@ -80,6 +80,8 @@ public class HuntCrosstabRequestDTO {
      * per-user z-score to each row. Ignored (no-op) for any other row field — never fabricates a score.
      */
     private boolean deviation = false;
+    /** P4: opt-in — flag cells whose observed count is surprising given the row/col totals (chi-square residual). */
+    private boolean significance = false;
 
     /** P2 comparison request: which prior window to compare against. */
     public static class ComparisonDTO {
@@ -160,4 +162,6 @@ public class HuntCrosstabRequestDTO {
 
     public boolean isDeviation() { return deviation; }
     public void setDeviation(boolean deviation) { this.deviation = deviation; }
+    public boolean isSignificance() { return significance; }
+    public void setSignificance(boolean significance) { this.significance = significance; }
 }

@@ -23,19 +23,22 @@ public class HaHuntCrosstabService {
     private final HaHuntCrosstabPlanner planner;
     private final CrosstabMetrics metrics;
     private final CrosstabDeviationResolver deviationResolver;
+    private final CrosstabSignificanceResolver significanceResolver;
 
     public HaHuntCrosstabService(CrosstabCostPolicy costPolicy,
                                  CrosstabRequestMapper mapper,
                                  CrosstabDefinitionValidator validator,
                                  HaHuntCrosstabPlanner planner,
                                  CrosstabMetrics metrics,
-                                 CrosstabDeviationResolver deviationResolver) {
+                                 CrosstabDeviationResolver deviationResolver,
+                                 CrosstabSignificanceResolver significanceResolver) {
         this.costPolicy = costPolicy;
         this.mapper = mapper;
         this.validator = validator;
         this.planner = planner;
         this.metrics = metrics;
         this.deviationResolver = deviationResolver;
+        this.significanceResolver = significanceResolver;
     }
 
     public boolean isEnabled() {
@@ -56,6 +59,7 @@ public class HaHuntCrosstabService {
             HuntCrosstabResponseDTO response = planner.plan(definition);
             applyComparison(request, definition, response);
             applyDeviation(request, response);
+            applySignificance(request, response);
             if ("PARTIAL".equals(response.getStatus())) {
                 metrics.recordPartial();
             }
@@ -117,5 +121,20 @@ public class HaHuntCrosstabService {
         if (response.getRowKeys() == null || response.getRowKeys().isEmpty()) return;
         var deviations = deviationResolver.resolve(request.getRowField(), response.getRowKeys());
         if (deviations != null) response.setRowDeviations(deviations);
+    }
+
+    /**
+     * P4 (Option A): when requested, flag cells whose observed count is surprising given the row/col totals
+     * (standardized chi-square residual over the SHOWN matrix). Pure arithmetic on counts already in the
+     * response — no OpenSearch call, no fabricated score. Safely skipped for a DISTINCT measure or an empty
+     * matrix. Records the honest scope flag so the UI can say "within this result set".
+     */
+    private void applySignificance(HuntCrosstabRequestDTO request, HuntCrosstabResponseDTO response) {
+        if (!request.isSignificance()) return;
+        boolean computed = significanceResolver.annotate(response);
+        if (computed) {
+            response.setSignificanceScopedToShownMatrix(Boolean.TRUE);
+            metrics.recordSignificance();
+        }
     }
 }

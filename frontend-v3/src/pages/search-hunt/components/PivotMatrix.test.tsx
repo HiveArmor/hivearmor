@@ -123,4 +123,25 @@ describe('PivotMatrix', () => {
     const note = screen.getByRole('note');
     expect(note).toHaveTextContent(/event\.category is multi-valued/i);
   });
+
+  it('renders the significant-combination marker only on flagged cells, with the honest scope note', () => {
+    const flagged = data({
+      cells: [
+        { row: 'alice', col: 'RU', value: 5, significance: { residual: 3.1, expected: 1.5, ratio: 3.33, direction: 'over' } },
+        { row: 'bob', col: 'IN', value: 3 },
+      ],
+      significanceScopedToShownMatrix: true,
+    });
+    render(<PivotMatrix data={flagged} rowField="host.name" colField="event.action" heat={false} onCellAction={vi.fn()} />);
+    // Over-represented marker present with its ratio.
+    expect(screen.getByText(/3\.33× exp/)).toBeInTheDocument();
+    // Honest scope note present.
+    expect(screen.getByText(/measured within this result set/i)).toBeInTheDocument();
+  });
+
+  it('shows no significance marker when the response carries none', () => {
+    render(<PivotMatrix data={data()} rowField="host.name" colField="event.action" heat={false} onCellAction={vi.fn()} />);
+    expect(screen.queryByText(/× exp|rare/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/measured within this result set/i)).not.toBeInTheDocument();
+  });
 });
