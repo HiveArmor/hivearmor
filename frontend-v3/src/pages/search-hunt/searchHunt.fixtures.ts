@@ -624,6 +624,29 @@ export function getFoundationHuntCrosstab(
   const colTotals = colKeys.map((c) => measureOf(byCol.get(c) ?? []));
   const grandTotal = distinct ? measureOf(eligible) : pivotEligibleMatched;
 
+  // P4 fixture: annotate cells with the SAME standardized-residual math as the backend resolver, when
+  // requested and the measure is count (distinct is skipped, never faked). Keeps the fixture honest.
+  let significanceScopedToShownMatrix: boolean | undefined;
+  if (request.significance && !distinct && grandTotal > 0) {
+    const rowTotalByKey = new Map(rowKeys.map((r, i) => [r, rowTotals[i]]));
+    const colTotalByKey = new Map(colKeys.map((c, i) => [c, colTotals[i]]));
+    for (const cell of cells) {
+      const rt = rowTotalByKey.get(cell.row);
+      const ct = colTotalByKey.get(cell.col);
+      if (!rt || !ct) continue;
+      const expected = (rt * ct) / grandTotal;
+      if (expected < 1) continue;
+      const residual = (cell.value - expected) / Math.sqrt(expected);
+      if (Math.abs(residual) < 2) continue;
+      const round = (v: number) => Math.round(v * 100) / 100;
+      cell.significance = {
+        residual: round(residual), expected: round(expected),
+        ratio: round(cell.value / expected), direction: residual >= 0 ? 'over' : 'under',
+      };
+    }
+    significanceScopedToShownMatrix = true;
+  }
+
   const rowTruncated = rowCardinalityEstimate > rowKeys.length;
   const colTruncated = colCardinalityEstimate > colKeys.length;
 
@@ -644,6 +667,7 @@ export function getFoundationHuntCrosstab(
     rowTotals,
     colTotals,
     grandTotal,
+    significanceScopedToShownMatrix,
     totalSemantics: {
       cell: m('matching row AND column member'),
       row: m('matching the row member in pivot-eligible scope'),

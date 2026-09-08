@@ -87,6 +87,8 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
   const [compare, setCompare] = useState(false);
   // P2 Strand B: mark user.name rows with their existing UEBA z-score (no-op for other row axes).
   const [deviate, setDeviate] = useState(false);
+  // P4: flag surprising row×col combinations (chi-square residual over the shown matrix).
+  const [significant, setSignificant] = useState(false);
   // P3 PR 2: show a deterministic plain-language explanation of the current pivot.
   const [explainOpen, setExplainOpen] = useState(false);
   // P3 PR 2: a one-line explanation of a specific cell, shown when the analyst picks "Explain this cell".
@@ -208,11 +210,12 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
       colMissing: config.colMissing ?? 'omit',
       comparison: compare ? { mode: 'previous_period' } : undefined,
       deviation: deviate ? true : undefined,
+      significance: significant ? true : undefined,
     };
-  }, [ready, committed, config, pivotFilters, rowIsDate, colIsDate, compare, deviate]);
+  }, [ready, committed, config, pivotFilters, rowIsDate, colIsDate, compare, deviate, significant]);
 
   const crosstabQuery = useQuery({
-    queryKey: ['hunt-pivot', committed, config.rowField, config.colField, config.valueFn, config.distinctField, config.rowBucketInterval, config.colBucketInterval, config.rowMissing, config.colMissing, pivotFilters, compare, deviate],
+    queryKey: ['hunt-pivot', committed, config.rowField, config.colField, config.valueFn, config.distinctField, config.rowBucketInterval, config.colBucketInterval, config.rowMissing, config.colMissing, pivotFilters, compare, deviate, significant],
     queryFn: ({ signal }) => fetchHuntCrosstab(request as HuntCrosstabRequest, signal),
     enabled: ready && committed.query.length > 0,
     staleTime: 30_000,
@@ -354,6 +357,11 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
         {config.rowField === 'user.name' && (
           <label className="pivot-toolbar__heat" title="Mark each user row with its existing UEBA peer-baseline z-score">
             <input type="checkbox" checked={deviate} onChange={(e) => setDeviate(e.target.checked)} /> UEBA deviation
+          </label>
+        )}
+        {config.valueFn === 'count' && (
+          <label className="pivot-toolbar__heat" title="Flag combinations whose count is surprising given the row and column totals (within this result set)">
+            <input type="checkbox" checked={significant} onChange={(e) => setSignificant(e.target.checked)} /> Significant combinations
           </label>
         )}
         <PivotTemplatesMenu fields={fields} onApply={applyTemplate} />

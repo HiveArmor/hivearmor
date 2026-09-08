@@ -23,6 +23,7 @@ public class CrosstabMetrics {
     static final String METRIC_TRUNCATED = "hivearmor.hunt.crosstab.truncated";
     static final String METRIC_RETURNED_CELLS = "hivearmor.hunt.crosstab.returned.cells";
     static final String METRIC_COMPARISON = "hivearmor.hunt.crosstab.comparison";
+    static final String METRIC_SIGNIFICANCE = "hivearmor.hunt.crosstab.significance";
 
     private final AtomicLong requests = new AtomicLong();
     private final AtomicLong failures = new AtomicLong();
@@ -30,6 +31,7 @@ public class CrosstabMetrics {
     private final AtomicLong truncated = new AtomicLong();
     private final AtomicLong returnedCells = new AtomicLong();
     private final AtomicLong comparison = new AtomicLong();
+    private final AtomicLong significance = new AtomicLong();
 
     @Nullable private final Counter micrometerRequests;
     @Nullable private final Counter micrometerFailures;
@@ -37,6 +39,7 @@ public class CrosstabMetrics {
     @Nullable private final Counter micrometerTruncated;
     @Nullable private final Counter micrometerReturnedCells;
     @Nullable private final Counter micrometerComparison;
+    @Nullable private final Counter micrometerSignificance;
 
     /** In-memory-only counter (tests / no MeterRegistry). */
     public CrosstabMetrics() {
@@ -57,6 +60,8 @@ public class CrosstabMetrics {
                 .description("Total non-zero cells returned by hunt crosstab").register(meterRegistry);
             this.micrometerComparison = Counter.builder(METRIC_COMPARISON)
                 .description("Hunt crosstab responses that ran a previous-period comparison").register(meterRegistry);
+            this.micrometerSignificance = Counter.builder(METRIC_SIGNIFICANCE)
+                .description("Hunt crosstab responses that computed significant-combination residuals").register(meterRegistry);
         } else {
             this.micrometerRequests = null;
             this.micrometerFailures = null;
@@ -64,6 +69,7 @@ public class CrosstabMetrics {
             this.micrometerTruncated = null;
             this.micrometerReturnedCells = null;
             this.micrometerComparison = null;
+            this.micrometerSignificance = null;
         }
     }
 
@@ -98,10 +104,16 @@ public class CrosstabMetrics {
         if (micrometerComparison != null) micrometerComparison.increment();
     }
 
+    public void recordSignificance() {
+        significance.incrementAndGet();
+        if (micrometerSignificance != null) micrometerSignificance.increment();
+    }
+
     public long getRequestCount() { return requests.get(); }
     public long getFailureCount() { return failures.get(); }
     public long getPartialCount() { return partial.get(); }
     public long getTruncatedCount() { return truncated.get(); }
     public long getReturnedCellCount() { return returnedCells.get(); }
     public long getComparisonCount() { return comparison.get(); }
+    public long getSignificanceCount() { return significance.get(); }
 }

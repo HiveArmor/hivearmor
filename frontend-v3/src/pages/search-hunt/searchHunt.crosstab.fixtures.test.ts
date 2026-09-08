@@ -110,4 +110,21 @@ describe('getFoundationHuntCrosstab', () => {
     const onHost = getFoundationHuntCrosstab(req({ rowField: 'host.name', deviation: true }));
     expect(onHost.rowDeviations).toBeUndefined();
   });
+
+  it('annotates flagged cells with a real residual when significance is requested (count), scoped honestly', () => {
+    const r = getFoundationHuntCrosstab(req({ significance: true }));
+    expect(r.significanceScopedToShownMatrix).toBe(true);
+    const flagged = r.cells.filter((c) => c.significance);
+    // At least one surprising combination exists in the fixture matrix.
+    expect(flagged.length).toBeGreaterThan(0);
+    for (const c of flagged) {
+      expect(['over', 'under']).toContain(c.significance?.direction);
+      expect(Math.abs(c.significance?.residual ?? 0)).toBeGreaterThanOrEqual(2);
+      expect(c.significance?.expected).toBeGreaterThanOrEqual(1);
+    }
+    // Absent when not requested.
+    const none = getFoundationHuntCrosstab(req({}));
+    expect(none.significanceScopedToShownMatrix).toBeUndefined();
+    expect(none.cells.every((c) => c.significance === undefined)).toBe(true);
+  });
 });
