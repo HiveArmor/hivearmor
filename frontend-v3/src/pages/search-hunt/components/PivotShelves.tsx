@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import { ArrowLeftRight, Plus, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeftRight, Plus, X } from 'lucide-react';
 
 import type { HuntFieldDefinition } from '../searchHunt.types';
 
@@ -16,6 +16,10 @@ export interface PivotShelvesProps {
   /** P1.1: per-axis missing-value mode. */
   rowMissing: 'omit' | 'include';
   colMissing: 'omit' | 'include';
+  /** P1.1 field intelligence: per-field coverage %/cardinality for the active search snapshot (null when no search yet). */
+  statByField?: Map<string, { coverage: number | null; cardinality: number }>;
+  /** The pivot's top-N bucket cap — a field with more distinct values than this truncates hard. */
+  axisTopN?: number;
   onSetRow: (field: string | null) => void;
   onSetCol: (field: string | null) => void;
   onSetValueFn: (fn: 'count' | 'distinct') => void;
@@ -57,6 +61,7 @@ export function PivotShelves(props: PivotShelvesProps): JSX.Element {
   const {
     fields, rowField, colField, valueFn, distinctField,
     rowBucketInterval, colBucketInterval, rowMissing, colMissing,
+    statByField, axisTopN = 50,
     onSetRow, onSetCol, onSetValueFn, onSetDistinctField,
     onSetRowBucketInterval, onSetColBucketInterval, onSetRowMissing, onSetColMissing, onSwap,
   } = props;
@@ -114,6 +119,35 @@ export function PivotShelves(props: PivotShelvesProps): JSX.Element {
       </label>
     ) : null;
 
+  /**
+   * Field intelligence hint for an occupied axis: coverage % + cardinality, plus a low-coverage or
+   * high-cardinality marker so the analyst can predict a sparse or heavily-truncated pivot before running
+   * it. Text + icon (never colour alone) for a11y. Nothing rendered until a search snapshot exists.
+   */
+  const LOW_COVERAGE = 50; // below this %, the pivot will look sparse/misleading for this axis
+  const fieldStatHint = (value: string) => {
+    const stat = statByField?.get(value);
+    if (!stat) return null;
+    const lowCoverage = stat.coverage != null && stat.coverage < LOW_COVERAGE;
+    const highCardinality = stat.cardinality > axisTopN;
+    return (
+      <span className="pivot-shelf__stat" aria-label={`${value} field intelligence`}>
+        {stat.cardinality > 0 && <span className="pivot-shelf__stat-cardinality">~{stat.cardinality.toLocaleString()} values</span>}
+        {stat.coverage != null && (
+          <span className={`pivot-shelf__stat-coverage${lowCoverage ? ' pivot-shelf__stat-coverage--low' : ''}`}>
+            {lowCoverage && <AlertTriangle size={10} aria-hidden="true" />}
+            {stat.coverage}% coverage{lowCoverage ? ' (sparse)' : ''}
+          </span>
+        )}
+        {highCardinality && (
+          <span className="pivot-shelf__stat-warn" title={`More than ${axisTopN} distinct values — the pivot shows only the top ${axisTopN}`}>
+            <AlertTriangle size={10} aria-hidden="true" /> top {axisTopN} only
+          </span>
+        )}
+      </span>
+    );
+  };
+
   const shelf = (
     target: ShelfTarget, label: string, value: string | null,
     onClear?: () => void,
@@ -130,6 +164,7 @@ export function PivotShelves(props: PivotShelvesProps): JSX.Element {
               <X size={11} aria-hidden="true" />
             </button>
           )}
+          {fieldStatHint(value)}
         </span>
       ) : (
         <span className="pivot-shelf__placeholder">Drop a field</span>

@@ -56,6 +56,27 @@ describe('PivotShelves', () => {
     expect(screen.queryByRole('checkbox', { name: /include a \(missing\) bucket/i })).not.toBeInTheDocument();
   });
 
+  it('shows coverage/cardinality on an occupied axis, with low-coverage and high-cardinality markers', () => {
+    const statByField = new Map([
+      ['host.name', { coverage: 22, cardinality: 4200 }],   // low coverage AND high cardinality
+      ['event.action', { coverage: 90, cardinality: 12 }],  // healthy
+    ]);
+    setup({ statByField, axisTopN: 50 });
+    // Rows axis = host.name → sparse + heavy truncation.
+    expect(screen.getByText(/~4,200 values/)).toBeInTheDocument();
+    expect(screen.getByText(/22% coverage \(sparse\)/)).toBeInTheDocument();
+    expect(screen.getByText(/top 50 only/)).toBeInTheDocument();
+    // Columns axis = event.action → healthy, no sparse/truncation markers on it.
+    expect(screen.getByText(/90% coverage/)).toBeInTheDocument();
+    expect(screen.getByText(/90% coverage/).textContent).not.toMatch(/sparse/);
+  });
+
+  it('shows no field-intelligence hint when stats are absent (no search snapshot yet)', () => {
+    setup();
+    expect(screen.queryByText(/coverage/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/values/)).not.toBeInTheDocument();
+  });
+
   it('assigning from the menu calls onSetRow', () => {
     const p = setup();
     fireEvent.click(screen.getByRole('button', { name: 'Add a field to Rows' }));

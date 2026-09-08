@@ -2018,6 +2018,10 @@
 .pivot-shelf__label { font: var(--ha-type-metadata); color: var(--ha-foreground-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
 .pivot-shelf__chip { display: inline-flex; align-items: center; gap: 4px; }
 .pivot-shelf__chip code { font: var(--ha-type-mono); color: var(--ha-foreground-primary); }
+.pivot-shelf__stat { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; font: var(--ha-type-metadata); color: var(--ha-foreground-tertiary); font-variant-numeric: tabular-nums; }
+.pivot-shelf__stat-coverage { display: inline-flex; align-items: center; gap: 2px; }
+.pivot-shelf__stat-coverage--low { color: var(--ha-severity-medium); }
+.pivot-shelf__stat-warn { display: inline-flex; align-items: center; gap: 2px; color: var(--ha-severity-medium); }
 .pivot-shelf__placeholder { font: var(--ha-type-compact); color: var(--ha-foreground-tertiary); font-style: italic; }
 .pivot-shelf__remove, .pivot-shelf__add {
   display: inline-flex; align-items: center; gap: 3px;

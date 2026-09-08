@@ -948,6 +948,7 @@ export function SearchHuntPage(): JSX.Element {
                     committed={committed}
                     fields={schemaQuery.data ?? []}
                     tenantId={selectedTenantId}
+                    searchId={completedSearchId}
                     initialConfig={pivotInitialConfig}
                     canSave={canSaveQuery}
                     onCellAction={(action, rowField, colField, rowValue, colValue) =>

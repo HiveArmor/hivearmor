@@ -9,7 +9,7 @@ import { PivotMatrix } from './PivotMatrix';
 import { PivotShelves } from './PivotShelves';
 import { buildSavedPivotFilters } from '../lib/savedPivot';
 import { buildCrosstabCsv, crosstabCsvFilename } from '../pivotCsv';
-import { createSavedHunt, fetchHuntCrosstab } from '../searchHunt.service';
+import { createSavedHunt, fetchHuntCrosstab, fetchHuntFieldStats } from '../searchHunt.service';
 import type {
   HuntCrosstabRequest,
   HuntFieldDefinition,
@@ -27,6 +27,8 @@ export interface HuntPivotViewProps {
   fields: HuntFieldDefinition[];
   /** Current tenant id — guards the remembered config across tenant switches. */
   tenantId: number | null;
+  /** Active completed search snapshot id — enables per-field coverage/cardinality on the shelves (P1.1). */
+  searchId?: string | null;
   /** Optional config to seed the shelves from — e.g. a loaded Saved Pivot. Overrides localStorage. */
   initialConfig?: HuntPivotConfig | null;
   /** Whether the current user may save (create) a Saved Pivot. */
@@ -71,12 +73,31 @@ function loadConfig(tenantId: number | null): HuntPivotConfig {
  * matched set, and renders shelves + toolbar + honest scope note + matrix + every state. The matrix
  * never sums cells to totals (totalSemantics.additive is false).
  */
-export function HuntPivotView({ committed, fields, tenantId, initialConfig, canSave = true, onCellAction }: HuntPivotViewProps): JSX.Element {
+export function HuntPivotView({ committed, fields, tenantId, searchId, initialConfig, canSave = true, onCellAction }: HuntPivotViewProps): JSX.Element {
   const [config, setConfig] = useState<HuntPivotConfig>(() => initialConfig ?? loadConfig(tenantId));
   const [heat, setHeat] = useState(true);
   // Pivot-local scratch filters: extra KQL clauses AND-ed into the crosstab request query only.
   // They narrow the crosstab without touching the committed hunt query. Ephemeral (not persisted).
   const [pivotFilters, setPivotFilters] = useState<string[]>([]);
+
+  // P1.1 field intelligence: per-field coverage %/cardinality for the active search snapshot, shown on
+  // the shelves so the analyst can predict a sparse or heavily-truncated pivot before running it. Same
+  // query key as FieldBrowser → TanStack dedupes to one network call and a shared cache.
+  const fieldStatsQuery = useQuery({
+    queryKey: ['hunt-field-stats', searchId],
+    queryFn: ({ signal }) => fetchHuntFieldStats(searchId ?? '', signal),
+    enabled: Boolean(searchId),
+    staleTime: 30_000,
+    gcTime: 2 * 60_000,
+    retry: false,
+  });
+  const statByField = useMemo(() => {
+    const map = new Map<string, { coverage: number | null; cardinality: number }>();
+    for (const stat of fieldStatsQuery.data?.fields ?? []) {
+      map.set(stat.name, { coverage: stat.coverage, cardinality: stat.cardinality });
+    }
+    return map;
+  }, [fieldStatsQuery.data]);
 
   // Save-pivot dialog state.
   const [saveOpen, setSaveOpen] = useState(false);
@@ -212,6 +233,7 @@ export function HuntPivotView({ committed, fields, tenantId, initialConfig, canS
         colBucketInterval={config.colBucketInterval ?? null}
         rowMissing={config.rowMissing ?? 'omit'}
         colMissing={config.colMissing ?? 'omit'}
+        statByField={statByField}
         onSetRow={(f) => setConfig((c) => ({ ...c, rowField: f, rowBucketInterval: null, rowMissing: 'omit' }))}
         onSetCol={(f) => setConfig((c) => ({ ...c, colField: f, colBucketInterval: null, colMissing: 'omit' }))}
         onSetValueFn={(fn) => setConfig((c) => ({ ...c, valueFn: fn }))}
