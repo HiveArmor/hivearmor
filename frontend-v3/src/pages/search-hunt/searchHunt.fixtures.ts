@@ -2,6 +2,8 @@ import type {
   HistoryEntry,
   HuntAggregateRequest,
   HuntAggregateResponse,
+  HuntCrosstabRequest,
+  HuntCrosstabResponse,
   HuntEvent,
   HuntEventDetail,
   HuntEventDetailResponse,
@@ -447,6 +449,163 @@ export function getFoundationHuntAggregates(request: HuntAggregateRequest): Hunt
       distinctUsers: new Set(events.map((e) => e.user).filter(Boolean)).size,
     },
     breakdowns,
+    partialFailures: [],
+  };
+}
+
+/**
+ * Fixture crosstab — derives the same shape as the PR-A backend from the full fixture event set,
+ * so the Pivot view renders real numbers in fixture mode. Honest per-scope totals:
+ *  - COUNT row/col totals cover the FULL member within pivot-eligible scope (NOT intersected with
+ *    the displayed opposite axis), so a row total can exceed the sum of its visible cells.
+ *  - DISTINCT totals are computed at their own scope via Set cardinality, never summed from cells.
+ *  - grand COUNT = pivot-eligible count; grand DISTINCT = distinct over the eligible set.
+ * Axis selection is marked approximate to mirror distributed-terms honesty (fixture is exact, but the
+ * contract stays honest). Truncation flags come from the true distinct member counts.
+ */
+export function getFoundationHuntCrosstab(
+  request: HuntCrosstabRequest,
+  signal?: AbortSignal,
+): HuntCrosstabResponse {
+  if (signal?.aborted) {
+    throw new DOMException('Aborted', 'AbortError');
+  }
+
+  const fieldOf = (field: string) => (e: HuntEvent): string | null => {
+    switch (field) {
+      case 'event.severity': case 'severity': return e.severity;
+      case 'dataSource': return e.dataSource;
+      case 'data_stream.dataset': case 'dataset': return e.dataset;
+      case 'event.action': case 'action': return e.action;
+      case 'host.name': case 'host': return e.host;
+      case 'user.name': case 'user': return e.user;
+      case 'event.category': case 'category': return e.category;
+      case 'source.ip': return e.sourceIp;
+      case 'destination.ip': return e.destinationIp;
+      case 'process.name': return (e.normalized?.['process.name'] as string) ?? null;
+      default: return (e.normalized?.[field] as string) ?? null;
+    }
+  };
+
+  const rowOf = fieldOf(request.rowField);
+  const colOf = fieldOf(request.colField);
+  const distinctOf = request.valueFn === 'distinct' && request.distinctField
+    ? fieldOf(request.distinctField)
+    : null;
+
+  const totalMatched = foundationHuntEvents.length;
+  // Pivot-eligible = both axis fields present.
+  const eligible = foundationHuntEvents.filter((e) => rowOf(e) != null && colOf(e) != null);
+  const pivotEligibleMatched = eligible.length;
+  const distinct = request.valueFn === 'distinct';
+
+  // Measure of an event set: count of docs, or distinct cardinality of the distinct field.
+  const measureOf = (events: HuntEvent[]): number => {
+    if (!distinct || !distinctOf) return events.length;
+    const set = new Set<string>();
+    for (const e of events) {
+      const v = distinctOf(e);
+      if (v != null) set.add(v);
+    }
+    return set.size;
+  };
+
+  // Group eligible events by row and by col member.
+  const byRow = new Map<string, HuntEvent[]>();
+  const byCol = new Map<string, HuntEvent[]>();
+  const byCell = new Map<string, HuntEvent[]>();
+  const push = (map: Map<string, HuntEvent[]>, key: string, e: HuntEvent): void => {
+    const list = map.get(key);
+    if (list) list.push(e);
+    else map.set(key, [e]);
+  };
+  for (const e of eligible) {
+    const r = rowOf(e) as string;
+    const c = colOf(e) as string;
+    push(byRow, r, e);
+    push(byCol, c, e);
+    push(byCell, `${r}\u0000${c}`, e);
+  }
+
+  const rowCardinalityEstimate = byRow.size;
+  const colCardinalityEstimate = byCol.size;
+
+  // Top-N members by the selected measure (mirrors Stage-A discovery).
+  const rankMembers = (groups: Map<string, HuntEvent[]>, size: number): string[] =>
+    [...groups.entries()]
+      .map(([key, evs]) => [key, measureOf(evs)] as const)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, Math.max(1, size))
+      .map(([key]) => key);
+
+  const rowKeys = rankMembers(byRow, request.rowSize);
+  const colKeys = rankMembers(byCol, request.colSize);
+
+  // Cells: only selected row x selected col intersections, non-zero.
+  const cells = [] as HuntCrosstabResponse['cells'];
+  for (const r of rowKeys) {
+    for (const c of colKeys) {
+      const evs = byCell.get(`${r}\u0000${c}`);
+      if (!evs || evs.length === 0) continue;
+      const value = measureOf(evs);
+      if (value > 0) cells.push({ row: r, col: c, value });
+    }
+  }
+
+  // Row/col totals at their OWN scope (full member within eligible; not intersected).
+  const rowTotals = rowKeys.map((r) => measureOf(byRow.get(r) ?? []));
+  const colTotals = colKeys.map((c) => measureOf(byCol.get(c) ?? []));
+  const grandTotal = distinct ? measureOf(eligible) : pivotEligibleMatched;
+
+  const rowTruncated = rowCardinalityEstimate > rowKeys.length;
+  const colTruncated = colCardinalityEstimate > colKeys.length;
+
+  const m = (over: string) => (distinct
+    ? `approximate distinct(${request.distinctField}) ${over}`
+    : `documents ${over}`);
+
+  return {
+    searchId: 'HUNT-XT-FIXTURE',
+    computedAt: new Date().toISOString(),
+    totalMatched,
+    pivotEligibleMatched,
+    totalRelation: 'eq',
+    measure: { function: request.valueFn, field: request.distinctField ?? null, approximate: distinct },
+    rowKeys,
+    colKeys,
+    cells,
+    rowTotals,
+    colTotals,
+    grandTotal,
+    totalSemantics: {
+      cell: m('matching row AND column member'),
+      row: m('matching the row member in pivot-eligible scope'),
+      column: m('matching the column member in pivot-eligible scope'),
+      grand: m('in the pivot-eligible scope'),
+      additive: false,
+    },
+    rowTruncated,
+    colTruncated,
+    rowCardinalityEstimate,
+    colCardinalityEstimate,
+    cardinalityApproximate: true,
+    axisSelection: {
+      strategy: 'distributed_terms',
+      approximate: true,
+      rowShardSize: Math.max(request.rowSize * 4, 200),
+      colShardSize: Math.max(request.colSize * 4, 200),
+      rowDocCountErrorUpperBound: distinct ? null : 0,
+      colDocCountErrorUpperBound: distinct ? null : 0,
+    },
+    execution: {
+      tookMs: 6,
+      timedOut: false,
+      returnedCells: cells.length,
+      returnedRows: rowKeys.length,
+      returnedColumns: colKeys.length,
+      truncated: rowTruncated || colTruncated,
+    },
+    status: 'COMPLETE',
     partialFailures: [],
   };
 }

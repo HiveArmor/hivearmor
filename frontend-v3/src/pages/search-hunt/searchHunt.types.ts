@@ -481,3 +481,104 @@ export interface HuntAggregateResponse {
   breakdowns: HuntAggregateBreakdown[];
   partialFailures: Array<{ source: string; code: string; message: string }>;
 }
+
+/* ------------------------------------------------------------------ *
+ * Investigation Pivot (Crosstab) — matches backend HuntCrosstab*DTO   *
+ * ------------------------------------------------------------------ */
+
+/** Pivot view result mode (widens the page's Table | Metrics toggle). */
+export type HuntResultView = 'table' | 'metrics' | 'pivot';
+
+/** Crosstab request. indexType is a LOGICAL type (all|log|event|alert), never a raw wildcard. */
+export interface HuntCrosstabRequest {
+  query: string;
+  language: 'kql';
+  timeRange: HuntTimeRange;
+  tenantScope: 'authorized' | string;
+  indexType: 'all' | 'log' | 'event' | 'alert' | string;
+  rowField: string;
+  colField: string;
+  valueFn: 'count' | 'distinct';
+  distinctField?: string;
+  rowSize: number;
+  colSize: number;
+}
+
+/** A single non-zero crosstab cell. */
+export interface HuntCrosstabCell {
+  row: string;
+  col: string;
+  value: number;
+}
+
+/** The measure and whether its values are approximate (false for count, true for distinct). */
+export interface HuntCrosstabMeasure {
+  function: 'count' | 'distinct' | string;
+  field?: string | null;
+  approximate: boolean;
+}
+
+/** Describes each total's aggregation scope, independent of the measure. additive is always false. */
+export interface HuntCrosstabTotalSemantics {
+  cell: string;
+  row: string;
+  column: string;
+  grand: string;
+  additive: boolean;
+}
+
+/** How the row/column MEMBERS were selected (distinct from measure-value approximation). */
+export interface HuntCrosstabAxisSelection {
+  strategy: string;
+  approximate: boolean;
+  rowShardSize: number;
+  colShardSize: number;
+  rowDocCountErrorUpperBound?: number | null;
+  colDocCountErrorUpperBound?: number | null;
+}
+
+/** Unobtrusive execution metadata for the status line + query inspector. */
+export interface HuntCrosstabExecution {
+  tookMs: number;
+  timedOut: boolean;
+  returnedCells: number;
+  returnedRows: number;
+  returnedColumns: number;
+  truncated: boolean;
+}
+
+/** Full crosstab response. */
+export interface HuntCrosstabResponse {
+  searchId: string;
+  computedAt: string;
+  totalMatched: number;
+  pivotEligibleMatched: number;
+  totalRelation: string;
+  measure: HuntCrosstabMeasure;
+  rowKeys: string[];
+  colKeys: string[];
+  cells: HuntCrosstabCell[];
+  rowTotals: number[];
+  colTotals: number[];
+  grandTotal: number;
+  totalSemantics: HuntCrosstabTotalSemantics;
+  rowTruncated: boolean;
+  colTruncated: boolean;
+  rowCardinalityEstimate: number;
+  colCardinalityEstimate: number;
+  cardinalityApproximate: boolean;
+  axisSelection: HuntCrosstabAxisSelection;
+  execution: HuntCrosstabExecution;
+  status: 'COMPLETE' | 'PARTIAL' | string;
+  partialFailures: Array<{ source: string; code: string; message: string }>;
+}
+
+/** Locally-remembered pivot builder config (localStorage ha_hunt_pivot_config). */
+export interface HuntPivotConfig {
+  v: number;
+  tenantId: number | null;
+  rowField: string | null;
+  colField: string | null;
+  valueFn: 'count' | 'distinct';
+  distinctField: string | null;
+}

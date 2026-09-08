@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { EChartsOption } from 'echarts';
 import {
   BarChart3, BarChartBig, BookOpen, Check, ChevronLeft, ChevronRight, CircleStop, Clock3, Columns3, Database, FileClock,
-  Keyboard, Library, ListFilter, MoreHorizontal, Play, Save, ShieldAlert, Sparkles, Table2,
+  Grid3x3, Keyboard, Library, ListFilter, MoreHorizontal, Play, Save, ShieldAlert, Sparkles, Table2,
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -15,6 +15,7 @@ import { FieldBrowser } from './components/FieldBrowser';
 import { HuntActionDrawer } from './components/HuntActionDrawer';
 import { HuntAiControls, type HuntAutonomy } from './components/HuntAiControls';
 import { HuntMetricsView } from './components/HuntMetricsView';
+import { HuntPivotView } from './components/HuntPivotView';
 import { HuntVerdictPanel } from './components/HuntVerdictPanel';
 import {
   huntIndexScopeLabel,
@@ -129,7 +130,7 @@ export function SearchHuntPage(): JSX.Element {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [flyoutEventId, setFlyoutEventId] = useState<string | null>(null);
   const [verdictPanelOpen, setVerdictPanelOpen] = useState(false);
-  const [resultView, setResultView] = useState<'table' | 'metrics'>('table');
+  const [resultView, setResultView] = useState<'table' | 'metrics' | 'pivot'>('table');
   // Histogram collapse — persisted, so an analyst who reclaims the 96px for row-scanning keeps it
   // collapsed across visits. The histogram stays in the table view (it is the time-scoping control);
   // this only hides its body on demand.
@@ -409,6 +410,33 @@ export function SearchHuntPage(): JSX.Element {
       runSearch({ query: nextQuery });
     }, 450);
   }, [runSearch]);
+
+  // Pivot cell actions (PR-B P1). The selected cell is the INTERSECTION A AND B where
+  // A = rowField:rowValue, B = colField:colValue.
+  //  - Drill: append (A AND B), switch to the Table view, debounced auto-run.
+  //  - Keep in Hunt: append (A AND B) to the committed query, stay in Pivot, auto-run.
+  //  - Exclude from Hunt: append NOT (A AND B) — the intersection ONLY, never A!=x AND B!=y.
+  //  - Copy: copy the safely-quoted (A AND B) to the clipboard.
+  const handlePivotCellAction = useCallback(
+    (action: 'drill' | 'keep' | 'exclude' | 'copy',
+     rowField: string, colField: string, rowValue: string, colValue: string): void => {
+      const q = (v: string): string => {
+        const escaped = v.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+        return /[\s:()]/.test(v) ? `"${escaped}"` : escaped;
+      };
+      const intersection = `(${rowField}:${q(rowValue)} AND ${colField}:${q(colValue)})`;
+      if (action === 'copy') {
+        navigator.clipboard?.writeText(intersection).catch(() => { /* ignore */ });
+        return;
+      }
+      const fragment = action === 'exclude' ? `NOT ${intersection}` : intersection;
+      if (action === 'drill') {
+        setResultView('table');
+      }
+      applyFieldFilter(fragment);
+    },
+    [applyFieldFilter],
+  );
 
   // R5 field-rail filter pills are TOGGLES: activating appends the fragment, deactivating strips that
   // exact fragment (and a bordering ' AND ') back out of the query. Debounced auto-run either way.
@@ -724,6 +752,7 @@ export function SearchHuntPage(): JSX.Element {
           <div className="hunt-view-toggle" role="group" aria-label="Result view">
             <button type="button" onClick={() => setResultView('table')} aria-pressed={resultView === 'table'} title="Table view"><Table2 size={13} aria-hidden="true" />Table</button>
             <button type="button" onClick={() => setResultView('metrics')} aria-pressed={resultView === 'metrics'} title="Metrics view — summarise these results"><BarChartBig size={13} aria-hidden="true" />Metrics</button>
+            <button type="button" onClick={() => setResultView('pivot')} aria-pressed={resultView === 'pivot'} title="Pivot view — crosstab these results by two fields"><Grid3x3 size={13} aria-hidden="true" />Pivot</button>
           </div>
           <span className="hunt-control-divider" aria-hidden="true" />
           <div className="hunt-saved-recent-anchor">
@@ -863,6 +892,14 @@ export function SearchHuntPage(): JSX.Element {
                     totalIsExact={summary?.totalIsExact}
                     aggregates={aggregatesQuery.data ?? null}
                     onDrill={(field, value) => applyFieldFilter(`${field}:"${value.replace(/"/g, '\\"')}"`)}
+                  />
+                ) : resultView === 'pivot' ? (
+                  <HuntPivotView
+                    committed={committed}
+                    fields={schemaQuery.data ?? []}
+                    tenantId={selectedTenantId}
+                    onCellAction={(action, rowField, colField, rowValue, colValue) =>
+                      handlePivotCellAction(action, rowField, colField, rowValue, colValue)}
                   />
                 ) : (
                 <SearchResultsGrid
