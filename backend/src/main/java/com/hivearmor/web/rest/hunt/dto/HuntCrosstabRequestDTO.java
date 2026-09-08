@@ -60,6 +60,26 @@ public class HuntCrosstabRequestDTO {
     @Max(50)
     private int colSize = 20;
 
+    /** Optional date-histogram bucketing for the Rows axis (P1.1). Null = TERM axis. */
+    private BucketDTO rowBucket;
+
+    /** Optional date-histogram bucketing for the Columns axis (P1.1). Null = TERM axis. */
+    private BucketDTO colBucket;
+
+    /** Fixed-interval date-histogram bucket spec for an axis. */
+    public static class BucketDTO {
+        /** Fixed interval, e.g. "1m", "5m", "1h", "1d". Validated against the allow-list. */
+        private String interval;
+        /** Optional IANA timezone; null = UTC. */
+        private String timezone;
+
+        public String getInterval() { return interval; }
+        public void setInterval(String interval) { this.interval = interval; }
+
+        public String getTimezone() { return timezone; }
+        public void setTimezone(String timezone) { this.timezone = timezone; }
+    }
+
     public String getQuery() { return query; }
     public void setQuery(String query) { this.query = query; }
 
@@ -92,4 +112,10 @@ public class HuntCrosstabRequestDTO {
 
     public int getColSize() { return colSize; }
     public void setColSize(int colSize) { this.colSize = colSize; }
+
+    public BucketDTO getRowBucket() { return rowBucket; }
+    public void setRowBucket(BucketDTO rowBucket) { this.rowBucket = rowBucket; }
+
+    public BucketDTO getColBucket() { return colBucket; }
+    public void setColBucket(BucketDTO colBucket) { this.colBucket = colBucket; }
 }

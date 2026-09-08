@@ -1,6 +1,7 @@
 package com.hivearmor.service.hunt.crosstab;
 
 import com.hivearmor.service.hunt.HuntQueryException;
+import com.hivearmor.service.hunt.crosstab.CrosstabDefinition.BucketSpec;
 import com.hivearmor.service.hunt.crosstab.CrosstabDefinition.DimKind;
 import com.hivearmor.service.hunt.crosstab.CrosstabDefinition.Dimension;
 import com.hivearmor.service.hunt.crosstab.CrosstabDefinition.Dimensions;
@@ -33,8 +34,8 @@ public class CrosstabRequestMapper {
         MeasureFn fn = parseMeasureFn(request.getValueFn());
         String distinctField = fn == MeasureFn.DISTINCT ? request.getDistinctField() : null;
 
-        Dimension row = new Dimension(request.getRowField(), DimKind.TERM, MissingMode.OMIT);
-        Dimension col = new Dimension(request.getColField(), DimKind.TERM, MissingMode.OMIT);
+        Dimension row = toDimension(request.getRowField(), request.getRowBucket());
+        Dimension col = toDimension(request.getColField(), request.getColBucket());
         Dimensions dimensions = new Dimensions(List.of(row), List.of(col));
         Measure measure = new Measure(fn, distinctField);
 
@@ -51,6 +52,14 @@ public class CrosstabRequestMapper {
             List.of(measure),
             rowSize,
             colSize);
+    }
+
+    private static Dimension toDimension(String field, HuntCrosstabRequestDTO.BucketDTO bucket) {
+        if (bucket != null && bucket.getInterval() != null && !bucket.getInterval().isBlank()) {
+            return new Dimension(field, DimKind.DATE_HISTOGRAM, MissingMode.OMIT,
+                new BucketSpec(bucket.getInterval().trim(), bucket.getTimezone()));
+        }
+        return new Dimension(field, DimKind.TERM, MissingMode.OMIT);
     }
 
     private static MeasureFn parseMeasureFn(String valueFn) {

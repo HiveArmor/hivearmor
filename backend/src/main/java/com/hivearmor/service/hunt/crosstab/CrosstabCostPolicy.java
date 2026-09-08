@@ -54,6 +54,16 @@ public class CrosstabCostPolicy {
      */
     private int precisionThreshold = 3000;
 
+    /**
+     * Allowed fixed date-histogram intervals for a bucketed axis (P1.1). A request outside this list
+     * is rejected by the validator. Kept small and coarse to bound the bucket count.
+     */
+    private java.util.List<String> allowedBucketIntervals =
+        new java.util.ArrayList<>(java.util.List.of("1m", "5m", "15m", "30m", "1h", "3h", "12h", "1d", "7d"));
+
+    /** Hard ceiling on date-histogram buckets per axis — bucket-explosion guard (e.g. 1m over 90d). */
+    private int maxBuckets = 500;
+
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
@@ -80,6 +90,19 @@ public class CrosstabCostPolicy {
 
     public int getPrecisionThreshold() { return precisionThreshold; }
     public void setPrecisionThreshold(int precisionThreshold) { this.precisionThreshold = precisionThreshold; }
+
+    public java.util.List<String> getAllowedBucketIntervals() { return allowedBucketIntervals; }
+    public void setAllowedBucketIntervals(java.util.List<String> allowedBucketIntervals) { this.allowedBucketIntervals = allowedBucketIntervals; }
+
+    public int getMaxBuckets() { return maxBuckets; }
+    public void setMaxBuckets(int maxBuckets) { this.maxBuckets = maxBuckets; }
+
+    /** True if the requested date-histogram interval is on the allow-list (case-insensitive). */
+    public boolean isAllowedInterval(String interval) {
+        if (interval == null) return false;
+        String norm = interval.trim().toLowerCase(java.util.Locale.ROOT);
+        return allowedBucketIntervals.stream().anyMatch(a -> a.equalsIgnoreCase(norm));
+    }
 
     /** Clamp a requested row-member size into [1, maxRowMembers]. */
     public int clampRowSize(int requested) {
