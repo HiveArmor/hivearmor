@@ -1,9 +1,23 @@
 import { useEffect, useRef } from 'react';
 
-import { Copy, MinusCircle, PlusCircle, Search } from 'lucide-react';
+import { Copy, FileText, MinusCircle, PlusCircle, Search, Shield, User as UserIcon, Activity } from 'lucide-react';
 
-/** The four P1 cell actions. Keep/Exclude modify the hunt query; Drill switches to Table; Copy is clipboard. */
-export type PivotCellAction = 'drill' | 'keep' | 'exclude' | 'copy';
+import { resolveEntityType, timelineAvailable } from '../lib/entityType';
+
+/**
+ * Cell actions. P1: Drill/Keep/Exclude modify the hunt (Copy is clipboard). P1.1 adds the
+ * investigation group — View entity / Open timeline (row-entity), Add evidence / Create incident
+ * (drill-then-promote). Investigation items are offered only when the field/selection supports them.
+ */
+export type PivotCellAction =
+  | 'drill'
+  | 'keep'
+  | 'exclude'
+  | 'copy'
+  | 'view_entity'
+  | 'open_timeline'
+  | 'add_evidence'
+  | 'create_incident';
 
 export interface PivotCellMenuProps {
   /** Selected cell coordinates for the header line. */
@@ -21,15 +35,23 @@ export interface PivotCellMenuProps {
 }
 
 /**
- * Cell-action popover for the crosstab matrix (PR-B P1).
+ * Cell-action popover for the crosstab matrix.
  *
- * <p>Four actions: Drill to Events (temporary drill filter + switch to Table + Return-to-Pivot),
+ * <p>P1 actions: Drill to Events (temporary drill filter + switch to Table + Return-to-Pivot),
  * Keep in Hunt / Exclude from Hunt (modify the committed hunt query — Exclude is NOT(A AND B), the
- * intersection only), and Copy Filter (clipboard). Keyboard: Esc closes; focus is trapped to the menu.
+ * intersection only), and Copy Filter (clipboard). P1.1 adds an investigation group, gated on the
+ * row field's entity type: View entity (entity-typed row), Open timeline (user row), and
+ * Add evidence / Create incident (drill the cell's events, then open the existing promotion UI).
+ * Keyboard: Esc closes; focus is trapped to the menu.
  */
 export function PivotCellMenu(props: PivotCellMenuProps): JSX.Element {
   const { rowField, colField, rowValue, colValue, value, valueLabel, x, y, onAction, onClose } = props;
   const ref = useRef<HTMLDivElement>(null);
+
+  // Investigation-group availability, derived from the ROW field (the primary entity axis).
+  const rowEntityType = resolveEntityType(rowField);
+  const canViewEntity = rowEntityType !== null;
+  const canOpenTimeline = timelineAvailable(rowField);
 
   useEffect(() => {
     const first = ref.current?.querySelector<HTMLButtonElement>('button');
@@ -78,6 +100,25 @@ export function PivotCellMenu(props: PivotCellMenuProps): JSX.Element {
       </button>
       <button type="button" role="menuitem" onClick={() => onAction('copy')}>
         <Copy size={13} aria-hidden="true" /> Copy filter
+      </button>
+
+      <div className="pivot-cell-menu__divider" role="separator" />
+
+      {canViewEntity && (
+        <button type="button" role="menuitem" onClick={() => onAction('view_entity')}>
+          <UserIcon size={13} aria-hidden="true" /> View entity
+        </button>
+      )}
+      {canOpenTimeline && (
+        <button type="button" role="menuitem" onClick={() => onAction('open_timeline')}>
+          <Activity size={13} aria-hidden="true" /> Open timeline
+        </button>
+      )}
+      <button type="button" role="menuitem" onClick={() => onAction('add_evidence')}>
+        <FileText size={13} aria-hidden="true" /> Add evidence…
+      </button>
+      <button type="button" role="menuitem" onClick={() => onAction('create_incident')}>
+        <Shield size={13} aria-hidden="true" /> Create incident…
       </button>
     </div>
   );
