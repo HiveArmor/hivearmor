@@ -83,6 +83,9 @@ app:
     frontend-url: http://localhost:4200
     redis:
         enabled: false  # No Redis in local dev stack; disables AlertRedisPublisher and listener
+    hunt:
+        crosstab:
+            enabled: true  # Investigation Pivot on in dev/local; base application.yml keeps it off for prod.
 
 application:
     chart-builder: # Chart builder configuration
