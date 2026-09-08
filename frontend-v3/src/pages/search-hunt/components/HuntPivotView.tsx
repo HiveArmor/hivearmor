@@ -79,6 +79,8 @@ function loadConfig(tenantId: number | null): HuntPivotConfig {
 export function HuntPivotView({ committed, fields, tenantId, searchId, initialConfig, canSave = true, onCellAction }: HuntPivotViewProps): JSX.Element {
   const [config, setConfig] = useState<HuntPivotConfig>(() => initialConfig ?? loadConfig(tenantId));
   const [heat, setHeat] = useState(true);
+  // P2: compare each cell against the previous period (same width, immediately prior window).
+  const [compare, setCompare] = useState(false);
   // Pivot-local scratch filters: extra KQL clauses AND-ed into the crosstab request query only.
   // They narrow the crosstab without touching the committed hunt query. Ephemeral (not persisted).
   const [pivotFilters, setPivotFilters] = useState<string[]>([]);
@@ -183,11 +185,12 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
       colBucket: colIsDate && config.colBucketInterval ? { interval: config.colBucketInterval } : undefined,
       rowMissing: config.rowMissing ?? 'omit',
       colMissing: config.colMissing ?? 'omit',
+      comparison: compare ? { mode: 'previous_period' } : undefined,
     };
-  }, [ready, committed, config, pivotFilters, rowIsDate, colIsDate]);
+  }, [ready, committed, config, pivotFilters, rowIsDate, colIsDate, compare]);
 
   const crosstabQuery = useQuery({
-    queryKey: ['hunt-pivot', committed, config.rowField, config.colField, config.valueFn, config.distinctField, config.rowBucketInterval, config.colBucketInterval, config.rowMissing, config.colMissing, pivotFilters],
+    queryKey: ['hunt-pivot', committed, config.rowField, config.colField, config.valueFn, config.distinctField, config.rowBucketInterval, config.colBucketInterval, config.rowMissing, config.colMissing, pivotFilters, compare],
     queryFn: ({ signal }) => fetchHuntCrosstab(request as HuntCrosstabRequest, signal),
     enabled: ready && committed.query.length > 0,
     staleTime: 30_000,
@@ -304,6 +307,9 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
       <div className="pivot-toolbar">
         <label className="pivot-toolbar__heat">
           <input type="checkbox" checked={heat} onChange={(e) => setHeat(e.target.checked)} /> Heat
+        </label>
+        <label className="pivot-toolbar__heat">
+          <input type="checkbox" checked={compare} onChange={(e) => setCompare(e.target.checked)} /> Compare to previous period
         </label>
         <PivotTemplatesMenu fields={fields} onApply={applyTemplate} />
         {canSave && (

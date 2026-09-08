@@ -86,6 +86,24 @@ public class HuntCrosstabResponseDTO {
     private boolean rowMultiValued;
     private boolean colMultiValued;
 
+    /** P2: describes the previous-period comparison when requested (null otherwise). */
+    private ComparisonDTO comparison;
+
+    /** P2 comparison descriptor: the mode applied and the shifted window the comparison values came from. */
+    public static class ComparisonDTO {
+        private String mode;         // previous_period | previous_window
+        private String from;         // shifted window start (ISO)
+        private String to;           // shifted window end (ISO)
+        public ComparisonDTO() {}
+        public ComparisonDTO(String mode, String from, String to) { this.mode = mode; this.from = from; this.to = to; }
+        public String getMode() { return mode; }
+        public void setMode(String mode) { this.mode = mode; }
+        public String getFrom() { return from; }
+        public void setFrom(String from) { this.from = from; }
+        public String getTo() { return to; }
+        public void setTo(String to) { this.to = to; }
+    }
+
     private AxisSelectionDTO axisSelection;
 
     private ExecutionDTO execution;
@@ -146,6 +164,9 @@ public class HuntCrosstabResponseDTO {
     public boolean isColMultiValued() { return colMultiValued; }
     public void setColMultiValued(boolean colMultiValued) { this.colMultiValued = colMultiValued; }
 
+    public ComparisonDTO getComparison() { return comparison; }
+    public void setComparison(ComparisonDTO comparison) { this.comparison = comparison; }
+
     public List<CellDTO> getCells() { return cells; }
     public void setCells(List<CellDTO> cells) { this.cells = cells; }
 
@@ -193,6 +214,10 @@ public class HuntCrosstabResponseDTO {
         private String row;
         private String col;
         private long value;
+        /** P2 comparison: the value in the previous period, and the deltas. Null when no comparison requested. */
+        private Long comparisonValue;
+        private Long delta;
+        private Double deltaPercent;
 
         public CellDTO() {}
 
@@ -208,6 +233,12 @@ public class HuntCrosstabResponseDTO {
         public void setCol(String col) { this.col = col; }
         public long getValue() { return value; }
         public void setValue(long value) { this.value = value; }
+        public Long getComparisonValue() { return comparisonValue; }
+        public void setComparisonValue(Long comparisonValue) { this.comparisonValue = comparisonValue; }
+        public Long getDelta() { return delta; }
+        public void setDelta(Long delta) { this.delta = delta; }
+        public Double getDeltaPercent() { return deltaPercent; }
+        public void setDeltaPercent(Double deltaPercent) { this.deltaPercent = deltaPercent; }
     }
 
     /** The measure and whether its values are approximate. */

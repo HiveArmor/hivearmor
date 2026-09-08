@@ -5,6 +5,8 @@ import com.hivearmor.web.rest.hunt.dto.HuntCrosstabRequestDTO;
 import com.hivearmor.web.rest.hunt.dto.HuntCrosstabResponseDTO;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 /**
  * Orchestrates a Hunt Crosstab (Pivot) request: feature-flag gate &rarr; map flat DTO to the neutral
  * definition &rarr; V1 validate &rarr; plan/execute &rarr; telemetry.
@@ -49,6 +51,7 @@ public class HaHuntCrosstabService {
             CrosstabDefinition definition = mapper.toDefinition(request);
             validator.validate(definition);
             HuntCrosstabResponseDTO response = planner.plan(definition);
+            applyComparison(request, definition, response);
             if ("PARTIAL".equals(response.getStatus())) {
                 metrics.recordPartial();
             }
@@ -65,5 +68,38 @@ public class HaHuntCrosstabService {
             metrics.recordFailure();
             throw e;
         }
+    }
+
+    /**
+     * P2: when the request asks for a previous-period comparison, run a matrix-only pass over the shifted
+     * window using the CURRENT run's members (identical keying + scope), then widen each cell with
+     * {@code comparisonValue / delta / deltaPercent}. A non-comparison request is left untouched.
+     *
+     * <p>Skipped (no error, response unchanged) when the current window is not absolute/parseable, or the
+     * current matrix is empty — the comparison is never fabricated. deltaPercent is null when the prior
+     * value is 0 (no divide-by-zero, no fabricated infinity).
+     */
+    private void applyComparison(HuntCrosstabRequestDTO request, CrosstabDefinition definition,
+                                 HuntCrosstabResponseDTO response) throws Exception {
+        HuntCrosstabRequestDTO.ComparisonDTO cmp = request.getComparison();
+        if (cmp == null) return;
+        if (response.getCells() == null || response.getCells().isEmpty()) return;
+        if (response.getRowKeys() == null || response.getColKeys() == null) return;
+
+        var shifted = ComparisonWindow.shift(definition.timeRange(), cmp.getMode(), cmp.getOffset());
+        if (shifted == null) return; // relative/unparseable window — skip rather than guess
+
+        CrosstabDefinition prevDef = definition.withTimeRange(shifted);
+        Map<String, Long> prior = planner.comparisonCells(prevDef, response.getRowKeys(), response.getColKeys());
+
+        for (HuntCrosstabResponseDTO.CellDTO cell : response.getCells()) {
+            long prev = prior.getOrDefault(cell.getRow() + "\u0000" + cell.getCol(), 0L);
+            cell.setComparisonValue(prev);
+            cell.setDelta(cell.getValue() - prev);
+            cell.setDeltaPercent(prev == 0 ? null : ((cell.getValue() - prev) * 100.0) / prev);
+        }
+        response.setComparison(new HuntCrosstabResponseDTO.ComparisonDTO(
+            cmp.getMode() == null ? "previous_period" : cmp.getMode(), shifted.getFrom(), shifted.getTo()));
+        metrics.recordComparison();
     }
 }

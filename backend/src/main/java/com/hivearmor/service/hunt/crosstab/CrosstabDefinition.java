@@ -129,6 +129,11 @@ public final class CrosstabDefinition {
     public String query() { return query; }
     public String language() { return language; }
     public HuntSearchRequestDTO.TimeRangeDTO timeRange() { return timeRange; }
+
+    /** P2: a copy of this definition with a shifted time range (all else identical) for the comparison pass. */
+    public CrosstabDefinition withTimeRange(HuntSearchRequestDTO.TimeRangeDTO shifted) {
+        return new CrosstabDefinition(query, language, shifted, indexType, tenantScope, dimensions, measures, rowSize, colSize);
+    }
     public String indexType() { return indexType; }
     public String tenantScope() { return tenantScope; }
     public Dimensions dimensions() { return dimensions; }

@@ -83,4 +83,21 @@ describe('getFoundationHuntCrosstab', () => {
     expect(r.rowMultiValued).toBe(true);
     expect(r.colMultiValued).toBe(false);
   });
+
+  it('populates previous-period comparison values on cells when comparison is requested', () => {
+    const r = getFoundationHuntCrosstab(req({ comparison: { mode: 'previous_period' } }));
+    expect(r.comparison?.mode).toBe('previous_period');
+    const withCells = r.cells.filter((c) => c.value > 0);
+    expect(withCells.length).toBeGreaterThan(0);
+    for (const c of withCells) {
+      expect(typeof c.comparisonValue).toBe('number');
+      expect(c.delta).toBe(c.value - (c.comparisonValue as number));
+    }
+  });
+
+  it('omits comparison entirely when not requested (response unchanged)', () => {
+    const r = getFoundationHuntCrosstab(req({}));
+    expect(r.comparison).toBeUndefined();
+    expect(r.cells.every((c) => c.comparisonValue === undefined)).toBe(true);
+  });
 });

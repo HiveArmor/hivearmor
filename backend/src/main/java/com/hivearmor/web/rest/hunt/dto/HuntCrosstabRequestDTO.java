@@ -72,6 +72,24 @@ public class HuntCrosstabRequestDTO {
     /** How events missing the Columns field are handled: "omit" (default) | "include". */
     private String colMissing = "omit";
 
+    /** P2: optional previous-period comparison. Null = no comparison (response is unchanged). */
+    private ComparisonDTO comparison;
+
+    /** P2 comparison request: which prior window to compare against. */
+    public static class ComparisonDTO {
+        /**
+         * "previous_period" (default) shifts the window back by its own width; "previous_window" shifts
+         * by an explicit {@code offset} (e.g. "7d" for week-over-week).
+         */
+        private String mode = "previous_period";
+        /** Explicit shift for "previous_window", e.g. "7d". Ignored for "previous_period". */
+        private String offset;
+        public String getMode() { return mode; }
+        public void setMode(String mode) { this.mode = mode; }
+        public String getOffset() { return offset; }
+        public void setOffset(String offset) { this.offset = offset; }
+    }
+
     /** Fixed-interval date-histogram bucket spec for an axis. */
     public static class BucketDTO {
         /** Fixed interval, e.g. "1m", "5m", "1h", "1d". Validated against the allow-list. */
@@ -130,4 +148,7 @@ public class HuntCrosstabRequestDTO {
 
     public String getColMissing() { return colMissing; }
     public void setColMissing(String colMissing) { this.colMissing = colMissing; }
+
+    public ComparisonDTO getComparison() { return comparison; }
+    public void setComparison(ComparisonDTO comparison) { this.comparison = comparison; }
 }

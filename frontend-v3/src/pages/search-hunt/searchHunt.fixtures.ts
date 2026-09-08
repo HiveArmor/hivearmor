@@ -607,6 +607,18 @@ export function getFoundationHuntCrosstab(
     }
   }
 
+  // P2 fixture comparison: synthesize a deterministic prior value (~70-115% of current) so the delta
+  // renders in fixture mode. Real backend runs an actual shifted-window query.
+  if (request.comparison) {
+    for (const cell of cells) {
+      const seed = (cell.row.length * 7 + cell.col.length * 13) % 45; // 0..44 → 70%..114%
+      const prev = Math.round((cell.value * (70 + seed)) / 100);
+      cell.comparisonValue = prev;
+      cell.delta = cell.value - prev;
+      cell.deltaPercent = prev === 0 ? null : Math.round(((cell.value - prev) * 100) / prev);
+    }
+  }
+
   // Row/col totals at their OWN scope (full member within eligible; not intersected).
   const rowTotals = rowKeys.map((r) => measureOf(byRow.get(r) ?? []));
   const colTotals = colKeys.map((c) => measureOf(byCol.get(c) ?? []));
@@ -653,6 +665,9 @@ export function getFoundationHuntCrosstab(
     missingKey: rowInclude || colInclude ? MISSING_SENTINEL : null,
     rowMultiValued: request.rowField === 'event.category',
     colMultiValued: request.colField === 'event.category',
+    comparison: request.comparison
+      ? { mode: request.comparison.mode ?? 'previous_period', from: '(fixture)', to: '(fixture)' }
+      : undefined,
     axisSelection: {
       strategy: 'distributed_terms',
       approximate: true,

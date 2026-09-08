@@ -261,6 +261,36 @@ public class HaHuntCrosstabPlanner {
 
     // ------------------------------------------------------------------ Stage B
 
+    /**
+     * P2: run a matrix-only pass for a (previous-period) definition over an EXPLICIT set of members.
+     *
+     * <p>Reuses the current run's row/column keys so the two periods are keyed identically (no member
+     * drift), and routes through the SAME {@code resolveIndices} + time-range helpers so the scope is
+     * identical apart from the shifted window. Returns cells keyed {@code row\u0000col -> value}; the
+     * caller merges these as {@code comparisonValue} onto the current cells. Discovery is skipped
+     * entirely — this is a single matrix search, not a second full plan.
+     */
+    public Map<String, Long> comparisonCells(CrosstabDefinition def, List<String> rowKeys, List<String> colKeys) throws Exception {
+        if (rowKeys.isEmpty() || colKeys.isEmpty()) return Map.of();
+        FieldSpec rowSpec = fieldRegistry.require(def.row().field());
+        FieldSpec colSpec = fieldRegistry.require(def.column().field());
+        AxisPlan rowPlan = axisPlan(def.row(), rowSpec);
+        AxisPlan colPlan = axisPlan(def.column(), colSpec);
+        Measure measure = def.measure();
+        boolean distinct = measure.fn() == MeasureFn.DISTINCT;
+        String distinctPath = distinct ? aggFieldPathFor(fieldRegistry.require(measure.field())) : null;
+        Query baseQuery = withTimeRange(queryParser.parse(def.query()), def.timeRange());
+        Query eligibleFilter = eligibleFilter(baseQuery, def.row(), def.column());
+        List<String> indices = resolveIndices(def.indexType());
+        MatrixResult mx = computeMatrix(eligibleFilter, indices, rowSpec, colSpec, rowPlan, colPlan,
+            rowKeys, colKeys, distinct, distinctPath);
+        Map<String, Long> byKey = new LinkedHashMap<>();
+        for (CellDTO c : mx.cells()) {
+            byKey.put(c.getRow() + "\u0000" + c.getCol(), c.getValue());
+        }
+        return byKey;
+    }
+
     private record MatrixResult(List<CellDTO> cells, List<Long> rowTotals, List<Long> colTotals,
                                 boolean timedOut, List<PartialFailureDTO> failures) {}
 
