@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hivearmor.service.hunt.ai.HaHuntAiExplainService;
+import com.hivearmor.service.hunt.ai.HaHuntPivotSuggestService;
 import com.hivearmor.service.hunt.ai.HaAiCalibrationService;
 import com.hivearmor.service.hunt.ai.HaHuntProvenanceService;
 import com.hivearmor.service.hunt.ai.HaHuntVerdictService;
@@ -28,6 +29,8 @@ import com.hivearmor.web.rest.hunt.ai.dto.ExplainClauseRequestDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.ExplainClauseResponseDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.HuntEventSample;
 import com.hivearmor.web.rest.hunt.ai.dto.HuntFieldProvenanceDTO;
+import com.hivearmor.web.rest.hunt.ai.dto.PivotSuggestRequestDTO;
+import com.hivearmor.web.rest.hunt.ai.dto.PivotSuggestResponseDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.VerdictRequestDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.VerdictResponseDTO;
 
@@ -55,17 +58,20 @@ public class HaHuntAiResource {
     private final HaHuntVerdictService verdictService;
     private final HaHuntService huntService;
     private final HaHuntProvenanceService provenanceService;
+    private final HaHuntPivotSuggestService pivotSuggestService;
 
     public HaHuntAiResource(HaHuntAiExplainService explainService,
                             HaAiCalibrationService calibrationService,
                             HaHuntVerdictService verdictService,
                             HaHuntService huntService,
-                            HaHuntProvenanceService provenanceService) {
+                            HaHuntProvenanceService provenanceService,
+                            HaHuntPivotSuggestService pivotSuggestService) {
         this.explainService = explainService;
         this.calibrationService = calibrationService;
         this.verdictService = verdictService;
         this.huntService = huntService;
         this.provenanceService = provenanceService;
+        this.pivotSuggestService = pivotSuggestService;
     }
 
     /** Max events sampled from a completed search for verdict analysis. */
@@ -80,6 +86,19 @@ public class HaHuntAiResource {
     public ResponseEntity<ExplainClauseResponseDTO> explain(@Valid @RequestBody ExplainClauseRequestDTO body) {
         log.debug("HaHuntAiResource: explain clause ({} chars)", body.clause().length());
         return ResponseEntity.ok(explainService.explain(body.clause(), body.languageOrDefault()));
+    }
+
+    /**
+     * Ask Hive Intelligence (P3): turn a natural-language question into a candidate pivot definition the
+     * analyst can inspect and edit (contract §22). Always HTTP 200 — an unconfigured/failing LLM yields
+     * {@code state = "unavailable"}; the returned definition is validated (ineligible fields dropped),
+     * never auto-run.
+     */
+    @PostMapping("/pivot-suggest")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    public ResponseEntity<PivotSuggestResponseDTO> pivotSuggest(@Valid @RequestBody PivotSuggestRequestDTO body) {
+        log.debug("HaHuntAiResource: pivot-suggest ({} chars)", body.question().length());
+        return ResponseEntity.ok(pivotSuggestService.suggest(body.question()));
     }
 
     /**

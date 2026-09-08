@@ -157,6 +157,29 @@ export interface HuntAiFeedback {
   note?: string;
 }
 
+/* -------------------------------------------------- P3: Ask Hive Intelligence (pivot-suggest) */
+
+/** A natural-language question the analyst wants answered as a pivot. */
+export interface PivotSuggestRequest {
+  question: string;
+}
+
+/**
+ * A validated candidate pivot the analyst can APPLY and EDIT — never auto-run.
+ * state 'unavailable' = no AI provider configured (UI shows its unavailable card).
+ * Any field the model named that isn't schema-eligible is dropped (null) + noted in warnings.
+ */
+export interface PivotSuggestResponse {
+  state: 'ready' | 'unavailable';
+  rowField: string | null;
+  colField: string | null;
+  valueFn: 'count' | 'distinct';
+  distinctField: string | null;
+  explanation: string | null;
+  warnings: string[];
+  provenance: { provider: string; generatedAt: string; agentVersion: string; caveat: string } | null;
+}
+
 /* ----------------------------------------------------------------- Mock/live switch */
 
 /** Mirrors the existing VITE_USE_FOUNDATION_FIXTURES pattern; UI imports only huntAiService. */

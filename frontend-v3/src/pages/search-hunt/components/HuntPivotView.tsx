@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Download, Info, Save } from 'lucide-react';
 
+import { AskHivePivot } from './AskHivePivot';
 import { PivotBreadcrumb, type PivotStep } from './PivotBreadcrumb';
 import type { PivotCellAction } from './PivotCellMenu';
 import { PivotFiltersShelf } from './PivotFiltersShelf';
@@ -312,6 +313,7 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
     <div className="pivot-view">
       <PivotBreadcrumb steps={steps} onNavigate={navigateToStep} />
       <SuggestedPivots suggestions={suggestions} onApply={applySuggestion} />
+      <AskHivePivot tenantId={tenantId} onApply={(c) => { setConfig(c); setTemplateWarnings([]); }} />
       <PivotShelves
         fields={fields}
         rowField={config.rowField}
