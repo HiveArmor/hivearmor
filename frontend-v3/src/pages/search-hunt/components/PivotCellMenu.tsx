@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-import { Copy, FileText, Filter, MinusCircle, PlusCircle, Search, Shield, User as UserIcon, Activity } from 'lucide-react';
+import { Copy, FileText, Filter, Layers, MinusCircle, PlusCircle, Search, Shield, User as UserIcon, Activity } from 'lucide-react';
 
 import { resolveEntityType, timelineAvailable } from '../lib/entityType';
 
@@ -16,6 +16,7 @@ export type PivotCellAction =
   | 'exclude'
   | 'copy'
   | 'filter_pivot'
+  | 'pivot_further'
   | 'view_entity'
   | 'open_timeline'
   | 'add_evidence'
@@ -102,6 +103,9 @@ export function PivotCellMenu(props: PivotCellMenuProps): JSX.Element {
       </button>
       <button type="button" role="menuitem" onClick={() => onAction('filter_pivot')}>
         <Filter size={13} aria-hidden="true" /> Filter this Pivot
+      </button>
+      <button type="button" role="menuitem" onClick={() => onAction('pivot_further')}>
+        <Layers size={13} aria-hidden="true" /> Pivot further into this cell
       </button>
       <button type="button" role="menuitem" onClick={() => onAction('copy')}>
         <Copy size={13} aria-hidden="true" /> Copy filter

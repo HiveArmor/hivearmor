@@ -75,6 +75,12 @@ describe('PivotCellMenu', () => {
     expect(onAction.mock.calls.map((c) => c[0] as PivotCellAction)).toContain('filter_pivot');
   });
 
+  it('offers Pivot further into this cell', () => {
+    const { onAction } = renderMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: /pivot further into this cell/i }));
+    expect(onAction.mock.calls.map((c) => c[0] as PivotCellAction)).toContain('pivot_further');
+  });
+
   it('navigates entity actions on click', () => {
     const { onAction } = renderMenu({ rowField: 'user.name', rowValue: 'alice' });
     fireEvent.click(screen.getByRole('menuitem', { name: /view entity/i }));

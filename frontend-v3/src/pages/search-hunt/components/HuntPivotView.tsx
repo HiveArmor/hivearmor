@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Download, Save } from 'lucide-react';
 
+import { PivotBreadcrumb, type PivotStep } from './PivotBreadcrumb';
 import type { PivotCellAction } from './PivotCellMenu';
 import { PivotFiltersShelf } from './PivotFiltersShelf';
 import { PivotMatrix } from './PivotMatrix';
@@ -81,6 +82,10 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
   // Pivot-local scratch filters: extra KQL clauses AND-ed into the crosstab request query only.
   // They narrow the crosstab without touching the committed hunt query. Ephemeral (not persisted).
   const [pivotFilters, setPivotFilters] = useState<string[]>([]);
+
+  // P1.1 investigation path: the Pivot Further breadcrumb. steps[0] is the root (un-narrowed) pivot; each
+  // Pivot Further pushes a step capturing the scope + config being left. Ephemeral (not persisted / saved).
+  const [steps, setSteps] = useState<PivotStep[]>([]);
 
   // P1.1 field intelligence: per-field coverage %/cardinality for the active search snapshot, shown on
   // the shelves so the analyst can predict a sparse or heavily-truncated pivot before running it. Same
@@ -214,8 +219,8 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
     }));
   }, []);
 
-  // Intercept the pivot-local "Filter this Pivot" action here (state lives in this view); forward
-  // every other action (drill/keep/exclude/copy/entity/timeline/evidence/incident) up to the page.
+  // Intercept the pivot-local "Filter this Pivot" + "Pivot further" actions here (state lives in this
+  // view); forward every other action (drill/keep/exclude/copy/entity/timeline/evidence/incident) up.
   const handleCell = useCallback(
     (action: PivotCellAction, rowField: string, colField: string, rowValue: string, colValue: string, value: number) => {
       if (action === 'filter_pivot') {
@@ -223,10 +228,42 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
         setPivotFilters((cur) => (cur.includes(clause) ? cur : [...cur, clause]));
         return;
       }
+      if (action === 'pivot_further') {
+        // Pin the cell as a pivot-local scope, record the step being LEFT, then reset the axes so the
+        // analyst picks a new breakdown WITHIN the scoped subset. Never touches the committed hunt query.
+        const clause = `(${rowField}:${quoteKql(rowValue)} AND ${colField}:${quoteKql(colValue)})`;
+        const label = `${rowField} = ${rowValue} × ${colField} = ${colValue}`;
+        setSteps((cur) => {
+          const base: PivotStep[] = cur.length === 0
+            ? [{ id: 'root', label: 'All results', scopeFilters: pivotFilters, config }]
+            : cur;
+          return [...base, { id: `step-${base.length}-${Date.now()}`, label, scopeFilters: [...(base[base.length - 1].scopeFilters), clause], config }];
+        });
+        setPivotFilters((cur) => (cur.includes(clause) ? cur : [...cur, clause]));
+        setConfig((c) => ({ ...c, rowField: null, colField: null, rowBucketInterval: null, colBucketInterval: null, rowMissing: 'omit', colMissing: 'omit' }));
+        return;
+      }
       onCellAction(action, rowField, colField, rowValue, colValue, value);
     },
-    [onCellAction],
+    [onCellAction, pivotFilters, config],
   );
+
+  // Restore an earlier breadcrumb step: reinstate its scope + config and truncate the deeper trail.
+  const navigateToStep = useCallback((index: number) => {
+    setSteps((cur) => {
+      const target = cur[index];
+      if (!target) return cur;
+      setPivotFilters(target.scopeFilters);
+      setConfig(target.config);
+      // Truncating to a single remaining step (the root) collapses the breadcrumb entirely.
+      return index === 0 ? [] : cur.slice(0, index + 1);
+    });
+  }, []);
+
+  // A fresh committed-query change starts a new investigation — reset the breadcrumb to root.
+  useEffect(() => {
+    setSteps([]);
+  }, [committed.query]);
 
   // ---- states ----
   if (committed.query.length === 0) {
@@ -235,6 +272,7 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
 
   return (
     <div className="pivot-view">
+      <PivotBreadcrumb steps={steps} onNavigate={navigateToStep} />
       <PivotShelves
         fields={fields}
         rowField={config.rowField}
