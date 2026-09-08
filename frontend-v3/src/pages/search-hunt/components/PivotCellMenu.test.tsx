@@ -119,4 +119,10 @@ describe('PivotCellMenu', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('fires create_detection from the Create detection candidate item', () => {
+    const { onAction } = renderMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: /create detection candidate/i }));
+    expect(onAction.mock.calls.map((c) => c[0])).toContain('create_detection');
+  });
 });
