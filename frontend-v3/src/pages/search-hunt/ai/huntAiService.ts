@@ -15,6 +15,8 @@ import type {
   HuntClauseExplanation,
   HuntAiFeedback,
   PivotSuggestResponse,
+  PivotDetectionDraftRequest,
+  PivotDetectionDraftResponse,
 } from './huntAiContract.types';
 
 import { apiClient } from '@/lib/apiClient';
@@ -91,4 +93,24 @@ export async function suggestPivotFromNl(question: string): Promise<PivotSuggest
     };
   }
   return apiClient.post<PivotSuggestResponse>(`${AI_BASE}/pivot-suggest`, { question });
+}
+
+/**
+ * P5 step 5b — AI-draft a DETECTION rule from a pivot combination. The result is a status=draft rule (never
+ * deployed); a SOC manager approves it in Detection. mock returns a deterministic ready draft so the flow
+ * demos with no provider; live posts to the analyst-tier draft-only endpoint.
+ */
+export async function aiDraftDetectionRule(req: PivotDetectionDraftRequest): Promise<PivotDetectionDraftResponse> {
+  if (HUNT_AI_MODE === 'mock') {
+    const expression = `equals(${req.rowField}, ${JSON.stringify(req.rowValue)}) && equals(${req.colField}, ${JSON.stringify(req.colValue)})`;
+    return {
+      state: 'ready',
+      ruleId: `RULE-AI-DRAFT-${req.searchId ?? 'x'}`,
+      expression,
+      explanation: `Matches events where ${req.rowField} is ${req.rowValue} and ${req.colField} is ${req.colValue}.`,
+      warnings: [],
+      provenance: { provider: 'mock', generatedAt: new Date().toISOString(), agentVersion: 'mock@1.0', caveat: 'AI-drafted (mock) — a SOC manager must review and approve.' },
+    };
+  }
+  return apiClient.post<PivotDetectionDraftResponse>(`${AI_BASE}/pivot-detection-draft`, req);
 }

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ShieldAlert, X } from 'lucide-react';
 
 import { createRule } from '../../detection-rules/detectionRules.service';
+import { aiDraftDetectionRule } from '../ai/huntAiService';
 import type { PivotDetectionContext } from '../lib/pivotDetectionContext';
 import { buildDraftRuleFromContext } from '../lib/pivotDraftRule';
 
@@ -23,6 +24,7 @@ export function DetectionCandidatePreview({ context, onClose }: DetectionCandida
   const [drafting, setDrafting] = useState(false);
   const [draftId, setDraftId] = useState<string | number | null>(null);
   const [draftError, setDraftError] = useState<string | null>(null);
+  const [aiExpression, setAiExpression] = useState<string | null>(null);
 
   const draftForReview = async () => {
     setDrafting(true);
@@ -32,6 +34,29 @@ export function DetectionCandidatePreview({ context, onClose }: DetectionCandida
       setDraftId(created.id);
     } catch {
       setDraftError('Could not create the draft. Nothing was changed.');
+    } finally {
+      setDrafting(false);
+    }
+  };
+
+  const aiDraftForReview = async () => {
+    setDrafting(true);
+    setDraftError(null);
+    try {
+      const r = await aiDraftDetectionRule({
+        rowField: c.rowField, colField: c.colField,
+        rowValue: c.selectedCell.row, colValue: c.selectedCell.col, value: c.selectedCell.value,
+        query: c.query, searchId: c.searchId,
+        significance: c.significant ? `${c.significant.direction}-represented ~${c.significant.ratio}x expected ${c.significant.expected}` : undefined,
+      });
+      if (r.state === 'ready' && r.ruleId) {
+        setAiExpression(r.expression);
+        setDraftId(r.ruleId);
+      } else {
+        setDraftError('AI drafting is unavailable (no provider or unusable output). Use the manual draft — nothing was changed.');
+      }
+    } catch {
+      setDraftError('AI drafting failed. Nothing was changed.');
     } finally {
       setDrafting(false);
     }
@@ -75,11 +100,15 @@ export function DetectionCandidatePreview({ context, onClose }: DetectionCandida
           <button type="button" className="detection-candidate__draft" onClick={() => void draftForReview()} disabled={drafting}>
             {drafting ? 'Creating draft…' : 'Draft rule for review'}
           </button>
+          <button type="button" className="detection-candidate__ai-draft" onClick={() => void aiDraftForReview()} disabled={drafting}>
+            {drafting ? '…' : 'AI-draft the rule'}
+          </button>
         </div>
       ) : (
-        <p className="detection-candidate__drafted" role="status">
-          Draft created ({String(draftId)}). <a href={`/detection-rules/${draftId}`}>Open in Detection review →</a>
-        </p>
+        <div className="detection-candidate__drafted" role="status">
+          <p>Draft created ({String(draftId)}). <a href={`/detection-rules/${draftId}`}>Open in Detection review →</a></p>
+          {aiExpression && <p className="detection-candidate__ai-cel">AI-drafted rule: <code>{aiExpression}</code></p>}
+        </div>
       )}
       {draftError && <p className="detection-candidate__draft-err" role="alert">{draftError}</p>}
 

@@ -10,6 +10,17 @@ vi.mock('../../detection-rules/detectionRules.service', () => ({
   createRule: (rule: unknown) => createRuleMock(rule),
 }));
 
+// Mock the AI-draft service call (5b) — returns a ready draft with a CEL.
+const aiDraftMock = vi.fn(async () => ({
+  state: 'ready', ruleId: 'RULE-AI-1',
+  expression: 'equals(user.name, "alice") && equals(host.name, "RU")',
+  explanation: 'user on host', warnings: [],
+  provenance: { provider: 'mock', generatedAt: 't', agentVersion: 'mock@1.0', caveat: 'AI-drafted' },
+}));
+vi.mock('../ai/huntAiService', () => ({
+  aiDraftDetectionRule: () => aiDraftMock(),
+}));
+
 const ctx: PivotDetectionContext = {
   searchId: 'HUNT-1', computedAt: '2026-09-08T00:00:00Z',
   query: 'event.category:authentication',
@@ -41,6 +52,17 @@ describe('DetectionCandidatePreview', () => {
     // Forward action is a REVIEW link, not a deploy button.
     const link = screen.getByRole('link', { name: /open in detection review/i });
     expect(link).toHaveAttribute('href', '/detection-rules/RULE-DRAFT-1');
+    expect(screen.queryByRole('button', { name: /deploy|activate|approve|publish/i })).not.toBeInTheDocument();
+  });
+
+  it('AI-drafts a rule (5b), shows the drafted CEL + review link, and still has NO deploy button', async () => {
+    render(<DetectionCandidatePreview context={ctx} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /ai-draft the rule/i }));
+    await waitFor(() => expect(screen.getByText(/AI-drafted rule:/)).toBeInTheDocument());
+    expect(aiDraftMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByText(/equals\(user\.name/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open in detection review/i })).toHaveAttribute('href', '/detection-rules/RULE-AI-1');
+    // Governance: even the AI path never exposes a deploy/activate/approve button.
     expect(screen.queryByRole('button', { name: /deploy|activate|approve|publish/i })).not.toBeInTheDocument();
   });
 
