@@ -125,4 +125,10 @@ describe('PivotCellMenu', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: /create detection candidate/i }));
     expect(onAction.mock.calls.map((c) => c[0])).toContain('create_detection');
   });
+
+  it('offers View relationship graph for an entity row and fires view_entity_graph', () => {
+    const { onAction } = renderMenu({ rowField: 'user.name', rowValue: 'alice' });
+    fireEvent.click(screen.getByRole('menuitem', { name: /view relationship graph/i }));
+    expect(onAction.mock.calls.map((c) => c[0])).toContain('view_entity_graph');
+  });
 });

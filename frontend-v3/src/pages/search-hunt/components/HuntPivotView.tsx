@@ -7,6 +7,7 @@ import { AskHivePivot } from './AskHivePivot';
 import { DetectionCandidatePreview } from './DetectionCandidatePreview';
 import { PivotBreadcrumb, type PivotStep } from './PivotBreadcrumb';
 import type { PivotCellAction } from './PivotCellMenu';
+import { PivotEntityGraph } from './PivotEntityGraph';
 import { PivotFiltersShelf } from './PivotFiltersShelf';
 import { PivotMatrix } from './PivotMatrix';
 import { PivotShelves } from './PivotShelves';
@@ -14,6 +15,7 @@ import { PivotTemplatesMenu } from './PivotTemplatesMenu';
 import { SuggestedPivots } from './SuggestedPivots';
 import { explainPivot, explainCell } from '../lib/explainPivot';
 import { buildDetectionContext, type PivotDetectionContext } from '../lib/pivotDetectionContext';
+import { pivotFieldToEntityType } from '../lib/pivotEntityType';
 import { validatePivotTemplate, type PivotTemplate } from '../lib/pivotTemplates';
 import { buildSavedPivotFilters } from '../lib/savedPivot';
 import { suggestPivots, type SuggestedPivot } from '../lib/suggestedPivots';
@@ -93,6 +95,8 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
   const [significant, setSignificant] = useState(false);
   // P5 PR 1: captured reproduction context for a detection candidate (no rule drafted here).
   const [detectionContext, setDetectionContext] = useState<PivotDetectionContext | null>(null);
+  // Item C: entity to show the relationship graph for (reuses the existing EntityGraphPanel).
+  const [graphEntity, setGraphEntity] = useState<{ type: 'ip' | 'host' | 'user' | 'process'; id: string } | null>(null);
   // P3 PR 2: show a deterministic plain-language explanation of the current pivot.
   const [explainOpen, setExplainOpen] = useState(false);
   // P3 PR 2: a one-line explanation of a specific cell, shown when the analyst picks "Explain this cell".
@@ -296,6 +300,15 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
         if (ctx) setDetectionContext(ctx);
         return;
       }
+      if (action === 'view_entity_graph') {
+        // Item C: map whichever axis is a graphable entity to its type + value, and open the existing
+        // entity-graph renderer for it. Prefer the row axis, fall back to the column axis.
+        const rt = pivotFieldToEntityType(rowField);
+        const ct = pivotFieldToEntityType(colField);
+        if (rt) setGraphEntity({ type: rt, id: rowValue });
+        else if (ct) setGraphEntity({ type: ct, id: colValue });
+        return;
+      }
       onCellAction(action, rowField, colField, rowValue, colValue, value);
     },
     [onCellAction, pivotFilters, config, data, committed.query],
@@ -480,6 +493,9 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
       ) : null}
       {detectionContext && (
         <DetectionCandidatePreview context={detectionContext} onClose={() => setDetectionContext(null)} />
+      )}
+      {graphEntity && (
+        <PivotEntityGraph entityType={graphEntity.type} entityId={graphEntity.id} onClose={() => setGraphEntity(null)} />
       )}
     </div>
   );

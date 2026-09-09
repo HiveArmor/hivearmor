@@ -27,8 +27,39 @@ import type {
 } from './searchHunt.types';
 
 import { ApiError, apiClient } from '@/lib/apiClient';
+import type { EntityGraphResponse } from '@/pages/alerts/alertInvestigation.types';
 
 const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
+/**
+ * Item C (relationship graph) — fetch the entity neighbourhood for a pivot cell's entity from the EXISTING
+ * entity-graph endpoint. Reuses the shipped EntityGraphResponse shape + EntityGraphPanel renderer; no new
+ * graph library. Fixture mode returns a small deterministic graph so the pivot demos with no backend.
+ */
+export async function fetchPivotEntityGraph(
+  entityType: 'ip' | 'host' | 'user' | 'process',
+  entityId: string,
+  signal?: AbortSignal,
+): Promise<EntityGraphResponse> {
+  if (fixtureMode) {
+    return {
+      nodes: [
+        { id: entityId, label: entityId, type: entityType, role: 'focus', riskScore: 60, metadata: {} },
+        { id: 'FIN-WKS-044', label: 'FIN-WKS-044', type: 'host', role: 'related', riskScore: 40, metadata: {} },
+        { id: '203.0.113.84', label: '203.0.113.84', type: 'ip', role: 'related', riskScore: 55, metadata: {} },
+      ],
+      edges: [
+        { id: 'e1', sourceId: entityId, targetId: 'FIN-WKS-044', type: 'accessed', direction: 'out', strength: 'medium', evidence: '', timestamp: new Date().toISOString() },
+        { id: 'e2', sourceId: 'FIN-WKS-044', targetId: '203.0.113.84', type: 'connected', direction: 'out', strength: 'medium', evidence: '', timestamp: new Date().toISOString() },
+      ],
+      metadata: { totalNodes: 3, totalEdges: 2, truncated: false },
+    };
+  }
+  return apiClient.get<EntityGraphResponse>(
+    `/ha-entities/${encodeURIComponent(entityType)}/${encodeURIComponent(entityId)}/graph`,
+    { signal, params: { depth: 2 } },
+  );
+}
 
 /** True when the backend rejected execute because manager approval is required. */
 export function isHuntApprovalRequiredError(error: unknown): boolean {
