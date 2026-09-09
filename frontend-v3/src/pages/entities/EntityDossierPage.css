@@ -129,6 +129,11 @@
   text-align: center;
   text-transform: uppercase;
 }
+/* Severity is color-coded (paired with the uppercase text label). Severity tokens ONLY. */
+.ha-dossier-related__sev[data-sev="critical"] { color: var(--ha-severity-critical); border-color: color-mix(in srgb, var(--ha-severity-critical) 45%, transparent); }
+.ha-dossier-related__sev[data-sev="high"]     { color: var(--ha-severity-high);     border-color: color-mix(in srgb, var(--ha-severity-high) 45%, transparent); }
+.ha-dossier-related__sev[data-sev="medium"]   { color: var(--ha-severity-medium);   border-color: color-mix(in srgb, var(--ha-severity-medium) 45%, transparent); }
+.ha-dossier-related__sev[data-sev="low"]      { color: var(--ha-severity-low);      border-color: color-mix(in srgb, var(--ha-severity-low) 45%, transparent); }
 
 .ha-dossier-page__fixture {
   display: flex;
@@ -484,7 +489,7 @@
 
 .ha-dossier-related__list button:hover { background: var(--ha-surface-elevated); }
 
-.ha-dossier-related__list span,
+.ha-dossier-related__list span:not(.ha-dossier-related__sev),
 .ha-dossier-related__event {
   display: flex;
   min-width: 0;
