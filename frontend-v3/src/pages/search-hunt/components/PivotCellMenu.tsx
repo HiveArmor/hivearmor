@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { Copy, FileText, Filter, Info, Layers, MinusCircle, PlusCircle, Search, Shield, ShieldAlert, User as UserIcon, Activity } from 'lucide-react';
+import { Copy, FileText, Filter, Info, Layers, MinusCircle, PlusCircle, Search, Share2, Shield, ShieldAlert, User as UserIcon, Activity } from 'lucide-react';
 
 import { resolveEntityType, timelineAvailable } from '../lib/entityType';
 
@@ -22,7 +22,8 @@ export type PivotCellAction =
   | 'open_timeline'
   | 'add_evidence'
   | 'create_incident'
-  | 'create_detection';
+  | 'create_detection'
+  | 'view_entity_graph';
 
 export interface PivotCellMenuProps {
   /** Selected cell coordinates for the header line. */
@@ -136,6 +137,11 @@ export function PivotCellMenu(props: PivotCellMenuProps): JSX.Element {
       {canViewEntity && (
         <button type="button" role="menuitem" onClick={() => onAction('view_entity')}>
           <UserIcon size={13} aria-hidden="true" /> View entity
+        </button>
+      )}
+      {canViewEntity && (
+        <button type="button" role="menuitem" onClick={() => onAction('view_entity_graph')}>
+          <Share2 size={13} aria-hidden="true" /> View entity relationships
         </button>
       )}
       {canOpenTimeline && (

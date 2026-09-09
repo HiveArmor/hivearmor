@@ -14,6 +14,7 @@ import { PivotTemplatesMenu } from './PivotTemplatesMenu';
 import { SuggestedPivots } from './SuggestedPivots';
 import { explainPivot, explainCell } from '../lib/explainPivot';
 import { buildDetectionContext, type PivotDetectionContext } from '../lib/pivotDetectionContext';
+import { pivotFieldToEntityType } from '../lib/pivotEntityType';
 import { validatePivotTemplate, type PivotTemplate } from '../lib/pivotTemplates';
 import { buildSavedPivotFilters } from '../lib/savedPivot';
 import { suggestPivots, type SuggestedPivot } from '../lib/suggestedPivots';
@@ -294,6 +295,17 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
         // no deploy path. Turning this into a rule is a separate, SOC-manager-governed step (§29).
         const ctx = buildDetectionContext(data, config, committed.query, pivotFilters, rowValue, colValue, value);
         if (ctx) setDetectionContext(ctx);
+        return;
+      }
+      if (action === 'view_entity_graph') {
+        // Item C (hand-off): the pivot does not embed a graph — it sends the cell's entity to the canonical
+        // per-entity investigation surface (the Entity Dossier, which has its own relationship graph fed by
+        // the dossier service). Prefer the row axis, fall back to the column axis. Opens in a new tab so the
+        // hunt/pivot session is preserved.
+        const rt = pivotFieldToEntityType(rowField);
+        const ct = pivotFieldToEntityType(colField);
+        const id = rt ? rowValue : ct ? colValue : null;
+        if (id) window.open(`/entities/${encodeURIComponent(id)}/dossier`, '_blank', 'noopener');
         return;
       }
       onCellAction(action, rowField, colField, rowValue, colValue, value);

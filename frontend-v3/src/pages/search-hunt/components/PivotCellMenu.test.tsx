@@ -44,19 +44,19 @@ describe('PivotCellMenu', () => {
 
   it('shows View entity + Open timeline for a user row (entity + timeline available)', () => {
     renderMenu({ rowField: 'user.name', rowValue: 'alice' });
-    expect(screen.getByRole('menuitem', { name: /view entity/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /^view entity$/i })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: /open timeline/i })).toBeInTheDocument();
   });
 
   it('shows View entity but NOT Open timeline for a host row (timeline is user-only)', () => {
     renderMenu({ rowField: 'host.name', rowValue: 'WS-014' });
-    expect(screen.getByRole('menuitem', { name: /view entity/i })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /^view entity$/i })).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /open timeline/i })).not.toBeInTheDocument();
   });
 
   it('hides both entity actions for a non-entity row field', () => {
     renderMenu({ rowField: 'event.category', rowValue: 'authentication' });
-    expect(screen.queryByRole('menuitem', { name: /view entity/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: /^view entity$/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: /open timeline/i })).not.toBeInTheDocument();
   });
 
@@ -107,7 +107,7 @@ describe('PivotCellMenu', () => {
 
   it('navigates entity actions on click', () => {
     const { onAction } = renderMenu({ rowField: 'user.name', rowValue: 'alice' });
-    fireEvent.click(screen.getByRole('menuitem', { name: /view entity/i }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /^view entity$/i }));
     fireEvent.click(screen.getByRole('menuitem', { name: /open timeline/i }));
     const fired = onAction.mock.calls.map((c) => c[0] as PivotCellAction);
     expect(fired).toContain('view_entity');
@@ -124,5 +124,11 @@ describe('PivotCellMenu', () => {
     const { onAction } = renderMenu();
     fireEvent.click(screen.getByRole('menuitem', { name: /create detection candidate/i }));
     expect(onAction.mock.calls.map((c) => c[0])).toContain('create_detection');
+  });
+
+  it('offers View entity relationships for an entity row and fires view_entity_graph', () => {
+    const { onAction } = renderMenu({ rowField: 'user.name', rowValue: 'alice' });
+    fireEvent.click(screen.getByRole('menuitem', { name: /view entity relationships/i }));
+    expect(onAction.mock.calls.map((c) => c[0])).toContain('view_entity_graph');
   });
 });
