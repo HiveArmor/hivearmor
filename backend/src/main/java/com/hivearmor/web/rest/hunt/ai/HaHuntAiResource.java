@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hivearmor.service.hunt.ai.HaHuntAiExplainService;
 import com.hivearmor.service.hunt.ai.HaHuntPivotSuggestService;
+import com.hivearmor.service.hunt.ai.HaHuntPivotRuleDraftService;
 import com.hivearmor.service.hunt.ai.HaAiCalibrationService;
 import com.hivearmor.service.hunt.ai.HaHuntProvenanceService;
 import com.hivearmor.service.hunt.ai.HaHuntVerdictService;
@@ -31,6 +32,8 @@ import com.hivearmor.web.rest.hunt.ai.dto.HuntEventSample;
 import com.hivearmor.web.rest.hunt.ai.dto.HuntFieldProvenanceDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.PivotSuggestRequestDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.PivotSuggestResponseDTO;
+import com.hivearmor.web.rest.hunt.ai.dto.PivotDetectionDraftRequestDTO;
+import com.hivearmor.web.rest.hunt.ai.dto.PivotDetectionDraftResponseDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.VerdictRequestDTO;
 import com.hivearmor.web.rest.hunt.ai.dto.VerdictResponseDTO;
 
@@ -59,19 +62,22 @@ public class HaHuntAiResource {
     private final HaHuntService huntService;
     private final HaHuntProvenanceService provenanceService;
     private final HaHuntPivotSuggestService pivotSuggestService;
+    private final HaHuntPivotRuleDraftService pivotRuleDraftService;
 
     public HaHuntAiResource(HaHuntAiExplainService explainService,
                             HaAiCalibrationService calibrationService,
                             HaHuntVerdictService verdictService,
                             HaHuntService huntService,
                             HaHuntProvenanceService provenanceService,
-                            HaHuntPivotSuggestService pivotSuggestService) {
+                            HaHuntPivotSuggestService pivotSuggestService,
+                            HaHuntPivotRuleDraftService pivotRuleDraftService) {
         this.explainService = explainService;
         this.calibrationService = calibrationService;
         this.verdictService = verdictService;
         this.huntService = huntService;
         this.provenanceService = provenanceService;
         this.pivotSuggestService = pivotSuggestService;
+        this.pivotRuleDraftService = pivotRuleDraftService;
     }
 
     /** Max events sampled from a completed search for verdict analysis. */
@@ -99,6 +105,23 @@ public class HaHuntAiResource {
     public ResponseEntity<PivotSuggestResponseDTO> pivotSuggest(@Valid @RequestBody PivotSuggestRequestDTO body) {
         log.debug("HaHuntAiResource: pivot-suggest ({} chars)", body.question().length());
         return ResponseEntity.ok(pivotSuggestService.suggest(body.question()));
+    }
+
+    /**
+     * P5 step 5b: AI-draft a DETECTION rule from a pivot combination. Analyst-tier (ALERT_QUEUE_AUTH) —
+     * it can only create a {@code status=draft} rule via the existing authoring service; it never approves,
+     * activates, or deploys. Approval stays SOC_MANAGER-only in the Detection UI. Always HTTP 200: an
+     * unconfigured/failing LLM or an unusable/off-field CEL yields {@code state=unavailable} and persists
+     * NOTHING — never a 5xx, never a fabricated or auto-fixed rule.
+     */
+    @PostMapping("/pivot-detection-draft")
+    @PreAuthorize(ALERT_QUEUE_AUTH)
+    public ResponseEntity<PivotDetectionDraftResponseDTO> pivotDetectionDraft(
+            @Valid @RequestBody PivotDetectionDraftRequestDTO body) {
+        final String userId = SecurityUtils.getCurrentUserLogin().orElse("system");
+        final Long tenantId = TenantContext.getClientId() != null ? TenantContext.getClientId() : 0L;
+        log.debug("HaHuntAiResource: pivot-detection-draft {} × {}", body.rowField(), body.colField());
+        return ResponseEntity.ok(pivotRuleDraftService.draft(body, userId, tenantId));
     }
 
     /**

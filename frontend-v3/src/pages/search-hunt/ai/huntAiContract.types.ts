@@ -180,6 +180,33 @@ export interface PivotSuggestResponse {
   provenance: { provider: string; generatedAt: string; agentVersion: string; caveat: string } | null;
 }
 
+/* ------------------------------------------ P5 step 5b: AI-drafted detection rule from a pivot cell */
+
+export interface PivotDetectionDraftRequest {
+  rowField: string;
+  colField: string;
+  rowValue: string;
+  colValue: string;
+  value: number;
+  query: string;
+  searchId: string | null;
+  significance?: string;
+}
+
+/**
+ * A DRAFT detection rule created (status=draft) from an AI-drafted CEL — the analyst edits it and a SOC
+ * manager must approve it in Detection. state 'unavailable' = no provider / unusable model output; nothing
+ * was persisted (the manual 5a draft path still works).
+ */
+export interface PivotDetectionDraftResponse {
+  state: 'ready' | 'unavailable';
+  ruleId: string | null;
+  expression: string | null;
+  explanation: string | null;
+  warnings: string[];
+  provenance: { provider: string; generatedAt: string; agentVersion: string; caveat: string } | null;
+}
+
 /* ----------------------------------------------------------------- Mock/live switch */
 
 /** Mirrors the existing VITE_USE_FOUNDATION_FIXTURES pattern; UI imports only huntAiService. */
