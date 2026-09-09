@@ -368,7 +368,7 @@
 }
 
 .ha-dossier-risk__drivers strong { font-size: 11px; }
-.ha-dossier-risk__drivers span { color: var(--ha-action-primary); font-size: 10px; }
+.ha-dossier-risk__drivers span { color: var(--ha-foreground-secondary); font-size: 10px; font-variant-numeric: tabular-nums; }
 .ha-dossier-risk__drivers p {
   grid-column: 1 / -1;
   margin: 0;
