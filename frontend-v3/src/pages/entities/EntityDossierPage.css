@@ -205,6 +205,12 @@
   font-size: 9px;
   text-transform: uppercase;
 }
+/* Criticality chip conveys meaning → color-coded (with the uppercase text). The plain type label
+   (no data-level) stays neutral grey — it is a classification, not a severity. Severity tokens only. */
+.ha-dossier-identity__title span[data-level='critical'] { color: var(--ha-severity-critical); border-color: color-mix(in srgb, var(--ha-severity-critical) 45%, transparent); }
+.ha-dossier-identity__title span[data-level='high']     { color: var(--ha-severity-high);     border-color: color-mix(in srgb, var(--ha-severity-high) 45%, transparent); }
+.ha-dossier-identity__title span[data-level='medium']   { color: var(--ha-severity-medium);   border-color: color-mix(in srgb, var(--ha-severity-medium) 45%, transparent); }
+.ha-dossier-identity__title span[data-level='low']      { color: var(--ha-severity-low);      border-color: color-mix(in srgb, var(--ha-severity-low) 45%, transparent); }
 
 .ha-dossier-identity code {
   display: block;
