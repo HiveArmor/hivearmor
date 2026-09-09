@@ -5,6 +5,7 @@ import { Download, Info, Save } from 'lucide-react';
 
 import { AskHivePivot } from './AskHivePivot';
 import { DetectionCandidatePreview } from './DetectionCandidatePreview';
+import { InformativeFields } from './InformativeFields';
 import { PivotBreadcrumb, type PivotStep } from './PivotBreadcrumb';
 import type { PivotCellAction } from './PivotCellMenu';
 import { PivotFiltersShelf } from './PivotFiltersShelf';
@@ -15,6 +16,7 @@ import { SuggestedPivots } from './SuggestedPivots';
 import { explainPivot, explainCell } from '../lib/explainPivot';
 import { buildDetectionContext, type PivotDetectionContext } from '../lib/pivotDetectionContext';
 import { pivotFieldToEntityType } from '../lib/pivotEntityType';
+import { rankInformativeFields } from '../lib/pivotFieldInfoGain';
 import { validatePivotTemplate, type PivotTemplate } from '../lib/pivotTemplates';
 import { buildSavedPivotFilters } from '../lib/savedPivot';
 import { suggestPivots, type SuggestedPivot } from '../lib/suggestedPivots';
@@ -141,8 +143,23 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
     () => suggestPivots(fields, statByField, tenantId, 3),
     [fields, statByField, tenantId],
   );
+  // Item B: deterministic "most informative field" ranking from the same field-stats (no LLM/query).
+  const informativeFields = useMemo(
+    () => rankInformativeFields(fields, statByField, 3),
+    [fields, statByField],
+  );
   const applySuggestion = useCallback((s: SuggestedPivot) => {
     setConfig(s.config);
+    setTemplateWarnings([]);
+  }, []);
+
+  // Item B: apply a recommended field to the first empty axis (Rows if empty, else Columns). Never auto-runs.
+  const applyInformativeField = useCallback((field: string) => {
+    setConfig((c) => {
+      if (!c.rowField) return { ...c, rowField: field };
+      if (!c.colField) return { ...c, colField: field };
+      return { ...c, rowField: field };   // both full → replace Rows
+    });
     setTemplateWarnings([]);
   }, []);
 
@@ -340,6 +357,7 @@ export function HuntPivotView({ committed, fields, tenantId, searchId, initialCo
       <PivotBreadcrumb steps={steps} onNavigate={navigateToStep} />
       <div className="pivot-assist-row">
         <SuggestedPivots suggestions={suggestions} onApply={applySuggestion} />
+        <InformativeFields fields={informativeFields} onApply={applyInformativeField} />
         <AskHivePivot tenantId={tenantId} onApply={(c) => { setConfig(c); setTemplateWarnings([]); }} />
       </div>
       <PivotShelves

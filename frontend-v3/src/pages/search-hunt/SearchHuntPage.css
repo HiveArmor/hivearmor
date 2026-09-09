@@ -2011,6 +2011,11 @@
 .pivot-suggestions__chip { display: inline-flex; align-items: center; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control, 6px); background: var(--ha-surface-input); color: var(--ha-foreground-secondary); padding: 2px 9px; min-height: 24px; cursor: pointer; font: var(--ha-type-compact); font-family: var(--ha-font-mono); }
 .pivot-suggestions__chip:hover { color: var(--ha-action-primary); border-color: var(--ha-border-strong); }
 .pivot-suggestions__chip:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ha-border-focus); }
+.pivot-infogain { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 4px 10px; font: var(--ha-type-compact); }
+.pivot-infogain__label { display: inline-flex; align-items: center; gap: 4px; color: var(--ha-intelligence-primary); font: var(--ha-type-metadata); text-transform: uppercase; letter-spacing: 0.04em; }
+.pivot-infogain__chip { min-height: 24px; padding: 2px 8px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control, 6px); background: var(--ha-surface-input); color: var(--ha-foreground-secondary); cursor: pointer; font-family: var(--ha-font-mono); font-size: var(--ha-type-metadata); }
+.pivot-infogain__chip:hover { color: var(--ha-action-primary); border-color: var(--ha-border-strong); }
+.pivot-infogain__chip:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ha-border-focus); }
 .ask-hive { padding: 4px 10px 8px; }
 /* Inline row shared with the Suggested strip: the collapsed trigger sits at the end of that row;
    when expanded, the Ask Hive panel wraps to its own full-width line below. */
