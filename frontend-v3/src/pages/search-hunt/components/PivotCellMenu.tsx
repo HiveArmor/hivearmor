@@ -141,7 +141,7 @@ export function PivotCellMenu(props: PivotCellMenuProps): JSX.Element {
       )}
       {canViewEntity && (
         <button type="button" role="menuitem" onClick={() => onAction('view_entity_graph')}>
-          <Share2 size={13} aria-hidden="true" /> View relationship graph
+          <Share2 size={13} aria-hidden="true" /> View entity relationships
         </button>
       )}
       {canOpenTimeline && (

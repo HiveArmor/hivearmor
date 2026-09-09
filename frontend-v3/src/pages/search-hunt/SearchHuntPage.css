@@ -2307,12 +2307,6 @@
 .detection-candidate__ai-draft:disabled { opacity: 0.5; cursor: default; }
 .detection-candidate__ai-cel { margin: 4px 0 0; font: var(--ha-type-metadata); color: var(--ha-foreground-secondary); }
 .detection-candidate__ai-cel code { font-family: var(--ha-font-mono); }
-.pivot-entity-graph { margin: 8px 10px; border: 1px solid var(--ha-border-subtle); border-radius: var(--ha-radius-panel, 8px); background: var(--ha-surface-panel); }
-.pivot-entity-graph__head { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--ha-border-subtle); }
-.pivot-entity-graph__title { flex: 1 1 auto; font: var(--ha-type-section-title); color: var(--ha-foreground-primary); }
-.pivot-entity-graph__title code { font-family: var(--ha-font-mono); margin-left: 4px; }
-.pivot-entity-graph__close { display: inline-flex; align-items: center; justify-content: center; min-height: 24px; padding: 0 6px; border: 1px solid var(--ha-border-default); border-radius: var(--ha-radius-control, 6px); background: transparent; color: var(--ha-foreground-tertiary); cursor: pointer; }
-.pivot-entity-graph__close:hover { color: var(--ha-foreground-secondary); border-color: var(--ha-border-strong); }
 .detection-candidate__draft-err { margin: 0 0 8px; font: var(--ha-type-metadata); color: var(--ha-severity-high); }
 .pivot-matrix__total-col, .pivot-matrix__total-row td, .pivot-matrix__grand {
   background: var(--ha-surface-zebra); font-weight: 620; color: var(--ha-foreground-primary);
