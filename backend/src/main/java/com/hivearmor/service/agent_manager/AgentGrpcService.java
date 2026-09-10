@@ -6,6 +6,7 @@ import com.hivearmor.service.grpc.ListRequest;
 import com.hivearmor.config.Constants;
 import com.hivearmor.security.SecurityUtils;
 import com.hivearmor.multitenancy.TenantContext;
+import com.hivearmor.multitenancy.TenantScope;
 import com.hivearmor.service.grpc.*;
 import com.hivearmor.web.rest.errors.AgentNotfoundException;
 import com.hivearmor.web.rest.vm.AgentRequestVM;
@@ -36,7 +37,57 @@ public class AgentGrpcService {
     }
 
     public ListAgentsResponseDTO listAgents(ListRequest request) throws Exception {
+        // P0A1-T04: the tenant must already be set on the request by the caller
+        // (controllers via TenantScope.requireTenant()). The manager fail-closes
+        // when tenant_id <= 0, so this method never widens scope on its own.
         return mapToListAgentsResponseDTO(blockingStub.listAgents(request));
+    }
+
+    /**
+     * P0A1-T04 — convenience overload that stamps the authoritative tenant onto the
+     * request before dispatch. Callers holding a resolved tenant should prefer this
+     * so the tenant is set in exactly one place.
+     */
+    public ListAgentsResponseDTO listAgents(ListRequest request, long tenantId) throws Exception {
+        ListRequest scoped = request.toBuilder().setTenantId(tenantId).build();
+        return mapToListAgentsResponseDTO(blockingStub.listAgents(scoped));
+    }
+
+    /**
+     * P0A1-T12 — response-action target guard. Verifies the target agent belongs to
+     * the caller's authoritative tenant BEFORE any response command (kill / isolate /
+     * quarantine / restore / lift) is dispatched to the agent-manager. A target in
+     * another tenant does not resolve under the tenant-scoped lookup and is refused
+     * with {@link AgentNotfoundException} (mapped to 404, no cross-tenant disclosure).
+     * This is authorization only — command signing is a later batch.
+     */
+    public void requireAgentInCurrentTenant(String agentId) throws AgentNotfoundException {
+        if (agentId == null || agentId.isBlank()) {
+            throw new AgentNotfoundException();
+        }
+        try {
+            ListRequest req = ListRequest.newBuilder()
+                    .setPageNumber(1)
+                    .setPageSize(1)
+                    .setSearchQuery("id.Is=" + agentId.trim())
+                    .setSortBy("")
+                    .setTenantId(TenantScope.requireTenant())
+                    .build();
+            ListAgentsResponseDTO response = mapToListAgentsResponseDTO(blockingStub.listAgents(req));
+            if (response.getAgents() == null || response.getAgents().isEmpty()) {
+                com.hivearmor.multitenancy.TenantAudit.crossTenantDenied(
+                    "requireAgentInCurrentTenant", "agent", agentId, "target-outside-tenant");
+                throw new AgentNotfoundException();
+            }
+        } catch (AgentNotfoundException nf) {
+            throw nf;
+        } catch (Exception e) {
+            // Fail closed: if the target cannot be positively confirmed within the
+            // caller's tenant, do not allow the response action to proceed.
+            com.hivearmor.multitenancy.TenantAudit.crossTenantDenied(
+                "requireAgentInCurrentTenant", "agent", agentId, "confirm-failed");
+            throw new AgentNotfoundException();
+        }
     }
 
     public EnrollmentTokenCreatedDTO createEnrollmentToken(long tenantId, EnrollmentTokenCreateDTO request, String actor) {
@@ -181,8 +232,21 @@ public class AgentGrpcService {
         return mapToListAgentsCommandsResponseDTO(blockingStub.listAgentCommands(request));
     }
 
+    /** P0A1-T07 — stamps the authoritative tenant before dispatching the command read. */
+    public ListAgentsCommandsResponseDTO listAgentCommands(ListRequest request, long tenantId) throws Exception {
+        return mapToListAgentsCommandsResponseDTO(
+            blockingStub.listAgentCommands(request.toBuilder().setTenantId(tenantId).build()));
+    }
+
     public ListAgentsResponseDTO listAgentWithCommands(ListRequest request) throws Exception {
         return mapToListAgentsResponseDTO(blockingStub.listAgents(request));
+    }
+
+    /** P0A1-T06 — stamps the authoritative tenant so both the agent rows and their
+     *  attached commands are resolved within the caller's tenant. */
+    public ListAgentsResponseDTO listAgentWithCommands(ListRequest request, long tenantId) throws Exception {
+        return mapToListAgentsResponseDTO(
+            blockingStub.listAgents(request.toBuilder().setTenantId(tenantId).build()));
     }
 
 
@@ -209,11 +273,14 @@ public class AgentGrpcService {
         try {
             ListAgentsCommandsResponseDTO dto = new ListAgentsCommandsResponseDTO();
             // Load agent list one time, will be used to search the agent that execute the command, by agent_id
+            // P0A1-T04: scoped to the authoritative tenant so command→agent resolution
+            // cannot see another tenant's agents.
             ListRequest req = ListRequest.newBuilder()
                     .setPageNumber(1)
                     .setPageSize(1000000)
                     .setSearchQuery("")
                     .setSortBy("")
+                    .setTenantId(TenantScope.requireTenant())
                     .build();
 
             ListAgentsResponse agentResp = blockingStub.listAgents(req);
@@ -261,6 +328,7 @@ public class AgentGrpcService {
                     .setPageSize(1000000)
                     .setSearchQuery("hostname.Is=" + hostname)
                     .setSortBy("")
+                    .setTenantId(TenantScope.requireTenant())
                     .build();
             ListAgentsResponseDTO response = listAgents(req);
             List<AgentDTO> agentDTOList = response.getAgents();

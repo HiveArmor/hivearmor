@@ -1,6 +1,8 @@
 package com.hivearmor.web.rest.agent_manager;
 
 import com.hivearmor.service.grpc.ListRequest;
+import com.hivearmor.multitenancy.TenantScope;
+import com.hivearmor.web.rest.errors.AgentNotfoundException;
 import com.hivearmor.domain.application_events.enums.ApplicationEventType;
 import com.hivearmor.service.agent_manager.AgentGrpcService;
 import com.hivearmor.service.application_events.ApplicationEventService;
@@ -65,7 +67,7 @@ public class AgentManagerResource {
                     .setSearchQuery(searchQuery != null ? searchQuery : "")
                     .setSortBy(sortBy != null ? sortBy : "")
                     .build();
-            ListAgentsResponseDTO response = agentGrpcService.listAgents(request);
+            ListAgentsResponseDTO response = agentGrpcService.listAgents(request, TenantScope.requireTenant());
             List<AgentDTO> agentDTOList = response.getAgents();
             agentDTOList.forEach(agentDTO -> agentDTO.setAgentKey("SECRET"));
             HttpHeaders headers = new HttpHeaders();
@@ -94,7 +96,7 @@ public class AgentManagerResource {
                     .setSearchQuery(searchQuery != null ? searchQuery : "")
                     .setSortBy(sortBy != null ? sortBy : "")
                     .build();
-            ListAgentsResponseDTO response = agentGrpcService.listAgentWithCommands(request);
+            ListAgentsResponseDTO response = agentGrpcService.listAgentWithCommands(request, TenantScope.requireTenant());
             List<AgentDTO> agentDTOList = response.getAgents();
             agentDTOList.forEach(agentDTO -> agentDTO.setAgentKey("SECRET"));
             HttpHeaders headers = new HttpHeaders();
@@ -118,6 +120,11 @@ public class AgentManagerResource {
             response.setAgentKey("SECRET");
             HttpHeaders headers = new HttpHeaders();
             return ResponseEntity.ok().headers(headers).body(response);
+        } catch (AgentNotfoundException nf) {
+            // P0A1-T05/T16: not found OR belongs to another tenant → 404 with no
+            // detail, so the response cannot distinguish "exists in another tenant"
+            // from "does not exist" (no cross-tenant existence disclosure).
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);
@@ -142,7 +149,7 @@ public class AgentManagerResource {
                     .setSearchQuery(searchQuery != null ? searchQuery : "")
                     .setSortBy(sortBy != null ? sortBy : "")
                     .build();
-            ListAgentsCommandsResponseDTO response = agentGrpcService.listAgentCommands(request);
+            ListAgentsCommandsResponseDTO response = agentGrpcService.listAgentCommands(request, TenantScope.requireTenant());
 
             List<AgentCommandDTO> commands = response.getAgentCommands();
 
@@ -170,6 +177,10 @@ public class AgentManagerResource {
         try {
             AgentDTO response = agentGrpcService.getAgentByHostname(hostname);
             return ResponseEntity.ok(response.getStatus() == AgentStatusEnum.ONLINE);
+        } catch (AgentNotfoundException nf) {
+            // P0A1-T05/T16: host not in the caller's tenant (or absent) → 404, no
+            // disclosure. Inherited from the now tenant-scoped getAgentByHostname.
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);
