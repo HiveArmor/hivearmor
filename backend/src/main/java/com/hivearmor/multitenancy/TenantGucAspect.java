@@ -47,13 +47,21 @@ import java.sql.PreparedStatement;
  *       rows rather than leaking. Never a wildcard, never the prior borrower's value.</li>
  * </ul>
  *
- * <h3>Why an {@code @Order(HIGHEST_PRECEDENCE)} @Around on @Transactional</h3>
+ * <h3>Why {@code @Order(LOWEST_PRECEDENCE)} — the aspect must run INNERMOST</h3>
  * Spring's transaction interceptor advises {@code @Transactional} methods at
- * {@link Ordered#LOWEST_PRECEDENCE}. Ordering this aspect at {@link Ordered#HIGHEST_PRECEDENCE}
- * makes it the OUTERMOST advice, so its {@code proceed()} runs strictly INSIDE the transaction
- * the interceptor opened — {@link TransactionSynchronizationManager#isActualTransactionActive()}
- * is true and {@link DataSourceUtils#getConnection} returns the SAME connection the transaction
- * (and thus the RLS-policied queries) will use. This single choke point covers BOTH:
+ * {@link Ordered#LOWEST_PRECEDENCE} (there is no {@code @EnableTransactionManagement(order=)}
+ * override in this app). In Spring AOP a LOWER order value = HIGHER precedence = OUTERMOST
+ * advice, and an outermost advice's body BEFORE {@code proceed()} runs BEFORE any inner advice —
+ * including before the tx interceptor opens the transaction. If this aspect were outermost, its
+ * {@code isActualTransactionActive()} check would run before the tx exists and the GUC would be
+ * silently skipped on the primary path (the outermost {@code @Transactional} entry point).
+ *
+ * <p>So this aspect is ordered {@link Ordered#LOWEST_PRECEDENCE} to sit at (tied with, then
+ * effectively just inside) the tx interceptor — it runs INNERMOST, closest to the target method,
+ * so its {@code proceed()} executes strictly INSIDE the transaction the interceptor opened:
+ * {@link TransactionSynchronizationManager#isActualTransactionActive()} is true and
+ * {@link DataSourceUtils#getConnection} returns the SAME connection the transaction (and thus the
+ * RLS-policied queries) will use. This single choke point covers BOTH:
  * <ul>
  *   <li><b>request threads</b> — a {@code @Transactional} service method invoked from a controller
  *       under a {@link TenantContextFilter}-set {@link TenantContext}; and</li>
@@ -67,7 +75,7 @@ import java.sql.PreparedStatement;
  */
 @Aspect
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+@Order(Ordered.LOWEST_PRECEDENCE)
 public class TenantGucAspect {
 
     private static final Logger log = LoggerFactory.getLogger(TenantGucAspect.class);

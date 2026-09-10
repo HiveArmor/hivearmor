@@ -89,6 +89,36 @@ ALTER DATABASE hivearmor SET app.current_tenant = '-1';
 > whichever role runs the migration, i.e. `hivearmor_migrator`. Good — the app role is a pure
 > DML consumer.
 
+### 2a. Existing-table ownership (REQUIRED before P2, or P2 will silently fail on legacy tables)
+
+**Hazard (review H1):** all tables that exist TODAY were created by the ORIGINAL single role
+(`${DB_USER}` / `postgres`), NOT by `hivearmor_migrator`. `ALTER TABLE ... FORCE ROW LEVEL
+SECURITY` and `CREATE POLICY` (the P2 step) must be run by the table OWNER (or a superuser). If
+ownership is left with the old role and P2 later runs its policy DDL as `hivearmor_migrator`, it
+will FAIL on those legacy tables — the exact "silently doesn't apply" class this runbook warns
+about. Resolve it explicitly, ONE of:
+
+- **Option A (recommended) — transfer ownership of existing objects to the migrator** (run as
+  superuser or the current owner):
+  ```sql
+  -- Reassign every object owned by the old single role to the migrator, in the hivearmor DB:
+  REASSIGN OWNED BY <OLD_DB_USER> TO hivearmor_migrator;
+  -- (or per-table: ALTER TABLE public.hive_edr_event OWNER TO hivearmor_migrator; ...)
+  ```
+  Then P2's `ALTER TABLE ... FORCE ROW LEVEL SECURITY` + `CREATE POLICY` run cleanly as the
+  migrator on all tables, old and new.
+- **Option B — run the P2 policy DDL as a superuser / the current table owner** rather than the
+  migrator. Simpler operationally, but P2 must then document that its DDL role ≠ the migration
+  role. Option A is preferred so the migrator uniformly owns the schema.
+
+Verify current ownership before choosing:
+```sql
+SELECT tablename, tableowner FROM pg_tables
+WHERE schemaname = 'public'
+  AND tablename IN ('hive_edr_event','hive_edr_quarantine','ha_edr_quarantine',
+                    'hive_alert_response_rule_execution');
+```
+
 ---
 
 ## 3. Application configuration change
