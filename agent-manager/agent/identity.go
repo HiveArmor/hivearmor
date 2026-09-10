@@ -25,7 +25,7 @@ func (s *AgentService) VerifyConnectorIdentity(ctx context.Context, req *VerifyC
 	switch req.GetConnectorType() {
 	case ConnectorType_AGENT:
 		agent := models.Agent{}
-		if err := s.DBConnection.GetFirst(&agent, "id = ?", req.GetConnectorId()); err != nil {
+		if err := s.DBConnection.SystemContextGetFirst(&agent, "id = ?", req.GetConnectorId()); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, status.Error(codes.NotFound, "connector not found")
 			}
@@ -49,7 +49,7 @@ func (s *AgentService) VerifyConnectorIdentity(ctx context.Context, req *VerifyC
 		return identity, nil
 	case ConnectorType_COLLECTOR:
 		collector := models.Collector{}
-		if err := s.DBConnection.GetFirst(&collector, "id = ?", req.GetConnectorId()); err != nil {
+		if err := s.DBConnection.SystemContextGetFirst(&collector, "id = ?", req.GetConnectorId()); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, status.Error(codes.NotFound, "connector not found")
 			}
@@ -86,7 +86,7 @@ func (s *AgentService) ListConnectorAuthorization(ctx context.Context, req *List
 	switch req.GetConnectorType() {
 	case ConnectorType_AGENT:
 		agents := []models.Agent{}
-		total, err := s.DBConnection.GetByPagination(&agents, page, utils.NewFilter(""), "", false)
+		total, err := s.DBConnection.SystemContextGetByPagination(&agents, page, utils.NewFilter(""))
 		if err != nil {
 			catcher.Error("failed to list connector authorization", err, map[string]any{"process": "agent-manager", "connector_type": "agent"})
 			return nil, status.Error(codes.Internal, "failed to list connector authorization")
@@ -98,7 +98,7 @@ func (s *AgentService) ListConnectorAuthorization(ctx context.Context, req *List
 		return &ListConnectorAuthorizationResponse{Rows: rows, Total: int32(total)}, nil
 	case ConnectorType_COLLECTOR:
 		collectors := []models.Collector{}
-		total, err := s.DBConnection.GetByPagination(&collectors, page, utils.NewFilter(""), "", false)
+		total, err := s.DBConnection.SystemContextGetByPagination(&collectors, page, utils.NewFilter(""))
 		if err != nil {
 			catcher.Error("failed to list connector authorization", err, map[string]any{"process": "agent-manager", "connector_type": "collector"})
 			return nil, status.Error(codes.Internal, "failed to list connector authorization")

@@ -56,7 +56,7 @@ func InitAgentService() error {
 		}
 
 		agents := []models.Agent{}
-		_, err = AgentServ.DBConnection.GetAll(&agents, "")
+		_, err = AgentServ.DBConnection.SystemContextFind(&agents, "")
 		if err != nil {
 			err = fmt.Errorf("failed to fetch agents: %v", err)
 			return
