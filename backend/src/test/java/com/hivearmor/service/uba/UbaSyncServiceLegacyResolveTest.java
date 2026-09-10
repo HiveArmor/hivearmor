@@ -176,4 +176,34 @@ class UbaSyncServiceLegacyResolveTest {
         assertThat(result.anomaliesResolved()).isZero();
         verify(aRepo, never()).findByTenantIdIsNull();
     }
+
+    @Test
+    void probeException_abstains_leavesAnomalyNull() {
+        // Core safety guarantee: an erroring tenant-index probe is "unknown", NOT "absent" —
+        // the resolver must NOT stamp on partial evidence.
+        ElasticsearchService es = mock(ElasticsearchService.class);
+        UtmUbaAnomalyRepository aRepo = mock(UtmUbaAnomalyRepository.class);
+        UtmUbaEntityRiskRepository eRepo = mock(UtmUbaEntityRiskRepository.class);
+        MsspIndexResolver resolver = mock(MsspIndexResolver.class);
+        HaClientRepository clients = mock(HaClientRepository.class);
+
+        when(clients.findByMsspManagedTrueAndClientPrefixIsNotNull())
+            .thenReturn(List.of(tenant(10L, "acme"), tenant(20L, "globex")));
+        when(resolver.resolveIndexPatternForPrefix(eq("alert"), anyString()))
+            .thenAnswer(i -> "v3-hive-alert-" + i.getArgument(1) + "-*");
+
+        UtmUbaAnomaly a = anomaly("ALERT-1", "web01", "host");
+        when(aRepo.findByTenantIdIsNull()).thenReturn(List.of(a));
+        when(eRepo.findByTenantIdIsNull()).thenReturn(List.of());
+
+        // The first tenant's probe throws → abstain for the whole anomaly.
+        when(es.exists(anyList(), anyString())).thenThrow(new RuntimeException("OpenSearch unreachable"));
+
+        var result = svc(es, aRepo, eRepo, resolver, clients).resolveLegacyUbaTenants();
+
+        assertThat(a.getTenantId()).isNull();
+        verify(aRepo, never()).save(any());
+        assertThat(result.anomaliesResolved()).isZero();
+        assertThat(result.anomaliesUnresolved()).isEqualTo(1);
+    }
 }
