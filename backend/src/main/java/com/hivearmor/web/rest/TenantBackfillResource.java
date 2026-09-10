@@ -39,4 +39,20 @@ public class TenantBackfillResource {
         List<TenantBackfillService.TableResult> results = backfillService.backfill();
         return ResponseEntity.ok(results);
     }
+
+    /**
+     * POST /api/ha-tenant-notnull — the FINAL, irreversible step: enforce tenant_id NOT NULL
+     * on every tenant table that is provably clean (zero NULLs). ADMIN-only. Idempotent and
+     * safe to re-run: a table that still has NULL rows is SKIPPED (reported, never defaulted)
+     * so the operator can re-run the backfill and retry. Run this only AFTER the backfill
+     * reports zero remaining nulls. This is application-level (not a Liquibase changeset)
+     * because deferred-until-clean enforcement cannot be modelled by a MARK_RAN precondition.
+     */
+    @PostMapping("/ha-tenant-notnull")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<List<TenantBackfillService.EnforceResult>> enforceNotNull() {
+        log.info("P0A2 tenant_id NOT-NULL enforcement triggered via /api/ha-tenant-notnull");
+        List<TenantBackfillService.EnforceResult> results = backfillService.enforceNotNull();
+        return ResponseEntity.ok(results);
+    }
 }

@@ -130,4 +130,47 @@ class TenantBackfillServiceTest {
             .doesNotThrowAnyException();
         verify(q, never()).executeUpdate();
     }
+
+    // ---- enforceNotNull() ----
+
+    /**
+     * A clean table (zero NULLs) is ALTERed to NOT NULL; a table that still has NULLs is
+     * SKIPPED (fail-safe, no ALTER). Verifies ALTER runs exactly once per enforced table.
+     */
+    @Test
+    void enforceNotNull_altersCleanTables_skipsNullBearing() {
+        EntityManager em = mock(EntityManager.class);
+        TenantScopedBackgroundExecutor executor = mock(TenantScopedBackgroundExecutor.class);
+        AgentService agentService = mock(AgentService.class);
+        HaClientRepository clients = mock(HaClientRepository.class);
+
+        Query nullableQ = mock(Query.class);  // information_schema is_nullable lookup
+        Query countQ = mock(Query.class);     // COUNT(*) ... WHERE tenant_id IS NULL
+        Query alterQ = mock(Query.class);     // ALTER TABLE ... SET NOT NULL
+        when(nullableQ.setParameter(anyString(), any())).thenReturn(nullableQ);
+
+        when(em.createNativeQuery(anyString())).thenAnswer(inv -> {
+            String sql = inv.getArgument(0);
+            if (sql.startsWith("SELECT is_nullable")) return nullableQ;
+            if (sql.startsWith("SELECT COUNT(*)")) return countQ;
+            return alterQ;
+        });
+        // Every table currently nullable ('YES') so the count gate decides.
+        when(nullableQ.getResultList()).thenReturn(List.of("YES"));
+        // First table clean (0 nulls, enforce); the other five still have 2 nulls (skip).
+        when(countQ.getSingleResult()).thenReturn(0L, 2L, 2L, 2L, 2L, 2L);
+        when(alterQ.executeUpdate()).thenReturn(0);
+
+        var svc = new TenantBackfillService(em, executor, agentService, clients);
+        var results = svc.enforceNotNull();
+
+        assertThat(results).hasSize(6);
+        long enforcedCount = results.stream().filter(TenantBackfillService.EnforceResult::enforced).count();
+        assertThat(enforcedCount).isEqualTo(1);
+        // Skipped (dirty) tables report their remaining NULL count and were NOT altered.
+        assertThat(results).filteredOn(r -> !r.enforced())
+            .allSatisfy(r -> assertThat(r.remainingNull()).isEqualTo(2));
+        // ALTER ran exactly once — only for the clean table, never for a dirty one (fail-safe).
+        verify(alterQ, times(1)).executeUpdate();
+    }
 }

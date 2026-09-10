@@ -55,16 +55,35 @@
 - **Then:** a follow-up changeset enforces NOT NULL on MSSP (guarded by the INVERSE
   precondition — MSSP-managed clients exist AND zero NULL rows remain), so NOT NULL is
   only applied once the job has completed. Do NOT enforce NOT NULL on MSSP before the job.
-- **DELIVERED (feat/p0a2-tenant-backfill):** `TenantBackfillService.backfill()` + admin-only
-  `POST /api/ha-tenant-backfill`. Idempotent (only touches `tenant_id IS NULL`), covers all
-  SIX agent-linked tables (the four above + `hive_uba_anomaly` + `hive_uba_entity_risk`).
-  Single-tenant → blanket `SET tenant_id = 0` per table (also closes the T19-G5/L-3 legacy
-  single-tenant UBA orphaning). MSSP → per-tenant via `TenantScopedBackgroundExecutor`:
-  lists each tenant's agents and stamps rows whose `agent_id`/`agent`/`entity_id` matches an
-  agent id/hostname; unresolved rows stay NULL (orphans) and are reported, never defaulted.
-  Returns per-table `{updated, remainingNull}`. NEXT: after an operator runs it and confirms
-  zero remaining nulls, a NOT-NULL changeset (single-tenant done in `20260910003`; MSSP + the
-  UBA columns still pending) — that is the remaining step, deliberately NOT in this PR.
+- **DELIVERED (PR #278, merged `5992dbd4`):** `TenantBackfillService.backfill()` + admin-only
+  `POST /api/ha-tenant-backfill`. Idempotent (only touches `tenant_id IS NULL`).
+  Single-tenant → blanket `SET tenant_id = 0` across ALL six tables (also closes the
+  T19-G5/L-3 legacy single-tenant UBA orphaning). MSSP → per-tenant via
+  `TenantScopedBackgroundExecutor` over the FOUR agent-linked tables only
+  (`hive_edr_event`, `hive_edr_quarantine`, `ha_edr_quarantine` by `agent_id`,
+  `hive_alert_response_rule_execution` by `agent`): lists each tenant's agents and stamps
+  matching rows; per-tenant agent-enumeration failures are caught + counted (`failedTenants`),
+  never silently reported as orphans. The two UBA tables are DELIBERATELY EXCLUDED from MSSP
+  host-matching (independent review C1): `entity_id` is a user/ip/host value, not an agent
+  identifier, so matching it against agent hostnames would orphan user/ip entities or
+  mis-stamp a colliding username cross-tenant. New UBA rows are already tenant-stamped at
+  insert (A2-3), so only LEGACY MSSP UBA rows remain NULL, reported as unresolvable-by-agent.
+- **NOT-NULL enforcement DELIVERED (feat/p0a2-notnull-enforcement) — APPLICATION-LEVEL, not
+  Liquibase.** `TenantBackfillService.enforceNotNull()` + admin-only `POST /api/ha-tenant-notnull`.
+  It enforces `tenant_id NOT NULL` on every tenant table (the four EDR/response tables + both
+  UBA tables) that is PROVABLY CLEAN (zero NULLs), skips any table that still has NULL rows
+  (reported, never defaulted to a wrong tenant), and is a no-op on an already-NOT-NULL column.
+  Idempotent and re-runnable: after the operator runs the backfill and re-runs this, newly-clean
+  tables get locked. WHY NOT LIQUIBASE: a changeset gated on a TRANSIENT data state
+  (`sqlCheck` for zero NULLs) with `onFail="MARK_RAN"` is UNSOUND — MARK_RAN is sticky
+  (recorded in DATABASECHANGELOG, never re-evaluated), so once it ran on a still-dirty deploy
+  the constraint would be skipped FOREVER on exactly the MSSP deployments that need it. An
+  independent review of the first attempt (PR #279) caught this as Critical; the enforcement was
+  moved to the application layer, which re-checks on every call and mirrors the app-level backfill
+  precedent (authoritative agent→tenant map lives outside this DB). Single-tenant EDR/response
+  NOT-NULL is still additionally covered by the stable-signal changeset `20260910003` (gated on
+  deployment shape, where MARK_RAN-forever is correct). MSSP legacy UBA rows stay skipped until a
+  UBA-specific migration resolves them from the originating alert's tenant.
 
 ### A2-6 (DESIGN) — Postgres RLS defense-in-depth
 - **From T20:** adopt RLS as a second layer beneath app-level scoping, but ONLY after backfill + NOT NULL on `tenant_id`. Pilot on the four P0-A1 EDR/response tables
