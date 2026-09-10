@@ -20,7 +20,14 @@ func MigrateDatabase() error {
 	if err != nil {
 		return err
 	}
-	return installEnrollmentAuditImmutability(db)
+	if err := installEnrollmentAuditImmutability(db); err != nil {
+		return err
+	}
+	// P0-A2-7 §3.2a — install RLS policies (defense-in-depth beneath the #290
+	// app-layer scoping). Inert under the current superuser role; enforcing once
+	// §3.2b connects as an unprivileged role. Runs after AutoMigrate so the tables
+	// (and agents, referenced by the agent_commands parent policy) exist.
+	return installTenantRlsPolicies(db)
 }
 
 // migrateAgentHostnameTenantUnique drops the legacy global (hostname, deleted_at)
