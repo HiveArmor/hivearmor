@@ -37,10 +37,20 @@ public class AssetSynchronizationService {
     private final UtmNetworkScanRepository networkScanRepository;
     private final UtmDataInputStatusService dataInputStatusService;
     private final UtmTenantConfigService tenantConfigService;
+    private final com.hivearmor.multitenancy.TenantScopedBackgroundExecutor backgroundExecutor;
 
-    @Transactional
     @Scheduled(fixedDelay = 60000, initialDelay = 120000)
     public void syncDataInputsAndAssets() {
+        // P0A1-T14 — run the sync once PER TENANT under that tenant's scope, so each
+        // tenant's agents map only to that tenant's assets. No cross-tenant / all-tenant
+        // agent list is ever loaded for synchronization; a failure in one tenant does
+        // not stop the others (handled by the executor).
+        backgroundExecutor.runForEachTenant("AssetSynchronizationService.syncDataInputsAndAssets",
+                this::syncDataInputsAndAssetsForCurrentTenant);
+    }
+
+    @Transactional
+    public void syncDataInputsAndAssetsForCurrentTenant() {
         String correlationId = UUID.randomUUID().toString().substring(0, 8);
         log.info("[{}] Starting unified asset synchronization cycle", correlationId);
 

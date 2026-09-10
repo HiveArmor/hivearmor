@@ -25,6 +25,12 @@ public class UtmAlertResponseRuleExecution implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // P0A1-T14 follow-on — owning tenant, so pending executions are partitioned by
+    // tenant instead of probed across every tenant. Nullable in DB for existing rows;
+    // stamped from the alert's tenant scope at creation (single-tenant → 0).
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @NotNull
     @Column(name = "rule_id", nullable = false)
     private Long ruleId;

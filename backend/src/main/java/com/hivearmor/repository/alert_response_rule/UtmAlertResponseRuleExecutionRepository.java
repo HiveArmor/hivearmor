@@ -14,4 +14,11 @@ import java.util.List;
 public interface UtmAlertResponseRuleExecutionRepository extends JpaRepository<UtmAlertResponseRuleExecution, Long>, JpaSpecificationExecutor<UtmAlertResponseRuleExecution> {
     List<UtmAlertResponseRuleExecution> findAllRuleByExecutionStatusAndRule_RuleActiveTrue(RuleExecutionStatus status);
 
+    /**
+     * P0A1-T14 follow-on — pending executions for ONE tenant only. Background
+     * command dispatch iterates tenants and uses this so a tenant's commands are
+     * pre-partitioned by {@code tenant_id} rather than probed across every tenant.
+     */
+    List<UtmAlertResponseRuleExecution> findAllByExecutionStatusAndTenantIdAndRule_RuleActiveTrue(RuleExecutionStatus status, Long tenantId);
+
 }
