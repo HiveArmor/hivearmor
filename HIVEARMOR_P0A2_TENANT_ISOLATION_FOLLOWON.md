@@ -127,6 +127,22 @@
   - **NOT in this PR — P2 (the pilot):** `ENABLE`/`FORCE ROW LEVEL SECURITY` + the `tenant_isolation`
     policy on the four EDR/response tables. Deliberately a separate go/no-go PR gated on the
     P0A1-T18 cross-tenant matrix, because enabling policies is the blast-radius step.
+  - **P2 PILOT DELIVERED (feat/p0a2-6-rls-p2-pilot):** changeset `20260910006_rls_pilot_edr_response.xml`
+    enables `ENABLE`/`FORCE ROW LEVEL SECURITY` + a `tenant_isolation` policy (USING **and** WITH CHECK)
+    on the four EDR/response tables (`hive_edr_event`, `hive_edr_quarantine`, `ha_edr_quarantine`,
+    `hive_alert_response_rule_execution`). Predicate:
+    `tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1)` —
+    the `true` (missing_ok) makes an un-GUC'd query fail CLOSED (evaluate against -1 → zero rows)
+    instead of ERRORING; WITH CHECK blocks cross-tenant writes too. GATED per-table by a
+    `sqlCheck` for zero `tenant_id IS NULL` rows with **`onFail="CONTINUE"`** (NOT MARK_RAN — CONTINUE
+    skips-without-recording so it re-evaluates and lands automatically once the operator's backfill
+    leaves the table clean; MARK_RAN would stick as done-forever on a dirty deploy). Each table is an
+    independent changeset with a `<rollback>` (DROP POLICY + DISABLE RLS). **Operator prerequisites
+    (the go/no-go):** (1) run the backfill so each pilot table has zero null tenant_id; (2) the app
+    must connect as the unprivileged `hivearmor_app` role (a superuser/BYPASSRLS role silently
+    bypasses RLS — see the role-provisioning runbook); (3) CI/operator must run the P0A1-T18
+    cross-tenant matrix AGAINST a policied role to prove isolation actually holds before relying on
+    it. The GUC choke point (#281) and role split (runbook) are the wiring this depends on.
 
 ### A2-7 (DESIGN) — agent-manager Go/GORM datasource
 - **From both T19 & T20:** the agent-manager uses a SEPARATE Postgres datasource (GORM) that neither the Java `MsspIndexResolver` nor a backend RLS policy covers. P0-A1 forced tenant predicates in its list queries (T03/T07/T11), but a broader review of its `findAll`/`Unscoped` surface + its own RLS story is a distinct workstream.

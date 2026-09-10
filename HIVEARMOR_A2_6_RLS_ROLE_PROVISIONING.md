@@ -168,10 +168,34 @@ RESET ROLE;
 SHOW app.current_tenant;               -- expect -1 on a fresh connection
 ```
 
-**Post-P2 (later) verification — MUST be added when policies are enabled:** a test that connects
-as `hivearmor_app`, sets `app.current_tenant` to tenant A, and proves a query returns ONLY tenant
-A's rows (and zero when set to a non-owning tenant). Enabling RLS without this test is how a
-"working" backstop ships doing nothing (§6 risk 3).
+**Post-P2 verification — MANDATORY go/no-go once the pilot policies (changeset 20260910006)
+are enabled.** On a deployment still running as a single superuser, the changeset "succeeds"
+(policy created, RLS enabled) but enforces NOTHING — a superuser bypasses RLS — so "migration
+applied" must NOT be mistaken for "isolation enforced." Prove enforcement is live by connecting
+as the unprivileged `hivearmor_app` role and confirming the policy actually filters:
+
+```sql
+-- Connect AS hivearmor_app (not the superuser / migrator), then:
+SELECT set_config('app.current_tenant', '101', true);   -- pretend to be tenant 101
+SELECT count(*) FROM hive_edr_event;                     -- should return ONLY tenant 101's rows
+SELECT set_config('app.current_tenant', '-1', true);     -- an impossible tenant
+SELECT count(*) FROM hive_edr_event;                     -- MUST return 0 (fail-closed proof)
+-- Repeat for hive_edr_quarantine, ha_edr_quarantine, hive_alert_response_rule_execution.
+-- Also run the P0A1-T18 cross-tenant matrix against a policied hivearmor_app connection.
+```
+If the `-1` query returns a non-zero count, RLS is NOT enforcing (you are likely still on a
+superuser/BYPASSRLS connection) — do NOT treat the pilot as live.
+
+**GUC value contract (defense-in-depth):** `app.current_tenant` must only ever be set to a
+NUMERIC string (or left unset). The policy casts it `::bigint`, so a hand-typed
+`SET app.current_tenant = 'notanumber'` on a live session would raise a cast error on every
+query against a policied table until reset. In-app this cannot happen — `TenantGucAspect` only
+ever binds a numeric client id / `0` / `-1`, and the DB-level default is `'-1'` — so this is only
+a warning against manual operator misuse.
+
+**PostgreSQL floor:** the policy uses `current_setting('app.current_tenant', true)` (the
+`missing_ok` two-arg form), which requires PostgreSQL ≥ 9.6. Any supported HiveArmor Postgres is
+far newer; noted for future maintainers.
 
 ---
 
