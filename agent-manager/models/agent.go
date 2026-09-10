@@ -18,7 +18,7 @@ const (
 type Agent struct {
 	gorm.Model
 	Ip       string
-	Hostname string `gorm:"uniqueIndex:idx_hostname_deleted;not null"`
+	Hostname string `gorm:"uniqueIndex:idx_hostname_deleted,priority:2;not null"`
 	Os       string
 	Platform string
 	Version  string
@@ -27,10 +27,13 @@ type Agent struct {
 	AgentKey            string     `gorm:"type:string;index"`
 	AgentKeyHash        string     `gorm:"type:text"`
 	AgentUUID           string     `gorm:"type:varchar(36);uniqueIndex"`
-	TenantID            int64      `gorm:"index;not null;default:0"`
+	// P0A1-T13 — hostname uniqueness is per-tenant, not global. tenant_id is the
+	// first column of idx_hostname_deleted so two tenants may reuse a hostname and
+	// a global hostname existence probe cannot leak across tenants.
+	TenantID            int64      `gorm:"uniqueIndex:idx_hostname_deleted,priority:1;index;not null;default:0"`
 	CredentialVersion   uint32     `gorm:"not null;default:1"`
 	CredentialRevokedAt *time.Time `gorm:"index"`
-	DeletedAt           *time.Time `gorm:"uniqueIndex:idx_hostname_deleted;index:idx_agent_delete"`
+	DeletedAt           *time.Time `gorm:"uniqueIndex:idx_hostname_deleted,priority:3;index:idx_agent_delete"`
 	RegisterBy          string     `gorm:"not null"`
 	DeletedBy           string
 	Mac                 string

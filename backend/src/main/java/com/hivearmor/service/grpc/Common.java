@@ -49,16 +49,16 @@ public final class Common {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\014common.proto\022\005agent\"\\\n\013ListRequest\022\023\n\013" +
+      "\n\014common.proto\022\005agent\"o\n\013ListRequest\022\023\n\013" +
       "page_number\030\001 \001(\005\022\021\n\tpage_size\030\002 \001(\005\022\024\n\014" +
-      "search_query\030\003 \001(\t\022\017\n\007sort_by\030\004 \001(\t\"\'\n\014A" +
-      "uthResponse\022\n\n\002id\030\001 \001(\r\022\013\n\003key\030\002 \001(\t\"H\n\r" +
-      "DeleteRequest\022\022\n\ndeleted_by\030\001 \001(\t\022\020\n\010age" +
-      "nt_id\030\002 \001(\r\022\021\n\ttenant_id\030\003 \001(\003*.\n\006Status" +
-      "\022\n\n\006ONLINE\020\000\022\013\n\007OFFLINE\020\001\022\013\n\007UNKNOWN\020\002*)" +
-      "\n\rConnectorType\022\t\n\005AGENT\020\000\022\r\n\tCOLLECTOR\020" +
-      "\001B)\n\032com.hivearmor.service.grpcB\006CommonP" +
-      "\001\210\001\001b\006proto3"
+      "search_query\030\003 \001(\t\022\017\n\007sort_by\030\004 \001(\t\022\021\n\tt" +
+      "enant_id\030\005 \001(\003\"\'\n\014AuthResponse\022\n\n\002id\030\001 \001" +
+      "(\r\022\013\n\003key\030\002 \001(\t\"H\n\rDeleteRequest\022\022\n\ndele" +
+      "ted_by\030\001 \001(\t\022\020\n\010agent_id\030\002 \001(\r\022\021\n\ttenant" +
+      "_id\030\003 \001(\003*.\n\006Status\022\n\n\006ONLINE\020\000\022\013\n\007OFFLI" +
+      "NE\020\001\022\013\n\007UNKNOWN\020\002*)\n\rConnectorType\022\t\n\005AG" +
+      "ENT\020\000\022\r\n\tCOLLECTOR\020\001B)\n\032com.hivearmor.se" +
+      "rvice.grpcB\006CommonP\001\210\001\001b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -69,7 +69,7 @@ public final class Common {
     internal_static_agent_ListRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_agent_ListRequest_descriptor,
-        new java.lang.String[] { "PageNumber", "PageSize", "SearchQuery", "SortBy", });
+        new java.lang.String[] { "PageNumber", "PageSize", "SearchQuery", "SortBy", "TenantId", });
     internal_static_agent_AuthResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_agent_AuthResponse_fieldAccessorTable = new

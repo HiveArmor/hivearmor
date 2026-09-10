@@ -144,6 +144,24 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int TENANT_ID_FIELD_NUMBER = 5;
+  private long tenantId_ = 0L;
+  /**
+   * <pre>
+   * Tenant scope for endpoint-scoped reads (agents/commands). Set server-side by the
+   * backend from the authenticated identity (TenantContext), never from a client param.
+   * Zero means "no tenant supplied" and is accepted ONLY under an explicit system context
+   * (P0A1-T14); a normal MSSP read with tenant_id == 0 is rejected fail-closed by the manager.
+   * </pre>
+   *
+   * <code>int64 tenant_id = 5;</code>
+   * @return The tenantId.
+   */
+  @java.lang.Override
+  public long getTenantId() {
+    return tenantId_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -170,6 +188,9 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessage.isStringEmpty(sortBy_)) {
       com.google.protobuf.GeneratedMessage.writeString(output, 4, sortBy_);
     }
+    if (tenantId_ != 0L) {
+      output.writeInt64(5, tenantId_);
+    }
     getUnknownFields().writeTo(output);
   }
 
@@ -192,6 +213,10 @@ private static final long serialVersionUID = 0L;
     }
     if (!com.google.protobuf.GeneratedMessage.isStringEmpty(sortBy_)) {
       size += com.google.protobuf.GeneratedMessage.computeStringSize(4, sortBy_);
+    }
+    if (tenantId_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(5, tenantId_);
     }
     size += getUnknownFields().getSerializedSize();
     memoizedSize = size;
@@ -216,6 +241,8 @@ private static final long serialVersionUID = 0L;
         .equals(other.getSearchQuery())) return false;
     if (!getSortBy()
         .equals(other.getSortBy())) return false;
+    if (getTenantId()
+        != other.getTenantId()) return false;
     if (!getUnknownFields().equals(other.getUnknownFields())) return false;
     return true;
   }
@@ -235,6 +262,9 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getSearchQuery().hashCode();
     hash = (37 * hash) + SORT_BY_FIELD_NUMBER;
     hash = (53 * hash) + getSortBy().hashCode();
+    hash = (37 * hash) + TENANT_ID_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getTenantId());
     hash = (29 * hash) + getUnknownFields().hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -370,6 +400,7 @@ private static final long serialVersionUID = 0L;
       pageSize_ = 0;
       searchQuery_ = "";
       sortBy_ = "";
+      tenantId_ = 0L;
       return this;
     }
 
@@ -415,6 +446,9 @@ private static final long serialVersionUID = 0L;
       if (((from_bitField0_ & 0x00000008) != 0)) {
         result.sortBy_ = sortBy_;
       }
+      if (((from_bitField0_ & 0x00000010) != 0)) {
+        result.tenantId_ = tenantId_;
+      }
     }
 
     @java.lang.Override
@@ -444,6 +478,9 @@ private static final long serialVersionUID = 0L;
         sortBy_ = other.sortBy_;
         bitField0_ |= 0x00000008;
         onChanged();
+      }
+      if (other.getTenantId() != 0L) {
+        setTenantId(other.getTenantId());
       }
       this.mergeUnknownFields(other.getUnknownFields());
       onChanged();
@@ -491,6 +528,11 @@ private static final long serialVersionUID = 0L;
               bitField0_ |= 0x00000008;
               break;
             } // case 34
+            case 40: {
+              tenantId_ = input.readInt64();
+              bitField0_ |= 0x00000010;
+              break;
+            } // case 40
             default: {
               if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                 done = true; // was an endgroup tag
@@ -712,6 +754,59 @@ private static final long serialVersionUID = 0L;
       checkByteStringIsUtf8(value);
       sortBy_ = value;
       bitField0_ |= 0x00000008;
+      onChanged();
+      return this;
+    }
+
+    private long tenantId_ ;
+    /**
+     * <pre>
+     * Tenant scope for endpoint-scoped reads (agents/commands). Set server-side by the
+     * backend from the authenticated identity (TenantContext), never from a client param.
+     * Zero means "no tenant supplied" and is accepted ONLY under an explicit system context
+     * (P0A1-T14); a normal MSSP read with tenant_id == 0 is rejected fail-closed by the manager.
+     * </pre>
+     *
+     * <code>int64 tenant_id = 5;</code>
+     * @return The tenantId.
+     */
+    @java.lang.Override
+    public long getTenantId() {
+      return tenantId_;
+    }
+    /**
+     * <pre>
+     * Tenant scope for endpoint-scoped reads (agents/commands). Set server-side by the
+     * backend from the authenticated identity (TenantContext), never from a client param.
+     * Zero means "no tenant supplied" and is accepted ONLY under an explicit system context
+     * (P0A1-T14); a normal MSSP read with tenant_id == 0 is rejected fail-closed by the manager.
+     * </pre>
+     *
+     * <code>int64 tenant_id = 5;</code>
+     * @param value The tenantId to set.
+     * @return This builder for chaining.
+     */
+    public Builder setTenantId(long value) {
+
+      tenantId_ = value;
+      bitField0_ |= 0x00000010;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Tenant scope for endpoint-scoped reads (agents/commands). Set server-side by the
+     * backend from the authenticated identity (TenantContext), never from a client param.
+     * Zero means "no tenant supplied" and is accepted ONLY under an explicit system context
+     * (P0A1-T14); a normal MSSP read with tenant_id == 0 is rejected fail-closed by the manager.
+     * </pre>
+     *
+     * <code>int64 tenant_id = 5;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearTenantId() {
+      bitField0_ = (bitField0_ & ~0x00000010);
+      tenantId_ = 0L;
       onChanged();
       return this;
     }

@@ -255,7 +255,10 @@ func (s *CollectorService) DeleteCollector(ctx context.Context, req *DeleteReque
 func (s *CollectorService) ListCollector(ctx context.Context, req *ListRequest) (*ListCollectorResponse, error) {
 	pageNumber, pageSize := utils.BoundInventoryPage(req.GetPageNumber(), req.GetPageSize())
 	page := utils.NewPaginator(pageSize, pageNumber, req.SortBy)
-	filter := utils.NewFilter(req.SearchQuery)
+	filter, err := tenantScopedFilters(req.GetTenantId(), utils.NewFilter(req.SearchQuery))
+	if err != nil {
+		return nil, err
+	}
 
 	collectors := []models.Collector{}
 	total, err := s.DBConnection.GetByPagination(&collectors, page, filter, "", false)

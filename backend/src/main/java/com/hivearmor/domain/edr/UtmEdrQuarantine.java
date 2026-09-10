@@ -15,6 +15,11 @@ public class UtmEdrQuarantine implements Serializable {
     @Column(name = "agent_id", length = 150, nullable = false)
     private String agentId;
 
+    // P0A1-T09 follow-on — authoritative tenant, assigned server-side (never from
+    // payload). Nullable during rollout/backfill; enforced NOT NULL in a later batch.
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @Column(name = "hostname", length = 200)
     private String hostname;
 
@@ -55,6 +60,8 @@ public class UtmEdrQuarantine implements Serializable {
     public void setId(Long id) { this.id = id; }
     public String getAgentId() { return agentId; }
     public void setAgentId(String agentId) { this.agentId = agentId; }
+    public Long getTenantId() { return tenantId; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
     public String getHostname() { return hostname; }
     public void setHostname(String hostname) { this.hostname = hostname; }
     public String getFilePath() { return filePath; }

@@ -1,6 +1,7 @@
 package com.hivearmor.service;
 
 import com.hivearmor.domain.HaEdrQuarantine;
+import com.hivearmor.multitenancy.TenantScope;
 import com.hivearmor.repository.HaEdrQuarantineRepository;
 import com.hivearmor.service.dto.QuarantineActionRequest;
 import com.hivearmor.service.dto.QuarantineBulkRequest;
@@ -54,14 +55,17 @@ public class HaEdrQuarantineService {
 
         Page<HaEdrQuarantine> results;
 
+        // P0A1-T09 follow-on — every quarantine read is tenant-scoped; the previous
+        // findAll() branch returned every tenant's records.
+        long tenant = TenantScope.requireTenant();
         if (hasAgentId && hasStatus) {
-            results = quarantineRepository.findByAgentIdAndStatus(agentId, status, pageable);
+            results = quarantineRepository.findByTenantIdAndAgentIdAndStatus(tenant, agentId, status, pageable);
         } else if (hasAgentId) {
-            results = quarantineRepository.findByAgentId(agentId, pageable);
+            results = quarantineRepository.findByTenantIdAndAgentId(tenant, agentId, pageable);
         } else if (hasStatus) {
-            results = quarantineRepository.findByStatus(status, pageable);
+            results = quarantineRepository.findByTenantIdAndStatus(tenant, status, pageable);
         } else {
-            results = quarantineRepository.findAll(pageable);
+            results = quarantineRepository.findByTenantId(tenant, pageable);
         }
 
         return results.map(this::toDTO);

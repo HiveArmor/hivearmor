@@ -804,6 +804,14 @@
     <!-- DET-MSSP-001 STAGING CANDIDATE — tenant_id on correlation rules + exceptions -->
     <include file="/config/liquibase/changelog/20260907020_mssp_detection_pack_isolation.xml" relativeToChangelogFile="false"/>
 
+    <!-- P0A1-T08 — authoritative tenant_id on EDR events -->
+    <include file="/config/liquibase/changelog/20260909001_ha_edr_event_tenant.xml" relativeToChangelogFile="false"/>
+
+    <!-- P0A1-T09 follow-on — authoritative tenant_id on quarantine records -->
+    <include file="/config/liquibase/changelog/20260910001_ha_edr_quarantine_tenant.xml" relativeToChangelogFile="false"/>
+    <include file="/config/liquibase/changelog/20260910002_ha_arr_execution_tenant.xml" relativeToChangelogFile="false"/>
+    <include file="/config/liquibase/changelog/20260910003_tenant_backfill_notnull.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
 

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      P0A1-T14 follow-on — tenant attribution for alert-response rule executions.
+      hive_alert_response_rule_execution (UtmAlertResponseRuleExecution) previously
+      had no tenant column, so the background dispatcher had to probe every tenant to
+      resolve each command's target agent. tenant_id lets executeRuleCommands()
+      pre-partition pending commands per tenant.
+
+      tenant_id is assigned SERVER-SIDE from the alert's tenant scope
+      (TenantScope.currentTenantOrNull → 0 for single-tenant) at row creation, never
+      from a request payload. Added nullable during the rollout/backfill window;
+      NOT NULL enforcement deferred to a later batch after backfilling existing rows
+      from their rule/agent owner.
+    -->
+    <changeSet id="20260910002-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="hive_alert_response_rule_execution" columnName="tenant_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="hive_alert_response_rule_execution">
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="hive_alert_response_rule_execution"
+                     indexName="idx_hive_arr_execution_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

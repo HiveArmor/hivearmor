@@ -14,4 +14,10 @@ public interface UtmEdrQuarantineRepository extends JpaRepository<UtmEdrQuaranti
     Page<UtmEdrQuarantine> findByStatus(String status, Pageable pageable);
     List<UtmEdrQuarantine> findByAgentIdAndStatus(String agentId, String status);
     long countByStatus(String status);
+
+    // P0A1-T09 follow-on — tenant-scoped reads. Null-tenant (pre-backfill) rows are
+    // excluded from tenant-scoped reads, so a read can never cross tenants.
+    Page<UtmEdrQuarantine> findByTenantId(Long tenantId, Pageable pageable);
+    Page<UtmEdrQuarantine> findByTenantIdAndAgentId(Long tenantId, String agentId, Pageable pageable);
+    Page<UtmEdrQuarantine> findByTenantIdAndStatus(Long tenantId, String status, Pageable pageable);
 }
