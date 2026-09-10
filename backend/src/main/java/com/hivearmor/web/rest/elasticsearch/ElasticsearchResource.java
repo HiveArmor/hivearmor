@@ -237,6 +237,13 @@ public class ElasticsearchResource {
     @PostMapping("/index/delete-index")
     public ResponseEntity<Void> deleteIndex(@RequestBody List<String> indexes) {
         final String ctx = CLASSNAME + ".deleteIndex";
+        // A2-4 (destructive): /api/** grants ROLE_USER here, and deleteIndex takes raw index
+        // names — without this guard an MSSP tenant USER could delete ANOTHER tenant's index.
+        // Validate every requested name against the caller's scope; fail closed on null/empty.
+        if (indexes == null || indexes.isEmpty()) {
+            return ResponseUtil.buildErrorResponse(HttpStatus.BAD_REQUEST, ctx + ": no index specified");
+        }
+        indexes.forEach(this::validateTenantScope);
         try {
             elasticsearchService.deleteIndex(indexes);
             return ResponseEntity.ok().build();

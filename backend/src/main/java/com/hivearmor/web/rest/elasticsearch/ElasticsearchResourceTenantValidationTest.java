@@ -324,6 +324,81 @@ class ElasticsearchResourceTenantValidationTest {
     }
 
     // =========================================================================
+    // Guard hardening — comma multi-target bypass + destructive deleteIndex
+    // =========================================================================
+
+    @Test
+    @DisplayName("A2-4 MSSP: comma multi-target smuggling another tenant is denied")
+    void search_tenantCwm_commaMultiTargetDenied() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            // First sub-target is in scope, second is another tenant — OpenSearch would read BOTH.
+            assertThatThrownBy(() -> resource.search(null, 100,
+                    "v3-hive-alert-cwm-*,v3-hive-alert-other-*", false, pageable))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: comma list of only own-tenant sub-targets is allowed")
+    void search_tenantCwm_commaAllOwnAllowed() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            assertThatCode(() -> resource.search(null, 100,
+                    "v3-hive-alert-cwm-*,v3-hive-log-cwm-*", false, pageable))
+                .doesNotThrowAnyException();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: deleteIndex denies deleting another tenant's index")
+    void deleteIndex_tenantCwm_otherTenantDenied() throws Exception {
+        try {
+            TenantContext.set("cwm");
+            assertThatThrownBy(() -> resource.deleteIndex(java.util.List.of("v3-hive-alert-other-2026.09.10")))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+            // Service must never be reached for an out-of-scope delete.
+            verify(elasticsearchService, never()).deleteIndex(any());
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: deleteIndex denies a batch containing one foreign index")
+    void deleteIndex_tenantCwm_mixedBatchDenied() throws Exception {
+        try {
+            TenantContext.set("cwm");
+            assertThatThrownBy(() -> resource.deleteIndex(
+                    java.util.List.of("v3-hive-alert-cwm-2026.09.10", "v3-hive-log-other-2026.09.10")))
+                .isInstanceOf(TenantScopeViolationException.class);
+            verify(elasticsearchService, never()).deleteIndex(any());
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: deleteIndex allows deleting own-tenant indexes")
+    void deleteIndex_tenantCwm_ownAllowed() {
+        try {
+            TenantContext.set("cwm");
+            assertThatCode(() -> resource.deleteIndex(java.util.List.of("v3-hive-alert-cwm-2026.09.10")))
+                .doesNotThrowAnyException();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    // =========================================================================
     // Helper methods
     // =========================================================================
 
