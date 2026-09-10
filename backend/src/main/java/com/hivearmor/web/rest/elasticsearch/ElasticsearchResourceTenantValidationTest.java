@@ -227,8 +227,188 @@ class ElasticsearchResourceTenantValidationTest {
     }
 
     // =========================================================================
+    // A2-4 — metadata endpoints must enforce the same tenant scope as the
+    // query endpoints (they previously leaked another tenant's field values,
+    // value+count aggregations, and field/mapping names).
+    // =========================================================================
+
+    @Test
+    @DisplayName("A2-4 MSSP: getFieldValues denies another tenant's index pattern")
+    void getFieldValues_tenantCwm_otherTenantDenied() {
+        try {
+            TenantContext.set("cwm");
+            assertThatThrownBy(() -> resource.getFieldValues("hostname", "v3-hive-log-other-*"))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: getFieldValues allows own tenant index pattern")
+    void getFieldValues_tenantCwm_ownPatternAllowed() {
+        try {
+            TenantContext.set("cwm");
+            when(elasticsearchService.getFieldValues(anyString(), anyString()))
+                .thenReturn(java.util.List.of());
+            assertThatCode(() -> resource.getFieldValues("hostname", "v3-hive-log-cwm-*"))
+                .doesNotThrowAnyException();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 Non-MSSP: getFieldValues allows any pattern")
+    void getFieldValues_noTenantContext_anyPatternAllowed() {
+        assertThat(TenantContext.get()).isNull();
+        when(elasticsearchService.getFieldValues(anyString(), anyString()))
+            .thenReturn(java.util.List.of());
+        assertThatCode(() -> resource.getFieldValues("hostname", "v3-hive-log-other-*"))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: getFieldValuesWithCount denies another tenant's index")
+    void getFieldValuesWithCount_tenantCwm_otherTenantDenied() {
+        try {
+            TenantContext.set("cwm");
+            assertThatThrownBy(() -> resource.getFieldValuesWithCount(valuesWithCount("v3-hive-alert-other-*")))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: getFieldValuesWithCount allows own tenant index")
+    void getFieldValuesWithCount_tenantCwm_ownPatternAllowed() {
+        try {
+            TenantContext.set("cwm");
+            when(elasticsearchService.getFieldValuesWithCount(anyString(), anyString(), any(), any(), anyBoolean(), anyBoolean()))
+                .thenReturn(java.util.Map.of());
+            assertThatCode(() -> resource.getFieldValuesWithCount(valuesWithCount("v3-hive-alert-cwm-*")))
+                .doesNotThrowAnyException();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: getIndexProperties denies another tenant's index pattern")
+    void getIndexProperties_tenantCwm_otherTenantDenied() {
+        try {
+            TenantContext.set("cwm");
+            assertThatThrownBy(() -> resource.getIndexProperties("v3-hive-alert-other-*"))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: getIndexProperties allows own tenant index pattern")
+    void getIndexProperties_tenantCwm_ownPatternAllowed() {
+        try {
+            TenantContext.set("cwm");
+            when(elasticsearchService.getIndexProperties(anyString()))
+                .thenReturn(java.util.List.of());
+            assertThatCode(() -> resource.getIndexProperties("v3-hive-alert-cwm-*"))
+                .doesNotThrowAnyException();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    // =========================================================================
+    // Guard hardening — comma multi-target bypass + destructive deleteIndex
+    // =========================================================================
+
+    @Test
+    @DisplayName("A2-4 MSSP: comma multi-target smuggling another tenant is denied")
+    void search_tenantCwm_commaMultiTargetDenied() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            // First sub-target is in scope, second is another tenant — OpenSearch would read BOTH.
+            assertThatThrownBy(() -> resource.search(null, 100,
+                    "v3-hive-alert-cwm-*,v3-hive-alert-other-*", false, pageable))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: comma list of only own-tenant sub-targets is allowed")
+    void search_tenantCwm_commaAllOwnAllowed() {
+        try {
+            TenantContext.set("cwm");
+            Pageable pageable = PageRequest.of(0, 10);
+            assertThatCode(() -> resource.search(null, 100,
+                    "v3-hive-alert-cwm-*,v3-hive-log-cwm-*", false, pageable))
+                .doesNotThrowAnyException();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: deleteIndex denies deleting another tenant's index")
+    void deleteIndex_tenantCwm_otherTenantDenied() throws Exception {
+        try {
+            TenantContext.set("cwm");
+            assertThatThrownBy(() -> resource.deleteIndex(java.util.List.of("v3-hive-alert-other-2026.09.10")))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+            // Service must never be reached for an out-of-scope delete.
+            verify(elasticsearchService, never()).deleteIndex(any());
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: deleteIndex denies a batch containing one foreign index")
+    void deleteIndex_tenantCwm_mixedBatchDenied() throws Exception {
+        try {
+            TenantContext.set("cwm");
+            assertThatThrownBy(() -> resource.deleteIndex(
+                    java.util.List.of("v3-hive-alert-cwm-2026.09.10", "v3-hive-log-other-2026.09.10")))
+                .isInstanceOf(TenantScopeViolationException.class);
+            verify(elasticsearchService, never()).deleteIndex(any());
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: deleteIndex allows deleting own-tenant indexes")
+    void deleteIndex_tenantCwm_ownAllowed() {
+        try {
+            TenantContext.set("cwm");
+            assertThatCode(() -> resource.deleteIndex(java.util.List.of("v3-hive-alert-cwm-2026.09.10")))
+                .doesNotThrowAnyException();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    // =========================================================================
     // Helper methods
     // =========================================================================
+
+    private ElasticsearchResource.PropertyValuesWithCountRequest valuesWithCount(String indexPattern) {
+        var rq = new ElasticsearchResource.PropertyValuesWithCountRequest();
+        rq.setIndex(indexPattern);
+        rq.setField("hostname");
+        rq.setTop(10);
+        return rq;
+    }
 
     private com.hivearmor.domain.shared_types.CsvExportingParams buildCsvParams(String indexPattern) {
         var params = new com.hivearmor.domain.shared_types.CsvExportingParams();
