@@ -23,9 +23,12 @@ public class TenantBackfillResource {
 
     private final Logger log = LoggerFactory.getLogger(TenantBackfillResource.class);
     private final TenantBackfillService backfillService;
+    private final com.hivearmor.service.uba.UbaSyncService ubaSyncService;
 
-    public TenantBackfillResource(TenantBackfillService backfillService) {
+    public TenantBackfillResource(TenantBackfillService backfillService,
+                                  com.hivearmor.service.uba.UbaSyncService ubaSyncService) {
         this.backfillService = backfillService;
+        this.ubaSyncService = ubaSyncService;
     }
 
     /**
@@ -54,5 +57,21 @@ public class TenantBackfillResource {
         log.info("P0A2 tenant_id NOT-NULL enforcement triggered via /api/ha-tenant-notnull");
         List<TenantBackfillService.EnforceResult> results = backfillService.enforceNotNull();
         return ResponseEntity.ok(results);
+    }
+
+    /**
+     * POST /api/ha-uba-resolve-legacy-tenants — resolve tenant_id for LEGACY MSSP UBA rows
+     * (hive_uba_anomaly / hive_uba_entity_risk) that predate per-tenant sync and cannot be
+     * agent-resolved. Each legacy anomaly is attributed to the tenant whose alert index owns
+     * its originating alert; entity-risk rows inherit their entity's (unambiguous) tenant.
+     * Zero/ambiguous matches stay NULL and are reported — never guessed. ADMIN-only,
+     * idempotent (only touches tenant_id IS NULL). Run this before ha-tenant-notnull so the
+     * UBA NOT-NULL constraint can engage on MSSP.
+     */
+    @PostMapping("/ha-uba-resolve-legacy-tenants")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<com.hivearmor.service.uba.UbaSyncService.LegacyUbaResolution> resolveLegacyUbaTenants() {
+        log.info("P0A2 legacy-UBA tenant resolution triggered via /api/ha-uba-resolve-legacy-tenants");
+        return ResponseEntity.ok(ubaSyncService.resolveLegacyUbaTenants());
     }
 }
