@@ -68,15 +68,14 @@ class MsspProvisioningServicePropertyTest {
     // =========================================================================
 
     /**
-     * Valid {@code clientPrefix}: matches {@code ^[a-z0-9-]{2,20}$} with no
-     * leading/trailing hyphen.
+     * Valid {@code clientPrefix}: matches {@code ^[a-z0-9]{2,20}$} (hyphen-FREE;
+     * the ES tenant-scope guard requires it — see P0-A2 tenant-prefix charset fix).
      */
     @Provide
     Arbitrary<String> validPrefixes() {
         return Arbitraries.strings()
-                .withChars("abcdefghijklmnopqrstuvwxyz0123456789-")
-                .ofMinLength(2).ofMaxLength(20)
-                .filter(s -> !s.startsWith("-") && !s.endsWith("-"));
+                .withChars("abcdefghijklmnopqrstuvwxyz0123456789")
+                .ofMinLength(2).ofMaxLength(20);
     }
 
     /**
