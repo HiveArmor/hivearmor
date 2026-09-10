@@ -79,6 +79,15 @@ class HaSearchServiceConfidenceTest {
     private static final double EXPECTED_SAFE_FALLBACK_CONFIDENCE = 0.1;
 
     /**
+     * ObjectMapper used by the {@code @Provide} factory helpers below. Must be
+     * STATIC: jqwik resolves {@code @Provide} arbitraries BEFORE {@code @BeforeTry}
+     * runs, so an instance field set in {@code setUp()} is still null when the
+     * generators build their nodes (this was the latent NPE while the test was
+     * silently skipped under src/main).
+     */
+    private static final ObjectMapper GEN = new ObjectMapper();
+
+    /**
      * Re-initialises the mock and service before every jqwik trial so that
      * stub configuration from one trial cannot leak into the next.
      */
@@ -245,13 +254,22 @@ class HaSearchServiceConfidenceTest {
     }
 
     /**
-     * Generates strings that will fail the LLM parse/validate pipeline:
+     * Generates strings that will fail the LLM parse/validate pipeline and so must
+     * yield {@link HaSearchService#SAFE_FALLBACK_CONFIDENCE} (0.1):
      * <ul>
      *   <li>Strings with no {@code '{'} character (no JSON object to extract).</li>
-     *   <li>Valid JSON objects that are missing the required {@code query} field
-     *       (DslValidator returns {@code false} for these).</li>
+     *   <li>JSON objects that genuinely fail {@code isValidQueryDsl}: an empty
+     *       object, an object containing a {@code script} key at any depth, or a
+     *       {@code size} that is out of range / non-integer.</li>
      *   <li>Empty and blank strings.</li>
      * </ul>
+     *
+     * <p>NOTE: the CONTRACT is that {@code isValidQueryDsl} accepts ANY non-empty
+     * object with no {@code script} key and a valid {@code size} — it does NOT
+     * require a {@code query} field. An earlier version of this generator wrongly
+     * treated "object without a query field" (e.g. {@code {"size":5}}) as a failure;
+     * those are actually VALID (→ 0.75), which is exactly the assertion that broke
+     * once this test started running.
      */
     @Provide
     Arbitrary<String> invalidLlmOutputs() {
@@ -261,19 +279,24 @@ class HaSearchServiceConfidenceTest {
             .ofMinLength(0)
             .ofMaxLength(80);
 
-        // Group 2: valid JSON objects without a 'query' field (DslValidator rejects)
-        Arbitrary<String> noQueryJsonObjects = Arbitraries.of(
-            "{\"size\":5}",
-            "{\"from\":0}",
-            "{\"explanation\":\"no query here\"}",
-            "{\"confidence\":0.9}",
-            "{\"aggs\":{\"terms\":{\"field\":\"category\"}}}"
+        // Group 2: JSON objects that genuinely FAIL isValidQueryDsl
+        //   - empty object (size == 0 → rejected)
+        //   - script key present (rejected at any depth)
+        //   - size out of range / non-integer (rejected)
+        Arbitrary<String> failingJsonObjects = Arbitraries.of(
+            "{}",
+            "{\"query\":{\"script\":{\"source\":\"1\"}}}",
+            "{\"script\":\"evil\"}",
+            "{\"size\":-1}",
+            "{\"size\":20000}",
+            "{\"size\":\"big\"}",
+            "{\"query\":\"not-an-object\"}"
         );
 
         // Group 3: blank / whitespace-only strings
         Arbitrary<String> blankStrings = Arbitraries.of("", "  ", "\t", "\n");
 
-        return Arbitraries.oneOf(noBraceStrings, noQueryJsonObjects, blankStrings);
+        return Arbitraries.oneOf(noBraceStrings, failingJsonObjects, blankStrings);
     }
 
     // =========================================================================
@@ -285,9 +308,9 @@ class HaSearchServiceConfidenceTest {
      * {@code confidence} field.
      */
     private ObjectNode buildValidQueryNode() {
-        ObjectNode root = objectMapper.createObjectNode();
-        root.set("query", objectMapper.createObjectNode()
-            .set("match_all", objectMapper.createObjectNode()));
+        ObjectNode root = GEN.createObjectNode();
+        root.set("query", GEN.createObjectNode()
+            .set("match_all", GEN.createObjectNode()));
         return root;
     }
 
