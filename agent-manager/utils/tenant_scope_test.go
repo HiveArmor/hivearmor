@@ -100,3 +100,40 @@ func TestQualifiedTenantScope_ForcesQualifiedPredicateAndFailsClosed(t *testing.
 		t.Fatalf("qualified scope must fail closed at tenantID=0, got: %s", sql2)
 	}
 }
+
+// P0-A2-7: TenantScope composes with a user FilterScope by AND (GORM chains
+// Where clauses with AND), so a user-supplied filter can NEITHER widen past the
+// tenant predicate NOR rescue a fail-closed query. This is the real bypass concern
+// for ScopedGetByPagination, which applies TenantScope BEFORE FilterScope.
+func TestTenantScope_ComposesWithFilterScopeAsAND(t *testing.T) {
+	// A malicious user filter that names a different tenant must be ANDed on top of
+	// the forced tenant predicate, never OR-ed — so both predicates appear and the
+	// forced one is not weakened.
+	userFilters := []Filter{{Field: "tenant_id", Op: Is, Value: int64(999)}}
+
+	db := dryRunDB(t)
+	var rows []tenantRow
+	sql := db.Model(&tenantRow{}).
+		Scopes(TenantScope(101)).
+		Scopes(FilterScope(userFilters)).
+		Find(&rows).Statement.SQL.String()
+	if strings.Contains(sql, " OR ") {
+		t.Fatalf("scope + user filter must chain by AND, never OR; got: %s", sql)
+	}
+	if !strings.Contains(sql, "AND") {
+		t.Fatalf("expected the forced tenant predicate ANDed with the user filter, got: %s", sql)
+	}
+
+	// Fail-closed survives a user filter: 1=0 ANDed with anything is still empty.
+	db2 := dryRunDB(t)
+	sql2 := db2.Model(&tenantRow{}).
+		Scopes(TenantScope(0)).
+		Scopes(FilterScope(userFilters)).
+		Find(&rows).Statement.SQL.String()
+	if !strings.Contains(sql2, "1 = 0") {
+		t.Fatalf("fail-closed must survive a user filter (1=0 AND ...), got: %s", sql2)
+	}
+	if strings.Contains(sql2, " OR ") {
+		t.Fatalf("a user filter must not OR-rescue a fail-closed query, got: %s", sql2)
+	}
+}
