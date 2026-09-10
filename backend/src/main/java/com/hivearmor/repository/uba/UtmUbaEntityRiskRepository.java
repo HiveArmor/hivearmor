@@ -24,6 +24,12 @@ public interface UtmUbaEntityRiskRepository extends JpaRepository<UtmUbaEntityRi
     /** P0A2-3 — decay operates within a single tenant's rows per per-tenant run. */
     List<UtmUbaEntityRisk> findByTenantId(Long tenantId);
 
+    /**
+     * P0A2 UBA legacy resolver — MSSP legacy entity-risk rows with no tenant. Resolved
+     * transitively from the tenant of anomalies sharing the same (entity_id, entity_type).
+     */
+    List<UtmUbaEntityRisk> findByTenantIdIsNull();
+
     Optional<UtmUbaEntityRisk> findFirstByEntityId(String entityId);
 
     Page<UtmUbaEntityRisk> findAllByOrderByRiskScoreDesc(Pageable pageable);

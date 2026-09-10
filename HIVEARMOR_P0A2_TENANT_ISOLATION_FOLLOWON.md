@@ -84,6 +84,19 @@
   NOT-NULL is still additionally covered by the stable-signal changeset `20260910003` (gated on
   deployment shape, where MARK_RAN-forever is correct). MSSP legacy UBA rows stay skipped until a
   UBA-specific migration resolves them from the originating alert's tenant.
+- **UBA legacy-row resolution DELIVERED (feat/p0a2-uba-legacy-tenant-resolve) — APPLICATION-LEVEL.**
+  `UbaSyncService.resolveLegacyUbaTenants()` + admin-only `POST /api/ha-uba-resolve-legacy-tenants`.
+  Each legacy MSSP anomaly (`tenant_id IS NULL`) is attributed to the tenant whose alert index
+  owns its originating alert — the alert's OpenSearch id is stored in the anomaly's `details_json`
+  as `alertId`, and for each MSSP tenant we probe `MsspIndexResolver.resolveIndexPatternForPrefix
+  ("alert", prefix)` via `ElasticsearchService.exists`. A UNIQUE tenant match stamps the row; zero
+  or AMBIGUOUS (>1 tenant) matches, or a tenant-index probe error, leave it NULL and are reported —
+  never guessed (no cross-tenant mis-attribution). Entity-risk rows carry no alert id, so they
+  inherit the (unambiguous) tenant of anomalies sharing their `(entity_id, entity_type)`. Idempotent
+  (only touches `tenant_id IS NULL`). Application-level because the authoritative alert lives in
+  OpenSearch (a different store) — no in-DB join can derive it. RUN ORDER: backfill →
+  resolve-legacy-UBA → ha-tenant-notnull (the UBA NOT-NULL constraint then engages on MSSP once
+  these rows are resolved; any still-ambiguous rows keep it deferred, which is correct).
 
 ### A2-6 (DESIGN) — Postgres RLS defense-in-depth
 - **From T20:** adopt RLS as a second layer beneath app-level scoping, but ONLY after backfill + NOT NULL on `tenant_id`. Pilot on the four P0-A1 EDR/response tables
