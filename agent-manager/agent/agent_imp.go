@@ -223,7 +223,10 @@ func (s *AgentService) DeleteAgent(ctx context.Context, req *DeleteRequest) (*Au
 func (s *AgentService) ListAgents(ctx context.Context, req *ListRequest) (*ListAgentsResponse, error) {
 	pageNumber, pageSize := utils.BoundInventoryPage(req.GetPageNumber(), req.GetPageSize())
 	page := utils.NewPaginator(pageSize, pageNumber, req.SortBy)
-	filter := utils.NewFilter(req.SearchQuery)
+	filter, err := tenantScopedFilters(req.GetTenantId(), utils.NewFilter(req.SearchQuery))
+	if err != nil {
+		return nil, err
+	}
 
 	agents := []models.Agent{}
 	total, err := s.DBConnection.GetByPagination(&agents, page, filter, "", false)
@@ -391,10 +394,13 @@ func (s *AgentService) ProcessCommand(stream PanelService_ProcessCommandServer) 
 func (s *AgentService) ListAgentCommands(ctx context.Context, req *ListRequest) (*ListAgentsCommandsResponse, error) {
 	pageNumber, pageSize := utils.BoundInventoryPage(req.GetPageNumber(), req.GetPageSize())
 	page := utils.NewPaginator(pageSize, pageNumber, req.SortBy)
-	filter := utils.NewFilter(req.SearchQuery)
+	join, filter, err := tenantScopedCommandFilters(req.GetTenantId(), utils.NewFilter(req.SearchQuery))
+	if err != nil {
+		return nil, err
+	}
 
 	commands := []models.AgentCommand{}
-	total, err := s.DBConnection.GetByPagination(&commands, page, filter, "", false)
+	total, err := s.DBConnection.GetByPagination(&commands, page, filter, join, false)
 	if err != nil {
 		catcher.Error("failed to fetch agent commands", err, map[string]any{"process": "agent-manager"})
 		return nil, status.Errorf(codes.Internal, "failed to fetch agent commands: %v", err)
