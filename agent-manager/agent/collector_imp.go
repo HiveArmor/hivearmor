@@ -255,13 +255,13 @@ func (s *CollectorService) DeleteCollector(ctx context.Context, req *DeleteReque
 func (s *CollectorService) ListCollector(ctx context.Context, req *ListRequest) (*ListCollectorResponse, error) {
 	pageNumber, pageSize := utils.BoundInventoryPage(req.GetPageNumber(), req.GetPageSize())
 	page := utils.NewPaginator(pageSize, pageNumber, req.SortBy)
-	filter, err := tenantScopedFilters(req.GetTenantId(), utils.NewFilter(req.SearchQuery))
-	if err != nil {
-		return nil, err
+	if req.GetTenantId() <= 0 {
+		return nil, status.Error(codes.PermissionDenied,
+			"tenant scope is required for this read but no tenant was supplied")
 	}
 
 	collectors := []models.Collector{}
-	total, err := s.DBConnection.GetByPagination(&collectors, page, filter, "", false)
+	total, err := s.DBConnection.ScopedGetByPagination(&collectors, req.GetTenantId(), page, utils.NewFilter(req.SearchQuery), "", false)
 	if err != nil {
 		catcher.Error("failed to fetch collectors", err, map[string]any{"process": "agent-manager"})
 		return nil, status.Errorf(codes.Internal, "failed to fetch collectors: %v", err)

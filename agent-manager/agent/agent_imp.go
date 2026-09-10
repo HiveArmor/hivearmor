@@ -223,13 +223,15 @@ func (s *AgentService) DeleteAgent(ctx context.Context, req *DeleteRequest) (*Au
 func (s *AgentService) ListAgents(ctx context.Context, req *ListRequest) (*ListAgentsResponse, error) {
 	pageNumber, pageSize := utils.BoundInventoryPage(req.GetPageNumber(), req.GetPageSize())
 	page := utils.NewPaginator(pageSize, pageNumber, req.SortBy)
-	filter, err := tenantScopedFilters(req.GetTenantId(), utils.NewFilter(req.SearchQuery))
-	if err != nil {
-		return nil, err
+	// Reject a missing tenant loudly up front (gRPC PermissionDenied), then let
+	// ScopedGetByPagination force the tenant_id predicate structurally (P0-A2-7).
+	if req.GetTenantId() <= 0 {
+		return nil, status.Error(codes.PermissionDenied,
+			"tenant scope is required for this read but no tenant was supplied")
 	}
 
 	agents := []models.Agent{}
-	total, err := s.DBConnection.GetByPagination(&agents, page, filter, "", false)
+	total, err := s.DBConnection.ScopedGetByPagination(&agents, req.GetTenantId(), page, utils.NewFilter(req.SearchQuery), "", false)
 	if err != nil {
 		catcher.Error("failed to fetch agents", err, map[string]any{"process": "agent-manager"})
 		return nil, status.Errorf(codes.Internal, "failed to fetch agents: %v", err)
