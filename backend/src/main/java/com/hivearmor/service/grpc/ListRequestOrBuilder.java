@@ -44,4 +44,17 @@ public interface ListRequestOrBuilder extends
    */
   com.google.protobuf.ByteString
       getSortByBytes();
+
+  /**
+   * <pre>
+   * Tenant scope for endpoint-scoped reads (agents/commands). Set server-side by the
+   * backend from the authenticated identity (TenantContext), never from a client param.
+   * Zero means "no tenant supplied" and is accepted ONLY under an explicit system context
+   * (P0A1-T14); a normal MSSP read with tenant_id == 0 is rejected fail-closed by the manager.
+   * </pre>
+   *
+   * <code>int64 tenant_id = 5;</code>
+   * @return The tenantId.
+   */
+  long getTenantId();
 }
