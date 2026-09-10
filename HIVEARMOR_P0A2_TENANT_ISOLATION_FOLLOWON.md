@@ -107,6 +107,26 @@
   set/clear + the `TenantScopedBackgroundExecutor` per-tenant loop, with a fail-closed
   default so an unset GUC denies rather than exposes.
 - **Top risks:** connection-pool GUC bleed; the nullable rollout window; superuser bypass.
+- **P0 + P1 DELIVERED (feat/p0a2-6-rls-p0-p1), INERT.** Backfill + NOT-NULL prerequisites are
+  now met (#278/#279/#280). This PR ships the low-risk foundation the spike recommends, with NO
+  policy enabled yet:
+  - **P1 (code):** `TenantGucAspect` — an `@Order(HIGHEST_PRECEDENCE)` `@Around` on `@Transactional`
+    that, inside the active transaction, issues transaction-local
+    `SELECT set_config('app.current_tenant', ?, true)` on the tx-bound connection (bound param, no
+    injection). One choke point covers BOTH request threads and the `TenantScopedBackgroundExecutor`
+    (both run `@Transactional`). Fail-closed value mapping: `getClientId()` → that id; null +
+    single-tenant → `0`; null + MSSP → `-1` (impossible id → future policy returns zero rows, never
+    a leak). Transaction-local scope is safe against Hikari pool bleed (works because prod runs
+    `auto-commit=false`). Ships INERT — no policy reads the GUC yet, so it is a verifiable no-op.
+    5 unit tests (value mapping ×3, bound-param set_config, inert-phase failure swallowed).
+  - **P0 (ops):** `HIVEARMOR_A2_6_RLS_ROLE_PROVISIONING.md` — the unprivileged-app-role /
+    `BYPASSRLS`-migration-role split (a superuser silently bypasses RLS, so this is what makes RLS
+    actually enforce), as an idempotent SQL script + `spring.liquibase.user`/datasource config
+    change + verification + rollback. NOT a Liquibase changeset (role provisioning is a privileged
+    operational action).
+  - **NOT in this PR — P2 (the pilot):** `ENABLE`/`FORCE ROW LEVEL SECURITY` + the `tenant_isolation`
+    policy on the four EDR/response tables. Deliberately a separate go/no-go PR gated on the
+    P0A1-T18 cross-tenant matrix, because enabling policies is the blast-radius step.
 
 ### A2-7 (DESIGN) — agent-manager Go/GORM datasource
 - **From both T19 & T20:** the agent-manager uses a SEPARATE Postgres datasource (GORM) that neither the Java `MsspIndexResolver` nor a backend RLS policy covers. P0-A1 forced tenant predicates in its list queries (T03/T07/T11), but a broader review of its `findAll`/`Unscoped` surface + its own RLS story is a distinct workstream.
