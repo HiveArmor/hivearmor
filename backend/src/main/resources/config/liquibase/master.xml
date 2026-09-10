@@ -810,6 +810,7 @@
     <!-- P0A1-T09 follow-on — authoritative tenant_id on quarantine records -->
     <include file="/config/liquibase/changelog/20260910001_ha_edr_quarantine_tenant.xml" relativeToChangelogFile="false"/>
     <include file="/config/liquibase/changelog/20260910002_ha_arr_execution_tenant.xml" relativeToChangelogFile="false"/>
+    <include file="/config/liquibase/changelog/20260910003_tenant_backfill_notnull.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>
 

@@ -40,6 +40,22 @@
 ### A2-5 (INFO) — confirm log/statistics indexes are tenant-free by design
 - **Open item (T19):** `v3-hive-backend-logs` and `v3-hive-statistics-*` readers (audit-log resources, `ApplicationEventService`) were classified N/A provisionally. Confirm they are admin-`@PreAuthorize`'d and genuinely tenant-agnostic, or scope them.
 
+### A2-B (MSSP BACKFILL CONTRACT) — application-level tenant backfill + NOT NULL for MSSP
+- **Context:** changeset `20260910003_tenant_backfill_notnull.xml` backfills `tenant_id = 0`
+  and enforces NOT NULL for the four EDR/response tables, but is GATED to SINGLE-TENANT
+  deployments (precondition: no MSSP-managed client with a prefix). It MARK_RANs on MSSP,
+  because the authoritative agent→tenant mapping lives in the agent-manager's SEPARATE
+  Postgres (the `agents` table, reachable only over gRPC) — there is no in-DB join.
+- **Required for MSSP:** an application-level backfill job that, for each legacy row with
+  NULL `tenant_id` in `hive_edr_event`, `hive_edr_quarantine`, `ha_edr_quarantine`,
+  `hive_alert_response_rule_execution`, resolves the owning agent's tenant via the manager
+  (`agent_id`/`agent` → tenant), stamps the row, and reports rows it could not resolve
+  (orphaned agents) rather than defaulting them to 0. Run it per-tenant via the
+  `TenantScopedBackgroundExecutor` pattern, idempotent, resumable.
+- **Then:** a follow-up changeset enforces NOT NULL on MSSP (guarded by the INVERSE
+  precondition — MSSP-managed clients exist AND zero NULL rows remain), so NOT NULL is
+  only applied once the job has completed. Do NOT enforce NOT NULL on MSSP before the job.
+
 ### A2-6 (DESIGN) — Postgres RLS defense-in-depth
 - **From T20:** adopt RLS as a second layer beneath app-level scoping, but ONLY after backfill + NOT NULL on `tenant_id`. Pilot on the four P0-A1 EDR/response tables
   (`hive_edr_event`, `hive_edr_quarantine`, `ha_edr_quarantine`, `hive_alert_response_rule_execution`).
