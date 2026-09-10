@@ -31,12 +31,17 @@ public class EntityGraphResource {
 
     private static final String CLASSNAME = "EntityGraphResource";
     private final Logger log = LoggerFactory.getLogger(EntityGraphResource.class);
-    private static final String ALERT_INDEX = "v3-hive-alert-*";
+    // P0A2-1 (T19 G3) — index TYPE only; the full pattern is resolved per-request via
+    // MsspIndexResolver so it is tenant-scoped (v3-hive-alert-<prefix>-*) in MSSP mode.
+    private static final String ALERT_INDEX_TYPE = "alert";
 
     private final OpensearchClientBuilder client;
+    private final com.hivearmor.multitenancy.MsspIndexResolver indexResolver;
 
-    public EntityGraphResource(OpensearchClientBuilder client) {
+    public EntityGraphResource(OpensearchClientBuilder client,
+                               com.hivearmor.multitenancy.MsspIndexResolver indexResolver) {
         this.client = client;
+        this.indexResolver = indexResolver;
     }
 
     public record GraphNode(String id, String type, String label, Map<String, Object> properties) {}
@@ -85,7 +90,7 @@ public class EntityGraphResource {
         )));
 
         SearchRequest request = SearchRequest.of(r -> r
-            .index(ALERT_INDEX)
+            .index(indexResolver.resolveIndexPattern(ALERT_INDEX_TYPE))
             .query(query)
             .size(0)
             .aggregations("related_ips",   a -> a.terms(t -> t.field("adversary.ip.keyword").size(20)))
@@ -149,7 +154,7 @@ public class EntityGraphResource {
                 )));
 
                 SearchRequest req = SearchRequest.of(r -> r
-                    .index(ALERT_INDEX).query(q).size(0)
+                    .index(indexResolver.resolveIndexPattern(ALERT_INDEX_TYPE)).query(q).size(0)
                     .aggregations("users", a -> a.terms(t -> t.field("adversary.user.keyword").size(5)))
                     .aggregations("hosts", a -> a.terms(t -> t.field("adversary.host.keyword").size(5)))
                 );
