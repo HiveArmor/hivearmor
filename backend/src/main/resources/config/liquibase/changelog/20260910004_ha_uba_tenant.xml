@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      P0A2-3 (T19 G5) — tenant attribution for UBA (User Behaviour Analytics) tables.
+      hive_uba_anomaly and hive_uba_entity_risk previously had no tenant column, so the
+      scheduled UbaSyncService aggregated ANOMALY alerts across ALL tenants into shared
+      rows (dedup + entity-risk upsert keyed only on entityId/entityType, so two tenants
+      sharing an entityId collided). tenant_id lets the sync run per tenant and keep each
+      tenant's UBA data isolated.
+
+      tenant_id is stamped SERVER-SIDE from the sync's tenant scope
+      (TenantScope.requireTenant → 0 for single-tenant), never from a request payload.
+      Added nullable during the rollout/backfill window; NOT-NULL enforcement deferred to
+      a later batch after backfilling existing rows from their owning tenant.
+    -->
+    <changeSet id="20260910004-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="hive_uba_anomaly" columnName="tenant_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="hive_uba_anomaly">
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="hive_uba_anomaly" indexName="idx_hive_uba_anomaly_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260910004-2" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="hive_uba_entity_risk" columnName="tenant_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="hive_uba_entity_risk">
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="hive_uba_entity_risk" indexName="idx_hive_uba_entity_risk_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

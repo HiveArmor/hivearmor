@@ -26,4 +26,10 @@ public interface UtmUbaAnomalyRepository extends JpaRepository<UtmUbaAnomaly, Lo
     long countByStatus(String status);
 
     boolean existsByDetailsJsonContaining(String fragment);
+
+    /**
+     * P0A2-3 — tenant-scoped dedup. The sync runs per tenant, so dedup must match
+     * within the same tenant only (two tenants may legitimately carry the same alert id).
+     */
+    boolean existsByTenantIdAndDetailsJsonContaining(Long tenantId, String fragment);
 }
