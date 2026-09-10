@@ -50,6 +50,14 @@ class HaSearchServiceParserTest {
     private HaSearchService service;
 
     /**
+     * ObjectMapper used by the {@code @Provide} factory helpers below. Must be
+     * STATIC: jqwik resolves {@code @Provide} arbitraries BEFORE {@code @BeforeTry}
+     * runs, so the instance {@code objectMapper} is still null when the generators
+     * build their nodes (the latent NPE while this test was silently skipped).
+     */
+    private static final ObjectMapper GEN = new ObjectMapper();
+
+    /**
      * Re-initialises mocks and service before every jqwik trial so that no
      * state leaks between iterations.
      */
@@ -211,24 +219,24 @@ class HaSearchServiceParserTest {
 
     /** Minimal single-field object. */
     private ObjectNode minimalObject() {
-        ObjectNode root = objectMapper.createObjectNode();
+        ObjectNode root = GEN.createObjectNode();
         root.put("type", "minimal");
         return root;
     }
 
     /** Typical match-all DSL: {@code {"query":{"match_all":{}}}} */
     private ObjectNode matchAllQuery() {
-        ObjectNode root = objectMapper.createObjectNode();
-        root.set("query", objectMapper.createObjectNode()
-            .set("match_all", objectMapper.createObjectNode()));
+        ObjectNode root = GEN.createObjectNode();
+        root.set("query", GEN.createObjectNode()
+            .set("match_all", GEN.createObjectNode()));
         return root;
     }
 
     /** Typical LLM response with confidence and explanation fields. */
     private ObjectNode queryWithConfidenceAndExplanation() {
-        ObjectNode root = objectMapper.createObjectNode();
-        ObjectNode query = objectMapper.createObjectNode();
-        ObjectNode term = objectMapper.createObjectNode();
+        ObjectNode root = GEN.createObjectNode();
+        ObjectNode query = GEN.createObjectNode();
+        ObjectNode term = GEN.createObjectNode();
         term.put("severity", "critical");
         query.set("term", term);
         root.set("query", query);
@@ -239,28 +247,28 @@ class HaSearchServiceParserTest {
 
     /** Object with a numeric {@code size} field inside the valid range. */
     private ObjectNode queryWithSizeField() {
-        ObjectNode root = objectMapper.createObjectNode();
-        root.set("query", objectMapper.createObjectNode()
-            .set("match_all", objectMapper.createObjectNode()));
+        ObjectNode root = GEN.createObjectNode();
+        root.set("query", GEN.createObjectNode()
+            .set("match_all", GEN.createObjectNode()));
         root.put("size", 250);
         return root;
     }
 
     /** Nested bool query simulating an authentication-failure search. */
     private ObjectNode nestedBoolQuery() {
-        ObjectNode root = objectMapper.createObjectNode();
-        ObjectNode bool = objectMapper.createObjectNode();
-        ObjectNode matchEntry = objectMapper.createObjectNode();
+        ObjectNode root = GEN.createObjectNode();
+        ObjectNode bool = GEN.createObjectNode();
+        ObjectNode matchEntry = GEN.createObjectNode();
         matchEntry.put("category", "authentication_failure");
-        ObjectNode matchClause = objectMapper.createObjectNode();
+        ObjectNode matchClause = GEN.createObjectNode();
         matchClause.set("category", matchEntry);
-        ObjectNode matchOuter = objectMapper.createObjectNode();
+        ObjectNode matchOuter = GEN.createObjectNode();
         matchOuter.set("match", matchClause);
         com.fasterxml.jackson.databind.node.ArrayNode mustArr =
-            objectMapper.createArrayNode();
+            GEN.createArrayNode();
         mustArr.add(matchOuter);
         bool.set("must", mustArr);
-        ObjectNode query = objectMapper.createObjectNode();
+        ObjectNode query = GEN.createObjectNode();
         query.set("bool", bool);
         root.set("query", query);
         return root;
@@ -271,29 +279,29 @@ class HaSearchServiceParserTest {
      * Verifies the string-literal scanner ignores {@code {}} inside JSON strings.
      */
     private ObjectNode objectWithBracesInStringValue() {
-        ObjectNode root = objectMapper.createObjectNode();
-        root.set("query", objectMapper.createObjectNode()
-            .set("match_all", objectMapper.createObjectNode()));
+        ObjectNode root = GEN.createObjectNode();
+        root.set("query", GEN.createObjectNode()
+            .set("match_all", GEN.createObjectNode()));
         root.put("hint", "Use {wildcard} or {range} queries for flexible filtering.");
         return root;
     }
 
     /** Object whose string value contains escaped double-quote characters. */
     private ObjectNode objectWithEscapedQuotesInValue() {
-        ObjectNode root = objectMapper.createObjectNode();
-        root.set("query", objectMapper.createObjectNode()
-            .set("match_all", objectMapper.createObjectNode()));
+        ObjectNode root = GEN.createObjectNode();
+        root.set("query", GEN.createObjectNode()
+            .set("match_all", GEN.createObjectNode()));
         root.put("label", "Find \"failed\" login attempts");
         return root;
     }
 
     /** Object with an array-valued field. */
     private ObjectNode objectWithArrayField() {
-        ObjectNode root = objectMapper.createObjectNode();
-        root.set("query", objectMapper.createObjectNode()
-            .set("match_all", objectMapper.createObjectNode()));
+        ObjectNode root = GEN.createObjectNode();
+        root.set("query", GEN.createObjectNode()
+            .set("match_all", GEN.createObjectNode()));
         com.fasterxml.jackson.databind.node.ArrayNode tags =
-            objectMapper.createArrayNode();
+            GEN.createArrayNode();
         tags.add("auth");
         tags.add("critical");
         root.set("tags", tags);
@@ -302,19 +310,19 @@ class HaSearchServiceParserTest {
 
     /** Object with a boolean field. */
     private ObjectNode objectWithBooleanField() {
-        ObjectNode root = objectMapper.createObjectNode();
-        root.set("query", objectMapper.createObjectNode()
-            .set("match_all", objectMapper.createObjectNode()));
+        ObjectNode root = GEN.createObjectNode();
+        root.set("query", GEN.createObjectNode()
+            .set("match_all", GEN.createObjectNode()));
         root.put("track_total_hits", true);
         return root;
     }
 
     /** Three-level deeply nested object. */
     private ObjectNode deeplyNestedObject() {
-        ObjectNode root = objectMapper.createObjectNode();
-        ObjectNode level1 = objectMapper.createObjectNode();
-        ObjectNode level2 = objectMapper.createObjectNode();
-        ObjectNode level3 = objectMapper.createObjectNode();
+        ObjectNode root = GEN.createObjectNode();
+        ObjectNode level1 = GEN.createObjectNode();
+        ObjectNode level2 = GEN.createObjectNode();
+        ObjectNode level3 = GEN.createObjectNode();
         level3.put("field", "value");
         level2.set("deep", level3);
         level1.set("inner", level2);

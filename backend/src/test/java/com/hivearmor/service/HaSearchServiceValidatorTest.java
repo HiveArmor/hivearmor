@@ -6,9 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.hivearmor.ai.HaLlmService;
 import com.hivearmor.multitenancy.MsspIndexResolver;
 import net.jqwik.api.*;
-import org.junit.jupiter.api.BeforeEach;
-
-import java.lang.reflect.Method;
+import net.jqwik.api.lifecycle.BeforeProperty;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -31,35 +29,33 @@ class HaSearchServiceValidatorTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private HaSearchService service;
-    private Method isValidQueryDslMethod;
 
-    @BeforeEach
-    void setUp() throws Exception {
+    /**
+     * jqwik lifecycle: {@code @BeforeProperty} runs before a property's tries.
+     * (JUnit's {@code @BeforeEach} does NOT run for jqwik {@code @Property}
+     * methods — that was the latent NPE while this test was silently skipped
+     * under src/main: {@code service} was never initialised.)
+     */
+    @BeforeProperty
+    void setUp() {
         HaLlmService llmService = mock(HaLlmService.class);
         MsspIndexResolver resolver = mock(MsspIndexResolver.class);
         service = new HaSearchService(llmService, MAPPER, resolver);
-
-        isValidQueryDslMethod =
-                HaSearchService.class.getDeclaredMethod("isValidQueryDsl", JsonNode.class);
-        isValidQueryDslMethod.setAccessible(true);
     }
 
     // =========================================================================
-    // Reflection helper
+    // Validator invocation — via the package-private test accessor (no reflection)
     // =========================================================================
 
     /**
-     * Invokes the private {@code isValidQueryDsl} method via reflection.
+     * Calls {@code isValidQueryDsl} through the service's package-private
+     * {@code isValidQueryDslForTesting} accessor (same package), avoiding reflection.
      *
      * @param node the candidate node to validate (may be null)
      * @return the boolean result of {@code isValidQueryDsl(node)}
      */
     private boolean invoke(JsonNode node) {
-        try {
-            return (boolean) isValidQueryDslMethod.invoke(service, node);
-        } catch (Exception e) {
-            throw new AssertionError("Reflection invocation of isValidQueryDsl failed", e);
-        }
+        return service.isValidQueryDslForTesting(node);
     }
 
     // =========================================================================
