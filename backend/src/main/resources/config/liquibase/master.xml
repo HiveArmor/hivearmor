@@ -812,7 +812,6 @@
     <include file="/config/liquibase/changelog/20260910002_ha_arr_execution_tenant.xml" relativeToChangelogFile="false"/>
     <include file="/config/liquibase/changelog/20260910003_tenant_backfill_notnull.xml" relativeToChangelogFile="false"/>
     <include file="/config/liquibase/changelog/20260910004_ha_uba_tenant.xml" relativeToChangelogFile="false"/>
-    <include file="/config/liquibase/changelog/20260910005_tenant_notnull_enforcement.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>
 

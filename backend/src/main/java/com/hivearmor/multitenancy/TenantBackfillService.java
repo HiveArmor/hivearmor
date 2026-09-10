@@ -224,4 +224,69 @@ public class TenantBackfillService {
             .getSingleResult();
         return ((Number) c).longValue();
     }
+
+    // ---------------------------------------------------------------------------------------
+    // NOT-NULL enforcement — the FINAL, irreversible step of the isolation programme.
+    //
+    // This is deliberately application-level, NOT a Liquibase changeset. A Liquibase
+    // precondition gated on a TRANSIENT data state (are there NULLs right now?) with
+    // onFail="MARK_RAN" fails permanently: once it runs on a still-dirty deploy it is
+    // recorded as MARK_RAN and NEVER re-evaluated, so the constraint would never land on
+    // exactly the MSSP deployments that need it. Enforcing here — re-checked on every call,
+    // applied only when the table is provably clean — makes "enforce once clean" actually
+    // work and mirrors the app-level backfill precedent (the authoritative agent→tenant map
+    // lives outside this DB).
+    // ---------------------------------------------------------------------------------------
+
+    /** Per-table enforcement outcome. */
+    public record EnforceResult(String table, boolean enforced, long remainingNull, boolean alreadyNotNull) { }
+
+    /**
+     * Enforce {@code tenant_id NOT NULL} on every tenant table that is provably clean (zero
+     * NULLs). Idempotent and safe to re-run: a table that still has NULLs is SKIPPED (not
+     * altered, never defaulted to a wrong tenant) and reported so the operator can re-run the
+     * backfill and call this again. A table already NOT NULL is a no-op. Run this AFTER
+     * {@link #backfill()} reports zero remaining nulls (and, for MSSP UBA tables, after a
+     * UBA-specific migration resolves their legacy rows).
+     *
+     * @return per-table outcome (enforced / skipped-with-remainingNull / already-not-null).
+     */
+    @Transactional
+    public List<EnforceResult> enforceNotNull() {
+        List<String> allTables = new ArrayList<>(AGENT_LINKED_TABLES.keySet());
+        allTables.addAll(UBA_TABLES);
+
+        List<EnforceResult> results = new ArrayList<>();
+        for (String table : allTables) {
+            if (isTenantIdNotNull(table)) {
+                results.add(new EnforceResult(table, false, 0, true));
+                continue;
+            }
+            long remaining = countNull(table);
+            if (remaining > 0) {
+                // Fail SAFE: do not lock a table that still has unattributed rows.
+                results.add(new EnforceResult(table, false, remaining, false));
+                log.warn("P0A2 NOT-NULL: {} still has {} NULL tenant_id rows — NOT enforced; "
+                        + "re-run backfill then retry", table, remaining);
+                continue;
+            }
+            // table name is a hardcoded constant; no user input reaches this DDL.
+            em.createNativeQuery("ALTER TABLE " + table + " ALTER COLUMN tenant_id SET NOT NULL")
+                .executeUpdate();
+            results.add(new EnforceResult(table, true, 0, false));
+            log.info("P0A2 NOT-NULL: enforced tenant_id NOT NULL on {}", table);
+        }
+        return results;
+    }
+
+    /** True if {@code tenant_id} is already NOT NULL on the given table (Postgres catalog). */
+    private boolean isTenantIdNotNull(String table) {
+        // information_schema.columns.is_nullable = 'NO' once the constraint is set.
+        Object nullable = em.createNativeQuery(
+                "SELECT is_nullable FROM information_schema.columns "
+                + "WHERE table_name = :t AND column_name = 'tenant_id'")
+            .setParameter("t", table)
+            .getResultList().stream().findFirst().orElse(null);
+        return "NO".equals(nullable);
+    }
 }

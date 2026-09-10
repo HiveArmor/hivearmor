@@ -68,15 +68,22 @@
   identifier, so matching it against agent hostnames would orphan user/ip entities or
   mis-stamp a colliding username cross-tenant. New UBA rows are already tenant-stamped at
   insert (A2-3), so only LEGACY MSSP UBA rows remain NULL, reported as unresolvable-by-agent.
-- **NOT-NULL enforcement DELIVERED (feat/p0a2-notnull-enforcement):** changeset
-  `20260910005_tenant_notnull_enforcement.xml` enforces NOT NULL on MSSP for the four
-  EDR/response tables AND on both UBA tables. The guard is the DATA STATE, not deployment
-  shape: each changeset's `addNotNullConstraint` runs ONLY when a `sqlCheck` confirms that
-  table already has ZERO NULLs, else MARK_RAN. This fails SAFE — it lands automatically on
-  the first deploy after the operator's backfill leaves the table clean, and no-ops on every
-  deploy before that. MSSP legacy UBA rows (unresolvable-by-agent) keep the UBA constraint
-  MARK_RAN on MSSP until a UBA-specific migration resolves them from the originating alert's
-  tenant. Single-tenant EDR/response NOT-NULL was already done in `20260910003`.
+- **NOT-NULL enforcement DELIVERED (feat/p0a2-notnull-enforcement) — APPLICATION-LEVEL, not
+  Liquibase.** `TenantBackfillService.enforceNotNull()` + admin-only `POST /api/ha-tenant-notnull`.
+  It enforces `tenant_id NOT NULL` on every tenant table (the four EDR/response tables + both
+  UBA tables) that is PROVABLY CLEAN (zero NULLs), skips any table that still has NULL rows
+  (reported, never defaulted to a wrong tenant), and is a no-op on an already-NOT-NULL column.
+  Idempotent and re-runnable: after the operator runs the backfill and re-runs this, newly-clean
+  tables get locked. WHY NOT LIQUIBASE: a changeset gated on a TRANSIENT data state
+  (`sqlCheck` for zero NULLs) with `onFail="MARK_RAN"` is UNSOUND — MARK_RAN is sticky
+  (recorded in DATABASECHANGELOG, never re-evaluated), so once it ran on a still-dirty deploy
+  the constraint would be skipped FOREVER on exactly the MSSP deployments that need it. An
+  independent review of the first attempt (PR #279) caught this as Critical; the enforcement was
+  moved to the application layer, which re-checks on every call and mirrors the app-level backfill
+  precedent (authoritative agent→tenant map lives outside this DB). Single-tenant EDR/response
+  NOT-NULL is still additionally covered by the stable-signal changeset `20260910003` (gated on
+  deployment shape, where MARK_RAN-forever is correct). MSSP legacy UBA rows stay skipped until a
+  UBA-specific migration resolves them from the originating alert's tenant.
 
 ### A2-6 (DESIGN) — Postgres RLS defense-in-depth
 - **From T20:** adopt RLS as a second layer beneath app-level scoping, but ONLY after backfill + NOT NULL on `tenant_id`. Pilot on the four P0-A1 EDR/response tables
