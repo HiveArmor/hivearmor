@@ -1,6 +1,7 @@
 package com.hivearmor.service.edr;
 
 import com.hivearmor.domain.edr.*;
+import com.hivearmor.multitenancy.TenantScope;
 import com.hivearmor.repository.edr.*;
 import com.hivearmor.service.dto.edr.*;
 import com.hivearmor.service.incident_response.grpc_impl.IncidentResponseCommandService;
@@ -28,6 +29,7 @@ public class EdrService {
     private final UtmEdrQuarantineRepository quarantineRepo;
     private final UtmEdrIsolationRepository isolationRepo;
     private final IncidentResponseCommandService commandService;
+    private final com.hivearmor.service.agent_manager.AgentGrpcService agentGrpcService;
     private final String agentManagerHost;
 
     public EdrService(UtmEdrRuleRepository ruleRepo,
@@ -35,12 +37,14 @@ public class EdrService {
                       UtmEdrQuarantineRepository quarantineRepo,
                       UtmEdrIsolationRepository isolationRepo,
                       IncidentResponseCommandService commandService,
+                      com.hivearmor.service.agent_manager.AgentGrpcService agentGrpcService,
                       @Value("${grpc.server.address:}") String agentManagerHost) {
         this.ruleRepo = ruleRepo;
         this.eventRepo = eventRepo;
         this.quarantineRepo = quarantineRepo;
         this.isolationRepo = isolationRepo;
         this.commandService = commandService;
+        this.agentGrpcService = agentGrpcService;
         this.agentManagerHost = agentManagerHost;
     }
 
@@ -94,13 +98,20 @@ public class EdrService {
     public Page<EdrEventDTO> queryEvents(String agentId, String eventType, String severity,
                                           Instant from, Instant to, int page, int size) {
         PageRequest pr = PageRequest.of(page, size, Sort.by("eventTime").descending());
-        return eventRepo.findFiltered(agentId, eventType, severity, from, to, pr)
+        // P0A1-T09 — scope to the authoritative tenant so a relational EDR-event
+        // read can never return another tenant's rows. Tenant comes from the
+        // authenticated principal (TenantContext), never a request parameter.
+        return eventRepo.findFilteredForTenant(TenantScope.requireTenant(), agentId, eventType, severity, from, to, pr)
             .map(this::toEventDTO);
     }
 
     public EdrEventDTO ingestEvent(EdrEventDTO dto) {
         UtmEdrEvent e = new UtmEdrEvent();
         e.setAgentId(dto.getAgentId());
+        // P0A1-T08 — tenant is authoritative from the authenticated agent identity
+        // (TenantContext, set by TelemetryAgentIdentityFilter), NEVER from the event
+        // payload. The DTO carries no tenant field; even if it did, this overwrites it.
+        e.setTenantId(TenantScope.requireTenant());
         e.setHostname(dto.getHostname());
         e.setEventType(dto.getEventType());
         e.setEventTime(dto.getEventTime() != null ? dto.getEventTime() : Instant.now());
@@ -127,18 +138,26 @@ public class EdrService {
 
     public Page<EdrQuarantineDTO> listQuarantine(String agentId, String status, int page, int size) {
         PageRequest pr = PageRequest.of(page, size, Sort.by("quarantinedAt").descending());
+        // P0A1-T09 follow-on — every quarantine read is tenant-scoped; the previous
+        // findAll() branch returned every tenant's records.
+        long tenant = TenantScope.requireTenant();
         if (agentId != null) {
-            return quarantineRepo.findByAgentId(agentId, pr).map(this::toQuarantineDTO);
+            return quarantineRepo.findByTenantIdAndAgentId(tenant, agentId, pr).map(this::toQuarantineDTO);
         }
         if (status != null) {
-            return quarantineRepo.findByStatus(status, pr).map(this::toQuarantineDTO);
+            return quarantineRepo.findByTenantIdAndStatus(tenant, status, pr).map(this::toQuarantineDTO);
         }
-        return quarantineRepo.findAll(pr).map(this::toQuarantineDTO);
+        return quarantineRepo.findByTenantId(tenant, pr).map(this::toQuarantineDTO);
     }
 
     public EdrQuarantineDTO quarantineFile(EdrQuarantineDTO dto, String actionedBy) {
+        // P0A1-T12 — refuse a response action targeting an agent outside the caller's tenant.
+        agentGrpcService.requireAgentInCurrentTenant(dto.getAgentId());
         UtmEdrQuarantine q = new UtmEdrQuarantine();
         q.setAgentId(dto.getAgentId());
+        // P0A1-T09 follow-on — authoritative tenant from the authenticated identity,
+        // never from the payload.
+        q.setTenantId(TenantScope.requireTenant());
         q.setHostname(dto.getHostname());
         q.setFilePath(dto.getFilePath());
         q.setFileHash(dto.getFileHash());
@@ -179,6 +198,9 @@ public class EdrService {
     public EdrQuarantineDTO restoreFile(Long quarantineId, String actionedBy) {
         UtmEdrQuarantine q = quarantineRepo.findById(quarantineId)
             .orElseThrow(() -> new IllegalArgumentException("Quarantine entry not found: " + quarantineId));
+        // P0A1-T12 — the record is loaded by id (not tenant-scoped), so verify its
+        // owning agent is in the caller's tenant before restoring another tenant's file.
+        agentGrpcService.requireAgentInCurrentTenant(q.getAgentId());
         q.setStatus("RESTORED");
         q.setRestoredAt(Instant.now());
         q.setActionedBy(actionedBy);
@@ -219,6 +241,8 @@ public class EdrService {
         if (isolationRepo.existsByAgentIdAndStatus(dto.getAgentId(), "ACTIVE")) {
             throw new IllegalStateException("Agent " + dto.getAgentId() + " is already isolated");
         }
+        // P0A1-T12 — refuse isolating an agent outside the caller's tenant.
+        agentGrpcService.requireAgentInCurrentTenant(dto.getAgentId());
         UtmEdrIsolation iso = new UtmEdrIsolation();
         iso.setAgentId(dto.getAgentId());
         iso.setHostname(dto.getHostname());
@@ -258,6 +282,8 @@ public class EdrService {
     public EdrIsolationDTO liftIsolation(Long isolationId, String actionedBy) {
         UtmEdrIsolation iso = isolationRepo.findById(isolationId)
             .orElseThrow(() -> new IllegalArgumentException("Isolation not found: " + isolationId));
+        // P0A1-T12 — verify the isolation's owning agent is in the caller's tenant.
+        agentGrpcService.requireAgentInCurrentTenant(iso.getAgentId());
         iso.setStatus("LIFTED");
         iso.setLiftedAt(Instant.now());
         iso.setActionedBy(actionedBy);
@@ -278,6 +304,8 @@ public class EdrService {
     // ---- Response actions ----
 
     public String killProcess(String agentId, Integer pid, String processName, String actionedBy) {
+        // P0A1-T12 — refuse killing a process on an agent outside the caller's tenant.
+        agentGrpcService.requireAgentInCurrentTenant(agentId);
         String cmd = "EDR_KILL:" + pid;
         commandService.sendCommand(
             agentId, cmd, "EDR_ACTION", String.valueOf(pid),
