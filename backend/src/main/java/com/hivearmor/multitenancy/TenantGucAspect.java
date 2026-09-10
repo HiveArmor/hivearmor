@@ -56,8 +56,15 @@ import java.sql.PreparedStatement;
  * {@code isActualTransactionActive()} check would run before the tx exists and the GUC would be
  * silently skipped on the primary path (the outermost {@code @Transactional} entry point).
  *
- * <p>So this aspect is ordered {@link Ordered#LOWEST_PRECEDENCE} to sit at (tied with, then
- * effectively just inside) the tx interceptor — it runs INNERMOST, closest to the target method,
+ * <p>So this aspect is ordered {@link Ordered#LOWEST_PRECEDENCE} — the maximum order value, i.e.
+ * the LOWEST precedence, i.e. the INNERMOST advice, closest to the target method — so it runs
+ * strictly INSIDE the transaction the interceptor opened. (There is no representable value MORE
+ * inner: {@code LOWEST_PRECEDENCE} is {@code Integer.MAX_VALUE}. Ordering it any lower — e.g.
+ * {@code LOWEST_PRECEDENCE - 1} — makes it run OUTSIDE the tx, which was verified to break the
+ * mechanism.) The tx interceptor is ALSO at {@code LOWEST_PRECEDENCE}; the tie is resolved in
+ * favor of this aspect running inside the tx, and {@code TenantGucAspectIntegrationTest} is the
+ * empirical guard that asserts that outcome against the real Spring wiring on every build. As a
+ * result
  * so its {@code proceed()} executes strictly INSIDE the transaction the interceptor opened:
  * {@link TransactionSynchronizationManager#isActualTransactionActive()} is true and
  * {@link DataSourceUtils#getConnection} returns the SAME connection the transaction (and thus the
