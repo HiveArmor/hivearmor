@@ -1,6 +1,7 @@
 package com.hivearmor.multitenancy;
 
 import com.hivearmor.domain.HaClient;
+import com.hivearmor.repository.HaClientRepository;
 import com.hivearmor.service.agent_manager.AgentService;
 import com.hivearmor.service.dto.agent_manager.AgentDTO;
 import jakarta.persistence.EntityManager;
@@ -43,25 +44,39 @@ public class TenantBackfillService {
 
     private static final Logger log = LoggerFactory.getLogger(TenantBackfillService.class);
 
-    /** table name &rarr; agent-linkage column (the value matched against an agent id/hostname). */
+    /**
+     * Tables whose linkage column genuinely holds an AGENT identifier (id or hostname), so
+     * an MSSP row can be tenant-resolved by matching it against a tenant's agents.
+     * table name &rarr; agent-linkage column.
+     */
     private static final Map<String, String> AGENT_LINKED_TABLES = new LinkedHashMap<>() {{
         put("hive_edr_event", "agent_id");
         put("hive_edr_quarantine", "agent_id");
         put("ha_edr_quarantine", "agent_id");
         put("hive_alert_response_rule_execution", "agent");
-        put("hive_uba_anomaly", "entity_id");
-        put("hive_uba_entity_risk", "entity_id");
     }};
+
+    /**
+     * UBA tables. Their {@code entity_id} is a user/ip/host value, NOT an agent identifier
+     * (see UbaSyncService.resolveEntityType → "user"/"host"), so it CANNOT be tenant-resolved
+     * by matching agent hostnames — doing so would orphan user/ip entities and could
+     * mis-stamp a username that collides with another tenant's hostname (a cross-tenant leak).
+     * New UBA rows are already tenant-stamped at insert by UbaSyncService, so only LEGACY
+     * NULL rows are affected. On single-tenant they resolve to 0; on MSSP they have no
+     * agent-derivable tenant on the row itself and are reported as unresolvable (left NULL)
+     * rather than mis-attributed — see the report's msspUnresolvableUba note.
+     */
+    private static final List<String> UBA_TABLES = List.of("hive_uba_anomaly", "hive_uba_entity_risk");
 
     private final EntityManager em;
     private final TenantScopedBackgroundExecutor backgroundExecutor;
     private final AgentService agentService;
-    private final com.hivearmor.repository.HaClientRepository clients;
+    private final HaClientRepository clients;
 
     public TenantBackfillService(EntityManager em,
                                  TenantScopedBackgroundExecutor backgroundExecutor,
                                  AgentService agentService,
-                                 com.hivearmor.repository.HaClientRepository clients) {
+                                 HaClientRepository clients) {
         this.em = em;
         this.backgroundExecutor = backgroundExecutor;
         this.agentService = agentService;
@@ -69,13 +84,15 @@ public class TenantBackfillService {
     }
 
     /** Per-table outcome for the caller's report. */
-    public record TableResult(String table, long updated, long remainingNull) { }
+    public record TableResult(String table, long updated, long remainingNull, int failedTenants) { }
 
     /**
-     * Run the backfill across all agent-linked tenant_id tables. Idempotent.
+     * Run the backfill across all tenant_id tables. Idempotent.
      *
-     * @return per-table counts of rows updated this run and rows still NULL afterwards
-     *         (a non-zero {@code remainingNull} on MSSP = orphaned rows needing manual review).
+     * @return per-table counts of rows updated this run, rows still NULL afterwards, and
+     *         (MSSP) the number of tenants whose agent enumeration FAILED this run — a
+     *         non-zero {@code failedTenants} means some NULLs may be transient failures, not
+     *         true orphans, so the run should be RE-RUN before trusting remainingNull.
      */
     @Transactional
     public List<TableResult> backfill() {
@@ -88,15 +105,17 @@ public class TenantBackfillService {
         return backfillMssp();
     }
 
-    /** Single-tenant: every NULL row belongs to the {@code 0} sentinel. */
+    /** Single-tenant: every NULL row (agent-linked AND UBA) belongs to the {@code 0} sentinel. */
     private List<TableResult> backfillSingleTenant() {
         List<TableResult> results = new ArrayList<>();
-        for (String table : AGENT_LINKED_TABLES.keySet()) {
+        List<String> allTables = new ArrayList<>(AGENT_LINKED_TABLES.keySet());
+        allTables.addAll(UBA_TABLES);
+        for (String table : allTables) {
             long updated = em.createNativeQuery(
                     "UPDATE " + table + " SET tenant_id = 0 WHERE tenant_id IS NULL")
                 .executeUpdate();
             long remaining = countNull(table);
-            results.add(new TableResult(table, updated, remaining));
+            results.add(new TableResult(table, updated, remaining, 0));
             log.info("P0A2-B single-tenant {}: set {} rows to tenant 0, {} still NULL", table, updated, remaining);
         }
         return results;
@@ -107,14 +126,24 @@ public class TenantBackfillService {
      * linkage column matches one of that tenant's agent ids/hostnames.
      */
     private List<TableResult> backfillMssp() {
-        // Per-tenant pass fills matching rows; then a final NULL count per table.
+        // Per-table running totals of rows stamped this run, plus a count of tenants whose
+        // agent enumeration failed (so failures aren't silently reported as orphans — C2).
+        Map<String, Long> updatedPerTable = new java.util.concurrent.ConcurrentHashMap<>();
+        java.util.concurrent.atomic.AtomicInteger failedTenants = new java.util.concurrent.atomic.AtomicInteger();
+
         backgroundExecutor.runForEachTenant("TenantBackfillService.backfill", (HaClient tenant) -> {
-            if (tenant == null) {
-                return; // defensive: MSSP path always has a resolved tenant here
-            }
             long tenantId = tenant.getId();
-            // getInstalledAgents() is tenant-scoped (runs under this tenant's TenantContext).
-            List<AgentDTO> agents = agentService.getInstalledAgents();
+            List<AgentDTO> agents;
+            try {
+                // Tenant-scoped (runs under this tenant's TenantContext set by the executor).
+                agents = agentService.getInstalledAgents();
+            } catch (Exception ex) {
+                // C2 — a transient manager failure must NOT masquerade as orphaned rows.
+                failedTenants.incrementAndGet();
+                log.warn("P0A2-B MSSP tenant {}: agent enumeration failed, rows left for re-run: {}",
+                        tenantId, ex.getMessage());
+                return;
+            }
             if (agents.isEmpty()) {
                 return;
             }
@@ -126,36 +155,68 @@ public class TenantBackfillService {
                 .map(a -> String.valueOf(a.getId()))
                 .collect(Collectors.toSet());
 
+            // ONLY agent-linked tables — UBA entity_id is a user/ip/host value, not an agent
+            // identifier, so it is deliberately NOT matched here (C1).
             for (Map.Entry<String, String> e : AGENT_LINKED_TABLES.entrySet()) {
                 String table = e.getKey();
                 String col = e.getValue();
-                // EDR/quarantine link by agent_id; rule-exec + UBA link by hostname.
                 Set<String> keys = "agent_id".equals(col) ? agentIds : hostnames;
                 if (keys.isEmpty()) {
                     continue;
                 }
-                long updated = em.createNativeQuery(
-                        "UPDATE " + table + " SET tenant_id = :tid "
-                        + "WHERE tenant_id IS NULL AND " + col + " IN (:keys)")
-                    .setParameter("tid", tenantId)
-                    .setParameter("keys", keys)
-                    .executeUpdate();
+                long updated = updateInBatches(table, col, tenantId, keys);
                 if (updated > 0) {
+                    updatedPerTable.merge(table, updated, Long::sum);
                     log.info("P0A2-B MSSP {}: stamped {} rows to tenant {}", table, updated, tenantId);
                 }
             }
         });
 
-        // Report remaining NULLs (orphans) per table after all tenants processed.
         List<TableResult> results = new ArrayList<>();
+        int failed = failedTenants.get();
+
+        // Agent-linked tables: real updated total + remaining NULLs (true orphans only if
+        // failed==0; otherwise some NULLs may be from failed tenants — re-run).
         for (String table : AGENT_LINKED_TABLES.keySet()) {
             long remaining = countNull(table);
-            results.add(new TableResult(table, -1, remaining)); // updated counted per-tenant in logs
+            results.add(new TableResult(table, updatedPerTable.getOrDefault(table, 0L), remaining, failed));
             if (remaining > 0) {
-                log.warn("P0A2-B MSSP {}: {} rows still NULL (orphaned agents) \u2014 manual review before NOT-NULL", table, remaining);
+                log.warn("P0A2-B MSSP {}: {} rows still NULL ({} tenant(s) failed this run) \u2014 "
+                        + "re-run then review before NOT-NULL", table, remaining, failed);
+            }
+        }
+        // UBA tables: not resolvable from an agent join on MSSP (see UBA_TABLES doc). New rows
+        // are already tenant-stamped at insert; legacy NULL rows are reported as-is (updated=0)
+        // and must be resolved by a UBA-specific migration (originating alert's tenant), NOT here.
+        for (String table : UBA_TABLES) {
+            long remaining = countNull(table);
+            results.add(new TableResult(table, 0L, remaining, failed));
+            if (remaining > 0) {
+                log.warn("P0A2-B MSSP {}: {} legacy NULL rows NOT auto-resolved (entity_id is not an "
+                        + "agent identifier) \u2014 needs a UBA-specific backfill before NOT-NULL", table, remaining);
             }
         }
         return results;
+    }
+
+    /**
+     * H2 — batch the IN (:keys) set so a large tenant cannot exceed PostgreSQL's
+     * 65,535 bind-parameter limit. Chunks of 1,000.
+     */
+    private long updateInBatches(String table, String col, long tenantId, Set<String> keys) {
+        final int batch = 1000;
+        List<String> all = new ArrayList<>(keys);
+        long total = 0;
+        for (int i = 0; i < all.size(); i += batch) {
+            List<String> chunk = all.subList(i, Math.min(i + batch, all.size()));
+            total += em.createNativeQuery(
+                    "UPDATE " + table + " SET tenant_id = :tid "
+                    + "WHERE tenant_id IS NULL AND " + col + " IN (:keys)")
+                .setParameter("tid", tenantId)
+                .setParameter("keys", chunk)
+                .executeUpdate();
+        }
+        return total;
     }
 
     private long countNull(String table) {
