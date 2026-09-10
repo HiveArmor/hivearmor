@@ -227,8 +227,113 @@ class ElasticsearchResourceTenantValidationTest {
     }
 
     // =========================================================================
+    // A2-4 — metadata endpoints must enforce the same tenant scope as the
+    // query endpoints (they previously leaked another tenant's field values,
+    // value+count aggregations, and field/mapping names).
+    // =========================================================================
+
+    @Test
+    @DisplayName("A2-4 MSSP: getFieldValues denies another tenant's index pattern")
+    void getFieldValues_tenantCwm_otherTenantDenied() {
+        try {
+            TenantContext.set("cwm");
+            assertThatThrownBy(() -> resource.getFieldValues("hostname", "v3-hive-log-other-*"))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: getFieldValues allows own tenant index pattern")
+    void getFieldValues_tenantCwm_ownPatternAllowed() {
+        try {
+            TenantContext.set("cwm");
+            when(elasticsearchService.getFieldValues(anyString(), anyString()))
+                .thenReturn(java.util.List.of());
+            assertThatCode(() -> resource.getFieldValues("hostname", "v3-hive-log-cwm-*"))
+                .doesNotThrowAnyException();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 Non-MSSP: getFieldValues allows any pattern")
+    void getFieldValues_noTenantContext_anyPatternAllowed() {
+        assertThat(TenantContext.get()).isNull();
+        when(elasticsearchService.getFieldValues(anyString(), anyString()))
+            .thenReturn(java.util.List.of());
+        assertThatCode(() -> resource.getFieldValues("hostname", "v3-hive-log-other-*"))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: getFieldValuesWithCount denies another tenant's index")
+    void getFieldValuesWithCount_tenantCwm_otherTenantDenied() {
+        try {
+            TenantContext.set("cwm");
+            assertThatThrownBy(() -> resource.getFieldValuesWithCount(valuesWithCount("v3-hive-alert-other-*")))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: getFieldValuesWithCount allows own tenant index")
+    void getFieldValuesWithCount_tenantCwm_ownPatternAllowed() {
+        try {
+            TenantContext.set("cwm");
+            when(elasticsearchService.getFieldValuesWithCount(anyString(), anyString(), any(), any(), anyBoolean(), anyBoolean()))
+                .thenReturn(java.util.Map.of());
+            assertThatCode(() -> resource.getFieldValuesWithCount(valuesWithCount("v3-hive-alert-cwm-*")))
+                .doesNotThrowAnyException();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: getIndexProperties denies another tenant's index pattern")
+    void getIndexProperties_tenantCwm_otherTenantDenied() {
+        try {
+            TenantContext.set("cwm");
+            assertThatThrownBy(() -> resource.getIndexProperties("v3-hive-alert-other-*"))
+                .isInstanceOf(TenantScopeViolationException.class)
+                .hasMessageContaining("outside tenant scope");
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("A2-4 MSSP: getIndexProperties allows own tenant index pattern")
+    void getIndexProperties_tenantCwm_ownPatternAllowed() {
+        try {
+            TenantContext.set("cwm");
+            when(elasticsearchService.getIndexProperties(anyString()))
+                .thenReturn(java.util.List.of());
+            assertThatCode(() -> resource.getIndexProperties("v3-hive-alert-cwm-*"))
+                .doesNotThrowAnyException();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    // =========================================================================
     // Helper methods
     // =========================================================================
+
+    private ElasticsearchResource.PropertyValuesWithCountRequest valuesWithCount(String indexPattern) {
+        var rq = new ElasticsearchResource.PropertyValuesWithCountRequest();
+        rq.setIndex(indexPattern);
+        rq.setField("hostname");
+        rq.setTop(10);
+        return rq;
+    }
 
     private com.hivearmor.domain.shared_types.CsvExportingParams buildCsvParams(String indexPattern) {
         var params = new com.hivearmor.domain.shared_types.CsvExportingParams();

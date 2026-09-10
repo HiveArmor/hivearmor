@@ -158,6 +158,8 @@ public class ElasticsearchResource {
     public ResponseEntity<List<String>> getFieldValues(@RequestParam String keyword,
                                                        @RequestParam String indexPattern) {
         final String ctx = CLASSNAME + ".getFieldValues";
+        // A2-4: metadata reads leak another tenant's field values without this guard.
+        validateTenantScope(indexPattern);
         try {
             return ResponseEntity.ok(elasticsearchService.getFieldValues(keyword, indexPattern));
         } catch (Exception e) {
@@ -171,6 +173,8 @@ public class ElasticsearchResource {
     @PostMapping("/property/values-with-count")
     public ResponseEntity<Map<String, Long>> getFieldValuesWithCount(@Valid @RequestBody PropertyValuesWithCountRequest rq) {
         final String ctx = CLASSNAME + ".getFieldValuesWithCount";
+        // A2-4: metadata reads leak another tenant's field values + doc counts without this guard.
+        validateTenantScope(rq.getIndex());
         try {
             return ResponseEntity.ok(elasticsearchService.getFieldValuesWithCount(rq.getField(), rq.getIndex(),
                     rq.getFilters(), rq.getTop(), rq.isOrderByCount(), rq.isSortAsc()));
@@ -191,6 +195,8 @@ public class ElasticsearchResource {
     @GetMapping("/index/properties")
     public ResponseEntity<List<IndexPropertyType>> getIndexProperties(@RequestParam String indexPattern) {
         final String ctx = CLASSNAME + ".getIndexProperties";
+        // A2-4: metadata reads leak another tenant's field/mapping names without this guard.
+        validateTenantScope(indexPattern);
         try {
             return ResponseEntity.ok(elasticsearchService.getIndexProperties(indexPattern));
         } catch (OpenSearchIndexNotFoundException e) {
