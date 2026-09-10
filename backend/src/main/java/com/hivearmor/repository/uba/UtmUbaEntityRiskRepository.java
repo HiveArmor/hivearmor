@@ -15,6 +15,15 @@ public interface UtmUbaEntityRiskRepository extends JpaRepository<UtmUbaEntityRi
 
     Optional<UtmUbaEntityRisk> findByEntityIdAndEntityType(String entityId, String entityType);
 
+    /**
+     * P0A2-3 — tenant-scoped upsert lookup. Prevents two tenants that share an entityId
+     * (e.g. hostname "web01") from colliding into one risk row.
+     */
+    Optional<UtmUbaEntityRisk> findByTenantIdAndEntityIdAndEntityType(Long tenantId, String entityId, String entityType);
+
+    /** P0A2-3 — decay operates within a single tenant's rows per per-tenant run. */
+    List<UtmUbaEntityRisk> findByTenantId(Long tenantId);
+
     Optional<UtmUbaEntityRisk> findFirstByEntityId(String entityId);
 
     Page<UtmUbaEntityRisk> findAllByOrderByRiskScoreDesc(Pageable pageable);

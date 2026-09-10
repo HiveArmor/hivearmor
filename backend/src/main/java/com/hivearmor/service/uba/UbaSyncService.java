@@ -30,8 +30,10 @@ public class UbaSyncService {
 
     private static final Logger log = LoggerFactory.getLogger(UbaSyncService.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    // Event processor writes v3-hive-alert-YYYY-MM-DD (dash-separated, no leading underscore)
-    private static final String ALERT_INDEX_PATTERN = "v3-hive-alert-*";
+    // P0A2-3 (T19 G5) — the alert index is resolved per-tenant via MsspIndexResolver
+    // ("alert" -> v3-hive-alert-<prefix>-* in MSSP, v3-hive-alert-* single-tenant),
+    // NOT a hardcoded all-tenant pattern.
+    private static final String ALERT_INDEX_TYPE = "alert";
 
     private static final int RISK_PER_ANOMALY_CRITICAL = 40;
     private static final int RISK_PER_ANOMALY_HIGH     = 25;
@@ -43,13 +45,19 @@ public class UbaSyncService {
     private final ElasticsearchService elasticsearchService;
     private final UtmUbaEntityRiskRepository entityRepo;
     private final UtmUbaAnomalyRepository anomalyRepo;
+    private final com.hivearmor.multitenancy.TenantScopedBackgroundExecutor backgroundExecutor;
+    private final com.hivearmor.multitenancy.MsspIndexResolver indexResolver;
 
     public UbaSyncService(ElasticsearchService elasticsearchService,
                           UtmUbaEntityRiskRepository entityRepo,
-                          UtmUbaAnomalyRepository anomalyRepo) {
+                          UtmUbaAnomalyRepository anomalyRepo,
+                          com.hivearmor.multitenancy.TenantScopedBackgroundExecutor backgroundExecutor,
+                          com.hivearmor.multitenancy.MsspIndexResolver indexResolver) {
         this.elasticsearchService = elasticsearchService;
         this.entityRepo = entityRepo;
         this.anomalyRepo = anomalyRepo;
+        this.backgroundExecutor = backgroundExecutor;
+        this.indexResolver = indexResolver;
     }
 
     /**
@@ -57,8 +65,17 @@ public class UbaSyncService {
      * Queries the last 24 hours so we pick up any anomalies that arrived since the last run.
      */
     @Scheduled(fixedDelay = 60_000, initialDelay = 30_000)
-    @Transactional
     public void syncAnomalies() {
+        // P0A2-3 (T19 G5) — run the UBA sync once PER TENANT under that tenant's scope,
+        // so each pass reads only that tenant's alert index and writes tenant-attributed
+        // UBA rows. No cross-tenant all-index read, no cross-tenant entity/anomaly comingling.
+        backgroundExecutor.runForEachTenant("UbaSyncService.syncAnomalies",
+                this::syncAnomaliesForCurrentTenant);
+    }
+
+    @Transactional
+    public void syncAnomaliesForCurrentTenant() {
+        long tenantId = com.hivearmor.multitenancy.TenantScope.requireTenant();
         try {
             List<FilterType> filters = new ArrayList<>();
             filters.add(new FilterType(Constants.alertCategoryKeyword, OperatorType.IS, "ANOMALY"));
@@ -66,7 +83,7 @@ public class UbaSyncService {
                 List.of(Instant.now().minus(48, ChronoUnit.HOURS).toString(), Instant.now().toString())));
 
             SearchRequest req = SearchRequest.of(s -> s
-                .index(ALERT_INDEX_PATTERN)
+                .index(indexResolver.resolveIndexPattern(ALERT_INDEX_TYPE))
                 .query(SearchUtil.toQuery(filters))
                 .sort(sort -> sort.field(f -> f.field(Constants.timestamp)
                     .order(org.opensearch.client.opensearch._types.SortOrder.Desc)))
@@ -92,12 +109,12 @@ public class UbaSyncService {
                 Instant detectedAt   = alert.getTimestampAsInstant();
                 if (detectedAt == null) detectedAt = Instant.now();
 
-                // Deduplicate: skip if we already have an anomaly for this alert id.
-                // The OS alert id is stored as "alertId" inside details_json.
+                // Deduplicate WITHIN this tenant: the OS alert id is stored inside details_json.
                 String alertOsId = alert.getId() != null ? alert.getId() : hit.id();
-                if (anomalyRepo.existsByDetailsJsonContaining("\"alertId\":\"" + alertOsId + "\"")) continue;
+                if (anomalyRepo.existsByTenantIdAndDetailsJsonContaining(tenantId, "\"alertId\":\"" + alertOsId + "\"")) continue;
 
                 UtmUbaAnomaly anomaly = new UtmUbaAnomaly();
+                anomaly.setTenantId(tenantId);
                 anomaly.setEntityId(entityId);
                 anomaly.setEntityType(entityType);
                 anomaly.setAnomalyType(anomalyType);
@@ -116,14 +133,14 @@ public class UbaSyncService {
                 anomalyRepo.save(anomaly);
                 newAnomalies++;
 
-                upsertEntityRisk(entityId, entityType, sourceIp, detectedAt, severity, anomaly.getDescription());
+                upsertEntityRisk(tenantId, entityId, entityType, sourceIp, detectedAt, severity, anomaly.getDescription());
                 updatedEntities++;
             }
 
-            log.info("UBA sync: {} new anomalies, {} entities updated (scanned {} hits)",
-                newAnomalies, updatedEntities, hits.size());
+            log.info("UBA sync (tenant {}): {} new anomalies, {} entities updated (scanned {} hits)",
+                tenantId, newAnomalies, updatedEntities, hits.size());
         } catch (Exception e) {
-            log.warn("UBA sync failed: {}", e.getMessage());
+            log.warn("UBA sync failed (tenant {}): {}", tenantId, e.getMessage());
         }
     }
 
@@ -132,10 +149,17 @@ public class UbaSyncService {
      * the threshold are considered negligible risk and removed.
      */
     @Scheduled(fixedDelay = 300_000)
-    @Transactional
     public void decayRiskScores() {
+        // P0A2-3 — decay per tenant so each pass only touches its own tenant's rows.
+        backgroundExecutor.runForEachTenant("UbaSyncService.decayRiskScores",
+                this::decayRiskScoresForCurrentTenant);
+    }
+
+    @Transactional
+    public void decayRiskScoresForCurrentTenant() {
+        long tenantId = com.hivearmor.multitenancy.TenantScope.requireTenant();
         try {
-            List<UtmUbaEntityRisk> entities = entityRepo.findAll();
+            List<UtmUbaEntityRisk> entities = entityRepo.findByTenantId(tenantId);
             int removed = 0;
             for (UtmUbaEntityRisk entity : entities) {
                 int newScore = (int) Math.floor(entity.getRiskScore() * DECAY_FACTOR);
@@ -160,12 +184,13 @@ public class UbaSyncService {
 
     // ── helpers ───────────────────────────────────────────────────────────────
 
-    private void upsertEntityRisk(String entityId, String entityType, String sourceIp,
+    private void upsertEntityRisk(long tenantId, String entityId, String entityType, String sourceIp,
                                    Instant detectedAt, String severity, String description) {
         UtmUbaEntityRisk entity = entityRepo
-            .findByEntityIdAndEntityType(entityId, entityType)
+            .findByTenantIdAndEntityIdAndEntityType(tenantId, entityId, entityType)
             .orElseGet(() -> {
                 UtmUbaEntityRisk e = new UtmUbaEntityRisk();
+                e.setTenantId(tenantId);
                 e.setEntityId(entityId);
                 e.setEntityType(entityType);
                 e.setDisplayName(entityId);

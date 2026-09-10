@@ -30,7 +30,7 @@
 
 ### A2-3 (MEDIUM) — `UbaSyncService` scheduled cross-tenant aggregation
 - **Gap (T19 G5):** `@Scheduled` job reads `v3-hive-alert-*` globally (no request `TenantContext`) and writes into shared relational UBA tables → cross-tenant aggregation.
-- **Fix:** run per-tenant using the P0-A1 `TenantScopedBackgroundExecutor` (enumerate tenants → set scope → read that tenant's alerts → write that tenant's UBA rows). Mirrors the T14 pattern already in the codebase.
+- **Fix APPLIED (feat/p0a2-uba-per-tenant):** `syncAnomalies` and `decayRiskScores` now run via `TenantScopedBackgroundExecutor.runForEachTenant` — each pass resolves the alert index via `MsspIndexResolver` (per-tenant `v3-hive-alert-<prefix>-*`) and reads/writes under that tenant's scope. Added `tenant_id` to `hive_uba_anomaly` + `hive_uba_entity_risk` (Liquibase `20260910004`, nullable); dedup/upsert/decay are now tenant-scoped (`existsByTenantIdAndDetailsJsonContaining`, `findByTenantIdAndEntityIdAndEntityType`, `findByTenantId`) so two tenants sharing an entityId no longer collide. Writes stamp `tenant_id` from the sync scope (single-tenant → 0). NOT-NULL + backfill deferred (same rollout pattern as the other tenant columns).
 - **Test:** UBA rows attributed to the correct tenant; no cross-tenant peer-group bleed.
 
 ### A2-4 (LOW) — `ElasticsearchResource` metadata endpoints skip tenant scope

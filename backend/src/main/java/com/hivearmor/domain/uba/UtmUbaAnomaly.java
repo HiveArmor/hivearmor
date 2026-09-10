@@ -14,6 +14,12 @@ public class UtmUbaAnomaly implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // P0A2-3 (T19 G5) — owning tenant, so UBA anomalies are partitioned per tenant
+    // instead of co-mingled across all tenants in one table. Nullable during rollout;
+    // stamped from the sync's tenant scope (single-tenant -> 0).
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @Column(name = "entity_id", length = 150, nullable = false)
     private String entityId;
 
@@ -55,6 +61,8 @@ public class UtmUbaAnomaly implements Serializable {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    public Long getTenantId() { return tenantId; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
     public String getEntityId() { return entityId; }
     public void setEntityId(String entityId) { this.entityId = entityId; }
     public String getEntityType() { return entityType; }
