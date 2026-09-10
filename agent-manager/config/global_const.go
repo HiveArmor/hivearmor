@@ -75,5 +75,11 @@ var (
 	DBUser                    = os.Getenv("DB_USER")
 	DBPassword                = os.Getenv("DB_PASSWORD")
 	DBName                    = os.Getenv("DB_NAME")
+	// P0-A2-7 §3.2b — optional dedicated credentials for the all-tenant, BYPASSRLS
+	// system-context pool (boot caches, connector-authorization reconciliation,
+	// VerifyConnectorIdentity). When unset, the system pool falls back to DB_USER /
+	// DB_PASSWORD, so this change is inert until an operator provisions the roles.
+	DBSystemUser              = os.Getenv("DB_SYSTEM_USER")
+	DBSystemPassword          = os.Getenv("DB_SYSTEM_PASSWORD")
 	AllowLegacyEnrollment     = os.Getenv("ALLOW_LEGACY_AGENT_ENROLLMENT") == "true"
 )

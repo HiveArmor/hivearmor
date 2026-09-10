@@ -50,7 +50,7 @@ func (s *LastSeenService) InitPingSync() {
 	pings := []models.LastSeen{}
 	go s.processPings()
 	for {
-		_, err := s.DBConnection.GetAll(&pings, "")
+		_, err := s.DBConnection.SystemContextFind(&pings, "")
 		if err != nil {
 			catcher.Error("failed to get LastSeen items", err, map[string]any{"process": "agent-manager"})
 			time.Sleep(5 * time.Second)
