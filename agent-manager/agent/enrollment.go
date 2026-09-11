@@ -13,6 +13,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/google/uuid"
+	"github.com/hivearmor/agent-manager/database"
 	"github.com/hivearmor/agent-manager/models"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
@@ -180,7 +181,7 @@ func (s *AgentService) CreateEnrollmentToken(_ context.Context, req *CreateEnrol
 		PolicyID: strings.TrimSpace(req.GetPolicyId()), Platform: canonicalPlatform(req.GetPlatform()),
 		ExpiresAt: req.GetExpiresAt().AsTime(), MaxUses: req.GetMaxUses(), CreatedBy: strings.TrimSpace(req.GetCreatedBy()), Version: 1,
 	}
-	if err := s.DBConnection.Transaction(func(tx *gorm.DB) error {
+	if err := s.DBConnection.WithTenantTx(req.GetTenantId(), func(tx *gorm.DB) error {
 		if err := tx.Create(model).Error; err != nil {
 			return err
 		}
@@ -212,7 +213,7 @@ func (s *AgentService) ListEnrollmentTokens(_ context.Context, req *ListEnrollme
 	}
 	var rows []models.EnrollmentToken
 	var total int64
-	err := s.DBConnection.Transaction(func(tx *gorm.DB) error {
+	err := s.DBConnection.WithTenantTx(req.GetTenantId(), func(tx *gorm.DB) error {
 		if err := tx.Model(&models.EnrollmentToken{}).Where("tenant_id = ?", req.GetTenantId()).Count(&total).Error; err != nil {
 			return err
 		}
@@ -241,7 +242,7 @@ func (s *AgentService) RevokeEnrollmentToken(_ context.Context, req *RevokeEnrol
 		return nil, status.Error(codes.InvalidArgument, "actor or reason exceeds the supported length")
 	}
 	var model models.EnrollmentToken
-	err := s.DBConnection.Transaction(func(tx *gorm.DB) error {
+	err := s.DBConnection.WithTenantTx(req.GetTenantId(), func(tx *gorm.DB) error {
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("token_id = ? AND tenant_id = ?", req.GetId(), req.GetTenantId()).First(&model).Error; err != nil {
 			return err
 		}
@@ -296,7 +297,7 @@ func (s *AgentService) changeAgentCredential(req *AgentCredentialRequest, revoke
 	}
 	var model models.Agent
 	var plaintext string
-	err := s.DBConnection.Transaction(func(tx *gorm.DB) error {
+	err := s.DBConnection.WithTenantTx(req.GetTenantId(), func(tx *gorm.DB) error {
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ? AND tenant_id = ?", req.GetAgentId(), req.GetTenantId()).First(&model).Error; err != nil {
 			return err
 		}
@@ -350,6 +351,31 @@ func (s *AgentService) changeAgentCredential(req *AgentCredentialRequest, revoke
 		response.RevokedAt = timestamppb.New(*model.CredentialRevokedAt)
 	}
 	return response, nil
+}
+
+// P0-A2-7 §3.2b — resolveEnrollmentTenant learns which tenant an enrollment token
+// belongs to WITHOUT a tenant GUC, by looking it up system-context on the BYPASSRLS
+// pool. The token is the agent's presented credential (validated fully inside
+// consumeEnrollment under the tenant tx); here we only read its tenant_id so the
+// consume transaction can be GUC'd. Returns Unauthenticated for a missing/invalid
+// token, matching consumeEnrollment's own contract.
+func resolveEnrollmentTenant(ctx context.Context, db *database.DB) (int64, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok || len(md.Get("enrollment-token")) != 1 {
+		return 0, status.Error(codes.Unauthenticated, "enrollment token is required")
+	}
+	tokenID, err := enrollmentTokenID(md.Get("enrollment-token")[0])
+	if err != nil {
+		return 0, status.Error(codes.Unauthenticated, "invalid enrollment token")
+	}
+	var token models.EnrollmentToken
+	if err := db.SystemContextGetFirst(&token, "token_id = ?", tokenID); err != nil {
+		return 0, status.Error(codes.Unauthenticated, "invalid enrollment token")
+	}
+	if token.TenantID <= 0 {
+		return 0, status.Error(codes.Unauthenticated, "invalid enrollment token")
+	}
+	return token.TenantID, nil
 }
 
 func consumeEnrollment(ctx context.Context, tx *gorm.DB, req *AgentRequest) (*models.Agent, string, error) {
