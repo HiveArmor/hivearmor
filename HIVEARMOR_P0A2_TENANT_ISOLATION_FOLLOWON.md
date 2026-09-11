@@ -144,8 +144,15 @@
     cross-tenant matrix AGAINST a policied role to prove isolation actually holds before relying on
     it. The GUC choke point (#281) and role split (runbook) are the wiring this depends on.
 
-### A2-7 (DESIGN) — agent-manager Go/GORM datasource
+### A2-7 (DELIVERED) — agent-manager Go/GORM datasource
 - **From both T19 & T20:** the agent-manager uses a SEPARATE Postgres datasource (GORM) that neither the Java `MsspIndexResolver` nor a backend RLS policy covers. P0-A1 forced tenant predicates in its list queries (T03/T07/T11), but a broader review of its `findAll`/`Unscoped` surface + its own RLS story is a distinct workstream.
+- **DELIVERED to `release/v3`** (design of record: `HIVEARMOR_A2_7_MANAGER_RLS.md`, audit: `HIVEARMOR_A2_7_AGENT_MANAGER_DATASOURCE_REVIEW.md`):
+  - #290 `98603a76` — §3.1 app-layer forced-tenant GORM scope (`utils.TenantScope`, `ScopedFind`/`ScopedGetByPagination`, fail-closed).
+  - #291 `cb91d4b3` — fix: `GetFirst`/`Delete` args-spread bug (unspread `[]interface{}` dropped the tenant predicate; correctness + security).
+  - #292 `4f7e3fb7` — §3.2a RLS `tenant_isolation` policies on agents/collectors/enrollment_tokens/enrollment_audit_events + agent_commands (parent policy). Inert (superuser ignores RLS).
+  - #293 `d255b8cf` — §3.2b steps 1-2: BYPASSRLS system-context pool + `WithTenantTx` per-tx GUC; reads converted.
+  - #294 `72ab32d6` — §3.2b step 3: all tenant-facing writes tenant-GUC'd with affected-row no-op detection; `//go:build integration` matrix (T-CANARY/T-SCOPE/T-CMD/T-WRITE/T-MISSING-GUC/T-POOL-BLEED/T-CONCURRENT — all green on real Postgres).
+- **To ENABLE enforcement (operator, no code):** `HIVEARMOR_A2_7_MANAGER_RLS_ENABLEMENT_RUNBOOK.md` — provision `hivearmor_agents_app` (unprivileged, table-owner) + `hivearmor_agents_system` (BYPASSRLS), set `DB_USER`/`DB_SYSTEM_USER`, staging canary (T-BOOT/T-CANARY), roll out with instant rollback.
 
 ---
 
@@ -154,4 +161,4 @@
 2. **A2-3** (MEDIUM, needs the per-tenant executor refactor).
 3. **A2-4, A2-5** (LOW/INFO clean-up).
 4. **Backfill + NOT NULL** (also a standing P0-A1 carry-forward) — unblocks A2-6.
-5. **A2-6, A2-7** (DESIGN) after the prerequisites land.
+5. **A2-6** (DESIGN), **A2-7** (DELIVERED — #290–#294 merged; enforcement pending operator role split) after the prerequisites land.
