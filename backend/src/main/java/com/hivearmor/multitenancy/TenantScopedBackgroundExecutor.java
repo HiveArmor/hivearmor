@@ -85,12 +85,25 @@ public class TenantScopedBackgroundExecutor {
     public void runForEachTenant(String jobName, Consumer<HaClient> perTenantWork) {
         List<HaClient> tenants = clients.findByMsspManagedTrueAndClientPrefixIsNotNull();
         if (tenants.isEmpty()) {
+            // Single-tenant deployment: exactly one pass, no cross-tenant span.
             runOne(jobName, null, null, () -> perTenantWork.accept(null));
             return;
         }
+        int ok = 0;
+        int failed = 0;
         for (HaClient tenant : tenants) {
-            runOne(jobName, tenant.getId(), tenant.getClientPrefix(), () -> perTenantWork.accept(tenant));
+            boolean success = runOne(jobName, tenant.getId(), tenant.getClientPrefix(), () -> perTenantWork.accept(tenant));
+            if (success) {
+                ok++;
+            } else {
+                failed++;
+                // Rule 6: one tenant's failure must not stop the others — continue.
+            }
         }
+        // #275 M1: emit the same per-tenant run summary as the Runnable overload so
+        // an overloaded/partially-failing per-tenant job is observable, not silent.
+        log.info("{}: per-tenant run complete tenants={} ok={} failed={}",
+                jobName, tenants.size(), ok, failed);
     }
 
     private boolean runOne(String jobName, Long clientId, String prefix, Runnable work) {
