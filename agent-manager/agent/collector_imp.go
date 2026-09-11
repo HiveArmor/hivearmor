@@ -159,7 +159,7 @@ func (s *CollectorService) RegisterCollector(ctx context.Context, req *RegisterR
 
 	key := uuid.New().String()
 	collector.CollectorKey = key
-	err = s.DBConnection.Create(collector)
+	err = s.DBConnection.ScopedCreate(tenantID, collector)
 	if err != nil {
 		catcher.Error("failed to create collector", err, map[string]any{"process": "agent-manager"})
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to create collector: %v", err))
@@ -193,7 +193,10 @@ func bindExistingCollectorTenant(s *CollectorService, old *models.Collector, req
 	if !needsUpdate {
 		return bound, nil
 	}
-	if err := s.DBConnection.Upsert(&models.Collector{}, "id = ?", map[string]interface{}{"tenant_id": bound}, old.ID); err != nil {
+	// P0-A2-7 §3.2b — tenant REBIND (old.TenantID -> bound) crosses tenant boundaries,
+	// so no single per-tenant GUC satisfies both the RLS USING (old) and WITH CHECK
+	// (new). This narrow, system-authorized re-enrollment path uses the system pool.
+	if err := s.DBConnection.SystemContextUpsert(&models.Collector{}, "id = ?", map[string]interface{}{"tenant_id": bound}, old.ID); err != nil {
 		catcher.Error("failed to bind collector tenant", err, map[string]any{"collector_id": old.ID, "process": "agent-manager"})
 		return 0, status.Error(codes.Internal, "failed to bind collector tenant")
 	}
@@ -227,15 +230,28 @@ func (s *CollectorService) DeleteCollector(ctx context.Context, req *DeleteReque
 		return nil, status.Error(codes.InvalidArgument, "invalid id")
 	}
 
-	err = s.DBConnection.Upsert(&models.Collector{}, "id = ?", map[string]interface{}{"deleted_by": req.DeletedBy}, id)
+	// P0-A2-7 §3.2b — context-authenticated delete carries no request tenant; resolve
+	// the collector's tenant (system pool) so the RLS GUC governs the writes below.
+	tenantID, err := s.DBConnection.ResolveTenantByID("collectors", "id", idInt)
 	if err != nil {
+		catcher.Error("unable to resolve collector tenant for delete", err, map[string]any{"process": "agent-manager"})
+		return nil, status.Error(codes.Internal, "unable to delete collector")
+	}
+	if tenantID <= 0 {
+		return nil, status.Error(codes.NotFound, "collector not found")
+	}
+
+	if _, err = s.DBConnection.ScopedUpsert(tenantID, &models.Collector{}, "id = ?", map[string]interface{}{"deleted_by": req.DeletedBy}, id); err != nil {
 		catcher.Error("unable to delete collector", err, map[string]any{"process": "agent-manager"})
 	}
 
-	err = s.DBConnection.Delete(&models.Collector{}, "id = ?", false, id)
+	deleted, err := s.DBConnection.ScopedDelete(tenantID, &models.Collector{}, "id = ?", false, id)
 	if err != nil {
 		catcher.Error("unable to delete collector", err, map[string]any{"process": "agent-manager"})
 		return nil, status.Error(codes.Internal, fmt.Sprintf("unable to delete collector: %v", err.Error()))
+	}
+	if deleted == 0 {
+		return nil, status.Error(codes.NotFound, "collector not found")
 	}
 
 	s.CacheCollectorKeyMutex.Lock()

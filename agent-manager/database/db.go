@@ -248,6 +248,103 @@ func (d *DB) WithTenantTx(tenantID int64, fn func(tx *gorm.DB) error) error {
 	})
 }
 
+// P0-A2-7 §3.2b step 3 — tenant-scoped WRITE helpers. Each runs inside WithTenantTx,
+// so the RLS tenant_isolation policy (§3.2a) enforces the tenant on the write and a
+// WITH CHECK rejects a cross-tenant INSERT/UPDATE. Delete/Upsert return the affected
+// row count so a caller can DETECT a silent no-op (a write that matched zero rows
+// under RLS because the GUC did not match) instead of assuming success.
+
+// ScopedCreate inserts data within tenantID's transaction. The row's tenant_id must
+// equal tenantID or the RLS WITH CHECK rejects it.
+func (d *DB) ScopedCreate(tenantID int64, data interface{}) error {
+	return d.WithTenantTx(tenantID, func(tx *gorm.DB) error {
+		return tx.Create(data).Error
+	})
+}
+
+// ScopedUpsert mirrors Upsert but inside tenantID's transaction. Returns the number
+// of rows the update touched (0 when a matching row was not visible under the tenant
+// GUC — a caller may treat 0 as "not found in tenant").
+func (d *DB) ScopedUpsert(tenantID int64, data interface{}, query string, updates map[string]interface{}, args ...interface{}) (int64, error) {
+	var affected int64
+	err := d.WithTenantTx(tenantID, func(tx *gorm.DB) error {
+		var count int64
+		if err := tx.Model(data).Where(query, args...).Count(&count).Error; err != nil {
+			return err
+		}
+		if count > 0 {
+			var res *gorm.DB
+			if updates != nil {
+				res = tx.Model(data).Where(query, args...).Updates(updates)
+			} else {
+				res = tx.Model(data).Where(query, args...).Updates(data)
+			}
+			affected = res.RowsAffected
+			return res.Error
+		}
+		if err := tx.Create(data).Error; err != nil {
+			return err
+		}
+		affected = 1
+		return nil
+	})
+	return affected, err
+}
+
+// ScopedDelete mirrors Delete but inside tenantID's transaction and RETURNS the
+// affected row count. A count of 0 means the target row was not visible under the
+// tenant GUC (RLS filtered it) — the caller MUST treat that as a not-in-tenant /
+// no-op rather than a successful delete.
+func (d *DB) ScopedDelete(tenantID int64, data interface{}, query string, hardDelete bool, args ...interface{}) (int64, error) {
+	var affected int64
+	err := d.WithTenantTx(tenantID, func(tx *gorm.DB) error {
+		q := tx
+		if hardDelete {
+			q = q.Unscoped()
+		}
+		res := q.Where(query, args...).Delete(data)
+		if res.Error != nil && !errors.Is(res.Error, gorm.ErrRecordNotFound) {
+			return res.Error
+		}
+		affected = res.RowsAffected
+		return nil
+	})
+	return affected, err
+}
+
+// SystemContextUpsert performs an UPDATE on the SYSTEM pool (BYPASSRLS) for the
+// narrow, system-authorized case of MOVING a row between tenants — specifically the
+// collector re-enrollment tenant-rebind, where a single per-tenant GUC cannot satisfy
+// both the RLS USING (old tenant, to see the row) and WITH CHECK (new tenant) at once.
+// This is a deliberate, documented exception to the "system pool = reads only" rule;
+// it is used ONLY for that rebind. Never use it for an ordinary tenant-scoped update.
+func (d *DB) SystemContextUpsert(data interface{}, query string, updates map[string]interface{}, args ...interface{}) error {
+	d.locker.Lock()
+	defer d.locker.Unlock()
+	return d.sysConn.Model(data).Where(query, args...).Updates(updates).Error
+}
+
+// ResolveTenantByID looks up a single row's tenant_id via the SYSTEM pool (BYPASSRLS),
+// for context/stream-authenticated write paths that hold only the row id and no
+// request tenant (self-delete, command history). It reads the tenant with which the
+// subsequent Scoped* write is GUC'd. Returns (0, nil) when no such row exists — the
+// caller should then treat the operation as not-found rather than proceeding with an
+// unscoped write. table and idColumn are constant literals supplied by call sites,
+// never user input; id is a bound parameter.
+func (d *DB) ResolveTenantByID(table, idColumn string, id interface{}) (int64, error) {
+	d.locker.Lock()
+	defer d.locker.Unlock()
+	var tenantID int64
+	err := d.sysConn.Table(table).
+		Where(idColumn+" = ?", id).
+		Limit(1).
+		Pluck("tenant_id", &tenantID).Error
+	if err != nil {
+		return 0, err
+	}
+	return tenantID, nil
+}
+
 
 func (d *DB) Delete(data interface{}, query string, hardDelete bool, args ...interface{}) error {
 	d.locker.Lock()

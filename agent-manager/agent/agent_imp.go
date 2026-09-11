@@ -83,7 +83,15 @@ func (s *AgentService) RegisterAgent(ctx context.Context, req *AgentRequest) (*A
 	}
 	var agent *models.Agent
 	var key string
-	err := s.DBConnection.Transaction(func(tx *gorm.DB) error {
+	// P0-A2-7 §3.2b — the enrollment token authenticates the agent (like a connector
+	// key); resolve its tenant system-context, then run the whole consume tx under
+	// that tenant's RLS GUC so the agents / enrollment_tokens / audit writes are
+	// tenant-scoped.
+	tenantID, resolveErr := resolveEnrollmentTenant(ctx, s.DBConnection)
+	if resolveErr != nil {
+		return nil, resolveErr
+	}
+	err := s.DBConnection.WithTenantTx(tenantID, func(tx *gorm.DB) error {
 		var err error
 		agent, key, err = consumeEnrollment(ctx, tx, req)
 		return err
@@ -124,7 +132,7 @@ func (s *AgentService) UpdateAgent(ctx context.Context, req *AgentRequest) (*Aut
 	}
 
 	agent := &models.Agent{}
-	err = s.DBConnection.GetFirst(agent, "id = ?", idInt)
+	err = s.DBConnection.SystemContextGetFirst(agent, "id = ?", idInt)
 	if err != nil {
 		catcher.Error("failed to fetch agent", err, map[string]any{"process": "agent-manager"})
 		return nil, status.Errorf(codes.NotFound, "agent not found")
@@ -155,8 +163,9 @@ func (s *AgentService) UpdateAgent(ctx context.Context, req *AgentRequest) (*Aut
 		agent.Addresses = req.GetAddresses()
 	}
 
-	err = s.DBConnection.Upsert(&agent, "id = ?", nil, idInt)
-	if err != nil {
+	// P0-A2-7 §3.2b — write under the agent's own tenant GUC (resolved from the row
+	// just read on the system pool).
+	if _, err = s.DBConnection.ScopedUpsert(agent.TenantID, &agent, "id = ?", nil, idInt); err != nil {
 		catcher.Error("failed to update agent", err, map[string]any{"process": "agent-manager"})
 		return nil, status.Errorf(codes.Internal, "failed to update agent: %v", err)
 	}
@@ -170,12 +179,14 @@ func (s *AgentService) UpdateAgent(ctx context.Context, req *AgentRequest) (*Aut
 
 func (s *AgentService) DeleteAgent(ctx context.Context, req *DeleteRequest) (*AuthResponse, error) {
 	var idInt int
+	var tenantID int64
 	if req.GetAgentId() > 0 {
 		idInt = int(req.GetAgentId())
 		var scoped models.Agent
 		if req.GetTenantId() <= 0 || s.DBConnection.GetFirst(&scoped, "id = ? AND tenant_id = ?", idInt, req.GetTenantId()) != nil {
 			return nil, status.Error(codes.NotFound, "agent not found in tenant")
 		}
+		tenantID = req.GetTenantId()
 	} else {
 		id, _, _, err := utils.GetItemsFromContext(ctx)
 		if err != nil {
@@ -186,23 +197,40 @@ func (s *AgentService) DeleteAgent(ctx context.Context, req *DeleteRequest) (*Au
 			return nil, status.Error(codes.InvalidArgument, "invalid id")
 		}
 		idInt = parsedID
+		// P0-A2-7 §3.2b — context-authenticated self-delete carries no request tenant.
+		// Resolve the agent's tenant (system pool) so the RLS GUC can be set for the
+		// writes below; a missing row is not-found rather than an unscoped write.
+		tenantID, err = s.DBConnection.ResolveTenantByID("agents", "id", idInt)
+		if err != nil {
+			catcher.Error("unable to resolve agent tenant for delete", err, map[string]any{"process": "agent-manager"})
+			return &AuthResponse{}, status.Error(codes.Internal, "unable to delete agent")
+		}
+		if tenantID <= 0 {
+			return nil, status.Error(codes.NotFound, "agent not found")
+		}
 	}
 
-	err := s.DBConnection.Upsert(&models.Agent{}, "id = ?", map[string]interface{}{"deleted_by": req.DeletedBy}, idInt)
-	if err != nil {
+	// All three writes run under the resolved tenant's RLS GUC. Affected-row counts
+	// are checked so a silent no-op (row not visible under RLS) is not mistaken for
+	// success.
+	if _, err := s.DBConnection.ScopedUpsert(tenantID, &models.Agent{}, "id = ?", map[string]interface{}{"deleted_by": req.DeletedBy}, idInt); err != nil {
 		catcher.Error("unable to update delete_by field in agent", err, map[string]any{"process": "agent-manager"})
 	}
 
-	err = s.DBConnection.Delete(&models.AgentCommand{}, "agent_id = ?", false, uint(idInt))
-	if err != nil {
+	// agent_commands has no own tenant_id; its RLS policy resolves via the owning
+	// agent, so the same tenant GUC governs this delete.
+	if _, err := s.DBConnection.ScopedDelete(tenantID, &models.AgentCommand{}, "agent_id = ?", false, uint(idInt)); err != nil {
 		catcher.Error("unable to delete agent commands", err, map[string]any{"process": "agent-manager"})
 		return &AuthResponse{}, status.Error(codes.Internal, fmt.Sprintf("unable to delete agent commands: %v", err.Error()))
 	}
 
-	err = s.DBConnection.Delete(&models.Agent{}, "id = ?", false, idInt)
+	deleted, err := s.DBConnection.ScopedDelete(tenantID, &models.Agent{}, "id = ?", false, idInt)
 	if err != nil {
 		catcher.Error("unable to delete agent", err, map[string]any{"process": "agent-manager"})
 		return &AuthResponse{}, status.Error(codes.Internal, fmt.Sprintf("unable to delete agent: %v", err.Error()))
+	}
+	if deleted == 0 {
+		return nil, status.Error(codes.NotFound, "agent not found in tenant")
 	}
 
 	s.CacheAgentKeyMutex.Lock()
@@ -337,8 +365,14 @@ func (s *AgentService) ProcessCommand(stream PanelService_ProcessCommandServer) 
 		s.CommandResultChannelM.Unlock()
 
 		histCommand := createHistoryCommand(cmd, cmdID, uint(streamId))
-		err = s.DBConnection.Create(&histCommand)
-		if err != nil {
+		// P0-A2-7 §3.2b — the command's tenant is the target agent's; resolve it
+		// (system pool) so the RLS GUC (via the agent_commands parent policy) is set.
+		cmdTenantID, terr := s.DBConnection.ResolveTenantByID("agents", "id", streamId)
+		if terr != nil || cmdTenantID <= 0 {
+			catcher.Error("unable to resolve agent tenant for command", terr, map[string]any{"agent_id": streamId, "process": "agent-manager"})
+			return status.Errorf(codes.NotFound, "agent not found for command")
+		}
+		if err = s.DBConnection.ScopedCreate(cmdTenantID, &histCommand); err != nil {
 			catcher.Error("unable to create a new command history", err, map[string]any{"process": "agent-manager"})
 		}
 
@@ -358,7 +392,8 @@ func (s *AgentService) ProcessCommand(stream PanelService_ProcessCommandServer) 
 
 		select {
 		case result := <-s.CommandResultChannel[cmdID]:
-			err = s.DBConnection.Upsert(
+			_, err = s.DBConnection.ScopedUpsert(
+				cmdTenantID,
 				&models.AgentCommand{},
 				"agent_id = ? AND cmd_id = ?",
 				map[string]interface{}{"command_status": models.Executed, "result": result.Result},
@@ -377,7 +412,8 @@ func (s *AgentService) ProcessCommand(stream PanelService_ProcessCommandServer) 
 			delete(s.CommandResultChannel, cmdID)
 			s.CommandResultChannelM.Unlock()
 
-			_ = s.DBConnection.Upsert(
+			_, _ = s.DBConnection.ScopedUpsert(
+				cmdTenantID,
 				&models.AgentCommand{},
 				"agent_id = ? AND cmd_id = ?",
 				map[string]interface{}{"command_status": models.Error, "result": "command timed out after 5 minutes"},
