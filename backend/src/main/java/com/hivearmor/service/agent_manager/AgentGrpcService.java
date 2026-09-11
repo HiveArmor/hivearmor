@@ -371,6 +371,13 @@ public class AgentGrpcService {
                     log.error(msg);
                     throw new Exception(msg);
                 }
+                // #275 M2: a non-NOT_FOUND gRPC status (UNAVAILABLE / DEADLINE_EXCEEDED
+                // — a transient agent-manager outage) must NOT fall through leaving agent
+                // null and be reported as a not-found; surface the outage explicitly.
+                String msg = String.format("%1$s: Agent %2$s update failed — agent manager returned gRPC status %3$s (service unavailable, not not-found)",
+                        ctx, hostname, e.getStatus().getCode());
+                log.error(msg);
+                throw new Exception(msg);
             }
 
             assert agent != null;
@@ -407,6 +414,12 @@ public class AgentGrpcService {
                 if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
                     throw new AgentNotfoundException();
                 }
+                // #275 M2: a non-NOT_FOUND gRPC status (UNAVAILABLE / DEADLINE_EXCEEDED
+                // — a transient agent-manager outage) must NOT fall through as a silent
+                // 404-shaped no-op. Surface it as a real error so the outage is visible.
+                log.error(String.format("%1$s: Agent %2$s lookup failed with gRPC status %3$s (treating as service error, not not-found)",
+                        ctx, hostname, e.getStatus().getCode()));
+                throw e;
             } catch (AgentNotfoundException e) {
                 throw e;
             }
