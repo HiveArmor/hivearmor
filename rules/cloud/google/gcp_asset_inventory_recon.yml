@@ -1,0 +1,36 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - google
+name: GCP Cloud Asset Inventory Reconnaissance
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Discovery
+technique: "T1580 - Cloud Infrastructure Discovery"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1580/
+  - https://attack.mitre.org/techniques/T1087/004/
+description: |
+  Detects broad reconnaissance via Cloud Asset Inventory — SearchAllResources /
+  SearchAllIamPolicies / ExportAssets against the cloudasset service. These APIs return the
+  entire resource inventory or the complete IAM binding map for an org/folder/project in one
+  call, letting an attacker map every asset and every privilege path at once (the GCP
+  equivalent of an org-wide BloodHound sweep). Legitimate use is typically by a known
+  security/inventory service account; broad enumeration by a user or a newly-active principal
+  is a strong post-compromise discovery signal.
+
+  Next Steps:
+  1. Identify the actor (adversary.user), the scope searched, and whether IAM policies were included
+  2. SearchAllIamPolicies or ExportAssets over the whole org by a non-inventory principal is high-signal
+  3. Confirm it is not a sanctioned CSPM / inventory / backup tool
+  4. If suspicious, review the actor's session for what preceded (initial access) and follows (privesc/exfil)
+  5. Restrict cloudasset permissions to dedicated service accounts
+where: |
+  contains("log.protoPayloadServiceName", "cloudasset.googleapis.com") &&
+  regexMatch("log.protoPayloadMethodName", "(?i)(SearchAllResources|SearchAllIamPolicies|ExportAssets|ListAssets|AnalyzeIamPolicy)")
+groupBy:
+  - adversary.user
+  - adversary.ip
