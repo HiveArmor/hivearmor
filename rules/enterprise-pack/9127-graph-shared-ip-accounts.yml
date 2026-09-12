@@ -1,0 +1,44 @@
+id: 9127
+name: GRAPH-SHARED-IP-MANY-ACCOUNTS
+type: graph_offense
+dataTypes:
+  - windows
+  - linux
+  - o365
+  - azure
+category: Credential Access
+technique: "T1110 - Brute Force"
+mitre:
+  tactics: ["TA0006"]
+  attacks: ["T1110", "T1078"]
+adversary: origin
+description: >
+  Staging graph pack (DET-SEQ). A single source IP address authenticated into
+  many distinct user accounts within the window — the graph signature of
+  credential stuffing, password spraying, or a shared attacker egress reusing
+  harvested credentials across identities. Requires Neo4j (NEO4J_ENABLED) —
+  STAGING CANDIDATE.
+references:
+  - https://attack.mitre.org/techniques/T1110/
+  - https://attack.mitre.org/techniques/T1078/
+  - https://attack.mitre.org/tactics/TA0006/
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+cypherQuery: |
+  MATCH (ip:IpAddress)<-[l:LOGGED_INTO_FROM]-(u:User)
+  WHERE l.lastSeen > datetime() - duration('PT1H')
+  WITH ip, count(DISTINCT u) AS accountCount, collect(DISTINCT u.username)[0..8] AS sampleUsers
+  WHERE accountCount >= 6
+  RETURN ip.address     AS sourceIP,
+         accountCount,
+         sampleUsers,
+         coalesce(ip.riskScore, 0) AS riskScore
+  LIMIT 20
+alertFields:
+  - sourceIP
+  - accountCount
+  - sampleUsers
+  - riskScore
+checkIntervalSeconds: 240
