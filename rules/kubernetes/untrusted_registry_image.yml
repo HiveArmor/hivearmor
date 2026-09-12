@@ -16,7 +16,7 @@ references:
 description: |
   Detects a pod created from an image pulled directly from a public/untrusted registry (Docker Hub library images or docker.io) rather than the organisation's private registry. Attackers with deploy access run their tooling from public images (miners, reverse shells, recon kits) instead of building and pushing to an internal registry.
 
-  This rule flags docker.io / library images and images with no registry host (implicit Docker Hub). Tune the allowlist regex to your organisation's registry host(s) before enabling in production.
+  This rule flags images from the Docker Hub `library/` namespace, images referencing `docker.io/` explicitly, and any image pinned to the mutable `:latest` tag (a supply-chain and deploy-hygiene smell). It deliberately does NOT flag every image — add your organisation's private registry host(s) to the allowlist and, if desired, extend the pattern to other public registries before enabling in production.
 
   Next Steps:
   1. Identify the pod, namespace, and the exact image reference pulled
@@ -28,7 +28,7 @@ where: |
   exists("log.message") &&
   contains("log.message", "\"resource\":\"pods\"") &&
   contains("log.message", "\"verb\":\"create\"") &&
-  regexMatch("log.message", "\"image\":\"(docker\\.io/|library/|[a-z0-9]+(:[^/\"]+)?\")")
+  regexMatch("log.message", "\"image\":\"(docker\\.io/|library/|[^\"]*:latest\")")
 groupBy:
   - log.k8s.namespace
   - log.k8s.podName
