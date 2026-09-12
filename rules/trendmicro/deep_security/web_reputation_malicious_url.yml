@@ -1,0 +1,33 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - trendmicro-deep-security
+name: "Trend Micro: Malicious URL Access (Web Reputation)"
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: Command and Control
+technique: "T1071.001 - Application Layer Protocol: Web Protocols"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1071/001/
+description: |
+  Detects a Trend Micro Deep Security Web Reputation event — a host accessed (or was blocked
+  from) a URL with a bad reputation (Web Reputation module, Signature IDs 5000000-5999999).
+  A workload reaching a low-reputation or known-malicious URL is a strong indicator of C2
+  callback, malware download, or phishing follow-through. The requested URL is carried in the
+  event.
+
+  Next Steps:
+  1. Identify the host (origin.host), the requested URL (log.tmRequestUrl), and the verdict
+  2. A "Detect Only" (allowed) hit means the connection succeeded — treat as likely-compromised
+  3. Extract the domain/URL as an IOC and pivot across DNS/proxy/firewall logs for other hosts
+  4. Investigate the host for the process that made the request (malware vs. user browsing)
+  5. Block the destination and confirm no data left over the channel
+where: |
+  regexMatch("log.signatureId", "^5[0-9]{6}$") ||
+  (regexMatch("log.tmCategory", "(?i)Web ?Reputation") && exists("log.tmRequestUrl"))
+groupBy:
+  - origin.host
+  - lastEvent.log.tmRequestUrl
