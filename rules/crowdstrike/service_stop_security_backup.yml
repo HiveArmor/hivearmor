@@ -1,0 +1,36 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - crowdstrike
+name: "Service Stop Targeting Security or Backup Services"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 3
+category: Impact
+technique: "T1489 - Service Stop"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1489/
+  - https://attack.mitre.org/tactics/TA0040/
+description: |
+  Detects command-line activity stopping or disabling security, backup, or database
+  services (net stop / sc stop / sc config start=disabled / Stop-Service / taskkill)
+  targeting AV/EDR, Veeam/backup, SQL, or Exchange service names. Disabling defensive
+  and backup services is a hallmark ransomware precursor — the attacker clears the way
+  for encryption and prevents recovery just before detonating.
+
+  Next Steps:
+  1. Identify the host, account, and the exact service(s) targeted
+  2. Confirm this is not a sanctioned maintenance window or patch operation
+  3. Treat AV/EDR/backup service stops as high-confidence pre-ransomware activity
+  4. Correlate with shadow-copy deletion (T1490), mass file rename (T1486), or lateral movement
+  5. If unauthorized, isolate the host immediately, restart the services, and begin ransomware IR
+where: >
+  equals("log.event_simpleName", "ProcessRollup2") &&
+  exists("log.eventCommandLine") &&
+  regexMatch("log.eventCommandLine", "(?i)(net(\\.exe)?\\s+stop|sc(\\.exe)?\\s+(stop|config)|stop-service|taskkill.*/f)") &&
+  regexMatch("log.eventCommandLine", "(?i)(windefend|sense|sophos|crowdstrike|csfalcon|mcafee|symantec|sentinel|veeam|backup|sql|msexchange|memtas|sqltelemetry)")
+groupBy:
+  - origin.host
+  - origin.user
