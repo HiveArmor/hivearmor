@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - azure
+name: Azure Conditional Access Policy Tampering
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: Defense Evasion
+technique: "T1556.009 - Modify Authentication Process: Conditional Access Policies"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1556/009/
+description: |
+  Detects modification or deletion of an Entra ID Conditional Access policy — the
+  "Update conditional access policy" / "Delete conditional access policy" operations in the
+  AuditLogs. Conditional Access is the control that enforces MFA, compliant-device, and
+  trusted-location requirements; an attacker who has gained privileged access weakens or
+  deletes a CA policy to remove MFA enforcement for themselves or a target, then signs in
+  freely. Disabling the very control that would stop them is a hallmark post-compromise move.
+
+  Next Steps:
+  1. Identify the actor (adversary.user), the CA policy changed, and what the change relaxed
+  2. Disabling MFA/compliant-device grant controls or excluding a user/app is high-signal
+  3. Confirm the change matches an approved identity-governance ticket, not an ad-hoc edit
+  4. If unauthorized, restore the policy from its prior state and review sign-ins allowed meanwhile
+  5. Investigate the actor's session — this usually follows a privileged-account compromise
+where: |
+  contains("log.operationName", "conditional access policy") &&
+  regexMatch("log.operationName", "(?i)(update|delete|remove)") &&
+  equals("log.resultType", "Success")
+groupBy:
+  - adversary.user
+  - adversary.ip
