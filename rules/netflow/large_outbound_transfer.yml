@@ -1,0 +1,41 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - netflow
+name: Large Sustained Outbound Data Transfer
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Exfiltration
+technique: "T1030 - Data Transfer Size Limits"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1030/
+  - https://attack.mitre.org/techniques/T1048/
+description: |
+  Detects an internal host pushing a large volume of data outbound in repeated flows within a short window. Adversaries chunk exfiltration into many moderately-sized transfers to stay under per-flow alerting thresholds; correlating repeated high-byte outbound flows from one source surfaces that pattern.
+
+  Next Steps:
+  1. Identify the source host and the external destination(s) receiving the data
+  2. Establish whether the destination is a known service (backup, cloud sync) or unfamiliar
+  3. Correlate with the process/user active on the source host at that time
+  4. Quantify total bytes moved and compare against the host's normal egress baseline
+  5. If unauthorised, isolate the host, block the destination, and begin data-loss assessment
+where: |
+  exists("origin.ip") && exists("target.ip") &&
+  greaterThan("origin.bytesSent", 5000000)
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: '{{.origin.ip}}'
+      - field: target.ip
+        operator: filter_term
+        value: '{{.target.ip}}'
+    within: 10m
+    count: 5
+groupBy:
+  - origin.ip
+  - target.ip
