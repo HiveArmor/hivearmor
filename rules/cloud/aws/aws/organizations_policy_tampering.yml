@@ -1,0 +1,48 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS Organizations Policy or Membership Tampering
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: Defense Evasion
+technique: "T1562.008 - Impair Defenses: Disable or Modify Cloud Logs"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/008/
+  - https://attack.mitre.org/techniques/T1098/
+  - https://attack.mitre.org/tactics/TA0005/
+description: |
+  Detects tampering with AWS Organizations governance — detaching or disabling a Service
+  Control Policy (DetachPolicy / DisablePolicyType), leaving the organization
+  (LeaveOrganization), or creating/inviting a new account. SCPs are the org-wide guardrail;
+  detaching one lifts the ceiling on what member-account principals can do (including
+  disabling logging), and LeaveOrganization / new-account creation are used to escape
+  central control or stand up attacker-controlled accounts. These are high-blast-radius,
+  rarely-legitimate management-account actions.
+
+  Next Steps:
+  1. Identify the principal (should be a management-account admin) and the exact Organizations action
+  2. Confirm it was an authorised, change-controlled org-governance change
+  3. Treat DetachPolicy on an SCP, DisablePolicyType, and LeaveOrganization as high severity
+  4. If unauthorized, re-attach the SCP / re-enable the policy type and lock down the management account
+  5. Review what member-account activity occurred while the guardrail was off
+where: |
+  equals("log.eventSource", "organizations.amazonaws.com") &&
+  oneOf("log.eventName", ["DetachPolicy", "DisablePolicyType", "DeletePolicy", "LeaveOrganization", "RemoveAccountFromOrganization", "CreateAccount", "InviteAccountToOrganization", "UpdatePolicy"])
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_term
+        value: 'organizations.amazonaws.com'
+    within: 30m
+    count: 1
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

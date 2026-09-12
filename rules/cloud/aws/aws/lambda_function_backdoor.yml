@@ -1,0 +1,47 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS Lambda Function Backdoor or Cross-Account Exposure
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: Persistence
+technique: "T1098 - Account Manipulation"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1098/
+  - https://attack.mitre.org/techniques/T1546/
+  - https://attack.mitre.org/tactics/TA0003/
+description: |
+  Detects backdooring or exposure of an AWS Lambda function — AddPermission granting invoke
+  to another account or a public principal, AddLayerVersionPermission sharing a (possibly
+  trojaned) layer cross-account, or UpdateFunctionCode/UpdateFunctionConfiguration that
+  swaps the code or injects a malicious layer/env. A Lambda with an attacker-controlled
+  layer or an over-permissive resource policy is a durable execution-and-persistence
+  foothold that runs with the function's IAM role.
+
+  Next Steps:
+  1. Identify the principal, the function, and the exact action (permission grant / code or layer change)
+  2. Confirm it matches a sanctioned deployment identity and change
+  3. Flag AddPermission with Principal "*" or a foreign account, and layer sharing cross-account, as high-signal
+  4. If unauthorized, remove the permission / revert the code+layers and rotate the function's role credentials
+  5. Review the function's recent invocations and what its role could reach
+where: |
+  equals("log.eventSource", "lambda.amazonaws.com") &&
+  oneOf("log.eventName", ["AddPermission", "AddPermission20150331", "AddPermission20150331v2", "AddLayerVersionPermission", "UpdateFunctionCode", "UpdateFunctionCode20150331v2", "UpdateFunctionConfiguration", "UpdateFunctionConfiguration20150331v2", "PutFunctionConcurrency"])
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_term
+        value: 'lambda.amazonaws.com'
+    within: 30m
+    count: 1
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress
