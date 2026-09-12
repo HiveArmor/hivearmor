@@ -1,0 +1,31 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - github
+name: GitHub Branch Protection Disabled or Overridden
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: Defense Evasion
+technique: "T1562.001 - Impair Defenses: Disable or Modify Tools"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/001/
+  - https://docs.github.com/en/organizations/keeping-your-organization-secure/managing-security-settings-for-your-organization/reviewing-the-audit-log-for-your-organization
+description: |
+  Detects deletion or weakening of a repository's branch-protection rule — destroying the protected-branch policy, disabling required reviews / status checks, or overriding protection to push directly. Branch protection is the control that forces code review and CI before merge; removing or bypassing it is how an attacker (or a compromised maintainer token) slips unreviewed, possibly malicious, code into a protected branch.
+
+  Next Steps:
+  1. Identify the repository, the branch, and the actor that changed the protection
+  2. Confirm the change was an authorised, reviewed repository-admin decision
+  3. Inspect any commits pushed to the branch during the window the protection was down
+  4. If unauthorised, restore the protection rule and review recent merges for injected changes
+  5. Rotate the acting identity's credentials/tokens if compromise is suspected
+where: |
+  oneOf("log.action", ["protected_branch.destroy", "protected_branch.dismiss_stale_reviews", "protected_branch.policy_override", "protected_branch.update_admin_enforced", "protected_branch.rejected_ref_update"]) ||
+  regexMatch("log.action", "^protected_branch\\.(destroy|policy_override|dismiss)") ||
+  (contains("log.action", "protected_branch") && regexMatch("log.message", "(?i)(destroy|disable|override|false)"))
+groupBy:
+  - log.repositoryName
+  - log.senderLogin
