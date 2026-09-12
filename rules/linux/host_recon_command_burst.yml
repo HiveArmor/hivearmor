@@ -1,0 +1,44 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - "linux"
+name: "Linux: Host Reconnaissance Command Burst"
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+category: Discovery
+technique: "T1082 - System Information Discovery"
+adversary: origin
+references:
+  - https://attack.mitre.org/tactics/TA0007/
+  - https://attack.mitre.org/techniques/T1082/
+  - https://attack.mitre.org/techniques/T1033/
+description: |
+  Detects a burst of built-in host-reconnaissance commands from the same origin in a
+  short window — whoami / id, uname -a, hostname, ip addr / ifconfig, netstat / ss,
+  ps aux, systemctl list-units / service --status-all, cat of /etc/passwd or
+  /etc/os-release. A single command is routine; a rapid sequence of several distinct
+  recon commands from one origin is the standard post-compromise enumeration an
+  attacker runs to orient before lateral movement or privilege escalation.
+
+  Next Steps:
+  1. Identify the host, user, and the exact recon commands and order
+  2. Determine whether this was a legitimate operator/automation task or unexpected
+  3. Correlate with the preceding session (SSH login, sudo, a new shell) and its source
+  4. Check what the origin did next — credential access, staging, or outbound transfer
+  5. If unauthorized, isolate the host, preserve shell history, and rotate the user's credentials
+where: |
+  exists("log.message") &&
+  regexMatch("log.message", "(?i)(\\bwhoami\\b|\\bid\\b|\\buname\\b|\\bhostname\\b|\\bifconfig\\b|\\bip\\s+(addr|a|route)\\b|\\bnetstat\\b|\\bss\\s+-|\\bps\\s+aux\\b|\\bsystemctl\\s+list|\\bservice\\s+--status-all\\b|/etc/(passwd|os-release|resolv\\.conf))")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.user
+        operator: filter_term
+        value: '{{.origin.user}}'
+    within: 5m
+    count: 6
+groupBy:
+  - origin.host
+  - origin.user

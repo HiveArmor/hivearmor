@@ -1,0 +1,48 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS IAM and Permission Enumeration
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Discovery
+technique: "T1087.004 - Account Discovery: Cloud Account"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1087/004/
+  - https://attack.mitre.org/techniques/T1069/003/
+  - https://attack.mitre.org/techniques/T1526/
+description: |
+  Detects a burst of IAM/STS/Organizations enumeration calls from a single identity —
+  ListUsers, ListRoles, ListPolicies, GetAccountAuthorizationDetails, ListAccessKeys,
+  GetCallerIdentity, ListAccounts. After compromising a credential, attackers map who
+  they are and what they (and other principals) can do before escalating; a spike of
+  identity-and-permission enumeration is a strong pre-escalation signal, and
+  GetAccountAuthorizationDetails in particular is a hallmark of automated privilege-path
+  discovery (e.g. enumerate-iam / PMapper).
+
+  Next Steps:
+  1. Identify the principal and whether the calls came from a user key, assumed role, or new session
+  2. Flag GetAccountAuthorizationDetails / ListAccounts as high-signal — rarely used by normal workloads
+  3. Compare against the identity's baseline; confirm it is not a sanctioned IAM audit / CSPM tool
+  4. Check for immediate follow-on: AttachUserPolicy, CreateAccessKey, AssumeRole, PassRole
+  5. If unauthorized, disable the key / revoke the session and audit the identity's effective permissions
+where: |
+  equals("log.eventSource", "iam.amazonaws.com") ||
+  regexMatch("log.eventName", "^(GetAccountAuthorizationDetails|ListUsers|ListRoles|ListPolicies|ListGroups|ListAccessKeys|ListAttachedUserPolicies|GetCallerIdentity|ListAccounts)$")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventName
+        operator: filter_match
+        value: 'List Get'
+    within: 10m
+    count: 15
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress
