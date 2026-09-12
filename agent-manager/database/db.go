@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/hivearmor/agent-manager/config"
+	"github.com/hivearmor/agent-manager/metrics"
 	"github.com/hivearmor/agent-manager/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -214,6 +215,7 @@ func (d *DB) ScopedCommandsByPagination(data interface{}, tenantID int64, p util
 func (d *DB) SystemContextFind(data interface{}, query string, args ...interface{}) (int64, error) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
+	metrics.SystemContextQueries.WithLabelValues("find").Inc()
 	tx := d.sysConn
 	if query != "" {
 		tx = tx.Where(query, args...)
@@ -232,6 +234,7 @@ func (d *DB) SystemContextFind(data interface{}, query string, args ...interface
 func (d *DB) SystemContextGetFirst(data interface{}, query string, args ...interface{}) error {
 	d.locker.Lock()
 	defer d.locker.Unlock()
+	metrics.SystemContextQueries.WithLabelValues("get_first").Inc()
 	return d.sysConn.Where(query, args...).First(data).Error
 }
 
@@ -242,6 +245,7 @@ func (d *DB) SystemContextGetFirst(data interface{}, query string, args ...inter
 func (d *DB) SystemContextGetByPagination(data interface{}, p utils.Pagination, f []utils.Filter) (int64, error) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
+	metrics.SystemContextQueries.WithLabelValues("get_by_pagination").Inc()
 	var count int64
 	tx := d.sysConn.Model(data).Scopes(utils.FilterScope(f)).Count(&count).Scopes(p.PagingScope)
 	if err := tx.Find(data).Error; err != nil {
@@ -262,6 +266,7 @@ func (d *DB) SystemContextGetByPagination(data interface{}, p utils.Pagination, 
 // tenant can never run an unscoped statement.
 func (d *DB) WithTenantTx(tenantID int64, fn func(tx *gorm.DB) error) error {
 	if tenantID <= 0 {
+		metrics.RLSMissingTenant.Inc()
 		return status.Error(codes.PermissionDenied,
 			"tenant scope is required for this operation but no tenant was supplied")
 	}
@@ -316,6 +321,9 @@ func (d *DB) ScopedUpsert(tenantID int64, data interface{}, query string, update
 		affected = 1
 		return nil
 	})
+	if err == nil && affected == 0 {
+		metrics.RLSScopedNoop.WithLabelValues("upsert").Inc()
+	}
 	return affected, err
 }
 
@@ -337,6 +345,9 @@ func (d *DB) ScopedDelete(tenantID int64, data interface{}, query string, hardDe
 		affected = res.RowsAffected
 		return nil
 	})
+	if err == nil && affected == 0 {
+		metrics.RLSScopedNoop.WithLabelValues("delete").Inc()
+	}
 	return affected, err
 }
 
@@ -349,6 +360,7 @@ func (d *DB) ScopedDelete(tenantID int64, data interface{}, query string, hardDe
 func (d *DB) SystemContextUpsert(data interface{}, query string, updates map[string]interface{}, args ...interface{}) error {
 	d.locker.Lock()
 	defer d.locker.Unlock()
+	metrics.SystemContextQueries.WithLabelValues("upsert").Inc()
 	return d.sysConn.Model(data).Where(query, args...).Updates(updates).Error
 }
 
@@ -362,6 +374,7 @@ func (d *DB) SystemContextUpsert(data interface{}, query string, updates map[str
 func (d *DB) ResolveTenantByID(table, idColumn string, id interface{}) (int64, error) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
+	metrics.SystemContextQueries.WithLabelValues("resolve_tenant").Inc()
 	var tenantID int64
 	err := d.sysConn.Table(table).
 		Where(idColumn+" = ?", id).

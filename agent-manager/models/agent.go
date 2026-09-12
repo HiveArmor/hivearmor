@@ -85,7 +85,11 @@ type EnrollmentAuditEvent struct {
 
 type AgentCommand struct {
 	gorm.Model
-	AgentID       uint
+	// P0-A2-7 §3.2 C8 — agent_id is the join target of the agent_commands RLS
+	// parent-subquery policy (EXISTS SELECT 1 FROM agents WHERE a.id =
+	// agent_commands.agent_id AND a.tenant_id = <GUC>). Index it so the per-row RLS
+	// check is an index lookup, not a scan.
+	AgentID       uint `gorm:"index"`
 	Command       string
 	CommandStatus AgentCommandStatus
 	Result        string
