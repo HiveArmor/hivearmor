@@ -1,0 +1,54 @@
+id: 9131
+name: SEQ-EXEC-CREDDUMP-LATERAL-EXFIL
+dataTypes:
+  - windows
+  - process
+  - wineventlog
+  - network
+category: Exfiltration
+technique: "T1041 - Exfiltration Over C2 Channel"
+mitre:
+  tactics: ["TA0002", "TA0006", "TA0008", "TA0010"]
+  attacks: ["T1059", "T1003.001", "T1021", "T1041"]
+adversary: origin
+description: >
+  Staging sequence pack (DET-SEQ). The full hands-on-keyboard intrusion chain on one
+  origin host: suspicious execution, then credential dumping (LSASS/mimikatz-style),
+  then a remote-service logon (lateral movement), then a large outbound transfer
+  (exfiltration) — each within its window. This 4-stage chain links fragments that
+  today exist only as separate 2-stage rules; observing all four from one origin in
+  sequence is a very high-confidence "active breach in progress" signal.
+references:
+  - https://attack.mitre.org/techniques/T1059/
+  - https://attack.mitre.org/techniques/T1003/001/
+  - https://attack.mitre.org/techniques/T1021/
+  - https://attack.mitre.org/techniques/T1041/
+  - https://attack.mitre.org/tactics/TA0010/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+deduplicateBy:
+  - origin.host
+groupBy:
+  - origin.host
+sequence:
+  - where: 'action == "suspicious_execution" || safe("log.action", "") == "suspicious_execution" || raw.matches("(?i).*(powershell.*-enc|rundll32.*javascript:|mshta\\s+https?://|regsvr32.*/i:http).*")'
+    within: 15m
+  - where: 'action == "credential_dump" || safe("log.action", "") == "credential_dump" || raw.matches("(?i).*(lsass(.exe)?).*(procdump|comsvcs|MiniDump|sekurlsa|ProcessAccess).*")'
+    within: 30m
+  - where: 'action == "remote_logon" || safe("log.action", "") == "remote_logon" || raw.matches("(?i).*(LogonType[^0-9]{0,12}(3|10)).*")'
+    within: 60m
+  - where: 'action == "data_exfil" || safe("log.action", "") == "data_exfil" || raw.matches("(?i).*(rclone|MEGAcmd|curl.*-T\\s|Invoke-WebRequest.*-InFile).*")'
+    within: 120m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.host
+        operator: filter_term
+        value: "{{.origin.host}}"
+      - field: log.action
+        operator: filter_term
+        value: credential_dump
+    within: 180m
+    count: 1
