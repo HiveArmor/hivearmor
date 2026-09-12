@@ -1,0 +1,44 @@
+id: 9126
+name: GRAPH-HOST-MANY-RISKY-EXTERNAL
+type: graph_offense
+dataTypes:
+  - windows
+  - linux
+  - network
+category: Command and Control
+technique: "T1071 - Application Layer Protocol"
+mitre:
+  tactics: ["TA0011"]
+  attacks: ["T1071", "T1090"]
+adversary: origin
+description: >
+  Staging graph pack (DET-SEQ). One internal host communicated with several
+  distinct external IP addresses that each carry a non-zero threat-intel risk
+  score within the window — consistent with C2 fan-out or use of a proxy mesh.
+  Requires Neo4j (NEO4J_ENABLED) — STAGING CANDIDATE.
+references:
+  - https://attack.mitre.org/techniques/T1071/
+  - https://attack.mitre.org/techniques/T1090/
+  - https://attack.mitre.org/tactics/TA0011/
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 2
+cypherQuery: |
+  MATCH (h:Host)-[c:COMMUNICATED_WITH]->(ip:IpAddress)
+  WHERE c.lastSeen > datetime() - duration('PT3H')
+    AND coalesce(ip.riskScore, 0) > 0
+    AND NOT ip.address STARTS WITH '10.'
+    AND NOT ip.address STARTS WITH '192.168.'
+    AND NOT ip.address STARTS WITH '172.'
+  WITH h, count(DISTINCT ip) AS riskyPeers, collect(DISTINCT ip.address)[0..8] AS sampleIPs
+  WHERE riskyPeers >= 4
+  RETURN h.hostname     AS targetHost,
+         riskyPeers,
+         sampleIPs
+  LIMIT 20
+alertFields:
+  - targetHost
+  - riskyPeers
+  - sampleIPs
+checkIntervalSeconds: 180

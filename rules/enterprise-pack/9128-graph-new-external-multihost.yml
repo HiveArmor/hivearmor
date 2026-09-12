@@ -1,0 +1,47 @@
+id: 9128
+name: GRAPH-NEW-EXTERNAL-MULTI-HOST
+type: graph_offense
+dataTypes:
+  - windows
+  - linux
+  - network
+category: Command and Control
+technique: "T1071 - Application Layer Protocol"
+mitre:
+  tactics: ["TA0011"]
+  attacks: ["T1071", "T1568"]
+adversary: origin
+description: >
+  Staging graph pack (DET-SEQ). An external IP first seen within the last day was
+  contacted by two or more internal hosts in the window — an emerging shared
+  destination is a common early sign of a newly stood-up C2 endpoint before it
+  accrues threat-intel reputation. Requires Neo4j (NEO4J_ENABLED) — STAGING
+  CANDIDATE.
+references:
+  - https://attack.mitre.org/techniques/T1071/
+  - https://attack.mitre.org/techniques/T1568/
+  - https://attack.mitre.org/tactics/TA0011/
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 1
+cypherQuery: |
+  MATCH (h:Host)-[c:COMMUNICATED_WITH]->(ip:IpAddress)
+  WHERE ip.firstSeen > datetime() - duration('P1D')
+    AND c.lastSeen > datetime() - duration('PT4H')
+    AND NOT ip.address STARTS WITH '10.'
+    AND NOT ip.address STARTS WITH '192.168.'
+    AND NOT ip.address STARTS WITH '172.'
+  WITH ip, count(DISTINCT h) AS hostCount, collect(DISTINCT h.hostname)[0..8] AS sampleHosts
+  WHERE hostCount >= 2
+  RETURN ip.address     AS c2IP,
+         hostCount,
+         sampleHosts,
+         ip.firstSeen    AS firstSeen
+  LIMIT 20
+alertFields:
+  - c2IP
+  - hostCount
+  - sampleHosts
+  - firstSeen
+checkIntervalSeconds: 300

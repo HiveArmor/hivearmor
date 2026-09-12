@@ -1,0 +1,32 @@
+id: 9121
+name: RISK-SUSPICIOUS-EXECUTION-LOLBIN
+dataTypes:
+  - windows
+  - process
+  - wineventlog
+category: Execution
+technique: "T1059 - Command and Scripting Interpreter"
+mitre:
+  tactics: ["TA0002"]
+  attacks: ["T1059", "T1218"]
+adversary: origin
+description: >
+  Accumulates risk when a living-off-the-land binary is invoked in a way that
+  fetches or executes remote content (mshta with a URL, rundll32 javascript,
+  regsvr32 /i:http, certutil -urlcache -f, bitsadmin /transfer). These proxy
+  execution patterns are individually low-confidence but strongly indicative
+  when they contribute to an accumulating-risk offense.
+references:
+  - https://attack.mitre.org/techniques/T1218/
+  - https://attack.mitre.org/tactics/TA0002/
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.command
+groupBy:
+  - origin.host
+riskScore: 30
+where: 'raw.matches("(?i).*(mshta(.exe)?\\s+https?://|rundll32(.exe)?.*javascript:|regsvr32(.exe)?.*/i:https?://|certutil(.exe)?.*-urlcache.*-f|bitsadmin.*/transfer).*")'

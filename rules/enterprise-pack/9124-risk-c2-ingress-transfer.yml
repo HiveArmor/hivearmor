@@ -1,0 +1,34 @@
+id: 9124
+name: RISK-C2-INGRESS-TOOL-TRANSFER
+dataTypes:
+  - windows
+  - linux
+  - process
+  - wineventlog
+category: Command and Control
+technique: "T1105 - Ingress Tool Transfer"
+mitre:
+  tactics: ["TA0011"]
+  attacks: ["T1105", "T1071"]
+adversary: origin
+description: >
+  Accumulates risk when a host downloads a remote payload via a scripting or
+  transfer utility (PowerShell DownloadString/Invoke-WebRequest, curl/wget to a
+  raw IP or non-standard port, scp from an external host). Ingress tool transfer
+  is the bridge between initial access and hands-on activity; feeding it to the
+  accumulator lets it combine with execution and defense-evasion signals from the
+  same origin.
+references:
+  - https://attack.mitre.org/techniques/T1105/
+  - https://attack.mitre.org/tactics/TA0011/
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.command
+groupBy:
+  - origin.host
+riskScore: 25
+where: 'raw.matches("(?i).*((Net\\.WebClient|DownloadString|DownloadFile|Invoke-WebRequest|iwr|curl|wget)\\s+.*https?://|scp\\s+.*@).*")'
