@@ -1,0 +1,40 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - macos
+name: "macOS: Virtualization / Sandbox Evasion Check"
+impact:
+  confidentiality: 1
+  integrity: 2
+  availability: 1
+category: Defense Evasion
+technique: "T1497 - Virtualization/Sandbox Evasion"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1497/
+  - https://attack.mitre.org/techniques/T1497/001/
+description: |
+  Detects a process probing for virtual-machine or analysis-sandbox artifacts before
+  executing — querying hardware model / platform identifiers (sysctl hw.model,
+  ioreg / IOPlatformExpertDevice, system_profiler) and testing the result against known VM
+  strings (VMware, VirtualBox, QEMU, Parallels), or checking CPU count / memory as an
+  analysis-environment tell. macOS malware runs these checks to stay dormant in sandboxes and
+  only detonate on real endpoints, so the check itself is a strong pre-execution indicator.
+
+  Next Steps:
+  1. Identify the host, the process, and the exact VM/sandbox artifact it queried
+  2. sysctl hw.model / ioreg IOPlatformExpertDevice piped to a grep for VMware/VirtualBox/QEMU is high-signal
+  3. Confirm it is not a legitimate inventory/telemetry agent enumerating hardware
+  4. If malicious, capture the sample before it self-deletes and analyze on bare metal
+  5. Correlate with what the process did next (or refused to do) based on the check result
+where: |
+  exists("log.eventMessage") &&
+  (
+    (regexMatch("log.eventMessage", "(?i)(hw\\.model|IOPlatformExpertDevice|IOPlatformSerialNumber|system_profiler\\s+SPHardware)") &&
+     regexMatch("log.eventMessage", "(?i)(vmware|virtualbox|vbox|qemu|parallels|kvm|sandbox|\\bgrep\\b)")) ||
+    (regexMatch("log.eventMessage", "(?i)\\bioreg\\b.*(vmware|virtualbox|qemu|parallels)")) ||
+    (regexMatch("log.eventMessage", "(?i)sysctl.*(hw\\.model|machdep\\.cpu).*(vmware|virtualbox|qemu|parallels|\\bgrep\\b)"))
+  )
+groupBy:
+  - origin.host
+  - origin.user

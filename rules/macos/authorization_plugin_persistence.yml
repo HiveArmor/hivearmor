@@ -1,0 +1,40 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - macos
+name: "macOS: Authorization Plugin Persistence"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: Persistence
+technique: "T1547 - Boot or Logon Autostart Execution"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1547/
+  - https://attack.mitre.org/techniques/T1556/
+description: |
+  Detects installation of a macOS authorization plugin — a bundle written to
+  /Library/Security/SecurityAgentPlugins/ combined with a change to the authorization policy
+  database (authorizationdb / security authorizationdb write). Authorization plugins load
+  into the SecurityAgent at the login window and on privileged operations, so a malicious
+  plugin both persists across reboots AND can capture credentials as the user authenticates
+  (the technique behind malware such as the "evil" authorization-plugin family).
+
+  Next Steps:
+  1. Identify the host, the plugin bundle written, and the process that installed it
+  2. A write to SecurityAgentPlugins plus an authorizationdb rule change is high-signal
+  3. Confirm it is not a legitimate MDM/SSO/smartcard plugin (JamfConnect, Kerberos SSO)
+  4. If unauthorized, remove the plugin, restore the authorization mechanisms, and treat login creds as exposed
+  5. Rotate credentials for accounts that logged in while the plugin was present
+where: |
+  exists("log.eventMessage") &&
+  (
+    (regexMatch("log.eventMessage", "/Library/Security/SecurityAgentPlugins/") &&
+     regexMatch("log.eventMessage", "(?i)(\\.bundle|write|created|copied|installed|modif)")) ||
+    (regexMatch("log.eventMessage", "(?i)authorizationdb") &&
+     regexMatch("log.eventMessage", "(?i)(write|mechanisms|modif)"))
+  )
+groupBy:
+  - origin.host
+  - origin.user
