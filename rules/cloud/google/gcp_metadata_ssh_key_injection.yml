@@ -1,0 +1,39 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - google
+name: GCP Instance Metadata Modification
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: Persistence
+technique: "T1098.004 - Account Manipulation: SSH Authorized Keys"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1098/004/
+  - https://attack.mitre.org/techniques/T1059/
+description: |
+  Detects modification of Compute Engine instance or project metadata —
+  compute.instances.setMetadata or compute.projects.setCommonInstanceMetadata. GCE metadata
+  is a dual persistence/execution primitive: an ssh-keys entry grants SSH access (project-wide
+  when set at the project level), and a startup-script / windows-startup-script entry runs
+  code as root/SYSTEM on the next boot. An attacker with compute-admin rights uses either to
+  gain durable, guest-OS-invisible access to workloads. (GCP audit logs do not expose the
+  request body as a queryable field here, so this rule fires on the metadata write itself;
+  triage the specific key from the raw event.)
+
+  Next Steps:
+  1. Identify the actor (adversary.user), the instance/project, and inspect the raw event for the metadata key set
+  2. A project-wide setCommonInstanceMetadata change is the highest signal (affects all VMs)
+  3. Look specifically for an ssh-keys entry (new SSH access) or a startup-script (boot-time code)
+  4. Confirm the change matches a sanctioned provisioning/IaC workflow, not an ad-hoc API call
+  5. If unauthorized, revert the metadata, rotate affected access, and enforce OS Login
+where: |
+  (contains("log.protoPayloadMethodName", "compute.instances.setMetadata") ||
+   contains("log.protoPayloadMethodName", "compute.projects.setCommonInstanceMetadata") ||
+   contains("log.protoPayloadMethodName", "v1.compute.instances.setMetadata")) &&
+  contains("log.protoPayloadServiceName", "compute.googleapis.com")
+groupBy:
+  - adversary.user
+  - adversary.ip
