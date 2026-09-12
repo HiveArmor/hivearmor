@@ -17,7 +17,12 @@ package database
 // The policy predicate reads a transaction-local GUC and FAILS CLOSED when it is
 // absent: current_setting('app.current_tenant', true) returns NULL (not an error)
 // when unset, and COALESCE(..., -1) maps that to the impossible tenant id -1
-// (single-tenant = 0, MSSP ids are positive) → zero rows / rejected write.
+// → zero rows / rejected write. Tenant ids are ALWAYS POSITIVE: the backend
+// (requireTenant) and enrollment-token creation both reject tenant_id <= 0, so no
+// row is ever stamped with tenant 0. 0 is only the model column default and, with
+// the -1 sentinel, part of the fail-closed reasoning — it is never a live tenant,
+// so a missing/zero tenant can only ever deny, never widen. (The Go helpers guard
+// tenantID <= 0 for the same reason; the two layers agree.)
 //
 // All statements are IDEMPOTENT (AutoMigrate runs every boot): DROP POLICY IF EXISTS
 // before CREATE, and ENABLE/FORCE are no-ops when already set.

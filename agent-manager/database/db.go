@@ -174,6 +174,34 @@ func (d *DB) ScopedGetByPagination(data interface{}, tenantID int64, p utils.Pag
 	return count, nil
 }
 
+// ScopedCommandsByPagination is the tenant-scoped list read for a table that has NO
+// tenant_id column of its own (agent_commands), whose tenancy is the owning agent's.
+// It runs inside WithTenantTx so the per-transaction GUC is set and the DB-layer RLS
+// policy (agent_commands' parent-subquery to agents.tenant_id) enforces — the
+// backstop that ScopedGetByPagination's utils.TenantScope cannot provide here,
+// because that scope forces a "<table>.tenant_id = ?" predicate and agent_commands
+// has no such column. The caller supplies the forced JOIN + qualified
+// "agents.tenant_id = ?" app-layer filter (see agent.tenantScopedCommandFilters),
+// applied ahead of any user filter. Fails closed (PermissionDenied) when
+// tenantID <= 0, via WithTenantTx.
+func (d *DB) ScopedCommandsByPagination(data interface{}, tenantID int64, p utils.Pagination, f []utils.Filter, join string, getDeleted bool) (int64, error) {
+	var count int64
+	err := d.WithTenantTx(tenantID, func(tx *gorm.DB) error {
+		q := tx.Model(data).Scopes(utils.FilterScope(f)).Count(&count).Scopes(p.PagingScope)
+		if getDeleted {
+			q = q.Unscoped()
+		}
+		if join != "" {
+			q = q.Joins(join)
+		}
+		return q.Find(data).Error
+	})
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 // SystemContextFind is an EXPLICIT, all-tenant read for system-context callers that
 // legitimately need every tenant's rows (boot-time credential cache warm-up, the
 // event-processor's ListConnectorAuthorization revocation-reconciliation, and

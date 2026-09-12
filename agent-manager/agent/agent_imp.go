@@ -438,7 +438,10 @@ func (s *AgentService) ListAgentCommands(ctx context.Context, req *ListRequest) 
 	}
 
 	commands := []models.AgentCommand{}
-	total, err := s.DBConnection.GetByPagination(&commands, page, filter, join, false)
+	// P0-A2-7 §3.2 C2 — ScopedCommandsByPagination runs the read inside WithTenantTx so
+	// the RLS GUC is set and the agent_commands parent-subquery policy enforces at the
+	// DB layer, in addition to the app-layer forced agents.tenant_id join/filter above.
+	total, err := s.DBConnection.ScopedCommandsByPagination(&commands, req.GetTenantId(), page, filter, join, false)
 	if err != nil {
 		catcher.Error("failed to fetch agent commands", err, map[string]any{"process": "agent-manager"})
 		return nil, status.Errorf(codes.Internal, "failed to fetch agent commands: %v", err)
