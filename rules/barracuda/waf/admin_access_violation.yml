@@ -1,0 +1,36 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - barracuda-waf
+name: "Barracuda WAF: Administrative Access Violation or Config Change"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: Defense Evasion
+technique: "T1562.001 - Impair Defenses: Disable or Modify Tools"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/001/
+  - https://attack.mitre.org/techniques/T1078/
+description: |
+  Detects a Barracuda WAF Audit event (cat=AUDIT) indicating an administrative security
+  concern — an unsuccessful login, an admin access violation, or a configuration change
+  (transaction type CONFIG / UNSUCCESSFUL LOGIN / ADMIN ACCESS VIOLATION, or a SET/DELETE
+  change). An attacker who reaches the WAF management plane can weaken policy (disable a
+  security rule, change a service), and repeated failed admin logins indicate a brute-force
+  against the WAF console itself.
+
+  Next Steps:
+  1. Identify the admin/user (origin.user), the source IP, and the transaction (log.message)
+  2. UNSUCCESSFUL LOGIN bursts or ADMIN ACCESS VIOLATION are high-signal for console attack
+  3. A CONFIG SET/DELETE that disables a security rule or alters a service is high-signal for tampering
+  4. Confirm the change matches an approved admin action; if not, revert and investigate the session
+  5. Enforce MFA / restrict management access to trusted networks
+where: |
+  equals("log.baLogType", "AUDIT") &&
+  (regexMatch("log.message", "(?i)(UNSUCCESSFUL LOGIN|ADMIN ACCESS VIOLATION|\\bSET\\b|\\bDELETE\\b|CONFIG|ROLLBACK|RESTORE)") ||
+   exists("origin.user"))
+groupBy:
+  - origin.user
+  - origin.ip
