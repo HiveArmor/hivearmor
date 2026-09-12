@@ -1,0 +1,41 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - wineventlog
+name: "Windows: Bulk Network Share File Access"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Collection
+technique: "T1039 - Data from Network Shared Drive"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1039/
+  - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-5145
+description: |
+  Detects a single account accessing a large number of files on network shares in a short window (Event ID 5145, detailed file-share object access). After gaining a foothold, adversaries sweep accessible SMB shares to collect documents; a burst of share-access events from one account — especially against administrative shares — is the collection signal.
+
+  Next Steps:
+  1. Identify the account, source host, and the share(s) and files accessed
+  2. Compare the access volume against the account's normal file-share behaviour
+  3. Determine whether administrative shares (C$, ADMIN$) or sensitive file servers were touched
+  4. Correlate with prior lateral movement or credential access on the source host
+  5. If unauthorised, disable the account, isolate the source host, and review share ACLs
+where: |
+  equals("log.eventCode", 5145) &&
+  !regexMatch("log.eventDataSubjectUserName", "\\$$")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.eventDataSubjectUserName
+        operator: filter_term
+        value: '{{.log.eventDataSubjectUserName}}'
+      - field: log.eventCode
+        operator: filter_term
+        value: '5145'
+    within: 5m
+    count: 100
+groupBy:
+  - log.eventDataSubjectUserName
+  - origin.host

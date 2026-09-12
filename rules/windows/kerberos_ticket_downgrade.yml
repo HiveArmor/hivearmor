@@ -1,0 +1,42 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - wineventlog
+name: "Windows: Kerberos Ticket Encryption Downgrade (Possible Pass-the-Ticket)"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: "Lateral Movement"
+technique: "T1550.003 - Use Alternate Authentication Material: Pass the Ticket"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1550/003/
+  - https://attack.mitre.org/techniques/T1558/
+description: |
+  Detects a Kerberos service-ticket request (Event ID 4769) using the weak RC4 encryption type (0x17) against a modern AES-capable domain. Attackers who replay or forge Kerberos tickets (Pass-the-Ticket, and the ticket-forgery families that precede it) frequently produce RC4 tickets where AES is expected — an encryption-downgrade signal for stolen or crafted tickets used to move laterally.
+
+  Next Steps:
+  1. Identify the account, the requested service (target user/SPN), and the client host
+  2. Confirm whether RC4 is legitimately expected for that account (legacy systems) or anomalous
+  3. Correlate with prior credential-access activity (LSASS access, DCSync, ticket export)
+  4. Check what the account accessed after the ticket was issued
+  5. If confirmed, reset the affected account and, for suspected golden/silver tickets, rotate krbtgt twice
+where: |
+  equals("log.eventCode", 4769) &&
+  equals("log.eventDataTicketEncryptionType", "0x17") &&
+  !regexMatch("log.eventDataTargetUserName", "\\$@")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.eventDataTargetUserName
+        operator: filter_term
+        value: '{{.log.eventDataTargetUserName}}'
+      - field: log.eventCode
+        operator: filter_term
+        value: '4769'
+    within: 15m
+    count: 3
+groupBy:
+  - target.user
+  - origin.ip

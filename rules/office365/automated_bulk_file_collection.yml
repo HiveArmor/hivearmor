@@ -1,0 +1,40 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - o365
+name: Office 365 Automated Bulk File Collection
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Collection
+technique: "T1119 - Automated Collection"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1119/
+  - https://learn.microsoft.com/en-us/purview/audit-log-activities
+description: |
+  Detects a single principal performing many SharePoint/OneDrive file access or download operations in a short window. An attacker with a compromised token automates collection by pulling large numbers of files programmatically; a burst of FileDownloaded / FileAccessed events from one actor is that automated-collection signal.
+
+  Next Steps:
+  1. Identify the principal and whether the access came from a user session or an OAuth app / service principal
+  2. Compare the download volume and file set against the user's normal activity
+  3. Determine the client IP and user agent — automated collection often shows a non-browser agent
+  4. If suspicious, revoke the token/session and disable the OAuth app grant
+  5. Inventory the accessed files for sensitive content and assess exposure
+where: |
+  oneOf("log.Operation", ["FileDownloaded", "FileAccessed", "FileSyncDownloadedFull", "FileAccessedExtended"]) &&
+  equals("log.ResultStatus", "Success")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.user
+        operator: filter_term
+        value: '{{.origin.user}}'
+      - field: log.Operation
+        operator: filter_match
+        value: 'File'
+    within: 10m
+    count: 50
+groupBy:
+  - origin.user
