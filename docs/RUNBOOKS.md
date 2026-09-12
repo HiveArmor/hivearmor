@@ -45,6 +45,14 @@ RLS actually bites.
 
 ---
 
+## Detection engineering
+
+| Runbook | Scope | Notes |
+|---|---|---|
+| [`HIVEARMOR_GRAPH_RULE_CALIBRATION_RUNBOOK.md`](../HIVEARMOR_GRAPH_RULE_CALIBRATION_RUNBOOK.md) | Graph-offense rules `9125–9128` | Calibrate the Neo4j graph-rule thresholds against a real, populated graph before relying on the alerts. Uses the read-only `event-processor/cmd/graph-calibrate` tool (reports each metric's P90/P95/P99 + a recommended threshold). No code change — thresholds live in the rule YAML. |
+
+---
+
 ## Conventions
 
 - **RLS enablement docs** live at repo root as `HIVEARMOR_*_RUNBOOK.md` (alongside the
