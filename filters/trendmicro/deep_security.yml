@@ -1,0 +1,259 @@
+# Trend Micro Deep Security / Vision One (Workload Security) parser, version 1.0.0
+# Based on the official Trend Micro Deep Security syslog documentation and sample logs:
+#   https://help.deepsecurity.trendmicro.com/12_0/aws/Events-Alerts/syslog-parsing.html
+#   https://cloudonegov.trendmicro.com/docs/workload-security/event-syslog-message-formats/
+# Supports both CEF and LEEF 2.0 syslog framing emitted by the DS Agent and Manager.
+#
+# Base CEF:  CEF:Version|Device Vendor|Device Product|Device Version|Signature ID|Name|Severity|Extension
+# Base LEEF: LEEF:2.0|Vendor|Product|Version|EventID|(Delimiter)|Extension
+#
+# IMPORTANT — CEF extension values may contain spaces (e.g. cs1=Multiple Windows Logon
+# Failures, msg=..., name=...). The engine's kv step splits on space and would truncate
+# these, so every KNOWN space-valued key is grok-captured up to the next ' <key>=' boundary
+# BEFORE the kv step runs on the remainder. Each such grok step re-reads log.cefExtension
+# from the top, so key ORDER does not matter (the docs warn CEF key order is not guaranteed).
+#
+# Signature ID / module taxonomy (from the docs):
+#   10 custom-IPS, 20 log-firewall, 21 deny-firewall, 30 integrity, 40 log-inspection,
+#   100-7499 system, 1000000-1999999 IPS, 2000000-2999999 integrity,
+#   3000000-3999999 log-inspection, 4000000-4999999 anti-malware,
+#   5000000-5999999 web-reputation, 6000000-6999999 application-control
+
+pipeline:
+  - dataTypes:
+      - trendmicro-deep-security
+    steps:
+
+      # ── Phase 1: CEF header (name + severity live here, not the extension) ─
+      - grok:
+          patterns:
+            - field_name: cefVersion
+              pattern: 'CEF:{{.integer}}|'
+            - field_name: vendor
+              pattern: '{{.data}}|'
+            - field_name: product
+              pattern: '{{.data}}|'
+            - field_name: productVersion
+              pattern: '{{.data}}|'
+            - field_name: signatureId
+              pattern: '{{.data}}|'
+            - field_name: name
+              pattern: '{{.data}}|'
+            - field_name: severity
+              pattern: '{{.integer}}|'
+            - field_name: cefExtension
+              pattern: '{{.greedy}}'
+          source: raw
+          where: 'contains("raw", "CEF:")'
+
+      # ── Phase 1b: LEEF 2.0 header ──────────────────────────────────────────
+      - grok:
+          patterns:
+            - field_name: leefVersion
+              pattern: 'LEEF:{{.data}}|'
+            - field_name: vendor
+              pattern: '{{.data}}|'
+            - field_name: product
+              pattern: '{{.data}}|'
+            - field_name: productVersion
+              pattern: '{{.data}}|'
+            - field_name: eventId
+              pattern: '{{.data}}|'
+            - field_name: cefExtension
+              pattern: '{{.greedy}}'
+          source: raw
+          where: 'contains("raw", "LEEF:")'
+
+      # ── Phase 2: trim trailing pipe left on header fields ──────────────────
+      - trim:
+          function: suffix
+          substring: '|'
+          fields:
+            - log.cefVersion
+            - log.vendor
+            - log.product
+            - log.productVersion
+            - log.signatureId
+            - log.name
+            - log.eventId
+
+      # ── Phase 3: grok the SPACE-VALUED extension keys up to the next key ────
+      # Each pattern captures '<key>=<value>' where <value> is everything up to the
+      # next ' <word>=' token. Ordered longest-anchor-first where keys share a prefix
+      # (cs1Label before cs1) is not needed here because the trailing ' {{.word}}='
+      # literal boundary disambiguates. Each step re-reads log.cefExtension.
+      - grok:
+          patterns:
+            - field_name: tmMsg
+              pattern: 'msg={{.data}} {{.word}}='
+          source: log.cefExtension
+          where: contains("log.cefExtension", "msg=")
+
+      # end-of-line fallback: msg with no trailing key (captures to EOL)
+      - grok:
+          patterns:
+            - field_name: tmMsgEol
+              pattern: 'msg={{.greedy}}'
+          source: log.cefExtension
+          where: contains("log.cefExtension", "msg=")
+
+      - grok:
+          patterns:
+            - field_name: tmCs1
+              pattern: 'cs1={{.data}} {{.word}}='
+          source: log.cefExtension
+          where: contains("log.cefExtension", "cs1=")
+
+      - grok:
+          patterns:
+            - field_name: tmCs2
+              pattern: 'cs2={{.data}} {{.word}}='
+          source: log.cefExtension
+          where: contains("log.cefExtension", "cs2=")
+
+      - grok:
+          patterns:
+            - field_name: tmCs3
+              pattern: 'cs3={{.data}} {{.word}}='
+          source: log.cefExtension
+          where: contains("log.cefExtension", "cs3=")
+
+      - grok:
+          patterns:
+            - field_name: tmCs6
+              pattern: 'cs6={{.data}} {{.word}}='
+          source: log.cefExtension
+          where: contains("log.cefExtension", "cs6=")
+
+      - grok:
+          patterns:
+            - field_name: tmFilePath
+              pattern: 'filePath={{.data}} {{.word}}='
+          source: log.cefExtension
+          where: contains("log.cefExtension", "filePath=")
+
+      - grok:
+          patterns:
+            - field_name: tmMalwareTarget
+              pattern: 'TrendMicroDsMalwareTarget={{.data}} {{.word}}='
+          source: log.cefExtension
+          where: contains("log.cefExtension", "TrendMicroDsMalwareTarget=")
+
+      # ── Phase 4: kv the remaining single-token extension fields ────────────
+      - kv:
+          fieldSplit: ' '
+          valueSplit: '='
+          source: log.cefExtension
+          where: exists("log.cefExtension")
+
+      # ── Phase 5: promote standard schema fields ────────────────────────────
+      - rename:
+          from:
+            - log.src
+          to: origin.ip
+          where: exists("log.src")
+
+      - rename:
+          from:
+            - log.dst
+          to: target.ip
+          where: exists("log.dst")
+
+      - rename:
+          from:
+            - log.suser
+          to: origin.user
+          where: exists("log.suser")
+
+      - rename:
+          from:
+            - log.duser
+          to: target.user
+          where: exists("log.duser")
+
+      - rename:
+          from:
+            - log.shost
+          to: origin.host
+          where: exists("log.shost")
+
+      - rename:
+          from:
+            - log.act
+          to: action
+          where: exists("log.act")
+
+      - rename:
+          from:
+            - log.proto
+          to: protocol
+          where: exists("log.proto")
+
+      - rename:
+          from:
+            - log.spt
+          to: origin.port
+          where: exists("log.spt")
+
+      - rename:
+          from:
+            - log.dpt
+          to: target.port
+          where: exists("log.dpt")
+
+      - rename:
+          from:
+            - log.dvchost
+          to: log.tmDeviceHost
+          where: exists("log.dvchost")
+
+      - rename:
+          from:
+            - log.dvc
+          to: log.tmDeviceIp
+          where: exists("log.dvc")
+
+      - rename:
+          from:
+            - log.request
+          to: log.tmRequestUrl
+          where: exists("log.request")
+
+      # normalized message: prefer the grok-captured full msg, else the kv value
+      - rename:
+          from:
+            - log.tmMsg
+          to: log.message
+          where: exists("log.tmMsg")
+
+      - rename:
+          from:
+            - log.tmMsgEol
+          to: log.message
+          where: exists("log.tmMsgEol") && !exists("log.message")
+
+      # LEEF severity/category (CEF carries severity/name in the header instead)
+      - rename:
+          from:
+            - log.sev
+          to: log.severity
+          where: exists("log.sev") && !exists("log.severity")
+
+      - rename:
+          from:
+            - log.cat
+          to: log.tmCategory
+          where: exists("log.cat")
+
+      # ── Phase 6: dataType + category ───────────────────────────────────────
+      - add:
+          function: set
+          params:
+            key: log.dataType
+            value: trendmicro-deep-security
+
+      - add:
+          function: set
+          params:
+            key: log.eventCategory
+            value: threat
