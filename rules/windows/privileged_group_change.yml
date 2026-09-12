@@ -1,0 +1,37 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - wineventlog
+name: "Windows: Privileged Group Membership Change"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: Persistence
+technique: "T1098 - Account Manipulation"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1098/
+  - https://attack.mitre.org/techniques/T1078/002/
+description: |
+  Detects a member being added to a highly-privileged group — Security events 4728 (global
+  group), 4732 (local group), or 4756 (universal group) referencing Domain Admins, Enterprise
+  Admins, Schema Admins, Administrators, Backup Operators, Account Operators, or DnsAdmins.
+  Adding an attacker-controlled account to one of these groups is a primary persistence and
+  privilege-escalation step after domain compromise; the added account inherits domain-wide
+  rights and survives password resets of the original foothold.
+
+  Next Steps:
+  1. Identify who made the change (SubjectUserName), the group, and the member added (MemberName)
+  2. Confirm it matches an approved provisioning/JIT request, not an ad-hoc addition
+  3. Additions to Domain/Enterprise/Schema Admins or DnsAdmins are the highest signal
+  4. If unauthorized, remove the member, disable the added account, and investigate the granting session
+  5. Review what the added account did while privileged and rotate the granter's credentials
+where: |
+  oneOf("log.eventCode", ["4728", "4732", "4756"]) &&
+  equals("log.channel", "Security") &&
+  regexMatch("target.user", "(?i)(Domain Admins|Enterprise Admins|Schema Admins|^Administrators$|Backup Operators|Account Operators|DnsAdmins|Group Policy Creator Owners|Enterprise Key Admins)") &&
+  exists("log.eventDataSubjectUserName")
+groupBy:
+  - origin.host
+  - log.eventDataSubjectUserName

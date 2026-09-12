@@ -1,0 +1,38 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - wineventlog
+name: "Windows: Suspicious Windows Service Installed"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: Persistence
+technique: "T1543.003 - Create or Modify System Process: Windows Service"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1543/003/
+  - https://attack.mitre.org/techniques/T1569/002/
+description: |
+  Detects installation of a suspicious Windows service — System event 7045 (or Security 4697)
+  — whose image path is a shell/script host, an encoded command, a binary in a user-writable
+  path, or a PsExec-style service (PSEXESVC). New services run as SYSTEM at boot, making them
+  a durable persistence mechanism; remote service creation is also how PsExec, and much
+  human-operated ransomware, executes payloads laterally across a domain.
+
+  Next Steps:
+  1. Identify the host, the service name, and the image path / command it runs
+  2. A service launching powershell/cmd, running from %TEMP%/%APPDATA%, or named like PSEXESVC is high-signal
+  3. Confirm it is not a legitimate software install or management agent
+  4. If malicious, stop and delete the service, kill the process, and recover the payload
+  5. Correlate with the source of a remote install (4624 type-3 logon just before) for lateral-movement scope
+where: |
+  (equals("log.eventCode", "7045") || equals("log.eventCode", "4697")) &&
+  (
+    regexMatch("log.eventDataImagePath", "(?i)(powershell|pwsh|cmd\\.exe|/c\\b|wscript|cscript|mshta|rundll32|regsvr32|-enc\\b|-nop\\b|frombase64)") ||
+    regexMatch("log.eventDataImagePath", "(?i)(\\\\Temp\\\\|\\\\AppData\\\\|\\\\Users\\\\Public\\\\|\\\\ProgramData\\\\|\\\\Windows\\\\Temp\\\\|%systemroot%\\\\[^\\\\]+\\.exe$)") ||
+    regexMatch("log.eventDataServiceName", "(?i)(psexesvc|paexec|remcom|csexec)")
+  )
+groupBy:
+  - origin.host
+  - log.eventDataSubjectUserName
