@@ -1,0 +1,34 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - otlp
+name: Kubernetes Pod Image From Untrusted Registry
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: Execution
+technique: "T1610 - Deploy Container"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1610/
+  - https://kubernetes.io/docs/concepts/containers/images/
+description: |
+  Detects a pod created from an image pulled directly from a public/untrusted registry (Docker Hub library images or docker.io) rather than the organisation's private registry. Attackers with deploy access run their tooling from public images (miners, reverse shells, recon kits) instead of building and pushing to an internal registry.
+
+  This rule flags docker.io / library images and images with no registry host (implicit Docker Hub). Tune the allowlist regex to your organisation's registry host(s) before enabling in production.
+
+  Next Steps:
+  1. Identify the pod, namespace, and the exact image reference pulled
+  2. Confirm the image is not a sanctioned public base image used by a known workload
+  3. Inspect the image for miners, reverse shells, or recon tooling; check the digest against threat intel
+  4. Review who deployed it and whether image provenance/admission (Kyverno/Gatekeeper) should have blocked it
+  5. If unauthorized, delete the workload, block the image digest, and require signed internal-registry images
+where: |
+  exists("log.message") &&
+  contains("log.message", "\"resource\":\"pods\"") &&
+  contains("log.message", "\"verb\":\"create\"") &&
+  regexMatch("log.message", "\"image\":\"(docker\\.io/|library/|[a-z0-9]+(:[^/\"]+)?\")")
+groupBy:
+  - log.k8s.namespace
+  - log.k8s.podName
