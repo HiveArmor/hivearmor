@@ -248,4 +248,84 @@ func TestRLSMatrix(t *testing.T) {
 			}
 		}
 	})
+
+	// P0-A2-7 §3.2 C5 — additional required cases.
+
+	// T-CROSS: cross-tenant read is denied in BOTH directions (not just t1→t2).
+	t.Run("T-CROSS bidirectional read isolation", func(t *testing.T) {
+		app.SetMaxOpenConns(4)
+		inTx(2, func(tx *sql.Tx) {
+			if n := count(tx, `SELECT count(*) FROM agents WHERE id=10`); n != 0 {
+				t.Fatalf("t2 must not see t1 agent 10, got %d", n)
+			}
+			if n := count(tx, `SELECT count(*) FROM agent_commands WHERE id=1000`); n != 0 {
+				t.Fatalf("t2 must not see t1 command 1000, got %d", n)
+			}
+		})
+		inTx(1, func(tx *sql.Tx) {
+			if n := count(tx, `SELECT count(*) FROM agent_commands WHERE id=2000`); n != 0 {
+				t.Fatalf("t1 must not see t2 command 2000, got %d", n)
+			}
+		})
+	})
+
+	// T-LEAK: a tenant cannot reassign a row to itself (steal) via UPDATE, and an
+	// UPDATE targeting another tenant's row affects 0 rows (never leaks/mutates it).
+	t.Run("T-LEAK cross-tenant update cannot steal or mutate", func(t *testing.T) {
+		// t1 tries to pull t2's agent 20 into tenant 1 — USING hides the row → 0 rows,
+		// and WITH CHECK would also reject the new tenant value.
+		inTx(1, func(tx *sql.Tx) {
+			res, err := tx.Exec(`UPDATE agents SET tenant_id=1 WHERE id=20`)
+			if err == nil {
+				if n, _ := res.RowsAffected(); n != 0 {
+					t.Fatalf("t1 stole/mutated t2 agent 20: %d rows affected", n)
+				}
+			}
+			// If it errored (WITH CHECK), that is also a correct denial.
+		})
+		// Confirm from t2's own context that agent 20 is untouched (still tenant 2).
+		inTx(2, func(tx *sql.Tx) {
+			if n := count(tx, `SELECT count(*) FROM agents WHERE id=20 AND tenant_id=2`); n != 1 {
+				t.Fatalf("t2 agent 20 tenant was altered by t1's attempt, got %d", n)
+			}
+		})
+	})
+
+	// T-MIGRATE: re-running buildRlsStatements() (AutoMigrate runs every boot) is
+	// idempotent and enforcement still holds afterwards.
+	t.Run("T-MIGRATE idempotent policy re-apply keeps enforcement", func(t *testing.T) {
+		applyPolicies(t, admin) // second application — must not error
+		applyPolicies(t, admin) // third — still idempotent
+		app.SetMaxOpenConns(4)
+		inTx(1, func(tx *sql.Tx) {
+			if n := count(tx, `SELECT count(*) FROM agents`); n != 1 {
+				t.Fatalf("after re-apply, t1 must still see exactly its 1 agent, got %d", n)
+			}
+		})
+		inTx(0, func(tx *sql.Tx) {
+			if n := count(tx, `SELECT count(*) FROM agents`); n != 0 {
+				t.Fatalf("after re-apply, no-GUC must still fail closed, got %d", n)
+			}
+		})
+	})
+
+	// T-BOOT: proves WHY boot caches must use the system (BYPASSRLS) pool. The app
+	// role with NO GUC sees zero rows (would starve the credential cache → agent-auth
+	// outage), while the admin/superuser role (stand-in for the BYPASSRLS system pool)
+	// sees ALL tenants' rows and can warm the cache.
+	t.Run("T-BOOT app-role no-GUC starves; system pool sees all", func(t *testing.T) {
+		app.SetMaxOpenConns(4)
+		inTx(0, func(tx *sql.Tx) {
+			if n := count(tx, `SELECT count(*) FROM agents`); n != 0 {
+				t.Fatalf("app role with no GUC must read 0 (would starve boot cache), got %d", n)
+			}
+		})
+		var all int
+		if err := admin.QueryRow(`SELECT count(*) FROM agents`).Scan(&all); err != nil {
+			t.Fatalf("system-pool read: %v", err)
+		}
+		if all != 2 {
+			t.Fatalf("system/BYPASSRLS pool must see all tenants (2), got %d", all)
+		}
+	})
 }
