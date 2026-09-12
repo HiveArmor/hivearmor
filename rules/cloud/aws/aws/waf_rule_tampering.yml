@@ -1,0 +1,34 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS WAF Rule Configuration Tampering
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: Defense Evasion
+technique: "T1562.001 - Impair Defenses: Disable or Modify Tools"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/001/
+description: |
+  Detects modification of AWS WAF rules — UpdateWebACL or UpdateRuleGroup. An attacker who
+  cannot delete the Web ACL instead weakens it: flipping the default action to Allow, adding
+  a broad Allow/Count override, removing an AWS managed rule group (e.g. the SQLi/known-bad-
+  inputs set), or scoping a rule down so their traffic is no longer inspected. These are
+  quieter than deleting the WAF but achieve the same bypass, so any WAF rule update warrants
+  review of what changed.
+
+  Next Steps:
+  1. Identify the principal, source IP, and the Web ACL / rule group changed
+  2. Inspect the change for a default-action=Allow flip, a new Allow/Count rule, or a removed managed group
+  3. Confirm it matches an approved WAF-tuning ticket, not an ad-hoc edit (especially off-hours)
+  4. If unauthorized, revert the rule config and review traffic admitted while it was weakened
+  5. Correlate with exploit/scan traffic that the change would have let through
+where: |
+  oneOf("log.eventSource", ["waf.amazonaws.com", "waf-regional.amazonaws.com", "wafv2.amazonaws.com"]) &&
+  oneOf("log.eventName", ["UpdateWebACL", "UpdateRuleGroup"])
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress
