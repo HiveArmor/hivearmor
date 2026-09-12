@@ -1,0 +1,38 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - "linux"
+name: "System Linux: Sudoers Privilege Escalation Tampering"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: Privilege Escalation
+technique: "T1548.003 - Abuse Elevation Control Mechanism: Sudo and Sudo Caching"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1548/003/
+description: |
+  Detects tampering with the sudo configuration to grant persistent privilege escalation —
+  a write to /etc/sudoers or a file under /etc/sudoers.d/, or the addition of a permissive
+  entry (NOPASSWD:ALL, a user granted ALL=(ALL)). Adding a passwordless-sudo entry gives an
+  attacker reliable root on demand and survives reboots; it is a common step immediately
+  after gaining a low-privileged foothold on a server.
+
+  Next Steps:
+  1. Identify the host, user, and the exact sudoers change (file edited, entry added)
+  2. Confirm it was made by configuration management (puppet/ansible/chef), not an interactive shell
+  3. Inspect the added entry for NOPASSWD or an unexpected user/command grant
+  4. If unauthorized, revert the sudoers change and audit what the granted identity did with root
+  5. Correlate with the session that made the edit and rotate that user's credentials
+where: |
+  exists("log.message") &&
+  regexMatch("log.message", "(/etc/sudoers(\\.d/)?|visudo)") &&
+  (
+    regexMatch("log.message", "(?i)(write|open|modif|append|created|renamed|truncate)") ||
+    regexMatch("log.message", "(NOPASSWD|ALL\\s*=\\s*\\(ALL)")
+  ) &&
+  !regexMatch("log.message", "(?i)\\b(puppet|ansible|chef|salt|dpkg|rpm|yum|dnf|apt)\\b")
+groupBy:
+  - origin.host
+  - origin.user
