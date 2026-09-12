@@ -1,0 +1,34 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - barracuda-waf
+name: "Barracuda WAF: Web Application Attack Detected"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: Initial Access
+technique: "T1190 - Exploit Public-Facing Application"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1190/
+  - https://campus.barracuda.com/product/webapplicationfirewall/doc/168307237/logs-overview/
+description: |
+  Detects a Barracuda WAF Web Firewall event (cat=WF) — the WAF matched an attack signature
+  or policy on an inbound request (SQL injection, XSS, command injection, protocol violation,
+  etc.; the attack type is in the event name/message). A Web Firewall event is the WAF's core
+  detection: an active exploitation attempt against a protected web application, with the
+  client IP, target host, and URL for triage.
+
+  Next Steps:
+  1. Identify the attacker (origin.ip), the target (target.host), the URL, and the attack type (log.name / log.message)
+  2. Confirm whether the WAF action was block/deny or LOG-only (allowed through)
+  3. Correlate the source IP against threat intel and check for a burst (scan) or a single targeted hit
+  4. If the attack reached the backend (LOG-only), inspect the app for exploitation and data access
+  5. Tune the rule or block the source; capture the URL/payload as an IOC
+where: |
+  equals("log.baLogType", "WF") &&
+  exists("origin.ip")
+groupBy:
+  - origin.ip
+  - target.host

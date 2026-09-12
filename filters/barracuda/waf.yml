@@ -1,0 +1,215 @@
+# Barracuda Web Application Firewall parser, version 1.0.0
+# Based on the official Barracuda WAF log documentation and a real CEF sample:
+#   https://campus.barracuda.com/product/webapplicationfirewall/doc/168312823/exporting-log-formats
+#   Cyderes parser KB (CEF sample line): docs.cyderes.cloud/parser-knowledge-base/barracuda_waf
+#
+# Barracuda WAF exports CEF ("CEF:0 (ArcSight)" / "HPE ArcSight CEF:0") for all five log
+# types: Web Firewall (cat=WF), Access/Traffic (cat=TR), Audit (cat=AUDIT), Network
+# Firewall (cat=NF), System (cat=SYS). This parser consumes that CEF form.
+#
+# Base CEF: CEF:Version|Device Vendor|Device Product|Device Version|Signature ID|Name|Severity|Extension
+# Sample:   CEF:0|BarracudaNetworks|WAAS|BNWAS-1.0|WAF|WAF|4| cat=TR dvc=10.1.1.1 src=10.1.1.1
+#           spt=52758 dhost=website.com outcome=200 requestMethod=POST request=/x cs2Label=Protected
+#           cs2=PROTECTED cs6Label=WFMatched cs6=VALID requestClientApplication="Mozilla/5.0 ..." ...
+#
+# IMPORTANT — like all CEF, extension values may contain spaces (requestClientApplication,
+# msg, requestContext). The engine's kv step splits on space and would truncate these, so
+# every KNOWN space-valued key is grok-captured up to the next ' <key>=' boundary BEFORE kv
+# runs on the remainder. Each grok step re-reads log.cefExtension, so key ORDER is irrelevant.
+# NOTE: CEF header pipes use a PLAIN '|' (not '\|'): patternToRegex QuoteMeta-escapes literals,
+# so a '\|' would become a literal backslash+pipe and the header would never split.
+
+pipeline:
+  - dataTypes:
+      - barracuda-waf
+    steps:
+
+      # ── Phase 1: CEF header ────────────────────────────────────────────────
+      - grok:
+          patterns:
+            - field_name: cefVersion
+              pattern: 'CEF:{{.integer}}|'
+            - field_name: vendor
+              pattern: '{{.data}}|'
+            - field_name: product
+              pattern: '{{.data}}|'
+            - field_name: productVersion
+              pattern: '{{.data}}|'
+            - field_name: signatureId
+              pattern: '{{.data}}|'
+            - field_name: name
+              pattern: '{{.data}}|'
+            - field_name: severity
+              pattern: '{{.integer}}|'
+            - field_name: cefExtension
+              pattern: '{{.greedy}}'
+          source: raw
+          where: 'contains("raw", "CEF:")'
+
+      # ── Phase 2: trim trailing pipe left on header fields ──────────────────
+      - trim:
+          function: suffix
+          substring: '|'
+          fields:
+            - cefVersion
+            - vendor
+            - product
+            - productVersion
+            - signatureId
+            - name
+
+      # ── Phase 3: grok the SPACE-VALUED extension keys up to the next key ────
+      - grok:
+          patterns:
+            - field_name: tmMsg
+              pattern: 'msg={{.data}} {{.word}}='
+          source: log.cefExtension
+          where: contains("log.cefExtension", "msg=")
+
+      - grok:
+          patterns:
+            - field_name: tmMsgEol
+              pattern: 'msg={{.greedy}}'
+          source: log.cefExtension
+          where: contains("log.cefExtension", "msg=")
+
+      - grok:
+          patterns:
+            - field_name: baRequestContext
+              pattern: 'requestContext={{.data}} {{.word}}='
+          source: log.cefExtension
+          where: contains("log.cefExtension", "requestContext=")
+
+      # requestClientApplication (User-Agent) — spaced; capture up to next ' key=',
+      # plus an end-of-line fallback when it is the last field.
+      - grok:
+          patterns:
+            - field_name: baUserAgentMid
+              pattern: 'requestClientApplication={{.data}} {{.word}}='
+          source: log.cefExtension
+          where: contains("log.cefExtension", "requestClientApplication=")
+
+      - grok:
+          patterns:
+            - field_name: baUserAgentEol
+              pattern: 'requestClientApplication={{.greedy}}'
+          source: log.cefExtension
+          where: contains("log.cefExtension", "requestClientApplication=")
+
+      # ── Phase 4: kv the remaining single-token extension fields ────────────
+      - kv:
+          fieldSplit: ' '
+          valueSplit: '='
+          source: log.cefExtension
+          where: exists("log.cefExtension")
+
+      # ── Phase 5: promote standard schema fields ────────────────────────────
+      - rename:
+          from:
+            - log.src
+          to: origin.ip
+          where: exists("log.src")
+
+      - rename:
+          from:
+            - log.spt
+          to: origin.port
+          where: exists("log.spt")
+
+      - rename:
+          from:
+            - log.dst
+          to: target.ip
+          where: exists("log.dst")
+
+      - rename:
+          from:
+            - log.dpt
+          to: target.port
+          where: exists("log.dpt")
+
+      - rename:
+          from:
+            - log.dhost
+          to: target.host
+          where: exists("log.dhost")
+
+      - rename:
+          from:
+            - log.suser
+          to: origin.user
+          where: exists("log.suser")
+
+      - rename:
+          from:
+            - log.requestMethod
+          to: log.baMethod
+          where: exists("log.requestMethod")
+
+      - rename:
+          from:
+            - log.request
+          to: log.baRequestUrl
+          where: exists("log.request")
+
+      - rename:
+          from:
+            - log.outcome
+          to: log.baHttpStatus
+          where: exists("log.outcome")
+
+      - rename:
+          from:
+            - log.dvc
+          to: log.baDeviceIp
+          where: exists("log.dvc")
+
+      - rename:
+          from:
+            - log.dvchost
+          to: log.baDeviceHost
+          where: exists("log.dvchost")
+
+      - rename:
+          from:
+            - log.baUserAgentMid
+          to: log.baUserAgent
+          where: exists("log.baUserAgentMid")
+
+      - rename:
+          from:
+            - log.baUserAgentEol
+          to: log.baUserAgent
+          where: exists("log.baUserAgentEol") && !exists("log.baUserAgent")
+
+      - rename:
+          from:
+            - log.cat
+          to: log.baLogType
+          where: exists("log.cat")
+
+      # normalized message: prefer boundary-captured msg, else end-of-line msg
+      - rename:
+          from:
+            - log.tmMsg
+          to: log.message
+          where: exists("log.tmMsg")
+
+      - rename:
+          from:
+            - log.tmMsgEol
+          to: log.message
+          where: exists("log.tmMsgEol") && !exists("log.message")
+
+      # ── Phase 6: dataType + category ───────────────────────────────────────
+      - add:
+          function: set
+          params:
+            key: log.dataType
+            value: barracuda-waf
+
+      - add:
+          function: set
+          params:
+            key: log.eventCategory
+            value: threat

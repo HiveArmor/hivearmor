@@ -1,0 +1,44 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - barracuda-waf
+name: "Barracuda WAF: Application-Layer Request Flood"
+impact:
+  confidentiality: 1
+  integrity: 1
+  availability: 3
+category: Impact
+technique: "T1499.002 - Endpoint Denial of Service: Service Exhaustion Flood"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1499/002/
+description: |
+  Detects a high-volume request flood from a single client against a protected web service
+  (Barracuda WAF access logs, cat=TR) — the signature of an application-layer (Layer 7) DoS:
+  one source issuing a very large number of requests in a short window to exhaust the
+  application/backend. The Barracuda WAF also raises WF events for rate/DoS policy hits; this
+  rule catches the flood pattern from the access-log volume directly.
+
+  Next Steps:
+  1. Identify the source (origin.ip), the target service (target.host), and the request rate
+  2. Distinguish a legitimate spike (a known client/CDN) from a single abusive source
+  3. Correlate with any WF DoS/rate-limit policy events for the same source
+  4. If malicious, rate-limit or block the source and confirm the service recovered
+  5. Review whether a WAF rate-control policy should be tightened for the target service
+where: |
+  equals("log.baLogType", "TR") &&
+  exists("origin.ip")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: '{{.origin.ip}}'
+      - field: log.baLogType
+        operator: filter_term
+        value: 'TR'
+    within: 1m
+    count: 200
+groupBy:
+  - origin.ip
+  - target.host
