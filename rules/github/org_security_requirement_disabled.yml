@@ -1,0 +1,34 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - github
+name: GitHub Organization Security Requirement Disabled
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: Defense Evasion
+technique: "T1562.001 - Impair Defenses: Disable or Modify Tools"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/001/
+  - https://docs.github.com/en/organizations/keeping-your-organization-secure/managing-security-settings-for-your-organization/reviewing-the-audit-log-for-your-organization
+description: |
+  Detects weakening of an organization-wide security control — disabling the two-factor
+  authentication requirement, turning off secret scanning / push protection, or relaxing
+  the default repository-permission or member-privilege baseline. Lowering an org security
+  requirement expands the attack surface for the whole org and is a common step an attacker
+  takes after gaining owner access, to make follow-on account takeover or code injection easier.
+
+  Next Steps:
+  1. Identify the exact org setting changed and the owner/admin that changed it
+  2. Confirm it was an authorised, documented policy change with security sign-off
+  3. Treat disabling the 2FA requirement or secret-scanning/push-protection as high severity
+  4. If unauthorised, re-enable the control immediately and review the org for actions taken while it was off
+  5. Verify the acting owner account is not compromised (recent risky sign-in, new tokens)
+where: |
+  oneOf("log.action", ["org.disable_two_factor_requirement", "org.update_default_repository_permission", "org.update_member", "repository_secret_scanning.disable", "repository_secret_scanning_push_protection.disable", "org.advanced_security_disabled"]) ||
+  regexMatch("log.action", "(disable_two_factor|secret_scanning.*disable|advanced_security_disabled)") ||
+  (contains("log.action", "org.update") && regexMatch("log.message", "(?i)(two_factor.*false|disable|admin)"))
+groupBy:
+  - log.senderLogin
