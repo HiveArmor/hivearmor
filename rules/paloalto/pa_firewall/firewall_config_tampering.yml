@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - firewall-paloalto
+name: "Palo Alto: Firewall Configuration Tampering"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: Defense Evasion
+technique: "T1562.004 - Impair Defenses: Disable or Modify System Firewall"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/004/
+  - https://attack.mitre.org/techniques/T1562/008/
+description: |
+  Detects administrative configuration changes on the firewall — CONFIG-type events for
+  security-policy edits, log-forwarding/syslog changes, or admin/account modification. An
+  attacker who gains firewall-admin access adds a permissive allow rule (to open an egress or
+  ingress path), disables threat/URL logging (to blind the SOC), or creates a rogue admin for
+  persistence. Firewall config is high-value and rarely changed outside a change window.
+
+  Next Steps:
+  1. Identify the admin (origin.user), the source IP, and the exact config object changed
+  2. A new allow rule, disabled logging/log-forwarding, or a new admin account is high-signal
+  3. Confirm the change matches an approved change ticket, not an ad-hoc or off-hours edit
+  4. If unauthorized, revert the config, remove any rogue rule/admin, and review what the change permitted
+  5. Correlate with traffic that used a newly-added rule
+where: |
+  equals("log.pa_type", "CONFIG") &&
+  (regexMatch("log.panOSOpCode", "(?i)(set|edit|delete|create|commit|rename|move)") ||
+   regexMatch("log.message", "(?i)(set|edit|delete|create|commit).*(rulebase|security|log-setting|syslog|profiles|mgt-config|admin|password)"))
+groupBy:
+  - adversary.ip
+  - adversary.user
