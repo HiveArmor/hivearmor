@@ -1,0 +1,46 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS SSM Parameter Store Secure Parameter Harvest
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Credential Access
+technique: "T1552 - Unsecured Credentials"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1552/
+  - https://attack.mitre.org/techniques/T1555/
+description: |
+  Detects a burst of SSM Parameter Store reads — GetParameter / GetParameters /
+  GetParametersByPath, especially with decryption — from one identity. Parameter Store
+  SecureString parameters commonly hold DB passwords, API keys, and tokens; a compromised
+  identity sweeps them (often GetParametersByPath over a whole path) to harvest credentials,
+  the Parameter-Store analogue of the Secrets Manager mass-retrieval this pack already
+  covers.
+
+  Next Steps:
+  1. Identify the principal, source IP, and the parameter paths read
+  2. Compare against the identity's normal Parameter Store footprint (which params, how often)
+  3. Flag GetParametersByPath over a broad path, or WithDecryption reads from a non-app principal, as high-signal
+  4. If unauthorized, revoke the credential/session and rotate the parameters read
+  5. Review what the harvested credentials could reach
+where: |
+  equals("log.eventSource", "ssm.amazonaws.com") &&
+  oneOf("log.eventName", ["GetParameter", "GetParameters", "GetParametersByPath"])
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventName
+        operator: filter_match
+        value: 'GetParameter'
+    within: 10m
+    count: 15
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress
