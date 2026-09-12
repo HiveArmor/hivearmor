@@ -1,0 +1,39 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - "linux"
+name: "System Linux: Container Runtime Binary Overwrite Escape"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 3
+category: Privilege Escalation
+technique: "T1611 - Escape to Host"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1611/
+  - https://nvd.nist.gov/vuln/detail/CVE-2019-5736
+description: |
+  Detects the runc-overwrite class of container escape — writing to /proc/self/exe or
+  overwriting the host runc / containerd-shim / docker binary from a container context
+  (CVE-2019-5736 and successors). By replacing the running-runtime binary through
+  /proc/self/exe, a process in a container overwrites the host's runc and executes as root on
+  the host the next time a container is started or exec'd — a full container-to-host escape
+  distinct from the docker.sock / nsenter / mount primitives.
+
+  Next Steps:
+  1. Identify the host/container, process, and the exact write target (/proc/self/exe or a runtime binary)
+  2. A write/open-for-write to /proc/self/exe from a container process is a strong escape indicator
+  3. Confirm the container runtime and host kernel are patched against CVE-2019-5736
+  4. If confirmed, isolate the host (assume host root compromise) and rebuild from known-good
+  5. Review what started/exec'd containers after the write and audit the host for persistence
+where: |
+  exists("log.message") &&
+  (
+    (regexMatch("log.message", "/proc/self/exe") && regexMatch("log.message", "(?i)(open|write|O_WRONLY|O_RDWR|truncate|dd\\b|cp\\b|>)")) ||
+    (regexMatch("log.message", "(?i)(/usr/(s?bin|libexec)/(runc|containerd-shim|dockerd|docker)|/run/containerd)") &&
+     regexMatch("log.message", "(?i)(open|write|O_WRONLY|O_RDWR|truncate|overwrite|cp\\b|mv\\b|>)"))
+  )
+groupBy:
+  - origin.host
+  - origin.user
