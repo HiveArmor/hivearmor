@@ -1,0 +1,39 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - macos
+name: "macOS: Login/Logout Hook Persistence"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 1
+category: Persistence
+technique: "T1037.002 - Boot or Logon Initialization Scripts: Login Hook"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1037/002/
+description: |
+  Detects installation of a macOS Login or Logout Hook — a script the loginwindow runs as
+  root at every login/logout, set via `defaults write com.apple.loginwindow LoginHook`
+  (or LogoutHook), or written to /private/var/root/Library/Preferences/com.apple.loginwindow.
+  Login hooks are a legacy but still-functional persistence mechanism that executes with
+  elevated privilege and is easy to miss in review, so attackers use them to survive reboots.
+
+  Next Steps:
+  1. Identify the user/process that set the hook and the script path it points to
+  2. Confirm it is not a sanctioned MDM/management configuration
+  3. Inspect the referenced script for a reverse shell, downloader, or credential harvester
+  4. If unauthorized, remove the hook (`defaults delete com.apple.loginwindow LoginHook`) and delete the script
+  5. Correlate with the session that set it and check for other persistence
+where: |
+  (
+    contains("log.eventMessage", "com.apple.loginwindow") &&
+    (contains("log.eventMessage", "LoginHook") || contains("log.eventMessage", "LogoutHook"))
+  ) ||
+  (
+    contains("log.eventMessage", "defaults") &&
+    regexMatch("log.eventMessage", "(?i)(LoginHook|LogoutHook)")
+  )
+groupBy:
+  - adversary.host
+  - adversary.user
