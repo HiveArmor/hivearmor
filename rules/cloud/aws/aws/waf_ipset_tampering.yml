@@ -1,0 +1,34 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS WAF IP Set Tampering
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: Defense Evasion
+technique: "T1562.001 - Impair Defenses: Disable or Modify Tools"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/001/
+  - https://attack.mitre.org/techniques/T1078/
+description: |
+  Detects modification of an AWS WAF IP set — UpdateIPSet. IP sets back WAF allow/deny rules;
+  an attacker adds their own source IP/CIDR to an allow-listed IP set (so their traffic
+  bypasses every WAF rule), or removes their IP from a block list. This is a targeted,
+  low-noise WAF bypass that leaves the Web ACL and its rules intact, so it is easy to miss
+  without watching IP-set changes specifically.
+
+  Next Steps:
+  1. Identify the principal, source IP, and the IP set changed
+  2. Correlate the actor's own source IP/CIDR against the addresses added to an allow-list IP set — a self-add is critical-signal
+  3. Confirm the change matches an approved allowlisting request (a real office/VPN range)
+  4. If unauthorized, revert the IP set and review traffic from the added addresses
+  5. Check whether the added IP then sent exploit/scan traffic that bypassed the WAF
+where: |
+  oneOf("log.eventSource", ["waf.amazonaws.com", "waf-regional.amazonaws.com", "wafv2.amazonaws.com"]) &&
+  equals("log.eventName", "UpdateIPSet")
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress
