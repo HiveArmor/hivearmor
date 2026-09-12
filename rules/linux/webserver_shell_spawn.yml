@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - "linux"
+name: "System Linux: Web Server Process Spawned a Shell"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: Persistence
+technique: "T1505.003 - Server Software Component: Web Shell"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1505/003/
+  - https://attack.mitre.org/techniques/T1190/
+description: |
+  Detects a web-server or app-server process (apache2/httpd/nginx/php-fpm/tomcat/java, or the
+  www-data/apache/nginx service account) spawning an interactive shell or command interpreter
+  (bash/sh/python/perl/nc). A web daemon launching a shell is the signature of a web shell or
+  an exploited web-app RCE — the primary initial-access-to-execution path on internet-facing
+  Linux servers.
+
+  Next Steps:
+  1. Identify the host, the web-server parent process, and the child shell/command
+  2. Confirm it is not a legitimate CGI/hook the application is designed to run
+  3. Inspect the web root for a recently written/modified .php/.jsp/.aspx web-shell file
+  4. Review web access logs around the time for the triggering request and source IP
+  5. If confirmed, isolate the host, remove the web shell, and patch the exploited web app
+where: |
+  exists("log.message") &&
+  regexMatch("log.message", "(?i)\\b(www-data|apache|nginx|httpd|php-fpm|php|tomcat|catalina|node)\\b") &&
+  regexMatch("log.message", "(?i)(\\b(bash|sh|dash|zsh|ksh)\\s+-[ic]|/bin/(bash|sh)\\b|\\bpython[23]?\\b.*(-c|pty|socket)|\\bperl\\b.*-e|\\bnetcat\\b|/dev/tcp/)")
+groupBy:
+  - origin.host
+  - origin.user
