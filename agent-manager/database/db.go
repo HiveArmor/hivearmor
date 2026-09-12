@@ -383,7 +383,8 @@ func GetDB() *DB {
 		// set (an operator's BYPASSRLS role), else falls back to the app creds so this
 		// is inert until roles are provisioned.
 		sysUser, sysPass := config.DBUser, config.DBPassword
-		if config.DBSystemUser != "" {
+		systemPoolDedicated := config.DBSystemUser != ""
+		if systemPoolDedicated {
 			sysUser, sysPass = config.DBSystemUser, config.DBSystemPassword
 		}
 		dbInstance.sysConn, err = gorm.Open(postgres.Open(dsnFor(sysUser, sysPass)), &gorm.Config{
@@ -391,6 +392,27 @@ func GetDB() *DB {
 		})
 		if err != nil {
 			panic(err)
+		}
+		// P0-A2-7 §3.2 C4 — fail-fast cut-over guard. If the app role is unprivileged
+		// (RLS actually ENFORCES) but no dedicated system role was provisioned, the
+		// system pool silently fell back to the app creds — so the boot credential
+		// caches (which read all tenants via sysConn) would fail closed to zero rows,
+		// producing a total agent-authentication OUTAGE. Refuse to start instead of
+		// booting into that state. Inert on the shipped superuser config (rlsWouldEnforce
+		// is false), so this never trips an existing deployment.
+		if !systemPoolDedicated {
+			enforce, perr := rlsWouldEnforce(dbInstance.conn)
+			if perr != nil {
+				panic(fmt.Errorf("agent-manager: could not verify DB role privileges at startup: %w", perr))
+			}
+			if enforce {
+				panic(fmt.Errorf(
+					"agent-manager: refusing to start — DB_USER is a non-SUPERUSER, non-BYPASSRLS role " +
+						"(RLS will enforce) but DB_SYSTEM_USER is not set, so the system-context pool fell " +
+						"back to the app role and the boot credential caches would fail closed, breaking all " +
+						"agent authentication. Provision a BYPASSRLS system role and set DB_SYSTEM_USER / " +
+						"DB_SYSTEM_PASSWORD (see HIVEARMOR_A2_7_MANAGER_RLS_ENABLEMENT_RUNBOOK.md)"))
+			}
 		}
 	})
 	return dbInstance
@@ -400,4 +422,22 @@ func GetDB() *DB {
 func dsnFor(user, password string) string {
 	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s",
 		config.DBHost, config.DBPort, user, password, config.DBName)
+}
+
+// rlsWouldEnforce reports whether the role backing conn is subject to row-level
+// security. RLS (even under FORCE ROW LEVEL SECURITY) is ignored by SUPERUSER and
+// BYPASSRLS roles, so it enforces only when the current role is NEITHER. Used by the
+// §3.2 C4 cut-over guard to decide whether a missing DB_SYSTEM_USER is fatal.
+func rlsWouldEnforce(conn *gorm.DB) (bool, error) {
+	var row struct {
+		RolSuper     bool `gorm:"column:rolsuper"`
+		RolBypassRls bool `gorm:"column:rolbypassrls"`
+	}
+	err := conn.Raw(
+		"SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname = current_user",
+	).Scan(&row).Error
+	if err != nil {
+		return false, err
+	}
+	return !row.RolSuper && !row.RolBypassRls, nil
 }

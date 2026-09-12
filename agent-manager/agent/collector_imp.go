@@ -135,7 +135,13 @@ func (s *CollectorService) RegisterCollector(ctx context.Context, req *RegisterR
 	}
 
 	oldCollector := &models.Collector{}
-	err := s.DBConnection.GetFirst(oldCollector, "hostname = ? and module = ?", collector.Hostname, string(collector.Module))
+	// P0-A2-7 §3.2 C1 — collector hostname+module uniqueness is GLOBAL (cross-tenant)
+	// by design, and the re-registration/rebind path below deliberately spans tenants.
+	// This lookup must therefore use the system-context (BYPASSRLS) pool, not the app
+	// pool: under the enforced unprivileged role an app-pool read with no tenant GUC
+	// fails closed to zero rows, which would break legitimate collector re-registration.
+	// SystemContextGetFirst keeps the all-tenant intent explicit and greppable.
+	err := s.DBConnection.SystemContextGetFirst(oldCollector, "hostname = ? and module = ?", collector.Hostname, string(collector.Module))
 	if err == nil {
 		if oldCollector.Ip != collector.Ip {
 			catcher.Error("collector already registered with different IP", nil, map[string]any{"hostname": oldCollector.Hostname, "module": oldCollector.Module, "id": oldCollector.ID, "process": "agent-manager"})
