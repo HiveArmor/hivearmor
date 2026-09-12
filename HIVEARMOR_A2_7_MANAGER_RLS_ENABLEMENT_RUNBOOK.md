@@ -125,6 +125,38 @@ GRANT UPDATE ON collectors TO hivearmor_agents_system;   -- for the tenant-rebin
 > The app role owning the tables is the pivot that lets AutoMigrate keep running on the
 > app pool. If your deployment runs migrations out-of-band, use §6 instead.
 
+### 2a. Least-privilege matrix (P0-A2-7 §3.2 C6)
+
+Grant exactly this — no more. The system role is BYPASSRLS, so every extra grant on it
+is un-scoped by tenant; keep its write surface to the single rebind path.
+
+| Role | SELECT | INSERT | UPDATE | DELETE | DDL / ownership | BYPASSRLS | SUPERUSER |
+|------|--------|--------|--------|--------|-----------------|-----------|-----------|
+| `hivearmor_agents_app` | all tables (RLS-scoped) | all (RLS WITH CHECK) | all (RLS-scoped) | all (RLS-scoped) | **owns** the RLS tables + sequences (needed for boot AutoMigrate) | **NO** | **NO** |
+| `hivearmor_agents_system` | all tables | **NO** | **`collectors` only** (tenant rebind) | **NO** | NO | **YES** | **NO** |
+| `hivearmor_agents_migrator` (§6 only) | — | — | — | — | owns tables, runs DDL | YES | NO |
+
+**The system role MUST NOT be granted INSERT, DELETE, or UPDATE on any table other than
+`collectors`.** Its only sanctioned write is `SystemContextUpsert` on `collectors` for
+the re-registration tenant rebind (`agent/collector_imp.go`); every other system-pool
+call is a read. If a future system-context write is added, extend this matrix and the
+grant in the same PR — do not widen the role pre-emptively. Verify after provisioning:
+
+```sql
+-- system role must show only SELECT (+ UPDATE on collectors), never INSERT/DELETE elsewhere
+SELECT table_name, privilege_type
+  FROM information_schema.role_table_grants
+ WHERE grantee = 'hivearmor_agents_system'
+ ORDER BY table_name, privilege_type;
+```
+
+Observability (P0-A2-7 §3.2 C7): the agent-manager exports Prometheus counters to watch
+enforcement at cut-over — `agent_manager_rls_missing_tenant_total` (fail-closed
+rejections), `agent_manager_rls_scoped_noop_total{op}` (scoped writes/deletes that hit 0
+rows — a spike can mean cross-tenant attempts being filtered), and
+`agent_manager_system_context_queries_total{op}` (all-tenant BYPASSRLS pool usage — watch
+that this surface stays small). Alert on a sudden rise in any of them after cut-over.
+
 ---
 
 ## 3. Wire the environment
