@@ -1,0 +1,31 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - otlp
+name: Kubernetes API Access by Anonymous Identity
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: Initial Access
+technique: "T1078 - Valid Accounts"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1078/
+  - https://kubernetes.io/docs/reference/access-authn-authz/authentication/#anonymous-requests
+description: |
+  Detects a Kubernetes API request attributed to the anonymous identity (system:anonymous / system:unauthenticated) that was allowed rather than rejected. Anonymous access to the API server indicates a misconfigured authorizer or an exposed unauthenticated endpoint and is a common initial-access foothold.
+
+  Next Steps:
+  1. Confirm the request was authorized (decision "allow") and not merely a rejected probe
+  2. Identify the resource and verb the anonymous identity reached
+  3. Review the API server's --anonymous-auth setting and RBAC bindings to system:unauthenticated / system:anonymous
+  4. Determine the source IP and whether the API server is exposed beyond the intended network
+  5. Disable anonymous auth (or bind it to nothing) and rotate anything the anonymous identity could read
+where: |
+  exists("log.message") &&
+  regexMatch("log.message", "system:(anonymous|unauthenticated)") &&
+  contains("log.message", "\"decision\":\"allow\"")
+groupBy:
+  - log.k8s.namespace
+  - log.hostname
