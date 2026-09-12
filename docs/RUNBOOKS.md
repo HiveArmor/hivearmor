@@ -22,6 +22,7 @@ does not enable the other.
 | [`HIVEARMOR_BACKEND_RLS_PILOT_ENABLEMENT_RUNBOOK.md`](../HIVEARMOR_BACKEND_RLS_PILOT_ENABLEMENT_RUNBOOK.md) | `hivearmor` (backend) | Backfill `tenant_id` → provision `hivearmor_app` (unprivileged) + `hivearmor_migrator` (BYPASSRLS) → verify with the T18 matrix. Activates the #281/#282 pilot on the 4 EDR/response tables. | No |
 | [`HIVEARMOR_A2_7_MANAGER_RLS_ENABLEMENT_RUNBOOK.md`](../HIVEARMOR_A2_7_MANAGER_RLS_ENABLEMENT_RUNBOOK.md) | `hivearmor_agents` (agent-manager) | Provision `hivearmor_agents_app` (unprivileged, table-owner) + `hivearmor_agents_system` (BYPASSRLS) → wire `DB_USER`/`DB_SYSTEM_USER` → staging canary (T-BOOT/T-CANARY) → rollout. Activates the A2-7 policies (#290–#294). | No |
 | [`HIVEARMOR_A2_6_RLS_ROLE_PROVISIONING.md`](../HIVEARMOR_A2_6_RLS_ROLE_PROVISIONING.md) | reference | Role-provisioning design of record (unprivileged app role + BYPASSRLS migrator, the GUC aspect ordering). Both runbooks above build on it. | No |
+| [`HIVEARMOR_A2_7_MANAGER_RLS_3_2_VALIDATION.md`](../HIVEARMOR_A2_7_MANAGER_RLS_3_2_VALIDATION.md) | reference | Post-implementation security-gate audit of the merged §3.2 RLS design. Verdict GO WITH CONDITIONS; all conditions C1–C8 resolved & merged (#304–#306). Read before running the agent-manager enablement runbook. | No |
 
 **Golden rule for both:** the app must connect as a **non-superuser, non-BYPASSRLS** role,
 or the RLS policies are a silent no-op. Rollback for either is instant — revert the app
