@@ -91,6 +91,26 @@ describe('detection rules UX honesty (Prompt 16)', () => {
     expect(fixtures).not.toContain('v11-log-*');
   });
 
+  it('surfaces skill content pack inventory with Neo4j honesty', () => {
+    expect(page).toContain('detection-skill-pack-honesty');
+    expect(page).toContain('skill content pack (16 rules: 6 CEL, 5 sequence, 3 risk, 2 graph)');
+    expect(page).toContain('v3-hive-log-*');
+    expect(page).not.toContain('v11-log-*');
+    const fixtures = readFileSync(join(process.cwd(), 'src/pages/detection-rules/detectionRules.fixtures.ts'), 'utf8');
+    expect(fixtures).toContain('SKILL_PACK_RULE_IDS');
+    expect(fixtures).toContain("engine: 'cel'");
+    expect(fixtures).toContain('CEL-WIN-SHADOW-CREDENTIALS');
+    expect(fixtures).toContain('SEQ-KERBEROAST-THEN-LATERAL');
+    expect(fixtures).toContain('RISK-ASREPROAST');
+    expect(fixtures).toContain('GRAPH-JUMP-HOST-MULTI-ACCOUNT');
+    expect(fixtures).toContain('GRAPH-STOLEN-CREDS-PIVOT-C2');
+    for (const id of [9401, 9402, 9403, 9404, 9405, 9406, 9407, 9408, 9409, 9410, 9411, 9412, 9413, 9414, 9415, 9416]) {
+      expect(fixtures).toContain(`id: ${id}`);
+    }
+    expect(fixtures).toContain('v3-hive-log-*');
+    expect(fixtures).not.toContain('v11-log-*');
+  });
+
   it('isolates MSSP tenant detection packs with two-tenant fixtures', () => {
     expect(page).toContain('detection-mssp-pack-honesty');
     expect(page).toContain('Detection pack tenant');

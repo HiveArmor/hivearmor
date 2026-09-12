@@ -1,0 +1,48 @@
+id: 9410
+name: SEQ-WINRM-THEN-ADMIN-SHARE
+dataTypes:
+  - windows
+  - wineventlog
+  - network
+category: Lateral Movement
+technique: "T1021.006 - Remote Services: Windows Remote Management"
+mitre:
+  tactics: ["TA0008"]
+  attacks: ["T1021.006", "T1021.002"]
+adversary: origin
+description: >
+  Skill content pack. Sequence: a WinRM/PSRemoting session is followed by
+  admin-share access (C$/ADMIN$/IPC$) from the same origin IP within 20
+  minutes. Distinct from SEQ-RDP-THEN-ADMIN-SHARE (9110): this is the
+  WinRM-then-file-copy staging used after evil-winrm. False positives:
+  SCCM content copy and GPO software deployment over IPC$. Exclude known
+  management servers.
+references:
+  - https://attack.mitre.org/techniques/T1021/006/
+  - https://attack.mitre.org/techniques/T1021/002/
+  - https://attack.mitre.org/tactics/TA0008/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.ip
+  - origin.user
+groupBy:
+  - origin.ip
+sequence:
+  - where: 'action == "winrm_session" || safe("log.action", "") == "winrm_session" || raw.matches("(?i).*(wsmprovhost|evil-winrm|Enter-PSSession|winrs).*")'
+    within: 10m
+  - where: 'action == "admin_share_access" || safe("log.action", "") == "admin_share_access" || raw.matches("(?i).*(admin\\$|C\\$|IPC\\$).*")'
+    within: 20m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: "{{.origin.ip}}"
+      - field: log.action
+        operator: filter_term
+        value: winrm_session
+    within: 20m
+    count: 1

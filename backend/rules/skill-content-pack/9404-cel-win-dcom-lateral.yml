@@ -1,0 +1,47 @@
+id: 9404
+name: CEL-WIN-DCOM-LATERAL
+dataTypes:
+  - windows
+  - wineventlog
+  - process
+  - network
+category: Lateral Movement
+technique: "T1021.003 - Remote Services: Distributed Component Object Model"
+mitre:
+  tactics: ["TA0008"]
+  attacks: ["T1021.003", "T1021"]
+adversary: origin
+description: >
+  Skill content pack. Detects DCOM lateral movement via MMC20.Application,
+  ShellWindows, ShellBrowserWindow, or Impacket dcomexec. These instantiate a
+  remote COM object and spawn a child process as the authenticating user.
+  False positives: SCCM/MECM remote MMC, RSAT computer-management snaps,
+  and approved remote-admin suites. Require a remote destination and exclude
+  known management subnets after baseline.
+references:
+  - https://attack.mitre.org/techniques/T1021/003/
+  - https://www.cybereason.com/blog/dcom-lateral-movement-techniques
+  - https://attack.mitre.org/tactics/TA0008/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.user
+  - origin.command
+groupBy:
+  - origin.host
+  - origin.ip
+where: >
+  raw.matches("(?i).*(dcomexec(\\.py)?|MMC20\\.Application|ShellWindows|ShellBrowserWindow|ExecuteShellCommand).*")
+  || (raw.matches("(?i).*mmc\\.exe.*") && raw.matches("(?i).*(-Embedding|DCOM|CLSID).*")
+      && raw.matches("(?i).*(cmd\\.exe|powershell\\.exe|wscript\\.exe).*"))
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.host
+        operator: filter_term
+        value: "{{.origin.host}}"
+    within: 10m
+    count: 1
