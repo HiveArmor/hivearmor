@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - firewall-paloalto
+name: "Palo Alto: Critical System Event"
+impact:
+  confidentiality: 1
+  integrity: 2
+  availability: 3
+category: Defense Evasion
+technique: "T1562 - Impair Defenses"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/
+  - https://docs.paloaltonetworks.com/pan-os/10-2/pan-os-admin/monitoring/use-syslog-for-monitoring/syslog-field-descriptions/system-log-fields
+description: |
+  Detects high-severity PAN-OS SYSTEM events that indicate tampering or a resilience problem —
+  high/critical severity system log entries for HA failover, unexpected commit/reboot,
+  dataplane restart, certificate expiry, or log-forwarding failure. An attacker may force an
+  HA failover or restart to create a monitoring gap, and log-forwarding failure means the SOC
+  stops receiving events; either is both an availability and a defense-evasion concern.
+
+  Next Steps:
+  1. Identify the device, the system event, and its severity
+  2. HA failover, dataplane restart, or "log forwarding failed" at high severity is high-signal
+  3. Confirm it correlates with planned maintenance; if not, treat as tampering or fault
+  4. If suspicious, check for a preceding config change or admin action that triggered it
+  5. Confirm log delivery to the SIEM resumed and quantify any blind window
+where: |
+  equals("log.pa_type", "SYSTEM") &&
+  regexMatch("log.severityLabel", "(?i)(high|critical)") &&
+  regexMatch("log.message", "(?i)(HA .*(failover|suspend|down)|dataplane|restart|reboot|commit|log forwarding.*(fail|error)|certificate.*(expir|invalid)|disk|out of memory)")
+groupBy:
+  - target.host
+  - lastEvent.log.panOSEventID

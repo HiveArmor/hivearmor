@@ -1,0 +1,37 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - firewall-paloalto
+name: "Palo Alto: Correlated Threat Event"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: Command and Control
+technique: "T1071 - Application Layer Protocol"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1071/
+  - https://docs.paloaltonetworks.com/pan-os/10-2/pan-os-admin/monitoring/monitor-correlated-events
+description: |
+  Detects PAN-OS Correlation events — the firewall's own correlation engine flags a host that
+  matched a multi-stage object such as "compromised host", "beaconing detected", or a
+  known-C2 correlation. Because PAN-OS has already stitched several lower-level detections
+  into one correlated verdict, these are high-fidelity: a CORRELATION event naming a
+  compromised/beaconing host is one of the strongest single signals the firewall produces and
+  warrants immediate triage.
+
+  Next Steps:
+  1. Identify the host (adversary.ip) and the correlation object/verdict that fired
+  2. "Compromised host" / "beaconing" correlations are critical-signal — treat as active intrusion
+  3. Pivot to the underlying threat/traffic logs for that host to see the constituent detections
+  4. Isolate the host and investigate for malware, C2, and lateral movement
+  5. Feed the destination IOCs to blocking + threat intel
+where: |
+  equals("log.pa_type", "CORRELATION") &&
+  (regexMatch("log.message", "(?i)(compromised host|beacon|command.?and.?control|c2|correlated|threat|infected|malware)") ||
+   exists("log.panOSThreatCategory")) &&
+  exists("origin.ip")
+groupBy:
+  - adversary.ip
+  - target.ip
