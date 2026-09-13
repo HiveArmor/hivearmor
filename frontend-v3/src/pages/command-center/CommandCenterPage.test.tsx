@@ -30,6 +30,16 @@ vi.mock('@/services/sensorsService', () => ({
 }));
 vi.mock('@/hooks/useAlertStream', () => ({ useAlertStream: vi.fn() }));
 vi.mock('@/hooks/useEpsStream', () => ({ useEpsStream: () => ({ eps: 1840, connected: false }) }));
+vi.mock('@/hooks/useCurrentTenantLabel', () => ({
+  useCurrentTenantLabel: () => ({
+    tenantId: null,
+    isAllTenants: true,
+    label: 'All Tenants (4)',
+    prefix: '',
+    tenantCount: 4,
+    isLoading: false,
+  }),
+}));
 vi.mock('@/components/ha-chart', () => ({
   HaChart: ({ ariaLabel }: { ariaLabel: string }) => <div role="img" aria-label={ariaLabel} />,
 }));

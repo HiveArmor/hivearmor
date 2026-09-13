@@ -32,6 +32,7 @@ import {
 
 import { HaChart } from '@/components/ha-chart';
 import { useAlertStream } from '@/hooks/useAlertStream';
+import { useCurrentTenantLabel } from '@/hooks/useCurrentTenantLabel';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import {
@@ -76,13 +77,6 @@ function metricFromState(
   return { label, value, detail, trend: 'Live contract', state, route };
 }
 
-const TENANT_SCOPE_LABELS: Record<number, string> = {
-  1: 'Acme',
-  3812: 'Workmates1',
-  3813: 'CWM',
-  3814: 'Workmates2',
-};
-
 function formatTimelineHour(hour: string): string {
   const parsed = new Date(hour);
   if (Number.isNaN(parsed.getTime())) return hour;
@@ -101,10 +95,7 @@ export function CommandCenterPage(): JSX.Element {
     status: 'open,in_progress',
     sort: 'createdAt,desc',
   };
-  const scopeLabel =
-    selectedTenantId === null
-      ? 'All authorized tenants'
-      : (TENANT_SCOPE_LABELS[selectedTenantId] ?? `Tenant ${String(selectedTenantId)}`);
+  const scopeLabel = useCurrentTenantLabel().label;
 
   const summaryQuery = useQuery({
     queryKey: ['alerts', 'summary', selectedTenantId],
