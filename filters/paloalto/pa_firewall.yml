@@ -226,13 +226,13 @@ pipeline:
           source: raw
           where: contains("raw", "THREAT") && !contains("raw", "CEF:")
 
-      # For the url subtype, the Category field is the URL category.
-      - add:
-          function: set
-          params:
-            key: log.urlCategory
-            value: '{{.log.category}}'
-          where: equals("log.pa_subtype", "url") && exists("log.category")
+      # For the url subtype the CSV Category field IS the URL category. It is
+      # already emitted as log.category (which the url rule matches via
+      # contains("log.category", ...)); we do not also copy it to
+      # log.urlCategory because the add/set operator stores its value
+      # literally (no {{...}} interpolation), which would emit a bogus
+      # template string. log.urlCategory is reserved for the CEF
+      # url_category_list field handled in a later increment.
 
       # ═══════════════════════════════════════════════════════════════════════
       # SHARED NORMALIZATION
