@@ -1,0 +1,147 @@
+/**
+ * AgentHealthBadge styles — token-only (foundation.css). No raw hex.
+ *
+ * Level colours use the OPERATIONAL-STATE / SEVERITY tokens:
+ *   green  → --ha-state-healthy
+ *   amber  → --ha-severity-high  (at-risk / degraded)
+ *   red    → --ha-severity-critical
+ *   unknown→ --ha-state-disconnected  (absence of signal, never green)
+ * Freshness Stale uses the stale (violet) token per the design system; Offline
+ * uses critical. A dot always pairs with a text label (WCAG, never colour-only).
+ */
+
+.ha-agent-health {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+  min-width: 0;
+}
+
+.ha-agent-health--full {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ha-agent-health__headline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ha-agent-health__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--ha-state-disconnected);
+}
+
+.ha-agent-health__word {
+  font-weight: 600;
+  color: var(--ha-foreground-primary);
+  white-space: nowrap;
+}
+
+.ha-agent-health__reason {
+  color: var(--ha-foreground-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ha-agent-health--compact .ha-agent-health__reason {
+  max-width: 220px;
+}
+
+/* Level tones ------------------------------------------------------------- */
+.ha-agent-health--green .ha-agent-health__dot { background: var(--ha-state-healthy); }
+.ha-agent-health--green .ha-agent-health__word { color: var(--ha-state-healthy); }
+
+.ha-agent-health--amber .ha-agent-health__dot { background: var(--ha-severity-high); }
+.ha-agent-health--amber .ha-agent-health__word { color: var(--ha-severity-high); }
+
+.ha-agent-health--red .ha-agent-health__dot { background: var(--ha-severity-critical); }
+.ha-agent-health--red .ha-agent-health__word { color: var(--ha-severity-critical); }
+
+.ha-agent-health--unknown .ha-agent-health__dot { background: var(--ha-state-disconnected); }
+.ha-agent-health--unknown .ha-agent-health__word { color: var(--ha-foreground-secondary); }
+
+.ha-agent-health--error .ha-agent-health__dot { background: var(--ha-severity-high); }
+.ha-agent-health--error .ha-agent-health__word { color: var(--ha-severity-high); }
+
+/* Freshness chip ---------------------------------------------------------- */
+.ha-agent-health__fresh {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: var(--ha-radius-pill);
+  border: 1px solid var(--ha-border-default);
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-metadata);
+  white-space: nowrap;
+}
+
+.ha-agent-health__fresh--stale {
+  color: var(--ha-severity-high);
+  border-color: var(--ha-border-warning);
+  background: var(--ha-fill-high-subtle);
+}
+
+.ha-agent-health__fresh--offline {
+  color: var(--ha-severity-critical);
+  border-color: var(--ha-border-critical);
+  background: var(--ha-fill-critical-subtle);
+}
+
+.ha-agent-health__fresh--unknown {
+  color: var(--ha-foreground-tertiary);
+}
+
+/* Per-dimension pills ----------------------------------------------------- */
+.ha-agent-health__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ha-agent-health__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--ha-radius-pill);
+  border: 1px solid var(--ha-border-default);
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-metadata);
+  white-space: nowrap;
+}
+
+.ha-agent-health__pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--ha-state-disconnected);
+}
+
+.ha-agent-health__pill-label { color: var(--ha-foreground-primary); font-weight: 600; }
+.ha-agent-health__pill-check { color: var(--ha-foreground-tertiary); }
+
+.ha-agent-health__pill--green .ha-agent-health__pill-dot { background: var(--ha-state-healthy); }
+.ha-agent-health__pill--amber .ha-agent-health__pill-dot { background: var(--ha-severity-high); }
+.ha-agent-health__pill--amber { border-color: var(--ha-border-warning); background: var(--ha-fill-high-subtle); }
+.ha-agent-health__pill--red .ha-agent-health__pill-dot { background: var(--ha-severity-critical); }
+.ha-agent-health__pill--red { border-color: var(--ha-border-critical); background: var(--ha-fill-critical-subtle); }
+.ha-agent-health__pill--unknown .ha-agent-health__pill-dot { background: var(--ha-state-disconnected); }
+
+.ha-agent-health__novitals {
+  margin: 0;
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+}

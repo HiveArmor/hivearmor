@@ -5,6 +5,9 @@
 
 import { apiClient } from '@/lib/apiClient';
 
+const fixtureMode =
+  import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
 /** Canonical UI projection after adapting AgentDTO. */
 export interface SensorDTO {
   agentId: string;
@@ -101,6 +104,16 @@ export async function fetchSensors(query: SensorsQuery = {}): Promise<{
   sensors: SensorDTO[];
   total: number;
 }> {
+  if (fixtureMode) {
+    // Fixture-mode seed: the SensorGrid has no backend here, so seed a small
+    // fleet whose agentIds map 1:1 to the telemetry.fixtures vitals keys, letting
+    // the Health column render every state (healthy/degraded/errored/stale/
+    // offline/novitals) offline for visual verification. DEV-only; never ships.
+    const { getFixtureSensors } = await import('./sensors.fixtures');
+    const rows = getFixtureSensors();
+    return { sensors: rows, total: rows.length };
+  }
+
   const params: Record<string, string | number> = {};
   if (query.page !== undefined) params.pageNumber = query.page;
   if (query.size !== undefined) params.pageSize = query.size;
