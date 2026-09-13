@@ -2,10 +2,11 @@ package operators
 
 import (
 	"strconv"
+	"strings"
 )
 
 // CastOp converts the listed fields to the target type.
-// Currently only "int" is supported.
+// Supported targets: int/integer, float, string, lower, upper.
 func CastOp(fields []string, to string, data map[string]any) {
 	for _, f := range fields {
 		v, exists := getDeep(data, f)
@@ -31,6 +32,14 @@ func CastOp(fields []string, to string, data map[string]any) {
 			}
 		case "string":
 			setDeep(data, f, getString(data, f))
+		case "lower":
+			if s, ok := v.(string); ok {
+				setDeep(data, f, strings.ToLower(s))
+			}
+		case "upper":
+			if s, ok := v.(string); ok {
+				setDeep(data, f, strings.ToUpper(s))
+			}
 		}
 	}
 }
