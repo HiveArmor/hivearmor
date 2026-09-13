@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      SPEC-04 (W1b) PR-1b.2c-ii — authoritative tenant attribution for collectors.
+      Collectors are synced OUT-OF-BAND from the agent-manager over gRPC (the manager
+      is the tenant authority and is already fully tenant-scoped for collectors,
+      emitting Collector.tenant_id=9). tenant_id is set server-side from that proto in
+      UtmCollectorService.saveCollector, never from a request.
+
+      Nullable during rollout; single-tenant backfill in 20260913008; MSSP per-row is
+      set from the manager proto going forward; NOT NULL deferred.
+    -->
+    <changeSet id="20260913007-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="hive_collectors" columnName="tenant_id"/></not>
+        </preConditions>
+        <addColumn tableName="hive_collectors">
+            <column name="tenant_id" type="BIGINT"><constraints nullable="true"/></column>
+        </addColumn>
+        <createIndex tableName="hive_collectors" indexName="idx_hive_collectors_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

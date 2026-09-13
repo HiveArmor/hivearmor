@@ -4,6 +4,7 @@ import agent.CollectorOuterClass;
 import com.hivearmor.domain.application_modules.UtmModule;
 import com.hivearmor.domain.application_modules.UtmModuleGroup;
 import com.hivearmor.domain.collector.UtmCollector;
+import com.hivearmor.multitenancy.TenantScope;
 import com.hivearmor.domain.network_scan.NetworkScanFilter;
 import com.hivearmor.repository.collector.UtmCollectorRepository;
 import com.hivearmor.service.dto.application_modules.ModuleActivationDTO;
@@ -50,6 +51,9 @@ public class UtmCollectorService {
         }
 
         utmCollector.setStatus(collector.getStatus().name());
+        // SPEC-04 (W1b) — stamp the authoritative tenant from the manager's proto
+        // (the manager is already tenant-scoped for collectors and emits field 9).
+        utmCollector.setTenantId(collector.getTenantId());
         utmCollector.setLastSeen(LocalDateTime.parse(collector.getLastSeen(), this.formatter));
         utmCollector.setVersion(collector.getVersion());
         utmCollector.setIp(collector.getIp());
@@ -92,8 +96,9 @@ public class UtmCollectorService {
     }
 
     private Page<UtmCollector> filter(NetworkScanFilter f, Pageable p) {
-
+        // SPEC-04 (W1b) — scope the collector search to the caller's tenant.
         return utmCollectorRepository.searchByFilters(
+                TenantScope.requireTenant(),
                 f.getAssetIpMacName() == null ? null : "%" + f.getAssetIpMacName() + "%",
                 f.getDiscoveredInitDate(),
                 f.getDiscoveredEndDate(),
@@ -115,7 +120,9 @@ public class UtmCollectorService {
     }
 
     Optional<UtmCollector> findById(Long id) {
-        return utmCollectorRepository.findById(id);
+        // SPEC-04 (W1b) — by-id load scoped to the caller's tenant; a cross-tenant
+        // (or pre-backfill null-tenant) id reads as empty (no disclosure).
+        return utmCollectorRepository.findByIdAndTenantId(id, TenantScope.requireTenant());
     }
 
     @Transactional

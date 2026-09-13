@@ -12,6 +12,12 @@ public class UtmCollector {
     @Id
     private Long id;
 
+    // SPEC-04 (W1b) — authoritative tenant, set from the agent-manager Collector
+    // proto at sync (the manager is the tenant authority for collectors). Nullable
+    // during rollout; single-tenant NOT NULL by 20260913008.
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @Column(name = "status", nullable = false)
     private String status;
 
@@ -65,6 +71,14 @@ public class UtmCollector {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 
     public String getStatus() {
