@@ -406,6 +406,149 @@ pipeline:
           where: contains("raw", "GLOBALPROTECT") && !contains("raw", "CEF:")
 
       # ═══════════════════════════════════════════════════════════════════════
+      # DECRYPTION CSV PATH  (no "CEF:" marker, field 5 == DECRYPTION)
+      # ═══════════════════════════════════════════════════════════════════════
+      # Decryption Syslog default field order. NOTE: Type is at field 5 (field 4
+      # is empty), unlike THREAT/SYSTEM. Rule-relevant fields: Source Address(8)
+      # -> origin.ip, Destination Address(9) -> target.ip, root_status(64) ->
+      # panOSRootStatus (the cert-trust failure signal). {{.csv}} tolerates the
+      # many empty columns.
+      - grok:
+          patterns:
+            - field_name: decTrash1
+              pattern: '{{.csv}},'
+            - field_name: decTrash2
+              pattern: '{{.csv}},'
+            - field_name: decTrash3
+              pattern: '{{.csv}},'
+            - field_name: decTrash4
+              pattern: '{{.csv}},'
+            - field_name: pa_type
+              pattern: '{{.csv}},'
+            - field_name: decTrash6
+              pattern: '{{.csv}},'
+            - field_name: decTrash7
+              pattern: '{{.csv}},'
+            - field_name: decSrc
+              pattern: '{{.csv}},'
+            - field_name: decDst
+              pattern: '{{.csv}},'
+            - field_name: decTrash10
+              pattern: '{{.csv}},'
+            - field_name: decTrash11
+              pattern: '{{.csv}},'
+            - field_name: decTrash12
+              pattern: '{{.csv}},'
+            - field_name: decTrash13
+              pattern: '{{.csv}},'
+            - field_name: decTrash14
+              pattern: '{{.csv}},'
+            - field_name: decTrash15
+              pattern: '{{.csv}},'
+            - field_name: decTrash16
+              pattern: '{{.csv}},'
+            - field_name: decTrash17
+              pattern: '{{.csv}},'
+            - field_name: decTrash18
+              pattern: '{{.csv}},'
+            - field_name: decTrash19
+              pattern: '{{.csv}},'
+            - field_name: decTrash20
+              pattern: '{{.csv}},'
+            - field_name: decTrash21
+              pattern: '{{.csv}},'
+            - field_name: decTrash22
+              pattern: '{{.csv}},'
+            - field_name: decTrash23
+              pattern: '{{.csv}},'
+            - field_name: decTrash24
+              pattern: '{{.csv}},'
+            - field_name: decTrash25
+              pattern: '{{.csv}},'
+            - field_name: decTrash26
+              pattern: '{{.csv}},'
+            - field_name: decTrash27
+              pattern: '{{.csv}},'
+            - field_name: decTrash28
+              pattern: '{{.csv}},'
+            - field_name: decTrash29
+              pattern: '{{.csv}},'
+            - field_name: decTrash30
+              pattern: '{{.csv}},'
+            - field_name: decTrash31
+              pattern: '{{.csv}},'
+            - field_name: decTrash32
+              pattern: '{{.csv}},'
+            - field_name: decTrash33
+              pattern: '{{.csv}},'
+            - field_name: decTrash34
+              pattern: '{{.csv}},'
+            - field_name: decTrash35
+              pattern: '{{.csv}},'
+            - field_name: decTrash36
+              pattern: '{{.csv}},'
+            - field_name: decTrash37
+              pattern: '{{.csv}},'
+            - field_name: decTrash38
+              pattern: '{{.csv}},'
+            - field_name: decTrash39
+              pattern: '{{.csv}},'
+            - field_name: decTrash40
+              pattern: '{{.csv}},'
+            - field_name: decTrash41
+              pattern: '{{.csv}},'
+            - field_name: decTrash42
+              pattern: '{{.csv}},'
+            - field_name: decTrash43
+              pattern: '{{.csv}},'
+            - field_name: decTrash44
+              pattern: '{{.csv}},'
+            - field_name: decTrash45
+              pattern: '{{.csv}},'
+            - field_name: decTrash46
+              pattern: '{{.csv}},'
+            - field_name: decTrash47
+              pattern: '{{.csv}},'
+            - field_name: decTrash48
+              pattern: '{{.csv}},'
+            - field_name: decTrash49
+              pattern: '{{.csv}},'
+            - field_name: decTrash50
+              pattern: '{{.csv}},'
+            - field_name: decTrash51
+              pattern: '{{.csv}},'
+            - field_name: decTrash52
+              pattern: '{{.csv}},'
+            - field_name: decTrash53
+              pattern: '{{.csv}},'
+            - field_name: decTrash54
+              pattern: '{{.csv}},'
+            - field_name: decTrash55
+              pattern: '{{.csv}},'
+            - field_name: decTrash56
+              pattern: '{{.csv}},'
+            - field_name: decTrash57
+              pattern: '{{.csv}},'
+            - field_name: decTrash58
+              pattern: '{{.csv}},'
+            - field_name: decTrash59
+              pattern: '{{.csv}},'
+            - field_name: decTrash60
+              pattern: '{{.csv}},'
+            - field_name: decTrash61
+              pattern: '{{.csv}},'
+            - field_name: decTrash62
+              pattern: '{{.csv}},'
+            - field_name: decTrash63
+              pattern: '{{.csv}},'
+            - field_name: panOSRootStatus
+              pattern: '{{.csv}},'
+            - field_name: decChainStatus
+              pattern: '{{.csv}},'
+          source: raw
+          where: contains("raw", ",DECRYPTION,") && !contains("raw", "CEF:")
+
+      # ═══════════════════════════════════════════════════════════════════════
       # SHARED NORMALIZATION
       # ═══════════════════════════════════════════════════════════════════════
 
@@ -428,6 +571,17 @@ pipeline:
             - log.gpPublicIp
           to: origin.ip
           where: exists("log.gpPublicIp") && !exists("origin.ip")
+      # DECRYPTION CSV: Source Address(8) / Destination Address(9).
+      - rename:
+          from:
+            - log.decSrc
+          to: origin.ip
+          where: exists("log.decSrc") && !exists("origin.ip")
+      - rename:
+          from:
+            - log.decDst
+          to: target.ip
+          where: exists("log.decDst") && !exists("target.ip")
       # GLOBALPROTECT CSV: Portal/gateway host is the target.
       - rename:
           from:
@@ -476,25 +630,64 @@ pipeline:
             value: firewall-paloalto
 
       # ── Cleanup scratch fields ───────────────────────────────────────────────
+      # Named CEF scratch + all positional-CSV scratch fields by prefix
+      # (csv*, sys*, gp*, dec*, req*, cat*, msg* trash captures).
       - delete:
           fields:
             - log.cefPrefix
             - log.cefMsgAll
             - log.cefExtension
-            - log.reqTrash
-            - log.reqTrash2
-            - log.reqTrash3
-            - log.catTrash
-            - log.catTrash2
-            - log.msgTrash
-            - log.msgTrash2
-            - log.msgTrash3
-            - log.csvFutureUse
-            - log.csvFutureUse2
-            - log.csvFutureUse3
-            - log.sysFutureUse
-            - log.sysFutureUse2
-            - log.sysFutureUse3
-            - log.sysFutureUse4
-            - log.gpFutureUse
-            - log.gpFutureUse2
+          prefixes:
+            - reqTrash
+            - catTrash
+            - msgTrash
+            - csvFutureUse
+            - csvReceiveTime
+            - csvSerial
+            - csvGenTime
+            - csvNat
+            - csvRule
+            - csvSrc
+            - csvDst
+            - csvApp
+            - csvVsys
+            - csvZone
+            - csvIf
+            - csvOut
+            - csvIn
+            - csvLog
+            - csvSession
+            - csvRepeat
+            - csvPort
+            - csvFlags
+            - csvProto
+            - csvUrlFilename
+            - sysFutureUse
+            - sysReceiveTime
+            - sysSerial
+            - sysGenTime
+            - sysVsys
+            - sysObject
+            - sysModule
+            - gpFutureUse
+            - gpReceiveTime
+            - gpSerial
+            - gpGenTime
+            - gpVsys
+            - gpStage
+            - gpAuthMethod
+            - gpTunnelType
+            - gpSrc
+            - gpMachine
+            - gpPublicIpv6
+            - gpPrivate
+            - gpHostId
+            - gpSerial2
+            - gpClient
+            - gpRepeatCnt
+            - gpReason
+            - gpError
+            - gpLocation
+            - gpLogin
+            - gpConnect
+            - decTrash
