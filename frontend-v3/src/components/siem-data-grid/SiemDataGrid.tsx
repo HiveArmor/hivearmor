@@ -64,6 +64,8 @@ export interface SiemDataGridProps {
   className?: string;
   getRowId?: (params: { data: unknown }) => string;
   defaultColDef?: Partial<ColDef>;
+  /** Passed to AG Grid as gridOptions.context — read via params.context in cell renderers. Optional; undefined = no change. */
+  context?: unknown;
   paginationPageSize?: number;
   infiniteInitialRowCount?: number;
   cacheBlockSize?: number;
@@ -97,6 +99,7 @@ export const SiemDataGrid = forwardRef<AgGridReact, SiemDataGridProps>(
       className,
       getRowId,
       defaultColDef,
+      context,
       paginationPageSize,
       infiniteInitialRowCount,
       cacheBlockSize,
@@ -111,6 +114,7 @@ export const SiemDataGrid = forwardRef<AgGridReact, SiemDataGridProps>(
     const gridOptions: GridOptions = {
       columnDefs,
       rowData,
+      context,
       // Map serverSide → infinite (ServerSideRowModel is enterprise-only in AG Grid 36 Community)
       rowModelType: rowModelType === 'serverSide' ? 'infinite' : rowModelType,
       serverSideDatasource: undefined,

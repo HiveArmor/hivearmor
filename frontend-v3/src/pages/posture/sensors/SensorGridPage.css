@@ -288,3 +288,26 @@
   color: var(--ha-foreground-tertiary);
   font: var(--ha-type-metadata);
 }
+
+/* PR-1a.3 — kill-process PID input inside the confirmation modal */
+.sensor-fleet-page__kill-pid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0;
+  font-size: var(--ha-type-compact);
+  color: var(--ha-foreground-secondary);
+}
+.sensor-fleet-page__kill-pid input {
+  font-family: var(--ha-font-mono);
+  font-variant-numeric: tabular-nums;
+  padding: 8px 10px;
+  background: var(--ha-surface-input);
+  border: 1px solid var(--ha-border-default);
+  border-radius: 4px;
+  color: var(--ha-foreground-primary);
+}
+.sensor-fleet-page__kill-pid input:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 1px;
+}

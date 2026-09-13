@@ -13,6 +13,16 @@ import {
 vi.mock('@/hooks/useEpsStream', () => ({
   useEpsStream: () => ({ connected: true, eps: 100 }),
 }));
+vi.mock('@/hooks/useCurrentTenantLabel', () => ({
+  useCurrentTenantLabel: () => ({
+    tenantId: null,
+    isAllTenants: true,
+    label: 'All Tenants (4)',
+    prefix: '',
+    tenantCount: 4,
+    isLoading: false,
+  }),
+}));
 vi.mock('@/components/status-dock', () => ({
   StatusDock: () => <div data-testid="status-dock" />,
 }));
@@ -55,6 +65,7 @@ vi.mock('@/components/siem-data-grid', () => ({
   SiemDataGrid: ({
     rowData,
     columnDefs,
+    context,
   }: {
     rowData: Array<{ hostname: string; agentId: string; connectionStatus?: string }>;
     columnDefs: Array<{
@@ -62,6 +73,7 @@ vi.mock('@/components/siem-data-grid', () => ({
       headerName?: string;
       cellRenderer?: (p: unknown) => JSX.Element;
     }>;
+    context?: unknown;
   }) => {
     const actionsCol = columnDefs.find((c) => c.headerName === 'Actions');
     const hostnameCol = columnDefs.find((c) => c.field === 'hostname');
@@ -72,7 +84,7 @@ vi.mock('@/components/siem-data-grid', () => ({
             {hostnameCol?.cellRenderer
               ? hostnameCol.cellRenderer({ data: row, value: row.hostname })
               : null}
-            {actionsCol?.cellRenderer ? actionsCol.cellRenderer({ data: row }) : null}
+            {actionsCol?.cellRenderer ? actionsCol.cellRenderer({ data: row, context }) : null}
           </div>
         ))}
       </div>
@@ -218,5 +230,33 @@ describe('SensorGridPage fleet UX', () => {
     ).toBeVisible();
     expect(screen.getByRole('grid', { name: 'Registered agents' })).toBeVisible();
     expect(screen.getByRole('link', { name: 'Endpoint telemetry' })).toBeVisible();
+  });
+
+  it('opens an accessible Kill modal (no window.prompt) showing target, tenant, and a PID input', async () => {
+    const user = userEvent.setup();
+    hasAuthority.mockImplementation((role: string) => role === 'ROLE_ADMIN');
+    authRoles.mockReturnValue(['ROLE_ADMIN']);
+
+    render(
+      <MemoryRouter>
+        <SensorGridPage />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getAllByRole('button', { name: 'Kill process' })[0]);
+
+    // Modal is present with the required safety context (not a native prompt).
+    expect(screen.getByRole('dialog', { name: /Kill process on sensor/i })).toBeVisible();
+    expect(screen.getByText(/agent 42/i)).toBeVisible();
+    expect(screen.getByText(/Tenant: All Tenants \(4\)/i)).toBeVisible();
+    expect(screen.getByText(/not reversible/i)).toBeVisible();
+    expect(screen.getByLabelText(/Process PID to terminate/i)).toBeVisible();
+
+    // Confirm (inside the dialog) is disabled until a PID is entered, then enables.
+    const dialogConfirm = screen.getByRole('button', { name: /Terminate process/i });
+    expect(dialogConfirm).toBeDisabled();
+
+    await user.type(screen.getByLabelText(/Process PID to terminate/i), '4321');
+    expect(dialogConfirm).not.toBeDisabled();
   });
 });

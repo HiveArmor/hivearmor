@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '@patternfly/react-core';
 import { useQuery } from '@tanstack/react-query';
 import type { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { Activity, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
 
 import { AddAgentDrawer } from './AddAgentDrawer';
 import { AgentPackageCatalog } from './AgentPackageCatalog';
@@ -13,10 +15,12 @@ import { DensitySelector } from '@/components/density-selector';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { HaButton } from '@/components/ha-button/HaButton';
+import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { HaInlineBanner } from '@/components/ha-inline-banner';
 import { LoadingState } from '@/components/loading-state';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock';
+import { useCurrentTenantLabel } from '@/hooks/useCurrentTenantLabel';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useRowDensity, ROW_HEIGHTS } from '@/hooks/useRowDensity';
 import { hasAuthority } from '@/lib/auth/hasAuthority';
@@ -73,31 +77,21 @@ function ActionButton(props: {
   );
 }
 
-async function dispatchIsolate(agentId: string, hostname: string): Promise<void> {
-  if (!window.confirm(`Isolate host ${hostname || agentId}?`)) return;
-  try {
-    await isolateSensor({ agentId, hostname, reason: 'SensorGrid isolate' });
-    showSuccessToast('Isolate command dispatched');
-  } catch (err) {
-    showErrorToast(err instanceof Error ? err.message : 'Isolate failed');
-  }
+/**
+ * Row-action request shape. The grid cell renderer only *requests* an action;
+ * the page component owns the confirmation modal + dispatch so destructive
+ * actions get an accessible confirm with the target host, agent id, the tenant
+ * the action runs in, and a reversibility statement (never a native
+ * window.confirm/prompt). See SensorGridPage's pendingAction state.
+ */
+interface RemoteActionRequest {
+  kind: 'isolate' | 'kill';
+  agentId: string;
+  hostname: string;
 }
 
-async function dispatchKill(agentId: string, hostname: string): Promise<void> {
-  const raw = window.prompt('Process PID to terminate on this sensor:');
-  if (raw === null) return;
-  const pid = Number.parseInt(raw.trim(), 10);
-  if (!Number.isFinite(pid) || pid <= 0) {
-    showErrorToast('Enter a valid positive PID');
-    return;
-  }
-  if (!window.confirm(`Kill PID ${pid} on ${hostname || agentId}?`)) return;
-  try {
-    await killSensorProcess({ agentId, pid });
-    showSuccessToast('Kill process command dispatched');
-  } catch (err) {
-    showErrorToast(err instanceof Error ? err.message : 'Kill process failed');
-  }
+interface SensorGridContext {
+  onRequestAction: (req: RemoteActionRequest) => void;
 }
 
 /**
@@ -161,7 +155,9 @@ function ActionsCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Elemen
         title={canIsolate ? 'Isolate host' : isolateBlockedTitle}
         danger
         onClick={() => {
-          if (agentId) void dispatchIsolate(agentId, hostname);
+          if (agentId) {
+            (params.context as SensorGridContext).onRequestAction({ kind: 'isolate', agentId, hostname });
+          }
         }}
       />
       <ActionButton
@@ -171,7 +167,9 @@ function ActionsCellRenderer(params: ICellRendererParams<SensorDTO>): JSX.Elemen
         title={canKill ? 'Kill process on this sensor' : killBlockedTitle}
         danger
         onClick={() => {
-          if (agentId) void dispatchKill(agentId, hostname);
+          if (agentId) {
+            (params.context as SensorGridContext).onRequestAction({ kind: 'kill', agentId, hostname });
+          }
         }}
       />
     </div>
@@ -227,6 +225,58 @@ export function SensorGridPage(): JSX.Element {
   const [addAgentOpen, setAddAgentOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [isolateBannerDismissed, setIsolateBannerDismissed] = useState(false);
+  // Destructive remote-action confirmation (replaces window.confirm/prompt).
+  const [pendingAction, setPendingAction] = useState<RemoteActionRequest | null>(null);
+  const [killPid, setKillPid] = useState('');
+  const [actionBusy, setActionBusy] = useState(false);
+  // Active tenant scope, shown in every destructive confirm so the operator can
+  // see which tenant the action runs in. NOTE: SensorDTO carries no per-row
+  // tenant, so a client-side row-vs-scope mismatch guard is not yet possible;
+  // backend AgentGrpcService.requireAgentInCurrentTenant is the enforcement.
+  const tenantScope = useCurrentTenantLabel();
+
+  const requestAction = (req: RemoteActionRequest): void => {
+    setKillPid('');
+    setPendingAction(req);
+  };
+
+  const closeActionModal = (): void => {
+    if (actionBusy) return;
+    setPendingAction(null);
+    setKillPid('');
+  };
+
+  const confirmIsolate = async (req: RemoteActionRequest): Promise<void> => {
+    setActionBusy(true);
+    try {
+      await isolateSensor({ agentId: req.agentId, hostname: req.hostname, reason: 'SensorGrid isolate' });
+      showSuccessToast('Isolate command dispatched');
+      setPendingAction(null);
+    } catch (err) {
+      showErrorToast(err instanceof Error ? err.message : 'Isolate failed');
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const confirmKill = async (req: RemoteActionRequest): Promise<void> => {
+    const pid = Number.parseInt(killPid.trim(), 10);
+    if (!Number.isFinite(pid) || pid <= 0) {
+      showErrorToast('Enter a valid positive PID');
+      return;
+    }
+    setActionBusy(true);
+    try {
+      await killSensorProcess({ agentId: req.agentId, pid });
+      showSuccessToast('Kill process command dispatched');
+      setPendingAction(null);
+      setKillPid('');
+    } catch (err) {
+      showErrorToast(err instanceof Error ? err.message : 'Kill process failed');
+    } finally {
+      setActionBusy(false);
+    }
+  };
   const canProvisionAgent = hasAuthority('ROLE_ADMIN');
   const canViewEnrollmentAudit = useAuthStore((state) =>
     state.hasAnyRole(['ROLE_ADMIN', 'ROLE_SOC_MANAGER'])
@@ -602,6 +652,7 @@ export function SensorGridPage(): JSX.Element {
             height="100%"
             rowHeight={ROW_HEIGHTS[density]}
             getRowId={(params) => String((params.data as SensorDTO).agentId)}
+            context={{ onRequestAction: requestAction } satisfies SensorGridContext}
             ariaLabel="Registered agents"
           />
         )}
@@ -649,6 +700,70 @@ export function SensorGridPage(): JSX.Element {
       <StatusDock sseConnected={epsConnected} eps={eps} />
 
       <AddAgentDrawer isOpen={addAgentOpen} onClose={() => setAddAgentOpen(false)} />
+
+      {pendingAction?.kind === 'isolate' && (
+        <HaConfirmationModal
+          isOpen
+          variant="danger"
+          title="Isolate host"
+          message={
+            `Target: ${pendingAction.hostname || pendingAction.agentId} (agent ${pendingAction.agentId}). ` +
+            `Tenant: ${tenantScope.label}. ` +
+            `Isolation cuts the endpoint off from the network except the HiveArmor console. ` +
+            `Reversible — you can lift isolation from the response console once contained.`
+          }
+          confirmLabel={actionBusy ? 'Dispatching…' : 'Isolate host'}
+          cancelLabel="Cancel"
+          onConfirm={() => { void confirmIsolate(pendingAction); }}
+          onCancel={closeActionModal}
+        />
+      )}
+
+      {pendingAction?.kind === 'kill' && (
+        <Modal
+          isOpen
+          onClose={closeActionModal}
+          variant="small"
+          width="min(480px, calc(100vw - 32px))"
+          className="ha-confirmation-modal"
+          backdropClassName="ha-confirmation-modal__backdrop"
+          aria-label="Kill process on sensor"
+        >
+          <ModalHeader title="Kill process" titleIconVariant="warning" />
+          <ModalBody className="ha-confirmation-modal__body">
+            <p>
+              {`Target: ${pendingAction.hostname || pendingAction.agentId} (agent ${pendingAction.agentId}). `}
+              {`Tenant: ${tenantScope.label}. `}
+              {`Terminating a process is not reversible; the process must be restarted manually if needed.`}
+            </p>
+            <label className="sensor-fleet-page__kill-pid">
+              Process PID to terminate
+              <input
+                type="number"
+                min={1}
+                inputMode="numeric"
+                value={killPid}
+                onChange={(event) => setKillPid(event.target.value)}
+                aria-label="Process PID to terminate"
+                autoFocus
+              />
+            </label>
+            <div className="ha-confirmation-modal__guardrail" role="note">
+              This decision is recorded in the audit trail. Verify the investigation record before continuing.
+            </div>
+          </ModalBody>
+          <ModalFooter className="ha-confirmation-modal__footer">
+            <HaButton variant="secondary" onClick={closeActionModal}>Cancel</HaButton>
+            <HaButton
+              variant="danger"
+              isDisabled={actionBusy || killPid.trim() === ''}
+              onClick={() => { void confirmKill(pendingAction); }}
+            >
+              {actionBusy ? 'Dispatching…' : 'Terminate process'}
+            </HaButton>
+          </ModalFooter>
+        </Modal>
+      )}
     </div>
   );
 }
