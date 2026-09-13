@@ -199,6 +199,12 @@ pipeline:
             - log.PanOSEventStatus
           to: log.panOSEventStatus
           where: exists("log.PanOSEventStatus")
+      # PanOSOpCode -> panOSOpCode (CONFIG rule tests it for set/edit/delete/...).
+      - rename:
+          from:
+            - log.PanOSOpCode
+          to: log.panOSOpCode
+          where: exists("log.PanOSOpCode")
 
       # ═══════════════════════════════════════════════════════════════════════
       # CSV PATH  (no "CEF:" marker, comma-separated, field 4 == THREAT)
@@ -612,6 +618,45 @@ pipeline:
           where: contains("raw", ",CORRELATION,") && !contains("raw", "CEF:")
 
       # ═══════════════════════════════════════════════════════════════════════
+      # CONFIG CSV PATH  (no "CEF:" marker, field 4 == CONFIG)
+      # ═══════════════════════════════════════════════════════════════════════
+      # Config Log Fields order. Rule-relevant: Host(8) -> origin.ip,
+      # Command(10) -> panOSOpCode, Admin(11) -> origin.user, Configuration
+      # Path(14) -> message (e.g. 'rulebase security rules ...').
+      - grok:
+          patterns:
+            - field_name: configTrash1
+              pattern: '{{.csv}},'
+            - field_name: configTrash2
+              pattern: '{{.csv}},'
+            - field_name: configTrash3
+              pattern: '{{.csv}},'
+            - field_name: pa_type
+              pattern: '{{.csv}},'
+            - field_name: configTrash5
+              pattern: '{{.csv}},'
+            - field_name: configTrash6
+              pattern: '{{.csv}},'
+            - field_name: configTrash7
+              pattern: '{{.csv}},'
+            - field_name: configHost
+              pattern: '{{.csv}},'
+            - field_name: configTrash9
+              pattern: '{{.csv}},'
+            - field_name: panOSOpCode
+              pattern: '{{.csv}},'
+            - field_name: configAdmin
+              pattern: '{{.csv}},'
+            - field_name: configTrash12
+              pattern: '{{.csv}},'
+            - field_name: configTrash13
+              pattern: '{{.csv}},'
+            - field_name: message
+              pattern: '{{.csv}},'
+          source: raw
+          where: contains("raw", ",CONFIG,") && !contains("raw", "CEF:")
+
+      # ═══════════════════════════════════════════════════════════════════════
       # SHARED NORMALIZATION
       # ═══════════════════════════════════════════════════════════════════════
 
@@ -646,6 +691,17 @@ pipeline:
             - log.corrSrc
           to: origin.ip
           where: exists("log.corrSrc") && !exists("origin.ip")
+      # CONFIG CSV: Host(8) is the admin client machine; Admin(11) the user.
+      - rename:
+          from:
+            - log.configHost
+          to: origin.ip
+          where: exists("log.configHost") && !exists("origin.ip")
+      - rename:
+          from:
+            - log.configAdmin
+          to: origin.user
+          where: exists("log.configAdmin") && !exists("origin.user")
       - rename:
           from:
             - log.decDst
@@ -761,3 +817,4 @@ pipeline:
             - gpConnect
             - decTrash
             - corrTrash
+            - configTrash
