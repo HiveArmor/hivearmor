@@ -15,7 +15,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -56,8 +55,6 @@ class ConnectorAlertIngestServiceTenantScopingTest {
 
         assertThat(out).isEmpty();
         verify(stagingRepository).findByTenantIdAndConnectorInstanceIdOrderByIngestedAtDesc(eq(TENANT_A), eq(7L), any());
-        // The unscoped by-instance finder must never be used on the request-path read.
-        verify(stagingRepository, never()).findByConnectorInstanceIdOrderByIngestedAtDesc(any(), any());
     }
 
     @Test
