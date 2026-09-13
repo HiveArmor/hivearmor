@@ -11,6 +11,7 @@ var tokenPatterns = map[string]string{
 	"{{.float}}":     `[-+]?\d+(?:\.\d+)?`,
 	"{{.word}}":      `\S+`,
 	"{{.data}}":      `.+?`,
+	"{{.rest}}":      `.*?`,
 	"{{.csv}}":       `[^,]*`,
 	"{{.greedy}}":    `.+`,
 	"{{.ipv4}}":      `\d{1,3}(?:\.\d{1,3}){3}`,
