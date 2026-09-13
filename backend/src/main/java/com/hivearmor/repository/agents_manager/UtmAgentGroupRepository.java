@@ -12,4 +12,8 @@ public interface UtmAgentGroupRepository extends JpaRepository<UtmAgentGroup, Lo
     Optional<UtmAgentGroup> findByGroupName(String groupName);
     List<UtmAgentGroup> findByPlatform(String platform);
     List<UtmAgentGroup> findAllByOrderByGroupNameAsc();
+
+    // SPEC-04 (W1b) — tenant-scoped reads. Null-tenant (pre-backfill) rows excluded.
+    List<UtmAgentGroup> findByTenantIdOrderByGroupNameAsc(Long tenantId);
+    Optional<UtmAgentGroup> findByIdAndTenantId(Long id, Long tenantId);
 }

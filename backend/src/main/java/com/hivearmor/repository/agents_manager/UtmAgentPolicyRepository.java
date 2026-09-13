@@ -13,4 +13,8 @@ public interface UtmAgentPolicyRepository extends JpaRepository<UtmAgentPolicy, 
     List<UtmAgentPolicy> findByPlatform(String platform);
     List<UtmAgentPolicy> findByIsActive(Boolean isActive);
     List<UtmAgentPolicy> findAllByOrderByPolicyNameAsc();
+
+    // SPEC-04 (W1b) — tenant-scoped reads. Null-tenant (pre-backfill) rows excluded.
+    List<UtmAgentPolicy> findByTenantIdOrderByPolicyNameAsc(Long tenantId);
+    Optional<UtmAgentPolicy> findByIdAndTenantId(Long id, Long tenantId);
 }

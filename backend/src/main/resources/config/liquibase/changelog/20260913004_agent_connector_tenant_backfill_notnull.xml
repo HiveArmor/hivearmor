@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      SPEC-04 (W1b) PR-1b.2b backfill + NOT-NULL for the tenant_id columns added by
+      20260913003 (hive_agent_policy, hive_agent_group, ha_connector_instance).
+
+      Same contract as 20260910003 / 20260913002: no in-DB column reliably maps
+      these rows to a tenant (a policy/group can span tenants; a connector instance
+      is tenant-blind), so a derived SQL backfill would risk cross-tenant
+      mis-attribution. Therefore:
+
+        * SINGLE-TENANT deployments (no MSSP-managed client with a prefix): every
+          legacy row's tenant is the single-tenant sentinel 0 — backfill to 0 is
+          correct and COMPLETE, NOT-NULL enforced here. Gated by the ha_client
+          sqlCheck.
+
+        * MSSP deployments: this changeset MARK_RANs (no-op). Per-row tenant is an
+          application-level assignment (these are backend-request-created going
+          forward; legacy MSSP rows need operator/admin tenant assignment).
+          NOT-NULL for MSSP is a later batch.
+    -->
+
+    <!-- hive_agent_policy -->
+    <changeSet id="20260913004-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="hive_agent_policy" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ha_client WHERE mssp_managed = TRUE AND client_prefix IS NOT NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <update tableName="hive_agent_policy">
+            <column name="tenant_id" valueNumeric="0"/>
+            <where>tenant_id IS NULL</where>
+        </update>
+        <addNotNullConstraint tableName="hive_agent_policy" columnName="tenant_id"
+                              columnDataType="BIGINT" defaultNullValue="0"/>
+    </changeSet>
+
+    <!-- hive_agent_group -->
+    <changeSet id="20260913004-2" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="hive_agent_group" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ha_client WHERE mssp_managed = TRUE AND client_prefix IS NOT NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <update tableName="hive_agent_group">
+            <column name="tenant_id" valueNumeric="0"/>
+            <where>tenant_id IS NULL</where>
+        </update>
+        <addNotNullConstraint tableName="hive_agent_group" columnName="tenant_id"
+                              columnDataType="BIGINT" defaultNullValue="0"/>
+    </changeSet>
+
+    <!-- ha_connector_instance -->
+    <changeSet id="20260913004-3" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="ha_connector_instance" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ha_client WHERE mssp_managed = TRUE AND client_prefix IS NOT NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <update tableName="ha_connector_instance">
+            <column name="tenant_id" valueNumeric="0"/>
+            <where>tenant_id IS NULL</where>
+        </update>
+        <addNotNullConstraint tableName="ha_connector_instance" columnName="tenant_id"
+                              columnDataType="BIGINT" defaultNullValue="0"/>
+    </changeSet>
+
+</databaseChangeLog>
