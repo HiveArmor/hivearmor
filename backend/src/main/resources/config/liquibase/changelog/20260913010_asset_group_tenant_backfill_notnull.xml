@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      SPEC-04 (W1b, FU-1) backfill + NOT-NULL for hive_asset_group.tenant_id
+      (added by 20260913009). Same contract as the prior W1b slices:
+        * SINGLE-TENANT (no MSSP-managed client with a prefix): every legacy row's
+          tenant is 0 — backfill to 0 is correct and COMPLETE, NOT-NULL enforced.
+          Gated by the ha_client sqlCheck.
+        * MSSP: MARK_RAN (no-op). New rows are stamped at save() from the request
+          tenant; legacy MSSP rows are an app-level backfill. NOT-NULL for MSSP deferred.
+    -->
+    <changeSet id="20260913010-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="hive_asset_group" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ha_client WHERE mssp_managed = TRUE AND client_prefix IS NOT NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <update tableName="hive_asset_group">
+            <column name="tenant_id" valueNumeric="0"/>
+            <where>tenant_id IS NULL</where>
+        </update>
+        <addNotNullConstraint tableName="hive_asset_group" columnName="tenant_id"
+                              columnDataType="BIGINT" defaultNullValue="0"/>
+    </changeSet>
+
+</databaseChangeLog>

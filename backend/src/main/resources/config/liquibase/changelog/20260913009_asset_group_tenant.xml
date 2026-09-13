@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      SPEC-04 (W1b, FU-1) — authoritative tenant attribution for asset groups.
+      hive_asset_group has exactly one create path (REST POST/PUT via
+      UtmAssetGroupResource -> UtmAssetGroupService.save), which is request-scoped;
+      there is NO out-of-band writer (network-scan discovery only stamps an existing
+      group id onto scan rows, it never creates a group). So tenant_id is assigned
+      server-side from TenantScope.requireTenant() at save, never from payload.
+
+      Nullable during rollout; single-tenant backfill in 20260913010; MSSP per-row
+      is an app-level job; NOT NULL deferred.
+
+      Note: ids 007/008 are used by the parallel PR-1b.2c-ii (collectors) branch;
+      FU-1 uses 009/010 to avoid a changeset-id collision when both merge.
+    -->
+    <changeSet id="20260913009-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="hive_asset_group" columnName="tenant_id"/></not>
+        </preConditions>
+        <addColumn tableName="hive_asset_group">
+            <column name="tenant_id" type="BIGINT"><constraints nullable="true"/></column>
+        </addColumn>
+        <createIndex tableName="hive_asset_group" indexName="idx_hive_asset_group_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

@@ -4,6 +4,7 @@ import com.hivearmor.domain.UtmAssetMetrics;
 import com.hivearmor.domain.network_scan.AssetGroupFilter;
 import com.hivearmor.domain.network_scan.UtmAssetGroup;
 import com.hivearmor.domain.network_scan.UtmNetworkScan;
+import com.hivearmor.multitenancy.TenantScope;
 import com.hivearmor.repository.UtmAssetMetricsRepository;
 import com.hivearmor.repository.network_scan.UtmAssetGroupRepository;
 import com.hivearmor.repository.network_scan.UtmNetworkScanRepository;
@@ -21,6 +22,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.Query;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,6 +75,19 @@ public class UtmAssetGroupService {
      */
     public UtmAssetGroup save(UtmAssetGroup utmAssetGroup) {
         log.debug("Request to save UtmAssetGroup : {}", utmAssetGroup);
+        long tenant = TenantScope.requireTenant();
+        if (utmAssetGroup.getId() == null) {
+            // SPEC-04 (W1b, FU-1) — create: stamp the authoritative tenant
+            // server-side, ignoring any payload-supplied value.
+            utmAssetGroup.setTenantId(tenant);
+        } else {
+            // Update: the row must already belong to the caller's tenant, and the
+            // tenant is preserved server-side (never taken from the payload) — a
+            // cross-tenant (or pre-backfill null-tenant) id is treated as not found.
+            UtmAssetGroup existing = utmAssetGroupRepository.findByIdAndTenantId(utmAssetGroup.getId(), tenant)
+                .orElseThrow(() -> new EntityNotFoundException("Asset group not found: " + utmAssetGroup.getId()));
+            utmAssetGroup.setTenantId(existing.getTenantId());
+        }
         return utmAssetGroupRepository.save(utmAssetGroup);
     }
 
@@ -128,7 +143,8 @@ public class UtmAssetGroupService {
     @Transactional(readOnly = true)
     public Optional<UtmAssetGroup> findOne(Long id) {
         log.debug("Request to get UtmAssetGroup : {}", id);
-        return utmAssetGroupRepository.findById(id);
+        // SPEC-04 (W1b, FU-1) — by-id load scoped to the caller's tenant.
+        return utmAssetGroupRepository.findByIdAndTenantId(id, TenantScope.requireTenant());
     }
 
     /**
@@ -138,7 +154,11 @@ public class UtmAssetGroupService {
      */
     public void delete(Long id) {
         log.debug("Request to delete UtmAssetGroup : {}", id);
-        utmAssetGroupRepository.deleteById(id);
+        // SPEC-04 (W1b, FU-1) — re-check tenant before delete; a cross-tenant id
+        // is treated as not found so it cannot be deleted.
+        UtmAssetGroup existing = utmAssetGroupRepository.findByIdAndTenantId(id, TenantScope.requireTenant())
+            .orElseThrow(() -> new EntityNotFoundException("Asset group not found: " + id));
+        utmAssetGroupRepository.deleteById(existing.getId());
     }
 
     private static class FilteredQuery {
@@ -157,6 +177,14 @@ public class UtmAssetGroupService {
         sb.append("SELECT DISTINCT hive_asset_group.* FROM hive_asset_group"
             + " LEFT JOIN hive_network_scan ON hive_asset_group.id = hive_network_scan.group_id"
             + " WHERE 1=1\n");
+
+        // SPEC-04 (W1b, FU-1) — tenant scope on the owning/projected table, as a
+        // bound positional param (server-resolved, never from the request body).
+        // Placed before the null-filter early return so an unfiltered search is
+        // still tenant-scoped; the count query wraps this same SQL, so both the
+        // data and count queries inherit the predicate from this single edit.
+        sb.append("AND hive_asset_group.tenant_id = ?\n");
+        params.add(TenantScope.requireTenant());
 
         if (filters == null) {
             return new FilteredQuery(sb.toString(), params);
