@@ -112,6 +112,26 @@ pipeline:
           source: log.cefExtension
           where: contains("log.cefExtension", "cat=")
 
+      # msg=<human text, may contain spaces> ... next key= (mid-line) OR end-of-line.
+      - grok:
+          patterns:
+            - field_name: msgTrash
+              pattern: '{{.data}}msg='
+            - field_name: pa_msgText
+              pattern: '{{.data}} {{.word}}='
+            - field_name: msgTrash2
+              pattern: '{{.greedy}}'
+          source: log.cefExtension
+          where: contains("log.cefExtension", "msg=")
+      - grok:
+          patterns:
+            - field_name: msgTrash3
+              pattern: '{{.data}}msg='
+            - field_name: pa_msgTextEol
+              pattern: '{{.greedy}}'
+          source: log.cefExtension
+          where: contains("log.cefExtension", "msg=")
+
       # ── kv the CEF extension (space/=), reading the isolated extension only ──
       - kv:
           fieldSplit: ' '
@@ -144,6 +164,27 @@ pipeline:
             - log.pa_catName
           to: log.message
           where: exists("log.pa_catName")
+
+      # SYSTEM (and other) CEF logs carry their human text in msg=; prefer the
+      # boundary-captured value (mid-line, then end-of-line) so a space-valued
+      # message is not truncated by kv. Only set when a threat name (cat=) did
+      # not already populate message.
+      - rename:
+          from:
+            - log.pa_msgText
+          to: log.message
+          where: exists("log.pa_msgText") && !exists("log.message")
+      - rename:
+          from:
+            - log.pa_msgTextEol
+          to: log.message
+          where: exists("log.pa_msgTextEol") && !exists("log.message")
+      # PanOSEventID -> panOSEventID (SYSTEM rules group by log.panOSEventID).
+      - rename:
+          from:
+            - log.PanOSEventID
+          to: log.panOSEventID
+          where: exists("log.PanOSEventID")
 
       # ═══════════════════════════════════════════════════════════════════════
       # CSV PATH  (no "CEF:" marker, comma-separated, field 4 == THREAT)
@@ -235,6 +276,50 @@ pipeline:
       # url_category_list field handled in a later increment.
 
       # ═══════════════════════════════════════════════════════════════════════
+      # SYSTEM CSV PATH  (no "CEF:" marker, comma-separated, field 4 == SYSTEM)
+      # ═══════════════════════════════════════════════════════════════════════
+      # System Log Fields order:
+      # FUTURE_USE, Receive Time, Serial, Type(SYSTEM), Subtype, FUTURE_USE,
+      # Generated Time, Virtual System, Event ID, Object, FUTURE_USE, FUTURE_USE,
+      # Module, Severity, Description, Sequence Number, ...
+      # The Description (field 15) is the load-bearing text the SYSTEM rules
+      # match on, so we capture through it. {{.csv}} tolerates empty columns.
+      - grok:
+          patterns:
+            - field_name: sysFutureUse
+              pattern: '{{.csv}},'
+            - field_name: sysReceiveTime
+              pattern: '{{.csv}},'
+            - field_name: sysSerial
+              pattern: '{{.csv}},'
+            - field_name: pa_type
+              pattern: '{{.csv}},'
+            - field_name: pa_subtype
+              pattern: '{{.csv}},'
+            - field_name: sysFutureUse2
+              pattern: '{{.csv}},'
+            - field_name: sysGenTime
+              pattern: '{{.csv}},'
+            - field_name: sysVsys
+              pattern: '{{.csv}},'
+            - field_name: panOSEventID
+              pattern: '{{.csv}},'
+            - field_name: sysObject
+              pattern: '{{.csv}},'
+            - field_name: sysFutureUse3
+              pattern: '{{.csv}},'
+            - field_name: sysFutureUse4
+              pattern: '{{.csv}},'
+            - field_name: sysModule
+              pattern: '{{.csv}},'
+            - field_name: severityLabel
+              pattern: '{{.csv}},'
+            - field_name: message
+              pattern: '{{.data}},'
+          source: raw
+          where: contains("raw", "SYSTEM") && !contains("raw", "CEF:")
+
+      # ═══════════════════════════════════════════════════════════════════════
       # SHARED NORMALIZATION
       # ═══════════════════════════════════════════════════════════════════════
 
@@ -303,6 +388,13 @@ pipeline:
             - log.reqTrash3
             - log.catTrash
             - log.catTrash2
+            - log.msgTrash
+            - log.msgTrash2
+            - log.msgTrash3
             - log.csvFutureUse
             - log.csvFutureUse2
             - log.csvFutureUse3
+            - log.sysFutureUse
+            - log.sysFutureUse2
+            - log.sysFutureUse3
+            - log.sysFutureUse4
