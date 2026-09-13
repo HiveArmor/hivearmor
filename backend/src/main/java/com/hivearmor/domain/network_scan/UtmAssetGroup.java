@@ -25,6 +25,12 @@ public class UtmAssetGroup implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // SPEC-04 (W1b, FU-1) — authoritative tenant, assigned server-side at save
+    // (never from payload). Nullable during rollout; single-tenant NOT NULL by
+    // the companion backfill changeset.
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @NotNull
     @Size(max = 100)
     @Column(name = "group_name", length = 100, nullable = false, unique = true)
@@ -53,6 +59,14 @@ public class UtmAssetGroup implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 
     public String getGroupName() {

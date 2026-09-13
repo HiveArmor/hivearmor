@@ -2,6 +2,7 @@ package com.hivearmor.service.collectors;
 
 import agent.CollectorOuterClass;
 import com.hivearmor.domain.collector.UtmCollector;
+import com.hivearmor.multitenancy.TenantScope;
 import com.hivearmor.domain.network_scan.AssetGroupFilter;
 import com.hivearmor.domain.network_scan.UtmAssetGroup;
 import com.hivearmor.repository.collector.UtmCollectorRepository;
@@ -268,6 +269,13 @@ public class CollectorService {
                     LEFT JOIN hive_collectors c ON ag.id = c.group_id
                     WHERE 1=1
                 """);
+
+        // SPEC-04 (W1b, FU-1) — tenant scope on the owning/projected table, as a
+        // named bound param (server-resolved, never from the request). Added before
+        // the optional filters; the count query wraps this same SQL, so both the
+        // data and count queries are scoped by this single predicate.
+        sql.append(" AND ag.tenant_id = :tenantId ");
+        params.put("tenantId", TenantScope.requireTenant());
 
         if (filter.getAssetType() != null) {
             sql.append(" AND ag.type = :type ");
