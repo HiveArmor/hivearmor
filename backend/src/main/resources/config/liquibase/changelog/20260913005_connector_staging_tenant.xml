@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      SPEC-04 (W1b) PR-1b.2c-i — authoritative tenant attribution for connector
+      alert staging. The staging row is written OUT-OF-BAND (ConnectorAlertIngestScheduler,
+      @Scheduled) so there is no request tenant, but the parent ha_connector_instance
+      (which carries tenant_id since PR-1b.2b) is loaded in the same method that creates
+      the staging row — so tenant_id is inherited server-side from the parent instance,
+      never from payload.
+
+      Nullable during rollout; single-tenant backfill in 20260913006; MSSP per-row is
+      inherited from the parent instance going forward; NOT NULL deferred.
+    -->
+    <changeSet id="20260913005-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="ha_connector_alert_staging" columnName="tenant_id"/></not>
+        </preConditions>
+        <addColumn tableName="ha_connector_alert_staging">
+            <column name="tenant_id" type="BIGINT"><constraints nullable="true"/></column>
+        </addColumn>
+        <createIndex tableName="ha_connector_alert_staging" indexName="idx_ha_connector_alert_staging_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

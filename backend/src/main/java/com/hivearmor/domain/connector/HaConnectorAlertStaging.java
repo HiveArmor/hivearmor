@@ -37,6 +37,12 @@ public class HaConnectorAlertStaging implements Serializable {
     @Column(name = "connector_instance_id", nullable = false)
     private Long connectorInstanceId;
 
+    // SPEC-04 (W1b) — authoritative tenant, inherited server-side from the parent
+    // ha_connector_instance at ingest (never from payload). Nullable during rollout;
+    // single-tenant NOT NULL by 20260913006.
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @Column(name = "connector_id", nullable = false, length = 64)
     private String connectorId;
 
@@ -106,6 +112,14 @@ public class HaConnectorAlertStaging implements Serializable {
 
     public void setConnectorInstanceId(Long connectorInstanceId) {
         this.connectorInstanceId = connectorInstanceId;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 
     public String getConnectorId() {
