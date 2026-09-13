@@ -822,6 +822,10 @@
     <include file="/config/liquibase/changelog/20260913003_agent_connector_tenant.xml" relativeToChangelogFile="false"/>
     <include file="/config/liquibase/changelog/20260913004_agent_connector_tenant_backfill_notnull.xml" relativeToChangelogFile="false"/>
 
+    <!-- SPEC-04 W1b PR-1b.2c-i — authoritative tenant_id on connector alert staging -->
+    <include file="/config/liquibase/changelog/20260913005_connector_staging_tenant.xml" relativeToChangelogFile="false"/>
+    <include file="/config/liquibase/changelog/20260913006_connector_staging_tenant_backfill_notnull.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
 

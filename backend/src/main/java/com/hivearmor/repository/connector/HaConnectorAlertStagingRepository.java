@@ -24,6 +24,13 @@ public interface HaConnectorAlertStagingRepository extends JpaRepository<HaConne
         Pageable pageable
     );
 
+    // SPEC-04 (W1b) — tenant-scoped list read; null-tenant (pre-backfill) rows excluded.
+    List<HaConnectorAlertStaging> findByTenantIdAndConnectorInstanceIdOrderByIngestedAtDesc(
+        Long tenantId,
+        Long connectorInstanceId,
+        Pageable pageable
+    );
+
     long countByConnectorInstanceId(Long connectorInstanceId);
 
     List<HaConnectorAlertStaging> findByIngestBatchIdOrderByIdAsc(String ingestBatchId);

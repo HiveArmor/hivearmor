@@ -5,6 +5,7 @@ import com.hivearmor.domain.connector.ConnectorStagingStatus;
 import com.hivearmor.domain.connector.HaConnectorAlertStaging;
 import com.hivearmor.domain.connector.HaConnectorInstance;
 import com.hivearmor.repository.connector.HaConnectorAlertStagingRepository;
+import com.hivearmor.multitenancy.TenantScope;
 import com.hivearmor.repository.connector.HaConnectorInstanceRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,8 +90,11 @@ public class ConnectorAlertIngestService {
     @Transactional(readOnly = true)
     public List<Map<String, Object>> listStaged(Long instanceId, int limit) {
         int size = Math.min(Math.max(limit, 1), 200);
+        // SPEC-04 (W1b) — scope the staged-alert list to the caller's tenant so it
+        // cannot read another tenant's staged rows for an instance id it does not own.
+        long tenant = TenantScope.requireTenant();
         return stagingRepository
-            .findByConnectorInstanceIdOrderByIngestedAtDesc(instanceId, PageRequest.of(0, size))
+            .findByTenantIdAndConnectorInstanceIdOrderByIngestedAtDesc(tenant, instanceId, PageRequest.of(0, size))
             .stream()
             .map(this::toAuditMap)
             .collect(Collectors.toList());
@@ -159,6 +163,9 @@ public class ConnectorAlertIngestService {
             }
             HaConnectorAlertStaging staging = new HaConnectorAlertStaging();
             staging.setConnectorInstanceId(row.getId());
+            // SPEC-04 (W1b) — inherit the authoritative tenant from the parent
+            // connector instance (out-of-band ingest has no request tenant).
+            staging.setTenantId(row.getTenantId());
             staging.setConnectorId(connectorId);
             staging.setExternalId(externalId);
             staging.setTitle(truncate(alert.getTitle(), MAX_TITLE));
