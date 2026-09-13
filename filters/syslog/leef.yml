@@ -11,17 +11,17 @@ pipeline:
       # ── Phase 1: Parse LEEF header ────────────────────────────────────────
       - grok:
           patterns:
-            - field_name: log.leefVersion
-              pattern: 'LEEF:{{.data}}\|'
-            - field_name: log.vendor
-              pattern: '{{.data}}\|'
-            - field_name: log.product
-              pattern: '{{.data}}\|'
-            - field_name: log.productVersion
-              pattern: '{{.data}}\|'
-            - field_name: log.eventId
-              pattern: '{{.data}}\|'
-            - field_name: log.leefExtension
+            - field_name: leefVersion
+              pattern: 'LEEF:{{.data}}|'
+            - field_name: vendor
+              pattern: '{{.data}}|'
+            - field_name: product
+              pattern: '{{.data}}|'
+            - field_name: productVersion
+              pattern: '{{.data}}|'
+            - field_name: eventId
+              pattern: '{{.data}}|'
+            - field_name: leefExtension
               pattern: '{{.greedy}}'
           source: raw
           where: 'contains("raw", "LEEF:")'

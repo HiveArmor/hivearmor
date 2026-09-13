@@ -10,21 +10,21 @@ pipeline:
       # ── Phase 1: Parse CEF header ──────────────────────────────────────────
       - grok:
           patterns:
-            - field_name: log.cefVersion
-              pattern: 'CEF:{{.integer}}\|'
-            - field_name: log.vendor
-              pattern: '{{.data}}\|'
-            - field_name: log.product
-              pattern: '{{.data}}\|'
-            - field_name: log.productVersion
-              pattern: '{{.data}}\|'
-            - field_name: log.signatureId
-              pattern: '{{.data}}\|'
-            - field_name: log.name
-              pattern: '{{.data}}\|'
-            - field_name: log.severity
-              pattern: '{{.integer}}\|'
-            - field_name: log.cefExtension
+            - field_name: cefVersion
+              pattern: 'CEF:{{.integer}}|'
+            - field_name: vendor
+              pattern: '{{.data}}|'
+            - field_name: product
+              pattern: '{{.data}}|'
+            - field_name: productVersion
+              pattern: '{{.data}}|'
+            - field_name: signatureId
+              pattern: '{{.data}}|'
+            - field_name: name
+              pattern: '{{.data}}|'
+            - field_name: severity
+              pattern: '{{.integer}}|'
+            - field_name: cefExtension
               pattern: '{{.greedy}}'
           source: raw
           where: 'contains("raw", "CEF:")'
