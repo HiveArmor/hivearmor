@@ -69,3 +69,23 @@ func TestPaloAltoSystemCSV(t *testing.T) {
 		}
 	}
 }
+
+// Regression: msg= as the FIRST token of the CEF extension must still be
+// stripped cleanly (the {{.rest}} zero-width prefix case). A {{.data}} prefix
+// could not match the empty string before msg= and left "msg=" in the value.
+func TestPaloAltoSystemMsgAtExtensionStart(t *testing.T) {
+	raw := `Mar 1 20:48:22 h 1 <14>1 2021-03-01T20:48:22.900Z h logforwarder - panwlogs - CEF:0|Palo Alto Networks|LF|2.0|SYSTEM|ha|4|msg=HA1 link down peer unreachable PanOSEventID=ha-link-down PanOSSeverity=critical`
+	ev := paSystemExecute(raw)
+	if ev == nil {
+		t.Fatal("nil event")
+	}
+	if got := ev.Log["message"].GetStringValue(); got != "HA1 link down peer unreachable" {
+		t.Errorf("message = %q, want %q", got, "HA1 link down peer unreachable")
+	}
+	if got := ev.Log["panOSEventID"].GetStringValue(); got != "ha-link-down" {
+		t.Errorf("panOSEventID = %q, want %q", got, "ha-link-down")
+	}
+	if got := ev.Log["severityLabel"].GetStringValue(); got != "critical" {
+		t.Errorf("severityLabel = %q, want %q", got, "critical")
+	}
+}

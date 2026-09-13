@@ -84,7 +84,7 @@ pipeline:
       - grok:
           patterns:
             - field_name: reqTrash
-              pattern: '{{.data}}request='
+              pattern: '{{.rest}}request='
             - field_name: pa_request
               pattern: '{{.data}} {{.word}}='
             - field_name: reqTrash2
@@ -94,7 +94,7 @@ pipeline:
       - grok:
           patterns:
             - field_name: reqTrash3
-              pattern: '{{.data}}request='
+              pattern: '{{.rest}}request='
             - field_name: pa_requestEol
               pattern: '{{.greedy}}'
           source: log.cefExtension
@@ -104,7 +104,7 @@ pipeline:
       - grok:
           patterns:
             - field_name: catTrash
-              pattern: '{{.data}}cat='
+              pattern: '{{.rest}}cat='
             - field_name: pa_catName
               pattern: '{{.data}} {{.word}}='
             - field_name: catTrash2
@@ -116,7 +116,7 @@ pipeline:
       - grok:
           patterns:
             - field_name: msgTrash
-              pattern: '{{.data}}msg='
+              pattern: '{{.rest}}msg='
             - field_name: pa_msgText
               pattern: '{{.data}} {{.word}}='
             - field_name: msgTrash2
@@ -126,7 +126,7 @@ pipeline:
       - grok:
           patterns:
             - field_name: msgTrash3
-              pattern: '{{.data}}msg='
+              pattern: '{{.rest}}msg='
             - field_name: pa_msgTextEol
               pattern: '{{.greedy}}'
           source: log.cefExtension
