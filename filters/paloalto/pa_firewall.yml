@@ -185,6 +185,12 @@ pipeline:
             - log.PanOSEventID
           to: log.panOSEventID
           where: exists("log.PanOSEventID")
+      # PanOSEventStatus -> panOSEventStatus (GLOBALPROTECT rules test it for fail/error/denied).
+      - rename:
+          from:
+            - log.PanOSEventStatus
+          to: log.panOSEventStatus
+          where: exists("log.PanOSEventStatus")
 
       # ═══════════════════════════════════════════════════════════════════════
       # CSV PATH  (no "CEF:" marker, comma-separated, field 4 == THREAT)
@@ -320,6 +326,86 @@ pipeline:
           where: contains("raw", "SYSTEM") && !contains("raw", "CEF:")
 
       # ═══════════════════════════════════════════════════════════════════════
+      # GLOBALPROTECT CSV PATH  (no "CEF:" marker, field 4 == GLOBALPROTECT)
+      # ═══════════════════════════════════════════════════════════════════════
+      # GlobalProtect Log Fields order. Fields the GP rule needs: Public IP(16)
+      # -> origin.ip, Description(28) -> message, Status(29) -> panOSEventStatus,
+      # Portal(34) -> target.host. {{.csv}} tolerates empty columns; the last
+      # captured field (Portal) uses a trailing comma bound.
+      - grok:
+          patterns:
+            - field_name: gpFutureUse
+              pattern: '{{.csv}},'
+            - field_name: gpReceiveTime
+              pattern: '{{.csv}},'
+            - field_name: gpSerial
+              pattern: '{{.csv}},'
+            - field_name: pa_type
+              pattern: '{{.csv}},'
+            - field_name: pa_subtype
+              pattern: '{{.csv}},'
+            - field_name: gpFutureUse2
+              pattern: '{{.csv}},'
+            - field_name: gpGenTime
+              pattern: '{{.csv}},'
+            - field_name: gpVsys
+              pattern: '{{.csv}},'
+            - field_name: panOSEventID
+              pattern: '{{.csv}},'
+            - field_name: gpStage
+              pattern: '{{.csv}},'
+            - field_name: gpAuthMethod
+              pattern: '{{.csv}},'
+            - field_name: gpTunnelType
+              pattern: '{{.csv}},'
+            - field_name: gpSrcUser
+              pattern: '{{.csv}},'
+            - field_name: gpSrcRegion
+              pattern: '{{.csv}},'
+            - field_name: gpMachine
+              pattern: '{{.csv}},'
+            - field_name: gpPublicIp
+              pattern: '{{.csv}},'
+            - field_name: gpPublicIpv6
+              pattern: '{{.csv}},'
+            - field_name: gpPrivateIp
+              pattern: '{{.csv}},'
+            - field_name: gpPrivateIpv6
+              pattern: '{{.csv}},'
+            - field_name: gpHostId
+              pattern: '{{.csv}},'
+            - field_name: gpSerial2
+              pattern: '{{.csv}},'
+            - field_name: gpClientVer
+              pattern: '{{.csv}},'
+            - field_name: gpClientOs
+              pattern: '{{.csv}},'
+            - field_name: gpClientOsVer
+              pattern: '{{.csv}},'
+            - field_name: gpRepeatCnt
+              pattern: '{{.csv}},'
+            - field_name: gpReason
+              pattern: '{{.csv}},'
+            - field_name: gpError
+              pattern: '{{.csv}},'
+            - field_name: message
+              pattern: '{{.csv}},'
+            - field_name: panOSEventStatus
+              pattern: '{{.csv}},'
+            - field_name: gpLocation
+              pattern: '{{.csv}},'
+            - field_name: gpLoginDuration
+              pattern: '{{.csv}},'
+            - field_name: gpConnectMethod
+              pattern: '{{.csv}},'
+            - field_name: gpErrorCode
+              pattern: '{{.csv}},'
+            - field_name: gpPortal
+              pattern: '{{.csv}},'
+          source: raw
+          where: contains("raw", "GLOBALPROTECT") && !contains("raw", "CEF:")
+
+      # ═══════════════════════════════════════════════════════════════════════
       # SHARED NORMALIZATION
       # ═══════════════════════════════════════════════════════════════════════
 
@@ -336,6 +422,18 @@ pipeline:
             - log.src
           to: origin.ip
           where: exists("log.src")
+      # GLOBALPROTECT CSV: Public IP is the client actor IP.
+      - rename:
+          from:
+            - log.gpPublicIp
+          to: origin.ip
+          where: exists("log.gpPublicIp") && !exists("origin.ip")
+      # GLOBALPROTECT CSV: Portal/gateway host is the target.
+      - rename:
+          from:
+            - log.gpPortal
+          to: target.host
+          where: exists("log.gpPortal") && !exists("target.host")
       - rename:
           from:
             - log.dst
@@ -398,3 +496,5 @@ pipeline:
             - log.sysFutureUse2
             - log.sysFutureUse3
             - log.sysFutureUse4
+            - log.gpFutureUse
+            - log.gpFutureUse2
