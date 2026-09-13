@@ -105,24 +105,18 @@ export async function getAlertTimeline(days = 1): Promise<AlertTimelineBucket[]>
 }
 
 export async function getDetectionHealthSummary(): Promise<DetectionHealthSummary> {
-  // A1-DET-01: read X-Total-Count — do not trust page array length with size=1
-  const token = localStorage.getItem('hivearmor_auth_token');
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    Accept: 'application/json',
-  };
-
-  const fetchTotal = async (active?: boolean): Promise<number> => {
-    const query = new URLSearchParams({ page: '0', size: '1' });
-    if (active !== undefined) query.set('active', String(active));
-    const response = await fetch(`/api/correlation-rule/search-by-filters?${query.toString()}`, {
-      headers,
+  // A1-DET-01: read X-Total-Count — do not trust page array length with size=1.
+  // Routed through apiClient.getCount so the request inherits the X-Tenant-ID
+  // header (previously a raw fetch that leaked an all-tenant count when a tenant
+  // was selected — UX-002).
+  const fetchTotal = (active?: boolean): Promise<number> =>
+    apiClient.getCount('/correlation-rule/search-by-filters', {
+      params: {
+        page: 0,
+        size: 1,
+        ...(active !== undefined ? { active } : {}),
+      },
     });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    return parseInt(response.headers.get('X-Total-Count') ?? '0', 10);
-  };
 
   const [activeRules, totalRules] = await Promise.all([fetchTotal(true), fetchTotal()]);
   return { activeRules, totalRules };

@@ -126,10 +126,54 @@ async function request<T>(path: string, options: ApiRequestOptions = {}): Promis
   return response.text() as unknown as T;
 }
 
+/**
+ * Issues a GET and returns only the total-count header, using the same
+ * auth + tenant (`X-Tenant-ID`) headers as every other client call. Use this
+ * for `size=1` count probes that read `X-Total-Count` rather than the body —
+ * previously these were hand-rolled `fetch()` calls that silently omitted the
+ * tenant header (a cross-tenant count leak). Returns 0 when the header is absent.
+ */
+async function requestCount(
+  path: string,
+  options: Omit<ApiRequestOptions, 'method' | 'body'> = {}
+): Promise<number> {
+  const { params, headers = {}, signal, auth = 'required' } = options;
+
+  const token = getToken();
+  const requestHeaders: Record<string, string> = {
+    Accept: 'application/json',
+    ...headers,
+  };
+  if (auth === 'required' && token) {
+    requestHeaders['Authorization'] = `Bearer ${token}`;
+  }
+  const { selectedTenantId } = useAuthStore.getState();
+  if (auth === 'required' && selectedTenantId !== null) {
+    requestHeaders['X-Tenant-ID'] = String(selectedTenantId);
+  }
+
+  const url = buildUrl(`${BASE_PATH}${path}`, params);
+  const response = await fetch(url, { method: 'GET', headers: requestHeaders, signal });
+
+  if (response.status === 401 && auth === 'required' && !visualFixtureMode) {
+    useAuthStore.getState().logout();
+    window.location.href = '/login';
+    throw new ApiError(401, { status: 401, message: 'Session expired' });
+  }
+  if (!response.ok) {
+    throw new ApiError(response.status, { status: response.status, message: response.statusText });
+  }
+  return parseInt(response.headers.get('X-Total-Count') ?? '0', 10);
+}
+
 // Named exports — use these in service files
 export const apiClient = {
   get: <T>(path: string, options?: Omit<ApiRequestOptions, 'method' | 'body'>) =>
     request<T>(path, { ...options, method: 'GET' }),
+
+  /** GET that returns the `X-Total-Count` header (tenant-scoped). See requestCount. */
+  getCount: (path: string, options?: Omit<ApiRequestOptions, 'method' | 'body'>) =>
+    requestCount(path, options),
 
   post: <T>(path: string, body?: unknown, options?: Omit<ApiRequestOptions, 'method' | 'body'>) =>
     request<T>(path, { ...options, method: 'POST', body }),

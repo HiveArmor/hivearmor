@@ -1,10 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { getAlertTimeline, getDetectionHealthSummary } from './commandCenter.service';
 
 vi.mock('@/lib/apiClient', () => ({
   apiClient: {
     get: vi.fn(),
+    getCount: vi.fn(),
   },
 }));
 
@@ -27,32 +28,30 @@ describe('getAlertTimeline', () => {
   });
 });
 
-describe('getDetectionHealthSummary (A1-DET-01)', () => {
-  beforeEach(() => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (url: string) => {
-        const active = String(url).includes('active=true');
-        return {
-          ok: true,
-          headers: {
-            get: (name: string) => (name === 'X-Total-Count' ? (active ? '12' : '40') : null),
-          },
-          json: async () => [{}],
-        };
-      })
-    );
-    localStorage.setItem('hivearmor_auth_token', 'test-token');
-  });
-
+describe('getDetectionHealthSummary (A1-DET-01, UX-002)', () => {
   afterEach(() => {
-    vi.unstubAllGlobals();
-    localStorage.removeItem('hivearmor_auth_token');
+    vi.mocked(apiClient.getCount).mockReset();
   });
 
-  it('reads X-Total-Count instead of page array length', async () => {
+  it('reads totals via apiClient.getCount (tenant-scoped, not raw fetch)', async () => {
+    // active=true → 12, no-active → 40
+    vi.mocked(apiClient.getCount).mockImplementation(async (_path, options) => {
+      const active = options?.params?.active;
+      return active === true ? 12 : 40;
+    });
+
     const summary = await getDetectionHealthSummary();
+
     expect(summary).toEqual({ activeRules: 12, totalRules: 40 });
-    expect(fetch).toHaveBeenCalledTimes(2);
+    // Routed through apiClient (inherits X-Tenant-ID) — never a bare fetch.
+    expect(apiClient.getCount).toHaveBeenCalledTimes(2);
+    expect(apiClient.getCount).toHaveBeenCalledWith(
+      '/correlation-rule/search-by-filters',
+      { params: { page: 0, size: 1, active: true } }
+    );
+    expect(apiClient.getCount).toHaveBeenCalledWith(
+      '/correlation-rule/search-by-filters',
+      { params: { page: 0, size: 1 } }
+    );
   });
 });
