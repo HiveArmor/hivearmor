@@ -152,7 +152,15 @@ pipeline:
             - log.PanOSThreatID
           to: log.pa_threatid
           where: exists("log.PanOSThreatID")
-      # PanOSThreatCategory -> category (e.g. "spyware", "unknown")
+      # PanOSThreatCategory: the CORRELATION rule reads log.panOSThreatCategory
+      # (case-fixed), while THREAT rules read log.category. Do the CORRELATION
+      # case-fix first; the THREAT rename below is then a no-op for CORRELATION.
+      - rename:
+          from:
+            - log.PanOSThreatCategory
+          to: log.panOSThreatCategory
+          where: exists("log.PanOSThreatCategory") && equals("log.pa_type", "CORRELATION")
+      # PanOSThreatCategory -> category (e.g. "spyware", "unknown") for THREAT.
       - rename:
           from:
             - log.PanOSThreatCategory
@@ -549,6 +557,61 @@ pipeline:
           where: contains("raw", ",DECRYPTION,") && !contains("raw", "CEF:")
 
       # ═══════════════════════════════════════════════════════════════════════
+      # CORRELATION CSV PATH  (no "CEF:" marker, field 4 == CORRELATION)
+      # ═══════════════════════════════════════════════════════════════════════
+      # Correlated Events Log Fields order (compact, 22 fields). Rule-relevant:
+      # Source Address(8) -> origin.ip, Category(11) -> panOSThreatCategory,
+      # Evidence(22, last) -> message (the correlation verdict text).
+      - grok:
+          patterns:
+            - field_name: corrTrash1
+              pattern: '{{.csv}},'
+            - field_name: corrTrash2
+              pattern: '{{.csv}},'
+            - field_name: corrTrash3
+              pattern: '{{.csv}},'
+            - field_name: pa_type
+              pattern: '{{.csv}},'
+            - field_name: corrTrash5
+              pattern: '{{.csv}},'
+            - field_name: corrTrash6
+              pattern: '{{.csv}},'
+            - field_name: corrTrash7
+              pattern: '{{.csv}},'
+            - field_name: corrSrc
+              pattern: '{{.csv}},'
+            - field_name: corrTrash9
+              pattern: '{{.csv}},'
+            - field_name: corrTrash10
+              pattern: '{{.csv}},'
+            - field_name: panOSThreatCategory
+              pattern: '{{.csv}},'
+            - field_name: corrTrash12
+              pattern: '{{.csv}},'
+            - field_name: corrTrash13
+              pattern: '{{.csv}},'
+            - field_name: corrTrash14
+              pattern: '{{.csv}},'
+            - field_name: corrTrash15
+              pattern: '{{.csv}},'
+            - field_name: corrTrash16
+              pattern: '{{.csv}},'
+            - field_name: corrTrash17
+              pattern: '{{.csv}},'
+            - field_name: corrTrash18
+              pattern: '{{.csv}},'
+            - field_name: corrTrash19
+              pattern: '{{.csv}},'
+            - field_name: corrTrash20
+              pattern: '{{.csv}},'
+            - field_name: corrTrash21
+              pattern: '{{.csv}},'
+            - field_name: message
+              pattern: '{{.greedy}}'
+          source: raw
+          where: contains("raw", ",CORRELATION,") && !contains("raw", "CEF:")
+
+      # ═══════════════════════════════════════════════════════════════════════
       # SHARED NORMALIZATION
       # ═══════════════════════════════════════════════════════════════════════
 
@@ -577,6 +640,12 @@ pipeline:
             - log.decSrc
           to: origin.ip
           where: exists("log.decSrc") && !exists("origin.ip")
+      # CORRELATION CSV: Source Address(8) is the flagged host.
+      - rename:
+          from:
+            - log.corrSrc
+          to: origin.ip
+          where: exists("log.corrSrc") && !exists("origin.ip")
       - rename:
           from:
             - log.decDst
@@ -691,3 +760,4 @@ pipeline:
             - gpLogin
             - gpConnect
             - decTrash
+            - corrTrash
