@@ -43,6 +43,11 @@ message Collector {
   string version = 6;
   CollectorModule module = 7;
   string last_seen = 8;
+  // SPEC-04 (W1b) — authoritative tenant, set by the agent-manager (which is
+  // already fully tenant-scoped for collectors). The manager already emits this
+  // field; this backend copy was missing it (proto drift), so the backend stub
+  // could not read the tenant off each synced row.
+  int64 tenant_id = 9;
 }
 
 message CollectorMessages {
