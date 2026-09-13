@@ -1,10 +1,12 @@
 package com.hivearmor.service.agents_manager;
 
 import com.hivearmor.domain.agents_manager.*;
+import com.hivearmor.multitenancy.TenantScope;
 import com.hivearmor.repository.agents_manager.*;
 import com.hivearmor.service.dto.agent_manager.*;
 import com.hivearmor.service.incident_response.grpc_impl.IncidentResponseCommandService;
 import io.grpc.stub.StreamObserver;
+import jakarta.persistence.EntityNotFoundException;
 import com.hivearmor.service.grpc.CommandResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,12 +54,16 @@ public class UtmAgentPolicyService {
     }
 
     public List<AgentPolicyDTO> listAll() {
-        return policyRepo.findAllByOrderByPolicyNameAsc().stream().map(this::toDto)
+        // SPEC-04 (W1b) — scope to the caller's tenant; single-tenant = 0.
+        long tenant = TenantScope.requireTenant();
+        return policyRepo.findByTenantIdOrderByPolicyNameAsc(tenant).stream().map(this::toDto)
             .collect(Collectors.toList());
     }
 
     public Optional<AgentPolicyDTO> getById(Long id) {
-        return policyRepo.findById(id).map(this::toDto);
+        // SPEC-04 (W1b) — by-id load re-checked against the caller's tenant.
+        long tenant = TenantScope.requireTenant();
+        return policyRepo.findByIdAndTenantId(id, tenant).map(this::toDto);
     }
 
     public AgentPolicyDTO create(AgentPolicyDTO dto, String createdBy) {
@@ -70,12 +76,13 @@ public class UtmAgentPolicyService {
         p.setVersionNum(1);
         p.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
         p.setCreatedBy(createdBy);
+        // SPEC-04 (W1b) — stamp the authoritative tenant server-side (never payload).
+        p.setTenantId(TenantScope.requireTenant());
         return toDto(policyRepo.save(p));
     }
 
     public AgentPolicyDTO update(Long id, AgentPolicyDTO dto) {
-        UtmAgentPolicy p = policyRepo.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Policy not found: " + id));
+        UtmAgentPolicy p = requireInTenant(id);
         p.setPolicyName(dto.getPolicyName());
         p.setDescription(dto.getDescription());
         p.setPlatform(dto.getPlatform());
@@ -101,10 +108,24 @@ public class UtmAgentPolicyService {
     }
 
     public void delete(Long id) {
+        // SPEC-04 (W1b) — re-check tenant before delete.
+        requireInTenant(id);
         policyRepo.deleteById(id);
     }
 
+    /**
+     * SPEC-04 (W1b) — resolve a policy by id ONLY within the caller's tenant.
+     * A cross-tenant or pre-backfill null-tenant id is treated as not found.
+     */
+    private UtmAgentPolicy requireInTenant(Long id) {
+        long tenant = TenantScope.requireTenant();
+        return policyRepo.findByIdAndTenantId(id, tenant)
+            .orElseThrow(() -> new EntityNotFoundException("Policy not found: " + id));
+    }
+
     public void assignGroup(Long policyId, Long groupId) {
+        // SPEC-04 (W1b) — the policy must belong to the caller's tenant.
+        requireInTenant(policyId);
         if (!assignmentRepo.existsByPolicyIdAndGroupId(policyId, groupId)) {
             UtmPolicyGroupAssignment a = new UtmPolicyGroupAssignment();
             a.setPolicyId(policyId);
@@ -118,12 +139,12 @@ public class UtmAgentPolicyService {
     }
 
     public void unassignGroup(Long policyId, Long groupId) {
+        requireInTenant(policyId);
         assignmentRepo.deleteByPolicyIdAndGroupId(policyId, groupId);
     }
 
     public void pushPolicyToGroup(Long policyId, Long groupId) {
-        UtmAgentPolicy policy = policyRepo.findById(policyId)
-            .orElseThrow(() -> new IllegalArgumentException("Policy not found: " + policyId));
+        UtmAgentPolicy policy = requireInTenant(policyId);
 
         List<Integer> agentIds = memberRepo.findByGroupId(groupId).stream()
             .map(UtmAgentGroupMember::getAgentId).collect(Collectors.toList());
@@ -140,8 +161,7 @@ public class UtmAgentPolicyService {
         if (agentId == null || agentId <= 0) {
             throw new IllegalArgumentException("agentId must be a positive connector id");
         }
-        UtmAgentPolicy policy = policyRepo.findById(policyId)
-            .orElseThrow(() -> new IllegalArgumentException("Policy not found: " + policyId));
+        UtmAgentPolicy policy = requireInTenant(policyId);
         log.info("Pushing policy id={} version={} to agentId={}",
             policyId, policy.getVersionNum(), agentId);
         deliverApplyPolicy(policy, String.valueOf(agentId));
@@ -250,11 +270,13 @@ public class UtmAgentPolicyService {
     }
 
     public List<PolicyPushLogDTO> getPushLog(Long policyId) {
+        requireInTenant(policyId);
         return pushLogRepo.findByPolicyIdOrderByPushedAtDesc(policyId).stream()
             .map(PolicyPushLogDTO::new).collect(Collectors.toList());
     }
 
     public List<AgentPolicyStateDTO> getPolicyStates(Long policyId) {
+        requireInTenant(policyId);
         return stateRepo.findByPolicyId(policyId).stream()
             .map(AgentPolicyStateDTO::new).collect(Collectors.toList());
     }

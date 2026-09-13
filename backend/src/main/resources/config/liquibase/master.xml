@@ -818,6 +818,10 @@
     <include file="/config/liquibase/changelog/20260913001_ha_edr_isolation_tenant.xml" relativeToChangelogFile="false"/>
     <include file="/config/liquibase/changelog/20260913002_ha_edr_isolation_tenant_backfill_notnull.xml" relativeToChangelogFile="false"/>
 
+    <!-- SPEC-04 W1b PR-1b.2b — authoritative tenant_id on policy / group / connector-instance -->
+    <include file="/config/liquibase/changelog/20260913003_agent_connector_tenant.xml" relativeToChangelogFile="false"/>
+    <include file="/config/liquibase/changelog/20260913004_agent_connector_tenant_backfill_notnull.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
 

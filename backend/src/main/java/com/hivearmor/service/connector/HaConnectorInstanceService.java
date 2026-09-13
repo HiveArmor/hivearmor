@@ -3,6 +3,7 @@ package com.hivearmor.service.connector;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivearmor.domain.connector.HaConnectorInstance;
+import com.hivearmor.multitenancy.TenantScope;
 import com.hivearmor.repository.connector.HaConnectorInstanceRepository;
 import com.hivearmor.security.AesGcmEncryptionService;
 import com.hivearmor.service.dto.connector.ConnectorInstanceDTO;
@@ -48,12 +49,14 @@ public class HaConnectorInstanceService {
 
     @Transactional(readOnly = true)
     public List<ConnectorInstanceDTO> listInstances() {
-        return repository.findAllByOrderByNameAsc().stream().map(this::toDto).collect(Collectors.toList());
+        // SPEC-04 (W1b) — scope to the caller's tenant; single-tenant = 0.
+        long tenant = TenantScope.requireTenant();
+        return repository.findByTenantIdOrderByNameAsc(tenant).stream().map(this::toDto).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public ConnectorInstanceDTO getInstance(Long id) {
-        return toDto(require(id));
+        return toDto(requireInTenant(id));
     }
 
     @Transactional
@@ -73,6 +76,8 @@ public class HaConnectorInstanceService {
         HaConnectorInstance row = new HaConnectorInstance();
         row.setConnectorId(connector.connectorId());
         row.setName(body.getName().trim());
+        // SPEC-04 (W1b) — stamp the authoritative tenant server-side (never payload).
+        row.setTenantId(TenantScope.requireTenant());
         row.setEnabled(body.getEnabled() == null || body.getEnabled());
         applyConfig(row, connector, body.getConfig(), false);
         row.setAllowedCapabilities(joinCaps(body.getAllowedCapabilities()));
@@ -83,7 +88,7 @@ public class HaConnectorInstanceService {
 
     @Transactional
     public ConnectorInstanceDTO update(Long id, ConnectorInstanceWriteDTO body) {
-        HaConnectorInstance row = require(id);
+        HaConnectorInstance row = requireInTenant(id);
         HaConnector connector = registry.require(row.getConnectorId());
         if (body.getName() != null && !body.getName().isBlank()
             && !body.getName().trim().equalsIgnoreCase(row.getName())) {
@@ -107,12 +112,26 @@ public class HaConnectorInstanceService {
 
     @Transactional
     public void delete(Long id) {
-        repository.delete(require(id));
+        repository.delete(requireInTenant(id));
     }
 
     @Transactional
     public ConnectionTestResult test(Long id) {
-        HaConnectorInstance row = require(id);
+        // Request-path entry — tenant-scoped by-id load.
+        return testInstance(requireInTenant(id));
+    }
+
+    /**
+     * SPEC-04 (W1b) — out-of-band test entry operating on an ALREADY-RESOLVED row.
+     * The playbook dispatcher (PlaybookConnectorDispatcher, an @Async out-of-band
+     * path with no request TenantContext) resolves the instance itself and calls
+     * this, so it must NOT re-load through the tenant-scoped requireInTenant — that
+     * would fail-close on MSSP. Callers holding a row id from a user request use
+     * {@link #test(Long)} instead. Package-private: only same-package dispatchers
+     * that have already resolved the row may use it.
+     */
+    @Transactional
+    ConnectionTestResult testInstance(HaConnectorInstance row) {
         HaConnector connector = registry.require(row.getConnectorId());
         Map<String, String> merged = decryptMergedConfig(row, connector);
         ConnectionTestResult result = connector.testConnection(merged);
@@ -244,6 +263,21 @@ public class HaConnectorInstanceService {
 
     private HaConnectorInstance require(Long id) {
         return repository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Connector instance not found: " + id));
+    }
+
+    /**
+     * SPEC-04 (W1b) — request-path by-id load re-checked against the caller's
+     * tenant. A cross-tenant (or pre-backfill null-tenant) id reads as not found
+     * (no disclosure). Used by the human CRUD/test paths (getInstance/update/
+     * delete/test). Out-of-band callers (the ingest scheduler's
+     * fetchAlertsNormalized, the playbook dispatcher's decryptedConfig) keep the
+     * unscoped {@link #require(Long)} — their tenant handling is PR-1b.2c scope
+     * (they run without a request tenant).
+     */
+    private HaConnectorInstance requireInTenant(Long id) {
+        long tenant = TenantScope.requireTenant();
+        return repository.findByIdAndTenantId(id, tenant)
             .orElseThrow(() -> new IllegalArgumentException("Connector instance not found: " + id));
     }
 

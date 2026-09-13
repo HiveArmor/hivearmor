@@ -2,9 +2,11 @@ package com.hivearmor.service.agents_manager;
 
 import com.hivearmor.domain.agents_manager.UtmAgentGroup;
 import com.hivearmor.domain.agents_manager.UtmAgentGroupMember;
+import com.hivearmor.multitenancy.TenantScope;
 import com.hivearmor.repository.agents_manager.UtmAgentGroupMemberRepository;
 import com.hivearmor.repository.agents_manager.UtmAgentGroupRepository;
 import com.hivearmor.service.dto.agent_manager.AgentGroupDTO;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +29,9 @@ public class UtmAgentGroupService {
     }
 
     public List<AgentGroupDTO> listAll() {
-        return groupRepo.findAllByOrderByGroupNameAsc().stream().map(g -> {
+        // SPEC-04 (W1b) — scope to the caller's tenant; single-tenant = 0.
+        long tenant = TenantScope.requireTenant();
+        return groupRepo.findByTenantIdOrderByGroupNameAsc(tenant).stream().map(g -> {
             AgentGroupDTO dto = new AgentGroupDTO(g);
             List<UtmAgentGroupMember> members = memberRepo.findByGroupId(g.getId());
             dto.setMemberCount(members.size());
@@ -37,7 +41,10 @@ public class UtmAgentGroupService {
     }
 
     public Optional<AgentGroupDTO> getById(Long id) {
-        return groupRepo.findById(id).map(g -> {
+        // SPEC-04 (W1b) — by-id load re-checked against the caller's tenant; a
+        // cross-tenant (or null-tenant) id reads as not found (no disclosure).
+        long tenant = TenantScope.requireTenant();
+        return groupRepo.findByIdAndTenantId(id, tenant).map(g -> {
             AgentGroupDTO dto = new AgentGroupDTO(g);
             List<UtmAgentGroupMember> members = memberRepo.findByGroupId(g.getId());
             dto.setMemberCount(members.size());
@@ -52,14 +59,15 @@ public class UtmAgentGroupService {
         g.setDescription(dto.getDescription());
         g.setPlatform(dto.getPlatform());
         g.setCreatedBy(createdBy);
+        // SPEC-04 (W1b) — stamp the authoritative tenant server-side (never payload).
+        g.setTenantId(TenantScope.requireTenant());
         g.setCreatedAt(Instant.now());
         UtmAgentGroup saved = groupRepo.save(g);
         return new AgentGroupDTO(saved);
     }
 
     public AgentGroupDTO update(Long id, AgentGroupDTO dto) {
-        UtmAgentGroup g = groupRepo.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Group not found: " + id));
+        UtmAgentGroup g = requireInTenant(id);
         g.setGroupName(dto.getGroupName());
         g.setDescription(dto.getDescription());
         g.setPlatform(dto.getPlatform());
@@ -68,10 +76,13 @@ public class UtmAgentGroupService {
     }
 
     public void delete(Long id) {
+        // Re-check tenant before delete so a cross-tenant id cannot remove a row.
+        requireInTenant(id);
         groupRepo.deleteById(id);
     }
 
     public void addMember(Long groupId, Integer agentId) {
+        requireInTenant(groupId);
         if (!memberRepo.existsByGroupIdAndAgentId(groupId, agentId)) {
             UtmAgentGroupMember m = new UtmAgentGroupMember();
             m.setGroupId(groupId);
@@ -81,12 +92,25 @@ public class UtmAgentGroupService {
     }
 
     public void removeMember(Long groupId, Integer agentId) {
+        requireInTenant(groupId);
         memberRepo.deleteByGroupIdAndAgentId(groupId, agentId);
     }
 
     public List<Integer> getMembers(Long groupId) {
+        requireInTenant(groupId);
         return memberRepo.findByGroupId(groupId).stream()
             .map(UtmAgentGroupMember::getAgentId)
             .collect(Collectors.toList());
+    }
+
+    /**
+     * SPEC-04 (W1b) — resolve a group by id ONLY within the caller's tenant.
+     * A cross-tenant or pre-backfill null-tenant id is treated as not found so it
+     * is neither disclosed nor mutated.
+     */
+    private UtmAgentGroup requireInTenant(Long id) {
+        long tenant = TenantScope.requireTenant();
+        return groupRepo.findByIdAndTenantId(id, tenant)
+            .orElseThrow(() -> new EntityNotFoundException("Group not found: " + id));
     }
 }

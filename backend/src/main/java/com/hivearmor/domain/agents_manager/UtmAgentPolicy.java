@@ -15,6 +15,11 @@ public class UtmAgentPolicy implements Serializable {
     @Column(name = "policy_name", length = 200, nullable = false, unique = true)
     private String policyName;
 
+    // SPEC-04 (W1b) — authoritative tenant, assigned server-side at create (never
+    // from payload). Nullable during rollout; single-tenant NOT NULL by 20260913004.
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @Column(name = "description", length = 500)
     private String description;
 
@@ -41,6 +46,8 @@ public class UtmAgentPolicy implements Serializable {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    public Long getTenantId() { return tenantId; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
     public String getPolicyName() { return policyName; }
     public void setPolicyName(String policyName) { this.policyName = policyName; }
     public String getDescription() { return description; }

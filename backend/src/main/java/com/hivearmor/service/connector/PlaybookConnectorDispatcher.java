@@ -75,7 +75,10 @@ public class PlaybookConnectorDispatcher {
         HaConnector connector = registry.require(row.getConnectorId());
 
         if (TEST_IDS.contains(n)) {
-            ConnectionTestResult result = instanceService.test(row.getId());
+            // Out-of-band (@Async playbook) path: use the already-resolved row so
+            // the connector.test action does not re-load through the tenant-scoped
+            // by-id finder (which would fail-close on MSSP with no request tenant).
+            ConnectionTestResult result = instanceService.testInstance(row);
             Map<String, Object> out = new LinkedHashMap<>(result.toMap());
             out.put("action", "connector.test");
             out.put("connectorInstanceId", row.getId());

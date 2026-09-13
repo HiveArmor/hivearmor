@@ -27,6 +27,11 @@ public class HaConnectorInstance implements Serializable {
     @Column(name = "connector_id", nullable = false, length = 64)
     private String connectorId;
 
+    // SPEC-04 (W1b) — authoritative tenant, assigned server-side at create (never
+    // from payload). Nullable during rollout; single-tenant NOT NULL by 20260913004.
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @Column(name = "name", nullable = false, length = 120)
     private String name;
 
@@ -84,6 +89,14 @@ public class HaConnectorInstance implements Serializable {
 
     public void setConnectorId(String connectorId) {
         this.connectorId = connectorId;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 
     public String getName() {

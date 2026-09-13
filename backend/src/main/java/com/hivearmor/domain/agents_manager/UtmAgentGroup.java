@@ -15,6 +15,11 @@ public class UtmAgentGroup implements Serializable {
     @Column(name = "group_name", length = 200, nullable = false, unique = true)
     private String groupName;
 
+    // SPEC-04 (W1b) — authoritative tenant, assigned server-side at create (never
+    // from payload). Nullable during rollout; single-tenant NOT NULL by 20260913004.
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @Column(name = "description", length = 500)
     private String description;
 
@@ -32,6 +37,8 @@ public class UtmAgentGroup implements Serializable {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    public Long getTenantId() { return tenantId; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
     public String getGroupName() { return groupName; }
     public void setGroupName(String groupName) { this.groupName = groupName; }
     public String getDescription() { return description; }

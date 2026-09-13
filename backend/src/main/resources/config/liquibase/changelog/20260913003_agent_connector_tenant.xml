@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      SPEC-04 (W1b) PR-1b.2b — authoritative tenant attribution for the three
+      request-path tables: hive_agent_policy (canonical Plane A), hive_agent_group,
+      ha_connector_instance. tenant_id is assigned SERVER-SIDE from the caller's
+      tenant at create() time (TenantScope.requireTenant()), never from payload.
+
+      Plane B (ha_agent_policy) is deliberately NOT touched — it is legacy and
+      deprecated in W5. Out-of-band tables (hive_collectors, ha_connector_alert_staging)
+      are a separate slice (PR-1b.2c) needing an agent-manager contract change.
+
+      Nullable during rollout; single-tenant backfill in 20260913004; MSSP per-row
+      is an application-level job; NOT NULL deferred.
+    -->
+
+    <!-- hive_agent_policy (canonical Plane A) -->
+    <changeSet id="20260913003-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="hive_agent_policy" columnName="tenant_id"/></not>
+        </preConditions>
+        <addColumn tableName="hive_agent_policy">
+            <column name="tenant_id" type="BIGINT"><constraints nullable="true"/></column>
+        </addColumn>
+        <createIndex tableName="hive_agent_policy" indexName="idx_hive_agent_policy_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- hive_agent_group -->
+    <changeSet id="20260913003-2" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="hive_agent_group" columnName="tenant_id"/></not>
+        </preConditions>
+        <addColumn tableName="hive_agent_group">
+            <column name="tenant_id" type="BIGINT"><constraints nullable="true"/></column>
+        </addColumn>
+        <createIndex tableName="hive_agent_group" indexName="idx_hive_agent_group_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ha_connector_instance -->
+    <changeSet id="20260913003-3" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="ha_connector_instance" columnName="tenant_id"/></not>
+        </preConditions>
+        <addColumn tableName="ha_connector_instance">
+            <column name="tenant_id" type="BIGINT"><constraints nullable="true"/></column>
+        </addColumn>
+        <createIndex tableName="ha_connector_instance" indexName="idx_ha_connector_instance_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
