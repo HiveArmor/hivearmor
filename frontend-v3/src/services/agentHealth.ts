@@ -60,7 +60,13 @@ export const HEALTH_THRESHOLDS = {
 // Dimension model
 // ---------------------------------------------------------------------------
 
-export type HealthDimensionId = 'freshness' | 'cpu' | 'memory' | 'queue' | 'eps' | 'errors';
+/**
+ * Dimensions evaluated at the GLANCE surface (SensorGrid row / agent header).
+ * RAM% and EPS-vs-baseline bands are the SPEC-03 drill-down's concern (they need
+ * a capacity/baseline this glance view does not carry), so they are deliberately
+ * NOT dimensions here. EPS remains a valid sparkline signal (see `TrendedSignal`).
+ */
+export type HealthDimensionId = 'freshness' | 'cpu' | 'queue' | 'errors';
 
 export interface HealthDimension {
   id: HealthDimensionId;
