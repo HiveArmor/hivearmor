@@ -127,4 +127,66 @@ class MsspIndexResolverTest {
                 .as("resolveIndexPatternForPrefix() must use the explicit prefix and ignore TenantContext")
                 .isEqualTo("v3-hive-alert-another-tenant-*");
     }
+
+    // -------------------------------------------------------------------------
+    // SPEC-04 (W1b) — fail-closed contract
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("resolveIndexPattern() FAILS CLOSED when a client id is resolved but the prefix is unset (MSSP)")
+    void resolveIndexPattern_failsClosed_whenClientIdSetButPrefixBlank() {
+        // Genuine MSSP request whose tenant prefix did not resolve: client id set,
+        // prefix null. Must deny rather than widen to the all-tenant wildcard.
+        TenantContext.set(7L, null);
+
+        org.assertj.core.api.Assertions
+                .assertThatThrownBy(() -> resolver.resolveIndexPattern("event"))
+                .as("an MSSP request with an unresolved prefix must not read every tenant")
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("resolveTenantScopedIndexPattern() FAILS CLOSED in the same MSSP-unresolved case")
+    void resolveTenantScopedIndexPattern_failsClosed_whenClientIdSetButPrefixBlank() {
+        TenantContext.set(7L, "");
+
+        org.assertj.core.api.Assertions
+                .assertThatThrownBy(() -> resolver.resolveTenantScopedIndexPattern("fim"))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("resolveIndexPatternForPrefix() FAILS CLOSED on a blank prefix when a client id is resolved")
+    void resolveIndexPatternForPrefix_failsClosed_onBlankPrefixWithClientId() {
+        TenantContext.set(7L, null);
+
+        // Blank explicit prefix delegates to resolveIndexPattern, which fails closed.
+        org.assertj.core.api.Assertions
+                .assertThatThrownBy(() -> resolver.resolveIndexPatternForPrefix("alert", null))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class);
+    }
+
+    @Test
+    @DisplayName("single-tenant (no client id, no prefix) still gets the unscoped wildcard — NOT denied")
+    void resolveIndexPattern_singleTenant_returnsWildcard() {
+        // No client id, no prefix = non-MSSP deployment, no partition to enforce.
+        String actual = resolver.resolveIndexPattern("event");
+
+        assertThat(actual)
+                .as("single-tenant reads must keep the unscoped pattern")
+                .isEqualTo("v3-hive-event-*");
+    }
+
+    @Test
+    @DisplayName("resolveAllTenantIndexPattern() is an explicit, un-guarded all-tenant escape hatch")
+    void resolveAllTenantIndexPattern_alwaysWildcard_evenForMssp() {
+        // Even a fully-resolved MSSP context does not restrict the EXPLICIT aggregate.
+        TenantContext.set(7L, "acme");
+
+        String actual = resolver.resolveAllTenantIndexPattern("alert");
+
+        assertThat(actual)
+                .as("the explicit aggregate path must return the all-tenant pattern by design")
+                .isEqualTo("v3-hive-alert-*");
+    }
 }

@@ -41,6 +41,13 @@ public interface HaEdrQuarantineRepository extends JpaRepository<HaEdrQuarantine
      */
     List<HaEdrQuarantine> findAllByIdIn(List<Long> ids);
 
+    /**
+     * SPEC-04 — tenant-scoped bulk lookup for mutations. Only rows owned by the
+     * given tenant are returned; a cross-tenant (or pre-backfill null-tenant) id
+     * is silently excluded so a bulk mutate can never touch another tenant's row.
+     */
+    List<HaEdrQuarantine> findAllByTenantIdAndIdIn(Long tenantId, List<Long> ids);
+
     // P0A1-T09 follow-on — tenant-scoped reads. Null-tenant (pre-backfill) rows are
     // excluded from tenant-scoped reads, so a read can never cross tenants.
     Page<HaEdrQuarantine> findByTenantId(Long tenantId, Pageable pageable);
