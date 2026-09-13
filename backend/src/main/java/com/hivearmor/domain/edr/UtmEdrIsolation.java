@@ -15,6 +15,12 @@ public class UtmEdrIsolation implements Serializable {
     @Column(name = "agent_id", length = 150, nullable = false)
     private String agentId;
 
+    // SPEC-04 (W1b) — authoritative tenant, assigned server-side from the caller's
+    // tenant at isolate time (never from payload). Nullable during rollout/backfill;
+    // enforced NOT NULL on single-tenant by 20260913002, MSSP by a later batch.
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @Column(name = "hostname", length = 200)
     private String hostname;
 
@@ -46,6 +52,8 @@ public class UtmEdrIsolation implements Serializable {
     public void setId(Long id) { this.id = id; }
     public String getAgentId() { return agentId; }
     public void setAgentId(String agentId) { this.agentId = agentId; }
+    public Long getTenantId() { return tenantId; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
     public String getHostname() { return hostname; }
     public void setHostname(String hostname) { this.hostname = hostname; }
     public String getIsolationType() { return isolationType; }

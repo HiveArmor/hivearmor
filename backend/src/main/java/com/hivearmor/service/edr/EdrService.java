@@ -245,6 +245,10 @@ public class EdrService {
         agentGrpcService.requireAgentInCurrentTenant(dto.getAgentId());
         UtmEdrIsolation iso = new UtmEdrIsolation();
         iso.setAgentId(dto.getAgentId());
+        // SPEC-04 (W1b) — stamp the authoritative tenant server-side (never from
+        // payload). requireAgentInCurrentTenant above already proved the agent is
+        // in this tenant, so the row's tenant is the caller's tenant.
+        iso.setTenantId(TenantScope.requireTenant());
         iso.setHostname(dto.getHostname());
         iso.setIsolationType(dto.getIsolationType() != null ? dto.getIsolationType() : "FULL");
         iso.setStatus("ACTIVE");
