@@ -117,7 +117,21 @@ public class HaConnectorInstanceService {
 
     @Transactional
     public ConnectionTestResult test(Long id) {
-        HaConnectorInstance row = requireInTenant(id);
+        // Request-path entry — tenant-scoped by-id load.
+        return testInstance(requireInTenant(id));
+    }
+
+    /**
+     * SPEC-04 (W1b) — out-of-band test entry operating on an ALREADY-RESOLVED row.
+     * The playbook dispatcher (PlaybookConnectorDispatcher, an @Async out-of-band
+     * path with no request TenantContext) resolves the instance itself and calls
+     * this, so it must NOT re-load through the tenant-scoped requireInTenant — that
+     * would fail-close on MSSP. Callers holding a row id from a user request use
+     * {@link #test(Long)} instead. Package-private: only same-package dispatchers
+     * that have already resolved the row may use it.
+     */
+    @Transactional
+    ConnectionTestResult testInstance(HaConnectorInstance row) {
         HaConnector connector = registry.require(row.getConnectorId());
         Map<String, String> merged = decryptMergedConfig(row, connector);
         ConnectionTestResult result = connector.testConnection(merged);

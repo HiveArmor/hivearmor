@@ -6,6 +6,7 @@ import com.hivearmor.repository.agents_manager.*;
 import com.hivearmor.service.dto.agent_manager.*;
 import com.hivearmor.service.incident_response.grpc_impl.IncidentResponseCommandService;
 import io.grpc.stub.StreamObserver;
+import jakarta.persistence.EntityNotFoundException;
 import com.hivearmor.service.grpc.CommandResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +120,7 @@ public class UtmAgentPolicyService {
     private UtmAgentPolicy requireInTenant(Long id) {
         long tenant = TenantScope.requireTenant();
         return policyRepo.findByIdAndTenantId(id, tenant)
-            .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Policy not found: " + id));
+            .orElseThrow(() -> new EntityNotFoundException("Policy not found: " + id));
     }
 
     public void assignGroup(Long policyId, Long groupId) {
