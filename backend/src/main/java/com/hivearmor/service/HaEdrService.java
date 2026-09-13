@@ -94,7 +94,7 @@ public class HaEdrService {
                             .filter(eventTypeFilter))));
 
             SearchRequest request = SearchRequest.of(s -> s
-                    .index(indexResolver.resolveIndexPattern("event"))
+                    .index(indexResolver.resolveTenantScopedIndexPattern("event"))
                     .query(combined)
                     .size(MAX_PROCESS_NODES)
                     .sort(sort -> sort.field(f -> f
@@ -234,7 +234,7 @@ public class HaEdrService {
             }
         }
         return requested.stream()
-                .map(indexResolver::resolveIndexPattern)
+                .map(indexResolver::resolveTenantScopedIndexPattern)
                 .collect(java.util.stream.Collectors.joining(","));
     }
 

@@ -123,7 +123,7 @@ public class HaEdrFimService {
                 .size(10));
 
         SearchRequest req = SearchRequest.of(s -> s
-                .index(indexResolver.resolveIndexPattern(FIM_INDEX_TYPE))
+                .index(indexResolver.resolveTenantScopedIndexPattern(FIM_INDEX_TYPE))
                 .size(0)
                 .query(baseQuery)
                 .aggregations("by_time", Aggregation.of(a -> a
@@ -180,7 +180,7 @@ public class HaEdrFimService {
                 .size(TOP_PATHS_SIZE));
 
         SearchRequest req = SearchRequest.of(s -> s
-                .index(indexResolver.resolveIndexPattern(FIM_INDEX_TYPE))
+                .index(indexResolver.resolveTenantScopedIndexPattern(FIM_INDEX_TYPE))
                 .size(0)
                 .query(baseQuery)
                 .aggregations("top_paths", Aggregation.of(a -> a.terms(pathTerms))));
@@ -220,7 +220,7 @@ public class HaEdrFimService {
                 .minDocCount(2));  // hashes appearing > once are suspicious
 
         SearchRequest req = SearchRequest.of(s -> s
-                .index(indexResolver.resolveIndexPattern(FIM_INDEX_TYPE))
+                .index(indexResolver.resolveTenantScopedIndexPattern(FIM_INDEX_TYPE))
                 .size(0)
                 .query(combined)
                 .aggregations("by_hash", Aggregation.of(a -> a

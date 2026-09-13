@@ -1,8 +1,10 @@
 package com.hivearmor.service;
 
 import com.hivearmor.domain.edr.UtmEdrIsolation;
+import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.repository.edr.UtmEdrIsolationRepository;
 import com.hivearmor.service.dto.IsolatedHostDTO;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,11 +14,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -33,6 +37,11 @@ class HaEdrIsolationServiceTest {
     @BeforeEach
     void setUp() {
         service = new HaEdrIsolationService(isolationRepository);
+    }
+
+    @AfterEach
+    void cleanup() {
+        TenantContext.clear();
     }
 
     @Test
@@ -79,5 +88,30 @@ class HaEdrIsolationServiceTest {
 
         assertThat(page.getContent()).isEmpty();
         verify(isolationRepository).findAll(any(Pageable.class));
+    }
+
+    // -------------------------------------------------------------------------
+    // SPEC-04 (W1b) — MSSP fail-closed: no tenant_id column yet, so an MSSP list
+    // read must be denied rather than return every tenant's isolated hosts.
+    // -------------------------------------------------------------------------
+
+    @Test
+    void listIsolatedHostsDeniedForMsspTenantContext() {
+        TenantContext.set(7L, "acme");
+
+        assertThatThrownBy(() -> service.listIsolatedHosts("ACTIVE", 0, 25))
+            .isInstanceOf(AccessDeniedException.class);
+
+        // The repository must never be queried for an MSSP request on this list.
+        org.mockito.Mockito.verifyNoInteractions(isolationRepository);
+    }
+
+    @Test
+    void listIsolatedHostsDeniedForMsspEvenWithoutStatus() {
+        TenantContext.set(7L, "acme");
+
+        assertThatThrownBy(() -> service.listIsolatedHosts(null, 0, 25))
+            .isInstanceOf(AccessDeniedException.class);
+        org.mockito.Mockito.verifyNoInteractions(isolationRepository);
     }
 }

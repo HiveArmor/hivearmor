@@ -80,9 +80,16 @@ public class HaEdrQuarantineService {
      * @throws EntityNotFoundException if no record exists for the given id
      */
     public QuarantinedFileDTO applyAction(Long id, QuarantineActionRequest request) {
+        long tenant = TenantScope.requireTenant();
         HaEdrQuarantine entity = quarantineRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException(
                 "Quarantined file not found with id: " + id));
+
+        // SPEC-04: a by-id load is not tenant-scoped by itself. Re-check the loaded
+        // row against the caller's tenant and refuse a cross-tenant (or pre-backfill
+        // null-tenant) mutate with the same not-found error — no cross-tenant
+        // disclosure, mirroring AgentGrpcService.requireAgentInCurrentTenant.
+        requireInTenant(entity, tenant, id);
 
         applyStatusChange(entity, request.getAction());
 
@@ -97,7 +104,11 @@ public class HaEdrQuarantineService {
      * @return list of updated {@link QuarantinedFileDTO}
      */
     public List<QuarantinedFileDTO> applyBulkAction(QuarantineBulkRequest request) {
-        List<HaEdrQuarantine> entities = quarantineRepository.findAllByIdIn(request.getIds());
+        // SPEC-04: load only rows owned by the caller's tenant, so a bulk mutate
+        // can never touch another tenant's (or a pre-backfill null-tenant) record.
+        long tenant = TenantScope.requireTenant();
+        List<HaEdrQuarantine> entities =
+            quarantineRepository.findAllByTenantIdAndIdIn(tenant, request.getIds());
 
         for (HaEdrQuarantine entity : entities) {
             applyStatusChange(entity, request.getAction());
@@ -113,6 +124,21 @@ public class HaEdrQuarantineService {
     }
 
     // ---- private helpers ----
+
+    /**
+     * SPEC-04 — fail-closed by-id tenant re-check. A row whose {@code tenantId}
+     * does not match the caller's tenant (including a pre-backfill {@code null}
+     * tenant) is treated as not found, so a cross-tenant id is neither disclosed
+     * nor mutated. Mirrors {@code AgentGrpcService.requireAgentInCurrentTenant}.
+     */
+    private void requireInTenant(HaEdrQuarantine entity, long tenant, Long id) {
+        Long rowTenant = entity.getTenantId();
+        if (rowTenant == null || rowTenant.longValue() != tenant) {
+            com.hivearmor.multitenancy.TenantAudit.crossTenantDenied(
+                "HaEdrQuarantineService.applyAction", "quarantine", id, "row-outside-tenant");
+            throw new EntityNotFoundException("Quarantined file not found with id: " + id);
+        }
+    }
 
     /**
      * Mutates the entity's status field based on the requested action.
