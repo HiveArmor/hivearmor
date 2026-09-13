@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 
 import { AddAgentDrawer } from './AddAgentDrawer';
 import { AgentPackageCatalog } from './AgentPackageCatalog';
+import { SensorHealthCell } from './SensorHealthCell';
 
 import { DensitySelector } from '@/components/density-selector';
 import { EmptyState } from '@/components/empty-state';
@@ -324,6 +325,15 @@ export function SensorGridPage(): JSX.Element {
         cellRenderer: (params: { value: string }) => (
           <span className={statusClass(params.value)}>{statusLabel(params.value)}</span>
         ),
+      },
+      {
+        headerName: 'Health',
+        colId: 'health',
+        flex: 1.3,
+        minWidth: 240,
+        sortable: false,
+        filter: false,
+        cellRenderer: SensorHealthCell,
       },
       {
         field: 'platform',
