@@ -297,6 +297,9 @@ const AgentPoliciesPage = React.lazy(() =>
 const EndpointsListPage = React.lazy(() =>
   import('@/pages/edr/endpoints/EndpointsListPage').then(m => ({ default: m.EndpointsListPage }))
 );
+const EndpointDetailPage = React.lazy(() =>
+  import('@/pages/edr/EndpointDetailPage').then(m => ({ default: m.EndpointDetailPage }))
+);
 
 // ── UEBA ──────────────────────────────────────────────────────────────────────
 const RiskDashboardPage = React.lazy(() =>
@@ -462,6 +465,15 @@ export const router = createBrowserRouter([
         element: (
           <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <EndpointTimelinePage />
+          </AuthGuard>
+        ),
+      },
+      // EDR — Consolidated agent/endpoint detail page (SPEC-03, W3). Net-new route.
+      {
+        path: 'edr/endpoints/:agentId',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <EndpointDetailPage />
           </AuthGuard>
         ),
       },

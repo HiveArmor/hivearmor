@@ -35,6 +35,8 @@ export const ROUTES = {
   RESPONSE_LIBRARY: '/response/library',
   DASHBOARD: '/dashboard',
   EDR_ENDPOINTS: '/edr/endpoints',
+  /** Consolidated per-agent detail page (SPEC-03, W3). Net-new: no EDR_TIMELINE constant exists. */
+  ENDPOINT_DETAIL: '/edr/endpoints/:agentId',
   EDR_FIM: '/edr/fim',
   EDR_POLICIES: '/edr/policies',
 
