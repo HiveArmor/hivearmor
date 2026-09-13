@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      SPEC-04 (W1b) PR-1b.2a — authoritative tenant attribution for host isolation.
+      tenant_id is assigned SERVER-SIDE from the caller's authenticated tenant at
+      isolate time (TenantScope.requireTenant() in EdrService.isolateAgent), never
+      from the request payload. The owning agent is already re-checked against the
+      caller's tenant there (requireAgentInCurrentTenant), so agent_id IS the
+      agent-manager agent id.
+
+      Added nullable so existing rows and in-flight isolates during rollout are
+      tolerated; a backfill (20260913002) populates existing rows on single-tenant
+      deployments; MSSP per-row backfill is an application-level gRPC job
+      (agent_id -> tenant), and NOT NULL is deferred to a later batch.
+    -->
+    <changeSet id="20260913001-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="hive_edr_isolation" columnName="tenant_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="hive_edr_isolation">
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="hive_edr_isolation" indexName="idx_hive_edr_isolation_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!--
+      Composite index for the tenant-scoped list read pattern
+      (WHERE tenant_id = ? [AND status = ?] ORDER BY isolated_at DESC), used by
+      HaEdrIsolationService.listIsolatedHosts once tenant scoping is wired.
+    -->
+    <changeSet id="20260913001-2" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_hive_edr_isolation_tenant_time"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="hive_edr_isolation" indexName="idx_hive_edr_isolation_tenant_time">
+            <column name="tenant_id"/>
+            <column name="isolated_at" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,15 +1,12 @@
 package com.hivearmor.service;
 
 import com.hivearmor.domain.edr.UtmEdrIsolation;
-import com.hivearmor.multitenancy.TenantAudit;
-import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.multitenancy.TenantScope;
 import com.hivearmor.repository.edr.UtmEdrIsolationRepository;
 import com.hivearmor.service.dto.IsolatedHostDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,26 +40,16 @@ public class HaEdrIsolationService {
     public Page<IsolatedHostDTO> listIsolatedHosts(String status, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "isolatedAt"));
 
-        // SPEC-04 (W1b): hive_edr_isolation has no tenant_id column yet, so this
-        // list read cannot be tenant-filtered at the database. In an MSSP
-        // deployment the previous findAll()/findByStatus() returned EVERY tenant's
-        // isolated hosts — a cross-tenant read. Fail closed here rather than leak;
-        // proper per-tenant scoping is delivered in PR-2 (adds tenant_id +
-        // findByTenantId* finders, mirroring HaEdrQuarantine). requireTenant() also
-        // fail-closes an MSSP request whose tenant is unresolved.
-        TenantScope.requireTenant();
-        if (TenantContext.isMssp()) {
-            TenantAudit.crossTenantDenied(
-                "HaEdrIsolationService.listIsolatedHosts", "edr-isolation", null,
-                "no-tenant-column-yet");
-            throw new AccessDeniedException(
-                "isolated-host list is not tenant-scoped yet; per-tenant support is pending (SPEC-04 PR-2)");
-        }
-
+        // SPEC-04 (W1b) PR-1b.2a: hive_edr_isolation now carries an authoritative
+        // tenant_id (stamped server-side at isolate time; single-tenant rows = 0).
+        // Scope every list read to the caller's tenant; null-tenant (pre-backfill)
+        // rows are excluded by the finders, so a read can never cross tenants.
+        // requireTenant() also fail-closes an MSSP request whose tenant is unresolved.
+        long tenant = TenantScope.requireTenant();
         boolean hasStatus = status != null && !status.isBlank();
         Page<UtmEdrIsolation> results = hasStatus
-            ? isolationRepository.findByStatus(status.trim(), pageable)
-            : isolationRepository.findAll(pageable);
+            ? isolationRepository.findByTenantIdAndStatus(tenant, status.trim(), pageable)
+            : isolationRepository.findByTenantId(tenant, pageable);
         return results.map(this::toDTO);
     }
 

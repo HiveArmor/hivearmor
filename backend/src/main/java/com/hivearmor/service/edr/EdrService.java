@@ -227,10 +227,16 @@ public class EdrService {
 
     public Page<EdrIsolationDTO> listIsolations(String status, int page, int size) {
         PageRequest pr = PageRequest.of(page, size, Sort.by("isolatedAt").descending());
+        // SPEC-04 (W1b) PR-1b.2a — this deprecated endpoint reads the same
+        // hive_edr_isolation table as HaEdrIsolationService; scope it to the
+        // caller's tenant with the same finders so it can no longer return every
+        // tenant's isolation records on MSSP. Null-tenant (pre-backfill) rows are
+        // excluded (fail-closed); single-tenant reads use tenant 0.
+        long tenant = TenantScope.requireTenant();
         if (status != null) {
-            return isolationRepo.findByStatus(status, pr).map(this::toIsolationDTO);
+            return isolationRepo.findByTenantIdAndStatus(tenant, status, pr).map(this::toIsolationDTO);
         }
-        return isolationRepo.findAll(pr).map(this::toIsolationDTO);
+        return isolationRepo.findByTenantId(tenant, pr).map(this::toIsolationDTO);
     }
 
     public EdrIsolationDTO isolateAgent(EdrIsolationDTO dto, String actionedBy) {
@@ -245,6 +251,10 @@ public class EdrService {
         agentGrpcService.requireAgentInCurrentTenant(dto.getAgentId());
         UtmEdrIsolation iso = new UtmEdrIsolation();
         iso.setAgentId(dto.getAgentId());
+        // SPEC-04 (W1b) — stamp the authoritative tenant server-side (never from
+        // payload). requireAgentInCurrentTenant above already proved the agent is
+        // in this tenant, so the row's tenant is the caller's tenant.
+        iso.setTenantId(TenantScope.requireTenant());
         iso.setHostname(dto.getHostname());
         iso.setIsolationType(dto.getIsolationType() != null ? dto.getIsolationType() : "FULL");
         iso.setStatus("ACTIVE");

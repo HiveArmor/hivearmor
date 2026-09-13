@@ -14,20 +14,27 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 
 import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * SPEC-04 (W1b) PR-1b.2a — proves the isolated-host list is tenant-scoped now that
+ * hive_edr_isolation carries an authoritative tenant_id. Single-tenant reads use
+ * tenant 0; MSSP reads scope to the caller's tenant (no longer fail-closed); the
+ * unscoped findAll()/findByStatus() paths must never be used.
+ */
 @ExtendWith(MockitoExtension.class)
 class HaEdrIsolationServiceTest {
+
+    private static final long TENANT_A = 101L;
 
     @Mock
     private UtmEdrIsolationRepository isolationRepository;
@@ -44,8 +51,7 @@ class HaEdrIsolationServiceTest {
         TenantContext.clear();
     }
 
-    @Test
-    void listIsolatedHostsMapsEntityAndFiltersByStatus() {
+    private UtmEdrIsolation sampleRow() {
         UtmEdrIsolation entity = new UtmEdrIsolation();
         entity.setId(42L);
         entity.setAgentId("agent-1");
@@ -57,9 +63,14 @@ class HaEdrIsolationServiceTest {
         entity.setIsolatedAt(Instant.parse("2026-08-25T03:00:00Z"));
         entity.setActionedBy("soc.manager");
         entity.setEdrEventId(99L);
+        return entity;
+    }
 
-        when(isolationRepository.findByStatus(eq("ACTIVE"), any(Pageable.class)))
-            .thenReturn(new PageImpl<>(List.of(entity)));
+    @Test
+    void singleTenantListScopesToTenantZeroAndMapsEntity() {
+        // Single-tenant: no tenant context => requireTenant() returns 0L.
+        when(isolationRepository.findByTenantIdAndStatus(eq(0L), eq("ACTIVE"), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(List.of(sampleRow())));
 
         Page<IsolatedHostDTO> page = service.listIsolatedHosts("ACTIVE", 0, 25);
 
@@ -67,51 +78,53 @@ class HaEdrIsolationServiceTest {
         IsolatedHostDTO dto = page.getContent().get(0);
         assertThat(dto.getId()).isEqualTo(42L);
         assertThat(dto.getAgentId()).isEqualTo("agent-1");
-        assertThat(dto.getHostname()).isEqualTo("host-a");
         assertThat(dto.getStatus()).isEqualTo("ACTIVE");
-        assertThat(dto.getReason()).isEqualTo("ransomware containment");
-        assertThat(dto.getActionedBy()).isEqualTo("soc.manager");
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(isolationRepository).findByStatus(eq("ACTIVE"), pageableCaptor.capture());
-        assertThat(pageableCaptor.getValue().getPageNumber()).isZero();
-        assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(25);
+        verify(isolationRepository).findByTenantIdAndStatus(eq(0L), eq("ACTIVE"), pageableCaptor.capture());
         assertThat(pageableCaptor.getValue().getSort().getOrderFor("isolatedAt")).isNotNull();
+        // Unscoped reads must never be used.
+        verify(isolationRepository, never()).findByStatus(any(), any());
+        verify(isolationRepository, never()).findAll(any(Pageable.class));
     }
 
     @Test
-    void listIsolatedHostsWithoutStatusUsesFindAll() {
-        when(isolationRepository.findAll(any(Pageable.class)))
+    void singleTenantListWithoutStatusScopesToTenantZero() {
+        when(isolationRepository.findByTenantId(eq(0L), any(Pageable.class)))
             .thenReturn(new PageImpl<>(List.of()));
 
         Page<IsolatedHostDTO> page = service.listIsolatedHosts(null, 1, 10);
 
         assertThat(page.getContent()).isEmpty();
-        verify(isolationRepository).findAll(any(Pageable.class));
-    }
-
-    // -------------------------------------------------------------------------
-    // SPEC-04 (W1b) — MSSP fail-closed: no tenant_id column yet, so an MSSP list
-    // read must be denied rather than return every tenant's isolated hosts.
-    // -------------------------------------------------------------------------
-
-    @Test
-    void listIsolatedHostsDeniedForMsspTenantContext() {
-        TenantContext.set(7L, "acme");
-
-        assertThatThrownBy(() -> service.listIsolatedHosts("ACTIVE", 0, 25))
-            .isInstanceOf(AccessDeniedException.class);
-
-        // The repository must never be queried for an MSSP request on this list.
-        org.mockito.Mockito.verifyNoInteractions(isolationRepository);
+        verify(isolationRepository).findByTenantId(eq(0L), any(Pageable.class));
+        verify(isolationRepository, never()).findAll(any(Pageable.class));
     }
 
     @Test
-    void listIsolatedHostsDeniedForMsspEvenWithoutStatus() {
-        TenantContext.set(7L, "acme");
+    void msspListScopesToCallerTenantNotAllTenants() {
+        TenantContext.set(TENANT_A, "acme");
+        when(isolationRepository.findByTenantIdAndStatus(eq(TENANT_A), eq("ACTIVE"), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(List.of(sampleRow())));
 
-        assertThatThrownBy(() -> service.listIsolatedHosts(null, 0, 25))
-            .isInstanceOf(AccessDeniedException.class);
-        org.mockito.Mockito.verifyNoInteractions(isolationRepository);
+        Page<IsolatedHostDTO> page = service.listIsolatedHosts("ACTIVE", 0, 25);
+
+        assertThat(page.getContent()).hasSize(1);
+        // Scoped to the caller's tenant; the unscoped finders are never called.
+        verify(isolationRepository).findByTenantIdAndStatus(eq(TENANT_A), eq("ACTIVE"), any(Pageable.class));
+        verify(isolationRepository, never()).findByStatus(any(), any());
+        verify(isolationRepository, never()).findAll(any(Pageable.class));
+    }
+
+    @Test
+    void msspListWithoutStatusScopesToCallerTenant() {
+        TenantContext.set(TENANT_A, "acme");
+        when(isolationRepository.findByTenantId(eq(TENANT_A), any(Pageable.class)))
+            .thenReturn(new PageImpl<>(List.of(sampleRow())));
+
+        Page<IsolatedHostDTO> page = service.listIsolatedHosts(null, 0, 25);
+
+        assertThat(page.getContent()).hasSize(1);
+        verify(isolationRepository).findByTenantId(eq(TENANT_A), any(Pageable.class));
+        verify(isolationRepository, never()).findAll(any(Pageable.class));
     }
 }

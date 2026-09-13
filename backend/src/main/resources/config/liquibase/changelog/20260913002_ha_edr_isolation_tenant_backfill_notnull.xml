@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      SPEC-04 (W1b) PR-1b.2a backfill + NOT-NULL for hive_edr_isolation.tenant_id
+      (added by 20260913001).
+
+      Same contract as 20260910003: the authoritative agent->tenant mapping lives
+      in the agent-manager's SEPARATE Postgres database, reachable only over gRPC,
+      NOT in this backend database. There is no in-DB join to derive a per-tenant
+      value for an MSSP deployment (agent_id would have to be resolved via gRPC).
+      Therefore:
+
+        * SINGLE-TENANT deployments (no MSSP-managed client with a prefix): every
+          legacy row's tenant is the single-tenant sentinel 0 — a SQL backfill to 0
+          is correct and COMPLETE, so NOT-NULL is enforced here. Gated by the same
+          sqlCheck as 20260910003.
+
+        * MSSP deployments: per-row tenant is resolved from the manager over gRPC by
+          an APPLICATION-LEVEL backfill job (agent_id -> tenant, mirroring
+          AgentGrpcService.requireAgentInCurrentTenant). This changeset MARK_RANs
+          (no-op) on MSSP so it never stamps a wrong tenant; NOT-NULL for MSSP is a
+          later changeset AFTER that job completes.
+    -->
+    <changeSet id="20260913002-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="hive_edr_isolation" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ha_client WHERE mssp_managed = TRUE AND client_prefix IS NOT NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <update tableName="hive_edr_isolation">
+            <column name="tenant_id" valueNumeric="0"/>
+            <where>tenant_id IS NULL</where>
+        </update>
+        <addNotNullConstraint tableName="hive_edr_isolation" columnName="tenant_id"
+                              columnDataType="BIGINT" defaultNullValue="0"/>
+    </changeSet>
+
+</databaseChangeLog>
