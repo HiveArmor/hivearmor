@@ -77,13 +77,16 @@ type DropOp struct {
 }
 
 type DeleteOp struct {
-	Fields []string `yaml:"fields"`
-	Where  string   `yaml:"where,omitempty"`
+	Fields   []string `yaml:"fields"`
+	Prefixes []string `yaml:"prefixes,omitempty"`
+	Where    string   `yaml:"where,omitempty"`
 }
 
 type KVOp struct {
 	FieldSplit string `yaml:"fieldSplit"`
 	ValueSplit string `yaml:"valueSplit"`
+	Source     string `yaml:"source,omitempty"`
+	Where      string `yaml:"where,omitempty"`
 }
 
 type DynamicOp struct {

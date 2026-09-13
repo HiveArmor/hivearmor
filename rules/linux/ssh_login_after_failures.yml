@@ -1,0 +1,46 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - "linux"
+name: "System Linux: Successful SSH Login After Repeated Failures"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: Lateral Movement
+technique: "T1021.004 - Remote Services: SSH"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1021/004/
+  - https://attack.mitre.org/techniques/T1110/
+description: |
+  Detects a successful SSH authentication (Accepted password/publickey) from a source that
+  produced repeated Failed password attempts on the same host shortly before — the signature
+  of a brute-force or password-spray that SUCCEEDED. The existing brute-force rule flags the
+  failed-attempt burst; this rule flags the far more important event: the guess that landed,
+  granting the attacker an interactive session.
+
+  Next Steps:
+  1. Identify the host, the account, and the source IP that succeeded after failing
+  2. Confirm it is not a user fat-fingering their password before getting it right
+  3. Treat a success from an external/unfamiliar IP after many failures as a likely compromise
+  4. If suspicious, terminate the session, lock the account, and rotate its credential + any SSH keys
+  5. Review what the session did after login (sudo, recon, lateral movement, key theft)
+where: |
+  exists("log.message") &&
+  regexMatch("log.message", "(Accepted (password|publickey))") &&
+  exists("origin.ip")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: '{{.origin.ip}}'
+      - field: log.message
+        operator: filter_match
+        value: 'Failed password'
+    within: 15m
+    count: 8
+groupBy:
+  - origin.ip
+  - origin.user

@@ -1,0 +1,32 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - otlp
+name: Kubernetes cluster-admin Role Binding Created
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: Privilege Escalation
+technique: "T1078.003 - Valid Accounts: Local Accounts"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1078/003/
+  - https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+description: |
+  Detects creation of a ClusterRoleBinding or RoleBinding that grants the built-in cluster-admin role. Binding cluster-admin to a user, group, or service account hands full control of the cluster; attackers create such a binding to persist with maximum privilege after an initial foothold.
+
+  Next Steps:
+  1. Identify the subject the binding grants cluster-admin to (user / group / service account)
+  2. Confirm the binding was made by an authorized cluster operator via a reviewed change
+  3. If the subject is a service account, trace which pod mounts its token
+  4. Delete the unauthorized binding and rotate the subject's credentials
+  5. Audit the API server logs for what the newly-privileged identity did next
+where: |
+  exists("log.message") &&
+  regexMatch("log.message", "\"resource\":\"(clusterrolebindings|rolebindings)\"") &&
+  contains("log.message", "\"verb\":\"create\"") &&
+  contains("log.message", "cluster-admin")
+groupBy:
+  - log.k8s.namespace
+  - log.hostname

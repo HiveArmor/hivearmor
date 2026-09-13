@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      P0A2-6 PHASE P2 — Postgres Row-Level Security PILOT on the four P0-A1 EDR/response tables.
+      This is the go/no-go blast-radius step of the RLS programme (see HIVEARMOR_P0A1_T20_RLS_SPIKE.md
+      §4 P2 and HIVEARMOR_A2_6_RLS_ROLE_PROVISIONING.md). It makes the tenant_id predicate a property
+      of the TABLE: any query that forgets its WHERE tenant_id predicate returns only the current
+      tenant's rows (or zero), enforced by PostgreSQL beneath the app-level scoping.
+
+      PREREQUISITES (all must hold before this bites — see the gating below and the runbook):
+        1. tenant_id backfilled to zero remaining NULLs on each pilot table (POST /api/ha-tenant-backfill).
+        2. The app connects as the UNPRIVILEGED hivearmor_app role (NOT superuser, NOT BYPASSRLS) —
+           a superuser/BYPASSRLS role ignores RLS entirely, so this would be a silent no-op otherwise.
+        3. The TenantGucAspect (#281) sets transaction-local app.current_tenant on every tx — already merged.
+        4. Migrations run as the BYPASSRLS hivearmor_migrator role so THIS changeset (and future ones)
+           can alter/read all rows regardless of policy.
+
+      THE GATE (why this is a safe go/no-go, not an unconditional enable):
+        Each changeset's preCondition is a sqlCheck that the table has ZERO tenant_id IS NULL rows,
+        with onFail="CONTINUE". CONTINUE (NOT MARK_RAN) means: if the table still has NULL rows
+        (operator has not finished the backfill), the changeset is SKIPPED FOR THIS RUN WITHOUT being
+        recorded as run — so it RE-EVALUATES on the next deploy and the pilot lands automatically once
+        the data is clean. This is deliberately different from MARK_RAN, which would record the
+        changeset as done-forever on a dirty deploy and never enable RLS (a lock that silently never
+        engages). Gating on the transient data state with CONTINUE is the correct pattern for
+        deferred-until-clean enforcement.
+
+        Why zero-nulls matters for RLS specifically: the policy predicate
+        (tenant_id = current_setting('app.current_tenant')::bigint) evaluates NULL = X to NULL (not
+        true), so a NULL-tenant_id row would be invisible to EVERY tenant — including to the backfill
+        job — the moment RLS is on. Enabling RLS before backfill completes would make un-backfilled
+        rows vanish. So: no NULLs, then RLS.
+
+      THE POLICY:
+        USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+          - current_setting('app.current_tenant', true): the `true` (missing_ok) returns NULL instead
+            of ERRORING when the GUC was never set on the connection — so an un-GUC'd query fails
+            CLOSED (evaluates against -1, an impossible tenant id → zero rows) rather than throwing and
+            breaking the request. Belt-and-suspenders with the runbook's DB-level default of '-1'.
+          - NULLIF(..., '') guards the empty-string case; COALESCE(..., -1) is the final fail-closed
+            fallback. -1 is never a real ha_client.id (single-tenant is 0, MSSP ids are positive).
+        WITH CHECK (same predicate): also blocks INSERT/UPDATE of a row into a DIFFERENT tenant, not
+          just hides reads. A write with the wrong/absent GUC is rejected rather than mis-attributed.
+
+        FORCE ROW LEVEL SECURITY: applies the policy even to the table OWNER, so the migrator's
+        ownership does not become a silent bypass for the app if roles are ever misconfigured. The
+        BYPASSRLS attribute on the migrator role is what still lets migrations through — that is the
+        intended, role-level exemption, not a per-table one.
+
+      Each table is its own changeset (independently gated + independently rollback-able). Rollback
+      drops the policy and disables RLS — instant, per-table, no data change; the app-layer scoping
+      (primary) still protects the table after rollback.
+    -->
+
+    <!-- ================= hive_edr_event ================= -->
+    <changeSet id="20260910006-1" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <columnExists tableName="hive_edr_event" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM hive_edr_event WHERE tenant_id IS NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE hive_edr_event ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE hive_edr_event FORCE ROW LEVEL SECURITY;
+            CREATE POLICY tenant_isolation ON hive_edr_event
+                USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+                WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1));
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS tenant_isolation ON hive_edr_event;
+            ALTER TABLE hive_edr_event NO FORCE ROW LEVEL SECURITY;
+            ALTER TABLE hive_edr_event DISABLE ROW LEVEL SECURITY;
+        </rollback>
+    </changeSet>
+
+    <!-- ================= hive_edr_quarantine ================= -->
+    <changeSet id="20260910006-2" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <columnExists tableName="hive_edr_quarantine" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM hive_edr_quarantine WHERE tenant_id IS NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE hive_edr_quarantine ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE hive_edr_quarantine FORCE ROW LEVEL SECURITY;
+            CREATE POLICY tenant_isolation ON hive_edr_quarantine
+                USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+                WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1));
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS tenant_isolation ON hive_edr_quarantine;
+            ALTER TABLE hive_edr_quarantine NO FORCE ROW LEVEL SECURITY;
+            ALTER TABLE hive_edr_quarantine DISABLE ROW LEVEL SECURITY;
+        </rollback>
+    </changeSet>
+
+    <!-- ================= ha_edr_quarantine ================= -->
+    <changeSet id="20260910006-3" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <columnExists tableName="ha_edr_quarantine" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ha_edr_quarantine WHERE tenant_id IS NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE ha_edr_quarantine ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE ha_edr_quarantine FORCE ROW LEVEL SECURITY;
+            CREATE POLICY tenant_isolation ON ha_edr_quarantine
+                USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+                WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1));
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS tenant_isolation ON ha_edr_quarantine;
+            ALTER TABLE ha_edr_quarantine NO FORCE ROW LEVEL SECURITY;
+            ALTER TABLE ha_edr_quarantine DISABLE ROW LEVEL SECURITY;
+        </rollback>
+    </changeSet>
+
+    <!-- ================= hive_alert_response_rule_execution ================= -->
+    <changeSet id="20260910006-4" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <columnExists tableName="hive_alert_response_rule_execution" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM hive_alert_response_rule_execution WHERE tenant_id IS NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE hive_alert_response_rule_execution ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE hive_alert_response_rule_execution FORCE ROW LEVEL SECURITY;
+            CREATE POLICY tenant_isolation ON hive_alert_response_rule_execution
+                USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+                WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1));
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS tenant_isolation ON hive_alert_response_rule_execution;
+            ALTER TABLE hive_alert_response_rule_execution NO FORCE ROW LEVEL SECURITY;
+            ALTER TABLE hive_alert_response_rule_execution DISABLE ROW LEVEL SECURITY;
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

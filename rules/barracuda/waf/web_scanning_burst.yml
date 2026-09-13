@@ -1,0 +1,45 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - barracuda-waf
+name: "Barracuda WAF: Web Scanning / Probing Burst"
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+category: Reconnaissance
+technique: "T1595.002 - Active Scanning: Vulnerability Scanning"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1595/002/
+description: |
+  Detects a burst of error responses (HTTP 4xx) from one client across the Barracuda WAF
+  access logs (cat=TR) — the signature of automated web scanning / directory brute-forcing /
+  vulnerability probing (many 400/401/403/404 in a short window as the scanner walks paths and
+  parameters). This precedes a targeted attack and often maps a source that a Web Firewall
+  rule will later block; catching the recon burst gives early warning.
+
+  Next Steps:
+  1. Identify the source (origin.ip), the target host, and the volume/spread of 4xx responses
+  2. Many distinct URLs with 4xx from one IP in minutes is high-signal for a scanner
+  3. Correlate the source with any cat=WF attack events that followed the recon
+  4. Check the User-Agent (log.baUserAgent) for a known scanner (nikto, sqlmap, nmap, gobuster)
+  5. Block or rate-limit the source and watch for a shift to a successful (2xx) exploit path
+where: |
+  equals("log.baLogType", "TR") &&
+  regexMatch("log.baHttpStatus", "^4[0-9][0-9]$") &&
+  exists("origin.ip")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: '{{.origin.ip}}'
+      - field: log.baHttpStatus
+        operator: filter_match
+        value: '4'
+    within: 5m
+    count: 30
+groupBy:
+  - origin.ip
+  - target.host

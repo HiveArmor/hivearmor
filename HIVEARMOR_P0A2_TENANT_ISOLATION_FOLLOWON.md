@@ -1,0 +1,164 @@
+# HIVEARMOR P0-A2 — Tenant Isolation Follow-On (tracking)
+
+> Opened 2026-09-10. Successor batch to P0-A1 (tenant security closure). Captures the
+> tenant-isolation work found DURING P0-A1's T19 verification and T20 spike that is out
+> of P0-A1's chartered scope (endpoint-scoped agent/EDR/collector/response resources).
+> P0-A1 fixed the two HIGH EDR read gaps adjacent to its own work (G1, G2); everything
+> below is deferred here.
+
+## Source of these items
+- `HIVEARMOR_P0A1_T19_VISIBLEBY_VERIFICATION.md` — OpenSearch read-path tenant-scope audit.
+- `HIVEARMOR_P0A1_T20_RLS_SPIKE.md` — Postgres RLS defense-in-depth spike.
+
+## Already fixed in P0-A1 (for reference — do NOT re-do)
+- **G1 — `HaEdrFimService`**: routed FIM reads through `MsspIndexResolver.resolveIndexPattern("fim")` (was hardcoded `v3-hive-fim-*`).
+- **G2 — `HaEdrService.fetchTimeline`**: its local `resolveIndexPattern(types)` now builds each type pattern via the injected `MsspIndexResolver` (was hardcoded, shadowing the resolver used by the sibling `fetchProcessNodes`).
+
+---
+
+## Open items
+
+### A2-1 (HIGH) — `EntityGraphResource` cross-tenant alert reads
+- **Gap (T19 G3):** reads `v3-hive-alert-*` hardcoded (`:34,87,135` in `buildGraph`/`expandSecondHop`); `@PreAuthorize(ROLE_ADMIN/ROLE_USER)` but no tenant scoping → entity-graph spans all tenants' alerts in MSSP mode.
+- **Fix:** inject `MsspIndexResolver`, resolve `resolveIndexPattern("alert")` for both query sites.
+- **Test:** cross-tenant entity-graph read returns only caller-tenant alerts.
+
+### A2-2 (HIGH) — `OffenseResource` cross-tenant offense/alert reads
+- **Gap (T19 G4):** reads `v3-hive-offense-*` and `v3-hive-alert-*` hardcoded (`:37-38,79,113,194,207`) via `elasticsearchService.search(...)` with no `validateTenantScope`/resolver.
+- **Fix:** route through `MsspIndexResolver` (offense + alert types) OR the `TenantScopeGuard` used by the generic search endpoints.
+- **Test:** offense list + alert lookups scoped to caller tenant.
+
+### A2-3 (MEDIUM) — `UbaSyncService` scheduled cross-tenant aggregation
+- **Gap (T19 G5):** `@Scheduled` job reads `v3-hive-alert-*` globally (no request `TenantContext`) and writes into shared relational UBA tables → cross-tenant aggregation.
+- **Fix APPLIED (feat/p0a2-uba-per-tenant):** `syncAnomalies` and `decayRiskScores` now run via `TenantScopedBackgroundExecutor.runForEachTenant` — each pass resolves the alert index via `MsspIndexResolver` (per-tenant `v3-hive-alert-<prefix>-*`) and reads/writes under that tenant's scope. Added `tenant_id` to `hive_uba_anomaly` + `hive_uba_entity_risk` (Liquibase `20260910004`, nullable); dedup/upsert/decay are now tenant-scoped (`existsByTenantIdAndDetailsJsonContaining`, `findByTenantIdAndEntityIdAndEntityType`, `findByTenantId`) so two tenants sharing an entityId no longer collide. Writes stamp `tenant_id` from the sync scope (single-tenant → 0). NOT-NULL + backfill deferred (same rollout pattern as the other tenant columns).
+- **Test:** UBA rows attributed to the correct tenant; no cross-tenant peer-group bleed.
+
+### A2-4 (LOW) — `ElasticsearchResource` metadata endpoints skip tenant scope
+- **Gap (T19 open item):** `getFieldValues`, `getFieldValuesWithCount`, `getIndexProperties` accepted a client `indexPattern`/`index` and did NOT call `validateTenantScope`. Lower severity (returns field names/values, not documents) but distinct field values could still leak across tenants.
+- **DELIVERED (A2-4):** `validateTenantScope(...)` now guards all three metadata reads via the shared `TenantScopeGuard`, identical to the query endpoints (`search`/`count`/`generic-search`/`search/csv`/`search/sql`). Non-MSSP mode stays permissive (backward-compat); MSSP mode denies any pattern outside the caller's alert/log prefix with `TenantScopeViolationException`. Covered by new cases in `ElasticsearchResourceTenantValidationTest` (own-allowed / other-denied / non-MSSP-allowed per endpoint). **Adversarial review upgraded scope to HIGH with two additional fixes on the same resource:** (H1) `TenantScopeGuard.isPatternInScope` did `startsWith` on the whole string, so a comma multi-target `v3-hive-alert-cwm-*,v3-hive-alert-other-*` passed a `cwm` check but read `other` too (affected ALL scoped endpoints, not just metadata) — now splits on `,` and requires every sub-target in scope, fail-closed; (H2) `deleteIndex` (POST /index/delete-index, raw `List<String>`) had NO scope guard and `/api/**` grants it to ROLE_USER — an MSSP tenant USER could DELETE another tenant's index; now every name is scope-validated before the service is reached. Prefix-collision (`cwm` vs `cwm2`) is already prevented by the retained trailing `-`; residual constraint (prefix must not contain `-`) documented in the guard Javadoc. `getAllIndexes`/`cluster/status` remain out of scope (index NAMES + cluster health, admin index-mgmt).
+
+### A2-5 (INFO) — confirm log/statistics indexes are tenant-free by design — CONFIRMED
+- **CONFIRMED tenant-free by design.** `v3-hive-statistics-*` (`Constants.STATISTICS_INDEX_PATTERN`) is a GLOBAL, non-tenant-prefixed index: the event-processor writes system/infra telemetry types (`statistics`, `baselines`, `correlation`, `offense`, `sequence-state`, `compliance-evidence`) via `sdkos.BuildCurrentDayIndex(type)` = `v3-hive-<type>-YYYY.MM.DD` (no tenant segment), whereas the per-tenant DATA types `alert` and `log` are written via `sdkos.BuildTenantIndex` = `v3-hive-<type>-<prefix>-YYYY.MM.DD`. Its only backend consumer is `SourceActivityProvider.fetchLatestSourceActivity()` — an internal checkpoint-driven data-source-liveness poll (infra health), NOT a tenant-facing endpoint. So the statistics index is genuinely global system telemetry and correctly needs no tenant scoping. Consistent with `TenantScopeGuard`, which only admits the `alert`/`log` tenant-prefixed families and would (correctly) deny any attempt to route a global-type pattern through the tenant-facing ES metadata/query endpoints.
+
+### A2-B (MSSP BACKFILL CONTRACT) — application-level tenant backfill + NOT NULL for MSSP
+- **Context:** changeset `20260910003_tenant_backfill_notnull.xml` backfills `tenant_id = 0`
+  and enforces NOT NULL for the four EDR/response tables, but is GATED to SINGLE-TENANT
+  deployments (precondition: no MSSP-managed client with a prefix). It MARK_RANs on MSSP,
+  because the authoritative agent→tenant mapping lives in the agent-manager's SEPARATE
+  Postgres (the `agents` table, reachable only over gRPC) — there is no in-DB join.
+- **Required for MSSP:** an application-level backfill job that, for each legacy row with
+  NULL `tenant_id` in `hive_edr_event`, `hive_edr_quarantine`, `ha_edr_quarantine`,
+  `hive_alert_response_rule_execution`, resolves the owning agent's tenant via the manager
+  (`agent_id`/`agent` → tenant), stamps the row, and reports rows it could not resolve
+  (orphaned agents) rather than defaulting them to 0. Run it per-tenant via the
+  `TenantScopedBackgroundExecutor` pattern, idempotent, resumable.
+- **Then:** a follow-up changeset enforces NOT NULL on MSSP (guarded by the INVERSE
+  precondition — MSSP-managed clients exist AND zero NULL rows remain), so NOT NULL is
+  only applied once the job has completed. Do NOT enforce NOT NULL on MSSP before the job.
+- **DELIVERED (PR #278, merged `5992dbd4`):** `TenantBackfillService.backfill()` + admin-only
+  `POST /api/ha-tenant-backfill`. Idempotent (only touches `tenant_id IS NULL`).
+  Single-tenant → blanket `SET tenant_id = 0` across ALL six tables (also closes the
+  T19-G5/L-3 legacy single-tenant UBA orphaning). MSSP → per-tenant via
+  `TenantScopedBackgroundExecutor` over the FOUR agent-linked tables only
+  (`hive_edr_event`, `hive_edr_quarantine`, `ha_edr_quarantine` by `agent_id`,
+  `hive_alert_response_rule_execution` by `agent`): lists each tenant's agents and stamps
+  matching rows; per-tenant agent-enumeration failures are caught + counted (`failedTenants`),
+  never silently reported as orphans. The two UBA tables are DELIBERATELY EXCLUDED from MSSP
+  host-matching (independent review C1): `entity_id` is a user/ip/host value, not an agent
+  identifier, so matching it against agent hostnames would orphan user/ip entities or
+  mis-stamp a colliding username cross-tenant. New UBA rows are already tenant-stamped at
+  insert (A2-3), so only LEGACY MSSP UBA rows remain NULL, reported as unresolvable-by-agent.
+- **NOT-NULL enforcement DELIVERED (feat/p0a2-notnull-enforcement) — APPLICATION-LEVEL, not
+  Liquibase.** `TenantBackfillService.enforceNotNull()` + admin-only `POST /api/ha-tenant-notnull`.
+  It enforces `tenant_id NOT NULL` on every tenant table (the four EDR/response tables + both
+  UBA tables) that is PROVABLY CLEAN (zero NULLs), skips any table that still has NULL rows
+  (reported, never defaulted to a wrong tenant), and is a no-op on an already-NOT-NULL column.
+  Idempotent and re-runnable: after the operator runs the backfill and re-runs this, newly-clean
+  tables get locked. WHY NOT LIQUIBASE: a changeset gated on a TRANSIENT data state
+  (`sqlCheck` for zero NULLs) with `onFail="MARK_RAN"` is UNSOUND — MARK_RAN is sticky
+  (recorded in DATABASECHANGELOG, never re-evaluated), so once it ran on a still-dirty deploy
+  the constraint would be skipped FOREVER on exactly the MSSP deployments that need it. An
+  independent review of the first attempt (PR #279) caught this as Critical; the enforcement was
+  moved to the application layer, which re-checks on every call and mirrors the app-level backfill
+  precedent (authoritative agent→tenant map lives outside this DB). Single-tenant EDR/response
+  NOT-NULL is still additionally covered by the stable-signal changeset `20260910003` (gated on
+  deployment shape, where MARK_RAN-forever is correct). MSSP legacy UBA rows stay skipped until a
+  UBA-specific migration resolves them from the originating alert's tenant.
+- **UBA legacy-row resolution DELIVERED (feat/p0a2-uba-legacy-tenant-resolve) — APPLICATION-LEVEL.**
+  `UbaSyncService.resolveLegacyUbaTenants()` + admin-only `POST /api/ha-uba-resolve-legacy-tenants`.
+  Each legacy MSSP anomaly (`tenant_id IS NULL`) is attributed to the tenant whose alert index
+  owns its originating alert — the alert's OpenSearch id is stored in the anomaly's `details_json`
+  as `alertId`, and for each MSSP tenant we probe `MsspIndexResolver.resolveIndexPatternForPrefix
+  ("alert", prefix)` via `ElasticsearchService.exists`. A UNIQUE tenant match stamps the row; zero
+  or AMBIGUOUS (>1 tenant) matches, or a tenant-index probe error, leave it NULL and are reported —
+  never guessed (no cross-tenant mis-attribution). Entity-risk rows carry no alert id, so they
+  inherit the (unambiguous) tenant of anomalies sharing their `(entity_id, entity_type)`. Idempotent
+  (only touches `tenant_id IS NULL`). Application-level because the authoritative alert lives in
+  OpenSearch (a different store) — no in-DB join can derive it. RUN ORDER: backfill →
+  resolve-legacy-UBA → ha-tenant-notnull (the UBA NOT-NULL constraint then engages on MSSP once
+  these rows are resolved; any still-ambiguous rows keep it deferred, which is correct).
+
+### A2-6 (DESIGN) — Postgres RLS defense-in-depth
+- **From T20:** adopt RLS as a second layer beneath app-level scoping, but ONLY after backfill + NOT NULL on `tenant_id`. Pilot on the four P0-A1 EDR/response tables
+  (`hive_edr_event`, `hive_edr_quarantine`, `ha_edr_quarantine`, `hive_alert_response_rule_execution`).
+- **Prerequisites (blockers):** (1) backfill + NOT NULL on `tenant_id`; (2) a dedicated
+  unprivileged app DB role (single superuser role bypasses RLS today, silently no-op);
+  (3) transaction-local GUC (`set_config(..., true)`) wired to `TenantContextFilter`
+  set/clear + the `TenantScopedBackgroundExecutor` per-tenant loop, with a fail-closed
+  default so an unset GUC denies rather than exposes.
+- **Top risks:** connection-pool GUC bleed; the nullable rollout window; superuser bypass.
+- **P0 + P1 DELIVERED (feat/p0a2-6-rls-p0-p1), INERT.** Backfill + NOT-NULL prerequisites are
+  now met (#278/#279/#280). This PR ships the low-risk foundation the spike recommends, with NO
+  policy enabled yet:
+  - **P1 (code):** `TenantGucAspect` — an `@Order(HIGHEST_PRECEDENCE)` `@Around` on `@Transactional`
+    that, inside the active transaction, issues transaction-local
+    `SELECT set_config('app.current_tenant', ?, true)` on the tx-bound connection (bound param, no
+    injection). One choke point covers BOTH request threads and the `TenantScopedBackgroundExecutor`
+    (both run `@Transactional`). Fail-closed value mapping: `getClientId()` → that id; null +
+    single-tenant → `0`; null + MSSP → `-1` (impossible id → future policy returns zero rows, never
+    a leak). Transaction-local scope is safe against Hikari pool bleed (works because prod runs
+    `auto-commit=false`). Ships INERT — no policy reads the GUC yet, so it is a verifiable no-op.
+    5 unit tests (value mapping ×3, bound-param set_config, inert-phase failure swallowed).
+  - **P0 (ops):** `HIVEARMOR_A2_6_RLS_ROLE_PROVISIONING.md` — the unprivileged-app-role /
+    `BYPASSRLS`-migration-role split (a superuser silently bypasses RLS, so this is what makes RLS
+    actually enforce), as an idempotent SQL script + `spring.liquibase.user`/datasource config
+    change + verification + rollback. NOT a Liquibase changeset (role provisioning is a privileged
+    operational action).
+  - **NOT in this PR — P2 (the pilot):** `ENABLE`/`FORCE ROW LEVEL SECURITY` + the `tenant_isolation`
+    policy on the four EDR/response tables. Deliberately a separate go/no-go PR gated on the
+    P0A1-T18 cross-tenant matrix, because enabling policies is the blast-radius step.
+  - **P2 PILOT DELIVERED (feat/p0a2-6-rls-p2-pilot):** changeset `20260910006_rls_pilot_edr_response.xml`
+    enables `ENABLE`/`FORCE ROW LEVEL SECURITY` + a `tenant_isolation` policy (USING **and** WITH CHECK)
+    on the four EDR/response tables (`hive_edr_event`, `hive_edr_quarantine`, `ha_edr_quarantine`,
+    `hive_alert_response_rule_execution`). Predicate:
+    `tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1)` —
+    the `true` (missing_ok) makes an un-GUC'd query fail CLOSED (evaluate against -1 → zero rows)
+    instead of ERRORING; WITH CHECK blocks cross-tenant writes too. GATED per-table by a
+    `sqlCheck` for zero `tenant_id IS NULL` rows with **`onFail="CONTINUE"`** (NOT MARK_RAN — CONTINUE
+    skips-without-recording so it re-evaluates and lands automatically once the operator's backfill
+    leaves the table clean; MARK_RAN would stick as done-forever on a dirty deploy). Each table is an
+    independent changeset with a `<rollback>` (DROP POLICY + DISABLE RLS). **Operator prerequisites
+    (the go/no-go):** (1) run the backfill so each pilot table has zero null tenant_id; (2) the app
+    must connect as the unprivileged `hivearmor_app` role (a superuser/BYPASSRLS role silently
+    bypasses RLS — see the role-provisioning runbook); (3) CI/operator must run the P0A1-T18
+    cross-tenant matrix AGAINST a policied role to prove isolation actually holds before relying on
+    it. The GUC choke point (#281) and role split (runbook) are the wiring this depends on.
+
+### A2-7 (DELIVERED) — agent-manager Go/GORM datasource
+- **From both T19 & T20:** the agent-manager uses a SEPARATE Postgres datasource (GORM) that neither the Java `MsspIndexResolver` nor a backend RLS policy covers. P0-A1 forced tenant predicates in its list queries (T03/T07/T11), but a broader review of its `findAll`/`Unscoped` surface + its own RLS story is a distinct workstream.
+- **DELIVERED to `release/v3`** (design of record: `HIVEARMOR_A2_7_MANAGER_RLS.md`, audit: `HIVEARMOR_A2_7_AGENT_MANAGER_DATASOURCE_REVIEW.md`):
+  - #290 `98603a76` — §3.1 app-layer forced-tenant GORM scope (`utils.TenantScope`, `ScopedFind`/`ScopedGetByPagination`, fail-closed).
+  - #291 `cb91d4b3` — fix: `GetFirst`/`Delete` args-spread bug (unspread `[]interface{}` dropped the tenant predicate; correctness + security).
+  - #292 `4f7e3fb7` — §3.2a RLS `tenant_isolation` policies on agents/collectors/enrollment_tokens/enrollment_audit_events + agent_commands (parent policy). Inert (superuser ignores RLS).
+  - #293 `d255b8cf` — §3.2b steps 1-2: BYPASSRLS system-context pool + `WithTenantTx` per-tx GUC; reads converted.
+  - #294 `72ab32d6` — §3.2b step 3: all tenant-facing writes tenant-GUC'd with affected-row no-op detection; `//go:build integration` matrix (T-CANARY/T-SCOPE/T-CMD/T-WRITE/T-MISSING-GUC/T-POOL-BLEED/T-CONCURRENT — all green on real Postgres).
+- **To ENABLE enforcement (operator, no code):** `HIVEARMOR_A2_7_MANAGER_RLS_ENABLEMENT_RUNBOOK.md` — provision `hivearmor_agents_app` (unprivileged, table-owner) + `hivearmor_agents_system` (BYPASSRLS), set `DB_USER`/`DB_SYSTEM_USER`, staging canary (T-BOOT/T-CANARY), roll out with instant rollback.
+
+---
+
+## Suggested sequencing
+1. **A2-1, A2-2** (HIGH, small, same pattern as G1/G2) — quick wins.
+2. **A2-3** (MEDIUM, needs the per-tenant executor refactor).
+3. **A2-4, A2-5** (LOW/INFO clean-up).
+4. **Backfill + NOT NULL** (also a standing P0-A1 carry-forward) — unblocks A2-6.
+5. **A2-6** (DESIGN), **A2-7** (DELIVERED — #290–#294 merged; enforcement pending operator role split) after the prerequisites land.

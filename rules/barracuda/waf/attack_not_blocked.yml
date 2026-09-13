@@ -1,0 +1,34 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - barracuda-waf
+name: "Barracuda WAF: Attack Detected but Not Blocked (Monitor Mode)"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: Initial Access
+technique: "T1190 - Exploit Public-Facing Application"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1190/
+description: |
+  Detects a Barracuda WAF Web Firewall event (cat=WF) whose action was LOG or WARNING rather
+  than DENY — the WAF RECOGNIZED an attack but let the request through to the backend (a rule
+  in passive/monitor mode, or a policy set to log-only). This is higher urgency than a blocked
+  attack: the malicious request reached the application, so any successful exploitation would
+  not have been prevented. It also flags WAF rules that should be moved to blocking mode.
+
+  Next Steps:
+  1. Identify the attacker (origin.ip), the target host/URL, and the attack type
+  2. Because the request was NOT blocked, inspect the backend app for successful exploitation
+  3. Determine why the rule is in LOG/monitor mode and whether it should be set to block
+  4. Correlate with the access log (cat=TR) for the same request to see the backend response
+  5. Block the source and move the rule to enforce mode if the detection is reliable
+where: |
+  equals("log.baLogType", "WF") &&
+  (regexMatch("log.message", "(?i)\\b(LOG|WARNING|monitor|passive|detect)\\b") ||
+   regexMatch("action", "(?i)(LOG|WARNING)"))
+groupBy:
+  - origin.ip
+  - target.host

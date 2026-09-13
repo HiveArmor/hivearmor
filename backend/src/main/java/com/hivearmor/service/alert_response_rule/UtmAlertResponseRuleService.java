@@ -67,6 +67,7 @@ public class UtmAlertResponseRuleService {
     private final UtmIncidentVariableService utmIncidentVariableService;
     private final UtmAlertResponseActionTemplateRepository utmAlertResponseActionTemplateRepository;
     private final UtmAlertResponseActionTemplateService utmAlertResponseActionTemplateService;
+    private final com.hivearmor.multitenancy.TenantScopedBackgroundExecutor backgroundExecutor;
 
 
 
@@ -201,6 +202,11 @@ public class UtmAlertResponseRuleService {
                     exe.setRuleId(rule.getId());
                     exe.setCommand(buildCommand(rule.getRuleCmd(), matchAsJson));
                     exe.setExecutionStatus(RuleExecutionStatus.PENDING);
+                    // P0A1-T14 follow-on — stamp the owning tenant from the alert's scope
+                    // (single-tenant → 0), never from a payload. Lets the dispatcher
+                    // pre-partition pending commands per tenant.
+                    Long tenantId = com.hivearmor.multitenancy.TenantScope.currentTenantOrNull();
+                    exe.setTenantId(tenantId != null ? tenantId : 0L);
                     alertResponseRuleExecutionRepository.save(exe);
                 }
             }
@@ -267,58 +273,71 @@ public class UtmAlertResponseRuleService {
     @Scheduled(fixedDelay = 30, timeUnit = TimeUnit.SECONDS)
     public void executeRuleCommands() {
         final String ctx = CLASSNAME + ".executeRuleCommands";
-        try {
-            List<UtmAlertResponseRuleExecution> cmds = alertResponseRuleExecutionRepository.findAllRuleByExecutionStatusAndRule_RuleActiveTrue(RuleExecutionStatus.PENDING);
-            if (CollectionUtils.isEmpty(cmds))
-                return;
+        // P0A1-T14 — process pending commands ONE tenant at a time. Each tenant's
+        // commands are pre-partitioned by tenant_id (no cross-tenant probing) and
+        // their target agent is resolved under that tenant's scope. A failure in one
+        // tenant does not stop the others (handled by the executor).
+        backgroundExecutor.runForEachTenant(ctx, () -> {
+            try {
+                Long tenantId = com.hivearmor.multitenancy.TenantScope.requireTenant();
+                List<UtmAlertResponseRuleExecution> cmds =
+                        alertResponseRuleExecutionRepository.findAllByExecutionStatusAndTenantIdAndRule_RuleActiveTrue(RuleExecutionStatus.PENDING, tenantId);
+                if (CollectionUtils.isEmpty(cmds))
+                    return;
 
-            for (UtmAlertResponseRuleExecution cmd : cmds) {
-                Optional<AgentDTO> opt = agentService.getAgentByHostName(cmd.getAgent());
-                if (opt.isEmpty()) {
-                    cmd.setExecutionStatus(RuleExecutionStatus.FAILED);
-                    cmd.setNonExecutionCause(RuleNonExecutionCause.AGENT_NOT_FOUND);
-                    alertResponseRuleExecutionRepository.save(cmd);
-                } else {
-                    AgentDTO agent = opt.get();
-                    if (agent.getStatus().equals(AgentStatusEnum.ONLINE)) {
-                        String reason = "The incident response automation executed this command because it was accomplished the conditions of the rule with ID: " + cmd.getRuleId();
-                        final StringBuilder results = new StringBuilder();
-                        String shell = cmd.getRule() != null ? cmd.getRule().getRuleShell() : null;
-                        incidentResponseCommandService.sendCommand(String.valueOf(agent.getId()), utmIncidentVariableService.replaceVariablesInCommand(cmd.getCommand()), "INCIDENT_RESPONSE_AUTOMATION",
-                                cmd.getRuleId().toString(), reason, Constants.SYSTEM_ACCOUNT, shell, new StreamObserver<>() {
-                                    @Override
-                                    public void onNext(CommandResult commandResult) {
-                                        results.append(commandResult.getResult());
-                                    }
-
-                                    @Override
-                                    public void onError(Throwable throwable) {
-
-                                    }
-
-                                    @Override
-                                    public void onCompleted() {
-                                        cmd.setCommandResult(results.toString());
-                                        cmd.setExecutionStatus(RuleExecutionStatus.EXECUTED);
-                                        cmd.setNonExecutionCause(null);
-                                        alertResponseRuleExecutionRepository.save(cmd);
-                                    }
-                                });
-                    } else {
-                        if (cmd.getExecutionRetries() < Constants.IRA_EXECUTION_RETRIES) {
-                            cmd.setExecutionStatus(RuleExecutionStatus.PENDING);
-                            cmd.setExecutionRetries(cmd.getExecutionRetries() + 1);
-                            cmd.setNonExecutionCause(RuleNonExecutionCause.AGENT_OFFLINE);
-                        } else {
-                            cmd.setExecutionStatus(RuleExecutionStatus.FAILED);
-                        }
+                for (UtmAlertResponseRuleExecution cmd : cmds) {
+                    Optional<AgentDTO> opt = agentService.getAgentByHostName(cmd.getAgent());
+                    if (opt.isEmpty()) {
+                        // Agent not in this (the command's own) tenant → genuinely not found.
+                        cmd.setExecutionStatus(RuleExecutionStatus.FAILED);
+                        cmd.setNonExecutionCause(RuleNonExecutionCause.AGENT_NOT_FOUND);
                         alertResponseRuleExecutionRepository.save(cmd);
+                    } else {
+                        dispatchRuleCommand(cmd, opt.get());
                     }
                 }
+            } catch (Exception e) {
+                String msg = ctx + ": " + e.getLocalizedMessage();
+                log.error(msg);
             }
-        } catch (Exception e) {
-            String msg = ctx + ": " + e.getLocalizedMessage();
-            log.error(msg);
+        });
+    }
+
+    /** P0A1-T14 — dispatch a single resolved rule command to its (in-tenant) agent. */
+    private void dispatchRuleCommand(UtmAlertResponseRuleExecution cmd, AgentDTO agent) {
+        if (agent.getStatus().equals(AgentStatusEnum.ONLINE)) {
+            String reason = "The incident response automation executed this command because it was accomplished the conditions of the rule with ID: " + cmd.getRuleId();
+            final StringBuilder results = new StringBuilder();
+            String shell = cmd.getRule() != null ? cmd.getRule().getRuleShell() : null;
+            incidentResponseCommandService.sendCommand(String.valueOf(agent.getId()), utmIncidentVariableService.replaceVariablesInCommand(cmd.getCommand()), "INCIDENT_RESPONSE_AUTOMATION",
+                    cmd.getRuleId().toString(), reason, Constants.SYSTEM_ACCOUNT, shell, new StreamObserver<>() {
+                        @Override
+                        public void onNext(CommandResult commandResult) {
+                            results.append(commandResult.getResult());
+                        }
+
+                        @Override
+                        public void onError(Throwable throwable) {
+
+                        }
+
+                        @Override
+                        public void onCompleted() {
+                            cmd.setCommandResult(results.toString());
+                            cmd.setExecutionStatus(RuleExecutionStatus.EXECUTED);
+                            cmd.setNonExecutionCause(null);
+                            alertResponseRuleExecutionRepository.save(cmd);
+                        }
+                    });
+        } else {
+            if (cmd.getExecutionRetries() < Constants.IRA_EXECUTION_RETRIES) {
+                cmd.setExecutionStatus(RuleExecutionStatus.PENDING);
+                cmd.setExecutionRetries(cmd.getExecutionRetries() + 1);
+                cmd.setNonExecutionCause(RuleNonExecutionCause.AGENT_OFFLINE);
+            } else {
+                cmd.setExecutionStatus(RuleExecutionStatus.FAILED);
+            }
+            alertResponseRuleExecutionRepository.save(cmd);
         }
     }
 

@@ -1,0 +1,49 @@
+id: 9132
+name: SEQ-AWS-NEWKEY-PRIVESC-EXFIL
+dataTypes:
+  - aws
+category: Exfiltration
+technique: "T1078.004 - Valid Accounts: Cloud Accounts"
+mitre:
+  tactics: ["TA0003", "TA0004", "TA0010"]
+  attacks: ["T1098.001", "T1548.005", "T1537"]
+adversary: origin
+description: >
+  Staging sequence pack (DET-SEQ). AWS account-takeover kill chain by one identity:
+  a new access key or login profile is created (persistence / credential planting),
+  followed by a privilege-escalation action (attach admin policy, PassRole, create
+  policy version), followed by data exfiltration (S3 bulk read, snapshot share, or RDS
+  public restore) — each within its window. Individually these are separate cloud
+  rules; the ordered chain from one principal is a high-confidence compromised-identity
+  signal.
+references:
+  - https://attack.mitre.org/techniques/T1098/001/
+  - https://attack.mitre.org/techniques/T1548/005/
+  - https://attack.mitre.org/techniques/T1537/
+  - https://attack.mitre.org/tactics/TA0010/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - log.userIdentityArn
+groupBy:
+  - log.userIdentityArn
+sequence:
+  - where: 'safe("log.eventName", "") == "CreateAccessKey" || safe("log.eventName", "") == "CreateLoginProfile" || safe("log.eventName", "") == "UpdateLoginProfile" || raw.matches("(?i).*(CreateAccessKey|CreateLoginProfile|CreateUser).*")'
+    within: 30m
+  - where: 'safe("log.eventName", "") == "AttachUserPolicy" || safe("log.eventName", "") == "AttachRolePolicy" || safe("log.eventName", "") == "PutUserPolicy" || safe("log.eventName", "") == "CreatePolicyVersion" || raw.matches("(?i).*(AttachUserPolicy|AttachRolePolicy|PutUserPolicy|CreatePolicyVersion|PassRole|AdministratorAccess).*")'
+    within: 60m
+  - where: 'safe("log.eventName", "") == "GetObject" || safe("log.eventName", "") == "ModifySnapshotAttribute" || safe("log.eventName", "") == "RestoreDBInstanceFromDBSnapshot" || raw.matches("(?i).*(GetObject|ModifySnapshotAttribute|SharedSnapshot|RestoreDBInstance|CreateDBSnapshot).*")'
+    within: 120m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: "{{.log.userIdentityArn}}"
+      - field: log.eventName
+        operator: filter_match
+        value: 'CreateAccessKey CreateLoginProfile'
+    within: 180m
+    count: 1

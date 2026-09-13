@@ -1,0 +1,46 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS Cognito User Pool Tampering
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: Persistence
+technique: "T1136.003 - Create Account: Cloud Account"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1136/003/
+  - https://attack.mitre.org/techniques/T1556/
+description: |
+  Detects tampering with an Amazon Cognito user/identity pool that undermines application
+  authentication — admin-creating or confirming a user, disabling the pool's MFA
+  requirement (SetUserPoolMfaConfig OFF), weakening password policy, or attaching a rogue
+  identity provider. Cognito fronts customer-facing app auth; an attacker who edits the
+  pool can plant a backdoor account, disable MFA to enable takeover, or federate an IdP
+  they control — persisting access to the application and its users.
+
+  Next Steps:
+  1. Identify the principal, the user/identity pool, and the exact Cognito change
+  2. Confirm it matches a sanctioned app-admin or IaC change
+  3. Flag AdminCreateUser, SetUserPoolMfaConfig disabling MFA, and new IdP attachment as high-signal
+  4. If unauthorized, revert the change, remove any planted user/IdP, and force-reset affected app users
+  5. Review app sign-ins since the change for takeover activity
+where: |
+  regexMatch("log.eventSource", "cognito-idp\\.amazonaws\\.com|cognito-identity\\.amazonaws\\.com") &&
+  oneOf("log.eventName", ["AdminCreateUser", "AdminConfirmSignUp", "AdminSetUserPassword", "SetUserPoolMfaConfig", "UpdateUserPool", "CreateIdentityProvider", "UpdateIdentityProvider", "AdminAddUserToGroup", "SetIdentityPoolRoles", "CreateUserPoolClient"])
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_match
+        value: 'cognito'
+    within: 30m
+    count: 1
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

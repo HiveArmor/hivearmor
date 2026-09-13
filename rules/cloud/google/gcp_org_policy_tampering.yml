@@ -1,0 +1,36 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - google
+name: GCP Organization Policy Tampering
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: Defense Evasion
+technique: "T1484.002 - Domain or Tenant Policy Modification: Trust Modification"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1484/002/
+  - https://attack.mitre.org/techniques/T1562/
+description: |
+  Detects modification of a GCP Organization Policy — SetOrgPolicy / the orgpolicy service.
+  Org policies enforce org-wide security constraints (block external IPs on VMs, disable
+  service-account key creation, restrict public bucket ACLs, require OS Login, restrict
+  allowed domains for sharing). An attacker who reaches org/folder-admin rights relaxes or
+  removes one of these constraints to unlock a follow-on technique across the whole
+  organization — e.g. re-enabling SA key creation before minting keys, or allowing external
+  IPs before exposing a VM.
+
+  Next Steps:
+  1. Identify the actor (adversary.user), the constraint changed, and the resource scope (org/folder/project)
+  2. Disabling a security constraint (iam.disableServiceAccountKeyCreation, compute.vmExternalIpAccess, storage.publicAccessPrevention) is high-signal
+  3. Confirm the change matches an approved org-governance ticket, not an ad-hoc set
+  4. If unauthorized, restore the constraint and hunt for the technique it was relaxed to enable
+  5. Review what changed org-wide during the window the constraint was off
+where: |
+  contains("log.protoPayloadMethodName", "SetOrgPolicy") ||
+  contains("log.protoPayloadServiceName", "orgpolicy.googleapis.com")
+groupBy:
+  - adversary.user
+  - adversary.ip

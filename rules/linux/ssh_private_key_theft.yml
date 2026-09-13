@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - "linux"
+name: "System Linux: SSH Private Key or Credential File Access"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 0
+category: Credential Access
+technique: "T1552.004 - Unsecured Credentials: Private Keys"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1552/004/
+description: |
+  Detects a process reading or copying private-key material — ~/.ssh/id_rsa|id_ed25519|
+  id_ecdsa|id_dsa, *.pem / *.key files, or the whole ~/.ssh directory — via cat/cp/scp/tar/
+  base64/openssl rather than the ssh client itself. Stealing SSH private keys and cloud/TLS
+  key files lets an attacker move laterally to every host and service those keys unlock, a
+  primary post-compromise credential-access action on servers.
+
+  Next Steps:
+  1. Identify the host, user, process, and the exact key file(s) accessed
+  2. Confirm the accessor is a legitimate ssh/agent/backup process, not an ad-hoc cp/tar/cat
+  3. Treat archiving or base64-encoding a .ssh directory / *.pem as high-signal exfil staging
+  4. If unauthorized, rotate every key that could have been read and revoke its access everywhere
+  5. Correlate with subsequent SSH logins from new hosts and outbound transfer
+where: |
+  exists("log.message") &&
+  regexMatch("log.message", "(/\\.ssh/id_(rsa|ed25519|ecdsa|dsa)|\\.ssh/id_|\\.pem\\b|[A-Za-z0-9_./-]+\\.key\\b|/\\.ssh/?(\\s|$))") &&
+  regexMatch("log.message", "(?i)(\\bcp\\b|\\bcat\\b|scp|\\btar\\b|base64|openssl|\\bdd\\b|\\bzip\\b|xxd)") &&
+  !regexMatch("log.message", "(?i)(ssh-agent|/usr/bin/ssh\\b|sshd|ssh-add|known_hosts)")
+groupBy:
+  - origin.host
+  - origin.user

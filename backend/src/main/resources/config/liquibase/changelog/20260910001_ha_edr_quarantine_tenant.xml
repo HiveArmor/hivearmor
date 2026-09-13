@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      P0A1-T09 follow-on — authoritative tenant attribution for quarantine records.
+      Two quarantine tables exist: hive_edr_quarantine (UtmEdrQuarantine, written by
+      EdrService.quarantineFile) and ha_edr_quarantine (HaEdrQuarantine, read/update
+      surface). Both previously had a findAll() read path returning EVERY tenant's rows.
+      tenant_id is assigned SERVER-SIDE from the authenticated identity (TenantContext),
+      never from a request payload. Added nullable during the rollout/backfill window;
+      NOT NULL enforcement deferred to a later batch after backfill from the owning agent.
+    -->
+    <changeSet id="20260910001-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="hive_edr_quarantine" columnName="tenant_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="hive_edr_quarantine">
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="hive_edr_quarantine" indexName="idx_hive_edr_quarantine_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260910001-2" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="ha_edr_quarantine" columnName="tenant_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="ha_edr_quarantine">
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="ha_edr_quarantine" indexName="idx_ha_edr_quarantine_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

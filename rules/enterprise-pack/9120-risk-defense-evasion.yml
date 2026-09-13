@@ -1,0 +1,33 @@
+id: 9120
+name: RISK-DEFENSE-EVASION-TAMPER
+dataTypes:
+  - windows
+  - linux
+  - process
+  - wineventlog
+category: Defense Evasion
+technique: "T1562.001 - Impair Defenses: Disable or Modify Tools"
+mitre:
+  tactics: ["TA0005"]
+  attacks: ["T1562.001", "T1070"]
+adversary: origin
+description: >
+  Accumulates risk when commands tamper with security controls or clear logs
+  (stopping AV/EDR services, disabling the firewall, wevtutil cl, clearing the
+  bash history, sc stop of a defender service). Individually noisy admin actions,
+  but weighted into the accumulator they raise an origin's score when combined
+  with other stages of an intrusion.
+references:
+  - https://attack.mitre.org/techniques/T1562/001/
+  - https://attack.mitre.org/tactics/TA0005/
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+deduplicateBy:
+  - origin.host
+  - origin.command
+groupBy:
+  - origin.host
+riskScore: 35
+where: 'raw.matches("(?i).*(wevtutil\\s+cl|Clear-EventLog|sc\\s+(stop|config).*(windefend|sense|sophos|crowdstrike)|Set-MpPreference.*-Disable|netsh\\s+advfirewall\\s+set.*off|systemctl\\s+stop\\s+(auditd|rsyslog)|history\\s+-c|>\\s*/var/log/).*")'

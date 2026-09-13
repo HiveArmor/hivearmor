@@ -197,31 +197,45 @@ public class HaEdrService {
     }
 
     /**
-     * Resolves OpenSearch index patterns based on the requested event types.
+     * Resolves TENANT-SCOPED OpenSearch index patterns for the requested event types.
      * When types is null/blank all endpoint index patterns are searched.
+     *
+     * <p>P0A1-T19 (G2): each type pattern is produced by {@link MsspIndexResolver}, so
+     * in MSSP mode it carries the caller's tenant prefix (v3-hive-&lt;type&gt;-&lt;prefix&gt;-*)
+     * and this read can no longer span every tenant. Previously the patterns were
+     * hardcoded (v3-hive-&lt;type&gt;-*), bypassing the injected resolver used by the
+     * sibling fetchProcessNodes path.
      */
     private String resolveIndexPattern(String types) {
+        java.util.List<String> requested = new java.util.ArrayList<>();
         if (types == null || types.isBlank()) {
-            return "v3-hive-process-*,v3-hive-netconn-*,v3-hive-fim-*,v3-hive-dns-*";
+            requested.add("process");
+            requested.add("netconn");
+            requested.add("fim");
+            requested.add("dns");
+        } else {
+            if (types.contains("process") || types.contains("exec")) {
+                requested.add("process");
+            }
+            if (types.contains("network") || types.contains("netconn")) {
+                requested.add("netconn");
+            }
+            if (types.contains("file") || types.contains("fim")) {
+                requested.add("fim");
+            }
+            if (types.contains("dns")) {
+                requested.add("dns");
+            }
+            if (requested.isEmpty()) {
+                requested.add("process");
+                requested.add("netconn");
+                requested.add("fim");
+                requested.add("dns");
+            }
         }
-        StringBuilder sb = new StringBuilder();
-        if (types.contains("process") || types.contains("exec")) {
-            sb.append("v3-hive-process-*,");
-        }
-        if (types.contains("network") || types.contains("netconn")) {
-            sb.append("v3-hive-netconn-*,");
-        }
-        if (types.contains("file") || types.contains("fim")) {
-            sb.append("v3-hive-fim-*,");
-        }
-        if (types.contains("dns")) {
-            sb.append("v3-hive-dns-*,");
-        }
-        String result = sb.toString();
-        if (result.isEmpty()) {
-            return "v3-hive-process-*,v3-hive-netconn-*,v3-hive-fim-*,v3-hive-dns-*";
-        }
-        return result.endsWith(",") ? result.substring(0, result.length() - 1) : result;
+        return requested.stream()
+                .map(indexResolver::resolveIndexPattern)
+                .collect(java.util.stream.Collectors.joining(","));
     }
 
     /**

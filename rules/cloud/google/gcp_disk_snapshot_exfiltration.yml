@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - google
+name: GCP Disk Snapshot or Image Exfiltration
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Exfiltration
+technique: "T1537 - Transfer Data to Cloud Account"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1537/
+  - https://attack.mitre.org/techniques/T1578/
+description: |
+  Detects creation of a Compute Engine disk snapshot or machine image — disks.createSnapshot,
+  images.insert, or the snapshots service. A well-known cloud-exfiltration technique is to
+  snapshot a victim VM's disk and then create an image / share the snapshot to an
+  attacker-controlled project, reading the data (credentials, source, databases) from a copy
+  without ever touching the running instance. Snapshotting sensitive disks, or sharing a
+  snapshot/image cross-project, is the high-signal pattern.
+
+  Next Steps:
+  1. Identify the actor (adversary.user), the source disk/instance, and the snapshot/image target
+  2. A snapshot of a sensitive VM followed by a cross-project image insert or share is high-signal
+  3. Confirm it matches a sanctioned backup/DR workflow, not an ad-hoc copy
+  4. If unauthorized, delete the rogue snapshot/image, revoke any cross-project share, and treat the disk contents as exposed
+  5. Review the actor's other activity for the broader intrusion
+where: |
+  contains("log.protoPayloadServiceName", "compute.googleapis.com") &&
+  regexMatch("log.protoPayloadMethodName", "(?i)(disks\\.createSnapshot|createSnapshot|images\\.insert|snapshots\\.insert)")
+groupBy:
+  - adversary.user
+  - adversary.ip

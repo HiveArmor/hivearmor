@@ -1,0 +1,47 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS KMS Key Destruction or Disablement
+impact:
+  confidentiality: 1
+  integrity: 2
+  availability: 3
+category: Impact
+technique: "T1485 - Data Destruction"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1485/
+  - https://attack.mitre.org/techniques/T1486/
+  - https://attack.mitre.org/tactics/TA0040/
+description: |
+  Detects scheduling deletion of, disabling, or removing access to an AWS KMS key —
+  ScheduleKeyDeletion, DisableKey, DisableKeyRotation, or a PutKeyPolicy that revokes
+  access. Because KMS keys encrypt S3 objects, EBS volumes, RDS, and secrets, destroying
+  or disabling a CMK renders all data it protects permanently unrecoverable — a
+  denial/destruction impact, and in extortion scenarios a coercion lever (the attacker
+  controls the only path to decrypt).
+
+  Next Steps:
+  1. Identify the principal, the key id, and the action (schedule-deletion / disable / policy revoke)
+  2. Confirm it is a sanctioned key-lifecycle change, not an unexpected deletion
+  3. Treat ScheduleKeyDeletion on a key protecting production data as critical — cancel it within the window
+  4. If unauthorized, CancelKeyDeletion / re-enable the key immediately and lock down KMS IAM
+  5. Inventory what data the key protects and assess recoverability
+where: |
+  equals("log.eventSource", "kms.amazonaws.com") &&
+  oneOf("log.eventName", ["ScheduleKeyDeletion", "DisableKey", "DisableKeyRotation", "DeleteAlias"])
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_term
+        value: 'kms.amazonaws.com'
+    within: 30m
+    count: 1
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

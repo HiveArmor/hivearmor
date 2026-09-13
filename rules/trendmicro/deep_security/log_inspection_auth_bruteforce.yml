@@ -1,0 +1,33 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - trendmicro-deep-security
+name: "Trend Micro: Repeated Authentication Failures (Log Inspection)"
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: Credential Access
+technique: "T1110 - Brute Force"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1110/
+description: |
+  Detects a Trend Micro Deep Security Log Inspection event reporting repeated authentication
+  failures (Log Inspection module, Signature IDs 3000000-3999999; the sub-rule description in
+  log.tmCs1 names the condition, e.g. "Multiple Windows Logon Failures"). Log Inspection
+  parses the host's own logs, so this is host-side evidence of a brute-force or password-spray
+  against the monitored server, complementing network-side detections.
+
+  Next Steps:
+  1. Identify the host (origin.host), the source of the failures (origin.ip / log.message), and the account
+  2. Correlate with a subsequent successful logon on the same host (brute-force success)
+  3. Distinguish a real attack from a misconfigured service repeatedly failing to authenticate
+  4. If malicious, block the source, lock the targeted account, and review host access
+  5. Pivot the source IP across other hosts' Log Inspection events for spray behavior
+where: |
+  regexMatch("log.signatureId", "^3[0-9]{6}$") &&
+  regexMatch("log.tmCs1", "(?i)(logon fail|login fail|authentication fail|audit failure|multiple .*fail)")
+groupBy:
+  - origin.host
+  - origin.ip

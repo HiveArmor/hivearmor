@@ -1,0 +1,38 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - macos
+name: "macOS: Suspicious Screen Capture Activity"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Collection
+technique: "T1113 - Screen Capture"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1113/
+description: |
+  Detects abuse of the macOS screencapture facility for surveillance — the screencapture CLI
+  run non-interactively (-x silent, -C, output to a hidden/temp path), invoked by a
+  non-standard parent, or a scripted loop capturing the screen. Screen capture is a common
+  data-collection step in macOS stealers and RATs to harvest on-screen credentials, MFA
+  codes, and sensitive documents; legitimate use is interactive (Cmd-Shift-3/4) and rarely
+  writes to /tmp or a dotfile path.
+
+  Next Steps:
+  1. Identify the host, user, the invoking process, and where the capture was written
+  2. screencapture -x to /tmp or a hidden path, or run by a shell/osascript loop, is high-signal
+  3. Confirm the process is not a sanctioned screen-recording/remote-support tool
+  4. If malicious, isolate the host, remove the tool, and treat visible on-screen data as exposed
+  5. Correlate with TCC screen-recording grants and outbound transfer of image files
+where: |
+  exists("log.eventMessage") &&
+  (
+    (regexMatch("log.eventMessage", "(?i)\\bscreencapture\\b") &&
+     regexMatch("log.eventMessage", "(?i)(\\s-[a-z]*x|\\s-C\\b|/tmp/|/\\.|/var/folders/|\\.png\\s*$|loop|while\\s)")) ||
+    (regexMatch("log.eventMessage", "(?i)(CGWindowListCreateImage|CGDisplayCreateImage)"))
+  )
+groupBy:
+  - origin.host
+  - origin.user

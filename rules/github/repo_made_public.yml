@@ -1,0 +1,30 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - github
+name: GitHub Private Repository Made Public
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Exfiltration
+technique: "T1567.001 - Exfiltration Over Web Service: Exfiltration to Code Repository"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1567/001/
+  - https://docs.github.com/en/organizations/keeping-your-organization-secure/managing-security-settings-for-your-organization/reviewing-the-audit-log-for-your-organization
+description: |
+  Detects an organisation repository being changed from private to public visibility. Flipping a private repo public exposes all of its source, secrets, and history to the internet and is a direct exfiltration channel — whether malicious or an accidental leak, it warrants immediate review.
+
+  Next Steps:
+  1. Identify the repository and the actor that changed its visibility
+  2. Confirm the change was an authorised, intentional open-sourcing decision
+  3. If unauthorised, revert to private immediately and treat all repo secrets as compromised
+  4. Rotate any credentials, tokens, or keys committed to the repository
+  5. Check whether the repo was cloned/forked while public and by whom
+where: |
+  oneOf("log.action", ["repo.visibility_change", "repo.access"]) &&
+  regexMatch("log.message", "\"visibility\":\\s*\"public\"|to public|made public")
+groupBy:
+  - log.repositoryName
+  - log.senderLogin

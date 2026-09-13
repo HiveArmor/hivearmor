@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - crowdstrike
+name: "Windows: Local Data Destruction Command"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 3
+category: Impact
+technique: "T1485 - Data Destruction"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1485/
+  - https://attack.mitre.org/tactics/TA0040/
+description: |
+  Detects command-line data-destruction on the endpoint — recursive/forced delete
+  (del /f /s /q of a broad path), secure-wipe (cipher /w, sdelete), format, or fsutil
+  file setzerodata. Existing coverage for this technique is cloud-only (mass resource
+  deletion in AWS/GCP); this closes the endpoint-local blind spot. Local wiping is used
+  both by destructive "wiper" malware and by ransomware clearing backups/originals.
+
+  Next Steps:
+  1. Identify the host, account, and the exact destruction command and target path
+  2. Confirm it is not a sanctioned cleanup/decommission task
+  3. Assess the scope — a broad recursive delete or a secure-wipe of user/share paths is high severity
+  4. Correlate with service-stop (T1489), shadow-copy deletion (T1490), or encryption (T1486)
+  5. If unauthorized, isolate the host, preserve volatile evidence, and begin destructive-incident IR
+where: >
+  equals("log.event_simpleName", "ProcessRollup2") &&
+  exists("log.eventCommandLine") &&
+  regexMatch("log.eventCommandLine", "(?i)(del\\s+.*(/s|/q).*(/f|/s)|cipher(\\.exe)?\\s+/w:|sdelete(64)?(\\.exe)?\\s|format\\s+[a-z]:.*/(y|q)|fsutil\\s+file\\s+setzerodata)")
+groupBy:
+  - origin.host
+  - origin.user

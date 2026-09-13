@@ -1,0 +1,34 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - trendmicro-deep-security
+name: "Trend Micro: Unauthorized Software Execution (Application Control)"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: Execution
+technique: "T1204 - User Execution"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1204/
+  - https://attack.mitre.org/techniques/T1105/
+description: |
+  Detects a Trend Micro Deep Security Application Control event — software that did not match
+  an allow rule was blocked or detected (Application Control module, Signature IDs
+  6000000-6999999; reason typically "notWhitelisted"). Unrecognized software executing on a
+  locked-down workload is a strong signal of a dropped payload, living-off-the-land binary, or
+  unauthorized tool. The file path, hash, and reason are carried in the event.
+
+  Next Steps:
+  1. Identify the host (origin.host), the file path (log.tmFilePath), the hash, and the reason (log.tmCs1)
+  2. A "Detect Only" (not blocked) hit means the software RAN — treat as high urgency
+  3. Pivot on the file hash (log.fileHash) across the estate for the same unauthorized binary
+  4. Determine whether it is a legitimate unmanaged install or an attacker payload
+  5. If malicious, block the hash, remove the file, and investigate how it arrived
+where: |
+  regexMatch("log.signatureId", "^6[0-9]{6}$") ||
+  (regexMatch("log.tmCategory", "(?i)App ?Control") && regexMatch("action", "(?i)(block|detectOnly)"))
+groupBy:
+  - origin.host
+  - lastEvent.log.tmFilePath

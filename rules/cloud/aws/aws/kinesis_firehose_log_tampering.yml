@@ -1,0 +1,46 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS Kinesis/Firehose Log Delivery Stream Tampering
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: Defense Evasion
+technique: "T1562.008 - Impair Defenses: Disable or Modify Cloud Logs"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/008/
+  - https://attack.mitre.org/tactics/TA0005/
+description: |
+  Detects tampering with a Kinesis Data Stream or Firehose delivery stream that carries log
+  or event data — deleting the stream (DeleteStream / DeleteDeliveryStream), or redirecting
+  it (UpdateDestination / CreateDeliveryStream pointing at an attacker-controlled S3/HTTP
+  endpoint). Many organisations funnel CloudTrail/VPC/app logs through Firehose to their
+  SIEM; deleting or re-pointing that stream blinds downstream detection (or exfiltrates the
+  log feed) without touching CloudTrail itself, so it evades CloudTrail-focused monitoring.
+
+  Next Steps:
+  1. Identify the principal and the exact action (delete vs destination change) and the stream
+  2. Determine whether the stream carries security/log telemetry to a SIEM or lake
+  3. Flag UpdateDestination to a new/cross-account bucket or an HTTP endpoint as high-signal
+  4. If unauthorized, restore the stream/destination and confirm log delivery resumed
+  5. Assess the blind window and whether the log feed was diverted to an attacker sink
+where: |
+  oneOf("log.eventSource", ["kinesis.amazonaws.com", "firehose.amazonaws.com"]) &&
+  oneOf("log.eventName", ["DeleteStream", "DeleteDeliveryStream", "UpdateDestination", "CreateDeliveryStream", "StopDeliveryStreamEncryption", "MergeShards"])
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_match
+        value: 'kinesis firehose'
+    within: 30m
+    count: 1
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

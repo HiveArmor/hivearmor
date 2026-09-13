@@ -1,0 +1,39 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - wineventlog
+name: "Windows: Suspicious Scheduled Task Created"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: Persistence
+technique: "T1053.005 - Scheduled Task/Job: Scheduled Task"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1053/005/
+description: |
+  Detects registration of a scheduled task (Security event 4698) whose action runs a shell,
+  script host, LOLBIN, or a binary from a suspicious path — the most common Windows
+  persistence and privilege-execution primitive. Attackers register tasks that launch
+  powershell/cmd/wscript/mshta/rundll32, run from %TEMP%/%APPDATA%/Public, or execute an
+  encoded command; many also run as SYSTEM. Legitimate software installs tasks too, so this
+  keys on suspicious task content rather than task creation alone.
+
+  Next Steps:
+  1. Identify the host, the creating account, the task name, and its action/command
+  2. A task running powershell -enc / cmd /c / mshta / a binary from a user-writable path is high-signal
+  3. Confirm the task is not an installer or admin action
+  4. If malicious, delete the task, kill any running instance, and hunt for the dropped payload
+  5. Search other hosts for the same task name (mass-deployed persistence)
+where: |
+  equals("log.eventCode", "4698") &&
+  equals("log.channel", "Security") &&
+  (
+    regexMatch("log.data.TaskContent", "(?i)(powershell|pwsh|cmd\\.exe|/c\\b|wscript|cscript|mshta|rundll32|regsvr32|certutil|bitsadmin|-enc\\b|-nop\\b|frombase64|hidden)") ||
+    regexMatch("log.data.TaskContent", "(?i)(\\\\Temp\\\\|\\\\AppData\\\\|\\\\Users\\\\Public\\\\|\\\\ProgramData\\\\|\\\\Windows\\\\Temp\\\\)")
+  ) &&
+  exists("log.eventDataSubjectUserName")
+groupBy:
+  - origin.host
+  - log.eventDataSubjectUserName

@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - "linux"
+name: "Linux: Destructive Data Wipe Command"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 3
+category: Impact
+technique: "T1485 - Data Destruction"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1485/
+  - https://attack.mitre.org/techniques/T1561/
+  - https://attack.mitre.org/tactics/TA0040/
+description: |
+  Detects destructive wipe commands on Linux — a raw write to a block device (dd of=/dev/sd*
+  or /dev/nvme*), mkfs re-format of a mounted device, shred/wipe of files, or a broad
+  recursive rm of a system or data root (/, /home, /var, /etc, a mounted share). These
+  are the fingerprints of wiper malware and of ransomware destroying originals/backups.
+  This complements the existing cloud-only destruction coverage with an endpoint signal.
+
+  Next Steps:
+  1. Identify the host, user, and the exact destructive command and its target
+  2. Confirm it is not a sanctioned disk-provisioning, decommission, or backup-rotation task
+  3. A dd/mkfs against a live block device or an rm -rf of a system root is critical severity
+  4. Correlate with a preceding foothold, privilege escalation, or lateral movement
+  5. If unauthorized, isolate the host immediately and begin destructive-incident IR
+where: |
+  exists("log.message") &&
+  regexMatch("log.message", "(?i)(\\bdd\\b[^\\n]*of=/dev/(sd|nvme|vd|xvd)|\\bmkfs(\\.[a-z0-9]+)?\\s+[^\\n]*/dev/|\\bshred\\b[^\\n]*-|\\bwipe\\b\\s+/|\\brm\\s+-[a-z]*r[a-z]*f?[a-z]*\\s+(/|/home|/var|/etc|/srv|/mnt|/data)(\\s|/|$))")
+groupBy:
+  - origin.host
+  - origin.user

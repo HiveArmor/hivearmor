@@ -77,6 +77,30 @@ Output: `target/hivearmor.war`
 mvn -s settings.xml test
 ```
 
+### Where tests live — put new tests in `src/test/java`
+
+**All backend tests belong in `backend/src/test/java`.** This is the standard Maven
+test root and the only place Surefire discovers tests on a clean build. Any older note
+claiming "no `src/test` — tests are embedded in `src/main/java`" is **wrong**.
+
+> **Silent-skip hazard.** A `*Test.java` placed under `src/main/java` still *compiles*
+> (into `target/classes`), so it looks fine locally — but Surefire scans
+> `target/test-classes`, and nothing in the build compiles a new `src/main` test into
+> that directory. The result: the test is **silently skipped on a clean CI build** (no
+> failure, no report) and only appears to "run" locally off stale `target/test-classes`
+> artifacts from an earlier build. Tests left there **rot unnoticed** and can hide real
+> regressions.
+
+Practical rules when adding or moving a backend test:
+
+- Put the test file under `src/test/java/<same package path>`.
+- Verify it actually runs with a **clean** build, not an incremental one:
+  `mvn -s settings.xml -o clean test -Dtest=YourTestClass` — confirm a `Tests run: N`
+  line appears for your class.
+- Before editing a test, grep **both** roots for a same-package duplicate — a divergent
+  copy in `src/main/java` and `src/test/java` means CI runs only the `src/test` one and
+  your edits to the other never execute.
+
 ---
 
 ## API Overview

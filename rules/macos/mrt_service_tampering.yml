@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - macos
+name: "macOS: Malware Removal Tool Service Tampering"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 2
+category: Defense Evasion
+technique: "T1562.001 - Impair Defenses: Disable or Modify Tools"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/001/
+description: |
+  Detects tampering with Apple's built-in malware-remediation services — unloading, killing,
+  or disabling MRT (com.apple.MRTd / MRT.app) or XProtectRemediator / XProtect Behavioral
+  Service via launchctl unload/disable, kill, or removal of their launch jobs. Disabling
+  these background scanners lets malware persist without being remediated on the next scan.
+  This is distinct from XProtect signature/bundle evasion — it targets the running services
+  that would remove the threat.
+
+  Next Steps:
+  1. Identify the host, the process, and which remediation service was unloaded/killed
+  2. launchctl unload/disable of com.apple.MRTd or XProtect* by a non-Apple process is high-signal
+  3. Confirm it is not an Apple updater or a sanctioned management action
+  4. If unauthorized, re-enable the services and run a full on-demand scan
+  5. Hunt for the persistence the tampering was meant to protect
+where: |
+  exists("log.eventMessage") &&
+  regexMatch("log.eventMessage", "(?i)(com\\.apple\\.MRTd|/MRT\\.app|XProtectRemediator|XProtect\\.app|com\\.apple\\.XprotectFramework\\.PluginService|XProtectBehaviorService)") &&
+  regexMatch("log.eventMessage", "(?i)(launchctl\\s+(unload|disable|remove|bootout)|\\bkill(all)?\\b|\\bunload|\\bdisabl|\\bstop\\b|removed)")
+groupBy:
+  - origin.host
+  - origin.user

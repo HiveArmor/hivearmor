@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - github
+name: GitHub OAuth App or Integration Authorized to Organization
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: Persistence
+technique: "T1098 - Account Manipulation"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1098/
+  - https://attack.mitre.org/techniques/T1550/001/
+  - https://docs.github.com/en/organizations/keeping-your-organization-secure/managing-security-settings-for-your-organization/reviewing-the-audit-log-for-your-organization
+description: |
+  Detects a new OAuth application or GitHub App being authorized/installed against the
+  organization or granted access to repositories. A malicious or over-scoped third-party
+  app is a token-based persistence and data-access channel that survives user credential
+  rotation — the GitHub analogue of the illicit-consent-grant attack seen in M365/Azure.
+  Attackers who compromise an org-owner session authorize an app they control to retain
+  programmatic access to code and secrets.
+
+  Next Steps:
+  1. Identify the app/integration, who authorized it, and the scopes/repositories granted
+  2. Confirm it is a sanctioned, reviewed integration on the org's allowlist
+  3. Scrutinise broad scopes (repo, admin:org, workflow) and access to many repositories
+  4. If unauthorised, revoke the app authorization/installation and rotate exposed secrets
+  5. Review the app's API activity since authorization for data access or code changes
+where: |
+  oneOf("log.action", ["oauth_application.create", "oauth_application.generate_client_secret", "oauth_authorization.create", "org.oauth_app_access_approved", "org.oauth_app_access_requested", "integration.create", "integration_installation.create", "integration_installation.repositories_added"]) ||
+  regexMatch("log.action", "^(oauth_application|oauth_authorization|integration|integration_installation)\\.")
+groupBy:
+  - log.senderLogin

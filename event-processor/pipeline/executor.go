@@ -75,11 +75,13 @@ func Execute(log *plugins.Log) *plugins.Event {
 			case step.Delete != nil:
 				d := step.Delete
 				if d.Where == "" || EvalWhere(d.Where, data) {
-					operators.DeleteOp(d.Fields, data)
+					operators.DeleteOp(d.Fields, data, d.Prefixes...)
 				}
 
 			case step.KV != nil:
-				operators.KVOp(step.KV.FieldSplit, step.KV.ValueSplit, data)
+				if step.KV.Where == "" || EvalWhere(step.KV.Where, data) {
+					operators.KVOp(step.KV.FieldSplit, step.KV.ValueSplit, step.KV.Source, data)
+				}
 
 			case step.Dynamic != nil:
 				dyn := step.Dynamic

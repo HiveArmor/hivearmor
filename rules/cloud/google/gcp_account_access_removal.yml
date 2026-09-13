@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - google
+name: GCP Account Access Removal
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 3
+category: Impact
+technique: "T1531 - Account Access Removal"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1531/
+description: |
+  Detects removal or disabling of identities that can lock out operators or disrupt a
+  response — disabling/deleting a service account (DisableServiceAccount /
+  DeleteServiceAccount) or suspending/deleting a Workspace/Cloud Identity user. An attacker
+  uses this to deny defenders access mid-incident, to disable a service account that a
+  security control depends on, or as a destructive/extortion step. Disabling the SAs behind
+  logging, backup, or security tooling is especially damaging.
+
+  Next Steps:
+  1. Identify the actor (adversary.user), the account disabled/deleted, and its role
+  2. Disabling/deleting a security, logging, or admin identity is critical-signal
+  3. Confirm it is not a sanctioned de-provisioning / offboarding action
+  4. If unauthorized, restore the account/SA, revoke the actor's session, and check what the disabled identity protected
+  5. Correlate with other destructive or defense-evasion actions in the same session
+where: |
+  regexMatch("log.protoPayloadMethodName", "(?i)(DisableServiceAccount|DeleteServiceAccount)") ||
+  (contains("log.protoPayloadServiceName", "admin.googleapis.com") &&
+   regexMatch("log.protoPayloadMethodName", "(?i)(DELETE_USER|SUSPEND_USER|deleteUser|suspendUser)"))
+groupBy:
+  - adversary.user
+  - adversary.ip

@@ -1,0 +1,38 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - "linux"
+name: "System Linux: Shell History Anti-Forensics"
+impact:
+  confidentiality: 1
+  integrity: 2
+  availability: 1
+category: Defense Evasion
+technique: "T1070.003 - Indicator Removal: Clear Command History"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1070/003/
+description: |
+  Detects attempts to destroy or disable shell command history — history -c, deleting or
+  truncating ~/.bash_history (or .zsh_history), redirecting HISTFILE to /dev/null, or
+  unsetting/zeroing HISTSIZE/HISTFILESIZE. Clearing command history is a near-universal
+  attacker anti-forensics step to hide the commands run during hands-on-keyboard activity on
+  a server.
+
+  Next Steps:
+  1. Identify the host, user, and the exact history-clearing action
+  2. Legitimate users rarely wipe history mid-session — treat it as suspicious by default
+  3. Correlate with the session that did it (SSH login, sudo) and recover history from other sources (auditd, this SIEM)
+  4. Reconstruct what the user ran before and after the clear from process/auditd telemetry
+  5. If unauthorized, isolate the host and rotate the user's credentials
+where: |
+  exists("log.message") &&
+  (
+    regexMatch("log.message", "history\\s+-c") ||
+    regexMatch("log.message", "(?i)(rm|truncate|>|shred)\\s+[^\\n]*\\.(bash|zsh)_history") ||
+    regexMatch("log.message", "HISTFILE\\s*=\\s*/dev/null") ||
+    regexMatch("log.message", "(unset\\s+HIST|HISTSIZE\\s*=\\s*0|export\\s+HISTFILE=)")
+  )
+groupBy:
+  - origin.host
+  - origin.user

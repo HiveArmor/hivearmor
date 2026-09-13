@@ -49,8 +49,10 @@ public class HaEdrFimService {
     private static final Logger log = LoggerFactory.getLogger(HaEdrFimService.class);
     private static final String CLASSNAME = "HaEdrFimService";
 
-    /** OpenSearch index pattern for FIM events emitted by the agent FIM collector. */
-    private static final String FIM_INDEX = "v3-hive-fim-*";
+    /** OpenSearch index TYPE for FIM events emitted by the agent FIM collector.
+     *  The full pattern is resolved per-request via {@link MsspIndexResolver} so it is
+     *  tenant-scoped (v3-hive-fim-&lt;prefix&gt;-*) in MSSP mode — P0A1-T19 (G1). */
+    private static final String FIM_INDEX_TYPE = "fim";
 
     /** Maximum number of path buckets to return in the Top Changed Paths panel. */
     private static final int TOP_PATHS_SIZE = 10;
@@ -59,9 +61,12 @@ public class HaEdrFimService {
     private static final int MAX_SUSPICIOUS_HASHES = 20;
 
     private final OpensearchClientBuilder osClient;
+    private final com.hivearmor.multitenancy.MsspIndexResolver indexResolver;
 
-    public HaEdrFimService(OpensearchClientBuilder osClient) {
+    public HaEdrFimService(OpensearchClientBuilder osClient,
+                           com.hivearmor.multitenancy.MsspIndexResolver indexResolver) {
         this.osClient = osClient;
+        this.indexResolver = indexResolver;
     }
 
     // -------------------------------------------------------------------------
@@ -118,7 +123,7 @@ public class HaEdrFimService {
                 .size(10));
 
         SearchRequest req = SearchRequest.of(s -> s
-                .index(FIM_INDEX)
+                .index(indexResolver.resolveIndexPattern(FIM_INDEX_TYPE))
                 .size(0)
                 .query(baseQuery)
                 .aggregations("by_time", Aggregation.of(a -> a
@@ -175,7 +180,7 @@ public class HaEdrFimService {
                 .size(TOP_PATHS_SIZE));
 
         SearchRequest req = SearchRequest.of(s -> s
-                .index(FIM_INDEX)
+                .index(indexResolver.resolveIndexPattern(FIM_INDEX_TYPE))
                 .size(0)
                 .query(baseQuery)
                 .aggregations("top_paths", Aggregation.of(a -> a.terms(pathTerms))));
@@ -215,7 +220,7 @@ public class HaEdrFimService {
                 .minDocCount(2));  // hashes appearing > once are suspicious
 
         SearchRequest req = SearchRequest.of(s -> s
-                .index(FIM_INDEX)
+                .index(indexResolver.resolveIndexPattern(FIM_INDEX_TYPE))
                 .size(0)
                 .query(combined)
                 .aggregations("by_hash", Aggregation.of(a -> a

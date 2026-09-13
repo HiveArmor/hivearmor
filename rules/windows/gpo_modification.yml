@@ -1,0 +1,37 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - wineventlog
+name: "Windows: Group Policy Object Modification"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: Privilege Escalation
+technique: "T1484.001 - Domain Policy Modification: Group Policy Modification"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1484/001/
+description: |
+  Detects modification of a Group Policy Object — a directory-service change (Security event
+  5136) to a groupPolicyContainer object, or a change to its gPCFileSysPath / gPCMachine/User
+  extension attributes. An attacker who can edit a GPO linked to many machines or a
+  privileged OU pushes a scheduled task, startup script, or local-admin membership to every
+  affected host at once, achieving domain-wide persistence, privilege escalation, or mass
+  code execution (SharpGPOAbuse, pyGPOAbuse).
+
+  Next Steps:
+  1. Identify the account that modified the GPO and which GPO / OU is affected
+  2. Confirm the change came from a sanctioned admin via the GPMC, not an ad-hoc tool
+  3. Determine the scope — a GPO linked to Domain Controllers or a broad OU is high-signal
+  4. If unauthorized, revert the GPO, remove any pushed task/script/membership, and audit affected hosts
+  5. Review what the modified policy delivered before it was reverted
+where: |
+  equals("log.eventCode", "5136") &&
+  equals("log.channel", "Security") &&
+  regexMatch("log.data.ObjectClass", "(?i)(groupPolicyContainer)") &&
+  regexMatch("log.data.AttributeLDAPDisplayName", "(?i)(gPCFileSysPath|gPCMachineExtensionNames|gPCUserExtensionNames|versionNumber|nTSecurityDescriptor)") &&
+  exists("log.eventDataSubjectUserName")
+groupBy:
+  - origin.host
+  - log.eventDataSubjectUserName

@@ -1,0 +1,40 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - macos
+name: "macOS: Periodic Script Persistence"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 1
+category: Persistence
+technique: "T1053.003 - Scheduled Task/Job: Cron"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1053/003/
+  - https://attack.mitre.org/techniques/T1037/
+description: |
+  Detects persistence via the macOS periodic mechanism — writing an executable into
+  /etc/periodic/{daily,weekly,monthly}/ or modifying /etc/periodic.conf or
+  /etc/defaults/periodic.conf. The periodic system runs these scripts as root on a schedule
+  (driven by launchd's com.apple.periodic-* jobs); dropping a script there is a lesser-known
+  persistence spot that many endpoint tools overlook because it is neither a LaunchAgent nor
+  a user crontab.
+
+  Next Steps:
+  1. Identify the host, the process, and the periodic script/config written
+  2. A non-package-manager write into /etc/periodic/* is high-signal (these are rarely edited)
+  3. Inspect the script contents for a payload, network callback, or privilege use
+  4. If malicious, remove the script, restore periodic.conf, and check what it ran as root
+  5. Hunt other hosts for the same script (mass persistence)
+where: |
+  exists("log.eventMessage") &&
+  (
+    regexMatch("log.eventMessage", "/etc/periodic/(daily|weekly|monthly)/") ||
+    regexMatch("log.eventMessage", "(/etc/periodic\\.conf|/etc/defaults/periodic\\.conf)")
+  ) &&
+  regexMatch("log.eventMessage", "(?i)(write|created|copied|chmod|\\+x|modif|installed|>)") &&
+  !regexMatch("log.eventMessage", "(?i)(/usr/sbin/periodic\\b|installer\\b|softwareupdate)")
+groupBy:
+  - origin.host
+  - origin.user

@@ -1,0 +1,38 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - otlp
+name: Kubernetes API Permission Probing (Forbidden Burst)
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+category: Discovery
+technique: "T1613 - Container and Resource Discovery"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1613/
+  - https://kubernetes.io/docs/reference/access-authn-authz/authorization/
+description: |
+  Detects a single identity generating a burst of Forbidden (RBAC-denied) API responses in a short window. A compromised service-account token is typically used to systematically probe what the identity can access, producing many 403s before the attacker finds a usable permission.
+
+  Next Steps:
+  1. Identify the requesting identity and whether it is a service-account token from inside a pod
+  2. Review which resources/verbs were attempted, in order, to infer the attacker's objective
+  3. If a probe succeeded (a later "allow" from the same identity), treat that resource as compromised
+  4. Revoke the service-account token and delete/quarantine the source pod
+  5. Tighten the identity's RBAC to least privilege and alert on future 403 bursts from workloads
+where: |
+  exists("log.message") &&
+  contains("log.message", "\"reason\":\"Forbidden\"")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.message
+        operator: filter_match
+        value: '"reason":"Forbidden"'
+    within: 2m
+    count: 20
+groupBy:
+  - log.k8s.namespace
+  - log.hostname

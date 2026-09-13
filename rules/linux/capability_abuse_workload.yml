@@ -1,0 +1,40 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - "linux"
+name: "System Linux: Dangerous Capability Abuse in Workload"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: Privilege Escalation
+technique: "T1548 - Abuse Elevation Control Mechanism"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1548/
+  - https://attack.mitre.org/techniques/T1611/
+description: |
+  Detects abuse of Linux capabilities that enable privilege escalation or container escape —
+  granting a file a dangerous capability at runtime (setcap cap_sys_admin / cap_sys_ptrace /
+  cap_dac_read_search / cap_setuid), or a process exercising CAP_SYS_ADMIN-class operations
+  (capsh --print used to probe, then mount/module/ptrace actions). A container run with
+  CAP_SYS_ADMIN or CAP_SYS_PTRACE can mount host filesystems, load modules, or ptrace host
+  processes to break out; setting such a capability on a binary is a classic setuid-free
+  privesc primitive.
+
+  Next Steps:
+  1. Identify the host/container, process, and the capability set or exercised
+  2. A runtime setcap of cap_sys_admin/cap_sys_ptrace/cap_dac_read_search on a binary is high-signal
+  3. Determine whether the container is supposed to hold that capability (drop it if not)
+  4. If unauthorized, revoke the capability, restart the workload with a minimal cap set, and audit for escape
+  5. Correlate with mount / kernel-module / ptrace activity that the capability enabled
+where: |
+  exists("log.message") &&
+  (
+    regexMatch("log.message", "(?i)\\bsetcap\\b.*(cap_sys_admin|cap_sys_ptrace|cap_dac_read_search|cap_sys_module|cap_setuid|cap_net_admin)") ||
+    regexMatch("log.message", "(?i)\\bcapsh\\b.*(--print|cap_sys_admin|--gid=0|--uid=0)") ||
+    regexMatch("log.message", "(?i)(cap_sys_module).*(insmod|modprobe|init_module)")
+  )
+groupBy:
+  - origin.host
+  - origin.user

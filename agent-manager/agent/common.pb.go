@@ -117,11 +117,16 @@ func (ConnectorType) EnumDescriptor() ([]byte, []int) {
 }
 
 type ListRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	PageNumber    int32                  `protobuf:"varint,1,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
-	PageSize      int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	SearchQuery   string                 `protobuf:"bytes,3,opt,name=search_query,json=searchQuery,proto3" json:"search_query,omitempty"`
-	SortBy        string                 `protobuf:"bytes,4,opt,name=sort_by,json=sortBy,proto3" json:"sort_by,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	PageNumber  int32                  `protobuf:"varint,1,opt,name=page_number,json=pageNumber,proto3" json:"page_number,omitempty"`
+	PageSize    int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	SearchQuery string                 `protobuf:"bytes,3,opt,name=search_query,json=searchQuery,proto3" json:"search_query,omitempty"`
+	SortBy      string                 `protobuf:"bytes,4,opt,name=sort_by,json=sortBy,proto3" json:"sort_by,omitempty"`
+	// Tenant scope for endpoint-scoped reads (agents/commands). Set server-side by the
+	// backend from the authenticated identity (TenantContext), never from a client param.
+	// Zero means "no tenant supplied" and is accepted ONLY under an explicit system context
+	// (P0A1-T14); a normal MSSP read with tenant_id == 0 is rejected fail-closed by the manager.
+	TenantId      int64 `protobuf:"varint,5,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -182,6 +187,13 @@ func (x *ListRequest) GetSortBy() string {
 		return x.SortBy
 	}
 	return ""
+}
+
+func (x *ListRequest) GetTenantId() int64 {
+	if x != nil {
+		return x.TenantId
+	}
+	return 0
 }
 
 type AuthResponse struct {
@@ -309,13 +321,14 @@ var File_common_proto protoreflect.FileDescriptor
 
 const file_common_proto_rawDesc = "" +
 	"\n" +
-	"\fcommon.proto\x12\x05agent\"\x87\x01\n" +
+	"\fcommon.proto\x12\x05agent\"\xa4\x01\n" +
 	"\vListRequest\x12\x1f\n" +
 	"\vpage_number\x18\x01 \x01(\x05R\n" +
 	"pageNumber\x12\x1b\n" +
 	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12!\n" +
 	"\fsearch_query\x18\x03 \x01(\tR\vsearchQuery\x12\x17\n" +
-	"\asort_by\x18\x04 \x01(\tR\x06sortBy\"M\n" +
+	"\asort_by\x18\x04 \x01(\tR\x06sortBy\x12\x1b\n" +
+	"\ttenant_id\x18\x05 \x01(\x03R\btenantId\"M\n" +
 	"\fAuthResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\rR\x02id\x12\x10\n" +
 	"\x03key\x18\x02 \x01(\tR\x03key\x12\x1b\n" +

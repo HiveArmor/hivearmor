@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      P0A1 backfill + NOT-NULL for the tenant_id columns added by
+      20260909001 (hive_edr_event), 20260910001 (hive_edr_quarantine, ha_edr_quarantine),
+      and 20260910002 (hive_alert_response_rule_execution).
+
+      IMPORTANT — the authoritative agent->tenant mapping lives in the agent-manager's
+      SEPARATE Postgres database (the `agents` table), reachable only over gRPC, NOT in
+      this backend database. So there is no in-DB join to derive a per-tenant value for
+      an MSSP deployment. Therefore:
+
+        * SINGLE-TENANT deployments (no MSSP-managed client with a prefix): every legacy
+          row's tenant is the single-tenant sentinel 0. A SQL backfill to 0 is correct
+          and COMPLETE, so NOT-NULL can be enforced here. Each changeset below is gated
+          by a sqlCheck precondition that runs it ONLY on such deployments.
+
+        * MSSP deployments: per-row tenant must be resolved from the manager over gRPC by
+          an APPLICATION-LEVEL backfill job (see HIVEARMOR_P0A2_TENANT_ISOLATION_FOLLOWON.md,
+          A2 backfill contract). These changesets MARK_RAN (no-op) on MSSP so they never
+          stamp a wrong tenant or fail; NOT-NULL for MSSP is enforced by a later changeset
+          AFTER that job completes.
+
+      The precondition: zero MSSP-managed clients that carry a client_prefix.
+    -->
+
+    <!-- hive_edr_event -->
+    <changeSet id="20260910003-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="hive_edr_event" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ha_client WHERE mssp_managed = TRUE AND client_prefix IS NOT NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <update tableName="hive_edr_event">
+            <column name="tenant_id" valueNumeric="0"/>
+            <where>tenant_id IS NULL</where>
+        </update>
+        <addNotNullConstraint tableName="hive_edr_event" columnName="tenant_id"
+                              columnDataType="BIGINT" defaultNullValue="0"/>
+    </changeSet>
+
+    <!-- hive_edr_quarantine -->
+    <changeSet id="20260910003-2" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="hive_edr_quarantine" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ha_client WHERE mssp_managed = TRUE AND client_prefix IS NOT NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <update tableName="hive_edr_quarantine">
+            <column name="tenant_id" valueNumeric="0"/>
+            <where>tenant_id IS NULL</where>
+        </update>
+        <addNotNullConstraint tableName="hive_edr_quarantine" columnName="tenant_id"
+                              columnDataType="BIGINT" defaultNullValue="0"/>
+    </changeSet>
+
+    <!-- ha_edr_quarantine -->
+    <changeSet id="20260910003-3" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="ha_edr_quarantine" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ha_client WHERE mssp_managed = TRUE AND client_prefix IS NOT NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <update tableName="ha_edr_quarantine">
+            <column name="tenant_id" valueNumeric="0"/>
+            <where>tenant_id IS NULL</where>
+        </update>
+        <addNotNullConstraint tableName="ha_edr_quarantine" columnName="tenant_id"
+                              columnDataType="BIGINT" defaultNullValue="0"/>
+    </changeSet>
+
+    <!-- hive_alert_response_rule_execution -->
+    <changeSet id="20260910003-4" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <columnExists tableName="hive_alert_response_rule_execution" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ha_client WHERE mssp_managed = TRUE AND client_prefix IS NOT NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <update tableName="hive_alert_response_rule_execution">
+            <column name="tenant_id" valueNumeric="0"/>
+            <where>tenant_id IS NULL</where>
+        </update>
+        <addNotNullConstraint tableName="hive_alert_response_rule_execution" columnName="tenant_id"
+                              columnDataType="BIGINT" defaultNullValue="0"/>
+    </changeSet>
+
+</databaseChangeLog>

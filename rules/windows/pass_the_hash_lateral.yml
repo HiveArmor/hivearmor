@@ -1,0 +1,43 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - wineventlog
+name: "Windows: Possible Pass-the-Hash Lateral Movement"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: "Lateral Movement"
+technique: "T1550.002 - Use Alternate Authentication Material: Pass the Hash"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1550/002/
+  - https://attack.mitre.org/techniques/T1021/002/
+description: |
+  Detects a network logon (Event ID 4624, LogonType 3) using NTLM authentication where the logon process is seclogo / the authentication package is NTLM with no domain — the classic fingerprint of a Pass-the-Hash logon replaying a stolen NTLM hash to authenticate laterally without the plaintext password.
+
+  Next Steps:
+  1. Identify the source workstation, the target host, and the account used
+  2. Confirm whether NTLM (rather than Kerberos) is expected for that account and path
+  3. Correlate with prior credential-dumping activity on the source host (LSASS access)
+  4. Check whether the account is privileged and what it reached after the logon
+  5. If confirmed, isolate both hosts, reset the account (twice, for krbtgt-adjacent), and hunt for further hash reuse
+where: |
+  equals("log.eventCode", 4624) &&
+  equals("log.eventDataLogonType", "3") &&
+  regexMatch("log.eventDataAuthenticationPackageName", "NTLM") &&
+  !regexMatch("log.eventDataTargetUserName", "\\$$")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.eventDataTargetUserName
+        operator: filter_term
+        value: '{{.log.eventDataTargetUserName}}'
+      - field: log.eventCode
+        operator: filter_term
+        value: '4624'
+    within: 10m
+    count: 3
+groupBy:
+  - target.user
+  - origin.host

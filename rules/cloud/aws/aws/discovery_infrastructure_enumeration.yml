@@ -1,0 +1,49 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS Cloud Infrastructure Enumeration Burst
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Discovery
+technique: "T1580 - Cloud Infrastructure Discovery"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1580/
+  - https://attack.mitre.org/tactics/TA0007/
+description: |
+  Detects a burst of read-only Describe*/List* CloudTrail calls across core compute
+  and networking services (EC2, RDS, VPC, ELB, Auto Scaling) from a single identity in
+  a short window. A compromised key or role is routinely used to inventory an account's
+  infrastructure before targeting — mass enumeration from one principal, especially an
+  assumed role or a new access key, is the cloud analogue of host reconnaissance.
+
+  Tune the count threshold to your environment (IaC tooling and cloud-security scanners
+  also enumerate heavily) before enabling in production.
+
+  Next Steps:
+  1. Identify the principal (userIdentityArn), its type (IAM user / assumed role), and source IP
+  2. Compare the enumeration volume and service spread against that identity's normal behaviour
+  3. Determine whether the caller is sanctioned tooling (Config, a CSPM scanner, IaC) or unexpected
+  4. Check for follow-on privilege escalation, resource creation, or data access from the same identity
+  5. If unauthorized, disable the access key / revoke the session and review CloudTrail for what was reached
+where: |
+  regexMatch("log.eventName", "^(Describe|List|Get)") &&
+  oneOf("log.eventSource", ["ec2.amazonaws.com", "rds.amazonaws.com", "elasticloadbalancing.amazonaws.com", "autoscaling.amazonaws.com"]) &&
+  equals("log.errorCode", "")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventName
+        operator: filter_match
+        value: 'Describe List Get'
+    within: 10m
+    count: 30
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

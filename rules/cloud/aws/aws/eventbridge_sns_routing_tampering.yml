@@ -1,0 +1,46 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS EventBridge or SNS Event Routing Tampering
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: Defense Evasion
+technique: "T1562.001 - Impair Defenses: Disable or Modify Tools"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/001/
+  - https://attack.mitre.org/techniques/T1537/
+description: |
+  Detects tampering with EventBridge/SNS event routing that either blinds detection or
+  exfiltrates events — disabling/deleting a security EventBridge rule (DeleteRule /
+  DisableRule that fed GuardDuty/Config/Security-Hub automation), or adding a new target /
+  SNS subscription that forwards events to an attacker-controlled cross-account/HTTPS
+  endpoint (PutTargets / Subscribe / SetTopicAttributes). This is both a defense-evasion
+  step (silence alerting automation) and a covert exfiltration channel for the event stream.
+
+  Next Steps:
+  1. Identify the principal and the exact action (rule delete/disable, or new target/subscription)
+  2. For a new target/subscription, determine the destination — cross-account ARN or external HTTPS is high-signal
+  3. Confirm the change matches sanctioned automation/IaC
+  4. If unauthorized, restore the rule / remove the rogue target or subscription
+  5. Review what alerting or automation was silenced and what fired (or didn't) meanwhile
+where: |
+  oneOf("log.eventSource", ["events.amazonaws.com", "sns.amazonaws.com"]) &&
+  oneOf("log.eventName", ["DeleteRule", "DisableRule", "PutRule", "PutTargets", "RemoveTargets", "Subscribe", "SetTopicAttributes", "AddPermission", "CreateTopic"])
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_match
+        value: 'events sns'
+    within: 30m
+    count: 1
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

@@ -1,0 +1,31 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - otlp
+name: Kubernetes Exec Into Running Pod
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: Execution
+technique: "T1609 - Container Administration Command"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1609/
+  - https://kubernetes.io/docs/reference/kubectl/generated/kubectl_exec/
+description: |
+  Detects an interactive command executed inside a running pod via the Kubernetes API (kubectl exec / the pods/exec subresource). Adversaries use exec to run commands in a container whose image they do not control, for reconnaissance, credential theft, or lateral movement, without leaving an image-layer artifact.
+
+  Next Steps:
+  1. Identify the user or service account that issued the exec and the target pod/namespace
+  2. Verify the exec was expected operator activity, not an interactive shell into a production workload
+  3. Review the command run for reconnaissance or credential access
+  4. Check whether the identity should have pods/exec permission at all (RBAC review)
+  5. If unauthorized, revoke the binding, rotate any credentials the pod could reach, and preserve the pod for forensics
+where: |
+  exists("log.message") &&
+  regexMatch("log.message", "pods/exec") &&
+  contains("log.message", "\"stage\":\"ResponseComplete\"")
+groupBy:
+  - log.k8s.namespace
+  - log.hostname

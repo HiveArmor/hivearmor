@@ -1,0 +1,48 @@
+id: 9133
+name: SEQ-O365-LOGIN-FORWARD-EXFIL
+dataTypes:
+  - o365
+category: Exfiltration
+technique: "T1114.003 - Email Collection: Email Forwarding Rule"
+mitre:
+  tactics: ["TA0001", "TA0009", "TA0010"]
+  attacks: ["T1078.004", "T1114.003", "T1537"]
+adversary: origin
+description: >
+  Staging sequence pack (DET-SEQ). Office 365 business-email-compromise kill chain for
+  one user: an anomalous sign-in (risky/impossible-travel or a successful login after
+  failures), followed by creation of an inbox/forwarding rule (attacker ensures they
+  keep seeing the mail), followed by bulk file/mail download (collection & exfil) —
+  each within its window. The ordered chain from one principal is a high-confidence BEC
+  signal that any single stage alone would under-rate.
+references:
+  - https://attack.mitre.org/techniques/T1078/004/
+  - https://attack.mitre.org/techniques/T1114/003/
+  - https://attack.mitre.org/techniques/T1537/
+  - https://attack.mitre.org/tactics/TA0010/
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+deduplicateBy:
+  - origin.user
+groupBy:
+  - origin.user
+sequence:
+  - where: 'safe("log.Operation", "") == "UserLoggedIn" && (raw.matches("(?i).*(riskLevel|impossible.?travel|unfamiliar|anomalous).*") || safe("log.action", "") == "risky_signin") || safe("log.action", "") == "suspicious_login"'
+    within: 30m
+  - where: 'oneOf("log.Operation", ["New-InboxRule", "Set-InboxRule", "Set-Mailbox", "New-TransportRule"]) || raw.matches("(?i).*(ForwardingSMTPAddress|ForwardTo|RedirectTo|DeliverToMailboxAndForward).*")'
+    within: 60m
+  - where: 'oneOf("log.Operation", ["FileDownloaded", "FileSyncDownloadedFull", "MailItemsAccessed", "SearchExported", "Download"]) || safe("log.action", "") == "mass_download"'
+    within: 120m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.user
+        operator: filter_term
+        value: "{{.origin.user}}"
+      - field: log.Operation
+        operator: filter_match
+        value: 'InboxRule'
+    within: 180m
+    count: 1

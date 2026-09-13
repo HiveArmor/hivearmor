@@ -1,0 +1,45 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS Macie Data-Protection Disabled
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 1
+category: Defense Evasion
+technique: "T1562.001 - Impair Defenses: Disable or Modify Tools"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/001/
+  - https://attack.mitre.org/tactics/TA0005/
+description: |
+  Detects disabling or degrading Amazon Macie — DisableMacie, UpdateMacieSession to PAUSED,
+  DisableOrganizationAdminAccount, DeleteMember, or deleting classification jobs / custom
+  data identifiers. Macie is the sensitive-data-discovery control for S3; turning it off
+  blinds the org to data exposure and is a defense-evasion step an attacker takes before
+  or during S3 data theft (paired with the existing S3 exfiltration rules).
+
+  Next Steps:
+  1. Identify the principal and the exact Macie action
+  2. Confirm it is a sanctioned, change-controlled security-tooling change
+  3. Treat DisableMacie / DisableOrganizationAdminAccount as high severity
+  4. If unauthorized, re-enable Macie and review S3 access during the blind window
+  5. Verify the acting identity is not compromised (recent risky activity, new keys)
+where: |
+  equals("log.eventSource", "macie2.amazonaws.com") &&
+  oneOf("log.eventName", ["DisableMacie", "UpdateMacieSession", "DisableOrganizationAdminAccount", "DeleteMember", "DisassociateMember", "DeleteClassificationJob", "UpdateClassificationJob", "DeleteCustomDataIdentifier"])
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_term
+        value: 'macie2.amazonaws.com'
+    within: 30m
+    count: 1
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

@@ -1,0 +1,48 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - firewall-paloalto
+name: "Palo Alto: TLS Decryption Failure Anomaly"
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 1
+category: Command and Control
+technique: "T1573 - Encrypted Channel"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1573/
+  - https://attack.mitre.org/techniques/T1071/001/
+description: |
+  Detects a burst of TLS decryption failures / errors from a single internal host — DECRYPTION
+  log events reporting unsupported ciphers, cert errors, or sessions that could not be
+  decrypted. Malware C2 and data exfiltration frequently use pinned certs, self-signed certs,
+  or non-standard TLS that the firewall cannot decrypt; a host generating many such failures
+  (rather than the occasional broken site) is a signal of an encrypted covert channel evading
+  inspection. Also surfaces decryption-policy gaps.
+
+  Next Steps:
+  1. Identify the internal host (adversary.ip), the destinations, and the failure reason
+  2. Many decryption errors to a small set of unusual destinations is high-signal for C2
+  3. Distinguish from known cert-pinned apps (update/telemetry) via an allowlist
+  4. If suspicious, inspect the host for malware and the destinations against threat intel
+  5. Review whether decryption policy should cover the destinations, or whether they should be blocked
+where: |
+  equals("log.pa_type", "DECRYPTION") &&
+  (regexMatch("log.panOSEventStatus", "(?i)(fail|error)") ||
+   regexMatch("log.message", "(?i)(decrypt.*(fail|error)|unsupported (cipher|version|protocol)|cert.*(error|untrusted|expired|unsupported))")) &&
+  exists("origin.ip")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: '{{.origin.ip}}'
+      - field: log.pa_type
+        operator: filter_term
+        value: 'DECRYPTION'
+    within: 15m
+    count: 20
+groupBy:
+  - adversary.ip
+  - target.ip

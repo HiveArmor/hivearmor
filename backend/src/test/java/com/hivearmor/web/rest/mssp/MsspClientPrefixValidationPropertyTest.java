@@ -33,17 +33,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 /**
  * Property 4: {@code clientPrefix} bean-validation predicate is exactly
- * {@code ^[a-z0-9-]{2,20}$}.
+ * {@code ^[a-z0-9]{2,20}$}.
  *
  * <p><strong>Feature: sprint-23-mssp-portal, Property 4:
- * clientPrefix bean-validation predicate is exactly ^[a-z0-9-]{2,20}$</strong>
+ * clientPrefix bean-validation predicate is exactly ^[a-z0-9]{2,20}$</strong>
  *
  * <p><strong>Validates: Requirements 8.5, 8.6, 10.4, 10.5</strong>
  *
  * <h2>How it works</h2>
  * <p>For any arbitrary prefix string {@code s}:
  * <ul>
- *   <li>If {@code s.matches("^[a-z0-9-]{2,20}$")} then
+ *   <li>If {@code s.matches("^[a-z0-9]{2,20}$")} then
  *       {@code POST /api/ha-mssp/tenants} must return {@code 201} (provisioned)
  *       or {@code 409} (conflict on duplicate) — never {@code 400}.</li>
  *   <li>If {@code s} does NOT match the regex then the response must be
@@ -57,11 +57,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * <h2>Minimum iterations</h2>
  * <p>100 (enforced via {@code @Property(tries = 100)}).
  */
-@Label("Feature: sprint-23-mssp-portal, Property 4: clientPrefix bean-validation predicate is exactly ^[a-z0-9-]{2,20}$")
+@Label("Feature: sprint-23-mssp-portal, Property 4: clientPrefix bean-validation predicate is exactly ^[a-z0-9]{2,20}$")
 class MsspClientPrefixValidationPropertyTest {
 
     /** The exact regex used by {@code @Pattern} on {@code NewTenantRequest.clientPrefix}. */
-    static final String PREFIX_REGEX = "^[a-z0-9-]{2,20}$";
+    static final String PREFIX_REGEX = "^[a-z0-9]{2,20}$";
 
     private MockMvc mockMvc;
     private MsspProvisioningService provisioningService;
@@ -111,7 +111,7 @@ class MsspClientPrefixValidationPropertyTest {
      *
      * <p>For any arbitrary prefix string:
      * <ul>
-     *   <li>A string matching {@code ^[a-z0-9-]{2,20}$} must yield {@code 201}
+     *   <li>A string matching {@code ^[a-z0-9]{2,20}$} must yield {@code 201}
      *       (service returns a response) or {@code 409} (service throws
      *       {@link DuplicatePrefixException}) — never {@code 400}.</li>
      *   <li>A string NOT matching the regex must yield exactly {@code 400}.</li>
@@ -176,28 +176,30 @@ class MsspClientPrefixValidationPropertyTest {
      * {@code true} and {@code false} branches of the property are exercised
      * across the 100 trials.
      *
-     * <p>Four sub-arbitraries are combined via {@link Arbitraries#oneOf}:
+     * <p>Sub-arbitraries are combined via {@link Arbitraries#oneOf}:
      * <ol>
-     *   <li>Strings from the allowed alphabet {@code [a-z0-9-]}, length 2–20
-     *       (valid by the regex).</li>
-     *   <li>Strings from the allowed alphabet that are too short (0–1 chars)
-     *       — invalid due to length constraint.</li>
-     *   <li>Strings from the allowed alphabet that are too long (21–35 chars)
-     *       — invalid due to length constraint.</li>
-     *   <li>Strings with at least one uppercase letter — invalid due to
-     *       character-class constraint.</li>
-     *   <li>Strings containing spaces or special characters — invalid.</li>
+     *   <li>Strings from the alphabet {@code [a-z0-9-]}, length 2–20. Since the
+     *       prefix regex is now {@code ^[a-z0-9]{2,20}$} (hyphen-FREE — see the
+     *       ES tenant-scope-guard dependency), this bucket yields a MIX: the
+     *       hyphen-free strings are valid, the hyphen-bearing ones are invalid.
+     *       Each string's validity is recomputed at runtime via
+     *       {@code prefix.matches(PREFIX_REGEX)}, so the property stays correct
+     *       and this bucket exercises BOTH the accept path and the
+     *       hyphen-reject (400) path.</li>
+     *   <li>Strings that are too short (0–1 chars) — invalid (length).</li>
+     *   <li>Strings that are too long (21–35 chars) — invalid (length).</li>
+     *   <li>Strings with at least one uppercase letter — invalid (char class).</li>
+     *   <li>Strings containing a space — invalid (char class).</li>
      * </ol>
      *
-     * <p>Note: sub-arbitrary (1) does NOT filter on leading/trailing hyphens
-     * because the regex {@code ^[a-z0-9-]{2,20}$} does NOT exclude them — a
-     * prefix of {@code "--"} is syntactically valid under the regex even though
-     * it may be semantically odd. The property must reflect the regex exactly.
+     * <p>Note: the regex now EXCLUDES hyphens, so a prefix like {@code "a-"} or
+     * {@code "--"} is INVALID and must yield {@code 400}. The property reflects
+     * the regex exactly by recomputing {@code matches(PREFIX_REGEX)} per case.
      */
     @Provide
     Arbitrary<String> arbitraryPrefixes() {
         return Arbitraries.oneOf(
-            // (1) Valid: matches ^[a-z0-9-]{2,20}$
+            // (1) Mix: alphabet [a-z0-9-]; hyphen-free = valid, hyphen-bearing = invalid (400)
             Arbitraries.strings()
                 .withChars("abcdefghijklmnopqrstuvwxyz0123456789-")
                 .ofMinLength(2)

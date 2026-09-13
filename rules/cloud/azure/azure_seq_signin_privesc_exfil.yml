@@ -1,0 +1,48 @@
+id: 9134
+name: SEQ-AZURE-SIGNIN-PRIVESC-EXFIL
+dataTypes:
+  - azure
+category: Exfiltration
+technique: "T1078.004 - Valid Accounts: Cloud Accounts"
+mitre:
+  tactics: ["TA0001", "TA0004", "TA0010"]
+  attacks: ["T1078.004", "T1098.003", "T1537"]
+adversary: origin
+description: >
+  Staging sequence pack (DET-SEQ). Entra ID / Azure account-takeover kill chain for one
+  identity: an anomalous (risky / unfamiliar) sign-in, followed by a privilege-escalation
+  action in the tenant (add member to a privileged role, consent to an application, or
+  add a service principal / credential), followed by data access on Key Vault or Storage
+  — each within its window. Each stage exists individually as an Azure rule; the ordered
+  chain from one principal is a high-confidence compromised-identity signal.
+references:
+  - https://attack.mitre.org/techniques/T1078/004/
+  - https://attack.mitre.org/techniques/T1098/003/
+  - https://attack.mitre.org/techniques/T1537/
+  - https://attack.mitre.org/tactics/TA0010/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - adversary.user
+groupBy:
+  - adversary.user
+sequence:
+  - where: 'contains("log.operationName", "Sign-in") && (exists("log.properties.riskEventTypes") || raw.matches("(?i).*(risk|unfamiliar|impossible.?travel|anomalous|atRisk).*")) || safe("log.action", "") == "risky_signin"'
+    within: 30m
+  - where: 'oneOf("log.operationName", ["Add member to role", "Consent to application", "Add service principal", "Add app role assignment to service principal"]) || raw.matches("(?i).*(Add member to role|Consent to application|Add service principal|addServicePrincipalCredentials|Update conditional access).*")'
+    within: 60m
+  - where: 'contains("log.operationName", "Microsoft.KeyVault") || contains("log.operationName", "Microsoft.Storage") || raw.matches("(?i).*(VaultGet|SecretGet|listKeys|blob.*download|ListAccountSas).*")'
+    within: 120m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: adversary.user
+        operator: filter_term
+        value: "{{.adversary.user}}"
+      - field: log.operationName
+        operator: filter_match
+        value: 'role application'
+    within: 180m
+    count: 1

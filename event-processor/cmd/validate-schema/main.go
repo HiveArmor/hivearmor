@@ -29,12 +29,23 @@ import (
 // ruleDoc mirrors the shape of a rule YAML without requiring the full type set.
 type ruleDoc struct {
 	Name      string         `yaml:"name"`
+	Type      string         `yaml:"type"`
 	DataTypes []string       `yaml:"dataTypes"`
 	Category  string         `yaml:"category"`
 	Impact    map[string]any `yaml:"impact"`
 	Where     string         `yaml:"where"`
 	RiskScore int            `yaml:"riskScore"`
 	Sequence  []any          `yaml:"sequence"`
+	// graph_offense extension: these rules trigger via a scheduled Neo4j
+	// Cypher query rather than a per-event where/riskScore/sequence, and
+	// are routed by schedule (not by dataTypes) — see rules/evaluate.go and
+	// rules/tenant_tree.go in the event-processor.
+	CypherQuery string `yaml:"cypherQuery"`
+}
+
+// isGraphOffense mirrors rules.Rule.IsGraphOffense() in the event-processor.
+func (r *ruleDoc) isGraphOffense() bool {
+	return r.Type == "graph_offense"
 }
 
 func (r *ruleDoc) violations() []string {
@@ -42,7 +53,10 @@ func (r *ruleDoc) violations() []string {
 	if strings.TrimSpace(r.Name) == "" {
 		v = append(v, "missing or empty 'name'")
 	}
-	if len(r.DataTypes) == 0 {
+	if len(r.DataTypes) == 0 && !r.isGraphOffense() {
+		// graph_offense rules are routed by schedule, not by dataTypes
+		// (rules/tenant_tree.go returns before the dataTypes check), so
+		// dataTypes is optional for them.
 		v = append(v, "missing or empty 'dataTypes'")
 	}
 	if strings.TrimSpace(r.Category) == "" {
@@ -57,9 +71,18 @@ func (r *ruleDoc) violations() []string {
 			}
 		}
 	}
-	hasEval := strings.TrimSpace(r.Where) != "" || r.RiskScore > 0 || len(r.Sequence) > 0
-	if !hasEval {
-		v = append(v, "must have at least one of: 'where', 'riskScore', 'sequence'")
+	// A graph_offense rule triggers via its Cypher query (see
+	// rules/evaluate.go: SyntaxOK = IsGraphOffense() && CypherQuery != "");
+	// otherwise a rule needs one of where / riskScore / sequence.
+	if r.isGraphOffense() {
+		if strings.TrimSpace(r.CypherQuery) == "" {
+			v = append(v, "graph_offense rule missing or empty 'cypherQuery'")
+		}
+	} else {
+		hasEval := strings.TrimSpace(r.Where) != "" || r.RiskScore > 0 || len(r.Sequence) > 0
+		if !hasEval {
+			v = append(v, "must have at least one of: 'where', 'riskScore', 'sequence'")
+		}
 	}
 	if len(r.Sequence) == 1 {
 		v = append(v, "'sequence' rules require at least 2 steps")

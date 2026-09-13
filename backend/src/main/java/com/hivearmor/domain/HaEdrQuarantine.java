@@ -28,6 +28,11 @@ public class HaEdrQuarantine implements Serializable {
     @Column(name = "agent_id", nullable = false)
     private String agentId;
 
+    // P0A1-T09 follow-on — authoritative tenant, assigned server-side (never from
+    // payload). Nullable during rollout/backfill; enforced NOT NULL in a later batch.
+    @Column(name = "tenant_id")
+    private Long tenantId;
+
     @Column(name = "agent_name")
     private String agentName;
 
@@ -71,6 +76,14 @@ public class HaEdrQuarantine implements Serializable {
 
     public void setAgentId(String agentId) {
         this.agentId = agentId;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 
     public String getAgentName() {

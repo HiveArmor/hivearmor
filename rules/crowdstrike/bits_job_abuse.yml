@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - crowdstrike
+name: "BITS Job Abuse for Download or Persistence"
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: Persistence
+technique: "T1197 - BITS Jobs"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1197/
+  - https://attack.mitre.org/tactics/TA0003/
+description: |
+  Detects abuse of the Background Intelligent Transfer Service (BITS) via bitsadmin or
+  the Start-BitsTransfer PowerShell cmdlet to fetch a remote payload or register a
+  persistent transfer/notify job. BITS is a living-off-the-land mechanism: it downloads
+  through a trusted Windows service (evading naive network controls) and a job with a
+  /SetNotifyCmdLine or long retry window survives reboots as persistence.
+
+  Next Steps:
+  1. Identify the host, account, and the full BITS command (source URL, local target, notify cmd)
+  2. Determine whether the destination is a legitimate update source or an unknown/raw-IP host
+  3. Check for /SetNotifyCmdLine or a large /SetMinRetryDelay — these turn a transfer into persistence
+  4. Inspect the downloaded file and any command BITS was set to run on completion
+  5. If unauthorized, remove the BITS job (bitsadmin /reset), quarantine the payload, and isolate the host
+where: >
+  equals("log.event_simpleName", "ProcessRollup2") &&
+  exists("log.eventCommandLine") &&
+  regexMatch("log.eventCommandLine", "(?i)(bitsadmin(\\.exe)?\\s+.*(/transfer|/create|/addfile|/setnotifycmdline)|start-bitstransfer|import-module\\s+bitstransfer)")
+groupBy:
+  - origin.host
+  - origin.user

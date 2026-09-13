@@ -34,8 +34,6 @@ import java.util.stream.Collectors;
 public class OffenseResource {
 
     private static final String CLASSNAME = "OffenseResource";
-    private static final String OFFENSE_INDEX = "v3-hive-offense-*";
-    private static final String ALERT_INDEX = "v3-hive-alert-*";
 
     /** Mirrors {@code HaCorrelatedFindingsResource} status/authz for correlated findings. */
     private static final String ALERT_QUEUE_AUTH =
@@ -53,11 +51,25 @@ public class OffenseResource {
     private final Logger log = LoggerFactory.getLogger(OffenseResource.class);
     private final ElasticsearchService elasticsearchService;
     private final ApplicationEventService applicationEventService;
+    private final com.hivearmor.multitenancy.MsspIndexResolver indexResolver;
 
     public OffenseResource(ElasticsearchService elasticsearchService,
-                           ApplicationEventService applicationEventService) {
+                           ApplicationEventService applicationEventService,
+                           com.hivearmor.multitenancy.MsspIndexResolver indexResolver) {
         this.elasticsearchService = elasticsearchService;
         this.applicationEventService = applicationEventService;
+        this.indexResolver = indexResolver;
+    }
+
+    // P0A2-2 (T19 G4) — resolve the index pattern per-request via MsspIndexResolver so
+    // reads/writes are tenant-scoped (v3-hive-<type>-<prefix>-*) in MSSP mode instead of
+    // the previous hardcoded, tenant-agnostic v3-hive-<type>-* constants.
+    private String offenseIndex() {
+        return indexResolver.resolveIndexPattern("offense");
+    }
+
+    private String alertIndex() {
+        return indexResolver.resolveIndexPattern("alert");
     }
 
     /**
@@ -77,7 +89,7 @@ public class OffenseResource {
             }
 
             SearchResponse<Map> searchResponse = elasticsearchService.search(
-                    filters, size, OFFENSE_INDEX, pageable, Map.class);
+                    filters, size, offenseIndex(), pageable, Map.class);
 
             if (searchResponse == null || searchResponse.hits() == null
                     || searchResponse.hits().total().value() == 0) {
@@ -113,7 +125,7 @@ public class OffenseResource {
             List<FilterType> filters = List.of(new FilterType("_id", OperatorType.IS, id));
 
             SearchResponse<Map> searchResponse = elasticsearchService.search(
-                    filters, 1, OFFENSE_INDEX,
+                    filters, 1, offenseIndex(),
                     org.springframework.data.domain.PageRequest.of(0, 1), Map.class);
 
             if (searchResponse == null || searchResponse.hits() == null
@@ -155,7 +167,7 @@ public class OffenseResource {
             }
 
             Query query = Query.of(q -> q.ids(i -> i.values(id)));
-            elasticsearchService.updateByQuery(query, OFFENSE_INDEX, script);
+            elasticsearchService.updateByQuery(query, offenseIndex(), script);
 
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -197,7 +209,7 @@ public class OffenseResource {
             // First, fetch the offense to get its alerts[] array
             List<FilterType> offenseFilter = List.of(new FilterType("_id", OperatorType.IS, id));
             SearchResponse<Map> offenseResp = elasticsearchService.search(
-                    offenseFilter, 1, OFFENSE_INDEX,
+                    offenseFilter, 1, offenseIndex(),
                     org.springframework.data.domain.PageRequest.of(0, 1), Map.class);
 
             if (offenseResp == null || offenseResp.hits() == null
@@ -217,7 +229,7 @@ public class OffenseResource {
             // Fetch alert documents by their IDs
             List<FilterType> alertFilter = List.of(new FilterType("id", OperatorType.IS_ONE_OF, alertIds));
             SearchResponse<Map> alertResp = elasticsearchService.search(
-                    alertFilter, alertIds.size(), ALERT_INDEX,
+                    alertFilter, alertIds.size(), alertIndex(),
                     org.springframework.data.domain.PageRequest.of(0, alertIds.size()), Map.class);
 
             if (alertResp == null || alertResp.hits() == null

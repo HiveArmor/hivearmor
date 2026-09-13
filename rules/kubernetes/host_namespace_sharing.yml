@@ -1,0 +1,30 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - otlp
+name: Kubernetes Pod Shares Host Namespaces
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 2
+category: Privilege Escalation
+technique: "T1611 - Escape to Host"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1611/
+  - https://kubernetes.io/docs/concepts/security/pod-security-standards/
+description: |
+  Detects a pod created with hostNetwork, hostPID, or hostIPC set to true. Sharing the host network or process/IPC namespaces lets a container observe and interfere with host and neighbouring-pod processes and traffic, a common stepping stone to host compromise and credential sniffing.
+
+  Next Steps:
+  1. Identify the pod/namespace and which host namespace it shares (network/PID/IPC)
+  2. Confirm whether the workload is a sanctioned node-level agent (CNI, monitoring) or unexpected
+  3. Review the service account and RBAC that permitted the elevated pod spec
+  4. If unauthorized, delete the pod and inspect the node for sniffed traffic or accessed host processes
+  5. Enforce the baseline/restricted Pod Security Standard to block host-namespace sharing
+where: |
+  exists("log.message") &&
+  regexMatch("log.message", "\"host(Network|PID|IPC)\":true")
+groupBy:
+  - log.k8s.namespace
+  - log.k8s.podName

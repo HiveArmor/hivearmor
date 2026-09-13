@@ -1,0 +1,46 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS ECR Image Implant or Repository Policy Tampering
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: Persistence
+technique: "T1525 - Implant Internal Image"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1525/
+  - https://attack.mitre.org/tactics/TA0003/
+description: |
+  Detects tampering with Amazon ECR that implants or exposes container images — setting a
+  permissive repository policy (SetRepositoryPolicy granting cross-account or public pull/
+  push), disabling image tag immutability, or a push (PutImage / CompleteLayerUpload) to a
+  base/shared repository. Implanting a backdoored image into a trusted registry causes every
+  workload that pulls it to run attacker code — a supply-chain persistence and execution
+  vector.
+
+  Next Steps:
+  1. Identify the principal, the repository, and the exact ECR action (policy change / push / immutability off)
+  2. Confirm it matches a sanctioned CI/CD push identity and change
+  3. Flag SetRepositoryPolicy granting Principal "*" or a foreign account, and PutImageTagMutability=MUTABLE, as high-signal
+  4. If unauthorized, revert the repo policy, re-enable tag immutability, and scan/quarantine the pushed image
+  5. Identify which running workloads pulled the affected image
+where: |
+  equals("log.eventSource", "ecr.amazonaws.com") &&
+  oneOf("log.eventName", ["SetRepositoryPolicy", "PutImageTagMutability", "PutRegistryPolicy", "PutImage", "CompleteLayerUpload", "PutLifecyclePolicy", "DeleteRepositoryPolicy"])
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_term
+        value: 'ecr.amazonaws.com'
+    within: 30m
+    count: 1
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - macos
+name: "macOS: Emond Event Monitor Persistence"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 1
+category: Persistence
+technique: "T1546.014 - Event Triggered Execution: Emond"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1546/014/
+description: |
+  Detects creation or modification of an emond (Event Monitor Daemon) rule — a plist under
+  /etc/emond.d/rules/ or an entry in /private/var/db/emondClients — which lets an attacker
+  run a command when a defined system event fires (commonly at startup). emond is an
+  obscure, seldom-monitored macOS persistence mechanism that executes with root privilege,
+  which is exactly why adversaries favour it.
+
+  Next Steps:
+  1. Identify the user/process that wrote the emond rule and the action it defines
+  2. Confirm it is not part of a legitimate management/monitoring configuration (emond is rarely used)
+  3. Inspect the rule's command/action for a shell, downloader, or persistence payload
+  4. If unauthorized, remove the emond rule plist and the emondClients entry
+  5. Correlate with the session that created it and hunt for additional persistence
+where: |
+  contains("log.eventMessage", "/etc/emond.d/") ||
+  contains("log.eventMessage", "emondClients") ||
+  (contains("log.eventMessage", "emond") &&
+   regexMatch("log.eventMessage", "(?i)(\\.plist|rules/|created|written|modified)"))
+groupBy:
+  - adversary.host
+  - adversary.user

@@ -48,6 +48,9 @@ class OffenseResourceStatusTest {
     @Mock
     private ApplicationEventService applicationEventService;
 
+    @Mock
+    private com.hivearmor.multitenancy.MsspIndexResolver indexResolver;
+
     private MockMvc mockMvc;
 
     private static final OncePerRequestFilter ANALYST_AUTH_FILTER = new OncePerRequestFilter() {
@@ -68,7 +71,11 @@ class OffenseResourceStatusTest {
 
     @BeforeEach
     void setUp() {
-        OffenseResource controller = new OffenseResource(elasticsearchService, applicationEventService);
+        // P0A2-2: resolver now supplies the index pattern per request; return the
+        // conventional single-tenant pattern so the search/update flow is unaffected.
+        org.mockito.Mockito.lenient().when(indexResolver.resolveIndexPattern(org.mockito.ArgumentMatchers.anyString()))
+                .thenAnswer(inv -> "v3-hive-" + inv.getArgument(0) + "-*");
+        OffenseResource controller = new OffenseResource(elasticsearchService, applicationEventService, indexResolver);
         mockMvc = MockMvcBuilders
                 .standaloneSetup(controller)
                 .addFilter(ANALYST_AUTH_FILTER)
@@ -170,9 +177,15 @@ class OffenseResourceStatusTest {
         }
 
         @Bean
+        com.hivearmor.multitenancy.MsspIndexResolver msspIndexResolver() {
+            return mock(com.hivearmor.multitenancy.MsspIndexResolver.class);
+        }
+
+        @Bean
         OffenseResource offenseResource(ElasticsearchService elasticsearchService,
-                                        ApplicationEventService applicationEventService) {
-            return new OffenseResource(elasticsearchService, applicationEventService);
+                                        ApplicationEventService applicationEventService,
+                                        com.hivearmor.multitenancy.MsspIndexResolver msspIndexResolver) {
+            return new OffenseResource(elasticsearchService, applicationEventService, msspIndexResolver);
         }
     }
 }

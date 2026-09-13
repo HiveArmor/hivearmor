@@ -1,0 +1,51 @@
+id: 9130
+name: SEQ-PHISH-EXEC-PERSIST-C2
+dataTypes:
+  - windows
+  - process
+  - wineventlog
+category: Command and Control
+technique: "T1566 - Phishing"
+mitre:
+  tactics: ["TA0001", "TA0002", "TA0003", "TA0011"]
+  attacks: ["T1566.001", "T1204.002", "T1547.001", "T1071"]
+adversary: origin
+description: >
+  Staging sequence pack (DET-SEQ). Full endpoint kill chain on one origin host:
+  a phishing-delivered document or macro execution, followed by an autostart
+  persistence write, followed by C2-style beaconing — each within its window. Linking
+  the three stages (which exist individually as separate 2-stage fragments) into one
+  offense is far higher confidence than any single stage and models the classic
+  commodity-loader intrusion (phish -> exec -> persist -> call home).
+references:
+  - https://attack.mitre.org/techniques/T1566/001/
+  - https://attack.mitre.org/techniques/T1204/002/
+  - https://attack.mitre.org/techniques/T1547/001/
+  - https://attack.mitre.org/techniques/T1071/
+  - https://attack.mitre.org/tactics/TA0011/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+deduplicateBy:
+  - origin.host
+groupBy:
+  - origin.host
+sequence:
+  - where: 'action == "macro_execution" || safe("log.action", "") == "macro_execution" || raw.matches("(?i).*(winword|excel|outlook|powerpnt)(\\.exe)?.*(cmd|powershell|wscript|cscript|mshta).*")'
+    within: 10m
+  - where: 'action == "persistence_create" || safe("log.action", "") == "persistence_create" || raw.matches("(?i).*(CurrentVersion.{0,3}Run|RunOnce|Start Menu.*Startup|schtasks.*/create).*")'
+    within: 30m
+  - where: 'action == "c2_beacon" || safe("log.action", "") == "c2_beacon" || raw.matches("(?i).*(DownloadString|Invoke-WebRequest|Net\\.WebClient|certutil.*-urlcache|https?://[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+).*")'
+    within: 60m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.host
+        operator: filter_term
+        value: "{{.origin.host}}"
+      - field: log.action
+        operator: filter_term
+        value: macro_execution
+    within: 90m
+    count: 1

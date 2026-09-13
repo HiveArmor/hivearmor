@@ -1,0 +1,47 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS Route53 Resolver DNS Exfiltration or Logging Disabled
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: Exfiltration
+technique: "T1071.004 - Application Layer Protocol: DNS"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1071/004/
+  - https://attack.mitre.org/techniques/T1562/008/
+description: |
+  Detects Route53 Resolver changes that enable DNS exfiltration or blind DNS monitoring —
+  creating/associating a Resolver rule that forwards a domain's queries to an
+  attacker-controlled outbound endpoint (CreateResolverRule / AssociateResolverRule /
+  CreateResolverEndpoint), or deleting/disassociating a Resolver query-logging config
+  (DeleteResolverQueryLogConfig / DisassociateResolverQueryLogConfig). DNS is a classic
+  low-and-slow exfil channel; a forwarding rule to an external resolver tunnels data out,
+  and killing query logging removes the record of it.
+
+  Next Steps:
+  1. Identify the principal and the exact Resolver action (forwarding rule vs query-logging change)
+  2. For a rule, determine the target IP/endpoint — an external/unfamiliar resolver is high-signal
+  3. Confirm the change matches sanctioned networking/DNS administration
+  4. If unauthorized, remove the rule / restore query logging and inspect VPC DNS traffic for tunneling
+  5. Correlate with data-staging activity on hosts in the affected VPC
+where: |
+  equals("log.eventSource", "route53resolver.amazonaws.com") &&
+  oneOf("log.eventName", ["CreateResolverRule", "AssociateResolverRule", "CreateResolverEndpoint", "DeleteResolverQueryLogConfig", "DisassociateResolverQueryLogConfig", "UpdateResolverRule"])
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_term
+        value: 'route53resolver.amazonaws.com'
+    within: 30m
+    count: 1
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

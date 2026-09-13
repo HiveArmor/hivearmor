@@ -55,7 +55,7 @@ public class AgentService {
                     .setSearchQuery("")
                     .setSortBy("")
                     .build();
-            ListAgentsResponseDTO response = agentGrpcService.listAgents(request);
+            ListAgentsResponseDTO response = agentGrpcService.listAgents(request, com.hivearmor.multitenancy.TenantScope.requireTenant());
 
             if (CollectionUtils.isEmpty(response.getAgents()))
                 return Collections.emptyList();
@@ -85,7 +85,7 @@ public class AgentService {
                     .setSortBy("")
                     .build();
 
-            ListAgentsResponseDTO rs = agentGrpcService.listAgents(rq);
+            ListAgentsResponseDTO rs = agentGrpcService.listAgents(rq, com.hivearmor.multitenancy.TenantScope.requireTenant());
 
             if (CollectionUtils.isEmpty(rs.getAgents()))
                 return Optional.empty();
@@ -99,6 +99,10 @@ public class AgentService {
 
     @Transactional
    /* @Scheduled(fixedDelay = 15000, initialDelay = 30000)*/
+    // P0A1-T14 — DISABLED. Before re-enabling, this MUST run through
+    // TenantScopedBackgroundExecutor.runForEachTenant(...) so it syncs one tenant at
+    // a time (getInstalledAgents() is now fail-closed on requireTenant() and will
+    // throw if invoked without a tenant scope). Do NOT re-enable as an all-tenants job.
     public void synchronizeAgents() {
         final String ctx = CLASSNAME + ".synchronizeAgents";
 

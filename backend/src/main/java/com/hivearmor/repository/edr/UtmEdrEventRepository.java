@@ -33,6 +33,28 @@ public interface UtmEdrEventRepository extends JpaRepository<UtmEdrEvent, Long> 
         @Param("to") Instant to,
         Pageable pageable);
 
+    /**
+     * P0A1-T09 — tenant-scoped variant of {@link #findFiltered}. The tenant_id
+     * predicate is mandatory (not nullable) so a relational EDR-event read can
+     * never return another tenant's rows. Rows with a null tenant_id (pre-backfill)
+     * are intentionally excluded from tenant-scoped reads.
+     */
+    @Query("SELECT e FROM UtmEdrEvent e WHERE " +
+           "e.tenantId = :tenantId AND " +
+           "(:agentId IS NULL OR e.agentId = :agentId) AND " +
+           "(:eventType IS NULL OR e.eventType = :eventType) AND " +
+           "(:severity IS NULL OR e.severity = :severity) AND " +
+           "(:from IS NULL OR e.eventTime >= :from) AND " +
+           "(:to IS NULL OR e.eventTime <= :to)")
+    Page<UtmEdrEvent> findFilteredForTenant(
+        @Param("tenantId") Long tenantId,
+        @Param("agentId") String agentId,
+        @Param("eventType") String eventType,
+        @Param("severity") String severity,
+        @Param("from") Instant from,
+        @Param("to") Instant to,
+        Pageable pageable);
+
     List<UtmEdrEvent> findByAgentIdOrderByEventTimeDesc(String agentId);
     long countByAgentIdAndSeverity(String agentId, String severity);
 }

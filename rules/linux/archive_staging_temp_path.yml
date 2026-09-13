@@ -1,0 +1,32 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - "linux"
+name: "Linux: Data Staged via Archive Creation in Temp Path"
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Collection
+technique: "T1074.001 - Data Staged: Local Data Staging"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1074/001/
+  - https://attack.mitre.org/techniques/T1560/001/
+description: |
+  Detects creation of a large compressed archive in a world-writable or temporary path (tar/zip/gzip into /tmp, /dev/shm, /var/tmp). Before exfiltration, adversaries collect and compress data into a staging archive; archiving into a temp directory is a common pre-exfil collection step, especially when paired with later outbound transfer.
+
+  Next Steps:
+  1. Identify the host, user, and the exact archive command and destination path
+  2. Determine what was archived (source directories) and whether it holds sensitive data
+  3. Correlate with any subsequent outbound transfer from the same host
+  4. Confirm the activity is not a legitimate backup or build job
+  5. If unauthorised, preserve the archive for forensics, isolate the host, and reset the user's credentials
+where: |
+  exists("log.message") &&
+  regexMatch("log.message", "\\b(tar|zip|gzip|7z|rar|bzip2)\\b") &&
+  regexMatch("log.message", "(/tmp/|/dev/shm/|/var/tmp/)") &&
+  regexMatch("log.message", "\\.(tar|tar\\.gz|tgz|zip|gz|7z|rar|bz2)\\b")
+groupBy:
+  - origin.user
+  - origin.ip

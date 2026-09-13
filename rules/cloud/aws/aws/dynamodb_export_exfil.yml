@@ -1,0 +1,48 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS DynamoDB Table Export or Bulk Extraction
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Exfiltration
+technique: "T1530 - Data from Cloud Storage Object"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1530/
+  - https://attack.mitre.org/techniques/T1537/
+description: |
+  Detects exfiltration of DynamoDB data — ExportTableToPointInTime (which writes the full
+  table to an S3 bucket the caller chooses, a clean bulk-exfil path that bypasses per-item
+  read auditing), CreateBackup/ExportTableToPointInTime to an external account, or a burst
+  of Scan/BatchGetItem across tables. A compromised identity uses table export to copy an
+  entire database — including PII/credentials — out in one action.
+
+  Next Steps:
+  1. Identify the principal, the table(s), and the S3 destination of any export
+  2. Confirm the export/backup is a sanctioned, scheduled data pipeline for that identity
+  3. Flag ExportTableToPointInTime to a bucket outside the account, or a Scan burst from a non-app principal, as high-signal
+  4. If unauthorized, revoke the credential/session, delete the export artifact, and assess data exposure
+  5. Review the destination bucket's policy for cross-account/public access
+where: |
+  equals("log.eventSource", "dynamodb.amazonaws.com") &&
+  (
+    oneOf("log.eventName", ["ExportTableToPointInTime", "CreateBackup", "CreateGlobalTable", "RestoreTableFromBackup"]) ||
+    regexMatch("log.eventName", "^(Scan|BatchGetItem)$")
+  )
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_term
+        value: 'dynamodb.amazonaws.com'
+    within: 15m
+    count: 20
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

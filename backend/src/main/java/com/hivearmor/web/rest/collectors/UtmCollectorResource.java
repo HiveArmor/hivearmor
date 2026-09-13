@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -31,11 +32,21 @@ import java.util.List;
 
 /**
  * REST controller for managing {@link UtmCollectorResource}.
+ *
+ * <p>P0A1-T10 — authorization: reads require Analyst/SOC-Manager/Admin; mutations
+ * (config upsert, asset-group change, delete) require SOC-Manager/Admin. Before this
+ * change the endpoints had no {@code @PreAuthorize} and were only covered by the
+ * default {@code .anyRequest().authenticated()} rule (authenticated but not authorized).
  */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/collectors")
 public class UtmCollectorResource {
+
+    private static final String READ_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST')";
+    private static final String MUTATE_AUTH =
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER')";
 
     private final UtmModuleGroupService moduleGroupService;
     private final UtmCollectorService utmCollectorService;
@@ -48,6 +59,7 @@ public class UtmCollectorResource {
             successMessage = "Collector configuration upserted successfully"
     )
     @PostMapping("/config")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> upsertCollectorConfig(@Valid @RequestBody CollectorConfigDTO collectorConfig,
                                                       @RequestParam(name = "action", defaultValue = "CREATE") CollectorActionEnum action) {
 
@@ -56,6 +68,7 @@ public class UtmCollectorResource {
     }
 
     @GetMapping
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<ListCollectorsResponseDTO> listCollectorsByModule(@RequestParam(required = false, defaultValue = "0") Integer pageNumber,
                                                                             @RequestParam(required = false, defaultValue = "10") Integer pageSize,
                                                                             @RequestParam(required = false) String hostname,
@@ -70,6 +83,7 @@ public class UtmCollectorResource {
     }
 
     @GetMapping("/{collectorId}/module-groups")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<UtmModuleGroup>> getModuleGroups(@PathVariable String collectorId) {
 
         return ResponseEntity.ok(moduleGroupService.findAllByCollectorId(collectorId));
@@ -77,6 +91,7 @@ public class UtmCollectorResource {
     }
 
     @PutMapping("/asset-group")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> updateGroup(@Valid @RequestBody UpdateGroupDTO body) {
 
         utmCollectorService.updateGroup(body.getAssetsIds(), body.getAssetGroupId());
@@ -86,6 +101,7 @@ public class UtmCollectorResource {
 
 
     @GetMapping("/asset-groups")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<AssetGroupDTO>> searchGroupsByFilter(AssetGroupFilter filter, Pageable pageable) {
 
 
@@ -96,6 +112,7 @@ public class UtmCollectorResource {
     }
 
     @GetMapping("/search-by-filters")
+    @PreAuthorize(READ_AUTH)
     public ResponseEntity<List<CollectorDTO>> searchByFilters(@ParameterObject NetworkScanFilter filters,
                                                               @ParameterObject Pageable pageable) {
 
@@ -112,6 +129,7 @@ public class UtmCollectorResource {
             successMessage = "Collector deleted successfully"
     )
     @DeleteMapping("/{id}")
+    @PreAuthorize(MUTATE_AUTH)
     public ResponseEntity<Void> deleteCollector(@PathVariable Long id) {
         collectorService.deleteCollector(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("UtmCollector", id.toString())).build();

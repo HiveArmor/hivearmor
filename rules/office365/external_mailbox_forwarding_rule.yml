@@ -1,0 +1,41 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - o365
+name: Office 365 External Mailbox Forwarding Rule Created
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Exfiltration
+technique: "T1114.003 - Email Collection: Email Forwarding Rule"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1114/003/
+  - https://learn.microsoft.com/en-us/purview/audit-log-activities
+description: |
+  Detects creation or modification of a mailbox forwarding rule / inbox rule in Office 365 (Set-Mailbox ForwardingSMTPAddress, New-InboxRule, Set-InboxRule). Attackers who compromise a mailbox set an auto-forward to an external address to silently exfiltrate mail — a hallmark of business email compromise.
+
+  Next Steps:
+  1. Identify the mailbox and the user/admin that created the rule
+  2. Determine the forwarding destination and whether it is an external domain
+  3. Confirm the mailbox owner did not set the rule themselves (call out of band)
+  4. Remove the forwarding rule and reset the account credentials + revoke sessions
+  5. Review sent/deleted items and audit logs for what was already forwarded
+where: |
+  oneOf("log.Operation", ["Set-Mailbox", "New-InboxRule", "Set-InboxRule", "Set-TransportRule", "New-TransportRule"]) &&
+  equals("log.ResultStatus", "Success") &&
+  regexMatch("log.message", "(ForwardingSMTPAddress|ForwardTo|RedirectTo|DeliverToMailboxAndForward)")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.user
+        operator: filter_term
+        value: '{{.origin.user}}'
+      - field: log.Operation
+        operator: filter_match
+        value: 'Rule'
+    within: 24h
+    count: 2
+groupBy:
+  - origin.user

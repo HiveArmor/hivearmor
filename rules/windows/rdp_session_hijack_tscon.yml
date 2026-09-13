@@ -1,0 +1,31 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - wineventlog
+name: "Windows: RDP Session Hijacking via tscon"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: "Lateral Movement"
+technique: "T1563.002 - Remote Service Session Hijacking: RDP Hijacking"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1563/002/
+  - https://attack.mitre.org/techniques/T1021/001/
+description: |
+  Detects use of tscon.exe (typically launched via a SYSTEM-level service) to connect to another user's disconnected RDP session without their credentials. An attacker with SYSTEM can hijack an existing RDP session — inheriting that user's authenticated context and network access — a stealthy lateral-movement and privilege-inheritance technique that leaves no failed-logon trace.
+
+  Next Steps:
+  1. Identify the host, the hijacking process/parent, and the target session ID / user
+  2. Confirm whether a service was created or modified to run tscon as SYSTEM
+  3. Determine whose session was taken over and what that identity could reach
+  4. Correlate with recent SYSTEM-level privilege escalation on the host
+  5. If confirmed, isolate the host, terminate the session, and reset the hijacked user's credentials
+where: |
+  (equals("log.eventCode", 4688) || equals("log.eventCode", 4697) || equals("log.eventCode", 7045)) &&
+  regexMatch("log.eventDataProcessName", "(?i)tscon\\.exe") &&
+  (contains("log.message", "/dest:") || regexMatch("log.eventDataProcessName", "(?i)tscon"))
+groupBy:
+  - origin.host
+  - target.user

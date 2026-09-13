@@ -52,9 +52,27 @@ public class TenantScopeGuard {
             return false;
         }
         // resolveIndexPattern returns v3-hive-<type>-<prefix>-* ; strip the trailing wildcard.
+        // The stripped prefix retains its trailing '-' (e.g. "v3-hive-alert-cwm-"), which is
+        // what prevents a sibling-tenant collision such as tenant "cwm" matching "cwm2"
+        // (the char after "cwm" is '2', not '-'). NOTE: this assumes tenant prefixes contain
+        // no '-'; a hyphen-bearing prefix could still collide (documented constraint).
         String alertPrefix = indexResolver.resolveIndexPattern("alert").replace("*", "");
         String logPrefix = indexResolver.resolveIndexPattern("log").replace("*", "");
-        String trimmed = requestedPattern.trim();
-        return trimmed.startsWith(alertPrefix) || trimmed.startsWith(logPrefix);
+
+        // OpenSearch treats a comma-separated pattern as MULTI-TARGET, so a single
+        // startsWith() on the whole string would let "v3-hive-alert-cwm-*,v3-hive-alert-other-*"
+        // pass the scope check while still reading another tenant's index. Fail closed: split
+        // on ',' and require EVERY sub-target to be in scope (an empty sub-target fails too).
+        String[] targets = requestedPattern.trim().split(",", -1);
+        for (String target : targets) {
+            String trimmed = target.trim();
+            if (trimmed.isEmpty()) {
+                return false;
+            }
+            if (!(trimmed.startsWith(alertPrefix) || trimmed.startsWith(logPrefix))) {
+                return false;
+            }
+        }
+        return true;
     }
 }

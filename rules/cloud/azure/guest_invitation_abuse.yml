@@ -1,0 +1,35 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - azure
+name: Azure External Guest Invitation Abuse
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: Persistence
+technique: "T1136.003 - Create Account: Cloud Account"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1136/003/
+  - https://attack.mitre.org/techniques/T1078/004/
+description: |
+  Detects abuse of Entra ID external collaboration (B2B) — the "Invite external user" /
+  "Redeem external user invite" operations, especially when followed by role or group
+  changes. An attacker who can invite guests creates an external identity in the tenant they
+  control, then adds it to a privileged role or a sensitive group, establishing persistence
+  that is easy to overlook (a foreign guest account rather than a member account). Bulk
+  invitations, or an invite immediately followed by elevation, are the high-signal patterns.
+
+  Next Steps:
+  1. Identify who sent the invite (adversary.user), the invited external address, and the domain
+  2. An invite from an unusual inviter, or a guest added to a role/group right after redeeming, is high-signal
+  3. Confirm the guest is a legitimate business collaborator, not an attacker-owned mailbox
+  4. If unauthorized, remove the guest account and any role/group it was granted
+  5. Review external-collaboration settings (who can invite, allowed domains)
+where: |
+  regexMatch("log.operationName", "(?i)(Invite external user|Redeem external user invite|Add external user|Invitation)") &&
+  equals("log.resultType", "Success")
+groupBy:
+  - adversary.user
+  - adversary.ip

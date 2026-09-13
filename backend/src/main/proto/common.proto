@@ -12,6 +12,11 @@ message ListRequest {
   int32 page_size = 2;
   string search_query = 3;
   string sort_by = 4;
+  // Tenant scope for endpoint-scoped reads (agents/commands). Set server-side by the
+  // backend from the authenticated identity (TenantContext), never from a client param.
+  // Zero means "no tenant supplied" and is accepted ONLY under an explicit system context
+  // (P0A1-T14); a normal MSSP read with tenant_id == 0 is rejected fail-closed by the manager.
+  int64 tenant_id = 5;
 }
 
 enum Status {

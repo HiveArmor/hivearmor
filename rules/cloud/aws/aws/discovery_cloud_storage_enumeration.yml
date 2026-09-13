@@ -1,0 +1,46 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS Cloud Storage Enumeration
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+category: Discovery
+technique: "T1619 - Cloud Storage Object Discovery"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1619/
+  - https://attack.mitre.org/tactics/TA0007/
+description: |
+  Detects a single identity enumerating cloud storage — ListBuckets followed by a burst
+  of ListObjects/ListObjectsV2/GetBucketAcl/GetBucketPolicy across many buckets. Mapping
+  which buckets exist and what they contain is the reconnaissance step that precedes
+  bulk S3 exfiltration; a wide sweep of bucket/object listing from one principal is the
+  discovery signal that pairs with the existing exfiltration rules.
+
+  Next Steps:
+  1. Identify the principal, source IP, and the set of buckets enumerated
+  2. Compare against the identity's normal S3 access footprint (which buckets, how often)
+  3. Flag GetBucketAcl/GetBucketPolicy sweeps — attackers check for world-readable or misconfigured buckets
+  4. Correlate with any subsequent GetObject volume spike (exfiltration) from the same identity
+  5. If unauthorized, revoke the credential/session and review bucket policies for public exposure
+where: |
+  equals("log.eventSource", "s3.amazonaws.com") &&
+  regexMatch("log.eventName", "^(ListBuckets|ListObjects|ListObjectsV2|GetBucketAcl|GetBucketPolicy|GetBucketLocation|ListAllMyBuckets)$") &&
+  equals("log.errorCode", "")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_term
+        value: 's3.amazonaws.com'
+    within: 10m
+    count: 20
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

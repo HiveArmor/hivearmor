@@ -1,0 +1,36 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - azure
+name: Azure Federated Domain Trust Added
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: Privilege Escalation
+technique: "T1484.002 - Domain or Tenant Policy Modification: Trust Modification"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1484/002/
+  - https://attack.mitre.org/techniques/T1606/002/
+description: |
+  Detects addition or conversion of a federated domain in Entra ID — the "Set domain
+  authentication" / "Set federation settings on domain" / "Add unverified domain" operations
+  that make a domain trust an external identity provider. An attacker with tenant-admin
+  rights adds a federated domain pointing at an IdP they control (the AADInternals
+  "Set-AADIntDomainAuthentication" technique); they can then mint SAML tokens for ANY user in
+  the tenant (a Golden SAML precursor / persistence). This complements the existing
+  golden-SAML and federation-modified detections by catching the domain-trust setup itself.
+
+  Next Steps:
+  1. Identify the actor and the domain that was federated or had its authentication changed
+  2. Federating a domain to an unfamiliar issuer/token-signing cert is critical-signal
+  3. Confirm the change matches a sanctioned federation/migration project
+  4. If unauthorized, revert the domain to managed auth, remove the rogue issuer, and treat all tokens as forgeable
+  5. Rotate token-signing certs and review sign-ins that used the federated path
+where: |
+  regexMatch("log.operationName", "(?i)(Set domain authentication|Set federation settings on domain|Add unverified domain|Update domain|Set DirSyncEnabled flag)") &&
+  equals("log.resultType", "Success")
+groupBy:
+  - adversary.user
+  - adversary.ip

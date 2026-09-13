@@ -1,0 +1,38 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - "linux"
+name: "System Linux: Container Environment Reconnaissance"
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+category: Discovery
+technique: "T1613 - Container and Resource Discovery"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1613/
+description: |
+  Detects a process performing container/orchestrator reconnaissance from inside a workload —
+  checking whether it is containerized (reading /.dockerenv or /proc/self/cgroup, testing for
+  container runtime files) or enumerating the cluster with kubectl/crictl/ctr/docker invoked
+  from within a pod. This "where am I, what can I reach" step typically follows an initial
+  container compromise and precedes escape or lateral movement, so it is an early warning on
+  the container kill chain.
+
+  Next Steps:
+  1. Identify the host/container, process, and the recon action (self-check vs. cluster enum)
+  2. kubectl/crictl/ctr run from inside an application container is high-signal (apps rarely ship these)
+  3. Correlate with what preceded it (a web-app shell spawn, a reverse shell) and what follows (escape, token read)
+  4. If unauthorized, treat as an active intrusion — isolate the workload
+  5. Review whether the container image should even contain these tools (reduce attack surface)
+where: |
+  exists("log.message") &&
+  (
+    regexMatch("log.message", "(/\\.dockerenv|/proc/self/cgroup|/run/\\.containerenv)") ||
+    regexMatch("log.message", "(?i)\\b(kubectl|crictl|\\bctr\\b|nerdctl)\\b\\s+(get|exec|describe|run|auth|cp|-n\\b)")
+  ) &&
+  !regexMatch("log.message", "(?i)(kubelet|containerd-shim|/usr/bin/dockerd|liveness|readiness|health)")
+groupBy:
+  - origin.host
+  - origin.user

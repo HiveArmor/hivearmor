@@ -1,0 +1,41 @@
+id: 9125
+name: GRAPH-PRIV-USER-HOST-FANOUT
+type: graph_offense
+dataTypes:
+  - windows
+  - linux
+  - wineventlog
+category: Lateral Movement
+technique: "T1021 - Remote Services"
+mitre:
+  tactics: ["TA0008"]
+  attacks: ["T1021", "T1078"]
+adversary: origin
+description: >
+  Staging graph pack (DET-SEQ). A single privileged user account logged into an
+  unusually large number of distinct hosts within a short window — consistent
+  with credential misuse spreading laterally across the estate. Requires Neo4j
+  (NEO4J_ENABLED) — STAGING CANDIDATE.
+references:
+  - https://attack.mitre.org/techniques/T1021/
+  - https://attack.mitre.org/techniques/T1078/
+  - https://attack.mitre.org/tactics/TA0008/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+cypherQuery: |
+  MATCH (u:User)-[l:LOGGED_INTO]->(h:Host)
+  WHERE u.privileged = true
+    AND l.lastSeen > datetime() - duration('PT2H')
+  WITH u, count(DISTINCT h) AS hostCount, collect(DISTINCT h.hostname)[0..8] AS sampleHosts
+  WHERE hostCount >= 8
+  RETURN u.username    AS user,
+         hostCount,
+         sampleHosts
+  LIMIT 20
+alertFields:
+  - user
+  - hostCount
+  - sampleHosts
+checkIntervalSeconds: 300

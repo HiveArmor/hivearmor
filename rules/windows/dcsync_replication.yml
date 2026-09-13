@@ -1,0 +1,37 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - wineventlog
+name: "Windows: DCSync Credential Replication"
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+category: Credential Access
+technique: "T1003.006 - OS Credential Dumping: DCSync"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1003/006/
+description: |
+  Detects a DCSync attack — a request for Active Directory directory-replication rights
+  (Security event 4662 referencing the DS-Replication-Get-Changes /
+  DS-Replication-Get-Changes-All control-access GUIDs 1131f6aa/1131f6ad) by an account that
+  is not a domain controller. DCSync (Mimikatz lsadump::dcsync, secretsdump) impersonates a
+  DC and asks a real DC to replicate secrets, extracting password hashes for any account —
+  including krbtgt — without ever touching the DC's disk or LSASS.
+
+  Next Steps:
+  1. Identify the account (SubjectUserName) and host that requested replication
+  2. Only domain controllers legitimately replicate — a user/workstation doing so is high-signal
+  3. Whitelist the actual DC computer accounts and Azure AD Connect / known sync accounts
+  4. If unauthorized, treat as full-domain compromise: rotate krbtgt (twice) and all privileged creds
+  5. Review whether krbtgt was among the replicated objects (golden-ticket risk)
+where: |
+  equals("log.eventCode", "4662") &&
+  equals("log.channel", "Security") &&
+  regexMatch("log.data.Properties", "(1131f6aa-9c07-11d1-f79f-00c04fc2dcd2|1131f6ad-9c07-11d1-f79f-00c04fc2dcd2)") &&
+  exists("log.eventDataSubjectUserName") &&
+  !regexMatch("log.eventDataSubjectUserName", "(?i)\\$$")
+groupBy:
+  - origin.host
+  - log.eventDataSubjectUserName

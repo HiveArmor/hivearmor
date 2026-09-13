@@ -42,6 +42,7 @@ public class TenantContextFilter extends OncePerRequestFilter {
     private final UserRepository users;
     private final TokenProvider tokenProvider;
     private final ObjectMapper objectMapper;
+    private final com.hivearmor.service.application_events.ApplicationEventService eventService;
     private final boolean legacyPrefixOnlyMode;
 
     @Autowired
@@ -49,12 +50,14 @@ public class TenantContextFilter extends OncePerRequestFilter {
                                HaTenantUserRepository tenantUsers,
                                UserRepository users,
                                TokenProvider tokenProvider,
-                               ObjectMapper objectMapper) {
+                               ObjectMapper objectMapper,
+                               com.hivearmor.service.application_events.ApplicationEventService eventService) {
         this.resolver    = resolver;
         this.tenantUsers = tenantUsers;
         this.users = users;
         this.tokenProvider = tokenProvider;
         this.objectMapper = objectMapper;
+        this.eventService = eventService;
         this.legacyPrefixOnlyMode = false;
     }
 
@@ -63,7 +66,7 @@ public class TenantContextFilter extends OncePerRequestFilter {
                         HaTenantUserRepository tenantUsers,
                         UserRepository users,
                         TokenProvider tokenProvider) {
-        this(resolver, tenantUsers, users, tokenProvider, new ObjectMapper());
+        this(resolver, tenantUsers, users, tokenProvider, new ObjectMapper(), null);
     }
 
     /** Compatibility constructor retained for isolated legacy filter tests. */
@@ -73,6 +76,7 @@ public class TenantContextFilter extends OncePerRequestFilter {
         this.users = null;
         this.tokenProvider = null;
         this.objectMapper = new ObjectMapper();
+        this.eventService = null;
         this.legacyPrefixOnlyMode = true;
     }
 
@@ -121,6 +125,7 @@ public class TenantContextFilter extends OncePerRequestFilter {
                         "Tenant scope was not found", "tenant-scope-not-found");
                     return null;
                 }
+                auditTenantSelection(auth, requestedClientId, prefix.get(), "X-Tenant-ID", request);
                 return new ResolvedTenant(requestedClientId, prefix.get());
             } catch (NumberFormatException ignored) {
                 writeProblem(response, HttpStatus.BAD_REQUEST, "Invalid Tenant Scope",
@@ -152,6 +157,8 @@ public class TenantContextFilter extends OncePerRequestFilter {
                         "Tenant scope was not found", "tenant-scope-not-found");
                     return null;
                 }
+                auditTenantSelection(auth, resolved.get().clientId(), resolved.get().prefix(),
+                    HEADER_TENANT_PREFIX, request);
                 return resolved.get();
             }
         }
@@ -220,8 +227,59 @@ public class TenantContextFilter extends OncePerRequestFilter {
         return tokenProvider.getAuthentication(token);
     }
 
+    /**
+     * P0A1-T15 — record a deliberate admin tenant selection. This is a cross-tenant
+     * admin action (an admin selecting a tenant scope via a request header), so it is
+     * audited rather than silent. No token/secret is logged — only actor login, the
+     * selected tenant id/prefix, the selector header, and the request path.
+     *
+     * <p>Only admin-class principals can reach the header selection paths that call
+     * this (MSSP_ADMIN for both headers; a platform ADMIN only via X-Tenant-ID after
+     * the T15 membership tightening). No-ops when the audit service is unavailable
+     * (isolated filter tests use the package-private constructors).
+     */
+    private void auditTenantSelection(Authentication auth,
+                                      Long selectedClientId,
+                                      String selectedPrefix,
+                                      String selector,
+                                      HttpServletRequest request) {
+        if (eventService == null) {
+            return;
+        }
+        boolean adminClass = hasAuthority(auth, AUTHORITY_MSSP_ADMIN) || hasAuthority(auth, AUTHORITY_ADMIN);
+        if (!adminClass) {
+            // A tenant member selecting their OWN tenant is routine, not a cross-tenant
+            // admin action — do not audit it here.
+            return;
+        }
+        try {
+            java.util.Map<String, Object> details = new java.util.HashMap<>();
+            details.put("actor", auth.getName());
+            details.put("selectedClientId", selectedClientId);
+            details.put("selectedPrefix", selectedPrefix);
+            details.put("selector", selector);
+            details.put("msspAdmin", hasAuthority(auth, AUTHORITY_MSSP_ADMIN));
+            details.put("method", request.getMethod());
+            details.put("path", request.getRequestURI());
+            eventService.createEvent(
+                "Admin tenant scope selected: actor=" + auth.getName()
+                    + " tenant=" + selectedClientId + " via=" + selector,
+                com.hivearmor.domain.application_events.enums.ApplicationEventType.TENANT_SCOPE_SELECTED,
+                details);
+        } catch (Exception ignored) {
+            // Auditing must never break the request path; a failed audit write is
+            // logged by the event service itself.
+        }
+    }
+
     private boolean isAuthorizedForTenant(Authentication auth, Long clientId) {
-        if (hasAuthority(auth, AUTHORITY_MSSP_ADMIN) || hasAuthority(auth, AUTHORITY_ADMIN)) {
+        // P0A1-T15 — ADMIN is NOT an implicit cross-tenant escape. Only the MSSP
+        // operator authority (MSSP_ADMIN) may select ANY tenant; that is its role.
+        // A plain platform ADMIN (ROLE_ADMIN without MSSP_ADMIN) is authorized for a
+        // tenant only through actual membership — on a single-tenant deployment that
+        // resolves to their own tenant; on an MSSP deployment it prevents a local admin
+        // from silently reaching another tenant's data.
+        if (hasAuthority(auth, AUTHORITY_MSSP_ADMIN)) {
             return true;
         }
         if (users == null) {

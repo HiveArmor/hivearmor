@@ -168,7 +168,12 @@ public class TelemetryAgentIdentityFilter extends OncePerRequestFilter {
         }
         String method = request.getMethod();
         if ("POST".equalsIgnoreCase(method)) {
-            return "/api/ha-telemetry/sca".equals(path) || "/api/ha-telemetry/sbom".equals(path);
+            // P0A1-T08 — EDR event ingest is an agent device-authenticated path so the
+            // tenant is bound from the authenticated agent identity (TenantContext),
+            // never trusted from the event payload.
+            return "/api/ha-telemetry/sca".equals(path)
+                || "/api/ha-telemetry/sbom".equals(path)
+                || "/api/edr/events/ingest".equals(path);
         }
         if ("PUT".equalsIgnoreCase(method)) {
             return path.startsWith("/api/ha-telemetry/vitals");

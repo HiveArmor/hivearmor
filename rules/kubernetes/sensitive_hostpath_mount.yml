@@ -1,0 +1,31 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - otlp
+name: Kubernetes Pod Mounts Sensitive Host Path
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+category: Privilege Escalation
+technique: "T1611 - Escape to Host"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1611/
+  - https://kubernetes.io/docs/concepts/storage/volumes/#hostpath
+description: |
+  Detects a pod spec that mounts a sensitive host path (the host root, the container runtime socket, or the kubelet/etc directories) via a hostPath volume. Mounting the host filesystem or the docker/containerd socket is a direct container-escape and node-takeover technique.
+
+  Next Steps:
+  1. Identify the pod, namespace, and the host path it requested to mount
+  2. Determine whether the workload has a legitimate need for host access (very few do)
+  3. Check the mounting service account's RBAC and whether Pod Security admission should have blocked it
+  4. If unauthorized, delete the pod, cordon the node, and inspect the node for tampering
+  5. Enforce the restricted Pod Security Standard and block hostPath via an admission policy
+where: |
+  exists("log.message") &&
+  contains("log.message", "\"hostPath\"") &&
+  regexMatch("log.message", "\"path\":\"(/|/root|/etc|/var/run/docker\\.sock|/var/run/containerd|/var/lib/kubelet|/proc|/sys)")
+groupBy:
+  - log.k8s.namespace
+  - log.k8s.podName

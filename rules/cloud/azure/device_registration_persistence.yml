@@ -1,0 +1,34 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - azure
+name: Azure Device Registration for Persistence
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 1
+category: Persistence
+technique: "T1098.005 - Account Manipulation: Device Registration"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1098/005/
+description: |
+  Detects registration or join of a device to Entra ID — the "Add device" / "Register device"
+  / "Add registered owner to device" operations. After compromising an account, an attacker
+  registers their own device so it becomes a "known"/compliant device: this satisfies
+  device-based Conditional Access, enables Primary Refresh Token (PRT) acquisition, and gives
+  durable access that survives a password reset. Bulk or unexpected device registrations tied
+  to a single account are a strong persistence signal.
+
+  Next Steps:
+  1. Identify the actor, the account the device was registered under, and the device details
+  2. A device registration right after a risky sign-in or from a new location/IP is high-signal
+  3. Confirm the enrollment matches a real user provisioning a real device (Intune/Autopilot)
+  4. If unauthorized, remove/disable the device object and revoke its refresh tokens
+  5. Check whether the device was then used to obtain a PRT or satisfy Conditional Access
+where: |
+  regexMatch("log.operationName", "(?i)(Add device|Register device|Add registered owner to device|Add registered user to device)") &&
+  equals("log.resultType", "Success")
+groupBy:
+  - adversary.user
+  - adversary.ip

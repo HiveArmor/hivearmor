@@ -1,0 +1,33 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS WAF Web ACL Removed or Disassociated
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+category: Defense Evasion
+technique: "T1562.001 - Impair Defenses: Disable or Modify Tools"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1562/001/
+description: |
+  Detects removal of AWS WAF protection — DeleteWebACL, or DisassociateWebACL that detaches a
+  Web ACL from its protected resource (ALB, API Gateway, CloudFront, AppSync). Removing or
+  detaching the Web ACL leaves the fronted application with no WAF inspection, so an attacker
+  who intends to exploit the app first strips the WAF. Web ACLs are rarely deleted or
+  detached outside a deliberate change.
+
+  Next Steps:
+  1. Identify the principal (userIdentityArn), source IP, and the Web ACL / resource affected
+  2. A disassociate/delete against a production-fronting Web ACL is high-signal
+  3. Confirm the change matches an approved IaC/change ticket, not an ad-hoc API call
+  4. If unauthorized, re-attach/restore the Web ACL and inspect app traffic during the gap
+  5. Correlate with exploit attempts against the now-unprotected resource
+where: |
+  oneOf("log.eventSource", ["waf.amazonaws.com", "waf-regional.amazonaws.com", "wafv2.amazonaws.com"]) &&
+  oneOf("log.eventName", ["DeleteWebACL", "DisassociateWebACL"])
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

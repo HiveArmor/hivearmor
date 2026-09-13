@@ -1,0 +1,48 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - azure
+name: Azure MFA Fatigue / Push Bombing
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: Credential Access
+technique: "T1621 - Multi-Factor Authentication Request Generation"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1621/
+description: |
+  Detects MFA fatigue (push bombing) — a burst of MFA-challenged sign-in attempts for a
+  single user in a short window, the pattern where an attacker who already has the password
+  repeatedly triggers Authenticator push prompts until the user approves one out of
+  annoyance. Keys on repeated sign-ins that reach the MFA step (interrupted / MFA-required
+  result) for one principal, correlated over a few minutes.
+
+  Next Steps:
+  1. Identify the target user (adversary.user), the source IP(s), and the prompt count
+  2. Many MFA prompts in minutes — especially from an unfamiliar IP/ASN — is high-signal
+  3. Check whether any prompt was ultimately approved (successful sign-in after the burst)
+  4. If suspicious, revoke the user's sessions, force password reset, and confirm the account is not already in use
+  5. Consider enabling number-matching / prompt throttling if not already enforced
+where: |
+  contains("log.operationName", "Sign-in activity") &&
+  (equals("log.properties.status.errorCode", "50074") ||
+   equals("log.properties.status.errorCode", "50076") ||
+   equals("log.properties.status.errorCode", "50079") ||
+   equals("log.properties.status.errorCode", "500121")) &&
+  exists("origin.ip")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: '{{.origin.ip}}'
+      - field: log.properties.status.errorCode
+        operator: filter_match
+        value: '5007'
+    within: 10m
+    count: 6
+groupBy:
+  - lastEvent.log.operationName
+  - adversary.ip

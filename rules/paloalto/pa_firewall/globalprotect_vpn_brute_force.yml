@@ -1,0 +1,48 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - firewall-paloalto
+name: "Palo Alto: GlobalProtect VPN Authentication Failures"
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: Credential Access
+technique: "T1110 - Brute Force"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1110/
+  - https://attack.mitre.org/techniques/T1133/
+description: |
+  Detects repeated GlobalProtect VPN authentication failures from one source — a brute-force
+  or password-spray against the GlobalProtect portal/gateway. Internet-facing VPN is a
+  primary initial-access target; a burst of failed GP auth attempts from a single IP,
+  especially followed by a success, indicates credential attack against the remote-access
+  edge. Complements the existing admin-brute-force rule (which covers device-management
+  logins, not the GP portal).
+
+  Next Steps:
+  1. Identify the source IP, the targeted portal/gateway, and the accounts tried
+  2. Many failures from one external IP — or spread across many users — is high-signal
+  3. Check whether any attempt then succeeded (successful GP login after the burst)
+  4. If malicious, block the source, confirm MFA is enforced on GlobalProtect, and review any session it established
+  5. Correlate the source IP against threat intel
+where: |
+  equals("log.pa_type", "GLOBALPROTECT") &&
+  (regexMatch("log.panOSEventStatus", "(?i)(fail|error|denied)") ||
+   regexMatch("log.message", "(?i)(authentication failed|login failed|invalid username|auth.*deny)")) &&
+  exists("origin.ip")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.ip
+        operator: filter_term
+        value: '{{.origin.ip}}'
+      - field: log.pa_type
+        operator: filter_term
+        value: 'GLOBALPROTECT'
+    within: 15m
+    count: 8
+groupBy:
+  - adversary.ip
+  - target.host

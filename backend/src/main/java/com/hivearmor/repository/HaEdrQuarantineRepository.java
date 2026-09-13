@@ -40,4 +40,11 @@ public interface HaEdrQuarantineRepository extends JpaRepository<HaEdrQuarantine
      * Used by bulk restore/delete operations.
      */
     List<HaEdrQuarantine> findAllByIdIn(List<Long> ids);
+
+    // P0A1-T09 follow-on — tenant-scoped reads. Null-tenant (pre-backfill) rows are
+    // excluded from tenant-scoped reads, so a read can never cross tenants.
+    Page<HaEdrQuarantine> findByTenantId(Long tenantId, Pageable pageable);
+    Page<HaEdrQuarantine> findByTenantIdAndAgentId(Long tenantId, String agentId, Pageable pageable);
+    Page<HaEdrQuarantine> findByTenantIdAndStatus(Long tenantId, String status, Pageable pageable);
+    Page<HaEdrQuarantine> findByTenantIdAndAgentIdAndStatus(Long tenantId, String agentId, String status, Pageable pageable);
 }

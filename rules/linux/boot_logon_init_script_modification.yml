@@ -1,0 +1,41 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - "linux"
+name: "Linux: Boot or Logon Init Script Modification"
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 1
+category: Persistence
+technique: "T1037.004 - Boot or Logon Initialization Scripts: RC Scripts"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1037/
+  - https://attack.mitre.org/techniques/T1037/004/
+  - https://attack.mitre.org/tactics/TA0003/
+description: |
+  Detects modification of boot/logon initialization scripts that execute automatically
+  at system start or user login — /etc/rc.local, /etc/rc.common, files under
+  /etc/init.d or /etc/rc*.d, and system-wide login init (/etc/profile, /etc/profile.d,
+  /etc/bash.bashrc). Adding a command to one of these gives an attacker persistence that
+  survives reboot without a new service or cron entry. This technique had no prior
+  coverage.
+
+  Next Steps:
+  1. Identify the host, user, and the exact init script modified and the change
+  2. Confirm the change was made by a package manager / config-management tool, not an interactive shell
+  3. Inspect the added content for a reverse shell, downloader, or credential harvester
+  4. Correlate with the session that made the edit (SSH login, sudo, a dropped file)
+  5. If unauthorized, revert the script, remove the payload, and rotate the user's credentials
+where: |
+  exists("log.message") &&
+  (
+    oneOf("log.operation", ["write", "unlink", "rename", "truncate"]) ||
+    regexMatch("log.message", "(?i)(write|open|modif|append|edit)")
+  ) &&
+  regexMatch("log.message", "(/etc/rc\\.local|/etc/rc\\.common|/etc/init\\.d/|/etc/rc[0-9S]\\.d/|/etc/profile(\\.d)?|/etc/bash\\.bashrc|/etc/X11/xinit)") &&
+  !regexMatch("log.message", "(?i)\\b(apt|dpkg|yum|dnf|rpm|puppet|ansible|chef|salt|packagekitd)\\b")
+groupBy:
+  - origin.host
+  - origin.user

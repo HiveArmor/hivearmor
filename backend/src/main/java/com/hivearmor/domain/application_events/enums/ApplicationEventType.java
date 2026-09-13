@@ -103,5 +103,12 @@ public enum ApplicationEventType {
     REPORT_IMPORT_ATTEMPT,
     REPORT_IMPORT_SUCCESS,
     JWT_KEY_ROTATED,
+    // P0A1-T15 — an admin deliberately selected a tenant scope other than their own
+    // (cross-tenant admin action). Emitted by TenantContextFilter; audited, never silent.
+    TENANT_SCOPE_SELECTED,
+    // P0A1-T17 — a cross-tenant access was denied (object resolved outside the caller's
+    // tenant, or no tenant could be established in MSSP mode). Actor/target/op recorded,
+    // no secrets. Emitted by TenantAudit.
+    CROSS_TENANT_DENIED,
     UNDEFINED
 }

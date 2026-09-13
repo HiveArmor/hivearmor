@@ -1,0 +1,33 @@
+id: 9123
+name: RISK-EXFIL-STAGING-ARCHIVE
+dataTypes:
+  - windows
+  - linux
+  - process
+  - wineventlog
+category: Collection
+technique: "T1560.001 - Archive Collected Data: Archive via Utility"
+mitre:
+  tactics: ["TA0009", "TA0010"]
+  attacks: ["T1560.001", "T1074.001"]
+adversary: origin
+description: >
+  Accumulates risk when data is compressed into an archive via a command-line
+  utility (tar/zip/7z/rar, or Compress-Archive) — a common pre-exfiltration
+  staging step. On its own it is often legitimate (backups, packaging); weighted
+  into the accumulator it becomes meaningful when the same origin has already
+  scored on collection or discovery, sharpening the pre-exfil signal.
+references:
+  - https://attack.mitre.org/techniques/T1560/001/
+  - https://attack.mitre.org/tactics/TA0009/
+impact:
+  confidentiality: 3
+  integrity: 1
+  availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.command
+groupBy:
+  - origin.host
+riskScore: 20
+where: 'raw.matches("(?i).*(Compress-Archive|\\b(tar|zip|7z|rar|gzip|bzip2)\\b.*\\.(tar|tar\\.gz|tgz|zip|7z|rar|gz|bz2)).*")'

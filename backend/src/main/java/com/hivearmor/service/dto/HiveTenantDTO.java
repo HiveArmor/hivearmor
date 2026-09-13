@@ -23,9 +23,12 @@ public class HiveTenantDTO {
     @Size(max = 253)
     private String domain;
 
-    /** Unique prefix used for data partitioning; immutable after creation. */
+    /** Unique prefix used for data partitioning; immutable after creation.
+     *  Hyphen-FREE: the ES tenant-scope guard matches indexes by startsWith on
+     *  "v3-hive-<type>-<prefix>-", so a hyphen inside the prefix would let a
+     *  tenant collide with a sibling (cwm vs cwm-x). */
     @Size(max = 50)
-    @Pattern(regexp = "^[a-z0-9-]*$", message = "must contain only lowercase letters, digits, and hyphens")
+    @Pattern(regexp = "^[a-z0-9]*$", message = "must contain only lowercase letters and digits (no hyphens)")
     private String prefix;
 
     /** ACTIVE | SUSPENDED | PROVISIONING | DEPROVISIONED */

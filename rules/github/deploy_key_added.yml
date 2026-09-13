@@ -1,0 +1,36 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - github
+name: GitHub Deploy Key Added to Repository
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: Persistence
+technique: "T1098 - Account Manipulation"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1098/
+  - https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys
+description: |
+  Detects a deploy key (an SSH key granting repository access, often outside normal user
+  auth and MFA) being added to a repository. A write-enabled deploy key is a stealthy
+  persistence and code-access mechanism: it keeps working after the adding user's session
+  ends and is easy to overlook in access reviews, so attackers add one to retain access to
+  source and CI even after their initial foothold is remediated.
+
+  Next Steps:
+  1. Identify the repository, the actor that added the key, and whether it is read-only or read-write
+  2. Confirm the key corresponds to a legitimate, documented CI/CD or automation integration
+  3. Check whether the key's title/fingerprint matches a known deployment; investigate if unfamiliar
+  4. If unauthorised, remove the deploy key immediately and rotate any credentials it could reach
+  5. Review clones/pushes made via the key since it was added
+where: |
+  oneOf("log.action", ["repo.create_actions_secret", "deploy_key.create", "repo.deploy_key_created", "public_key.create"]) ||
+  regexMatch("log.action", "deploy_key\\.(create|verify)") ||
+  (contains("log.action", "deploy_key") && !contains("log.action", "destroy")) ||
+  (oneOf("log.action", ["repo.access", "repo.update"]) && regexMatch("log.message", "(?i)deploy.?key"))
+groupBy:
+  - log.repositoryName
+  - log.senderLogin

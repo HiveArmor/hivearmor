@@ -1,0 +1,49 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS SES Email Sending Abuse
+impact:
+  confidentiality: 2
+  integrity: 2
+  availability: 1
+category: Resource Development
+technique: "T1586.002 - Compromise Accounts: Email Accounts"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1586/002/
+  - https://attack.mitre.org/techniques/T1585/002/
+description: |
+  Detects abuse of Amazon SES/WorkMail from a compromised identity — verifying a new
+  sending identity, updating the account sending quota / moving out of the sandbox, or a
+  burst of SendEmail/SendRawEmail/SendBulkTemplatedEmail. After stealing AWS credentials,
+  attackers monetize by sending phishing or spam through the victim's reputable SES
+  infrastructure (evading sender reputation controls) — a common and costly post-compromise
+  action that also risks the account's sending reputation.
+
+  Next Steps:
+  1. Identify the principal, source IP, and the SES action(s) — new verified identity, quota bump, or send burst
+  2. Confirm the activity matches sanctioned mail automation for that identity
+  3. Flag VerifyEmailIdentity / UpdateAccountSendingEnabled / a send spike from a non-app principal as high-signal
+  4. If unauthorized, revoke the credential/session, remove the rogue identity, and review sent mail
+  5. Check SES reputation dashboards and whether the account was pulled from the sandbox
+where: |
+  oneOf("log.eventSource", ["ses.amazonaws.com", "email.amazonaws.com", "workmail.amazonaws.com"]) &&
+  (
+    oneOf("log.eventName", ["VerifyEmailIdentity", "VerifyDomainIdentity", "UpdateAccountSendingEnabled", "PutAccountSendingAttributes", "CreateConfigurationSet"]) ||
+    regexMatch("log.eventName", "^Send(Email|RawEmail|BulkTemplatedEmail|TemplatedEmail)$")
+  )
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_match
+        value: 'ses workmail email'
+    within: 15m
+    count: 25
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

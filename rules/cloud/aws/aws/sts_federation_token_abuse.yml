@@ -1,0 +1,48 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS STS Federation Token Minting Abuse
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: Persistence
+technique: "T1550.001 - Use Alternate Authentication Material: Application Access Token"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1550/001/
+  - https://attack.mitre.org/techniques/T1078/004/
+description: |
+  Detects an IAM user minting federated session credentials via GetFederationToken (or a
+  chain of GetSessionToken / AssumeRole that widens rather than narrows scope). Attackers
+  who compromise a long-lived access key call GetFederationToken to spin off short-lived
+  credentials that (a) keep working after the source key is disabled if not explicitly
+  revoked, and (b) muddy attribution in CloudTrail — a persistence and defense-evasion
+  technique. GetFederationToken from an interactive/compromised user is rarely legitimate
+  outside specific broker applications.
+
+  Next Steps:
+  1. Identify the calling IAM user, source IP, and the policy/scope of the minted token
+  2. Confirm the caller is a sanctioned credential-broker application, not an interactive user
+  3. Flag GetFederationToken from a user that normally does not federate as high-signal
+  4. If unauthorized, disable the source key AND revoke active sessions (revoke-older-than), then rotate
+  5. Trace what the federated session did across CloudTrail
+where: |
+  equals("log.eventSource", "sts.amazonaws.com") &&
+  oneOf("log.eventName", ["GetFederationToken", "GetSessionToken"]) &&
+  equals("log.userIdentityType", "IAMUser")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventName
+        operator: filter_match
+        value: 'GetFederationToken GetSessionToken'
+    within: 30m
+    count: 1
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

@@ -1,0 +1,33 @@
+id: 9122
+name: RISK-PERSISTENCE-AUTOSTART
+dataTypes:
+  - windows
+  - linux
+  - process
+  - wineventlog
+category: Persistence
+technique: "T1547.001 - Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder"
+mitre:
+  tactics: ["TA0003"]
+  attacks: ["T1547.001", "T1546", "T1053"]
+adversary: origin
+description: >
+  Accumulates risk when an autostart persistence mechanism is created — a write
+  to a Run/RunOnce registry key, a new item in a Startup folder, or a crontab /
+  systemd unit created from a shell. Persistence is a mid-kill-chain stage; feeding
+  it to the accumulator lets it combine with recon, execution, and credential
+  access from the same origin into a single high-confidence offense.
+references:
+  - https://attack.mitre.org/techniques/T1547/001/
+  - https://attack.mitre.org/tactics/TA0003/
+impact:
+  confidentiality: 1
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.command
+groupBy:
+  - origin.host
+riskScore: 25
+where: 'raw.matches("(?i).*(reg(.exe)?\\s+add.*(CurrentVersion.{0,2}Run|RunOnce)|New-ItemProperty.*Run|Start Menu.*Programs.*Startup|crontab\\s+-|/etc/cron\\.|systemctl\\s+enable\\s+).*")'

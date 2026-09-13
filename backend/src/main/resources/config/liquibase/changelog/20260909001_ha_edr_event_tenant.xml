@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      P0A1-T08 — authoritative tenant attribution for EDR events.
+      tenant_id is assigned SERVER-SIDE at ingest from the authenticated agent
+      identity (TenantContext, set by TelemetryAgentIdentityFilter), never from
+      the event payload. Added nullable so existing rows and in-flight ingests
+      during rollout are tolerated; a backfill (operational job) populates
+      existing rows from the owning agent; enforcement to NOT NULL is deferred to
+      a later batch after backfill completes and all writers set it.
+    -->
+    <changeSet id="20260909001-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="hive_edr_event" columnName="tenant_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="hive_edr_event">
+            <column name="tenant_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="hive_edr_event" indexName="idx_hive_edr_event_tenant_id">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!--
+      Composite index for the common tenant-scoped read pattern
+      (WHERE tenant_id = ? ORDER BY event_time DESC), used by EDR timeline /
+      query reads once tenant scoping (P0A1-T09) is wired.
+    -->
+    <changeSet id="20260909001-2" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists indexName="idx_hive_edr_event_tenant_time"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="hive_edr_event" indexName="idx_hive_edr_event_tenant_time">
+            <column name="tenant_id"/>
+            <column name="event_time" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

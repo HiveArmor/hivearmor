@@ -1,0 +1,50 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS Bedrock Model Invocation Abuse (LLMjacking)
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 2
+category: Impact
+technique: "T1496 - Resource Hijacking"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1496/
+  - https://attack.mitre.org/tactics/TA0040/
+description: |
+  Detects abuse of Amazon Bedrock consistent with "LLMjacking" — stolen AWS credentials
+  used to run large volumes of expensive foundation-model inference on the victim's
+  account. Indicators: enabling model access (PutFoundationModelEntitlement /
+  GetFoundationModelAvailability probing), then a burst of InvokeModel /
+  InvokeModelWithResponseStream, often from a new identity or region and frequently
+  paired with attempts to disable model-invocation logging. This drives large,
+  unexpected inference bills.
+
+  Next Steps:
+  1. Identify the principal, source IP/region, and the volume of InvokeModel calls
+  2. Compare against the identity's normal Bedrock usage (many workloads use zero)
+  3. Flag model-access enablement or an invocation burst from a non-application principal as high-signal
+  4. Check whether PutModelInvocationLoggingConfiguration was changed to disable logging
+  5. If unauthorized, revoke the credential/session, review the Bedrock bill, and restrict Bedrock IAM
+where: |
+  equals("log.eventSource", "bedrock.amazonaws.com") &&
+  (
+    regexMatch("log.eventName", "^InvokeModel") ||
+    oneOf("log.eventName", ["GetFoundationModelAvailability", "PutFoundationModelEntitlement", "CreateModelInvocationJob", "PutModelInvocationLoggingConfiguration", "DeleteModelInvocationLoggingConfiguration"])
+  )
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventSource
+        operator: filter_term
+        value: 'bedrock.amazonaws.com'
+    within: 15m
+    count: 20
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

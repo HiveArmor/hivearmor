@@ -1,0 +1,46 @@
+# Rule version v1.0.0
+
+dataTypes:
+  - aws
+name: AWS Cross-Account VPC Network Bridge Created
+impact:
+  confidentiality: 3
+  integrity: 2
+  availability: 1
+category: Lateral Movement
+technique: "T1021 - Remote Services"
+adversary: origin
+references:
+  - https://attack.mitre.org/techniques/T1021/
+  - https://attack.mitre.org/techniques/T1071/
+description: |
+  Detects creation or acceptance of a cross-account/external network bridge — a VPC peering
+  connection (CreateVpcPeeringConnection / AcceptVpcPeeringConnection), a Transit Gateway
+  attachment, or a VPC endpoint service that exposes internal services to another account.
+  An attacker who controls a foreign AWS account uses a peering/TGW attachment to stitch the
+  victim VPC to their own, creating a covert, routed network path for lateral movement and
+  data egress that never leaves the AWS backbone (and so bypasses internet-egress controls).
+
+  Next Steps:
+  1. Identify the principal and the peer/attachment counterpart account or VPC
+  2. Confirm the counterpart is a known, sanctioned account (not an unfamiliar external one)
+  3. Flag AcceptVpcPeeringConnection or a TGW attach from/to an unknown account as high-signal
+  4. If unauthorized, delete the peering/attachment and audit route tables + security groups for the opened path
+  5. Review traffic across the bridge for lateral movement or exfiltration
+where: |
+  equals("log.eventSource", "ec2.amazonaws.com") &&
+  oneOf("log.eventName", ["CreateVpcPeeringConnection", "AcceptVpcPeeringConnection", "CreateTransitGatewayPeeringAttachment", "AcceptTransitGatewayPeeringAttachment", "CreateVpcEndpointServiceConfiguration", "ModifyVpcEndpointServicePermissions"])
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.userIdentityArn
+        operator: filter_term
+        value: '{{.log.userIdentityArn}}'
+      - field: log.eventName
+        operator: filter_match
+        value: 'Peering Attachment Endpoint'
+    within: 30m
+    count: 1
+groupBy:
+  - log.userIdentityArn
+  - log.sourceIPAddress

@@ -92,7 +92,7 @@ func (s *AgentService) ListEnrollmentAuditEvents(_ context.Context, req *ListEnr
 
 	var rows []models.EnrollmentAuditEvent
 	var total int64
-	err := s.DBConnection.Transaction(func(tx *gorm.DB) error {
+	err := s.DBConnection.WithTenantTx(req.GetTenantId(), func(tx *gorm.DB) error {
 		query := tx.Model(&models.EnrollmentAuditEvent{}).Where("tenant_id = ?", req.GetTenantId())
 		if value := strings.TrimSpace(req.GetTokenId()); value != "" {
 			query = query.Where("token_id = ?", value)

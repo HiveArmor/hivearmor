@@ -1,0 +1,32 @@
+id: 9119
+name: RISK-RECON-DISCOVERY-TOOLING
+dataTypes:
+  - windows
+  - linux
+  - process
+  - wineventlog
+category: Discovery
+technique: "T1057 - Process Discovery"
+mitre:
+  tactics: ["TA0007"]
+  attacks: ["T1057", "T1082", "T1016"]
+adversary: origin
+description: >
+  Accumulates risk when host/network/process discovery tooling runs (whoami,
+  net view, systeminfo, ipconfig /all, tasklist, arp -a). A single recon command
+  is low-signal on its own; feeding it into the risk accumulator lets a burst of
+  discovery from one origin build toward an offense without flooding alerts.
+references:
+  - https://attack.mitre.org/techniques/T1057/
+  - https://attack.mitre.org/tactics/TA0007/
+impact:
+  confidentiality: 2
+  integrity: 1
+  availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.command
+groupBy:
+  - origin.host
+riskScore: 15
+where: 'raw.matches("(?i).*(whoami|net(.exe)?\\s+(view|group|user|localgroup)|systeminfo|ipconfig\\s+/all|ifconfig|tasklist|arp\\s+-a|nltest|net\\s+session).*")'
