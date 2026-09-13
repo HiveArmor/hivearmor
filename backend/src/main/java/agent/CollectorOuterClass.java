@@ -1956,6 +1956,19 @@ public final class CollectorOuterClass {
      */
     com.google.protobuf.ByteString
         getLastSeenBytes();
+
+    /**
+     * <pre>
+     * SPEC-04 (W1b) — authoritative tenant, set by the agent-manager (which is
+     * already fully tenant-scoped for collectors). The manager already emits this
+     * field; this backend copy was missing it (proto drift), so the backend stub
+     * could not read the tenant off each synced row.
+     * </pre>
+     *
+     * <code>int64 tenant_id = 9;</code>
+     * @return The tenantId.
+     */
+    long getTenantId();
   }
   /**
    * Protobuf type {@code agent.Collector}
@@ -2243,6 +2256,24 @@ public final class CollectorOuterClass {
       }
     }
 
+    public static final int TENANT_ID_FIELD_NUMBER = 9;
+    private long tenantId_ = 0L;
+    /**
+     * <pre>
+     * SPEC-04 (W1b) — authoritative tenant, set by the agent-manager (which is
+     * already fully tenant-scoped for collectors). The manager already emits this
+     * field; this backend copy was missing it (proto drift), so the backend stub
+     * could not read the tenant off each synced row.
+     * </pre>
+     *
+     * <code>int64 tenant_id = 9;</code>
+     * @return The tenantId.
+     */
+    @java.lang.Override
+    public long getTenantId() {
+      return tenantId_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2281,6 +2312,9 @@ public final class CollectorOuterClass {
       if (!com.google.protobuf.GeneratedMessage.isStringEmpty(lastSeen_)) {
         com.google.protobuf.GeneratedMessage.writeString(output, 8, lastSeen_);
       }
+      if (tenantId_ != 0L) {
+        output.writeInt64(9, tenantId_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -2317,6 +2351,10 @@ public final class CollectorOuterClass {
       if (!com.google.protobuf.GeneratedMessage.isStringEmpty(lastSeen_)) {
         size += com.google.protobuf.GeneratedMessage.computeStringSize(8, lastSeen_);
       }
+      if (tenantId_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(9, tenantId_);
+      }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
@@ -2346,6 +2384,8 @@ public final class CollectorOuterClass {
       if (module_ != other.module_) return false;
       if (!getLastSeen()
           .equals(other.getLastSeen())) return false;
+      if (getTenantId()
+          != other.getTenantId()) return false;
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -2373,6 +2413,9 @@ public final class CollectorOuterClass {
       hash = (53 * hash) + module_;
       hash = (37 * hash) + LAST_SEEN_FIELD_NUMBER;
       hash = (53 * hash) + getLastSeen().hashCode();
+      hash = (37 * hash) + TENANT_ID_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getTenantId());
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -2512,6 +2555,7 @@ public final class CollectorOuterClass {
         version_ = "";
         module_ = 0;
         lastSeen_ = "";
+        tenantId_ = 0L;
         return this;
       }
 
@@ -2569,6 +2613,9 @@ public final class CollectorOuterClass {
         if (((from_bitField0_ & 0x00000080) != 0)) {
           result.lastSeen_ = lastSeen_;
         }
+        if (((from_bitField0_ & 0x00000100) != 0)) {
+          result.tenantId_ = tenantId_;
+        }
       }
 
       @java.lang.Override
@@ -2616,6 +2663,9 @@ public final class CollectorOuterClass {
           lastSeen_ = other.lastSeen_;
           bitField0_ |= 0x00000080;
           onChanged();
+        }
+        if (other.getTenantId() != 0L) {
+          setTenantId(other.getTenantId());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
@@ -2683,6 +2733,11 @@ public final class CollectorOuterClass {
                 bitField0_ |= 0x00000080;
                 break;
               } // case 66
+              case 72: {
+                tenantId_ = input.readInt64();
+                bitField0_ |= 0x00000100;
+                break;
+              } // case 72
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -3194,6 +3249,59 @@ public final class CollectorOuterClass {
         checkByteStringIsUtf8(value);
         lastSeen_ = value;
         bitField0_ |= 0x00000080;
+        onChanged();
+        return this;
+      }
+
+      private long tenantId_ ;
+      /**
+       * <pre>
+       * SPEC-04 (W1b) — authoritative tenant, set by the agent-manager (which is
+       * already fully tenant-scoped for collectors). The manager already emits this
+       * field; this backend copy was missing it (proto drift), so the backend stub
+       * could not read the tenant off each synced row.
+       * </pre>
+       *
+       * <code>int64 tenant_id = 9;</code>
+       * @return The tenantId.
+       */
+      @java.lang.Override
+      public long getTenantId() {
+        return tenantId_;
+      }
+      /**
+       * <pre>
+       * SPEC-04 (W1b) — authoritative tenant, set by the agent-manager (which is
+       * already fully tenant-scoped for collectors). The manager already emits this
+       * field; this backend copy was missing it (proto drift), so the backend stub
+       * could not read the tenant off each synced row.
+       * </pre>
+       *
+       * <code>int64 tenant_id = 9;</code>
+       * @param value The tenantId to set.
+       * @return This builder for chaining.
+       */
+      public Builder setTenantId(long value) {
+
+        tenantId_ = value;
+        bitField0_ |= 0x00000100;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * SPEC-04 (W1b) — authoritative tenant, set by the agent-manager (which is
+       * already fully tenant-scoped for collectors). The manager already emits this
+       * field; this backend copy was missing it (proto drift), so the backend stub
+       * could not read the tenant off each synced row.
+       * </pre>
+       *
+       * <code>int64 tenant_id = 9;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearTenantId() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        tenantId_ = 0L;
         onChanged();
         return this;
       }
@@ -8853,43 +8961,44 @@ public final class CollectorOuterClass {
       "e\030\002 \001(\t\022\017\n\007version\030\003 \001(\t\022)\n\tcollector\030\004 " +
       "\001(\0162\026.agent.CollectorModule\"F\n\025ListColle" +
       "ctorResponse\022\036\n\004rows\030\001 \003(\0132\020.agent.Colle" +
-      "ctor\022\r\n\005total\030\002 \001(\005\"\267\001\n\tCollector\022\n\n\002id\030" +
+      "ctor\022\r\n\005total\030\002 \001(\005\"\312\001\n\tCollector\022\n\n\002id\030" +
       "\001 \001(\005\022\035\n\006status\030\002 \001(\0162\r.agent.Status\022\025\n\r" +
       "collector_key\030\003 \001(\t\022\n\n\002ip\030\004 \001(\t\022\020\n\010hostn" +
       "ame\030\005 \001(\t\022\017\n\007version\030\006 \001(\t\022&\n\006module\030\007 \001" +
       "(\0162\026.agent.CollectorModule\022\021\n\tlast_seen\030" +
-      "\010 \001(\t\"y\n\021CollectorMessages\022(\n\006config\030\001 \001" +
-      "(\0132\026.agent.CollectorConfigH\000\022(\n\006result\030\002" +
-      " \001(\0132\026.agent.ConfigKnowledgeH\000B\020\n\016stream" +
-      "_message\"h\n\017CollectorConfig\022\024\n\014collector" +
-      "_id\030\001 \001(\t\022+\n\006groups\030\002 \003(\0132\033.agent.Collec" +
-      "torConfigGroup\022\022\n\nrequest_id\030\003 \001(\t\"\244\001\n\024C" +
-      "ollectorConfigGroup\022\n\n\002id\030\001 \001(\005\022\022\n\ngroup" +
-      "_name\030\002 \001(\t\022\031\n\021group_description\030\003 \001(\t\022;" +
-      "\n\016configurations\030\004 \003(\0132#.agent.Collector" +
-      "GroupConfigurations\022\024\n\014collector_id\030\005 \001(" +
-      "\005\"\276\001\n\034CollectorGroupConfigurations\022\n\n\002id" +
-      "\030\001 \001(\005\022\020\n\010group_id\030\002 \001(\005\022\020\n\010conf_key\030\003 \001" +
-      "(\t\022\022\n\nconf_value\030\004 \001(\t\022\021\n\tconf_name\030\005 \001(" +
-      "\t\022\030\n\020conf_description\030\006 \001(\t\022\026\n\016conf_data" +
-      "_type\030\007 \001(\t\022\025\n\rconf_required\030\010 \001(\010\"7\n\017Co" +
-      "nfigKnowledge\022\020\n\010accepted\030\001 \001(\t\022\022\n\nreque" +
-      "st_id\030\002 \001(\t\"7\n\rConfigRequest\022&\n\006module\030\001" +
-      " \001(\0162\026.agent.CollectorModule*,\n\017Collecto" +
-      "rModule\022\n\n\006AS_400\020\000\022\r\n\tHIVEARMOR\020\0012\356\002\n\020C" +
-      "ollectorService\022B\n\021RegisterCollector\022\026.a" +
-      "gent.RegisterRequest\032\023.agent.AuthRespons" +
-      "e\"\000\022>\n\017DeleteCollector\022\024.agent.DeleteReq" +
-      "uest\032\023.agent.AuthResponse\"\000\022C\n\rListColle" +
-      "ctor\022\022.agent.ListRequest\032\034.agent.ListCol" +
-      "lectorResponse\"\000\022K\n\017CollectorStream\022\030.ag" +
-      "ent.CollectorMessages\032\030.agent.CollectorM" +
-      "essages\"\000(\0010\001\022D\n\022GetCollectorConfig\022\024.ag" +
-      "ent.ConfigRequest\032\026.agent.CollectorConfi" +
-      "g\"\0002d\n\025PanelCollectorService\022K\n\027Register" +
-      "CollectorConfig\022\026.agent.CollectorConfig\032" +
-      "\026.agent.ConfigKnowledge\"\000B*Z(github.com/" +
-      "hivearmor/agent-manager/agentb\006proto3"
+      "\010 \001(\t\022\021\n\ttenant_id\030\t \001(\003\"y\n\021CollectorMes" +
+      "sages\022(\n\006config\030\001 \001(\0132\026.agent.CollectorC" +
+      "onfigH\000\022(\n\006result\030\002 \001(\0132\026.agent.ConfigKn" +
+      "owledgeH\000B\020\n\016stream_message\"h\n\017Collector" +
+      "Config\022\024\n\014collector_id\030\001 \001(\t\022+\n\006groups\030\002" +
+      " \003(\0132\033.agent.CollectorConfigGroup\022\022\n\nreq" +
+      "uest_id\030\003 \001(\t\"\244\001\n\024CollectorConfigGroup\022\n" +
+      "\n\002id\030\001 \001(\005\022\022\n\ngroup_name\030\002 \001(\t\022\031\n\021group_" +
+      "description\030\003 \001(\t\022;\n\016configurations\030\004 \003(" +
+      "\0132#.agent.CollectorGroupConfigurations\022\024" +
+      "\n\014collector_id\030\005 \001(\005\"\276\001\n\034CollectorGroupC" +
+      "onfigurations\022\n\n\002id\030\001 \001(\005\022\020\n\010group_id\030\002 " +
+      "\001(\005\022\020\n\010conf_key\030\003 \001(\t\022\022\n\nconf_value\030\004 \001(" +
+      "\t\022\021\n\tconf_name\030\005 \001(\t\022\030\n\020conf_description" +
+      "\030\006 \001(\t\022\026\n\016conf_data_type\030\007 \001(\t\022\025\n\rconf_r" +
+      "equired\030\010 \001(\010\"7\n\017ConfigKnowledge\022\020\n\010acce" +
+      "pted\030\001 \001(\t\022\022\n\nrequest_id\030\002 \001(\t\"7\n\rConfig" +
+      "Request\022&\n\006module\030\001 \001(\0162\026.agent.Collecto" +
+      "rModule*,\n\017CollectorModule\022\n\n\006AS_400\020\000\022\r" +
+      "\n\tHIVEARMOR\020\0012\356\002\n\020CollectorService\022B\n\021Re" +
+      "gisterCollector\022\026.agent.RegisterRequest\032" +
+      "\023.agent.AuthResponse\"\000\022>\n\017DeleteCollecto" +
+      "r\022\024.agent.DeleteRequest\032\023.agent.AuthResp" +
+      "onse\"\000\022C\n\rListCollector\022\022.agent.ListRequ" +
+      "est\032\034.agent.ListCollectorResponse\"\000\022K\n\017C" +
+      "ollectorStream\022\030.agent.CollectorMessages" +
+      "\032\030.agent.CollectorMessages\"\000(\0010\001\022D\n\022GetC" +
+      "ollectorConfig\022\024.agent.ConfigRequest\032\026.a" +
+      "gent.CollectorConfig\"\0002d\n\025PanelCollector" +
+      "Service\022K\n\027RegisterCollectorConfig\022\026.age" +
+      "nt.CollectorConfig\032\026.agent.ConfigKnowled" +
+      "ge\"\000B*Z(github.com/hivearmor/agent-manag" +
+      "er/agentb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -8913,7 +9022,7 @@ public final class CollectorOuterClass {
     internal_static_agent_Collector_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_agent_Collector_descriptor,
-        new java.lang.String[] { "Id", "Status", "CollectorKey", "Ip", "Hostname", "Version", "Module", "LastSeen", });
+        new java.lang.String[] { "Id", "Status", "CollectorKey", "Ip", "Hostname", "Version", "Module", "LastSeen", "TenantId", });
     internal_static_agent_CollectorMessages_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_agent_CollectorMessages_fieldAccessorTable = new
