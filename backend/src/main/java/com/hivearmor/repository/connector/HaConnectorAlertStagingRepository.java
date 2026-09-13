@@ -19,12 +19,9 @@ public interface HaConnectorAlertStagingRepository extends JpaRepository<HaConne
         String externalId
     );
 
-    List<HaConnectorAlertStaging> findByConnectorInstanceIdOrderByIngestedAtDesc(
-        Long connectorInstanceId,
-        Pageable pageable
-    );
-
     // SPEC-04 (W1b) — tenant-scoped list read; null-tenant (pre-backfill) rows excluded.
+    // (The unscoped findByConnectorInstanceIdOrderByIngestedAtDesc was removed as dead
+    // code once listStaged switched to this scoped finder — FU-2 cleanup.)
     List<HaConnectorAlertStaging> findByTenantIdAndConnectorInstanceIdOrderByIngestedAtDesc(
         Long tenantId,
         Long connectorInstanceId,
