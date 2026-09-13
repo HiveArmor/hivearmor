@@ -84,6 +84,8 @@ type DeleteOp struct {
 type KVOp struct {
 	FieldSplit string `yaml:"fieldSplit"`
 	ValueSplit string `yaml:"valueSplit"`
+	Source     string `yaml:"source,omitempty"`
+	Where      string `yaml:"where,omitempty"`
 }
 
 type DynamicOp struct {
