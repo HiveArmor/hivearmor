@@ -14,7 +14,16 @@ import { useParams } from 'react-router-dom';
 
 import { EndpointTimelineBody } from './EndpointTimelineBody';
 
-export function EndpointTimelinePage(): JSX.Element {
+export interface EndpointTimelinePageProps {
+  /**
+   * Optional fixed initial time range, forwarded to EndpointTimelineBody. Left
+   * undefined by the router in production (live rolling last-24h window); only
+   * stories/tests pass it, to keep visual baselines deterministic.
+   */
+  initialRange?: { from: string; to: string };
+}
+
+export function EndpointTimelinePage({ initialRange }: EndpointTimelinePageProps = {}): JSX.Element {
   const { agentId = '' } = useParams<{ agentId: string }>();
-  return <EndpointTimelineBody agentId={agentId} showHeader />;
+  return <EndpointTimelineBody agentId={agentId} showHeader initialRange={initialRange} />;
 }
