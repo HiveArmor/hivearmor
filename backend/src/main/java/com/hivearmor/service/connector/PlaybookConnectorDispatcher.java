@@ -68,10 +68,43 @@ public class PlaybookConnectorDispatcher {
             || BLOCK_IP_IDS.contains(n);
     }
 
-    @Transactional
+    // SPEC-04 (W1b) FU-4 — NOT @Transactional. This runs on an @Async playbook thread
+    // with no request TenantContext; it resolves the target instance, seeds the tenant
+    // context from that instance's own tenant, and then calls the nested service methods
+    // (testInstance/ingest/decryptedConfig — each individually @Transactional). Because
+    // the tx boundary (where TenantGucAspect sets app.current_tenant) is opened by those
+    // nested calls AFTER the context is set here, the GUC matches the row's tenant_id and
+    // the writes survive an RLS WITH CHECK. If dispatch itself were @Transactional the
+    // aspect would fire at its entry, before the context is seeded — hence no @Transactional.
     public Map<String, Object> dispatch(String actionId, Map<String, Object> config) {
         String n = actionId.trim().toLowerCase(Locale.ROOT);
         HaConnectorInstance row = resolveInstance(config);
+        return runInInstanceTenant(row, () -> dispatchResolved(n, row, config));
+    }
+
+    private Map<String, Object> runInInstanceTenant(HaConnectorInstance row, java.util.function.Supplier<Map<String, Object>> work) {
+        Long prevClientId = com.hivearmor.multitenancy.TenantContext.getClientId();
+        String prevPrefix = com.hivearmor.multitenancy.TenantContext.getClientPrefix();
+        try {
+            Long tenantId = row.getTenantId();
+            if (tenantId != null && tenantId > 0L) {
+                // MSSP tenant — set numeric scope so the GUC matches the row's tenant_id.
+                com.hivearmor.multitenancy.TenantContext.set(tenantId, null);
+            } else {
+                // Single-tenant (tenant_id 0 or null): clear so requireTenant()/GUC resolve 0.
+                com.hivearmor.multitenancy.TenantContext.clear();
+            }
+            return work.get();
+        } finally {
+            if (prevClientId != null) {
+                com.hivearmor.multitenancy.TenantContext.set(prevClientId, prevPrefix);
+            } else {
+                com.hivearmor.multitenancy.TenantContext.clear();
+            }
+        }
+    }
+
+    private Map<String, Object> dispatchResolved(String n, HaConnectorInstance row, Map<String, Object> config) {
         HaConnector connector = registry.require(row.getConnectorId());
 
         if (TEST_IDS.contains(n)) {
@@ -107,7 +140,7 @@ public class PlaybookConnectorDispatcher {
             return blockIp(row, connector, config);
         }
 
-        throw new IllegalArgumentException("Unsupported connector action: " + actionId);
+        throw new IllegalArgumentException("Unsupported connector action: " + n);
     }
 
     private Map<String, Object> disableUser(

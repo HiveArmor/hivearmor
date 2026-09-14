@@ -2,6 +2,7 @@ package com.hivearmor.service.connector;
 
 import com.hivearmor.domain.connector.ConnectorStagingStatus;
 import com.hivearmor.domain.connector.HaConnectorAlertStaging;
+import com.hivearmor.multitenancy.TenantScope;
 import com.hivearmor.repository.connector.HaConnectorAlertStagingRepository;
 import com.hivearmor.service.elasticsearch.ElasticsearchService;
 import com.hivearmor.service.inputs.HaIndexNames;
@@ -153,7 +154,12 @@ public class ConnectorStagingPromoteService {
     @Transactional
     public ConnectorPromoteResult promotePendingBatch(int limit) {
         int size = Math.min(Math.max(limit, 1), MAX_BATCH);
-        List<HaConnectorAlertStaging> pending = stagingRepository.findByStatusOrderByIdAsc(
+        // SPEC-04 (W1b) FU-4 — scope the sweep to the current tenant (the scheduler wraps
+        // this in TenantScopedBackgroundExecutor). Correct before RLS (no cross-tenant
+        // promote) and after (matches RLS visibility). promoteByIds re-loads by id under
+        // the same tenant scope.
+        List<HaConnectorAlertStaging> pending = stagingRepository.findByTenantIdAndStatusOrderByIdAsc(
+            TenantScope.requireTenant(),
             ConnectorStagingStatus.PENDING,
             PageRequest.of(0, size)
         );
