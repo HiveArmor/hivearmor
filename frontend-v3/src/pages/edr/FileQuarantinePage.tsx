@@ -48,6 +48,7 @@ import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { SiemDataGrid } from '@/components/siem-data-grid';
 import { StatusDock } from '@/components/status-dock/StatusDock';
 import { ROUTES } from '@/constants/routes.constants';
+import { useCurrentTenantLabel } from '@/hooks/useCurrentTenantLabel';
 import { useEpsStream } from '@/hooks/useEpsStream';
 import { useIsolatedHosts, useQuarantineBulkAction, useQuarantineAction, useQuarantinedFiles } from '@/hooks/useQuarantine';
 import { useRowDensity, type RowDensity } from '@/hooks/useRowDensity';
@@ -505,6 +506,7 @@ export function FileQuarantinePage(): JSX.Element {
 
 function FileQuarantineContent(): JSX.Element {
   const canMutate = useAuthStore((state) => state.hasAnyRole([...QUARANTINE_ACCESS_ROLES]));
+  const tenantScopeLabel = useCurrentTenantLabel().label;
   const gridRef = useRef<AgGridReact>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const [view, setView] = useState<WorkspaceView>('files');
@@ -662,7 +664,7 @@ function FileQuarantineContent(): JSX.Element {
             <HaCompactSelect<IsolationStatus> ariaLabel="Isolation status" label="State" value={containmentStatus} options={ISOLATION_STATUS_OPTIONS} onChange={(value) => { setContainmentStatus(value); setIsolationPage(0); }} />
             <span className="qrn-scope"><Laptop size={12} />Host isolation only</span>
           </>}
-          <span className="qrn-scope"><LockKeyhole size={12} />All authorized tenants</span>
+          <span className="qrn-scope"><LockKeyhole size={12} />{tenantScopeLabel}</span>
           {view === 'files' && (
             <span className="qrn-snapshot">{data?.stale ? 'Stale snapshot' : formatFreshnessLabel(data?.snapshotAt, data?.asOf, dataUpdatedAt)}</span>
           )}

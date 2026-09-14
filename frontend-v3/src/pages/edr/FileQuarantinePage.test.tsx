@@ -25,6 +25,7 @@
 
 import React from 'react';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -206,10 +207,13 @@ function makeRow(overrides: Partial<QuarantinedFileDTO> = {}): QuarantinedFileDT
 // ---------------------------------------------------------------------------
 
 function renderPage() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <MemoryRouter>
-      <FileQuarantinePage />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <FileQuarantinePage />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 
