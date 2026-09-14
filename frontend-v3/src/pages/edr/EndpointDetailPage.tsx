@@ -393,7 +393,7 @@ export function EndpointDetailPage(): JSX.Element {
               />
               <p className="endpoint-detail__muted endpoint-detail__hint">
                 Applied-policy detail is not yet resolvable per agent (see note above). Manage policies from the
-                {' '}<Link className="endpoint-detail__inline-link" to={ROUTES.EDR_POLICIES}>agent policies</Link> console.
+                {' '}<Link className="endpoint-detail__inline-link" to={ROUTES.ENDPOINTS_FIM_POLICIES}>agent policies</Link> console.
               </p>
             </HaCard.Body>
           </HaCard>

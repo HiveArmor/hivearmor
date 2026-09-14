@@ -300,21 +300,24 @@ describe('HaNavigation', () => {
     expect(screen.getByRole('button', { name: 'Endpoints' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('W4 IA: Endpoint Security co-locates FIM findings, FIM policies, and agent policies', () => {
+  it('W4 IA + W5: Endpoint Security co-locates FIM findings and the single FIM Policies entry', () => {
     renderNavigation();
     fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
     expect(screen.getByRole('button', { name: 'File Integrity' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'FIM Policies' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Agent Policies' })).toBeVisible();
+    // SPEC-06 W5: the legacy Plane B "Agent Policies" entry (/edr/policies) is retired —
+    // that route now redirects to the canonical FIM Policies console.
+    expect(screen.queryByRole('button', { name: 'Agent Policies' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Response Actions' })).toBeVisible();
     // Data Sources is analyst-visible here (surfaced from ADMIN into the endpoint context).
     expect(screen.getByRole('button', { name: 'Data Sources' })).toBeVisible();
   });
 
-  it('W4 IA: single canonical Agent Policies entry (no duplicate rendered)', () => {
+  it('W5: single canonical Policies entry — FIM Policies, no Agent Policies duplicate', () => {
     renderNavigation();
     fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
-    expect(screen.getAllByRole('button', { name: 'Agent Policies' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'FIM Policies' })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'Agent Policies' })).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Data Sources' })).toHaveLength(1);
   });
 

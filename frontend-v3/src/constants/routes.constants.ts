@@ -43,6 +43,9 @@ export const ROUTES = {
   /** Consolidated per-agent detail page (SPEC-03, W3). Net-new: no EDR_TIMELINE constant exists. */
   ENDPOINT_DETAIL: '/edr/endpoints/:agentId',
   EDR_FIM: '/edr/fim',
+  /** DEPRECATED (SPEC-06 W5): Plane B legacy console retired from UI; this route
+   *  now redirects to AGENT_FIM_POLICIES (canonical Plane A). Kept as the redirect
+   *  source path for old bookmarks during the 2-release deprecation window. */
   EDR_POLICIES: '/edr/policies',
 
   // POSTURE
