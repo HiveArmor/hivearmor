@@ -495,23 +495,23 @@ export function SensorGridPage(): JSX.Element {
       <header className="sensor-fleet-page__header">
         <div className="sensor-fleet-page__title-block">
           <div className="sensor-fleet-page__title-row">
-            <h1 className="sensor-fleet-page__title">Sensors</h1>
+            <h1 className="sensor-fleet-page__title">Endpoints</h1>
             <span className="sensor-fleet-page__count">
               {onlineCount} / {sensors.length} online
             </span>
           </div>
           <p className="sensor-fleet-page__job">
-            Agent fleet inventory — health, timelines, and enrollment.
+            Agent fleet — health, timelines, enrollment, and containment.
           </p>
         </div>
 
         <div className="sensor-fleet-page__toolbar">
           <DensitySelector />
-          <Link to="/edr/endpoints" className="sensor-fleet-page__link">
-            Endpoint telemetry
+          <Link to="/edr/fim" className="sensor-fleet-page__link">
+            File Integrity
           </Link>
-          <Link to="/posture/sensors/fim-policies" className="sensor-fleet-page__link">
-            Agent FIM policies
+          <Link to="/endpoints/fim-policies" className="sensor-fleet-page__link">
+            FIM policies
           </Link>
           {canViewEnrollmentAudit && (
             <Link to="/admin/enrollment-audit" className="sensor-fleet-page__link">

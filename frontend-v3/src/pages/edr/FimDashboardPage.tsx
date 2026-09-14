@@ -633,9 +633,9 @@ function FimDashboardContent(): JSX.Element {
       </header>
 
       <p className="fim-page__meta">
-        <Link to={ROUTES.SENSORS}>Sensors</Link>
+        <Link to={ROUTES.ENDPOINTS}>Endpoints</Link>
         <span aria-hidden="true">·</span>
-        <Link to={ROUTES.EDR_ENDPOINTS}>Endpoints</Link>
+        <Link to={ROUTES.ENDPOINTS_FIM_POLICIES}>FIM Policies</Link>
         <span aria-hidden="true">·</span>
         <Link to={ROUTES.EDR_POLICIES}>Agent Policies</Link>
         <span aria-hidden="true">·</span>

@@ -50,6 +50,39 @@ export const LEGACY_ROUTE_REGISTRY: readonly LegacyRouteEntry[] = [
       'Canonical detection rule authoring is under Detection Rules. This import URL is not marked deprecated until lifecycle headers and consumer cutover are recorded.',
     stillLinked: false,
   },
+  {
+    // W4 IA — Sensors fleet moved into the unified Endpoint Security area.
+    path: '/posture/sensors',
+    kind: 'path-alias',
+    canonicalPath: '/endpoints',
+    chipLabel: 'Moved',
+    bannerTitle: 'Sensors moved to Endpoint Security',
+    bannerDetail:
+      'The agent fleet now lives under Endpoint Security → Endpoints (/endpoints), unified with the former EDR Endpoints list on the same data. This URL still resolves for bookmarks; backend Deprecation, Sunset, and successor Link headers are not advertised yet (GOV-008).',
+    stillLinked: true,
+  },
+  {
+    // W4 IA — legacy EDR Endpoints list unified into /endpoints (same SensorDTO).
+    path: '/edr/endpoints',
+    kind: 'path-alias',
+    canonicalPath: '/endpoints',
+    chipLabel: 'Moved',
+    bannerTitle: 'Endpoints is now the unified fleet at /endpoints',
+    bannerDetail:
+      'The Endpoints host list and the Sensors fleet have been unified under Endpoint Security → Endpoints (/endpoints). This URL still resolves for bookmarks; lifecycle headers are not advertised yet (GOV-008).',
+    stillLinked: true,
+  },
+  {
+    // W4 IA — Agent FIM policies co-located with FIM findings under Endpoint Security.
+    path: '/posture/sensors/fim-policies',
+    kind: 'path-alias',
+    canonicalPath: '/endpoints/fim-policies',
+    chipLabel: 'Moved',
+    bannerTitle: 'Agent FIM Policies moved to Endpoint Security',
+    bannerDetail:
+      'FIM policy authoring now lives under Endpoint Security → FIM Policies (/endpoints/fim-policies), co-located with File Integrity findings. This URL still resolves for bookmarks; lifecycle headers are not advertised yet (GOV-008).',
+    stillLinked: true,
+  },
 ] as const;
 
 /** Redirect-only aliases — Navigate in router; listed for honesty scans, not page banners. */

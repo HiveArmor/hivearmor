@@ -459,6 +459,27 @@ export const router = createBrowserRouter([
         path: 'hunt',
         element: <Navigate to="/search" replace />,
       },
+      // ── W4 IA — Endpoint Security canonical routes ───────────────────────
+      // /endpoints is the unified fleet home (merges Sensors + Endpoints on the
+      // same SensorDTO). Renders the full-featured SensorGridPage. The legacy
+      // /posture/sensors and /edr/endpoints paths stay mounted in place below
+      // with a LegacyRouteNotice banner (LEGACY_ROUTE_REGISTRY) — no 404s.
+      {
+        path: 'endpoints',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <SensorGridPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'endpoints/fim-policies',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <AgentFimPolicyPage />
+          </AuthGuard>
+        ),
+      },
       // EDR — Endpoint Timeline
       {
         path: 'edr/timeline/:agentId',
@@ -512,7 +533,9 @@ export const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
-      // EDR — Endpoints list (agent selector, entry point for timeline)
+      // EDR — Endpoints list. W4 IA: retired as a nav entry; canonical fleet is
+      // /endpoints (SensorGridPage). Kept mounted in place with a LegacyRouteNotice
+      // banner so bookmarks resolve — no 404. EndpointsListPage component retained.
       {
         path: 'edr/endpoints',
         element: (
@@ -770,6 +793,8 @@ export const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
+      // POSTURE — Sensors. W4 IA: moved to Endpoint Security → Endpoints (/endpoints).
+      // Kept mounted in place with a LegacyRouteNotice banner so bookmarks resolve — no 404.
       {
         path: 'posture/sensors',
         element: (
@@ -778,6 +803,8 @@ export const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
+      // POSTURE — Agent FIM Policies. W4 IA: moved to Endpoint Security → FIM Policies
+      // (/endpoints/fim-policies). Kept mounted in place with a LegacyRouteNotice banner.
       {
         path: 'posture/sensors/fim-policies',
         element: (

@@ -19,8 +19,10 @@ describe('FIM dashboard UX honesty (Prompt 22)', () => {
   it('wires staging honesty, meta links, and human role labels', () => {
     expect(page).toContain('STAGING CANDIDATE');
     expect(page).toContain('fim-empty-honesty');
-    expect(page).toContain('ROUTES.SENSORS');
-    expect(page).toContain('ROUTES.EDR_ENDPOINTS');
+    // W4 IA: FIM co-located under Endpoint Security — cross-links point at canonical /endpoints
+    // and the co-located FIM Policies route (not the retired /posture/sensors + /edr/endpoints).
+    expect(page).toContain('ROUTES.ENDPOINTS');
+    expect(page).toContain('ROUTES.ENDPOINTS_FIM_POLICIES');
     expect(page).toContain('ROUTES.EDR_POLICIES');
     expect(page).toContain('ROUTES.RESPONSE_QUARANTINE');
     expect(page).toContain('ROUTES.SEARCH');

@@ -175,15 +175,15 @@ describe('SensorGridPage fleet UX', () => {
     );
 
     expect(
-      screen.getByText(/Agent fleet inventory — health, timelines, and enrollment/i)
+      screen.getByText(/Agent fleet — health, timelines, enrollment, and containment/i)
     ).toBeVisible();
-    expect(screen.getByRole('link', { name: 'Endpoint telemetry' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'File Integrity' })).toHaveAttribute(
       'href',
-      '/edr/endpoints'
+      '/edr/fim'
     );
-    expect(screen.getByRole('link', { name: 'Agent FIM policies' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'FIM policies' })).toHaveAttribute(
       'href',
-      '/posture/sensors/fim-policies'
+      '/endpoints/fim-policies'
     );
     const timelineLinks = screen.getAllByRole('link', {
       name: /Open EDR timeline for wks-01/i,
@@ -229,7 +229,7 @@ describe('SensorGridPage fleet UX', () => {
       screen.getByText(/Required permission: Platform Administrator to enroll agents/i)
     ).toBeVisible();
     expect(screen.getByRole('grid', { name: 'Registered agents' })).toBeVisible();
-    expect(screen.getByRole('link', { name: 'Endpoint telemetry' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'File Integrity' })).toBeVisible();
   });
 
   it('opens an accessible Kill modal (no window.prompt) showing target, tenant, and a PID input', async () => {
