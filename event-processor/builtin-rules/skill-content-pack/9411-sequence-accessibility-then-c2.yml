@@ -1,0 +1,48 @@
+id: 9411
+name: SEQ-ACCESSIBILITY-THEN-C2
+dataTypes:
+  - windows
+  - process
+  - netconn
+  - wineventlog
+category: Command and Control
+technique: "T1546.008 - Event Triggered Execution: Accessibility Features"
+mitre:
+  tactics: ["TA0003", "TA0011"]
+  attacks: ["T1546.008", "T1071"]
+adversary: origin
+description: >
+  Skill content pack. Sequence: accessibility/IFEO persistence (sethc, utilman,
+  osk Debugger) is followed by outbound C2-style communication from the same
+  host within 1 hour. Persistence alone is noisy on image-servicing hosts;
+  persistence-then-beacon is the post-exploit pattern. False positives: OEM
+  accessibility installers plus CDN telemetry. Require an external destination
+  in the second step.
+references:
+  - https://attack.mitre.org/techniques/T1546/008/
+  - https://attack.mitre.org/techniques/T1071/
+  - https://attack.mitre.org/tactics/TA0011/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+deduplicateBy:
+  - origin.host
+groupBy:
+  - origin.host
+sequence:
+  - where: 'action == "accessibility_hijack" || safe("log.action", "") == "accessibility_hijack" || raw.matches("(?i).*(sethc|utilman|osk).*(Debugger|IFEO|cmd\\.exe).*")'
+    within: 15m
+  - where: 'action == "c2_beacon" || safe("log.action", "") == "c2_beacon" || raw.matches("(?i).*(beacon|c2|command.?and.?control|https?://\\d{1,3}\\.\\d{1,3}\\.).*")'
+    within: 1h
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.host
+        operator: filter_term
+        value: "{{.origin.host}}"
+      - field: log.action
+        operator: filter_term
+        value: accessibility_hijack
+    within: 1h
+    count: 1

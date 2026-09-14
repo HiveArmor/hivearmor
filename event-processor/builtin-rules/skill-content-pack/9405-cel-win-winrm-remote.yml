@@ -1,0 +1,48 @@
+id: 9405
+name: CEL-WIN-WINRM-REMOTE
+dataTypes:
+  - windows
+  - wineventlog
+  - process
+  - powershell
+category: Lateral Movement
+technique: "T1021.006 - Remote Services: Windows Remote Management"
+mitre:
+  tactics: ["TA0008"]
+  attacks: ["T1021.006", "T1059.001"]
+adversary: origin
+description: >
+  Skill content pack. Detects suspicious WinRM / PowerShell remoting: evil-winrm,
+  winrs.exe to a remote host, wsmprovhost spawning encoded PowerShell, or
+  Enter-PSSession/Invoke-Command targeting a non-admin workstation. False
+  positives: JEA endpoints, SCCM Run Scripts, and approved jump-host remoting.
+  Tune by excluding known WinRM management hosts and Constrained Language
+  mode sessions.
+references:
+  - https://attack.mitre.org/techniques/T1021/006/
+  - https://attack.mitre.org/techniques/T1059/001/
+  - https://www.crowdstrike.com/en-us/blog/how-to-hunt-for-lateral-movement-using-event-logs/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.host
+  - origin.user
+  - origin.command
+groupBy:
+  - origin.host
+  - origin.user
+where: >
+  raw.matches("(?i).*(evil-winrm|winrs(.exe)?[^\\n]*-r:|wsmprovhost\\.exe).*")
+  || (raw.matches("(?i).*(Enter-PSSession|Invoke-Command|New-PSSession).*")
+      && raw.matches("(?i).*(-ComputerName|-HostName|-Session).*")
+      && !raw.matches("(?i).*(-ConfigurationName\\s+JEA).*"))
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.user
+        operator: filter_term
+        value: "{{.origin.user}}"
+    within: 15m
+    count: 1

@@ -5,6 +5,7 @@ const unavailable = (): never => {
 };
 
 export const ENTERPRISE_PACK_RULE_IDS: readonly number[] = [];
+export const SKILL_PACK_RULE_IDS: readonly number[] = [];
 export const foundationDetectionRules: DetectionRule[] = [];
 export const foundationDetectionExecutions: DetectionExecution[] = [];
 export const foundationDetectionSampleEvents: DetectionSampleEvent[] = [];

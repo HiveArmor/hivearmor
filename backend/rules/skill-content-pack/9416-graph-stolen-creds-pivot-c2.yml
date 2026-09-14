@@ -1,0 +1,52 @@
+id: 9416
+name: GRAPH-STOLEN-CREDS-PIVOT-C2
+type: graph_offense
+dataTypes:
+  - windows
+  - linux
+  - network
+category: Command and Control
+technique: "T1550 - Use Alternate Authentication Material"
+mitre:
+  tactics: ["TA0008", "TA0011"]
+  attacks: ["T1550", "T1071", "T1021"]
+adversary: origin
+description: >
+  Skill content pack. Graph offense: a non-privileged user logged into two
+  distinct hosts within one hour and at least one of those hosts talked to an
+  external IP. Distinct from GRAPH-PRIVILEGED-PIVOT-THEN-C2 (privileged, 4h):
+  this is stolen workstation-credential speed. Requires Neo4j
+  (NEO4J_ENABLED) — STAGING CANDIDATE. Staging Neo4j is new; Cypher runs
+  against an empty graph without entity ingest.
+references:
+  - https://attack.mitre.org/techniques/T1550/
+  - https://attack.mitre.org/techniques/T1071/
+  - https://attack.mitre.org/techniques/T1021/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+cypherQuery: |
+  MATCH (u:User)-[r1:LOGGED_INTO]->(h1:Host)-[c:COMMUNICATED_WITH]->(extIP:IpAddress),
+        (u)-[r2:LOGGED_INTO]->(h2:Host)
+  WHERE h1.hostname <> h2.hostname
+    AND coalesce(u.privileged, false) = false
+    AND NOT extIP.address STARTS WITH '10.'
+    AND NOT extIP.address STARTS WITH '192.168.'
+    AND NOT extIP.address STARTS WITH '172.'
+    AND r1.lastSeen > datetime() - duration('PT1H')
+    AND r2.lastSeen > datetime() - duration('PT1H')
+    AND c.lastSeen > datetime() - duration('PT1H')
+  RETURN u.username    AS user,
+         h1.hostname   AS pivotHost,
+         h2.hostname   AS targetHost,
+         extIP.address AS externalIP,
+         u.riskScore   AS riskScore
+  LIMIT 20
+alertFields:
+  - user
+  - pivotHost
+  - targetHost
+  - externalIP
+  - riskScore
+checkIntervalSeconds: 120

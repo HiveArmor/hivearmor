@@ -1,0 +1,46 @@
+id: 9403
+name: CEL-WIN-ETW-TAMPER
+dataTypes:
+  - windows
+  - wineventlog
+  - process
+  - powershell
+category: Defense Evasion
+technique: "T1562.006 - Impair Defenses: Indicator Blocking"
+mitre:
+  tactics: ["TA0005"]
+  attacks: ["T1562.006", "T1562.002"]
+adversary: origin
+description: >
+  Skill content pack. Detects ETW/event-log tampering: disabling Autologger
+  sessions, logman stop, wevtutil sl /e:false, Remove-EtwTraceSession, or
+  MiniNt / MiniNT audit policy clears. Attackers blind Sysmon, PowerShell,
+  and security providers before payload execution. False positives: Windows
+  feature-on-demand setup, approved log-pipeline maintenance, and vendor
+  EDR installers that briefly stop a trace. Group by host and suppress
+  known admin automation after P95 baseline.
+references:
+  - https://attack.mitre.org/techniques/T1562/006/
+  - https://attack.mitre.org/techniques/T1562/002/
+  - https://www.elastic.co/security-labs/stopping-etw-in-its-tracks
+impact:
+  confidentiality: 2
+  integrity: 3
+  availability: 2
+deduplicateBy:
+  - origin.host
+  - origin.command
+groupBy:
+  - origin.host
+where: >
+  raw.matches("(?i).*(logman(.exe)?[^\\n]*stop|wevtutil(.exe)?[^\\n]*sl[^\\n]*/e:\\s*false|Remove-EtwTraceSession|Set-EtwTraceProvider).*")
+  || raw.matches("(?i).*(Autologger|EventLog-System|Microsoft-Windows-Sysmon).*(Enabled.{0,8}0|disable).*")
+  || raw.matches("(?i).*(MiniNt|auditpol(.exe)?[^\\n]*/set[^\\n]*/success:disable).*")
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: origin.host
+        operator: filter_term
+        value: "{{.origin.host}}"
+    within: 15m
+    count: 1

@@ -1,0 +1,50 @@
+id: 9415
+name: GRAPH-JUMP-HOST-MULTI-ACCOUNT
+type: graph_offense
+dataTypes:
+  - windows
+  - linux
+  - identity
+category: Lateral Movement
+technique: "T1021 - Remote Services"
+mitre:
+  tactics: ["TA0008"]
+  attacks: ["T1021", "T1078"]
+adversary: origin
+description: >
+  Skill content pack. Graph offense: one host is the login source for three or
+  more distinct accounts that each reach three or more other hosts within two
+  hours — a compromised jump box used for credential stuffing / pass-the-hash
+  fan-out. Distinct from GRAPH-PRIV-ESC-MULTI-HOST (single high-risk user).
+  Requires Neo4j (NEO4J_ENABLED) — STAGING CANDIDATE. Cypher runs against an
+  empty graph until entity ingest exists.
+references:
+  - https://attack.mitre.org/techniques/T1021/
+  - https://attack.mitre.org/techniques/T1078/
+  - https://attack.mitre.org/tactics/TA0008/
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 2
+cypherQuery: |
+  MATCH (jump:Host)<-[r1:LOGGED_INTO]-(u:User)-[r2:LOGGED_INTO]->(target:Host)
+  WHERE jump.hostname <> target.hostname
+    AND r1.lastSeen > datetime() - duration('PT2H')
+    AND r2.lastSeen > datetime() - duration('PT2H')
+  WITH jump, count(DISTINCT u) AS userCount, count(DISTINCT target) AS targetCount,
+       collect(DISTINCT u.username)[0..8] AS sampleUsers,
+       collect(DISTINCT target.hostname)[0..8] AS sampleTargets
+  WHERE userCount >= 3 AND targetCount >= 3
+  RETURN jump.hostname AS jumpHost,
+         userCount,
+         targetCount,
+         sampleUsers,
+         sampleTargets
+  LIMIT 20
+alertFields:
+  - jumpHost
+  - userCount
+  - targetCount
+  - sampleUsers
+  - sampleTargets
+checkIntervalSeconds: 120

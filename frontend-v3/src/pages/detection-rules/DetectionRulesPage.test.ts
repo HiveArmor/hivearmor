@@ -133,7 +133,8 @@ describe('detection rules foundation fixtures', () => {
     expect(new Set(foundationDetectionRules.map((rule) => rule.id)).size).toBe(foundationDetectionRules.length);
     expect(foundationDetectionRules.length).toBeGreaterThanOrEqual(40);
     expect(foundationDetectionRules.every((rule) => rule.techniqueId && rule.health && rule.schedule)).toBe(true);
-    expect(foundationDetectionRules.filter((rule) => (rule.engine ?? 'cel') === 'cel').every((rule) => rule.ruleDefinition?.includes('celExists(') && rule.ruleDefinition.includes('equals('))).toBe(true);
+    expect(foundationDetectionRules.filter((rule) => (rule.engine ?? 'cel') === 'cel' && !rule.contentPack).every((rule) => rule.ruleDefinition?.includes('celExists(') && rule.ruleDefinition.includes('equals('))).toBe(true);
+    expect(foundationDetectionRules.filter((rule) => rule.engine === 'cel' && rule.contentPack === 'skill-content-pack').every((rule) => rule.ruleDefinition?.includes('where:') && rule.ruleDefinition.includes('v3-hive-log-*'))).toBe(true);
     expect(foundationDetectionRules.filter((rule) => rule.engine === 'sequence').every((rule) => rule.ruleDefinition?.includes('sequence:'))).toBe(true);
   });
 
@@ -147,15 +148,19 @@ describe('detection rules foundation fixtures', () => {
     expect(foundationDetectionSampleEvents.some((sample) => sample.id === 'sample-excepted-scanner-001')).toBe(true);
     expect(foundationDetectionSampleEvents.some((sample) => sample.id === 'sample-baseline-excepted-001')).toBe(true);
     expect(foundationDetectionSampleEvents.some((sample) => sample.id === 'sample-sequence-auth-001')).toBe(true);
-    const { ENTERPRISE_PACK_RULE_IDS } = await import('./detectionRules.fixtures');
+    expect(foundationDetectionSampleEvents.some((sample) => sample.id === 'sample-skill-kerberoast-001')).toBe(true);
+    const { ENTERPRISE_PACK_RULE_IDS, SKILL_PACK_RULE_IDS } = await import('./detectionRules.fixtures');
     expect(ENTERPRISE_PACK_RULE_IDS).toEqual([9101, 9102, 9103, 9104, 9105, 9106, 9107, 9108, 9109, 9110, 9111, 9112, 9113, 9114, 9115, 9116, 9117, 9118]);
-    expect(foundationDetectionRules.filter((rule) => rule.engine === 'sequence').length).toBe(7);
-    expect(foundationDetectionRules.filter((rule) => rule.engine === 'risk').length).toBe(6);
-    expect(foundationDetectionRules.filter((rule) => rule.engine === 'graph').length).toBe(5);
-    expect(filterFoundationDetectionRules({ engine: 'graph', size: 100 }).items.map((rule) => rule.id)).toEqual([9105, 9115, 9116, 9117, 9118]);
-    expect(filterFoundationDetectionRules({ engine: 'sequence', size: 100 }).total).toBe(7);
-    expect(filterFoundationDetectionRules({ engine: 'risk', size: 100 }).total).toBe(6);
+    expect(SKILL_PACK_RULE_IDS).toEqual([9401, 9402, 9403, 9404, 9405, 9406, 9407, 9408, 9409, 9410, 9411, 9412, 9413, 9414, 9415, 9416]);
+    expect(foundationDetectionRules.filter((rule) => rule.engine === 'sequence').length).toBe(12);
+    expect(foundationDetectionRules.filter((rule) => rule.engine === 'risk').length).toBe(9);
+    expect(foundationDetectionRules.filter((rule) => rule.engine === 'graph').length).toBe(7);
+    expect(filterFoundationDetectionRules({ engine: 'graph', size: 100 }).items.map((rule) => rule.id)).toEqual([9105, 9115, 9116, 9117, 9118, 9415, 9416]);
+    expect(filterFoundationDetectionRules({ engine: 'sequence', size: 100 }).total).toBe(12);
+    expect(filterFoundationDetectionRules({ engine: 'risk', size: 100 }).total).toBe(9);
     expect(foundationDetectionRules.filter((rule) => ENTERPRISE_PACK_RULE_IDS.includes(rule.id as typeof ENTERPRISE_PACK_RULE_IDS[number])).every((rule) => Boolean(rule.techniqueId))).toBe(true);
+    expect(foundationDetectionRules.filter((rule) => SKILL_PACK_RULE_IDS.includes(rule.id as typeof SKILL_PACK_RULE_IDS[number])).every((rule) => Boolean(rule.techniqueId))).toBe(true);
+    expect(foundationDetectionRules.some((rule) => rule.ruleName === 'CEL-WIN-SHADOW-CREDENTIALS' && rule.contentPack === 'skill-content-pack')).toBe(true);
   });
 
   it('never leaks Acme custom rules into the CWM pack', async () => {
@@ -170,6 +175,7 @@ describe('detection rules foundation fixtures', () => {
     expect(platform.items.some((rule) => rule.ruleName?.startsWith('ACME-CUSTOM-'))).toBe(false);
     expect(platform.items.some((rule) => rule.ruleName?.startsWith('CWM-CUSTOM-'))).toBe(false);
     expect(platform.items.some((rule) => rule.ruleName === 'SEQ-BRUTE-FORCE-THEN-SUCCESS')).toBe(true);
+    expect(platform.items.some((rule) => rule.ruleName === 'CEL-WIN-SHADOW-CREDENTIALS')).toBe(true);
   });
 
   it('are excluded by both production build paths', async () => {

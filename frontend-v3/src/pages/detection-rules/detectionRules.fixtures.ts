@@ -5,16 +5,20 @@ import type { DetectionExecution, DetectionRule, DetectionRuleSummary, Detection
 import { isDetectionContentVisible } from '@/services/detectionPack.service';
 
 const ENTERPRISE_PACK = 'enterprise-pack';
+const SKILL_PACK = 'skill-content-pack';
 
 /** DET-SEQ staging pack IDs (sequence 9101-9102/9106-9110, risk 9103-9104/9111-9114, graph 9105/9115-9118). */
 export const ENTERPRISE_PACK_RULE_IDS = [9101, 9102, 9103, 9104, 9105, 9106, 9107, 9108, 9109, 9110, 9111, 9112, 9113, 9114, 9115, 9116, 9117, 9118] as const;
+
+/** Skill-driven content pack IDs (CEL 9401-9406, sequence 9407-9411, risk 9412-9414, graph 9415-9416). */
+export const SKILL_PACK_RULE_IDS = [9401, 9402, 9403, 9404, 9405, 9406, 9407, 9408, 9409, 9410, 9411, 9412, 9413, 9414, 9415, 9416] as const;
 
 interface PackSeed {
   id: number;
   ruleName: string;
   description: string;
   dataTypes: string[];
-  engine: 'sequence' | 'risk' | 'graph';
+  engine: 'cel' | 'sequence' | 'risk' | 'graph';
   category: string;
   severity: DetectionRule['severity'];
   techniqueId: string;
@@ -26,16 +30,31 @@ interface PackSeed {
   alerts24h?: number;
   matchCount?: number;
   references?: string[];
+  contentPack?: string;
+}
+
+function packHealthMessage(engine: PackSeed['engine']): string {
+  if (engine === 'graph') {
+    return 'Graph-offense evaluator starts with NEO4J_ENABLED=true on local-dev/staging event-processor. Neo4j was already in local-dev compose; the flag was never flipped. Staging Neo4j is new; graph stays empty without entity-graph ingest.';
+  }
+  if (engine === 'sequence') {
+    return 'Sequence engine loaded this staging pack rule.';
+  }
+  if (engine === 'risk') {
+    return 'Risk engine scores a where match only after afterEvents lookback succeeds (or if the rule has no afterEvents).';
+  }
+  return 'CEL engine evaluates the where clause against normalized events. afterEvents lookback uses v3-hive-log-*.';
 }
 
 function packRule(seed: PackSeed, index: number): DetectionRule {
   const isGraph = seed.engine === 'graph';
+  const pack = seed.contentPack ?? ENTERPRISE_PACK;
   return {
     id: seed.id,
     ruleName: seed.ruleName,
     description: seed.description,
     dataTypes: seed.dataTypes,
-    tags: [ENTERPRISE_PACK, seed.engine],
+    tags: [pack, seed.engine],
     ruleActive: true,
     lastModified: `2026-09-07T16:${String(40 + index).padStart(2, '0')}:00Z`,
     sigmaRuleId: null,
@@ -46,13 +65,9 @@ function packRule(seed: PackSeed, index: number): DetectionRule {
     tactic: seed.tactic,
     origin: 'managed',
     engine: seed.engine,
-    contentPack: ENTERPRISE_PACK,
+    contentPack: pack,
     health: isGraph ? 'warning' : 'healthy',
-    healthMessage: isGraph
-      ? 'Graph-offense evaluator starts with NEO4J_ENABLED=true on local-dev/staging event-processor. Neo4j was already in local-dev compose; the flag was never flipped. Staging Neo4j is new; graph stays empty without entity-graph ingest.'
-      : seed.engine === 'sequence'
-        ? 'Sequence engine loaded this staging pack rule.'
-        : 'Risk engine scores a where match only after afterEvents lookback succeeds (or if the rule has no afterEvents).',
+    healthMessage: packHealthMessage(seed.engine),
     lastRunAt: isGraph ? null : `2026-09-07T16:${String(12 + index).padStart(2, '0')}:00Z`,
     lastRunDurationMs: isGraph ? null : 90 + index * 20,
     schedule: isGraph ? 'Every 2m' : 'Streaming',
@@ -222,6 +237,139 @@ const enterprisePackSeeds: PackSeed[] = [
 
 const enterprisePackRules: DetectionRule[] = enterprisePackSeeds.map((seed, index) => packRule(seed, index));
 
+const skillPackSeeds: PackSeed[] = [
+  {
+    id: 9401, ruleName: 'CEL-WIN-SHADOW-CREDENTIALS', engine: 'cel', contentPack: SKILL_PACK,
+    description: 'Shadow Credentials / Whisker-style writes to msDS-KeyCredentialLink. False positives: Entra hybrid join.',
+    dataTypes: ['windows', 'wineventlog', 'process'], category: 'Credential Access', severity: 'critical',
+    techniqueId: 'T1098.005', techniqueName: 'Device Registration', tactic: 'Credential Access', lookback: '15m',
+    groupBy: ['origin.host', 'origin.user'], matchCount: 1,
+    ruleDefinition: `id: 9401\nname: CEL-WIN-SHADOW-CREDENTIALS\nmitre:\n  attacks: [T1098.005, T1556.006]\nwhere: 'raw.matches("(?i).*msDS-KeyCredentialLink.*")'\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9402, ruleName: 'CEL-WIN-ACCESSIBILITY-HIJACK', engine: 'cel', contentPack: SKILL_PACK,
+    description: 'Sticky-keys / IFEO Debugger hijack of sethc, utilman, osk, or magnify.',
+    dataTypes: ['windows', 'wineventlog', 'process'], category: 'Persistence', severity: 'high',
+    techniqueId: 'T1546.008', techniqueName: 'Accessibility Features', tactic: 'Persistence', lookback: '10m',
+    groupBy: ['origin.host'],
+    ruleDefinition: `id: 9402\nname: CEL-WIN-ACCESSIBILITY-HIJACK\nmitre:\n  attacks: [T1546.008, T1546.012]\nwhere: 'raw.matches("(?i).*(sethc|utilman).*Debugger.*")'\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9403, ruleName: 'CEL-WIN-ETW-TAMPER', engine: 'cel', contentPack: SKILL_PACK,
+    description: 'ETW/event-log tampering via logman stop, wevtutil sl /e:false, or Autologger disable.',
+    dataTypes: ['windows', 'powershell', 'process'], category: 'Defense Evasion', severity: 'high',
+    techniqueId: 'T1562.006', techniqueName: 'Indicator Blocking', tactic: 'Defense Evasion', lookback: '15m',
+    groupBy: ['origin.host'],
+    ruleDefinition: `id: 9403\nname: CEL-WIN-ETW-TAMPER\nmitre:\n  attacks: [T1562.006, T1562.002]\nwhere: 'raw.matches("(?i).*logman.*stop.*")'\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9404, ruleName: 'CEL-WIN-DCOM-LATERAL', engine: 'cel', contentPack: SKILL_PACK,
+    description: 'DCOM lateral movement via MMC20.Application, ShellWindows, or Impacket dcomexec.',
+    dataTypes: ['windows', 'wineventlog', 'network'], category: 'Lateral Movement', severity: 'high',
+    techniqueId: 'T1021.003', techniqueName: 'Distributed Component Object Model', tactic: 'Lateral Movement', lookback: '10m',
+    groupBy: ['origin.host', 'origin.ip'],
+    ruleDefinition: `id: 9404\nname: CEL-WIN-DCOM-LATERAL\nmitre:\n  attacks: [T1021.003]\nwhere: 'raw.matches("(?i).*(dcomexec|MMC20\\\\.Application).*")'\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9405, ruleName: 'CEL-WIN-WINRM-REMOTE', engine: 'cel', contentPack: SKILL_PACK,
+    description: 'Suspicious WinRM / PowerShell remoting: evil-winrm, winrs, or wsmprovhost.',
+    dataTypes: ['windows', 'powershell'], category: 'Lateral Movement', severity: 'high',
+    techniqueId: 'T1021.006', techniqueName: 'Windows Remote Management', tactic: 'Lateral Movement', lookback: '15m',
+    groupBy: ['origin.host', 'origin.user'], matchCount: 2,
+    ruleDefinition: `id: 9405\nname: CEL-WIN-WINRM-REMOTE\nmitre:\n  attacks: [T1021.006, T1059.001]\nwhere: 'raw.matches("(?i).*(evil-winrm|wsmprovhost).*")'\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9406, ruleName: 'CEL-LIN-PAM-MODULE-TAMPER', engine: 'cel', contentPack: SKILL_PACK,
+    description: 'Unauthorized writes to /etc/pam.d or pam_*.so replacement. False positives: package-manager upgrades.',
+    dataTypes: ['linux', 'syslog', 'file'], category: 'Persistence', severity: 'critical',
+    techniqueId: 'T1556.003', techniqueName: 'Pluggable Authentication Modules', tactic: 'Persistence', lookback: '20m',
+    groupBy: ['origin.host'],
+    ruleDefinition: `id: 9406\nname: CEL-LIN-PAM-MODULE-TAMPER\nmitre:\n  attacks: [T1556.003]\nwhere: 'raw.matches("(?i).*/etc/pam\\\\.d/.*")'\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9407, ruleName: 'SEQ-KERBEROAST-THEN-LATERAL', engine: 'sequence', contentPack: SKILL_PACK,
+    description: 'Kerberoast-style TGS request followed by a remote service logon from the same origin within 45 minutes.',
+    dataTypes: ['windows', 'wineventlog', 'network'], category: 'Lateral Movement', severity: 'high',
+    techniqueId: 'T1558.003', techniqueName: 'Kerberoasting', tactic: 'Credential Access', lookback: '45m',
+    groupBy: ['origin.user', 'origin.host'], alerts24h: 1, matchCount: 1,
+    ruleDefinition: `id: 9407\nname: SEQ-KERBEROAST-THEN-LATERAL\nmitre:\n  attacks: [T1558.003, T1021]\nsequence:\n  - where: 'action == "kerberoast"'\n    within: 15m\n  - where: 'action == "remote_logon"'\n    within: 45m\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9408, ruleName: 'SEQ-AMSI-BYPASS-THEN-ENCODED-PS', engine: 'sequence', contentPack: SKILL_PACK,
+    description: 'AMSI bypass followed by encoded PowerShell from the same host within 20 minutes.',
+    dataTypes: ['windows', 'powershell', 'process'], category: 'Defense Evasion', severity: 'high',
+    techniqueId: 'T1562.001', techniqueName: 'Disable or Modify Tools', tactic: 'Defense Evasion', lookback: '20m',
+    groupBy: ['origin.host'],
+    ruleDefinition: `id: 9408\nname: SEQ-AMSI-BYPASS-THEN-ENCODED-PS\nmitre:\n  attacks: [T1562.001, T1059.001]\nsequence:\n  - where: 'action == "amsi_bypass"'\n    within: 10m\n  - where: 'action == "encoded_powershell"'\n    within: 20m\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9409, ruleName: 'SEQ-SHADOW-CRED-THEN-AUTH', engine: 'sequence', contentPack: SKILL_PACK,
+    description: 'Shadow Credentials write followed by successful authentication as the targeted principal within 30 minutes.',
+    dataTypes: ['windows', 'identity'], category: 'Credential Access', severity: 'critical',
+    techniqueId: 'T1098.005', techniqueName: 'Device Registration', tactic: 'Credential Access', lookback: '30m',
+    groupBy: ['target.user'],
+    ruleDefinition: `id: 9409\nname: SEQ-SHADOW-CRED-THEN-AUTH\nmitre:\n  attacks: [T1098.005, T1550.003]\nsequence:\n  - where: 'action == "shadow_credential"'\n    within: 10m\n  - where: 'action == "authentication_success"'\n    within: 30m\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9410, ruleName: 'SEQ-WINRM-THEN-ADMIN-SHARE', engine: 'sequence', contentPack: SKILL_PACK,
+    description: 'WinRM/PSRemoting session followed by admin-share access from the same origin IP within 20 minutes.',
+    dataTypes: ['windows', 'network'], category: 'Lateral Movement', severity: 'high',
+    techniqueId: 'T1021.006', techniqueName: 'Windows Remote Management', tactic: 'Lateral Movement', lookback: '20m',
+    groupBy: ['origin.ip'], matchCount: 1,
+    ruleDefinition: `id: 9410\nname: SEQ-WINRM-THEN-ADMIN-SHARE\nmitre:\n  attacks: [T1021.006, T1021.002]\nsequence:\n  - where: 'action == "winrm_session"'\n    within: 10m\n  - where: 'action == "admin_share_access"'\n    within: 20m\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9411, ruleName: 'SEQ-ACCESSIBILITY-THEN-C2', engine: 'sequence', contentPack: SKILL_PACK,
+    description: 'Accessibility/IFEO persistence followed by outbound C2-style communication from the same host within 1 hour.',
+    dataTypes: ['windows', 'process', 'netconn'], category: 'Command and Control', severity: 'high',
+    techniqueId: 'T1546.008', techniqueName: 'Accessibility Features', tactic: 'Persistence', lookback: '1h',
+    groupBy: ['origin.host'],
+    ruleDefinition: `id: 9411\nname: SEQ-ACCESSIBILITY-THEN-C2\nmitre:\n  attacks: [T1546.008, T1071]\nsequence:\n  - where: 'action == "accessibility_hijack"'\n    within: 15m\n  - where: 'action == "c2_beacon"'\n    within: 1h\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9412, ruleName: 'RISK-ASREPROAST', engine: 'risk', contentPack: SKILL_PACK,
+    description: 'Accumulates risk for AS-REP roasting after afterEvents lookback (≥3 hits / 1h per origin).',
+    dataTypes: ['windows', 'identity'], category: 'Credential Access', severity: 'high',
+    techniqueId: 'T1558.004', techniqueName: 'AS-REP Roasting', tactic: 'Credential Access', lookback: '1h',
+    groupBy: ['origin.ip'], matchCount: 5,
+    ruleDefinition: `id: 9412\nname: RISK-ASREPROAST\nriskScore: 35\nwhere: 'raw.matches("(?i).*GetNPUsers.*")'\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9413, ruleName: 'RISK-LOLBAS-PROXY-EXEC', engine: 'risk', contentPack: SKILL_PACK,
+    description: 'Accumulates risk when signed Microsoft proxies launch script or HTTP content (≥2 hits / 30m per host).',
+    dataTypes: ['windows', 'process'], category: 'Defense Evasion', severity: 'medium',
+    techniqueId: 'T1218', techniqueName: 'System Binary Proxy Execution', tactic: 'Defense Evasion', lookback: '30m',
+    groupBy: ['origin.host'], matchCount: 4,
+    ruleDefinition: `id: 9413\nname: RISK-LOLBAS-PROXY-EXEC\nriskScore: 30\nwhere: 'raw.matches("(?i).*(mshta|rundll32|regsvr32).*")'\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9414, ruleName: 'RISK-PASS-THE-HASH', engine: 'risk', contentPack: SKILL_PACK,
+    description: 'Accumulates risk for pass-the-hash / Logon Type 9 after afterEvents lookback (≥2 hits / 1h).',
+    dataTypes: ['windows', 'identity'], category: 'Credential Access', severity: 'critical',
+    techniqueId: 'T1550.002', techniqueName: 'Pass the Hash', tactic: 'Credential Access', lookback: '1h',
+    groupBy: ['origin.host', 'origin.user'], matchCount: 2,
+    ruleDefinition: `id: 9414\nname: RISK-PASS-THE-HASH\nriskScore: 40\nwhere: 'raw.matches("(?i).*sekurlsa::pth.*")'\nafterEvents:\n  - indexPattern: v3-hive-log-*`,
+  },
+  {
+    id: 9415, ruleName: 'GRAPH-JUMP-HOST-MULTI-ACCOUNT', engine: 'graph', contentPack: SKILL_PACK,
+    description: 'One host, three or more accounts, three or more targets in 2h. Requires Neo4j — STAGING CANDIDATE.',
+    dataTypes: ['windows', 'linux', 'identity'], category: 'Lateral Movement', severity: 'critical',
+    techniqueId: 'T1021', techniqueName: 'Remote Services', tactic: 'Lateral Movement', lookback: '2h',
+    groupBy: ['jumpHost'],
+    ruleDefinition: `id: 9415\nname: GRAPH-JUMP-HOST-MULTI-ACCOUNT\ntype: graph_offense\nmitre:\n  attacks: [T1021, T1078]\ncypherQuery: |\n  MATCH (jump:Host)<-[:LOGGED_INTO]-(u:User)-[:LOGGED_INTO]->(target:Host)\n  WHERE jump.hostname <> target.hostname\n  RETURN jump.hostname AS jumpHost`,
+  },
+  {
+    id: 9416, ruleName: 'GRAPH-STOLEN-CREDS-PIVOT-C2', engine: 'graph', contentPack: SKILL_PACK,
+    description: 'Non-privileged user on two hosts plus an external IP within 1h. Requires Neo4j — STAGING CANDIDATE.',
+    dataTypes: ['windows', 'linux', 'network'], category: 'Command and Control', severity: 'critical',
+    techniqueId: 'T1550', techniqueName: 'Use Alternate Authentication Material', tactic: 'Lateral Movement', lookback: '1h',
+    groupBy: ['user'],
+    ruleDefinition: `id: 9416\nname: GRAPH-STOLEN-CREDS-PIVOT-C2\ntype: graph_offense\nmitre:\n  attacks: [T1550, T1071, T1021]\ncypherQuery: |\n  MATCH (u:User)-[:LOGGED_INTO]->(h1:Host)-[:COMMUNICATED_WITH]->(extIP:IpAddress)\n  RETURN u.username AS user`,
+  },
+];
+
+const skillPackRules: DetectionRule[] = skillPackSeeds.map((seed, index) => packRule(seed, index));
+
 const ruleSeeds = [
   ['Encoded PowerShell with network retrieval', 'Endpoint', 'critical', 'T1059.001', 'PowerShell', 'Execution'],
   ['Rare privileged authentication followed by execution', 'Identity', 'critical', 'T1078', 'Valid Accounts', 'Defense Evasion'],
@@ -372,6 +520,7 @@ const cwmCustomRules: DetectionRule[] = [
 
 export const foundationDetectionRules: DetectionRule[] = [
   ...enterprisePackRules,
+  ...skillPackRules,
   ...generatedDetectionRules,
   ...acmeCustomRules,
   ...cwmCustomRules,
@@ -462,6 +611,29 @@ export const foundationDetectionSampleEvents: DetectionSampleEvent[] = [
       action: 'failed_auth',
       log: { action: 'failed_auth' },
       origin: { ip: '203.0.113.40', user: 'j.ortiz', host: 'FIN-WKS-018' },
+    }, null, 2),
+  },
+  {
+    id: 'sample-skill-kerberoast-001',
+    label: 'Kerberoast TGS then remote logon (skill pack sequence)',
+    dataType: 'Identity',
+    json: JSON.stringify({
+      '@timestamp': '2026-09-08T10:12:00Z',
+      action: 'kerberoast',
+      log: { action: 'kerberoast', eventID: '4769' },
+      origin: { ip: '10.44.8.19', user: 'a.patel', host: 'FIN-WKS-044' },
+    }, null, 2),
+  },
+  {
+    id: 'sample-skill-shadow-cred-001',
+    label: 'Shadow Credentials KeyCredentialLink write',
+    dataType: 'Identity',
+    json: JSON.stringify({
+      '@timestamp': '2026-09-08T10:18:00Z',
+      action: 'shadow_credential',
+      log: { action: 'shadow_credential', eventID: '5136' },
+      origin: { host: 'DC-01', user: 'svc-helpdesk' },
+      target: { user: 'admin.backup' },
     }, null, 2),
   },
 ];

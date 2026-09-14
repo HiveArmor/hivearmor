@@ -1,0 +1,44 @@
+id: 9409
+name: SEQ-SHADOW-CRED-THEN-AUTH
+dataTypes:
+  - windows
+  - wineventlog
+  - identity
+category: Credential Access
+technique: "T1098.005 - Account Manipulation: Device Registration"
+mitre:
+  tactics: ["TA0006", "TA0001"]
+  attacks: ["T1098.005", "T1550.003"]
+adversary: origin
+description: >
+  Skill content pack. Sequence: a Shadow Credentials / KeyCredentialLink write
+  is followed by a successful authentication as the targeted principal within
+  30 minutes (often PKINIT / Unconstrained-like cert auth without the password).
+  False positives: Entra hybrid join completing device authentication, and
+  Intune re-enrollment. Correlate on the target account, not the writer.
+references:
+  - https://attack.mitre.org/techniques/T1098/005/
+  - https://attack.mitre.org/techniques/T1550/003/
+  - https://posts.specterops.io/shadow-credentials-abusing-key-trust-account-mapping-for-takeover-8ee1a53566ab
+impact:
+  confidentiality: 3
+  integrity: 3
+  availability: 1
+deduplicateBy:
+  - origin.user
+  - target.user
+groupBy:
+  - target.user
+sequence:
+  - where: 'action == "shadow_credential" || safe("log.action", "") == "shadow_credential" || raw.matches("(?i).*(msDS-KeyCredentialLink|Whisker|KeyCredentialLink).*")'
+    within: 10m
+  - where: 'action == "authentication_success" || safe("log.action", "") == "authentication_success" || raw.matches("(?i).*(LogonType.{0,4}3|PKINIT|Kerberos Certificate).*")'
+    within: 30m
+afterEvents:
+  - indexPattern: v3-hive-log-*
+    with:
+      - field: log.action
+        operator: filter_term
+        value: shadow_credential
+    within: 30m
+    count: 1
