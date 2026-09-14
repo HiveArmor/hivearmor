@@ -834,6 +834,7 @@
     <include file="/config/liquibase/changelog/20260913009_asset_group_tenant.xml" relativeToChangelogFile="false"/>
     <include file="/config/liquibase/changelog/20260913010_asset_group_tenant_backfill_notnull.xml" relativeToChangelogFile="false"/>
     <include file="/config/liquibase/changelog/20260914001_rls_w1b_safe_three.xml" relativeToChangelogFile="false"/>
+    <include file="/config/liquibase/changelog/20260914002_rls_w1b_four_tables.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>
 

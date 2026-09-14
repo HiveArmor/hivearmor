@@ -31,6 +31,7 @@ public class EdrService {
     private final IncidentResponseCommandService commandService;
     private final com.hivearmor.service.agent_manager.AgentGrpcService agentGrpcService;
     private final EdrQuarantineCallbackPersister quarantineCallbackPersister;
+    private final EdrIsolationCallbackPersister isolationCallbackPersister;
     private final String agentManagerHost;
 
     public EdrService(UtmEdrRuleRepository ruleRepo,
@@ -40,6 +41,7 @@ public class EdrService {
                       IncidentResponseCommandService commandService,
                       com.hivearmor.service.agent_manager.AgentGrpcService agentGrpcService,
                       EdrQuarantineCallbackPersister quarantineCallbackPersister,
+                      EdrIsolationCallbackPersister isolationCallbackPersister,
                       @Value("${grpc.server.address:}") String agentManagerHost) {
         this.ruleRepo = ruleRepo;
         this.eventRepo = eventRepo;
@@ -48,6 +50,7 @@ public class EdrService {
         this.commandService = commandService;
         this.agentGrpcService = agentGrpcService;
         this.quarantineCallbackPersister = quarantineCallbackPersister;
+        this.isolationCallbackPersister = isolationCallbackPersister;
         this.agentManagerHost = agentManagerHost;
     }
 
@@ -287,7 +290,10 @@ public class EdrService {
                 @Override public void onNext(CommandResult r) {}
                 @Override public void onError(Throwable t) {
                     saved.setStatus("FAILED");
-                    isolationRepo.save(saved);
+                    // SPEC-04 (W1b) FU-4 — async gRPC-callback thread: no tx / no
+                    // TenantContext. Persist under the row's own tenant so the FAILED
+                    // status survives RLS on hive_edr_isolation.
+                    isolationCallbackPersister.saveInRowTenant(saved);
                 }
                 @Override public void onCompleted() {}
             }
