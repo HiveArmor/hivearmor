@@ -42,6 +42,12 @@ public class UtmCollectorService {
         this.utmCollectorRepository = utmCollectorRepository;
     }
 
+    // SPEC-04 (W1b) FU-4 — @Transactional so TenantGucAspect sets app.current_tenant
+    // on this write's connection (the aspect only fires inside an active tx). This is a
+    // request-path write (reached from the list-collectors HTTP endpoint), so the
+    // TenantContext is the caller's tenant — the same value stamped into tenant_id from
+    // proto field 9 below — making the row survive an RLS WITH CHECK once enabled.
+    @Transactional
     public UtmCollector saveCollector(CollectorOuterClass.Collector collector) {
         UtmCollector utmCollector = utmCollectorRepository.findById(Long.valueOf(collector.getId()))
                 .orElse(new UtmCollector());
@@ -67,6 +73,9 @@ public class UtmCollectorService {
 
     }
 
+    // SPEC-04 (W1b) FU-4 — @Transactional so TenantGucAspect sets the tenant GUC for the
+    // offline-marking updates below (request-path; TenantContext is the caller's tenant).
+    @Transactional
     public void synchronize(List<CollectorDTO> collectorDTOS) {
         List<UtmCollector> collectors = utmCollectorRepository.findAll();
 

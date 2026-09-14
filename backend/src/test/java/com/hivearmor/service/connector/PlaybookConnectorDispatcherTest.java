@@ -385,6 +385,50 @@ class PlaybookConnectorDispatcherTest {
         assertThat(out.get("status")).isEqualTo("deactivated");
     }
 
+    @Test
+    void dispatchSeedsTenantContextFromInstanceTenantForOutOfBandWrite() {
+        // SPEC-04 (W1b) FU-4 — the @Async playbook dispatch has no request TenantContext.
+        // It must seed the context from the resolved instance's own tenant so the nested
+        // write (staging insert) runs under a GUC that matches the row's tenant_id and
+        // survives an RLS WITH CHECK.
+        HaConnectorInstance row = crowdstrikeRow(7L);
+        row.setTenantId(42L); // an MSSP tenant
+        when(instanceRepository.findById(7L)).thenReturn(Optional.of(row));
+
+        final Long[] seenClientId = new Long[1];
+        when(ingestService.ingest(eq(7L), any())).thenAnswer(inv -> {
+            seenClientId[0] = com.hivearmor.multitenancy.TenantContext.getClientId();
+            return new ConnectorIngestResult("b", 7L, CrowdStrikeConnector.ID, 1, 1, 0, List.of());
+        });
+
+        com.hivearmor.multitenancy.TenantContext.clear();
+        dispatcher.dispatch("pull_alerts", Map.of("connectorInstanceId", 7L));
+
+        // The nested write saw the instance's tenant as the active scope.
+        assertThat(seenClientId[0]).isEqualTo(42L);
+        // And the context is restored (cleared) afterward — no scope bleed.
+        assertThat(com.hivearmor.multitenancy.TenantContext.getClientId()).isNull();
+    }
+
+    @Test
+    void dispatchUsesSingleTenantScopeWhenInstanceTenantIsZero() {
+        HaConnectorInstance row = crowdstrikeRow(8L);
+        row.setTenantId(0L); // single-tenant sentinel
+        when(instanceRepository.findById(8L)).thenReturn(Optional.of(row));
+
+        final Long[] seenClientId = new Long[]{ -99L };
+        when(ingestService.ingest(eq(8L), any())).thenAnswer(inv -> {
+            seenClientId[0] = com.hivearmor.multitenancy.TenantContext.getClientId();
+            return new ConnectorIngestResult("b", 8L, CrowdStrikeConnector.ID, 0, 0, 0, List.of());
+        });
+
+        com.hivearmor.multitenancy.TenantContext.clear();
+        dispatcher.dispatch("pull_alerts", Map.of("connectorInstanceId", 8L));
+
+        // tenant_id 0 → cleared context → requireTenant()/GUC resolve single-tenant 0.
+        assertThat(seenClientId[0]).isNull();
+    }
+
     private static HaConnectorInstance oktaRow(long id) {
         HaConnectorInstance row = new HaConnectorInstance();
         row.setId(id);

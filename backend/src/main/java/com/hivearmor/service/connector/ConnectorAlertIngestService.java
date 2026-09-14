@@ -101,12 +101,17 @@ public class ConnectorAlertIngestService {
     }
 
     /**
-     * Scheduled pull for all enabled instances that declare PULL_ALERTS.
+     * Scheduled pull for the CURRENT TENANT's enabled instances that declare PULL_ALERTS.
+     *
+     * <p>SPEC-04 (W1b) FU-4 — scoped to {@code TenantScope.requireTenant()} (the scheduler
+     * wraps this in {@link com.hivearmor.multitenancy.TenantScopedBackgroundExecutor} which
+     * sets the per-tenant context). Using the tenant-scoped finder keeps this correct both
+     * before RLS (no cross-tenant duplicate processing) and after (matches RLS visibility).
      */
     @Transactional
     public List<ConnectorIngestResult> ingestEnabledPullers() {
         List<ConnectorIngestResult> out = new ArrayList<>();
-        for (HaConnectorInstance row : instanceRepository.findAllByOrderByNameAsc()) {
+        for (HaConnectorInstance row : instanceRepository.findByTenantIdOrderByNameAsc(TenantScope.requireTenant())) {
             if (!row.isEnabled()) {
                 continue;
             }

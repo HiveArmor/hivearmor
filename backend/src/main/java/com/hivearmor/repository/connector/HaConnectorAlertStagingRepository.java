@@ -34,5 +34,13 @@ public interface HaConnectorAlertStagingRepository extends JpaRepository<HaConne
 
     List<HaConnectorAlertStaging> findByStatusOrderByIdAsc(String status, Pageable pageable);
 
+    // SPEC-04 (W1b) FU-4 — tenant-scoped status finder for the per-tenant promote sweep;
+    // null-tenant (pre-backfill) rows excluded (fail-closed).
+    List<HaConnectorAlertStaging> findByTenantIdAndStatusOrderByIdAsc(
+        Long tenantId,
+        String status,
+        Pageable pageable
+    );
+
     List<HaConnectorAlertStaging> findByIdIn(Collection<Long> ids);
 }
