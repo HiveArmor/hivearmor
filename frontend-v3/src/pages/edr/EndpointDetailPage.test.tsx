@@ -331,6 +331,11 @@ describe('EndpointDetailPage', () => {
     );
     expect(screen.getByText('AI Verdict')).toBeDefined();
     expect(screen.getByRole('group', { name: /assessment content/i })).toBeDefined();
+    // HONESTY: an assistive answer is 'Inconclusive' (no formal verdict), never
+    // the alarming 'Suspicious', and NO fabricated confidence percentage is shown.
+    expect(screen.getByText('Inconclusive')).toBeDefined();
+    expect(screen.queryByText('Suspicious')).toBeNull();
+    expect(screen.queryByText(/confidence/i)).toBeNull();
     // Honest disclaimer: assistive, not a formal detection verdict.
     expect(screen.getByText(/not a formal detection verdict/i)).toBeDefined();
     // The host-scoped alerts honesty note is still present.

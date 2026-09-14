@@ -27,8 +27,12 @@ export interface AiEvidenceItem {
 
 export interface AiVerdictCardProps {
   verdict: AiVerdict;
-  /** Confidence 0–100 (or 0–1). */
-  confidence: number;
+  /**
+   * Confidence 0–100 (or 0–1). OMIT when the source has no calibrated
+   * confidence (e.g. an assistive Q&A model that only reports success/failure) —
+   * the badge is then hidden rather than fabricating a percentage.
+   */
+  confidence?: number;
   /** One-line summary shown on the Summary tab. */
   summary: React.ReactNode;
   /** The agent's conclusion / rationale (Conclusion tab). */
@@ -95,7 +99,7 @@ export function AiVerdictCard({
         <span className="ai-verdict__verdict" data-verdict={verdict}>
           {VERDICT_LABEL[verdict]}
         </span>
-        <ConfidenceBadge value={confidence} />
+        {confidence !== undefined && <ConfidenceBadge value={confidence} />}
       </HaCard.Header>
 
       <div className="ai-verdict__tabs" role="tablist" aria-label="AI verdict detail">

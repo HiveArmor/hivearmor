@@ -67,6 +67,7 @@ import { ErrorState } from '@/components/error-state';
 import { HaCard } from '@/components/ha-card/HaCard';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { HaDefinitionList, type HaDefinitionItem } from '@/components/ha-definition-list/HaDefinitionList';
+import { HaModal } from '@/components/ha-modal/HaModal';
 import { HaTabs } from '@/components/ha-tabs/HaTabs';
 import { LoadingState } from '@/components/loading-state/LoadingState';
 import { ROUTES } from '@/constants/routes.constants';
@@ -274,11 +275,18 @@ function SecurityAiAssessment({
   }
 
   // Substantive, grounded answer → the full verdict spine.
+  //
+  // HONESTY: the assistive Q&A model returns free text with NO formal
+  // classification, so we do NOT assert a malicious/suspicious/benign verdict
+  // (that would fabricate a judgement the model never made and colour it as an
+  // alarm). The verdict is 'inconclusive' — the neutral "no formal verdict"
+  // value — and confidence is OMITTED because the backend reports only
+  // success/failure, not a calibrated score. The card is used to present the
+  // assistive summary, reasoning basis, and grounded sources — not a verdict.
   return (
     <AiProvenanceFrame label="Hive Intelligence assessment" variant="rule" caveat={false}>
       <AiVerdictCard
-        verdict="suspicious"
-        confidence={assessment.confidence}
+        verdict="inconclusive"
         summary={assessment.answer}
         reasoning={assessment.steps.map((s) => ({ label: s.label, detail: s.detail, state: 'done' }))}
         evidence={
@@ -288,8 +296,8 @@ function SecurityAiAssessment({
         }
       />
       <p className="endpoint-detail__muted endpoint-detail__hint endpoint-detail__ai-disclaimer">
-        Assistive assessment from the SOC AI Q&amp;A model — it is not a formal detection verdict.
-        Confirm against the evidence and alerts before acting on {hostname}.
+        Assistive assessment from the SOC AI Q&amp;A model — it is not a formal detection verdict and
+        does not classify the endpoint. Confirm against the evidence and alerts before acting on {hostname}.
       </p>
     </AiProvenanceFrame>
   );
@@ -719,28 +727,33 @@ export function EndpointDetailPage(): JSX.Element {
         />
       </div>
 
-      {/* Governed-action gate (SPEC-08): human approval BEFORE the confirm. */}
-      {actionPhase === 'approval' && pendingAction && pendingCopy && (
-        <div className="endpoint-detail__approval-overlay" role="dialog" aria-modal="true" aria-label="Approve response action">
-          <div className="endpoint-detail__approval-shell">
-            <ApprovalCard
-              action={`${pendingCopy.approvalAction} · ${agent.hostname}`}
-              agent="Response agent (assistive)"
-              risk={pendingCopy.risk}
-              blastRadius={pendingCopy.blastRadius}
-              reversible={pendingCopy.reversible}
-              expiry={`Scope: ${tenantLabel}`}
-              onApprove={approveAction}
-              onReject={closeAction}
-            >
-              <p className="endpoint-detail__muted endpoint-detail__hint">
-                Approving records your decision and advances to a final confirmation. Execution is
-                gated by the response-authority contract and is not fired automatically from here.
-              </p>
-            </ApprovalCard>
-          </div>
-        </div>
-      )}
+      {/* Governed-action gate (SPEC-08): human approval BEFORE the confirm.
+          Hosted in HaModal (PatternFly) for focus-trap / Escape / focus-restore. */}
+      <HaModal
+        isOpen={actionPhase === 'approval' && pendingAction !== null}
+        onClose={closeAction}
+        title="Approve response action"
+        width={560}
+        className="endpoint-detail__approval-modal"
+      >
+        {pendingAction && pendingCopy && (
+          <ApprovalCard
+            action={`${pendingCopy.approvalAction} · ${agent.hostname}`}
+            agent="Response agent (assistive)"
+            risk={pendingCopy.risk}
+            blastRadius={pendingCopy.blastRadius}
+            reversible={pendingCopy.reversible}
+            expiry={`Scope: ${tenantLabel}`}
+            onApprove={approveAction}
+            onReject={closeAction}
+          >
+            <p className="endpoint-detail__muted endpoint-detail__hint">
+              Approving records your decision and advances to a final confirmation. Execution is
+              gated by the response-authority contract and is not fired automatically from here.
+            </p>
+          </ApprovalCard>
+        )}
+      </HaModal>
 
       {/* SPEC-01 confirm modal — tenant echo + reversibility (second gate). */}
       <HaConfirmationModal

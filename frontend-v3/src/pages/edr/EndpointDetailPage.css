@@ -333,20 +333,5 @@
   word-break: break-word;
 }
 
-/* Governed-action approval gate overlay (SPEC-08). */
-.endpoint-detail__approval-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: var(--ha-z-modal, 1000);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: color-mix(in srgb, var(--ha-background-primary) 72%, transparent);
-}
-
-.endpoint-detail__approval-shell {
-  width: min(560px, 100%);
-  max-height: calc(100vh - 48px);
-  overflow-y: auto;
-}
+/* Governed-action approval gate is hosted in HaModal (PatternFly) — no custom
+   overlay needed; the modal provides scrim, focus-trap, Escape and focus-restore. */
