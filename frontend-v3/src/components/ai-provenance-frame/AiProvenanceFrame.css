@@ -26,6 +26,12 @@
   font: var(--ha-type-metadata);
 }
 
+/* Inline caveat, used inside AiProvenanceLabel (footer / inline provenance marker). */
+.ha-provenance__caveat-inline {
+  color: color-mix(in srgb, var(--ha-intelligence-primary) 78%, var(--ha-foreground-tertiary));
+  font-weight: 400;
+}
+
 /* Rule variant — violet left rule, framed block. */
 .ha-provenance--rule {
   display: flex;

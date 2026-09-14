@@ -48,6 +48,7 @@ import {
   ScrollText,
   ShieldAlert,
   Settings2,
+  Sparkles,
   Terminal,
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -57,6 +58,10 @@ import { EndpointTimelineBody } from './EndpointTimelineBody';
 import { AccessDeniedState } from '@/components/access-denied-state/AccessDeniedState';
 import { AgentHealthBadge } from '@/components/agent-health-badge';
 import { AgentVitalsSparkline } from '@/components/agent-vitals-sparkline';
+import { AiProvenanceFrame } from '@/components/ai-provenance-frame';
+import { AiVerdictCard } from '@/components/ai-verdict-card';
+import { ApprovalCard } from '@/components/approval-card';
+import { AutonomyControl } from '@/components/autonomy-control';
 import { EmptyState } from '@/components/empty-state/EmptyState';
 import { ErrorState } from '@/components/error-state';
 import { HaCard } from '@/components/ha-card/HaCard';
@@ -82,6 +87,10 @@ import {
   computeFreshness,
   extractSparklineSeries,
 } from '@/services/agentHealth';
+import {
+  fetchEndpointAiAssessment,
+  type EndpointAiAssessment,
+} from '@/services/endpointAiAssessment.service';
 import { ALL_TENANTS_OPTION } from '@/services/mastheadTenants.service';
 import { fetchAgentVitals } from '@/services/telemetryService';
 import { useAuthStore } from '@/store/auth.store';
@@ -184,26 +193,156 @@ function OverviewTab({
 }
 
 // ---------------------------------------------------------------------------
+// Security tab — AI-assisted assessment (SPEC-08 / W7) + host-scoped alerts note
+// ---------------------------------------------------------------------------
+
+/**
+ * The AI-assessment surface for the Security tab. Wires the AI kit (SPEC-08):
+ *   - `answered`      → AiVerdictCard (verdict → confidence → reasoning → evidence
+ *                       spine) wrapped in AiProvenanceFrame so provenance is
+ *                       explicit. Fed by the REAL /ha-soc-ai/query endpoint.
+ *   - `inconclusive`  → the model's own "insufficient signal" answer, framed as AI
+ *                       output — NOT a fabricated benign verdict.
+ *   - `unavailable`   → an honest "AI not active" note (the backend graceful
+ *                       fallback / unconfigured state). Never a green light.
+ *
+ * There is no per-endpoint reasoning STREAM source, so we keep AiVerdictCard's
+ * static reasoning timeline rather than faking a ReasoningStream (SPEC-08 item 4).
+ * The assistive Q&A model does not emit a formal malicious/benign classification,
+ * so the verdict shown is 'suspicious' | 'inconclusive' only when the model
+ * actually flags concern — we never upgrade silence into a verdict.
+ */
+function SecurityAiAssessment({
+  hostname,
+  assessment,
+  isLoading,
+  isError,
+  onRetry,
+}: {
+  hostname: string;
+  assessment: EndpointAiAssessment | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
+}): JSX.Element {
+  if (isLoading) {
+    return (
+      <HaCard as="section" className="endpoint-detail__card">
+        <HaCard.Header>
+          <span className="endpoint-detail__card-title endpoint-detail__ai-title">
+            <Sparkles size={15} aria-hidden="true" /> AI assessment
+          </span>
+        </HaCard.Header>
+        <HaCard.Body>
+          <LoadingState message="Assessing endpoint with Hive Intelligence…" rows={4} />
+        </HaCard.Body>
+      </HaCard>
+    );
+  }
+
+  if (isError || !assessment) {
+    return (
+      <ErrorState
+        title="Could not run AI assessment"
+        message="Hive Intelligence could not assess this endpoint. Nothing has been changed."
+        onRetry={onRetry}
+      />
+    );
+  }
+
+  // Honest non-verdict states — framed as AI output, never a fabricated verdict.
+  if (assessment.outcome === 'unavailable') {
+    return (
+      <AiProvenanceFrame label="Hive Intelligence" caveat={false} variant="rule">
+        <p className="endpoint-detail__ai-note">
+          AI assessment is not active for this endpoint. {assessment.answer}
+        </p>
+        <p className="endpoint-detail__muted endpoint-detail__hint">
+          Assistive AI is a staging capability; it activates when the SOC AI service is configured.
+          Until then, use the log/telemetry evidence and the host-scoped alert search below.
+        </p>
+      </AiProvenanceFrame>
+    );
+  }
+
+  if (assessment.outcome === 'inconclusive') {
+    return (
+      <AiProvenanceFrame label="Hive Intelligence" variant="rule">
+        <p className="endpoint-detail__ai-note">{assessment.answer}</p>
+      </AiProvenanceFrame>
+    );
+  }
+
+  // Substantive, grounded answer → the full verdict spine.
+  return (
+    <AiProvenanceFrame label="Hive Intelligence assessment" variant="rule" caveat={false}>
+      <AiVerdictCard
+        verdict="suspicious"
+        confidence={assessment.confidence}
+        summary={assessment.answer}
+        reasoning={assessment.steps.map((s) => ({ label: s.label, detail: s.detail, state: 'done' }))}
+        evidence={
+          assessment.sources.length > 0
+            ? assessment.sources.map((src, i) => ({ label: `Source ${i + 1}`, value: <span className="endpoint-detail__evidence-src">{src}</span> }))
+            : undefined
+        }
+      />
+      <p className="endpoint-detail__muted endpoint-detail__hint endpoint-detail__ai-disclaimer">
+        Assistive assessment from the SOC AI Q&amp;A model — it is not a formal detection verdict.
+        Confirm against the evidence and alerts before acting on {hostname}.
+      </p>
+    </AiProvenanceFrame>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
 type PendingAction = 'isolate' | 'kill' | 'quarantine' | null;
 
-const ACTION_COPY: Record<Exclude<PendingAction, null>, { title: string; confirm: string; reversibility: string }> = {
+/** Two-phase governed-action flow (SPEC-08 governed-action gate + SPEC-01 confirm). */
+type ActionPhase = 'approval' | 'confirm' | null;
+
+const ACTION_COPY: Record<Exclude<PendingAction, null>, {
+  title: string;
+  confirm: string;
+  reversibility: string;
+  /** Human-readable action label for the ApprovalCard. */
+  approvalAction: string;
+  /** Risk tier drives the ApprovalCard's risk-toned left rule. */
+  risk: 'low' | 'medium' | 'high' | 'critical';
+  /** Whether the action can be rolled back. */
+  reversible: boolean;
+  /** Plain-language blast radius. */
+  blastRadius: string;
+}> = {
   isolate: {
     title: 'Isolate this endpoint?',
     confirm: 'Isolate endpoint',
     reversibility: 'Network isolation cuts the host off from all communication except HiveArmor. It is reversible — you can release the host afterward. Isolation execution is gated by the response-authority contract and is not yet live-verified here.',
+    approvalAction: 'Isolate endpoint from the network',
+    risk: 'high',
+    reversible: true,
+    blastRadius: '1 endpoint · all network traffic except HiveArmor',
   },
   kill: {
     title: 'Terminate a process on this endpoint?',
     confirm: 'Request terminate',
     reversibility: 'Terminating a process is NOT reversible — the process is killed. Verify the process and its parent before continuing. Execution is gated by the response-authority contract and is not yet live-verified here.',
+    approvalAction: 'Terminate a running process',
+    risk: 'critical',
+    reversible: false,
+    blastRadius: '1 process on 1 endpoint · cannot be undone',
   },
   quarantine: {
     title: 'Quarantine a file on this endpoint?',
     confirm: 'Request quarantine',
     reversibility: 'Quarantine moves the file to a preserved holding area on the endpoint; it is reversible via restore. Execution is gated by the response-authority contract and is not yet live-verified here.',
+    approvalAction: 'Quarantine a file',
+    risk: 'medium',
+    reversible: true,
+    blastRadius: '1 file on 1 endpoint · restorable from quarantine',
   },
 };
 
@@ -213,6 +352,7 @@ export function EndpointDetailPage(): JSX.Element {
 
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  const [actionPhase, setActionPhase] = useState<ActionPhase>(null);
 
   // Role gate: analysts+ may view; destructive actions need the same roles AND a
   // concrete tenant scope (never in the all-tenants aggregate view — SPEC-01).
@@ -243,6 +383,20 @@ export function EndpointDetailPage(): JSX.Element {
     queryFn: ({ signal }) => fetchAgentEnrollmentAudit(agentId, signal),
     enabled: canView && agentId !== '' && activeTab === 'audit',
     retry: 1,
+  });
+
+  // Per-endpoint AI assessment (SPEC-08 / W7) — only when the Security tab is
+  // open, keyed on the resolved hostname. Fetched from the real /ha-soc-ai/query
+  // endpoint; the service maps an unconfigured backend to an honest "unavailable"
+  // outcome rather than throwing.
+  const detailData = detailQuery.data;
+  const aiHostname = detailData?.hostname ?? '';
+  const aiQuery = useQuery({
+    queryKey: ['endpoint-ai-assessment', aiHostname],
+    queryFn: ({ signal }) => fetchEndpointAiAssessment(aiHostname, signal),
+    enabled: canView && aiHostname !== '' && activeTab === 'security',
+    retry: 1,
+    staleTime: 60_000,
   });
 
   const vitals = useMemo(() => vitalsQuery.data ?? [], [vitalsQuery.data]);
@@ -303,16 +457,31 @@ export function EndpointDetailPage(): JSX.Element {
   const agent = detailQuery.data;
 
   // ── Header action handlers ────────────────────────────────────────────────
+  // Two-phase governed-action flow (SPEC-08 + SPEC-01):
+  //   button → ApprovalCard (human approval gate: risk + blast radius +
+  //   reversibility + Approve/Reject) → SPEC-01 confirm modal (tenant echo) →
+  //   route to the response-authority console. Nothing destructive fires
+  //   automatically; the human passes BOTH gates, and even then execution is the
+  //   authority contract's, not this page's.
   const actionsDisabled = isAggregateScope; // fail-closed in the aggregate view
   const openAction = (action: Exclude<PendingAction, null>): void => {
     if (actionsDisabled) return;
     setPendingAction(action);
+    setActionPhase('approval');
+  };
+  const closeAction = (): void => {
+    setPendingAction(null);
+    setActionPhase(null);
+  };
+  const approveAction = (): void => {
+    // Human approved the proposed action → advance to the SPEC-01 confirm gate.
+    setActionPhase('confirm');
   };
   const confirmAction = (): void => {
     // Execution is gated by the response-authority contract (RESP-021) and is
-    // not live-verified in W3 — route the operator to the authority console
+    // not live-verified in W3/W7 — route the operator to the authority console
     // rather than firing an unverified destructive call.
-    setPendingAction(null);
+    closeAction();
     navigate(`${ROUTES.RESPONSE_AUTHORITY}?search=${encodeURIComponent(agent.hostname)}`);
   };
 
@@ -335,6 +504,13 @@ export function EndpointDetailPage(): JSX.Element {
       title: (<><ShieldAlert size={14} aria-hidden="true" /> Security</>),
       content: (
         <div className="endpoint-detail__tabpane">
+          <SecurityAiAssessment
+            hostname={agent.hostname}
+            assessment={aiQuery.data}
+            isLoading={aiQuery.isLoading}
+            isError={aiQuery.isError}
+            onRetry={() => void aiQuery.refetch()}
+          />
           <CapabilityNote note={PER_AGENT_ALERTS_CAPABILITY.note} />
           <EmptyState
             icon={<ShieldAlert size={38} />}
@@ -395,6 +571,30 @@ export function EndpointDetailPage(): JSX.Element {
                 Applied-policy detail is not yet resolvable per agent (see note above). Manage policies from the
                 {' '}<Link className="endpoint-detail__inline-link" to={ROUTES.ENDPOINTS_FIM_POLICIES}>agent policies</Link> console.
               </p>
+            </HaCard.Body>
+          </HaCard>
+
+          <HaCard as="section" className="endpoint-detail__card">
+            <HaCard.Header>
+              <span className="endpoint-detail__card-title endpoint-detail__ai-title">
+                <Sparkles size={15} aria-hidden="true" /> Response autonomy
+              </span>
+            </HaCard.Header>
+            <HaCard.Body>
+              <AiProvenanceFrame label="Agentic response" variant="rule" caveat={false}>
+                <AutonomyControl
+                  value="suggest"
+                  onChange={() => { /* read-only: no backend autonomy store exists yet */ }}
+                  disabled
+                  label={`Response agent · ${agent.hostname}`}
+                />
+                <p className="endpoint-detail__muted endpoint-detail__hint">
+                  Autonomy is fixed at <strong>Suggest</strong> and cannot be changed here: there is no
+                  agentic autonomy/policy store in the backend yet, so HiveArmor never acts on an
+                  endpoint without explicit human approval. This control is shown for transparency and
+                  becomes adjustable when the agentic response backend ships (planned — AI-SOC programme).
+                </p>
+              </AiProvenanceFrame>
             </HaCard.Body>
           </HaCard>
         </div>
@@ -519,16 +719,39 @@ export function EndpointDetailPage(): JSX.Element {
         />
       </div>
 
-      {/* SPEC-01 confirm modal — tenant echo + reversibility */}
+      {/* Governed-action gate (SPEC-08): human approval BEFORE the confirm. */}
+      {actionPhase === 'approval' && pendingAction && pendingCopy && (
+        <div className="endpoint-detail__approval-overlay" role="dialog" aria-modal="true" aria-label="Approve response action">
+          <div className="endpoint-detail__approval-shell">
+            <ApprovalCard
+              action={`${pendingCopy.approvalAction} · ${agent.hostname}`}
+              agent="Response agent (assistive)"
+              risk={pendingCopy.risk}
+              blastRadius={pendingCopy.blastRadius}
+              reversible={pendingCopy.reversible}
+              expiry={`Scope: ${tenantLabel}`}
+              onApprove={approveAction}
+              onReject={closeAction}
+            >
+              <p className="endpoint-detail__muted endpoint-detail__hint">
+                Approving records your decision and advances to a final confirmation. Execution is
+                gated by the response-authority contract and is not fired automatically from here.
+              </p>
+            </ApprovalCard>
+          </div>
+        </div>
+      )}
+
+      {/* SPEC-01 confirm modal — tenant echo + reversibility (second gate). */}
       <HaConfirmationModal
-        isOpen={pendingAction !== null}
+        isOpen={actionPhase === 'confirm'}
         title={pendingCopy?.title ?? ''}
         message={confirmMessage}
         confirmLabel={pendingCopy?.confirm ?? 'Continue'}
         cancelLabel="Cancel"
         variant={pendingAction === 'kill' ? 'danger' : 'primary'}
         onConfirm={confirmAction}
-        onCancel={() => setPendingAction(null)}
+        onCancel={closeAction}
       />
     </div>
   );

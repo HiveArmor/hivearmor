@@ -3,6 +3,7 @@ import type React from 'react';
 
 import { ConfidenceBadge } from './ConfidenceBadge';
 
+import { AiProvenanceLabel } from '@/components/ai-provenance-frame';
 import { HaCard } from '@/components/ha-card';
 
 import './AiVerdictCard.css';
@@ -147,7 +148,7 @@ export function AiVerdictCard({
       </HaCard.Body>
 
       <HaCard.Footer className="ai-verdict__footer">
-        <span className="ai-verdict__provenance" aria-hidden="true">✦ AI-generated · verify before acting</span>
+        <AiProvenanceLabel className="ai-verdict__provenance" />
         <div className="ai-verdict__feedback">
           <button
             type="button"

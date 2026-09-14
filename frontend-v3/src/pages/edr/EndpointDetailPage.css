@@ -310,3 +310,43 @@
     gap: 2px;
   }
 }
+
+/* ── AI-kit wiring (SPEC-08 / W7) — intelligence-violet provenance only ──── */
+
+.endpoint-detail__ai-title {
+  color: var(--ha-intelligence-primary);
+}
+
+.endpoint-detail__ai-note {
+  margin: 0;
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-body);
+}
+
+.endpoint-detail__ai-disclaimer {
+  margin-top: 8px;
+}
+
+.endpoint-detail__evidence-src {
+  font: var(--ha-type-mono-metadata, var(--ha-type-metadata));
+  color: var(--ha-foreground-secondary);
+  word-break: break-word;
+}
+
+/* Governed-action approval gate overlay (SPEC-08). */
+.endpoint-detail__approval-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--ha-z-modal, 1000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--ha-background-primary) 72%, transparent);
+}
+
+.endpoint-detail__approval-shell {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}

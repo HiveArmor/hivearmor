@@ -21,6 +21,32 @@ export interface AiProvenanceFrameProps {
 }
 
 /**
+ * AiProvenanceLabel — the single codified provenance marker (✦ + violet label, optional caveat).
+ * Extracted so any surface (the frame below, AiVerdictCard's footer, an inline note) renders the
+ * SAME treatment from one source instead of re-typing the "✦ AI-generated · verify before acting"
+ * string. Intelligence-violet tokens only.
+ */
+export function AiProvenanceLabel({
+  label = 'AI-generated',
+  caveat = true,
+  caveatText = 'verify before acting',
+  className,
+}: {
+  label?: string;
+  caveat?: boolean;
+  caveatText?: string;
+  className?: string;
+}): JSX.Element {
+  return (
+    <span className={['ha-provenance__label', className].filter(Boolean).join(' ')}>
+      <span className="ha-provenance__glyph" aria-hidden="true">✦</span>
+      {label}
+      {caveat && <span className="ha-provenance__caveat-inline"> · {caveatText}</span>}
+    </span>
+  );
+}
+
+/**
  * AiProvenanceFrame — the single primitive that codifies the AI provenance rule (design §5a/C):
  * any surface produced by an AI agent is wrapped so it is unmistakably marked as AI output, in
  * `--ha-intelligence-primary`, with an optional "verify before acting" caveat. The other AI-kit
