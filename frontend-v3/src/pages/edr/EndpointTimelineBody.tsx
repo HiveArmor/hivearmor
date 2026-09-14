@@ -438,17 +438,25 @@ export interface EndpointTimelineBodyProps {
   agentId: string;
   /** When true, renders the standalone page's own header. Default false (the tab owns chrome). */
   showHeader?: boolean;
+  /**
+   * Optional fixed initial time range (ISO strings). Production leaves this
+   * undefined so the range defaults to a live rolling last-24h window. Stories
+   * and tests pass a fixed range so the From/To inputs — and therefore the
+   * visual-regression baselines — are deterministic instead of baking in the
+   * wall-clock date. The user can still change the range after mount.
+   */
+  initialRange?: { from: string; to: string };
 }
 
 /**
  * The timeline body. Fills its container. `agentId` is a prop so it can be
  * embedded in a tab; when empty the query is disabled and the empty state shows.
  */
-export function EndpointTimelineBody({ agentId, showHeader = false }: EndpointTimelineBodyProps): JSX.Element {
+export function EndpointTimelineBody({ agentId, showHeader = false, initialRange }: EndpointTimelineBodyProps): JSX.Element {
   const [density] = useRowDensity();
 
-  const [from, setFrom] = useState<string>(minus24hIso);
-  const [to, setTo] = useState<string>(nowIso);
+  const [from, setFrom] = useState<string>(() => initialRange?.from ?? minus24hIso());
+  const [to, setTo] = useState<string>(() => initialRange?.to ?? nowIso());
   const [selectedTypes, setSelectedTypes] = useState<EdrEventType[]>([]);
   const [minSeverity, setMinSeverity] = useState<number>(0);
   const [selectedEvent, setSelectedEvent] = useState<EdrEventDTO | null>(null);

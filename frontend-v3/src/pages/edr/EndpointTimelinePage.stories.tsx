@@ -46,6 +46,17 @@ const ANALYST_USER: HaUser = {
 
 const FAKE_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.story.token';
 
+/**
+ * Fixed time range so the From/To inputs render deterministically — the page
+ * otherwise defaults to a rolling last-24h window off Date.now(), which baked
+ * the wall-clock date into these visual-regression baselines and made them
+ * drift on every regeneration.
+ */
+const FROZEN_RANGE = {
+  from: '2026-07-25T00:00:00.000Z',
+  to: '2026-07-26T00:00:00.000Z',
+} as const;
+
 // ---------------------------------------------------------------------------
 // Sample EDR events — mix of all event types and all severity bands
 // ---------------------------------------------------------------------------
@@ -276,7 +287,7 @@ const timelineEmptyHandler = http.get('/api/ha-edr/timeline', () =>
  *   - Auth store seeded with a valid analyst session
  */
 function makeDecorator(user: HaUser): (Story: React.ComponentType) => React.ReactElement {
-  function StoryDecorator(Story: React.ComponentType): React.ReactElement {
+  function StoryDecorator(_Story: React.ComponentType): React.ReactElement {
     React.useEffect(() => {
       useAuthStore.setState({
         user,
@@ -302,7 +313,16 @@ function makeDecorator(user: HaUser): (Story: React.ComponentType) => React.Reac
         */}
         <MemoryRouter initialEntries={['/edr/timeline/agent-win-dc01']}>
           <Routes>
-            <Route path="/edr/timeline/:agentId" element={<Story />} />
+            {/*
+              Render the page with an EXPLICIT frozen range so the From/To inputs
+              (and thus the visual baselines) are date-independent. Passing it here
+              rather than via story args keeps it deterministic through the router
+              element indirection.
+            */}
+            <Route
+              path="/edr/timeline/:agentId"
+              element={<EndpointTimelinePage initialRange={FROZEN_RANGE} />}
+            />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>
