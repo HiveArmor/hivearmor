@@ -637,8 +637,6 @@ function FimDashboardContent(): JSX.Element {
         <span aria-hidden="true">·</span>
         <Link to={ROUTES.ENDPOINTS_FIM_POLICIES}>FIM Policies</Link>
         <span aria-hidden="true">·</span>
-        <Link to={ROUTES.EDR_POLICIES}>Agent Policies</Link>
-        <span aria-hidden="true">·</span>
         <Link to={ROUTES.RESPONSE_QUARANTINE}>Quarantine</Link>
         <span aria-hidden="true">·</span>
         <Link to={ROUTES.SEARCH}>Search</Link>

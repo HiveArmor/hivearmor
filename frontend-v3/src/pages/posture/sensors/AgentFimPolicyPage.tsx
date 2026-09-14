@@ -823,9 +823,6 @@ function AgentFimPolicyContent({
             <Link to="/edr/fim" className="agent-fim-policy-page__link">
               FIM dashboard
             </Link>
-            <Link to="/edr/policies" className="agent-fim-policy-page__link">
-              Ha policies (legacy)
-            </Link>
           </nav>
           {canMutate ? (
             <HaButton variant="primary" onClick={openCreate}>

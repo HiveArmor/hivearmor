@@ -291,9 +291,6 @@ const FileQuarantinePage = React.lazy(() =>
 const FimDashboardPage = React.lazy(() =>
   import('@/pages/edr/FimDashboardPage').then(m => ({ default: m.FimDashboardPage }))
 );
-const AgentPoliciesPage = React.lazy(() =>
-  import('@/pages/edr/AgentPoliciesPage').then(m => ({ default: m.AgentPoliciesPage }))
-);
 const EndpointsListPage = React.lazy(() =>
   import('@/pages/edr/endpoints/EndpointsListPage').then(m => ({ default: m.EndpointsListPage }))
 );
@@ -524,14 +521,14 @@ export const router = createBrowserRouter([
           </AuthGuard>
         ),
       },
-      // EDR — Agent Policy Management (read: Analyst|SOC Manager|Admin; mutate gated in page)
+      // EDR — Agent Policy Management retired in W5 (SPEC-06): the legacy Plane B
+      // page (/edr/policies, config-only, no push) converges onto the canonical
+      // Plane A FIM policy console. Post-W4 IA that console's canonical route is
+      // /endpoints/fim-policies (SensorGrid Endpoint Security area). Redirect
+      // preserves old /edr/policies bookmarks.
       {
         path: 'edr/policies',
-        element: (
-          <AuthGuard allowedRoles={['ROLE_ADMIN', 'ROLE_SOC_MANAGER', 'ROLE_ANALYST']}>
-            <AgentPoliciesPage />
-          </AuthGuard>
-        ),
+        element: <Navigate to="/endpoints/fim-policies" replace />,
       },
       // EDR — Endpoints list. W4 IA: retired as a nav entry; canonical fleet is
       // /endpoints (SensorGridPage). Kept mounted in place with a LegacyRouteNotice

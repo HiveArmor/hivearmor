@@ -20,10 +20,11 @@ describe('FIM dashboard UX honesty (Prompt 22)', () => {
     expect(page).toContain('STAGING CANDIDATE');
     expect(page).toContain('fim-empty-honesty');
     // W4 IA: FIM co-located under Endpoint Security — cross-links point at canonical /endpoints
-    // and the co-located FIM Policies route (not the retired /posture/sensors + /edr/endpoints).
+    // and the co-located FIM Policies route. SPEC-06 W5: the retired Plane B "Agent Policies"
+    // link (ROUTES.EDR_POLICIES) is removed; FIM Policies is the single canonical Policies surface.
     expect(page).toContain('ROUTES.ENDPOINTS');
     expect(page).toContain('ROUTES.ENDPOINTS_FIM_POLICIES');
-    expect(page).toContain('ROUTES.EDR_POLICIES');
+    expect(page).not.toContain('ROUTES.EDR_POLICIES');
     expect(page).toContain('ROUTES.RESPONSE_QUARANTINE');
     expect(page).toContain('ROUTES.SEARCH');
     expect(page).toContain('Analyst · SOC Manager · Platform Administrator');

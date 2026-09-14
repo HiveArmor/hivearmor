@@ -836,6 +836,9 @@
     <include file="/config/liquibase/changelog/20260914001_rls_w1b_safe_three.xml" relativeToChangelogFile="false"/>
     <include file="/config/liquibase/changelog/20260914002_rls_w1b_four_tables.xml" relativeToChangelogFile="false"/>
 
+    <!-- SPEC-06 W5 — policy-plane convergence (Plane A canonical; Plane B deprecated). No DDL. -->
+    <include file="/config/liquibase/changelog/20260914003_policy_plane_convergence.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
 

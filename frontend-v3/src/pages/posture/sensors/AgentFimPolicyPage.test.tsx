@@ -99,21 +99,26 @@ describe('AgentFimPolicyPage', () => {
     expect(mockUseUtmAgentPolicies).not.toHaveBeenCalled();
   });
 
-  it('shows STAGING CANDIDATE banner and dual-plane note', () => {
+  it('shows STAGING CANDIDATE banner and no retired legacy back-link (SPEC-06 W5)', () => {
     renderPage();
     expect(
       screen.getByText(/Agent FIM policy push — STAGING CANDIDATE/),
     ).toBeVisible();
-    expect(screen.getByText(/Ha Agent Policies/)).toBeVisible();
-    expect(screen.getByRole('link', { name: 'Ha policies (legacy)' })).toHaveAttribute(
-      'href',
-      '/edr/policies',
-    );
+    // SPEC-06 W5: the legacy Plane B "Ha policies (legacy)" back-link is retired —
+    // /edr/policies now redirects here, so the round-trip link is removed.
+    expect(
+      screen.queryByRole('link', { name: 'Ha policies (legacy)' }),
+    ).not.toBeInTheDocument();
     expect(
       within(screen.getByRole('navigation', { name: 'Related views' })).getByRole('link', {
         name: 'Sensors',
       }),
     ).toHaveAttribute('href', '/posture/sensors');
+    expect(
+      within(screen.getByRole('navigation', { name: 'Related views' })).getByRole('link', {
+        name: 'FIM dashboard',
+      }),
+    ).toHaveAttribute('href', '/edr/fim');
   });
 
   it('read-only for Analyst (no create)', () => {

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+      SPEC-06 (W5) — Policy-plane convergence.
+
+      DECISION: Plane A (/api/agent-policies, hive_agent_policy) is canonical.
+      Plane B (/api/ha-edr/policies, ha_agent_policy) is deprecated (config-only:
+      no APPLY_POLICY push, no versioning, no device round-trip).
+
+      Plane A's policy_config (schema v1) ALREADY models FIM file paths, registry
+      keys, and collector toggles — see AgentPolicySchemaService — so NO new column
+      is added to hive_agent_policy. Plane B's typed columns are projected into
+      policy_config at the application layer by HaPolicyConvergenceMigrationRunner
+      (idempotent, uses AgentPolicySchemaService.fromHaColumns). This changeset is
+      the audit anchor for the convergence and a defensive guard; it makes no schema
+      change and is a safe no-op where ha_agent_policy does not exist.
+
+      Nothing is dropped here: the ha_agent_policy table and Plane B endpoints stay
+      functional for a two-release deprecation window (LegacyHaEdrPolicyDeprecationFilter).
+      A future changeset may drop ha_agent_policy once the deprecation window closes
+      AND row-count is confirmed zero — never in this changeset.
+    -->
+
+    <!--
+      Marker changeset. Runs once to record that the convergence has been applied
+      in this environment; the actual row projection is app-level and idempotent so
+      it also covers rows created after this migration but before the window closes.
+      empty <comment> + no-op <sql> keeps liquibase:validate green with zero DDL.
+    -->
+    <changeSet id="20260914003-1" author="hivearmor">
+        <comment>
+            SPEC-06 W5: mark policy-plane convergence applied. Plane A
+            (hive_agent_policy) canonical; Plane B (ha_agent_policy) deprecated.
+            No schema change — Plane A policy_config already models FIM/registry/
+            collectors. Row projection handled idempotently at the app layer.
+        </comment>
+        <!-- Intentionally no DDL/DML: schema is unchanged and Plane B rows are
+             projected by the application runner (safe for the empty-table case). -->
+        <sql>SELECT 1</sql>
+    </changeSet>
+
+</databaseChangeLog>

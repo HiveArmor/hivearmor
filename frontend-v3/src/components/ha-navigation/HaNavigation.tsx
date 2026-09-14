@@ -85,9 +85,10 @@ const POSTURE_ITEMS: NavItemSpec[] = [
 const ENDPOINT_ITEMS: NavItemSpec[] = [
   { label: 'Endpoints', icon: 'Monitor', route: '/endpoints', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'File Integrity', icon: 'FileSearch', route: '/edr/fim', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  // Single canonical Policies entry — Plane A FIM push console (SPEC-06 W5: the
+  // legacy Plane B "Agent Policies" → /edr/policies entry is retired; that route
+  // now redirects here).
   { label: 'FIM Policies', icon: 'FileCog', route: '/endpoints/fim-policies', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
-  // Single canonical Policies entry (Plane A). W5 also edits this line — whichever merges second rebases.
-  { label: 'Agent Policies', icon: 'Settings', route: '/edr/policies', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Response Actions', icon: 'ShieldOff', route: '/response/quarantine', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   // Telemetry & Collectors — surfaced here (root cause of most "no data"); also kept in ADMINISTRATION.
   { label: 'Data Sources', icon: 'Database', route: '/inputs/sources', roles: ['ROLE_ADMIN', 'ROLE_ANALYST'] },
