@@ -833,6 +833,7 @@
     <!-- SPEC-04 W1b FU-1 — authoritative tenant_id on asset groups -->
     <include file="/config/liquibase/changelog/20260913009_asset_group_tenant.xml" relativeToChangelogFile="false"/>
     <include file="/config/liquibase/changelog/20260913010_asset_group_tenant_backfill_notnull.xml" relativeToChangelogFile="false"/>
+    <include file="/config/liquibase/changelog/20260914001_rls_w1b_safe_three.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>
 

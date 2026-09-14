@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      SPEC-04 W1b FU-4 (Track A) — Row-Level Security on the three W1b request-path tables whose
+      writers were AUDITED fully RLS-SAFE: hive_agent_policy (Plane A), hive_agent_group, hive_asset_group.
+      (See .plan/agent-edr-uiux/SPEC-04-FU4-RLS-WRITEPATH-AUDIT.md.)
+
+      This is the SAME policy shape as the P0A2-6 EDR/response pilot (20260910006_rls_pilot_edr_response.xml)
+      and inherits its whole rationale — read that changeset's header for the full design notes. Summary:
+
+        - Every write to these three tables goes through its request-path service under a real
+          @Transactional tx with a resolved TenantContext, stamping tenant_id from TenantScope.requireTenant()
+          (create) or preserving it via findByIdAndTenantId (update). No out-of-band writer exists for any of
+          the three entities (repositories injected only into their own services; `new` only in create()).
+          So the app never issues a write whose tenant_id != the app.current_tenant GUC the TenantGucAspect
+          sets → WITH CHECK always holds. This is why these three are the safe subset; collector + connector
+          tables are DEFERRED until their scheduler/@Async writers seed a TenantContext.
+
+      PREREQUISITES (identical to the pilot):
+        1. tenant_id backfilled to zero NULLs on each table (the W1b backfill/NOT-NULL changesets 004/010
+           already do this on single-tenant; MSSP via POST /api/ha-tenant-backfill).
+        2. App connects as the UNPRIVILEGED hivearmor_app role (superuser/BYPASSRLS ignores RLS → no-op).
+        3. TenantGucAspect (#281) sets app.current_tenant per-tx — already merged.
+        4. Migrations run as the BYPASSRLS hivearmor_migrator role.
+
+      THE GATE: each changeset's preCondition is a sqlCheck for ZERO tenant_id IS NULL rows, onFail="CONTINUE"
+      (NOT MARK_RAN) — skipped-without-recording on a dirty table so it re-evaluates and lands automatically
+      once the data is clean. NULL = X evaluates to NULL (not true), so a NULL-tenant row would be invisible
+      to every tenant the moment RLS is on — hence no-NULLs-then-RLS.
+
+      THE POLICY (verbatim from the pilot):
+        USING/WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+          - current_setting(..., true): missing_ok → NULL (not ERROR) when the GUC was never set → fail CLOSED
+            against -1 (impossible id) rather than throwing.
+          - single-tenant rows carry tenant_id = 0; the GUC resolves to 0 single-tenant → policy matches all
+            → correct no-op single-tenant.
+        FORCE ROW LEVEL SECURITY: applies even to the table owner, so migrator ownership is not a silent bypass.
+
+      Ships INERT today (gated + app connects as superuser). Per-table changeset, per-table rollback
+      (drop policy + disable RLS; no data change; app-layer scoping still protects the table after rollback).
+    -->
+
+    <!-- ================= hive_agent_policy (Plane A) ================= -->
+    <changeSet id="20260914001-1" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <columnExists tableName="hive_agent_policy" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM hive_agent_policy WHERE tenant_id IS NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE hive_agent_policy ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE hive_agent_policy FORCE ROW LEVEL SECURITY;
+            CREATE POLICY tenant_isolation ON hive_agent_policy
+                USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+                WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1));
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS tenant_isolation ON hive_agent_policy;
+            ALTER TABLE hive_agent_policy NO FORCE ROW LEVEL SECURITY;
+            ALTER TABLE hive_agent_policy DISABLE ROW LEVEL SECURITY;
+        </rollback>
+    </changeSet>
+
+    <!-- ================= hive_agent_group ================= -->
+    <changeSet id="20260914001-2" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <columnExists tableName="hive_agent_group" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM hive_agent_group WHERE tenant_id IS NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE hive_agent_group ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE hive_agent_group FORCE ROW LEVEL SECURITY;
+            CREATE POLICY tenant_isolation ON hive_agent_group
+                USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+                WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1));
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS tenant_isolation ON hive_agent_group;
+            ALTER TABLE hive_agent_group NO FORCE ROW LEVEL SECURITY;
+            ALTER TABLE hive_agent_group DISABLE ROW LEVEL SECURITY;
+        </rollback>
+    </changeSet>
+
+    <!-- ================= hive_asset_group ================= -->
+    <changeSet id="20260914001-3" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <columnExists tableName="hive_asset_group" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM hive_asset_group WHERE tenant_id IS NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE hive_asset_group ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE hive_asset_group FORCE ROW LEVEL SECURITY;
+            CREATE POLICY tenant_isolation ON hive_asset_group
+                USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+                WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1));
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS tenant_isolation ON hive_asset_group;
+            ALTER TABLE hive_asset_group NO FORCE ROW LEVEL SECURITY;
+            ALTER TABLE hive_asset_group DISABLE ROW LEVEL SECURITY;
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
