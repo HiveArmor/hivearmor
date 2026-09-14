@@ -72,11 +72,15 @@ export interface HaDataSourceRecord {
 // ── Create payload ─────────────────────────────────────────────────────────
 
 /**
- * Request body for POST /api/ha-inputs/sources (AddDataSourceWizard finish step).
+ * Request body for POST /api/ha-inputs/sources.
  *
- * config keys and values are type-specific — the wizard collects them in Step 2
- * based on REQUIRED_FIELDS[type].  All values are strings at the wire level;
- * the backend coerces them to the appropriate types.
+ * config keys and values are type-specific. All values are strings at the wire
+ * level; the backend coerces them to the appropriate types. The 3-step
+ * AddDataSourceWizard that once collected these was retired in W8 (SPEC-09):
+ * ING-002 (durable draft/activate onboarding) has not landed, so onboarding
+ * stays fail-closed and no in-app source-creation UI is mounted. This payload
+ * type is retained because it mirrors the backend contract that will drive the
+ * governed onboarding form once ING-002 ships.
  */
 export interface HaDataSourceCreatePayload {
   /** Human-readable display name — 1..128 characters. */
