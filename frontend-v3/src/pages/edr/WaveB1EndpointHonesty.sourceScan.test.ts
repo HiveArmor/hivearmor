@@ -17,7 +17,10 @@ describe('Wave B1 Endpoint defense honesty', () => {
   it('B1-EP-01 / B1-FIM-01: endpoints and FIM routes are Analyst-gated', () => {
     const router = readFileSync(join(process.cwd(), 'src/router/index.tsx'), 'utf8');
     const nav = readFileSync(join(process.cwd(), 'src/components/ha-navigation/HaNavigation.tsx'), 'utf8');
-    expect(nav).toContain("route: '/edr/endpoints', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']");
+    // W4 IA: the Endpoints nav entry now points at the canonical /endpoints fleet home.
+    expect(nav).toContain("route: '/endpoints', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']");
+    // Canonical + legacy-in-place routes both stay Analyst-gated (no 404, no privilege change).
+    expect(router).toMatch(/path:\s*'endpoints'[\s\S]*?allowedRoles=\{\['ROLE_ANALYST'/);
     expect(router).toMatch(/path:\s*'edr\/fim'[\s\S]*?allowedRoles=\{\['ROLE_ANALYST'/);
     expect(router).toMatch(/path:\s*'edr\/endpoints'[\s\S]*?allowedRoles=\{\['ROLE_ANALYST'/);
     expect(router).toMatch(/path:\s*'edr\/quarantine'[\s\S]*?allowedRoles=\{\['ROLE_ANALYST'/);

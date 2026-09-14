@@ -278,4 +278,96 @@ describe('HaNavigation', () => {
     expect(cssSource).toContain(".ha-navigation[data-expanded='false'] .ha-nav-section + .ha-nav-section::before");
     expect(cssSource).toContain('min-height: 36px');
   });
+
+  // ── W4 IA — Endpoint Security consolidation ──────────────────────────────
+  it('W4 IA: renders the Endpoint Security section for an analyst', () => {
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    // Section landmark uses its title as aria-label.
+    expect(screen.getByRole('region', { name: 'ENDPOINT SECURITY' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Endpoints' })).toBeVisible();
+  });
+
+  it('W4 IA: Endpoints entry points at the canonical /endpoints fleet home', () => {
+    // Active-state is prefix-matched: on /endpoints the Endpoints item is aria-current.
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/endpoints']}><HaNavigation /></MemoryRouter>
+      </QueryClientProvider>,
+    );
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.getByRole('button', { name: 'Endpoints' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('W4 IA: Endpoint Security co-locates FIM findings, FIM policies, and agent policies', () => {
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.getByRole('button', { name: 'File Integrity' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'FIM Policies' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Agent Policies' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Response Actions' })).toBeVisible();
+    // Data Sources is analyst-visible here (surfaced from ADMIN into the endpoint context).
+    expect(screen.getByRole('button', { name: 'Data Sources' })).toBeVisible();
+  });
+
+  it('W4 IA: single canonical Agent Policies entry (no duplicate rendered)', () => {
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.getAllByRole('button', { name: 'Agent Policies' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Data Sources' })).toHaveLength(1);
+  });
+
+  it('W4 IA: Sensors and Agent FIM Policies are gone from POSTURE (moved to Endpoint Security)', () => {
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.queryByRole('button', { name: 'Sensors' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Agent FIM Policies' })).not.toBeInTheDocument();
+    // The old ENDPOINT DEFENSE section title is retired.
+    expect(screen.queryByRole('region', { name: 'ENDPOINT DEFENSE' })).not.toBeInTheDocument();
+  });
+
+  it('W4 IA: hides the whole Endpoint Security section from ROLE_USER (role filtering preserved)', () => {
+    useAuthStore.setState({
+      user: {
+        id: 9,
+        login: 'reader',
+        firstName: 'Read',
+        lastName: 'Only',
+        email: 'reader@example.test',
+        roles: ['ROLE_USER'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.queryByRole('button', { name: 'Endpoints' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'FIM Policies' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'ENDPOINT SECURITY' })).not.toBeInTheDocument();
+  });
+
+  it('W4 IA: Connector SDK surfaces for SOC Manager under Endpoint Security', () => {
+    useAuthStore.setState({
+      user: {
+        id: 3,
+        login: 'socmgr',
+        firstName: 'Sam',
+        lastName: 'Manager',
+        email: 'sam@example.test',
+        roles: ['ROLE_SOC_MANAGER'],
+        langKey: 'en',
+      },
+      token: 'test-token',
+      isAuthenticated: true,
+      isLoading: false,
+      selectedTenantId: null,
+    });
+    renderNavigation();
+    fireEvent.mouseEnter(screen.getByRole('navigation', { name: 'Primary navigation' }));
+    expect(screen.getByRole('button', { name: 'Connector SDK' })).toBeVisible();
+  });
 });

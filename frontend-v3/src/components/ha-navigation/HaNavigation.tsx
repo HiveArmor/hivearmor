@@ -1,6 +1,8 @@
 /**
- * HaNavigation — Left sidebar navigation with 7 sections.
+ * HaNavigation — Left sidebar navigation.
  * Reads from sidebar.store and auth.store.
+ * W4 IA: the former ENDPOINT DEFENSE section is now the unified ENDPOINT SECURITY area
+ * (fleet + FIM + policies + response + telemetry/collectors); role filtering is preserved.
  */
 
 import { useState } from 'react';
@@ -69,20 +71,27 @@ const POSTURE_ITEMS: NavItemSpec[] = [
   { label: 'Vulnerabilities', icon: 'Bug', route: '/posture/vulnerabilities', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'CIS Benchmark', icon: 'ClipboardCheck', route: '/posture/cis-benchmark', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Detection Coverage', icon: 'Grid3x3', route: '/posture/readiness', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
-  { label: 'Sensors', icon: 'Activity', route: '/posture/sensors', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
-  {
-    label: 'Agent FIM Policies',
-    icon: 'FileSearch',
-    route: '/posture/sensors/fim-policies',
-    roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'],
-  },
   { label: 'Compliance', icon: 'CheckSquare', route: '/compliance', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
 ];
-// Section: ENDPOINT DEFENSE
+// W4 IA: Sensors (/posture/sensors) and Agent FIM Policies (/posture/sensors/fim-policies)
+// moved OUT of POSTURE into the ENDPOINT SECURITY section below. Their routes still resolve
+// in place (LegacyRouteNotice banner) so bookmarks never 404.
+
+// Section: ENDPOINT SECURITY (W4 IA — was ENDPOINT DEFENSE).
+// Unifies the fractured agent/EDR/FIM/telemetry surfaces into one area:
+// the fleet (merged Sensors + Endpoints on the same SensorDTO), FIM findings +
+// policy co-located, agent policies (Plane A — coordinate single entry with W5),
+// response actions, and Telemetry/Collectors surfaced here instead of buried in ADMIN.
 const ENDPOINT_ITEMS: NavItemSpec[] = [
-  { label: 'Endpoints', icon: 'Monitor', route: '/edr/endpoints', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  { label: 'Endpoints', icon: 'Monitor', route: '/endpoints', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'File Integrity', icon: 'FileSearch', route: '/edr/fim', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  { label: 'FIM Policies', icon: 'FileCog', route: '/endpoints/fim-policies', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  // Single canonical Policies entry (Plane A). W5 also edits this line — whichever merges second rebases.
   { label: 'Agent Policies', icon: 'Settings', route: '/edr/policies', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  { label: 'Response Actions', icon: 'ShieldOff', route: '/response/quarantine', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  // Telemetry & Collectors — surfaced here (root cause of most "no data"); also kept in ADMINISTRATION.
+  { label: 'Data Sources', icon: 'Database', route: '/inputs/sources', roles: ['ROLE_ADMIN', 'ROLE_ANALYST'] },
+  { label: 'Connector SDK', icon: 'Plug', route: '/admin/connectors', roles: ['ROLE_ADMIN', 'ROLE_SOC_MANAGER'] },
 ];
 
 // Section: DASHBOARDS — gallery is the safe entry point; Studio is role-gated.
@@ -109,13 +118,14 @@ const MSSP_ADMIN_AUTHORITY = "MSSP_ADMIN";
 // - /admin/connection-keys, /admin/scim, /admin/sso — specialized admin surfaces
 // - /admin/rule-generation, /admin/rules/import, /admin/rules/test — detection tooling, not nav hubs
 // - /admin/*-old, /response/playbooks-legacy, /settings/system — aliases / deprecated
+// W4 IA: Connector SDK (/admin/connectors) and Data Sources (/inputs/sources) MOVED to the
+// ENDPOINT SECURITY section (Telemetry & Collectors) so operators find them in the endpoint
+// context instead of buried under ADMIN. Their canonical routes are unchanged.
 const ADMINISTRATION_ITEMS: NavItemSpec[] = [
   { label: 'Identity & Tenancy', icon: 'UserCog', route: '/admin/users', roles: ['ROLE_ADMIN'] },
   { label: 'Integrations & Delivery', icon: 'Plug', route: '/admin/integrations', roles: ['ROLE_ADMIN'] },
   { label: 'Threat Intel Feeds', icon: 'Brain', route: '/admin/threat-intel', roles: ['ROLE_ADMIN'] },
-  { label: 'Connector SDK', icon: 'Plug', route: '/admin/connectors', roles: ['ROLE_ADMIN', 'ROLE_SOC_MANAGER'] },
   { label: 'API Keys', icon: 'KeyRound', route: '/settings/api-keys', roles: ['ROLE_ADMIN'] },
-  { label: 'Data Sources', icon: 'Database', route: '/inputs/sources', roles: ['ROLE_ADMIN', 'ROLE_ANALYST'] },
   { label: 'Audit Log', icon: 'ClipboardList', route: '/admin/audit', roles: ['ROLE_ADMIN'] },
   { label: 'Enrollment Audit', icon: 'Shield', route: '/admin/enrollment-audit', roles: ['ROLE_ADMIN', 'ROLE_SOC_MANAGER'] },
   { label: 'Pipeline & Ingestion', icon: 'Activity', route: '/admin/pipeline-signals', roles: ['ROLE_ADMIN'] },
@@ -239,7 +249,7 @@ export function HaNavigation(_props: HaNavigationProps): JSX.Element {
           onItemClick={handleNavItemClick}
         />
         <NavSection
-          title="ENDPOINT DEFENSE"
+          title="ENDPOINT SECURITY"
           items={endpointItems}
           collapsed={!expanded}
           currentPath={location.pathname}
