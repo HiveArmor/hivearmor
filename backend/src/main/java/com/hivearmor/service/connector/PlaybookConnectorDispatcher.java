@@ -6,7 +6,6 @@ import com.hivearmor.service.connector.impl.AwsSecurityHubConnector;
 import com.hivearmor.service.connector.impl.AzureEntraConnector;
 import com.hivearmor.service.connector.impl.OktaConnector;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -96,8 +95,12 @@ public class PlaybookConnectorDispatcher {
             }
             return work.get();
         } finally {
+            // Restore the prior scope unconditionally — cover a prefix-only prior context
+            // (clientId null but prefix set) too, not just the clientId-bearing case.
             if (prevClientId != null) {
                 com.hivearmor.multitenancy.TenantContext.set(prevClientId, prevPrefix);
+            } else if (prevPrefix != null) {
+                com.hivearmor.multitenancy.TenantContext.set(prevPrefix);
             } else {
                 com.hivearmor.multitenancy.TenantContext.clear();
             }
