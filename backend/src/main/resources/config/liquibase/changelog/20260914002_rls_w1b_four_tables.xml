@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      SPEC-04 W1b FU-4 (Track A) — Row-Level Security on the four W1b request-path tables that
+      became RLS-SAFE once their out-of-band writers were fixed:
+        - hive_collectors, ha_connector_instance, ha_connector_alert_staging — safe after the
+          out-of-band writer fixes (saveCollector @Transactional; ingest/promote schedulers run
+          per-tenant via TenantScopedBackgroundExecutor; playbook dispatcher seeds TenantContext
+          from the instance's tenant). See SPEC-04-FU4-RLS-WRITEPATH-AUDIT.md.
+        - hive_edr_isolation — safe once its async isolateAgent onError callback persists under the
+          row's tenant (EdrIsolationCallbackPersister, added in this same change).
+
+      DEPENDENCY: the collector/connector policies here are only correct on top of the out-of-band
+      writer fixes. Merge those first. The hive_edr_isolation policy depends on the isolation
+      callback fix shipped alongside this changeset.
+
+      This is the SAME policy shape as the P0A2-6 EDR/response pilot (20260910006) and the safe-three
+      changeset (20260914001) — read those headers for the full rationale. Summary: policy predicate
+      tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true),'')::bigint, -1),
+      FORCE ROW LEVEL SECURITY, per-table gate sqlCheck for ZERO tenant_id IS NULL with
+      onFail="CONTINUE" (re-evaluates each deploy, lands once clean), per-table rollback.
+
+      Ships INERT: gated on zero nulls AND the app connects as superuser today (DB_USER=postgres),
+      which ignores RLS. Activation is the operator runbook (unprivileged role + T18 matrix).
+    -->
+
+    <!-- ================= hive_collectors ================= -->
+    <changeSet id="20260914002-1" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <columnExists tableName="hive_collectors" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM hive_collectors WHERE tenant_id IS NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE hive_collectors ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE hive_collectors FORCE ROW LEVEL SECURITY;
+            CREATE POLICY tenant_isolation ON hive_collectors
+                USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+                WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1));
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS tenant_isolation ON hive_collectors;
+            ALTER TABLE hive_collectors NO FORCE ROW LEVEL SECURITY;
+            ALTER TABLE hive_collectors DISABLE ROW LEVEL SECURITY;
+        </rollback>
+    </changeSet>
+
+    <!-- ================= hive_edr_isolation ================= -->
+    <changeSet id="20260914002-2" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <columnExists tableName="hive_edr_isolation" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM hive_edr_isolation WHERE tenant_id IS NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE hive_edr_isolation ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE hive_edr_isolation FORCE ROW LEVEL SECURITY;
+            CREATE POLICY tenant_isolation ON hive_edr_isolation
+                USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+                WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1));
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS tenant_isolation ON hive_edr_isolation;
+            ALTER TABLE hive_edr_isolation NO FORCE ROW LEVEL SECURITY;
+            ALTER TABLE hive_edr_isolation DISABLE ROW LEVEL SECURITY;
+        </rollback>
+    </changeSet>
+
+    <!-- ================= ha_connector_instance ================= -->
+    <changeSet id="20260914002-3" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <columnExists tableName="ha_connector_instance" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ha_connector_instance WHERE tenant_id IS NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE ha_connector_instance ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE ha_connector_instance FORCE ROW LEVEL SECURITY;
+            CREATE POLICY tenant_isolation ON ha_connector_instance
+                USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+                WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1));
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS tenant_isolation ON ha_connector_instance;
+            ALTER TABLE ha_connector_instance NO FORCE ROW LEVEL SECURITY;
+            ALTER TABLE ha_connector_instance DISABLE ROW LEVEL SECURITY;
+        </rollback>
+    </changeSet>
+
+    <!-- ================= ha_connector_alert_staging ================= -->
+    <changeSet id="20260914002-4" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <columnExists tableName="ha_connector_alert_staging" columnName="tenant_id"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM ha_connector_alert_staging WHERE tenant_id IS NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE ha_connector_alert_staging ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE ha_connector_alert_staging FORCE ROW LEVEL SECURITY;
+            CREATE POLICY tenant_isolation ON ha_connector_alert_staging
+                USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+                WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1));
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS tenant_isolation ON ha_connector_alert_staging;
+            ALTER TABLE ha_connector_alert_staging NO FORCE ROW LEVEL SECURITY;
+            ALTER TABLE ha_connector_alert_staging DISABLE ROW LEVEL SECURITY;
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
