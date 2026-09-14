@@ -30,6 +30,7 @@ public class EdrService {
     private final UtmEdrIsolationRepository isolationRepo;
     private final IncidentResponseCommandService commandService;
     private final com.hivearmor.service.agent_manager.AgentGrpcService agentGrpcService;
+    private final EdrQuarantineCallbackPersister quarantineCallbackPersister;
     private final String agentManagerHost;
 
     public EdrService(UtmEdrRuleRepository ruleRepo,
@@ -38,6 +39,7 @@ public class EdrService {
                       UtmEdrIsolationRepository isolationRepo,
                       IncidentResponseCommandService commandService,
                       com.hivearmor.service.agent_manager.AgentGrpcService agentGrpcService,
+                      EdrQuarantineCallbackPersister quarantineCallbackPersister,
                       @Value("${grpc.server.address:}") String agentManagerHost) {
         this.ruleRepo = ruleRepo;
         this.eventRepo = eventRepo;
@@ -45,6 +47,7 @@ public class EdrService {
         this.isolationRepo = isolationRepo;
         this.commandService = commandService;
         this.agentGrpcService = agentGrpcService;
+        this.quarantineCallbackPersister = quarantineCallbackPersister;
         this.agentManagerHost = agentManagerHost;
     }
 
@@ -182,12 +185,15 @@ public class EdrService {
             new StreamObserver<CommandResult>() {
                 @Override public void onNext(CommandResult r) {
                     saved.setQuarantinePath(r.getResult());
-                    quarantineRepo.save(saved);
+                    // SPEC-04 (W1b) FU-4 — async gRPC-callback thread: no tx / no
+                    // TenantContext. Persist under the row's own tenant so the write
+                    // survives RLS on ha_edr_quarantine (already an active pilot policy).
+                    quarantineCallbackPersister.saveInRowTenant(saved);
                 }
                 @Override public void onError(Throwable t) {
                     saved.setStatus("FAILED");
                     saved.setReason("Command failed: " + t.getMessage());
-                    quarantineRepo.save(saved);
+                    quarantineCallbackPersister.saveInRowTenant(saved);
                 }
                 @Override public void onCompleted() {}
             }
