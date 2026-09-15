@@ -35,7 +35,8 @@
 
 import { useMemo, useState } from 'react';
 
-import { useQuery } from '@tanstack/react-query';
+import { Modal, ModalBody, ModalFooter, ModalHeader } from '@patternfly/react-core';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Ban,
@@ -49,9 +50,11 @@ import {
   ShieldAlert,
   Settings2,
   Terminal,
+  Trash2,
 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
+import { AgentCommandsTab } from './AgentCommandsTab';
 import { EndpointTimelineBody } from './EndpointTimelineBody';
 
 import { AccessDeniedState } from '@/components/access-denied-state/AccessDeniedState';
@@ -59,6 +62,7 @@ import { AgentHealthBadge } from '@/components/agent-health-badge';
 import { AgentVitalsSparkline } from '@/components/agent-vitals-sparkline';
 import { EmptyState } from '@/components/empty-state/EmptyState';
 import { ErrorState } from '@/components/error-state';
+import { HaButton } from '@/components/ha-button/HaButton';
 import { HaCard } from '@/components/ha-card/HaCard';
 import { HaConfirmationModal } from '@/components/ha-confirmation-modal/HaConfirmationModal';
 import { HaDefinitionList, type HaDefinitionItem } from '@/components/ha-definition-list/HaDefinitionList';
@@ -66,6 +70,7 @@ import { HaTabs } from '@/components/ha-tabs/HaTabs';
 import { LoadingState } from '@/components/loading-state/LoadingState';
 import { ROUTES } from '@/constants/routes.constants';
 import { useMastheadTenants } from '@/hooks/useMastheadTenants';
+import { ApiError } from '@/lib/apiClient';
 import { formatBoundedRelativeTime } from '@/lib/threatIntelFreshness';
 import {
   EDR_MITRE_CAPABILITY,
@@ -75,6 +80,7 @@ import {
   PER_AGENT_POLICY_CAPABILITY,
   fetchAgentDetail,
   fetchAgentEnrollmentAudit,
+  removeAgent,
   type AgentDetail,
 } from '@/services/agentDetail.service';
 import {
@@ -213,10 +219,16 @@ export function EndpointDetailPage(): JSX.Element {
 
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  // SPEC-07 W6 6.2 — agent removal (irreversible, typed-confirmation tier).
+  const [removeOpen, setRemoveOpen] = useState(false);
+  const [removeTyped, setRemoveTyped] = useState('');
+  const queryClient = useQueryClient();
 
   // Role gate: analysts+ may view; destructive actions need the same roles AND a
   // concrete tenant scope (never in the all-tenants aggregate view — SPEC-01).
   const canView = useAuthStore((s) => s.hasAnyRole(['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']));
+  // Removal is MUTATE_AUTH on the backend (ADMIN/SOC_MANAGER) — mirror it in the UI.
+  const canMutate = useAuthStore((s) => s.hasAnyRole(['ROLE_SOC_MANAGER', 'ROLE_ADMIN']));
   const selectedTenantId = useAuthStore((s) => s.selectedTenantId);
   const { tenants } = useMastheadTenants();
   const selectedTenant = tenants.find((t) => t.id === selectedTenantId) ?? ALL_TENANTS_OPTION;
@@ -243,6 +255,19 @@ export function EndpointDetailPage(): JSX.Element {
     queryFn: ({ signal }) => fetchAgentEnrollmentAudit(agentId, signal),
     enabled: canView && agentId !== '' && activeTab === 'audit',
     retry: 1,
+  });
+
+  // Removal mutation (SPEC-07 W6 6.2). On success, invalidate the fleet + this
+  // agent's queries and navigate back to the endpoints list — the agent is gone.
+  const removeMutation = useMutation({
+    mutationFn: (hostname: string) => removeAgent(hostname),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['sensors'] });
+      void queryClient.invalidateQueries({ queryKey: ['agent-detail'] });
+      setRemoveOpen(false);
+      setRemoveTyped('');
+      navigate(ROUTES.EDR_ENDPOINTS);
+    },
   });
 
   const vitals = useMemo(() => vitalsQuery.data ?? [], [vitalsQuery.data]);
@@ -363,11 +388,7 @@ export function EndpointDetailPage(): JSX.Element {
       content: (
         <div className="endpoint-detail__tabpane">
           <CapabilityNote note={PER_AGENT_COMMANDS_CAPABILITY.note} />
-          <EmptyState
-            icon={<Terminal size={38} />}
-            title="Per-endpoint command history unavailable"
-            description="The agent-commands API does not yet accept an agent filter. An interactive live-response console is a planned enhancement (W6)."
-          />
+          <AgentCommandsTab agentId={agent.agentId} />
         </div>
       ),
     },
@@ -506,6 +527,17 @@ export function EndpointDetailPage(): JSX.Element {
           >
             <FileWarning size={14} aria-hidden="true" /> Quarantine
           </button>
+          {canMutate && (
+            <button
+              type="button"
+              className="endpoint-detail__action endpoint-detail__action--danger"
+              disabled={actionsDisabled}
+              onClick={() => { setRemoveTyped(''); removeMutation.reset(); setRemoveOpen(true); }}
+              title={actionsDisabled ? 'Select a specific tenant to enable removal' : 'Remove this agent from the fleet'}
+            >
+              <Trash2 size={14} aria-hidden="true" /> Remove
+            </button>
+          )}
         </div>
       </header>
 
@@ -530,6 +562,67 @@ export function EndpointDetailPage(): JSX.Element {
         onConfirm={confirmAction}
         onCancel={() => setPendingAction(null)}
       />
+
+      {/* SPEC-07 W6 6.2 — agent removal: typed-confirmation tier (type the hostname). */}
+      {removeOpen && (
+        <Modal
+          isOpen
+          onClose={() => { if (!removeMutation.isPending) { setRemoveOpen(false); setRemoveTyped(''); } }}
+          variant="small"
+          width="min(480px, calc(100vw - 32px))"
+          className="ha-confirmation-modal"
+          backdropClassName="ha-confirmation-modal__backdrop"
+          aria-label="Remove agent from fleet"
+        >
+          <ModalHeader title="Remove this agent?" titleIconVariant="warning" />
+          <ModalBody className="ha-confirmation-modal__body">
+            <p>
+              {`Target: ${agent.hostname} (agent ${agent.agentId}). Tenant: ${tenantLabel}. `}
+              Removing an agent is <strong>not reversible</strong> — re-onboarding requires
+              redeploying the agent with a new enrollment key. Its history remains in the audit trail.
+            </p>
+            <label className="endpoint-detail__remove-confirm">
+              Type the hostname <code>{agent.hostname}</code> to confirm
+              <input
+                type="text"
+                value={removeTyped}
+                onChange={(e) => setRemoveTyped(e.target.value)}
+                aria-label={`Type ${agent.hostname} to confirm removal`}
+                autoComplete="off"
+                autoFocus
+              />
+            </label>
+            <div className="ha-confirmation-modal__guardrail" role="note">
+              This decision is recorded in the audit trail. Verify the endpoint before continuing.
+            </div>
+            {removeMutation.isError && (
+              <p className="endpoint-detail__remove-error" role="alert">
+                {removeMutation.error instanceof ApiError && removeMutation.error.status === 404
+                  ? 'This agent is not in your current tenant scope, or was already removed.'
+                  : removeMutation.error instanceof ApiError && removeMutation.error.status === 400
+                    ? 'Select a specific tenant before removing an agent.'
+                    : 'Removal failed — the agent manager could not be reached. Nothing was changed.'}
+              </p>
+            )}
+          </ModalBody>
+          <ModalFooter className="ha-confirmation-modal__footer">
+            <HaButton
+              variant="secondary"
+              onClick={() => { setRemoveOpen(false); setRemoveTyped(''); }}
+              isDisabled={removeMutation.isPending}
+            >
+              Cancel
+            </HaButton>
+            <HaButton
+              variant="danger"
+              isDisabled={removeTyped.trim() !== agent.hostname || removeMutation.isPending}
+              onClick={() => removeMutation.mutate(agent.hostname)}
+            >
+              {removeMutation.isPending ? 'Removing…' : 'Remove agent'}
+            </HaButton>
+          </ModalFooter>
+        </Modal>
+      )}
     </div>
   );
 }

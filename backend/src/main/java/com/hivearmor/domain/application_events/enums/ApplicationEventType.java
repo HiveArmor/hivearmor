@@ -48,6 +48,11 @@ public enum ApplicationEventType {
     API_KEY_ACCESS_FAILURE,
     COLLECTOR_DELETE_ATTEMPT,
     COLLECTOR_DELETE_SUCCESS,
+    // SPEC-07 W6 6.2 — user-initiated agent removal from the fleet/detail UI.
+    // Irreversible (re-onboarding requires redeployment); actor + hostname + tenant
+    // recorded, never silent.
+    AGENT_DELETE_ATTEMPT,
+    AGENT_DELETE_SUCCESS,
     RESET_USER_PASSWORD_ATTEMPT,
     RESET_USER_PASSWORD_SUCCESS,
     USER_CREATION_ATTEMPT,

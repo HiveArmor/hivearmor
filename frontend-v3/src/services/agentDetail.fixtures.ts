@@ -10,7 +10,7 @@
  * spec's research demands (health must never hide a failing dimension).
  */
 
-import type { AgentDetail, AgentEnrollmentAuditRow } from './agentDetail.service';
+import type { AgentCommandRow, AgentDetail, AgentEnrollmentAuditRow } from './agentDetail.service';
 
 function detail(
   agentId: string,
@@ -111,6 +111,62 @@ export function getFixtureEnrollmentAudit(agentUuid: string): AgentEnrollmentAud
       actor: 'system',
       at: new Date(base - 1 * 86_400_000).toISOString(),
       detail: 'Agent connection key rotated on schedule',
+    },
+  ];
+}
+
+/**
+ * Fixture command-history rows for the Commands tab (SPEC-07 W6 6.1). Covers every
+ * CommandStatus state so the tab renders Pending/Running/Completed/Failed offline.
+ * Keyed to the agent's id so filtering by agentId returns them.
+ */
+export function getFixtureAgentCommands(agentId: string): AgentCommandRow[] {
+  const base = Date.now();
+  const id = agentId.trim() || 'fixture-healthy';
+  return [
+    {
+      cmdId: 'cmd-1001',
+      agentId: id,
+      command: 'isolate-host',
+      status: 'COMPLETED',
+      result: 'Host isolated; network access restricted to HiveArmor console.',
+      issuedBy: 'maya.chen',
+      issuedAt: new Date(base - 90 * 60_000).toISOString(),
+      updatedAt: new Date(base - 89 * 60_000).toISOString(),
+      reason: 'Suspected lateral movement — INC-4821',
+    },
+    {
+      cmdId: 'cmd-1002',
+      agentId: id,
+      command: 'collect-artifacts',
+      status: 'RUNNING',
+      result: null,
+      issuedBy: 'maya.chen',
+      issuedAt: new Date(base - 8 * 60_000).toISOString(),
+      updatedAt: new Date(base - 6 * 60_000).toISOString(),
+      reason: 'Evidence collection for INC-4821',
+    },
+    {
+      cmdId: 'cmd-1003',
+      agentId: id,
+      command: 'kill-process',
+      status: 'FAILED',
+      result: 'Process not found (already exited).',
+      issuedBy: 'sam.rivera',
+      issuedAt: new Date(base - 4 * 60_000).toISOString(),
+      updatedAt: new Date(base - 3 * 60_000).toISOString(),
+      reason: 'Terminate suspicious binary',
+    },
+    {
+      cmdId: 'cmd-1004',
+      agentId: id,
+      command: 'update-policy',
+      status: 'PENDING',
+      result: null,
+      issuedBy: 'system',
+      issuedAt: new Date(base - 1 * 60_000).toISOString(),
+      updatedAt: null,
+      reason: null,
     },
   ];
 }

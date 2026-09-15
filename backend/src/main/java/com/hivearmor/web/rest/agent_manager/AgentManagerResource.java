@@ -2,6 +2,7 @@ package com.hivearmor.web.rest.agent_manager;
 
 import com.hivearmor.service.grpc.ListRequest;
 import com.hivearmor.multitenancy.TenantScope;
+import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.web.rest.errors.AgentNotfoundException;
 import com.hivearmor.domain.application_events.enums.ApplicationEventType;
 import com.hivearmor.service.agent_manager.AgentGrpcService;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -204,6 +206,66 @@ public class AgentManagerResource {
         try {
             AuthResponseDTO response = agentGrpcService.updateAgentAttributes(agentRequestVM);
             return ResponseEntity.ok().body(response);
+        } catch (Exception e) {
+            String msg = ctx + ": " + e.getMessage();
+            log.error(msg);
+            eventService.createEvent(msg, ApplicationEventType.ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(
+                    HeaderUtil.createFailureAlert("", "", msg)).body(null);
+        }
+    }
+
+    /**
+     * {@code DELETE  /agents/{hostname}} : Removes an agent from the fleet (SPEC-07 W6 6.2).
+     *
+     * <p>Calls the existing tenant-scoped {@link AgentGrpcService#deleteAgent(String)}, which
+     * resolves the host via {@code getAgentByHostname} (404 for a missing host OR one in another
+     * tenant — no cross-tenant existence disclosure) and forces the current tenant into the
+     * gRPC {@code DeleteRequest}. Removal is <strong>irreversible</strong> (re-onboarding requires
+     * redeployment); both the attempt and the success are written to the application audit trail
+     * with the actor + hostname + tenant.
+     *
+     * <p>Tenant scope is checked HERE, up front: the underlying service resolves the host before
+     * it ever reaches its own {@code tenantId <= 0} guard, so a missing/unresolved tenant would
+     * otherwise surface as a misleading 500. We therefore gate on {@link TenantContext#getClientId()}
+     * first (400 when no concrete tenant is selected) and map the MSSP no-tenant
+     * {@link AccessDeniedException} to 403.
+     *
+     * @param hostname the agent hostname to remove
+     * @return {@code 204 No Content} on success, {@code 400} if no tenant is selected, {@code 403}
+     *         if the tenant scope is denied (MSSP), {@code 404} if the host is not in the caller's
+     *         tenant scope, {@code 500} on a backend outage.
+     */
+    @DeleteMapping("/agents/{hostname}")
+    @PreAuthorize(MUTATE_AUTH)
+    public ResponseEntity<Void> deleteAgent(@PathVariable @NotNull String hostname) {
+        final String ctx = CLASSNAME + ".deleteAgent";
+
+        // Gate the tenant scope BEFORE the service call. deleteAgent() -> getAgentByHostname()
+        // requires a tenant internally, but wraps a missing one into a generic RuntimeException
+        // that would 500 here — so reject a scope-less removal up front with the honest status.
+        // Only MSSP mode requires a concrete tenant: in a single-tenant (non-MSSP) deployment
+        // getClientId() is legitimately null (no partitioning) and the removal must proceed, so
+        // we mirror TenantScope.requireTenant()'s own MSSP-vs-single-tenant distinction rather
+        // than a bare `clientId <= 0` check (which would wrongly 400 every single-tenant removal).
+        Long tenantId = TenantContext.getClientId();
+        if ((tenantId == null || tenantId <= 0) && TenantContext.isMssp()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        eventService.createEvent(ctx + ": removal requested for host " + hostname,
+                ApplicationEventType.AGENT_DELETE_ATTEMPT);
+        try {
+            agentGrpcService.deleteAgent(hostname);
+            eventService.createEvent(ctx + ": host " + hostname + " removed from fleet",
+                    ApplicationEventType.AGENT_DELETE_SUCCESS);
+            return ResponseEntity.noContent().build();
+        } catch (AgentNotfoundException nf) {
+            // Not in the caller's tenant (or absent) → 404, no disclosure.
+            return ResponseEntity.notFound().build();
+        } catch (AccessDeniedException denied) {
+            // MSSP: tenant scope could not be resolved for this caller → 403, not a fake outage.
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (Exception e) {
             String msg = ctx + ": " + e.getMessage();
             log.error(msg);
