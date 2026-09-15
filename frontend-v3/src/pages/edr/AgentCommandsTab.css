@@ -1,0 +1,125 @@
+/* AgentCommandsTab — command history table (SPEC-07 W6 6.1). Hive Carbon tokens only. */
+
+.agent-commands__card {
+  width: 100%;
+}
+
+.agent-commands__card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ha-space-2);
+  font: var(--ha-type-section-title);
+  color: var(--ha-text-primary);
+}
+
+.agent-commands__count {
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-tertiary);
+}
+
+.agent-commands__body {
+  padding: 0;
+  overflow-x: auto;
+}
+
+.agent-commands__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ha-text-sm);
+}
+
+.agent-commands__table thead th {
+  text-align: left;
+  padding: var(--ha-space-2) var(--ha-space-3);
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ha-text-tertiary);
+  border-bottom: 1px solid var(--ha-border-subtle);
+  white-space: nowrap;
+}
+
+.agent-commands__table tbody td {
+  padding: var(--ha-space-3);
+  border-bottom: 1px solid var(--ha-border-subtle);
+  color: var(--ha-text-secondary);
+  vertical-align: top;
+}
+
+.agent-commands__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.agent-commands__cmd {
+  display: block;
+  font-family: var(--ha-font-mono);
+  color: var(--ha-text-primary);
+}
+
+.agent-commands__reason {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--ha-text-xs);
+  color: var(--ha-text-tertiary);
+}
+
+.agent-commands__result {
+  display: inline-block;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ha-font-mono);
+  font-size: var(--ha-text-xs);
+}
+
+/* Status badge — pill per real state, colour from Hive Carbon state/severity tokens. */
+.agent-commands__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--ha-radius-pill);
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.agent-commands__status--pending {
+  color: var(--ha-text-secondary);
+  background: var(--ha-fill-neutral-muted);
+}
+
+.agent-commands__status--running {
+  color: var(--ha-state-info);
+  background: var(--ha-fill-info-subtle);
+}
+
+.agent-commands__status--completed {
+  color: var(--ha-state-success);
+  background: var(--ha-fill-success-subtle);
+}
+
+.agent-commands__status--failed {
+  color: var(--ha-severity-critical);
+  background: var(--ha-fill-critical-subtle);
+}
+
+.agent-commands__status--unknown {
+  color: var(--ha-text-tertiary);
+  background: var(--ha-fill-muted);
+}
+
+.agent-commands__spin {
+  animation: agent-commands-spin 1s linear infinite;
+}
+
+@keyframes agent-commands-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-commands__spin { animation: none; }
+}

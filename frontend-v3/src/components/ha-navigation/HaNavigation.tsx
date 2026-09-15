@@ -129,6 +129,7 @@ const ADMINISTRATION_ITEMS: NavItemSpec[] = [
   { label: 'API Keys', icon: 'KeyRound', route: '/settings/api-keys', roles: ['ROLE_ADMIN'] },
   { label: 'Audit Log', icon: 'ClipboardList', route: '/admin/audit', roles: ['ROLE_ADMIN'] },
   { label: 'Enrollment Audit', icon: 'Shield', route: '/admin/enrollment-audit', roles: ['ROLE_ADMIN', 'ROLE_SOC_MANAGER'] },
+  { label: 'Enrollment Keys', icon: 'KeyRound', route: '/admin/enrollment-keys', roles: ['ROLE_ADMIN', 'ROLE_SOC_MANAGER'] },
   { label: 'Pipeline & Ingestion', icon: 'Activity', route: '/admin/pipeline-signals', roles: ['ROLE_ADMIN'] },
   { label: 'Settings', icon: 'Settings', route: '/admin/settings', roles: ['ROLE_ADMIN'] },
 ];

@@ -49,7 +49,7 @@ class AgentManagerResourcePreAuthorizeTest {
 
     @Test
     void mutateEndpointsRequireAdminOrSocManager() {
-        for (String name : List.of("updateAgentAttributes", "canRunCommand")) {
+        for (String name : List.of("updateAgentAttributes", "canRunCommand", "deleteAgent")) {
             Method m = Arrays.stream(AgentManagerResource.class.getDeclaredMethods())
                 .filter(x -> x.getName().equals(name))
                 .findFirst()

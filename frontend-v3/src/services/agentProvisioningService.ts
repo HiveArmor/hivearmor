@@ -10,6 +10,9 @@ import type {
   CreateAgentKeyRequest,
 } from '@/types/agentProvisioning.types';
 
+const fixtureMode =
+  import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
 /**
  * Create a new agent provisioning key.
  * Returns the raw key and install scripts — treat them as secrets.
@@ -25,6 +28,10 @@ export async function createAgentKey(
  * Does NOT return raw keys or scripts.
  */
 export async function listAgentKeys(): Promise<AgentKeyListItemDTO[]> {
+  if (fixtureMode) {
+    const { getFixtureAgentKeys } = await import('./enrollmentTokens.fixtures');
+    return getFixtureAgentKeys();
+  }
   return apiClient.get<AgentKeyListItemDTO[]>('/ha-agent-keys');
 }
 
@@ -32,5 +39,6 @@ export async function listAgentKeys(): Promise<AgentKeyListItemDTO[]> {
  * Revoke (immediately expire) an agent provisioning key by ID.
  */
 export async function revokeAgentKey(id: string): Promise<void> {
+  if (fixtureMode) return;
   return apiClient.delete<void>(`/ha-agent-keys/${id}`);
 }
