@@ -96,6 +96,9 @@ const ThreatIntelAdminPage = React.lazy(() =>
 const EnrollmentAuditPage = React.lazy(() =>
   import('@/pages/admin/enrollment-audit/EnrollmentAuditPage').then(m => ({ default: m.EnrollmentAuditPage }))
 );
+const EnrollmentKeysPage = React.lazy(() =>
+  import('@/pages/admin/enrollment-keys/EnrollmentKeysPage').then(m => ({ default: m.EnrollmentKeysPage }))
+);
 
 // ── Alert pages ───────────────────────────────────────────────────────────────
 const AlertSeverityBoardPage = React.lazy(() =>
@@ -1003,6 +1006,14 @@ export const router = createBrowserRouter([
         element: (
           <AuthGuard allowedRoles={['ROLE_ADMIN', 'ROLE_SOC_MANAGER']}>
             <EnrollmentAuditPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'admin/enrollment-keys',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ADMIN', 'ROLE_SOC_MANAGER']}>
+            <EnrollmentKeysPage />
           </AuthGuard>
         ),
       },

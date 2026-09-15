@@ -184,6 +184,112 @@ export async function fetchAgentEnrollmentAudit(
 }
 
 // ---------------------------------------------------------------------------
+// Command history (SPEC-07 W6 6.1) — GET /agent-manager/agent-commands.
+//
+// The verified endpoint takes NO agentId parameter (recon: EXISTS_NO_FILTER), so
+// we fetch the tenant-scoped list and filter to this agent CLIENT-SIDE. The
+// backend already scrubs secret values from `result`; we never render anything
+// beyond what it returns. There is no status stream, so the caller POLLS this on
+// an interval (research §: Defender Action Center async status).
+// ---------------------------------------------------------------------------
+
+/** Normalized command status states the UI renders honestly (no fabricated "done"). */
+export type CommandStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'UNKNOWN';
+
+/** One command-history row scoped to a single agent. */
+export interface AgentCommandRow {
+  cmdId: string;
+  agentId: string;
+  command: string;
+  status: CommandStatus;
+  /** Secret-scrubbed result text from the backend (may be empty while pending). */
+  result: string | null;
+  issuedBy: string | null;
+  issuedAt: string | null;
+  updatedAt: string | null;
+  reason: string | null;
+}
+
+interface AgentCommandWire {
+  cmdId?: string | null;
+  agentId?: number | string | null;
+  command?: string | null;
+  commandStatus?: string | null;
+  result?: string | null;
+  executedBy?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  reason?: string | null;
+}
+
+/** Maps a raw backend status string onto the honest CommandStatus enum. */
+function normalizeCommandStatus(raw: string | null | undefined): CommandStatus {
+  const value = (raw ?? '').toUpperCase();
+  if (value.includes('PENDING') || value.includes('QUEUED') || value.includes('CREATED')) return 'PENDING';
+  if (value.includes('RUNNING') || value.includes('IN_PROGRESS') || value.includes('EXECUTING')) return 'RUNNING';
+  if (value.includes('COMPLETE') || value.includes('SUCCESS') || value.includes('DONE')) return 'COMPLETED';
+  if (value.includes('FAIL') || value.includes('ERROR') || value.includes('TIMEOUT')) return 'FAILED';
+  return 'UNKNOWN';
+}
+
+function adaptCommandRow(wire: AgentCommandWire): AgentCommandRow {
+  return {
+    cmdId: (wire.cmdId ?? '').toString(),
+    agentId: (wire.agentId ?? '').toString(),
+    command: (wire.command ?? '').toString(),
+    status: normalizeCommandStatus(wire.commandStatus),
+    result: wire.result ?? null,
+    issuedBy: wire.executedBy ?? null,
+    issuedAt: wire.createdAt ?? null,
+    updatedAt: wire.updatedAt ?? null,
+    reason: wire.reason ?? null,
+  };
+}
+
+/**
+ * Fetches command history for ONE agent. The backend list has no agent filter,
+ * so this pulls the tenant-scoped list and filters client-side by agentId,
+ * newest-first. Returns [] on an empty history (never a fabricated row).
+ */
+export async function fetchAgentCommands(
+  agentId: string,
+  signal?: AbortSignal,
+): Promise<AgentCommandRow[]> {
+  if (fixtureMode) {
+    const { getFixtureAgentCommands } = await import('./agentDetail.fixtures');
+    return getFixtureAgentCommands(agentId);
+  }
+  const wire = await apiClient.get<AgentCommandWire[]>('/agent-manager/agent-commands', {
+    params: { pageSize: 500 },
+    signal,
+  });
+  const rows = (Array.isArray(wire) ? wire : [])
+    .map(adaptCommandRow)
+    .filter((row) => row.agentId === agentId);
+  rows.sort((a, b) => (b.issuedAt ?? '').localeCompare(a.issuedAt ?? ''));
+  return rows;
+}
+
+// ---------------------------------------------------------------------------
+// Agent removal (SPEC-07 W6 6.2) — DELETE /agent-manager/agents/{hostname}.
+//
+// Irreversible (re-onboarding requires redeployment). The backend forces the
+// current tenant, rejects a cross-tenant target with 404, and audits both the
+// attempt and the success. The caller gates this behind a typed-confirmation
+// modal (type the hostname) per SPEC-01.
+// ---------------------------------------------------------------------------
+
+/**
+ * Removes an agent from the fleet by hostname. Resolves on 204; throws ApiError
+ * on 404 (not in tenant scope), 400 (no tenant selected), or 5xx (backend outage).
+ * Never echoes any secret — only the hostname is sent.
+ */
+export async function removeAgent(hostname: string, signal?: AbortSignal): Promise<void> {
+  if (fixtureMode) return;
+  await apiClient.delete<void>(`/agent-manager/agents/${encodeURIComponent(hostname)}`, { signal });
+}
+
+// ---------------------------------------------------------------------------
 // Honest capability markers for data sources without a per-agent server filter.
 // ---------------------------------------------------------------------------
 
@@ -199,12 +305,15 @@ export const PER_AGENT_ALERTS_CAPABILITY: CapabilityGap = {
 };
 
 /**
- * Per-agent COMMANDS is not filterable server-side today: GET
- * /api/agent-manager/agent-commands takes no agentId parameter (recon).
+ * Per-agent COMMANDS: GET /api/agent-manager/agent-commands takes no agentId
+ * parameter (recon), so W6 fetches the tenant-scoped list and filters to this
+ * agent CLIENT-SIDE. This note explains the derivation (there is no server-side
+ * agent filter and no live-response console yet) rather than implying the list
+ * is authoritative or interactive.
  */
 export const PER_AGENT_COMMANDS_CAPABILITY: CapabilityGap = {
   verdict: 'EXISTS_NO_FILTER',
-  note: 'The agent-commands API does not yet accept an agent filter, so commands cannot be scoped to a single endpoint here. This is a tracked backend dependency (W6).',
+  note: 'Command history is filtered to this endpoint in the browser — the agent-commands API returns the tenant-wide list with no server-side agent filter. Results are secret-scrubbed by the backend. An interactive live-response console is a planned enhancement.',
 };
 
 /**

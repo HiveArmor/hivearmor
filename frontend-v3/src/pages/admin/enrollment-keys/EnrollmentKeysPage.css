@@ -1,0 +1,129 @@
+/* EnrollmentKeysPage — SPEC-07 W6 6.3. Hive Carbon tokens only. */
+
+.enrollment-keys {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-4);
+  padding: var(--ha-space-4);
+}
+
+.enrollment-keys--state {
+  padding: var(--ha-space-6);
+}
+
+.enrollment-keys__notice {
+  padding: var(--ha-space-3);
+  border-radius: var(--ha-radius-control);
+  border: 1px solid var(--ha-border-info);
+  background: var(--ha-fill-info-subtle);
+  color: var(--ha-text-secondary);
+  font-size: var(--ha-text-sm);
+}
+
+.enrollment-keys__card {
+  width: 100%;
+}
+
+.enrollment-keys__card-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ha-space-2);
+  font: var(--ha-type-section-title);
+  color: var(--ha-text-primary);
+}
+
+.enrollment-keys__card-body {
+  padding: 0;
+  overflow-x: auto;
+}
+
+.enrollment-keys__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ha-text-sm);
+}
+
+.enrollment-keys__table thead th {
+  text-align: left;
+  padding: var(--ha-space-2) var(--ha-space-3);
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ha-text-tertiary);
+  border-bottom: 1px solid var(--ha-border-subtle);
+  white-space: nowrap;
+}
+
+.enrollment-keys__table tbody td {
+  padding: var(--ha-space-3);
+  border-bottom: 1px solid var(--ha-border-subtle);
+  color: var(--ha-text-secondary);
+  vertical-align: middle;
+}
+
+.enrollment-keys__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.enrollment-keys__mono {
+  font-family: var(--ha-font-mono);
+  color: var(--ha-text-primary);
+}
+
+.enrollment-keys__actions-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.enrollment-keys__pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--ha-radius-pill);
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+}
+
+.enrollment-keys__pill--active {
+  color: var(--ha-state-success);
+  background: var(--ha-fill-success-subtle);
+}
+
+.enrollment-keys__pill--revoked {
+  color: var(--ha-severity-critical);
+  background: var(--ha-fill-critical-subtle);
+}
+
+.enrollment-keys__pill--inactive {
+  color: var(--ha-text-tertiary);
+  background: var(--ha-fill-muted);
+}
+
+.enrollment-keys__reason {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-2);
+  margin-top: var(--ha-space-3);
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+}
+
+.enrollment-keys__reason input {
+  padding: 8px 12px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-primary);
+  background: var(--ha-surface-input);
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-control);
+  outline: none;
+}
+
+.enrollment-keys__reason input:focus {
+  border-color: var(--ha-border-focus);
+}
+
+.enrollment-keys__error {
+  margin-top: var(--ha-space-2);
+  font-size: var(--ha-text-xs);
+  color: var(--ha-severity-critical);
+}

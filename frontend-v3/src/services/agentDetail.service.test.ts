@@ -12,18 +12,21 @@ import {
   PER_AGENT_COMMANDS_CAPABILITY,
   PER_AGENT_POLICY_CAPABILITY,
   adaptAgentDetail,
+  fetchAgentCommands,
   fetchAgentDetail,
+  removeAgent,
 } from './agentDetail.service';
 
 const mocks = vi.hoisted(() => ({
   get: vi.fn(),
+  delete: vi.fn(),
 }));
 
 vi.mock('@/lib/apiClient', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/apiClient')>();
   return {
     ...actual, // keep the real ApiError class
-    apiClient: { get: mocks.get },
+    apiClient: { get: mocks.get, delete: mocks.delete },
   };
 });
 
@@ -82,6 +85,51 @@ describe('fetchAgentDetail', () => {
     mocks.get.mockRejectedValueOnce(new ApiError(404, { status: 404 }));
     mocks.get.mockResolvedValueOnce([]);
     await expect(fetchAgentDetail('missing')).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+describe('fetchAgentCommands (SPEC-07 W6 6.1)', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('filters the tenant-wide command list to the requested agent, newest-first, and normalizes status', async () => {
+    mocks.get.mockResolvedValue([
+      { cmdId: 'c1', agentId: 9, command: 'isolate-host', commandStatus: 'COMPLETED', createdAt: '2026-09-01T10:00:00Z', executedBy: 'maya' },
+      { cmdId: 'c2', agentId: 7, command: 'kill', commandStatus: 'RUNNING', createdAt: '2026-09-02T10:00:00Z' },
+      { cmdId: 'c3', agentId: 9, command: 'collect', commandStatus: 'IN_PROGRESS', createdAt: '2026-09-03T10:00:00Z', executedBy: 'sam' },
+    ]);
+
+    const rows = await fetchAgentCommands('9');
+
+    // Only agent 9's commands survive the client-side filter.
+    expect(rows.map((r) => r.cmdId)).toEqual(['c3', 'c1']); // newest-first
+    expect(rows[0].status).toBe('RUNNING'); // IN_PROGRESS → RUNNING
+    expect(rows[1].status).toBe('COMPLETED');
+    expect(rows[1].issuedBy).toBe('maya');
+  });
+
+  it('returns [] when no command matches the agent (never a fabricated row)', async () => {
+    mocks.get.mockResolvedValue([{ cmdId: 'c9', agentId: 1, command: 'x', commandStatus: 'DONE' }]);
+    const rows = await fetchAgentCommands('9');
+    expect(rows).toEqual([]);
+  });
+});
+
+describe('removeAgent (SPEC-07 W6 6.2)', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('DELETEs the hostname-scoped route (url-encoded) and sends no secret', async () => {
+    mocks.delete.mockResolvedValue(undefined);
+    await removeAgent('web-01.corp');
+    expect(mocks.delete).toHaveBeenCalledWith(
+      '/agent-manager/agents/web-01.corp',
+      expect.any(Object),
+    );
+  });
+
+  it('propagates a 404 (cross-tenant / missing) so the caller shows the honest message', async () => {
+    const { ApiError } = await import('@/lib/apiClient');
+    mocks.delete.mockRejectedValue(new ApiError(404, { status: 404 }));
+    await expect(removeAgent('other-tenant-host')).rejects.toMatchObject({ status: 404 });
   });
 });
 
