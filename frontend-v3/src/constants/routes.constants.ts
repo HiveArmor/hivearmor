@@ -85,6 +85,8 @@ export const ROUTES = {
   ADMIN_CONNECTION_KEYS: '/admin/connection-keys',
   ADMIN_AUDIT: '/admin/audit',
   ADMIN_ENROLLMENT_AUDIT: '/admin/enrollment-audit',
+  /** SPEC-07 W6 6.3 — enrollment tokens & provisioning keys management. */
+  ADMIN_ENROLLMENT_KEYS: '/admin/enrollment-keys',
   ADMIN_SETTINGS: '/admin/settings',
   ADMIN_THREAT_INTEL: '/admin/threat-intel',
   ADMIN_PIPELINE_SIGNALS: '/admin/pipeline-signals',

@@ -123,6 +123,52 @@
   opacity: 0.6;
 }
 
+/* SPEC-07 W6 6.2 — destructive Remove action + typed-confirm removal modal. */
+.endpoint-detail__action--danger {
+  color: var(--ha-severity-critical);
+  border-color: var(--ha-border-critical);
+}
+
+.endpoint-detail__action--danger:hover:not(:disabled) {
+  background: var(--ha-fill-critical-subtle);
+  border-color: var(--ha-severity-critical);
+}
+
+.endpoint-detail__remove-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-2);
+  margin-top: var(--ha-space-3);
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+}
+
+.endpoint-detail__remove-confirm code {
+  font-family: var(--ha-font-mono);
+  color: var(--ha-text-primary);
+}
+
+.endpoint-detail__remove-confirm input {
+  padding: 8px 12px;
+  font-family: var(--ha-font-mono);
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-primary);
+  background: var(--ha-surface-input);
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-control);
+  outline: none;
+}
+
+.endpoint-detail__remove-confirm input:focus {
+  border-color: var(--ha-border-focus);
+}
+
+.endpoint-detail__remove-error {
+  margin-top: var(--ha-space-2);
+  font-size: var(--ha-text-xs);
+  color: var(--ha-severity-critical);
+}
+
 /* ── Body / tabs ───────────────────────────────────────────────────────── */
 .endpoint-detail__body {
   flex: 1;

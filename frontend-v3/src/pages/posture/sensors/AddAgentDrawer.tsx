@@ -10,21 +10,27 @@
  * drawer closes — they are never stored beyond the current session.
  */
 
-import { lazy, Suspense, useCallback, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Copy, Download, Monitor, Server, Shield, ShieldAlert, Terminal } from 'lucide-react';
+import { Check, Copy, Download, Loader2, Monitor, Server, Shield, ShieldAlert, ShieldCheck, Terminal } from 'lucide-react';
 
+import { AgentHealthBadge } from '@/components/agent-health-badge';
 import { HaButton } from '@/components/ha-button/HaButton';
 import { HaDrawer } from '@/components/ha-drawer/HaDrawer';
 import { HaInlineBanner } from '@/components/ha-inline-banner';
 import { ApiError, apiClient } from '@/lib/apiClient';
 import { downloadInstallScript, installScriptDownloadFilename } from '@/lib/installScriptDownload';
 import { defineHiveArmorMonacoTheme } from '@/lib/monacoTheme';
+import { computeCompositeHealth, computeFreshness } from '@/services/agentHealth';
 import { createAgentKey } from '@/services/agentProvisioningService';
+import { fetchSensors, type SensorDTO } from '@/services/sensorsService';
+import { fetchAgentVitals } from '@/services/telemetryService';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore } from '@/store/theme.store';
 import type { AgentKeyCreatedDTO, AgentMode } from '@/types/agentProvisioning.types';
+
+import './AddAgentDrawer.css';
 
 interface AgentPackageStatus {
   filename: string;
@@ -494,6 +500,9 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
                 are open to <strong>{created.serverHost}</strong> on the target machine.
               </span>
             </div>
+
+            {/* SPEC-07 W6 6.4 — verify connection / first-heartbeat step. */}
+            <VerifyConnectionPanel alias={created.alias} serverHost={created.serverHost} />
           </div>
         </div>
       )}
@@ -502,6 +511,99 @@ export function AddAgentDrawer({ isOpen, onClose }: AddAgentDrawerProps): JSX.El
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
+
+/**
+ * VerifyConnectionPanel — SPEC-07 W6 6.4 final enrollment step.
+ *
+ * After the install script is generated, polls fetchSensors for the new alias to
+ * appear ONLINE (first heartbeat), then shows its SPEC-02 health badge. Times out
+ * gracefully with port/key troubleshooting hints and never blocks forever.
+ */
+function VerifyConnectionPanel({ alias, serverHost }: { alias: string; serverHost: string }): JSX.Element {
+  const TIMEOUT_MS = 5 * 60_000; // stop polling after 5 minutes
+  const [startedAt] = useState(() => Date.now());
+  const [timedOut, setTimedOut] = useState(false);
+
+  // Poll the fleet for a host whose hostname matches the alias, until it is ONLINE
+  // or we time out. matchedId lets us then pull vitals for the health badge.
+  const sensorsQuery = useQuery({
+    queryKey: ['verify-connection', alias],
+    queryFn: async ({ signal }) => {
+      void signal;
+      const { sensors } = await fetchSensors({ q: alias, size: 200 });
+      return sensors;
+    },
+    refetchInterval: timedOut ? false : 5_000,
+    enabled: !timedOut,
+  });
+
+  const match: SensorDTO | undefined = (sensorsQuery.data ?? []).find(
+    (s) => s.hostname.toLowerCase() === alias.toLowerCase(),
+  );
+  const online = match?.connectionStatus === 'ONLINE';
+  const matchedAgentId = match?.agentId ?? '';
+
+  // Vitals for the connected health badge (only once online, matches SPEC-02).
+  const vitalsQuery = useQuery({
+    queryKey: ['verify-connection-vitals', matchedAgentId],
+    queryFn: ({ signal }) => fetchAgentVitals(matchedAgentId, signal),
+    enabled: online && matchedAgentId !== '',
+    retry: 0,
+  });
+
+  useEffect(() => {
+    if (online || timedOut) return;
+    const remaining = TIMEOUT_MS - (Date.now() - startedAt);
+    if (remaining <= 0) { setTimedOut(true); return; }
+    const t = setTimeout(() => setTimedOut(true), remaining);
+    return () => clearTimeout(t);
+  }, [online, timedOut, startedAt, TIMEOUT_MS]);
+
+  if (online && match) {
+    const vitals = vitalsQuery.data ?? [];
+    const health = computeCompositeHealth(vitals);
+    const freshness = computeFreshness(vitals);
+    return (
+      <div className="add-agent-verify add-agent-verify--ok" role="status">
+        <ShieldCheck size={18} aria-hidden="true" />
+        <div className="add-agent-verify__body">
+          <strong>Connected ✓</strong>
+          <span>{match.hostname} reported its first heartbeat.</span>
+          <div className="add-agent-verify__health">
+            <AgentHealthBadge health={health} freshness={freshness} variant="full" errored={vitalsQuery.isError} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (timedOut) {
+    return (
+      <div className="add-agent-verify add-agent-verify--timeout" role="status">
+        <ShieldAlert size={18} aria-hidden="true" />
+        <div className="add-agent-verify__body">
+          <strong>No heartbeat yet</strong>
+          <span>
+            {alias} has not checked in after 5 minutes. If you have run the script on the endpoint,
+            verify: outbound ports <code>443</code>, <code>50051</code>, <code>9000</code> are open to{' '}
+            <strong>{serverHost}</strong>; the enrollment token has not expired; and the agent service
+            is running. This drawer does not block — the host will still appear in Endpoints once it connects.
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="add-agent-verify add-agent-verify--waiting" role="status">
+      <Loader2 size={18} aria-hidden="true" className="add-agent-verify__spin" />
+      <div className="add-agent-verify__body">
+        <strong>Waiting for first heartbeat…</strong>
+        <span>Run the script on the endpoint. HiveArmor is polling for {alias} to come online.</span>
+      </div>
+    </div>
+  );
+}
 
 interface ModeCardProps {
   selected: boolean;

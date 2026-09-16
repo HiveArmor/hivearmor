@@ -1,0 +1,61 @@
+/* AddAgentDrawer verify-connection panel (SPEC-07 W6 6.4). Hive Carbon tokens only. */
+
+.add-agent-verify {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ha-space-3);
+  padding: var(--ha-space-3);
+  border-radius: var(--ha-radius-control);
+  border: 1px solid var(--ha-border-default);
+  background: var(--ha-surface-panel);
+}
+
+.add-agent-verify__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+}
+
+.add-agent-verify__body strong {
+  color: var(--ha-text-primary);
+}
+
+.add-agent-verify__body code {
+  font-family: var(--ha-font-mono);
+  color: var(--ha-text-primary);
+}
+
+.add-agent-verify__health {
+  margin-top: var(--ha-space-2);
+}
+
+.add-agent-verify--waiting {
+  border-color: var(--ha-border-info);
+  color: var(--ha-state-info);
+}
+
+.add-agent-verify--ok {
+  border-color: var(--ha-border-positive);
+  color: var(--ha-state-success);
+}
+
+.add-agent-verify--timeout {
+  border-color: var(--ha-border-warning);
+  color: var(--ha-state-warning);
+}
+
+.add-agent-verify__spin {
+  animation: add-agent-verify-spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes add-agent-verify-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .add-agent-verify__spin { animation: none; }
+}
