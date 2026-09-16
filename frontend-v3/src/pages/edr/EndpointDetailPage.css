@@ -310,3 +310,28 @@
     gap: 2px;
   }
 }
+
+/* ── AI-kit wiring (SPEC-08 / W7) — intelligence-violet provenance only ──── */
+
+.endpoint-detail__ai-title {
+  color: var(--ha-intelligence-primary);
+}
+
+.endpoint-detail__ai-note {
+  margin: 0;
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-body);
+}
+
+.endpoint-detail__ai-disclaimer {
+  margin-top: 8px;
+}
+
+.endpoint-detail__evidence-src {
+  font: var(--ha-type-mono-metadata, var(--ha-type-metadata));
+  color: var(--ha-foreground-secondary);
+  word-break: break-word;
+}
+
+/* Governed-action approval gate is hosted in HaModal (PatternFly) — no custom
+   overlay needed; the modal provides scrim, focus-trap, Escape and focus-restore. */

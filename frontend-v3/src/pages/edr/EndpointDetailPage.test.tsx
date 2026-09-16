@@ -35,6 +35,7 @@ const mocks = vi.hoisted(() => ({
   fetchAgentDetail: vi.fn(),
   fetchAgentEnrollmentAudit: vi.fn(),
   fetchAgentVitals: vi.fn(),
+  fetchEndpointAiAssessment: vi.fn(),
   useMastheadTenants: vi.fn(),
 }));
 
@@ -46,6 +47,10 @@ vi.mock('@/services/agentDetail.service', async (importOriginal) => {
     fetchAgentEnrollmentAudit: mocks.fetchAgentEnrollmentAudit,
   };
 });
+
+vi.mock('@/services/endpointAiAssessment.service', () => ({
+  fetchEndpointAiAssessment: mocks.fetchEndpointAiAssessment,
+}));
 
 vi.mock('@/services/telemetryService', () => ({
   fetchAgentVitals: mocks.fetchAgentVitals,
@@ -170,6 +175,17 @@ describe('EndpointDetailPage', () => {
     });
     mocks.fetchAgentVitals.mockResolvedValue(healthyVitals());
     mocks.fetchAgentEnrollmentAudit.mockResolvedValue([]);
+    mocks.fetchEndpointAiAssessment.mockResolvedValue({
+      outcome: 'answered',
+      answer: 'Elevated process-creation activity from an unsigned binary; recommend isolating for triage.',
+      confidence: 72,
+      sources: ['process.create · unsigned binary', 'network.connection · low-reputation host'],
+      durationMs: 1180,
+      steps: [
+        { label: 'Signal review', detail: '2 grounded sources cited' },
+        { label: 'Assessment', detail: 'Model responded in 1180 ms' },
+      ],
+    });
   });
 
   it('shows AccessDeniedState and does not fetch when the user lacks the required roles', () => {
@@ -264,7 +280,7 @@ describe('EndpointDetailPage', () => {
     expect(screen.getByRole('button', { name: /Quarantine/i })).toHaveProperty('disabled', true);
   });
 
-  it('opens an SPEC-01 confirm modal echoing host + agent id + tenant + reversibility', async () => {
+  it('gates a destructive action behind an ApprovalCard, then the SPEC-01 confirm modal echoing host + agent id + tenant + reversibility', async () => {
     setUser(['ROLE_ANALYST'], 7);
     mocks.fetchAgentDetail.mockResolvedValue(makeAgent());
     renderPage();
@@ -272,9 +288,78 @@ describe('EndpointDetailPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /Isolate/i }));
 
+    // Phase 1 — human approval gate (SPEC-08): the confirm modal is NOT shown yet.
+    expect(screen.getByRole('dialog', { name: /Approve response action/i })).toBeDefined();
+    expect(screen.getByText(/Isolate endpoint from the network/i)).toBeDefined();
+    expect(screen.getByText(/1 endpoint · all network traffic except HiveArmor/i)).toBeDefined();
+    expect(screen.queryByText(/Isolate this endpoint\?/i)).toBeNull();
+
+    // Approve → phase 2 — SPEC-01 confirm modal with tenant + target + reversibility.
+    await userEvent.click(screen.getByRole('button', { name: /^Approve$/i }));
     expect(screen.getByText(/Isolate this endpoint\?/i)).toBeDefined();
-    // Tenant echo + target echo + reversibility all in the confirm message.
     expect(screen.getByText(/Target: db-prod-02 \(agent agent-77\) · Tenant: Acme Corp/i)).toBeDefined();
     expect(screen.getByText(/reversible — you can release the host afterward/i)).toBeDefined();
+  });
+
+  it('cancels a governed action when the ApprovalCard is rejected (no confirm modal, nothing fired)', async () => {
+    setUser(['ROLE_ANALYST'], 7);
+    mocks.fetchAgentDetail.mockResolvedValue(makeAgent());
+    renderPage();
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'db-prod-02' })).toBeDefined());
+
+    await userEvent.click(screen.getByRole('button', { name: /Kill process/i }));
+    // Critical-risk approval gate with irreversible blast radius.
+    expect(screen.getByText(/Terminate a running process/i)).toBeDefined();
+    expect(screen.getByText(/1 process on 1 endpoint · cannot be undone/i)).toBeDefined();
+
+    await userEvent.click(screen.getByRole('button', { name: /^Reject$/i }));
+    expect(screen.queryByRole('dialog', { name: /Approve response action/i })).toBeNull();
+    expect(screen.queryByText(/Terminate a process on this endpoint\?/i)).toBeNull();
+  });
+
+  it('wires the AI verdict spine on the Security tab from a real assessment (SPEC-08)', async () => {
+    setUser(['ROLE_ANALYST'], 7);
+    mocks.fetchAgentDetail.mockResolvedValue(makeAgent());
+    renderPage();
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'db-prod-02' })).toBeDefined());
+
+    await userEvent.click(screen.getByRole('tab', { name: /Security/i }));
+
+    // AI provenance is explicit, and the verdict card renders the model's answer.
+    await waitFor(() =>
+      expect(screen.getByText(/Elevated process-creation activity from an unsigned binary/i)).toBeDefined(),
+    );
+    expect(screen.getByText('AI Verdict')).toBeDefined();
+    expect(screen.getByRole('group', { name: /assessment content/i })).toBeDefined();
+    // HONESTY: an assistive answer is 'Inconclusive' (no formal verdict), never
+    // the alarming 'Suspicious', and NO fabricated confidence percentage is shown.
+    expect(screen.getByText('Inconclusive')).toBeDefined();
+    expect(screen.queryByText('Suspicious')).toBeNull();
+    expect(screen.queryByText(/confidence/i)).toBeNull();
+    // Honest disclaimer: assistive, not a formal detection verdict.
+    expect(screen.getByText(/not a formal detection verdict/i)).toBeDefined();
+    // The host-scoped alerts honesty note is still present.
+    expect(screen.getByText(/Host-scoped alerts unavailable/i)).toBeDefined();
+  });
+
+  it('shows an honest "AI not active" state when the assessment is unavailable (never a fabricated verdict)', async () => {
+    setUser(['ROLE_ANALYST'], 7);
+    mocks.fetchAgentDetail.mockResolvedValue(makeAgent());
+    mocks.fetchEndpointAiAssessment.mockResolvedValue({
+      outcome: 'unavailable',
+      answer: 'AI service not configured. Set SOC_AI_BASE_URL to enable Hive Intelligence.',
+      confidence: 0,
+      sources: [],
+      durationMs: 0,
+      steps: [],
+    });
+    renderPage();
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'db-prod-02' })).toBeDefined());
+
+    await userEvent.click(screen.getByRole('tab', { name: /Security/i }));
+
+    await waitFor(() => expect(screen.getByText(/AI assessment is not active for this endpoint/i)).toBeDefined());
+    // No verdict card, no fabricated verdict text.
+    expect(screen.queryByText('AI Verdict')).toBeNull();
   });
 });
