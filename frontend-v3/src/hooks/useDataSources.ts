@@ -27,7 +27,8 @@ import type { HaDataSourceRecord } from '@/types/dataSource.types';
 
 // ---------------------------------------------------------------------------
 // Shared query key — referenced by mutation hooks for cache invalidation
-// (e.g. after AddDataSourceWizard POST /api/ha-inputs/sources, Req 11.5)
+// (e.g. after a future governed POST /api/ha-inputs/sources once ING-002 lands;
+// the orphaned AddDataSourceWizard was retired in W8 / SPEC-09)
 // ---------------------------------------------------------------------------
 
 export const DATA_SOURCES_QUERY_KEY = ['dataSources'] as const;

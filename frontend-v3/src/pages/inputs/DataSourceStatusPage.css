@@ -1,0 +1,31 @@
+/* Data Sources page — view tab strip (W8). Hive Carbon tokens only. */
+
+.ds-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ds-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--ha-border-default);
+}
+.ds-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--ha-foreground-tertiary);
+  font-size: 12px;
+  cursor: pointer;
+}
+.ds-tabs button:hover { color: var(--ha-foreground-secondary); }
+.ds-tabs button[aria-selected='true'] {
+  color: var(--ha-foreground-primary);
+  border-bottom-color: var(--ha-action-primary);
+}
+.ds-tabs button > svg { flex: 0 0 auto; }
