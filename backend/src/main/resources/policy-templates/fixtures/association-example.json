@@ -1,0 +1,24 @@
+{
+  "scope": "ORG",
+  "orgId": "acme",
+  "rows": [
+    {
+      "rank": 1,
+      "name": "Critical_Servers",
+      "match": { "group": "Critical_Servers" },
+      "templates": ["sec-log-full", "compliance-scan"]
+    },
+    {
+      "rank": 2,
+      "name": "UEBA_Workstations",
+      "match": { "group": "UEBA_Workstations" },
+      "templates": ["ueba-on", "sec-log-basic"]
+    },
+    {
+      "rank": 3,
+      "name": "Other",
+      "match": { "any": true },
+      "templates": ["sec-log-basic"]
+    }
+  ]
+}

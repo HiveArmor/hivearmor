@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "name": "sec-log-full",
+  "description": "Advanced Windows template: Sysmon + full event logs, registry change monitoring, cert + script collection, IIS file logs. Bound to Critical_Servers.",
+  "scope": "ORG",
+  "orgId": "acme",
+  "version": 3,
+  "platform": "windows",
+  "monitor": {
+    "items": [
+      { "metric": "cpu", "intervalSec": 60 },
+      { "metric": "memory", "intervalSec": 60 },
+      { "metric": "disk", "intervalSec": 300 }
+    ]
+  },
+  "event": {
+    "fileLog": { "iis": true, "dhcp": false },
+    "eventLogs": [
+      { "type": "Security", "include": "ALL", "exclude": "NONE" },
+      { "type": "Other", "channel": "Microsoft-Windows-Sysmon/Operational", "include": "ALL", "exclude": "NONE" },
+      { "type": "Application", "include": ["1000", "1001", "1002"], "exclude": "NONE" }
+    ]
+  },
+  "userLog": [
+    {
+      "fullFileName": "C:\\inetpub\\logs\\LogFiles\\W3SVC1\\u_ex.log",
+      "logPrefix": "IIS",
+      "multiline": { "start": "^#", "end": "$", "maxLines": 50 }
+    }
+  ],
+  "fim": {
+    "mode": "replace",
+    "rules": [
+      { "path": "C:\\Windows\\System32", "recursive": false, "exclude": ["*.tmp"] }
+    ],
+    "registry": {
+      "mode": "merge",
+      "keys": ["SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"]
+    }
+  },
+  "change": {
+    "registry": [
+      { "rootKey": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion", "excludeSubkeys": ["Uninstall"] }
+    ],
+    "installedSoftware": true
+  },
+  "script": {
+    "wmi": ["Win32_Service", "Win32_Process"],
+    "powershell": ["Get-LocalUser | Select-Object Name,Enabled"]
+  },
+  "certificate": [
+    { "store": "MY", "add": true, "delete": true, "expiring": true, "expired": true }
+  ],
+  "osquery": {
+    "queries": ["startup_items", "logged_in_users"]
+  }
+}

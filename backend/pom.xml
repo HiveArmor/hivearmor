@@ -513,6 +513,18 @@
         </dependency>
 
         <!--
+            JSON Schema validator (Draft 2020-12) — TEST SCOPE ONLY (PT-0).
+            Validates policy-template + host-template-association fixtures against the
+            checked-in schemas. No runtime footprint; not used by production code paths.
+        -->
+        <dependency>
+            <groupId>com.networknt</groupId>
+            <artifactId>json-schema-validator</artifactId>
+            <version>1.5.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
             jqwik — property-based testing engine (Sprint 25 S25-T01).
             Declared at compile scope (not test) because Sprint 25 property tests
             live in src/main/java per the project's "no src/test" convention.
