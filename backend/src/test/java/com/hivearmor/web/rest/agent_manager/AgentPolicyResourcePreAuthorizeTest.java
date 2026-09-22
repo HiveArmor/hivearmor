@@ -87,4 +87,46 @@ class AgentPolicyResourcePreAuthorizeTest {
         assertThat(pre.value()).contains("ROLE_AGENT_DEVICE");
         assertThat(pre.value()).doesNotContain("ROLE_ANALYST");
     }
+
+    // ---- PT-1 template library ----
+
+    @Test
+    void templateReadsAllowAnalystNotAgentDevice() {
+        for (String name : List.of("listTemplates", "getTemplate")) {
+            Method m = methodNamed(name);
+            PreAuthorize pre = m.getAnnotation(PreAuthorize.class);
+            assertThat(pre).as(name).isNotNull();
+            assertThat(pre.value()).as(name).contains("ROLE_ANALYST");
+            assertThat(pre.value()).as(name).contains("ROLE_SOC_MANAGER");
+            assertThat(pre.value()).as(name).contains("ROLE_ADMIN");
+            // The library is an operator surface — a device fetches a specific policy via GET /{id},
+            // it never browses the template library.
+            assertThat(pre.value()).as(name).doesNotContain("ROLE_AGENT_DEVICE");
+        }
+    }
+
+    @Test
+    void templateMutationsAllowAdminAndSocManagerOnly() {
+        for (String name : List.of("createTemplate", "cloneTemplate")) {
+            Method m = methodNamed(name);
+            PreAuthorize pre = m.getAnnotation(PreAuthorize.class);
+            assertThat(pre).as(name).isNotNull();
+            assertThat(pre.value()).as(name).contains("ROLE_ADMIN");
+            assertThat(pre.value()).as(name).contains("ROLE_SOC_MANAGER");
+            assertThat(pre.value()).as(name).doesNotContain("ROLE_ANALYST");
+            assertThat(pre.value()).as(name).doesNotContain("ROLE_AGENT_DEVICE");
+        }
+    }
+
+    @Test
+    void agentDevicePathsUnchangedByPt1() {
+        // Regression guard: the agent-device fetch/report/sync surface must remain exactly as PT-0
+        // left it — PT-1 adds only operator template endpoints.
+        assertThat(methodNamed("getPolicy").getAnnotation(PreAuthorize.class).value())
+            .contains("ROLE_AGENT_DEVICE");
+        assertThat(methodNamed("reportState").getAnnotation(PreAuthorize.class).value())
+            .contains("ROLE_AGENT_DEVICE");
+        assertThat(methodNamed("syncOnConnect").getAnnotation(PreAuthorize.class).value())
+            .contains("ROLE_AGENT_DEVICE");
+    }
 }

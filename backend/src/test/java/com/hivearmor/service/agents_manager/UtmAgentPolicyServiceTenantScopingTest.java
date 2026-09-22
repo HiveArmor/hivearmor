@@ -54,7 +54,8 @@ class UtmAgentPolicyServiceTenantScopingTest {
     @BeforeEach
     void setUp() {
         service = new UtmAgentPolicyService(policyRepo, assignmentRepo, pushLogRepo,
-            stateRepo, memberRepo, commandService, schemaService);
+            stateRepo, memberRepo, commandService, schemaService,
+            new com.fasterxml.jackson.databind.ObjectMapper());
     }
 
     @AfterEach

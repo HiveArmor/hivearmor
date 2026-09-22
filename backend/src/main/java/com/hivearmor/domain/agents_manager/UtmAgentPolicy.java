@@ -29,6 +29,20 @@ public class UtmAgentPolicy implements Serializable {
     @Column(name = "policy_config", columnDefinition = "TEXT", nullable = false)
     private String policyConfig;
 
+    // PT-1 (template library) — visibility scope: ORG (tenant-scoped) or GLOBAL
+    // (cross-tenant readable, global-admin writable). Defaulted 'ORG' by 20260922001.
+    @Column(name = "scope", length = 10)
+    private String scope;
+
+    // PT-1 — optional org qualifier carried on ORG-scope templates (library metadata).
+    @Column(name = "org_id", length = 64)
+    private String orgId;
+
+    // PT-1 — distinguishes reusable library templates from ad-hoc policies.
+    // Defaulted false by 20260922001 so existing ad-hoc policies stay non-template.
+    @Column(name = "is_template", nullable = false)
+    private Boolean isTemplate = false;
+
     @Column(name = "version_num", nullable = false)
     private Integer versionNum = 1;
 
@@ -56,6 +70,12 @@ public class UtmAgentPolicy implements Serializable {
     public void setPlatform(String platform) { this.platform = platform; }
     public String getPolicyConfig() { return policyConfig; }
     public void setPolicyConfig(String policyConfig) { this.policyConfig = policyConfig; }
+    public String getScope() { return scope; }
+    public void setScope(String scope) { this.scope = scope; }
+    public String getOrgId() { return orgId; }
+    public void setOrgId(String orgId) { this.orgId = orgId; }
+    public Boolean getIsTemplate() { return isTemplate; }
+    public void setIsTemplate(Boolean isTemplate) { this.isTemplate = isTemplate; }
     public Integer getVersionNum() { return versionNum; }
     public void setVersionNum(Integer versionNum) { this.versionNum = versionNum; }
     public Boolean getIsActive() { return isActive; }

@@ -68,6 +68,82 @@ public class AgentPolicySchemaService {
     }
 
     /**
+     * PT-1 — library-metadata keys carried by a PT-0 template <em>envelope</em> that are NOT part
+     * of the agent wire {@code policyConfig}. They live in dedicated columns
+     * ({@code policy_name}, {@code description}, {@code scope}, {@code org_id}, {@code version_num},
+     * {@code platform}), so they are stripped before the remaining schema-v1 sections are stored.
+     */
+    private static final java.util.Set<String> TEMPLATE_ENVELOPE_KEYS =
+        java.util.Set.of("name", "description", "scope", "orgId", "org_id", "version", "platform");
+
+    /**
+     * PT-1 — accept a full PT-0 template <em>envelope</em> (metadata keys + schema-v1 sections in
+     * one JSON object) and return the normalized wire {@code policyConfig}: the schema-v1 sections
+     * only, with the library-metadata keys removed. A document that is already a bare wire policy
+     * (no envelope keys) is normalized unchanged. This is what lets every PT-0 example template
+     * round-trip: the caller maps the metadata keys into columns, this maps the rest into
+     * {@code policyConfig}.
+     *
+     * @throws IllegalArgumentException when JSON is malformed or the sections violate schema rules
+     */
+    public String policyConfigFromTemplateEnvelope(String rawEnvelope) {
+        if (!StringUtils.hasText(rawEnvelope) || "{}".equals(rawEnvelope.trim())) {
+            return normalizePolicyConfig("{}");
+        }
+        try {
+            JsonNode tree = objectMapper.readTree(rawEnvelope);
+            if (tree == null || tree.isNull() || !tree.isObject()) {
+                return normalizePolicyConfig("{}");
+            }
+            com.fasterxml.jackson.databind.node.ObjectNode obj =
+                ((com.fasterxml.jackson.databind.node.ObjectNode) tree).deepCopy();
+            obj.remove(TEMPLATE_ENVELOPE_KEYS);
+            return normalizePolicyConfig(objectMapper.writeValueAsString(obj));
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("policyConfig must be valid JSON: " + e.getOriginalMessage());
+        }
+    }
+
+    /**
+     * PT-1 — pull the library-metadata keys out of a PT-0 template envelope so the caller can map
+     * them into columns. Missing keys are left absent (null); {@code org_id} is accepted under
+     * either the camelCase ({@code orgId}) or snake_case ({@code org_id}) spelling. Never throws —
+     * a non-envelope document simply yields empty metadata. Values are read as text/int only.
+     */
+    public TemplateEnvelopeMeta extractTemplateMeta(String rawEnvelope) {
+        TemplateEnvelopeMeta meta = new TemplateEnvelopeMeta();
+        if (!StringUtils.hasText(rawEnvelope)) {
+            return meta;
+        }
+        try {
+            JsonNode t = objectMapper.readTree(rawEnvelope);
+            if (t == null || !t.isObject()) {
+                return meta;
+            }
+            if (t.hasNonNull("name")) meta.name = t.get("name").asText();
+            if (t.hasNonNull("description")) meta.description = t.get("description").asText();
+            if (t.hasNonNull("scope")) meta.scope = t.get("scope").asText();
+            if (t.hasNonNull("orgId")) meta.orgId = t.get("orgId").asText();
+            else if (t.hasNonNull("org_id")) meta.orgId = t.get("org_id").asText();
+            if (t.hasNonNull("platform")) meta.platform = t.get("platform").asText();
+            if (t.hasNonNull("version") && t.get("version").isInt()) meta.version = t.get("version").asInt();
+        } catch (JsonProcessingException e) {
+            log.warn("AgentPolicySchemaService: could not parse template envelope metadata ({})", e.getMessage());
+        }
+        return meta;
+    }
+
+    /** PT-1 — library-metadata carried by a PT-0 template envelope (see {@link #extractTemplateMeta}). */
+    public static final class TemplateEnvelopeMeta {
+        public String name;
+        public String description;
+        public String scope;
+        public String orgId;
+        public String platform;
+        public Integer version;
+    }
+
+    /**
      * Projects legacy Ha EDR columns into schema v1 (FIM paths + optional registry + collector hints).
      * Does not push APPLY_POLICY — caller must write into Utm agent-policies.
      */

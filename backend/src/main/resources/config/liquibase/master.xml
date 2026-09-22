@@ -839,6 +839,9 @@
     <!-- SPEC-06 W5 — policy-plane convergence (Plane A canonical; Plane B deprecated). No DDL. -->
     <include file="/config/liquibase/changelog/20260914003_policy_plane_convergence.xml" relativeToChangelogFile="false"/>
 
+    <!-- SPEC-PT-1 — template-library metadata on canonical Plane A + GLOBAL-template read RLS policy. -->
+    <include file="/config/liquibase/changelog/20260922001_agent_policy_template.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
 
