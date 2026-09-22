@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hivearmor.com/schema/host-template-association/v1.json",
+  "title": "HostTemplateAssociation",
+  "description": "PT-0 design-first contract. An ordered, rank-based, first-match binding table mapping hosts to PolicyTemplates (mirrors FortiSIEM 'Host To Template Associations'). effective(host) = rows.sortByRank().first(r => matches(r.match, host)).templates. A row may list several templates -> union+de-dupe merge. The table MUST end with an 'any' catch-all row (see resolver spec). DESIGN-ONLY in PT-0 -- the resolver + Apply/re-push ship in PT-3.",
+  "type": "object",
+  "required": ["rows"],
+  "additionalProperties": true,
+  "properties": {
+    "scope": {
+      "description": "Tenant visibility of this association table. GLOBAL = cross-org default binding; ORG = one org's binding.",
+      "type": "string",
+      "enum": ["GLOBAL", "ORG"]
+    },
+    "orgId": {
+      "description": "Required when scope=ORG; forbidden/ignored when scope=GLOBAL. Tenant scoping enforced by RLS in PT-3.",
+      "type": ["string", "null"]
+    },
+    "rows": {
+      "description": "Association rows. Evaluated by ascending rank (rank 1 first). MUST contain at least one row and MUST end with an 'any' catch-all (invariant enforced in the resolver, PT-3).",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/associationRow" }
+    }
+  },
+  "$defs": {
+    "associationRow": {
+      "type": "object",
+      "required": ["rank", "name", "match", "templates"],
+      "additionalProperties": true,
+      "properties": {
+        "rank": {
+          "description": "Ordering key. Lower rank is evaluated first. Ranks should be unique; ties break by array order (documented in resolver spec).",
+          "type": "integer",
+          "minimum": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "match": { "$ref": "#/$defs/matchSpec" },
+        "templates": {
+          "description": "Template names bound by this row. Multiple templates union+de-dupe per the resolver merge rules.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "matchSpec": {
+      "description": "Exactly one match predicate. group/host/tag are exact string matches on a host attribute; any:true is the unconditional catch-all.",
+      "type": "object",
+      "oneOf": [
+        {
+          "required": ["group"],
+          "additionalProperties": false,
+          "properties": { "group": { "type": "string", "minLength": 1 } }
+        },
+        {
+          "required": ["host"],
+          "additionalProperties": false,
+          "properties": { "host": { "type": "string", "minLength": 1 } }
+        },
+        {
+          "required": ["tag"],
+          "additionalProperties": false,
+          "properties": { "tag": { "type": "string", "minLength": 1 } }
+        },
+        {
+          "required": ["any"],
+          "additionalProperties": false,
+          "properties": { "any": { "const": true } }
+        }
+      ]
+    }
+  }
+}

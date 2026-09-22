@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "fim": {
+    "mode": "replace",
+    "rules": [
+      { "path": "/etc", "recursive": true, "exclude": ["*.tmp", "*.swp"] }
+    ],
+    "registry": {
+      "mode": "merge",
+      "keys": ["SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"]
+    }
+  },
+  "collectors": { "fim": true, "dns": false, "netconn": true },
+  "response": { "allow_shell": false },
+  "telemetry": { "sca_interval_hours": 12, "sbom_interval_hours": 24 }
+}

@@ -1,0 +1,337 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hivearmor.com/schema/policy-template/v1.json",
+  "title": "PolicyTemplate",
+  "description": "PT-0 design-first contract. A reusable, named, tabbed agent monitor template. The template body is stored as Plane A hive_agent_policy.policyConfig (schema_version 1). All capability sections are additive and NON_NULL: an older agent that lacks a capability ignores the section it cannot enforce. This schema is DESIGN-ONLY in PT-0 -- no CRUD, UI, resolver, or agent behavior ships in this wave.",
+  "type": "object",
+  "required": ["schema_version", "name"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "description": "Wire major version. Frozen at 1 for agent compatibility; new sections are additive under feature levels.",
+      "type": "integer",
+      "const": 1
+    },
+    "name": {
+      "description": "Template name. Single-purpose, human-readable, unique within scope+org.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1024
+    },
+    "scope": {
+      "description": "Tenant visibility. GLOBAL templates are cross-org readable; ORG templates belong to one org.",
+      "type": "string",
+      "enum": ["GLOBAL", "ORG"]
+    },
+    "orgId": {
+      "description": "Required when scope=ORG; forbidden/ignored when scope=GLOBAL. Tenant scoping enforced by RLS in PT-1+.",
+      "type": ["string", "null"]
+    },
+    "version": {
+      "description": "Monotonic template revision, bumped on each saved edit (PT-1 owns lifecycle).",
+      "type": "integer",
+      "minimum": 1
+    },
+    "platform": {
+      "description": "Target OS family. A section unsupported on the platform is ignored by the agent.",
+      "type": "string",
+      "enum": ["windows", "linux", "macos", "any"]
+    },
+    "sections": {
+      "description": "OPTIONAL logical grouping wrapper used by the template LIBRARY/editor view (PT-1/PT-2). The agent wire document keeps capability sections FLAT at the top level (see AgentPolicySchemaV1). Both shapes are permitted so a template-library row and an agent policyConfig validate against the same contract.",
+      "type": "object",
+      "additionalProperties": true,
+      "$ref": "#/$defs/capabilitySections"
+    },
+    "monitor": { "$ref": "#/$defs/monitorSection" },
+    "event": { "$ref": "#/$defs/eventSection" },
+    "ueba": { "$ref": "#/$defs/uebaSection" },
+    "userLog": { "$ref": "#/$defs/userLogSection" },
+    "fim": { "$ref": "#/$defs/fimSection" },
+    "change": { "$ref": "#/$defs/changeSection" },
+    "script": { "$ref": "#/$defs/scriptSection" },
+    "certificate": { "$ref": "#/$defs/certificateSection" },
+    "osquery": { "$ref": "#/$defs/osquerySection" },
+    "scans": { "$ref": "#/$defs/scansSection" },
+    "collectors": {
+      "description": "Existing schema-v1 collector enablement map (fim/dns/netconn/usb/netflow/syslog/file). Missing keys treated as enabled by the agent.",
+      "type": "object",
+      "additionalProperties": { "type": "boolean" }
+    },
+    "response": {
+      "description": "Existing schema-v1 response toggles.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "allow_shell": { "type": "boolean" }
+      }
+    },
+    "telemetry": {
+      "description": "Existing schema-v1.1 SCA/SBOM cadence (hours). Preserved unchanged by PT-0.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "sca_interval_hours": { "type": "integer", "minimum": 1, "maximum": 168 },
+        "sbom_interval_hours": { "type": "integer", "minimum": 1, "maximum": 168 }
+      }
+    }
+  },
+  "$defs": {
+    "capabilitySections": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "monitor": { "$ref": "#/$defs/monitorSection" },
+        "event": { "$ref": "#/$defs/eventSection" },
+        "ueba": { "$ref": "#/$defs/uebaSection" },
+        "userLog": { "$ref": "#/$defs/userLogSection" },
+        "fim": { "$ref": "#/$defs/fimSection" },
+        "change": { "$ref": "#/$defs/changeSection" },
+        "script": { "$ref": "#/$defs/scriptSection" },
+        "certificate": { "$ref": "#/$defs/certificateSection" },
+        "osquery": { "$ref": "#/$defs/osquerySection" },
+        "scans": { "$ref": "#/$defs/scansSection" }
+      }
+    },
+    "monitorSection": {
+      "description": "Perf/discovery items. intervalSec is the ONLY cadence knob for polled perf metrics (besides scans/osquery).",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["metric"],
+            "additionalProperties": true,
+            "properties": {
+              "metric": { "type": "string", "minLength": 1 },
+              "intervalSec": { "type": "integer", "minimum": 5, "maximum": 86400 }
+            }
+          }
+        }
+      }
+    },
+    "eventSection": {
+      "description": "OS event/file-log collection. Event and file logs are event-driven (no cadence). Sysmon/DNS-analytical modeled as type=Other + channel.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "fileLog": {
+          "type": "object",
+          "additionalProperties": { "type": "boolean" },
+          "properties": {
+            "iis": { "type": "boolean" },
+            "dhcp": { "type": "boolean" }
+          }
+        },
+        "eventLogs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type"],
+            "additionalProperties": true,
+            "properties": {
+              "type": { "type": "string", "minLength": 1 },
+              "channel": { "type": "string" },
+              "include": {
+                "description": "ALL, NONE, or a comma/array list of event ids.",
+                "type": ["string", "array"],
+                "items": { "type": ["string", "integer"] }
+              },
+              "exclude": {
+                "type": ["string", "array"],
+                "items": { "type": ["string", "integer"] }
+              }
+            }
+          }
+        }
+      }
+    },
+    "uebaSection": {
+      "description": "Kernel file/process behavioral telemetry on/off.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "userLogSection": {
+      "description": "Tail arbitrary files. Array of file-tail specs.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["fullFileName"],
+        "additionalProperties": true,
+        "properties": {
+          "fullFileName": { "type": "string", "minLength": 1 },
+          "logPrefix": { "type": "string" },
+          "multiline": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "start": { "type": "string" },
+              "end": { "type": "string" },
+              "maxLines": { "type": "integer", "minimum": 1, "maximum": 10000 }
+            }
+          }
+        }
+      }
+    },
+    "fimSection": {
+      "description": "EXISTING schema-v1 FIM shape -- reused unchanged. Two accepted forms: (a) an ARRAY of path rules (template-library/editor shorthand), or (b) the wire OBJECT {mode, rules[], registry} that AgentPolicySchemaV1.FimSection serializes. PT-0 must round-trip form (b) byte-identically.",
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path"],
+            "additionalProperties": true,
+            "properties": {
+              "path": { "type": "string", "minLength": 1 },
+              "includeSubfolders": { "type": "boolean" },
+              "recursive": { "type": "boolean" },
+              "exclude": { "type": "array", "items": { "type": "string" } },
+              "onModify": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "pushFile": { "type": "boolean" },
+                  "compareBaseline": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "mode": { "type": "string", "enum": ["merge", "replace"] },
+            "rules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["path"],
+                "additionalProperties": true,
+                "properties": {
+                  "path": { "type": "string", "minLength": 1 },
+                  "recursive": { "type": "boolean" },
+                  "exclude": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            },
+            "registry": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "mode": { "type": "string", "enum": ["merge", "replace"] },
+                "keys": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "changeSection": {
+      "description": "Registry root-key monitoring + installed-software inventory toggle.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "registry": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rootKey"],
+            "additionalProperties": true,
+            "properties": {
+              "rootKey": { "type": "string", "minLength": 1 },
+              "excludeSubkeys": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "installedSoftware": { "type": "boolean" }
+      }
+    },
+    "scriptSection": {
+      "description": "WMI classes and PowerShell scripts to run for collection.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "wmi": { "type": "array", "items": { "type": "string" } },
+        "powershell": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "certificateSection": {
+      "description": "Per-store certificate lifecycle monitoring.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["store"],
+        "additionalProperties": true,
+        "properties": {
+          "store": { "type": "string", "minLength": 1 },
+          "add": { "type": "boolean" },
+          "delete": { "type": "boolean" },
+          "expiring": { "type": "boolean" },
+          "expired": { "type": "boolean" }
+        }
+      }
+    },
+    "osquerySection": {
+      "description": "Attach named osqueries. Schedule is set on the osquery, not the template.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "queries": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "scansSection": {
+      "description": "NET-NEW block, beyond FortiSIEM parity. Native agent-run CIS + Vuln scanning cadence. Decision record: Option A (native, reuse-first) -- see SPEC-PT-0 s4. source:agent is built in PT-5; source:ingest is RESERVED for a later external-scanner lane and not built now.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "cis": { "$ref": "#/$defs/scanSpec" },
+        "vuln": { "$ref": "#/$defs/scanSpec" }
+      }
+    },
+    "scanSpec": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "profile": {
+          "description": "For cis: a benchmark/SCAP profile id (e.g. CIS_Windows_2022_L1). For vuln: optional profile hint. Ignored when source=ingest.",
+          "type": "string"
+        },
+        "mode": {
+          "description": "scheduled = run on cronOrInterval; realtime = run on trigger/continuous where the engine supports it.",
+          "type": "string",
+          "enum": ["scheduled", "realtime"]
+        },
+        "cronOrInterval": {
+          "description": "5-field cron (scheduled) or an ISO-8601/interval string. Required when mode=scheduled; ignored when mode=realtime.",
+          "type": "string"
+        },
+        "source": {
+          "description": "agent = native OpenSCAP/OVAL (cis) or HaVulnService-backed agent SBOM->CVE (vuln), built in PT-5. ingest = external scanner results (Qualys/Nessus/Rapid7), RESERVED, not built now.",
+          "type": "string",
+          "enum": ["agent", "ingest"]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "enabled": { "const": true }, "mode": { "const": "scheduled" } },
+            "required": ["enabled", "mode"]
+          },
+          "then": { "required": ["cronOrInterval"] }
+        }
+      ]
+    }
+  }
+}

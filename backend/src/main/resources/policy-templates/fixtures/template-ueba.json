@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "name": "ueba-on",
+  "description": "UEBA workstation template: kernel file/process behavioral telemetry enabled, light perf polling. Bound to UEBA_Workstations.",
+  "scope": "ORG",
+  "orgId": "acme",
+  "version": 2,
+  "platform": "windows",
+  "monitor": {
+    "items": [
+      { "metric": "cpu", "intervalSec": 600 }
+    ]
+  },
+  "ueba": { "enabled": true },
+  "event": {
+    "eventLogs": [
+      { "type": "Security", "include": ["4624", "4625", "4688"], "exclude": "NONE" }
+    ]
+  }
+}

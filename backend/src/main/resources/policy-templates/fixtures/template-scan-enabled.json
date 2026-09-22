@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "name": "compliance-scan",
+  "description": "Scan-enabled template: native CIS benchmark (OpenSCAP/OVAL) on a nightly schedule + weekly agent-side vuln scan (HaVulnService SBOM->CVE+EPSS). source=agent (Option A native). Demonstrates the net-new scans block. scans behavior ships in PT-5; PT-0 only freezes the contract.",
+  "scope": "GLOBAL",
+  "version": 1,
+  "platform": "linux",
+  "monitor": {
+    "items": [
+      { "metric": "cpu", "intervalSec": 300 }
+    ]
+  },
+  "osquery": {
+    "queries": ["cis_checks"]
+  },
+  "scans": {
+    "cis": {
+      "enabled": true,
+      "profile": "xccdf_org.cisecurity.benchmarks_profile_lvl1_server",
+      "mode": "scheduled",
+      "cronOrInterval": "0 3 * * *",
+      "source": "agent"
+    },
+    "vuln": {
+      "enabled": true,
+      "mode": "scheduled",
+      "cronOrInterval": "0 4 * * 0",
+      "source": "agent"
+    }
+  }
+}

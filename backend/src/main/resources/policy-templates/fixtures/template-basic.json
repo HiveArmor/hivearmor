@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "name": "sec-log-basic",
+  "description": "Basic Windows security event-log + baseline FIM. Safe default for the 'Other' catch-all.",
+  "scope": "GLOBAL",
+  "version": 1,
+  "platform": "windows",
+  "monitor": {
+    "items": [
+      { "metric": "cpu", "intervalSec": 300 },
+      { "metric": "memory", "intervalSec": 300 }
+    ]
+  },
+  "event": {
+    "fileLog": { "iis": false, "dhcp": false },
+    "eventLogs": [
+      { "type": "Security", "include": "ALL", "exclude": "NONE" },
+      { "type": "System", "include": "ALL", "exclude": "NONE" }
+    ]
+  },
+  "fim": {
+    "mode": "merge",
+    "rules": [
+      { "path": "C:\\Windows\\System32\\drivers\\etc", "recursive": true }
+    ]
+  }
+}
