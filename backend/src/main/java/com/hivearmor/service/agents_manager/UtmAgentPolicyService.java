@@ -11,6 +11,9 @@ import com.hivearmor.service.grpc.CommandResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +22,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -36,6 +40,7 @@ public class UtmAgentPolicyService {
     private final UtmAgentGroupMemberRepository memberRepo;
     private final IncidentResponseCommandService commandService;
     private final AgentPolicySchemaService schemaService;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     public UtmAgentPolicyService(UtmAgentPolicyRepository policyRepo,
                                   UtmPolicyGroupAssignmentRepository assignmentRepo,
@@ -43,7 +48,8 @@ public class UtmAgentPolicyService {
                                   UtmAgentPolicyStateRepository stateRepo,
                                   UtmAgentGroupMemberRepository memberRepo,
                                   IncidentResponseCommandService commandService,
-                                  AgentPolicySchemaService schemaService) {
+                                  AgentPolicySchemaService schemaService,
+                                  com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
         this.policyRepo = policyRepo;
         this.assignmentRepo = assignmentRepo;
         this.pushLogRepo = pushLogRepo;
@@ -51,6 +57,7 @@ public class UtmAgentPolicyService {
         this.memberRepo = memberRepo;
         this.commandService = commandService;
         this.schemaService = schemaService;
+        this.objectMapper = objectMapper;
     }
 
     public List<AgentPolicyDTO> listAll() {
@@ -70,12 +77,22 @@ public class UtmAgentPolicyService {
         UtmAgentPolicy p = new UtmAgentPolicy();
         p.setPolicyName(dto.getPolicyName());
         p.setDescription(dto.getDescription());
-        p.setPlatform(dto.getPlatform());
+        p.setPlatform(normalizePlatform(dto.getPlatform()));
         p.setPolicyConfig(schemaService.normalizePolicyConfig(
             dto.getPolicyConfig() != null ? dto.getPolicyConfig() : "{}"));
         p.setVersionNum(1);
         p.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
         p.setCreatedBy(createdBy);
+        // PT-1 (template library) — scope + template flag. Ad-hoc policies default to
+        // ORG / is_template=false, preserving pre-PT-1 behavior exactly.
+        String scope = normalizeScope(dto.getScope());
+        boolean isTemplate = Boolean.TRUE.equals(dto.getIsTemplate());
+        // GLOBAL is writable only by a global-admin (ROLE_ADMIN) — enforced server-side because
+        // @PreAuthorize cannot see the payload's scope. Fail-closed AccessDeniedException.
+        requireGlobalAdminForGlobalWrite(scope);
+        p.setScope(scope);
+        p.setOrgId(SCOPE_ORG.equals(scope) ? dto.getOrgId() : null);
+        p.setIsTemplate(isTemplate);
         // SPEC-04 (W1b) — stamp the authoritative tenant server-side (never payload).
         p.setTenantId(TenantScope.requireTenant());
         return toDto(policyRepo.save(p));
@@ -83,16 +100,163 @@ public class UtmAgentPolicyService {
 
     public AgentPolicyDTO update(Long id, AgentPolicyDTO dto) {
         UtmAgentPolicy p = requireInTenant(id);
+        // PT-1 — a mutation of an existing GLOBAL row, OR a re-scope into GLOBAL, both require
+        // global-admin. Check the row's current scope AND the incoming target scope, fail-closed.
+        requireGlobalAdminForGlobalWrite(p.getScope());
         p.setPolicyName(dto.getPolicyName());
         p.setDescription(dto.getDescription());
-        p.setPlatform(dto.getPlatform());
+        if (dto.getPlatform() != null) p.setPlatform(normalizePlatform(dto.getPlatform()));
         if (dto.getPolicyConfig() != null) {
             p.setPolicyConfig(schemaService.normalizePolicyConfig(dto.getPolicyConfig()));
         }
+        if (dto.getScope() != null) {
+            String newScope = normalizeScope(dto.getScope());
+            requireGlobalAdminForGlobalWrite(newScope);
+            p.setScope(newScope);
+            if (SCOPE_GLOBAL.equals(newScope)) p.setOrgId(null);
+        }
+        if (dto.getOrgId() != null && SCOPE_ORG.equals(p.getScope())) p.setOrgId(dto.getOrgId());
+        if (dto.getIsTemplate() != null) p.setIsTemplate(dto.getIsTemplate());
         if (dto.getIsActive() != null) p.setIsActive(dto.getIsActive());
+        // Server owns the authoritative version counter — bump on edit; a client-supplied
+        // version (PT-0 envelope alias) is NEVER trusted for the stored value.
         p.setVersionNum(p.getVersionNum() + 1);
         p.setUpdatedAt(Instant.now());
         return toDto(policyRepo.save(p));
+    }
+
+    // ---- PT-1 (template library) ------------------------------------------------------
+
+    public static final String SCOPE_GLOBAL = "GLOBAL";
+    public static final String SCOPE_ORG = "ORG";
+    private static final String ROLE_GLOBAL_ADMIN = "ROLE_ADMIN";
+
+    /** Normalize/validate scope; null/blank defaults to ORG. Rejects unknown values clearly. */
+    private String normalizeScope(String raw) {
+        if (raw == null || raw.isBlank()) return SCOPE_ORG;
+        String s = raw.trim().toUpperCase(Locale.ROOT);
+        if (!SCOPE_GLOBAL.equals(s) && !SCOPE_ORG.equals(s)) {
+            throw new IllegalArgumentException("scope must be \"" + SCOPE_GLOBAL + "\" or \"" + SCOPE_ORG + "\"");
+        }
+        return s;
+    }
+
+    /** Normalize/validate platform; null passes through. Rejects unknown values clearly. */
+    private String normalizePlatform(String raw) {
+        if (raw == null || raw.isBlank()) return raw;
+        String s = raw.trim().toLowerCase(Locale.ROOT);
+        if (!"windows".equals(s) && !"linux".equals(s)) {
+            throw new IllegalArgumentException("platform must be \"windows\" or \"linux\"");
+        }
+        return s;
+    }
+
+    /**
+     * Fail-closed authorization: writing a GLOBAL-scope row requires the global-admin role
+     * ({@code ROLE_ADMIN}). ORG-scope writes are unaffected (already ROLE_SOC_MANAGER|ROLE_ADMIN
+     * at the endpoint). Uses the request SecurityContext; a missing/blank authentication denies.
+     */
+    private void requireGlobalAdminForGlobalWrite(String scope) {
+        if (!SCOPE_GLOBAL.equals(scope)) return;
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isGlobalAdmin = auth != null && auth.getAuthorities() != null
+            && auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(ROLE_GLOBAL_ADMIN::equals);
+        if (!isGlobalAdmin) {
+            throw new AccessDeniedException(
+                "GLOBAL-scope templates are writable only by a global admin (" + ROLE_GLOBAL_ADMIN + ")");
+        }
+    }
+
+    /** Template library list: own-tenant templates (any scope) UNION all GLOBAL templates. */
+    public List<AgentPolicyDTO> listTemplates() {
+        long tenant = TenantScope.requireTenant();
+        return policyRepo.findVisibleTemplates(tenant).stream().map(this::toDto)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Template library search: same visibility as {@link #listTemplates()}, filtered
+     * in-memory by optional name (case-insensitive contains), scope, and platform.
+     */
+    public List<AgentPolicyDTO> searchTemplates(String name, String scope, String platform) {
+        long tenant = TenantScope.requireTenant();
+        String nameLc = name == null ? null : name.trim().toLowerCase(Locale.ROOT);
+        String scopeUc = (scope == null || scope.isBlank()) ? null : normalizeScope(scope);
+        String platLc = (platform == null || platform.isBlank()) ? null : normalizePlatform(platform);
+        return policyRepo.findVisibleTemplates(tenant).stream()
+            .filter(p -> nameLc == null
+                || (p.getPolicyName() != null && p.getPolicyName().toLowerCase(Locale.ROOT).contains(nameLc)))
+            .filter(p -> scopeUc == null || scopeUc.equals(p.getScope()))
+            .filter(p -> platLc == null || platLc.equals(p.getPlatform()))
+            .map(this::toDto)
+            .collect(Collectors.toList());
+    }
+
+    /** Get one template by id within library visibility (own-tenant OR GLOBAL). */
+    public Optional<AgentPolicyDTO> getTemplateById(Long id) {
+        long tenant = TenantScope.requireTenant();
+        return policyRepo.findVisibleTemplateById(id, tenant).map(this::toDto);
+    }
+
+    /**
+     * Clone a visible template into a NEW template row owned by the caller's tenant. The clone is
+     * always {@code is_template=true}, starts at version 1, and defaults to ORG scope (cloning a
+     * GLOBAL template into your own tenant does not silently create a new GLOBAL). {@code newName}
+     * must be provided and unique within the caller's visible library.
+     */
+    public AgentPolicyDTO cloneTemplate(Long id, String newName, String createdBy) {
+        if (newName == null || newName.isBlank()) {
+            throw new IllegalArgumentException("clone requires a non-blank name");
+        }
+        long tenant = TenantScope.requireTenant();
+        UtmAgentPolicy src = policyRepo.findVisibleTemplateById(id, tenant)
+            .orElseThrow(() -> new EntityNotFoundException("Template not found: " + id));
+        if (policyRepo.existsVisibleByPolicyName(newName.trim(), tenant)) {
+            throw new IllegalArgumentException("a policy named \"" + newName.trim() + "\" already exists");
+        }
+        UtmAgentPolicy clone = new UtmAgentPolicy();
+        clone.setPolicyName(newName.trim());
+        clone.setDescription(src.getDescription());
+        clone.setPlatform(src.getPlatform());
+        // Re-normalize the source config so the clone stores a validated document.
+        clone.setPolicyConfig(schemaService.normalizePolicyConfig(src.getPolicyConfig()));
+        clone.setVersionNum(1);
+        clone.setIsActive(src.getIsActive());
+        clone.setIsTemplate(true);
+        clone.setScope(SCOPE_ORG);           // clone lands in the caller's own org, never GLOBAL
+        clone.setOrgId(src.getOrgId());
+        clone.setCreatedBy(createdBy);
+        clone.setTenantId(tenant);           // owned by the caller's tenant, never the source's
+        return toDto(policyRepo.save(clone));
+    }
+
+    /**
+     * PT-1 — create a template from a raw PT-0 template ENVELOPE JSON (metadata keys + schema-v1
+     * sections in one object). Splits metadata into columns and the sections into policyConfig,
+     * then delegates to {@link #create}. This is the path that round-trips every PT-0 example.
+     */
+    public AgentPolicyDTO createFromTemplateEnvelope(String rawEnvelope, String createdBy) {
+        AgentPolicySchemaService.TemplateEnvelopeMeta meta = schemaService.extractTemplateMeta(rawEnvelope);
+        AgentPolicyDTO dto = new AgentPolicyDTO();
+        dto.setPolicyName(meta.name);
+        dto.setDescription(meta.description);
+        dto.setScope(meta.scope);
+        dto.setOrgId(meta.orgId);
+        dto.setPlatform(meta.platform);
+        dto.setIsTemplate(true);
+        dto.setPolicyConfig(schemaService.policyConfigFromTemplateEnvelope(rawEnvelope));
+        return create(dto, createdBy);
+    }
+
+    /** PT-1 — serialize a parsed request-body map back to JSON for the envelope splitter. */
+    public String serializeEnvelope(Map<String, Object> envelope) {
+        try {
+            return envelope == null ? "{}" : objectMapper.writeValueAsString(envelope);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalArgumentException("template body must be valid JSON: " + e.getOriginalMessage());
+        }
     }
 
     /**
@@ -109,7 +273,9 @@ public class UtmAgentPolicyService {
 
     public void delete(Long id) {
         // SPEC-04 (W1b) — re-check tenant before delete.
-        requireInTenant(id);
+        UtmAgentPolicy p = requireInTenant(id);
+        // PT-1 — deleting a GLOBAL-scope row requires global-admin (same gate as write).
+        requireGlobalAdminForGlobalWrite(p.getScope());
         policyRepo.deleteById(id);
     }
 

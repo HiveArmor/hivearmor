@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      SPEC-PT-1 — Template-library backend on the canonical Plane A (hive_agent_policy).
+
+      Turns policies into a reusable, named, versioned TEMPLATE LIBRARY on the existing
+      canonical table. NO new plane, NO new table: template metadata lives as additive
+      columns beside the existing policy_name / description / platform / version_num columns.
+
+      ADDITIVE + BACKWARD-COMPATIBLE:
+        - scope        : 'ORG' (tenant-scoped, RLS-isolated) | 'GLOBAL' (cross-tenant readable).
+                         DEFAULT 'ORG' so every existing ad-hoc policy row keeps tenant isolation.
+        - org_id       : optional ORG qualifier (library metadata), nullable.
+        - is_template  : reusable library template vs ad-hoc policy. DEFAULT false so existing
+                         rows are NOT surfaced in the template library until explicitly promoted.
+      name/description/platform/version already exist (policy_name/description/platform/version_num).
+
+      TENANT ISOLATION — hive_agent_policy ALREADY has FORCE ROW LEVEL SECURITY + a
+      tenant_isolation policy (20260914001_rls_w1b_safe_three.xml). ORG templates inherit that
+      fail-closed isolation with NO new work — the service just stamps tenant_id on write.
+
+      GLOBAL cross-tenant READ: the existing tenant_isolation policy alone would HIDE a GLOBAL
+      template from every tenant except the one whose tenant_id it carries. Postgres combines
+      multiple PERMISSIVE policies with OR, so we ADD a second permissive SELECT-only policy
+      (global_template_read) that also admits rows where scope='GLOBAL' AND is_template=true.
+      This is additive — the shipped, immutable tenant_isolation changeset is NOT edited.
+      There is deliberately NO permissive write policy for GLOBAL: INSERT/UPDATE/DELETE still go
+      only through tenant_isolation's WITH CHECK (tenant_id = current GUC), so a GLOBAL template
+      is writable only within its owning tenant. Application-layer authz additionally restricts
+      GLOBAL writes to a global-admin role (ROLE_ADMIN) — see UtmAgentPolicyService.
+
+      Ships INERT for RLS today exactly like 20260914001 (the app connects as superuser, which
+      ignores RLS; the second policy takes effect only once the app runs as the unprivileged
+      hivearmor_app role). The COLUMNS and the FIM-policy migration below apply immediately.
+    -->
+
+    <!-- ===== 1. template metadata columns (nullable/defaulted, backward-compatible) ===== -->
+    <changeSet id="20260922001-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="hive_agent_policy" columnName="is_template"/></not>
+        </preConditions>
+        <addColumn tableName="hive_agent_policy">
+            <column name="scope" type="varchar(10)" defaultValue="ORG">
+                <constraints nullable="true"/>
+            </column>
+            <column name="org_id" type="varchar(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="is_template" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- ===== 2. backfill scope/is_template defaults on any pre-existing rows ===== -->
+    <changeSet id="20260922001-2" author="hivearmor">
+        <sql>
+            UPDATE hive_agent_policy SET scope = 'ORG' WHERE scope IS NULL;
+            UPDATE hive_agent_policy SET is_template = false WHERE is_template IS NULL;
+        </sql>
+    </changeSet>
+
+    <!-- ===== 3. helpful index for library list/search (by template flag + scope) ===== -->
+    <changeSet id="20260922001-3" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not><indexExists indexName="idx_hive_agent_policy_template"/></not>
+        </preConditions>
+        <createIndex indexName="idx_hive_agent_policy_template" tableName="hive_agent_policy">
+            <column name="is_template"/>
+            <column name="scope"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ===== 4. second PERMISSIVE, SELECT-only RLS policy for GLOBAL template reads ===== -->
+    <!--
+      Gated identically to 20260914001: only lands once RLS is actually enabled on the table
+      (i.e. the tenant_isolation policy exists). Combined with tenant_isolation via OR, this lets
+      any tenant SEE global templates while ORG templates stay isolated. Writes are unaffected.
+    -->
+    <changeSet id="20260922001-4" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <columnExists tableName="hive_agent_policy" columnName="is_template"/>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM pg_policies
+                    WHERE tablename = 'hive_agent_policy' AND policyname = 'tenant_isolation'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            CREATE POLICY global_template_read ON hive_agent_policy
+                FOR SELECT
+                USING (scope = 'GLOBAL' AND is_template = true);
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS global_template_read ON hive_agent_policy;
+        </rollback>
+    </changeSet>
+
+    <!-- ===== 5. migrate the existing FIM policy into an is_template row so the library isn't empty ===== -->
+    <!--
+      Promote the canonical FIM policy (created by BE-POL-01 / seeded FIM baseline) to a template
+      so the library has a starting entry. Match by the well-known baseline name if present;
+      otherwise no-op (MARK_RAN via the sqlCheck). Idempotent: only flips rows still
+      is_template=false. Preserves each row's tenant_id and scope (no cross-tenant move).
+    -->
+    <changeSet id="20260922001-5" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM hive_agent_policy
+                WHERE is_template = true
+                  AND (LOWER(policy_name) LIKE '%fim%' OR LOWER(policy_name) LIKE '%file integrity%')
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            UPDATE hive_agent_policy
+               SET is_template = true,
+                   scope = COALESCE(scope, 'ORG')
+             WHERE is_template = false
+               AND (LOWER(policy_name) LIKE '%fim%' OR LOWER(policy_name) LIKE '%file integrity%');
+        </sql>
+        <rollback>
+            <!-- Non-destructive rollback: leave promoted rows as templates (no data loss); the flag
+                 is advisory and safe to retain. Intentionally empty. -->
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
