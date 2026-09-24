@@ -235,6 +235,11 @@ const AgentFimPolicyPage = React.lazy(() =>
     default: m.AgentFimPolicyPage,
   }))
 );
+const PolicyTemplatesPage = React.lazy(() =>
+  import('@/pages/endpoints/policy-templates/PolicyTemplatesPage').then(m => ({
+    default: m.PolicyTemplatesPage,
+  }))
+);
 const VulnerabilitiesPage = React.lazy(() =>
   import('@/pages/posture/vulnerabilities/VulnerabilitiesPage').then(m => ({ default: m.VulnerabilitiesPage }))
 );
@@ -477,6 +482,14 @@ export const router = createBrowserRouter([
         element: (
           <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <AgentFimPolicyPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'endpoints/policy-templates',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <PolicyTemplatesPage />
           </AuthGuard>
         ),
       },

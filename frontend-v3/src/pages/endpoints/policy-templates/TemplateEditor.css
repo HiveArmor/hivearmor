@@ -1,0 +1,270 @@
+/**
+ * PT-2 template editor — Hive Carbon tokens only, no raw hex. WCAG 2.2 AA.
+ */
+
+.tmpl-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 70vh;
+}
+
+.tmpl-editor__tabs {
+  min-height: 0;
+}
+
+.tmpl-editor__tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* "authored, not yet enforced" dot on the tab */
+.tmpl-editor__tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--ha-radius-pill);
+  background: var(--ha-border-warning);
+  display: inline-block;
+}
+
+.tmpl-editor__section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 2px 8px;
+}
+
+.tmpl-editor__section-title {
+  margin: 0;
+  font-size: var(--ha-text-md);
+  font-weight: 600;
+  color: var(--ha-text-primary);
+}
+
+.tmpl-editor__hint {
+  margin: 0;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+}
+
+.tmpl-editor__hint code,
+.tmpl-editor__section code {
+  font-family: var(--ha-font-mono);
+  font-size: 0.9em;
+  padding: 0 3px;
+  background: var(--ha-surface-hover);
+  border-radius: var(--ha-radius-control);
+}
+
+/* Honesty note (SPEC-PT-2 §2) */
+.tmpl-editor__honesty {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--ha-fill-warning-subtle, var(--ha-surface-hover));
+  border: 1px solid var(--ha-border-warning);
+  border-radius: var(--ha-radius-control);
+}
+
+.tmpl-editor__honesty-badge {
+  align-self: flex-start;
+  font-size: var(--ha-text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ha-text-primary);
+}
+
+.tmpl-editor__honesty-text {
+  margin: 0;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+}
+
+.tmpl-editor__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tmpl-editor__field > label {
+  font-size: var(--ha-text-sm);
+  font-weight: 500;
+  color: var(--ha-text-secondary);
+}
+
+.tmpl-editor__req {
+  color: var(--ha-critical);
+}
+
+.tmpl-editor__row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tmpl-editor__row > .tmpl-editor__field {
+  flex: 1;
+  min-width: 160px;
+}
+
+.tmpl-editor__input {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-primary);
+  background: var(--ha-surface-input);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-control);
+}
+
+.tmpl-editor__input:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 1px;
+}
+
+.tmpl-editor__input:disabled {
+  background: var(--ha-surface-disabled);
+  color: var(--ha-text-tertiary);
+}
+
+.tmpl-editor__input--mono {
+  font-family: var(--ha-font-mono);
+}
+
+.tmpl-editor__input--num {
+  max-width: 140px;
+}
+
+.tmpl-editor__list,
+.tmpl-editor__stack-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tmpl-editor__stack-row {
+  padding: 8px;
+  border: 1px solid var(--ha-border-subtle);
+  border-radius: var(--ha-radius-control);
+  background: var(--ha-surface-base);
+}
+
+.tmpl-editor__list-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tmpl-editor__list-row > .tmpl-editor__input {
+  flex: 1;
+}
+
+.tmpl-editor__grid-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.tmpl-editor__grid-row--sub {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.tmpl-editor__inline-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
+.tmpl-editor__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-primary);
+  cursor: pointer;
+}
+
+.tmpl-editor__check input:disabled {
+  cursor: not-allowed;
+}
+
+.tmpl-editor__text-btn {
+  padding: 3px 8px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-action-primary);
+  background: transparent;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-control);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tmpl-editor__text-btn:hover {
+  background: var(--ha-surface-hover);
+}
+
+.tmpl-editor__text-btn:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 1px;
+}
+
+.tmpl-editor__text-btn--danger {
+  color: var(--ha-critical);
+  border-color: var(--ha-border-critical);
+}
+
+.tmpl-editor__fieldset {
+  border: 1px solid var(--ha-border-subtle);
+  border-radius: var(--ha-radius-control);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tmpl-editor__fieldset > legend {
+  font-size: var(--ha-text-sm);
+  font-weight: 600;
+  color: var(--ha-text-primary);
+  padding: 0 4px;
+}
+
+.tmpl-editor__scan-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 4px;
+}
+
+.tmpl-editor__errors {
+  padding: 8px 12px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-primary);
+  background: var(--ha-fill-critical-subtle);
+  border: 1px solid var(--ha-border-critical);
+  border-radius: var(--ha-radius-control);
+}
+
+.tmpl-editor__errors ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.tmpl-editor__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ha-border-subtle);
+}
+
+@media (max-width: 720px) {
+  .tmpl-editor__grid-row,
+  .tmpl-editor__grid-row--sub {
+    grid-template-columns: 1fr;
+  }
+}
