@@ -89,6 +89,7 @@ const ENDPOINT_ITEMS: NavItemSpec[] = [
   // legacy Plane B "Agent Policies" → /edr/policies entry is retired; that route
   // now redirects here).
   { label: 'FIM Policies', icon: 'FileCog', route: '/endpoints/fim-policies', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
+  { label: 'Policy Templates', icon: 'LayoutTemplate', route: '/endpoints/policy-templates', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   { label: 'Response Actions', icon: 'ShieldOff', route: '/response/quarantine', roles: ['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN'] },
   // Telemetry & Collectors — surfaced here (root cause of most "no data"); also kept in ADMINISTRATION.
   { label: 'Data Sources', icon: 'Database', route: '/inputs/sources', roles: ['ROLE_ADMIN', 'ROLE_ANALYST'] },

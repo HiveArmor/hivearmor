@@ -1,0 +1,178 @@
+/**
+ * Policy Templates page — PT-2. Hive Carbon tokens only, no raw hex. WCAG 2.2 AA.
+ * Density matches the Agent Policies / FIM inventory pattern.
+ */
+
+.policy-templates-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--ha-masthead-height));
+  overflow: hidden;
+  background: var(--ha-background);
+}
+
+.policy-templates-page__banner {
+  flex-shrink: 0;
+  margin: 8px 16px 0;
+}
+
+.policy-templates-page__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-primary);
+}
+
+.policy-templates-page__title-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.policy-templates-page__title {
+  margin: 0;
+  font-size: var(--ha-text-xl);
+  font-weight: 600;
+  color: var(--ha-text-primary);
+}
+
+.policy-templates-page__count {
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.policy-templates-page__job {
+  margin: 2px 0 0;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-secondary);
+  max-width: 56rem;
+}
+
+.policy-templates-page__filters {
+  flex-shrink: 0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--ha-border);
+  background: var(--ha-surface-base);
+}
+
+.policy-templates-page__filter-input {
+  padding: 6px 10px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-primary);
+  background: var(--ha-surface-input);
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-control);
+  min-width: 180px;
+}
+
+.policy-templates-page__filter-input:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 1px;
+}
+
+.policy-templates-page__inventory {
+  flex: 1;
+  overflow: auto;
+  padding: 12px 20px;
+}
+
+.policy-templates-page__error {
+  margin: 10px 20px;
+  padding: 10px 12px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-text-primary);
+  background: var(--ha-fill-critical-subtle);
+  border: 1px solid var(--ha-border-critical);
+  border-radius: var(--ha-radius-control);
+}
+
+.policy-templates-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ha-text-sm);
+}
+
+.policy-templates-page__table th {
+  text-align: left;
+  padding: 8px 10px;
+  font-weight: 600;
+  color: var(--ha-text-secondary);
+  border-bottom: 1px solid var(--ha-border);
+  position: sticky;
+  top: 0;
+  background: var(--ha-surface-primary);
+}
+
+.policy-templates-page__table td {
+  padding: 8px 10px;
+  color: var(--ha-text-primary);
+  border-bottom: 1px solid var(--ha-border-subtle);
+  vertical-align: middle;
+}
+
+.policy-templates-page__name {
+  font-weight: 500;
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.policy-templates-page__mono {
+  font-family: var(--ha-font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ha-text-secondary);
+}
+
+.policy-templates-page__scope {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: var(--ha-text-xs);
+  font-weight: 600;
+  border-radius: var(--ha-radius-pill);
+  border: 1px solid var(--ha-border);
+}
+
+.policy-templates-page__scope--global {
+  color: var(--ha-text-primary);
+  background: var(--ha-fill-info-subtle);
+  border-color: var(--ha-border-info);
+}
+
+.policy-templates-page__scope--org {
+  color: var(--ha-text-secondary);
+  background: var(--ha-surface-hover);
+}
+
+.policy-templates-page__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.policy-templates-page__action {
+  padding: 3px 8px;
+  font-size: var(--ha-text-sm);
+  color: var(--ha-action-primary);
+  background: transparent;
+  border: 1px solid var(--ha-border);
+  border-radius: var(--ha-radius-control);
+  cursor: pointer;
+}
+
+.policy-templates-page__action:hover {
+  background: var(--ha-surface-hover);
+}
+
+.policy-templates-page__action:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 1px;
+}
