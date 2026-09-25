@@ -274,4 +274,25 @@ class UtmAgentPolicyServiceTemplateTest {
             .isInstanceOf(IllegalArgumentException.class);
         verify(policyRepo, never()).findVisibleTemplateById(any(), any());
     }
+
+    // ---- PT-3 M1 regression: the reserved effective-policy name prefix is not user-writable ----
+    @Test
+    void createRejectsReservedEffectiveNamePrefix() {
+        authAs("soc", "ROLE_SOC_MANAGER");
+        AgentPolicyDTO dto = new AgentPolicyDTO();
+        dto.setPolicyName("__effective__:agent:5");
+        assertThatThrownBy(() -> service.create(dto, "soc"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("reserved prefix");
+        verify(policyRepo, never()).save(any());
+    }
+
+    @Test
+    void cloneRejectsReservedEffectiveNamePrefix() {
+        authAs("soc", "ROLE_SOC_MANAGER");
+        assertThatThrownBy(() -> service.cloneTemplate(2L, "__effective__:agent:9", "soc"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("reserved prefix");
+        verify(policyRepo, never()).findVisibleTemplateById(any(), any());
+    }
 }

@@ -240,6 +240,11 @@ const PolicyTemplatesPage = React.lazy(() =>
     default: m.PolicyTemplatesPage,
   }))
 );
+const HostAssociationsPage = React.lazy(() =>
+  import('@/pages/endpoints/host-associations/HostAssociationsPage').then(m => ({
+    default: m.HostAssociationsPage,
+  }))
+);
 const VulnerabilitiesPage = React.lazy(() =>
   import('@/pages/posture/vulnerabilities/VulnerabilitiesPage').then(m => ({ default: m.VulnerabilitiesPage }))
 );
@@ -490,6 +495,14 @@ export const router = createBrowserRouter([
         element: (
           <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <PolicyTemplatesPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'endpoints/host-associations',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <HostAssociationsPage />
           </AuthGuard>
         ),
       },

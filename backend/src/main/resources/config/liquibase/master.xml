@@ -842,6 +842,9 @@
     <!-- SPEC-PT-1 — template-library metadata on canonical Plane A + GLOBAL-template read RLS policy. -->
     <include file="/config/liquibase/changelog/20260922001_agent_policy_template.xml" relativeToChangelogFile="false"/>
 
+    <!-- SPEC-PT-3 — net-new host→template association table + its own tenant_id + tenant_isolation RLS. -->
+    <include file="/config/liquibase/changelog/20260923001_host_template_association.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
 
