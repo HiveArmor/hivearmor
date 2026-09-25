@@ -46,4 +46,9 @@ public interface UtmAgentPolicyRepository extends JpaRepository<UtmAgentPolicy, 
     boolean existsVisibleByPolicyName(
         @org.springframework.data.repository.query.Param("name") String name,
         @org.springframework.data.repository.query.Param("tenantId") Long tenantId);
+
+    // ---- PT-3 (host→template associations) ----------------------------------------
+    // A host's resolved effective policy is materialized as a NON-template, ORG-scope row named by
+    // a stable per-agent convention so re-Apply upserts (not duplicates) it. Tenant-scoped lookup.
+    Optional<UtmAgentPolicy> findByPolicyNameAndTenantId(String policyName, Long tenantId);
 }
