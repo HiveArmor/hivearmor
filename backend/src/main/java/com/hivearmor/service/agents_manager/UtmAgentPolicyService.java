@@ -74,6 +74,7 @@ public class UtmAgentPolicyService {
     }
 
     public AgentPolicyDTO create(AgentPolicyDTO dto, String createdBy) {
+        rejectReservedName(dto.getPolicyName());
         UtmAgentPolicy p = new UtmAgentPolicy();
         p.setPolicyName(dto.getPolicyName());
         p.setDescription(dto.getDescription());
@@ -130,6 +131,22 @@ public class UtmAgentPolicyService {
     public static final String SCOPE_GLOBAL = "GLOBAL";
     public static final String SCOPE_ORG = "ORG";
     private static final String ROLE_GLOBAL_ADMIN = "ROLE_ADMIN";
+
+    /**
+     * PT-3 — name prefix reserved for the system-managed per-agent effective-policy rows that Apply
+     * materializes ({@link #applyEffectivePolicyToAgent}). User-facing create/clone MUST reject it so
+     * a low-priv author cannot craft a template whose name collides with (and hijacks) the row a later
+     * Apply upserts and pushes. Only {@link #applyEffectivePolicyToAgent} may write a name with it.
+     */
+    private static final String RESERVED_NAME_PREFIX = "__effective__:";
+
+    /** Reject a user-supplied policy name that intrudes on the reserved system namespace. */
+    private void rejectReservedName(String name) {
+        if (name != null && name.trim().startsWith(RESERVED_NAME_PREFIX)) {
+            throw new IllegalArgumentException(
+                "policy name must not start with the reserved prefix \"" + RESERVED_NAME_PREFIX + "\"");
+        }
+    }
 
     /** Normalize/validate scope; null/blank defaults to ORG. Rejects unknown values clearly. */
     private String normalizeScope(String raw) {
@@ -210,6 +227,7 @@ public class UtmAgentPolicyService {
         if (newName == null || newName.isBlank()) {
             throw new IllegalArgumentException("clone requires a non-blank name");
         }
+        rejectReservedName(newName);
         long tenant = TenantScope.requireTenant();
         UtmAgentPolicy src = policyRepo.findVisibleTemplateById(id, tenant)
             .orElseThrow(() -> new EntityNotFoundException("Template not found: " + id));
@@ -399,6 +417,60 @@ public class UtmAgentPolicyService {
             connectorId, assigned.size(),
             assigned.stream().filter(AgentPolicySyncOnConnectDTO.AssignedPolicy::isPushed).count());
         return result;
+    }
+
+    // ---- PT-3 (host→template associations) ------------------------------------------------
+
+    /**
+     * PT-3 — materialize a host's resolved effective policy as a per-agent NON-template row and
+     * push {@code APPLY_POLICY} to that agent through the SAME delivery path as group/agent push
+     * ({@link #deliverApplyPolicy}), so push-log + drift are recorded identically.
+     *
+     * <p>The effective row is UPSERTED under a stable per-agent name so re-Apply updates one row
+     * (bumping its version) rather than accumulating duplicates. The row is tenant-stamped, ORG
+     * scope, {@code is_template=false}, {@code is_active=true}. The version bumps only when the
+     * resolved config actually changed, so an unchanged re-Apply is a no-op push with the same
+     * version (the agent recognizes it as current).
+     *
+     * @param tenant   authoritative tenant (already resolved by the caller under TenantScope)
+     * @param agentId  target connector id
+     * @param rowName  winning association-row name (for the effective policy's description)
+     * @param resolvedConfig merged schema-v1 policyConfig JSON
+     * @return the effective policy row id APPLY_POLICY was issued for
+     */
+    public Long applyEffectivePolicyToAgent(long tenant, Integer agentId, String rowName, String resolvedConfig) {
+        if (agentId == null || agentId <= 0) {
+            throw new IllegalArgumentException("agentId must be a positive connector id");
+        }
+        String normalized = schemaService.normalizePolicyConfig(
+            resolvedConfig == null || resolvedConfig.isBlank() ? "{}" : resolvedConfig);
+        String effName = RESERVED_NAME_PREFIX + "agent:" + agentId;   // stable per-agent upsert key
+
+        UtmAgentPolicy row = policyRepo.findByPolicyNameAndTenantId(effName, tenant).orElse(null);
+        if (row == null) {
+            row = new UtmAgentPolicy();
+            row.setPolicyName(effName);
+            row.setVersionNum(1);
+            row.setCreatedBy("system:pt3-apply");
+            row.setTenantId(tenant);
+            row.setScope(SCOPE_ORG);
+            row.setIsTemplate(false);
+            row.setIsActive(true);
+            row.setPolicyConfig(normalized);
+        } else {
+            // bump version only on real change so an unchanged re-Apply does not churn the agent
+            if (!normalized.equals(row.getPolicyConfig())) {
+                row.setPolicyConfig(normalized);
+                row.setVersionNum(row.getVersionNum() + 1);
+            }
+            row.setUpdatedAt(Instant.now());
+        }
+        row.setDescription("PT-3 effective policy (winning row: "
+            + (rowName == null ? "?" : rowName) + ")");
+        UtmAgentPolicy saved = policyRepo.save(row);
+
+        deliverApplyPolicy(saved, String.valueOf(agentId));
+        return saved.getId();
     }
 
     private void deliverApplyPolicy(UtmAgentPolicy policy, String agentIdStr) {

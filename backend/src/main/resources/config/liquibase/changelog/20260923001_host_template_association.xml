@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+      SPEC-PT-3 — Host→Template association table (ranked, first-match binding).
+
+      NET-NEW TABLE. Unlike hive_agent_policy / hive_agent_group / hive_asset_group (already
+      FORCE-RLS'd by 20260914001_rls_w1b_safe_three.xml), this table is NOT covered by any prior
+      RLS changeset, so PT-3 adds its OWN authoritative tenant_id column AND its own
+      tenant_isolation RLS policy here, following the exact same pattern as 20260914001.
+
+      Every write goes through HostTemplateAssociationService under a real @Transactional tx with a
+      resolved TenantContext, stamping tenant_id from TenantScope.requireTenant() (create) or
+      preserving it via findVisibleById (update). No out-of-band writer exists (the repository is
+      injected only into that one service; `new` only in create()). So the app never issues a write
+      whose tenant_id != the app.current_tenant GUC the TenantGucAspect sets → WITH CHECK always holds.
+
+      GLOBAL cross-tenant READ: a GLOBAL association table is a cross-tenant DEFAULT binding. As with
+      PT-1's global_template_read, Postgres combines PERMISSIVE policies with OR, so we add a second
+      SELECT-only policy (global_assoc_read) admitting rows where scope='GLOBAL'. Writes are unaffected:
+      INSERT/UPDATE/DELETE still go only through tenant_isolation's WITH CHECK (tenant_id = GUC), and
+      the service additionally gates GLOBAL writes to a global-admin (ROLE_ADMIN).
+
+      Ships INERT for RLS today exactly like 20260914001 (the app connects as superuser, which ignores
+      RLS; the policies take effect only once the app runs as the unprivileged hivearmor_app role). The
+      TABLE itself is created immediately.
+
+      Per-changeset rollback (drop table / drop policy + disable RLS; app-layer scoping still protects
+      the table after an RLS rollback via findVisible*).
+    -->
+
+    <!-- ===== 1. the net-new association table ===== -->
+    <changeSet id="20260923001-1" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="hive_host_template_association"/></not>
+        </preConditions>
+        <createTable tableName="hive_host_template_association">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <!-- authoritative tenant, stamped server-side; nullable during rollout, single-tenant = 0 -->
+            <column name="tenant_id" type="bigint">
+                <constraints nullable="true"/>
+            </column>
+            <column name="name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scope" type="varchar(10)" defaultValue="ORG">
+                <constraints nullable="false"/>
+            </column>
+            <column name="org_id" type="varchar(64)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="rows_json" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version_num" type="int" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+            <column name="last_applied_at" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="hive_host_template_association"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ===== 2. index for tenant/scope visibility lookups ===== -->
+    <changeSet id="20260923001-2" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <not><indexExists indexName="idx_hive_host_template_assoc_tenant_scope"/></not>
+        </preConditions>
+        <createIndex indexName="idx_hive_host_template_assoc_tenant_scope"
+                     tableName="hive_host_template_association">
+            <column name="tenant_id"/>
+            <column name="scope"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- ===== 3. tenant_isolation RLS policy (same shape as 20260914001) ===== -->
+    <!--
+      Gated on ZERO tenant_id IS NULL rows, onFail="CONTINUE" (NOT MARK_RAN) so it re-evaluates and
+      lands automatically once the data is clean. A fresh table starts empty (COUNT=0) so this lands
+      immediately on install; on an upgrade it waits for the tenant backfill exactly like 20260914001.
+    -->
+    <changeSet id="20260923001-3" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <tableExists tableName="hive_host_template_association"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM hive_host_template_association WHERE tenant_id IS NULL
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            ALTER TABLE hive_host_template_association ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE hive_host_template_association FORCE ROW LEVEL SECURITY;
+            CREATE POLICY tenant_isolation ON hive_host_template_association
+                USING (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1))
+                WITH CHECK (tenant_id = COALESCE(NULLIF(current_setting('app.current_tenant', true), '')::bigint, -1));
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS tenant_isolation ON hive_host_template_association;
+            ALTER TABLE hive_host_template_association NO FORCE ROW LEVEL SECURITY;
+            ALTER TABLE hive_host_template_association DISABLE ROW LEVEL SECURITY;
+        </rollback>
+    </changeSet>
+
+    <!-- ===== 4. second PERMISSIVE, SELECT-only policy for GLOBAL default-table reads ===== -->
+    <!--
+      Combined with tenant_isolation via OR, this lets any tenant SEE a GLOBAL default binding table
+      while ORG tables stay isolated. Writes are unaffected (no permissive write policy for GLOBAL).
+      Gated to land only once tenant_isolation exists (RLS actually enabled).
+    -->
+    <changeSet id="20260923001-4" author="hivearmor">
+        <preConditions onFail="CONTINUE">
+            <and>
+                <tableExists tableName="hive_host_template_association"/>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM pg_policies
+                    WHERE tablename = 'hive_host_template_association' AND policyname = 'tenant_isolation'
+                </sqlCheck>
+            </and>
+        </preConditions>
+        <sql>
+            CREATE POLICY global_assoc_read ON hive_host_template_association
+                FOR SELECT
+                USING (scope = 'GLOBAL');
+        </sql>
+        <rollback>
+            DROP POLICY IF EXISTS global_assoc_read ON hive_host_template_association;
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
