@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        BE-POL-GLOBAL-ADMIN: seed the platform (MSSP operator) role into jhi_authority.
+
+        ROLE_PLATFORM_ADMIN — writes GLOBAL, cross-tenant-readable agent-policy templates.
+        Distinct from the per-tenant ROLE_ADMIN so that in an MSSP deployment one tenant's
+        admin cannot author policy every other tenant inherits. Granted to MSSP operator
+        account(s) only. In single-tenant / on-prem deployments ROLE_ADMIN is treated as
+        equivalent via config (hivearmor.multitenancy.single-tenant-admin-global-write).
+
+        Mirrors AuthoritiesConstants.PLATFORM_ADMIN and the SOC-role seed
+        (20260720001_add_soc_roles.xml). Guarded with preConditions so re-running is safe.
+    -->
+    <changeSet id="20260924001-platform-admin-role" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM jhi_authority WHERE name = 'ROLE_PLATFORM_ADMIN'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="jhi_authority">
+            <column name="name" value="ROLE_PLATFORM_ADMIN"/>
+            <column name="name_show" value="Platform Admin"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

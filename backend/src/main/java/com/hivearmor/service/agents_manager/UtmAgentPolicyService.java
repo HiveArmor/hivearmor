@@ -1,7 +1,10 @@
 package com.hivearmor.service.agents_manager;
 
+import com.hivearmor.config.GlobalTemplateWriteProperties;
 import com.hivearmor.domain.agents_manager.*;
+import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.multitenancy.TenantScope;
+import com.hivearmor.security.AuthoritiesConstants;
 import com.hivearmor.repository.agents_manager.*;
 import com.hivearmor.service.dto.agent_manager.*;
 import com.hivearmor.service.incident_response.grpc_impl.IncidentResponseCommandService;
@@ -41,6 +44,7 @@ public class UtmAgentPolicyService {
     private final IncidentResponseCommandService commandService;
     private final AgentPolicySchemaService schemaService;
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    private final GlobalTemplateWriteProperties globalWriteProps;
 
     public UtmAgentPolicyService(UtmAgentPolicyRepository policyRepo,
                                   UtmPolicyGroupAssignmentRepository assignmentRepo,
@@ -49,7 +53,8 @@ public class UtmAgentPolicyService {
                                   UtmAgentGroupMemberRepository memberRepo,
                                   IncidentResponseCommandService commandService,
                                   AgentPolicySchemaService schemaService,
-                                  com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
+                                  com.fasterxml.jackson.databind.ObjectMapper objectMapper,
+                                  GlobalTemplateWriteProperties globalWriteProps) {
         this.policyRepo = policyRepo;
         this.assignmentRepo = assignmentRepo;
         this.pushLogRepo = pushLogRepo;
@@ -58,6 +63,7 @@ public class UtmAgentPolicyService {
         this.commandService = commandService;
         this.schemaService = schemaService;
         this.objectMapper = objectMapper;
+        this.globalWriteProps = globalWriteProps;
     }
 
     public List<AgentPolicyDTO> listAll() {
@@ -130,7 +136,11 @@ public class UtmAgentPolicyService {
 
     public static final String SCOPE_GLOBAL = "GLOBAL";
     public static final String SCOPE_ORG = "ORG";
-    private static final String ROLE_GLOBAL_ADMIN = "ROLE_ADMIN";
+    // BE-POL-GLOBAL-ADMIN — GLOBAL (cross-tenant-readable) template writes require the PLATFORM
+    // operator role, NOT a per-tenant ROLE_ADMIN. Single-tenant/on-prem equivalence for ROLE_ADMIN
+    // is handled in requireGlobalAdminForGlobalWrite via a config flag + the non-MSSP signal.
+    private static final String ROLE_GLOBAL_ADMIN = AuthoritiesConstants.PLATFORM_ADMIN;
+    private static final String ROLE_TENANT_ADMIN = AuthoritiesConstants.ADMIN;
 
     /**
      * PT-3 — name prefix reserved for the system-managed per-agent effective-policy rows that Apply
@@ -169,20 +179,35 @@ public class UtmAgentPolicyService {
     }
 
     /**
-     * Fail-closed authorization: writing a GLOBAL-scope row requires the global-admin role
-     * ({@code ROLE_ADMIN}). ORG-scope writes are unaffected (already ROLE_SOC_MANAGER|ROLE_ADMIN
-     * at the endpoint). Uses the request SecurityContext; a missing/blank authentication denies.
+     * Fail-closed authorization: writing a GLOBAL-scope row requires the platform-admin role
+     * ({@code ROLE_PLATFORM_ADMIN}, the MSSP operator). ORG-scope writes are unaffected (already
+     * ROLE_SOC_MANAGER|ROLE_ADMIN at the endpoint). Uses the request SecurityContext; a
+     * missing/blank authentication denies.
+     *
+     * <p>BE-POL-GLOBAL-ADMIN — single-tenant / on-prem equivalence: when the request is NOT
+     * MSSP-scoped ({@code TenantContext.isMssp() == false}) and the config flag
+     * {@code hivearmor.multitenancy.single-tenant-admin-global-write} is enabled (default), the
+     * ordinary {@code ROLE_ADMIN} is also accepted — the single on-prem admin IS the operator, so
+     * no regression. On an MSSP-scoped request only {@code ROLE_PLATFORM_ADMIN} is accepted,
+     * closing the cross-tenant escalation where any tenant's {@code ROLE_ADMIN} could author a
+     * GLOBAL template every other tenant inherits.
      */
     private void requireGlobalAdminForGlobalWrite(String scope) {
         if (!SCOPE_GLOBAL.equals(scope)) return;
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isGlobalAdmin = auth != null && auth.getAuthorities() != null
-            && auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(ROLE_GLOBAL_ADMIN::equals);
-        if (!isGlobalAdmin) {
+        if (auth == null || auth.getAuthorities() == null) {
             throw new AccessDeniedException(
-                "GLOBAL-scope templates are writable only by a global admin (" + ROLE_GLOBAL_ADMIN + ")");
+                "GLOBAL-scope templates are writable only by a platform admin (" + ROLE_GLOBAL_ADMIN + ")");
+        }
+        boolean singleTenantAdminAllowed =
+            globalWriteProps.isSingleTenantAdminGlobalWrite() && !TenantContext.isMssp();
+        boolean authorized = auth.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(a -> ROLE_GLOBAL_ADMIN.equals(a)
+                || (singleTenantAdminAllowed && ROLE_TENANT_ADMIN.equals(a)));
+        if (!authorized) {
+            throw new AccessDeniedException(
+                "GLOBAL-scope templates are writable only by a platform admin (" + ROLE_GLOBAL_ADMIN + ")");
         }
     }
 
