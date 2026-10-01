@@ -118,6 +118,39 @@ class AgentPolicyResourcePreAuthorizeTest {
         }
     }
 
+    // ---- BE-POL-GLOBAL-ADMIN: platform-admin endpoint reachability ----
+
+    @Test
+    void mutationsAdmitPlatformAdminSoGlobalGateIsReachable() {
+        // ROLE_PLATFORM_ADMIN must pass the coarse endpoint MUTATE guard so it can REACH the
+        // service-layer GLOBAL-template write gate (UtmAgentPolicyService.requireGlobalAdminFor-
+        // GlobalWrite). Without this, an MSSP operator holding only ROLE_PLATFORM_ADMIN would be
+        // 403'd at the controller and GLOBAL writes would be impossible for everyone in MSSP mode.
+        for (String name : List.of(
+            "createPolicy", "updatePolicy", "deletePolicy", "createTemplate", "cloneTemplate"
+        )) {
+            Method m = methodNamed(name);
+            PreAuthorize pre = m.getAnnotation(PreAuthorize.class);
+            assertThat(pre).as(name).isNotNull();
+            assertThat(pre.value()).as(name).contains("ROLE_PLATFORM_ADMIN");
+        }
+    }
+
+    @Test
+    void addingPlatformAdminDropsNoExistingMutateRole() {
+        // Regression guard: widening MUTATE to include ROLE_PLATFORM_ADMIN must not remove the
+        // roles that could already mutate (ROLE_ADMIN, ROLE_SOC_MANAGER), nor leak ROLE_ANALYST.
+        for (String name : List.of(
+            "createPolicy", "updatePolicy", "deletePolicy", "createTemplate", "cloneTemplate"
+        )) {
+            Method m = methodNamed(name);
+            String expr = m.getAnnotation(PreAuthorize.class).value();
+            assertThat(expr).as(name).contains("ROLE_ADMIN");
+            assertThat(expr).as(name).contains("ROLE_SOC_MANAGER");
+            assertThat(expr).as(name).doesNotContain("ROLE_ANALYST");
+        }
+    }
+
     @Test
     void agentDevicePathsUnchangedByPt1() {
         // Regression guard: the agent-device fetch/report/sync surface must remain exactly as PT-0
