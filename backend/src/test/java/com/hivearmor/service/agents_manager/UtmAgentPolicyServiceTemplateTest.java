@@ -54,13 +54,17 @@ class UtmAgentPolicyServiceTemplateTest {
     @Mock private IncidentResponseCommandService commandService;
 
     private UtmAgentPolicyService service;
+    private com.hivearmor.config.GlobalTemplateWriteProperties writeProps;
 
     @BeforeEach
     void setUp() {
         // Real schema service + mapper so validation/normalization is exercised end-to-end.
         AgentPolicySchemaService schemaService = new AgentPolicySchemaService(new ObjectMapper());
+        writeProps = new com.hivearmor.config.GlobalTemplateWriteProperties();
         service = new UtmAgentPolicyService(policyRepo, assignmentRepo, pushLogRepo,
-            stateRepo, memberRepo, commandService, schemaService, new ObjectMapper());
+            stateRepo, memberRepo, commandService, schemaService, new ObjectMapper(), writeProps);
+        // MSSP-scoped request (tenant prefix set) — the realistic context for the cross-tenant
+        // escalation this gate closes. TenantContext.isMssp() == true here.
         TenantContext.set(TENANT_A, "acme");
         lenient().when(assignmentRepo.findByPolicyId(any())).thenReturn(List.of());
     }
@@ -146,15 +150,15 @@ class UtmAgentPolicyServiceTemplateTest {
     }
 
     @Test
-    void createGlobalAllowedForAdmin() {
-        authAs("admin", "ROLE_ADMIN");
+    void createGlobalAllowedForPlatformAdmin() {
+        authAs("platform", "ROLE_PLATFORM_ADMIN");
         when(policyRepo.save(any(UtmAgentPolicy.class))).thenAnswer(i -> i.getArgument(0));
         AgentPolicyDTO dto = new AgentPolicyDTO();
         dto.setPolicyName("g");
         dto.setScope("GLOBAL");
         dto.setIsTemplate(true);
         dto.setOrgId("acme"); // ignored for GLOBAL
-        service.create(dto, "admin");
+        service.create(dto, "platform");
 
         ArgumentCaptor<UtmAgentPolicy> captor = ArgumentCaptor.forClass(UtmAgentPolicy.class);
         verify(policyRepo).save(captor.capture());

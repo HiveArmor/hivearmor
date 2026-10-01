@@ -33,8 +33,14 @@ public class AgentPolicyResource {
     private static final String CLASSNAME = "AgentPolicyResource";
     private static final String READ_AUTH =
         "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST')";
+    // ROLE_PLATFORM_ADMIN admitted here so the MSSP operator can REACH the service-layer
+    // GLOBAL-template write gate (requireGlobalAdminForGlobalWrite). This endpoint check is the
+    // coarse "may attempt a mutation" guard; the fine-grained GLOBAL restriction (platform admin
+    // only in MSSP mode) is enforced server-side in UtmAgentPolicyService. Adding the role here
+    // weakens no existing authority: ORG writes stay tenant-scoped, and GLOBAL writes are
+    // TIGHTENED by the service gate regardless of this list.
     private static final String MUTATE_AUTH =
-        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER')";
+        "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_PLATFORM_ADMIN')";
     /** Operator JWT or enrolled agent device ({@code ROLE_AGENT_DEVICE}). */
     private static final String AGENT_FETCH_AUTH =
         "hasAnyAuthority('ROLE_ADMIN','ROLE_SOC_MANAGER','ROLE_ANALYST','ROLE_AGENT_DEVICE')";

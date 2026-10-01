@@ -163,6 +163,12 @@ ha:
 
 hivearmor:
   air-gap: ${HIVEARMOR_AIR_GAP:false}
+  multitenancy:
+    # BE-POL-GLOBAL-ADMIN: GLOBAL (cross-tenant-readable) agent-policy templates are writable
+    # only by ROLE_PLATFORM_ADMIN (the MSSP operator). When true (default) a single-tenant/on-prem
+    # ROLE_ADMIN is accepted for GLOBAL writes, but ONLY on a non-MSSP-scoped request
+    # (TenantContext.isMssp()==false). Set false to require ROLE_PLATFORM_ADMIN unconditionally.
+    single-tenant-admin-global-write: ${HIVEARMOR_SINGLE_TENANT_ADMIN_GLOBAL_WRITE:true}
   encryption-key: ${HIVEARMOR_ENCRYPTION_KEY:}
   agent-packages:
     directories: ${HIVEARMOR_AGENT_PACKAGE_DIRS:/dependencies/agent,/updates/agent}
