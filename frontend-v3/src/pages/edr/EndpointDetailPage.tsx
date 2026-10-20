@@ -48,6 +48,7 @@ import {
   ListTree,
   ScrollText,
   ShieldAlert,
+  ShieldCheck,
   Settings2,
   Sparkles,
   Terminal,
@@ -56,6 +57,7 @@ import {
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { AgentCommandsTab } from './AgentCommandsTab';
+import { EndpointPostureTab } from './EndpointPostureTab';
 import { EndpointTimelineBody } from './EndpointTimelineBody';
 
 import { AccessDeniedState } from '@/components/access-denied-state/AccessDeniedState';
@@ -551,6 +553,15 @@ export function EndpointDetailPage(): JSX.Element {
             description="Alerts cannot yet be filtered to a single endpoint server-side. Search this host by name in the alerts list."
             action={<Link className="endpoint-detail__link-btn" to={`${ROUTES.ALERTS}?q=${encodeURIComponent(agent.hostname)}`}>Open alerts for {agent.hostname}</Link>}
           />
+        </div>
+      ),
+    },
+    {
+      key: 'posture',
+      title: (<><ShieldCheck size={14} aria-hidden="true" /> Posture</>),
+      content: (
+        <div className="endpoint-detail__tabpane">
+          <EndpointPostureTab agentId={agent.agentId} />
         </div>
       ),
     },

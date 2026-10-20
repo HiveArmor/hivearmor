@@ -50,7 +50,20 @@ var (
 
 	changeRegistryApplierMu sync.RWMutex
 	changeRegistryApplier   func(rootKeys []string) error
+
+	// PT-5 scans applier. The native scanner engine (CIS + vuln cadence) registers
+	// this; until it does, the desired scans state is stashed and consumed at start.
+	scansApplierMu sync.RWMutex
+	scansApplier   func(scans *ScansPolicySection) error
 )
+
+// SetScansPolicyApplier registers the callback used when the scans section applies.
+// The native scanner engine registers this to (re)arm CIS + vuln scan cadence.
+func SetScansPolicyApplier(fn func(scans *ScansPolicySection) error) {
+	scansApplierMu.Lock()
+	defer scansApplierMu.Unlock()
+	scansApplier = fn
+}
 
 // SetUserLogPolicyApplier registers the callback used when the userLog section applies.
 // The file-tail collector registers this to honour arbitrary file-tail specs at runtime.
@@ -222,6 +235,44 @@ func applySections(doc *AgentPolicyDocument) {
 	// event / script / certificate: parsed + capability-advertised. No runtime action
 	// is taken that the agent cannot honestly enforce. Script content is deliberately
 	// not executed and not logged (SPEC-PT-4 §4).
+
+	applyScans(doc.Scans)
+}
+
+// applyScans wires the PT-5 scans section to runtime behaviour, honestly.
+//   - scans.vuln (source=agent): drives the cadence of the EXISTING SBOM package
+//     inventory loop that feeds HaVulnService. When enabled with a scheduled interval
+//     we tighten the SBOM post interval to that cadence; realtime keeps the default
+//     interval as a safety floor and relies on change-triggered re-scans in the engine.
+//   - scans.cis (source=agent): handed to the native OpenSCAP/OVAL scanner applier
+//     (or stashed until it registers). The engine decides enforceability at runtime
+//     (SCAP content present + oscap available) — we never pretend here.
+//
+// An ingest-sourced or disabled scan is a no-op for the agent (reserved lane).
+func applyScans(scans *ScansPolicySection) {
+	if scans == nil {
+		return
+	}
+
+	// Vuln cadence reuses the SBOM inventory loop. Only tighten the interval; never
+	// loosen the SCA cadence, which serves a different (config-observation) purpose.
+	if scans.Vuln.RunByAgent() && !scans.Vuln.IsRealtime() {
+		sbom := scans.Vuln.EffectiveInterval()
+		telemetry.SetSBOMInterval(sbom)
+		utils.Logger.LogF(100, "policy_apply: scans.vuln cadence applied sbom_interval=%s", sbom)
+	}
+
+	// CIS engine: hand to the applier if registered, else stash for engine start.
+	scansApplierMu.RLock()
+	applier := scansApplier
+	scansApplierMu.RUnlock()
+	if applier != nil {
+		if err := applier(scans); err != nil {
+			utils.Logger.ErrorF("policy_apply: scans apply failed: %v", err)
+		}
+	} else {
+		stashScansPolicy(scans)
+	}
 }
 
 func eventLogCount(sec *EventPolicySection) int {
@@ -409,4 +460,48 @@ func PeekPendingChangeRegistryPolicy() (rootKeys []string, ok bool) {
 		return nil, false
 	}
 	return append([]string(nil), pendingChangeRegKeys...), true
+}
+
+// PT-5 pending scans state: stashed until the native scanner engine registers its
+// applier, then consumed at engine start (mirrors the FIM/userLog pending pattern).
+var (
+	pendingScansMu  sync.Mutex
+	pendingScans    *ScansPolicySection
+	pendingScansSet bool
+)
+
+func stashScansPolicy(scans *ScansPolicySection) {
+	pendingScansMu.Lock()
+	defer pendingScansMu.Unlock()
+	pendingScans = cloneScansPolicy(scans)
+	pendingScansSet = true
+}
+
+// PeekPendingScansPolicy returns the stashed scans section without clearing, so the
+// native scanner engine can pick it up when it starts after an early APPLY_POLICY.
+func PeekPendingScansPolicy() (scans *ScansPolicySection, ok bool) {
+	pendingScansMu.Lock()
+	defer pendingScansMu.Unlock()
+	if !pendingScansSet {
+		return nil, false
+	}
+	return cloneScansPolicy(pendingScans), true
+}
+
+// cloneScansPolicy returns a deep copy so a stashed section cannot be mutated by a
+// later apply sharing the same pointer.
+func cloneScansPolicy(in *ScansPolicySection) *ScansPolicySection {
+	if in == nil {
+		return nil
+	}
+	out := &ScansPolicySection{}
+	if in.CIS != nil {
+		cis := *in.CIS
+		out.CIS = &cis
+	}
+	if in.Vuln != nil {
+		vuln := *in.Vuln
+		out.Vuln = &vuln
+	}
+	return out
 }

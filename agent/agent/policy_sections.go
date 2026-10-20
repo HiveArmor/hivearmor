@@ -308,7 +308,7 @@ const (
 //     is sensitive and deliberately NOT executed or logged.
 //   - certificate parsed-only: no certificate-store watcher in this build.
 func SectionCapabilities() map[string]EnforcementStatus {
-	return map[string]EnforcementStatus{
+	caps := map[string]EnforcementStatus{
 		"event":       EnforcementParsedOnly,
 		"userLog":     EnforcementFull,
 		"change":      EnforcementPartial,
@@ -319,6 +319,17 @@ func SectionCapabilities() map[string]EnforcementStatus {
 		"telemetry": EnforcementFull,
 		"response":  EnforcementFull,
 	}
+	// PT-5 scans capability — reported honestly per sub-scanner:
+	//   scans.vuln → enforced: cadence drives the SHIPPED SBOM inventory loop that
+	//     feeds HaVulnService (CVE + EPSS). The cadence knob is fully wired.
+	//   scans.cis  → runtime-determined: the OpenSCAP/OVAL engine can only enforce
+	//     when SCAP content is present AND the oscap tool is available on the host.
+	//     When both hold it is enforced; otherwise it is parsed-only (we schedule the
+	//     intent but cannot run a scan) — never pretend enforcement on a host that
+	//     cannot run it. A cron-expression cadence (vs a duration) is partial.
+	caps["scans.vuln"] = EnforcementFull
+	caps["scans.cis"] = cisEngineCapability()
+	return caps
 }
 
 // CapabilityAdvertisement is the compact capability string reported on vitals/report-state.

@@ -40,6 +40,12 @@ type AgentPolicyDocument struct {
 	Change      *ChangePolicySection    `json:"change,omitempty"`
 	Script      *ScriptPolicySection    `json:"script,omitempty"`
 	Certificate []CertificateStoreWatch `json:"certificate,omitempty"`
+
+	// PT-5 net-new scan cadence section (additive; wire schema_version stays 1).
+	// Drives WHEN the agent runs native CIS benchmark + vulnerability inventory
+	// scans. Unknown/older-shape fields are ignored safely — an agent that predates
+	// this section drops the key entirely.
+	Scans *ScansPolicySection `json:"scans,omitempty"`
 }
 
 // FIMPolicySection drives File Integrity Monitoring watch rules.
@@ -144,6 +150,7 @@ func ParseAgentPolicyDocument(raw string) (*AgentPolicyDocument, error) {
 	normalizeChangeSection(doc.Change)
 	normalizeScriptSection(doc.Script)
 	doc.Certificate = normalizeCertificate(doc.Certificate)
+	normalizeScansSection(doc.Scans)
 
 	return &doc, nil
 }

@@ -97,6 +97,42 @@ public class HaTelemetryResource {
     }
 
     // -------------------------------------------------------------------------
+    // POST /api/ha-telemetry/cis
+    // -------------------------------------------------------------------------
+
+    /**
+     * Receives a batch of native CIS benchmark scan results from the agent's
+     * OpenSCAP/OVAL engine (PT-5, Option A).
+     *
+     * <p>This is a DISTINCT ingest path from {@code /sca}: CIS scan results are
+     * event-shaped, high-cardinality posture observations that are routed to the
+     * net-new OpenSearch index {@code v3-hive-cis-*} (tenant-scoped via the SDK
+     * index builder), NOT the Postgres {@code ha_sca_*} store used by the legacy
+     * observed-SSH SCA pack. Keeping the two paths separate is deliberate
+     * (SPEC-PT-5 §4 "two paths, do not blur them").
+     *
+     * <p>The payload carries {@code agentId}, {@code profile}, a {@code summary}
+     * tally, and a {@code results} array of pass/fail-per-control rows.
+     *
+     * @param payload CIS scan results JSON body
+     * @return 202 Accepted
+     */
+    @PostMapping("/cis")
+    public ResponseEntity<Void> ingestCis(@RequestBody JsonNode payload) {
+        final String ctx = CLASSNAME + ".ingestCis";
+        log.debug("{}: received CIS scan results", ctx);
+        // Capture tenant scope on the REQUEST thread: processCis is @Async and runs on
+        // a pool thread where the TenantContext ThreadLocal is not propagated. The
+        // OpenSearch index name is tenant-prefix-scoped, so the prefix must be passed
+        // explicitly rather than re-read inside the async worker (where it is blank).
+        telemetryService.processCis(
+                payload,
+                TenantContext.getClientId(),
+                TenantContext.getClientPrefix());
+        return ResponseEntity.accepted().build();
+    }
+
+    // -------------------------------------------------------------------------
     // PUT /api/ha-telemetry/vitals/{agentId}   — agent writes vitals
     // GET /api/ha-telemetry/vitals/{agentId}   — frontend reads stored vitals
     // -------------------------------------------------------------------------

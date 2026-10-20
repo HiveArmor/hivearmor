@@ -2,6 +2,8 @@ package com.hivearmor.service.telemetry;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.hivearmor.config.HaAirGapConfig;
+import com.hivearmor.multitenancy.MsspIndexResolver;
+import com.hivearmor.multitenancy.TenantContext;
 import com.hivearmor.service.elasticsearch.OpensearchClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +17,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service that processes agent telemetry payloads: SBOM, SCA results, and vitals.
@@ -41,17 +45,20 @@ public class HaTelemetryService {
     private final HaAirGapConfig.AirGapGuard airGapGuard;
     private final OsvEnrichmentService osvEnrichmentService;
     private final TransactionTemplate requiresNew;
+    private final MsspIndexResolver indexResolver;
 
     public HaTelemetryService(JdbcTemplate jdbc, OpensearchClientBuilder osClient,
                               HaAirGapConfig.AirGapGuard airGapGuard,
                               OsvEnrichmentService osvEnrichmentService,
-                              PlatformTransactionManager transactionManager) {
+                              PlatformTransactionManager transactionManager,
+                              MsspIndexResolver indexResolver) {
         this.jdbc = jdbc;
         this.osClient = osClient;
         this.airGapGuard = airGapGuard;
         this.osvEnrichmentService = osvEnrichmentService;
         this.requiresNew = new TransactionTemplate(transactionManager);
         this.requiresNew.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.indexResolver = indexResolver;
     }
 
     // -------------------------------------------------------------------------
@@ -263,9 +270,185 @@ public class HaTelemetryService {
     }
 
     // -------------------------------------------------------------------------
-    // Vitals processing
+    // CIS scan result processing (PT-5, Option A — OpenSearch v3-hive-cis)
     // -------------------------------------------------------------------------
 
+    /**
+     * Processes a batch of native CIS benchmark scan results from the agent's
+     * OpenSCAP engine and indexes them into the net-new OpenSearch index
+     * {@code v3-hive-cis-<prefix>-<date>} via the SDK index builder — DISTINCT from
+     * the Postgres {@code ha_sca_*} store used by the legacy observed-SSH SCA pack
+     * (SPEC-PT-5 §4, "two paths, do not blur them").
+     *
+     * <p>Runs {@code @Async}, so the request thread's {@link TenantContext} is NOT
+     * available here — the caller captures the tenant prefix + client id on the
+     * request thread and passes them in. We restore the scope for the duration of
+     * the index-name resolution and clear it in a {@code finally} block so the pool
+     * thread carries no stale scope.
+     *
+     * <p>One document is written per control result, plus one summary document, each
+     * sharing a {@code scanId} so a per-host read can reconstruct a scan run. The
+     * index is tenant-scoped by {@link MsspIndexResolver}, which fails closed for an
+     * MSSP request whose prefix did not resolve rather than widening to all tenants.
+     *
+     * @param payload       CIS scan results JSON body
+     * @param clientId      {@code ha_client.id} captured on the request thread (may be null)
+     * @param clientPrefix  {@code ha_client.client_prefix} captured on the request thread (may be null)
+     */
+    @Async
+    public void processCis(JsonNode payload, Long clientId, String clientPrefix) {
+        if (payload == null) {
+            return;
+        }
+        final String ctx = CLASSNAME + ".processCis";
+
+        String agentId = textOrEmpty(payload, "agentId");
+        if (agentId.isBlank()) {
+            log.warn("{}: CIS payload missing agentId", ctx);
+            return;
+        }
+
+        // Restore the tenant scope captured on the request thread so the index name
+        // resolves correctly on this async pool thread. Clear it afterwards.
+        TenantContext.set(clientId, clientPrefix);
+        try {
+            String hostname = textOrEmpty(payload, "hostname");
+            String profile = textOrEmpty(payload, "profile");
+            String benchmark = textOrNull(payload, "benchmark");
+            String contentHash = textOrNull(payload, "contentHash");
+            String mode = textOrEmpty(payload, "mode");
+            String scannedAt = textOrNull(payload, "scannedAt");
+            if (scannedAt == null || scannedAt.isBlank()) {
+                scannedAt = Instant.now().toString();
+            }
+            long durationMs = longOrZero(payload, "durationMs");
+
+            Long tenantId = clientId;
+            if (tenantId == null && payload.hasNonNull("tenantId")) {
+                tenantId = payload.get("tenantId").asLong();
+            }
+
+            JsonNode results = payload.path("results");
+            if (!results.isArray()) {
+                log.debug("{}: CIS payload has no results array", ctx);
+                return;
+            }
+
+            // Resolve the tenant-scoped current-day index via the SDK builder. This is
+            // the ONLY approved way to name the index (SPEC-PT-5 constraint). It fails
+            // closed for an MSSP request whose prefix is unresolved.
+            String indexName = indexResolver.resolveCurrentDayIndex("cis");
+
+            String scanId = agentId + ":" + scannedAt + ":" + Long.toString(Instant.now().toEpochMilli());
+            String indexedAt = Instant.now().toString();
+
+            int total = 0;
+            int pass = 0;
+            int fail = 0;
+            int error = 0;
+            int na = 0;
+            int notChecked = 0;
+
+            for (JsonNode r : results) {
+                String controlId = textOrEmpty(r, "controlId");
+                String title = textOrNull(r, "title");
+                String severity = textOrNull(r, "severity");
+                String status = textOrEmpty(r, "status").toUpperCase();
+                String idref = textOrNull(r, "idref");
+                String remediation = textOrNull(r, "remediation");
+
+                Map<String, Object> doc = new LinkedHashMap<>();
+                doc.put("docType", "control");
+                doc.put("scanId", scanId);
+                doc.put("agentId", agentId);
+                doc.put("hostname", hostname);
+                doc.put("tenantId", tenantId);
+                doc.put("profile", profile);
+                doc.put("benchmark", benchmark);
+                doc.put("contentHash", contentHash);
+                doc.put("mode", mode);
+                doc.put("controlId", controlId);
+                doc.put("title", title);
+                doc.put("severity", severity);
+                doc.put("status", status);
+                doc.put("idref", idref);
+                doc.put("remediation", remediation);
+                doc.put("scannedAt", scannedAt);
+                doc.put("indexedAt", indexedAt);
+
+                indexCisDoc(ctx, indexName, doc);
+
+                total++;
+                switch (status) {
+                    case "PASS":
+                        pass++;
+                        break;
+                    case "FAIL":
+                        fail++;
+                        break;
+                    case "ERROR":
+                        error++;
+                        break;
+                    case "NOT_APPLICABLE":
+                        na++;
+                        break;
+                    default:
+                        notChecked++;
+                        break;
+                }
+            }
+
+            // Summary document for cheap per-host score reads (one per scan run).
+            int denominator = pass + fail + error;
+            double score = denominator > 0 ? (double) pass / denominator * 100.0 : 0.0;
+            Map<String, Object> summary = new LinkedHashMap<>();
+            summary.put("docType", "summary");
+            summary.put("scanId", scanId);
+            summary.put("agentId", agentId);
+            summary.put("hostname", hostname);
+            summary.put("tenantId", tenantId);
+            summary.put("profile", profile);
+            summary.put("benchmark", benchmark);
+            summary.put("contentHash", contentHash);
+            summary.put("mode", mode);
+            summary.put("total", total);
+            summary.put("passCount", pass);
+            summary.put("failCount", fail);
+            summary.put("errorCount", error);
+            summary.put("naCount", na);
+            summary.put("notCheckedCount", notChecked);
+            summary.put("scorePct", score);
+            summary.put("durationMs", durationMs);
+            summary.put("scannedAt", scannedAt);
+            summary.put("indexedAt", indexedAt);
+            indexCisDoc(ctx, indexName, summary);
+
+            log.info("{}: indexed {} CIS controls for agent {} profile {} (score={}) into {}",
+                    ctx, total, agentId, profile, score, indexName);
+
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            // Fail-closed MSSP scope: the agent's tenant prefix did not resolve. Do NOT
+            // widen or silently write unscoped — drop the batch and log (no customer data).
+            log.warn("{}: refused CIS ingest for agent {} — tenant scope unresolved: {}",
+                    ctx, agentId, e.getMessage());
+        } catch (Exception e) {
+            log.error("{}: failed to process CIS results for agent {}: {}", ctx, agentId, e.getMessage());
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    private void indexCisDoc(String ctx, String indexName, Map<String, Object> doc) {
+        try {
+            osClient.execute(client -> client.index(indexName, doc));
+        } catch (Exception e) {
+            log.error("{}: indexing CIS doc to {} failed: {}", ctx, indexName, e.getMessage());
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Vitals processing
+    // -------------------------------------------------------------------------
     /**
      * Persists a single agent vitals sample into {@code ha_agent_vitals}.
      */

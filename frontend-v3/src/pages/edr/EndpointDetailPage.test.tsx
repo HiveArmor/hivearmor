@@ -243,13 +243,16 @@ describe('EndpointDetailPage', () => {
 
     const tablist = screen.getByRole('tablist');
     expect(tablist).toBeDefined();
-    // 6 tab panels (Overview/Security/Logs/Commands/Configuration/Audit); the
-    // 7th "surface" in the spec is the persistent header above the tab strip.
+    // 7 tab panels (Overview/Security/Posture/Logs/Commands/Configuration/Audit);
+    // the persistent header above the tab strip is an additional surface.
     const tabs = within(tablist).getAllByRole('tab');
-    expect(tabs.length).toBe(6);
+    expect(tabs.length).toBe(7);
 
     const overviewTab = within(tablist).getByRole('tab', { name: /Overview/i });
     expect(overviewTab.getAttribute('aria-selected')).toBe('true');
+
+    // The PT-5 per-host CIS + vuln posture tab is present.
+    expect(within(tablist).getByRole('tab', { name: /Posture/i })).toBeDefined();
 
     // Switch to Security → its honesty note appears and aria-selected moves.
     const securityTab = within(tablist).getByRole('tab', { name: /Security/i });

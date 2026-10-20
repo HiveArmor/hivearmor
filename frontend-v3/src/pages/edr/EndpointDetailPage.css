@@ -381,3 +381,50 @@
 
 /* Governed-action approval gate is hosted in HaModal (PatternFly) — no custom
    overlay needed; the modal provides scrim, focus-trap, Escape and focus-restore. */
+
+/* ---------------------------------------------------------------------------
+ * PT-5 per-host Posture tab (CIS benchmark + vulnerabilities)
+ * Token-only (foundation.css --ha-*). No raw hex.
+ * ------------------------------------------------------------------------- */
+.endpoint-detail__posture {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-5);
+}
+
+.endpoint-detail__posture-score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ha-space-6);
+  margin-bottom: var(--ha-space-4);
+}
+
+.endpoint-detail__posture-chart {
+  flex: 1 1 260px;
+  min-width: 240px;
+}
+
+.endpoint-detail__posture-chart--bar {
+  margin-bottom: var(--ha-space-4);
+}
+
+.endpoint-detail__posture-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-1);
+}
+
+.endpoint-detail__posture-score-big {
+  font-size: var(--ha-text-2xl);
+  font-weight: 700;
+  color: var(--ha-text-primary);
+  line-height: 1.1;
+}
+
+.endpoint-detail__posture-grid,
+.endpoint-detail__posture-vuln {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-3);
+}
