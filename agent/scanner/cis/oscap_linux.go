@@ -64,8 +64,9 @@ func runOscap(profile, mode string) (*ScanReport, error) {
 	// Lower scheduling priority best-effort so a scan never starves the endpoint.
 	applyResourceBounds(cmd)
 
-	// oscap exits non-zero (1) when any rule FAILS — that is a normal scan outcome,
-	// not an execution error. Exit code 2 is a genuine tool error. Distinguish them.
+	// oscap xccdf eval exit codes: 0 = all rules passed, 1 = tool/processing error
+	// (FATAL), 2 = at least one rule failed/unknown — a NORMAL scan outcome. So treat
+	// 0 and 2 as success and parse the results file; anything else (incl. 1) is fatal.
 	out, runErr := cmd.CombinedOutput()
 	finished := time.Now()
 	if ctx.Err() == context.DeadlineExceeded {

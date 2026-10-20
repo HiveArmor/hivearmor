@@ -155,6 +155,37 @@ func TestSectionCapabilities_IncludesScans(t *testing.T) {
 	}
 }
 
+func TestSectionCapabilities_RealtimeVulnIsPartial(t *testing.T) {
+	SetCISCapabilityProber(nil)
+	// Apply a policy requesting REALTIME vuln — no change-trigger hook exists, so the
+	// honest capability is partial, not enforced.
+	doc, err := ParseAgentPolicyDocument(
+		`{"scans": {"vuln": {"enabled": true, "mode": "realtime", "source": "agent"}}}`)
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if err := applyParsedPolicy(doc); err != nil {
+		t.Fatalf("apply: %v", err)
+	}
+	defer func() {
+		// Reset applied policy so later tests see the default enforced state.
+		_ = applyParsedPolicy(&AgentPolicyDocument{})
+	}()
+	if got := SectionCapabilities()["scans.vuln"]; got != EnforcementPartial {
+		t.Fatalf("realtime vuln should be partial, got %q", got)
+	}
+
+	// A scheduled vuln policy is fully enforced.
+	sched, _ := ParseAgentPolicyDocument(
+		`{"scans": {"vuln": {"enabled": true, "mode": "scheduled", "cronOrInterval": "12h", "source": "agent"}}}`)
+	if err := applyParsedPolicy(sched); err != nil {
+		t.Fatalf("apply scheduled: %v", err)
+	}
+	if got := SectionCapabilities()["scans.vuln"]; got != EnforcementFull {
+		t.Fatalf("scheduled vuln should be enforced, got %q", got)
+	}
+}
+
 // --- apply wiring ----------------------------------------------------------
 
 func TestApplyScans_RegistersPendingWhenNoApplier(t *testing.T) {

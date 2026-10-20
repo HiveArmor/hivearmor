@@ -70,7 +70,7 @@ function cisControlColumns(): ColDef[] {
       sortable: true,
       filter: true,
       cellStyle: (p: { value?: string }) => ({
-        color: CIS_STATUS_COLOR[p.value ?? ''] ?? 'var(--ha-text)',
+        color: CIS_STATUS_COLOR[p.value ?? ''] ?? 'var(--ha-text-primary)',
         fontVariantNumeric: 'tabular-nums',
       }),
     },
@@ -90,7 +90,7 @@ function vulnColumns(): ColDef[] {
       sortable: true,
       filter: true,
       cellStyle: (p: { value?: string }) => ({
-        color: SEVERITY_COLOR[(p.value as VulnSeverity) ?? 'INFO'] ?? 'var(--ha-text)',
+        color: SEVERITY_COLOR[(p.value as VulnSeverity) ?? 'INFO'] ?? 'var(--ha-text-primary)',
         fontVariantNumeric: 'tabular-nums',
       }),
     },
@@ -166,6 +166,8 @@ function CisPanel({ agentId }: { agentId: string }): JSX.Element {
     );
   }
 
+  const assessable = summary.passCount + summary.failCount + summary.errorCount;
+
   return (
     <div className="endpoint-detail__posture-cis">
       <div className="endpoint-detail__posture-score">
@@ -179,12 +181,23 @@ function CisPanel({ agentId }: { agentId: string }): JSX.Element {
           )}
         </div>
         <div className="endpoint-detail__posture-meta">
-          <div className="endpoint-detail__posture-score-big" style={{ fontVariantNumeric: 'tabular-nums' }}>
-            {summary.scorePct.toFixed(1)}%
-          </div>
-          <div className="endpoint-detail__muted">
-            {summary.profile || 'CIS profile'} · {summary.passCount}/{summary.passCount + summary.failCount + summary.errorCount} passing
-          </div>
+          {assessable > 0 ? (
+            <>
+              <div className="endpoint-detail__posture-score-big" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                {summary.scorePct.toFixed(1)}%
+              </div>
+              <div className="endpoint-detail__muted">
+                {summary.profile || 'CIS profile'} · {summary.passCount}/{assessable} passing
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="endpoint-detail__posture-score-big endpoint-detail__muted">N/A</div>
+              <div className="endpoint-detail__muted">
+                {summary.profile || 'CIS profile'} · no assessable controls (all not-applicable/not-checked)
+              </div>
+            </>
+          )}
           <div className="endpoint-detail__muted endpoint-detail__hint">
             {summary.benchmark ? `${summary.benchmark} · ` : ''}
             {summary.mode ? `${summary.mode} · ` : ''}

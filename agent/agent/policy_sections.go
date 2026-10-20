@@ -320,16 +320,33 @@ func SectionCapabilities() map[string]EnforcementStatus {
 		"response":  EnforcementFull,
 	}
 	// PT-5 scans capability — reported honestly per sub-scanner:
-	//   scans.vuln → enforced: cadence drives the SHIPPED SBOM inventory loop that
-	//     feeds HaVulnService (CVE + EPSS). The cadence knob is fully wired.
+	//   scans.vuln → scheduled: enforced (cadence drives the SHIPPED SBOM inventory
+	//     loop feeding HaVulnService). realtime: partial — there is no change-trigger
+	//     hook yet, so realtime vuln keeps the scheduled SBOM floor but cannot re-scan
+	//     on a package-change event; we never advertise it as fully enforced.
 	//   scans.cis  → runtime-determined: the OpenSCAP/OVAL engine can only enforce
 	//     when SCAP content is present AND the oscap tool is available on the host.
 	//     When both hold it is enforced; otherwise it is parsed-only (we schedule the
 	//     intent but cannot run a scan) — never pretend enforcement on a host that
 	//     cannot run it. A cron-expression cadence (vs a duration) is partial.
-	caps["scans.vuln"] = EnforcementFull
+	caps["scans.vuln"] = vulnCadenceCapability()
 	caps["scans.cis"] = cisEngineCapability()
 	return caps
+}
+
+// vulnCadenceCapability reports the honest enforcement level for scans.vuln. The
+// cadence knob drives the SHIPPED SBOM inventory loop, so SCHEDULED vuln is fully
+// enforced. REALTIME vuln, however, has no change-trigger hook yet — the agent keeps
+// the scheduled SBOM floor but cannot re-scan on a package-change event — so it is
+// advertised as PARTIAL, not enforced, when the applied policy asks for realtime.
+// Absent/scheduled vuln (and no policy yet) report enforced.
+func vulnCadenceCapability() EnforcementStatus {
+	doc := GetAppliedPolicy()
+	if doc != nil && doc.Scans != nil && doc.Scans.Vuln != nil &&
+		doc.Scans.Vuln.RunByAgent() && doc.Scans.Vuln.IsRealtime() {
+		return EnforcementPartial
+	}
+	return EnforcementFull
 }
 
 // CapabilityAdvertisement is the compact capability string reported on vitals/report-state.
