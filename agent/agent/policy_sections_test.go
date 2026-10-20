@@ -260,7 +260,7 @@ func TestCapabilityAdvertisement_HonestAndDeterministic(t *testing.T) {
 	for _, want := range []string{
 		"certificate=parsed-only",
 		"change=partial",
-		"event=partial",
+		"event=parsed-only",
 		"script=parsed-only",
 		"userLog=enforced",
 	} {
@@ -268,9 +268,17 @@ func TestCapabilityAdvertisement_HonestAndDeterministic(t *testing.T) {
 			t.Fatalf("advertisement %q missing %q", adv, want)
 		}
 	}
-	// Must never claim script/certificate as enforced.
-	if strings.Contains(adv, "script=enforced") || strings.Contains(adv, "certificate=enforced") {
-		t.Fatalf("dishonest capability claim: %q", adv)
+	// Must never claim a section as more enforced than it is. event, script and
+	// certificate are parsed-only in this build (no runtime consumer) — never partial
+	// or enforced.
+	for _, forbidden := range []string{
+		"script=enforced", "script=partial",
+		"certificate=enforced", "certificate=partial",
+		"event=enforced", "event=partial",
+	} {
+		if strings.Contains(adv, forbidden) {
+			t.Fatalf("dishonest capability claim: %q contains %q", adv, forbidden)
+		}
 	}
 	// No path/host separators that would imply customer data leaked in.
 	if strings.ContainsAny(adv, "/\\ ") {

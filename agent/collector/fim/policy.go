@@ -69,10 +69,13 @@ func RegisterPolicyApplier() {
 		return ApplyRegistryPolicyKeys(keys, mode)
 	})
 	// PT-4 change.registry → reuse the Windows registry watcher. The change section's
-	// root-keys are merged (never replace) into the runtime registry key set so they
-	// are watched alongside FIM registry keys. Consumed by currentRegistryKeys() at
-	// watcher construction. excludeSubkeys + installedSoftware are NOT yet wired
-	// (reported as partial capability).
+	// root-keys are merged (never replace) into the runtime registry key set. Like the
+	// existing FIM registry-keys applier (ApplyRegistryPolicyKeys), the live RegistryWatcher
+	// reads currentRegistryKeys() only at construction and has no live-refresh hook, so
+	// change.registry keys arriving after the collector has started take effect at the
+	// next collector/watcher (re)start — not mid-run. This is consistent with the
+	// "change = partial" capability claim. excludeSubkeys + installedSoftware are NOT
+	// wired (also reflected in the partial capability).
 	agent.SetChangeRegistryPolicyApplier(func(rootKeys []string) error {
 		return ApplyChangeRegistryKeys(rootKeys)
 	})

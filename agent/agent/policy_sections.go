@@ -125,9 +125,9 @@ type EventLogEntry struct {
 // UserLogTail tails an arbitrary file with an optional log prefix and multiline grouping
 // (SPEC-PT-4 §2). This maps to the agent's existing file-tail collector surface.
 type UserLogTail struct {
-	FullFileName string              `json:"fullFileName"`
-	LogPrefix    string              `json:"logPrefix,omitempty"`
-	Multiline    *UserLogMultiline   `json:"multiline,omitempty"`
+	FullFileName string            `json:"fullFileName"`
+	LogPrefix    string            `json:"logPrefix,omitempty"`
+	Multiline    *UserLogMultiline `json:"multiline,omitempty"`
 }
 
 // UserLogMultiline groups multi-line records (start/end markers, cap on lines).
@@ -296,19 +296,20 @@ const (
 // act on.
 //
 // Rationale per section (SPEC-PT-4):
-//   - event       partial: file-log (iis/dhcp) + Event Log channel desired-state are
-//                  recorded and honoured where a platform collector exists (Windows
-//                  ETW/winlogbeat, file tailer); arbitrary channel subscription depth is
-//                  platform-gated.
+//   - event       parsed-only: the event section is parsed, normalized and desired-state
+//     recorded, but NO collector consumes it yet — there is no runtime
+//     subscription of Windows Event Log channels or fileLog paths in this
+//     build. Honest posture matches script/certificate until the event
+//     collector wiring lands.
 //   - userLog     enforced: arbitrary file tailing is a first-class existing collector.
 //   - change      partial: registry root-key watch reuses the existing registry watcher;
-//                  installedSoftware delta + excludeSubkeys are not yet wired.
+//     installedSoftware delta + excludeSubkeys are not yet wired.
 //   - script      parsed-only: no WMI/PowerShell execution engine in this build; content
-//                  is sensitive and deliberately NOT executed or logged.
+//     is sensitive and deliberately NOT executed or logged.
 //   - certificate parsed-only: no certificate-store watcher in this build.
 func SectionCapabilities() map[string]EnforcementStatus {
 	return map[string]EnforcementStatus{
-		"event":       EnforcementPartial,
+		"event":       EnforcementParsedOnly,
 		"userLog":     EnforcementFull,
 		"change":      EnforcementPartial,
 		"script":      EnforcementParsedOnly,
