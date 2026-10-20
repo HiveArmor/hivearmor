@@ -48,6 +48,7 @@ func (fc *FileCollector) Name() string {
 }
 
 func (fc *FileCollector) Stop() {
+	unbindLiveCollector(fc)
 	fc.mu.Lock()
 	defer fc.mu.Unlock()
 	for key, w := range fc.watchers {
@@ -65,6 +66,7 @@ func (fc *FileCollector) Stop() {
 // It performs an initial reconciliation and then reacts to config file changes.
 func (fc *FileCollector) Start(ctx context.Context, queue chan<- *plugins.Log) {
 	fc.queue = queue
+	bindLiveCollector(ctx, fc)
 	configwatcher.Watch(ctx, "file collector", func() {
 		fc.reconcile(ctx)
 	})
@@ -146,6 +148,25 @@ func (fc *FileCollector) stopWatchersForDataType(dataType string) {
 			delete(fc.watchers, key)
 		}
 	}
+}
+
+// stopWatcherByKey stops a single tail watcher identified by its "dataType:path" key.
+// Used by the userLog applier to retire files that dropped out of the desired set.
+func (fc *FileCollector) stopWatcherByKey(key string) {
+	fc.mu.Lock()
+	defer fc.mu.Unlock()
+	w, ok := fc.watchers[key]
+	if !ok {
+		return
+	}
+	utils.Logger.Info("file collector: stopping watcher for %s", key)
+	if w.cancel != nil {
+		w.cancel()
+	}
+	if w.file != nil {
+		w.file.Close()
+	}
+	delete(fc.watchers, key)
 }
 
 func (fc *FileCollector) ensureWatcher(ctx context.Context, dataType, filePath string) {

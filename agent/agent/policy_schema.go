@@ -27,11 +27,19 @@ const (
 // Unknown fields are ignored. Backend contract is documented in
 // agent/release/EXTERNAL_WORK.md (BE-POL-01 / telemetry schedule).
 type AgentPolicyDocument struct {
-	SchemaVersion int                      `json:"schema_version"`
-	FIM           *FIMPolicySection        `json:"fim,omitempty"`
-	Collectors    map[string]bool          `json:"collectors,omitempty"`
-	Response      *ResponsePolicySection   `json:"response,omitempty"`
-	Telemetry     *TelemetryPolicySection  `json:"telemetry,omitempty"`
+	SchemaVersion int                     `json:"schema_version"`
+	FIM           *FIMPolicySection       `json:"fim,omitempty"`
+	Collectors    map[string]bool         `json:"collectors,omitempty"`
+	Response      *ResponsePolicySection  `json:"response,omitempty"`
+	Telemetry     *TelemetryPolicySection `json:"telemetry,omitempty"`
+
+	// PT-4 template sections (additive; wire schema_version stays 1). Unknown shapes
+	// deserialize safely and are ignored — older agents drop these keys entirely.
+	Event       *EventPolicySection     `json:"event,omitempty"`
+	UserLog     []UserLogTail           `json:"userLog,omitempty"`
+	Change      *ChangePolicySection    `json:"change,omitempty"`
+	Script      *ScriptPolicySection    `json:"script,omitempty"`
+	Certificate []CertificateStoreWatch `json:"certificate,omitempty"`
 }
 
 // FIMPolicySection drives File Integrity Monitoring watch rules.
@@ -128,6 +136,14 @@ func ParseAgentPolicyDocument(raw string) (*AgentPolicyDocument, error) {
 			return nil, err
 		}
 	}
+
+	// PT-4 sections: normalise in place. Malformed/unknown-shape rows are dropped
+	// safely (never fatal) so an older or newer document never crashes apply.
+	normalizeEventSection(doc.Event)
+	doc.UserLog = normalizeUserLog(doc.UserLog)
+	normalizeChangeSection(doc.Change)
+	normalizeScriptSection(doc.Script)
+	doc.Certificate = normalizeCertificate(doc.Certificate)
 
 	return &doc, nil
 }

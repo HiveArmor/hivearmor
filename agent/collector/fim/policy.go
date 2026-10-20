@@ -68,6 +68,46 @@ func RegisterPolicyApplier() {
 	agent.SetRegistryPolicyApplier(func(keys []string, mode string) error {
 		return ApplyRegistryPolicyKeys(keys, mode)
 	})
+	// PT-4 change.registry → reuse the Windows registry watcher. The change section's
+	// root-keys are merged (never replace) into the runtime registry key set so they
+	// are watched alongside FIM registry keys. Consumed by currentRegistryKeys() at
+	// watcher construction. excludeSubkeys + installedSoftware are NOT yet wired
+	// (reported as partial capability).
+	agent.SetChangeRegistryPolicyApplier(func(rootKeys []string) error {
+		return ApplyChangeRegistryKeys(rootKeys)
+	})
+}
+
+// ApplyChangeRegistryKeys merges PT-4 change.registry root-keys into the runtime
+// registry watch set (merge semantics — additive to FIM registry keys and defaults).
+func ApplyChangeRegistryKeys(rootKeys []string) error {
+	cleaned := cleanRegistryKeys(rootKeys)
+	if len(cleaned) == 0 {
+		return nil
+	}
+	runtimeRegMu.Lock()
+	existing := runtimeRegKeys
+	if len(existing) == 0 {
+		existing = defaultRegistryKeysCopy()
+	}
+	merged := append(append([]string(nil), existing...), cleaned...)
+	runtimeRegKeys = dedupeRegistryKeys(merged)
+	runtimeRegMu.Unlock()
+	return nil
+}
+
+// dedupeRegistryKeys removes duplicate keys, stable order (first occurrence kept).
+func dedupeRegistryKeys(in []string) []string {
+	seen := make(map[string]struct{}, len(in))
+	out := make([]string, 0, len(in))
+	for _, k := range in {
+		if _, ok := seen[k]; ok {
+			continue
+		}
+		seen[k] = struct{}{}
+		out = append(out, k)
+	}
+	return out
 }
 
 // ResolveRegistryKeys builds effective HKLM subkeys from defaults + policy.
@@ -121,15 +161,26 @@ func ApplyRegistryPolicyKeys(policyKeys []string, mode string) error {
 
 // currentRegistryKeys returns keys for a newly constructed registry watcher.
 func currentRegistryKeys() []string {
+	var base []string
 	if keys, mode, ok := agent.PeekPendingRegistryPolicy(); ok {
-		return ResolveRegistryKeys(keys, mode)
+		base = ResolveRegistryKeys(keys, mode)
+	} else {
+		runtimeRegMu.RLock()
+		if len(runtimeRegKeys) > 0 {
+			base = append([]string(nil), runtimeRegKeys...)
+		} else {
+			base = defaultRegistryKeysCopy()
+		}
+		runtimeRegMu.RUnlock()
 	}
-	runtimeRegMu.RLock()
-	defer runtimeRegMu.RUnlock()
-	if len(runtimeRegKeys) > 0 {
-		return append([]string(nil), runtimeRegKeys...)
+	// Merge any PT-4 change.registry root-keys stashed before the applier registered.
+	if changeKeys, ok := agent.PeekPendingChangeRegistryPolicy(); ok {
+		cleaned := cleanRegistryKeys(changeKeys)
+		if len(cleaned) > 0 {
+			base = dedupeRegistryKeys(append(base, cleaned...))
+		}
 	}
-	return defaultRegistryKeysCopy()
+	return base
 }
 
 // ApplyPolicyRules updates the runtime rule set and, if a collector is running,

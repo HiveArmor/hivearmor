@@ -16,6 +16,10 @@ var (
 	QueueDepthFn   func() int
 	DroppedTotalFn func() int64
 	PolicyMetaFn   func() (policyID int64, version int)
+	// CapabilitiesFn returns the agent's honest per-section enforcement capability
+	// advertisement (comma-separated "section=status" pairs). Wired from serv to the
+	// agent package's CapabilityAdvertisement to avoid an import cycle.
+	CapabilitiesFn func() string
 )
 
 // VitalsPayload is PUT to /api/ha-telemetry/vitals/{agentId} (AGT-OBS-01).
@@ -29,6 +33,11 @@ type VitalsPayload struct {
 	LastError            string  `json:"lastError,omitempty"`
 	AppliedPolicyID      int64   `json:"appliedPolicyId,omitempty"`
 	AppliedPolicyVersion int     `json:"appliedPolicyVersion,omitempty"`
+	// Capabilities is the agent's honest per-section enforcement advertisement
+	// (PT-4). The backend records it so PT-2's UI honesty notes reflect real
+	// capability instead of guessing. Contains no customer data — only section names
+	// and enforcement levels.
+	Capabilities string `json:"capabilities,omitempty"`
 }
 
 // StartVitalsLoop periodically PUTs self-metrics with device headers.
@@ -93,6 +102,9 @@ func CollectVitals() VitalsPayload {
 	}
 	if PolicyMetaFn != nil {
 		v.AppliedPolicyID, v.AppliedPolicyVersion = PolicyMetaFn()
+	}
+	if CapabilitiesFn != nil {
+		v.Capabilities = CapabilitiesFn()
 	}
 	return v
 }
