@@ -17,6 +17,7 @@ import (
 	"github.com/hivearmor/agent/collector/ebpf"
 	"github.com/hivearmor/agent/collector/esf"
 	"github.com/hivearmor/agent/collector/etw"
+	"github.com/hivearmor/agent/collector/file"
 	"github.com/hivearmor/agent/collector/fim"
 	"github.com/hivearmor/agent/collector/netconn"
 	"github.com/hivearmor/agent/collector/usb"
@@ -163,6 +164,7 @@ func (p *program) run() {
 	telemetry.QueueDepthFn = func() int { return len(pb.LogQueue) }
 	telemetry.DroppedTotalFn = func() int64 { return pb.LogsDropped.Load() }
 	telemetry.PolicyMetaFn = pb.AppliedPolicyMeta
+	telemetry.CapabilitiesFn = pb.CapabilityAdvertisement
 
 	p.goSafe("AgentVitals", func() {
 		telemetry.StartVitalsLoop(ctx, cnf)
@@ -175,6 +177,7 @@ func (p *program) run() {
 
 	// Apply last stored agent policy before starting collectors (AGT-POL-01).
 	fim.RegisterPolicyApplier()
+	file.RegisterUserLogApplier()
 	if err := pb.LoadAndApplyLatestPolicy(); err != nil {
 		utils.Logger.ErrorF("policy_apply on startup: %v", err)
 	}

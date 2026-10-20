@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -48,6 +49,7 @@ func (fc *FileCollector) Name() string {
 }
 
 func (fc *FileCollector) Stop() {
+	unbindLiveCollector(fc)
 	fc.mu.Lock()
 	defer fc.mu.Unlock()
 	for key, w := range fc.watchers {
@@ -65,6 +67,7 @@ func (fc *FileCollector) Stop() {
 // It performs an initial reconciliation and then reacts to config file changes.
 func (fc *FileCollector) Start(ctx context.Context, queue chan<- *plugins.Log) {
 	fc.queue = queue
+	bindLiveCollector(ctx, fc)
 	configwatcher.Watch(ctx, "file collector", func() {
 		fc.reconcile(ctx)
 	})
@@ -114,9 +117,16 @@ func (fc *FileCollector) reconcile(ctx context.Context) {
 		}
 	}
 
-	// Stop watchers that are no longer needed
+	// Stop watchers that are no longer needed.
+	// PT-4: userLog tailers are owned by the userLog applier (keyed by the
+	// userLogDataTypePrefix dataType), NOT by cnf.FileIntegrations. They must
+	// survive reconcile — otherwise the config-file watch / fallback ticker would
+	// tear down the "userLog = enforced" tails within one tick. Preserve them here.
 	fc.mu.Lock()
 	for key, w := range fc.watchers {
+		if isUserLogWatcher(w) {
+			continue
+		}
 		if _, exists := desiredWatchers[key]; !exists {
 			utils.Logger.Info("file collector: stopping watcher for %s", key)
 			if w.cancel != nil {
@@ -129,6 +139,18 @@ func (fc *FileCollector) reconcile(ctx context.Context) {
 		}
 	}
 	fc.mu.Unlock()
+}
+
+// isUserLogWatcher reports whether a watcher is owned by the PT-4 userLog applier
+// rather than by the collector config (cnf.FileIntegrations). userLog watchers use a
+// dataType of userLogDataTypePrefix ("userlog") or "userlog:<prefix>", so reconcile
+// must not stop them — their lifecycle is managed by applyUserLogTails.
+func isUserLogWatcher(w *fileWatcher) bool {
+	if w == nil {
+		return false
+	}
+	return w.dataType == userLogDataTypePrefix ||
+		strings.HasPrefix(w.dataType, userLogDataTypePrefix+":")
 }
 
 func (fc *FileCollector) stopWatchersForDataType(dataType string) {
@@ -146,6 +168,25 @@ func (fc *FileCollector) stopWatchersForDataType(dataType string) {
 			delete(fc.watchers, key)
 		}
 	}
+}
+
+// stopWatcherByKey stops a single tail watcher identified by its "dataType:path" key.
+// Used by the userLog applier to retire files that dropped out of the desired set.
+func (fc *FileCollector) stopWatcherByKey(key string) {
+	fc.mu.Lock()
+	defer fc.mu.Unlock()
+	w, ok := fc.watchers[key]
+	if !ok {
+		return
+	}
+	utils.Logger.Info("file collector: stopping watcher for %s", key)
+	if w.cancel != nil {
+		w.cancel()
+	}
+	if w.file != nil {
+		w.file.Close()
+	}
+	delete(fc.watchers, key)
 }
 
 func (fc *FileCollector) ensureWatcher(ctx context.Context, dataType, filePath string) {

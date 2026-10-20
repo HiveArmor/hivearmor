@@ -199,6 +199,10 @@ func reportPolicyStateToBackend(cnf *config.Config, policyID int64, appliedVersi
 		"appliedVersion": appliedVersion,
 		"state":          state,
 		"driftDetails":   driftDetails,
+		// PT-4 capability negotiation: advertise which template sections this agent
+		// build can actually enforce so the backend/UI reflect real capability.
+		// Additive field — older backends ignore it. No customer data.
+		"capabilities": CapabilityAdvertisement(),
 	}
 	body, _ := json.Marshal(payload)
 	resp, err := doBackendRequest(cnf, "POST", url, body)

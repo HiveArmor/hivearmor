@@ -42,7 +42,31 @@ var (
 
 	appliedPolicyID      atomic.Int64
 	appliedPolicyVersion atomic.Int64
+
+	// PT-4 section appliers. Each is optional: when no collector has registered an
+	// applier yet, the desired state is stashed and consumed at collector start.
+	userLogApplierMu sync.RWMutex
+	userLogApplier   func(tails []UserLogTail) error
+
+	changeRegistryApplierMu sync.RWMutex
+	changeRegistryApplier   func(rootKeys []string) error
 )
+
+// SetUserLogPolicyApplier registers the callback used when the userLog section applies.
+// The file-tail collector registers this to honour arbitrary file-tail specs at runtime.
+func SetUserLogPolicyApplier(fn func(tails []UserLogTail) error) {
+	userLogApplierMu.Lock()
+	defer userLogApplierMu.Unlock()
+	userLogApplier = fn
+}
+
+// SetChangeRegistryPolicyApplier registers the callback for change.registry root-keys.
+// On Windows the registry FIM watcher registers this to extend watched HKLM keys.
+func SetChangeRegistryPolicyApplier(fn func(rootKeys []string) error) {
+	changeRegistryApplierMu.Lock()
+	defer changeRegistryApplierMu.Unlock()
+	changeRegistryApplier = fn
+}
 
 // SetFIMPolicyApplier registers the callback used when policy FIM sections apply.
 func SetFIMPolicyApplier(fn func(rules []FIMWatchRule, mode string) error) {
@@ -144,15 +168,81 @@ func applyParsedPolicy(doc *AgentPolicyDocument) error {
 
 	shellPolicyEnabled.Store(AllowShellFromPolicy(doc))
 	applyTelemetryIntervals(doc.Telemetry)
+	applySections(doc)
 
 	appliedPolicyMu.Lock()
 	appliedPolicy = doc
 	appliedPolicyMu.Unlock()
 
-	utils.Logger.LogF(100, "policy_apply: applied schema_version=%d allow_shell=%v collectors=%d sca=%s sbom=%s",
+	utils.Logger.LogF(100, "policy_apply: applied schema_version=%d allow_shell=%v collectors=%d sca=%s sbom=%s event_logs=%s user_logs=%s change_registry=%s script_items=%s cert_stores=%s caps=[%s]",
 		doc.SchemaVersion, shellPolicyEnabled.Load(), len(doc.Collectors),
-		telemetry.EffectiveSCAInterval(), telemetry.EffectiveSBOMInterval())
+		telemetry.EffectiveSCAInterval(), telemetry.EffectiveSBOMInterval(),
+		sectionCount(eventLogCount(doc.Event)), sectionCount(len(doc.UserLog)),
+		sectionCount(changeRegistryCount(doc.Change)), sectionCount(scriptItemCount(doc.Script)),
+		sectionCount(len(doc.Certificate)), CapabilityAdvertisement())
 	return nil
+}
+
+// applySections wires the PT-4 template sections to runtime behaviour, honestly.
+//   - userLog      → file-tail applier (or stashed for collector start).
+//   - change.registry → Windows registry watcher applier (or stashed).
+//   - event / script / certificate → desired-state recorded on the applied document and
+//     advertised via SectionCapabilities; script content is NEVER logged or executed.
+//
+// Every applier failure is logged (no raw customer data) and does not abort the rest of
+// the apply — one unsupported section must not block the sections the agent DOES enforce.
+func applySections(doc *AgentPolicyDocument) {
+	if len(doc.UserLog) > 0 {
+		userLogApplierMu.RLock()
+		applier := userLogApplier
+		userLogApplierMu.RUnlock()
+		if applier != nil {
+			if err := applier(doc.UserLog); err != nil {
+				utils.Logger.ErrorF("policy_apply: userLog apply failed: %v", err)
+			}
+		} else {
+			stashUserLogPolicy(doc.UserLog)
+		}
+	}
+
+	if doc.Change != nil && len(doc.Change.Registry) > 0 {
+		rootKeys := RegistryRootKeysFromChange(doc.Change)
+		changeRegistryApplierMu.RLock()
+		applier := changeRegistryApplier
+		changeRegistryApplierMu.RUnlock()
+		if applier != nil {
+			if err := applier(rootKeys); err != nil {
+				utils.Logger.ErrorF("policy_apply: change.registry apply failed: %v", err)
+			}
+		} else {
+			stashChangeRegistryPolicy(rootKeys)
+		}
+	}
+
+	// event / script / certificate: parsed + capability-advertised. No runtime action
+	// is taken that the agent cannot honestly enforce. Script content is deliberately
+	// not executed and not logged (SPEC-PT-4 §4).
+}
+
+func eventLogCount(sec *EventPolicySection) int {
+	if sec == nil {
+		return 0
+	}
+	return len(sec.EventLogs)
+}
+
+func changeRegistryCount(sec *ChangePolicySection) int {
+	if sec == nil {
+		return 0
+	}
+	return len(sec.Registry)
+}
+
+func scriptItemCount(sec *ScriptPolicySection) int {
+	if sec == nil {
+		return 0
+	}
+	return len(sec.WMI) + len(sec.PowerShell)
 }
 
 func applyTelemetryIntervals(section *TelemetryPolicySection) {
@@ -271,4 +361,52 @@ func PeekPendingRegistryPolicy() (keys []string, mode string, ok bool) {
 		return nil, "", false
 	}
 	return append([]string(nil), pendingRegKeys...), pendingRegMode, true
+}
+
+// PT-4 pending-section state: stashed until a collector registers its applier, then
+// consumed at collector start (mirrors the FIM/registry pending pattern above).
+var (
+	pendingUserLogMu  sync.Mutex
+	pendingUserLog    []UserLogTail
+	pendingUserLogSet bool
+
+	pendingChangeRegMu   sync.Mutex
+	pendingChangeRegKeys []string
+	pendingChangeRegSet  bool
+)
+
+func stashUserLogPolicy(tails []UserLogTail) {
+	pendingUserLogMu.Lock()
+	defer pendingUserLogMu.Unlock()
+	pendingUserLog = append([]UserLogTail(nil), tails...)
+	pendingUserLogSet = true
+}
+
+// PeekPendingUserLogPolicy returns stashed userLog tail specs without clearing, so the
+// file-tail collector can pick them up when it starts after an early APPLY_POLICY.
+func PeekPendingUserLogPolicy() (tails []UserLogTail, ok bool) {
+	pendingUserLogMu.Lock()
+	defer pendingUserLogMu.Unlock()
+	if !pendingUserLogSet {
+		return nil, false
+	}
+	return append([]UserLogTail(nil), pendingUserLog...), true
+}
+
+func stashChangeRegistryPolicy(rootKeys []string) {
+	pendingChangeRegMu.Lock()
+	defer pendingChangeRegMu.Unlock()
+	pendingChangeRegKeys = append([]string(nil), rootKeys...)
+	pendingChangeRegSet = true
+}
+
+// PeekPendingChangeRegistryPolicy returns stashed change.registry root-keys without
+// clearing, so the Windows registry watcher can pick them up at start.
+func PeekPendingChangeRegistryPolicy() (rootKeys []string, ok bool) {
+	pendingChangeRegMu.Lock()
+	defer pendingChangeRegMu.Unlock()
+	if !pendingChangeRegSet {
+		return nil, false
+	}
+	return append([]string(nil), pendingChangeRegKeys...), true
 }
