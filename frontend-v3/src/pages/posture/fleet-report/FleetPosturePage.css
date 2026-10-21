@@ -1,0 +1,307 @@
+/* Fleet Posture Report (SPEC-PT-6). Hive Carbon tokens only — no raw hex. */
+
+.fpr-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ha-space-4, 16px);
+  padding: var(--ha-space-4, 16px);
+  min-height: 60vh;
+  background: var(--ha-surface-app);
+  color: var(--ha-foreground-primary);
+}
+
+.fpr-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ha-space-4, 16px);
+  flex-wrap: wrap;
+}
+
+.fpr-page__title {
+  margin: 0;
+  font: var(--ha-type-page-title);
+  color: var(--ha-foreground-primary);
+}
+
+.fpr-page__subtitle {
+  margin: 4px 0 0;
+  font: var(--ha-type-compact);
+  color: var(--ha-foreground-secondary);
+  max-width: 70ch;
+}
+
+.fpr-page__subtitle a,
+.fpr-coverage a,
+.fpr-empty-honesty a {
+  color: var(--ha-foreground-link);
+  text-decoration: none;
+}
+
+.fpr-page__subtitle a:hover,
+.fpr-coverage a:hover,
+.fpr-empty-honesty a:hover {
+  text-decoration: underline;
+}
+
+.fpr-page__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fpr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-control, 6px);
+  background: var(--ha-surface-elevated);
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-compact);
+  cursor: pointer;
+}
+
+.fpr-btn:hover:not(:disabled) {
+  background: var(--ha-surface-hover);
+  border-color: var(--ha-border-strong);
+}
+
+.fpr-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.fpr-btn:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 1px;
+}
+
+.fpr-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--ha-severity-critical);
+  border-radius: var(--ha-radius-panel, 8px);
+  background: var(--ha-fill-critical-subtle);
+  color: var(--ha-foreground-primary);
+  font: var(--ha-type-compact);
+}
+
+.fpr-coverage {
+  display: flex;
+  align-items: center;
+  gap: var(--ha-space-4, 16px);
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border: 1px solid var(--ha-border-subtle);
+  border-radius: var(--ha-radius-panel, 8px);
+  background: var(--ha-surface-panel);
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+}
+
+.fpr-coverage strong {
+  color: var(--ha-foreground-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.fpr-coverage__gap strong {
+  color: var(--ha-severity-high);
+}
+
+.fpr-coverage small {
+  flex-basis: 100%;
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+}
+
+.fpr-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ha-space-4, 16px);
+}
+
+.fpr-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: var(--ha-space-4, 16px);
+  border: 1px solid var(--ha-border-subtle);
+  border-radius: var(--ha-radius-panel, 8px);
+  background: var(--ha-surface-panel);
+  min-height: 220px;
+}
+
+.fpr-card--wide,
+.fpr-card--grid {
+  grid-column: 1 / -1;
+}
+
+.fpr-card__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font: var(--ha-type-section-title);
+  color: var(--ha-foreground-primary);
+}
+
+.fpr-card__head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.fpr-donut,
+.fpr-bars {
+  height: 180px;
+}
+
+.fpr-trend {
+  height: 240px;
+}
+
+.fpr-stats {
+  display: flex;
+  gap: var(--ha-space-4, 16px);
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.fpr-stats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fpr-stats dt {
+  font: var(--ha-type-metadata);
+  color: var(--ha-foreground-tertiary);
+}
+
+.fpr-stats dd {
+  margin: 0;
+  font: var(--ha-type-metric);
+  color: var(--ha-foreground-primary);
+}
+
+.fpr-num {
+  font-family: var(--ha-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.fpr-window {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.fpr-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--ha-border-default);
+  border-radius: var(--ha-radius-pill, 999px);
+  background: var(--ha-surface-input);
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-metadata);
+  cursor: pointer;
+}
+
+.fpr-chip:hover {
+  border-color: var(--ha-border-strong);
+}
+
+.fpr-chip--on {
+  background: var(--ha-fill-primary-subtle);
+  border-color: var(--ha-action-primary);
+  color: var(--ha-foreground-primary);
+}
+
+.fpr-chip:focus-visible {
+  outline: 2px solid var(--ha-border-focus);
+  outline-offset: 1px;
+}
+
+.fpr-drift {
+  margin: 0;
+  font: var(--ha-type-compact);
+  color: var(--ha-foreground-secondary);
+}
+
+.fpr-drift strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.fpr-up {
+  color: var(--ha-state-healthy);
+}
+
+.fpr-down {
+  color: var(--ha-severity-critical);
+}
+
+.fpr-grid-wrap {
+  height: 420px;
+}
+
+.fpr-host {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.fpr-host small {
+  color: var(--ha-foreground-tertiary);
+  font: var(--ha-type-metadata);
+}
+
+.fpr-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--ha-radius-pill, 999px);
+  font: var(--ha-type-metadata);
+}
+
+.fpr-badge--ok {
+  background: var(--ha-fill-low-subtle, var(--ha-surface-selected));
+  color: var(--ha-state-healthy);
+}
+
+.fpr-badge--none {
+  background: var(--ha-surface-input);
+  color: var(--ha-foreground-tertiary);
+  border: 1px dashed var(--ha-border-default);
+}
+
+.fpr-empty-honesty {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 24px 16px;
+  border: 1px dashed var(--ha-border-default);
+  border-radius: var(--ha-radius-control, 6px);
+  background: var(--ha-surface-input);
+  color: var(--ha-foreground-secondary);
+  font: var(--ha-type-compact);
+}
+
+.fpr-empty-honesty strong {
+  color: var(--ha-foreground-primary);
+}
+
+@media (max-width: 960px) {
+  .fpr-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fpr-btn,
+  .fpr-chip {
+    transition: none;
+  }
+}

@@ -56,6 +56,8 @@ export const ROUTES = {
   VULNERABILITIES: '/posture/vulnerabilities',
   CIS_BENCHMARK: '/posture/cis-benchmark',
   READINESS: '/posture/readiness',
+  /** PT-6 — cross-fleet compliance / posture reporting (trend, drift, report packs). */
+  FLEET_POSTURE_REPORT: '/posture/fleet-report',
   SENSORS: '/posture/sensors',
   /** Utm agent-policies FIM console (schema v1 push) — STAGING CANDIDATE */
   AGENT_FIM_POLICIES: '/posture/sensors/fim-policies',

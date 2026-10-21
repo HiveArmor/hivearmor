@@ -325,6 +325,9 @@ const EntityTimelineRoutePage = React.lazy(() =>
 const CisBenchmarkPage = React.lazy(() =>
   import('@/pages/posture/cis-benchmark/CisBenchmarkPage').then(m => ({ default: m.CisBenchmarkPage }))
 );
+const FleetPosturePage = React.lazy(() =>
+  import('@/pages/posture/fleet-report/FleetPosturePage').then(m => ({ default: m.FleetPosturePage }))
+);
 
 export const router = createBrowserRouter([
   {
@@ -860,6 +863,14 @@ export const router = createBrowserRouter([
         element: (
           <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
             <ReadinessMatrixPage />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: 'posture/fleet-report',
+        element: (
+          <AuthGuard allowedRoles={['ROLE_ANALYST', 'ROLE_SOC_MANAGER', 'ROLE_ADMIN']}>
+            <FleetPosturePage />
           </AuthGuard>
         ),
       },
