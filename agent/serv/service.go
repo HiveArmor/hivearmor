@@ -25,6 +25,7 @@ import (
 	"github.com/hivearmor/agent/database"
 	"github.com/hivearmor/agent/dependency"
 	"github.com/hivearmor/agent/models"
+	"github.com/hivearmor/agent/scanner/cis"
 	"github.com/hivearmor/agent/tamper"
 	"github.com/hivearmor/agent/telemetry"
 	"github.com/hivearmor/agent/utils"
@@ -178,8 +179,36 @@ func (p *program) run() {
 	// Apply last stored agent policy before starting collectors (AGT-POL-01).
 	fim.RegisterPolicyApplier()
 	file.RegisterUserLogApplier()
+
+	// PT-5 native CIS engine: register the honest capability prober + the scans
+	// applier, then start the engine loop. The engine runs on all platforms but only
+	// executes scans where OpenSCAP is available (parsed-only otherwise). Vuln cadence
+	// is handled by the SBOM telemetry loop, not the engine.
+	cisEngine := cis.NewEngine(cnf)
+	pb.SetCISCapabilityProber(func() pb.EnforcementStatus {
+		return pb.EnforcementStatus(cis.Capability())
+	})
+	pb.SetScansPolicyApplier(func(scans *pb.ScansPolicySection) error {
+		if scans == nil || scans.CIS == nil {
+			cisEngine.ApplyScans(false, false, "", 0, false)
+			return nil
+		}
+		c := scans.CIS
+		cronPending := c.CronOrInterval != "" && !c.CronOrIntervalIsDuration()
+		cisEngine.ApplyScans(c.RunByAgent(), c.IsRealtime(), c.Profile, c.EffectiveInterval(), cronPending)
+		return nil
+	})
+	cisEngine.Start(ctx)
+
 	if err := pb.LoadAndApplyLatestPolicy(); err != nil {
 		utils.Logger.ErrorF("policy_apply on startup: %v", err)
+	}
+
+	// Consume any scans policy that applied before the engine registered its applier.
+	if pending, ok := pb.PeekPendingScansPolicy(); ok && pending != nil && pending.CIS != nil {
+		c := pending.CIS
+		cronPending := c.CronOrInterval != "" && !c.CronOrIntervalIsDuration()
+		cisEngine.ApplyScans(c.RunByAgent(), c.IsRealtime(), c.Profile, c.EffectiveInterval(), cronPending)
 	}
 
 	// EDR subsystems — only started in EDR mode.

@@ -39,6 +39,20 @@ func SetScanIntervals(sca, sbom time.Duration) {
 	notifyIntervalWaiters()
 }
 
+// SetSBOMInterval updates only the SBOM/vuln-inventory loop cadence (clamped),
+// leaving the SCA cadence untouched. Used by the PT-5 scans.vuln cadence knob so
+// tightening vuln inventory does not disturb the independent SCA observation loop.
+func SetSBOMInterval(sbom time.Duration) {
+	sbomIntervalNs.Store(int64(clampInterval(sbom)))
+	notifyIntervalWaiters()
+}
+
+// SetSCAInterval updates only the SCA loop cadence (clamped), leaving SBOM untouched.
+func SetSCAInterval(sca time.Duration) {
+	scaIntervalNs.Store(int64(clampInterval(sca)))
+	notifyIntervalWaiters()
+}
+
 func clampInterval(d time.Duration) time.Duration {
 	if d <= 0 {
 		return defaultScanInterval
