@@ -2,6 +2,7 @@ package com.hivearmor.web.rest.telemetry;
 
 import com.hivearmor.service.telemetry.TelemetryQueryException;
 import com.hivearmor.web.rest.HaCisResource;
+import com.hivearmor.web.rest.HaPostureReportResource;
 import com.hivearmor.web.rest.HaVulnResource;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -13,8 +14,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.net.URI;
 import java.time.Instant;
 
-/** RFC 9457 errors for vulnerability and CIS telemetry queries. */
-@RestControllerAdvice(assignableTypes = {HaVulnResource.class, HaCisResource.class})
+/** RFC 9457 errors for vulnerability, CIS and cross-fleet posture telemetry queries. */
+@RestControllerAdvice(assignableTypes = {HaVulnResource.class, HaCisResource.class, HaPostureReportResource.class})
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class HaTelemetryExceptionHandler {
 
