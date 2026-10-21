@@ -848,6 +848,9 @@
     <!-- BE-POL-GLOBAL-ADMIN — seed ROLE_PLATFORM_ADMIN for GLOBAL agent-policy-template write authority. -->
     <include file="/config/liquibase/changelog/20260924001_platform_admin_role.xml" relativeToChangelogFile="false"/>
 
+    <!-- BE-POL (#368) — grant ROLE_PLATFORM_ADMIN to the MSSP operator identity (MSSP_ADMIN holders). -->
+    <include file="/config/liquibase/changelog/20260925001_platform_admin_operator_grant.xml" relativeToChangelogFile="false"/>
+
 </databaseChangeLog>
 
 
