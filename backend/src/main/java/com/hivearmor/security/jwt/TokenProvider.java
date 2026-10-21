@@ -25,9 +25,11 @@ import javax.crypto.SecretKey;
 import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -211,12 +213,12 @@ public class TokenProvider implements InitializingBean {
      */
     public UsernamePasswordAuthenticationToken getAuthentication(String token) {
         Claims claims = jwtParser.parseClaimsJws(token).getBody();
-        java.util.List<GrantedAuthority> authorities = Arrays
+        List<GrantedAuthority> authorities = Arrays
             .stream(claims.get(AUTHORITIES_KEY).toString().split(","))
             .filter(auth -> !auth.trim().isEmpty())
             .map(String::trim)
             .<GrantedAuthority>map(SimpleGrantedAuthority::new)
-            .collect(Collectors.toCollection(java.util.ArrayList::new));
+            .collect(Collectors.toCollection(ArrayList::new));
         // BE-POL (#368) — the MSSP operator identity (MSSP_ADMIN) is granted the platform-admin
         // authority that gates GLOBAL agent-policy-template writes (BE-POL-GLOBAL-ADMIN, #367).
         // Deriving it here from MSSP_ADMIN covers operators provisioned by an external IdP whose
