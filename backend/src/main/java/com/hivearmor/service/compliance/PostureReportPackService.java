@@ -14,6 +14,7 @@ import com.hivearmor.service.dto.posture.FleetCisPostureDTO;
 import com.hivearmor.service.dto.posture.FleetPostureOverviewDTO;
 import com.hivearmor.service.dto.vuln.VulnSummaryDTO;
 import com.hivearmor.service.telemetry.HaPostureReportService;
+import com.hivearmor.service.telemetry.TelemetryQueryException;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -196,7 +197,11 @@ public class PostureReportPackService {
             document.close();
             return baos.toByteArray();
         } catch (Exception e) {
-            throw new RuntimeException("Posture report PDF generation failed: " + e.getMessage(), e);
+            // Map to the telemetry error contract so the resource's exception handler
+            // returns a clean 503 (no stacktrace leak), consistent with the read paths.
+            throw new TelemetryQueryException(
+                    "POSTURE_REPORT_UNAVAILABLE",
+                    "Posture report PDF could not be generated");
         }
     }
 

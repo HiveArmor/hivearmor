@@ -43,7 +43,13 @@ public class FleetPostureOverviewDTO {
         private int fleetHostCount;
         private int hostsWithCis;
         private int hostsWithVuln;
-        /** Hosts with neither a CIS scan nor a vuln finding — zero visibility. */
+        /**
+         * Honest lower-bound estimate of hosts with no posture data —
+         * {@code fleetHostCount - max(hostsWithCis, hostsWithVuln)}. The CIS and vuln
+         * host sets are tracked by different source identities and are not correlated
+         * here, so this is a conservative FLOOR (it never understates the uncovered
+         * count, i.e. never overstates coverage), not an exact set difference.
+         */
         private int hostsUncovered;
 
         public int getFleetHostCount() { return fleetHostCount; }
