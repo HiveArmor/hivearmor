@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <!--
+        BE-POL (#368) — grant ROLE_PLATFORM_ADMIN to the MSSP operator identity.
+
+        Background. PR #367 (BE-POL-GLOBAL-ADMIN) made ROLE_PLATFORM_ADMIN the ONLY role
+        allowed to write GLOBAL, cross-tenant-readable agent-policy templates on an
+        MSSP-scoped request, and changeset 20260924001_platform_admin_role.xml seeds the
+        authority ROW in jhi_authority. But nothing GRANTS that authority to any account,
+        so in MSSP mode GLOBAL template writes are fail-closed-impossible for everyone —
+        over-restrictive (safe), but it blocks the intended "MSSP operator authors GLOBAL
+        templates" workflow.
+
+        What this does. For every user that already holds the MSSP operator authority
+        MSSP_ADMIN, also grant ROLE_PLATFORM_ADMIN — via the established jhi_user_authority
+        join path, the same mechanism SOC_MANAGER / ANALYST use. This maps the new platform
+        authority onto the EXISTING MSSP operator identity and ONLY that identity:
+
+          - A tenant ROLE_ADMIN never holds MSSP_ADMIN, so it never receives
+            ROLE_PLATFORM_ADMIN here. The #367 escalation (a single tenant admin authoring
+            policy every other tenant inherits) stays closed.
+          - Single-tenant / on-prem ROLE_ADMIN is unaffected: it holds neither MSSP_ADMIN
+            nor ROLE_PLATFORM_ADMIN, and its GLOBAL-write path stays governed by the
+            config-flag equivalence (hivearmor.multitenancy.single-tenant-admin-global-write),
+            which this changeset does not touch.
+
+        The runtime complement. TokenProvider.getAuthentication derives ROLE_PLATFORM_ADMIN
+        from MSSP_ADMIN at authority-reconstruction time, so an operator provisioned by an
+        external IdP (whose authorities arrive in the JWT auth claim and never land in
+        jhi_user_authority) is also covered. This changeset covers the DB-backed operator
+        and persists the grant; the two together cover every provisioning route.
+
+        Safety / idempotency.
+          - MSSP_ADMIN is an externally-provisioned authority and is NOT seeded as a
+            jhi_authority row on a fresh / single-tenant install. The preCondition requires
+            the ROLE_PLATFORM_ADMIN authority row to exist AND at least one MSSP_ADMIN grant
+            to exist; on a fresh install the second check is 0 and the changeset is marked
+            ran without inserting anything (onFail=MARK_RAN) — no FK violation, no-op.
+          - The INSERT ... SELECT is guarded by NOT EXISTS so re-running inserts nothing,
+            and the jhi_user_authority primary key (user_id, authority_name) is a second
+            backstop against duplicates.
+
+        Mirrors AuthoritiesConstants.PLATFORM_ADMIN and the SOC-role / platform-admin-role
+        seed convention. Guarded with preConditions so re-running is safe.
+    -->
+    <changeSet id="20260925001-platform-admin-operator-grant" author="hivearmor">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <sqlCheck expectedResult="1">
+                    SELECT COUNT(*) FROM jhi_authority WHERE name = 'ROLE_PLATFORM_ADMIN'
+                </sqlCheck>
+                <not>
+                    <sqlCheck expectedResult="0">
+                        SELECT COUNT(*) FROM jhi_user_authority WHERE authority_name = 'MSSP_ADMIN'
+                    </sqlCheck>
+                </not>
+            </and>
+        </preConditions>
+
+        <sql>
+            INSERT INTO jhi_user_authority (user_id, authority_name)
+            SELECT ua.user_id, 'ROLE_PLATFORM_ADMIN'
+            FROM jhi_user_authority ua
+            WHERE ua.authority_name = 'MSSP_ADMIN'
+              AND NOT EXISTS (
+                  SELECT 1 FROM jhi_user_authority existing
+                  WHERE existing.user_id = ua.user_id
+                    AND existing.authority_name = 'ROLE_PLATFORM_ADMIN'
+              );
+        </sql>
+
+        <rollback>
+            <!--
+                Rollback removes ONLY the platform-admin grants this changeset could have
+                added: those held by a user who also holds MSSP_ADMIN. A platform-admin
+                grant on a user WITHOUT MSSP_ADMIN was not created here and is left intact.
+            -->
+            <sql>
+                DELETE FROM jhi_user_authority pa
+                WHERE pa.authority_name = 'ROLE_PLATFORM_ADMIN'
+                  AND EXISTS (
+                      SELECT 1 FROM jhi_user_authority ma
+                      WHERE ma.user_id = pa.user_id
+                        AND ma.authority_name = 'MSSP_ADMIN'
+                  );
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

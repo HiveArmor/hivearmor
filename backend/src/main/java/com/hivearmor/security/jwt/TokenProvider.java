@@ -25,10 +25,11 @@ import javax.crypto.SecretKey;
 import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -43,6 +44,14 @@ public class TokenProvider implements InitializingBean {
 
     private static final String AUTHORITIES_KEY = "auth";
     private static final String AUTHENTICATED = "authenticated";
+    /**
+     * The MSSP operator authority (a bare, non-{@code ROLE_}-prefixed authority provisioned by
+     * the IdP / deployment, never created in application code). Held by the MSSP operator identity
+     * and checked by every {@code @PreAuthorize("hasAuthority('MSSP_ADMIN')")} MSSP endpoint. Kept
+     * as a local literal to mirror {@code TenantContextFilter.AUTHORITY_MSSP_ADMIN}; it is not a
+     * member of {@link AuthoritiesConstants}, which holds only the {@code ROLE_}-prefixed roles.
+     */
+    private static final String AUTHORITY_MSSP_ADMIN = "MSSP_ADMIN";
     public static final long TEMP_TOKEN_VALIDITY_IN_MILLIS = 300000;
     /** HS512 requires a signing key of at least 512 bits (64 bytes). */
     static final int HS512_MIN_KEY_BYTES = 64;
@@ -204,11 +213,28 @@ public class TokenProvider implements InitializingBean {
      */
     public UsernamePasswordAuthenticationToken getAuthentication(String token) {
         Claims claims = jwtParser.parseClaimsJws(token).getBody();
-        Collection<? extends GrantedAuthority> authorities = Arrays
+        List<GrantedAuthority> authorities = Arrays
             .stream(claims.get(AUTHORITIES_KEY).toString().split(","))
             .filter(auth -> !auth.trim().isEmpty())
-            .map(SimpleGrantedAuthority::new)
-            .collect(Collectors.toList());
+            .map(String::trim)
+            .<GrantedAuthority>map(SimpleGrantedAuthority::new)
+            .collect(Collectors.toCollection(ArrayList::new));
+        // BE-POL (#368) — the MSSP operator identity (MSSP_ADMIN) is granted the platform-admin
+        // authority that gates GLOBAL agent-policy-template writes (BE-POL-GLOBAL-ADMIN, #367).
+        // Deriving it here from MSSP_ADMIN covers operators provisioned by an external IdP whose
+        // authorities arrive in the JWT auth claim and never land in jhi_user_authority, in lockstep
+        // with the DB-backed grant (20260925001_platform_admin_operator_grant.xml). This does NOT
+        // widen any tenant role: only a principal already holding MSSP_ADMIN is affected, so a tenant
+        // ROLE_ADMIN never gains platform-admin — the #367 escalation stays closed.
+        boolean isMsspOperator = authorities.stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(AUTHORITY_MSSP_ADMIN::equals);
+        boolean alreadyPlatformAdmin = authorities.stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(AuthoritiesConstants.PLATFORM_ADMIN::equals);
+        if (isMsspOperator && !alreadyPlatformAdmin) {
+            authorities.add(new SimpleGrantedAuthority(AuthoritiesConstants.PLATFORM_ADMIN));
+        }
         User principal = new User(claims.getSubject(), "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
