@@ -17,6 +17,13 @@ import type {
 
 import { useAuthStore } from '@/store/auth.store';
 
+/**
+ * Design-fixture lane (DEV + VITE_USE_FOUNDATION_FIXTURES): only the per-host findings
+ * read short-circuits to SYNTHETIC data so the offline Posture tab's vuln card is
+ * populated. Dynamically imported so prod bundles tree-shake it (prod alias throws).
+ */
+const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function buildParams(obj: Record<string, unknown>): URLSearchParams {
@@ -120,6 +127,10 @@ export async function fetchVulnFindingsByAgent(
   page = 0,
   size = 50,
 ): Promise<{ findings: VulnFindingDTO[]; total: number }> {
+  if (fixtureMode) {
+    const { foundationVulnFindingsByAgent } = await import('@/services/fixtures/vulnPerHost.fixtures');
+    return foundationVulnFindingsByAgent(agentId, page, size);
+  }
   const params = buildParams({ page, size });
   const { data, total } = await get<VulnFindingDTO[]>(`/ha-vuln/findings/agent/${encodeURIComponent(agentId)}`, params);
   return { findings: data, total };
