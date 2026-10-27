@@ -16,6 +16,15 @@ import type {
   PostureTrendDTO,
 } from '@/types/postureReport.types';
 
+/**
+ * Design-fixture lane (DEV + VITE_USE_FOUNDATION_FIXTURES): fleet posture reads return
+ * clearly-labelled SYNTHETIC data so the offline Fleet Posture Report is populated.
+ * Dynamically imported so prod bundles tree-shake it (prod alias throws regardless).
+ * The export (PDF/CSV) path is NOT faked — it needs a real backend, and a fake blob
+ * would be a dishonest "download".
+ */
+const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
 export class PostureReportApiError extends Error {
   constructor(public readonly status: number, message: string) {
     super(message);
@@ -52,16 +61,28 @@ async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
 
 /** Composite cross-fleet overview: CIS posture + vuln-by-severity + coverage honesty. */
 export async function fetchPostureOverview(signal?: AbortSignal): Promise<FleetPostureOverviewDTO> {
+  if (fixtureMode) {
+    const { foundationPostureOverview } = await import('@/services/fixtures/postureReport.fixtures');
+    return foundationPostureOverview();
+  }
   return getJson<FleetPostureOverviewDTO>('/ha-posture-report/overview', signal);
 }
 
 /** Cross-fleet CIS benchmark posture: fleet rollup + per-host grid + not-covered count. */
 export async function fetchFleetCis(signal?: AbortSignal): Promise<FleetCisPostureDTO> {
+  if (fixtureMode) {
+    const { foundationFleetCis } = await import('@/services/fixtures/postureReport.fixtures');
+    return foundationFleetCis();
+  }
   return getJson<FleetCisPostureDTO>('/ha-posture-report/cis', signal);
 }
 
 /** Posture-over-time: day-bucketed CIS pass-rate series + latest-vs-previous drift. */
 export async function fetchPostureTrend(days = 90, signal?: AbortSignal): Promise<PostureTrendDTO> {
+  if (fixtureMode) {
+    const { foundationPostureTrend } = await import('@/services/fixtures/postureReport.fixtures');
+    return foundationPostureTrend(days);
+  }
   return getJson<PostureTrendDTO>(`/ha-posture-report/trend?days=${encodeURIComponent(days)}`, signal);
 }
 

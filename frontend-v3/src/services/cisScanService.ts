@@ -9,6 +9,13 @@
 import { useAuthStore } from '@/store/auth.store';
 import type { CisScanResultDTO, CisScanSummaryDTO } from '@/types/cisScan.types';
 
+/**
+ * Design-fixture lane (DEV + VITE_USE_FOUNDATION_FIXTURES): per-host CIS reads return
+ * clearly-labelled SYNTHETIC data so the offline Posture tab is populated. Dynamically
+ * imported so prod bundles tree-shake it (and the prod alias throws regardless).
+ */
+const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
 
 export class CisScanApiError extends Error {
   constructor(public readonly status: number, message: string) {
@@ -47,6 +54,10 @@ export async function fetchCisScanResultsByAgent(
   status?: string,
   signal?: AbortSignal,
 ): Promise<CisScanResultDTO[]> {
+  if (fixtureMode) {
+    const { foundationCisResults } = await import('@/services/fixtures/cisScan.fixtures');
+    return foundationCisResults(agentId, status);
+  }
   const q = status ? `?status=${encodeURIComponent(status)}` : '';
   return getJson<CisScanResultDTO[]>(
     `/ha-cis-scan/results/agent/${encodeURIComponent(agentId)}${q}`,
@@ -59,6 +70,10 @@ export async function fetchCisScanSummaryByAgent(
   agentId: string,
   signal?: AbortSignal,
 ): Promise<CisScanSummaryDTO> {
+  if (fixtureMode) {
+    const { foundationCisSummary } = await import('@/services/fixtures/cisScan.fixtures');
+    return foundationCisSummary(agentId);
+  }
   return getJson<CisScanSummaryDTO>(
     `/ha-cis-scan/results/agent/${encodeURIComponent(agentId)}/summary`,
     signal,

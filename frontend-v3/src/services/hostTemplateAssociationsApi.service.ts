@@ -19,7 +19,18 @@ import type {
 
 const BASE = '/host-template-associations';
 
+/**
+ * Design-fixture lane (DEV + VITE_USE_FOUNDATION_FIXTURES): read/preview/apply paths
+ * return clearly-labelled SYNTHETIC data so the offline UI is populated. Dynamically
+ * imported so prod bundles tree-shake it (and the prod alias throws regardless).
+ */
+const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
 export async function listAssociations(): Promise<HostTemplateAssociationDTO[]> {
+  if (fixtureMode) {
+    const { foundationAssociations } = await import('@/services/fixtures/hostTemplateAssociations.fixtures');
+    return foundationAssociations;
+  }
   return apiClient.get<HostTemplateAssociationDTO[]>(BASE);
 }
 
@@ -46,10 +57,18 @@ export async function deleteAssociation(id: number): Promise<void> {
 
 /** Preview which row wins for a host + the resolved sections. Read-only, never pushes. */
 export async function resolveHost(host: string): Promise<EffectivePolicyDTO> {
+  if (fixtureMode) {
+    const { foundationResolveHost } = await import('@/services/fixtures/hostTemplateAssociations.fixtures');
+    return foundationResolveHost(host);
+  }
   return apiClient.get<EffectivePolicyDTO>(`${BASE}/resolve/${encodeURIComponent(host)}`);
 }
 
 /** Explicit APPLY — re-resolve + re-push APPLY_POLICY to affected hosts. Backend returns 202. */
 export async function applyAssociation(id: number): Promise<ApplyResultDTO> {
+  if (fixtureMode) {
+    const { foundationApply } = await import('@/services/fixtures/hostTemplateAssociations.fixtures');
+    return foundationApply(id);
+  }
   return apiClient.post<ApplyResultDTO>(`${BASE}/${id}/apply`);
 }

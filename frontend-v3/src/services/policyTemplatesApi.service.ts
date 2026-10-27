@@ -21,6 +21,14 @@ import { apiClient } from '@/lib/apiClient';
 import type { UtmAgentPolicyDTO } from '@/types/agentPolicies';
 import type { PolicyTemplateEnvelope, TemplateScope } from '@/types/policyTemplates';
 
+/**
+ * Design-fixture lane: when a DEV build is started with VITE_USE_FOUNDATION_FIXTURES,
+ * reads short-circuit to clearly-labelled SYNTHETIC data so the offline UI is populated
+ * for visual review. The fixture module is dynamically imported so production bundles
+ * tree-shake it out (and the prod alias throws regardless). See fixtures/README.
+ */
+const fixtureMode = import.meta.env.DEV && import.meta.env.VITE_USE_FOUNDATION_FIXTURES === 'true';
+
 export interface TemplateSearchParams {
   name?: string;
   scope?: TemplateScope;
@@ -40,6 +48,10 @@ function buildQuery(params: TemplateSearchParams): string {
 
 /** List the visible template library (own-tenant any scope + all GLOBAL). */
 export async function listPolicyTemplates(): Promise<UtmAgentPolicyDTO[]> {
+  if (fixtureMode) {
+    const { foundationPolicyTemplates } = await import('@/services/fixtures/policyTemplates.fixtures');
+    return foundationPolicyTemplates;
+  }
   return apiClient.get<UtmAgentPolicyDTO[]>('/agent-policies/templates');
 }
 
@@ -47,11 +59,21 @@ export async function listPolicyTemplates(): Promise<UtmAgentPolicyDTO[]> {
 export async function searchPolicyTemplates(
   params: TemplateSearchParams,
 ): Promise<UtmAgentPolicyDTO[]> {
+  if (fixtureMode) {
+    const { filterFoundationPolicyTemplates } = await import('@/services/fixtures/policyTemplates.fixtures');
+    return filterFoundationPolicyTemplates(params);
+  }
   return apiClient.get<UtmAgentPolicyDTO[]>(`/agent-policies/templates${buildQuery(params)}`);
 }
 
 /** Get one template by id within library visibility. */
 export async function getPolicyTemplate(id: number): Promise<UtmAgentPolicyDTO> {
+  if (fixtureMode) {
+    const { foundationPolicyTemplates } = await import('@/services/fixtures/policyTemplates.fixtures');
+    const found = foundationPolicyTemplates.find((t) => t.id === id);
+    if (found) return found;
+    return foundationPolicyTemplates[0];
+  }
   return apiClient.get<UtmAgentPolicyDTO>(`/agent-policies/templates/${id}`);
 }
 

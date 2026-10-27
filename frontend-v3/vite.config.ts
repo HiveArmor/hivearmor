@@ -273,6 +273,51 @@ export default defineConfig(({ command }) => ({
             : './src/pages/correlated-findings/correlatedFindings.fixture-disabled.ts'
         ),
       },
+      {
+        find: '@/services/fixtures/policyTemplates.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/services/fixtures/policyTemplates.fixtures.ts'
+            : './src/services/fixtures/policyTemplates.fixture-disabled.ts'
+        ),
+      },
+      {
+        find: '@/services/fixtures/hostTemplateAssociations.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/services/fixtures/hostTemplateAssociations.fixtures.ts'
+            : './src/services/fixtures/hostTemplateAssociations.fixture-disabled.ts'
+        ),
+      },
+      {
+        find: '@/services/fixtures/cisScan.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/services/fixtures/cisScan.fixtures.ts'
+            : './src/services/fixtures/cisScan.fixture-disabled.ts'
+        ),
+      },
+      {
+        find: '@/services/fixtures/postureReport.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/services/fixtures/postureReport.fixtures.ts'
+            : './src/services/fixtures/postureReport.fixture-disabled.ts'
+        ),
+      },
+      {
+        find: '@/services/fixtures/vulnPerHost.fixtures',
+        replacement: resolve(
+          __dirname,
+          command === 'serve'
+            ? './src/services/fixtures/vulnPerHost.fixtures.ts'
+            : './src/services/fixtures/vulnPerHost.fixture-disabled.ts'
+        ),
+      },
       { find: /^@\//, replacement: resolve(__dirname, './src') + '/' },
     ],
   },
