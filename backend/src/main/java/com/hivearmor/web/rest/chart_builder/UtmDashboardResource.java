@@ -181,6 +181,10 @@ public class UtmDashboardResource {
      * @param id the id of the utmDashboard to retrieve
      * @return the ResponseEntity with status 200 (OK) and with body the utmDashboard, or with status 404 (Not Found)
      */
+    // GAP-SEC-12: method-level authorization. Reads are allowed for analyst-and-up;
+    // the service layer additionally scopes the lookup to the caller's tenant when a
+    // TenantContext is present (UtmDashboardServiceImpl.findOne).
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_SOC_MANAGER') or hasAuthority('ROLE_ANALYST')")
     @GetMapping("/ha-dashboards/{id}")
     public ResponseEntity<UtmDashboard> getUtmDashboard(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".getUtmDashboard";
@@ -204,6 +208,10 @@ public class UtmDashboardResource {
      * @param id the id of the utmDashboard to delete
      * @return the ResponseEntity with status 200 (OK)
      */
+    // GAP-SEC-12: method-level authorization. Deletion is restricted to admin / SOC
+    // manager; the service layer (UtmDashboardServiceImpl.delete) additionally refuses
+    // to delete a row outside the caller's tenant when a TenantContext is present.
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_SOC_MANAGER')")
     @DeleteMapping("/ha-dashboards/{id}")
     public ResponseEntity<Void> deleteUtmDashboard(@PathVariable Long id) {
         final String ctx = CLASSNAME + ".deleteUtmDashboard";

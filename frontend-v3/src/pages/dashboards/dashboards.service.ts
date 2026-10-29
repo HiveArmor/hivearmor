@@ -5,7 +5,9 @@
  * - SEC-06 resolved: POST /api/ha-visualizations/run requires
  *   ROLE_ADMIN | ROLE_SOC_MANAGER | ROLE_ANALYST (@PreAuthorize on backend).
  *   UI must not call run when the caller lacks those roles (see canRunVisualization).
- * - GAP-SEC-12: GET /api/ha-dashboards/{id} has no method-level @PreAuthorize
+ * - GAP-SEC-12: RESOLVED — GET and DELETE /api/ha-dashboards/{id} now carry method-level
+ *   @PreAuthorize (read: ADMIN|SOC_MANAGER|ANALYST, delete: ADMIN|SOC_MANAGER) in
+ *   UtmDashboardResource. Service layer additionally tenant-scopes the id lookup.
  * - GAP-MT-05: CLOSED (STAGING CANDIDATE) — backend stamps/scopes hive_dashboard.tenant_id
  *   via TenantContext; null context = legacy global list/get. UI does not redesign tenant UX.
  * - GAP-MT-05 depth: dashboard-visualization and dashboard-authority CRUD scoped via parent
@@ -37,7 +39,7 @@ export function canRunVisualization(roles: readonly string[] | undefined | null)
 
 /**
  * Fetch a single dashboard by ID
- * GAP-SEC-12: No method-level @PreAuthorize on this endpoint
+ * GAP-SEC-12 RESOLVED: backend enforces @PreAuthorize (ADMIN|SOC_MANAGER|ANALYST)
  */
 export async function getDashboard(id: number): Promise<DashboardDTO> {
   try {
@@ -122,7 +124,9 @@ export function isFavourited(dashboardId: number): boolean {
 
 /**
  * Fetch all dashboards with optional filters
- * GAP-SEC-12: No method-level @PreAuthorize on this endpoint
+ * GAP-SEC-12 (list): GET /ha-dashboards (list) still has no method-level @PreAuthorize;
+ *   it is tenant-scoped via TenantContext (GAP-MT-05) but not role-gated. Tracked as a
+ *   follow-up to the id-level fix (read/delete by id are now guarded).
  * GAP-MT-05: CLOSED (STAGING) — list is tenant-scoped when TenantContext is set
  */
 export async function getDashboards(params?: {
@@ -139,7 +143,7 @@ export async function getDashboards(params?: {
 
 /**
  * Delete a dashboard by ID
- * GAP-SEC-12: No method-level @PreAuthorize — should require ROLE_ADMIN or ROLE_SOC_MANAGER
+ * GAP-SEC-12 RESOLVED: backend enforces @PreAuthorize (ROLE_ADMIN or ROLE_SOC_MANAGER)
  */
 export async function deleteDashboard(id: number): Promise<void> {
   await apiClient.delete<void>(`/ha-dashboards/${id}`);
