@@ -334,7 +334,7 @@ export function IncidentLinkDialog({ alertId, onSuccess, onCancel }: IncidentLin
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(0, 0, 0, 0.7);
+          background: var(--ha-scrim-strong);
         }
         .ha-dialog-panel {
           width: 480px;

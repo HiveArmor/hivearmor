@@ -868,7 +868,7 @@ const responseActionsPanelStyles = `
   }
   .ha-dialog-btn--danger {
     background: var(--ha-severity-critical);
-    color: #fff;
+    color: var(--ha-foreground-on-action);
     border: none;
     border-radius: 6px;
     padding: 6px 16px;
